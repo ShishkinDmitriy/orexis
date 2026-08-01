@@ -8,3 +8,8 @@ dist/
 .venv/
 venv/
 .pytest_cache/
+
+# firmware (PlatformIO build output + WiFi secrets)
+.pio/
+firmware/**/include/config.h
+

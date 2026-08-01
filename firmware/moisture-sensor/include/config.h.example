@@ -1,0 +1,26 @@
+#pragma once
+// Copy this to config.h and fill in. config.h is gitignored (WiFi secrets).
+
+#define WIFI_SSID "your-wifi-ssid"
+#define WIFI_PASS "your-wifi-password"
+
+#define MQTT_HOST "192.168.1.50" // the Raspberry Pi's LAN IP (runs mosquitto)
+#define MQTT_PORT 1883
+
+// Which plant this board measures. PLANT_ID must match an id in
+// backend/config/plants.yaml; SENSOR_ID is recorded as the provenance sensor.
+#define PLANT_ID "fern"
+#define SENSOR_ID "moisture_sensor_fern"
+
+// Capacitive soil-moisture sensor on an ADC1 pin (GPIO 32-39). Avoid ADC2 pins —
+// they don't work while WiFi is on. GPIO 34-39 are input-only, ideal here.
+#define MOISTURE_PIN 34
+
+// Calibration — raw analogRead() values (0..4095) for your sensor. Measure once:
+//   ADC_DRY = reading in dry air / bone-dry soil (highest)
+//   ADC_WET = reading fully submerged / saturated soil (lowest)
+// A capacitive sensor reads HIGH when dry, LOW when wet.
+#define ADC_DRY 3200
+#define ADC_WET 1300
+
+#define PUBLISH_INTERVAL_MS 2000
