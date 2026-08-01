@@ -22,11 +22,12 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [gateway](/domain/gateway.md) - Sole author of attested beliefs; sensor/forecast → Influx + `:attested`; the one threshold authority.
 * [clearing](/domain/clearing.md) - Thin stake-free validator (a notary): checks a proposed trade and co-signs it before settlement. The host computes the match, not clearing.
 * [executor](/domain/executor.md) - The trusted actuator: validates the capability grant and drives the pump/valve. The only thing that touches hardware.
-* [supplier](/domain/supplier.md) - Strategic seller that hosts the auction (calls clearing) and, in v2, buys upstream.
+* [supplier](/domain/supplier.md) - Strategic seller that hosts the auction (runs it and proposes the match; clearing validates) and, in v2, buys upstream.
 
 # Rules and resources
 
 * [constitution](/domain/constitution.md) - Hard, non-negotiable constraints enforced by code, not persuasion.
+* [market](/domain/market.md) - How an auction condenses out of scarcity, who hosts, who's in the cluster, and how participants know each other (attested topology).
 * [round](/domain/round.md) - The iterative auction round: how a situation opens, iterates, and clears.
 * [wallet](/domain/wallet.md) - The single budget; how bids and metabolic cost are computed and debited.
 * [belief-base](/domain/belief-base.md) - Named-graph layout, SOSA shape, provenance, the two-store split.

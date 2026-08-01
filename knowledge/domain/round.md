@@ -17,8 +17,9 @@ backstop, not the primary terminator.
 
 # Flow
 
-1. **Situation opens** — a belief crosses threshold (a plant hits `:LOW`); the
-   [supplier](/domain/supplier.md) announces available water. Deterministic, no LLM.
+1. **Situation opens** — the auction condenses out of scarcity: excess demand crosses above
+   zero (a demand/supply/budget/belief shock — see [market](/domain/market.md)), and the
+   scarce-side host (v1 the [supplier](/domain/supplier.md)) convenes. Deterministic, no LLM.
 2. **Deterministic bids form** — each agent's value model produces an honest number from its
    own attested moisture + target. An above-target plant bids nothing and cedes (a reflex).
 3. **Proposals + English justification** — the LLM step: at most one call per deliberating

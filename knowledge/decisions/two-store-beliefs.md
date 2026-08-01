@@ -12,7 +12,9 @@ timestamp: 2026-08-01T00:00:00Z
 
 - **InfluxDB owns the *series*** — every raw reading, full history, trends, rate-of-change.
 - **Fuseki (RDF) owns the *current qualitative state* and structure** — `plant :hasCurrentMoisture :LOW`,
-  species, tank-sharing. Low-volume, queryable, provenance-tagged, reasoned-over.
+  species, tank-sharing. Low-volume, queryable, provenance-tagged, reasoned-over. The
+  tank-sharing / plumbing topology here *is* the market-cluster boundary — who competes with
+  whom. See [market](/domain/market.md).
 - The two are **joined by the plant URI in code**, not by any SPARQL-over-Influx federation
   (no such thing should be built — it re-creates the triple-count wall).
 
