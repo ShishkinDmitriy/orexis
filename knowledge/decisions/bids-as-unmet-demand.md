@@ -29,5 +29,5 @@ as unmet-demand keeps both sequential and price-coupled decomposition open for f
 # Related
 
 - [standalone-clearing](/decisions/standalone-clearing.md) - the other seam that makes
-  multi-source markets a caller change.
+  multi-source markets a change of host, not a rewrite.
 - [roadmap](/decisions/roadmap.md) - where decomposition lands (v2/v3).

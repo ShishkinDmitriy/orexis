@@ -93,6 +93,13 @@ concretely a **JWT (JWS)**:
   settlement token **must be single-use** — plain JWTs are replayable bearer tokens, so the
   executor tracks `jti` (per round, bounded) and checks `round`, or the same win settles
   twice (double-spend).
+- **The settlement token is a signature chain, not one signature.** The host runs the
+  auction but does not get to conjure obligations. So the token carries: each participant's
+  **order_sig** (a bid or ask = consent + solvency/availability), the host's **match_sig**
+  (the scarce side proposing the trade), and clearing's **val_sig** (integrity notarization).
+  The executor honors only a fully-signed token. This is what stops a host fabricating a
+  counterparty's obligation or shill-bidding — it can neither sign as another agent nor
+  out-mint its wallet. See [clearing-as-validator](/decisions/clearing-as-validator.md).
 
 # Cryptographic stance (this *is* the trust boundary)
 

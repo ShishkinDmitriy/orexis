@@ -26,10 +26,13 @@ backstop, not the primary terminator.
 4. **Shocks land** — e.g. a rain forecast is attested; a new deliberation round opens because
    a shared belief changed; private value curves diverge and agents re-bid. This is why
    conversation earns its place over a one-shot auction.
-5. **Constitution check** — [constitution](/domain/constitution.md), in code.
-6. **Clear + meter + actuate** — [clearing](/domain/clearing.md) computes the allocation,
-   debits wallets (water + metabolic cost), the [executor](/domain/executor.md) sequences
-   the pump.
+5. **Host proposes the match** — the scarce side (in v1 the [supplier](/domain/supplier.md))
+   selects the trade from the signed bids and signs it.
+6. **Validate + settle** — [clearing](/domain/clearing.md) checks the proposed trade
+   (conservation, solvency, identity, [constitution](/domain/constitution.md),
+   order-consistency) and **co-signs** it; then debits wallets (water + metabolic cost) and
+   the [executor](/domain/executor.md) actuates the fully-signed token, sequencing the pump.
+   See [clearing-as-validator](/decisions/clearing-as-validator.md).
 
 # Why iterative
 

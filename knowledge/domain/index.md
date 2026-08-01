@@ -20,7 +20,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Trusted infrastructure (stake-free)
 
 * [gateway](/domain/gateway.md) - Sole author of attested beliefs; sensor/forecast → Influx + `:attested`; the one threshold authority.
-* [clearing](/domain/clearing.md) - Standalone stake-free function that matches bids/asks and computes the allocation.
+* [clearing](/domain/clearing.md) - Thin stake-free validator (a notary): checks a proposed trade and co-signs it before settlement. The host computes the match, not clearing.
 * [executor](/domain/executor.md) - The trusted actuator: validates the capability grant and drives the pump/valve. The only thing that touches hardware.
 * [supplier](/domain/supplier.md) - Strategic seller that hosts the auction (calls clearing) and, in v2, buys upstream.
 

@@ -27,6 +27,7 @@ change something, to check you're not welding shut a planned extension.
 
 * [single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md) - One wallet for water and compute; thinking costs, so bounded rationality is priced in.
 * [strategic-supplier](/decisions/strategic-supplier.md) - The supplier is a genuine seller with costs and a reserve price (Design B), not a stake-free utility.
+* [clearing-as-validator](/decisions/clearing-as-validator.md) - The scarce side runs the auction; clearing is a thin stake-free notary that checks integrity and co-signs the trade before settlement.
 
 # Belief base
 
@@ -34,6 +35,6 @@ change something, to check you're not welding shut a planned extension.
 
 # Seams (open on purpose)
 
-* [standalone-clearing](/decisions/standalone-clearing.md) - Clearing is a separable function the supplier calls, so N-to-N later is a change of caller, not a rewrite.
+* [standalone-clearing](/decisions/standalone-clearing.md) - The scarce side hosts the auction (host rotates with topology); the clearing validator stays invariant.
 * [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md) - Bids reflect current unmet need, so multi-source decomposition stays possible.
 * [roadmap](/decisions/roadmap.md) - What v1 is, and the v2/v3 extensions each seam unlocks.

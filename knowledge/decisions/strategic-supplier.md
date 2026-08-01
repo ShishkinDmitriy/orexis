@@ -22,10 +22,13 @@ the reserve and release quantity.
 
 # The safety line (critical)
 
-A seller that also *judges its own auction* will rig it. So the supplier sets **terms ex
-ante** (reserve, quantity) but does **not** peek at bids and re-decide the winner — a
-committed [clearing](/domain/clearing.md) rule applies the terms. Seller sets the rules;
-neutral clearing runs them.
+A seller that also *judges its own auction* will rig it. The resolution is not to stop the
+supplier running the auction, but to stop it *cheating*: it may run the auction and propose
+the match, but [clearing](/domain/clearing.md) **validates** that trade (conservation,
+solvency, identity, constitution, order-consistency) and co-signs it before settlement.
+Greedy terms are fine; a trade that breaks an invariant is rejected. Seller runs the
+auction; neutral clearing checks nobody cheated. See
+[clearing-as-validator](/decisions/clearing-as-validator.md).
 
 # Seam for v2
 

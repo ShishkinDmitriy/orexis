@@ -1,7 +1,7 @@
 ---
 type: Decision
-title: Clearing is a standalone function
-description: The supplier calls clearing; it is not welded into the supplier.
+title: The scarce side hosts; clearing is topology-invariant
+description: Who runs the auction rotates with market shape; the clearing validator does not.
 status: accepted
 stage: v1
 tags: [seam, clearing, market-topology]
@@ -10,22 +10,26 @@ timestamp: 2026-08-01T00:00:00Z
 
 # Context
 
-"Who hosts the auction" turns out to be relative to market shape: the *scarce side* hosts.
-Supplier hosts one-to-many; a consumer hosts many-to-one (reverse auction); N-to-N has no
-host and needs a stake-free exchange. The invariant across all of them is the *clearing
-logic* — the host is just where it temporarily lives.
+"Who hosts the auction" is relative to market shape: the **scarce (short) side hosts** — the
+side there is not enough of, around which the many cluster (the micro short-side principle).
+The host rotates; the thing that must stay invariant is clearing.
 
 # Decision
 
-Write **clearing as a standalone, stake-free function**. In v1 the
-[supplier](/domain/supplier.md) *calls* it rather than *being* it.
+Keep **clearing off the host** and make it a thin, stake-free **validator** (see
+[clearing-as-validator](/decisions/clearing-as-validator.md)). The host *runs the auction*
+and proposes a match; clearing *checks and co-signs* it. Because clearing validates rather
+than allocates, it is **topology-invariant** — it does not know or care who hosted.
 
 # Why (the seam)
 
-The same clearing serves every topology as a change of *caller*, not a rewrite:
-- one-to-many → supplier invokes it (v1)
-- many-to-one → consumer invokes it (reverse auction)
-- N-to-N → a standalone exchange invokes it
+The host is the only thing that changes across topologies:
+- 1 supplier, N consumers → the [supplier](/domain/supplier.md) hosts (forward auction) — v1
+- N suppliers, 1 consumer → the consumer hosts (reverse auction)
+- N ↔ N → a stake-free exchange hosts (order book)
 
-This is the one place worth spending extra effort up front, because we already know all
-three callers are coming. See [roadmap](/decisions/roadmap.md) and [clearing](/domain/clearing.md).
+In every case the participants sign their **orders** (bids or asks), the host signs the
+**match**, and clearing signs the **validation** — the same predicate over signed orders. So
+a new topology is a change of *host*, not a rewrite of clearing. Mint and actuate stay in
+infrastructure regardless of host. See [roadmap](/decisions/roadmap.md) and
+[clearing](/domain/clearing.md).
