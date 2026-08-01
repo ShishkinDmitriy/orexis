@@ -90,7 +90,18 @@ Point a real ESP32 at the same MQTT topic + payload shape:
 The threshold→band mapping stays in [`config/plants.yaml`](config/plants.yaml) on the Pi —
 never in ESP32 firmware. Recalibrate there, no reflash.
 
+## Tests
+
+`clearing` is a pure validator (no infra, no LLM), so it's fully unit-tested:
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+```
+
 ## What's next
 
-`clearing` (pure, unit-testable) → the `executor` (validates the capability grant, drives
-the pump-ESP32) → the plant `agents`. See [`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md).
+`clearing` ✓ (the validator + settlement grant) → the `executor` (honors the fully-signed
+grant, drives the pump-ESP32) → the host/auction (supplier proposes the match) → the plant
+`agents`. See [`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md) and
+[`clearing-as-validator`](knowledge/decisions/clearing-as-validator.md).
