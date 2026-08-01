@@ -110,7 +110,8 @@ pytest backend -q
 
 ## What's next
 
-`clearing` ✓ (the validator + settlement grant) → the `executor` (honors the fully-signed
-grant, drives the pump-ESP32) → the host/auction (supplier proposes the match) → the plant
-`agents`. See [`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md) and
-[`clearing-as-validator`](knowledge/decisions/clearing-as-validator.md).
+Built: `clearing` ✓ (validator + settlement grant), `auction` ✓ (host proposes the match),
+`agent` ✓ (deterministic value-model bids). Next: the **LLM stance** layer (justification
+only — the number stays deterministic), reading live moisture from `:attested`, and the
+`executor` (honor the signed grant, drive the pump-ESP32). See
+[`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md).
