@@ -14,15 +14,30 @@ The knowledge substrate. Two stores by role, joined by plant URI. See
 - **InfluxDB** — the series (record): every reading, history, trends.
 - **Fuseki (RDF/TDB2)** — current qualitative state + structure (citable beliefs).
 
+# There is no shared knowledge — only testimony + private belief
+
+The one triplestore is *storage*, not a shared mind. Epistemically there is no "shared
+belief base": there is the gateway's **attested testimony** — a signed public record, like a
+village land registry or the court's admissible evidence — plus **each agent's private
+beliefs**. The record is authoritative by **institutional convention** (the leash: a
+justification may cite only `:attested`), not because it is metaphysical truth; the sensor
+could be wrong. What agents share is a *reference to the same measurement*, so they never
+argue about whether the sensor read 0.18 — but what it *means* and what to *do* is private
+and expected to diverge. That divergence is the point of deliberation (see
+[round](/domain/round.md)). The named graphs below encode exactly this: one witness of
+record, plus private assumptions, plus untrusted claims.
+
 # Named graphs — partitioned by TRUST, not topic
 
 The graph name IS the trust tier (provenance via PROV-O makes "can this be cited" a
 mechanical check):
 
-- `:attested` — sensor/forecast-witnessed current state, gateway-signed, **agent-read-only**.
-  The ONLY graph a justification may cite. Forecast lives here too (tense in the timestamp).
-- `:exp/<agent>` — an agent's own private learning. Per-agent, **not shared** (if shared it
-  becomes forgeable and trolls exploit it).
+- `:attested` — the **witness of record**: sensor/forecast-witnessed current state,
+  gateway-signed, **agent-read-only**. The ONLY graph a justification may cite. Forecast
+  lives here too (tense in the timestamp).
+- `:exp/<agent>` — an agent's **private beliefs / assumptions**, its own learning. Per-agent,
+  **not shared** (if shared it becomes forgeable and trolls exploit it — the same reason
+  there is no shared knowledge, only testimony).
 - `:claims` — what agents assert during negotiation. Untrusted; never merged into `:attested`.
 
 Everything meaningful is a **named** graph so it can carry provenance. The default (unnamed)

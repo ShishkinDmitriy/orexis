@@ -93,6 +93,7 @@ See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
 
 # Invariant
 
-The gateway is the single source of ground truth. The ESP32 supplies numbers; the gateway
-supplies the judgement; agents never write either store. See
-[trust-boundary](/decisions/trust-boundary.md).
+The gateway is the single **witness of record** — the sole author of attested testimony
+(not "shared knowledge"; agents form their own private beliefs from it). The ESP32 supplies
+numbers; the gateway supplies the judgement; agents never write either store. See
+[trust-boundary](/decisions/trust-boundary.md) and [belief-base](/domain/belief-base.md).

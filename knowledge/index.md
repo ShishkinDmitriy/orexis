@@ -25,4 +25,4 @@ runtime belief base).
 
 * Building a component? Read its [domain](domain/) concept, then any [decision](decisions/) it links.
 * Tempted to change something? Check whether a decision pins it — several choices exist to keep v2/v3 open and must not be welded shut.
-* Runtime ground truth (attested sensor triples) is NOT here — see [domain/belief-base](/domain/belief-base.md).
+* Runtime testimony (attested sensor triples — the witness of record, not "shared knowledge") is NOT here — see [domain/belief-base](/domain/belief-base.md).

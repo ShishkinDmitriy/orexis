@@ -24,7 +24,8 @@ An agent's identity is a bundle of durable, external parts, never chat history:
   [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
 - **Wallet** — the single budget for water and thinking ([wallet](/domain/wallet.md)).
 - **Active intention** — the committed plan, persisting until its `valid_while` fails.
-- **Attested belief base** — read-only ground truth it cites ([belief-base](/domain/belief-base.md)).
+- **Attested testimony** — the read-only common record it may cite (its own beliefs are
+  private; there is no shared knowledge). See [belief-base](/domain/belief-base.md).
 
 The LLM is a *stateless pure function* called inside a plan body; memory lives in the wallet
 and beliefs. This is what lets many agents share one model yet hold separate, stable

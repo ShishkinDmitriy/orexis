@@ -13,7 +13,7 @@ timestamp: 2026-08-01T00:00:00Z
 - **English** where things are *contested*: persuasion, preference, negotiation, coalition.
   The LLM owns this.
 - **Formal** (RDF/SOSA facts, SHACL/rule constraints) where things are *trusted*:
-  provenance, hard constraints, shared ground truth. No rhetoric moves these.
+  provenance, hard constraints, the common record agents cite. No rhetoric moves these.
 
 # Why each formal job can't be English
 

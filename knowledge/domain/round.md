@@ -24,7 +24,7 @@ backstop, not the primary terminator.
 3. **Proposals + English justification** — the LLM step: at most one call per deliberating
    agent, phrasing a stance that must cite attested triples. Provisional clear.
 4. **Shocks land** — e.g. a rain forecast is attested; a new deliberation round opens because
-   a shared belief changed; private value curves diverge and agents re-bid. This is why
+   an attested belief changed; private value curves diverge and agents re-bid. This is why
    conversation earns its place over a one-shot auction.
 5. **Host proposes the match** — the scarce side (in v1 the [supplier](/domain/supplier.md))
    selects the trade from the signed bids and signs it.
