@@ -1,0 +1,93 @@
+# Plant Auction — v1
+
+A multi-agent water-allocation system grounded in real sensors on a Raspberry Pi.
+Architecture and rationale live in [`knowledge/`](knowledge/) (OKF bundle). This README
+covers the **gateway slice** — the first thing to build.
+
+```
+ESP32 (or fake_sensor) --moisture--> MQTT --> gateway --> InfluxDB (series)
+                                                    \--> Fuseki   (:attested current-state)
+                                                    \--> situations/<plant> (band-change event)
+```
+
+## Prerequisites
+
+- Docker + Compose, **or** Podman + `podman-compose` (both work — the compose file is
+  plain Compose-spec, rootless-friendly)
+- Python 3.10+
+- Mosquitto MQTT broker on the host (see below)
+
+## 1. Infra
+
+```bash
+cp .env.example .env
+docker compose up -d        # or: podman compose up -d
+```
+
+Brings up: InfluxDB (`:8086`), Grafana (`:3000`), Fuseki (`:3030`). Grafana is pre-wired
+to InfluxDB (anonymous viewer enabled).
+
+**MQTT runs on the host, not in a container.** The Alpine/musl `eclipse-mosquitto` image
+can't open a config file on the Pi's kernel under rootless Podman/overlay; the Debian
+(glibc) build has no such issue, and since the gateway/agents are host processes anyway, a
+host broker is the clean choice:
+
+```bash
+sudo apt install -y mosquitto mosquitto-clients
+sudo systemctl enable --now mosquitto
+```
+
+The default config listens on `localhost:1883` and accepts anonymous local connections —
+which is all v1 needs (everything talks over loopback on the Pi).
+
+## 2. App
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e .
+```
+
+## 3. Run the slice
+
+Two terminals (venv active in both):
+
+```bash
+pa-gateway          # subscribes to sensors/+/moisture, writes both stores
+pa-fake-sensor      # simulates the ESP32 edge (no hardware needed)
+```
+
+The gateway logs `situation:` lines when a plant's band crosses LOW/OK/HIGH.
+
+## 4. Inspect
+
+- **Grafana dashboard** — http://localhost:3000/d/plant-moisture (or `http://<pi-ip>:3000/...`
+  from another machine). No login (anonymous Viewer enabled); auto-refreshes every 5s.
+  Shows current moisture per plant (colored by band) and a moisture-over-time chart. The
+  dashboard and datasource are **provisioned** from `infra/grafana/` — recreating Grafana
+  restores them, nothing lives only in the container.
+- **Attested current-state (what agents will cite)** — query Fuseki. Note the query
+  endpoint on this image is `/ds/sparql` (not `/ds/query`); updates go to `/ds/update`:
+
+  ```bash
+  curl -s http://localhost:3030/ds/sparql \
+    --data-urlencode 'query=PREFIX pa:<http://example.org/pa#>
+      SELECT ?plant ?band WHERE {
+        GRAPH <http://example.org/pa/graph/attested> { ?plant pa:hasCurrentMoisture ?band }
+      }' \
+    -H 'Accept: text/csv'
+  ```
+
+## Real hardware
+
+Point a real ESP32 at the same MQTT topic + payload shape:
+
+- topic: `sensors/<plant_id>/moisture`
+- payload: `{"value": 0.18, "sensor": "moisture_sensor_fern"}`
+
+The threshold→band mapping stays in [`config/plants.yaml`](config/plants.yaml) on the Pi —
+never in ESP32 firmware. Recalibrate there, no reflash.
+
+## What's next
+
+`clearing` (pure, unit-testable) → the `executor` (validates the capability grant, drives
+the pump-ESP32) → the plant `agents`. See [`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md).

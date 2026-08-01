@@ -1,0 +1,98 @@
+---
+type: Component
+title: Gateway
+description: Thin stake-free attestor on the RPi; turns the ESP32's raw readings into citable, provenance-stamped current-state.
+tags: [infrastructure, trusted, belief-base, sensors, esp32]
+timestamp: 2026-08-01T00:00:00Z
+---
+
+# What it is
+
+Trusted, stake-free infrastructure, and the **only** component that authors the `:attested`
+graph. It is **not a monolith** — it is a thin RPi process (≈ one file) that turns raw
+sensor numbers into citable qualitative state. Build it first: it owns the most settled
+decisions and everything downstream trusts it.
+
+The measurement root is split across the hardware, and the split is the point:
+
+- **ESP32 = transducer.** Reads the moisture sensor (ADC/I2C) and emits **raw numbers**. It
+  is the honest sensor edge precisely because it is stake-free — no wallet, no LLM, no
+  desire, so it *cannot* be self-interested. It makes no judgements.
+- **Gateway (RPi) = attestor.** Applies the qualitative judgement, stamps provenance, and
+  materializes current-state into `:attested`.
+
+# The reading is split, not the trust
+
+Raw numbers and citable facts live in different stores (see
+[two-store-beliefs](/decisions/two-store-beliefs.md) and [belief-base](/domain/belief-base.md)):
+
+```
+ESP32 ──raw reading──► InfluxDB            (the series / record — every reading)
+                          │
+              gateway reads latest
+                          ▼
+              threshold→band (0.18→:LOW) + prov stamp
+                          ▼
+                    Fuseki :attested         (current qualitative state — what agents cite)
+```
+
+Writing raw numbers to Influx is **not** attestation. Only the gateway's materialization
+into `:attested` is citable; a bare Influx point is just a record.
+
+# Responsibilities
+
+1. Receive readings from the ESP32 (soil moisture) and the weather **forecast** from an API
+   (a forecast is just an external reading, source = the API).
+2. Ensure **every** reading lands in InfluxDB (the record) — see ingest options below.
+3. **Materialize** only the current-state triple into `:attested`, overwriting rather than
+   accumulating — a thin, current, qualitative projection of the series.
+4. Apply the **threshold→band** decision as part of attestation. See below.
+5. Stamp provenance (`prov:wasGeneratedBy :gateway`) so the belief is citable-but-unforgeable.
+
+# The threshold lives here, never in ESP32 firmware
+
+The `0.18 → :LOW` decision (and the per-species dry points — fern ≠ succulent) lives in
+**one place**: this process, as config/T-Box. Keep the ESP32 dumb — it emits numbers, not
+judgements. Two reasons:
+
+- **One authority.** If each ESP32 hardcoded a threshold, agents would disagree about ground
+  truth. The band is the gateway's call and nobody else's.
+- **Recalibration is a config edit on the Pi, not a firmware reflash.**
+
+# Ingest — two viable wirings
+
+- **A — ESP32 → Influx direct.** Simplest; ESP32 has Influx client libs. The gateway polls
+  Influx for the latest reading and attests. Trust assumption: only trusted ESP32s can write
+  Influx (a write token on a trusted LAN). Acceptable v1 shortcut.
+- **B — ESP32 → MQTT → gateway → both stores.** The gateway is sole writer of *both* stores
+  (firsthand provenance), and the same MQTT reading fires "situation opens" when a plant
+  crosses `:LOW` (see [round](/domain/round.md) step 1). MQTT is already the agents' bus.
+  Preferred for provenance + round-trigger coherence.
+
+# SOSA shape (attested current-state)
+
+```turtle
+:obs_2f a sosa:Observation ;
+  sosa:hasFeatureOfInterest :plant1 ;
+  sosa:observedProperty :SoilMoisture ;
+  sosa:hasSimpleResult 0.18 ;
+  :qualitativeBand :LOW ;                 # gateway's call — the one authority
+  sosa:resultTime "..."^^xsd:dateTime ;
+  sosa:madeBySensor :moisture_sensor_1 ; # device id from the ESP32
+  prov:wasGeneratedBy :gateway .          # the leash hook
+```
+
+Forecast reuses this exactly: `madeBySensor :weather_api`, `phenomenonTime` in the future.
+Same class; tense lives in the timestamp.
+
+# Device identity (v1 vs v2)
+
+v1: a trusted LAN + a device-id string is enough. v2: device certs (TLS client cert to the
+broker/Influx) make the ESP32 a certified device principal — the same cert model as agents.
+See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
+
+# Invariant
+
+The gateway is the single source of ground truth. The ESP32 supplies numbers; the gateway
+supplies the judgement; agents never write either store. See
+[trust-boundary](/decisions/trust-boundary.md).

@@ -1,0 +1,57 @@
+name: plant-auction
+
+# Infra for v1: the two-store belief base (Influx series + Fuseki :attested) and
+# Grafana for eyeballing the series. All images have arm64 builds, so this runs on
+# the Raspberry Pi as-is.
+#
+# MQTT is NOT here: the Alpine/musl mosquitto image can't open a config file on this
+# Pi's kernel (rootless overlay), so the broker runs on the host instead (apt install
+# mosquitto — a glibc build). See README. The gateway/agents are host processes too,
+# so a host broker is architecturally consistent.
+
+services:
+  influxdb:
+    image: docker.io/library/influxdb:2.7
+    ports: ["8086:8086"]
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_USER:-admin}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD:-admin12345}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:-plant-auction}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUX_BUCKET:-sensors}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:-dev-token-change-me}
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: docker.io/grafana/grafana:11.2.0
+    ports: ["3000:3000"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on: [influxdb]
+
+  fuseki:
+    image: docker.io/secoresearch/fuseki:5.5.0
+    ports: ["3030:3030"]
+    environment:
+      ADMIN_PASSWORD: ${FUSEKI_PASSWORD:-admin}
+      ENABLE_UPDATE: "true"        # gateway attests via SPARQL Update (off by default)
+      ENABLE_DATA_WRITE: "true"
+      ENABLE_UPLOAD: "true"
+    # Serves a dataset at /ds. Dev: dataset is ephemeral in-container — the gateway
+    # re-attests current-state on every reading, so persistence isn't needed for v1.
+
+volumes:
+  influxdb-data:
+  grafana-data:

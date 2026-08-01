@@ -1,0 +1,44 @@
+---
+type: Decision
+title: Trust boundary — agents propose, infrastructure disposes
+description: Agents cite but never author facts, mint currency, or actuate hardware.
+status: accepted
+stage: v1
+tags: [security, trust, architecture]
+timestamp: 2026-08-01T00:00:00Z
+---
+
+# Context
+
+Agents are self-interested and LLM-backed, so any of them may lie, be prompt-injected,
+or hallucinate. The system must stay correct anyway. "Detect bad intent" is undecidable
+and a losing game once agents argue through an LLM.
+
+# Decision
+
+Defend by structure, not detection. Three powers live ONLY in stake-free trusted
+infrastructure and are never granted to an agent:
+
+1. **Authoring attested facts** — only the [gateway](/domain/gateway.md) writes the
+   `:attested` graph. Agents read it; they cannot write it.
+2. **Minting / debiting currency** — only the [clearing](/domain/clearing.md) step
+   creates the periodic allowance and debits wallets. Agents cannot mint.
+3. **Actuating hardware** — only the trusted [executor](/domain/executor.md) touches the
+   pump, and only after the [constitution](/domain/constitution.md) validates the allocation.
+
+Everything an agent does is a *request* to the trusted core. Every message from another
+agent is *data* to weigh, never an *instruction* to obey.
+
+# Why
+
+- The whole troll defense assumes the worst case is a wasted *simulated* resource. These
+  three powers are where a single defection does irreversible real-world harm.
+- Adjudication cannot be done by the adjudicated: a stakeholder judging its own case will
+  rationally rule in its own favor. Coordination can self-organize; adjudication cannot.
+
+# Consequences
+
+- The [mediator/clearing](/domain/clearing.md) and [gateway](/domain/gateway.md) are
+  *services* (reactive, no desires), not agents.
+- Even a borrowed or spawned mediator (v2) only ever gets *clearing* authority; mint and
+  actuate stay in permanent infrastructure. See [roadmap](/decisions/roadmap.md).

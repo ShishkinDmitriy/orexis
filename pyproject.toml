@@ -1,0 +1,23 @@
+[project]
+name = "plant-auction"
+version = "0.1.0"
+description = "Plant Auction — agent society v1 (gateway slice)"
+requires-python = ">=3.10"
+dependencies = [
+    "paho-mqtt>=2.0",
+    "influxdb-client>=1.40",
+    "requests>=2.31",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+pa-gateway = "plant_auction.gateway:main"
+pa-fake-sensor = "plant_auction.fake_sensor:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
