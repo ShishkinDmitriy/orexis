@@ -13,6 +13,15 @@ ESP32 (or fake_sensor) --moisture--> MQTT --> gateway --> InfluxDB (series)
                                                     \--> situations/<plant> (band-change event)
 ```
 
+## Layout
+
+```
+backend/     Python on the Raspberry Pi — gateway, market (clearing/auction), agents
+firmware/    ESP32 edge — moisture sensors (and later actuators)
+infra/       compose service configs — grafana, mosquitto
+knowledge/   OKF knowledge bundle (architecture decisions + domain model)
+```
+
 ## Prerequisites
 
 - Docker + Compose, **or** Podman + `podman-compose` (both work — the compose file is
@@ -47,7 +56,7 @@ which is all v1 needs (everything talks over loopback on the Pi).
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e .
+pip install -e ./backend
 ```
 
 ## 3. Run the slice
@@ -87,16 +96,16 @@ Point a real ESP32 at the same MQTT topic + payload shape:
 - topic: `sensors/<plant_id>/moisture`
 - payload: `{"value": 0.18, "sensor": "moisture_sensor_fern"}`
 
-The threshold→band mapping stays in [`config/plants.yaml`](config/plants.yaml) on the Pi —
-never in ESP32 firmware. Recalibrate there, no reflash.
+The threshold→band mapping stays in [`backend/config/plants.yaml`](backend/config/plants.yaml)
+on the Pi — never in ESP32 firmware. Recalibrate there, no reflash.
 
 ## Tests
 
-`clearing` is a pure validator (no infra, no LLM), so it's fully unit-tested:
+The market layer (`clearing`, `auction`) is pure (no infra, no LLM), so it's fully unit-tested:
 
 ```bash
-pip install -e ".[dev]"
-pytest -q
+pip install -e "./backend[dev]"
+pytest backend -q
 ```
 
 ## What's next
