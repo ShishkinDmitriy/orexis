@@ -11,7 +11,7 @@ datasources:
     isDefault: true
     jsonData:
       version: Flux
-      organization: plant-auction
+      organization: agora
       defaultBucket: sensors
     secureJsonData:
       token: dev-token-change-me

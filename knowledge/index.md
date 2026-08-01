@@ -2,13 +2,16 @@
 okf_version: "0.1"
 ---
 
-# Plant Auction — Agent Society
+# Agora — Agent Society
 
-A multi-agent resource-allocation system: self-interested plant agents bid in an
-iterative auction for water from a limited supply, grounded in real sensor data on
-a Raspberry Pi. Conversation sets valuations; the auction settles allocation. This
-bundle records the architecture *decisions* and the *domain model* — the durable
-"what and why", not the live sensed state (that lives in the runtime belief base).
+A multi-agent resource-allocation system: self-interested agents bid in an iterative
+auction for a scarce resource from a limited supply, under a hard trust/constitution
+boundary, grounded in real sensor data on a Raspberry Pi. Conversation sets valuations;
+the auction settles allocation. The domain is a plug-in — the **v1 example is plant
+watering** (agents bid for water), so plant/water language throughout is the concrete
+instance, not the architecture. This bundle records the architecture *decisions* and the
+*domain model* — the durable "what and why", not the live sensed state (that lives in the
+runtime belief base).
 
 # Decisions
 

@@ -36,7 +36,7 @@ class Gateway:
         self.influx = InfluxWriter(
             config.env("INFLUX_URL", "http://localhost:8086"),
             config.env("INFLUX_TOKEN", "dev-token-change-me"),
-            config.env("INFLUX_ORG", "plant-auction"),
+            config.env("INFLUX_ORG", "agora"),
             config.env("INFLUX_BUCKET", "sensors"),
         )
         self.attestor = Attestor(

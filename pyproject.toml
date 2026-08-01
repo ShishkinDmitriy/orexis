@@ -1,7 +1,7 @@
 [project]
-name = "plant-auction"
+name = "agora"
 version = "0.1.0"
-description = "Plant Auction — agent society v1 (gateway slice)"
+description = "Agora — agent society v1 (gateway slice)"
 requires-python = ">=3.10"
 dependencies = [
     "paho-mqtt>=2.0",
@@ -12,8 +12,8 @@ dependencies = [
 ]
 
 [project.scripts]
-pa-gateway = "plant_auction.gateway:main"
-pa-fake-sensor = "plant_auction.fake_sensor:main"
+agora-gateway = "agora.gateway:main"
+agora-fake-sensor = "agora.fake_sensor:main"
 
 [build-system]
 requires = ["setuptools>=68"]

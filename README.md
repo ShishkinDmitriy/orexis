@@ -1,8 +1,11 @@
-# Plant Auction — v1
+# Agora — v1
 
-A multi-agent water-allocation system grounded in real sensors on a Raspberry Pi.
-Architecture and rationale live in [`knowledge/`](knowledge/) (OKF bundle). This README
-covers the **gateway slice** — the first thing to build.
+A market society of self-interested agents that allocate a scarce resource through
+iterative auctions and deliberation, under a hard trust/constitution boundary — grounded
+in real sensors on a Raspberry Pi. The domain is a plug-in; the **v1 example domain is
+plant watering** (agents bid for water). Architecture and rationale live in
+[`knowledge/`](knowledge/) (OKF bundle). This README covers the **gateway slice** — the
+first thing to build.
 
 ```
 ESP32 (or fake_sensor) --moisture--> MQTT --> gateway --> InfluxDB (series)
@@ -52,15 +55,15 @@ pip install -e .
 Two terminals (venv active in both):
 
 ```bash
-pa-gateway          # subscribes to sensors/+/moisture, writes both stores
-pa-fake-sensor      # simulates the ESP32 edge (no hardware needed)
+agora-gateway          # subscribes to sensors/+/moisture, writes both stores
+agora-fake-sensor      # simulates the ESP32 edge (no hardware needed)
 ```
 
 The gateway logs `situation:` lines when a plant's band crosses LOW/OK/HIGH.
 
 ## 4. Inspect
 
-- **Grafana dashboard** — http://localhost:3000/d/plant-moisture (or `http://<pi-ip>:3000/...`
+- **Grafana dashboard** — http://localhost:3000/d/agora-moisture (or `http://<pi-ip>:3000/...`
   from another machine). No login (anonymous Viewer enabled); auto-refreshes every 5s.
   Shows current moisture per plant (colored by band) and a moisture-over-time chart. The
   dashboard and datasource are **provisioned** from `infra/grafana/` — recreating Grafana
@@ -70,9 +73,9 @@ The gateway logs `situation:` lines when a plant's band crosses LOW/OK/HIGH.
 
   ```bash
   curl -s http://localhost:3030/ds/sparql \
-    --data-urlencode 'query=PREFIX pa:<http://example.org/pa#>
+    --data-urlencode 'query=PREFIX ag:<http://example.org/agora#>
       SELECT ?plant ?band WHERE {
-        GRAPH <http://example.org/pa/graph/attested> { ?plant pa:hasCurrentMoisture ?band }
+        GRAPH <http://example.org/agora/graph/attested> { ?plant ag:hasCurrentMoisture ?band }
       }' \
     -H 'Accept: text/csv'
   ```

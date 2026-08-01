@@ -6,15 +6,15 @@
 
 plants:
   - id: fern
-    uri: "http://example.org/pa#fern"
+    uri: "http://example.org/agora#fern"
     species: fern
     sensor: moisture_sensor_fern
   - id: tomato
-    uri: "http://example.org/pa#tomato"
+    uri: "http://example.org/agora#tomato"
     species: tomato
     sensor: moisture_sensor_tomato
   - id: succulent
-    uri: "http://example.org/pa#succulent"
+    uri: "http://example.org/agora#succulent"
     species: succulent
     sensor: moisture_sensor_succulent
 

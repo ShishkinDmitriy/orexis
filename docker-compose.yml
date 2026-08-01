@@ -1,4 +1,4 @@
-name: plant-auction
+name: agora
 
 # Infra for v1: the two-store belief base (Influx series + Fuseki :attested) and
 # Grafana for eyeballing the series. All images have arm64 builds, so this runs on
@@ -17,7 +17,7 @@ services:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_USER:-admin}
       DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD:-admin12345}
-      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:-plant-auction}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:-agora}
       DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUX_BUCKET:-sensors}
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:-dev-token-change-me}
     volumes:

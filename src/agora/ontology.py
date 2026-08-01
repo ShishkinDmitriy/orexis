@@ -7,10 +7,10 @@ never per-agent and never in ESP32 firmware.
 from __future__ import annotations
 
 # RDF vocabulary used by the attested current-state graph.
-PA = "http://example.org/pa#"
+AG = "http://example.org/agora#"
 SOSA = "http://www.w3.org/ns/sosa/"
 PROV = "http://www.w3.org/ns/prov#"
-ATTESTED_GRAPH = "http://example.org/pa/graph/attested"
+ATTESTED_GRAPH = "http://example.org/agora/graph/attested"
 
 BANDS = ("LOW", "OK", "HIGH")
 

@@ -14,7 +14,7 @@ import requests
 from .ontology import ATTESTED_GRAPH
 
 _PREFIXES = """
-PREFIX pa:   <http://example.org/pa#>
+PREFIX ag:   <http://example.org/agora#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
@@ -38,7 +38,7 @@ class Attestor:
         ts: str | None = None,
     ) -> None:
         ts = ts or datetime.now(timezone.utc).isoformat()
-        obs = f"pa:obs_{plant_id}"
+        obs = f"ag:obs_{plant_id}"
 
         # Delete the plant's previous current-state, then insert the fresh observation.
         # Three ops in one request (separated by ';'): idempotent overwrite.
@@ -46,18 +46,18 @@ class Attestor:
 WITH <{ATTESTED_GRAPH}>
 DELETE {{ {obs} ?p ?o }} WHERE {{ {obs} ?p ?o }} ;
 WITH <{ATTESTED_GRAPH}>
-DELETE {{ <{plant_uri}> pa:hasCurrentMoisture ?b }}
-WHERE  {{ <{plant_uri}> pa:hasCurrentMoisture ?b }} ;
+DELETE {{ <{plant_uri}> ag:hasCurrentMoisture ?b }}
+WHERE  {{ <{plant_uri}> ag:hasCurrentMoisture ?b }} ;
 INSERT DATA {{ GRAPH <{ATTESTED_GRAPH}> {{
   {obs} a sosa:Observation ;
     sosa:hasFeatureOfInterest <{plant_uri}> ;
-    sosa:observedProperty pa:SoilMoisture ;
+    sosa:observedProperty ag:SoilMoisture ;
     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
-    pa:qualitativeBand pa:{band} ;
+    ag:qualitativeBand ag:{band} ;
     sosa:resultTime "{ts}"^^xsd:dateTime ;
-    sosa:madeBySensor pa:{sensor} ;
-    prov:wasGeneratedBy pa:gateway .
-  <{plant_uri}> pa:hasCurrentMoisture pa:{band} .
+    sosa:madeBySensor ag:{sensor} ;
+    prov:wasGeneratedBy ag:gateway .
+  <{plant_uri}> ag:hasCurrentMoisture ag:{band} .
 }} }}
 """
         resp = requests.post(
