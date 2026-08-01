@@ -29,8 +29,9 @@ record, plus private assumptions, plus untrusted claims.
 
 # Named graphs — partitioned by TRUST, not topic
 
-The graph name IS the trust tier (provenance via PROV-O makes "can this be cited" a
-mechanical check):
+The graph name IS the trust tier — it is the write-authorization boundary, so "can this be
+cited" is a mechanical membership check (PROV-O then records *which* witness inside it; see
+below on why the graph, not the provenance triple, carries the trust):
 
 - `:attested` — the **witness of record**: sensor/forecast-witnessed current state,
   gateway-signed, **agent-read-only**. The ONLY graph a justification may cite. Forecast
@@ -43,6 +44,26 @@ mechanical check):
 Everything meaningful is a **named** graph so it can carry provenance. The default (unnamed)
 graph carries no provenance, so nothing load-bearing goes there. See
 [trust-boundary](/decisions/trust-boundary.md).
+
+# Why a named graph — and why (for now) one
+
+The graph is a **write-authorization boundary, not a label.** Citability can't rest on a
+`prov:wasGeneratedBy :gateway` *triple* — a triple is forgeable by anyone who can write, so
+a troll would just self-stamp its own claim. Trust comes from **who may write the
+container**, not from a stamp inside it. `:attested` is the graph only the gateway writes;
+"citable?" is therefore *membership in a container you cannot write*, which no rhetoric or
+forged triple can fake. (The village registry is trusted because only the registrar may
+write the book — not because each entry says "signed, the registrar.") The two things are
+distinct and both wanted: the **graph** = the lock (who may write); the
+`prov:wasGeneratedBy` **triple** = the logbook entry (which sensor produced it).
+
+The **singleton is a v1 artifact of having one witness** (one gateway, one sensor per
+plant). The natural unit is **one graph per witness**: add independent sensors or oracles
+and you get `:attested/<witness>` graphs that may disagree, with agents forming beliefs by
+*weighing witnesses* — "different assumptions about the same facts" pushed up to the record
+itself. Nothing is welded to there being exactly one; v1 just has one. Private beliefs
+(`:exp/<agent>`) are already per-agent; only the *current consensus record* is singleton,
+and in v1 it collapses to the sole witness's output.
 
 # Access languages (deliberate asymmetry)
 
