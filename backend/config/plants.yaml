@@ -38,3 +38,10 @@ species_bands:
 value_model:
   litres_per_fraction: 2.0   # L needed to raise moisture by 1.0 (pot-size proxy)
   max_value_per_l: 0.80      # €/L willingness at peak urgency (bone dry)
+
+# The supplier's round terms (v1: fixed). The host announces this quantity + reserve.
+supplier:
+  id: supplier
+  quantity_l: 2.0            # litres available this round
+  reserve_price_per_l: 0.20  # won't sell below this (€/L)
+  tank_capacity_l: 5.0       # constitution: total allocation ceiling

@@ -70,6 +70,15 @@ agora-fake-sensor      # simulates the ESP32 edge (no hardware needed)
 
 The gateway logs `situation:` lines when a plant's band crosses LOW/OK/HIGH.
 
+With those two running, drive a full market round from the live attested state:
+
+```bash
+agora-round            # agents read :attested, bid, host clears, grants issue
+```
+
+This is the whole loop end to end: `sensor → gateway → :attested → agents bid →
+auction → clearing`. Deterministic, no LLM.
+
 ## 4. Inspect
 
 - **Grafana dashboard** — http://localhost:3000/d/agora-moisture (or `http://<pi-ip>:3000/...`
