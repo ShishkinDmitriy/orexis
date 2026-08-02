@@ -33,7 +33,6 @@ class Attestor:
         plant_uri: str,
         plant_id: str,
         value: float,
-        band: str,
         sensor: str,
         world_version: int | None = None,
         ts: str | None = None,
@@ -43,24 +42,19 @@ class Attestor:
         # provenance: which world-version was in force when this was sensed
         wv_line = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
 
-        # Delete the plant's previous current-state, then insert the fresh observation.
-        # Three ops in one request (separated by ';'): idempotent overwrite.
+        # Attest the MEASUREMENT only — no band. "Is this LOW?" is the agent's private
+        # judgment, not the witness's. Overwrite the plant's previous observation.
         update = f"""{_PREFIXES}
 WITH <{ATTESTED_GRAPH}>
 DELETE {{ {obs} ?p ?o }} WHERE {{ {obs} ?p ?o }} ;
-WITH <{ATTESTED_GRAPH}>
-DELETE {{ <{plant_uri}> ag:hasCurrentMoisture ?b }}
-WHERE  {{ <{plant_uri}> ag:hasCurrentMoisture ?b }} ;
 INSERT DATA {{ GRAPH <{ATTESTED_GRAPH}> {{
   {obs} a sosa:Observation ;
     sosa:hasFeatureOfInterest <{plant_uri}> ;
     sosa:observedProperty ag:SoilMoisture ;
     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
-    ag:qualitativeBand ag:{band} ;
     sosa:resultTime "{ts}"^^xsd:dateTime ;
     sosa:madeBySensor ag:{sensor} ;
 {wv_line}    prov:wasGeneratedBy ag:gateway .
-  <{plant_uri}> ag:hasCurrentMoisture ag:{band} .
 }} }}
 """
         resp = requests.post(

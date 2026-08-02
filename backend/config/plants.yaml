@@ -18,7 +18,10 @@ sources:
     supplier: supplier
 
 # Each plant's charter: identity + desire (target moisture) + endowment (starting credits)
-# + which source it draws from (its cluster).
+# + which source it draws from (its cluster) + its own band thresholds.
+# The band (LOW/OK/HIGH) is the plant's *private judgment*, not the gateway's — it's
+# desire-relative (a fern is parched where a succulent shrugs). low/high live in the
+# charter; the agent computes its own band. See knowledge/decisions/agent-centric-epistemics.md.
 plants:
   - id: fern
     uri: "http://example.org/agora#fern"
@@ -27,6 +30,8 @@ plants:
     source: barrel1
     target: 0.55
     endowment: 100.0
+    low: 0.35    # below this the agent judges itself LOW (thirsty)
+    high: 0.65   # above this, HIGH
   - id: tomato
     uri: "http://example.org/agora#tomato"
     species: tomato
@@ -34,6 +39,8 @@ plants:
     source: barrel1
     target: 0.50
     endowment: 100.0
+    low: 0.30
+    high: 0.60
   - id: succulent
     uri: "http://example.org/agora#succulent"
     species: succulent
@@ -41,13 +48,8 @@ plants:
     source: barrel1
     target: 0.22
     endowment: 100.0
-
-# band = LOW if value < low; HIGH if value > high; else OK.
-# Per-species dry points (fern likes it wet, succulent likes it dry).
-species_bands:
-  fern:      { low: 0.35, high: 0.65 }
-  tomato:    { low: 0.30, high: 0.60 }
-  succulent: { low: 0.12, high: 0.30 }
+    low: 0.12
+    high: 0.30
 
 # The deterministic value model (a seam — replaceable). Converts a moisture deficit into
 # a litres demand and a willingness-to-pay. See knowledge/decisions/deterministic-bid.md.

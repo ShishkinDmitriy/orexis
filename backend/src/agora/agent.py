@@ -15,6 +15,7 @@ from dataclasses import dataclass
 
 from . import config
 from .market import EPS, Bid
+from .ontology import band_for
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,8 @@ class Charter:
     endowment: float  # starting credits
     litres_per_fraction: float  # L to raise moisture by 1.0
     max_value_per_l: float  # €/L willingness at peak urgency
+    low: float  # below this the agent judges itself LOW (its own band)
+    high: float  # above this, HIGH
 
 
 def value_bid(
@@ -75,6 +78,11 @@ class Agent:
     def from_charter(cls, charter: Charter) -> "Agent":
         return cls(charter=charter, balance=charter.endowment)
 
+    def band(self, current_moisture: float) -> str:
+        """The agent's own LOW/OK/HIGH judgment — desire-relative, from its charter.
+        The gateway attests the number; the verdict is the agent's."""
+        return band_for(current_moisture, self.charter.low, self.charter.high)
+
     def bid(self, current_moisture: float, allocated_l: float = 0.0) -> Bid | None:
         return value_bid(current_moisture, self.charter, self.balance, allocated_l)
 
@@ -92,6 +100,8 @@ def load_charters(cfg: dict | None = None) -> list[Charter]:
             endowment=p["endowment"],
             litres_per_fraction=vm["litres_per_fraction"],
             max_value_per_l=vm["max_value_per_l"],
+            low=p["low"],
+            high=p["high"],
         )
         for p in cfg["plants"]
     ]

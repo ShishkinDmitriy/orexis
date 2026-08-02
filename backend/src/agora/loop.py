@@ -19,11 +19,12 @@ import time
 import paho.mqtt.client as mqtt
 
 from . import config
+from .agent import load_agents
 from .live import run_live_round
 
 log = logging.getLogger("loop")
 
-SITUATIONS_TOPIC = "situations/+"
+READINGS_TOPIC = "readings/+"
 
 
 def due(last_run_ts: float, now: float, cooldown_s: float) -> bool:
@@ -35,21 +36,28 @@ class RoundRunner:
     def __init__(self, cooldown_s: float = 30.0):
         self.cooldown_s = cooldown_s
         self.last_run_ts = 0.0
+        # the agents judge their own band from the raw reading — the gateway doesn't
+        self.agents = {a.charter.agent: a for a in load_agents()}
         self.mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.mqtt.on_connect = self._on_connect
         self.mqtt.on_message = self._on_message
 
     def _on_connect(self, client, userdata, flags, reason_code, properties) -> None:
-        log.info("connected (%s); subscribing %s", reason_code, SITUATIONS_TOPIC)
-        client.subscribe(SITUATIONS_TOPIC)
+        log.info("connected (%s); subscribing %s", reason_code, READINGS_TOPIC)
+        client.subscribe(READINGS_TOPIC)
 
     def _on_message(self, client, userdata, msg) -> None:
         try:
-            band = json.loads(msg.payload).get("band")
-        except (ValueError, AttributeError):
+            payload = json.loads(msg.payload)
+            plant_id = payload["plant"]
+            value = float(payload["value"])
+        except (ValueError, KeyError, AttributeError):
             return
-        if band != "LOW":
-            return  # only scarcity opens a round
+        agent = self.agents.get(plant_id)
+        if agent is None:
+            return
+        if agent.band(value) != "LOW":
+            return  # the agent judges itself fine — only its own scarcity opens a round
         now = time.monotonic()
         if not due(self.last_run_ts, now, self.cooldown_s):
             log.info("LOW on %s but within cooldown — skipping", msg.topic)

@@ -13,11 +13,10 @@
 #############  Attested observation — the witness-of-record shape  #############
 
 agora:ObservationShape a sh:NodeShape ;
-    rdfs:comment "Every attested observation must be a complete, gateway-signed, versioned reading." ;
+    rdfs:comment "Every attested observation is a complete, gateway-signed, versioned MEASUREMENT. No band — the band (LOW/OK/HIGH) is the agent's private judgment, not attested." ;
     sh:targetClass sosa:Observation ;
     sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:hasSimpleResult ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path agora:qualitativeBand ; sh:minCount 1 ; sh:maxCount 1 ; sh:class agora:Band ] ;
     sh:property [ sh:path sosa:resultTime ; sh:minCount 1 ; sh:datatype xsd:dateTime ] ;
     sh:property [ sh:path sosa:madeBySensor ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path agora:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;

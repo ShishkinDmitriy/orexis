@@ -7,7 +7,7 @@ from agora.auction import propose_match, run_round
 from agora.market import Limits, MarketState, Offer
 
 
-def charter(target=0.55, endowment=100.0, lpf=2.0, maxv=0.80) -> Charter:
+def charter(target=0.55, endowment=100.0, lpf=2.0, maxv=0.80, low=0.35, high=0.65) -> Charter:
     return Charter(
         agent="fern",
         plant_uri="http://example.org/agora#fern",
@@ -16,7 +16,26 @@ def charter(target=0.55, endowment=100.0, lpf=2.0, maxv=0.80) -> Charter:
         endowment=endowment,
         litres_per_fraction=lpf,
         max_value_per_l=maxv,
+        low=low,
+        high=high,
     )
+
+
+# --- the agent judges its own band (not the gateway) -----------------------
+
+def test_agent_computes_its_own_band():
+    a = Agent.from_charter(charter(low=0.35, high=0.65))
+    assert a.band(0.20) == "LOW"
+    assert a.band(0.50) == "OK"
+    assert a.band(0.80) == "HIGH"
+
+
+def test_same_reading_different_verdicts():
+    # The same 0.18 is LOW for a fern but OK for a succulent — desire-relative judgment.
+    fern = Agent.from_charter(charter(low=0.35, high=0.65))
+    succulent = Agent.from_charter(charter(low=0.12, high=0.30))
+    assert fern.band(0.18) == "LOW"
+    assert succulent.band(0.18) == "OK"
 
 
 # --- cede reflex -----------------------------------------------------------

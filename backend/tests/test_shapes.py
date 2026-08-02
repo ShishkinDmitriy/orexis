@@ -17,7 +17,6 @@ agora:obs_fern a sosa:Observation ;
   sosa:hasFeatureOfInterest agora:fern ;
   sosa:observedProperty agora:SoilMoisture ;
   sosa:hasSimpleResult "0.18"^^xsd:decimal ;
-  agora:qualitativeBand agora:LOW ;
   sosa:resultTime "2026-08-02T00:00:00+00:00"^^xsd:dateTime ;
   sosa:madeBySensor agora:moisture_sensor_fern ;
   agora:underWorldVersion 1 ;
@@ -41,8 +40,8 @@ def test_wellformed_conforms():
     assert _conforms(GOOD)
 
 
-def test_missing_band_fails():
-    assert not _conforms(GOOD.replace("  agora:qualitativeBand agora:LOW ;\n", ""))
+def test_missing_result_fails():
+    assert not _conforms(GOOD.replace('  sosa:hasSimpleResult "0.18"^^xsd:decimal ;\n', ""))
 
 
 def test_forged_provenance_fails():

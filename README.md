@@ -91,14 +91,16 @@ event-driven runner; `executor.actuate` in the config gates whether it opens val
   Shows current moisture per plant (colored by band) and a moisture-over-time chart. The
   dashboard and datasource are **provisioned** from `infra/grafana/` — recreating Grafana
   restores them, nothing lives only in the container.
-- **Attested current-state (what agents will cite)** — query Fuseki. Note the query
-  endpoint on this image is `/ds/sparql` (not `/ds/query`); updates go to `/ds/update`:
+- **Attested measurement (what agents cite)** — query Fuseki. The gateway attests the
+  *number*, not a band — "is it LOW?" is each agent's own call. Query endpoint on this image
+  is `/ds/sparql` (not `/ds/query`); updates go to `/ds/update`:
 
   ```bash
   curl -s http://localhost:3030/ds/sparql \
-    --data-urlencode 'query=PREFIX ag:<http://example.org/agora#>
-      SELECT ?plant ?band WHERE {
-        GRAPH <http://example.org/agora/graph/attested> { ?plant ag:hasCurrentMoisture ?band }
+    --data-urlencode 'query=PREFIX sosa:<http://www.w3.org/ns/sosa/>
+      SELECT ?plant ?value WHERE {
+        GRAPH <http://example.org/agora/graph/attested> {
+          ?o sosa:hasFeatureOfInterest ?plant ; sosa:hasSimpleResult ?value }
       }' \
     -H 'Accept: text/csv'
   ```
