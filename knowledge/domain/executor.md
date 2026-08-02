@@ -8,12 +8,18 @@ timestamp: 2026-08-01T00:00:00Z
 
 # What it is
 
-Trusted, stake-free infrastructure that holds the **actuate** power — the one power where a
-single bad act is physically irreversible (you can't un-flood a root-rotted plant). It is
-**not an agent**: reactive, no desires, no LLM. In the AuthN/AuthZ model it is the
-**resource server** — it consumes the capability grant that [clearing](/domain/clearing.md)
-issues and performs the water leg of the trade. See
-[authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
+> **Reframed ([thin-trusted-infra](/decisions/thin-trusted-infra.md)):** actuation is *not*
+> separate stake-free infra — the **resource owner (the [supplier](/domain/supplier.md))**
+> drives its own valves. The "executor" is the supplier's **actuation arm**, not a distinct
+> component. It *executes* a voucher (how much) + topology (which valve); it does not decide.
+> Safe not because the actuator is neutral, but because the amount is bounded *above* by
+> clearing (a valid, cleared voucher it can't forge) and *below* by the device fail-safe cap.
+> The description below still holds as the **resource server** role — it's just hosted by the
+> supplier now, not a standalone trusted party.
+
+Consumes a validated **voucher** and performs the water leg of the trade — the one act that is
+physically irreversible (you can't un-flood a root-rotted plant). It **decides nothing**:
+reactive, no desires, no LLM. See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
 
 # The actuation edge
 

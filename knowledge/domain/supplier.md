@@ -35,7 +35,15 @@ consumers and suppliers know each other (the attested plumbing topology) is in
 2. Compute a reserve price from cost. In **v1 the cost is a fixed constant** (e.g. €0.20/L);
    leave it as a clearly-marked replaceable input. See [strategic-supplier](/decisions/strategic-supplier.md).
 3. Run the auction, collect the participants' signed bids, and propose the match.
-4. Submit the proposed trade to [clearing](/domain/clearing.md) for validation + co-signature.
+4. Submit the proposed trade to [clearing](/domain/clearing.md) for validation (co-signature,
+   or public-function recomputation — see [thin-trusted-infra](/decisions/thin-trusted-infra.md)).
+5. **Actuate** — as the resource owner, drive its own valves to fulfil each voucher: *how
+   much* from the voucher, *which valve* from the topology. It executes, it does not decide;
+   bounded by the cleared voucher and the device fail-safe. This is the "executor" role, hosted
+   by the supplier. See [executor](/domain/executor.md).
+
+Mint is *not* the supplier's: [clearing](/domain/clearing.md) debits wallets; the supplier
+gets paid but cannot create currency. See [thin-trusted-infra](/decisions/thin-trusted-infra.md).
 
 # Seam
 

@@ -15,6 +15,7 @@ change something, to check you're not welding shut a planned extension.
 # Core architecture
 
 * [trust-boundary](/decisions/trust-boundary.md) - Agents cite but never author facts, mint currency, or actuate. Three privileged powers stay in trusted infrastructure.
+* [thin-trusted-infra](/decisions/thin-trusted-infra.md) - Relax the powers toward public functions + signed artifacts + bounded devices; the one irreducible trusted thing is the currency ledger (double-spend).
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation; the formal layer becomes load-bearing, not optional.
 * [deterministic-bid](/decisions/deterministic-bid.md) - The bid number is code; the LLM only produces the justification. Rhetoric can't move the number.
 * [english-vs-formal](/decisions/english-vs-formal.md) - English for what's contested, formal (RDF/SHACL) for what's trusted.

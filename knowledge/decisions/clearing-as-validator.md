@@ -23,6 +23,11 @@ proposed trade. **Clearing is a thin, stake-free validator** — a predicate, no
 optimizer — invoked *after* the trade is struck and *before* settlement. It certifies the
 trade is well-formed and co-signs it; it never decides who wins.
 
+Because it is a *pure predicate over signed inputs*, clearing is really a **public function**,
+not a trusted service: anyone can recompute `validate(trade, signed-orders)` and get the same
+answer. Two enforcement flavors — **co-signature** (trust its key; the v1 code) or
+**recompute + challenge** (no key; thinnest). See [thin-trusted-infra](/decisions/thin-trusted-infra.md).
+
 - An **allocator** is an optimizer (discretion → riggable, hard to trust).
 - A **validator** is a predicate (`valid? → bool`): no discretion, no strategy, trivially
   testable. The smallest possible trusted core.

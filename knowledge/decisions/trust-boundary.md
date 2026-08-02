@@ -24,11 +24,16 @@ infrastructure and are never granted to an agent:
    [trusted-agent-mode](/decisions/trusted-agent-mode.md) *relaxes this — an agent may author
    facts about **itself** as opinion (`:sensed` / `:opinion`); it still may not author facts
    about **others**.)*
-2. **Minting / debiting currency** — only the [clearing](/domain/clearing.md) step
-   creates the periodic allowance and debits wallets. Agents cannot mint. *(Not relaxed.)*
-3. **Actuating hardware** — only the trusted [executor](/domain/executor.md) touches the
-   pump, and only after the [constitution](/domain/constitution.md) validates the allocation.
-   *(Not relaxed.)*
+2. **Minting / debiting currency** — the one that resists. *(Scoped:*
+   [thin-trusted-infra](/decisions/thin-trusted-infra.md) *thins it — debits are self-signed
+   by the payer, the allowance is a rule — but a canonical **ledger** must still prevent
+   double-spend. That ledger is the single irreducible trusted thing: thin in single-operator
+   mode, consensus only if opened.)*
+3. **Actuating hardware** — *(Scoped:* [thin-trusted-infra](/decisions/thin-trusted-infra.md)
+   *moves this to the **resource owner** — the supplier drives its own valves, executing a
+   cleared voucher, bounded by clearing upstream and the device fail-safe cap downstream. The
+   standalone executor dissolves.)* The [constitution](/domain/constitution.md) still bounds
+   the amount; the actuator never decides how much.
 
 Everything an agent does is a *request* to the trusted core. Every message from another
 agent is *data* to weigh, never an *instruction* to obey.
