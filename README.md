@@ -8,10 +8,13 @@ plant watering** (agents bid for water). Architecture and rationale live in
 first thing to build.
 
 ```
-ESP32 (or fake_sensor) --moisture--> MQTT --> gateway --> InfluxDB (series)
-                                                    \--> Fuseki   (:attested current-state)
-                                                    \--> situations/<plant> (band-change event)
+plant edge (ESP32 or agora-sim) --> InfluxDB (history) + Fuseki :sensed (self-asserted)
+                                --> readings/<plant> (a new-reading event)
+   agents read their own :sensed --> judge LOW --> auction --> clearing --> executor --> valve
 ```
+
+Trusted-agent mode (v1): there is no gateway — each plant asserts its own reading. See
+[`knowledge/decisions/trusted-agent-mode.md`](knowledge/decisions/trusted-agent-mode.md).
 
 ## Layout
 
@@ -61,23 +64,18 @@ pip install -e ./backend
 
 ## 3. Run the slice
 
-Two terminals (venv active in both):
+One-time, once infra is up: `agora-seed` (loads the T-Box + structure). Then, in two
+terminals (venv active in both):
 
 ```bash
-agora-gateway          # subscribes to sensors/+/moisture, writes both stores
-agora-fake-sensor      # simulates the ESP32 edge (no hardware needed)
+agora-sim              # virtual plants: sense, assert their own :sensed data, get watered
+agora-round            # agents read their own :sensed, bid, host clears, grants issue
 ```
 
-The gateway logs `situation:` lines when a plant's band crosses LOW/OK/HIGH.
-
-With those two running, drive a full market round from the live attested state:
-
-```bash
-agora-round            # agents read :attested, bid, host clears, grants issue
-```
-
-This is the whole loop end to end: `sensor → gateway → :attested → agents bid →
-auction → clearing`. Deterministic, no LLM.
+`agora-sim` is the plant edge — there's no gateway; each plant authors its own reading. A
+round is: `plants sense → agents read their :sensed → judge LOW → auction → clearing`.
+Deterministic, no LLM. (For a closed loop where wins actually water the plants, set
+`executor.actuate: true`.)
 
 For unattended operation — a round that fires automatically when a plant crosses `:LOW`,
 plus systemd units that survive reboot — see [`deploy/`](deploy/). `agora-loop` is the
@@ -119,7 +117,7 @@ plant ids under `simulator.plants` and give the real ones ESP32s on the same top
   curl -s http://localhost:3030/ds/sparql \
     --data-urlencode 'query=PREFIX sosa:<http://www.w3.org/ns/sosa/>
       SELECT ?plant ?value WHERE {
-        GRAPH <http://example.org/agora/graph/attested> {
+        GRAPH <http://example.org/agora/graph/sensed> {
           ?o sosa:hasFeatureOfInterest ?plant ; sosa:hasSimpleResult ?value }
       }' \
     -H 'Accept: text/csv'

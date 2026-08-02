@@ -8,6 +8,14 @@ timestamp: 2026-08-01T00:00:00Z
 
 # What it is
 
+> **Status: decommissioned in v1** ([trusted-agent-mode](/decisions/trusted-agent-mode.md)).
+> Under the trusted-agent assumption there is no separate witness: each plant asserts its own
+> current-state (`:sensed` / `:opinion`, provenance = the plant). The gateway's store-writing
+> folds into the sensor edge (the virtual plant / device writes directly). This doc describes
+> the *adversarial-mode* witness — the role returns as a **signing sensor** (device cert) if
+> you open the society, never as a central process. The measurement-witness reasoning below
+> is why the role exists at all; it just no longer runs as its own component in v1.
+
 Trusted, stake-free infrastructure, and the **only** component that authors the `:attested`
 graph. It is **not a monolith** — it is a thin RPi process (≈ one file) that turns raw
 sensor numbers into citable qualitative state. Build it first: it owns the most settled

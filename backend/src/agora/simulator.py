@@ -10,7 +10,7 @@ the architecture was built for.
 Closes the loop: dry → the agent judges itself LOW → round → wins water → valve → wetter →
 cedes → dries again. Watering is driven by the market, not by chance.
 
-  agora-sim   (run instead of agora-fake-sensor; needs executor.actuate: true)
+  agora-sim   (the plant edge — no gateway; needs executor.actuate: true for the closed loop)
 """
 
 from __future__ import annotations
@@ -23,6 +23,8 @@ import time
 import paho.mqtt.client as mqtt
 
 from . import config
+from .influx_writer import InfluxWriter
+from .sensed_writer import SensedWriter
 
 log = logging.getLogger("sim")
 
@@ -58,10 +60,26 @@ class Simulator:
         ml_to_fraction = 1.0 / (lpf * 1000.0)
 
         ids = sim.get("plants") or [p["id"] for p in cfg["plants"]]
+        self.uris = {p["id"]: p["uri"] for p in cfg["plants"]}
         self.sensors = {p["id"]: p.get("sensor", p["id"]) for p in cfg["plants"]}
         self.plants = {
             pid: SimPlant(pid, random.uniform(0.4, 0.6), dry_rate, ml_to_fraction) for pid in ids
         }
+        self.world_version = int(cfg.get("world_version", 1))
+
+        # No gateway: each plant writes its OWN sensed data (self-asserted). See
+        # knowledge/decisions/trusted-agent-mode.md.
+        self.influx = InfluxWriter(
+            config.env("INFLUX_URL", "http://localhost:8086"),
+            config.env("INFLUX_TOKEN", "dev-token-change-me"),
+            config.env("INFLUX_ORG", "agora"),
+            config.env("INFLUX_BUCKET", "sensors"),
+        )
+        self.sensed = SensedWriter(
+            config.env("FUSEKI_URL", "http://localhost:3030/ds"),
+            "admin",
+            config.env("FUSEKI_PASSWORD", "admin"),
+        )
 
         self.mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.mqtt.on_connect = self._on_connect
@@ -93,8 +111,18 @@ class Simulator:
             while True:
                 for pid, p in self.plants.items():
                     p.dry()
-                    payload = {"value": round(p.moisture, 3), "sensor": self.sensors.get(pid, pid)}
-                    self.mqtt.publish(f"sensors/{pid}/moisture", json.dumps(payload))
+                    sensor = self.sensors.get(pid, pid)
+                    # the plant asserts its OWN reading: history (Influx) + current-state (:sensed)
+                    self.influx.write_reading(pid, sensor, p.moisture)
+                    try:
+                        self.sensed.write(self.uris[pid], pid, round(p.moisture, 3), sensor, self.world_version)
+                    except Exception as exc:
+                        log.error("sensed write failed for %s: %s", pid, exc)
+                    # announce a new reading so the round-runner can react
+                    self.mqtt.publish(
+                        f"readings/{pid}",
+                        json.dumps({"plant": pid, "uri": self.uris[pid], "value": round(p.moisture, 3)}),
+                    )
                 time.sleep(self.tick_s)
         except KeyboardInterrupt:
             pass

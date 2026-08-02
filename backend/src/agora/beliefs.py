@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import requests
 
-from .ontology import ATTESTED_GRAPH, SOSA
+from .ontology import SENSED_GRAPH, SOSA
 
 
 def _parse_moisture(results: dict) -> float | None:
@@ -32,7 +32,7 @@ class Beliefs:
         query = f"""
 PREFIX sosa: <{SOSA}>
 SELECT ?value WHERE {{
-  GRAPH <{ATTESTED_GRAPH}> {{
+  GRAPH <{SENSED_GRAPH}> {{
     ?obs sosa:hasFeatureOfInterest <{plant_uri}> ;
          sosa:hasSimpleResult ?value .
   }}

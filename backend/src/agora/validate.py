@@ -20,7 +20,7 @@ from pyshacl import validate as shacl_validate
 
 from . import config
 from .config import PROJECT_ROOT
-from .ontology import ATTESTED_GRAPH, STRUCTURE_GRAPH
+from .ontology import SENSED_GRAPH, STRUCTURE_GRAPH
 
 log = logging.getLogger("validate")
 
@@ -43,7 +43,7 @@ def validate() -> bool:
     data_url = fuseki.rstrip("/") + "/data"
 
     data = rdflib.Graph()
-    for graph_iri in (ATTESTED_GRAPH, STRUCTURE_GRAPH):
+    for graph_iri in (SENSED_GRAPH, STRUCTURE_GRAPH):
         data.parse(data=_fetch_graph(data_url, graph_iri), format="turtle")
 
     ontology = rdflib.Graph().parse(str(ONT_DIR / "agora.ttl"), format="turtle")

@@ -1,7 +1,8 @@
 [Unit]
 Description=Agora round runner (fires a round when a plant hits :LOW)
-After=agora-gateway.service
-Wants=agora-gateway.service
+After=agora-infra.service
+Wants=agora-infra.service
+# Needs the plant edge running too (agora-sim, or real devices) to supply readings + :sensed.
 
 [Service]
 WorkingDirectory=/home/dimonina/projects/not-yet

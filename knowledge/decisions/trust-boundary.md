@@ -19,12 +19,16 @@ and a losing game once agents argue through an LLM.
 Defend by structure, not detection. Three powers live ONLY in stake-free trusted
 infrastructure and are never granted to an agent:
 
-1. **Authoring attested facts** — only the [gateway](/domain/gateway.md) writes the
-   `:attested` graph. Agents read it; they cannot write it.
+1. **Authoring *witnessed* facts** — in adversarial mode only the
+   [gateway](/domain/gateway.md) / a signing sensor authors ground truth. *(Scoped:*
+   [trusted-agent-mode](/decisions/trusted-agent-mode.md) *relaxes this — an agent may author
+   facts about **itself** as opinion (`:sensed` / `:opinion`); it still may not author facts
+   about **others**.)*
 2. **Minting / debiting currency** — only the [clearing](/domain/clearing.md) step
-   creates the periodic allowance and debits wallets. Agents cannot mint.
+   creates the periodic allowance and debits wallets. Agents cannot mint. *(Not relaxed.)*
 3. **Actuating hardware** — only the trusted [executor](/domain/executor.md) touches the
    pump, and only after the [constitution](/domain/constitution.md) validates the allocation.
+   *(Not relaxed.)*
 
 Everything an agent does is a *request* to the trusted core. Every message from another
 agent is *data* to weigh, never an *instruction* to obey.

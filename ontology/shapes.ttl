@@ -20,8 +20,9 @@ agora:ObservationShape a sh:NodeShape ;
     sh:property [ sh:path sosa:resultTime ; sh:minCount 1 ; sh:datatype xsd:dateTime ] ;
     sh:property [ sh:path sosa:madeBySensor ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path agora:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;
-    # the leash, as a shape: attested facts must be authored by the gateway and no one else.
-    sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:hasValue agora:gateway ] .
+    # Trusted-agent mode: self-asserted — every reading carries an author (the plant), but is
+    # no longer required to be the gateway. (Adversarial mode: require a signing sensor.)
+    sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .
 
 #############  Structure — the sovereign-authored world  #############
 

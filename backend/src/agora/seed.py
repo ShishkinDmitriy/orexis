@@ -18,7 +18,7 @@ import requests
 
 from . import config
 from .config import PROJECT_ROOT
-from .ontology import ATTESTED_GRAPH, ONTOLOGY_GRAPH, STRUCTURE_GRAPH
+from .ontology import ONTOLOGY_GRAPH, OPINION_GRAPH, SENSED_GRAPH, STRUCTURE_GRAPH
 
 log = logging.getLogger("seed")
 
@@ -56,7 +56,8 @@ def build_structure_ttl(cfg: dict) -> str:
         "# typed graph catalog (graphs are resources, not magic strings)",
         f"<{ONTOLOGY_GRAPH}> a agora:OntologyGraph .",
         f"<{STRUCTURE_GRAPH}> a agora:StructureGraph .",
-        f"<{ATTESTED_GRAPH}> a agora:AttestedGraph ; agora:witness agora:gateway .",
+        f"<{SENSED_GRAPH}> a agora:SensedGraph .",
+        f"<{OPINION_GRAPH}> a agora:OpinionGraph .",
         "",
         "# supplier + sources (topology)",
         f"agora:{sup['id']} a agora:Supplier .",

@@ -12,14 +12,14 @@
 #################  Graphs — typed, self-describing (not magic strings)  #################
 
 agora:Graph a owl:Class ; rdfs:label "Named graph" .
-agora:AttestedGraph  a owl:Class ; rdfs:subClassOf agora:Graph ; rdfs:label "Attested graph" ;
-    rdfs:comment "Witness of record: gateway-signed, sensed current-state. Agent-read-only." .
+agora:SensedGraph  a owl:Class ; rdfs:subClassOf agora:Graph ; rdfs:label "Sensed graph" ;
+    rdfs:comment "Agents' sensor data — what each plant read (self-asserted, trusted-agent mode)." .
+agora:OpinionGraph a owl:Class ; rdfs:subClassOf agora:Graph ; rdfs:label "Opinion graph" ;
+    rdfs:comment "Agents' judgments — band, valuation, learning. Self-asserted." .
 agora:StructureGraph a owl:Class ; rdfs:subClassOf agora:Graph ; rdfs:label "Structure graph" ;
     rdfs:comment "Sovereign-authored durable structure: topology, charters, world version." .
 agora:OntologyGraph  a owl:Class ; rdfs:subClassOf agora:Graph ; rdfs:label "Ontology graph" ;
     rdfs:comment "This T-Box." .
-agora:witness a owl:ObjectProperty ; rdfs:domain agora:Graph ; rdfs:range prov:Agent ;
-    rdfs:label "witness" ; rdfs:comment "Who is allowed to author this graph." .
 
 #################  World + versioning  #################
 
@@ -72,7 +72,6 @@ agora:LOW  a agora:Band ; rdfs:label "LOW" .
 agora:OK   a agora:Band ; rdfs:label "OK" .
 agora:HIGH a agora:Band ; rdfs:label "HIGH" .
 
-#################  The witness of record  #################
-
-agora:gateway a prov:Agent ; rdfs:label "gateway" ;
-    rdfs:comment "The single witness of record; sole author of the attested graph." .
+#################  Authorship  #################
+# Trusted-agent mode: each plant authors its own :sensed / :opinion. No central witness.
+# (Adversarial mode restores a signing sensor as the author.)

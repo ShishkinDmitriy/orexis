@@ -1,0 +1,13 @@
+[Unit]
+Description=Agora plant edge (virtual plants: sense, assert :sensed, get watered)
+After=agora-infra.service
+Wants=agora-infra.service
+
+[Service]
+WorkingDirectory=/home/dimonina/projects/not-yet
+ExecStart=/home/dimonina/projects/not-yet/.venv/bin/agora-sim
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

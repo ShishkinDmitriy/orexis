@@ -69,6 +69,16 @@ are a v1 simplification. The target scopes them by *who has a stake* and *who ne
 Every writer uses the two stores (RDF current-state + Influx history) for its own scope; the
 **sovereign** reads all of it for observability.
 
+**Trusted-agent mode** (v1, see [trusted-agent-mode](/decisions/trusted-agent-mode.md)):
+there is no witness — each plant asserts its own state as opinion, split into two graphs that
+keep measurement apart from judgment:
+- `:sensed` — the agent's **sensor data** (`hasSimpleResult 0.18`), `prov:wasGeneratedBy` the
+  plant.
+- `:opinion` — the agent's **judgments** (band `LOW`, valuation), also the plant's.
+
+Re-introducing a witness (a signing sensor) for an adversarial society moves the provenance
+back to the device; the graphs are unchanged.
+
 Everything meaningful is a **named** graph so it can carry provenance. The default (unnamed)
 graph carries no provenance, so nothing load-bearing goes there. See
 [trust-boundary](/decisions/trust-boundary.md).

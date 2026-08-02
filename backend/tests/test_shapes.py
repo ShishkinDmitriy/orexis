@@ -20,7 +20,7 @@ agora:obs_fern a sosa:Observation ;
   sosa:resultTime "2026-08-02T00:00:00+00:00"^^xsd:dateTime ;
   sosa:madeBySensor agora:moisture_sensor_fern ;
   agora:underWorldVersion 1 ;
-  prov:wasGeneratedBy agora:gateway .
+  prov:wasGeneratedBy agora:fern .
 
 agora:fern a agora:Plant ; agora:servedBy agora:barrel1 ; agora:hasTarget 0.55 .
 agora:barrel1 a agora:WaterSource ; agora:suppliedBy agora:supplier .
@@ -44,9 +44,17 @@ def test_missing_result_fails():
     assert not _conforms(GOOD.replace('  sosa:hasSimpleResult "0.18"^^xsd:decimal ;\n', ""))
 
 
-def test_forged_provenance_fails():
-    # An attested observation NOT authored by the gateway must be rejected (the leash).
-    assert not _conforms(GOOD.replace("prov:wasGeneratedBy agora:gateway", "prov:wasGeneratedBy agora:fern"))
+def test_self_asserted_provenance_conforms():
+    # Trusted-agent mode: a plant authoring its own reading is valid.
+    assert _conforms(GOOD)  # GOOD is prov:wasGeneratedBy agora:fern
+
+
+def test_missing_provenance_fails():
+    bad = GOOD.replace(
+        "  agora:underWorldVersion 1 ;\n  prov:wasGeneratedBy agora:fern .",
+        "  agora:underWorldVersion 1 .",
+    )
+    assert not _conforms(bad)
 
 
 def test_missing_world_version_fails():

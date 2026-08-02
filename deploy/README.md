@@ -5,7 +5,9 @@ user-level, so these are **user** units.
 
 Services:
 - `agora-infra` — brings up the InfluxDB / Fuseki / Grafana containers (podman compose).
-- `agora-gateway` — sensor MQTT → InfluxDB + Fuseki `:attested`.
+- `agora-sim` — the plant edge: virtual plants sense, assert their own `:sensed` data, and
+  get watered (there is no gateway — each plant authors its own reading). For real hardware,
+  replace with devices that write `:sensed` directly.
 - `agora-loop` — fires a round when a plant crosses `:LOW` (event-driven).
 
 Mosquitto runs as a **system** service (`sudo systemctl enable --now mosquitto`), separate
@@ -25,8 +27,8 @@ systemctl --user daemon-reload
 systemctl --user start agora-infra
 .venv/bin/agora-seed
 
-# enable + start (order handled by the units)
-systemctl --user enable --now agora-gateway.service
+# enable + start (order handled by the units); set executor.actuate: true for the sim
+systemctl --user enable --now agora-sim.service
 systemctl --user enable --now agora-loop.service
 ```
 
@@ -36,12 +38,13 @@ Adjust the paths in the unit files if the repo or venv isn't at
 ## Watch it
 
 ```bash
-journalctl --user -u agora-gateway -f      # attestations / situations
+journalctl --user -u agora-sim -f          # plants sensing + getting watered
 journalctl --user -u agora-loop -f         # rounds firing on LOW
 ```
 
 Grafana dashboard: `http://<pi-ip>:3000/d/agora-moisture`.
-Attested state: `agora-validate` (SHACL) or the SPARQL curl in the top-level README.
+Belief base: `agora-validate` (SHACL over `:sensed` + `:structure`) or the SPARQL curl in the
+top-level README.
 
 ## Sensor-only phase (now)
 
