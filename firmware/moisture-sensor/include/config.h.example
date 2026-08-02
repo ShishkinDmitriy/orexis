@@ -23,4 +23,11 @@
 #define ADC_DRY 3200
 #define ADC_WET 1300
 
-#define PUBLISH_INTERVAL_MS 2000
+// --- Pull-based cadence (the agent owns how often; the board just senses + sleeps) ---
+// On each wake the board reads, publishes, then briefly listens for a retained cadence
+// command on sensors/<PLANT_ID>/cmd  ({"sleep_s":N} and/or {"sense":true}), then deep-sleeps.
+#define DEFAULT_SLEEP_S 60   // cadence until the agent sets one
+#define MIN_SLEEP_S 5        // don't sense more often than this (rate ceiling)
+#define MAX_SLEEP_S 900      // NEVER sleep longer than this — the constitutional cadence
+                             // floor, so a plant can't go blind through a drought
+#define CMD_WAIT_MS 1500     // listen window after publishing, to catch a cadence command
