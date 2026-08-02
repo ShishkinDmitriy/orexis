@@ -62,9 +62,9 @@ No one describes a world correctly the first time, so genesis is **not one-shot*
 - **Declarative reconciliation** — the sovereign narrates the *desired* world (or a change to
   it); the system computes the **delta** from the current world and proposes a *migration*,
   not a from-scratch rebuild.
-- **Versioned + provenance-stamped** — each ratification is a new world-version
-  (`world v2 ratified by :sovereign at T1 from story S1`), like a constitutional amendment or
-  a git commit. The genesis history is itself an auditable record.
+- **Versioned + provenance-stamped** — each ratification is a new world-version (see
+  *Versioning* below), like a constitutional amendment or a git commit. The genesis history
+  is itself an auditable record.
 - **Sovereign-only** — amendment is the same authority as amending the constitution.
 - **Migrations typed by disruptiveness** — *additive* (new plant/source: safe), *tuning*
   (adjust a target/threshold: safe-ish), *structural* (move a plant to a new source:
@@ -74,6 +74,31 @@ No one describes a world correctly the first time, so genesis is **not one-shot*
 - **Evidence can prompt amendment** — the system may *suggest* amendments from observed
   behaviour ("the fern keeps hitting rot at your stated target — lower it?"). A suggestion is
   a proposal; the sovereign still ratifies.
+
+# Versioning — a monotonic world-version
+
+Concretely: a single monotonic **world-version**, incremented on each manual (re-)genesis or
+amendment. It is used two ways, and the distinction matters:
+
+- **Structure carries it as identity** — the ratified topology + charters *are* world-vN.
+  When amended, the new structure is written as v(N+1) and the prior version is kept as an
+  **immutable snapshot**, not overwritten. The sequence of versions is append-only.
+- **State references it as provenance** — each runtime attestation (a moisture reading)
+  stamps *"sensed under world-vN"*. The reading still versions by its **timestamp** (it is a
+  time series); the world-version records *which structure was in force* when it was recorded,
+  so history stays interpretable after an amendment.
+
+Do **not** version the sensed value *by* genesis — moisture changes for reasons unrelated to
+the world's structure. Version the structure; reference it from state.
+
+This is what mechanically reconciles the line below: the world is **event-sourced** —
+amendments append a version, the version chain never mutates, and the "current" world is a
+projection of the latest. Rollback is a *forward* amendment (re-ratify an old version as the
+new current), never an edit of the past.
+
+v1: a `world_version` integer bumped by hand when the sovereign edits the config and
+re-seeds; the [gateway](/domain/gateway.md) stamps each attestation with it. Archiving prior
+versions and the diff/migration tooling are v2/v3.
 
 # The line that protects trust: structure mutable, history immutable
 
