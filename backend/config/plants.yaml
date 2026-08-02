@@ -64,6 +64,14 @@ supplier:
 
 # Executor dosing (RPi -> pump). ml_per_second calibrates litres -> open time;
 # max_dose_ml is a hard edge cap (defence-in-depth).
+# actuate: false = sensor-only phase — decide + log, but publish no valve commands.
+# Flip to true once a pump/valve is wired and calibrated.
 executor:
+  actuate: false
   ml_per_second: 10.0
   max_dose_ml: 1000.0
+
+# Event-driven round runner (agora-loop): a round fires when a plant hits :LOW,
+# no more often than this.
+round_loop:
+  cooldown_seconds: 30

@@ -1,0 +1,13 @@
+[Unit]
+Description=Agora round runner (fires a round when a plant hits :LOW)
+After=agora-gateway.service
+Wants=agora-gateway.service
+
+[Service]
+WorkingDirectory=/home/dimonina/projects/not-yet
+ExecStart=/home/dimonina/projects/not-yet/.venv/bin/agora-loop
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

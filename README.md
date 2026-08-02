@@ -79,6 +79,11 @@ agora-round            # agents read :attested, bid, host clears, grants issue
 This is the whole loop end to end: `sensor → gateway → :attested → agents bid →
 auction → clearing`. Deterministic, no LLM.
 
+For unattended operation — a round that fires automatically when a plant crosses `:LOW`,
+plus systemd units that survive reboot — see [`deploy/`](deploy/). `agora-loop` is the
+event-driven runner; `executor.actuate` in the config gates whether it opens valves
+(`false` = sensor-only: decide and log, don't water).
+
 ## 4. Inspect
 
 - **Grafana dashboard** — http://localhost:3000/d/agora-moisture (or `http://<pi-ip>:3000/...`

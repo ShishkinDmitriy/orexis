@@ -21,10 +21,13 @@ from .market import Limits, MarketState, Offer
 log = logging.getLogger("live")
 
 
-def run_live_round() -> None:
+def run_live_round(actuate: bool | None = None) -> None:
     cfg = config.load_plants()
     agents = load_agents(cfg)
     sup = cfg["supplier"]
+    exe_cfg = cfg.get("executor", {})
+    if actuate is None:
+        actuate = bool(exe_cfg.get("actuate", False))
     beliefs = Beliefs(config.env("FUSEKI_URL", "http://localhost:3030/ds"))
 
     bids = []
@@ -67,8 +70,11 @@ def run_live_round() -> None:
     for g in result.grants:
         log.info("  grant: %-9s %.3f L  debit €%.2f", g.sub, g.amount_l, g.debit)
 
+    if not actuate:
+        log.info("  (dry-run: actuation off — no valve commands published)")
+        return
+
     # Executor: turn each grant into a bounded valve command on MQTT (jti single-use).
-    exe_cfg = cfg.get("executor", {})
     publish, client = mqtt_publisher(
         config.env("MQTT_HOST", "localhost"), int(config.env("MQTT_PORT", "1883"))
     )
