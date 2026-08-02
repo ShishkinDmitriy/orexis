@@ -37,10 +37,15 @@ clearing ─grant─► executor (RPi) ─publish cmd─► MQTT ─► pump-ESP
 Sensing is read-only and low-stakes; actuation *writes to the physical world, irreversibly*.
 So the pump is a **guarded** MQTT subscriber, with four properties the sensor edge never needed:
 
-1. **Authenticated commands** — the pump acts only on *executor-authored* commands. On a
-   shared broker, anyone could publish `actuators/fern/valve` and bypass clearing + the
-   constitution. v1: trusted LAN + a dedicated command topic (structural). v2: the pump
-   verifies the **signed grant** / a device cert — the trust boundary, enforced on the wire.
+1. **Authenticated commands** — the pump acts only on a token signed by **both the host
+   (`match_sig`) and clearing (`val_sig`)**, and verifies both before opening. This is
+   implemented (Ed25519): the executor co-signs the command; the pump rejects anything
+   unsigned or tampered — a forged `actuators/fern/valve` message does nothing. This is the
+   principle **crypto proportional to irreversibility**: the (reversible) sensor path is
+   trusted in [trusted-agent-mode](/decisions/trusted-agent-mode.md), but the (irreversible)
+   valve is cryptographically gated — actuate is a power we did *not* relax. Keys are issued
+   once (`agora-keygen`); v1 signs both in-process, a separately-hosted supplier signing its
+   own match is a v2 refinement.
 2. **Idempotency** — dedup on `jti` (+ MQTT QoS 1), so a redelivered command never
    double-waters. QoS 0 could lose a command; QoS 1 + jti dedup is the right combo.
 3. **Fail-safe dosing** — commands are *bounded* ("open ~N seconds ≈ N ml, then auto-close").

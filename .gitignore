@@ -13,3 +13,6 @@ venv/
 .pio/
 firmware/**/include/config.h
 
+# signing keys (host + clearing) — never commit private keys
+keys/
+

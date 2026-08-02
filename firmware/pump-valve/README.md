@@ -11,7 +11,12 @@ executor (Pi) --publish--> actuators/<plant>/valve --subscribe--> ESP32 --> rela
 Because actuation is physically irreversible, this board is dumb but *guarded*
 (see [`knowledge/domain/executor.md`](../../knowledge/domain/executor.md)):
 
-- **Commands only from the executor topic** — v1 trusts the LAN; v2 verifies a signed grant.
+- **Commands only from a co-signed token** — the valve must open only on a command signed by
+  **both host (`match_sig`) and clearing (`val_sig`)** (Ed25519). The Python sim-pump already
+  verifies this (`agora.executor.verify_command`); **this firmware does not yet** — it's the
+  one guard still on the trusted-LAN assumption. Port: verify two Ed25519 signatures over the
+  canonical command (mbedTLS has Ed25519), with the host + clearing public keys flashed in.
+  Until then, keep this board on a trusted LAN.
 - **jti dedup** — a redelivered command (MQTT QoS 1) never double-waters.
 - **Fail-safe watchdog** — the valve never stays open past `MAX_OPEN_SECONDS`, and closes on
   any lost WiFi/MQTT connection. A hard local cap, whatever a command says.

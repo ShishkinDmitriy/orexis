@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 
-from . import config
+from . import config, signing
 from .agent import load_agents
 from .auction import run_round
 from .beliefs import Beliefs
@@ -79,10 +79,18 @@ def run_live_round(actuate: bool | None = None) -> None:
         config.env("MQTT_HOST", "localhost"), int(config.env("MQTT_PORT", "1883"))
     )
     try:
+        host_key = clearing_key = None
+        try:
+            host_key = signing.load_private("host")
+            clearing_key = signing.load_private("clearing")
+        except Exception:
+            log.warning("no signing keys (run agora-keygen) — the pump will reject commands")
         executor = Executor(
             publish,
             ml_per_second=exe_cfg.get("ml_per_second", 10.0),
             max_dose_ml=exe_cfg.get("max_dose_ml", 1000.0),
+            host_key=host_key,
+            clearing_key=clearing_key,
         )
         for cmd in executor.settle_all(result.grants):
             log.info("  actuate: %-9s open %.2fs (~%.0f ml)  -> actuators/%s/valve",

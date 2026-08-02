@@ -10,6 +10,7 @@ dependencies = [
     "PyYAML>=6.0",
     "python-dotenv>=1.0",
     "pyshacl>=0.26",
+    "cryptography>=42",
 ]
 
 [project.optional-dependencies]
@@ -21,6 +22,7 @@ agora-round = "agora.live:main"
 agora-loop = "agora.loop:main"
 agora-seed = "agora.seed:main"
 agora-validate = "agora.validate:main"
+agora-keygen = "agora.signing:main"
 
 [build-system]
 requires = ["setuptools>=68"]

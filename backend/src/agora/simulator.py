@@ -22,7 +22,8 @@ import time
 
 import paho.mqtt.client as mqtt
 
-from . import config
+from . import config, signing
+from .executor import verify_command
 from .influx_writer import InfluxWriter
 from .sensed_writer import SensedWriter
 
@@ -81,6 +82,14 @@ class Simulator:
             config.env("FUSEKI_PASSWORD", "admin"),
         )
 
+        # the pump verifies the co-signed token (host + clearing) before opening a valve
+        try:
+            self.host_pub = signing.load_public("host")
+            self.clearing_pub = signing.load_public("clearing")
+        except Exception:
+            self.host_pub = self.clearing_pub = None
+            log.warning("no signing keys (run agora-keygen) — valve commands will be REJECTED")
+
         self.mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.mqtt.on_connect = self._on_connect
         self.mqtt.on_message = self._on_message
@@ -97,9 +106,13 @@ class Simulator:
         except (ValueError, KeyError, TypeError):
             return
         p = self.plants.get(plant)
-        if p is not None:
-            p.water(ml)
-            log.info("%-9s watered %.0f ml -> moisture %.3f", plant, ml, p.moisture)
+        if p is None:
+            return
+        if not verify_command(payload, self.host_pub, self.clearing_pub):
+            log.warning("%-9s REJECTED valve command (bad/missing host+clearing signature)", plant)
+            return
+        p.water(ml)
+        log.info("%-9s watered %.0f ml -> moisture %.3f", plant, ml, p.moisture)
 
     def run(self) -> None:
         host = config.env("MQTT_HOST", "localhost")
