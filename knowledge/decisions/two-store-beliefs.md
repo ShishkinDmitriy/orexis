@@ -32,6 +32,13 @@ timestamp: 2026-08-01T00:00:00Z
 
 # The one seam to get right
 
-The numeric→qualitative threshold (0.18 → `:LOW`) lives in exactly ONE place: the
-[gateway](/domain/gateway.md), as part of attestation. Never per-agent, or agents disagree
-about ground truth.
+Only the **measurement** must be single-authored — the [gateway](/domain/gateway.md) signs
+`0.18` so nobody argues about the number. The numeric→qualitative *band* (0.18 → `:LOW`) is
+**not** ground truth: it is desire-relative, so it is **per-agent private judgment**, not a
+gateway authority. (An earlier version put the threshold in the gateway "or agents disagree
+about ground truth" — that conflated measurement with judgment; agents *are supposed* to
+disagree about what a reading means.) See
+[agent-centric-epistemics](/decisions/agent-centric-epistemics.md).
+
+Note the two-store pattern (RDF current-state + Influx history) is **general** — the gateway,
+clearing, and agents each use it for their own scope, scoped by who may author.

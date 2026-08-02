@@ -1,0 +1,111 @@
+---
+type: Decision
+title: Agent-centric epistemics — judgment, data, and initiative belong to the agent
+description: Push interpretation, private data, and perception to the agent; keep infra thin and honest; author by stake; disclose need-to-know; observe via sovereign god-view.
+status: accepted
+stage: v1
+tags: [epistemics, privacy, trust, sensing, metabolic-cost, observability]
+timestamp: 2026-08-02T00:00:00Z
+---
+
+# Context
+
+Reviewing the design we kept finding the same shape: **infra was doing things that are
+properly the agent's.** Four corrections, one principle. (The v1 *code* still does some of
+these the old way — this records the target it should move toward.)
+
+# 1. Measurement vs judgment — the gateway measures, the agent judges
+
+`0.18` is a fact (testimony). "Is 0.18 **LOW**?" depends on what the plant *wants* — a
+succulent shrugs, a fern is parched. So the band is **desire-relative interpretation, not
+ground truth**, and belongs to the agent, from the attested measurement + its charter
+target. Attesting `hasCurrentMoisture :LOW` into a shared graph was asserting a *judgment as
+testimony* — it broke "no shared knowledge, only testimony + private belief." The
+[gateway](/domain/gateway.md) attests the measurement; each [agent](/domain/agent.md)
+computes its own band. (The old "threshold is the gateway's one authority" reasoning in
+[two-store-beliefs](/decisions/two-store-beliefs.md) conflated measurement with judgment.)
+
+Keep separate: the **comfort band** (desire-relative → the agent's) vs the **rot limit**
+(objective physical harm → the [constitution](/domain/constitution.md)'s). Agents own what
+they *want*; the constitution owns what's *physically forbidden*.
+
+# 2. Minimal disclosure — the measurement is private-but-attested
+
+Nobody needs fern's moisture; the market needs fern's **bid**. A market *aggregates private
+information into a price without exposing it* — so moisture and value curve stay private.
+Private ≠ unattested: the gateway still signs the reading (honest), it is just **scoped
+private and disclosed need-to-know** (like a tax return — not published, but the auditor can
+demand it). The [constitution](/domain/constitution.md)'s rot check gets a plant's
+measurement on need-to-know; peers never do.
+
+- **Shared** = market moves (bids), trades, and the rules (structure, ontology, constitution).
+- **Private** = measurements, value curves, internal state.
+
+The leash flips from mandatory to **voluntary disclosure**: an agent *chooses* to reveal an
+attested fact in its justification to be believed (witness-signed, so credible). Persuasion
+with receipts, on its own terms.
+
+# 3. Agent-driven sensing — pull, not push; perception is a priced action
+
+The sensor should not push on its own cadence (that is the edge "acting"). Invert it: the
+**agent initiates sensing and decides how often**; the firmware is a thin reactive service
+(`sense` / `sleep`) — mechanism, not policy — symmetric with the pump. Honesty holds because
+**cadence ≠ content**: the agent controls *when* it looks, the witness still authors *what*
+it reads, and a bid must cite a **fresh-enough** attested reading (so stale, favourable data
+can't back a bid, and an agent can't stay willfully ignorant to bid high).
+
+The payoff: sensing costs energy (battery + budget), so **how much to observe becomes an
+economic decision** — bounded rationality extended from cognition to *perception*
+(see [single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md)). Guard: a
+**constitutional cadence floor** — autonomy over attention, but never the freedom to sleep
+through a drought and rot.
+
+# 4. Authored-by follows stake, not subject
+
+**"About X" ≠ "authored by X."** A fact an agent has a stake in is authored by the stake-free
+holder of that power:
+
+| Fact | About | Authored by | Why not the agent |
+|---|---|---|---|
+| moisture | the plant | **gateway** (witness) | it would report bone-dry |
+| wallet balance / debits | the agent | **clearing** (the mint) | it would print money |
+| win record | the agent | **clearing** (outcomes) | it would inflate its wins |
+| private beliefs / learning / self-view | the agent | **the agent** | nothing to gain by faking its own opinion |
+
+The agent authors only what it cannot gain by faking. Its self-metrics are welcome but
+**untrusted** (like `:claims`) — clearing checks solvency against *its* ledger, never a
+self-report. Provenance / write-scope distinguishes them.
+
+# The economy is a clearing-authored time series
+
+The two-store pattern (**RDF current-state + Influx history**) is *general*, not
+gateway-specific — every writer uses it for its own scope:
+
+```
+gateway  → measurements        → :attested/<plant>  (RDF) + influx     [witness]
+clearing → wallet / wins / grants → :ledger          (RDF) + influx     [mint / outcomes]
+agent    → private beliefs / self-view → :exp/<agent> (RDF) + influx     [own scope, untrusted]
+```
+
+So you can watch the *society* evolve (wallet, win-rate, water received over time), not just
+soil moisture.
+
+# Observability — sovereign god-view
+
+Minimal disclosure is **agent-to-agent**: fern never sees tomato's wallet. But the
+**sovereign** (operator) sees everything — so the economy dashboard is a sovereign-level
+view. Private among peers, transparent to the sovereign.
+
+# The one principle
+
+Push **judgment, data, and initiative** to the agent; keep infra a **thin honest mechanism**;
+**author by stake**; **disclose need-to-know**; **observe via the sovereign**. Every
+correction above is one face of this.
+
+# v1 vs the target
+
+Recorded now; the v1 code still: computes the band in the gateway, polls sensors on a fixed
+cadence, and keeps one global `:attested`. Moving to the target — gateway attests measurement
+only, per-plant private scopes, pull-based `sense`/`sleep` firmware, a clearing-authored
+ledger — is the v2 epistemics/observability work. The principle is pinned so the
+implementation can follow without re-litigation.

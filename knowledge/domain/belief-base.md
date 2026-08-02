@@ -56,6 +56,19 @@ agora:AttestedGraph ; agora:witness agora:gateway`) — a graph catalog, not mag
 Structure (durable, authored) is kept out of `:attested` (sensed, overwritten): different
 origins, different graphs. See [genesis](/decisions/genesis.md).
 
+**Authored by stake, disclosed need-to-know** (see
+[agent-centric-epistemics](/decisions/agent-centric-epistemics.md)): the graph tiers above
+are a v1 simplification. The target scopes them by *who has a stake* and *who needs to know*:
+- `:attested/<plant>` — the plant's own signed measurement, **private / need-to-know**
+  (peers never read it; the constitution and the plant do). Moisture is the plant's business;
+  the market needs its *bid*, not its moisture.
+- `:ledger` — wallet balances, debits, and grants, **authored by clearing** (the mint), not
+  by the agents they are *about* ("about X" ≠ "authored by X").
+- `:exp/<agent>` — the agent's private beliefs *and* its own (untrusted) self-metrics.
+
+Every writer uses the two stores (RDF current-state + Influx history) for its own scope; the
+**sovereign** reads all of it for observability.
+
 Everything meaningful is a **named** graph so it can carry provenance. The default (unnamed)
 graph carries no provenance, so nothing load-bearing goes there. See
 [trust-boundary](/decisions/trust-boundary.md).

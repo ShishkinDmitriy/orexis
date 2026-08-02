@@ -18,8 +18,16 @@ The measurement root is split across the hardware, and the split is the point:
 - **ESP32 = transducer.** Reads the moisture sensor (ADC/I2C) and emits **raw numbers**. It
   is the honest sensor edge precisely because it is stake-free — no wallet, no LLM, no
   desire, so it *cannot* be self-interested. It makes no judgements.
-- **Gateway (RPi) = attestor.** Applies the qualitative judgement, stamps provenance, and
-  materializes current-state into `:attested`.
+- **Gateway (RPi) = attestor.** Signs the **measurement**, stamps provenance, and files it
+  into the attested current-state.
+
+> **Correction (see [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)):**
+> the gateway attests the *measurement*, not the *judgment*. "Is 0.18 LOW?" is
+> desire-relative — a succulent shrugs where a fern is parched — so the **band is the
+> agent's private opinion**, computed from the attested value + its target, not the
+> gateway's call. The gateway's enduring role is the **honest measurement witness** (the
+> sealed meter-reader), and the reading is scoped **private / need-to-know**, not broadcast.
+> The band logic in the sections below is what the v1 code still does; it moves to the agent.
 
 # The reading is split, not the trust
 
@@ -93,7 +101,9 @@ See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
 
 # Invariant
 
-The gateway is the single **witness of record** — the sole author of attested testimony
-(not "shared knowledge"; agents form their own private beliefs from it). The ESP32 supplies
-numbers; the gateway supplies the judgement; agents never write either store. See
-[trust-boundary](/decisions/trust-boundary.md) and [belief-base](/domain/belief-base.md).
+The gateway is the single **witness of record** — the sole author of attested *measurements*
+(not "shared knowledge", and not judgments; agents form their own private beliefs and bands
+from them). The ESP32 supplies numbers; the gateway signs them; agents never write the
+attested store. See [trust-boundary](/decisions/trust-boundary.md),
+[belief-base](/domain/belief-base.md), and
+[agent-centric-epistemics](/decisions/agent-centric-epistemics.md).

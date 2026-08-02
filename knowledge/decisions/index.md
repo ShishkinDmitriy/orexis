@@ -18,6 +18,7 @@ change something, to check you're not welding shut a planned extension.
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation; the formal layer becomes load-bearing, not optional.
 * [deterministic-bid](/decisions/deterministic-bid.md) - The bid number is code; the LLM only produces the justification. Rhetoric can't move the number.
 * [english-vs-formal](/decisions/english-vs-formal.md) - English for what's contested, formal (RDF/SHACL) for what's trusted.
+* [agent-centric-epistemics](/decisions/agent-centric-epistemics.md) - Judgment, private data, and perception belong to the agent; infra is thin honest mechanism; author by stake; disclose need-to-know; observe via sovereign.
 
 # Identity & authorization
 

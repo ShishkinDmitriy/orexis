@@ -31,6 +31,21 @@ The LLM is a *stateless pure function* called inside a plan body; memory lives i
 and beliefs. This is what lets many agents share one model yet hold separate, stable
 positions.
 
+# What an agent owns (judgment, private data, perception)
+
+Interpretation and initiative belong to the agent, not infra (see
+[agent-centric-epistemics](/decisions/agent-centric-epistemics.md)):
+
+- **Its own band.** "Am I `:LOW`?" is desire-relative — the agent computes it from the
+  attested measurement + its charter target. The gateway attests the number, not the verdict.
+- **Its private state.** Its moisture (need-to-know), value curve, and beliefs are the
+  agent's — attested but scoped private. It shares its *bid*, not its state.
+- **Its perception.** The agent drives sensing (pull, not push) and how often — it can even
+  tell the sensor to sleep — paying for it (perception is a priced action); a bid must cite a
+  *fresh* reading.
+- **Its self-metrics.** It may log its own view (wallet, wins) as **untrusted** claims; the
+  authoritative ledger is clearing's.
+
 # What an agent may NOT do
 
 The three privileged powers are never granted to an agent, no matter how spotless its
