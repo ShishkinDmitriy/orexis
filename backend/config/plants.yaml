@@ -77,3 +77,11 @@ executor:
 # no more often than this.
 round_loop:
   cooldown_seconds: 30
+
+# Virtual plants (agora-sim) — closed-loop soil models that stand in for real hardware.
+# Watering is driven by the market (needs executor.actuate: true). Omit `plants` (or leave
+# empty) to simulate all; list a subset to mix virtual + real hardware plants.
+simulator:
+  tick_seconds: 2
+  dry_rate: 0.01           # moisture lost per tick
+  plants: [fern, tomato, succulent]

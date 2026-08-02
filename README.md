@@ -84,6 +84,26 @@ plus systemd units that survive reboot — see [`deploy/`](deploy/). `agora-loop
 event-driven runner; `executor.actuate` in the config gates whether it opens valves
 (`false` = sensor-only: decide and log, don't water).
 
+## Run the whole society in simulation (no hardware)
+
+Because the physical edge is dumb and interchangeable, **virtual plants** (soil models) are
+indistinguishable from real ones to the gateway and the auction — so you can run and watch
+the entire society in software, and even mix virtual + real plants. `agora-sim` replaces the
+sensor edge *and* the pump: each virtual plant dries over time, publishes its moisture, and
+gains moisture when it wins water — a closed loop driven by the market.
+
+```bash
+# set executor.actuate: true in backend/config/plants.yaml (the market must open valves)
+agora-gateway        # attests measurements
+agora-sim            # virtual plants: dry, publish readings, get watered on wins
+agora-loop           # fires a round when an agent judges itself LOW
+```
+
+Watch the plants dry, hit their own LOW, win water, and recover — `journalctl`/logs show
+`running a round` → grants → `watered N ml -> moisture ...`. Grafana shows the moisture
+oscillate around each plant's target. To mix with real hardware, list only the *virtual*
+plant ids under `simulator.plants` and give the real ones ESP32s on the same topics.
+
 ## 4. Inspect
 
 - **Grafana dashboard** — http://localhost:3000/d/agora-moisture (or `http://<pi-ip>:3000/...`
