@@ -117,6 +117,13 @@ pip install -e "./backend[dev]"
 pytest backend -q
 ```
 
+Validate the live belief base against the SHACL shapes (`ontology/shapes.ttl`) — every
+attested observation must be complete, gateway-signed, and world-versioned:
+
+```bash
+agora-validate         # SHACL over :attested + :structure; exit 0 = conforms
+```
+
 ## What's next
 
 Built: `clearing` ✓ (validator + settlement grant), `auction` ✓ (host proposes the match),

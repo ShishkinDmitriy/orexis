@@ -1,0 +1,39 @@
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix agora: <http://example.org/agora#> .
+@prefix sosa:  <http://www.w3.org/ns/sosa/> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+# SHACL shapes for Agora. The constitution is "checked by code that can't be argued with";
+# these are the first such checks — they validate the *shape* of the witness of record and
+# the sovereign-authored structure. Run with `agora-validate`.
+# See knowledge/domain/constitution.md, knowledge/domain/belief-base.md.
+
+#############  Attested observation — the witness-of-record shape  #############
+
+agora:ObservationShape a sh:NodeShape ;
+    rdfs:comment "Every attested observation must be a complete, gateway-signed, versioned reading." ;
+    sh:targetClass sosa:Observation ;
+    sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sosa:hasSimpleResult ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path agora:qualitativeBand ; sh:minCount 1 ; sh:maxCount 1 ; sh:class agora:Band ] ;
+    sh:property [ sh:path sosa:resultTime ; sh:minCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path sosa:madeBySensor ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path agora:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;
+    # the leash, as a shape: attested facts must be authored by the gateway and no one else.
+    sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:hasValue agora:gateway ] .
+
+#############  Structure — the sovereign-authored world  #############
+
+agora:PlantShape a sh:NodeShape ;
+    rdfs:comment "Every plant has a chartered target (0..1) and draws from a source." ;
+    sh:targetClass agora:Plant ;
+    sh:property [ sh:path agora:hasTarget ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ] ;
+    sh:property [ sh:path agora:servedBy ; sh:minCount 1 ; sh:class agora:WaterSource ] .
+
+agora:WaterSourceShape a sh:NodeShape ;
+    rdfs:comment "Every source is supplied by a supplier." ;
+    sh:targetClass agora:WaterSource ;
+    sh:property [ sh:path agora:suppliedBy ; sh:minCount 1 ; sh:class agora:Supplier ] .

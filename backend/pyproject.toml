@@ -9,6 +9,7 @@ dependencies = [
     "requests>=2.31",
     "PyYAML>=6.0",
     "python-dotenv>=1.0",
+    "pyshacl>=0.26",
 ]
 
 [project.optional-dependencies]
@@ -19,6 +20,7 @@ agora-gateway = "agora.gateway:main"
 agora-fake-sensor = "agora.fake_sensor:main"
 agora-round = "agora.live:main"
 agora-seed = "agora.seed:main"
+agora-validate = "agora.validate:main"
 
 [build-system]
 requires = ["setuptools>=68"]

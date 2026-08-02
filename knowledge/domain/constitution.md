@@ -23,9 +23,13 @@ independently before any action fires.
 # How it's enforced
 
 As **SHACL shapes / rule-engine checks** over the RDF belief base — validates or doesn't,
-with no argument. Run by the [clearing](/domain/clearing.md) step (or a rule-service it
-calls), in parallel with bidding. This is why the constitution must be formal, not English:
-the more persuasive the agents, the more the backstop must be immune to persuasion. See
+with no argument. The first shapes exist (`ontology/shapes.ttl`, run by `agora-validate`):
+they enforce the *witness-of-record shape* — every attested observation must be complete,
+world-versioned, and authored by the gateway and no one else (the leash, as a shape). The
+allocation constraints (no watering past rot, total ≤ tank) become SHACL over the proposed
+trade next, run by the [clearing](/domain/clearing.md) step in parallel with bidding. This is
+why the constitution must be formal, not English: the more persuasive the agents, the more
+the backstop must be immune to persuasion. See
 [english-vs-formal](/decisions/english-vs-formal.md).
 
 # Amendment
