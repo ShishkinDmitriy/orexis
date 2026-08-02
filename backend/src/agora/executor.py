@@ -1,8 +1,8 @@
 """Executor — the trusted actuator (RPi side).
 
-Consumes a validated capability grant and publishes a *bounded* valve command to the
+Consumes a validated capability voucher and publishes a *bounded* valve command to the
 pump-ESP32 over MQTT. Decides nothing; enforces single-use (jti) and a hard dose cap
-(defence-in-depth even though the grant already passed the constitution). The pump is a
+(defence-in-depth even though the voucher already passed the constitution). The pump is a
 guarded subscriber that runs the fail-safe watchdog.
 
 See knowledge/domain/executor.md.
@@ -15,7 +15,7 @@ from dataclasses import asdict, dataclass
 from typing import Callable
 
 from . import signing
-from .clearing import Grant
+from .clearing import Voucher
 
 # Publish sink: (topic, payload_dict) -> None. Injected so the executor is testable
 # without a broker; the default factory below wires a real MQTT publisher.
@@ -49,35 +49,35 @@ class Executor:
         self.clearing_key = clearing_key
         self._settled: set[str] = set()
 
-    def command_for(self, grant: Grant) -> Command:
-        ml = min(grant.amount_l * 1000.0, self.max_dose_ml)
+    def command_for(self, voucher: Voucher) -> Command:
+        ml = min(voucher.amount_l * 1000.0, self.max_dose_ml)
         seconds = round(ml / self.ml_per_second, 2)
         return Command(
-            jti=grant.jti,
-            plant=grant.sub,
-            scope=grant.scope,
+            jti=voucher.jti,
+            plant=voucher.sub,
+            scope=voucher.scope,
             ml=round(ml, 1),
             seconds=seconds,
-            round_id=grant.round_id,
+            round_id=voucher.round_id,
         )
 
-    def settle(self, grant: Grant) -> Command:
-        """Publish the bounded command for a grant, co-signed (host + clearing) so the pump
+    def settle(self, voucher: Voucher) -> Command:
+        """Publish the bounded command for a voucher, co-signed (host + clearing) so the pump
         can verify the actuate boundary. Raises on replay (single-use)."""
-        if grant.jti in self._settled:
-            raise ValueError(f"replay: jti {grant.jti} already settled")
-        cmd = self.command_for(grant)
+        if voucher.jti in self._settled:
+            raise ValueError(f"replay: jti {voucher.jti} already settled")
+        cmd = self.command_for(voucher)
         payload = asdict(cmd)
         if self.host_key is not None and self.clearing_key is not None:
             data = signing.canonical(payload)  # the command fields (no sig yet)
             payload["match_sig"] = signing.sign(self.host_key, data)  # the seller authorises
             payload["val_sig"] = signing.sign(self.clearing_key, data)  # clearing validates
         self.publish(f"actuators/{cmd.plant}/valve", payload)
-        self._settled.add(grant.jti)
+        self._settled.add(voucher.jti)
         return cmd
 
-    def settle_all(self, grants: list[Grant]) -> list[Command]:
-        return [self.settle(g) for g in grants]
+    def settle_all(self, vouchers: list[Voucher]) -> list[Command]:
+        return [self.settle(g) for g in vouchers]
 
 
 def verify_command(payload: dict, host_pub, clearing_pub) -> bool:

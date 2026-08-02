@@ -3,7 +3,7 @@
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from agora import signing
-from agora.clearing import Grant
+from agora.clearing import Voucher
 from agora.executor import Executor, verify_command
 
 
@@ -38,7 +38,7 @@ def _signing_executor():
 
 
 def _grant(jti="j1"):
-    return Grant(sub="fern", scope="actuate:valve/fern", amount_l=0.4, debit=0.2, round_id="R-1", jti=jti)
+    return Voucher(sub="fern", scope="actuate:valve/fern", amount_l=0.4, debit=0.2, round_id="R-1", jti=jti)
 
 
 def test_settled_command_is_co_signed_and_verifies():

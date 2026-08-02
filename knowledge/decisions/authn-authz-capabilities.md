@@ -16,20 +16,30 @@ leaning on mandatory, always-on central infrastructure. The unlock: express both
 agent is* and *what it may do* as **signed artifacts an agent carries**, so verification is
 local and needs no hot-path lookup.
 
-# Decision — two self-verifying layers
+# Decision — three self-verifying capabilities
 
-Split authentication from authorization; make each a signed artifact verifiable against a
-public key alone.
+Split authentication from authorization, and split authorization into *standing* vs *earned*.
+Each is a signed artifact verifiable against a public key alone. **Don't conflate them** — a
+static device binding and a per-round entitlement differ on every axis.
 
-- **AuthN — certificate = *who you are*.** Durable identity. Sovereign-issued. Answers "is
-  this really Fern, and is that identity still valid."
-- **AuthZ — capability grant = *what you may do now*.** Ephemeral, scoped, expiring.
-  Issued per round by [clearing](/domain/clearing.md) after the
-  [constitution](/domain/constitution.md) check. Answers "may Fern receive 2 L this round."
+- **Cert = *who you are*.** Durable identity. Sovereign-issued. "Is this really Fern?"
+- **Access grant = *which devices are yours*.** Static, **granted** by the sovereign at
+  [genesis](/decisions/genesis.md); binds an agent ↔ a device (its sensor / its valve).
+  Long-lived. "Is this Fern's valve/sensor?"
+- **Voucher = *what you may do right now*.** Dynamic, **won** in the auction — issued per
+  round by the host + [clearing](/domain/clearing.md) after the
+  [constitution](/domain/constitution.md) check, co-signed, single-use (`jti`), expiring.
+  "Did Fern win *this* 2 L dispense?"
 
-Both are checked *locally* by any verifier holding the issuer's public key. No registry is
-consulted on the hot path — the artifact carries its own proof. This is what keeps identity
-and authorization off the list of mandatory always-on services.
+The distinction that matters: an **access grant is *granted*** (standing, who your devices
+are); a **voucher is *won*** (ephemeral, what you earned this round). The two never merge.
+
+Verifier by edge: a **sensor** checks cert + **access grant** (reading isn't won — you read
+your own sensor whenever). An **actuator** checks cert + **access grant** *and* **voucher**
+(it's your valve *and* you won this dispense) — neither alone opens it.
+
+All three are checked *locally* by any verifier holding the issuer's public key — no hot-path
+registry; the artifact carries its own proof.
 
 # Certificates (identity)
 
@@ -63,10 +73,11 @@ and authorization off the list of mandatory always-on services.
   grant "revocation" is free. Only the durable cert needs an explicit, published, signed
   **revocation list**.
 
-# Capability grants (authorization) as the auction result
+# The voucher (auction result) — won, not granted
 
-The output of [clearing](/domain/clearing.md) is modeled explicitly as a signed capability —
-concretely a **JWT (JWS)**:
+The output of the auction is the **voucher**: what you *won* the right to do this round
+(distinct from the *access grant* that statically binds you to the device). Modeled as a
+signed capability — concretely a **JWT (JWS)**:
 
 ```json
 {
@@ -100,6 +111,30 @@ concretely a **JWT (JWS)**:
   The executor honors only a fully-signed token. This is what stops a host fabricating a
   counterparty's obligation or shill-bidding — it can neither sign as another agent nor
   out-mint its wallet. See [clearing-as-validator](/decisions/clearing-as-validator.md).
+
+# Connection determines authorization — the trust boundary is the network boundary
+
+A capability token is needed *exactly at a network boundary*, not everywhere. Whether an edge
+needs authorization depends on how it's connected, and the **same rule covers sensors and
+actuators**:
+
+- **Direct / local** — a sensor or relay wired to the agent's own device (a Pi's GPIO/I²C, or
+  on-chip). **Physical possession is the credential**: the agent reads its sensor or drives
+  its relay by a direct driver call, no token — nobody else can reach the pin. (A Raspberry Pi
+  with its own sensors + relay is this case; the local agent/executor calls them directly.)
+- **Networked** — a remote device over MQTT: the channel is shared and spoofable, so the
+  endpoint **verifies a capability**. A sensor checks the **access grant** (isolation — only
+  the linked agent reads it, granted at [genesis](/decisions/genesis.md)); an actuator checks
+  the **access grant** *and* the co-signed **voucher** (only the auction winner, and only its
+  own valve, opens it).
+
+It grades with the threat: direct → nothing; networked + trusted LAN → a token for
+**isolation**; networked + adversarial → *also* **signed readings** for **integrity** (the
+signing sensor). Local multi-tenant isolation (several agents on one Pi) is an OS concern
+(process / file perms), not a network token.
+
+This is why the in-process simulator needs no sensor auth (the direct case) while the pump
+command is co-signed (the pump is networked) — consistent, not an oversight.
 
 # Cryptographic stance (this *is* the trust boundary)
 

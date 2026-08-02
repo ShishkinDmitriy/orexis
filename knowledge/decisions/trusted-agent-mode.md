@@ -41,15 +41,20 @@ from the verdict.
 # Sensor access is capability-gated (isolation, not integrity)
 
 The sensor is not wide-open. At **[genesis](/decisions/genesis.md)** the sovereign links each
-agent to its sensor(s) and issues a **read-grant** — a capability the sensor checks on every
-read (the same [capability model](/decisions/authn-authz-capabilities.md) as settlement,
-applied to reads). This buys:
+agent to its sensor(s) with an **access grant** — a static capability (agent ↔ device) the
+sensor checks on each read (distinct from the *voucher* won per round at the auction; see
+[authn-authz-capabilities](/decisions/authn-authz-capabilities.md)). This buys:
 
 - **Isolation** — only fern's agent may read fern's sensor; no agent spies on another's
   sensor (consistent with minimal disclosure — each reads only its own).
 
 It does **not** buy **integrity** — once fern's agent holds the reading, nothing stops it
 opining a different number. In trusted mode we accept that; honesty of self-report is assumed.
+
+The access grant is only needed for a **networked** sensor. A sensor wired directly to the
+agent's own device (a Pi's GPIO) needs none — physical possession is the credential, and the
+agent just reads it. Authorization tracks the connection: see *Connection determines
+authorization* in [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
 
 # What is given up, what is kept
 

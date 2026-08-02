@@ -73,9 +73,9 @@ def test_round_happy_path_issues_grants():
     st = state(bids={b.agent: b for b in bids})
     result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1")
     assert result.validation.ok, result.validation.violations
-    assert {g.sub for g in result.grants} == {"tomato", "fern"}
+    assert {g.sub for g in result.vouchers} == {"tomato", "fern"}
     assert result.trade.total_qty_l == 5.0
-    tomato = next(g for g in result.grants if g.sub == "tomato")
+    tomato = next(g for g in result.vouchers if g.sub == "tomato")
     assert tomato.debit == pytest.approx(4.0 * 0.55)
 
 
@@ -88,7 +88,7 @@ def test_round_red_light_on_constitution():
     )
     result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1")
     assert not result.validation.ok
-    assert result.grants == []
+    assert result.vouchers == []
     assert any("rot headroom" in v for v in result.validation.violations)
 
 
@@ -97,5 +97,5 @@ def test_round_red_light_on_insolvency():
     st = state(bids={b.agent: b for b in bids}, wallets={"fern": 0.50})  # cost 1.50 > 0.50
     result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1")
     assert not result.validation.ok
-    assert result.grants == []
+    assert result.vouchers == []
     assert any("exceeds wallet" in v for v in result.validation.violations)

@@ -4,7 +4,7 @@ import dataclasses
 
 import pytest
 
-from agora.clearing import clear, issue_grants, validate
+from agora.clearing import clear, issue_vouchers, validate
 from agora.market import Bid, Limits, MarketState, Offer, Trade, TradeLine
 
 
@@ -150,20 +150,20 @@ def test_past_rot_headroom_rejected():
     assert any("rot headroom" in x for x in result.violations)
 
 
-# --- grants / clear() ------------------------------------------------------
+# --- vouchers / clear() ------------------------------------------------------
 
 def test_clear_issues_grants_for_valid_trade():
     trade = trade_with(
         TradeLine("tomato", qty_l=4.0, price_per_l=0.40),
         TradeLine("fern", qty_l=1.0, price_per_l=0.40),
     )
-    grants = clear(trade, base_state(), round_id="R-1")
-    assert {g.sub for g in grants} == {"tomato", "fern"}
-    tomato = next(g for g in grants if g.sub == "tomato")
+    vouchers = clear(trade, base_state(), round_id="R-1")
+    assert {g.sub for g in vouchers} == {"tomato", "fern"}
+    tomato = next(g for g in vouchers if g.sub == "tomato")
     assert tomato.amount_l == 4.0
     assert tomato.debit == pytest.approx(1.60)  # 4.0 * 0.40
     assert tomato.scope == "actuate:valve/tomato"
-    assert len({g.jti for g in grants}) == 2  # unique anti-replay ids
+    assert len({g.jti for g in vouchers}) == 2  # unique anti-replay ids
 
 
 def test_clear_raises_on_invalid_trade():

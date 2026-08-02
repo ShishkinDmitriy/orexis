@@ -134,7 +134,7 @@ def test_agents_drive_a_full_round():
 
     result = run_round(offer, bids, state, round_id="R-1")
     assert result.validation.ok, result.validation.violations
-    assert result.grants  # someone got water
+    assert result.vouchers  # someone got water
     assert result.trade.total_qty_l <= 2.0 + 1e-9  # supply respected
 
 

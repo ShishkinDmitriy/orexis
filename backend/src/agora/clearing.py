@@ -7,7 +7,7 @@ the proposed trade cheats. A pure predicate: `validate(trade, state) -> Validati
 Checks (see knowledge/decisions/clearing-as-validator.md):
   identity · order-consistency · conservation · solvency · constitution
 
-v1 note: grants are unsigned in-process objects — the JWS/co-signature is a v2 transport
+v1 note: vouchers are unsigned in-process objects — the JWS/co-signature is a v2 transport
 change, not a logic change. See knowledge/decisions/authn-authz-capabilities.md.
 """
 
@@ -81,7 +81,7 @@ def validate(trade: Trade, state: MarketState) -> Validation:
 
 
 @dataclass(frozen=True)
-class Grant:
+class Voucher:
     """Settlement token (capability). v1: unsigned, in-process — the signature chain
     (order_sig / match_sig / val_sig) is added later without changing this shape.
     See knowledge/decisions/authn-authz-capabilities.md."""
@@ -94,11 +94,11 @@ class Grant:
     jti: str  # anti-replay id
 
 
-def issue_grants(trade: Trade, round_id: str) -> list[Grant]:
-    """Turn a *validated* trade into per-buyer settlement grants. Caller must have
+def issue_vouchers(trade: Trade, round_id: str) -> list[Voucher]:
+    """Turn a *validated* trade into per-buyer settlement vouchers. Caller must have
     confirmed `validate(trade, state).ok` first."""
     return [
-        Grant(
+        Voucher(
             sub=line.agent,
             scope=f"actuate:valve/{line.agent}",
             amount_l=line.qty_l,
@@ -110,9 +110,9 @@ def issue_grants(trade: Trade, round_id: str) -> list[Grant]:
     ]
 
 
-def clear(trade: Trade, state: MarketState, round_id: str) -> list[Grant]:
-    """Validate then issue grants; raise if the trade is invalid."""
+def clear(trade: Trade, state: MarketState, round_id: str) -> list[Voucher]:
+    """Validate then issue vouchers; raise if the trade is invalid."""
     result = validate(trade, state)
     if not result.ok:
         raise ValueError("invalid trade: " + "; ".join(result.violations))
-    return issue_grants(trade, round_id)
+    return issue_vouchers(trade, round_id)

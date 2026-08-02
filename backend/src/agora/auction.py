@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-from .clearing import Grant, Validation, issue_grants, validate
+from .clearing import Voucher, Validation, issue_vouchers, validate
 from .market import EPS, Bid, MarketState, Offer, Trade, TradeLine
 
 
@@ -50,12 +50,12 @@ class RoundResult:
 
     trade: Trade
     validation: Validation
-    grants: list[Grant]  # empty unless the trade validated
+    vouchers: list[Voucher]  # empty unless the trade validated
 
 
 def run_round(offer: Offer, bids: Iterable[Bid], state: MarketState, round_id: str) -> RoundResult:
-    """Host proposes the match; clearing validates; grants issue only on a green light."""
+    """Host proposes the match; clearing validates; vouchers issue only on a green light."""
     trade = propose_match(offer, bids)
     result = validate(trade, state)
-    grants = issue_grants(trade, round_id) if result.ok else []
-    return RoundResult(trade=trade, validation=result, grants=grants)
+    vouchers = issue_vouchers(trade, round_id) if result.ok else []
+    return RoundResult(trade=trade, validation=result, vouchers=vouchers)

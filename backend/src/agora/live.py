@@ -1,9 +1,9 @@
-"""A live round, end to end against the running gateway.
+"""A live round, end to end (no gateway — trusted-agent mode).
 
-  sensor -> gateway -> Fuseki :attested  ->  agents read + bid  ->  host proposes  ->
-  clearing validates + issues grants.
+  plants assert :sensed  ->  agents read their own moisture + bid  ->  host proposes  ->
+  clearing validates + issues vouchers  ->  executor co-signs  ->  pump.
 
-Reads each plant's attested moisture, has the agents bid deterministically, and runs one
+Reads each plant's self-asserted moisture, has the agents bid deterministically, and runs one
 round through the host + clearing. No LLM; the number is code.
 """
 
@@ -65,16 +65,16 @@ def run_live_round(actuate: bool | None = None) -> None:
     if not result.validation.ok:
         log.warning("clearing RED — rejected: %s", result.validation.violations)
         return
-    log.info("clearing GREEN — %d grant(s), %.3f L allocated:",
-             len(result.grants), result.trade.total_qty_l)
-    for g in result.grants:
-        log.info("  grant: %-9s %.3f L  debit €%.2f", g.sub, g.amount_l, g.debit)
+    log.info("clearing GREEN — %d voucher(s), %.3f L allocated:",
+             len(result.vouchers), result.trade.total_qty_l)
+    for g in result.vouchers:
+        log.info("  voucher: %-9s %.3f L  debit €%.2f", g.sub, g.amount_l, g.debit)
 
     if not actuate:
         log.info("  (dry-run: actuation off — no valve commands published)")
         return
 
-    # Executor: turn each grant into a bounded valve command on MQTT (jti single-use).
+    # Executor: turn each voucher into a bounded valve command on MQTT (jti single-use).
     publish, client = mqtt_publisher(
         config.env("MQTT_HOST", "localhost"), int(config.env("MQTT_PORT", "1883"))
     )
@@ -92,7 +92,7 @@ def run_live_round(actuate: bool | None = None) -> None:
             host_key=host_key,
             clearing_key=clearing_key,
         )
-        for cmd in executor.settle_all(result.grants):
+        for cmd in executor.settle_all(result.vouchers):
             log.info("  actuate: %-9s open %.2fs (~%.0f ml)  -> actuators/%s/valve",
                      cmd.plant, cmd.seconds, cmd.ml, cmd.plant)
     finally:
