@@ -60,6 +60,33 @@ opining a different number. In trusted mode we accept that; honesty of self-repo
   via read-grants; the whole market layer (bids, clearing, executor) unchanged — it never
   trusted moisture anyway, only the *bid*.
 
+# Why it's more robust than it looks — self-punishment
+
+Because an agent reports moisture *about itself* and bears the consequences, lying is
+**self-defeating in both directions**:
+
+- **Lies wet** (reports *wetter* than reality) → bids low / cedes → stays thirsty → dries
+  out. Pure self-harm.
+- **Lies dry** (reports drier than reality) → bids urgently → wins water it doesn't need →
+  pays for it *and* over-waters toward rot. Self-harm again.
+
+No direction pays. Two layers enforce it: **physics** (thirst or rot) and the **economy**
+(over-grabbing drains the wallet; a chronic liar goes broke and drops out — and agents can't
+mint). So honesty-about-self is **incentive-compatible for a rational agent**.
+
+# What stays open (deliberately)
+
+- **Rival externality.** Lying *wet* is purely self-harming. Lying *dry* also grabs from a
+  **shared, scarce** pool — the liar starves Tomato as well as harming itself. Self-punishment
+  covers the first-order harm, not the externality (it is *bounded* by the liar's budget, not
+  zero).
+- **Rational vs. confused.** Self-punishment deters a *scheming* liar; it does nothing for a
+  *hallucinating* one — an LLM agent that misjudges its own state and rots itself by mistake.
+  In trusted mode the real risk is **incompetence, not malice**.
+
+These two gaps are exactly why the signing-sensor seam below stays on the table rather than
+being declared unnecessary.
+
 # The seam back to adversarial mode
 
 Restoring anti-fabrication does **not** require the gateway process back. Move the witness
