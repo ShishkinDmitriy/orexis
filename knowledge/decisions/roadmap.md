@@ -34,6 +34,9 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   procedural authority only; mint/actuate/attest stay in permanent infrastructure. (v2)
 - **Sybil / open-system** (naturalize + endow, currency minted not seized, reputation on
   identity). (v2)
+- **World genesis tool** (sovereign narrates → LLM drafts topology + charters → ratify →
+  infra writes; versioned, amendable migrations) — unlocked by [genesis](/decisions/genesis.md);
+  v1 hand-authors the ratified config. (v2/v3)
 - **Domain-as-plugin** (swap ontology → electricity instead of plants) — unlocked by
   [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) (agents read the T-Box
   from context). Extract seams from watering *first*, don't abstract prematurely. (v3)

@@ -27,6 +27,11 @@ and expected to diverge. That divergence is the point of deliberation (see
 [round](/domain/round.md)). The named graphs below encode exactly this: one witness of
 record, plus private assumptions, plus untrusted claims.
 
+Two kinds of belief arise differently: **state** (current moisture) is *sensed* by the
+gateway, continuously; **structure + identity** (topology, charters) is *authored* once by
+the sovereign and amended over time — it cannot be sensed. See
+[genesis](/decisions/genesis.md).
+
 # Named graphs — partitioned by TRUST, not topic
 
 The graph name IS the trust tier — it is the write-authorization boundary, so "can this be

@@ -33,6 +33,10 @@ change something, to check you're not welding shut a planned extension.
 
 * [two-store-beliefs](/decisions/two-store-beliefs.md) - InfluxDB owns the series; Fuseki owns citable current-state. Joined by plant URI, never federated.
 
+# Genesis
+
+* [genesis](/decisions/genesis.md) - Sovereign narrates → LLM drafts → sovereign ratifies → infra writes structure + charters. Amendable and versioned; structure mutable, history immutable.
+
 # Seams (open on purpose)
 
 * [standalone-clearing](/decisions/standalone-clearing.md) - The scarce side hosts the auction (host rotates with topology); the clearing validator stays invariant.

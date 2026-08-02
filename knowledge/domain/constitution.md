@@ -31,4 +31,6 @@ the more persuasive the agents, the more the backstop must be immune to persuasi
 # Amendment
 
 Only the sovereign (you) may amend the constitution. Agents operate within it; they cannot
-change it.
+change it. Amending the constitution, the topology, or charters is the same authority and
+process — see [genesis](/decisions/genesis.md), which is versioned and amendable (structure
+mutable, history immutable).
