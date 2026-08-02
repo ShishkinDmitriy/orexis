@@ -17,16 +17,39 @@ issues and performs the water leg of the trade. See
 
 # The actuation edge
 
-Like sensing, actuation splits across hardware:
+Like sensing, actuation splits across hardware, over the same MQTT bus — but *inverted*: the
+executor **publishes** a command; the pump-ESP32 **subscribes** and acts (the sensor edge is
+the other way round).
 
 ```
-clearing ──grant──► executor (RPi) ──validated command──► pump-ESP32 ──► valve
+clearing ─grant─► executor (RPi) ─publish cmd─► MQTT ─► pump-ESP32 (subscribe) ─► valve
+                        ▲                                        │
+                        └────────────── status/ack ─────────────┘
 ```
 
 - **Executor (RPi)** = decides *nothing*; validates the grant, then commands.
 - **Pump-ESP32** = drives a relay/valve on GPIO. It takes commands **only** from the
   executor — **never** from an agent directly. Same trust boundary as the sensor edge: the
   device is dumb and stake-free; authority lives one hop up.
+
+# Actuation is not sensing — the guarded subscriber
+
+Sensing is read-only and low-stakes; actuation *writes to the physical world, irreversibly*.
+So the pump is a **guarded** MQTT subscriber, with four properties the sensor edge never needed:
+
+1. **Authenticated commands** — the pump acts only on *executor-authored* commands. On a
+   shared broker, anyone could publish `actuators/fern/valve` and bypass clearing + the
+   constitution. v1: trusted LAN + a dedicated command topic (structural). v2: the pump
+   verifies the **signed grant** / a device cert — the trust boundary, enforced on the wire.
+2. **Idempotency** — dedup on `jti` (+ MQTT QoS 1), so a redelivered command never
+   double-waters. QoS 0 could lose a command; QoS 1 + jti dedup is the right combo.
+3. **Fail-safe dosing** — commands are *bounded* ("open ~N seconds ≈ N ml, then auto-close").
+   The device runs a **watchdog**: it closes the valve on command expiry *and* on lost
+   connection, and enforces a hard local max dose regardless of what it's told — a physical
+   constitution at the edge, so a crashed executor or dropped network can't flood.
+4. **Confirmation** — the pump *publishes* an ack/telemetry (`actuators/<plant>/valve/status`)
+   so the executor knows water actually flowed and the receipt is truthful. Subscriber *and*
+   publisher.
 
 # Responsibilities (per grant)
 

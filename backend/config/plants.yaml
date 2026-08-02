@@ -61,3 +61,9 @@ supplier:
   quantity_l: 2.0            # litres available this round
   reserve_price_per_l: 0.20  # won't sell below this (€/L)
   tank_capacity_l: 5.0       # constitution: total allocation ceiling
+
+# Executor dosing (RPi -> pump). ml_per_second calibrates litres -> open time;
+# max_dose_ml is a hard edge cap (defence-in-depth).
+executor:
+  ml_per_second: 10.0
+  max_dose_ml: 1000.0

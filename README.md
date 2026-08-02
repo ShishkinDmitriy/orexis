@@ -126,8 +126,11 @@ agora-validate         # SHACL over :attested + :structure; exit 0 = conforms
 
 ## What's next
 
-Built: `clearing` ✓ (validator + settlement grant), `auction` ✓ (host proposes the match),
-`agent` ✓ (deterministic value-model bids). Next: the **LLM stance** layer (justification
-only — the number stays deterministic), reading live moisture from `:attested`, and the
-`executor` (honor the signed grant, drive the pump-ESP32). See
-[`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md).
+Built: `gateway` ✓, belief base ✓ (T-Box + structure + attested, typed/versioned/SHACL-clean),
+`agent` ✓ (deterministic bids from live `:attested`), `auction` ✓, `clearing` ✓ (validator +
+grant), `executor` ✓ (grant → bounded valve command, `jti` single-use), and firmware for both
+edges (moisture sensor, guarded pump/valve). The loop closes: **sensor-in → water-out**.
+
+Next: the **LLM stance** layer (justification/coalition on top of the deterministic number —
+the leash), wallet debiting + metabolic cost, and the constitution as SHACL over the trade.
+See [`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md).

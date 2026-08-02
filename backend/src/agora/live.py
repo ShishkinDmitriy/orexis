@@ -15,6 +15,7 @@ from . import config
 from .agent import load_agents
 from .auction import run_round
 from .beliefs import Beliefs
+from .executor import Executor, mqtt_publisher
 from .market import Limits, MarketState, Offer
 
 log = logging.getLogger("live")
@@ -65,6 +66,24 @@ def run_live_round() -> None:
              len(result.grants), result.trade.total_qty_l)
     for g in result.grants:
         log.info("  grant: %-9s %.3f L  debit €%.2f", g.sub, g.amount_l, g.debit)
+
+    # Executor: turn each grant into a bounded valve command on MQTT (jti single-use).
+    exe_cfg = cfg.get("executor", {})
+    publish, client = mqtt_publisher(
+        config.env("MQTT_HOST", "localhost"), int(config.env("MQTT_PORT", "1883"))
+    )
+    try:
+        executor = Executor(
+            publish,
+            ml_per_second=exe_cfg.get("ml_per_second", 10.0),
+            max_dose_ml=exe_cfg.get("max_dose_ml", 1000.0),
+        )
+        for cmd in executor.settle_all(result.grants):
+            log.info("  actuate: %-9s open %.2fs (~%.0f ml)  -> actuators/%s/valve",
+                     cmd.plant, cmd.seconds, cmd.ml, cmd.plant)
+    finally:
+        client.loop_stop()
+        client.disconnect()
 
 
 def main() -> None:

@@ -1,0 +1,24 @@
+#pragma once
+// Copy this to config.h and fill in. config.h is gitignored (WiFi secrets).
+
+#define WIFI_SSID "your-wifi-ssid"
+#define WIFI_PASS "your-wifi-password"
+
+#define MQTT_HOST "192.168.1.50" // the Raspberry Pi's LAN IP (runs mosquitto)
+#define MQTT_PORT 1883
+
+// Which plant's valve this board drives. Subscribes to actuators/<PLANT_ID>/valve
+// and publishes status to actuators/<PLANT_ID>/valve/status.
+#define PLANT_ID "fern"
+
+// Relay/valve GPIO. ACTIVE_HIGH=1 if the relay opens on HIGH, 0 if it opens on LOW.
+#define VALVE_PIN 26
+#define VALVE_ACTIVE_HIGH 1
+
+// Fail-safe: the valve NEVER stays open longer than this, whatever a command says.
+// The hard physical constitution at the edge.
+#define MAX_OPEN_SECONDS 20.0
+
+// Reporting only: the executor already calibrates litres->seconds; this lets the
+// board estimate ml dispensed for its status message.
+#define ML_PER_SECOND 10.0
