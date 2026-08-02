@@ -38,9 +38,15 @@ consumers and suppliers know each other (the attested plumbing topology) is in
 4. Submit the proposed trade to [clearing](/domain/clearing.md) for validation (co-signature,
    or public-function recomputation — see [thin-trusted-infra](/decisions/thin-trusted-infra.md)).
 5. **Actuate** — as the resource owner, drive its own valves to fulfil each voucher: *how
-   much* from the voucher, *which valve* from the topology. It executes, it does not decide;
-   bounded by the cleared voucher and the device fail-safe. This is the "executor" role, hosted
-   by the supplier. See [executor](/domain/executor.md).
+   much* from the voucher, *which valve* from its **actuator map**. It executes, it does not
+   decide; bounded by the cleared voucher and the device fail-safe. This is the "executor"
+   role, hosted by the supplier. See [executor](/domain/executor.md).
+
+The supplier owns **one valve per plant it serves** — a genesis-configured `{plant_id →
+valve}` map (its own infrastructure, part of the attested topology). It knows the winning
+*agent*, not a valve; the voucher's **plant ID indexes the map** to select the valve. In v1
+this is the plant-keyed MQTT topic `actuators/<plant>/valve`; a direct-GPIO supplier holds a
+`{plant_id → pin}` map instead.
 
 Mint is *not* the supplier's: [clearing](/domain/clearing.md) debits wallets; the supplier
 gets paid but cannot create currency. See [thin-trusted-infra](/decisions/thin-trusted-infra.md).
