@@ -35,10 +35,13 @@ class Attestor:
         value: float,
         band: str,
         sensor: str,
+        world_version: int | None = None,
         ts: str | None = None,
     ) -> None:
         ts = ts or datetime.now(timezone.utc).isoformat()
         obs = f"ag:obs_{plant_id}"
+        # provenance: which world-version was in force when this was sensed
+        wv_line = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
 
         # Delete the plant's previous current-state, then insert the fresh observation.
         # Three ops in one request (separated by ';'): idempotent overwrite.
@@ -56,7 +59,7 @@ INSERT DATA {{ GRAPH <{ATTESTED_GRAPH}> {{
     ag:qualitativeBand ag:{band} ;
     sosa:resultTime "{ts}"^^xsd:dateTime ;
     sosa:madeBySensor ag:{sensor} ;
-    prov:wasGeneratedBy ag:gateway .
+{wv_line}    prov:wasGeneratedBy ag:gateway .
   <{plant_uri}> ag:hasCurrentMoisture ag:{band} .
 }} }}
 """

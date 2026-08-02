@@ -31,6 +31,7 @@ class Gateway:
         cfg = config.load_plants()
         self.plants = {p["id"]: p for p in cfg["plants"]}
         self.bands = cfg["species_bands"]
+        self.world_version = int(cfg.get("world_version", 1))
         self.last_band: dict[str, str] = {}
 
         self.influx = InfluxWriter(
@@ -83,7 +84,7 @@ class Gateway:
 
         # 3. attest: overwrite the plant's current-state in :attested.
         try:
-            self.attestor.attest(plant["uri"], plant_id, value, band, sensor)
+            self.attestor.attest(plant["uri"], plant_id, value, band, sensor, self.world_version)
         except Exception as exc:  # keep the loop alive even if Fuseki hiccups
             log.error("attest failed for %s: %s", plant_id, exc)
 

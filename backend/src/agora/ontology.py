@@ -6,11 +6,17 @@ never per-agent and never in ESP32 firmware.
 
 from __future__ import annotations
 
-# RDF vocabulary used by the attested current-state graph.
+# RDF vocabulary. Terms are defined in the shared T-Box (ontology/agora.ttl); these are the
+# canonical IRIs the code references. The named graphs are typed, self-describing resources
+# (agora:AttestedGraph, etc.) — the meaning lives in RDF, not in the string.
 AG = "http://example.org/agora#"
 SOSA = "http://www.w3.org/ns/sosa/"
 PROV = "http://www.w3.org/ns/prov#"
-ATTESTED_GRAPH = "http://example.org/agora/graph/attested"
+
+_GRAPH = "http://example.org/agora/graph/"
+ONTOLOGY_GRAPH = _GRAPH + "ontology"   # the T-Box
+STRUCTURE_GRAPH = _GRAPH + "structure"  # sovereign-authored: topology, charters, world version
+ATTESTED_GRAPH = _GRAPH + "attested"    # gateway-sensed current state
 
 BANDS = ("LOW", "OK", "HIGH")
 

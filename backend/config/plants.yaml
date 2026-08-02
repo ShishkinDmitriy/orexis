@@ -4,25 +4,41 @@
 # recalibrate without a reflash. See knowledge/domain/gateway.md and
 # knowledge/decisions/two-store-beliefs.md.
 
-# Each plant's charter: identity + desire (target moisture) + endowment (starting credits).
-# target is the plant's chartered desire; endowment is its initial wallet.
+# This whole file is the ratified world (v1, hand-authored — the output of genesis):
+# "ratified belief owned by parties". Topology + charters seed the belief base (agora-seed);
+# the gateway owns the thresholds; the supplier owns its terms. See
+# knowledge/decisions/genesis.md.
+
+# Bumped by hand on each re-genesis; stamped onto every attestation as provenance.
+world_version: 1
+
+# Topology (structure): which source waters which plants, and who supplies it.
+sources:
+  - id: barrel1
+    supplier: supplier
+
+# Each plant's charter: identity + desire (target moisture) + endowment (starting credits)
+# + which source it draws from (its cluster).
 plants:
   - id: fern
     uri: "http://example.org/agora#fern"
     species: fern
     sensor: moisture_sensor_fern
+    source: barrel1
     target: 0.55
     endowment: 100.0
   - id: tomato
     uri: "http://example.org/agora#tomato"
     species: tomato
     sensor: moisture_sensor_tomato
+    source: barrel1
     target: 0.50
     endowment: 100.0
   - id: succulent
     uri: "http://example.org/agora#succulent"
     species: succulent
     sensor: moisture_sensor_succulent
+    source: barrel1
     target: 0.22
     endowment: 100.0
 

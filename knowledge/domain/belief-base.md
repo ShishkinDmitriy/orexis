@@ -38,13 +38,23 @@ The graph name IS the trust tier — it is the write-authorization boundary, so 
 cited" is a mechanical membership check (PROV-O then records *which* witness inside it; see
 below on why the graph, not the provenance triple, carries the trust):
 
-- `:attested` — the **witness of record**: sensor/forecast-witnessed current state,
-  gateway-signed, **agent-read-only**. The ONLY graph a justification may cite. Forecast
-  lives here too (tense in the timestamp).
+- `:ontology` — the shared **T-Box** (`ontology/agora.ttl`): classes and properties (World,
+  WorldVersion, Plant, Band, servedBy…). The vocabulary agents read from context.
+- `:structure` — the sovereign-authored **durable structure**: topology (`servedBy` /
+  `suppliedBy`), charters (`hasTarget`), the current world version. Written by genesis, not
+  sensed. See [genesis](/decisions/genesis.md).
+- `:attested` — the **witness of record**: sensor/forecast-witnessed current *state*,
+  gateway-signed, **agent-read-only**, stamped `underWorldVersion`. The ONLY graph a
+  justification may cite. Forecast lives here too (tense in the timestamp).
 - `:exp/<agent>` — an agent's **private beliefs / assumptions**, its own learning. Per-agent,
   **not shared** (if shared it becomes forgeable and trolls exploit it — the same reason
   there is no shared knowledge, only testimony).
 - `:claims` — what agents assert during negotiation. Untrusted; never merged into `:attested`.
+
+The graphs themselves are **typed, self-describing resources** (`:attested a
+agora:AttestedGraph ; agora:witness agora:gateway`) — a graph catalog, not magic strings.
+Structure (durable, authored) is kept out of `:attested` (sensed, overwritten): different
+origins, different graphs. See [genesis](/decisions/genesis.md).
 
 Everything meaningful is a **named** graph so it can carry provenance. The default (unnamed)
 graph carries no provenance, so nothing load-bearing goes there. See
