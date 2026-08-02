@@ -8,7 +8,8 @@ timestamp: 2026-08-01T00:00:00Z
 
 # What it is
 
-The unit of coordination, run by the trusted core (v1). Iterative-ascending so that
+The unit of coordination, run by the **host** (the scarce side; v1 the supplier).
+Iterative-ascending so that
 conversation and auction genuinely interleave: agents see the partial allocation, converse,
 and re-bid. Bounded so it always terminates — primarily because deliberation costs, so rounds
 end endogenously when agents can no longer afford to think (see
@@ -21,18 +22,20 @@ backstop, not the primary terminator.
    zero (a demand/supply/budget/belief shock — see [market](/domain/market.md)), and the
    scarce-side host (v1 the [supplier](/domain/supplier.md)) convenes. Deterministic, no LLM.
 2. **Deterministic bids form** — each agent's value model produces an honest number from its
-   own attested moisture + target. An above-target plant bids nothing and cedes (a reflex).
+   own **sensed** moisture + target. An above-target plant bids nothing and cedes (a reflex).
 3. **Proposals + English justification** — the LLM step: at most one call per deliberating
-   agent, phrasing a stance that must cite attested triples. Provisional clear.
-4. **Shocks land** — e.g. a rain forecast is attested; a new deliberation round opens because
-   an attested belief changed; private value curves diverge and agents re-bid. This is why
+   agent, phrasing a stance that **may cite** its sensed facts (voluntary disclosure).
+   Provisional clear.
+4. **Shocks land** — e.g. a rain forecast is recorded; a new deliberation round opens because
+   a sensed belief changed; private value curves diverge and agents re-bid. This is why
    conversation earns its place over a one-shot auction.
 5. **Host proposes the match** — the scarce side (in v1 the [supplier](/domain/supplier.md))
    selects the trade from the signed bids and signs it.
 6. **Validate + settle** — [clearing](/domain/clearing.md) checks the proposed trade
    (conservation, solvency, identity, [constitution](/domain/constitution.md),
-   order-consistency) and **co-signs** it; then debits wallets (water + metabolic cost) and
-   the [executor](/domain/executor.md) actuates the fully-signed token, sequencing the pump.
+   order-consistency) and **co-signs** the [voucher](/domain/voucher.md); then debits wallets
+   (water + metabolic cost) and the [supplier](/domain/supplier.md)'s
+   [executor](/domain/executor.md) arm actuates the fully-signed voucher, sequencing the pump.
    See [clearing-as-validator](/decisions/clearing-as-validator.md).
 
 # Why iterative

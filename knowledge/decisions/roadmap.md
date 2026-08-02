@@ -31,7 +31,8 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
 - **Decentralized decomposition** (local auctions coupled by price, no global view) —
   the real thesis; sequential decomposition is the honest stepping-stone. (v3)
 - **Self-organization** (elected/rotating chair, borrowed or spawned mediator) — chair gets
-  procedural authority only; mint/actuate/attest stay in permanent infrastructure. (v2)
+  procedural authority only; the privileged powers never transfer to a borrowed chair (see
+  [trust-boundary](/decisions/trust-boundary.md) / [thin-trusted-infra](/decisions/thin-trusted-infra.md)). (v2)
 - **Sybil / open-system** (naturalize + endow, currency minted not seized, reputation on
   identity). (v2)
 - **World genesis tool** (sovereign narrates → LLM drafts topology + charters → ratify →

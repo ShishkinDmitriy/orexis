@@ -16,13 +16,14 @@ One budget per agent, paying for **both** water and thinking. See
 - **Water** — hard-conserved, zero-sum. One tank, fixed litres. The
   [constitution](/domain/constitution.md)'s physical law.
 - **Credits** — NOT zero-sum. Minted fresh each window as a periodic **allowance**,
-  **spent-to-void** not transferred, controlled by the trusted core (like a central bank).
+  **spent-to-void** not transferred, controlled by the **currency ledger** (like a central
+  bank — the one irreducible trusted store; see [thin-trusted-infra](/decisions/thin-trusted-infra.md)).
   This is what prevents permanent losers and kills Sybil swarms (newcomers join broke and
   accrue; nobody's credits are seized).
 
 # Bid
 
-Deterministic willingness-to-pay from a value model over attested moisture, target,
+Deterministic willingness-to-pay from a value model over its **sensed** moisture, target,
 evaporation, and forecast — computed as a **function of unmet demand**. Priced in euros as
 a *unit of account* (water has a real €/L cost); real money never actually moves. See
 [deterministic-bid](/decisions/deterministic-bid.md) and [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md).
@@ -34,7 +35,8 @@ settled against the same wallet by the [clearing](/domain/clearing.md) step, **w
 lose** — metered per call, debited at clear (clearing holds the sole mint/debit authority;
 see [trust-boundary](/decisions/trust-boundary.md)). Thinking is paid like metabolism. This
 is what makes rounds self-limiting and bounded rationality economic. Metering is
-deterministic and lives in the trusted core — an agent can't argue its bill down.
+deterministic and settled by the mint ([clearing](/domain/clearing.md)) — an agent can't
+argue its bill down.
 
 # Intention (committed plan)
 

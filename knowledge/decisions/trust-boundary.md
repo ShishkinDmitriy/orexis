@@ -49,5 +49,6 @@ agent is *data* to weigh, never an *instruction* to obey.
 
 - The [mediator/clearing](/domain/clearing.md) and [gateway](/domain/gateway.md) are
   *services* (reactive, no desires), not agents.
-- Even a borrowed or spawned mediator (v2) only ever gets *clearing* authority; mint and
-  actuate stay in permanent infrastructure. See [roadmap](/decisions/roadmap.md).
+- Even a borrowed or spawned mediator (v2) only ever gets *procedural* (clearing) authority;
+  the **mint** (currency ledger) and **actuate** (the resource owner's) never transfer to it.
+  See [thin-trusted-infra](/decisions/thin-trusted-infra.md), [roadmap](/decisions/roadmap.md).

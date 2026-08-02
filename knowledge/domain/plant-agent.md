@@ -10,15 +10,15 @@ timestamp: 2026-08-01T00:00:00Z
 
 One agent per plant (Fern, Tomato, Succulent), each advocating its own moisture target. A
 kind of [agent](/domain/agent.md) — the only tier with a stake (a desire and a
-[wallet](/domain/wallet.md)) and therefore the only tier the trusted core is built to
-constrain.
+[wallet](/domain/wallet.md)) and therefore the tier the trust model is built around.
 
 # Identity (important)
 
 An agent's identity is NOT an LLM session. It is: the **charter** (static — identity,
 plant URI, desire, endowment, skill set, system prompt), the **certificate** (signed proof
 of who it is; see [authn-authz-capabilities](/decisions/authn-authz-capabilities.md)), the
-**wallet**, the **active intention**, and the external **attested belief base**. The LLM is
+**wallet**, the **active intention**, and its own **beliefs** (self-asserted `:sensed` +
+`:opinion`; no witness in [trusted-agent-mode](/decisions/trusted-agent-mode.md)). The LLM is
 a stateless pure function called inside a plan body; memory lives in the wallet and beliefs,
 never in chat history. This is what lets 50 agents share one model yet hold separate
 positions.
@@ -39,7 +39,7 @@ its "loop" is the bus delivering messages. See [deterministic-bid](/decisions/de
 
 # BDI mapping
 
-- **B** = attested beliefs + forecast.
+- **B** = its own sensed readings + forecast (self-asserted; the agent judges its own band).
 - **D** = the target as a *trajectory* (value-of-water curve), not a point. Chartered by the
   sovereign; an agent does not invent new desires.
 - **Skills** = the plan library (negotiation moves: inform, bid, cede, counter_offer,
@@ -50,5 +50,7 @@ its "loop" is the bus delivering messages. See [deterministic-bid](/decisions/de
 # Invariants
 
 - The **bid is deterministic**; the LLM produces only the stance/justification.
-- Every justification **cites attested triples** or is rejected (the leash).
+- A justification **may cite** the agent's sensed facts to be believed — *voluntary*
+  disclosure, not mandatory (the leash relaxed in trusted mode; see
+  [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)).
 - The bid is a function of **unmet demand**. See [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md).

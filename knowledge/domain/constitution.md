@@ -24,8 +24,9 @@ independently before any action fires.
 
 As **SHACL shapes / rule-engine checks** over the RDF belief base — validates or doesn't,
 with no argument. The first shapes exist (`ontology/shapes.ttl`, run by `agora-validate`):
-they enforce the *witness-of-record shape* — every attested observation must be complete,
-world-versioned, and authored by the gateway and no one else (the leash, as a shape). The
+every observation must be complete and world-versioned, and — under
+[trusted-agent-mode](/decisions/trusted-agent-mode.md) — **self-asserted** (authored by the
+plant itself; a signing sensor re-adds an independent witness in adversarial mode). The
 allocation constraints (no watering past rot, total ≤ tank) become SHACL over the proposed
 trade next, run by the [clearing](/domain/clearing.md) step in parallel with bidding. This is
 why the constitution must be formal, not English: the more persuasive the agents, the more

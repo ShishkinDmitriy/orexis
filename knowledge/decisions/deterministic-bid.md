@@ -28,5 +28,7 @@ justification and any coalition move. The mediator clears on the number; it igno
 
 # Related
 
-- The justification must cite attested belief triples — a claim referencing a fact not in
-  `:attested` is rejected. This is "the leash." See [belief-base](/domain/belief-base.md).
+- The justification cites the agent's sensed facts — "the leash." Originally mandatory (cite
+  or be rejected); relaxed to **voluntary disclosure** in trusted mode (reveal to be believed,
+  witness-signed to be credible). See [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)
+  and [belief-base](/domain/belief-base.md).
