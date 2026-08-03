@@ -8,7 +8,7 @@
 #  it is what makes a society.
 #
 #  Note what is NOT written here: no ag:hasCapability. What an agent can DO is *derived* at
-#  genesis from this wiring (rules/*.ru) — an agent on a pull-mode sensor gains ag:Polling,
+#  genesis from this wiring (each capability's rules.ru) — an agent on a pull-mode sensor gains ag:Polling,
 #  one on a push-mode sensor gains ag:Listening instead, one plumbed into a market gains
 #  ag:Bidding, one holding valves gains ag:Actuation. Capability follows from hardware and
 #  connections, so it cannot drift from them: swap a sensor's firmware, re-run genesis, and

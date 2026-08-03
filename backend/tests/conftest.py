@@ -14,16 +14,12 @@ from datetime import datetime, timezone
 import pytest
 import rdflib
 
-from agora import store
-from agora.config import PROJECT_ROOT
-from agora.ontology import MODULE_FILES, ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
+from agora import loader, store
+from agora.ontology import ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
 from agora.seed import agent_id_of
 
-REPO_ROOT = PROJECT_ROOT.parent
+REPO_ROOT = loader.REPO_ROOT
 GENESIS_DIR = REPO_ROOT / "genesis"
-ONTOLOGY_DIR = REPO_ROOT / "ontology"
-RULES_DIR = REPO_ROOT / "rules"
-SHAPES_DIR = REPO_ROOT / "shapes"
 
 
 def genesis_dataset(readings: dict[str, float] | None = None,
@@ -34,13 +30,13 @@ def genesis_dataset(readings: dict[str, float] | None = None,
     the world actually implies rather than a hand-written list.
     """
     ds = rdflib.Dataset()
-    for name in MODULE_FILES:
-        ds.graph(rdflib.URIRef(ONTOLOGY_GRAPH)).parse(ONTOLOGY_DIR / f"{name}.ttl", format="turtle")
+    for path in loader.ontology_files():
+        ds.graph(rdflib.URIRef(ONTOLOGY_GRAPH)).parse(path, format="turtle")
     ds.graph(rdflib.URIRef(WORLD_GRAPH)).parse(GENESIS_DIR / "world.ttl", format="turtle")
     for path in sorted(GENESIS_DIR.glob("beliefs-*.ttl")):
         graph = rdflib.URIRef(beliefs_graph(agent_id_of(path)))
         ds.graph(graph).parse(path, format="turtle")
-    for rule in sorted(RULES_DIR.glob("*.ru")):
+    for rule in loader.rule_files():
         ds.update(rule.read_text())
 
     if readings:
@@ -124,7 +120,7 @@ def build_agent(agent_id: str, ds: rdflib.Dataset | None = None, monkeypatch=Non
     The modules under test are the ones that ship.
     """
     from agora import runtime
-    from agora.modules import perception as perception_module
+    from capabilities.perception import module as perception_module
 
     class NoInflux:
         def __init__(self, *a, **k):

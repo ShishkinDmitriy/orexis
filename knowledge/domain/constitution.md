@@ -23,7 +23,7 @@ independently before any action fires.
 # How it's enforced
 
 As **SHACL shapes / rule-engine checks** over the RDF belief base — validates or doesn't,
-with no argument. The first shapes exist (`ontology/shapes.ttl`, run by `agora-validate`):
+with no argument. The first shapes exist (each package's `shapes.ttl`, run together by `agora-validate`):
 every observation must be complete and world-versioned, and — under
 [trusted-agent-mode](/decisions/trusted-agent-mode.md) — **self-asserted** (authored by the
 plant itself; a signing sensor re-adds an independent witness in adversarial mode). The

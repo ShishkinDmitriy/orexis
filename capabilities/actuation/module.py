@@ -10,7 +10,8 @@ command topic. Every one of those is read from the world.
 Single-use is enforced here by `jti`; the device enforces its own fail-safe watchdog. Two
 independent limits, because the interesting failures are the ones where one of them is wrong.
 
-Vocabulary: ontology/actuation.ttl. Rules: shapes/actuation.ttl.
+Vocabulary: capabilities/actuation/ontology.ttl. Rules: capabilities/actuation/shapes.ttl.
+Derivation: capabilities/actuation/rules.ru.
 See knowledge/domain/executor.md.
 """
 
@@ -18,9 +19,10 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
-from .. import config, signing
-from ..ontology import ACTUATION
-from .base import Module
+from agora import config, signing
+from agora.module import Module
+
+from .terms import ACTUATION
 
 
 @dataclass(frozen=True)
@@ -91,15 +93,3 @@ class ActuationModule(Module):
             except ValueError as exc:
                 self.log.error("cannot redeem for %s: %s", voucher.sub, exc)
         return out
-
-
-def verify_command(payload: dict, host_pub, clearing_pub) -> bool:
-    """Device-side check: open only for a token signed by BOTH host and clearing."""
-    if host_pub is None or clearing_pub is None:
-        return False
-    match_sig, val_sig = payload.get("match_sig"), payload.get("val_sig")
-    if not match_sig or not val_sig:
-        return False
-    cmd = {k: v for k, v in payload.items() if k not in ("match_sig", "val_sig")}
-    data = signing.canonical(cmd)
-    return signing.verify(host_pub, data, match_sig) and signing.verify(clearing_pub, data, val_sig)

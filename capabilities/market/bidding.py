@@ -19,15 +19,21 @@ Two reasons it stays silent, and both are deliberate:
 The bid *number* is deterministic code (see decisions/deterministic-bid.md); an LLM would
 later produce the justification, never the number.
 
-Vocabulary: ontology/market.ttl (protocol) + ontology/water.ttl (what a bid means here).
-Rules: shapes/market.ttl, shapes/water.ttl.
+This is also the capability that holds a **band**, so it is the one that answers when the
+agent is asked what it makes of a reading — see `annotate` and `urgency` below. Perception
+supplies numbers; a stake supplies verdicts.
+
+Vocabulary: capabilities/market/ontology.ttl (protocol) + domain/water/ontology.ttl (what a
+bid means here). Rules: capabilities/market/shapes.ttl, domain/water/shapes.ttl.
 """
 
 from __future__ import annotations
 
-from ..market import EPS, Bid
-from ..ontology import BIDDING
-from .base import Module, Timer
+from agora.market import EPS, Bid
+from agora.module import Module, Timer
+
+from .beliefs import BIDDING_BLOCK
+from .terms import BIDDING, PERCEPTION
 
 
 def value_bid(moisture: float, b, balance: float, allocated_l: float = 0.0) -> Bid | None:
@@ -62,7 +68,7 @@ class BiddingModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.beliefs = agent.beliefs.bidding()
+        self.beliefs = agent.beliefs.read(BIDDING_BLOCK)
         self.balance = self.beliefs.endowment
         self.won_l = 0.0
         self.pending: dict | None = None  # a round I have been asked to answer
@@ -89,6 +95,23 @@ class BiddingModule(Module):
                 return True
         return False
 
+    # --- what I make of a reading: the part only a stakeholder can supply ---
+
+    def annotate(self, subject_uri: str, value: float) -> dict:
+        """My verdict on my own subject, for my agent's public announcement.
+
+        A band and never a number: the host learns that I am in trouble, not how wet I am.
+        """
+        if subject_uri != self.me.acts_for:
+            return {}
+        return {"band": self.beliefs.band(value)}
+
+    def urgency(self, subject_uri: str, value: float) -> float | None:
+        """How close this puts me to my floor. Perception uses it to set its cadence."""
+        if subject_uri != self.me.acts_for:
+            return None
+        return self.beliefs.urgency(value)
+
     # --- answering an offer ---
 
     def on_offer(self, market, offer: dict) -> None:
@@ -98,7 +121,7 @@ class BiddingModule(Module):
             return
 
         self.pending = {"round_id": round_id, "market": market}
-        perception = self.perception()
+        perception = self.agent.provider(PERCEPTION)
         if perception is None:
             # bidding while perceiving nothing leaves no reading to cite, so no honest bid
             self.log.info("round %s: I perceive nothing — sitting out", round_id)
@@ -154,12 +177,6 @@ class BiddingModule(Module):
             "max_price_per_l": bid.max_price_per_l,
             "balance": round(self.balance, 4),
         })
-
-    def perception(self):
-        """Whichever perception capability this agent got from its hardware, if any."""
-        from .perception import PerceptionModule
-
-        return next((m for m in self.agent.modules if isinstance(m, PerceptionModule)), None)
 
     # --- what came back ---
 

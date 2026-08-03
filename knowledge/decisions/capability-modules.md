@@ -1,12 +1,19 @@
 ---
 type: Decision
 title: Capability modules — code reads terms, never instances
-description: A capability is an ontology module + SHACL rules + derivation rules + a code module. Capabilities are derived at genesis from hardware and wiring; an agent process is given only its own id and discovers everything else.
-status: accepted
+description: A capability is an ontology module + SHACL rules + derivation rules + a code module. Capabilities are derived at genesis from hardware and wiring; an agent process is given only its own id and discovers everything else. Superseded on packaging by capability-packages.
+status: superseded-in-part
 stage: v1
 tags: [ontology, modules, capabilities, genesis, architecture, agents]
 timestamp: 2026-08-03T00:00:00Z
 ---
+
+> **Superseded in part** by [capability-packages](/decisions/capability-packages.md). What a
+> capability *is*, and that it is derived from hardware rather than declared, still holds and
+> is the substrate for everything below. Where the four files **live** does not: they are one
+> directory per capability now, discovered rather than listed, and a capability never imports
+> another's Python. The file table and the "one line of registry" in this document are the
+> parts that were replaced.
 
 # Context
 
@@ -30,16 +37,20 @@ a process is handed at boot: **its own agent id**. Everything else follows from 
 
 | | |
 |---|---|
-| `ontology/<name>.ttl` | the vocabulary — what this capability's terms mean |
-| `shapes/<name>.ttl` | the rules — what an agent must believe to hold it |
-| `rules/<name>.ru` | the derivation — what wiring gives an agent this capability |
-| `backend/src/agora/modules/<name>.py` | the code — which reads only that vocabulary |
+| `ontology.ttl` | the vocabulary — what this capability's terms mean |
+| `shapes.ttl` | the rules — what an agent must believe to hold it |
+| `rules.ru` | the derivation — what wiring gives an agent this capability |
+| `__init__.py` + its modules | the code — which reads only that vocabulary |
 
-The modules are `core`, `perception`, `mqtt`, `market`, `actuation`, and the domain plug-in
-`water`. Adding a capability — forecasting, say — touches none of the existing ones: write
-the four files, add one line of registry, and no agent has it until genesis derives it.
+*(These were four files with a shared name across four trees when this was written; they are
+one directory per capability now — see
+[capability-packages](/decisions/capability-packages.md). The four **kinds** of file, and what
+each is for, are unchanged.)*
 
-A **transport** is a smaller thing, deliberately: a `Driver` in `modules/drivers.py` plus its
+Adding a capability — forecasting, say — touches none of the existing ones, and no agent has
+it until genesis derives it.
+
+A **transport** is a smaller thing, deliberately: a `Driver` under `transports/` plus its
 terms and completeness rules. No capability, no module, no belief changes — because how a
 device is reached is not something an agent decides. That line is the subject of
 [the perception/binding split](/domain/sensing.md): a capability distinguishes what an agent
@@ -48,7 +59,7 @@ must decide, a binding distinguishes how a device is spoken to.
 # Capabilities are derived from hardware, not declared
 
 The sovereign never writes down what an agent can do — only what exists and what is wired to
-what. `rules/*.ru` then computes ability from connection:
+what. Each capability's `rules.ru` then computes ability from connection:
 
 - wired to a **pull-mode** sensor → `ag:Polling`: the agent owns a cadence;
 - wired to a **push-mode** sensor → `ag:Listening`: it records what arrives, and is never
@@ -119,6 +130,9 @@ validated world, so the check is a backstop rather than a burden.
   [belief-base-isolation](/decisions/belief-base-isolation.md) — per-agent store credentials
   and a per-graph access list generated from the world. Writes are not scoped, and the message
   bus has no ACLs at all, so a process on the broker can still watch every reading.
+- **A capability is now a directory, discovered rather than listed** — see
+  [capability-packages](/decisions/capability-packages.md), which also removed the last
+  Python imports between capabilities.
 - **Capabilities are read once at boot.** A world-version bump should eventually be an event
   agents react to, rather than something they notice on restart.
 - **Derivation is materialised, not maintained.** Rules run at genesis and write triples into

@@ -27,8 +27,8 @@ import time
 import paho.mqtt.client as mqtt
 
 from . import config, signing, store
-from .modules.actuation import verify_command
 from .ontology import WORLD_GRAPH
+from .signing import verify_command
 from .store import bindings
 from .world import load_bus, load_world
 

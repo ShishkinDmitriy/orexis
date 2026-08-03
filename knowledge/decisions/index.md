@@ -35,7 +35,8 @@ change something, to check you're not welding shut a planned extension.
 
 * [two-store-beliefs](/decisions/two-store-beliefs.md) - InfluxDB owns the series; Fuseki owns citable current-state. Joined by plant URI, never federated.
 * [world-graph](/decisions/world-graph.md) - No config file: the world graph holds only topology (public, versioned, stated once); desire, limits, cadence and prices are each agent's private beliefs. Agent/Sensor/Actuator become first-class.
-* [capability-modules](/decisions/capability-modules.md) - Code reads T-Box terms, never instances. A capability is an ontology module + shapes + derivation rules + code; capabilities are derived from hardware at genesis, and each agent is its own process knowing only its id.
+* [capability-modules](/decisions/capability-modules.md) - Code reads T-Box terms, never instances. A capability is an ontology module + shapes + derivation rules + code; capabilities are derived from hardware at genesis, and each agent is its own process knowing only its id. (Superseded on packaging by capability-packages.)
+* [capability-packages](/decisions/capability-packages.md) - A capability is one directory holding its own ontology, shapes, derivation rules, beliefs and code — found by looking, never listed. Capabilities reach each other through T-Box terms, never Python imports, so adding one is adding a directory and removing one is deleting it.
 
 # Genesis
 

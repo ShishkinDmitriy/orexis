@@ -8,8 +8,12 @@ to, and cannot drift from it.
 import pytest
 import rdflib
 
-from agora.ontology import ACTUATION, BIDDING, HOSTING, LISTENING, POLLING, WORLD_GRAPH
+from agora import loader
+from agora.ontology import WORLD_GRAPH
 from agora.world import WorldError, load_self, load_world
+from capabilities.actuation import ACTUATION
+from capabilities.market import BIDDING, HOSTING
+from capabilities.perception import LISTENING, POLLING
 
 from conftest import genesis_dataset, query_fn
 
@@ -57,7 +61,7 @@ def _world_with_push_sensor() -> rdflib.Dataset:
         INSERT { ag:moisture_sensor_fern ag:senseMode ag:Push }
         WHERE  { ag:moisture_sensor_fern ag:senseMode ag:Pull }
     """)
-    for rule in sorted((__import__("conftest").RULES_DIR).glob("*.ru")):
+    for rule in loader.rule_files():
         ds.update(rule.read_text())
     return ds
 

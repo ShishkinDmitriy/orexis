@@ -9,16 +9,17 @@ import pytest
 import rdflib
 from pyshacl import validate
 
-from agora.ontology import MODULE_FILES, WORLD_GRAPH, beliefs_graph
+from agora import loader
+from agora.ontology import WORLD_GRAPH, beliefs_graph
 
-from conftest import GENESIS_DIR, ONTOLOGY_DIR, RULES_DIR, SHAPES_DIR, genesis_dataset
+from conftest import GENESIS_DIR, genesis_dataset
 
 
 def _flatten(ds: rdflib.Dataset) -> rdflib.Graph:
     """The vocabulary + the world + every agent's beliefs, exactly as validation sees it."""
     data = rdflib.Graph()
-    for name in MODULE_FILES:
-        data.parse(ONTOLOGY_DIR / f"{name}.ttl", format="turtle")
+    for path in loader.ontology_files():
+        data.parse(path, format="turtle")
     for triple in ds.graph(rdflib.URIRef(WORLD_GRAPH)):
         data.add(triple)
     for agent in ("fern", "tomato", "succulent", "supplier"):
@@ -29,10 +30,10 @@ def _flatten(ds: rdflib.Dataset) -> rdflib.Graph:
 
 def _conforms(data: rdflib.Graph) -> bool:
     ontology, shapes = rdflib.Graph(), rdflib.Graph()
-    for name in MODULE_FILES:
-        ontology.parse(ONTOLOGY_DIR / f"{name}.ttl", format="turtle")
-        if (SHAPES_DIR / f"{name}.ttl").exists():
-            shapes.parse(SHAPES_DIR / f"{name}.ttl", format="turtle")
+    for path in loader.ontology_files():
+        ontology.parse(path, format="turtle")
+    for path in loader.shapes_files():
+        shapes.parse(path, format="turtle")
     conforms, _, _ = validate(data, shacl_graph=shapes, ont_graph=ontology,
                               inference="rdfs", advanced=True)
     return conforms
