@@ -7,7 +7,7 @@ Startup is three reads and no configuration:
   1. the **world** says what I am — what I act for, what I may poll, which market I belong
      to, what I can do, where each of those lives on the wire, and which bus to meet on;
   2. my **own beliefs** supply the parameters for each capability I composed;
-  3. the **modules** named by those capabilities are loaded, and nothing else runs.
+  3. the **packages** implementing those capabilities are loaded, and nothing else runs.
 
 The environment tells it two things only: which agent it is, and where the belief base is.
 Everything else — including the broker — is discovered, because a channel name is meaningless
@@ -17,7 +17,7 @@ Nothing in this process can reach another agent's beliefs, and no module knows t
 any instance. Adding a capability to an agent is a genesis edit: compose the capability in
 the world, add its block of beliefs, and the module starts running at next boot.
 
-See knowledge/decisions/capability-modules.md.
+See knowledge/decisions/capability-packages.md.
 """
 
 from __future__ import annotations
@@ -27,12 +27,21 @@ import signal
 
 import paho.mqtt.client as mqtt
 
-from . import config, store
+from . import config, loader, store
 from .beliefs import Beliefs
-from .modules import REGISTRY
+from .store import bindings
 from .world import MessageBus, Self, World, load_bus, load_self, load_world
 
 log = logging.getLogger("agent")
+
+
+def _family_q(family: str) -> str:
+    """Which capability terms belong to a family. Asked of the T-Box, so a module can look
+    for "whoever perceives" without knowing that polling and listening are the two ways."""
+    return f"""
+SELECT ?capability WHERE {{ GRAPH ?g {{
+  {{ ?capability a <{family}> }} UNION {{ ?capability rdfs:subClassOf* <{family}> }}
+}} }}"""
 
 
 class Agent:
@@ -51,11 +60,54 @@ class Agent:
         self.mqtt.on_message = self._on_message
 
         # exactly the modules this agent composed — no more, no less
-        self.modules = [REGISTRY[c](self) for c in sorted(self.me.capabilities) if c in REGISTRY]
-        unknown = [c for c in sorted(self.me.capabilities) if c not in REGISTRY]
+        registry = loader.registry()
+        self.modules = [
+            registry[c](self) for c in sorted(self.me.capabilities) if c in registry
+        ]
+        unknown = [c for c in sorted(self.me.capabilities) if c not in registry]
         if unknown:
-            log.warning("no module implements %s — the world expects more than this build has",
+            log.warning("no package implements %s — the world expects more than this build has",
                         ", ".join(unknown))
+
+    # --- how one capability reaches another, without knowing its name ---
+
+    def provider(self, family: str):
+        """Whichever of MY modules provides a capability of this family, or None.
+
+        The family is a T-Box term, so the caller asks for "something that perceives" rather
+        than for `PollingModule`. That is the whole point: no capability package imports
+        another's Python, so any of them can be removed without breaking the rest. None is a
+        normal answer — an agent that composed neither is simply an agent that cannot.
+        """
+        members = {r["capability"] for r in bindings(self.store.query(_family_q(family)))}
+        return next((m for m in self.modules if m.CAPABILITY in members), None)
+
+    def annotations(self, subject_uri: str, value: float) -> dict:
+        """Everything my modules want to say about a reading of mine, merged.
+
+        This is what makes my announcement *mine* rather than perception's: whoever holds an
+        opinion contributes it, and a module with no stake contributes nothing.
+        """
+        out: dict = {}
+        for module in self.modules:
+            try:
+                out.update(module.annotate(subject_uri, value))
+            except Exception as exc:
+                log.error("%s: %s could not annotate a reading: %s", self.id, module.name, exc)
+        return out
+
+    def urgency(self, subject_uri: str, value: float) -> float | None:
+        """How close this reading puts me to trouble — the sharpest opinion any of me holds."""
+        opinions = []
+        for module in self.modules:
+            try:
+                opinion = module.urgency(subject_uri, value)
+            except Exception as exc:
+                log.error("%s: %s could not judge a reading: %s", self.id, module.name, exc)
+                continue
+            if opinion is not None:
+                opinions.append(opinion)
+        return max(opinions) if opinions else None
 
     # --- the shared connection; modules route by the topics they asked for ---
 

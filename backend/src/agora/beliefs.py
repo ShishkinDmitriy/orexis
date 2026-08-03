@@ -1,8 +1,10 @@
 """An agent's own beliefs — read per capability, from its own graph and nowhere else.
 
-Each code module asks for exactly the block its ontology module defines: the polling module
-asks for `PollingBeliefs`, the bidding module for `BiddingBeliefs`. A module cannot
-accidentally depend on another's terms, because it never sees them.
+What is here is the *reader*, which is the same for every capability. What each capability
+actually believes is declared in its own package (`capabilities/<name>/beliefs.py`) as a
+`Block`: a dataclass and the terms that fill it. So this file does not grow when a capability
+is added, and a module cannot accidentally depend on another's terms, because it never sees
+them.
 
 **There are no defaults.** If a belief is missing the agent refuses to start, naming the term
 and the graph. A silent fallback would be a policy decision made in code — exactly what this
@@ -18,6 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import get_type_hints
 
 from .ontology import SENSED_GRAPH, beliefs_graph
 from .store import QueryFn, bindings
@@ -27,43 +30,37 @@ class BeliefError(RuntimeError):
     """A capability was composed onto an agent without the beliefs it needs to run."""
 
 
-@dataclass(frozen=True)
-class PollingBeliefs:
-    """ag:Polling — how closely this agent watches, and how stale it lets a reading get."""
-
-    fast_sleep_s: int
-    slow_sleep_s: int
-    max_age_s: int
-
-
-@dataclass(frozen=True)
-class ListeningBeliefs:
-    """ag:Listening — only the freshness rule. There is no cadence to hold: the hardware
-    pushes on its own clock, so requiring a cadence would be requiring a fiction."""
-
-    max_age_s: int
+# How a literal off the wire becomes the type the dataclass declared. Integers come through
+# SPARQL as decimals often enough that int("30.0") would be the wrong kind of strict.
+_CASTS = {
+    int: lambda x: int(float(x)),
+    float: float,
+    str: str,
+    bool: lambda x: str(x).lower() in ("1", "true", "yes"),
+}
 
 
 @dataclass(frozen=True)
-class BiddingBeliefs:
-    """ag:Bidding — its wallet, its desire, its limits, and its private value curve."""
+class Block:
+    """One capability's private parameters: the shape, and the terms that fill it.
 
-    endowment: float
-    target: float
-    low: float
-    high: float
-    litres_per_fraction: float
-    max_value_per_l: float
+    Declared next to the module that reads it. The cast for each field is taken from the
+    dataclass annotation, so a block states its types once rather than twice.
+    """
 
+    capability: str  # the term, so a missing belief names the capability that wanted it
+    cls: type
+    terms: dict[str, str]  # field name -> the ag: term carrying it
 
-@dataclass(frozen=True)
-class HostingBeliefs:
-    """ag:Hosting — the seller's terms and the shape of a round."""
-
-    quantity_l: float
-    reserve_price_per_l: float
-    bid_window_s: int
-    cooldown_s: int
+    def casts(self) -> dict:
+        hints = get_type_hints(self.cls)
+        missing = [f for f in self.terms if f not in hints]
+        if missing:
+            raise BeliefError(
+                f"{self.cls.__name__} has no field for {', '.join(missing)} — the block and "
+                "the dataclass disagree"
+            )
+        return {field: _CASTS[hints[field]] for field in self.terms}
 
 
 @dataclass(frozen=True)
@@ -101,29 +98,6 @@ def _parse_reading(results: dict) -> Reading | None:
     return Reading(value=float(rows[0]["value"]), result_time=_parse_datetime(rows[0].get("ts")))
 
 
-# Each entry: local name -> the ontology term that carries it. The module's whole contract.
-_POLLING_TERMS = {
-    "fast_sleep_s": "fastSleepS",
-    "slow_sleep_s": "slowSleepS",
-    "max_age_s": "maxReadingAgeS",
-}
-_LISTENING_TERMS = {"max_age_s": "maxReadingAgeS"}
-_BIDDING_TERMS = {
-    "endowment": "hasEndowment",
-    "target": "hasTarget",
-    "low": "bandLow",
-    "high": "bandHigh",
-    "litres_per_fraction": "litresPerFraction",
-    "max_value_per_l": "maxValuePerL",
-}
-_HOSTING_TERMS = {
-    "quantity_l": "offerQuantityL",
-    "reserve_price_per_l": "reservePricePerL",
-    "bid_window_s": "bidWindowS",
-    "cooldown_s": "roundCooldownS",
-}
-
-
 def _block_query(agent_uri: str, graph: str, terms: dict[str, str]) -> str:
     lines = "\n".join(
         f"  OPTIONAL {{ <{agent_uri}> ag:{term} ?{var} }}" for var, term in terms.items()
@@ -143,39 +117,24 @@ class Beliefs:
         self.agent_uri = agent_uri
         self.graph = beliefs_graph(agent_id)
 
-    def _block(self, capability: str, terms: dict[str, str], cast: dict) -> dict:
-        rows = bindings(self.query(_block_query(self.agent_uri, self.graph, terms)))
+    def read(self, block: Block):
+        """Fill one capability's block, or refuse to start and say exactly what is missing."""
+        rows = bindings(self.query(_block_query(self.agent_uri, self.graph, block.terms)))
         row = rows[0] if rows else {}
+        casts = block.casts()
         out, missing = {}, []
-        for var, term in terms.items():
-            raw = row.get(var)
+        for field, term in block.terms.items():
+            raw = row.get(field)
             if raw is None:
                 missing.append(f"ag:{term}")
             else:
-                out[var] = cast[var](raw)
+                out[field] = casts[field](raw)
         if missing:
             raise BeliefError(
-                f"{self.agent_id} composed {capability} but its beliefs graph <{self.graph}> "
-                f"is missing {', '.join(missing)} — run agora-validate"
+                f"{self.agent_id} composed {block.capability} but its beliefs graph "
+                f"<{self.graph}> is missing {', '.join(missing)} — run agora-validate"
             )
-        return out
-
-    def polling(self) -> PollingBeliefs:
-        cast = {k: (lambda x: int(float(x))) for k in _POLLING_TERMS}
-        return PollingBeliefs(**self._block("ag:Polling", _POLLING_TERMS, cast))
-
-    def listening(self) -> ListeningBeliefs:
-        cast = {"max_age_s": lambda x: int(float(x))}
-        return ListeningBeliefs(**self._block("ag:Listening", _LISTENING_TERMS, cast))
-
-    def bidding(self) -> BiddingBeliefs:
-        cast = {k: float for k in _BIDDING_TERMS}
-        return BiddingBeliefs(**self._block("ag:Bidding", _BIDDING_TERMS, cast))
-
-    def hosting(self) -> HostingBeliefs:
-        cast = {k: float for k in _HOSTING_TERMS}
-        cast["bid_window_s"] = cast["cooldown_s"] = lambda x: int(float(x))
-        return HostingBeliefs(**self._block("ag:Hosting", _HOSTING_TERMS, cast))
+        return block.cls(**out)
 
     def current_reading(self, subject_uri: str) -> Reading | None:
         """The latest observation of a subject, with the time it was taken."""

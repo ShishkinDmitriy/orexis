@@ -11,30 +11,37 @@ device's own nature:
 What survives the difference is the **judgment**: either way the agent decides how stale a
 reading may be before it stops trusting it, because that is about belief rather than control.
 What does not survive is the cadence — a listening agent is never asked for one, since it
-could not apply it. That asymmetry is enforced by shapes/perception.ttl, not by convention.
+could not apply it. That asymmetry is enforced by shapes.ttl, not by convention.
 
-What deliberately does NOT appear here is a protocol. How a device is spoken to is a
-`Driver`'s business (see drivers.py), chosen per sensor from what the world says about it —
-so an agent may hold one sensor on a bus and another on a wire under a single attention
-policy. A capability distinguishes what an agent must decide; a binding distinguishes how a
-device is reached, and only the second varies by transport.
+Two things deliberately do NOT appear here:
 
-Everything touched here is discovered: which sensors (`ag:polls`), what property they read
+- **A protocol.** How a device is spoken to is a driver's business (`transports/`), chosen per
+  sensor from what the world says about it — so an agent may hold one sensor on a bus and
+  another on a wire under a single attention policy.
+- **What counts as trouble.** Perception knows how to look and how fresh a number is; it has
+  no band and no target, because those belong to whoever holds a stake in the subject. So it
+  *asks* — `agent.urgency` for how closely to watch, `agent.annotations` for what to say
+  publicly — and an agent with no stake simply gets no answer and watches at its slow cadence.
+  That is why nothing here imports another capability.
+
+Everything touched is discovered: which sensors (`ag:polls`), what property they read
 (`sosa:observes`), and where to announce a perception (`ag:eventTopic`).
 
-Vocabulary: ontology/perception.ttl. Rules: shapes/perception.ttl.
-Derivation: rules/perception.ru. See knowledge/domain/sensing.md.
+Vocabulary: capabilities/perception/ontology.ttl. Rules: capabilities/perception/shapes.ttl.
+Derivation: capabilities/perception/rules.ru. See knowledge/domain/sensing.md.
 """
 
 from __future__ import annotations
 
-from .. import config
-from ..influx_writer import InfluxWriter
-from ..ontology import LISTENING, POLLING, band_for
-from ..sensed_writer import SensedWriter
-from ..store import bindings
-from .base import Module
-from .drivers import driver_for
+from agora import config
+from agora.driver import driver_for
+from agora.influx_writer import InfluxWriter
+from agora.module import Module
+from agora.sensed_writer import SensedWriter
+from agora.store import bindings
+
+from .beliefs import LISTENING_BLOCK, POLLING_BLOCK
+from .terms import LISTENING, POLLING
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future perception inherits them.
@@ -59,14 +66,6 @@ class PerceptionModule(Module):
             if self.drivers[sensor.uri] is None:
                 self.log.warning("%s states no binding I can speak — it will never be read",
                                  sensor.local_id)
-        # An agent judges itself against its own band, which is part of what it WANTS — so an
-        # agent with no stake in the subject has no verdict to reach, and says so.
-        self.band = None
-        try:
-            b = agent.beliefs.bidding()
-            self.band = (b.low, b.high)
-        except Exception:
-            pass
 
         self.influx = InfluxWriter(
             config.env("INFLUX_URL", "http://localhost:8086"),
@@ -118,21 +117,20 @@ class PerceptionModule(Module):
             self.log.error("sensed write failed: %s", exc)
 
         if self.me.event_topic:
-            # voluntary disclosure: I announce my own verdict, not my raw state. A host
-            # listens for this to know scarcity has appeared, and never reads my moisture.
+            # Voluntary disclosure: I announce my own verdict, not my raw state. A host listens
+            # for this to know scarcity has appeared, and never reads my moisture. The verdict
+            # comes from whichever of my capabilities holds an opinion — perception supplies
+            # the number, the stake supplies the judgment.
             self.publish(self.me.event_topic, {
                 "agent": self.me.agent_id, "subject": sensor.subject,
-                "value": round(value, 3), "band": self.judge(value),
+                "value": round(value, 3),
+                **self.agent.annotations(sensor.subject, value),
             })
         self.on_reading(sensor, value)
         self.agent.reading_recorded(sensor.subject, value)
 
     def on_reading(self, sensor, value: float) -> None:
         """What this capability does after recording. Polling re-aims; listening does not."""
-
-    def judge(self, value: float) -> str | None:
-        """My own verdict, against my own limits. Computed, never stored."""
-        return None if self.band is None else band_for(value, *self.band)
 
     def sense_now(self) -> None:
         """Ask for a reading now, if my hardware allows it. Listening cannot."""
@@ -150,7 +148,7 @@ class PollingModule(PerceptionModule):
     name = "polling"
 
     def __init__(self, agent):
-        self.beliefs = agent.beliefs.polling()
+        self.beliefs = agent.beliefs.read(POLLING_BLOCK)
         super().__init__(agent)
         self.min_sleep_s, self.max_sleep_s = self._bounds()
         self.sent_cadence: dict[str, int] = {}
@@ -168,16 +166,19 @@ class PollingModule(PerceptionModule):
         self.sense_now()
 
     def on_reading(self, sensor, value: float) -> None:
-        self.set_cadence(sensor, self.cadence_for(value))
+        self.set_cadence(sensor, self.cadence_for(sensor.subject, value))
 
-    def cadence_for(self, value: float) -> int:
-        """How long the board may sleep: the closer to my own trouble, the closer I watch."""
+    def cadence_for(self, subject_uri: str, value: float) -> int:
+        """How long the board may sleep: the closer to my own trouble, the closer I watch.
+
+        Trouble is not perception's to define, so it is asked for. An agent with no stake in
+        the subject gets no answer and watches at its slow cadence — the honest reading of
+        "nothing here is urgent to me".
+        """
         b = self.beliefs
-        if self.band is None:
+        urgency = self.agent.urgency(subject_uri, value)
+        if urgency is None:
             return min(self.max_sleep_s, max(self.min_sleep_s, b.slow_sleep_s))
-        low, high = self.band
-        span = high - low
-        urgency = 1.0 if span <= 0 else min(1.0, max(0.0, (high - value) / span))
         sleep_s = b.slow_sleep_s + (b.fast_sleep_s - b.slow_sleep_s) * urgency
         return int(round(min(self.max_sleep_s, max(self.min_sleep_s, sleep_s))))
 
@@ -211,7 +212,7 @@ class ListeningModule(PerceptionModule):
     name = "listening"
 
     def __init__(self, agent):
-        self.beliefs = agent.beliefs.listening()
+        self.beliefs = agent.beliefs.read(LISTENING_BLOCK)
         super().__init__(agent)
 
     def _max_age_s(self) -> int:

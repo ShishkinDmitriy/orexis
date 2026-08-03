@@ -42,7 +42,7 @@ Jena supports mapping users to graphs in the dataset assembler, so the store its
 read of a graph you do not own.
 
 - **Keeps one dataset**, which matters more than it looks: the derivation rules
-  (`rules/*.ru`) read `GRAPH <world>` and `GRAPH <ontology>` in a single update, and SHACL
+  (each capability's `rules.ru`) read `GRAPH <world>` and `GRAPH <ontology>` in a single update, and SHACL
   targets ask questions spanning world, T-Box and beliefs at once. Both require one dataset.
 - Enforcement lands exactly where the convention currently is, with no change to how agents
   query.

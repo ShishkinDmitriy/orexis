@@ -40,7 +40,8 @@ The graph name IS the trust tier — it is the write-authorization boundary, so 
 cited" is a mechanical membership check (PROV-O then records *which* witness inside it; see
 below on why the graph, not the provenance triple, carries the trust):
 
-- `:ontology` — the shared **T-Box** (`ontology/agora.ttl`): classes and properties (World,
+- `:ontology` — the shared **T-Box**, merged from every package's `ontology.ttl`
+  (`kernel/`, each `capabilities/*/`, `transports/*/`, `domain/*/`): classes and properties (World,
   Agent, Sensor, Valve, Plant, Band, servedBy…). The vocabulary agents read from context.
 - `:world` — the sovereign-authored **topology**, and *only* topology: which agent acts for
   which plant, which sensors it is wired to (`polls` — the access grant), which valve

@@ -7,9 +7,10 @@ these tests build a device and check the module obeys it.
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from agora import signing
+from agora import loader, signing  # noqa: F401  (loader puts the package trees on sys.path)
 from agora.clearing import Voucher
-from agora.modules.actuation import ActuationModule, verify_command
+from agora.signing import verify_command
+from capabilities.actuation import ActuationModule
 from agora.world import Actuator, Self
 
 

@@ -37,19 +37,42 @@ look, and bids only on a fresh reading. See
 ## Layout
 
 ```
-ontology/    the T-Box, one file per capability — core, polling, market, actuation, water
-shapes/      SHACL per capability: what an agent must believe to hold it
-rules/       derivation per capability: what wiring GIVES an agent it
-backend/     the code modules that read those terms, plus the agent runtime
-genesis/     the ratified world, hand-authored in Turtle: wiring + each agent's beliefs
-firmware/    ESP32 edge — moisture sensors and pump/valve
-infra/       compose service configs — grafana, mosquitto
-knowledge/   OKF knowledge bundle (architecture decisions + domain model)
+kernel/        the T-Box everything layers on. Not a capability; there is one
+capabilities/  what an agent can DO — perception, market, actuation. The extendable axis
+transports/    how a device is REACHED — mqtt. Deliberately not a capability
+domain/        what the society is ABOUT — water. Vocabulary; the domain is a plug-in
+backend/       the runtime that loads all of the above, plus the pure market mechanism
+genesis/       the ratified world, hand-authored in Turtle: wiring + each agent's beliefs
+firmware/      ESP32 edge — moisture sensors and pump/valve
+infra/         compose service configs — grafana, mosquitto
+knowledge/     OKF knowledge bundle (architecture decisions + domain model)
 ```
 
-A capability is those four things with the same name. Adding one — forecasting, say — means
-`ontology/forecast.ttl`, `shapes/forecast.ttl`, `rules/forecast.ru`, a module in
-`backend/src/agora/modules/`, and one line of registry. No existing module changes.
+**A capability is a directory**, and inside it the same names mean the same things every
+time:
+
+```
+capabilities/perception/
+  ontology.ttl   the vocabulary — what its terms mean
+  shapes.ttl     the rules — what an agent must believe to hold it
+  rules.ru       the derivation — what wiring GIVES an agent it
+  terms.py       the terms it implements, and the families it asks others for
+  beliefs.py     its Blocks — the private parameters it reads
+  module.py      the code, which reads only that vocabulary
+  __init__.py    the manifest: PROVIDES = (PollingModule, ListeningModule)
+```
+
+Every one of them is optional, and an omission is a statement: `domain/water/` has no code,
+`transports/mqtt/` has no `rules.ru` because a transport grants no capability, and
+`capabilities/actuation/` has no `beliefs.py` because it decides nothing.
+
+Nothing lists these — `agora.loader` finds them by looking. So **adding a capability is
+adding a directory**: drop in `capabilities/forecast/`, and `agora-seed` loads its vocabulary,
+runs its derivation, and agents that the wiring qualifies boot with it. No registry line, no
+term constant, no edit to any existing file — and deleting the directory removes it just as
+completely, because capabilities reach each other through T-Box terms and never through
+Python imports. See
+[`capability-packages`](knowledge/decisions/capability-packages.md).
 
 ## Prerequisites
 
@@ -219,7 +242,7 @@ pip install -e "./backend[dev]"
 pytest backend -q
 ```
 
-Validate the live belief base against every shapes module in [`shapes/`](shapes/). The checks
+Validate the live belief base against every package's `shapes.ttl`. The checks
 are **capability-aware**: a rule applies to an agent only if the world derived that capability
 for it. So the supplier is never asked for a cadence, a polling agent must have one, and a
 listening agent must *not* — plus the usual: a band whose floor is below its ceiling, a
@@ -227,7 +250,7 @@ cadence that watches more closely when thirsty, nobody sleeping past the constit
 ceiling, and every device stating where it is reachable.
 
 ```bash
-agora-validate         # every shapes module over :world + :beliefs/* + :sensed
+agora-validate         # every package's shapes over :world + :beliefs/* + :sensed
 ```
 
 ## What's next

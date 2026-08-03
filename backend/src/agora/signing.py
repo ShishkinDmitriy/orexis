@@ -73,6 +73,24 @@ def verify(pub: Ed25519PublicKey, data: bytes, sig_b64: str) -> bool:
         return False
 
 
+def verify_command(payload: dict, host_pub, clearing_pub) -> bool:
+    """Device-side check: open only for a token signed by BOTH host and clearing.
+
+    This is the *edge's* half of actuation, which is why it lives in the kernel rather than in
+    `capabilities/actuation/`: a device verifies without holding the capability, and a
+    simulator or a firmware stub must be able to check a command without loading the module
+    that issued it.
+    """
+    if host_pub is None or clearing_pub is None:
+        return False
+    match_sig, val_sig = payload.get("match_sig"), payload.get("val_sig")
+    if not match_sig or not val_sig:
+        return False
+    cmd = {k: v for k, v in payload.items() if k not in ("match_sig", "val_sig")}
+    data = canonical(cmd)
+    return verify(host_pub, data, match_sig) and verify(clearing_pub, data, val_sig)
+
+
 def main() -> None:
     """agora-keygen — create the host + clearing signing keys (run once)."""
     for name in ("host", "clearing"):

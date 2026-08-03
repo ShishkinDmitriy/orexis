@@ -21,6 +21,15 @@ def sensor_of(agent):
     return agent.me.sensors[0]
 
 
+def cadence_for(agent, value):
+    """The cadence the agent would choose for a reading of its own subject.
+
+    Two arguments now, and deliberately: perception asks *about a subject*, because whether a
+    number is trouble is the stakeholder's answer, not perception's.
+    """
+    return agent.polling().cadence_for(agent.me.acts_for, value)
+
+
 def cadences(agent):
     """Every cadence the agent has commanded, in order."""
     return [p["sleep_s"] for p in agent.sent.to(sensor_of(agent).command_topic)
@@ -30,18 +39,24 @@ def cadences(agent):
 # --- the policy ------------------------------------------------------------
 
 def test_it_watches_closely_when_thirsty(fern):
-    p = fern.polling()
-    assert p.cadence_for(0.35) == 30  # at its own low band -> its fastest
-    assert p.cadence_for(0.65) == 600  # at its high band -> its slowest
+    assert cadence_for(fern, 0.35) == 30  # at its own low band -> its fastest
+    assert cadence_for(fern, 0.65) == 600  # at its high band -> its slowest
 
 
 def test_attention_scales_with_trouble(fern):
+    assert cadence_for(fern, 0.40) < cadence_for(fern, 0.60)
+
+
+def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
+    """Urgency is supplied by whoever holds a band. Asked about a subject it has no stake in,
+    the agent has no opinion — and an agent with no opinion does not watch closely."""
     p = fern.polling()
-    assert p.cadence_for(0.40) < p.cadence_for(0.60)
+    assert p.cadence_for("http://example.org/agora#someone_elses_plant", 0.0) == \
+        p.beliefs.slow_sleep_s
 
 
 def test_the_bounds_come_from_the_ontology_not_the_code(fern):
-    """MIN/MAX are stated in ontology/polling.ttl and read at startup."""
+    """MIN/MAX are stated in capabilities/perception/ontology.ttl and read at startup."""
     p = fern.polling()
     assert (p.min_sleep_s, p.max_sleep_s) == (10, 900)
 
@@ -51,13 +66,13 @@ def test_no_agent_can_exceed_the_constitutional_ceiling(fern):
     too, so this is the second of three independent guards (the third is the firmware)."""
     p = fern.polling()
     p.beliefs = replace(p.beliefs, slow_sleep_s=99_999)
-    assert p.cadence_for(0.99) == p.max_sleep_s
+    assert cadence_for(fern, 0.99) == p.max_sleep_s
 
 
 def test_no_agent_can_hammer_its_sensor_flat(fern):
     p = fern.polling()
     p.beliefs = replace(p.beliefs, fast_sleep_s=1)
-    assert p.cadence_for(0.0) == p.min_sleep_s
+    assert cadence_for(fern, 0.0) == p.min_sleep_s
 
 
 # --- the two levers --------------------------------------------------------
@@ -90,17 +105,13 @@ def test_a_sense_request_is_never_retained(fern):
 
 # --- judgment and disclosure ----------------------------------------------
 
-def test_it_judges_itself_against_its_own_limits(fern):
-    p = fern.polling()
-    assert p.judge(0.20) == "LOW"
-    assert p.judge(0.50) == "OK"
-    assert p.judge(0.80) == "HIGH"
-
-
 def test_it_announces_its_verdict_not_just_a_number(fern):
+    """Perception supplies the number; the band is contributed by the capability that holds a
+    stake. The announcement is the agent's, not perception's — which is why it carries both."""
     fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
     event = fern.sent.to(fern.me.event_topic)[-1]
     assert event["band"] == "LOW" and event["agent"] == "fern"
+    assert event["value"] == 0.10
 
 
 def test_the_reading_is_recorded_as_its_own_assertion(fern):

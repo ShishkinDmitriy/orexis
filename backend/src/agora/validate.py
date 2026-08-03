@@ -1,7 +1,7 @@
 """SHACL validation of the belief base.
 
 Pulls the world, each agent's beliefs, and the sensed graph from Fuseki and validates them
-against every shapes module in shapes/ (with the T-Box for type resolution). This is the
+against every package's shapes (with the T-Box for type resolution). This is the
 constitution's "checked by code, not persuasion", and because capabilities are declared, the
 checks are capability-aware: a shape applies to an agent only if that agent composed the
 capability it belongs to. An agent that claims ag:Polling with no sensor or no cadence fails
@@ -18,16 +18,11 @@ import sys
 import rdflib
 from pyshacl import validate as shacl_validate
 
-from . import config, store
-from .config import PROJECT_ROOT
-from .ontology import MODULE_FILES, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
+from . import config, loader, store
+from .ontology import SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
 from .store import bindings
 
 log = logging.getLogger("validate")
-
-REPO_ROOT = PROJECT_ROOT.parent
-ONT_DIR = REPO_ROOT / "ontology"
-SHAPES_DIR = REPO_ROOT / "shapes"
 
 # Who has a beliefs graph is itself stated in the world — discovered, never listed here.
 _AGENTS_Q = f"""
@@ -49,11 +44,10 @@ def validate() -> bool:
     # to is a fact stated in the vocabulary.
     ontology = rdflib.Graph()
     shapes = rdflib.Graph()
-    for name in MODULE_FILES:
-        ontology.parse(str(ONT_DIR / f"{name}.ttl"), format="turtle")
-        shapes_file = SHAPES_DIR / f"{name}.ttl"
-        if shapes_file.exists():
-            shapes.parse(str(shapes_file), format="turtle")
+    for path in loader.ontology_files():
+        ontology.parse(str(path), format="turtle")
+    for path in loader.shapes_files():
+        shapes.parse(str(path), format="turtle")
 
     # advanced=True enables SPARQL-based targets, which is how a shape scopes itself to the
     # agents that composed its capability.

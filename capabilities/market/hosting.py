@@ -13,7 +13,7 @@ round is a conversation rather than a calculation:
 The host proposes; clearing disposes. `auction.py`, `clearing.py` and `market.py` are pure
 and unchanged — this module is only the choreography around them.
 
-Vocabulary: ontology/market.ttl. Rules: shapes/market.ttl.
+Vocabulary: capabilities/market/ontology.ttl. Rules: capabilities/market/shapes.ttl.
 See knowledge/domain/round.md, knowledge/decisions/clearing-as-validator.md.
 """
 
@@ -22,12 +22,15 @@ from __future__ import annotations
 import time
 import uuid
 
-from ..auction import run_round
-from ..market import Bid, Limits, MarketState, Offer
-from ..ontology import HOSTING, WORLD_GRAPH
-from ..store import bindings
-from ..world import participants
-from .base import Module, Timer
+from agora.auction import run_round
+from agora.market import Bid, Limits, MarketState, Offer
+from agora.module import Module, Timer
+from agora.ontology import WORLD_GRAPH
+from agora.store import bindings
+from agora.world import participants
+
+from .beliefs import HOSTING_BLOCK
+from .terms import ACTUATION, HOSTING
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -43,7 +46,7 @@ class HostingModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.beliefs = agent.beliefs.hosting()
+        self.beliefs = agent.beliefs.read(HOSTING_BLOCK)
         self.markets = self.me.hosted_markets
         self.participants = {
             m.uri: participants(agent.store.query, m) for m in self.markets
@@ -176,15 +179,13 @@ class HostingModule(Module):
         self.redeem(result.vouchers)
 
     def redeem(self, vouchers) -> None:
-        """Hand the vouchers to my own actuation module, if I have that capability.
+        """Hand the vouchers to whichever of my capabilities can touch the hardware.
 
         Winning is not the same as being able to open a valve: the resource owner redeems.
+        Asked for by term, so this package does not know that actuation is implemented in
+        Python at all — a host in a build without it simply issues paper.
         """
-        from .actuation import ActuationModule
-
-        actuation = next(
-            (m for m in self.agent.modules if isinstance(m, ActuationModule)), None
-        )
+        actuation = self.agent.provider(ACTUATION)
         if actuation is None:
             self.log.info("no actuation capability — vouchers issued but not redeemed")
             return
