@@ -24,12 +24,22 @@ import requests
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against.
 QueryFn = Callable[[str], dict]
 
+# Sent with every query. This is the ONLY set a query may use — rdflib silently pre-binds
+# common prefixes and Fuseki does not, so anything relying on that works in a test and 400s
+# against the real store. `test_store.py` holds the codebase to this list.
 PREFIXES = """
 PREFIX ag:   <http://example.org/agora#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
 """
+
+DECLARED = frozenset(
+    line.split()[1].rstrip(":") for line in PREFIXES.splitlines() if line.startswith("PREFIX")
+)
 
 
 def bindings(results: dict) -> list[dict]:
