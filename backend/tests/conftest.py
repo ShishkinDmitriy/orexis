@@ -19,21 +19,25 @@ from agora.ontology import ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_gr
 from agora.seed import agent_id_of
 
 REPO_ROOT = loader.REPO_ROOT
-GENESIS_DIR = REPO_ROOT / "genesis"
+GENESIS_ROOT = REPO_ROOT / "genesis"
+GENESIS_DIR = GENESIS_ROOT / "society"   # the world most tests are about
 
 
 def genesis_dataset(readings: dict[str, float] | None = None,
-                    result_time: datetime | None = None) -> rdflib.Dataset:
-    """The seeded belief base — including the DERIVATION step.
+                    result_time: datetime | None = None,
+                    world: str = "society") -> rdflib.Dataset:
+    """One seeded belief base — including the DERIVATION step.
 
     The rules are applied exactly as `agora-seed` applies them, so tests see the capabilities
-    the world actually implies rather than a hand-written list.
+    the world actually implies rather than a hand-written list. `world` names which of the
+    ratified worlds in genesis/ to build, so a test can be about the small one.
     """
+    genesis = GENESIS_ROOT / world
     ds = rdflib.Dataset()
     for path in loader.ontology_files():
         ds.graph(rdflib.URIRef(ONTOLOGY_GRAPH)).parse(path, format="turtle")
-    ds.graph(rdflib.URIRef(WORLD_GRAPH)).parse(GENESIS_DIR / "world.ttl", format="turtle")
-    for path in sorted(GENESIS_DIR.glob("beliefs-*.ttl")):
+    ds.graph(rdflib.URIRef(WORLD_GRAPH)).parse(genesis / "world.ttl", format="turtle")
+    for path in sorted(genesis.glob("beliefs-*.ttl")):
         graph = rdflib.URIRef(beliefs_graph(agent_id_of(path)))
         ds.graph(graph).parse(path, format="turtle")
     for rule in loader.rule_files():
@@ -147,7 +151,7 @@ def build_agent(agent_id: str, ds: rdflib.Dataset | None = None, monkeypatch=Non
     agent.module = lambda name: next(m for m in agent.modules if m.name == name)
     agent.hosting = lambda: agent.module("hosting")
     agent.bidding = lambda: agent.module("bidding")
-    agent.polling = lambda: agent.module("polling")
+    agent.subscribing = lambda: agent.module("subscribing")
     return agent
 
 

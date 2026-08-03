@@ -107,7 +107,7 @@ correction above is one face of this.
 Recorded ahead of the code; the code has since caught up in part.
 
 **Done.** The band is the agent's (§1) — computed from its charter, gateway decommissioned
-(see [trusted-agent-mode](/decisions/trusted-agent-mode.md)). Sensing is pull-based (§3): the
+(see [trusted-agent-mode](/decisions/trusted-agent-mode.md)). Sensing is agent-timed (§3): the
 firmware is a `sense`/`sleep` service, and the *agent* now drives it — it sets the cadence
 from its own urgency and nudges for a reading before it bids. The guard that pull requires
 came with it: a bid must cite a **fresh-enough** reading or the agent sits the round out, and

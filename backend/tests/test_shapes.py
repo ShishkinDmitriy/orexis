@@ -2,7 +2,7 @@
 
 The interesting property is that the rules are *capability-aware*: a shape applies to an agent
 only if the world derived that capability for it. So an agent on a push-mode board is never
-asked for a cadence it could not apply, and one on a pull board is required to have it.
+asked for an interval it could not apply, and one on a scheduled board is required to have it.
 """
 
 import pytest
@@ -12,20 +12,38 @@ from pyshacl import validate
 from agora import loader
 from agora.ontology import WORLD_GRAPH, beliefs_graph
 
-from conftest import GENESIS_DIR, genesis_dataset
+from agora.seed import agent_id_of
+
+from conftest import GENESIS_DIR, GENESIS_ROOT, genesis_dataset
 
 
-def _flatten(ds: rdflib.Dataset) -> rdflib.Graph:
+def _flatten(ds: rdflib.Dataset, genesis=GENESIS_DIR) -> rdflib.Graph:
     """The vocabulary + the world + every agent's beliefs, exactly as validation sees it."""
     data = rdflib.Graph()
     for path in loader.ontology_files():
         data.parse(path, format="turtle")
     for triple in ds.graph(rdflib.URIRef(WORLD_GRAPH)):
         data.add(triple)
-    for agent in ("fern", "tomato", "succulent", "supplier"):
-        for triple in ds.graph(rdflib.URIRef(beliefs_graph(agent))):
+    # every agent genesis authors, found the way agora-seed finds them — so adding one to
+    # the world is caught here rather than quietly skipped
+    for path in sorted(genesis.glob("beliefs-*.ttl")):
+        for triple in ds.graph(rdflib.URIRef(beliefs_graph(agent_id_of(path)))):
             data.add(triple)
     return data
+
+
+def _worlds():
+    return sorted(d.name for d in GENESIS_ROOT.iterdir() if (d / "world.ttl").exists())
+
+
+@pytest.mark.parametrize("world", _worlds())
+def test_every_shipped_world_conforms(world):
+    """Every ratified world in genesis/ must validate — found by looking, never listed.
+
+    This is what makes a second world cheap: add a directory and it is held to the same
+    constitution as the first, with no test edit.
+    """
+    assert _conforms(_flatten(genesis_dataset(world=world), GENESIS_ROOT / world))
 
 
 def _conforms(data: rdflib.Graph) -> bool:
@@ -130,7 +148,7 @@ def test_a_device_on_the_bus_must_state_where_it_publishes():
 def test_a_listening_agent_must_not_hold_a_cadence():
     """Requiring a policy it cannot enforce would be theatre; stating one misdescribes it."""
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Pull }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Push .
                                            ag:fern_agent ag:hasCapability ag:Listening }} }}
         WHERE  {{}}"""))

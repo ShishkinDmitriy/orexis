@@ -28,7 +28,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Perception
 
-* [sensing](/domain/sensing.md) - Perception, in two capabilities decided by the hardware: an agent on a pull board owns its cadence, one on a push board only listens. Either way it owns the freshness rule, and a bid must cite a reading it trusts.
+* [sensing](/domain/sensing.md) - Perception split by WHO HOLDS THE CLOCK: Polling (the agent asks each time — reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). Either way the agent owns the freshness rule, and a bid must cite a reading it trusts.
 
 # Rules and resources
 

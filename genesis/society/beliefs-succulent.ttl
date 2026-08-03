@@ -4,7 +4,7 @@
 #  fifth of the moisture, shrugs at readings that would have fern bidding hard, and is
 #  content to look rarely and to trust older data. Same world, same ontology, different mind.
 
-##  ag:Polling
+##  ag:Subscribing
 ag:succulent_agent
     ag:fastSleepS 60 ;
     ag:slowSleepS 900 ;

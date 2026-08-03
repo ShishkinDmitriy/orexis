@@ -36,11 +36,12 @@ change something, to check you're not welding shut a planned extension.
 * [two-store-beliefs](/decisions/two-store-beliefs.md) - InfluxDB owns the series; Fuseki owns citable current-state. Joined by plant URI, never federated.
 * [world-graph](/decisions/world-graph.md) - No config file: the world graph holds only topology (public, versioned, stated once); desire, limits, cadence and prices are each agent's private beliefs. Agent/Sensor/Actuator become first-class.
 * [capability-modules](/decisions/capability-modules.md) - Code reads T-Box terms, never instances. A capability is an ontology module + shapes + derivation rules + code; capabilities are derived from hardware at genesis, and each agent is its own process knowing only its id. (Superseded on packaging by capability-packages.)
+* [who-holds-the-clock](/decisions/who-holds-the-clock.md) - Perception is three capabilities on one axis: Polling (the agent asks each time — declared, reserved, no hardware for it), Subscribing (the agent states an interval the device keeps — what the ESP32 does), Listening (the device announces). What was called Polling was Subscribing all along.
 * [capability-packages](/decisions/capability-packages.md) - A capability is one directory holding its own ontology, shapes, derivation rules, beliefs and code — found by looking, never listed. Capabilities reach each other through T-Box terms, never Python imports, so adding one is adding a directory and removing one is deleting it.
 
 # Genesis
 
-* [genesis](/decisions/genesis.md) - Sovereign narrates → LLM drafts → sovereign ratifies → infra writes structure + charters. Amendable and versioned; structure mutable, history immutable.
+* [genesis](/decisions/genesis.md) - Sovereign narrates → LLM drafts → sovereign ratifies → infra writes structure + charters. Each output is a whole world (genesis/ holds several, seeded one at a time), and agents are born from it — `agora-up` reads the roster from the belief base. Amendable and versioned; structure mutable, history immutable.
 
 # Seams (open on purpose)
 

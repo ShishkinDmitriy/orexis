@@ -10,8 +10,10 @@ from __future__ import annotations
 from agora.ontology import term
 
 # The family. Anything that perceives is one of these — which is what lets another capability
-# ask for "whoever perceives" without knowing there are two ways to do it.
+# ask for "whoever perceives" without knowing which way it does it.
 PERCEPTION = term("PerceptionCapability")
 
-POLLING = term("Polling")  # the agent drives its sensors, and owns a cadence
+# The axis is who holds the clock, and these are in decreasing order of agent control.
+POLLING = term("Polling")  # the agent asks, each time — RESERVED, nothing implements it yet
+SUBSCRIBING = term("Subscribing")  # the agent states an interval; the device keeps to it
 LISTENING = term("Listening")  # the device announces on its own clock; the agent records

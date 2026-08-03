@@ -75,7 +75,7 @@ class Agent:
         """Whichever of MY modules provides a capability of this family, or None.
 
         The family is a T-Box term, so the caller asks for "something that perceives" rather
-        than for `PollingModule`. That is the whole point: no capability package imports
+        than for `SubscribingModule`. That is the whole point: no capability package imports
         another's Python, so any of them can be removed without breaking the rest. None is a
         normal answer — an agent that composed neither is simply an agent that cannot.
         """

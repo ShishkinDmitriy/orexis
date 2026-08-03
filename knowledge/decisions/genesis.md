@@ -29,11 +29,43 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
    agent** — no stake, proposes only.
 3. **Ratify** — the sovereign reviews, edits, accepts. Only the sovereign authors the world
    (see [constitution](/domain/constitution.md): only the sovereign amends).
-4. **Write** — the ratified draft is Turtle in `genesis/`, and `agora-seed` PUTs it: the
-   wiring into `:world` (which agents read but never rewire), each agent's opening beliefs
-   into its own `:beliefs/<agent>` (which it alone may revise). The sovereign authors the
-   world in the same vocabulary the agents read — no config file, no translation layer.
-   See [world-graph](/decisions/world-graph.md).
+4. **Write** — the ratified draft is Turtle in `genesis/<world>/`, and `agora-seed <world>`
+   PUTs it: the wiring into `:world` (which agents read but never rewire), each agent's
+   opening beliefs into its own `:beliefs/<agent>` (which it alone may revise). The sovereign
+   authors the world in the same vocabulary the agents read — no config file, no translation
+   layer. See [world-graph](/decisions/world-graph.md).
+
+# A genesis output is a whole world, and there may be several
+
+`genesis/` holds **one directory per ratified world**, each complete and seedable on its own —
+not a base with fragments layered on it. `agora-seed <name>` loads exactly one.
+
+This matters more than convenience. A world is the *entire* model of a system, so a second one
+is not a variant of the first: it is a different society. `genesis/society` has a market;
+`genesis/sensing` has one subject, one board and one agent and no market at all — which makes
+it the smallest genesis output that still produces a working agent, and the proof that a
+capability can stand alone. If `ag:Bidding` could only exist alongside perception, "capability"
+would be a word for a bundle.
+
+The two ship with **identical device ids and channels**, so one flashed board runs in either.
+Which world is in the store decides whether its agent merely watches or also buys. That is the
+model-driven claim reduced to something you can check by re-seeding.
+
+# Agents are born from the world
+
+Nothing lists the agents to run. `agora-up` asks the belief base `?a a ag:Agent` and starts one
+process per answer, handing each the single thing an agent is ever told: its own id. The roster
+*is* the ratified world, so adding an agent is adding it to `world.ttl` — no unit file, no
+launcher edit, and no place for a list to drift from the model.
+
+One OS process each, and that is not an implementation detail: the process boundary is what
+makes one agent unable to read another's beliefs, and it is why a round had to become a
+protocol rather than a calculation (see
+[capability-packages](/decisions/capability-packages.md)). Supervision must not undo it.
+
+**Firmware is the exception, and the contrast is the point.** A board is hardware; it is
+flashed by hand and the model cannot conjure it. What genesis decides is what an *agent* is —
+which is exactly why the same board is a watcher in one world and a bidder in another.
 
 This is [english-vs-formal](/decisions/english-vs-formal.md) applied to *creation*: the story
 is fuzzy human intent (English); the ratified structure is trusted formal.

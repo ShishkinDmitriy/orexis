@@ -1,13 +1,14 @@
 """The manifest: what this capability contributes to a build.
 
-Two modules, one capability each. The loader reads this and nothing else — which is why
-adding a capability never edits a registry.
+Two of the three perception capabilities. `ag:Polling` is declared in the vocabulary and
+deliberately absent here: it needs a device that is reachable at any moment, and nothing in
+this world is. Adding it later is a class and one line of PROVIDES — no other package moves.
 """
 
-from .module import ListeningModule, PerceptionModule, PollingModule
-from .terms import LISTENING, PERCEPTION, POLLING
+from .module import ListeningModule, PerceptionModule, SubscribingModule
+from .terms import LISTENING, PERCEPTION, POLLING, SUBSCRIBING
 
-PROVIDES = (PollingModule, ListeningModule)
+PROVIDES = (SubscribingModule, ListeningModule)
 
-__all__ = ["PROVIDES", "PerceptionModule", "PollingModule", "ListeningModule",
-           "PERCEPTION", "POLLING", "LISTENING"]
+__all__ = ["PROVIDES", "PerceptionModule", "SubscribingModule", "ListeningModule",
+           "PERCEPTION", "POLLING", "SUBSCRIBING", "LISTENING"]

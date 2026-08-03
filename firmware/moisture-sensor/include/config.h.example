@@ -7,8 +7,10 @@
 #define MQTT_HOST "192.168.1.50" // the Raspberry Pi's LAN IP (runs mosquitto)
 #define MQTT_PORT 1883
 
-// Which plant this board measures. PLANT_ID must match an id in
-// backend/config/plants.yaml; SENSOR_ID is recorded as the provenance sensor.
+// Which subject this board measures. The topics are built from PLANT_ID, so it must match
+// the ag:readingTopic / ag:commandTopic that genesis/world.ttl states for this board's
+// sensor; SENSOR_ID must match that sensor's ag:localId, and is recorded as provenance.
+// Use "bench" / "moisture_sensor_bench" to bring a board up with no market running.
 #define PLANT_ID "fern"
 #define SENSOR_ID "moisture_sensor_fern"
 
@@ -30,4 +32,6 @@
 #define MIN_SLEEP_S 5        // don't sense more often than this (rate ceiling)
 #define MAX_SLEEP_S 900      // NEVER sleep longer than this — the constitutional cadence
                              // floor, so a plant can't go blind through a drought
+#define MQTT_TRIES 10       // give up connecting after this many tries and
+                     // sleep, rather than holding the battery open forever
 #define CMD_WAIT_MS 1500     // listen window after publishing, to catch a cadence command

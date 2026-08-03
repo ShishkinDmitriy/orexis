@@ -27,10 +27,10 @@ systemctl --user daemon-reload
 
 # one-time, in order, once infra is up
 systemctl --user start agora-infra
-.venv/bin/agora-acl        # store credentials + per-graph access list, from the world
+.venv/bin/agora-acl society   # store credentials + per-graph access list, from the world
 systemctl --user restart agora-infra   # Fuseki reads the access list at startup
 .venv/bin/agora-keygen     # signing keys for the actuate boundary
-.venv/bin/agora-seed       # the belief base
+.venv/bin/agora-seed society  # the belief base
 
 # one unit per agent — the id after @ is the agent's id, and nothing else is configured
 systemctl --user enable --now agora-agent@supplier.service
@@ -63,7 +63,7 @@ top-level README.
 ## Two things to know about the containers
 
 **Fuseki's config is generated, and its credentials are not in git.** `infra/fuseki/config.ttl`
-comes from `agora-acl` reading `genesis/world.ttl`; `keys/fuseki/` holds one credential per
+comes from `agora-acl` reading the seeded world's `world.ttl`; `keys/fuseki/` holds one credential per
 agent and is gitignored, like the signing keys. A fresh checkout therefore needs `agora-acl`
 before Fuseki will start, and Fuseki needs a restart after any re-run. Its data now lives in
 the `fuseki-data` volume, so rebuilding the container no longer destroys the belief base.
@@ -75,7 +75,9 @@ isolation is not being enforced.
 podman's own `conmon` and `rootlessport` helpers: the containers keep running while their
 published ports quietly stop working, and `podman restart` then fails with "conmon exited
 prematurely". Recovery is `podman stop` followed by `podman start`. Match the actual process
-instead — `pkill -f agora-agent`, `pkill -f agora.simulator`.
+instead — `pkill -f agora-agent`, `pkill -f agora.simulator`. For a foreground run of the
+whole society without units, `agora-up` reads the roster from the belief base and starts one
+process per agent; the units below are the same thing made durable.
 
 ## Sensor-only phase (now)
 
