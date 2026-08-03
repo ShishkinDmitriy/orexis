@@ -24,7 +24,7 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
 1. **Narrate** — the sovereign describes the world in English (plants, sources, who feeds
    whom, quirks, desires).
 2. **Draft** — the LLM proposes a *formal* world: the topology graph (`:fern :servedBy
-   :barrel1`, `:fern_agent :hasSensor :moisture_sensor_fern` …) and each agent's opening
+   :barrel1`, `:fern_agent :polls :moisture_sensor_fern` …) and each agent's opening
    beliefs (target, bands, cadence, valuation). The LLM is a **drafting assistant, not an
    agent** — no stake, proposes only.
 3. **Ratify** — the sovereign reviews, edits, accepts. Only the sovereign authors the world

@@ -5,9 +5,13 @@
 Startup is three reads and no configuration:
 
   1. the **world** says what I am — what I act for, what I may poll, which market I belong
-     to, what I can do, and where each of those lives on the wire;
+     to, what I can do, where each of those lives on the wire, and which bus to meet on;
   2. my **own beliefs** supply the parameters for each capability I composed;
   3. the **modules** named by those capabilities are loaded, and nothing else runs.
+
+The environment tells it two things only: which agent it is, and where the belief base is.
+Everything else — including the broker — is discovered, because a channel name is meaningless
+without the bus it is on and every member must agree on it.
 
 Nothing in this process can reach another agent's beliefs, and no module knows the name of
 any instance. Adding a capability to an agent is a genesis edit: compose the capability in
@@ -26,7 +30,7 @@ import paho.mqtt.client as mqtt
 from . import config, store
 from .beliefs import Beliefs
 from .modules import REGISTRY
-from .world import Self, World, load_self, load_world
+from .world import MessageBus, Self, World, load_bus, load_self, load_world
 
 log = logging.getLogger("agent")
 
@@ -36,8 +40,9 @@ class Agent:
 
     def __init__(self, agent_id: str, st=None):
         self.id = agent_id
-        self.store = st or store.from_env(config.env)
+        self.store = st or store.from_env(config.env, agent_id)  # as myself, not as admin
         self.world: World = load_world(self.store.query)
+        self.bus: MessageBus = load_bus(self.store.query)  # discovered, not configured
         self.me: Self = load_self(self.store.query, agent_id)
         self.beliefs = Beliefs(self.store.query, agent_id, self.me.uri)
 
@@ -88,9 +93,7 @@ class Agent:
                 log.error("%s: %s failed on %s: %s", self.id, module.name, msg.topic, exc)
 
     def run(self) -> None:
-        host = config.env("MQTT_HOST", "localhost")
-        port = int(config.env("MQTT_PORT", "1883"))
-        self.mqtt.connect(host, port)
+        self.mqtt.connect(self.bus.host, self.bus.port)
         self.mqtt.loop_start()
         for module in self.modules:
             module.start()

@@ -1,30 +1,29 @@
 """Perception — two capabilities over one shared ingest path.
 
-Which one an agent gets is decided by its **hardware**, and derived at genesis:
+Which one an agent gets is decided by its **hardware**, and derived at genesis from the
+device's own nature:
 
-- **ag:Polling** (pull-mode sensor) — the agent drives the board. It owns the cadence and may
-  ask for a reading now.
-- **ag:Listening** (push-mode sensor) — the board announces on its own clock and takes no
+- **ag:Polling** (pull-mode device) — the agent drives it. It owns the cadence and may ask
+  for a reading now.
+- **ag:Listening** (push-mode device) — the device announces on its own clock and takes no
   orders. The agent records what arrives, and that is all it can do.
 
 What survives the difference is the **judgment**: either way the agent decides how stale a
 reading may be before it stops trusting it, because that is about belief rather than control.
 What does not survive is the cadence — a listening agent is never asked for one, since it
-could not apply it. That asymmetry is enforced by shapes/polling.ttl, not by convention.
+could not apply it. That asymmetry is enforced by shapes/perception.ttl, not by convention.
 
-For a poller there are two levers, deliberately unequal:
+What deliberately does NOT appear here is a protocol. How a device is spoken to is a
+`Driver`'s business (see drivers.py), chosen per sensor from what the world says about it —
+so an agent may hold one sensor on a bus and another on a wire under a single attention
+policy. A capability distinguishes what an agent must decide; a binding distinguishes how a
+device is reached, and only the second varies by transport.
 
-- **cadence** (`sleep_s`) is standing policy, published **retained**, so a board that is deep
-  asleep still gets it the moment it wakes. This is the reliable lever.
-- **sense** is a best-effort nudge — it lands only if the board is awake, and is never
-  retained (a retained `sense` would re-fire on every wake, forever).
+Everything touched here is discovered: which sensors (`ag:polls`), what property they read
+(`sosa:observes`), and where to announce a perception (`ag:eventTopic`).
 
-Everything touched here is discovered: which sensors (`ag:polls`), where they publish and
-listen (`ag:readingTopic` / `ag:commandTopic`), what property they read (`sosa:observes`),
-and where to announce a perception (`ag:eventTopic`).
-
-Vocabulary: ontology/polling.ttl. Rules: shapes/polling.ttl. Derivation: rules/polling.ru.
-See knowledge/domain/sensing.md.
+Vocabulary: ontology/perception.ttl. Rules: shapes/perception.ttl.
+Derivation: rules/perception.ru. See knowledge/domain/sensing.md.
 """
 
 from __future__ import annotations
@@ -35,11 +34,13 @@ from ..ontology import LISTENING, POLLING, band_for
 from ..sensed_writer import SensedWriter
 from ..store import bindings
 from .base import Module
+from .drivers import driver_for
 
-# The constitutional cadence bounds are stated in the ontology module, not compiled in here.
+# The constitutional bounds are stated in the ontology, not compiled in here — and they hang
+# off the capability FAMILY, so every transport and every future perception inherits them.
 _BOUNDS_Q = """
 SELECT ?min ?max WHERE {
-  GRAPH ?g { <http://example.org/agora#Polling> ag:minSleepS ?min ; ag:maxSleepS ?max }
+  GRAPH ?g { ag:PerceptionCapability ag:minSleepS ?min ; ag:maxSleepS ?max }
 } LIMIT 1"""
 
 
@@ -52,6 +53,12 @@ class PerceptionModule(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.max_age_s = self._max_age_s()
+        # one driver per sensor, chosen from its binding — not from anything the agent believes
+        self.drivers = {s.uri: driver_for(s, self.publish) for s in self.me.sensors}
+        for sensor in self.me.sensors:
+            if self.drivers[sensor.uri] is None:
+                self.log.warning("%s states no binding I can speak — it will never be read",
+                                 sensor.local_id)
         # An agent judges itself against its own band, which is part of what it WANTS — so an
         # agent with no stake in the subject has no verdict to reach, and says so.
         self.band = None
@@ -73,25 +80,26 @@ class PerceptionModule(Module):
         raise NotImplementedError
 
     def subscriptions(self) -> list[str]:
-        # exactly my own sensors' topics — never a wildcard, so the access grant is visible
-        return [s.reading_topic for s in self.me.sensors]
+        # exactly my own sensors, and only where their binding listens at all — never a
+        # wildcard, so the access grant stays visible in the subscription itself
+        return [t for s in self.me.sensors if self.drivers[s.uri]
+                for t in self.drivers[s.uri].subscriptions(s)]
 
     def stop(self) -> None:
         self.influx.close()
 
     def handle(self, topic: str, payload: bytes) -> bool:
-        sensor = next((s for s in self.me.sensors if s.reading_topic == topic), None)
-        if sensor is None:
-            return False
-        doc = self.parse(payload)
-        if doc is None or "value" not in doc:
-            self.log.warning("unreadable payload on %s", topic)
+        for sensor in self.me.sensors:
+            driver = self.drivers[sensor.uri]
+            if driver is None or not driver.owns(sensor, topic):
+                continue
+            value = driver.parse(payload)
+            if value is None:
+                self.log.warning("unreadable payload on %s", topic)
+            else:
+                self.ingest(sensor, value)
             return True
-        try:
-            self.ingest(sensor, float(doc["value"]))
-        except (TypeError, ValueError):
-            self.log.warning("non-numeric reading on %s", topic)
-        return True
+        return False
 
     def ingest(self, sensor, value: float) -> None:
         """Record the reading as my own assertion, and announce what I make of it."""
@@ -174,17 +182,21 @@ class PollingModule(PerceptionModule):
         return int(round(min(self.max_sleep_s, max(self.min_sleep_s, sleep_s))))
 
     def set_cadence(self, sensor, sleep_s: int) -> None:
-        """Standing policy — retained, so a sleeping board gets it on its next wake."""
+        """Standing policy. How it is delivered is the driver's problem, not mine."""
         if self.sent_cadence.get(sensor.local_id) == sleep_s:
             return
-        self.publish(sensor.command_topic, {"sleep_s": sleep_s}, retain=True)
+        driver = self.drivers[sensor.uri]
+        if driver is None:
+            return
+        driver.set_cadence(sensor, sleep_s)
         self.sent_cadence[sensor.local_id] = sleep_s
         self.log.info("%s: cadence now %ss", sensor.local_id, sleep_s)
 
     def sense_now(self) -> None:
-        """Best-effort nudge — lands only if the board is awake to hear it."""
+        """Best-effort nudge — lands only if the device is awake to hear it."""
         for sensor in self.me.sensors:
-            self.publish(sensor.command_topic, {"sense": True})
+            if self.drivers[sensor.uri]:
+                self.drivers[sensor.uri].sense_now(sensor)
 
 
 class ListeningModule(PerceptionModule):

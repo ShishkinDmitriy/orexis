@@ -28,16 +28,32 @@ class WorldError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class MessageBus:
+    """A broker the society meets on. In the world, because a channel name means nothing
+    without it and members who disagree about the bus are not in one society."""
+
+    uri: str
+    host: str
+    port: int
+
+
+@dataclass(frozen=True)
 class Sensor:
-    """A device an agent may poll, and where to reach it."""
+    """A device an agent may read, plus whatever its binding states about reaching it.
+
+    The binding fields are optional on purpose: a self-clocked device has no command channel,
+    and a device on some other transport would carry different fields entirely. Which driver
+    speaks to it is decided from these — never from anything the agent believes.
+    """
 
     uri: str
     local_id: str
     subject: str  # URI of what it monitors
     subject_id: str
     observes: str  # URI of the property it reads
-    reading_topic: str
-    command_topic: str
+    bus: str | None = None  # URI of the bus it declares itself on, if any
+    reading_topic: str | None = None
+    command_topic: str | None = None
 
 
 @dataclass(frozen=True)
@@ -94,6 +110,10 @@ class World:
     subject_physics: dict[str, dict] = field(default_factory=dict)  # subject id -> facts
 
 
+_BUS_Q = f"""
+SELECT ?bus ?host ?port WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?bus a ag:MessageBus ; ag:brokerHost ?host ; ag:brokerPort ?port }} }}"""
+
 _VERSION_Q = f"""
 SELECT ?v WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?world a ag:World ; ag:currentVersion/ag:versionNumber ?v }} }} LIMIT 1"""
@@ -110,13 +130,17 @@ SELECT ?agent ?capability ?actsFor ?actsForId ?eventTopic WHERE {{ GRAPH <{WORLD
 
 
 def _sensors_q(agent_uri: str) -> str:
+    """My sensors and their bindings. The binding parts are OPTIONAL: what a device states
+    about how to reach it varies by transport, and a driver is picked from what is there."""
     return f"""
-SELECT ?sensor ?localId ?subject ?subjectId ?observes ?readingTopic ?commandTopic
+SELECT ?sensor ?localId ?subject ?subjectId ?observes ?bus ?readingTopic ?commandTopic
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   <{agent_uri}> ag:polls ?sensor .
-  ?sensor ag:localId ?localId ; ag:monitors ?subject ; sosa:observes ?observes ;
-          ag:readingTopic ?readingTopic ; ag:commandTopic ?commandTopic .
+  ?sensor ag:localId ?localId ; ag:monitors ?subject ; sosa:observes ?observes .
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
+  OPTIONAL {{ ?sensor ag:onBus ?bus }}
+  OPTIONAL {{ ?sensor ag:readingTopic ?readingTopic }}
+  OPTIONAL {{ ?sensor ag:commandTopic ?commandTopic }}
 }} }}"""
 
 
@@ -206,7 +230,8 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
         Sensor(
             uri=r["sensor"], local_id=r["localId"], subject=r["subject"],
             subject_id=r.get("subjectId") or "", observes=r["observes"],
-            reading_topic=r["readingTopic"], command_topic=r["commandTopic"],
+            bus=r.get("bus"), reading_topic=r.get("readingTopic"),
+            command_topic=r.get("commandTopic"),
         )
         for r in bindings(query(_sensors_q(me.uri)))
     )
@@ -223,6 +248,20 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
         _market_from(r) for r in bindings(query(_markets_q(me.uri, "hosts")))
     )
     return me
+
+
+def load_bus(query: QueryFn) -> MessageBus:
+    """Where the society meets. The one piece of infrastructure that is a belief, not an
+    environment variable — because everyone must agree on it."""
+    rows = bindings(query(_BUS_Q))
+    if not rows:
+        raise WorldError("the world declares no ag:MessageBus — has it been seeded?")
+    if len(rows) > 1:
+        # A second bus is meaningful, but then resources must say which one they are on
+        # (ag:onBus) and this becomes a lookup. Refuse to guess.
+        raise WorldError(f"{len(rows)} buses declared; ag:onBus routing is not implemented")
+    row = rows[0]
+    return MessageBus(uri=row["bus"], host=row["host"], port=int(row["port"]))
 
 
 def participants(query: QueryFn, market: Market) -> frozenset[str]:

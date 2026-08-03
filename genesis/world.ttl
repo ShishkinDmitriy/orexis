@@ -23,6 +23,16 @@
 #
 #  See knowledge/decisions/world-graph.md, knowledge/decisions/capability-modules.md.
 
+##########  The bus everyone speaks over  ##########
+#  Here rather than in .env because a topic means nothing without the broker it is on, and a
+#  society whose members disagree about the bus is not one society. The ONLY thing the
+#  environment tells a process is where the belief base is; this is part of what it finds there.
+
+ag:local_bus a ag:MessageBus ;
+    ag:localId "local_bus" ;
+    ag:brokerHost "localhost" ;
+    ag:brokerPort 1883 .
+
 ##########  World version  ##########
 #  Found by TYPE (?w a ag:World), never by a well-known IRI.
 
@@ -107,6 +117,7 @@ ag:succulent_agent a ag:Agent ;
 
 ag:moisture_sensor_fern a ag:Sensor ;
     ag:localId "moisture_sensor_fern" ;
+    ag:onBus ag:local_bus ;
     ag:senseMode ag:Pull ;          # firmware answers on request -> its agent gains ag:Polling
     ag:monitors ag:fern ;
     sosa:observes ag:SoilMoisture ;
@@ -115,6 +126,7 @@ ag:moisture_sensor_fern a ag:Sensor ;
 
 ag:moisture_sensor_tomato a ag:Sensor ;
     ag:localId "moisture_sensor_tomato" ;
+    ag:onBus ag:local_bus ;
     ag:senseMode ag:Pull ;          # firmware answers on request -> its agent gains ag:Polling
     ag:monitors ag:tomato ;
     sosa:observes ag:SoilMoisture ;
@@ -123,6 +135,7 @@ ag:moisture_sensor_tomato a ag:Sensor ;
 
 ag:moisture_sensor_succulent a ag:Sensor ;
     ag:localId "moisture_sensor_succulent" ;
+    ag:onBus ag:local_bus ;
     ag:senseMode ag:Pull ;          # firmware answers on request -> its agent gains ag:Polling
     ag:monitors ag:succulent ;
     sosa:observes ag:SoilMoisture ;
@@ -132,16 +145,16 @@ ag:moisture_sensor_succulent a ag:Sensor ;
 ##########  Valves — the supplier's, one per plant  ##########
 
 ag:valve_fern a ag:Valve ;
-    ag:localId "valve_fern" ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
+    ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
     ag:commandTopic "actuators/fern/valve" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
 
 ag:valve_tomato a ag:Valve ;
-    ag:localId "valve_tomato" ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
+    ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
     ag:commandTopic "actuators/tomato/valve" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
 
 ag:valve_succulent a ag:Valve ;
-    ag:localId "valve_succulent" ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
+    ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
     ag:commandTopic "actuators/succulent/valve" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .

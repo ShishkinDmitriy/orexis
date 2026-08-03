@@ -43,7 +43,7 @@ below on why the graph, not the provenance triple, carries the trust):
 - `:ontology` — the shared **T-Box** (`ontology/agora.ttl`): classes and properties (World,
   Agent, Sensor, Valve, Plant, Band, servedBy…). The vocabulary agents read from context.
 - `:world` — the sovereign-authored **topology**, and *only* topology: which agent acts for
-  which plant, which sensors it is wired to (`hasSensor` — the access grant), which valve
+  which plant, which sensors it is wired to (`polls` — the access grant), which valve
   waters what, which source supplies it, plus the physical facts about that hardware
   (calibration, capacity, drying rate) and the current world version. Public: every agent
   reads all of it. It exists so the wiring is stated **once** instead of being repeated in
@@ -76,9 +76,12 @@ are already in place; the remaining scoping work is:
 - `:beliefs/<agent>` — done: the agent's private desire and limits, and later its learning
   *and* its own (untrusted) self-metrics.
 
-Note what is **not** enforced yet: these graphs are private by *convention* and because no
-agent's code queries another's, but the triplestore would serve any of them to anyone who
-asked. Real isolation needs per-graph access control.
+**Reads are enforced.** The store holds a per-graph access list keyed to per-agent
+credentials, generated from the world, so an agent connecting as itself sees the shared graphs
+and its own beliefs and nothing else — another agent's beliefs come back empty rather than
+refused. Writes are *not* graph-scoped (the store cannot), which is the same
+integrity-of-self-report assumption trusted-agent mode already accepts. The bus is a separate
+question and is still open. See [belief-base-isolation](/decisions/belief-base-isolation.md).
 
 Every writer uses the two stores (RDF current-state + Influx history) for its own scope; the
 **sovereign** reads all of it for observability.

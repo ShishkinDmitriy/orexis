@@ -1,0 +1,72 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Rules that hold for perception however it is done. They target the capability FAMILY, so a
+# new transport inherits them by declaring its capabilities as ag:PerceptionCapability rather
+# than by restating any of this.
+
+ag:PerceivingAgentShape a sh:NodeShape ;
+    rdfs:comment "Anything that perceives must be wired to something to perceive with, and must say how stale a reading may be before it stops trusting it. That judgment is about belief, not control, so it is required of every perceiver — including one that cannot drive its device at all." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/agora#hasCapability> ?cap .
+                ?cap a <http://example.org/agora#PerceptionCapability> .
+            }
+        """ ] ;
+    sh:property [ sh:path ag:polls ; sh:minCount 1 ; sh:class ag:Sensor ;
+                  sh:message "an agent that perceives must be wired to at least one sensor" ] ;
+    sh:property [ sh:path ag:maxReadingAgeS ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minExclusive 0 ;
+                  sh:message "a perceiving agent must say how stale a reading may be before it stops trusting it" ] .
+
+ag:SensorShape a sh:NodeShape ;
+    rdfs:comment "A sensor reads exactly one subject, says which property it observes, and states how it is driven — because its agent's capability is derived from that." ;
+    sh:targetClass ag:Sensor ;
+    sh:property [ sh:path ag:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path ag:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ag:SenseMode ;
+                  sh:message "a sensor must say how it is driven — its agent's capability follows from it" ] .
+
+ag:ObservationShape a sh:NodeShape ;
+    rdfs:comment "Every observation is a complete, authored, versioned MEASUREMENT, carrying the time it was taken — which is what the freshness rule checks. No band: the verdict is each agent's own and is never recorded." ;
+    sh:targetClass sosa:Observation ;
+    sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sosa:observedProperty ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sosa:hasSimpleResult ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path sosa:resultTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path sosa:madeBySensor ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path ag:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;
+    sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "every reading carries an author" ] .
+
+
+ag:PollingAgentShape a sh:NodeShape ;
+    rdfs:comment "Driving a device is what makes a cadence meaningful, so only this capability demands one. It must watch more closely when in trouble than when comfortable, and neither figure may leave the constitutional bounds — which are stated in ontology/perception.ttl, clamped again by the agent, and clamped a third time by the firmware." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
+                                       <http://example.org/agora#Polling> }
+        """ ] ;
+    sh:property [ sh:path ag:fastSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
+                  sh:lessThanOrEquals ag:slowSleepS ;
+                  sh:message "the fast cadence must be within the constitutional bounds and no slower than the slow one" ] ;
+    sh:property [ sh:path ag:slowSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
+                  sh:message "no agent may sleep past the constitutional ceiling — autonomy over attention, never the freedom to sleep through a drought" ] .
+
+ag:ListeningAgentShape a sh:NodeShape ;
+    rdfs:comment "A listening agent must NOT hold a cadence: requiring a policy it cannot enforce would be theatre, and stating one would misdescribe the hardware." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
+                                       <http://example.org/agora#Listening> }
+        """ ] ;
+    sh:property [ sh:path ag:fastSleepS ; sh:maxCount 0 ;
+                  sh:message "a listening agent cannot set a cadence — its device does not take one" ] ;
+    sh:property [ sh:path ag:slowSleepS ; sh:maxCount 0 ] .

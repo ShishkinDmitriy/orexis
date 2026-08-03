@@ -157,7 +157,7 @@ class BiddingModule(Module):
 
     def perception(self):
         """Whichever perception capability this agent got from its hardware, if any."""
-        from .polling import PerceptionModule
+        from .perception import PerceptionModule
 
         return next((m for m in self.agent.modules if isinstance(m, PerceptionModule)), None)
 

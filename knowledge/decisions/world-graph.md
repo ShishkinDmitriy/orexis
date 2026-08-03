@@ -37,26 +37,28 @@ The world graph exists **so the wiring is stated once** instead of being repeate
 agent's beliefs — that is its whole job. It is deliberately thin:
 
 ```turtle
-agora:fern_agent a agora:Agent ; agora:localId "fern" ;
-    agora:agentFor agora:fern ; agora:hasSensor agora:moisture_sensor_fern .
-agora:moisture_sensor_fern a agora:Sensor ; agora:monitors agora:fern .
-agora:valve_fern a agora:Valve ; agora:actuates agora:fern ; agora:mlPerSecond 10.0 .
-agora:supplier a agora:Supplier ; agora:hasActuator agora:valve_fern , … .
+ag:fern_agent a ag:Agent ; ag:localId "fern" ;
+    ag:actsFor ag:fern ; ag:polls ag:moisture_sensor_fern ; ag:bidsIn ag:barrel1_market .
+ag:moisture_sensor_fern a ag:Sensor ; ag:monitors ag:fern ; ag:senseMode ag:Pull .
+ag:valve_fern a ag:Valve ; ag:actuates ag:fern ; ag:mlPerSecond 10.0 .
+ag:supplier a ag:Agent ; ag:hasActuator ag:valve_fern , … .
 ```
 
 and each agent's own graph carries what it thinks:
 
 ```turtle
-agora:fern_agent agora:hasTarget 0.55 ; agora:bandLow 0.35 ; agora:bandHigh 0.65 ;
-    agora:fastSleepS 30 ; agora:slowSleepS 600 ; agora:maxReadingAgeS 120 ;
-    agora:litresPerFraction 2.0 ; agora:maxValuePerL 0.80 .
+ag:fern_agent ag:hasTarget 0.55 ; ag:bandLow 0.35 ; ag:bandHigh 0.65 ;
+    ag:fastSleepS 30 ; ag:slowSleepS 600 ; ag:maxReadingAgeS 120 ;
+    ag:litresPerFraction 2.0 ; ag:maxValuePerL 0.80 .
 ```
 
 # Agent, Sensor, Actuator become first-class
 
-The T-Box gains `agora:Agent`, `agora:Sensor` (`sosa:Sensor`), `agora:Actuator`/`agora:Valve`
-(`sosa:Actuator`), and the connection properties `agentFor` / `hasSensor` / `hasActuator` /
-`monitors` / `actuates`. Two consequences worth naming:
+The T-Box gains `ag:Agent`, `ag:Sensor` (`sosa:Sensor`), `ag:Actuator`/`ag:Valve`
+(`sosa:Actuator`), and the connection properties `actsFor` / `polls` / `hasActuator` /
+`monitors` / `actuates`. (These were first drafted as `agentFor`/`hasSensor`; the later split
+into capability modules renamed them to the transport-neutral forms used above. See
+[capability-modules](/decisions/capability-modules.md).) Two consequences worth naming:
 
 **An agent is no longer a plant.** `Plant` used to be a subclass of `Agent`, so `agora:fern`
 was both the thing measured and the thing bidding. Now `agora:fern` is a
@@ -64,11 +66,11 @@ was both the thing measured and the thing bidding. Now `agora:fern` is a
 about the plant; wallets and bids belong to the agent. The conflation was harmless while each
 plant had exactly one agent, and would have become confusing the moment it didn't.
 
-**`hasSensor` IS the access grant.** The capability from
+**`polls` IS the access grant.** The capability from
 [trusted-agent-mode](/decisions/trusted-agent-mode.md) stops being a separate mechanism and
-becomes topology: fern's agent is wired to fern's sensor and to no other, and the sensing
-service subscribes per-sensor rather than to a wildcard, so the isolation is visible in the
-code rather than asserted in a comment.
+becomes topology: fern's agent is wired to fern's sensor and to no other, and it subscribes
+per-sensor rather than to a wildcard, so the isolation is visible in the code rather than
+asserted in a comment.
 
 # Startup is a belief-base read
 
@@ -86,6 +88,10 @@ That is the whole configuration story now.
 - drying rate + litres-per-fraction → the **plant** in `:world` (physics)
 - `executor.actuate`, simulator tick → **environment variables**; these are deployment
   toggles, not beliefs anyone holds
+- the **message broker** → the world, as an `ag:MessageBus`. It started in `.env` and moved:
+  a channel name is meaningless without the broker it is on, and members who disagree about
+  the bus are not one society. What is left in the environment is the bootstrap pair — which
+  agent this process is, and where the belief base lives — plus deployment toggles.
 
 # The same term in two graphs, meaning two different things
 
@@ -112,9 +118,10 @@ ratify, write — only the ratified artifact's format changed.
   a genuine constitutional check, and the shipped `genesis/` is validated in CI-able tests.
 - **Re-genesis replaces editing.** Changing the wiring means editing `world.ttl` and bumping
   `versionNumber`; every fact recorded afterwards is stamped with it.
-- **Not yet enforced:** graph-level *read* authorization. `:beliefs/fern` is private by
-  convention and by the code never querying another agent's graph, but Fuseki would serve it
-  to anyone who asked. Real isolation needs per-graph access control — the same gap
-  [trusted-agent-mode](/decisions/trusted-agent-mode.md) accepts for writes.
+- **Read authorization is now enforced**, which this decision only set up: per-agent store
+  credentials and a per-graph access list generated from this graph, so `:beliefs/fern` is
+  private in fact and not only by habit. Writes remain unscoped — the same gap
+  [trusted-agent-mode](/decisions/trusted-agent-mode.md) accepts. See
+  [belief-base-isolation](/decisions/belief-base-isolation.md).
 - **Seam kept open:** the world is versioned but not yet *amendable at runtime* — agents read
   it once at startup. A world-version bump should eventually be an event agents react to.

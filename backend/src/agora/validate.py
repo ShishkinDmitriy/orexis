@@ -38,12 +38,15 @@ def validate() -> bool:
     st = store.from_env(config.env)
 
     graphs = [WORLD_GRAPH, SENSED_GRAPH]
-    graphs += [beliefs_graph(r["agentId"]) for r in bindings(st.query(_AGENTS_Q))]
+    graphs += [beliefs_graph(r["agentId"]) for r in bindings(st.query_all(_AGENTS_Q))]
 
     data = rdflib.Graph()
     for graph_iri in graphs:
         data.parse(data=st.get_graph(graph_iri), format="turtle")
 
+    # The T-Box goes into the DATA as well as being the inference source: shapes target
+    # capability families ("anything that perceives"), and which family a capability belongs
+    # to is a fact stated in the vocabulary.
     ontology = rdflib.Graph()
     shapes = rdflib.Graph()
     for name in MODULE_FILES:
@@ -54,6 +57,7 @@ def validate() -> bool:
 
     # advanced=True enables SPARQL-based targets, which is how a shape scopes itself to the
     # agents that composed its capability.
+    data += ontology
     conforms, _, report = shacl_validate(
         data, shacl_graph=shapes, ont_graph=ontology, inference="rdfs", advanced=True
     )

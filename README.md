@@ -68,6 +68,12 @@ docker compose up -d        # or: podman compose up -d
 Brings up: InfluxDB (`:8086`), Grafana (`:3000`), Fuseki (`:3030`). Grafana is pre-wired
 to InfluxDB (anonymous viewer enabled).
 
+Fuseki serves the belief base behind **two doors**, because Jena's per-graph access control is
+read-only: `/ds` is the secured one an agent reads through as itself, `/ds-rw` takes writes
+(updates from any agent, whole-graph operations from admin only). Its config is generated —
+see `agora-acl` below — and its data is in a named volume, so rebuilding the container does
+not destroy the world.
+
 **MQTT runs on the host, not in a container.** The Alpine/musl `eclipse-mosquitto` image
 can't open a config file on the Pi's kernel under rootless Podman/overlay; the Debian
 (glibc) build has no such issue, and since the agents are host processes anyway, a host
@@ -90,9 +96,24 @@ pip install -e ./backend
 
 ## 3. Run the slice
 
-One-time, once infra is up: `agora-seed` — it loads the T-Box, the **world** (wiring),
-**derives each agent's capabilities** from that wiring, and loads each agent's **private
-beliefs** from [`genesis/`](genesis/). It prints what it derived:
+One-time setup, in order:
+
+```bash
+agora-acl      # per-agent store credentials + the access list, generated from the world
+                 #   (re-run after adding an agent; restart Fuseki to pick it up)
+agora-keygen   # the host + clearing signing keys the valves check
+agora-seed     # the belief base itself
+```
+
+`agora-acl` is what makes privacy real rather than polite: it reads who exists from
+`genesis/world.ttl` and writes a Fuseki access list granting each agent the shared graphs plus
+its *own* beliefs — so `fern` querying `:beliefs/tomato` gets nothing back. Credentials land
+in `keys/fuseki/` (gitignored); each agent reads its own. See
+[`belief-base-isolation`](knowledge/decisions/belief-base-isolation.md).
+
+`agora-seed` then loads the T-Box, the **world** (wiring), **derives each agent's
+capabilities** from that wiring, and loads each agent's **private beliefs** from
+[`genesis/`](genesis/). It prints what it derived:
 
 ```
 derived fern      -> Polling, Bidding

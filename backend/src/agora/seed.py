@@ -55,7 +55,7 @@ def derive(st) -> None:
     """
     for path in sorted(RULES_DIR.glob("*.ru")):
         st.update(path.read_text())
-    for row in bindings(st.query(_CAPABILITIES_Q)):
+    for row in bindings(st.query_all(_CAPABILITIES_Q)):
         log.info("derived %-9s -> %s", row["agentId"], row["caps"])
 
 

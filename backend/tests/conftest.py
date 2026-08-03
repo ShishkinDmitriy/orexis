@@ -81,3 +81,94 @@ def query_with_readings():
         return query_fn(genesis_dataset(readings, result_time))
 
     return build
+
+
+# --- a live agent over the in-memory belief base ------------------------------------------
+
+class FakeStore:
+    """The store interface a module actually uses, backed by the in-memory dataset."""
+
+    def __init__(self, ds: rdflib.Dataset):
+        self.ds = ds
+        self.query = query_fn(ds)
+
+    def update(self, sparql: str) -> None:
+        self.ds.update(store.PREFIXES + sparql)
+
+
+class Sent(list):
+    """Everything the agent put on the wire, so a test can read the conversation."""
+
+    def to(self, topic: str) -> list[dict]:
+        return [payload for t, payload, _ in self if t == topic]
+
+    def under(self, prefix: str) -> list[dict]:
+        return [payload for t, payload, _ in self if t.startswith(prefix)]
+
+    def topics(self) -> list[str]:
+        return [t for t, _, _ in self]
+
+
+class Msg:
+    """The shape paho hands to a callback."""
+
+    def __init__(self, topic: str, payload: dict):
+        self.topic = topic
+        self.payload = json.dumps(payload).encode()
+
+
+def build_agent(agent_id: str, ds: rdflib.Dataset | None = None, monkeypatch=None):
+    """A real Agent — real world, real beliefs, real modules — with the broker captured.
+
+    Nothing is stubbed except the two things that would reach the network: MQTT and Influx.
+    The modules under test are the ones that ship.
+    """
+    from agora import runtime
+    from agora.modules import perception as perception_module
+
+    class NoInflux:
+        def __init__(self, *a, **k):
+            pass
+
+        def write_reading(self, *a, **k):
+            pass
+
+        def close(self):
+            pass
+
+    if monkeypatch is not None:
+        monkeypatch.setattr(perception_module, "InfluxWriter", NoInflux)
+        monkeypatch.setattr(runtime.mqtt, "Client", lambda *a, **k: _FakeClient())
+
+    agent = runtime.Agent(agent_id, st=FakeStore(ds or genesis_dataset()))
+    agent.sent = Sent()
+    agent.publish = lambda topic, payload, retain=False: agent.sent.append(
+        (topic, payload, retain))
+    agent.subscribed = []
+    agent._on_connect(_Recorder(agent.subscribed), None, None, 0, None)
+    agent.deliver = lambda topic, payload: agent._on_message(None, None, Msg(topic, payload))
+    # convenience: reach a module by name, the way a test wants to talk about it
+    agent.module = lambda name: next(m for m in agent.modules if m.name == name)
+    agent.hosting = lambda: agent.module("hosting")
+    agent.bidding = lambda: agent.module("bidding")
+    agent.polling = lambda: agent.module("polling")
+    return agent
+
+
+class _FakeClient:
+    def __init__(self, *a, **k):
+        self.on_connect = self.on_message = None
+
+    def publish(self, *a, **k):
+        pass
+
+    def subscribe(self, *a, **k):
+        pass
+
+
+class _Recorder:
+    def __init__(self, into):
+        self.into = into
+
+    def subscribe(self, topic):
+        self.into.append(topic)

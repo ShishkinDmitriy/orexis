@@ -32,7 +32,9 @@ agent -> peers   ag:eventTopic     {"agent":...,"value":...,"band":"LOW"}
 ```
 
 Every one of those channels is **stated in the world graph** on the resource that owns it —
-nothing builds a topic from a naming convention, so renaming a channel is a genesis edit.
+nothing builds a topic from a naming convention, so renaming a channel is a genesis edit. The
+broker they are on is stated there too, as an `ag:MessageBus`: a channel name means nothing
+without it, and members who disagree about the bus are not one society.
 Both edges — an ESP32 and a virtual plant (`agora-sim`) — speak exactly this, so there is one
 ingest path and nothing downstream can tell them apart.
 
@@ -48,6 +50,23 @@ moisture.
 - **Sense** (`sense:true`) is a *best-effort nudge* — it lands only if the board happens to be
   awake in its listen window, and is **never retained** (a retained `sense` would re-fire on
   every wake, forever).
+
+# Capability vs binding — what varies, and what does not
+
+The two capabilities above say what an agent must **decide**. How a device is actually spoken
+to is a separate axis, and deliberately not part of the capability: a pull-mode board on a
+bus and one on a GPIO pin present the same choices and the same obligations, and differ only
+in the driver that carries the message.
+
+So the protocol lives on the **device** (`ag:onBus` plus its channels), a `Driver` is selected
+per sensor from what the device declares, and the agent's attention policy is untouched by
+any of it. The test for whether something belongs in a capability is whether it changes what
+the agent must believe: pull-vs-push does (a cadence, or none), MQTT-vs-HTTP does not. An
+agent can hold one sensor on a bus and another on a wire under a single policy — which is
+exactly what naming the transport in the capability would have made impossible.
+
+Adding a transport is therefore small: a driver, its terms, and its completeness rules. No
+new capability, no belief changes.
 
 # Cadence is desire-relative, like the band
 

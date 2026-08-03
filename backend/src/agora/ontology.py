@@ -22,6 +22,9 @@ def term(name: str) -> str:
 
 
 # --- capabilities: the name of a module, as composed onto an agent -------------------------
+# Perception splits by what the agent must DECIDE (own a cadence, or not) — never by how a
+# device is reached, which is a driver's concern and changes nothing an agent believes.
+PERCEPTION_CAPABILITY = term("PerceptionCapability")
 POLLING = term("Polling")
 LISTENING = term("Listening")
 BIDDING = term("Bidding")
@@ -32,7 +35,7 @@ ACTUATION = term("Actuation")
 # anatomy of a capability:
 #     ontology/<name>.ttl  the vocabulary        shapes/<name>.ttl  the rules
 #     rules/<name>.ru      how it is derived     modules/<name>.py  the code
-MODULE_FILES = ("core", "transport", "polling", "market", "actuation", "water")
+MODULE_FILES = ("core", "perception", "mqtt", "market", "actuation", "water")
 
 # --- named graphs ---------------------------------------------------------------------------
 _GRAPH = "http://example.org/agora/graph/"

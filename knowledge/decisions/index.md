@@ -45,4 +45,5 @@ change something, to check you're not welding shut a planned extension.
 
 * [standalone-clearing](/decisions/standalone-clearing.md) - The scarce side hosts the auction (host rotates with topology); the clearing validator stays invariant.
 * [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md) - Bids reflect current unmet need, so multi-source decomposition stays possible.
+* [belief-base-isolation](/decisions/belief-base-isolation.md) - Privacy enforced by the store: per-graph ACLs behind per-agent credentials, generated from the world. Two doors, because Jena's access control is read-only. The bus is still open.
 * [roadmap](/decisions/roadmap.md) - What v1 is, and the v2/v3 extensions each seam unlocks.

@@ -1,0 +1,42 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/mqtt> a owl:Ontology ;
+    rdfs:label "Agora MQTT binding" ;
+    rdfs:comment """One way of reaching things: a broker and named channels on it. Everything here is a VARIANT — a society could speak Modbus to its sensors, or read a GPIO pin with no bus at all, and would swap this module without touching perception, market or actuation. Note what is NOT here: any capability. Which protocol a device speaks changes nothing an agent must decide, so it earns a binding on the device, not a name in the agent's abilities.""" .
+
+#################  The bus  #################
+# In the WORLD, not in the environment: a topic means nothing without the broker it is on,
+# and every agent must agree on the bus or they are not in the same society at all. The only
+# thing a process is told by its environment is where the belief base is; the belief base
+# then says everything else, including this.
+
+ag:MessageBus a owl:Class ; rdfs:label "Message bus" ;
+    rdfs:comment "A broker agents reach each other through. Found by type; when there is more than one, resources name theirs with ag:onBus." .
+
+ag:brokerHost a owl:DatatypeProperty ; rdfs:domain ag:MessageBus ; rdfs:range xsd:string ;
+    rdfs:label "broker host" .
+ag:brokerPort a owl:DatatypeProperty ; rdfs:domain ag:MessageBus ; rdfs:range xsd:integer ;
+    rdfs:label "broker port" .
+ag:onBus a owl:ObjectProperty ; rdfs:range ag:MessageBus ;
+    rdfs:label "on bus" ;
+    rdfs:comment "Which bus this resource is reachable on. Optional while a society has one." .
+
+#################  Channels  #################
+
+ag:readingTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "reading topic" ;
+    rdfs:comment "Where a sensor PUBLISHES what it read." .
+ag:commandTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "command topic" ;
+    rdfs:comment "Where a device LISTENS for instructions: a cadence for a sensor, a dose for a valve. Only a device that accepts instruction has one." .
+ag:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "event topic" ;
+    rdfs:comment "Where an agent announces something it noticed. Peers may listen; nobody is obliged to." .
+
+#  A device carrying these properties is reached over MQTT; that is what selects the driver
+#  the perception module talks to it through. An agent may hold sensors on different
+#  bindings at once and still have ONE attention policy, which is the point of keeping
+#  protocol out of the capability.

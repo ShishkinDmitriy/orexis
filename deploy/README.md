@@ -25,9 +25,12 @@ mkdir -p ~/.config/systemd/user
 cp deploy/systemd/agora-*.service ~/.config/systemd/user/
 systemctl --user daemon-reload
 
-# one-time: seed the belief base (T-Box + world + each agent's beliefs) once infra is up
+# one-time, in order, once infra is up
 systemctl --user start agora-infra
-.venv/bin/agora-seed
+.venv/bin/agora-acl        # store credentials + per-graph access list, from the world
+systemctl --user restart agora-infra   # Fuseki reads the access list at startup
+.venv/bin/agora-keygen     # signing keys for the actuate boundary
+.venv/bin/agora-seed       # the belief base
 
 # one unit per agent — the id after @ is the agent's id, and nothing else is configured
 systemctl --user enable --now agora-agent@supplier.service
@@ -56,6 +59,23 @@ journalctl --user -u agora-sim -f              # plants sensing + getting watere
 Grafana dashboard: `http://<pi-ip>:3000/d/agora-moisture`.
 Belief base: `agora-validate` (every shapes module over `:world` + `:beliefs/*` + `:sensed`) or the SPARQL curl in the
 top-level README.
+
+## Two things to know about the containers
+
+**Fuseki's config is generated, and its credentials are not in git.** `infra/fuseki/config.ttl`
+comes from `agora-acl` reading `genesis/world.ttl`; `keys/fuseki/` holds one credential per
+agent and is gitignored, like the signing keys. A fresh checkout therefore needs `agora-acl`
+before Fuseki will start, and Fuseki needs a restart after any re-run. Its data now lives in
+the `fuseki-data` volume, so rebuilding the container no longer destroys the belief base.
+
+An agent with no credential falls back to admin and **logs a warning** — if you see that, its
+isolation is not being enforced.
+
+**Do not `pkill -f agora`.** The containers are named `agora_*`, so a broad pattern matches
+podman's own `conmon` and `rootlessport` helpers: the containers keep running while their
+published ports quietly stop working, and `podman restart` then fails with "conmon exited
+prematurely". Recovery is `podman stop` followed by `podman start`. Match the actual process
+instead — `pkill -f agora-agent`, `pkill -f agora.simulator`.
 
 ## Sensor-only phase (now)
 

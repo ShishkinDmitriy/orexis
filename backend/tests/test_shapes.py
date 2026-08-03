@@ -15,8 +15,10 @@ from conftest import GENESIS_DIR, ONTOLOGY_DIR, RULES_DIR, SHAPES_DIR, genesis_d
 
 
 def _flatten(ds: rdflib.Dataset) -> rdflib.Graph:
-    """The world + every agent's beliefs as one graph, which is what validation sees."""
+    """The vocabulary + the world + every agent's beliefs, exactly as validation sees it."""
     data = rdflib.Graph()
+    for name in MODULE_FILES:
+        data.parse(ONTOLOGY_DIR / f"{name}.ttl", format="turtle")
     for triple in ds.graph(rdflib.URIRef(WORLD_GRAPH)):
         data.add(triple)
     for agent in ("fern", "tomato", "succulent", "supplier"):
@@ -117,10 +119,20 @@ def test_pull_sensor_must_state_a_command_topic():
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:commandTopic ?t }} }}"""))
 
 
-def test_sensor_must_state_where_it_publishes():
+def test_a_device_on_the_bus_must_state_where_it_publishes():
+    """Declaring a binding and then not completing it is the failure worth catching."""
     assert not _conforms(_mutate(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}"""))
+
+
+def test_a_listening_agent_must_not_hold_a_cadence():
+    """Requiring a policy it cannot enforce would be theatre; stating one misdescribes it."""
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Pull }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Push .
+                                           ag:fern_agent ag:hasCapability ag:Listening }} }}
+        WHERE  {{}}"""))
 
 
 def test_valve_must_carry_its_calibration():

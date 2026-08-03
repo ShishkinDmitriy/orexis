@@ -30,7 +30,7 @@ from . import config, signing, store
 from .modules.actuation import verify_command
 from .ontology import WORLD_GRAPH
 from .store import bindings
-from .world import load_world
+from .world import load_bus, load_world
 
 log = logging.getLogger("sim")
 
@@ -44,7 +44,8 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   OPTIONAL {{ ?subject ag:dryRatePerTick ?dryRate }}
   OPTIONAL {{ ?subject ag:litresPerFraction ?litresPerFraction }}
   ?sensor a ag:Sensor ; ag:monitors ?subject ; ag:localId ?sensorId ;
-          ag:readingTopic ?readingTopic ; ag:commandTopic ?sensorCmd .
+          ag:readingTopic ?readingTopic .
+  OPTIONAL {{ ?sensor ag:commandTopic ?sensorCmd }}
   OPTIONAL {{ ?valve a ag:Valve ; ag:actuates ?subject ; ag:commandTopic ?valveCmd }}
 }} }}"""
 
@@ -84,10 +85,11 @@ class Simulator:
     def __init__(self):
         st = store.from_env(config.env)
         world = load_world(st.query)
+        self.bus = load_bus(st.query)  # the same bus the agents meet on, from the same world
         self.tick_s = float(config.env("AGORA_SIM_TICK_S", "2"))
         bounds = bindings(st.query("""
 SELECT ?min ?max WHERE { GRAPH ?g {
-  <http://example.org/agora#Polling> ag:minSleepS ?min ; ag:maxSleepS ?max } } LIMIT 1"""))
+  ag:PerceptionCapability ag:minSleepS ?min ; ag:maxSleepS ?max } } LIMIT 1"""))
         min_sleep = int(bounds[0]["min"]) if bounds else 10
         max_sleep = int(bounds[0]["max"]) if bounds else 900
 
@@ -107,7 +109,8 @@ SELECT ?min ?max WHERE { GRAPH ?g {
             )
             self.reading_topic[sid] = row["readingTopic"]
             self.sensor_id[sid] = row["sensorId"]
-            self.by_sensor_cmd[row["sensorCmd"]] = sid
+            if row.get("sensorCmd"):
+                self.by_sensor_cmd[row["sensorCmd"]] = sid
             if row.get("valveCmd"):
                 self.by_valve_cmd[row["valveCmd"]] = sid
 
@@ -168,8 +171,7 @@ SELECT ?min ?max WHERE { GRAPH ?g {
             {"value": round(plant.moisture, 3), "sensor": self.sensor_id[sid]}))
 
     def run(self) -> None:
-        self.mqtt.connect(config.env("MQTT_HOST", "localhost"),
-                          int(config.env("MQTT_PORT", "1883")))
+        self.mqtt.connect(self.bus.host, self.bus.port)
         self.mqtt.loop_start()
         log.info("tick=%ss (Ctrl-C to stop)", self.tick_s)
         try:

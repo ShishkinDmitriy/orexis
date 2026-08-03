@@ -35,9 +35,15 @@ a process is handed at boot: **its own agent id**. Everything else follows from 
 | `rules/<name>.ru` | the derivation — what wiring gives an agent this capability |
 | `backend/src/agora/modules/<name>.py` | the code — which reads only that vocabulary |
 
-The modules are `core`, `transport`, `polling`, `market`, `actuation`, and the domain plug-in
+The modules are `core`, `perception`, `mqtt`, `market`, `actuation`, and the domain plug-in
 `water`. Adding a capability — forecasting, say — touches none of the existing ones: write
 the four files, add one line of registry, and no agent has it until genesis derives it.
+
+A **transport** is a smaller thing, deliberately: a `Driver` in `modules/drivers.py` plus its
+terms and completeness rules. No capability, no module, no belief changes — because how a
+device is reached is not something an agent decides. That line is the subject of
+[the perception/binding split](/domain/sensing.md): a capability distinguishes what an agent
+must decide, a binding distinguishes how a device is spoken to.
 
 # Capabilities are derived from hardware, not declared
 
@@ -109,8 +115,10 @@ validated world, so the check is a backstop rather than a burden.
   clearing-authored ledger does not exist yet (see
   [agent-centric-epistemics](/decisions/agent-centric-epistemics.md) §4). This is the honest
   stand-in, recorded rather than hidden — it is the one place the round trusts a self-report.
-- **Graph privacy is convention.** No agent's code reads another's graph, but the triplestore
-  would serve it to anyone who asked. Real isolation needs per-graph access control.
+- **Graph privacy is enforced for reads** as of
+  [belief-base-isolation](/decisions/belief-base-isolation.md) — per-agent store credentials
+  and a per-graph access list generated from the world. Writes are not scoped, and the message
+  bus has no ACLs at all, so a process on the broker can still watch every reading.
 - **Capabilities are read once at boot.** A world-version bump should eventually be an event
   agents react to, rather than something they notice on restart.
 - **Derivation is materialised, not maintained.** Rules run at genesis and write triples into

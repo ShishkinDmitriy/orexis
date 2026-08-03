@@ -17,6 +17,7 @@ dev = ["pytest>=8"]
 
 [project.scripts]
 agora-agent = "agora.runtime:main"
+agora-acl = "agora.acl:main"
 agora-sim = "agora.simulator:main"
 agora-seed = "agora.seed:main"
 agora-validate = "agora.validate:main"
