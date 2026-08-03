@@ -34,6 +34,8 @@ change something, to check you're not welding shut a planned extension.
 # Belief base
 
 * [two-store-beliefs](/decisions/two-store-beliefs.md) - InfluxDB owns the series; Fuseki owns citable current-state. Joined by plant URI, never federated.
+* [world-graph](/decisions/world-graph.md) - No config file: the world graph holds only topology (public, versioned, stated once); desire, limits, cadence and prices are each agent's private beliefs. Agent/Sensor/Actuator become first-class.
+* [capability-modules](/decisions/capability-modules.md) - Code reads T-Box terms, never instances. A capability is an ontology module + shapes + derivation rules + code; capabilities are derived from hardware at genesis, and each agent is its own process knowing only its id.
 
 # Genesis
 
@@ -43,4 +45,5 @@ change something, to check you're not welding shut a planned extension.
 
 * [standalone-clearing](/decisions/standalone-clearing.md) - The scarce side hosts the auction (host rotates with topology); the clearing validator stays invariant.
 * [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md) - Bids reflect current unmet need, so multi-source decomposition stays possible.
+* [belief-base-isolation](/decisions/belief-base-isolation.md) - Privacy enforced by the store: per-graph ACLs behind per-agent credentials, generated from the world. Two doors, because Jena's access control is read-only. The bus is still open.
 * [roadmap](/decisions/roadmap.md) - What v1 is, and the v2/v3 extensions each seam unlocks.

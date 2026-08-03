@@ -1,69 +1,153 @@
-"""SHACL shape tests — validate in-memory graphs, no Fuseki needed."""
+"""SHACL — the constitution as code, one shapes module per capability.
 
+The interesting property is that the rules are *capability-aware*: a shape applies to an agent
+only if the world derived that capability for it. So an agent on a push-mode board is never
+asked for a cadence it could not apply, and one on a pull board is required to have it.
+"""
+
+import pytest
 import rdflib
 from pyshacl import validate
 
-from agora.config import PROJECT_ROOT
+from agora.ontology import MODULE_FILES, WORLD_GRAPH, beliefs_graph
 
-ONT_DIR = PROJECT_ROOT.parent / "ontology"
-
-GOOD = """
-@prefix agora: <http://example.org/agora#> .
-@prefix sosa:  <http://www.w3.org/ns/sosa/> .
-@prefix prov:  <http://www.w3.org/ns/prov#> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-
-agora:obs_fern a sosa:Observation ;
-  sosa:hasFeatureOfInterest agora:fern ;
-  sosa:observedProperty agora:SoilMoisture ;
-  sosa:hasSimpleResult "0.18"^^xsd:decimal ;
-  sosa:resultTime "2026-08-02T00:00:00+00:00"^^xsd:dateTime ;
-  sosa:madeBySensor agora:moisture_sensor_fern ;
-  agora:underWorldVersion 1 ;
-  prov:wasGeneratedBy agora:fern .
-
-agora:fern a agora:Plant ; agora:servedBy agora:barrel1 ; agora:hasTarget 0.55 .
-agora:barrel1 a agora:WaterSource ; agora:suppliedBy agora:supplier .
-agora:supplier a agora:Supplier .
-"""
+from conftest import GENESIS_DIR, ONTOLOGY_DIR, RULES_DIR, SHAPES_DIR, genesis_dataset
 
 
-def _conforms(ttl: str) -> bool:
-    data = rdflib.Graph().parse(data=ttl, format="turtle")
-    ont = rdflib.Graph().parse(str(ONT_DIR / "agora.ttl"), format="turtle")
-    shapes = rdflib.Graph().parse(str(ONT_DIR / "shapes.ttl"), format="turtle")
-    conforms, _, _ = validate(data, shacl_graph=shapes, ont_graph=ont, inference="rdfs")
+def _flatten(ds: rdflib.Dataset) -> rdflib.Graph:
+    """The vocabulary + the world + every agent's beliefs, exactly as validation sees it."""
+    data = rdflib.Graph()
+    for name in MODULE_FILES:
+        data.parse(ONTOLOGY_DIR / f"{name}.ttl", format="turtle")
+    for triple in ds.graph(rdflib.URIRef(WORLD_GRAPH)):
+        data.add(triple)
+    for agent in ("fern", "tomato", "succulent", "supplier"):
+        for triple in ds.graph(rdflib.URIRef(beliefs_graph(agent))):
+            data.add(triple)
+    return data
+
+
+def _conforms(data: rdflib.Graph) -> bool:
+    ontology, shapes = rdflib.Graph(), rdflib.Graph()
+    for name in MODULE_FILES:
+        ontology.parse(ONTOLOGY_DIR / f"{name}.ttl", format="turtle")
+        if (SHAPES_DIR / f"{name}.ttl").exists():
+            shapes.parse(SHAPES_DIR / f"{name}.ttl", format="turtle")
+    conforms, _, _ = validate(data, shacl_graph=shapes, ont_graph=ontology,
+                              inference="rdfs", advanced=True)
     return conforms
 
 
-def test_wellformed_conforms():
-    assert _conforms(GOOD)
+def _mutate(update: str) -> rdflib.Graph:
+    """Apply a change to the seeded belief base and re-validate the result."""
+    ds = genesis_dataset()
+    ds.update("PREFIX ag: <http://example.org/agora#>\n" + update)
+    return _flatten(ds)
 
 
-def test_missing_result_fails():
-    assert not _conforms(GOOD.replace('  sosa:hasSimpleResult "0.18"^^xsd:decimal ;\n', ""))
+# --- the world we actually ship --------------------------------------------
+
+def test_genesis_conforms():
+    assert _conforms(_flatten(genesis_dataset()))
 
 
-def test_self_asserted_provenance_conforms():
-    # Trusted-agent mode: a plant authoring its own reading is valid.
-    assert _conforms(GOOD)  # GOOD is prov:wasGeneratedBy agora:fern
+# --- capability-conditional rules ------------------------------------------
+
+def test_polling_agent_must_state_a_cadence():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:fastSleepS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:fastSleepS ?v }} }}"""))
 
 
-def test_missing_provenance_fails():
-    bad = GOOD.replace(
-        "  agora:underWorldVersion 1 ;\n  prov:wasGeneratedBy agora:fern .",
-        "  agora:underWorldVersion 1 .",
-    )
-    assert not _conforms(bad)
+def test_polling_agent_must_state_a_freshness_limit():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:maxReadingAgeS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:maxReadingAgeS ?v }} }}"""))
 
 
-def test_missing_world_version_fails():
-    assert not _conforms(GOOD.replace("  agora:underWorldVersion 1 ;\n", ""))
+def test_cadence_may_not_be_slower_when_thirsty():
+    # watching LESS closely exactly when in trouble inverts the whole policy
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:fastSleepS 30 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:fastSleepS 800 }} }}
+        WHERE  {{}}"""))
 
 
-def test_target_out_of_range_fails():
-    assert not _conforms(GOOD.replace("agora:hasTarget 0.55", "agora:hasTarget 1.5"))
+def test_nobody_may_sleep_past_the_constitutional_ceiling():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:slowSleepS 600 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:slowSleepS 5000 }} }}
+        WHERE  {{}}"""))
 
 
-def test_source_without_supplier_fails():
-    assert not _conforms(GOOD.replace("agora:barrel1 a agora:WaterSource ; agora:suppliedBy agora:supplier .", "agora:barrel1 a agora:WaterSource ."))
+def test_inverted_band_is_not_a_band():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:bandLow 0.35 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:bandLow 0.90 }} }}
+        WHERE  {{}}"""))
+
+
+def test_bidder_must_have_a_valuation():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent ag:maxValuePerL ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent ag:maxValuePerL ?v }} }}"""))
+
+
+def test_host_must_say_how_long_it_waits_for_bids():
+    # without a window a round never closes
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{beliefs_graph("supplier")}> {{ ag:supplier ag:bidWindowS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("supplier")}> {{ ag:supplier ag:bidWindowS ?v }} }}"""))
+
+
+def test_the_supplier_is_not_asked_for_a_cadence():
+    """It composed no perception capability, so the polling rules simply do not apply to it."""
+    assert _conforms(_flatten(genesis_dataset()))  # it has no cadence, and that is fine
+
+
+# --- the world must be coherently wired ------------------------------------
+
+def test_sensor_must_state_how_it_is_driven():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ?m }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ?m }} }}"""))
+
+
+def test_pull_sensor_must_state_a_command_topic():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:commandTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:commandTopic ?t }} }}"""))
+
+
+def test_a_device_on_the_bus_must_state_where_it_publishes():
+    """Declaring a binding and then not completing it is the failure worth catching."""
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}"""))
+
+
+def test_a_listening_agent_must_not_hold_a_cadence():
+    """Requiring a policy it cannot enforce would be theatre; stating one misdescribes it."""
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Pull }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Push .
+                                           ag:fern_agent ag:hasCapability ag:Listening }} }}
+        WHERE  {{}}"""))
+
+
+def test_valve_must_carry_its_calibration():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern ag:maxDoseMl ?v }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern ag:maxDoseMl ?v }} }}"""))
+
+
+def test_a_plant_may_not_hold_a_desire():
+    """The target belongs to an agent's beliefs; a plant that held one would be a category error."""
+    assert not _conforms(_mutate(f"""
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern ag:hasTarget 0.55 }} }} WHERE {{}}"""))
+
+
+def test_market_must_state_all_three_channels():
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market ag:voucherTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market ag:voucherTopic ?t }} }}"""))

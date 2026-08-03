@@ -14,7 +14,8 @@ kind of [agent](/domain/agent.md) — the only tier with a stake (a desire and a
 
 # Identity (important)
 
-An agent's identity is NOT an LLM session. It is: the **charter** (static — identity,
+An agent's identity is NOT an LLM session. It is: the **charter** (its public wiring from the
+world plus its own private beliefs — identity,
 plant URI, desire, endowment, skill set, system prompt), the **certificate** (signed proof
 of who it is; see [authn-authz-capabilities](/decisions/authn-authz-capabilities.md)), the
 **wallet**, the **active intention**, and its own **beliefs** (self-asserted `:sensed` +

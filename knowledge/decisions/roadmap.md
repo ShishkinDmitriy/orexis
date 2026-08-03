@@ -48,6 +48,13 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) (agents read the T-Box
   from context). Extract seams from watering *first*, don't abstract prematurely. (v3)
 
+- **Enforced bus privacy.** The *store* now enforces who may read which graph
+  ([belief-base-isolation](/decisions/belief-base-isolation.md)), but the broker does not:
+  any process that can reach MQTT can subscribe `sensors/#` and watch every reading. Per-agent
+  broker credentials and topic ACLs are the matching half, and the remaining precondition for
+  taking the society adversarial — a signing sensor stops an agent authoring its own readings,
+  and store ACLs stop it reading others' minds, but the wire is still in the clear.
+
 # Working principle
 
 Extract-from-concrete. Build watering concretely; keep the four seams visible (value model,

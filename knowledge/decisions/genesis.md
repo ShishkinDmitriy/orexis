@@ -11,8 +11,9 @@ timestamp: 2026-08-02T00:00:00Z
 # Context
 
 The belief base holds two kinds of belief that arise differently. **State** (current
-moisture) is *sensed* continuously by the [gateway](/domain/gateway.md). **Structure +
-identity** (topology, charters) is *durable* and must be *authored* — it cannot be sensed.
+moisture) is *sensed* by each agent's own sensor (see [sensing](/domain/sensing.md)).
+**Structure + identity** (topology, wiring) is *durable* and must be *authored* — it cannot
+be sensed.
 Where does that come from, and — since no one describes a world correctly the first time —
 how is it corrected later?
 
@@ -22,22 +23,28 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
 
 1. **Narrate** — the sovereign describes the world in English (plants, sources, who feeds
    whom, quirks, desires).
-2. **Draft** — the LLM proposes a *formal* world: the topology graph
-   (`:fern :servedBy :barrel1` …), charters (targets, endowments, quirks), starting
-   thresholds. The LLM is a **drafting assistant, not an agent** — no stake, proposes only.
+2. **Draft** — the LLM proposes a *formal* world: the topology graph (`:fern :servedBy
+   :barrel1`, `:fern_agent :polls :moisture_sensor_fern` …) and each agent's opening
+   beliefs (target, bands, cadence, valuation). The LLM is a **drafting assistant, not an
+   agent** — no stake, proposes only.
 3. **Ratify** — the sovereign reviews, edits, accepts. Only the sovereign authors the world
    (see [constitution](/domain/constitution.md): only the sovereign amends).
-4. **Write** — trusted infra materializes the ratified draft as **attested structure** +
-   **signed charters**. Agents read it; they never author it.
+4. **Write** — the ratified draft is Turtle in `genesis/`, and `agora-seed` PUTs it: the
+   wiring into `:world` (which agents read but never rewire), each agent's opening beliefs
+   into its own `:beliefs/<agent>` (which it alone may revise). The sovereign authors the
+   world in the same vocabulary the agents read — no config file, no translation layer.
+   See [world-graph](/decisions/world-graph.md).
 
 This is [english-vs-formal](/decisions/english-vs-formal.md) applied to *creation*: the story
 is fuzzy human intent (English); the ratified structure is trusted formal.
 
 # Genesis vs sensing — each belief has one origin
 
-- **State** ← sensing (gateway), continuous. You cannot narrate the moisture.
-- **Structure / identity** ← genesis (narrate → draft → ratify), durable. You cannot sense a
-  charter.
+- **State** ← sensing, continuous. You cannot narrate the moisture.
+- **Topology / identity** ← genesis (narrate → draft → ratify), durable. You cannot sense who
+  is plumbed to what.
+- **Desire / limits** ← genesis *seeds* them, then they are the agent's own to revise. Opening
+  beliefs, not permanent law.
 
 They never mix. See [belief-base](/domain/belief-base.md).
 
@@ -45,15 +52,19 @@ They never mix. See [belief-base](/domain/belief-base.md).
 
 What looks like flat config is the *ratified output* of genesis, and each fact has an owner:
 
-- **topology / species** → attested **structure** (sovereign-declared; agents read, never
-  rewire — see [market](/domain/market.md)).
-- **target / endowment / quirks** → each agent's **charter** + private `:exp` (internal to
+- **topology / wiring / device calibration** → the **`:world`** graph (sovereign-declared;
+  agents read, never rewire — see [market](/domain/market.md)).
+- **target / endowment / value curve** → each agent's own **`:beliefs/<agent>`** (internal to
   the agent — see [agent](/domain/agent.md)).
-- **bands / thresholds** → the **gateway's** judgment authority (not an agent belief).
-- **quantity / reserve / tank** → the **supplier's** strategy.
+- **bands / cadence / freshness limit** → also the agent's: desire-relative judgments, not
+  ground truth (see [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)).
+- **quantity / reserve / cooldown** → the **supplier's** own beliefs — its strategy.
+- **tank capacity** → `:world`, on the source: a physical fact, and the constitution's
+  allocation ceiling.
 
 Splitting by owner keeps the epistemics honest — no shared knowledge, only testimony +
-private belief.
+private belief. That split is now literal: it is which *graph* the triple lives in, and
+there is no config file left over. See [world-graph](/decisions/world-graph.md).
 
 # Genesis is repeatable and amendable
 
@@ -80,7 +91,7 @@ No one describes a world correctly the first time, so genesis is **not one-shot*
 Concretely: a single monotonic **world-version**, incremented on each manual (re-)genesis or
 amendment. It is used two ways, and the distinction matters:
 
-- **Structure carries it as identity** — the ratified topology + charters *are* world-vN.
+- **The world graph carries it as identity** — the ratified topology *is* world-vN.
   When amended, the new structure is written as v(N+1) and the prior version is kept as an
   **immutable snapshot**, not overwritten. The sequence of versions is append-only.
 - **State references it as provenance** — each runtime attestation (a moisture reading)
@@ -96,13 +107,13 @@ amendments append a version, the version chain never mutates, and the "current" 
 projection of the latest. Rollback is a *forward* amendment (re-ratify an old version as the
 new current), never an edit of the past.
 
-v1: a `world_version` integer bumped by hand when the sovereign edits the config and
-re-seeds; the [gateway](/domain/gateway.md) stamps each attestation with it. Archiving prior
-versions and the diff/migration tooling are v2/v3.
+v1: an `agora:versionNumber` bumped by hand in `genesis/world.ttl` when the sovereign edits
+it and re-seeds; every recorded observation is stamped with it. Archiving prior versions and
+the diff/migration tooling are v2/v3.
 
 # The line that protects trust: structure mutable, history immutable
 
-Amendment changes the **current structure and go-forward charters**. It must **never**
+Amendment changes the **current world and go-forward beliefs**. It must **never**
 retro-edit **testimony/history** — past attestations (with their timestamps) and the Influx
 series are the *record of what happened*, append-only. You may change what the world **is**,
 never what it **was**. That is what keeps the witness of record trustworthy. See
@@ -110,8 +121,9 @@ never what it **was**. That is what keeps the witness of record trustworthy. See
 
 # v1 vs v2
 
-v1 **hand-authors** the ratified output (config files split by owner) and skips the narrator;
-amendment in v1 = edit the config and re-seed. The narrate → draft → ratify LLM tool, the
-world-versioning, and typed migrations are **v2/v3 onboarding** work. Because config is
-already treated as *ratified belief*, building the narrator later changes nothing
-downstream. See [roadmap](/decisions/roadmap.md).
+v1 **hand-authors** the ratified output — Turtle in `genesis/`, split by owner into the world
+and one file per agent — and skips the narrator; amendment in v1 = edit those files and
+re-seed. The narrate → draft → ratify LLM tool, version archiving, and typed migrations are
+**v2/v3 onboarding** work. Because the ratified output is already *belief in the agents' own
+vocabulary*, building the narrator later changes nothing downstream: it just writes the same
+Turtle. See [roadmap](/decisions/roadmap.md).

@@ -1,0 +1,64 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/core> a owl:Ontology ;
+    rdfs:label "Agora core" ;
+    rdfs:comment """The society kernel: agents, the capabilities they compose, devices, and the versioned world they share. Everything else is a MODULE layered on this — polling, market, actuation, and the domain itself. Code may reference the terms defined here; it may never reference an instance.""" .
+
+#################  Agents and capabilities (composition, not hierarchy)  #################
+
+ag:Agent a owl:Class ; rdfs:label "Agent" ;
+    rdfs:comment "A self-interested principal with a stake. What an agent can DO is not its class — it is the set of capabilities composed onto it, so two agents of the same kind may run different modules." .
+
+ag:Capability a owl:Class ; rdfs:label "Capability" ;
+    rdfs:comment "One thing an agent can do, defined by a module: a vocabulary (this ontology), rules (its SHACL shapes), and the code that reads them. Declaring a capability is what activates the module." .
+
+ag:hasCapability a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Capability ;
+    rdfs:label "has capability" ;
+    rdfs:comment "Composed onto the agent in the WORLD graph (public: peers must know what a counterparty can do). The PARAMETERS of a capability are private, in the agent's own beliefs." .
+
+ag:actsFor a owl:ObjectProperty ; rdfs:domain ag:Agent ;
+    rdfs:label "acts for" ;
+    rdfs:comment "The subject whose interest this agent advances. Generic; a domain narrows the range (in the water domain, a Plant)." .
+
+#################  Devices — dumb mechanism at the edge  #################
+
+ag:Device a owl:Class ; rdfs:label "Device" ;
+    rdfs:comment "A physical edge node: mechanism, never policy, and interchangeable with a simulated one." .
+
+#################  Naming — stated, never derived  #################
+
+ag:localId a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "local id" ;
+    rdfs:comment "The short name a resource is known by outside RDF. Stated here so nothing has to infer it from the shape of a URI. The ONE instance identifier a process is given is an agent's localId; everything else it discovers." .
+
+#################  The world and its versions  #################
+
+ag:World a owl:Class ; rdfs:label "World" ;
+    rdfs:comment "The ratified world produced by genesis. Found by TYPE, never by a well-known IRI." .
+ag:WorldVersion a owl:Class ; rdfs:label "World version" ;
+    rdfs:comment "One ratified version of the world's topology; the chain is append-only." .
+ag:currentVersion a owl:ObjectProperty ; rdfs:domain ag:World ; rdfs:range ag:WorldVersion ;
+    rdfs:label "current version" .
+ag:versionNumber a owl:DatatypeProperty ; rdfs:domain ag:WorldVersion ; rdfs:range xsd:integer ;
+    rdfs:label "version number" .
+ag:underWorldVersion a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "under world version" ;
+    rdfs:comment "The world-version in force when this fact was recorded (provenance)." .
+
+#################  Graphs — typed, self-describing (not magic strings)  #################
+
+ag:Graph a owl:Class ; rdfs:label "Named graph" .
+ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "World graph" ;
+    rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, versioned, sovereign-authored. Stated once so no agent's beliefs repeat it." .
+ag:BeliefsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Beliefs graph" ;
+    rdfs:comment "ONE agent's private parameters for the capabilities it composed. Opinion, not fact." .
+ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Sensed graph" ;
+    rdfs:comment "What sensors read. Measurement only; never a judgment." .
+ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Ontology graph" ;
+    rdfs:comment "The T-Box: this module and every other." .
+ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:Agent ;
+    rdfs:label "beliefs of" ;
+    rdfs:comment "Which agent owns this graph — the write boundary, made explicit." .

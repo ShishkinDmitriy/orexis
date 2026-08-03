@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/home/dimonina/projects/not-yet
+WorkingDirectory=/home/dimonina/projects/agora
 ExecStart=/usr/bin/podman compose up -d
 ExecStop=/usr/bin/podman compose down
 TimeoutStartSec=300

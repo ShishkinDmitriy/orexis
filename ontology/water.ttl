@@ -1,0 +1,63 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/water> a owl:Ontology ;
+    rdfs:label "Agora water domain" ;
+    rdfs:comment """The v1 domain, a PLUG-IN. Everything above this file is domain-neutral: agents, capabilities, polling, markets, actuation. This module says what is being sensed and allocated here — soil moisture and water — and what a bid MEANS in this domain. Swap this file and the society still runs.""" .
+
+#################  The things  #################
+
+ag:Plant a owl:Class ; rdfs:subClassOf sosa:FeatureOfInterest ; rdfs:label "Plant" ;
+    rdfs:comment "The physical thing sensed and watered. It has no stake — its agent does." .
+ag:WaterSource a owl:Class ; rdfs:label "Water source" ;
+    rdfs:comment "What a supplier dispenses; the plumbing node a market forms around." .
+ag:SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" .
+
+ag:servedBy a owl:ObjectProperty ; rdfs:domain ag:Plant ; rdfs:range ag:WaterSource ;
+    rdfs:label "served by" ;
+    rdfs:comment "Plumbing/reachability: which source can water this plant." .
+ag:suppliedBy a owl:ObjectProperty ; rdfs:domain ag:WaterSource ; rdfs:range ag:Agent ;
+    rdfs:label "supplied by" .
+ag:capacityL a owl:DatatypeProperty ; rdfs:domain ag:WaterSource ; rdfs:range xsd:decimal ;
+    rdfs:label "capacity litres" ;
+    rdfs:comment "Physical ceiling on what this source can dispense — the constitution's total-allocation limit." .
+
+#################  Physics of a pot (public: it is how the world behaves)  #################
+
+ag:dryRatePerTick a owl:DatatypeProperty ; rdfs:domain ag:Plant ; rdfs:range xsd:decimal ;
+    rdfs:label "dry rate per tick" ;
+    rdfs:comment "How fast this pot loses moisture — the soil model a virtual plant runs on." .
+
+# Deliberately un-domained. On a PLANT (in the world) it is the physical fact: what that pot
+# actually takes. On an AGENT (in its own beliefs) it is what the agent BELIEVES its pot
+# takes, which is what its bid is computed from. They coincide today; an agent that learns
+# would revise its own copy, and being wrong about it would cost it money.
+ag:litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "litres per fraction" ;
+    rdfs:comment "Litres needed to raise moisture by 1.0 — converts a deficit into a demand." .
+
+#################  What a bid means here — the bidder's private valuation  #################
+
+ag:hasTarget a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "has target" ;
+    rdfs:comment "Desire: the moisture fraction this agent is trying to hold. The deficit below it drives both how much it wants and how badly." .
+ag:maxValuePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "max value per litre" ;
+    rdfs:comment "Willingness to pay at peak urgency — the private value curve. The market sees the bid, never this." .
+
+#################  Judgment — desire-relative, never recorded as fact  #################
+
+ag:Band a owl:Class ; rdfs:label "Moisture band" ;
+    rdfs:comment "A verdict, not testimony. Computed by each agent from a reading against ITS OWN limits, and stored nowhere: the same 0.18 is LOW for a fern and OK for a succulent." .
+ag:LOW  a ag:Band ; rdfs:label "LOW" .
+ag:OK   a ag:Band ; rdfs:label "OK" .
+ag:HIGH a ag:Band ; rdfs:label "HIGH" .
+
+ag:bandLow a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "band low" ;
+    rdfs:comment "Below this the agent judges ITSELF low. A comfort limit, desire-relative — not the rot limit, which is physical and the constitution's." .
+ag:bandHigh a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "band high" .

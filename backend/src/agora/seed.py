@@ -1,96 +1,91 @@
-"""Genesis (v1, hand-authored): write the ratified world into the belief base.
+"""Genesis (v1, hand-authored): load the ratified world into the belief base.
 
-Loads the shared T-Box and materializes the sovereign-authored *structure* — the world
-version, topology (servedBy / suppliedBy), charters (targets), and the typed graph catalog —
-into Fuseki. This is the "infra writes the ratified draft" step of genesis; agents read it,
-never author it. Re-run (after bumping world_version + editing config) to re-seed.
+The sovereign authors the world directly in the vocabulary the agents read — Turtle, in
+`genesis/` — and this just PUTs each file into its graph. No translation layer, one language
+end to end:
+
+  ontology/*.ttl              -> :ontology          the T-Box, one file per capability
+  genesis/world.ttl           -> :world             hardware + wiring, public
+  rules/*.ru                  -> :world             DERIVES each agent's capabilities
+  genesis/beliefs-<agent>.ttl -> :beliefs/<agent>   that agent's private parameters
+
+The derivation step is what keeps abilities honest: the sovereign never writes down what an
+agent can do, only what it is wired to. Capability follows from hardware and connections —
+a pull-mode sensor gives its agent a cadence to own, a push-mode one does not — so the two
+can never drift apart. Change the wiring, re-run genesis, and abilities follow.
+
+Re-run after editing (bump agora:versionNumber in world.ttl on a structural change).
 
   agora-seed
 
-See knowledge/decisions/genesis.md.
+See knowledge/decisions/genesis.md, knowledge/decisions/world-graph.md.
 """
 
 from __future__ import annotations
 
 import logging
+import re
 
-import requests
-
-from . import config
+from . import config, store
 from .config import PROJECT_ROOT
-from .ontology import ONTOLOGY_GRAPH, OPINION_GRAPH, SENSED_GRAPH, STRUCTURE_GRAPH
+from .ontology import MODULE_FILES, ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph
+from .store import bindings
 
 log = logging.getLogger("seed")
 
-ONTOLOGY_TTL = PROJECT_ROOT.parent / "ontology" / "agora.ttl"
+REPO_ROOT = PROJECT_ROOT.parent
+ONTOLOGY_DIR = REPO_ROOT / "ontology"
+RULES_DIR = REPO_ROOT / "rules"
+GENESIS_DIR = REPO_ROOT / "genesis"
+WORLD_TTL = GENESIS_DIR / "world.ttl"
+BELIEFS_GLOB = "beliefs-*.ttl"
 
 
-def _put_graph(data_url: str, graph_iri: str, ttl: str, auth) -> None:
-    """Replace a named graph with the given Turtle (GSP PUT)."""
-    resp = requests.put(
-        data_url,
-        params={"graph": graph_iri},
-        data=ttl.encode("utf-8"),
-        headers={"Content-Type": "text/turtle"},
-        auth=auth,
-        timeout=15,
-    )
-    resp.raise_for_status()
+def agent_id_of(path) -> str:
+    """`genesis/beliefs-fern.ttl` -> `fern` — the graph it belongs to."""
+    return re.sub(r"^beliefs-|\.ttl$", "", path.name)
 
 
-def _local(uri: str) -> str:
-    return uri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+def derive(st) -> None:
+    """Run each module's derivation rules, materialising capabilities into the world.
+
+    Rules are SPARQL updates so the derivation is stated in the same language as everything
+    else, and lives with the module that owns it. Re-running is safe: INSERT of a triple that
+    is already there is a no-op.
+    """
+    for path in sorted(RULES_DIR.glob("*.ru")):
+        st.update(path.read_text())
+    for row in bindings(st.query_all(_CAPABILITIES_Q)):
+        log.info("derived %-9s -> %s", row["agentId"], row["caps"])
 
 
-def build_structure_ttl(cfg: dict) -> str:
-    """Turtle for the sovereign-authored structure graph, from config."""
-    v = int(cfg.get("world_version", 1))
-    sup = cfg["supplier"]
-    lines = [
-        "@prefix agora: <http://example.org/agora#> .",
-        "",
-        "# world + current version",
-        f"agora:world a agora:World ; agora:currentVersion agora:version_{v} .",
-        f"agora:version_{v} a agora:WorldVersion ; agora:versionNumber {v} .",
-        "",
-        "# typed graph catalog (graphs are resources, not magic strings)",
-        f"<{ONTOLOGY_GRAPH}> a agora:OntologyGraph .",
-        f"<{STRUCTURE_GRAPH}> a agora:StructureGraph .",
-        f"<{SENSED_GRAPH}> a agora:SensedGraph .",
-        f"<{OPINION_GRAPH}> a agora:OpinionGraph .",
-        "",
-        "# supplier + sources (topology)",
-        f"agora:{sup['id']} a agora:Supplier .",
-    ]
-    for s in cfg.get("sources", []):
-        lines.append(f"agora:{s['id']} a agora:WaterSource ; agora:suppliedBy agora:{s['supplier']} .")
-    lines.append("")
-    lines.append("# plants: charter desire + which source waters them")
-    for p in cfg["plants"]:
-        lines.append(
-            f"<{p['uri']}> a agora:Plant ; "
-            f"agora:servedBy agora:{p['source']} ; "
-            f"agora:hasTarget {p['target']} ; "
-            f"agora:underWorldVersion {v} ."
-        )
-    return "\n".join(lines) + "\n"
+_CAPABILITIES_Q = f"""
+SELECT ?agentId (GROUP_CONCAT(?cap; separator=", ") AS ?caps)
+WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?agent a ag:Agent ; ag:localId ?agentId ; ag:hasCapability ?c .
+  BIND(REPLACE(STR(?c), "^.*#", "") AS ?cap)
+}} }} GROUP BY ?agentId ORDER BY ?agentId"""
 
 
 def seed() -> None:
-    cfg = config.load_plants()
-    fuseki = config.env("FUSEKI_URL", "http://localhost:3030/ds")
-    data_url = fuseki.rstrip("/") + "/data"
-    auth = ("admin", config.env("FUSEKI_PASSWORD", "admin"))
+    st = store.from_env(config.env)
 
-    ontology_ttl = ONTOLOGY_TTL.read_text()
-    _put_graph(data_url, ONTOLOGY_GRAPH, ontology_ttl, auth)
-    log.info("loaded T-Box -> %s", ONTOLOGY_GRAPH)
+    # every ontology module into one T-Box graph — the modules are separate files so each
+    # capability owns its vocabulary, but agents read one merged vocabulary
+    t_box = "\n".join((ONTOLOGY_DIR / f"{name}.ttl").read_text() for name in MODULE_FILES)
+    st.put_graph(ONTOLOGY_GRAPH, t_box)
+    log.info("loaded T-Box (%s) -> %s", ", ".join(MODULE_FILES), ONTOLOGY_GRAPH)
 
-    _put_graph(data_url, STRUCTURE_GRAPH, build_structure_ttl(cfg), auth)
-    log.info(
-        "seeded structure (world v%s, %d plants, %d source(s)) -> %s",
-        cfg.get("world_version", 1), len(cfg["plants"]), len(cfg.get("sources", [])), STRUCTURE_GRAPH,
-    )
+    st.put_graph(WORLD_GRAPH, WORLD_TTL.read_text())
+    log.info("seeded world (topology + capabilities) -> %s", WORLD_GRAPH)
+
+    derive(st)
+
+    for path in sorted(GENESIS_DIR.glob(BELIEFS_GLOB)):
+        agent_id = agent_id_of(path)
+        graph = beliefs_graph(agent_id)
+        st.put_graph(graph, path.read_text())
+        log.info("seeded %-9s private beliefs -> %s", agent_id, graph)
 
 
 def main() -> None:

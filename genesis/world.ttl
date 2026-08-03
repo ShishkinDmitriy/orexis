@@ -1,0 +1,160 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+
+#  The ratified world, v1 — hand-authored by the sovereign, loaded by `agora-seed`.
+#
+#  HARDWARE AND WIRING ONLY. Who exists, what is plumbed or wired to what, what kind of
+#  device each one is, and where everything is reachable. All public, because agreement about
+#  it is what makes a society.
+#
+#  Note what is NOT written here: no ag:hasCapability. What an agent can DO is *derived* at
+#  genesis from this wiring (rules/*.ru) — an agent on a pull-mode sensor gains ag:Polling,
+#  one on a push-mode sensor gains ag:Listening instead, one plumbed into a market gains
+#  ag:Bidding, one holding valves gains ag:Actuation. Capability follows from hardware and
+#  connections, so it cannot drift from them: swap a sensor's firmware, re-run genesis, and
+#  the agent's abilities change with it.
+#
+#  Also not here: anything an agent could reasonably disagree about. Targets, bands, cadence
+#  and prices are opinion, and live in genesis/beliefs-<agent>.ttl.
+#
+#  Every wire name is stated on the resource that owns it, so no process builds a topic from
+#  a naming convention. A process is given exactly one instance identifier — its own agent
+#  id — and discovers all of this from it.
+#
+#  See knowledge/decisions/world-graph.md, knowledge/decisions/capability-modules.md.
+
+##########  The bus everyone speaks over  ##########
+#  Here rather than in .env because a topic means nothing without the broker it is on, and a
+#  society whose members disagree about the bus is not one society. The ONLY thing the
+#  environment tells a process is where the belief base is; this is part of what it finds there.
+
+ag:local_bus a ag:MessageBus ;
+    ag:localId "local_bus" ;
+    ag:brokerHost "localhost" ;
+    ag:brokerPort 1883 .
+
+##########  World version  ##########
+#  Found by TYPE (?w a ag:World), never by a well-known IRI.
+
+ag:world a ag:World ; ag:currentVersion ag:version_1 .
+ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+
+##########  Typed graph catalog  ##########
+
+<http://example.org/agora/graph/ontology> a ag:OntologyGraph .
+<http://example.org/agora/graph/world>    a ag:WorldGraph .
+<http://example.org/agora/graph/sensed>   a ag:SensedGraph .
+
+<http://example.org/agora/graph/beliefs/fern>      a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .
+<http://example.org/agora/graph/beliefs/tomato>    a ag:BeliefsGraph ; ag:beliefsOf ag:tomato_agent .
+<http://example.org/agora/graph/beliefs/succulent> a ag:BeliefsGraph ; ag:beliefsOf ag:succulent_agent .
+<http://example.org/agora/graph/beliefs/supplier>  a ag:BeliefsGraph ; ag:beliefsOf ag:supplier .
+
+##########  The venue  ##########
+
+ag:barrel1_market a ag:Market ;
+    ag:localId "barrel1_market" ;
+    ag:marketFor ag:barrel1 ;
+    ag:offerTopic   "market/barrel1/offer" ;
+    ag:bidTopic     "market/barrel1/bid" ;
+    ag:voucherTopic "market/barrel1/voucher" .
+
+ag:barrel1 a ag:WaterSource ;
+    ag:localId "barrel1" ;
+    ag:suppliedBy ag:supplier ;
+    ag:capacityL 5.0 .
+
+##########  The supplier — runs the venue and owns the valves  ##########
+#  Derivation gives it Hosting (it owns a market) and Actuation (it holds valves), and NOT
+#  Polling or Bidding — it is wired to no sensor and plumbed into no market as a buyer. Its
+#  class says none of this; its connections do.
+
+ag:supplier a ag:Agent ;
+    ag:localId "supplier" ;
+    ag:hosts ag:barrel1_market ;
+    ag:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
+
+##########  Plants — sensed and watered; no stake of their own  ##########
+
+ag:fern a ag:Plant ;
+    ag:localId "fern" ; ag:servedBy ag:barrel1 ;
+    ag:dryRatePerTick 0.01 ; ag:litresPerFraction 2.0 .
+
+ag:tomato a ag:Plant ;
+    ag:localId "tomato" ; ag:servedBy ag:barrel1 ;
+    ag:dryRatePerTick 0.01 ; ag:litresPerFraction 2.0 .
+
+ag:succulent a ag:Plant ;
+    ag:localId "succulent" ; ag:servedBy ag:barrel1 ;
+    ag:dryRatePerTick 0.008 ; ag:litresPerFraction 2.0 .
+
+##########  Plant agents — each wired to its own sensor and into the market  ##########
+#  ag:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
+#  From these two connections, derivation gives each of them Polling + Bidding.
+
+ag:fern_agent a ag:Agent ;
+    ag:localId "fern" ;
+    ag:actsFor ag:fern ;
+    ag:polls ag:moisture_sensor_fern ;
+    ag:bidsIn ag:barrel1_market ;
+    ag:eventTopic "readings/fern" .
+
+ag:tomato_agent a ag:Agent ;
+    ag:localId "tomato" ;
+    ag:actsFor ag:tomato ;
+    ag:polls ag:moisture_sensor_tomato ;
+    ag:bidsIn ag:barrel1_market ;
+    ag:eventTopic "readings/tomato" .
+
+ag:succulent_agent a ag:Agent ;
+    ag:localId "succulent" ;
+    ag:actsFor ag:succulent ;
+    ag:polls ag:moisture_sensor_succulent ;
+    ag:bidsIn ag:barrel1_market ;
+    ag:eventTopic "readings/succulent" .
+
+##########  Sensors — pull-mode boards: they sense on request and sleep  ##########
+
+ag:moisture_sensor_fern a ag:Sensor ;
+    ag:localId "moisture_sensor_fern" ;
+    ag:onBus ag:local_bus ;
+    ag:senseMode ag:Pull ;          # firmware answers on request -> its agent gains ag:Polling
+    ag:monitors ag:fern ;
+    sosa:observes ag:SoilMoisture ;
+    ag:readingTopic "sensors/fern/moisture" ;
+    ag:commandTopic "sensors/fern/cmd" .
+
+ag:moisture_sensor_tomato a ag:Sensor ;
+    ag:localId "moisture_sensor_tomato" ;
+    ag:onBus ag:local_bus ;
+    ag:senseMode ag:Pull ;          # firmware answers on request -> its agent gains ag:Polling
+    ag:monitors ag:tomato ;
+    sosa:observes ag:SoilMoisture ;
+    ag:readingTopic "sensors/tomato/moisture" ;
+    ag:commandTopic "sensors/tomato/cmd" .
+
+ag:moisture_sensor_succulent a ag:Sensor ;
+    ag:localId "moisture_sensor_succulent" ;
+    ag:onBus ag:local_bus ;
+    ag:senseMode ag:Pull ;          # firmware answers on request -> its agent gains ag:Polling
+    ag:monitors ag:succulent ;
+    sosa:observes ag:SoilMoisture ;
+    ag:readingTopic "sensors/succulent/moisture" ;
+    ag:commandTopic "sensors/succulent/cmd" .
+
+##########  Valves — the supplier's, one per plant  ##########
+
+ag:valve_fern a ag:Valve ;
+    ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
+    ag:commandTopic "actuators/fern/valve" ;
+    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+
+ag:valve_tomato a ag:Valve ;
+    ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
+    ag:commandTopic "actuators/tomato/valve" ;
+    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+
+ag:valve_succulent a ag:Valve ;
+    ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
+    ag:commandTopic "actuators/succulent/valve" ;
+    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .

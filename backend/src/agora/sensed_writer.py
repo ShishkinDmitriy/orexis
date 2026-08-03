@@ -1,59 +1,53 @@
-"""The plant's own sensed-data writer (trusted-agent mode — no witness).
+"""Writing what a sensor read into :sensed — the agent's own assertion.
 
-Each plant asserts its current reading into :sensed as its *own* opinion —
-prov:wasGeneratedBy the plant itself, not a gateway. Overwrites: one SOSA observation per
-plant, replaced each reading. See knowledge/decisions/trusted-agent-mode.md.
+Trusted-agent mode: no witness, so the reading is authored by the agent that polled it
+(`prov:wasGeneratedBy`). Everything about the observation is passed in from the world — the
+subject, the sensor, and which property it observes — so nothing here knows a name.
+
+One observation per subject, replaced each reading; the *series* lives in Influx. The
+observation's own IRI is minted from the subject id, and nothing ever looks it up by that
+name: readers match on `sosa:hasFeatureOfInterest`.
+
+See knowledge/decisions/trusted-agent-mode.md.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import requests
-
 from .ontology import SENSED_GRAPH
-
-_PREFIXES = """
-PREFIX ag:   <http://example.org/agora#>
-PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
-"""
+from .store import Store
 
 
 class SensedWriter:
-    """Writes a plant's self-asserted current reading into the :sensed graph."""
-
-    def __init__(self, fuseki_url: str, user: str = "admin", password: str = "admin"):
-        self.update_url = fuseki_url.rstrip("/") + "/update"
-        self.auth = (user, password)
+    def __init__(self, store: Store):
+        self.store = store
 
     def write(
         self,
-        plant_uri: str,
-        plant_id: str,
+        subject_uri: str,
+        subject_id: str,
         value: float,
-        sensor: str,
+        sensor_uri: str,
+        observed_property: str,
+        author_uri: str,
         world_version: int | None = None,
         ts: str | None = None,
     ) -> None:
         ts = ts or datetime.now(timezone.utc).isoformat()
-        obs = f"ag:obs_{plant_id}"
-        wv_line = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
+        obs = f"ag:obs_{subject_id}"
+        wv = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
 
-        # Self-asserted: authored by the plant, not a gateway. Overwrite prior observation.
-        update = f"""{_PREFIXES}
+        self.store.update(f"""
 WITH <{SENSED_GRAPH}>
 DELETE {{ {obs} ?p ?o }} WHERE {{ {obs} ?p ?o }} ;
 INSERT DATA {{ GRAPH <{SENSED_GRAPH}> {{
   {obs} a sosa:Observation ;
-    sosa:hasFeatureOfInterest <{plant_uri}> ;
-    sosa:observedProperty ag:SoilMoisture ;
+    sosa:hasFeatureOfInterest <{subject_uri}> ;
+    sosa:observedProperty <{observed_property}> ;
     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
     sosa:resultTime "{ts}"^^xsd:dateTime ;
-    sosa:madeBySensor ag:{sensor} ;
-{wv_line}    prov:wasGeneratedBy <{plant_uri}> .
+    sosa:madeBySensor <{sensor_uri}> ;
+{wv}    prov:wasGeneratedBy <{author_uri}> .
 }} }}
-"""
-        resp = requests.post(self.update_url, data={"update": update}, auth=self.auth, timeout=5)
-        resp.raise_for_status()
+""")
