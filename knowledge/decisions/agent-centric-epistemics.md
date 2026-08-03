@@ -104,8 +104,19 @@ correction above is one face of this.
 
 # v1 vs the target
 
-Recorded now; the v1 code still: computes the band in the gateway, polls sensors on a fixed
-cadence, and keeps one global `:attested`. Moving to the target — gateway attests measurement
-only, per-plant private scopes, pull-based `sense`/`sleep` firmware, a clearing-authored
-ledger — is the v2 epistemics/observability work. The principle is pinned so the
-implementation can follow without re-litigation.
+Recorded ahead of the code; the code has since caught up in part.
+
+**Done.** The band is the agent's (§1) — computed from its charter, gateway decommissioned
+(see [trusted-agent-mode](/decisions/trusted-agent-mode.md)). Sensing is pull-based (§3): the
+firmware is a `sense`/`sleep` service, and the *agent* now drives it — it sets the cadence
+from its own urgency and nudges for a reading before it bids. The guard that pull requires
+came with it: a bid must cite a **fresh-enough** reading or the agent sits the round out, and
+the cadence floor is clamped on both sides of the wire. See [sensing](/domain/sensing.md).
+
+**Not yet.** Perception is *initiated* by the agent but not **priced** — no wallet debit per
+`sense`, so "how much to observe" is not yet the economic decision §3 promises; that waits on
+[single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md). Disclosure (§2) is
+still coarse: one shared `:sensed` graph rather than per-plant private scopes — nothing yet
+*enforces* that a peer can't read fern's moisture. And the ledger (§4) is not yet
+clearing-authored. Those remain the v2 epistemics/observability work; the principle stays
+pinned so the rest can follow without re-litigation.

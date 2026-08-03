@@ -1,11 +1,11 @@
 [Unit]
-Description=Agora plant edge (virtual plants: sense, assert :sensed, get watered)
+Description=Agora physical edge (virtual plants: sense when asked, sleep, get watered)
 After=agora-infra.service
 Wants=agora-infra.service
 
 [Service]
-WorkingDirectory=/home/dimonina/projects/not-yet
-ExecStart=/home/dimonina/projects/not-yet/.venv/bin/agora-sim
+WorkingDirectory=/home/dimonina/projects/agora
+ExecStart=/home/dimonina/projects/agora/.venv/bin/agora-sim
 Restart=on-failure
 RestartSec=5
 

@@ -1,10 +1,11 @@
 """SHACL validation of the belief base.
 
-Pulls the attested + structure graphs from Fuseki and validates them against
-ontology/shapes.ttl (with the T-Box for type resolution). This is the constitution's
-"checked by code, not persuasion" applied to the *shape* of the record: an attested
-observation must be complete, gateway-signed, and world-versioned; the structure must be
-well-formed. Exits non-zero on any violation.
+Pulls the world, each agent's beliefs, and the sensed graph from Fuseki and validates them
+against every shapes module in shapes/ (with the T-Box for type resolution). This is the
+constitution's "checked by code, not persuasion", and because capabilities are declared, the
+checks are capability-aware: a shape applies to an agent only if that agent composed the
+capability it belongs to. An agent that claims ag:Polling with no sensor or no cadence fails
+here — before it fails at 3am. Exits non-zero on any violation.
 
   agora-validate
 """
@@ -15,42 +16,46 @@ import logging
 import sys
 
 import rdflib
-import requests
 from pyshacl import validate as shacl_validate
 
-from . import config
+from . import config, store
 from .config import PROJECT_ROOT
-from .ontology import SENSED_GRAPH, STRUCTURE_GRAPH
+from .ontology import MODULE_FILES, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
+from .store import bindings
 
 log = logging.getLogger("validate")
 
-ONT_DIR = PROJECT_ROOT.parent / "ontology"
+REPO_ROOT = PROJECT_ROOT.parent
+ONT_DIR = REPO_ROOT / "ontology"
+SHAPES_DIR = REPO_ROOT / "shapes"
 
-
-def _fetch_graph(data_url: str, graph_iri: str) -> str:
-    resp = requests.get(
-        data_url,
-        params={"graph": graph_iri},
-        headers={"Accept": "text/turtle"},
-        timeout=10,
-    )
-    resp.raise_for_status()
-    return resp.text
+# Who has a beliefs graph is itself stated in the world — discovered, never listed here.
+_AGENTS_Q = f"""
+SELECT ?agentId WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?a a ag:Agent ; ag:localId ?agentId }} }}"""
 
 
 def validate() -> bool:
-    fuseki = config.env("FUSEKI_URL", "http://localhost:3030/ds")
-    data_url = fuseki.rstrip("/") + "/data"
+    st = store.from_env(config.env)
+
+    graphs = [WORLD_GRAPH, SENSED_GRAPH]
+    graphs += [beliefs_graph(r["agentId"]) for r in bindings(st.query(_AGENTS_Q))]
 
     data = rdflib.Graph()
-    for graph_iri in (SENSED_GRAPH, STRUCTURE_GRAPH):
-        data.parse(data=_fetch_graph(data_url, graph_iri), format="turtle")
+    for graph_iri in graphs:
+        data.parse(data=st.get_graph(graph_iri), format="turtle")
 
-    ontology = rdflib.Graph().parse(str(ONT_DIR / "agora.ttl"), format="turtle")
-    shapes = rdflib.Graph().parse(str(ONT_DIR / "shapes.ttl"), format="turtle")
+    ontology = rdflib.Graph()
+    shapes = rdflib.Graph()
+    for name in MODULE_FILES:
+        ontology.parse(str(ONT_DIR / f"{name}.ttl"), format="turtle")
+        shapes_file = SHAPES_DIR / f"{name}.ttl"
+        if shapes_file.exists():
+            shapes.parse(str(shapes_file), format="turtle")
 
+    # advanced=True enables SPARQL-based targets, which is how a shape scopes itself to the
+    # agents that composed its capability.
     conforms, _, report = shacl_validate(
-        data, shacl_graph=shapes, ont_graph=ontology, inference="rdfs"
+        data, shacl_graph=shapes, ont_graph=ontology, inference="rdfs", advanced=True
     )
     print(report.strip())
     return conforms

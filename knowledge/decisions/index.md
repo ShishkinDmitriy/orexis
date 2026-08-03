@@ -34,6 +34,8 @@ change something, to check you're not welding shut a planned extension.
 # Belief base
 
 * [two-store-beliefs](/decisions/two-store-beliefs.md) - InfluxDB owns the series; Fuseki owns citable current-state. Joined by plant URI, never federated.
+* [world-graph](/decisions/world-graph.md) - No config file: the world graph holds only topology (public, versioned, stated once); desire, limits, cadence and prices are each agent's private beliefs. Agent/Sensor/Actuator become first-class.
+* [capability-modules](/decisions/capability-modules.md) - Code reads T-Box terms, never instances. A capability is an ontology module + shapes + derivation rules + code; capabilities are derived from hardware at genesis, and each agent is its own process knowing only its id.
 
 # Genesis
 

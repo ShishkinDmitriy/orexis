@@ -1,0 +1,13 @@
+@prefix ag: <http://example.org/agora#> .
+
+#  The supplier's PRIVATE beliefs — its terms as a genuine seller, not a stake-free utility.
+#
+#  It composed ag:Hosting and ag:Actuation, so only those modules' terms appear. There is no
+#  target here and no cadence: it neither wants anything watered nor perceives anything.
+
+##  ag:Hosting — how it runs a round
+ag:supplier
+    ag:offerQuantityL 2.0 ;      # what it puts up
+    ag:reservePricePerL 0.20 ;   # its floor; buyers never see the reasoning
+    ag:bidWindowS 3 ;            # how long it waits for bids before matching
+    ag:roundCooldownS 30 .       # it will not open rounds faster than this

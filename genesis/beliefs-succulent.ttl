@@ -1,0 +1,20 @@
+@prefix ag: <http://example.org/agora#> .
+
+#  Succulent's agent's PRIVATE beliefs. Note how far these diverge from fern's: it wants a
+#  fifth of the moisture, shrugs at readings that would have fern bidding hard, and is
+#  content to look rarely and to trust older data. Same world, same ontology, different mind.
+
+##  ag:Polling
+ag:succulent_agent
+    ag:fastSleepS 60 ;
+    ag:slowSleepS 900 ;
+    ag:maxReadingAgeS 300 .
+
+##  ag:Bidding
+ag:succulent_agent
+    ag:hasEndowment 100.0 ;
+    ag:hasTarget 0.22 ;
+    ag:bandLow 0.12 ;
+    ag:bandHigh 0.30 ;
+    ag:litresPerFraction 2.0 ;
+    ag:maxValuePerL 0.80 .

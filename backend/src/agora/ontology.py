@@ -1,30 +1,57 @@
-"""The gateway's one job that isn't plumbing: numeric -> qualitative band.
+"""The vocabulary, as the code sees it — the ONE place any name is written down.
 
-This is the single authority for what a number *means*. It lives here (gateway side),
-never per-agent and never in ESP32 firmware.
+Everything here is a **T-Box term**: a class, a property, or a capability. Those are public
+and well-known, and code is written against them exactly as it is written against a function
+signature. What must never appear in code is an **instance** — no `"supplier"`, no
+`ag:world`, no `"sensors/{id}/moisture"`. Instances are discovered from the graph, starting
+from the single identifier a process is given: its own agent id.
+
+The T-Box itself is modular (`ontology/*.ttl`), one module per capability. This file mirrors
+that split so it is obvious which vocabulary a code module is entitled to read.
 """
 
 from __future__ import annotations
 
-# RDF vocabulary. Terms are defined in the shared T-Box (ontology/agora.ttl); these are the
-# canonical IRIs the code references. The named graphs are typed, self-describing resources
-# (agora:AttestedGraph, etc.) — the meaning lives in RDF, not in the string.
 AG = "http://example.org/agora#"
 SOSA = "http://www.w3.org/ns/sosa/"
 PROV = "http://www.w3.org/ns/prov#"
 
+
+def term(name: str) -> str:
+    return AG + name
+
+
+# --- capabilities: the name of a module, as composed onto an agent -------------------------
+POLLING = term("Polling")
+LISTENING = term("Listening")
+BIDDING = term("Bidding")
+HOSTING = term("Hosting")
+ACTUATION = term("Actuation")
+
+# --- the modules, in load order. Each name is up to four files, and that is the whole
+# anatomy of a capability:
+#     ontology/<name>.ttl  the vocabulary        shapes/<name>.ttl  the rules
+#     rules/<name>.ru      how it is derived     modules/<name>.py  the code
+MODULE_FILES = ("core", "transport", "polling", "market", "actuation", "water")
+
+# --- named graphs ---------------------------------------------------------------------------
 _GRAPH = "http://example.org/agora/graph/"
-ONTOLOGY_GRAPH = _GRAPH + "ontology"    # the T-Box
-STRUCTURE_GRAPH = _GRAPH + "structure"  # sovereign-authored: topology, charters, world version
-# Trusted-agent mode: each plant asserts its own state (no witness). Two graphs by kind:
-SENSED_GRAPH = _GRAPH + "sensed"        # the agent's sensor data (what it read)
-OPINION_GRAPH = _GRAPH + "opinion"      # the agent's judgments (what it concludes)
+ONTOLOGY_GRAPH = _GRAPH + "ontology"  # the T-Box, all modules
+WORLD_GRAPH = _GRAPH + "world"  # topology + composed capabilities: public, versioned
+SENSED_GRAPH = _GRAPH + "sensed"  # what sensors read
+_BELIEFS = _GRAPH + "beliefs/"
+
+
+def beliefs_graph(agent_id: str) -> str:
+    """The graph holding ONE agent's private parameters. Also its write boundary."""
+    return _BELIEFS + agent_id
+
 
 BANDS = ("LOW", "OK", "HIGH")
 
 
 def band_for(value: float, low: float, high: float) -> str:
-    """Map a raw moisture reading to a qualitative band."""
+    """A reading judged against ONE agent's own limits. Never stored — always recomputed."""
     if value < low:
         return "LOW"
     if value > high:

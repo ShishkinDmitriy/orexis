@@ -1,0 +1,20 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/transport> a owl:Ontology ;
+    rdfs:label "Agora transport binding" ;
+    rdfs:comment """Where things are reached on the wire. Every channel is STATED on the resource it belongs to, so no code builds a name from a convention like "sensors/<id>/moisture" — a topic is discovered exactly like anything else. Channels are in the WORLD graph because both ends must agree on them.""" .
+
+ag:readingTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "reading topic" ;
+    rdfs:comment "Where a sensor PUBLISHES what it read." .
+
+ag:commandTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "command topic" ;
+    rdfs:comment "Where a device LISTENS for instructions: a cadence for a sensor, a dose for a valve." .
+
+ag:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "event topic" ;
+    rdfs:comment "Where an agent announces something it noticed — a fresh perception. Peers may listen; nobody is obliged to." .

@@ -1,0 +1,18 @@
+@prefix ag: <http://example.org/agora#> .
+
+#  Tomato's agent's PRIVATE beliefs. See genesis/beliefs-fern.ttl for what each term means.
+
+##  ag:Polling
+ag:tomato_agent
+    ag:fastSleepS 30 ;
+    ag:slowSleepS 600 ;
+    ag:maxReadingAgeS 120 .
+
+##  ag:Bidding
+ag:tomato_agent
+    ag:hasEndowment 100.0 ;
+    ag:hasTarget 0.50 ;
+    ag:bandLow 0.30 ;
+    ag:bandHigh 0.60 ;
+    ag:litresPerFraction 2.0 ;
+    ag:maxValuePerL 0.80 .

@@ -1,0 +1,62 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/market> a owl:Ontology ;
+    rdfs:label "Agora market" ;
+    rdfs:comment """The auction as a PROTOCOL: a venue, a host that announces offers, bidders that answer, and vouchers that come back. What a bid is worth is domain-specific and lives in the domain module; how a round is conducted is here. Two capabilities compose independently — an agent may bid, host, or do both.""" .
+
+#################  Capabilities  #################
+
+ag:Bidding a ag:Capability ; rdfs:label "Bidding" ;
+    rdfs:comment "The agent answers offers in a market it participates in, with a bid computed from its own private valuation. Nobody else can compute that bid; that is the point of one process per agent." .
+
+ag:Hosting a ag:Capability ; rdfs:label "Hosting" ;
+    rdfs:comment "The agent runs rounds in a market: announces the offer, collects bids until the deadline, matches, has the trade validated, and issues vouchers. The scarce side hosts." .
+
+#################  The venue  #################
+
+ag:Market a owl:Class ; rdfs:label "Market" ;
+    rdfs:comment "Where a scarce resource is allocated. Its channels are stated on it (see transport), so participants discover the venue rather than being configured with it." .
+
+ag:marketFor a owl:ObjectProperty ; rdfs:domain ag:Market ;
+    rdfs:label "market for" ;
+    rdfs:comment "The resource being allocated. The cluster boundary: who competes with whom." .
+
+ag:hosts a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Market ;
+    rdfs:label "hosts" .
+ag:bidsIn a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Market ;
+    rdfs:label "bids in" ;
+    rdfs:comment "Composed in the world: participation is public, so a host knows who may bid. What the agent will PAY stays private." .
+
+ag:offerTopic a owl:DatatypeProperty ; rdfs:domain ag:Market ; rdfs:range xsd:string ;
+    rdfs:label "offer topic" ;
+    rdfs:comment "Where the host announces a round." .
+ag:bidTopic a owl:DatatypeProperty ; rdfs:domain ag:Market ; rdfs:range xsd:string ;
+    rdfs:label "bid topic" ;
+    rdfs:comment "Where bidders answer. A prefix: each bidder publishes under its own localId." .
+ag:voucherTopic a owl:DatatypeProperty ; rdfs:domain ag:Market ; rdfs:range xsd:string ;
+    rdfs:label "voucher topic" ;
+    rdfs:comment "Where the host returns what was won. A prefix, one segment per winner." .
+
+#################  The host's own terms (private belief)  #################
+
+ag:offerQuantityL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "offer quantity litres" ;
+    rdfs:comment "What the host puts up in a round." .
+ag:reservePricePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "reserve price per litre" ;
+    rdfs:comment "A genuine seller's floor: below this it would rather keep the resource. Private — buyers see the offer, never the reasoning." .
+ag:roundCooldownS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "round cooldown seconds" ;
+    rdfs:comment "The host's floor on how often it will open a round, so a flapping participant cannot spam the market." .
+ag:bidWindowS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "bid window seconds" ;
+    rdfs:comment "How long the host waits for bids before matching. A bid that misses the deadline is simply not in the round." .
+
+#################  The bidder's own terms (private belief)  #################
+
+ag:hasEndowment a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "has endowment" ;
+    rdfs:comment "Opening wallet balance. The authoritative running balance is the mint's, never a self-report." .

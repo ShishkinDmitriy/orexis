@@ -1,0 +1,24 @@
+@prefix ag: <http://example.org/agora#> .
+
+#  Fern's agent's PRIVATE beliefs — the parameters for the capabilities it composed.
+#
+#  Grouped by the module that reads them. A module never reads outside its own vocabulary,
+#  so adding a capability means adding a block here, and nothing else changes.
+#
+#  Nothing here is repeated from the world: the wiring (which plant, which sensor, which
+#  market) is stated once, publicly, there. This file is only what fern *thinks*.
+
+##  ag:Polling — how closely it watches
+ag:fern_agent
+    ag:fastSleepS 30 ;          # at/below its own low band: watch closely
+    ag:slowSleepS 600 ;         # comfortable: let the board sleep, save energy
+    ag:maxReadingAgeS 120 .     # older than this and it will not bid on the number
+
+##  ag:Bidding — what it wants and what it will pay
+ag:fern_agent
+    ag:hasEndowment 100.0 ;
+    ag:hasTarget 0.55 ;         # the desire
+    ag:bandLow 0.35 ;           # a fern is parched where a succulent shrugs
+    ag:bandHigh 0.65 ;
+    ag:litresPerFraction 2.0 ;  # what it BELIEVES its pot takes (the world knows the truth)
+    ag:maxValuePerL 0.80 .      # willingness to pay at peak urgency — never disclosed

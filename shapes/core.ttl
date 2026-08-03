@@ -1,0 +1,34 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Rules for the society kernel. Each ontology module ships its own shapes file next to it;
+# together they are the constitution as code. Validated with `agora-validate`.
+
+ag:AgentShape a sh:NodeShape ;
+    rdfs:comment "Every agent is named and does at least one thing. An agent with no capability is a process with nothing to run." ;
+    sh:targetClass ag:Agent ;
+    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                  sh:message "an agent must state the id it is known by" ] ;
+    sh:property [ sh:path ag:hasCapability ; sh:minCount 1 ; sh:class ag:Capability ;
+                  sh:message "an agent must compose at least one capability" ] .
+
+ag:DeviceShape a sh:NodeShape ;
+    rdfs:comment "A device is reachable: it states where it is on the wire, so nothing has to guess its address from a naming convention." ;
+    sh:targetClass ag:Device ;
+    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+
+ag:WorldShape a sh:NodeShape ;
+    rdfs:comment "The world is versioned, so every fact recorded under it can say which world it was recorded in." ;
+    sh:targetClass ag:World ;
+    sh:property [ sh:path ag:currentVersion ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ag:WorldVersion ] .
+
+ag:WorldVersionShape a sh:NodeShape ;
+    sh:targetClass ag:WorldVersion ;
+    sh:property [ sh:path ag:versionNumber ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ] .
+
+ag:BeliefsGraphShape a sh:NodeShape ;
+    rdfs:comment "A beliefs graph belongs to exactly one agent — that is the write boundary." ;
+    sh:targetClass ag:BeliefsGraph ;
+    sh:property [ sh:path ag:beliefsOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ag:Agent ] .

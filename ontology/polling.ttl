@@ -1,0 +1,72 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/polling> a owl:Ontology ;
+    rdfs:label "Agora polling" ;
+    rdfs:comment """Perception as the agent's initiative. The board is mechanism (sense + sleep); WHEN to look is the agent's policy. This module defines the capability, the sensors an agent polls, and the private numbers that set its attention. The code module reads nothing outside these terms.""" .
+
+#  Perception comes in two shapes, and WHICH ONE an agent gets is decided by its hardware,
+#  not by the sovereign's opinion. That is why these capabilities are DERIVED at genesis
+#  (rules/polling.ru) from the sensor a agent is wired to: wire up a pull device and the agent
+#  owns a cadence; wire up a device that pushes on its own schedule and there is no cadence to
+#  own, so the agent gets the weaker capability and is not asked for beliefs it cannot act on.
+
+ag:Polling a ag:Capability ; rdfs:label "Polling" ;
+    rdfs:comment "The agent DRIVES its sensors: it sets their cadence and may ask for a reading now. Derived from being wired to a pull-mode sensor." .
+
+ag:Listening a ag:Capability ; rdfs:label "Listening" ;
+    rdfs:comment "The agent RECEIVES what its sensors send, on their schedule, and records it. Derived from being wired to a push-mode sensor. It still decides how stale a reading may be before it stops trusting it — that judgment survives, because it is about belief rather than control." .
+
+#################  How a sensor is driven — a fact about the device  #################
+
+ag:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
+    rdfs:comment "Whether a device answers on request or announces on its own schedule. A property of the hardware and its firmware; the agent's capability follows from it." .
+ag:Pull a ag:SenseMode ; rdfs:label "Pull" ;
+    rdfs:comment "Reactive: it senses when asked and sleeps for as long as it is told. Mechanism, no policy." .
+ag:Push a ag:SenseMode ; rdfs:label "Push" ;
+    rdfs:comment "Self-clocked: it announces readings on its own cadence and takes no commands. The edge holds the policy, and no agent can take it back." .
+
+ag:senseMode a owl:ObjectProperty ; rdfs:domain ag:Sensor ; rdfs:range ag:SenseMode ;
+    rdfs:label "sense mode" .
+
+#################  What is polled — composed in the world  #################
+
+ag:Sensor a owl:Class ; rdfs:subClassOf ag:Device , sosa:Sensor ; rdfs:label "Sensor" ;
+    rdfs:comment "Reads a property of a subject on request. Emits numbers; never judgments." .
+
+ag:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Sensor ;
+    rdfs:label "polls" ;
+    rdfs:comment "The agent may read this sensor. This IS the access grant — expressed as topology rather than as a separate permission system, so isolation is visible in the wiring: an agent is wired to its own sensors and to no others." .
+
+ag:monitors a owl:ObjectProperty ; rdfs:domain ag:Sensor ;
+    rdfs:label "monitors" ;
+    rdfs:comment "The subject this sensor reads. Pairs with sosa:observes, which says WHICH property." .
+
+#################  Attention — the agent's private policy  #################
+
+# Required only where they mean something: an agent that merely listens is never asked for
+# a cadence, because it has no way to apply one.
+ag:fastSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "fast sleep seconds" ;
+    rdfs:comment "Cadence when the agent judges itself in trouble — how closely it watches when worried." .
+ag:slowSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "slow sleep seconds" ;
+    rdfs:comment "Cadence when comfortable. Attention costs energy, so looking less is a real choice." .
+ag:maxReadingAgeS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "max reading age seconds" ;
+    rdfs:comment "How stale a reading may be and still back a decision. The guard that makes agent-owned cadence safe: without it, 'I choose when to look' becomes 'I choose which number to believe'." .
+
+#################  The constitutional bounds — stated, not compiled in  #################
+# Read by the agent (which clamps), enforced by this module's shapes (which reject beliefs
+# outside them), and clamped again by the firmware. Autonomy over attention, never the
+# freedom to sleep through a drought.
+
+ag:minSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+    rdfs:label "minimum sleep seconds" .
+ag:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+    rdfs:label "maximum sleep seconds" .
+
+ag:Polling ag:minSleepS 10 ; ag:maxSleepS 900 .

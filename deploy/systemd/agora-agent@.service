@@ -1,0 +1,23 @@
+# One agent, one process. The instance name IS the agent id — the only thing an agent is
+# told; it discovers everything else from the belief base.
+#
+#   systemctl --user enable --now agora-agent@fern.service
+#   systemctl --user enable --now agora-agent@supplier.service
+#
+# A crashed fern cannot take tomato down with it, and no process ever holds two agents'
+# private beliefs at once. See knowledge/decisions/capability-modules.md.
+
+[Unit]
+Description=Agora agent %i
+After=agora-infra.service
+Wants=agora-infra.service
+
+[Service]
+Environment=AGORA_AGENT_ID=%i
+WorkingDirectory=/home/dimonina/projects/agora
+ExecStart=/home/dimonina/projects/agora/.venv/bin/agora-agent
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

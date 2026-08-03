@@ -26,6 +26,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [voucher](/domain/voucher.md) - What you win: a co-signed, single-use claim on the supplier for N litres, redeemed to actuate (spot now, futures later).
 * [executor](/domain/executor.md) - The supplier's actuation arm: verifies the voucher and drives its own valve, bounded by clearing + the device fail-safe.
 
+# Perception
+
+* [sensing](/domain/sensing.md) - Perception, in two capabilities decided by the hardware: an agent on a pull board owns its cadence, one on a push board only listens. Either way it owns the freshness rule, and a bid must cite a reading it trusts.
+
 # Rules and resources
 
 * [constitution](/domain/constitution.md) - Hard, non-negotiable constraints enforced by code, not persuasion.
