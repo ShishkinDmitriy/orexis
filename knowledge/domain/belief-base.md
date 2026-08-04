@@ -16,7 +16,7 @@ The knowledge substrate. Two stores by role, joined by subject URI. See
   booted with, the vocabulary, its own beliefs, and its own sensed state.
 
 **There is no shared triplestore.** Each agent holds its own belief base as a file inside its
-own container, built at boot from the ratified Turtle in `genesis/<world>/`. Nothing else can
+own container, built at boot from the ratified Turtle in `world/<world>/`. Nothing else can
 open it — not another agent, not an operator. Isolation is therefore *structural*: an agent's
 store contains only what it may see, so there is nothing to enforce, no credential to issue and
 no access registry to keep in step. See

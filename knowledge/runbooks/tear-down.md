@@ -20,7 +20,6 @@ Measured on a running system, immediately after `down` on a world:
 | infra (Influx, Grafana) | **still up** | a separate compose project, shared across worlds |
 | each agent's belief base | **intact** | a named volume per agent; beliefs outlive any process, which is the point |
 | retained MQTT commands | **all four still standing** | they live in the broker, which is not in compose at all |
-| host processes (`agora-sim`, strays) | **still running** | compose never knew about them |
 
 Every one of those is deliberate. `down` is not incomplete — the society simply spans more than
 a compose project, and each layer has a lifetime the others do not.
@@ -45,7 +44,7 @@ agent's removal.
 
 ```bash
 cd deploy
-podman compose -f compose.society.yml down
+podman compose -f world/society/compose.yaml down
 ```
 
 Agents stop. Beliefs, readings, the world and any retained commands are untouched — this is
@@ -58,10 +57,9 @@ In this order, because each layer is independent:
 ```bash
 # 1. every world (each is its own compose project)
 cd deploy
-for f in compose.*.yml; do podman compose -f "$f" down; done
+for w in ../world/*/; do (cd "$w" && podman compose down); done
 
 # 2. host processes — compose never knew about these
-pkill -f agora-sim
 pkill -f "agora.runtime|agora-agent"
 
 # 3. infra, if you want the belief base and dashboards down too
@@ -69,7 +67,6 @@ cd .. && podman compose down
 ```
 
 **Step 2 is the one people skip, and it has cost real time here twice** — once a leaked
-`agora-sim` publishing `0.0` over a real board's readings for hours, once a stray agent from a
 killed supervisor doubling every write. A container is removed deterministically; a host
 process is not. That is half the argument for deploying agents as containers at all.
 
@@ -106,7 +103,7 @@ comes back as whatever the sovereign last authored, having forgotten anything it
 
 ```bash
 cd deploy
-podman compose -f compose.<world>.yml down -v   # destroys THAT world's agents' belief bases
+podman compose -f compose.yaml down -v   # destroys THAT world's agents' belief bases
 cd .. && podman compose down -v                 # repo root: destroys the Influx history
 ```
 
@@ -120,7 +117,7 @@ volume belonging to that agent alone.
 
 | you want | do |
 |---|---|
-| pause a society | `compose -f compose.<world>.yml down` |
+| pause a society | `compose -f compose.yaml down` |
 | swap worlds | `down`, re-seed, `agora-compose`, `up` — see [run-a-world](/runbooks/run-a-world.md) |
 | stop everything | all worlds down, then `pkill`, then infra down |
 | a device is obeying a world that is gone | clear its retained `cmd` topic |

@@ -86,7 +86,7 @@ That is the whole configuration story now.
   about that hardware, so the executor reads dosing from the device
 - barrel capacity → the **source** in `:world`; it is the constitution's allocation ceiling
 - drying rate + litres-per-fraction → the **plant** in `:world` (physics)
-- `executor.actuate`, simulator tick → **environment variables**; these are deployment
+- where the shared series store is → **an environment variable**; this is deployment
   toggles, not beliefs anyone holds
 - the **message broker** → the world, as an `ag:MessageBus`. It started in `.env` and moved:
   a channel name is meaningless without the broker it is on, and members who disagree about
@@ -103,8 +103,8 @@ fact is what makes that possible later; the un-domained property is deliberate.
 
 # Genesis authors Turtle directly
 
-`plants.yaml` is deleted. The sovereign hand-writes `genesis/world.ttl` and
-`genesis/<world>/beliefs-<agent>.ttl` in the same vocabulary the agents read, and each agent loads
+`plants.yaml` is deleted. The sovereign hand-writes `world/<name>/world.ttl` and
+`world/<name>/beliefs/<agent>.ttl` in the same vocabulary the agents read, and each agent loads
 each file into its graph. One language end to end, no YAML→RDF translation layer to drift.
 The genesis *process* is unchanged (see [genesis](/decisions/genesis.md)) — narrate, draft,
 ratify, write — only the ratified artifact's format changed.
@@ -115,7 +115,7 @@ ratify, write — only the ratified artifact's format changed.
   shapes can enforce that a band is actually a band (`bandLow sh:lessThan bandHigh`), that an
   agent watches *more* closely when thirsty (`fastSleepS sh:lessThanOrEquals slowSleepS`), and
   that nobody sleeps past the cadence ceiling (`sh:maxInclusive 900`). `agora-validate` is now
-  a genuine constitutional check, and the shipped `genesis/` is validated in CI-able tests.
+  a genuine constitutional check, and the shipped `world/` is validated in CI-able tests.
 - **Re-genesis replaces editing.** Changing the wiring means editing `world.ttl` and bumping
   `versionNumber`; every fact recorded afterwards is stamped with it.
 - **Read authorization is now enforced**, which this decision only set up: per-agent store

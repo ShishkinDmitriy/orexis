@@ -5,7 +5,7 @@
 #
 #  What is absent is the point. No ag:Bidding block: no endowment, no target, no band, no
 #  price. This agent holds no stake, so it has no opinion about what a reading MEANS — it
-#  records the number and announces it. Compare genesis/society/beliefs-fern.ttl, which is the
+#  records the number and announces it. Compare world/society/beliefs-fern.ttl, which is the
 #  same agent in a world that gives it something to want.
 
 ##  ag:Subscribing — the interval it asks its board to keep

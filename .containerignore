@@ -1,0 +1,27 @@
+# The build context is the repo root, because the image needs every discovered tree
+# (kernel/, capabilities/, transports/, domain/) as well as backend/. These are the parts it
+# never needs, and sending them is pure cost on a Pi.
+
+.git
+.venv
+venv
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/*.egg-info
+
+# firmware is flashed to a board, not built into an image
+firmware
+**/.pio
+
+# an agent's belief base is created at birth, never baked in
+**/state
+
+# secrets are MOUNTED per world, never copied into a layer
+world/*/secrets
+keys
+
+# not needed at runtime
+knowledge
+infra/grafana
+infra/mosquitto

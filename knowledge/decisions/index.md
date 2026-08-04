@@ -33,7 +33,7 @@ change something, to check you're not welding shut a planned extension.
 
 # Genesis
 
-* [genesis](/decisions/genesis.md) - Sovereign narrates → LLM drafts → sovereign ratifies → infra writes structure + charters. Each output is a whole world (genesis/ holds several, seeded one at a time), and agents are born from it — the deployment is generated from the world, one container per agent. Amendable and versioned; structure mutable, history immutable.
+* [genesis](/decisions/genesis.md) - Sovereign narrates → LLM drafts → sovereign ratifies → infra writes structure + charters. Each output is a whole world (world/ holds several, one loaded at a time), and agents are born from it — the deployment is generated from the world, one container per agent. Amendable and versioned; structure mutable, history immutable.
 
 # Seams (open on purpose)
 

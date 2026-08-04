@@ -21,7 +21,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 
 **Durable knowledge goes in the bundle, never in a new README.** `domain/` says what a thing is
 and how to use it; `decisions/` says why a choice was made and which seams it leaves open. The
-existing READMEs (root, `deploy/`, `firmware/*/`) are operational entry points and stay, but do
+existing READMEs (root, `firmware/*/`) are operational entry points and stay, but do
 not add more for design knowledge.
 
 **Reconciling the bundle is part of the change, not follow-up.** After changing behaviour, grep
@@ -39,12 +39,15 @@ record is worse than none, because it is still cited.
    `agora.loader` finds them. Adding one is adding a directory; no registry to edit. Capability
    packages never import each other's Python: ask `agent.provider(family)` or contribute via
    `annotate`/`urgency`.
-3. **There is no shared store.** The world is TTL files; each agent builds its own belief base
+3. **No `.env` at the repo root, because nothing here is true of every world at once.**
+   `infra/.env` says where the shared series store is; `world/<name>/.env` says what this
+   installation may *do* with that world — whether a pump is wired, which subjects are
+   simulated. Both are loaded on a host run; in a container they arrive as `env_file`.
+4. **There is no shared store.** The world is TTL files; each agent builds its own belief base
    at boot and holds it in a volume of its own, so isolation is structural rather than
    enforced. An agent is told its id and given one world, mounted — it never learns that other
    worlds exist. See [where-the-belief-base-lives](knowledge/decisions/where-the-belief-base-lives.md).
-4. **There is no config file.** Topology lives in the world graph, desire and limits in each
-   agent's own beliefs, both authored in `genesis/<world>/`. Deployment facts (`AGORA_ACTUATE`,
+5. **There is no config file for the model.** Topology lives in the world graph, desire and limits in each
    service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
@@ -57,9 +60,9 @@ not contain `ag:hasCapability` — seeding computes it from the wiring.
 source .venv/bin/activate
 
 agora-validate <world> # build the world from its files and hold it to every package's shapes
-agora-compose <world>  # generate deploy/compose.<world>.yml from that world's roster
-podman compose -f deploy/compose.<world>.yml up -d    # one container per agent
-agora-sim              # virtual edge: subjects that dry, sense on cadence, get watered
+agora-compose <world>       # generate world/<world>/compose.yaml from that world's roster
+cd world/<world> && podman compose up -d               # one container per agent
+podman build -t agora:local -f backend/Containerfile .   # only when a dependency changes
 pytest backend -q      # 176 tests, no infra needed
 ```
 
@@ -73,8 +76,8 @@ would reset them on a restart is a bug, not a convenience.
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `backend/tests/test_store.py` checks this by scanning the source text.
-- **`AGORA_SIM_PLANTS` empty means every subject in the world** — including ones a real board
-  publishes for, on the same topic. With hardware connected, list only the virtual ones.
+  ones a real board publishes for, on the same topic, and both get ingested. The world does
+  not know simulation exists; naming the subjects is the operator's job.
 - **Stray host processes are the usual cause of doubled data.** Agents and the simulator both
   publish and ingest; a leaked one from an earlier run keeps writing. `podman compose down`
   removes a society deterministically, which is half of why deployment is containers.

@@ -109,7 +109,7 @@ Any option that cannot offer it is disqualified rather than cheaper.
 There is a plausible exception — a short-lived agent spawned for one task, whose opinions are
 not worth keeping — but it is an **optimisation**, and the rule this architecture already
 follows applies: state it in the world and let the runtime derive the consequence. An ephemeral
-belief store would be a declared property of an agent in `genesis/<world>/world.ttl`, the way
+belief store would be a declared property of an agent in `world/<world>/world.ttl`, the way
 `ag:senseMode` declares a device's nature, and the default in its absence is durable. Nothing
 should be ephemeral because of how it happened to be deployed.
 

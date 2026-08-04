@@ -32,12 +32,9 @@ class FakeAgent:
         self.sent.append((topic, payload))
 
 
-def module(agent=None, armed=True, monkeypatch=None):
+def module(agent=None):
     agent = agent or FakeAgent()
-    if monkeypatch is not None:
-        monkeypatch.setenv("AGORA_ACTUATE", "true" if armed else "false")
     m = ActuationModule(agent)
-    m.armed = armed
     m.host_key = Ed25519PrivateKey.generate()
     m.clearing_key = Ed25519PrivateKey.generate()
     return m, agent
@@ -131,18 +128,11 @@ def test_redeem_all_is_one_command_per_voucher():
     assert len(agent.sent) == 2
 
 
-# --- the deployment safety toggle ------------------------------------------
+# --- single use ------------------------------------------------------------
 
-def test_a_disarmed_module_opens_nothing():
-    m, agent = module(armed=False)
-    cmd = m.redeem(voucher())
-    assert cmd.ml > 0  # it still decides, and logs what it would have done
-    assert agent.sent == []  # but no valve command reaches the wire
-
-
-def test_a_dry_run_still_spends_the_jti():
-    """Otherwise arming the system later would let every past voucher fire."""
-    m, _ = module(armed=False)
+def test_a_redeemed_voucher_cannot_fire_twice():
+    """A jti is spent on redemption, so a replayed voucher opens nothing."""
+    m, _ = module()
     m.redeem(voucher(jti="dup"))
     with pytest.raises(ValueError, match="replay"):
         m.redeem(voucher(jti="dup"))

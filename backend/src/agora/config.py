@@ -1,7 +1,7 @@
 """Environment only.
 
 There is no config file: the world (topology) and each agent's beliefs (desire, limits,
-cadence, prices) live in the belief base, authored at genesis in `genesis/*.ttl`. What is
+cadence, prices) live in the belief base, authored at genesis in `world/<name>/*.ttl`. What is
 left here is *deployment* — where the services are and whether this box may open a valve —
 which is not a belief anyone holds.
 """
@@ -26,9 +26,22 @@ def _find_upwards(name: str, start: Path) -> Path | None:
     return None
 
 
-_env = _find_upwards(".env", PROJECT_ROOT)
-if _env:
-    load_dotenv(_env)
+def _load_env() -> None:
+    """One file, and not at the repo root: `infra/.env` says where the shared series store is.
+
+    That is the whole of the environment now. What a thing IS and what it may DO are in the
+    model — a device that must not move water is declared as one, not disarmed by a variable
+    that can silently disagree with the world.
+
+    Optional: in a container the value arrives as `env_file`. This is host-run convenience.
+    """
+    infra = _find_upwards("infra/.env", PROJECT_ROOT)
+    if infra:
+        load_dotenv(infra)
+
+
+
+_load_env()
 
 
 def env(name: str, default: str | None = None) -> str | None:

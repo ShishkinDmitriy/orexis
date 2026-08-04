@@ -9,12 +9,12 @@ import pytest
 import rdflib
 from pyshacl import validate
 
-from agora import loader
+from agora import genesis, loader
 from agora.ontology import WORLD_GRAPH, beliefs_graph
 
 from agora.genesis import agent_id_of
 
-from conftest import GENESIS_DIR, GENESIS_ROOT, genesis_store
+from conftest import GENESIS_DIR, WORLDS_ROOT, genesis_store
 
 
 def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
@@ -25,7 +25,7 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
     graphs = [WORLD_GRAPH]
     # every agent genesis authors, found the way an agent's birth finds them — so adding one
     # to the world is caught here rather than quietly skipped
-    graphs += [beliefs_graph(agent_id_of(p)) for p in sorted(world_dir.glob("beliefs-*.ttl"))]
+    graphs += [beliefs_graph(agent_id_of(p)) for p in sorted(world_dir.glob(genesis.BELIEFS_GLOB))]
     for iri in graphs:
         ttl = st.get_graph(iri)
         if ttl.strip():
@@ -34,17 +34,17 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
 
 
 def _worlds():
-    return sorted(d.name for d in GENESIS_ROOT.iterdir() if (d / "world.ttl").exists())
+    return sorted(d.name for d in WORLDS_ROOT.iterdir() if (d / "world.ttl").exists())
 
 
 @pytest.mark.parametrize("world", _worlds())
 def test_every_shipped_world_conforms(world):
-    """Every ratified world in genesis/ must validate — found by looking, never listed.
+    """Every ratified world in world/ must validate — found by looking, never listed.
 
     This is what makes a second world cheap: add a directory and it is held to the same
     constitution as the first, with no test edit.
     """
-    assert _conforms(_flatten(genesis_store(world=world), GENESIS_ROOT / world))
+    assert _conforms(_flatten(genesis_store(world=world), WORLDS_ROOT / world))
 
 
 def _conforms(data: rdflib.Graph) -> bool:

@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import logging
 import signal
-from pathlib import Path
 
 import paho.mqtt.client as mqtt
 
@@ -60,7 +59,7 @@ class Agent:
         # My own store, built from the ratified files. Nothing else can reach it — that is the
         # isolation, and it is structural rather than enforced.
         self.store = st or genesis.open_belief_base(
-            world_dir(), agent_id, config.env("AGORA_STORE"))
+            genesis.current_world(), agent_id, config.env("AGORA_STORE"))
         self.world: World = load_world(self.store.query)
         self.bus: MessageBus = load_bus(self.store.query)  # discovered, not configured
         self.me: Self = load_self(self.store.query, agent_id)
@@ -177,18 +176,6 @@ class Agent:
                 module.stop()
             self.mqtt.loop_stop()
             self.mqtt.disconnect()
-
-
-def world_dir():
-    """The ratified world this agent belongs to.
-
-    A container is given exactly one world, mounted — so the agent is still told only its own
-    id and never learns that other worlds exist. Outside a container, name one for convenience.
-    """
-    explicit = config.env("AGORA_WORLD_DIR")
-    if explicit:
-        return Path(explicit)
-    return genesis.world_dir(config.env("AGORA_WORLD", genesis.DEFAULT_WORLD))
 
 
 def main() -> None:

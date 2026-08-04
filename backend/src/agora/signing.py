@@ -5,7 +5,7 @@ command must carry a token signed by the **host** (match_sig) and **clearing** (
 pump verifies both before opening. Crypto proportional to irreversibility. See
 knowledge/domain/executor.md, knowledge/decisions/authn-authz-capabilities.md.
 
-Keys live in a gitignored keys/ dir (run `agora-keygen` once). v1 in-process simplification:
+Keys live in a gitignored `world/<name>/secrets/` (run `agora-keygen <world>` once). v1 in-process simplification:
 the settlement service holds both signing keys; a separately-hosted supplier signing its own
 match is a v2 refinement.
 """
@@ -20,7 +20,12 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 
 from .config import PROJECT_ROOT
 
-KEYS_DIR = PROJECT_ROOT.parent / "keys"
+def KEYS_DIR() -> "object":
+    """This world's secrets. A function, not a constant, because which world a process belongs
+    to is discovered — and two worlds must not be able to sign for each other."""
+    from .genesis import current_world, secrets_dir
+
+    return secrets_dir(current_world())
 
 
 def canonical(payload: dict) -> bytes:
@@ -29,15 +34,15 @@ def canonical(payload: dict) -> bytes:
 
 
 def _priv_path(name: str):
-    return KEYS_DIR / f"{name}.key"
+    return KEYS_DIR() / f"{name}.key"
 
 
 def _pub_path(name: str):
-    return KEYS_DIR / f"{name}.pub"
+    return KEYS_DIR() / f"{name}.pub"
 
 
 def create_keypair(name: str) -> None:
-    KEYS_DIR.mkdir(parents=True, exist_ok=True)
+    KEYS_DIR().mkdir(parents=True, exist_ok=True)
     key = Ed25519PrivateKey.generate()
     _priv_path(name).write_bytes(
         key.private_bytes(
@@ -92,7 +97,21 @@ def verify_command(payload: dict, host_pub, clearing_pub) -> bool:
 
 
 def main() -> None:
-    """agora-keygen — create the host + clearing signing keys (run once)."""
+    """agora-keygen [world] — create that world's host + clearing signing keys."""
+    import argparse
+    import os
+
+    from .genesis import DEFAULT_WORLD, worlds
+
+    p = argparse.ArgumentParser(
+        prog="agora-keygen",
+        description="Create one world's signing keys. Two worlds are two societies and must "
+                    "not be able to sign for each other.",
+    )
+    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
+                   help=f"which world (default: {DEFAULT_WORLD}). Available: "
+                        + ", ".join(worlds()))
+    os.environ["AGORA_WORLD"] = p.parse_args().world
     for name in ("host", "clearing"):
         create_keypair(name)
-        print(f"created keys/{name}.key + keys/{name}.pub")
+    print(f"created {KEYS_DIR()}/[host|clearing].[key|pub]")

@@ -5,6 +5,13 @@
 # and the domain by looking at directories; a build that copied only backend/ would come up
 # with no capabilities and an agent that can do nothing.
 
+#   podman build -t agora:local -f backend/Containerfile .
+#
+# It lives beside pyproject.toml because it packages the application, but it is built from the
+# REPO ROOT: the runtime spans backend/ plus every discovered tree (kernel/, capabilities/,
+# transports/, domain/), so the context has to contain all of them. `.containerignore` keeps
+# .venv, .git and the firmware out of it.
+
 FROM docker.io/library/python:3.13-slim
 
 # Fuseki and the broker are reached over the network; nothing here needs a compiler.
@@ -19,13 +26,16 @@ COPY backend/pyproject.toml backend/pyproject.toml
 COPY backend/src/agora/__init__.py backend/src/agora/__init__.py
 RUN pip install -e ./backend
 
-# The trees the loader discovers. Each is a mount point in dev (see the generated compose),
-# so a code change needs a restart rather than a rebuild.
+# The trees the loader discovers. Each is also a mount point in the generated compose, so a
+# code change needs a restart rather than a rebuild.
+#
+# Note what is NOT here: world/. A world is MOUNTED, one per container, so the image is
+# world-agnostic — the same image is every agent of every world, and which one it is comes
+# from AGORA_AGENT_ID and the world mounted beside it.
 COPY kernel/       kernel/
 COPY capabilities/ capabilities/
 COPY transports/   transports/
 COPY domain/       domain/
-COPY genesis/      genesis/
 COPY backend/      backend/
 
 # An agent runs as nobody in particular. Its belief base is a file in its own volume, which

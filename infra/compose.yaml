@@ -2,6 +2,13 @@ name: agora
 
 # Infra for v1: the series (Influx) and Grafana for eyeballing it.
 #
+#   cd infra && podman compose up -d
+#
+# `compose.yaml` is the Compose Specification's own filename, so no -f is needed — the same
+# invocation as a world (`cd world/<name> && podman compose up -d`). Compose reads `.env` from
+# the directory holding the compose file, and the repo's one lives at the root, hence the
+# symlink beside this file.
+#
 # There is no triplestore. Each agent holds its own belief base inside its own container —
 # see knowledge/decisions/where-the-belief-base-lives.md — so the only shared infrastructure
 # left is the history and the view of it. All images have arm64 builds, so this runs on
@@ -40,8 +47,8 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./infra/grafana/dashboards:/etc/grafana/dashboards:ro
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on: [influxdb]
 
 volumes:

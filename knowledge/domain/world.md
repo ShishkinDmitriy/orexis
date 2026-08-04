@@ -14,7 +14,7 @@ each agent privately wants. It is the ratified output of
 ratifies — and each agent loads it at boot. The session that produces
 one is [genesis-process](/domain/genesis-process.md).
 
-Worlds are whole, not layered. `genesis/` holds one directory per world, each seedable on its
+Worlds are whole, not layered. `world/` holds one directory per world, each seedable on its
 own; there is no base that variants extend.
 
 ```bash
@@ -30,10 +30,15 @@ agora-validate sensing  # one subject, one board, one agent
 # Anatomy
 
 ```
-genesis/<name>/
-  world.ttl              public topology: what exists, and what is wired to what
-  beliefs-<agent>.ttl    one per agent — its private parameters, its opinions
+world/<name>/
+  world.ttl            public topology: what exists, and what is wired to what
+  beliefs/<agent>.ttl  one per agent — its private parameters, its opinions
+  secrets/             this society's signing keys (gitignored, never committed)
+  compose.yaml        generated: one container per agent
 ```
+
+A world is one self-contained directory. Nothing about it lives anywhere else, which is what
+makes adding, copying or deleting one a single move.
 
 That is all of it. There is no config file in this project; anything that looks like
 configuration is either a fact about the world or somebody's belief, and lives in one of these
@@ -75,15 +80,15 @@ simply never gets read. Nothing detects that for you.
 
 ## 3. Fact and opinion live in different files
 
-`world.ttl` holds what everyone must agree on. `beliefs-<agent>.ttl` holds what that agent alone
+`world.ttl` holds what everyone must agree on. `beliefs/<agent>.ttl` holds what that agent alone
 thinks, and no other agent can read it — enforced, not polite
 ([belief-base-isolation](/decisions/belief-base-isolation.md)).
 
 | | where | why |
 |---|---|---|
 | wiring, calibration, capacity | `world.ttl` | physical, public, stated once |
-| target, band, endowment, price ceiling | `beliefs-<agent>.ttl` | desire — a fern and a succulent may disagree and neither is wrong |
-| sleep intervals, freshness limit | `beliefs-<agent>.ttl` | how closely *this* agent chooses to watch |
+| target, band, endowment, price ceiling | `beliefs/<agent>.ttl` | desire — a fern and a succulent may disagree and neither is wrong |
+| sleep intervals, freshness limit | `beliefs/<agent>.ttl` | how closely *this* agent chooses to watch |
 
 If two agents could reasonably disagree about it, it is a belief.
 
@@ -100,10 +105,10 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
 1. **Sketch it in English first.** The narrate step is not ceremony: the questions it forces
    (*what is this sensor attached to? who owns the valve?*) are exactly the ones `world.ttl`
    has to answer.
-2. **Write `genesis/orchard/world.ttl`.** Copy `sensing/world.ttl` as the skeleton — it is the
+2. **Write `world/orchard/world.ttl`.** Copy `sensing/world.ttl` as the skeleton — it is the
    minimum: a bus, a world version, the graph catalog, a subject, a device, an agent. Every
    agent needs an `ag:localId`; every device needs its channels.
-3. **Write one `beliefs-<agent>.ttl` per agent**, with only the blocks for the capabilities the
+3. **Write one `beliefs/<agent>.ttl` per agent**, with only the blocks for the capabilities the
    wiring will give it. Unsure which? Seed and read what derivation decided.
 4. **Register each beliefs graph** in the catalog inside `world.ttl`:
    `<.../graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .`
@@ -135,7 +140,7 @@ change, the model did.
 
 # A world is files, and every agent holds its own copy
 
-There is no shared store. A world is the Turtle in `genesis/<name>/`, and each agent builds its
+There is no shared store. A world is the Turtle in `world/<name>/`, and each agent builds its
 own belief base from it at boot — the vocabulary, the whole world, the derivation, and its own
 beliefs. See [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md).
 
@@ -159,7 +164,9 @@ devices, which is a genesis decision, not an infra one.
 
 # Deployment — one container per agent
 
-`agora-compose <world>` reads the same `world.ttl` and writes `deploy/compose.<world>.yml`: a
+`agora-compose <world>` reads the same `world.ttl` and writes `compose.yaml` beside it — a world
+is one self-contained directory: its topology, its agents' opening beliefs, and the file that
+runs them. It emits: a
 `seed` service that runs to completion, then one container per agent, each told only its own
 `AGORA_AGENT_ID`. It is generated, never hand-edited — the roster is the ratified world, so a
 second list would be a second thing to drift.
@@ -167,9 +174,13 @@ second list would be a second thing to drift.
 Three details are load-bearing rather than packaging taste:
 
 - **One container per agent, holding its own belief base.** It is a file in that agent's own
-  volume, exclusively locked by its owner — nothing else can open it, including you. Only an
-  agent that derived `ag:Actuation` is given the signing keys; the generator runs the real
-  derivation rules in memory to know which one that is.
+  volume, exclusively locked by its owner — nothing else can open it, including you.
+- **The world is mounted file by file, not as a directory.** An agent gets `world.ttl` and its
+  **own** `beliefs/<id>.ttl`, and nothing else — it has no business reading what another agent
+  was authored to want. Only an agent that derived `ag:Actuation` also gets
+  `secrets/host.key` and `secrets/clearing.key`; the generator runs the real derivation rules
+  in memory to know which one that is. Verified: a plant agent's container contains exactly
+  two files under `/app/world`, and no key.
 - **`network_mode: host`.** The world states the bus as `ag:brokerHost "localhost"` because a
   channel name is meaningless without its broker and every member must agree on it. On a
   bridge network that stops being true for the agents while staying true for the ESP32 — two
@@ -182,8 +193,30 @@ The source trees are mounted read-only, so a code change needs a restart rather 
 
 ```bash
 agora-compose society
-cd deploy && podman compose -f compose.society.yml up -d
+cd world/society && podman compose up -d
 ```
+
+# Simulation — a world, not a mode
+
+A society you can run without hardware is a **world whose devices are simulated**, not a flag
+on a real one and not a program running beside it.
+
+The model already states what every device is and how it is driven. A simulated device is a
+*kind of device*, so an agent derives a simulated capability from it the way it derives any
+other — and a world cannot then disagree with how it is actually running. That is the same
+rule as everywhere else: what a thing does follows from what the world says it is.
+
+What this replaced: a separate `agora-sim` process pretending to be hardware, told by an
+environment variable which subjects to pretend to be. Getting that variable wrong put two
+publishers on one topic and both readings were ingested — a failure that cost hours here more
+than once, and one the model could not warn about because the model did not know simulation
+existed.
+
+**Unbuilt.** The capability and its binding do not exist yet, so today a world needs real
+boards. The shape is known: a simulated *binding* fits the existing split better than a new
+capability — a capability distinguishes what an agent must decide, a binding distinguishes how
+a device is spoken to, and "this reading came from a soil model rather than a wire" is
+plainly the second.
 
 # Amending
 
@@ -201,9 +234,8 @@ only an explicit re-birth discards them.
 - **Readings are not stored on the wire.** A board publishes QoS 0 and unretained, so a reading
   published while no agent is running goes to nobody. Start the agents *before* the hardware,
   or the first readings are lost.
-- **`agora-sim` simulates every subject in the world when `AGORA_SIM_PLANTS` is empty** —
-  including ones a real board is already publishing for, on the same topic, silently
-  overwriting real readings. With any hardware connected, list only the virtual subjects.
+  ones a real board is already publishing for, on the same topic, and both are ingested. The
+  world cannot warn you, by design: it does not know that simulation exists.
 
 # Seams left open
 

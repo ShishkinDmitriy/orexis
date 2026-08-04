@@ -20,7 +20,7 @@ between a ratified world and a running society.
 
 ```
   narrate ──▶ draft ──▶ ratify ──▶ write ──▶ │ birth ──▶ start ⇄ stop
-  (English)   (Turtle)  (human)   (genesis/) │ (the agent's own first boot, then compose)
+  (English)   (Turtle)  (human)   (world/)   │ (the agent's own first boot, then compose)
                                                           │
                                          beliefs authored ┘   nothing authored
 ```
@@ -86,14 +86,14 @@ query that returns nothing.
 
 # Where opening beliefs come from
 
-Today: hand-authored per world, one `beliefs-<agent>.ttl` per agent, written during the same
+Today: hand-authored per world, one `beliefs/<agent>.ttl` per agent, written during the same
 session and ratified with the rest of it. Genesis seeds them; from then on they are the agent's
 own to revise (aspirational — nothing revises them yet).
 
 **But beliefs are not all the same kind of thing**, and the two shipped worlds make the split
 visible. The same agent id, the same hardware, two worlds:
 
-| | `genesis/society` | `genesis/sensing` |
+| | `world/society` | `world/sensing` |
 |---|---|---|
 | `ag:slowSleepS` | 600 | 10 |
 | `ag:hasTarget` | 0.55 | *absent — it holds no stake* |

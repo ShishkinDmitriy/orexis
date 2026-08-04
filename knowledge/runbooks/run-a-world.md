@@ -26,10 +26,15 @@ agent's belief base lives inside that agent. Infra is a separate compose project
 world and stays up across them.
 
 ```bash
-cp .env.example .env
-podman compose up -d          # repo root: influxdb, grafana
-agora-keygen                  # host + clearing signing keys, once
+cp infra/.env.example infra/.env          # where the series store is
+cp world/<name>/.env.example world/<name>/.env   # what this installation may do with it
+cd infra && podman compose up -d          # influxdb, grafana
+agora-keygen <world>          # that world's host + clearing signing keys, once
 ```
+
+Keys are **per world**, in `world/<name>/secrets/` and gitignored. Two worlds are two
+societies: the host that runs a market and the clearing authority that co-signs its vouchers
+belong to that society, and must not be able to sign for another.
 
 The MQTT broker runs on the **host**, not in compose, and binds to loopback until told
 otherwise — every LAN board gets `Connection refused` until:
@@ -43,7 +48,7 @@ ss -lntp | grep 1883          # expect 0.0.0.0:1883
 # Deploy a world
 
 ```bash
-agora-compose society         # writes deploy/compose.society.yml FROM genesis/society/world.ttl
+agora-compose society         # writes world/society/compose.yaml FROM the world.ttl beside it
 ```
 
 That is the whole of it. No credentials to generate, no store to prepare, no service to restart
@@ -63,13 +68,16 @@ credential — its own. That is the boundary, not packaging taste
 # Up, down, and watch
 
 ```bash
-cd deploy
-podman compose -f compose.society.yml up -d      # each agent builds its own belief base
-podman compose -f compose.society.yml logs -f    # all of them, interleaved
-podman compose -f compose.society.yml logs -f agent-fern
-podman compose -f compose.society.yml ps
-podman compose -f compose.society.yml down       # stop and remove THIS world's containers
+cd world/society
+podman compose up -d            # each agent builds its own belief base
+podman compose logs -f          # all of them, interleaved
+podman compose logs -f agent-fern
+podman compose ps
+podman compose down             # stop and remove THIS world's containers
 ```
+
+A world is self-contained: its topology, its agents' opening beliefs and the compose file that
+runs it are one directory. There is no separate deploy tree to keep in step.
 
 `up` is **start**, not birth. An agent is born the first time it runs — it writes its opening
 beliefs once, and logs `born`. Every start after that refreshes the public world from the files
@@ -85,15 +93,15 @@ named volume per agent and survive `up`, `down` and `restart` alike — see
 The source trees are mounted read-only into the containers, so a restart is enough:
 
 ```bash
-podman compose -f compose.society.yml restart
+podman compose restart
 ```
 
 Rebuild only when a **dependency** changes (`backend/pyproject.toml`) or you added a file the
 image copies rather than mounts:
 
 ```bash
-podman build -t agora:local -f Containerfile .
-podman compose -f compose.society.yml up -d --force-recreate
+podman build -t agora:local -f backend/Containerfile .
+podman compose up -d --force-recreate
 ```
 
 # Switching worlds — nothing is lost
@@ -101,9 +109,8 @@ podman compose -f compose.society.yml up -d --force-recreate
 Each world has its own dataset, so switching destroys nothing and you can switch back:
 
 ```bash
-cd deploy
-podman compose -f compose.society.yml down
-podman compose -f compose.sensing.yml up -d
+podman compose -f world/society/compose.yaml down
+podman compose -f world/sensing/compose.yaml up -d
 ```
 
 Nothing to seed, and nothing shared to overwrite: each agent's belief base is its own volume,
@@ -118,23 +125,55 @@ device ids on purpose — that is what lets one flashed board run in either — 
 together puts two agents on `sensors/fern/moisture` and both ingest every reading. Nothing
 prevents this; it is your job to know.
 
-# No hardware?
+# Unattended, across reboots
+
+There are no agora services. Every agent already declares `restart: unless-stopped`, so the
+only thing missing after a reboot is something to start them again — and podman ships that:
 
 ```bash
-agora-sim <world>   # virtual subjects: dry over time, sense on the agent's interval, get watered
+loginctl enable-linger $USER                 # user services run without a login session
+systemctl --user enable podman-restart.service
 ```
 
-Set `AGORA_SIM_PLANTS` to **only the virtual ones** if any real board is connected. Empty means
-*every subject in the world*, and the simulator will happily publish over a real board on the
-same topic — it has done exactly that here, overwriting real readings with `0.0`.
+`podman-restart` brings back every container that has a restart policy, which is exactly the
+set you want and nothing else. Bring each world up once by hand and reboots take care of
+themselves.
+
+We shipped per-agent systemd units before and removed them. They ran agents as **host
+processes**, which is no longer a deployment mode — and worse, a unit left enabled would put a
+host agent on the same topics as its container, both ingesting every reading. That failure has
+already cost time here twice; the fix was to stop having two ways to run an agent.
+
+Mosquitto is the exception and is a **system** service, because it is not ours:
+`sudo systemctl enable --now mosquitto`.
+
+# Sensor-only until a pump is wired
+
+commands. Watch the supplier decide against real moisture first. When a pump is wired and
+
+Valve *calibration* is not a deployment toggle: it lives on the valve in `world.ttl`, because
+it is a fact about the hardware rather than about this installation.
+
+# No hardware?
+
+Not by running a simulator beside the agents — there isn't one any more, and there was no good
+place to put it. A program pretending to be hardware had to be told which subjects to pretend
+to be, and getting that wrong put two publishers on one topic with both readings ingested.
+
+**A simulation is a world.** The model already says what every device is and how it is driven;
+a device that is simulated is a *kind of device*, so an agent derives a simulated capability
+from it exactly as it derives any other. Nothing is toggled, nothing is passed a flag, and a
+world cannot disagree with how it is actually running.
+
+**That world does not exist yet** — the capability and its binding are unbuilt, so today the
+society needs real boards. See [world](/domain/world.md) §Simulation.
 
 # It went wrong
 
 | symptom | cause |
 |---|---|
-| agent refuses to start, `BeliefsInvalid` | its opening beliefs do not satisfy the shapes for the capabilities the world derived for it. The report names the shape; fix `genesis/<world>/beliefs-<agent>.ttl` |
+| agent refuses to start, `BeliefsInvalid` | its opening beliefs do not satisfy the shapes for the capabilities the world derived for it. The report names the shape; fix `world/<name>/beliefs/<agent>.ttl` |
 | agent logs `born` on every start | it is not keeping its volume — check the `agora-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
-| readings arrive twice | two writers. A stray host process from an earlier run, or `agora-sim` covering a real board |
 | agent cannot reach the broker | the world says `ag:brokerHost "localhost"`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |

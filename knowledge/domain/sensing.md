@@ -49,7 +49,6 @@ Every one of those channels is **stated in the world graph** on the resource tha
 nothing builds a topic from a naming convention, so renaming a channel is a genesis edit. The
 broker they are on is stated there too, as an `ag:MessageBus`: a channel name means nothing
 without it, and members who disagree about the bus are not one society.
-Both edges — an ESP32 and a virtual plant (`agora-sim`) — speak exactly this, so there is one
 ingest path and nothing downstream can tell them apart.
 
 Note what goes out on the event topic: the agent's **own verdict**, not its raw state. That is

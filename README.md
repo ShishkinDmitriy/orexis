@@ -41,10 +41,11 @@ kernel/        the T-Box everything layers on. Not a capability; there is one
 capabilities/  what an agent can DO — perception, market, actuation. The extendable axis
 transports/    how a device is REACHED — mqtt. Deliberately not a capability
 domain/        what the society is ABOUT — water. Vocabulary; the domain is a plug-in
-backend/       the runtime that loads all of the above, plus the pure market mechanism
-genesis/       ratified worlds — one directory each, complete and seedable on its own
+backend/       the runtime that loads all of the above, the pure market mechanism, and
+               the Containerfile that packages them
+world/         ratified worlds — one directory each: topology, beliefs, and its compose file
 firmware/      ESP32 edge — moisture sensors and pump/valve
-infra/         compose service configs — grafana, mosquitto
+infra/         how it runs: the infra compose, grafana and mosquitto configs
 knowledge/     OKF knowledge bundle (architecture decisions + domain model)
 ```
 
@@ -84,8 +85,9 @@ Python imports. See
 ## 1. Infra
 
 ```bash
-cp .env.example .env
-docker compose up -d        # or: podman compose up -d
+cp infra/.env.example infra/.env                 # where the series store is
+cp world/society/.env.example world/society/.env # what this installation may do with it
+cd infra && docker compose up -d                 # or: podman compose up -d
 ```
 
 Brings up: InfluxDB (`:8086`) and Grafana (`:3000`). **No triplestore** — each agent holds its
@@ -117,11 +119,11 @@ pip install -e ./backend
 One-time setup, in order:
 
 ```bash
-agora-keygen           # the host + clearing signing keys the valves check, once
+agora-keygen society   # that world's host + clearing signing keys, once
 agora-validate society # build the world from its files and check it
 ```
 
-[`genesis/`](genesis/) holds one directory per ratified world, each complete on its own:
+[`world/`](world/) holds one directory per ratified world, each complete on its own:
 `society` is the full example, `sensing` is the smallest one that produces a working agent.
 [`domain/world`](knowledge/domain/world.md) is the guide to authoring your own — what a world
 is made of, what you state versus what gets derived, and how to check it.
@@ -145,8 +147,7 @@ world**, one process each:
 
 ```bash
 agora-compose society                                  # generate the compose file FROM the world
-cd deploy && podman compose -f compose.society.yml up -d
-agora-sim                                              # virtual plants, if you have no hardware
+cd world/society && podman compose up -d
 ```
 
 ```
@@ -176,36 +177,28 @@ that let me do?*), then its own beliefs (*what do I want, how closely should I w
 runs exactly the modules its capabilities name. A round is a conversation — a plant announces
 its own verdict, the host offers, bidders answer with numbers only they can compute, clearing
 validates, vouchers come back. Deterministic, no LLM. (For a closed loop where wins actually
-water the plants, set `AGORA_ACTUATE=true`.)
 
 A bidder **looks before it bids** and sits out the round if its sensor does not answer in
 time, or if the newest reading is older than its own `ag:maxReadingAgeS`. Owning the cadence
 must not mean bidding on a stale, comfortable number — and the limit is each agent's own
 belief, so a slow-living succulent may accept older data than a fern.
 
-For unattended operation — one systemd unit per agent, surviving reboot — see
-[`deploy/`](deploy/). `AGORA_ACTUATE` in `.env` gates whether the supplier actually opens
-valves (`false` = sensor-only: decide, log, water nothing). Deployment toggles like this stay
-in the environment — they are about the physical installation, not beliefs anyone holds.
+For unattended operation see [`runbooks/run-a-world`](knowledge/runbooks/run-a-world.md)
+§Unattended — there are no agora services, only podman's own restart handling.
 
-## Run the whole society in simulation (no hardware)
+## Running without hardware
 
-Because the physical edge is dumb and interchangeable, **virtual plants** (soil models) are
-indistinguishable from real ones to the agents and the auction — so you can run and watch
-the entire society in software, and even mix virtual + real plants. `agora-sim` replaces the
-sensor edge *and* the pump: each virtual plant dries over time, senses on the cadence its
-agent set, and gains moisture when it wins water — a closed loop driven by the market.
+Not by running a simulator beside the agents — there isn't one any more, and there was no good
+place to put it. A program pretending to be hardware had to be told which subjects to pretend
+to be, and getting that wrong put two publishers on one topic with both readings ingested.
 
-```bash
-# set AGORA_ACTUATE=true in .env (the supplier must be allowed to open valves)
-agora-sim      # virtual plants: dry, sense on their agent's interval, get watered
-cd deploy && podman compose -f compose.society.yml up -d   # the whole society
-```
+**A simulation is a world.** The model already says what every device is and how it is driven;
+a device that is simulated is a *kind of device*, so an agent derives a simulated capability
+from it exactly as it derives any other. Nothing is toggled, nothing is passed a flag, and a
+world cannot disagree with how it is actually running.
 
-Watch the plants dry, hit their own LOW, win water, and recover — `journalctl`/logs show
-`running a round` → grants → `watered N ml -> moisture ...`. Grafana shows the moisture
-oscillate around each plant's target. To mix with real hardware, list only the *virtual*
-plant ids in `AGORA_SIM_PLANTS` and give the real ones ESP32s on the same topics.
+**That world does not exist yet** — the capability and its binding are unbuilt, so today the
+society needs real boards. See [`domain/world`](knowledge/domain/world.md) §Simulation.
 
 ## 4. Inspect
 
@@ -232,7 +225,7 @@ plant ids in `AGORA_SIM_PLANTS` and give the real ones ESP32s on the same topics
 
 ## Bringing a real board up
 
-Seed the **smallest world** instead of the society. `genesis/sensing` has one subject, one
+Seed the **smallest world** instead of the society. `world/sensing` has one subject, one
 board and one agent, plumbed into no market — so derivation gives that agent `ag:Subscribing`
 and nothing else. It reads, records, and stops. Nothing in that world declares it sensor-only;
 there is simply no market for a market capability to come from.
@@ -242,7 +235,7 @@ sudo cp infra/mosquitto/lan.conf /etc/mosquitto/conf.d/agora.conf   # mosquitto 
 sudo systemctl restart mosquitto                                    # loopback until told not to
 
 agora-compose sensing                                 # one agent, perception only
-cd deploy && podman compose -f compose.sensing.yml up -d
+cd world/sensing && podman compose up -d
 mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
 ```
 
@@ -262,7 +255,7 @@ you can mix them freely:
 - publishes on its `ag:readingTopic` — `{"value": 0.18, "sensor": "moisture_sensor_fern"}`
 - subscribes to its `ag:commandTopic` — `{"sleep_s": 300}` (retained) and/or `{"sense": true}`
 
-Both topics are whatever `genesis/world.ttl` says they are; nothing is derived from the id.
+Both topics are whatever `world/<name>/world.ttl` says they are; nothing is derived from the id.
 
 Declare the board's nature with `ag:senseMode`, and the capability follows from it — the axis
 is **who holds the clock**:
@@ -282,8 +275,8 @@ The ESP32 firmware is `ag:Scheduled`. Change the firmware, edit `ag:senseMode`, 
 agent, and the capability changes with it — the agent is never edited.
 
 The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
-([`genesis/beliefs-<agent>.ttl`](genesis/)); the wiring and the valve calibration are the
-world's ([`genesis/`](genesis/)). Edit the files and restart the agent — no reflash.
+([`world/<name>/beliefs/<agent>.ttl`](genesis/)); the wiring and the valve calibration are the
+world's ([`world/`](world/)). Edit the files and restart the agent — no reflash.
 The one thing firmware *does* enforce is the constitutional cadence clamp
 (`MIN_SLEEP_S`/`MAX_SLEEP_S` in `config.h`) — a buggy agent must not be able to talk a board
 into sleeping through a drought.

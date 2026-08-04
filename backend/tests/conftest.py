@@ -22,8 +22,8 @@ from agora.ontology import SENSED_GRAPH
 from agora.store import Store
 
 REPO_ROOT = loader.REPO_ROOT
-GENESIS_ROOT = REPO_ROOT / "genesis"
-GENESIS_DIR = GENESIS_ROOT / "society"   # the world most tests are about
+WORLDS_ROOT = REPO_ROOT / "world"
+GENESIS_DIR = WORLDS_ROOT / "society"   # the world most tests are about
 
 
 def genesis_store(readings: dict[str, float] | None = None,
@@ -33,9 +33,9 @@ def genesis_store(readings: dict[str, float] | None = None,
 
     The rules are applied exactly as an agent applies them, so tests see the capabilities the
     world actually implies rather than a hand-written list. `world` names which of the ratified
-    worlds in genesis/ to build, so a test can be about the small one.
+    worlds in world/ to build, so a test can be about the small one.
     """
-    path = GENESIS_ROOT / world
+    path = WORLDS_ROOT / world
     st = Store()
     genesis.refresh_public(st, path)
     for beliefs in sorted(path.glob(genesis.BELIEFS_GLOB)):
@@ -101,8 +101,7 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     Nothing is stubbed except the two things that would reach the network: MQTT and Influx.
     The modules under test are the ones that ship.
     """
-    from agora import runtime
-    from capabilities.perception import module as perception_module
+    from agora import observation, runtime
 
     class NoInflux:
         def __init__(self, *a, **k):
@@ -115,7 +114,8 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
             pass
 
     if monkeypatch is not None:
-        monkeypatch.setattr(perception_module, "InfluxWriter", NoInflux)
+        # one place for every capability that records — see agora/observation.py
+        monkeypatch.setattr(observation, "InfluxWriter", NoInflux)
         monkeypatch.setattr(runtime.mqtt, "Client", lambda *a, **k: _FakeClient())
 
     agent = runtime.Agent(agent_id, st=st or genesis_store())

@@ -250,20 +250,11 @@ def _win_for_fern(host):
 
 
 def test_winning_opens_the_valve(host):
-    host.module("actuation").armed = True  # a pump is wired and calibrated
     valve = _win_for_fern(host)
     command = host.sent.to(valve.command_topic)[-1]
     assert command["ml"] > 0 and command["seconds"] > 0
     assert command["plant"] == "fern"
     assert command["match_sig"] and command["val_sig"]  # co-signed, or the device refuses
-
-
-def test_a_disarmed_host_still_clears_but_waters_nothing(host):
-    """The sensor-only phase: decide, issue, log — and touch no hardware."""
-    host.module("actuation").armed = False
-    valve = _win_for_fern(host)
-    assert host.sent.to(f"{market_of(host).voucher_topic}/fern") != []  # the round completed
-    assert host.sent.to(valve.command_topic) == []  # but no valve moved
 
 
 # --- what comes back -------------------------------------------------------

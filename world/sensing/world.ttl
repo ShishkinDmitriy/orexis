@@ -10,10 +10,10 @@
 #  What it is FOR: bringing a real board up, and integration tests that have no business
 #  starting a market. It is also the clearest demonstration of the central claim — nothing
 #  here says what the agent can DO. It is wired to a sensor and to nothing else, and
-#  derivation gives it ag:Subscribing and nothing else. Seed genesis/society instead, without
+#  derivation gives it ag:Subscribing and nothing else. Seed world/society instead, without
 #  touching the board or the agent, and the very same hardware joins a market.
 #
-#  The device ids and channels are deliberately IDENTICAL to genesis/society, so one flashed
+#  The device ids and channels are deliberately IDENTICAL to world/society, so one flashed
 #  board works in either world. Which world is in the store decides what the agent becomes.
 #
 #  See knowledge/domain/world.md, knowledge/decisions/world-graph.md.
@@ -42,7 +42,7 @@ ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 #  NOT an ag:Plant here, and the difference is the point: a plant is a participant in a water
 #  economy (it is served by a source, it has a pot size), and this world has no economy for it
 #  to participate in. It is a feature of interest — something a sensor reads. The same IRI is
-#  an ag:Plant over in genesis/society, because there it is one.
+#  an ag:Plant over in world/society, because there it is one.
 
 ag:fern a sosa:FeatureOfInterest ;
     ag:localId "fern" .
