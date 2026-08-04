@@ -12,23 +12,24 @@ from pyshacl import validate
 from agora import loader
 from agora.ontology import WORLD_GRAPH, beliefs_graph
 
-from agora.seed import agent_id_of
+from agora.genesis import agent_id_of
 
-from conftest import GENESIS_DIR, GENESIS_ROOT, genesis_dataset
+from conftest import GENESIS_DIR, GENESIS_ROOT, genesis_store
 
 
-def _flatten(ds: rdflib.Dataset, genesis=GENESIS_DIR) -> rdflib.Graph:
+def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
     """The vocabulary + the world + every agent's beliefs, exactly as validation sees it."""
     data = rdflib.Graph()
     for path in loader.ontology_files():
         data.parse(path, format="turtle")
-    for triple in ds.graph(rdflib.URIRef(WORLD_GRAPH)):
-        data.add(triple)
-    # every agent genesis authors, found the way agora-seed finds them — so adding one to
-    # the world is caught here rather than quietly skipped
-    for path in sorted(genesis.glob("beliefs-*.ttl")):
-        for triple in ds.graph(rdflib.URIRef(beliefs_graph(agent_id_of(path)))):
-            data.add(triple)
+    graphs = [WORLD_GRAPH]
+    # every agent genesis authors, found the way an agent's birth finds them — so adding one
+    # to the world is caught here rather than quietly skipped
+    graphs += [beliefs_graph(agent_id_of(p)) for p in sorted(world_dir.glob("beliefs-*.ttl"))]
+    for iri in graphs:
+        ttl = st.get_graph(iri)
+        if ttl.strip():
+            data.parse(data=ttl, format="turtle")
     return data
 
 
@@ -43,7 +44,7 @@ def test_every_shipped_world_conforms(world):
     This is what makes a second world cheap: add a directory and it is held to the same
     constitution as the first, with no test edit.
     """
-    assert _conforms(_flatten(genesis_dataset(world=world), GENESIS_ROOT / world))
+    assert _conforms(_flatten(genesis_store(world=world), GENESIS_ROOT / world))
 
 
 def _conforms(data: rdflib.Graph) -> bool:
@@ -59,7 +60,7 @@ def _conforms(data: rdflib.Graph) -> bool:
 
 def _mutate(update: str) -> rdflib.Graph:
     """Apply a change to the seeded belief base and re-validate the result."""
-    ds = genesis_dataset()
+    ds = genesis_store()
     ds.update("PREFIX ag: <http://example.org/agora#>\n" + update)
     return _flatten(ds)
 
@@ -67,7 +68,7 @@ def _mutate(update: str) -> rdflib.Graph:
 # --- the world we actually ship --------------------------------------------
 
 def test_genesis_conforms():
-    assert _conforms(_flatten(genesis_dataset()))
+    assert _conforms(_flatten(genesis_store()))
 
 
 # --- capability-conditional rules ------------------------------------------
@@ -121,7 +122,7 @@ def test_host_must_say_how_long_it_waits_for_bids():
 
 def test_the_supplier_is_not_asked_for_a_cadence():
     """It composed no perception capability, so the polling rules simply do not apply to it."""
-    assert _conforms(_flatten(genesis_dataset()))  # it has no cadence, and that is fine
+    assert _conforms(_flatten(genesis_store()))  # it has no cadence, and that is fine
 
 
 # --- the world must be coherently wired ------------------------------------

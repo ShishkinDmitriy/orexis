@@ -15,7 +15,7 @@ from capabilities.actuation import ACTUATION
 from capabilities.market import BIDDING, HOSTING
 from capabilities.perception import LISTENING, SUBSCRIBING
 
-from conftest import genesis_dataset, query_fn
+from conftest import genesis_store, query_fn
 
 
 @pytest.fixture
@@ -50,20 +50,21 @@ def test_plant_agent_cannot_actuate(me):
 
 # --- the hardware decides which perception you get -------------------------
 
-def _world_with_push_sensor() -> rdflib.Dataset:
+def _world_with_push_sensor():
     """Swap fern's board for one that pushes on its own clock, and re-derive."""
-    ds = genesis_dataset()
-    world = ds.graph(rdflib.URIRef(WORLD_GRAPH))
-    world.update("""
-        PREFIX ag: <http://example.org/agora#>
-        DELETE { ag:moisture_sensor_fern ag:senseMode ag:Scheduled .
-                 ag:fern_agent ag:hasCapability ag:Subscribing }
-        INSERT { ag:moisture_sensor_fern ag:senseMode ag:Push }
-        WHERE  { ag:moisture_sensor_fern ag:senseMode ag:Scheduled }
+    st = genesis_store()
+    st.update(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{
+                 ag:moisture_sensor_fern ag:senseMode ag:Scheduled .
+                 ag:fern_agent ag:hasCapability ag:Subscribing }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+                 ag:moisture_sensor_fern ag:senseMode ag:Push }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
+                 ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
     """)
     for rule in loader.rule_files():
-        ds.update(rule.read_text())
-    return ds
+        st.update(rule.read_text())
+    return st
 
 
 def test_push_hardware_yields_listening_not_subscribing():
@@ -89,7 +90,7 @@ def test_the_smallest_world_yields_perception_and_nothing_else():
     society runs, over thinner wiring. This is the check that a capability can genuinely
     stand alone, which is the whole claim of deriving them.
     """
-    me = load_self(query_fn(genesis_dataset(world="sensing")), "fern")
+    me = load_self(query_fn(genesis_store(world="sensing")), "fern")
     assert me.capabilities == {SUBSCRIBING}
     assert not me.can(BIDDING) and not me.can(ACTUATION)
     assert me.markets == () and me.actuators == ()
@@ -98,8 +99,8 @@ def test_the_smallest_world_yields_perception_and_nothing_else():
 
 def test_the_board_did_not_change_only_the_model_did():
     """The point of the two worlds sharing device ids: one flashed board, either society."""
-    watching = load_self(query_fn(genesis_dataset(world="sensing")), "fern")
-    buying = load_self(query_fn(genesis_dataset(world="society")), "fern")
+    watching = load_self(query_fn(genesis_store(world="sensing")), "fern")
+    buying = load_self(query_fn(genesis_store(world="society")), "fern")
     assert [s.local_id for s in watching.sensors] == [s.local_id for s in buying.sensors]
     assert [s.reading_topic for s in watching.sensors] == \
            [s.reading_topic for s in buying.sensors]

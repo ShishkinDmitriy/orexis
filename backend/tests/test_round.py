@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from conftest import build_agent, genesis_dataset
+from conftest import build_agent, genesis_store
 
 
 @pytest.fixture
@@ -81,7 +81,7 @@ def test_no_second_round_while_one_is_open(host):
 
 def _with_reading(value, age_s=0):
     ts = datetime.now(timezone.utc) - timedelta(seconds=age_s)
-    return genesis_dataset({"fern": value, "tomato": value, "succulent": value}, ts)
+    return genesis_store({"fern": value, "tomato": value, "succulent": value}, ts)
 
 
 def test_a_thirsty_bidder_answers_with_its_own_number(make):

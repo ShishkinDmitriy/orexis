@@ -28,9 +28,9 @@ COPY domain/       domain/
 COPY genesis/      genesis/
 COPY backend/      backend/
 
-# An agent runs as nobody in particular, and reads exactly one credential — the compose file
-# mounts only its own. That is the point of the container: on one filesystem every agent could
-# read every other agent's store password, which makes the per-graph ACL a convention.
+# An agent runs as nobody in particular. Its belief base is a file in its own volume, which
+# nothing outside this container can name — that is the isolation, and it needs no credential
+# and no access registry, because there is no shared store to be let into.
 RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin agora \
  && chown -R agora:agora /app
 USER agora

@@ -26,9 +26,9 @@ import time
 
 import paho.mqtt.client as mqtt
 
-from . import config, signing, store
+from . import config, genesis, signing, store
 from .ontology import WORLD_GRAPH
-from .seed import DEFAULT_WORLD, worlds
+from .genesis import DEFAULT_WORLD, world_dir, worlds
 from .signing import verify_command
 from .store import bindings
 from .world import load_bus, load_world
@@ -84,7 +84,10 @@ class SimPlant:
 
 class Simulator:
     def __init__(self, world_name: str = DEFAULT_WORLD):
-        st = store.from_env(config.env, world=world_name)
+        # The simulator is the edge, not an agent: it reads the ratified world the same way an
+        # agent does — from the files — and keeps nothing of its own.
+        st = store.Store()
+        genesis.refresh_public(st, world_dir(world_name))
         world = load_world(st.query)
         self.bus = load_bus(st.query)  # the same bus the agents meet on, from the same world
         self.tick_s = float(config.env("AGORA_SIM_TICK_S", "2"))

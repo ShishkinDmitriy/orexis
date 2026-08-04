@@ -1,9 +1,12 @@
-"""A belief base in memory.
+"""A belief base in memory — the real one.
 
-The genesis Turtle is loaded into an rdflib Dataset and queried with the *same* SPARQL the
-production code sends to Fuseki — so these tests exercise the real queries against the real
-ratified world, with no triplestore running. If a query and the world drift apart, the tests
-notice.
+Tests build an agent's belief base exactly as an agent does: `genesis.refresh_public` loads the
+ratified Turtle and runs the derivation, `genesis.birth` writes opening beliefs. The store is
+the production `Store`, in memory rather than on disk, so these tests exercise the real queries
+against the real ratified world with nothing stubbed and nothing running.
+
+There is no longer a fake store to drift from the real one, because there is no server to
+stand in for.
 """
 
 from __future__ import annotations
@@ -12,65 +15,51 @@ import json
 from datetime import datetime, timezone
 
 import pytest
-import rdflib
 
-from agora import loader, store
-from agora.ontology import ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
-from agora.seed import agent_id_of
+from agora import genesis, loader
+from agora.genesis import agent_id_of
+from agora.ontology import SENSED_GRAPH
+from agora.store import Store
 
 REPO_ROOT = loader.REPO_ROOT
 GENESIS_ROOT = REPO_ROOT / "genesis"
 GENESIS_DIR = GENESIS_ROOT / "society"   # the world most tests are about
 
 
-def genesis_dataset(readings: dict[str, float] | None = None,
-                    result_time: datetime | None = None,
-                    world: str = "society") -> rdflib.Dataset:
-    """One seeded belief base — including the DERIVATION step.
+def genesis_store(readings: dict[str, float] | None = None,
+                  result_time: datetime | None = None,
+                  world: str = "society") -> Store:
+    """One belief base, built the way an agent builds it — derivation included.
 
-    The rules are applied exactly as `agora-seed` applies them, so tests see the capabilities
-    the world actually implies rather than a hand-written list. `world` names which of the
-    ratified worlds in genesis/ to build, so a test can be about the small one.
+    The rules are applied exactly as an agent applies them, so tests see the capabilities the
+    world actually implies rather than a hand-written list. `world` names which of the ratified
+    worlds in genesis/ to build, so a test can be about the small one.
     """
-    genesis = GENESIS_ROOT / world
-    ds = rdflib.Dataset()
-    for path in loader.ontology_files():
-        ds.graph(rdflib.URIRef(ONTOLOGY_GRAPH)).parse(path, format="turtle")
-    ds.graph(rdflib.URIRef(WORLD_GRAPH)).parse(genesis / "world.ttl", format="turtle")
-    for path in sorted(genesis.glob("beliefs-*.ttl")):
-        graph = rdflib.URIRef(beliefs_graph(agent_id_of(path)))
-        ds.graph(graph).parse(path, format="turtle")
-    for rule in loader.rule_files():
-        ds.update(rule.read_text())
+    path = GENESIS_ROOT / world
+    st = Store()
+    genesis.refresh_public(st, path)
+    for beliefs in sorted(path.glob(genesis.BELIEFS_GLOB)):
+        genesis.birth(st, path, agent_id_of(beliefs))
 
     if readings:
         ts = (result_time or datetime.now(timezone.utc)).isoformat()
-        sensed = ds.graph(rdflib.URIRef(SENSED_GRAPH))
-        sensed.parse(data="\n".join(
-            f"""@prefix agora: <http://example.org/agora#> .
-                @prefix sosa: <http://www.w3.org/ns/sosa/> .
-                @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-                agora:obs_{pid} a sosa:Observation ;
-                  sosa:hasFeatureOfInterest agora:{pid} ;
-                  sosa:hasSimpleResult "{value}"^^xsd:decimal ;
-                  sosa:resultTime "{ts}"^^xsd:dateTime ."""
-            for pid, value in readings.items()
-        ), format="turtle")
-    return ds
+        st.update("INSERT DATA { GRAPH <%s> {\n%s\n} }" % (SENSED_GRAPH, "\n".join(
+            f"""  ag:obs_{pid} a sosa:Observation ;
+                    sosa:hasFeatureOfInterest ag:{pid} ;
+                    sosa:hasSimpleResult "{value}"^^xsd:decimal ;
+                    sosa:resultTime "{ts}"^^xsd:dateTime ."""
+            for pid, value in readings.items())))
+    return st
 
 
-def query_fn(ds: rdflib.Dataset):
-    """A QueryFn over the in-memory dataset — prefixed exactly as Store.query prefixes."""
-
-    def query(sparql: str) -> dict:
-        return json.loads(ds.query(store.PREFIXES + sparql).serialize(format="json"))
-
-    return query
+def query_fn(st: Store):
+    """The QueryFn a reader is written against. It is simply the store's own."""
+    return st.query
 
 
 @pytest.fixture
 def query():
-    return query_fn(genesis_dataset())
+    return genesis_store().query
 
 
 @pytest.fixture
@@ -78,23 +67,12 @@ def query_with_readings():
     """Build a query fn over the world plus the given fresh readings."""
 
     def build(readings, result_time=None):
-        return query_fn(genesis_dataset(readings, result_time))
+        return query_fn(genesis_store(readings, result_time))
 
     return build
 
 
 # --- a live agent over the in-memory belief base ------------------------------------------
-
-class FakeStore:
-    """The store interface a module actually uses, backed by the in-memory dataset."""
-
-    def __init__(self, ds: rdflib.Dataset):
-        self.ds = ds
-        self.query = query_fn(ds)
-
-    def update(self, sparql: str) -> None:
-        self.ds.update(store.PREFIXES + sparql)
-
 
 class Sent(list):
     """Everything the agent put on the wire, so a test can read the conversation."""
@@ -117,7 +95,7 @@ class Msg:
         self.payload = json.dumps(payload).encode()
 
 
-def build_agent(agent_id: str, ds: rdflib.Dataset | None = None, monkeypatch=None):
+def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     """A real Agent — real world, real beliefs, real modules — with the broker captured.
 
     Nothing is stubbed except the two things that would reach the network: MQTT and Influx.
@@ -140,7 +118,7 @@ def build_agent(agent_id: str, ds: rdflib.Dataset | None = None, monkeypatch=Non
         monkeypatch.setattr(perception_module, "InfluxWriter", NoInflux)
         monkeypatch.setattr(runtime.mqtt, "Client", lambda *a, **k: _FakeClient())
 
-    agent = runtime.Agent(agent_id, st=FakeStore(ds or genesis_dataset()))
+    agent = runtime.Agent(agent_id, st=st or genesis_store())
     agent.sent = Sent()
     agent.publish = lambda topic, payload, retain=False: agent.sent.append(
         (topic, payload, retain))

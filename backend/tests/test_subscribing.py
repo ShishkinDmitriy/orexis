@@ -10,12 +10,12 @@ from dataclasses import replace
 
 import pytest
 
-from conftest import build_agent, genesis_dataset
+from conftest import build_agent, genesis_store
 
 
 @pytest.fixture
 def fern(monkeypatch):
-    return build_agent("fern", genesis_dataset(), monkeypatch)
+    return build_agent("fern", genesis_store(), monkeypatch)
 
 
 def sensor_of(agent):
