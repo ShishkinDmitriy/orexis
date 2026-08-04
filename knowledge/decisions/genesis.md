@@ -69,7 +69,9 @@ flashed by hand and the model cannot conjure it. What genesis decides is what an
 which is exactly why the same board is a watcher in one world and a bidder in another.
 
 This is [english-vs-formal](/decisions/english-vs-formal.md) applied to *creation*: the story
-is fuzzy human intent (English); the ratified structure is trusted formal.
+is fuzzy human intent (English); the ratified structure is trusted formal. What the session
+itself has to elicit, and how to tell the result hangs together, is
+[genesis-process](/domain/genesis-process.md).
 
 # Genesis vs sensing — each belief has one origin
 
