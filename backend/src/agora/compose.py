@@ -142,8 +142,8 @@ def render(world: str) -> str:
 #
 # `compose.yaml` is the Compose Specification's own filename, so no -f is needed.
 #
-# Infra (Influx, Grafana) lives in the repo-root infra/compose.yaml — bring it up first. The
-# MQTT broker runs on the host; see infra/mosquitto/lan.conf. There is no triplestore.
+# Infra (MQTT, Influx, Grafana) lives in infra/compose.yaml — bring it up first; the agents here
+# discover the broker from the world and will retry until it answers. There is no triplestore.
 #
 # Every agent here holds its own belief base in its own volume, so bringing this world up
 # cannot disturb another world, and adding a world restarts nothing. Two worlds may run at once

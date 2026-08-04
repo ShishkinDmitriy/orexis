@@ -1,0 +1,34 @@
+# The broker. A glibc build, and the config baked in.
+#
+# Two things were learned the hard way and are worth writing down, because the previous note
+# in the compose file got both wrong:
+#
+#   - The Alpine/musl `eclipse-mosquitto` image cannot open ANY config file on this host —
+#     not a bind mount, not a baked layer, not a file it wrote itself seconds earlier in
+#     /tmp. `cat` reads it fine, and mosquitto with no `-c` starts fine. It is not the mount,
+#     not the permissions, not seccomp, not AppArmor: it fails under --privileged too.
+#   - Without a config file mosquitto binds LOCALHOST ONLY and says so, so "just skip the
+#     config" is not an option: the boards would never reach it.
+#
+# The glibc build works, which is why the broker ran on the host as an apt package for so
+# long. It does not need to: it is the same package, in a container.
+#
+#   podman build -t agora-mosquitto:local -f infra/mosquitto/Containerfile infra/mosquitto
+
+FROM docker.io/library/debian:bookworm-slim
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends mosquitto \
+ && rm -rf /var/lib/apt/lists/*
+
+# conf.d is included by the packaged mosquitto.conf, so this adds the LAN listener without
+# replacing anything the package ships.
+COPY lan.conf /etc/mosquitto/conf.d/agora.conf
+
+# The packaged config writes a pid file, and the directory for it is created by systemd on a
+# host install. There is no systemd here.
+RUN install -d -o mosquitto -g mosquitto /run/mosquitto
+
+USER mosquitto
+EXPOSE 1883
+CMD ["/usr/sbin/mosquitto", "-c", "/etc/mosquitto/mosquitto.conf"]
