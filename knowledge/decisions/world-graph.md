@@ -104,7 +104,7 @@ fact is what makes that possible later; the un-domained property is deliberate.
 # Genesis authors Turtle directly
 
 `plants.yaml` is deleted. The sovereign hand-writes `genesis/world.ttl` and
-`genesis/beliefs-<agent>.ttl` in the same vocabulary the agents read, and `agora-seed` PUTs
+`genesis/<world>/beliefs-<agent>.ttl` in the same vocabulary the agents read, and each agent loads
 each file into its graph. One language end to end, no YAML→RDF translation layer to drift.
 The genesis *process* is unchanged (see [genesis](/decisions/genesis.md)) — narrate, draft,
 ratify, write — only the ratified artifact's format changed.

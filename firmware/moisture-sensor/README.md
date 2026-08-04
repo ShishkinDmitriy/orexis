@@ -87,7 +87,7 @@ From the Pi, without the market or any other agent running:
 
 ```bash
 mosquitto_sub -h localhost -t 'sensors/fern/#' -v    # is it publishing at all?
-agora-seed sensing && agora-compose sensing          # one agent, perception only
+agora-compose sensing                                # one agent, perception only
 cd ../../deploy && podman compose -f compose.sensing.yml up -d
 ```
 

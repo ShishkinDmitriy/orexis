@@ -19,8 +19,8 @@ be got out of the sovereign, how to tell when the result hangs together, and wha
 between a ratified world and a running society.
 
 ```
-  narrate ──▶ draft ──▶ ratify ──▶ write ──▶ seed ──▶ birth ──▶ start ⇄ stop
-  (English)   (Turtle)  (human)   (genesis/) (derive)  (once)   (compose up/down)
+  narrate ──▶ draft ──▶ ratify ──▶ write ──▶ │ birth ──▶ start ⇄ stop
+  (English)   (Turtle)  (human)   (genesis/) │ (the agent's own first boot, then compose)
                                                           │
                                          beliefs authored ┘   nothing authored
 ```
@@ -70,14 +70,15 @@ the only sense the system needs.
 
 1. **It parses, and every wire name is stated.** A device on a bus with no channel is caught by
    that transport's shapes.
-2. **Derivation produces the abilities the sovereign expected.** `agora-seed` prints what it
-   decided; read it. An agent that derived nothing has wiring implying no ability — almost
-   always a missing `ag:senseMode`. This is the step where a misunderstanding surfaces cheaply.
+2. **Derivation produces the abilities the sovereign expected.** `agora-validate` builds the
+   world from the files and prints what it derived; read it. An agent that derived nothing has
+   wiring implying no ability — almost always a missing `ag:senseMode`. This is the step where a
+   misunderstanding surfaces cheaply.
 3. **Every derived capability has the beliefs it needs.** `agora-validate` is capability-aware:
    a shape applies to an agent only if that agent derived the capability it belongs to. A
    subscribing agent with no interval fails here rather than at 3am.
-4. **The society actually comes up.** One container per agent; each refuses to boot if a
-   belief its capability requires is missing, naming the term and the graph.
+4. **The society actually comes up.** One container per agent; each validates itself against
+   the shapes for the capabilities it derived and refuses to boot if they do not hold.
 
 Interconnection is not checked as such, and does not need to be: the graph *is* the
 interconnection, and a dangling reference shows up as a capability that failed to derive or a
@@ -137,9 +138,9 @@ family only — cadence and freshness, which describe the deployment rather than
 materialised at birth so they are ratified and inspectable like everything else. Stake beliefs
 stay elicited, because nothing can derive them.
 
-**Today none of this is separated.** `agora-seed` replaces each beliefs graph wholesale, so
-re-seeding is an unintended re-birth. It is harmless only because nothing revises its own
-beliefs yet.
+**This is now separated in the code.** An agent writes its opening beliefs only if it has none,
+holds them in a volume of its own, and refreshes only the public world on each start. A restart
+cannot reset who an agent became; discarding a belief base takes an explicit `down -v`.
 
 # Starting the society
 
@@ -158,14 +159,9 @@ world and a bidder in another. See [world](/domain/world.md).
 
 # Seams left open
 
-- **Seeding has no readiness signal.** The seeder exits when its last write returns, but a
-  graph that has just been replaced is briefly not queryable — an agent starting in that window
-  reads a world it is not in and crashes. `restart: unless-stopped` recovers it, which means
-  correctness currently rests on a restart policy rather than on the seeder saying "ready".
-- **Birth is not a step of its own.** It is folded into `agora-seed`, which PUTs each beliefs
-  graph — so re-seeding is an unintended re-birth, and there is no record that an agent was
-  ever born. Separating them is what would let a world be amended without resetting who its
-  agents became.
+- **There is no record that an agent was born**, only the presence of its beliefs. That is
+  enough to make birth happen once, but not enough to say *when* it happened or under which
+  world version.
 - **World kind is not modelled.** There is no `ag:worldKind`, no defaults keyed to it, and no
   check that a bench world is not accidentally deployed with production cadences. Today the
   distinction lives only in which directory you seeded.

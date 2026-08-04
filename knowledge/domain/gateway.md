@@ -49,7 +49,7 @@ ESP32 ──raw reading──► InfluxDB            (the series / record — ev
                           ▼
               threshold→band (0.18→:LOW) + prov stamp
                           ▼
-                    Fuseki :attested         (current qualitative state — what agents cite)
+                    :sensed, per agent       (current qualitative state — what agents cite)
 ```
 
 Writing raw numbers to Influx is **not** attestation. Only the gateway's materialization

@@ -72,8 +72,8 @@ codebase — not in the seeder, not in the validator, not in the runtime, not in
 
 **Adding a capability is adding a directory.** No registry line, no term constant, no belief
 accessor, no edit to any existing file. This is checkable, and it was checked: dropping a
-throwaway `capabilities/forecast/` into the tree made `agora-seed` load its vocabulary, run
-its derivation, and an agent boot with `forecasting` in its module list — with nothing else
+throwaway `capabilities/forecast/` into the tree made an agent load its vocabulary, run its
+derivation, and boot with `forecasting` in its module list — with nothing else
 in the repo touched. Deleting the directory removed it just as completely.
 
 **Removing one is deleting a directory,** which is the harder half and the one that fails

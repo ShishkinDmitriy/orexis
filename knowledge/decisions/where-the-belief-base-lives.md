@@ -116,6 +116,24 @@ should be ephemeral because of how it happened to be deployed.
 This is not yet modelled and should not be until there is a real short-lived agent to model it
 for.
 
+# Built
+
+Implemented. Fuseki, `agora-seed`, `agora-acl`, the store credentials and the access registry
+are gone; `infra/fuseki/` no longer exists. Three things only became clear by building it:
+
+- **The derivation rules survived unchanged**, which the earlier rejection of "a dataset per
+  agent" predicted they would not (see
+  [belief-base-isolation](/decisions/belief-base-isolation.md)). That prediction assumed
+  beliefs split *out* of a shared dataset; each agent instead holds a **complete** one, so
+  `rules.ru` runs in SPARQL inside every agent exactly as written. Load + derive measures 4 ms.
+- **An agent validating itself has to scope the focus.** A capability shape targets every agent
+  the world declares, but an agent holds only its own beliefs — so without `focus_nodes`, fern
+  reported tomato as missing a band it was never entitled to see. Scoped, it asks the question
+  it can actually answer: *am I* what my capabilities require me to be.
+- **The store is exclusively locked by its owner.** Nothing outside an agent can open its
+  belief base, including an operator on the host. That is the isolation working, and also the
+  price: you cannot inspect a running agent's beliefs, only ask it.
+
 # A defect this exposed
 
 Writing a triple into a beliefs graph and then restarting the compose project removed it. The
@@ -128,8 +146,9 @@ re-birth"**, and it would hold for any store, Fuseki or embedded alike.
 
 The principled fix is not to change how anyone restarts, but to make birth do what its name
 says: **write an agent's beliefs only if it has none**, and require an explicit act to reset an
-agent that already exists. Then start can re-run the seeder as often as it likes and nothing is
-lost, because seeding a born agent would be a no-op.
+agent that already exists. **Done** — an agent is born on its first boot and logs `born`;
+verified that a restart logs only validation and startup, and that its RocksDB volume
+persists. Discarding a belief base now takes `down -v`, which is meant to look deliberate.
 
 # When the world changes under a running agent
 

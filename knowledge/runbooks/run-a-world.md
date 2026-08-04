@@ -9,7 +9,6 @@ timestamp: 2026-08-04T00:00:00Z
 # The shape of it
 
 ```
-agora-acl               ─┐  (all worlds at once)
 agora-compose <world>   ─┤ produce things from the world      (agora-specific)
                          │
 podman compose up -d    ─┤ run them                            (ordinary compose)
@@ -22,12 +21,13 @@ Everything after the generators is a plain compose project. There is deliberatel
 
 # Once, per machine
 
-Infra first: Fuseki holds the belief base, Influx the series, Grafana the view. It is a
-separate compose project from any world, and stays up across them.
+Infra first: Influx holds the series, Grafana the view. There is **no triplestore** — an
+agent's belief base lives inside that agent. Infra is a separate compose project from any
+world and stays up across them.
 
 ```bash
 cp .env.example .env
-podman compose up -d          # repo root: influxdb, grafana, fuseki
+podman compose up -d          # repo root: influxdb, grafana
 agora-keygen                  # host + clearing signing keys, once
 ```
 
@@ -43,13 +43,11 @@ ss -lntp | grep 1883          # expect 0.0.0.0:1883
 # Deploy a world
 
 ```bash
-agora-acl                     # every world at once: one dataset each, + per-agent credentials
 agora-compose society         # writes deploy/compose.society.yml FROM genesis/society/world.ttl
 ```
 
-`agora-acl` takes no world — it generates the Fuseki config for **all** of them, one isolated
-dataset per world. Restart Fuseki after it, and run it before `agora-compose`, or the `.pw`
-files do not exist and every agent falls back to admin.
+That is the whole of it. No credentials to generate, no store to prepare, no service to restart
+— adding a world or an agent disturbs nothing that is already running.
 
 ```
 agent-fern       Bidding, Subscribing
@@ -66,15 +64,18 @@ credential — its own. That is the boundary, not packaging taste
 
 ```bash
 cd deploy
-podman compose -f compose.society.yml up -d      # seed runs to completion, then the agents
+podman compose -f compose.society.yml up -d      # each agent builds its own belief base
 podman compose -f compose.society.yml logs -f    # all of them, interleaved
 podman compose -f compose.society.yml logs -f agent-fern
 podman compose -f compose.society.yml ps
 podman compose -f compose.society.yml down       # stop and remove THIS world's containers
 ```
 
-`up` is **start**, not birth: it authors nothing and may be run as often as you like. `down` is
-stop. Beliefs, readings and the world survive both — see [agent](/domain/agent.md) §Lifecycle.
+`up` is **start**, not birth. An agent is born the first time it runs — it writes its opening
+beliefs once, and logs `born`. Every start after that refreshes the public world from the files
+and leaves beliefs alone, so a restart cannot reset who an agent became. Beliefs live in a
+named volume per agent and survive `up`, `down` and `restart` alike — see
+[agent](/domain/agent.md) §Lifecycle.
 
 `down` removes only what *this* file declares. It is not a way to stop everything; for that see
 [tear-down](/runbooks/tear-down.md).
@@ -102,14 +103,14 @@ Each world has its own dataset, so switching destroys nothing and you can switch
 ```bash
 cd deploy
 podman compose -f compose.society.yml down
-podman compose -f compose.sensing.yml up -d        # already seeded? just bring it up
+podman compose -f compose.sensing.yml up -d
 ```
 
-Seed once per world, not per switch:
+Nothing to seed, and nothing shared to overwrite: each agent's belief base is its own volume,
+so worlds cannot touch each other at all.
 
 ```bash
-agora-seed society && agora-seed sensing           # both coexist
-agora-validate society && agora-validate sensing   # each is validated on its own
+agora-validate society && agora-validate sensing   # checked from the files, no store needed
 ```
 
 **Two worlds may run at once only if their devices differ.** `society` and `sensing` share
@@ -131,8 +132,9 @@ same topic — it has done exactly that here, overwriting real readings with `0.
 
 | symptom | cause |
 |---|---|
-| agent logs `no store credential — connecting as admin` | `agora-acl` was not run before `agora-compose`; the mount became a directory |
+| agent refuses to start, `BeliefsInvalid` | its opening beliefs do not satisfy the shapes for the capabilities the world derived for it. The report names the shape; fix `genesis/<world>/beliefs-<agent>.ttl` |
+| agent logs `born` on every start | it is not keeping its volume — check the `agora-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
-| an agent crashes once with `WorldError: knows no agent`, then recovers | store readiness, not ordering — the seeder had exited, but the replaced world graph was not yet queryable. `restart: unless-stopped` covers it. Only worrying if it does *not* recover |
+| cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
 | readings arrive twice | two writers. A stray host process from an earlier run, or `agora-sim` covering a real board |
 | agent cannot reach the broker | the world says `ag:brokerHost "localhost"`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |
