@@ -1,8 +1,8 @@
 ---
 type: Decision
-title: Where the belief base lives — one store, one per world, or one per agent
-description: Graph-level ACLs are assembled at startup, so authorising a new agent or world costs a Fuseki restart. Three ways out, measured rather than argued; plus what an agent should do when the world changes under it, and why validating beliefs belongs in the agent rather than in an admin tool.
-status: proposed
+title: Where the belief base lives — the world is files, beliefs are the agent's own
+description: A shared triplestore couples worlds that are supposed to be independent — adding the 21st forces a restart of the other 20. Decision: the world becomes TTL files an agent loads at start, beliefs live in a persistent store inside each agent, no shared store survives, and validation moves into the agent.
+status: accepted
 stage: v1
 tags: [belief-base, fuseki, isolation, acl, memory, validation, world-version]
 timestamp: 2026-08-04T00:00:00Z
@@ -78,6 +78,13 @@ and the only option whose cost grows with something you add deliberately and rar
 Each agent holds one self-contained store — the world as of the version it booted with, plus
 its own beliefs. Nothing is shared at runtime.
 
+**It must be persistent.** Oxigraph offers an in-memory store and a RocksDB-backed one; only
+the second is admissible. Beliefs that vanished on restart would make every start a partial
+re-birth, resetting the agent to whatever the sovereign last authored — the exact collapse
+[agent](/domain/agent.md) §Lifecycle exists to prevent. Start and stop are pause and resume, so
+revision has to survive them or a belief is configuration again. In practice: a RocksDB store on
+a per-agent named volume, which `agora-compose` can emit as one line per service.
+
 The count is highest and the machinery is lowest, because it stops being a *server*:
 `pyoxigraph` is a library, like SQLite. No port, no process, no container, and **no ACL
 anywhere** — an agent's store contains only what it may see, so isolation is structural rather
@@ -93,6 +100,36 @@ Two things make this more attractive than it first looks:
 
 What it costs: the belief base stops being one place. That is a genuine reframe of
 [belief-base](/domain/belief-base.md), and it puts validation somewhere new — see below.
+
+# Persistence is the default, and an exception must be declared
+
+**Beliefs survive restarts. That is a requirement, not a property of whichever store wins.**
+Any option that cannot offer it is disqualified rather than cheaper.
+
+There is a plausible exception — a short-lived agent spawned for one task, whose opinions are
+not worth keeping — but it is an **optimisation**, and the rule this architecture already
+follows applies: state it in the world and let the runtime derive the consequence. An ephemeral
+belief store would be a declared property of an agent in `genesis/<world>/world.ttl`, the way
+`ag:senseMode` declares a device's nature, and the default in its absence is durable. Nothing
+should be ephemeral because of how it happened to be deployed.
+
+This is not yet modelled and should not be until there is a real short-lived agent to model it
+for.
+
+# A defect this exposed
+
+Writing a triple into a beliefs graph and then restarting the compose project removed it. The
+likely cause — **unverified at the time of writing** — is that restarting the project also
+re-runs the `seed` service, which PUTs each beliefs graph wholesale.
+
+If so it is worse than the seam already recorded under [genesis](/decisions/genesis.md): not
+"re-seeding is an unintended re-birth" but **"restarting the society is an unintended
+re-birth"**, and it would hold for any store, Fuseki or embedded alike.
+
+The principled fix is not to change how anyone restarts, but to make birth do what its name
+says: **write an agent's beliefs only if it has none**, and require an explicit act to reset an
+agent that already exists. Then start can re-run the seeder as often as it likes and nothing is
+lost, because seeding a born agent would be a no-op.
 
 # When the world changes under a running agent
 
@@ -137,19 +174,67 @@ agent could ignore the shapes anyway. Belief validation catches misconfiguration
 Malice is caught where it always was, at [clearing](/domain/clearing.md), which validates what an
 agent may *do* rather than what it believes.
 
-# Recommendation
+# Decision — option 4
 
-**2 now, 3 if worlds become frequent, 4 only if the belief base is reframed deliberately.**
+**The world becomes TTL files. Beliefs live inside each agent. No shared store survives.**
 
-Pre-authorising (2) removes the restart from the common case — adding an agent — at almost no
-cost, and it strengthens the lifecycle story rather than working around it. Per-world Fuseki (3)
-is a clean answer to adding worlds, and 237 MB each is affordable, but it buys a rarer case with
-real memory. The prototype model (4) is the most elegant and the lightest, and it is the right
-answer *if and when* belief revision becomes real — because at that point a shared store holding
-private, mutable opinion starts creaking for reasons that have nothing to do with restarts.
+The argument that decided it is not memory and not latency — it is **coupling**. A shared
+Fuseki means adding the 21st world restarts the other 20. [world](/domain/world.md) isolated
+worlds at the data level and then left them joined at the config level, which makes that
+isolation partly cosmetic: two worlds that cannot see each other's data can still take each
+other down.
 
-Moving validation into the agent is worth doing **regardless of which option wins**, and should
-be decided on its own.
+And worlds are *already* frequent. Not three plants and a barrel, but versions of a world,
+simulations, variants under test. Multi-world was built to be used that way, and an option whose
+cost is paid by every existing world each time you add one cannot support it.
+
+Options 2 and 3 were both rejected for the same reason. Pre-authorising (2) removes the restart
+for agents but leaves worlds coupled. Per-world Fuseki (3) decouples them but pays 237 MB each —
+4.7 GB at twenty worlds, to run twenty JVMs whose only job is to keep a few hundred triples
+apart.
+
+## What it looks like
+
+| | before | after |
+|---|---|---|
+| world, T-Box | Fuseki, ACL'd | **TTL files**, loaded at start |
+| beliefs | Fuseki, ACL'd | persistent store inside the agent |
+| `:sensed` | Fuseki, readable by all | inside the agent |
+| Fuseki | 237 MB | **gone** |
+| store credentials, ACL registry | generated, restart to change | **gone** |
+| restart to add a world or agent | yes | **never** |
+
+The world and the T-Box are already authored as TTL. Genesis stops needing a store at all: it
+ratifies files, and an agent loads them. Isolation stops being enforced and becomes structural —
+an agent's store contains only what it may see, so there is nothing to enforce.
+
+The store must be **persistent and volume-backed** (see above); an in-memory store would make
+every start a partial re-birth.
+
+## Validation moves into the agent
+
+Decided with it, and it would have been right regardless. The **public world** is validated
+centrally against the ratified files. An **agent's own beliefs** are validated by that agent at
+startup, against the shapes for the capabilities it derived, and it refuses to run if they do
+not hold.
+
+This is what makes a distributed belief base viable — the check sits where the data is — but its
+better justification is independent: it happens before the agent acts rather than when an
+operator remembers to run a command, and refusing to start is not self-report.
+
+## Influx is a separate hole, and not a blocker
+
+Checked while deciding: **every agent holds the admin Influx token and can read every subject's
+entire history.** One bucket, one token, handed to all containers. So `fern` cannot read
+`tomato`'s beliefs but can read its complete moisture series — exactly the raw state the
+band-only MQTT disclosure exists to withhold.
+
+Influx 2.x permissions are per **bucket**, not per tag, so isolation means one bucket per agent
+and a token scoped to it. Verified working: a scoped token read its own bucket and was denied
+`sensors`. Generatable from the world, the way store credentials are today.
+
+Deliberately **not** part of this change — it is independent, it applies to the current design
+too, and it deserves its own decision.
 
 # What is not the reason
 
