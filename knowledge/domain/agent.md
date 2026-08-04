@@ -54,6 +54,30 @@ Interpretation and initiative belong to the agent, not infra (see
 - **Its self-metrics.** It may log its own view (wallet, wins) as **untrusted** claims; the
   authoritative ledger is clearing's.
 
+# Lifecycle — birth is not start
+
+Three distinct events, and conflating any two of them turns a belief back into configuration.
+
+| | when | what happens | repeatable |
+|---|---|---|---|
+| **birth** | once, per agent per world | the agent comes into existence: its beliefs graph is created from what the sovereign ratified | **no** — a second birth discards who the agent became |
+| **start** | every time a process comes up | reads the world, reads its own beliefs, runs the modules its capabilities name | yes, freely |
+| **stop** | the process goes down | modules release timers and connections; **beliefs survive** | yes |
+
+Start and stop are **pause and resume**. Nothing about the agent changes across them — it is
+the same agent, not running. That is why opening beliefs can be the agent's own to revise
+thereafter: revision survives a restart precisely because a restart is not a birth.
+
+Birth is the only event that may author beliefs, and it is the sovereign's act, not code's
+(see [genesis-process](/domain/genesis-process.md)). Death — an agent removed from the world —
+is unmodelled; [genesis](/decisions/genesis.md) flags it as the hard case in a destructive
+migration, because a wallet and outstanding commitments have to go somewhere.
+
+**Today the three are not separated.** `agora-seed` PUTs each beliefs graph, replacing it, so
+re-seeding is an unintended re-birth; and `agora-up` logs `born` when it is merely starting.
+Both are harmless only because nothing revises its own beliefs yet. The moment anything does, a
+re-seed silently resets it — which is the bug this distinction exists to prevent.
+
 # What an agent may NOT do
 
 The three privileged powers are never granted to an agent, no matter how spotless its

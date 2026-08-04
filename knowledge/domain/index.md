@@ -1,11 +1,3 @@
----
-type: Index
-title: Domain
-description: Index of domain concepts and components — the shared contract and invariants.
-tags: [index, domain]
-timestamp: 2026-08-01T00:00:00Z
----
-
 # Domain
 
 The shared contract — what each component is, what it's responsible for, and its
@@ -32,6 +24,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Genesis and structure
 
+* [genesis-process](/domain/genesis-process.md) - The LLM-assisted session that turns a description into a living society: what must be elicited, what "consistent" means concretely, where opening beliefs come from, and why a world's KIND changes the operational ones but never the stake ones.
 * [world](/domain/world.md) - What a ratified world is made of (public topology + one private beliefs file per agent), the three rules for authoring one, and what genesis DERIVES rather than accepts. Several worlds coexist; which one is seeded decides what each agent becomes.
 
 # Rules and resources

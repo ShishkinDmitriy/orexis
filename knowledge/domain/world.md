@@ -11,7 +11,8 @@ timestamp: 2026-08-04T00:00:00Z
 A **world** is the complete model of one society: what exists, what is wired to what, and what
 each agent privately wants. It is the ratified output of
 [genesis](/decisions/genesis.md) — the sovereign narrates, an LLM drafts, the sovereign
-ratifies — and it is what `agora-seed` loads into the belief base.
+ratifies — and it is what `agora-seed` loads into the belief base. The session that produces
+one is [genesis-process](/domain/genesis-process.md).
 
 Worlds are whole, not layered. `genesis/` holds one directory per world, each seedable on its
 own; there is no base that variants extend.
@@ -86,6 +87,12 @@ thinks, and no other agent can read it — enforced, not polite
 
 If two agents could reasonably disagree about it, it is a belief.
 
+Beliefs then divide again, and the two shipped worlds show it: the same agent has
+`ag:slowSleepS` 600 in `society` and 10 in `sensing`, because the **circumstance** differs, not
+because it wants anything different. Operational beliefs (cadence, freshness) track the kind of
+world; stake beliefs (target, band, endowment, price) are the agent's own and derivable from
+nothing. See [genesis-process](/domain/genesis-process.md) §"Where opening beliefs come from".
+
 # Authoring a world
 
 Say you want `orchard/` — two trees on a shared tank, no market yet.
@@ -155,3 +162,6 @@ beliefs graphs; re-run `agora-acl <name>` after a switch if you use per-agent cr
   `:world`; removing a wire does not retract the capability until the world is re-seeded.
 - **No cross-world check.** Nothing verifies that two worlds sharing device ids agree about
   those devices' channels, which is exactly the property `society` and `sensing` rely on.
+- **World kind is not modelled.** A bench world and a production one want different operational
+  beliefs, and nothing expresses that but the directory you seeded — so near-identical belief
+  files are hand-copied between worlds, waiting to drift.
