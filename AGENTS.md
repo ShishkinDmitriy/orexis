@@ -21,7 +21,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 
 **Durable knowledge goes in the bundle, never in a new README.** `domain/` says what a thing is
 and how to use it; `decisions/` says why a choice was made and which seams it leaves open. The
-existing READMEs (root, `deploy/`, `firmware/*/`) are operational entry points and stay, but do
+existing READMEs (root, `firmware/*/`) are operational entry points and stay, but do
 not add more for design knowledge.
 
 **Reconciling the bundle is part of the change, not follow-up.** After changing behaviour, grep
@@ -44,7 +44,7 @@ record is worse than none, because it is still cited.
    enforced. An agent is told its id and given one world, mounted — it never learns that other
    worlds exist. See [where-the-belief-base-lives](knowledge/decisions/where-the-belief-base-lives.md).
 4. **There is no config file.** Topology lives in the world graph, desire and limits in each
-   agent's own beliefs, both authored in `genesis/<world>/`. Deployment facts (`AGORA_ACTUATE`,
+   agent's own beliefs, both authored in `world/<world>/`. Deployment facts (`AGORA_ACTUATE`,
    service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
@@ -57,8 +57,8 @@ not contain `ag:hasCapability` — seeding computes it from the wiring.
 source .venv/bin/activate
 
 agora-validate <world> # build the world from its files and hold it to every package's shapes
-agora-compose <world>  # generate deploy/compose.<world>.yml from that world's roster
-podman compose -f deploy/compose.<world>.yml up -d    # one container per agent
+agora-compose <world>       # generate world/<world>/compose.yaml from that world's roster
+cd world/<world> && podman compose up -d    # one container per agent
 agora-sim              # virtual edge: subjects that dry, sense on cadence, get watered
 pytest backend -q      # 176 tests, no infra needed
 ```

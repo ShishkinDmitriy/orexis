@@ -51,7 +51,7 @@ So the pump is a **guarded** MQTT subscriber, with four properties the sensor ed
    `actuators/fern/valve` message does nothing. The principle is **crypto proportional to
    irreversibility**: the reversible sensor path is trusted in
    [trusted-agent-mode](/decisions/trusted-agent-mode.md), but the irreversible valve is
-   cryptographically gated. Keys issued once (`agora-keygen`); v1 signs both in-process. The
+   cryptographically gated. Keys issued once per world (`agora-keygen <world>`), because two worlds are two societies and must not sign for each other; v1 signs both in-process. The
    token is required *because the pump is networked* — a relay on the Pi's own GPIO would need
    none (physical possession). See *Connection determines authorization* in
    [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).

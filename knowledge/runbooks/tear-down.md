@@ -45,7 +45,7 @@ agent's removal.
 
 ```bash
 cd deploy
-podman compose -f compose.society.yml down
+podman compose -f world/society/compose.yaml down
 ```
 
 Agents stop. Beliefs, readings, the world and any retained commands are untouched — this is
@@ -58,7 +58,7 @@ In this order, because each layer is independent:
 ```bash
 # 1. every world (each is its own compose project)
 cd deploy
-for f in compose.*.yml; do podman compose -f "$f" down; done
+for w in ../world/*/; do (cd "$w" && podman compose down); done
 
 # 2. host processes — compose never knew about these
 pkill -f agora-sim
@@ -106,7 +106,7 @@ comes back as whatever the sovereign last authored, having forgotten anything it
 
 ```bash
 cd deploy
-podman compose -f compose.<world>.yml down -v   # destroys THAT world's agents' belief bases
+podman compose -f compose.yaml down -v   # destroys THAT world's agents' belief bases
 cd .. && podman compose down -v                 # repo root: destroys the Influx history
 ```
 
@@ -120,7 +120,7 @@ volume belonging to that agent alone.
 
 | you want | do |
 |---|---|
-| pause a society | `compose -f compose.<world>.yml down` |
+| pause a society | `compose -f compose.yaml down` |
 | swap worlds | `down`, re-seed, `agora-compose`, `up` — see [run-a-world](/runbooks/run-a-world.md) |
 | stop everything | all worlds down, then `pkill`, then infra down |
 | a device is obeying a world that is gone | clear its retained `cmd` topic |

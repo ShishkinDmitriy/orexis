@@ -84,7 +84,7 @@ def test_swapping_the_board_does_not_touch_the_agent():
 # --- the same hardware, a different world ----------------------------------
 
 def test_the_smallest_world_yields_perception_and_nothing_else():
-    """genesis/sensing: the same agent id, the same board, plumbed into no market.
+    """world/sensing: the same agent id, the same board, plumbed into no market.
 
     Nothing in that world declares the agent sensor-only — it is the same derivation the
     society runs, over thinner wiring. This is the check that a capability can genuinely

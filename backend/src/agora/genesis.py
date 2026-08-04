@@ -1,8 +1,9 @@
 """Genesis, as an agent experiences it: ratified files in, a belief base out.
 
-There is no store to seed. A world is `genesis/<name>/` — Turtle the sovereign ratified — and
-an agent builds its own belief base from it at boot. Nothing is shared, nothing is served, and
-nothing has to be provisioned before an agent can run.
+There is no store to seed. A world is `world/<name>/` — Turtle the sovereign ratified — and an
+agent builds its own belief base from it at boot. The directory is named for the *result*;
+genesis is the process that produced it, and lives in this module and in a conversation.
+Nothing is shared, nothing is served, and nothing has to be provisioned before an agent runs.
 
 Two operations, and keeping them apart is the whole point (see knowledge/domain/agent.md
 §Lifecycle):
@@ -25,7 +26,6 @@ See knowledge/decisions/where-the-belief-base-lives.md, knowledge/domain/world.m
 from __future__ import annotations
 
 import logging
-import re
 from pathlib import Path
 
 from . import loader
@@ -36,31 +36,55 @@ from .store import Store, bindings
 log = logging.getLogger("genesis")
 
 REPO_ROOT = PROJECT_ROOT.parent
-GENESIS_ROOT = REPO_ROOT / "genesis"
+WORLDS_ROOT = REPO_ROOT / "world"
 DEFAULT_WORLD = "society"
-BELIEFS_GLOB = "beliefs-*.ttl"
+BELIEFS_DIR = "beliefs"
+SECRETS_DIR = "secrets"
+BELIEFS_GLOB = "beliefs/*.ttl"
 
 
 def agent_id_of(path) -> str:
-    """`beliefs-fern.ttl` -> `fern` — the agent those beliefs belong to."""
-    return re.sub(r"^beliefs-|\.ttl$", "", Path(path).name)
+    """`beliefs/fern.ttl` -> `fern` — the agent those beliefs belong to."""
+    return Path(path).stem
 
 
 def worlds() -> list[str]:
     """Every ratified world on disk. Found by looking, like everything else."""
-    if not GENESIS_ROOT.is_dir():
+    if not WORLDS_ROOT.is_dir():
         return []
     return sorted(
-        d.name for d in GENESIS_ROOT.iterdir() if d.is_dir() and (d / "world.ttl").exists()
+        d.name for d in WORLDS_ROOT.iterdir() if d.is_dir() and (d / "world.ttl").exists()
     )
+
+
+def current_world() -> Path:
+    """The one world this process belongs to.
+
+    A container is given exactly one, mounted at a fixed path — so an agent is told only its
+    own id and never learns that other worlds exist. Outside a container, name one.
+    """
+    from . import config
+
+    explicit = config.env("AGORA_WORLD_DIR")
+    return Path(explicit) if explicit else world_dir(config.env("AGORA_WORLD", DEFAULT_WORLD))
+
+
+def secrets_dir(world: Path) -> Path:
+    """Where a world keeps its signing keys.
+
+    Per world, because they belong to a *society*: the host that runs its market and the
+    clearing authority that co-signs. Two worlds are two societies and should not be able to
+    sign for each other. Never committed — see .gitignore.
+    """
+    return world / SECRETS_DIR
 
 
 def world_dir(name: str) -> Path:
     """One world, or a refusal that names the ones there are."""
-    path = GENESIS_ROOT / name
+    path = WORLDS_ROOT / name
     if not (path / "world.ttl").exists():
         raise SystemExit(
-            f"no world called {name!r} in genesis/ — there is "
+            f"no world called {name!r} in world/ — there is "
             f"{', '.join(worlds()) or 'nothing'}"
         )
     return path
@@ -114,7 +138,7 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
     graph = beliefs_graph(agent_id)
     if st.has_graph(graph) and not rebirth:
         return False
-    path = world / f"beliefs-{agent_id}.ttl"
+    path = world / BELIEFS_DIR / f"{agent_id}.ttl"
     if not path.exists():
         # An agent the world declares but genesis never gave opening beliefs. Its capabilities
         # will fail their own validation at startup, which is where it should be reported.

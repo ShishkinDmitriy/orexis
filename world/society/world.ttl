@@ -15,7 +15,7 @@
 #  the agent's abilities change with it.
 #
 #  Also not here: anything an agent could reasonably disagree about. Targets, bands, cadence
-#  and prices are opinion, and live in genesis/beliefs-<agent>.ttl.
+#  and prices are opinion, and live in world/<name>/beliefs-<agent>.ttl.
 #
 #  Every wire name is stated on the resource that owns it, so no process builds a topic from
 #  a naming convention. A process is given exactly one instance identifier — its own agent

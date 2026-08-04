@@ -42,7 +42,7 @@ capabilities/  what an agent can DO — perception, market, actuation. The exten
 transports/    how a device is REACHED — mqtt. Deliberately not a capability
 domain/        what the society is ABOUT — water. Vocabulary; the domain is a plug-in
 backend/       the runtime that loads all of the above, plus the pure market mechanism
-genesis/       ratified worlds — one directory each, complete and seedable on its own
+world/         ratified worlds — one directory each: topology, beliefs, and its compose file
 firmware/      ESP32 edge — moisture sensors and pump/valve
 infra/         compose service configs — grafana, mosquitto
 knowledge/     OKF knowledge bundle (architecture decisions + domain model)
@@ -117,11 +117,11 @@ pip install -e ./backend
 One-time setup, in order:
 
 ```bash
-agora-keygen           # the host + clearing signing keys the valves check, once
+agora-keygen society   # that world's host + clearing signing keys, once
 agora-validate society # build the world from its files and check it
 ```
 
-[`genesis/`](genesis/) holds one directory per ratified world, each complete on its own:
+[`world/`](world/) holds one directory per ratified world, each complete on its own:
 `society` is the full example, `sensing` is the smallest one that produces a working agent.
 [`domain/world`](knowledge/domain/world.md) is the guide to authoring your own — what a world
 is made of, what you state versus what gets derived, and how to check it.
@@ -145,7 +145,7 @@ world**, one process each:
 
 ```bash
 agora-compose society                                  # generate the compose file FROM the world
-cd deploy && podman compose -f compose.society.yml up -d
+cd world/society && podman compose up -d
 agora-sim                                              # virtual plants, if you have no hardware
 ```
 
@@ -183,8 +183,9 @@ time, or if the newest reading is older than its own `ag:maxReadingAgeS`. Owning
 must not mean bidding on a stale, comfortable number — and the limit is each agent's own
 belief, so a slow-living succulent may accept older data than a fern.
 
-For unattended operation — one systemd unit per agent, surviving reboot — see
-[`deploy/`](deploy/). `AGORA_ACTUATE` in `.env` gates whether the supplier actually opens
+For unattended operation see [`runbooks/run-a-world`](knowledge/runbooks/run-a-world.md)
+§Unattended — there are no agora services, only podman's own restart handling.
+`AGORA_ACTUATE` in `.env` gates whether the supplier actually opens
 valves (`false` = sensor-only: decide, log, water nothing). Deployment toggles like this stay
 in the environment — they are about the physical installation, not beliefs anyone holds.
 
@@ -199,7 +200,7 @@ agent set, and gains moisture when it wins water — a closed loop driven by the
 ```bash
 # set AGORA_ACTUATE=true in .env (the supplier must be allowed to open valves)
 agora-sim      # virtual plants: dry, sense on their agent's interval, get watered
-cd deploy && podman compose -f compose.society.yml up -d   # the whole society
+cd world/society && podman compose up -d   # the whole society
 ```
 
 Watch the plants dry, hit their own LOW, win water, and recover — `journalctl`/logs show
@@ -232,7 +233,7 @@ plant ids in `AGORA_SIM_PLANTS` and give the real ones ESP32s on the same topics
 
 ## Bringing a real board up
 
-Seed the **smallest world** instead of the society. `genesis/sensing` has one subject, one
+Seed the **smallest world** instead of the society. `world/sensing` has one subject, one
 board and one agent, plumbed into no market — so derivation gives that agent `ag:Subscribing`
 and nothing else. It reads, records, and stops. Nothing in that world declares it sensor-only;
 there is simply no market for a market capability to come from.
@@ -242,7 +243,7 @@ sudo cp infra/mosquitto/lan.conf /etc/mosquitto/conf.d/agora.conf   # mosquitto 
 sudo systemctl restart mosquitto                                    # loopback until told not to
 
 agora-compose sensing                                 # one agent, perception only
-cd deploy && podman compose -f compose.sensing.yml up -d
+cd world/sensing && podman compose up -d
 mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
 ```
 
@@ -262,7 +263,7 @@ you can mix them freely:
 - publishes on its `ag:readingTopic` — `{"value": 0.18, "sensor": "moisture_sensor_fern"}`
 - subscribes to its `ag:commandTopic` — `{"sleep_s": 300}` (retained) and/or `{"sense": true}`
 
-Both topics are whatever `genesis/world.ttl` says they are; nothing is derived from the id.
+Both topics are whatever `world/<name>/world.ttl` says they are; nothing is derived from the id.
 
 Declare the board's nature with `ag:senseMode`, and the capability follows from it — the axis
 is **who holds the clock**:
@@ -282,8 +283,8 @@ The ESP32 firmware is `ag:Scheduled`. Change the firmware, edit `ag:senseMode`, 
 agent, and the capability changes with it — the agent is never edited.
 
 The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
-([`genesis/beliefs-<agent>.ttl`](genesis/)); the wiring and the valve calibration are the
-world's ([`genesis/`](genesis/)). Edit the files and restart the agent — no reflash.
+([`world/<name>/beliefs/<agent>.ttl`](genesis/)); the wiring and the valve calibration are the
+world's ([`world/`](world/)). Edit the files and restart the agent — no reflash.
 The one thing firmware *does* enforce is the constitutional cadence clamp
 (`MIN_SLEEP_S`/`MAX_SLEEP_S` in `config.h`) — a buggy agent must not be able to talk a board
 into sleeping through a drought.

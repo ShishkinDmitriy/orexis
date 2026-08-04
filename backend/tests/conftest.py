@@ -22,8 +22,8 @@ from agora.ontology import SENSED_GRAPH
 from agora.store import Store
 
 REPO_ROOT = loader.REPO_ROOT
-GENESIS_ROOT = REPO_ROOT / "genesis"
-GENESIS_DIR = GENESIS_ROOT / "society"   # the world most tests are about
+WORLDS_ROOT = REPO_ROOT / "world"
+GENESIS_DIR = WORLDS_ROOT / "society"   # the world most tests are about
 
 
 def genesis_store(readings: dict[str, float] | None = None,
@@ -33,9 +33,9 @@ def genesis_store(readings: dict[str, float] | None = None,
 
     The rules are applied exactly as an agent applies them, so tests see the capabilities the
     world actually implies rather than a hand-written list. `world` names which of the ratified
-    worlds in genesis/ to build, so a test can be about the small one.
+    worlds in world/ to build, so a test can be about the small one.
     """
-    path = GENESIS_ROOT / world
+    path = WORLDS_ROOT / world
     st = Store()
     genesis.refresh_public(st, path)
     for beliefs in sorted(path.glob(genesis.BELIEFS_GLOB)):

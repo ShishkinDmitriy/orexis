@@ -23,9 +23,9 @@ only once something concrete is on the table:
 - *who owns the barrel?* → owning the venue derives `ag:Hosting`, owning valves `ag:Actuation`
 - *thirsty at what number?* → a band is opinion; nothing can infer it
 
-# 2. Write `genesis/<name>/world.ttl`
+# 2. Write `world/<name>/world.ttl`
 
-Copy `genesis/sensing/world.ttl` — it is the minimum that still produces a working agent: a
+Copy `world/sensing/world.ttl` — it is the minimum that still produces a working agent: a
 bus, a world version, the graph catalog, a subject, a device, an agent.
 
 **Do not write `ag:hasCapability`.** State what exists and what is wired to what; seeding
@@ -43,7 +43,7 @@ reality, a derivation cannot.
 Every device states its own channels — nothing builds a topic from a naming convention. A
 board whose `PLANT_ID` disagrees with the world simply never gets read, and nothing warns you.
 
-# 3. Write one `beliefs-<agent>.ttl` per agent
+# 3. Write one `beliefs/<agent>.ttl` per agent
 
 Only the blocks for capabilities the wiring will give it. Unsure which? Do step 4 and read the
 output.

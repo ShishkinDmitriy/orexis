@@ -1,7 +1,7 @@
 """Environment only.
 
 There is no config file: the world (topology) and each agent's beliefs (desire, limits,
-cadence, prices) live in the belief base, authored at genesis in `genesis/*.ttl`. What is
+cadence, prices) live in the belief base, authored at genesis in `world/<name>/*.ttl`. What is
 left here is *deployment* — where the services are and whether this box may open a valve —
 which is not a belief anyone holds.
 """

@@ -21,7 +21,7 @@ wake -> read -> publish  sensors/<subject>/moisture  {"value":0.183,"sensor":"..
 Realizes [agent-driven sensing](../../knowledge/decisions/agent-centric-epistemics.md):
 **cadence ≠ content** — the agent chooses *when* to look; the reading is what the sensor
 measured. The board emits **numbers only** — the band/threshold judgement is the agent's, and
-lives in that agent's own beliefs (`genesis/beliefs-<agent>.ttl`), never in firmware. An agent
+lives in that agent's own beliefs (`world/<name>/beliefs/<agent>.ttl`), never in firmware. An agent
 with no stake holds no band at all and simply records the number.
 
 ## The agent sets the interval
@@ -57,7 +57,7 @@ cp include/config.h.example include/config.h    # gitignored (WiFi secrets)
 
 Set WiFi, the Pi's IP as `MQTT_HOST`, the ADC pin, the cadence bounds, and calibration.
 
-`PLANT_ID` and `SENSOR_ID` must agree with `genesis/world.ttl`: the topics this board uses are
+`PLANT_ID` and `SENSOR_ID` must agree with `world/<name>/world.ttl`: the topics this board uses are
 built from `PLANT_ID`, and they have to be the `ag:readingTopic` / `ag:commandTopic` the world
 states for the matching `ag:Sensor`, whose `ag:localId` is `SENSOR_ID`. The `"sensor"` field in each published
 payload must equal that `ag:localId` — a mismatch is the failure that otherwise goes silent.
@@ -88,10 +88,10 @@ From the Pi, without the market or any other agent running:
 ```bash
 mosquitto_sub -h localhost -t 'sensors/fern/#' -v    # is it publishing at all?
 agora-compose sensing                                # one agent, perception only
-cd ../../deploy && podman compose -f compose.sensing.yml up -d
+cd ../../world/sensing && podman compose up -d
 ```
 
-`genesis/sensing` is the smallest ratified world: one subject, one board, one agent, no
+`world/sensing` is the smallest ratified world: one subject, one board, one agent, no
 market. The agent logs the interval it set, and the line appears in Grafana
 (`localhost:3000`, "Agora — Moisture"). Two things to eyeball in the raw payloads: the
 `"sensor"` field must match the sensor's `ag:localId` in the world, and a value pinned at
@@ -108,7 +108,7 @@ series to Influx and asserts the observation to `:sensed` under its own authorsh
 `ag:polls` grant that entitles it to this sensor (see
 [connection determines authorization](../../knowledge/decisions/authn-authz-capabilities.md)).
 
-That capability runs alone, which is what `genesis/sensing` demonstrates: an agent there holds
+That capability runs alone, which is what `world/sensing` demonstrates: an agent there holds
 nothing else — no market, no bidding, no stake — because that world gives it nothing else to
 be wired to.
 

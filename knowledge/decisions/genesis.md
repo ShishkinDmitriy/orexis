@@ -29,7 +29,7 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
    agent** — no stake, proposes only.
 3. **Ratify** — the sovereign reviews, edits, accepts. Only the sovereign authors the world
    (see [constitution](/domain/constitution.md): only the sovereign amends).
-4. **Write** — the ratified draft is Turtle in `genesis/<world>/`, and that is the end of
+4. **Write** — the ratified draft is Turtle in `world/<world>/`, and that is the end of
    genesis. There is nothing to load: each agent reads those files at boot, copies the wiring
    into its own `:world` (which it never rewires) and writes its opening beliefs into its own
    `:beliefs/<agent>` once, at birth. The sovereign authors the world in the same vocabulary
@@ -39,13 +39,13 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
 
 # A genesis output is a whole world, and there may be several
 
-`genesis/` holds **one directory per ratified world**, each complete and seedable on its own —
+`world/` holds **one directory per ratified world**, each complete and seedable on its own —
 not a base with fragments layered on it. An agent is given exactly one, mounted. What a world is
 made of, and how to author one, is [world](/domain/world.md).
 
 This matters more than convenience. A world is the *entire* model of a system, so a second one
-is not a variant of the first: it is a different society. `genesis/society` has a market;
-`genesis/sensing` has one subject, one board and one agent and no market at all — which makes
+is not a variant of the first: it is a different society. `world/society` has a market;
+`world/sensing` has one subject, one board and one agent and no market at all — which makes
 it the smallest genesis output that still produces a working agent, and the proof that a
 capability can stand alone. If `ag:Bidding` could only exist alongside perception, "capability"
 would be a word for a bundle.
@@ -148,7 +148,7 @@ amendments append a version, the version chain never mutates, and the "current" 
 projection of the latest. Rollback is a *forward* amendment (re-ratify an old version as the
 new current), never an edit of the past.
 
-v1: an `agora:versionNumber` bumped by hand in `genesis/world.ttl` when the sovereign edits
+v1: an `agora:versionNumber` bumped by hand in `world/<name>/world.ttl` when the sovereign edits
 it and re-seeds; every recorded observation is stamped with it. Archiving prior versions and
 the diff/migration tooling are v2/v3.
 
@@ -162,7 +162,7 @@ never what it **was**. That is what keeps the witness of record trustworthy. See
 
 # v1 vs v2
 
-v1 **hand-authors** the ratified output — Turtle in `genesis/`, split by owner into the world
+v1 **hand-authors** the ratified output — Turtle in `world/`, split by owner into the world
 and one file per agent — and skips the narrator; amendment in v1 = edit those files and
 re-seed. The narrate → draft → ratify LLM tool, version archiving, and typed migrations are
 **v2/v3 onboarding** work. Because the ratified output is already *belief in the agents' own
