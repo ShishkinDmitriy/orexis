@@ -8,9 +8,14 @@ one `agora-agent` for each, handing it the single thing an agent process is ever
 id. So the roster is the ratified world, and re-seeding a different world brings up a
 different society with no edit here and no edit to any unit file.
 
-That is the whole point of deriving capabilities. An agent is not written; it is **born from
+That is the whole point of deriving capabilities. An agent is not written; it follows **from
 the model** — the world says what it is wired to, genesis derives what it can therefore do,
 and this starts a process that discovers both. Adding an agent is adding it to `world.ttl`.
+
+This is **start**, not birth. Birth happens once, at genesis, and is the only event entitled to
+author an agent's beliefs; start and stop are pause and resume, and nothing here writes
+anything an agent believes. Keeping them apart is what lets opening beliefs be revisable
+without a restart undoing the revision — see knowledge/domain/agent.md §Lifecycle.
 
 **One OS process each, deliberately.** It would be less code to run them in threads, and that
 would quietly destroy the property the design rests on: a process boundary is what makes one
@@ -93,7 +98,7 @@ def run(only: str | None = None) -> int:
             log.warning("%s has no derived capability — not starting it", agent_id)
             continue
         children[agent_id] = spawn(agent_id)
-        log.info("born  %-10s %s", agent_id, caps)
+        log.info("start %-10s %s", agent_id, caps)
 
     if not children:
         raise SystemExit("agora-up: nobody had a capability to run")
