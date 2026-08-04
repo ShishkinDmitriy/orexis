@@ -75,9 +75,21 @@ isolation is not being enforced.
 podman's own `conmon` and `rootlessport` helpers: the containers keep running while their
 published ports quietly stop working, and `podman restart` then fails with "conmon exited
 prematurely". Recovery is `podman stop` followed by `podman start`. Match the actual process
-instead — `pkill -f agora-agent`, `pkill -f agora.simulator`. For a foreground run of the
-whole society without units, `agora-up` reads the roster from the belief base and starts one
-process per agent; the units below are the same thing made durable.
+instead — `pkill -f agora-agent`, `pkill -f agora.simulator`.
+
+**The container path is now the supported one**, and the units below are the older host-process
+route. `agora-compose <world>` generates `deploy/compose.<world>.yml` from the world itself: a
+`seed` service that runs to completion, then one container per agent, each mounting exactly its
+own store credential. That last part is why it is preferred — on one filesystem every agent can
+read every other agent's password out of `keys/fuseki/`. See
+[`domain/world`](../knowledge/domain/world.md) §Deployment.
+
+```bash
+agora-acl society && agora-compose society
+cd deploy && podman compose -f compose.society.yml up -d
+podman compose -f compose.society.yml logs -f
+podman compose -f compose.society.yml down
+```
 
 ## Sensor-only phase (now)
 

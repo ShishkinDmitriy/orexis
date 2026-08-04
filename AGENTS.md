@@ -55,7 +55,8 @@ source .venv/bin/activate
 agora-seed <world>     # load one ratified world from genesis/ (society | sensing)
 agora-acl <world>      # per-agent store credentials + Fuseki access list
 agora-validate         # SHACL over the live belief base; exits non-zero on violation
-agora-up               # one process per agent the world declares
+agora-compose <world>  # generate deploy/compose.<world>.yml from that world's roster
+podman compose -f deploy/compose.<world>.yml up -d    # one container per agent
 agora-sim              # virtual edge: subjects that dry, sense on cadence, get watered
 pytest backend -q      # 176 tests, no infra needed
 ```
@@ -69,3 +70,6 @@ pytest backend -q      # 176 tests, no infra needed
   production. `backend/tests/test_store.py` checks this by scanning the source text.
 - **`AGORA_SIM_PLANTS` empty means every subject in the world** — including ones a real board
   publishes for, on the same topic. With hardware connected, list only the virtual ones.
+- **Stray host processes are the usual cause of doubled data.** Agents and the simulator both
+  publish and ingest; a leaked one from an earlier run keeps writing. `podman compose down`
+  removes a society deterministically, which is half of why deployment is containers.

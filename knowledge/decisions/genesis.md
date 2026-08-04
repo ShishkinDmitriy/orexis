@@ -54,15 +54,19 @@ model-driven claim reduced to something you can check by re-seeding.
 
 # Agents are born from the world
 
-Nothing lists the agents to run. `agora-up` asks the belief base `?a a ag:Agent` and starts one
-process per answer, handing each the single thing an agent is ever told: its own id. The roster
-*is* the ratified world, so adding an agent is adding it to `world.ttl` — no unit file, no
-launcher edit, and no place for a list to drift from the model.
+Nothing lists the agents to run. `agora-compose <world>` reads `?a a ag:Agent` out of the world
+and writes one container per answer, each told the single thing an agent is ever told: its own
+id. The roster *is* the ratified world, so adding an agent is adding it to `world.ttl` — no
+unit file, no launcher edit, and no place for a list to drift from the model. The compose file
+is generated for the same reason the store's access list is: a second roster is a second thing
+to keep in step.
 
-One OS process each, and that is not an implementation detail: the process boundary is what
+One container each, and that is not an implementation detail: the process boundary is what
 makes one agent unable to read another's beliefs, and it is why a round had to become a
 protocol rather than a calculation (see
-[capability-packages](/decisions/capability-packages.md)). Supervision must not undo it.
+[capability-packages](/decisions/capability-packages.md)). Supervision must not undo it — and
+a container goes further than a process, because it can be given exactly one credential
+instead of a directory full of everyone's. See [world](/domain/world.md) §Deployment.
 
 **Firmware is the exception, and the contrast is the point.** A board is hardware; it is
 flashed by hand and the model cannot conjure it. What genesis decides is what an *agent* is —

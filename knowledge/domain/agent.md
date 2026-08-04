@@ -73,10 +73,13 @@ Birth is the only event that may author beliefs, and it is the sovereign's act, 
 is unmodelled; [genesis](/decisions/genesis.md) flags it as the hard case in a destructive
 migration, because a wallet and outstanding commitments have to go somewhere.
 
-**Today the three are not separated.** `agora-seed` PUTs each beliefs graph, replacing it, so
-re-seeding is an unintended re-birth; and `agora-up` logs `born` when it is merely starting.
-Both are harmless only because nothing revises its own beliefs yet. The moment anything does, a
-re-seed silently resets it — which is the bug this distinction exists to prevent.
+In deployment the verbs line up: `podman compose up` is start, `down` is stop, and neither
+touches a belief. Birth is the `seed` service, which runs once before any agent does.
+
+**But the three are still not properly separated.** `agora-seed` PUTs each beliefs graph,
+replacing it — so re-running the seed service is an unintended re-birth. Harmless only because
+nothing revises its own beliefs yet; the moment anything does, a re-seed silently resets it,
+which is the bug this distinction exists to prevent.
 
 # What an agent may NOT do
 
