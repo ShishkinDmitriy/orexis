@@ -147,7 +147,7 @@ world**, one process each:
 ```bash
 agora-compose society                                  # generate the compose file FROM the world
 cd world/society && podman compose up -d
-agora-sim                                              # virtual plants, if you have no hardware
+podman compose --profile sim up -d                     # + the virtual edge, if no hardware
 ```
 
 ```
@@ -194,13 +194,13 @@ in the environment — they are about the physical installation, not beliefs any
 
 Because the physical edge is dumb and interchangeable, **virtual plants** (soil models) are
 indistinguishable from real ones to the agents and the auction — so you can run and watch
-the entire society in software, and even mix virtual + real plants. `agora-sim` replaces the
+the entire society in software, and even mix virtual + real plants. the `sim` compose profile replaces the
 sensor edge *and* the pump: each virtual plant dries over time, senses on the cadence its
 agent set, and gains moisture when it wins water — a closed loop driven by the market.
 
 ```bash
 # set AGORA_ACTUATE=true in .env (the supplier must be allowed to open valves)
-agora-sim      # virtual plants: dry, sense on their agent's interval, get watered
+podman compose --profile sim up -d   # virtual plants: dry, sense, get watered
 cd world/society && podman compose up -d   # the whole society
 ```
 

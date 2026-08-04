@@ -157,13 +157,17 @@ it is a fact about the hardware rather than about this installation.
 
 # No hardware?
 
+The virtual edge is a service in the world's own compose, behind a profile:
+
 ```bash
-agora-sim <world>   # virtual subjects: dry over time, sense on the agent's interval, get watered
+cd world/<name>
+podman compose --profile sim up -d    # agents + the virtual edge
 ```
 
-Set `AGORA_SIM_PLANTS` to **only the virtual ones** if any real board is connected. Empty means
-*every subject in the world*, and the simulator will happily publish over a real board on the
-same topic — it has done exactly that here, overwriting real readings with `0.0`.
+It is behind a profile because a world with real hardware must not have it running: two
+publishers on one topic both ingest, which has cost time here before. Set `AGORA_SIM_PLANTS`
+in `.env` to the **virtual subjects only** when mixing with real boards; empty means every
+subject in that world.
 
 # It went wrong
 
@@ -173,5 +177,5 @@ same topic — it has done exactly that here, overwriting real readings with `0.
 | agent logs `born` on every start | it is not keeping its volume — check the `agora-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
-| readings arrive twice | two writers. A stray host process from an earlier run, or `agora-sim` covering a real board |
+| readings arrive twice | two writers. A stray host process from an earlier run, or the `sim` compose profile covering a real board |
 | agent cannot reach the broker | the world says `ag:brokerHost "localhost"`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |

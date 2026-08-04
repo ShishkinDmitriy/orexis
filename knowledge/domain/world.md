@@ -212,7 +212,7 @@ only an explicit re-birth discards them.
 - **Readings are not stored on the wire.** A board publishes QoS 0 and unretained, so a reading
   published while no agent is running goes to nobody. Start the agents *before* the hardware,
   or the first readings are lost.
-- **`agora-sim` simulates every subject in the world when `AGORA_SIM_PLANTS` is empty** —
+- **the `sim` compose profile simulates every subject in the world when `AGORA_SIM_PLANTS` is empty** —
   including ones a real board is already publishing for, on the same topic, silently
   overwriting real readings. With any hardware connected, list only the virtual subjects.
 

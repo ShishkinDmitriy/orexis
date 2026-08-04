@@ -1,5 +1,5 @@
 .env
-!infra/.env      # a symlink to the root .env, so `cd infra && podman compose` finds it
+infra/.env
 __pycache__/
 *.py[cod]
 *.egg-info/

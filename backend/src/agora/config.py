@@ -26,9 +26,12 @@ def _find_upwards(name: str, start: Path) -> Path | None:
     return None
 
 
-_env = _find_upwards(".env", PROJECT_ROOT)
-if _env:
-    load_dotenv(_env)
+# Two files, by scope: the repo root says what this installation may DO, infra/ says where the
+# shared series store is. Both are optional — in a container the values arrive as env_file.
+for _name in (".env", "infra/.env"):
+    _found = _find_upwards(_name, PROJECT_ROOT)
+    if _found:
+        load_dotenv(_found)
 
 
 def env(name: str, default: str | None = None) -> str | None:
