@@ -158,6 +158,10 @@ world and a bidder in another. See [world](/domain/world.md).
 
 # Seams left open
 
+- **Seeding has no readiness signal.** The seeder exits when its last write returns, but a
+  graph that has just been replaced is briefly not queryable — an agent starting in that window
+  reads a world it is not in and crashes. `restart: unless-stopped` recovers it, which means
+  correctness currently rests on a restart policy rather than on the seeder saying "ready".
 - **Birth is not a step of its own.** It is folded into `agora-seed`, which PUTs each beliefs
   graph — so re-seeding is an unintended re-birth, and there is no record that an agent was
   ever born. Separating them is what would let a world be amended without resetting who its

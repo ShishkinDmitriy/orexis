@@ -153,8 +153,12 @@ Three details are load-bearing rather than packaging taste:
   bridge network that stops being true for the agents while staying true for the ESP32 — two
   names for one bus, which is what stating it in the world exists to prevent.
 - **Ordering is expressed, not hoped for.** Agents wait on
-  `seed: service_completed_successfully`. An agent started against an unseeded store fails on
-  its first read, loudly and pointlessly.
+  `seed: service_completed_successfully`, and that is honoured — measured, the first agent
+  starts 45ms after the seeder exits 0. What it does *not* buy is store readiness: an agent
+  starting immediately after a graph replace has been seen to read a world that does not yet
+  contain it, crash with a `WorldError`, and be recovered by `restart: unless-stopped` about
+  700ms later. The restart policy is currently what closes that window rather than anything
+  deliberate — see the seam in [genesis-process](/domain/genesis-process.md).
 
 The source trees are mounted read-only, so a code change needs a restart rather than a rebuild.
 

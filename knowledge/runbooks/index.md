@@ -1,0 +1,22 @@
+# Runbooks
+
+How to actually operate a society: bring one into existence, run it, and take it apart. The
+[domain](/domain/) says what things are; these say what to type.
+
+# Lifecycle
+
+* [genesis-a-world](/runbooks/genesis-a-world.md) - Author a new world and seed it: what to write, what genesis derives for you, and the four checks that tell you it hangs together.
+* [run-a-world](/runbooks/run-a-world.md) - Deploy, up, down, logs, and what to do after a code change. One container per agent, generated from the world.
+* [tear-down](/runbooks/tear-down.md) - Stopping a society is not one command, and `down` is not "kill all". What survives it, why each thing survives on purpose, and how to remove each in turn.
+
+# A note on commands
+
+There is no `agora-up`, no `agora-down`, no `agora-restart`. Running a society is
+`podman compose` (or `docker compose`) — a tool you already know, with verbs you already know,
+that behaves the same here as everywhere else.
+
+The only agora-specific commands are the ones that **produce** something from the world:
+`agora-seed`, `agora-acl`, `agora-compose`, and `agora-validate` to check the result. Once
+they have run, you are holding an ordinary compose project. That line is deliberate: a wrapper
+would be one more thing to learn, one more thing to document, and one more place for the truth
+about what is running to diverge from what compose thinks is running.

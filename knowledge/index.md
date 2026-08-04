@@ -21,9 +21,14 @@ runtime belief base).
 
 * [domain/](domain/) - The shared contract: what each component is, its responsibilities, and its invariants.
 
+# Runbooks
+
+* [runbooks/](runbooks/) - How to operate a society: genesis a world, run it, and take it apart — and why stopping it is not one command.
+
 # How to use this bundle
 
 * Building a component? Read its [domain](domain/) concept, then any [decision](decisions/) it links.
+* Trying to *operate* one? Start at [runbooks](runbooks/) — the domain says what things are, the runbooks say what to type.
 * Tempted to change something? Check whether a decision pins it — several choices exist to keep v2/v3 open and must not be welded shut.
 * Runtime testimony (attested sensor triples — the witness of record, not "shared knowledge") is NOT here — see [domain/belief-base](/domain/belief-base.md).
 * Adding a document? Concept files carry frontmatter with a non-empty `type` (`Decision`, `Domain Concept`, `Component`), plus `title` and `description`. An `index.md` carries **none** — it is navigation, and its title is its heading. Only this root file may declare `okf_version`.
