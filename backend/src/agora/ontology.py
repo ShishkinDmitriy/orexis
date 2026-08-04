@@ -1,7 +1,7 @@
 """The kernel vocabulary — prefixes and graph names, and deliberately nothing else.
 
 Everything here is true of *every* capability: how a term is spelled, and which graph a fact
-lives in. A term that belongs to one capability — `ag:Polling`, `ag:Bidding` — is named by
+lives in. A term that belongs to one capability — `ag:Subscribing`, `ag:Bidding` — is named by
 that capability's own package, so this file never grows when one is added. That is the whole
 reason it is this short.
 

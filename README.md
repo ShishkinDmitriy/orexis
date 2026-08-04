@@ -22,7 +22,7 @@ Nothing above is a name in the code. Every channel, every device, every limit is
 the graph; the one instance identifier a process gets is its own agent id.
 
 Agents are configured by **belief, not by file**. `:world` holds the public wiring — and from
-that wiring genesis *derives* what each agent can do, so a pull-mode sensor gives its agent a
+that wiring genesis *derives* what each agent can do, so a scheduled sensor gives its agent a
 cadence to own and a push-mode one does not. `:beliefs/<agent>` holds what each privately
 wants. See [`capability-modules`](knowledge/decisions/capability-modules.md) and
 [`world-graph`](knowledge/decisions/world-graph.md).
@@ -30,7 +30,7 @@ wants. See [`capability-modules`](knowledge/decisions/capability-modules.md) and
 Trusted-agent mode (v1): there is no gateway — each plant asserts its own reading. See
 [`knowledge/decisions/trusted-agent-mode.md`](knowledge/decisions/trusted-agent-mode.md).
 
-Sensing is **pull-based**: the board only senses and sleeps; the *agent* decides how often to
+Sensing is **agent-timed**: the board only senses and sleeps; the *agent* decides how often to
 look, and bids only on a fresh reading. See
 [`knowledge/domain/sensing.md`](knowledge/domain/sensing.md).
 
@@ -42,7 +42,7 @@ capabilities/  what an agent can DO — perception, market, actuation. The exten
 transports/    how a device is REACHED — mqtt. Deliberately not a capability
 domain/        what the society is ABOUT — water. Vocabulary; the domain is a plug-in
 backend/       the runtime that loads all of the above, plus the pure market mechanism
-genesis/       the ratified world, hand-authored in Turtle: wiring + each agent's beliefs
+genesis/       ratified worlds — one directory each, complete and seedable on its own
 firmware/      ESP32 edge — moisture sensors and pump/valve
 infra/         compose service configs — grafana, mosquitto
 knowledge/     OKF knowledge bundle (architecture decisions + domain model)
@@ -122,14 +122,20 @@ pip install -e ./backend
 One-time setup, in order:
 
 ```bash
-agora-acl      # per-agent store credentials + the access list, generated from the world
-                 #   (re-run after adding an agent; restart Fuseki to pick it up)
-agora-keygen   # the host + clearing signing keys the valves check
-agora-seed     # the belief base itself
+agora-acl society      # per-agent store credentials + access list, generated from the world
+                       #   (re-run after adding an agent; restart Fuseki to pick it up)
+agora-keygen           # the host + clearing signing keys the valves check
+agora-seed society     # the belief base itself
 ```
 
-`agora-acl` is what makes privacy real rather than polite: it reads who exists from
-`genesis/world.ttl` and writes a Fuseki access list granting each agent the shared graphs plus
+`agora-seed` takes **which world** to load. [`genesis/`](genesis/) holds one directory per
+ratified world, each complete on its own: `society` is the full example, `sensing` is the
+smallest one that produces a working agent. [`domain/world`](knowledge/domain/world.md) is the
+guide to authoring your own — what a world is made of, what you state versus what gets
+derived, and how to check it.
+
+`agora-acl` is what makes privacy real rather than polite: it reads who exists from that
+world and writes a Fuseki access list granting each agent the shared graphs plus
 its *own* beliefs — so `fern` querying `:beliefs/tomato` gets nothing back. Credentials land
 in `keys/fuseki/` (gitignored); each agent reads its own. See
 [`belief-base-isolation`](knowledge/decisions/belief-base-isolation.md).
@@ -139,19 +145,33 @@ capabilities** from that wiring, and loads each agent's **private beliefs** from
 [`genesis/`](genesis/). It prints what it derived:
 
 ```
-derived fern      -> Polling, Bidding
+derived fern      -> Bidding, Subscribing
 derived supplier  -> Hosting, Actuation
 ```
 
-Then one process per agent, plus the physical edge:
+Then bring the society up. **Agents are not launched from a list — they are born from the
+world**, one process each:
 
 ```bash
-AGORA_AGENT_ID=supplier  agora-agent    # hosts rounds, owns the valves
-AGORA_AGENT_ID=fern      agora-agent    # polls its sensor, bids for water
-AGORA_AGENT_ID=tomato    agora-agent
-AGORA_AGENT_ID=succulent agora-agent
-agora-sim                               # virtual plants: sense when asked, get watered
+agora-up        # asks the belief base who exists, starts one agora-agent per agent
+agora-sim       # virtual plants: sense when asked, get watered
 ```
+
+```
+born  fern       Bidding, Subscribing
+born  succulent  Bidding, Subscribing
+born  supplier   Hosting, Actuation
+born  tomato     Bidding, Subscribing
+```
+
+The roster is the ratified world, so seeding a different world brings up a different society
+with no edit anywhere — `agora-seed sensing && agora-up` starts exactly one agent that only
+watches. `agora-up fern` starts a single one; `AGORA_AGENT_ID=fern agora-agent` is still the
+primitive underneath, and is what a systemd unit runs.
+
+Note what is *not* born this way: firmware. A board is hardware and is flashed by hand. What
+the model decides is what an **agent** is — which is why the same flashed board is a watcher
+in one world and a bidder in another.
 
 Each agent boots from its id alone: it reads the world (*what am I wired to, and what does
 that let me do?*), then its own beliefs (*what do I want, how closely should I watch?*), and
@@ -180,8 +200,8 @@ agent set, and gains moisture when it wins water — a closed loop driven by the
 
 ```bash
 # set AGORA_ACTUATE=true in .env (the supplier must be allowed to open valves)
-agora-sim                              # virtual plants: dry, sense on cadence, get watered
-AGORA_AGENT_ID=supplier agora-agent    # + one agora-agent per plant
+agora-sim      # virtual plants: dry, sense on their agent's interval, get watered
+agora-up       # the whole society, one process per agent
 ```
 
 Watch the plants dry, hit their own LOW, win water, and recover — `journalctl`/logs show
@@ -211,6 +231,29 @@ plant ids in `AGORA_SIM_PLANTS` and give the real ones ESP32s on the same topics
     -H 'Accept: text/csv'
   ```
 
+## Bringing a real board up
+
+Seed the **smallest world** instead of the society. `genesis/sensing` has one subject, one
+board and one agent, plumbed into no market — so derivation gives that agent `ag:Subscribing`
+and nothing else. It reads, records, and stops. Nothing in that world declares it sensor-only;
+there is simply no market for a market capability to come from.
+
+```bash
+sudo cp infra/mosquitto/lan.conf /etc/mosquitto/conf.d/agora.conf   # mosquitto 2.x binds to
+sudo systemctl restart mosquitto                                    # loopback until told not to
+
+agora-seed sensing && agora-up       # one agent, perception only — the line appears in Grafana
+mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
+```
+
+The device ids and channels are identical in both worlds on purpose, so **the board needs no
+reflash**: seed `society` and the very same hardware joins a market. The model changed, not
+the firmware.
+
+A scheduled board is asleep almost all the time, so silence usually means it is working —
+wait one interval. The interval is retained and therefore reliable; `{"sense":true}` is
+best-effort and lands only if the board happens to be awake.
+
 ## Real hardware
 
 A real ESP32 speaks the same protocol as a virtual plant — an agent can't tell them apart, so
@@ -221,10 +264,22 @@ you can mix them freely:
 
 Both topics are whatever `genesis/world.ttl` says they are; nothing is derived from the id.
 
-Declare the board's nature with `ag:senseMode`. A `ag:Pull` board gives its agent `ag:Polling`
-(it owns the cadence); a `ag:Push` board — firmware that reports on its own clock and takes no
-commands — gives it `ag:Listening` instead, and the agent is then never asked for a cadence it
-could not apply. Change the firmware, re-run `agora-seed`, and the capability follows.
+Declare the board's nature with `ag:senseMode`, and the capability follows from it — the axis
+is **who holds the clock**:
+
+| `ag:senseMode` | capability | who runs the timer |
+|---|---|---|
+| `ag:Pull` | `ag:Polling` — *reserved, not built* | the agent asks for each reading |
+| `ag:Scheduled` | `ag:Subscribing` | the agent sets an interval, the board keeps it |
+| `ag:Push` | `ag:Listening` | the board, alone |
+
+`ag:Polling` is the simplest exchange and what the word ought to mean, but it needs a board
+reachable at any moment — one that deep-sleeps cannot hear the request. So it is declared in
+the vocabulary with no rule granting it and no module providing it. The room is kept on
+purpose; adding it is a class and one line of `PROVIDES`.
+
+The ESP32 firmware is `ag:Scheduled`. Change the firmware, re-run `agora-seed`, and the
+capability changes with it — the agent is never edited.
 
 The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
 ([`genesis/beliefs-<agent>.ttl`](genesis/)); the wiring and the valve calibration are the

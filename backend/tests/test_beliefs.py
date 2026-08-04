@@ -1,7 +1,7 @@
 """Beliefs are read per capability, from the agent's own graph, with no defaults.
 
 The reader is kernel; the blocks belong to the capability packages, so a test reaches for
-`POLLING_BLOCK` from `capabilities.perception` exactly as the module that runs does.
+`SUBSCRIBING_BLOCK` from `capabilities.perception` exactly as the module that runs does.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -11,7 +11,7 @@ import pytest
 from agora import loader  # noqa: F401  (puts the package trees on sys.path)
 from agora.beliefs import BeliefError, Beliefs, Reading
 from capabilities.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
-from capabilities.perception.beliefs import POLLING_BLOCK
+from capabilities.perception.beliefs import SUBSCRIBING_BLOCK
 
 FERN = "http://example.org/agora#fern_agent"
 SUCCULENT = "http://example.org/agora#succulent_agent"
@@ -25,8 +25,8 @@ def fern(query):
 
 # --- one block per capability ----------------------------------------------
 
-def test_polling_block(fern):
-    p = fern.read(POLLING_BLOCK)
+def test_subscribing_block(fern):
+    p = fern.read(SUBSCRIBING_BLOCK)
     assert (p.fast_sleep_s, p.slow_sleep_s, p.max_age_s) == (30, 600, 120)
 
 
@@ -52,8 +52,8 @@ def test_agents_hold_different_opinions(query):
 
 
 def test_slower_agent_tolerates_older_data(query):
-    fern = Beliefs(query, "fern", FERN).read(POLLING_BLOCK)
-    succ = Beliefs(query, "succulent", SUCCULENT).read(POLLING_BLOCK)
+    fern = Beliefs(query, "fern", FERN).read(SUBSCRIBING_BLOCK)
+    succ = Beliefs(query, "succulent", SUCCULENT).read(SUBSCRIBING_BLOCK)
     assert succ.slow_sleep_s > fern.slow_sleep_s
     assert succ.max_age_s > fern.max_age_s
 
@@ -102,7 +102,7 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
 
 def test_the_error_names_every_missing_term(query):
     with pytest.raises(BeliefError) as exc:
-        Beliefs(query, "supplier", SUPPLIER).read(POLLING_BLOCK)
+        Beliefs(query, "supplier", SUPPLIER).read(SUBSCRIBING_BLOCK)
     for term in ("ag:fastSleepS", "ag:slowSleepS", "ag:maxReadingAgeS"):
         assert term in str(exc.value)
 

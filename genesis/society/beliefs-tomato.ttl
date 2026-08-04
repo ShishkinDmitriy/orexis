@@ -2,7 +2,7 @@
 
 #  Tomato's agent's PRIVATE beliefs. See genesis/beliefs-fern.ttl for what each term means.
 
-##  ag:Polling
+##  ag:Subscribing
 ag:tomato_agent
     ag:fastSleepS 30 ;
     ag:slowSleepS 600 ;

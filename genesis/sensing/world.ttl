@@ -1,0 +1,68 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+
+#  A ratified world, v1 — the SMALLEST one that produces a working agent.
+#
+#  One bus, one subject, one board, one agent. No market, no supplier, no valves, and
+#  therefore no economy at all: this world has nothing to allocate, so nobody bids and nobody
+#  hosts. It is the whole of what is needed to perceive something.
+#
+#  What it is FOR: bringing a real board up, and integration tests that have no business
+#  starting a market. It is also the clearest demonstration of the central claim — nothing
+#  here says what the agent can DO. It is wired to a sensor and to nothing else, and
+#  derivation gives it ag:Subscribing and nothing else. Seed genesis/society instead, without
+#  touching the board or the agent, and the very same hardware joins a market.
+#
+#  The device ids and channels are deliberately IDENTICAL to genesis/society, so one flashed
+#  board works in either world. Which world is in the store decides what the agent becomes.
+#
+#  See knowledge/domain/world.md, knowledge/decisions/world-graph.md.
+
+##########  The bus everyone speaks over  ##########
+
+ag:local_bus a ag:MessageBus ;
+    ag:localId "local_bus" ;
+    ag:brokerHost "localhost" ;
+    ag:brokerPort 1883 .
+
+##########  World version  ##########
+
+ag:world a ag:World ; ag:currentVersion ag:version_1 .
+ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+
+##########  Typed graph catalog  ##########
+
+<http://example.org/agora/graph/ontology> a ag:OntologyGraph .
+<http://example.org/agora/graph/world>    a ag:WorldGraph .
+<http://example.org/agora/graph/sensed>   a ag:SensedGraph .
+
+<http://example.org/agora/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .
+
+##########  The subject — a thing that is watched, and nothing more  ##########
+#  NOT an ag:Plant here, and the difference is the point: a plant is a participant in a water
+#  economy (it is served by a source, it has a pot size), and this world has no economy for it
+#  to participate in. It is a feature of interest — something a sensor reads. The same IRI is
+#  an ag:Plant over in genesis/society, because there it is one.
+
+ag:fern a sosa:FeatureOfInterest ;
+    ag:localId "fern" .
+
+##########  The board  ##########
+
+ag:moisture_sensor_fern a ag:Sensor ;
+    ag:localId "moisture_sensor_fern" ;
+    ag:onBus ag:local_bus ;
+    ag:senseMode ag:Scheduled ;     # keeps a given interval -> its agent gains ag:Subscribing
+    ag:monitors ag:fern ;
+    sosa:observes ag:SoilMoisture ;
+    ag:readingTopic "sensors/fern/moisture" ;
+    ag:commandTopic "sensors/fern/cmd" .
+
+##########  The agent  ##########
+#  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
+#  No ag:bidsIn and no ag:hosts, so no market capability can be derived for it.
+
+ag:fern_agent a ag:Agent ;
+    ag:localId "fern" ;
+    ag:polls ag:moisture_sensor_fern ;
+    ag:eventTopic "readings/fern" .

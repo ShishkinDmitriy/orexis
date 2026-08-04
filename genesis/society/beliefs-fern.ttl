@@ -8,7 +8,7 @@
 #  Nothing here is repeated from the world: the wiring (which plant, which sensor, which
 #  market) is stated once, publicly, there. This file is only what fern *thinks*.
 
-##  ag:Polling — how closely it watches
+##  ag:Subscribing — the interval it asks its board to keep
 ag:fern_agent
     ag:fastSleepS 30 ;          # at/below its own low band: watch closely
     ag:slowSleepS 600 ;         # comfortable: let the board sleep, save energy

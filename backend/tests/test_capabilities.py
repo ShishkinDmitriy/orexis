@@ -13,7 +13,7 @@ from agora.ontology import WORLD_GRAPH
 from agora.world import WorldError, load_self, load_world
 from capabilities.actuation import ACTUATION
 from capabilities.market import BIDDING, HOSTING
-from capabilities.perception import LISTENING, POLLING
+from capabilities.perception import LISTENING, SUBSCRIBING
 
 from conftest import genesis_dataset, query_fn
 
@@ -25,9 +25,9 @@ def me(query):
 
 # --- what the shipped world derives ----------------------------------------
 
-def test_plant_agent_gets_polling_and_bidding(me):
-    """Wired to a pull sensor and into a market — so it perceives and it buys."""
-    assert me("fern").capabilities == {POLLING, BIDDING}
+def test_plant_agent_gets_subscribing_and_bidding(me):
+    """Wired to a scheduled sensor and into a market — so it perceives and it buys."""
+    assert me("fern").capabilities == {SUBSCRIBING, BIDDING}
 
 
 def test_supplier_gets_hosting_and_actuation(me):
@@ -37,7 +37,7 @@ def test_supplier_gets_hosting_and_actuation(me):
 
 def test_supplier_neither_perceives_nor_buys(me):
     supplier = me("supplier")
-    assert not supplier.can(POLLING)
+    assert not supplier.can(SUBSCRIBING)
     assert not supplier.can(BIDDING)
 
 
@@ -56,21 +56,21 @@ def _world_with_push_sensor() -> rdflib.Dataset:
     world = ds.graph(rdflib.URIRef(WORLD_GRAPH))
     world.update("""
         PREFIX ag: <http://example.org/agora#>
-        DELETE { ag:moisture_sensor_fern ag:senseMode ag:Pull .
-                 ag:fern_agent ag:hasCapability ag:Polling }
+        DELETE { ag:moisture_sensor_fern ag:senseMode ag:Scheduled .
+                 ag:fern_agent ag:hasCapability ag:Subscribing }
         INSERT { ag:moisture_sensor_fern ag:senseMode ag:Push }
-        WHERE  { ag:moisture_sensor_fern ag:senseMode ag:Pull }
+        WHERE  { ag:moisture_sensor_fern ag:senseMode ag:Scheduled }
     """)
     for rule in loader.rule_files():
         ds.update(rule.read_text())
     return ds
 
 
-def test_push_hardware_yields_listening_not_polling():
+def test_push_hardware_yields_listening_not_subscribing():
     """The same agent, the same wiring — a different board, a different capability."""
     me = load_self(query_fn(_world_with_push_sensor()), "fern")
     assert me.can(LISTENING)
-    assert not me.can(POLLING)
+    assert not me.can(SUBSCRIBING)
 
 
 def test_swapping_the_board_does_not_touch_the_agent():
@@ -78,6 +78,32 @@ def test_swapping_the_board_does_not_touch_the_agent():
     me = load_self(query_fn(_world_with_push_sensor()), "fern")
     assert me.can(BIDDING)  # its market wiring is untouched
     assert [s.local_id for s in me.sensors] == ["moisture_sensor_fern"]
+
+
+# --- the same hardware, a different world ----------------------------------
+
+def test_the_smallest_world_yields_perception_and_nothing_else():
+    """genesis/sensing: the same agent id, the same board, plumbed into no market.
+
+    Nothing in that world declares the agent sensor-only — it is the same derivation the
+    society runs, over thinner wiring. This is the check that a capability can genuinely
+    stand alone, which is the whole claim of deriving them.
+    """
+    me = load_self(query_fn(genesis_dataset(world="sensing")), "fern")
+    assert me.capabilities == {SUBSCRIBING}
+    assert not me.can(BIDDING) and not me.can(ACTUATION)
+    assert me.markets == () and me.actuators == ()
+    assert me.acts_for is None  # it advances nobody's interest; it only records
+
+
+def test_the_board_did_not_change_only_the_model_did():
+    """The point of the two worlds sharing device ids: one flashed board, either society."""
+    watching = load_self(query_fn(genesis_dataset(world="sensing")), "fern")
+    buying = load_self(query_fn(genesis_dataset(world="society")), "fern")
+    assert [s.local_id for s in watching.sensors] == [s.local_id for s in buying.sensors]
+    assert [s.reading_topic for s in watching.sensors] == \
+           [s.reading_topic for s in buying.sensors]
+    assert watching.capabilities < buying.capabilities  # strictly fewer, same hardware
 
 
 # --- an agent knows only itself --------------------------------------------

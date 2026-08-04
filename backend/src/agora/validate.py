@@ -4,7 +4,7 @@ Pulls the world, each agent's beliefs, and the sensed graph from Fuseki and vali
 against every package's shapes (with the T-Box for type resolution). This is the
 constitution's "checked by code, not persuasion", and because capabilities are declared, the
 checks are capability-aware: a shape applies to an agent only if that agent composed the
-capability it belongs to. An agent that claims ag:Polling with no sensor or no cadence fails
+capability it belongs to. An agent that claims ag:Subscribing with no sensor or no interval fails
 here — before it fails at 3am. Exits non-zero on any violation.
 
   agora-validate

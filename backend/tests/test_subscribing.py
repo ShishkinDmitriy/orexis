@@ -1,8 +1,9 @@
-"""ag:Polling — attention as the agent's own decision, bounded by the constitution.
+"""ag:Subscribing — attention as the agent's own decision, bounded by the constitution.
 
-The cadence policy, the two levers (retained cadence vs best-effort nudge), and the verdict
-an agent reaches about itself. Driven through a real agent, so the numbers come from the
-agent's own beliefs and the bounds from the ontology — neither is written down here.
+The agent states an interval and the device keeps to it. What is the agent's here is the
+*policy* — how often to look, and how that moves with trouble; what it delegates is only the
+timekeeping. Driven through a real agent, so the numbers come from the agent's own beliefs and
+the bounds from the ontology — neither is written down here.
 """
 
 from dataclasses import replace
@@ -27,7 +28,7 @@ def cadence_for(agent, value):
     Two arguments now, and deliberately: perception asks *about a subject*, because whether a
     number is trouble is the stakeholder's answer, not perception's.
     """
-    return agent.polling().cadence_for(agent.me.acts_for, value)
+    return agent.subscribing().cadence_for(agent.me.acts_for, value)
 
 
 def cadences(agent):
@@ -50,27 +51,27 @@ def test_attention_scales_with_trouble(fern):
 def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
     """Urgency is supplied by whoever holds a band. Asked about a subject it has no stake in,
     the agent has no opinion — and an agent with no opinion does not watch closely."""
-    p = fern.polling()
+    p = fern.subscribing()
     assert p.cadence_for("http://example.org/agora#someone_elses_plant", 0.0) == \
         p.beliefs.slow_sleep_s
 
 
 def test_the_bounds_come_from_the_ontology_not_the_code(fern):
     """MIN/MAX are stated in capabilities/perception/ontology.ttl and read at startup."""
-    p = fern.polling()
+    p = fern.subscribing()
     assert (p.min_sleep_s, p.max_sleep_s) == (10, 900)
 
 
 def test_no_agent_can_exceed_the_constitutional_ceiling(fern):
     """Even an agent that wants to nap forever is clamped — the shapes reject such beliefs
     too, so this is the second of three independent guards (the third is the firmware)."""
-    p = fern.polling()
+    p = fern.subscribing()
     p.beliefs = replace(p.beliefs, slow_sleep_s=99_999)
     assert cadence_for(fern, 0.99) == p.max_sleep_s
 
 
 def test_no_agent_can_hammer_its_sensor_flat(fern):
-    p = fern.polling()
+    p = fern.subscribing()
     p.beliefs = replace(p.beliefs, fast_sleep_s=1)
     assert cadence_for(fern, 0.0) == p.min_sleep_s
 
@@ -99,7 +100,7 @@ def test_a_changed_cadence_is_republished(fern):
 
 def test_a_sense_request_is_never_retained(fern):
     """A retained 'sense' would re-fire on every wake, forever."""
-    fern.polling().sense_now()
+    fern.subscribing().sense_now()
     assert all(not retain for t, p, retain in fern.sent if p.get("sense"))
 
 

@@ -4,7 +4,10 @@ Who exists, and therefore who needs a credential and which graphs they may read,
 `genesis/world.ttl`. Hand-maintaining a second list in a Fuseki config would be exactly the
 drift this architecture removes, so the config is generated:
 
-  agora-acl        writes infra/fuseki/config.ttl and keys/fuseki/*
+  agora-acl [world]   writes infra/fuseki/config.ttl and keys/fuseki/*
+
+The ACL follows whichever world you seeded — a credential per agent that world declares — so
+re-run it after `agora-seed <name>` with the same name.
 
 Two doors over one store, because Jena's data access control is **read-only**:
 
@@ -33,11 +36,11 @@ import rdflib
 
 from .config import PROJECT_ROOT
 from .ontology import AG, ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
+from .seed import DEFAULT_WORLD, world_dir, worlds
 
 log = logging.getLogger("acl")
 
 REPO_ROOT = PROJECT_ROOT.parent
-WORLD_TTL = REPO_ROOT / "genesis" / "world.ttl"
 CONFIG_OUT = REPO_ROOT / "infra" / "fuseki" / "config.ttl"
 SECRETS_DIR = REPO_ROOT / "keys" / "fuseki"  # gitignored, like the signing keys
 
@@ -45,9 +48,9 @@ SECRETS_DIR = REPO_ROOT / "keys" / "fuseki"  # gitignored, like the signing keys
 SHARED_GRAPHS = (ONTOLOGY_GRAPH, WORLD_GRAPH, SENSED_GRAPH)
 
 
-def agent_ids(world_ttl: Path = WORLD_TTL) -> list[str]:
+def agent_ids(world: str = DEFAULT_WORLD) -> list[str]:
     """Who exists, according to the world itself."""
-    g = rdflib.Graph().parse(world_ttl, format="turtle")
+    g = rdflib.Graph().parse(world_dir(world) / "world.ttl", format="turtle")
     q = f"SELECT ?id WHERE {{ ?a a <{AG}Agent> ; <{AG}localId> ?id }}"
     return sorted({str(row.id) for row in g.query(q)})
 
@@ -127,10 +130,10 @@ def build_config(ids: list[str], passwd_path: str, tdb_location: str) -> str:
 """
 
 
-def generate(admin_password: str = "admin") -> None:
-    ids = agent_ids()
+def generate(admin_password: str = "admin", world: str = DEFAULT_WORLD) -> None:
+    ids = agent_ids(world)
     if not ids:
-        raise SystemExit(f"no agents found in {WORLD_TTL} — nothing to authorise")
+        raise SystemExit(f"no agents in world {world!r} — nothing to authorise")
 
     lines = [f"admin={admin_password}"]
     for agent_id in ids:
@@ -142,16 +145,24 @@ def generate(admin_password: str = "admin") -> None:
     CONFIG_OUT.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_OUT.write_text(build_config(ids, "/fuseki-secrets/passwd", "/fuseki-data/tdb2"))
 
-    log.info("authorised %d agent(s): %s", len(ids), ", ".join(ids))
+    log.info("authorised %d agent(s) of world %r: %s", len(ids), world, ", ".join(ids))
     log.info("  config      -> %s", CONFIG_OUT)
     log.info("  credentials -> %s/  (gitignored; each agent reads its own)", SECRETS_DIR)
 
 
 def main() -> None:
+    import argparse
     import os
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    generate(os.environ.get("FUSEKI_PASSWORD", "admin"))
+    p = argparse.ArgumentParser(
+        prog="agora-acl",
+        description="Generate the store's access control from a ratified world.",
+    )
+    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
+                   help=f"which world (default: {DEFAULT_WORLD}). Available: "
+                        + ", ".join(worlds()))
+    generate(os.environ.get("FUSEKI_PASSWORD", "admin"), p.parse_args().world)
 
 
 if __name__ == "__main__":

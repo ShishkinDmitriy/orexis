@@ -17,7 +17,7 @@ def agent(monkeypatch):
 # --- it loads the modules its hardware implies, and no others --------------
 
 def test_plant_agent_runs_perception_and_bidding(agent):
-    assert {m.name for m in agent("fern").modules} == {"polling", "bidding"}
+    assert {m.name for m in agent("fern").modules} == {"subscribing", "bidding"}
 
 
 def test_supplier_runs_hosting_and_actuation(agent):
@@ -27,7 +27,7 @@ def test_supplier_runs_hosting_and_actuation(agent):
 def test_the_supplier_has_no_perception(agent):
     """It is wired to no sensor, so it neither polls nor listens — and is never asked to."""
     supplier = agent("supplier")
-    assert not any(m.name in ("polling", "listening") for m in supplier.modules)
+    assert not any(m.name in ("subscribing", "listening") for m in supplier.modules)
     assert supplier.me.sensors == ()
 
 

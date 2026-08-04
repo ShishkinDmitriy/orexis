@@ -1,17 +1,24 @@
-"""Perception — two capabilities over one shared ingest path.
+"""Perception — capabilities over one shared ingest path, split by WHO HOLDS THE CLOCK.
 
 Which one an agent gets is decided by its **hardware**, and derived at genesis from the
 device's own nature:
 
-- **ag:Polling** (pull-mode device) — the agent drives it. It owns the cadence and may ask
-  for a reading now.
-- **ag:Listening** (push-mode device) — the device announces on its own clock and takes no
+- **ag:Polling** (`ag:Pull` device) — the agent's own timer; it asks for each reading and the
+  device replies. The simplest exchange and the most agent control, but it needs a device that
+  is reachable at any moment. **Not implemented**: no rule grants it and no class here
+  provides it, because a board that deep-sleeps cannot hear the request. The room is kept
+  deliberately — see ontology.ttl.
+- **ag:Subscribing** (`ag:Scheduled` device) — the agent states an interval and the device
+  keeps to it. The agent still decides how often to look; what it delegates is the
+  timekeeping, which is exactly what lets the device sleep in between.
+- **ag:Listening** (`ag:Push` device) — the device announces on its own clock and takes no
   orders. The agent records what arrives, and that is all it can do.
 
-What survives the difference is the **judgment**: either way the agent decides how stale a
-reading may be before it stops trusting it, because that is about belief rather than control.
-What does not survive is the cadence — a listening agent is never asked for one, since it
-could not apply it. That asymmetry is enforced by shapes.ttl, not by convention.
+What survives the whole range is the **freshness judgment**: however the reading arrived, the
+agent decides how stale it may be before it stops trusting it, because that is about belief
+rather than control. What does not survive is the interval — a listening agent is never asked
+for one, since it could not apply it. That asymmetry is enforced by shapes.ttl, not by
+convention.
 
 Two things deliberately do NOT appear here:
 
@@ -40,8 +47,8 @@ from agora.module import Module
 from agora.sensed_writer import SensedWriter
 from agora.store import bindings
 
-from .beliefs import LISTENING_BLOCK, POLLING_BLOCK
-from .terms import LISTENING, POLLING
+from .beliefs import LISTENING_BLOCK, SUBSCRIBING_BLOCK
+from .terms import LISTENING, SUBSCRIBING
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future perception inherits them.
@@ -130,10 +137,16 @@ class PerceptionModule(Module):
         self.agent.reading_recorded(sensor.subject, value)
 
     def on_reading(self, sensor, value: float) -> None:
-        """What this capability does after recording. Polling re-aims; listening does not."""
+        """What this capability does after recording. Subscribing re-aims; listening does not."""
 
     def sense_now(self) -> None:
-        """Ask for a reading now, if my hardware allows it. Listening cannot."""
+        """Ask for a reading now, if my hardware allows it. Listening cannot.
+
+        Best-effort even where it is allowed: a device that sleeps between readings only hears
+        this if the nudge happens to land inside its waking window. It is the seed of
+        ag:Polling, not a substitute for it — a real polling module would need a device that
+        is always listening, and would then drive every reading this way.
+        """
 
     def fresh_reading(self, subject_uri: str):
         """The latest reading, or None if it is older than I am willing to trust."""
@@ -141,14 +154,19 @@ class PerceptionModule(Module):
         return reading if reading and reading.is_fresh(self.max_age_s) else None
 
 
-class PollingModule(PerceptionModule):
-    """ag:Polling — derived from being wired to a pull-mode sensor."""
+class SubscribingModule(PerceptionModule):
+    """ag:Subscribing — derived from being wired to a device that keeps to a given interval.
 
-    CAPABILITY = POLLING
-    name = "polling"
+    The standing request is the whole mechanism: the interval is published *retained*, so a
+    device that is asleep now receives it the instant it wakes and subscribes. That is why
+    this works against hardware the agent cannot otherwise reach.
+    """
+
+    CAPABILITY = SUBSCRIBING
+    name = "subscribing"
 
     def __init__(self, agent):
-        self.beliefs = agent.beliefs.read(POLLING_BLOCK)
+        self.beliefs = agent.beliefs.read(SUBSCRIBING_BLOCK)
         super().__init__(agent)
         self.min_sleep_s, self.max_sleep_s = self._bounds()
         self.sent_cadence: dict[str, int] = {}
@@ -203,7 +221,7 @@ class PollingModule(PerceptionModule):
 class ListeningModule(PerceptionModule):
     """ag:Listening — derived from being wired to a push-mode sensor.
 
-    No cadence, because there is nothing to send it to. The agent keeps its freshness rule,
+    No interval, because the device would not take one. The agent keeps its freshness rule,
     which now works as a *detector* rather than a control: if the board goes quiet, readings
     go stale and the agent stops acting on them instead of quietly using old numbers.
     """

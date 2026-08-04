@@ -45,28 +45,28 @@ ag:ObservationShape a sh:NodeShape ;
                   sh:message "every reading carries an author" ] .
 
 
-ag:PollingAgentShape a sh:NodeShape ;
-    rdfs:comment "Driving a device is what makes a cadence meaningful, so only this capability demands one. It must watch more closely when in trouble than when comfortable, and neither figure may leave the constitutional bounds — which are stated in this package's ontology.ttl, clamped again by the agent, and clamped a third time by the firmware." ;
+ag:SubscribingAgentShape a sh:NodeShape ;
+    rdfs:comment "Stating an interval is what makes these figures meaningful, so only this capability demands them. It must watch more closely when in trouble than when comfortable, and neither figure may leave the constitutional bounds — which are stated in this package's ontology.ttl, clamped again by the agent, and clamped a third time by the firmware. A polling agent would need the same two, since they are its own timer rather than the device's; a listening one can hold neither." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
-                                       <http://example.org/agora#Polling> }
+                                       <http://example.org/agora#Subscribing> }
         """ ] ;
     sh:property [ sh:path ag:fastSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
                   sh:lessThanOrEquals ag:slowSleepS ;
-                  sh:message "the fast cadence must be within the constitutional bounds and no slower than the slow one" ] ;
+                  sh:message "the fast interval must be within the constitutional bounds and no slower than the slow one" ] ;
     sh:property [ sh:path ag:slowSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
                   sh:message "no agent may sleep past the constitutional ceiling — autonomy over attention, never the freedom to sleep through a drought" ] .
 
 ag:ListeningAgentShape a sh:NodeShape ;
-    rdfs:comment "A listening agent must NOT hold a cadence: requiring a policy it cannot enforce would be theatre, and stating one would misdescribe the hardware." ;
+    rdfs:comment "A listening agent must NOT hold an interval: requiring a policy it cannot enforce would be theatre, and stating one would misdescribe the hardware." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
                                        <http://example.org/agora#Listening> }
         """ ] ;
     sh:property [ sh:path ag:fastSleepS ; sh:maxCount 0 ;
-                  sh:message "a listening agent cannot set a cadence — its device does not take one" ] ;
+                  sh:message "a listening agent states no interval — its device does not take one" ] ;
     sh:property [ sh:path ag:slowSleepS ; sh:maxCount 0 ] .

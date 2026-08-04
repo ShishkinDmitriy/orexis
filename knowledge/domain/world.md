@@ -1,0 +1,157 @@
+---
+type: Domain Concept
+title: World (a ratified genesis output)
+description: What a world is made of — public topology plus one private beliefs file per agent — the three rules for authoring one, and what genesis derives rather than accepts. Several worlds coexist; which one is seeded decides what each agent becomes.
+tags: [genesis, world, topology, derivation, authoring, capabilities]
+timestamp: 2026-08-04T00:00:00Z
+---
+
+# What it is
+
+A **world** is the complete model of one society: what exists, what is wired to what, and what
+each agent privately wants. It is the ratified output of
+[genesis](/decisions/genesis.md) — the sovereign narrates, an LLM drafts, the sovereign
+ratifies — and it is what `agora-seed` loads into the belief base.
+
+Worlds are whole, not layered. `genesis/` holds one directory per world, each seedable on its
+own; there is no base that variants extend.
+
+```bash
+agora-seed society      # plants, a market, a supplier, valves
+agora-seed sensing      # one subject, one board, one agent
+```
+
+| | holds | derivation produces |
+|---|---|---|
+| `society/` | 3 plants + agents, a supplier, a barrel market, 3 valves | `Subscribing` + `Bidding` per plant agent; `Hosting` + `Actuation` for the supplier |
+| `sensing/` | one subject, one board, one agent | `Subscribing`, and nothing else |
+
+# Anatomy
+
+```
+genesis/<name>/
+  world.ttl              public topology: what exists, and what is wired to what
+  beliefs-<agent>.ttl    one per agent — its private parameters, its opinions
+```
+
+That is all of it. There is no config file in this project; anything that looks like
+configuration is either a fact about the world or somebody's belief, and lives in one of these
+two files. See [world-graph](/decisions/world-graph.md) and [belief-base](/domain/belief-base.md).
+
+# The three rules
+
+## 1. State connections, never abilities
+
+**`world.ttl` must not contain `ag:hasCapability`.** State what exists and what is plugged into
+what; seeding runs each capability's `rules.ru` and derives what that wiring implies. This is
+load-bearing: a declaration can drift from reality, a derivation cannot.
+
+| you state | genesis derives |
+|---|---|
+| `ag:polls` a sensor whose `ag:senseMode` is `ag:Scheduled` | `ag:Subscribing` |
+| `ag:polls` a sensor whose `ag:senseMode` is `ag:Push` | `ag:Listening` |
+| `ag:bidsIn` a market | `ag:Bidding` |
+| `ag:hosts` a market | `ag:Hosting` |
+| `ag:hasActuator` anything that is a kind of `ag:Actuator` | `ag:Actuation` |
+
+Reflash a board from `Push` to `Scheduled`, re-seed, and its agent gains an interval to state —
+with no edit to the agent, because there is nothing about the agent to edit. See
+[who-holds-the-clock](/decisions/who-holds-the-clock.md) for what those three sense modes mean.
+
+The market rows are the **weakest** of these, and worth naming as such: `ag:bidsIn` says "is a
+bidder" in other words, where `ag:senseMode` states a physical fact about hardware. Deriving
+market roles from declared *goals* instead is an open seam — see below.
+
+## 2. Every wire name is stated
+
+No process builds a topic from a naming convention. A sensor states its own `ag:readingTopic`
+and `ag:commandTopic`; a market states its three channels; the bus states its host and port. A
+process is handed exactly one instance identifier — its own agent id — and discovers everything
+else from it.
+
+So renaming a channel is a genesis edit, and a board whose `PLANT_ID` disagrees with the world
+simply never gets read. Nothing detects that for you.
+
+## 3. Fact and opinion live in different files
+
+`world.ttl` holds what everyone must agree on. `beliefs-<agent>.ttl` holds what that agent alone
+thinks, and no other agent can read it — enforced, not polite
+([belief-base-isolation](/decisions/belief-base-isolation.md)).
+
+| | where | why |
+|---|---|---|
+| wiring, calibration, capacity | `world.ttl` | physical, public, stated once |
+| target, band, endowment, price ceiling | `beliefs-<agent>.ttl` | desire — a fern and a succulent may disagree and neither is wrong |
+| sleep intervals, freshness limit | `beliefs-<agent>.ttl` | how closely *this* agent chooses to watch |
+
+If two agents could reasonably disagree about it, it is a belief.
+
+# Authoring a world
+
+Say you want `orchard/` — two trees on a shared tank, no market yet.
+
+1. **Sketch it in English first.** The narrate step is not ceremony: the questions it forces
+   (*what is this sensor attached to? who owns the valve?*) are exactly the ones `world.ttl`
+   has to answer.
+2. **Write `genesis/orchard/world.ttl`.** Copy `sensing/world.ttl` as the skeleton — it is the
+   minimum: a bus, a world version, the graph catalog, a subject, a device, an agent. Every
+   agent needs an `ag:localId`; every device needs its channels.
+3. **Write one `beliefs-<agent>.ttl` per agent**, with only the blocks for the capabilities the
+   wiring will give it. Unsure which? Seed and read what derivation decided.
+4. **Register each beliefs graph** in the catalog inside `world.ttl`:
+   `<.../graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .`
+5. **Seed, and read what came out.** `agora-seed orchard` prints `derived tree_north ->
+   Subscribing`. An agent that derived nothing has wiring implying no ability — usually a
+   missing `ag:senseMode`, or a device that is not a kind of anything the rules recognise.
+6. **Validate.** `agora-validate` is capability-aware: a shape applies to an agent only if that
+   agent derived the capability it belongs to. It catches a subscribing agent with no interval,
+   an interval outside the constitutional bounds, a listening agent that stated one anyway, a
+   band whose floor is above its ceiling, a device on a bus with no channel, and an agent with
+   no capability at all.
+7. **Bring it to life.** `agora-up` asks the belief base who exists and starts one process each
+   — nothing lists them. `agora-acl orchard` first if you want read isolation enforced.
+
+A new world is covered by the test suite automatically: the shape tests glob `genesis/*/` and
+hold every world they find to the same constitution, with no test edit.
+
+# Why more than one world
+
+`sensing/` exists because "capabilities are derived, not declared" is worth nothing unless a
+capability can actually run alone. It has no market, so nothing can derive `ag:Bidding`, so no
+agent has it — and perception has to stand up by itself or the claim is false.
+
+The two ship with **the same device ids and channels on purpose**. One flashed board runs in
+either; which world is in the store decides whether its agent merely watches or also buys. That
+is the model-driven claim reduced to something checkable by re-seeding: the hardware did not
+change, the model did.
+
+# Amending
+
+Edit and re-run `agora-seed <name>`. Bump `ag:versionNumber` on a structural change — every
+recorded observation cites the world version it was made under, so the version is how you tell
+which world a fact was true in.
+
+Seeding replaces `:ontology`, `:world` and every `:beliefs/*` graph. It does **not** touch
+`:sensed`, so readings survive a re-seed. Switching worlds does not clear the other world's
+beliefs graphs; re-run `agora-acl <name>` after a switch if you use per-agent credentials.
+
+# Two things that bite
+
+- **Readings are not stored on the wire.** A board publishes QoS 0 and unretained, so a reading
+  published while no agent is running goes to nobody. Start the agents *before* the hardware,
+  or the first readings are lost.
+- **`agora-sim` simulates every subject in the world when `AGORA_SIM_PLANTS` is empty** —
+  including ones a real board is already publishing for, on the same topic, silently
+  overwriting real readings. With any hardware connected, list only the virtual subjects.
+
+# Seams left open
+
+- **Market roles are declared, not derived.** `ag:bidsIn` and `ag:hosts` are the two weakest
+  rows in the derivation table. Stating an agent's *goal* — keep this plant alive, steward this
+  source — and deriving both market capabilities from that would make them as honest as
+  perception and actuation already are, and would also yield who the counterparties are without
+  anyone listing them.
+- **Derivation is materialised, not maintained.** Rules run at seed time and write triples into
+  `:world`; removing a wire does not retract the capability until the world is re-seeded.
+- **No cross-world check.** Nothing verifies that two worlds sharing device ids agree about
+  those devices' channels, which is exactly the property `society` and `sensing` rely on.

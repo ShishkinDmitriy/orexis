@@ -61,7 +61,7 @@ must decide, a binding distinguishes how a device is spoken to.
 The sovereign never writes down what an agent can do — only what exists and what is wired to
 what. Each capability's `rules.ru` then computes ability from connection:
 
-- wired to a **pull-mode** sensor → `ag:Polling`: the agent owns a cadence;
+- wired to a **scheduled** sensor → `ag:Subscribing`: the agent states the interval;
 - wired to a **push-mode** sensor → `ag:Listening`: it records what arrives, and is never
   asked for a cadence, because it has no way to apply one;
 - plumbed into a market → `ag:Bidding`; owning the venue → `ag:Hosting`;

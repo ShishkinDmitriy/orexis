@@ -1,0 +1,20 @@
+@prefix ag: <http://example.org/agora#> .
+
+#  This agent's PRIVATE beliefs — and there is only one block, because it composed only one
+#  capability.
+#
+#  What is absent is the point. No ag:Bidding block: no endowment, no target, no band, no
+#  price. This agent holds no stake, so it has no opinion about what a reading MEANS — it
+#  records the number and announces it. Compare genesis/society/beliefs-fern.ttl, which is the
+#  same agent in a world that gives it something to want.
+
+##  ag:Subscribing — the interval it asks its board to keep
+#
+#  Both figures sit on the constitutional floor (ag:minSleepS 10, in
+#  capabilities/perception/ontology.ttl), because a board being brought up should be seen
+#  often. They are EQUAL, and honestly so: with no stake there is no trouble to watch harder
+#  for, so there is one rate. A plant agent's two differ because it has a band to be near.
+ag:fern_agent
+    ag:fastSleepS 10 ;
+    ag:slowSleepS 10 ;
+    ag:maxReadingAgeS 300 .     # it still decides what is too old to be current
