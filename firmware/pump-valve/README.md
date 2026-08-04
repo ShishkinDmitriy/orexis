@@ -16,6 +16,12 @@ Because actuation is physically irreversible, this board is dumb but *guarded*
   verifies this (`agora.executor.verify_command`); **this firmware does not yet** — it's the
   one guard still on the trusted-LAN assumption. Port: verify two Ed25519 signatures over the
   canonical command (mbedTLS has Ed25519), with the host + clearing public keys flashed in.
+
+  **Those keys are per world** (`world/<name>/secrets/`), because two worlds are two societies
+  and must not be able to sign for each other. So a valve is flashed for one world: move the
+  board to another and it will correctly refuse every command, because the signatures are from
+  an authority it does not recognise. Flash the public keys from the world the valve belongs
+  to.
   Until then, keep this board on a trusted LAN.
 - **jti dedup** — a redelivered command (MQTT QoS 1) never double-waters.
 - **Fail-safe watchdog** — the valve never stays open past `MAX_OPEN_SECONDS`, and closes on
