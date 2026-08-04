@@ -1,25 +1,38 @@
 ---
 type: Component
 title: Belief base
-description: Named-graph layout, SOSA observations, provenance, the two-store split.
-tags: [rdf, fuseki, influxdb, sosa, provenance]
+description: One belief base per agent, not one shared store — named-graph layout, SOSA observations, provenance, and the split between the series and the graph.
+tags: [rdf, influxdb, sosa, provenance, isolation]
 timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is
 
-The knowledge substrate. Two stores by role, joined by plant URI. See
+The knowledge substrate. Two stores by role, joined by subject URI. See
 [two-store-beliefs](/decisions/two-store-beliefs.md).
 
-- **InfluxDB** — the series (record): every reading, history, trends.
-- **Fuseki (RDF/TDB2)** — the world (topology), each agent's beliefs, and current sensed state.
+- **InfluxDB** — the series (record): every reading, history, trends. Shared.
+- **An embedded quad store, one per agent** — the world (topology) as of the version that agent
+  booted with, the vocabulary, its own beliefs, and its own sensed state.
+
+**There is no shared triplestore.** Each agent holds its own belief base as a file inside its
+own container, built at boot from the ratified Turtle in `genesis/<world>/`. Nothing else can
+open it — not another agent, not an operator. Isolation is therefore *structural*: an agent's
+store contains only what it may see, so there is nothing to enforce, no credential to issue and
+no access registry to keep in step. See
+[where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md); the mechanism it
+replaced is recorded in [belief-base-isolation](/decisions/belief-base-isolation.md).
+
+The consequence worth stating plainly: **you cannot query "the belief base"**, because there
+isn't one. There are N, and each is private to its holder — which is what the design always
+claimed epistemically, now made true mechanically rather than by convention.
 
 # There is no shared knowledge — only testimony + private belief
 
-The one triplestore is *storage*, not a shared mind. Epistemically there is no "shared
-belief base": there is the **public record** — the world's wiring and the sensed measurements,
-like a village land registry or the court's admissible evidence — plus **each agent's private
-beliefs**. The record is authoritative by **institutional convention** (the leash: a
+There is no shared mind, and now no shared store either. Epistemically there is the **public
+record** — the world's wiring, ratified as files and copied into every agent, like a village
+land registry or the court's admissible evidence — plus **each agent's private beliefs**, which
+never leave it. The record is authoritative by **institutional convention** (the leash: a
 justification may cite only what is on the record), not because it is metaphysical truth; the
 sensor could be wrong. What agents share is a *reference to the same measurement*, so they never
 argue about whether the sensor read 0.18 — but what it *means* and what to *do* is private
@@ -104,7 +117,7 @@ Everything meaningful is a **named** graph so it can carry provenance. The defau
 graph carries no provenance, so nothing load-bearing goes there. See
 [trust-boundary](/decisions/trust-boundary.md).
 
-# Why a named graph — and why (for now) one
+# Why a named graph
 
 The graph is a **write-authorization boundary, not a label.** Citability can't rest on a
 `prov:wasGeneratedBy :gateway` *triple* — a triple is forgeable by anyone who can write, so
@@ -117,13 +130,19 @@ write the book — not because each entry says "signed, the registrar.") The two
 distinct and both wanted: the **graph** = the lock (who may write); the
 `prov:wasGeneratedBy` **triple** = the logbook entry (which sensor produced it).
 
-The **`:sensed` singleton is a v1 artifact of having one sensor per plant**. The natural
-unit is **one graph per witness**: add independent sensors or oracles and you get
-`:sensed/<witness>` graphs that may disagree, with agents forming beliefs by *weighing
-witnesses* — "different assumptions about the same facts" pushed up to the record itself.
-Nothing is welded to there being exactly one. Private beliefs (`:beliefs/<agent>`) are
-already per-agent, and the world is deliberately singular — a shared world that agents
-disagreed about would defeat the point of stating the wiring once.
+The graph names survive the move to per-agent stores unchanged, and the reasoning above is why:
+they were never about *partitioning one server*, they were about who may write a container. In
+an agent's own store the boundary is doubly held — `:world` is replaced from the ratified files
+on every start and is not the agent's to author, while `:beliefs/<agent>` is written once at
+birth and is the agent's alone thereafter.
+
+The **`:sensed` singleton is a v1 artifact of having one sensor per subject**. The natural unit
+is **one graph per witness**: add independent sensors or oracles and you get `:sensed/<witness>`
+graphs that may disagree, with agents forming beliefs by *weighing witnesses* — "different
+assumptions about the same facts" pushed up to the record itself. Nothing is welded to there
+being exactly one. The world is deliberately singular *as a document* — every agent holds the
+same ratified copy — because a world agents disagreed about would defeat the point of stating
+the wiring once.
 
 # Access languages (deliberate asymmetry)
 

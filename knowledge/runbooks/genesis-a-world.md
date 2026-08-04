@@ -60,50 +60,42 @@ Register each in the catalog inside `world.ttl`:
 <http://example.org/agora/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .
 ```
 
-# 4. Seed, and read what it decided
+# 4. Validate, and read what it derived
+
+There is nothing to seed. `agora-validate` builds the world exactly as an agent would — from
+the files, in memory — and holds it to every package's shapes.
 
 ```bash
-agora-seed <name>
+agora-validate <name>   # exits non-zero on any violation
 ```
 
 ```
-seeded world 'sensing' (topology) -> .../graph/world
-derived fern      -> Subscribing
-seeded fern      private beliefs -> .../graph/beliefs/fern
+  fern       Subscribing, Bidding
+  supplier   Hosting, Actuation
+Conforms: True
 ```
 
-**Read the `derived` lines.** They are the cheapest place a misunderstanding surfaces. An agent
-that derived nothing has wiring implying no ability — almost always a missing `ag:senseMode`,
-or a device that is not a kind of anything the rules recognise.
-
-Seeding replaces `:ontology`, `:world` and every `:beliefs/*` graph **in this world's dataset**
-and touches no other world. It leaves `:sensed` alone, so readings survive. It is also, today,
-an unintended re-*birth*: it overwrites beliefs an agent may have revised. Harmless while
-nothing revises them — see [agent](/domain/agent.md) §Lifecycle.
-
-# 5. Validate
-
-```bash
-agora-validate <name>   # one world's belief base; exits non-zero on any violation
-```
+**Read the derived line for each agent.** It is the cheapest place a misunderstanding surfaces.
+An agent that derived nothing has wiring implying no ability — almost always a missing
+`ag:senseMode`, or a device that is not a kind of anything the rules recognise. An agent marked
+*(no opening beliefs authored)* is declared but has no `beliefs-<id>.ttl`, and will refuse to
+start.
 
 Capability-aware: a shape applies to an agent only if that agent derived the capability it
 belongs to. It catches a subscribing agent with no interval, an interval outside the
 constitutional bounds, a listening agent that stated one anyway, a band whose floor is above
 its ceiling, a device on a bus with no channel, and an agent with no capability at all.
 
-# 6. Credentials, then deploy
+# 5. Deploy
 
 ```bash
-agora-acl           # every world: a dataset each, and one credential per agent
-# then restart Fuseki so it loads the new dataset
+agora-compose <name>
+cd deploy && podman compose -f compose.<name>.yml up -d
 ```
 
-`agora-acl` takes no world — a new world needs a new Fuseki **dataset**, and the config
-defining them all is one file. Run it **before** generating the compose file: without it the
-per-agent `.pw` files do not exist, the bind mount becomes a directory, and every agent
-silently falls back to admin, undoing the isolation. `agora-compose` warns, but only if you
-read it.
+Nothing to provision first. Each agent builds its own belief base at boot from the world files
+mounted beside it, is born if it never has been, checks itself against the shapes for the
+capabilities it derived, and refuses to run if they do not hold.
 
 Then [run-a-world](/runbooks/run-a-world.md).
 
@@ -113,5 +105,6 @@ Then [run-a-world](/runbooks/run-a-world.md).
 |---|---|
 | `derived <agent> -> ` nothing | wiring implies no ability; check `ag:senseMode` and that devices are typed |
 | `agora-validate` fails on a missing belief | the wiring derived a capability whose block you did not write |
+| agent refuses to start, `BeliefsInvalid` | the same thing, caught at startup by the agent itself |
 | agent boots, no readings | the board's `PLANT_ID` and the world's `ag:readingTopic` disagree |
-| `no world called '<name>'` | the directory needs a `world.ttl`; `agora-seed` lists what it found |
+| `no world called '<name>'` | the directory needs a `world.ttl`; the error lists what it found |

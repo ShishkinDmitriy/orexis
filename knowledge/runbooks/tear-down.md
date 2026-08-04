@@ -17,8 +17,8 @@ Measured on a running system, immediately after `down` on a world:
 | | after `down` | why it survives |
 |---|---|---|
 | that world's agent containers | **gone** | what `down` is for |
-| infra (Fuseki, Influx, Grafana) | **still up** | a separate compose project, and shared across worlds |
-| that world's belief base | **intact** | in a volume, in that world's own dataset; the world and every reading outlive any process |
+| infra (Influx, Grafana) | **still up** | a separate compose project, shared across worlds |
+| each agent's belief base | **intact** | a named volume per agent; beliefs outlive any process, which is the point |
 | retained MQTT commands | **all four still standing** | they live in the broker, which is not in compose at all |
 | host processes (`agora-sim`, strays) | **still running** | compose never knew about them |
 
@@ -99,18 +99,22 @@ mosquitto_sub -h localhost -t 'sensors/+/cmd' -v -W 2 --retained-only 2>/dev/nul
 Do **not** do this while a world is running: you would delete the cadence its agents just set,
 and every board would fall back to its firmware default until the next reading round-trips.
 
-# Remove the belief base
+# Remove a belief base
 
-Rarely what you want — re-seeding replaces the world and beliefs anyway, and `:sensed` is the
-record of what was actually observed.
+Rarely what you want. Beliefs are the agent's, and discarding them is a re-birth: the agent
+comes back as whatever the sovereign last authored, having forgotten anything it revised.
 
 ```bash
-agora-seed <world>                    # replaces that world's :ontology, :world, :beliefs/*
-podman compose down -v                # repo root: destroys the Fuseki AND Influx volumes —
-                                      # EVERY world's dataset, not just one
+cd deploy
+podman compose -f compose.<world>.yml down -v   # destroys THAT world's agents' belief bases
+cd .. && podman compose down -v                 # repo root: destroys the Influx history
 ```
 
-`-v` is not reversible. It takes every reading and every graph with it.
+`-v` is not reversible. Per world it discards who those agents became — a re-birth by another
+name — and at the root it takes every reading with it.
+
+There is no shared graph store to remove: the world is files, and an agent's belief base is a
+volume belonging to that agent alone.
 
 # What to reach for
 

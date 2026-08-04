@@ -6,12 +6,12 @@
 #   podman compose -f compose.sensing.yml up -d
 #   podman compose -f compose.sensing.yml logs -f
 #
-# Infra (Fuseki, Influx, Grafana) lives in the repo-root docker-compose.yml and is not repeated
-# here — bring it up first. The MQTT broker runs on the host; see infra/mosquitto/lan.conf.
+# Infra (Influx, Grafana) lives in the repo-root docker-compose.yml — bring it up first. The
+# MQTT broker runs on the host; see infra/mosquitto/lan.conf. There is no triplestore.
 #
-# This world has its OWN Fuseki dataset (/ds-sensing), so bringing it up cannot disturb another
-# world's beliefs or readings. Two worlds may run at once as far as the belief base is
-# concerned — but only if their DEVICES differ, since two agents on one topic both ingest.
+# Every agent here holds its own belief base in its own volume, so bringing this world up
+# cannot disturb another world, and adding a world restarts nothing. Two worlds may run at once
+# — but only if their DEVICES differ, since two agents on one topic both ingest.
 
 name: agora-sensing
 
@@ -23,48 +23,35 @@ x-podman:
   in_pod: false
 
 services:
-  # Genesis. Runs to completion, then the agents start — an agent against an unseeded store
-  # fails on its first read, loudly and pointlessly.
-  seed:
-    image: agora:local
-    command: ["agora-seed", "sensing"]
-    env_file: [../.env]
-    network_mode: host
-    userns_mode: "keep-id:uid=10001,gid=10001"
-    restart: "no"
-    volumes:
-      - ../genesis:/app/genesis:ro
-      - ../capabilities:/app/capabilities:ro
-      - ../transports:/app/transports:ro
-      - ../domain:/app/domain:ro
-      - ../kernel:/app/kernel:ro
-      - ../backend/src/agora:/app/backend/src/agora:ro
 
   agent-fern:
     image: agora:local
     command: ["agora-agent"]
     environment:
       AGORA_AGENT_ID: "fern"
-      # An agent is told its own id and where the belief base is — nothing else. Each world
-      # has its own dataset, so this is how a container knows which society it is part of,
-      # without the agent ever learning the concept of a "world".
-      FUSEKI_URL: "${FUSEKI_BASE:-http://localhost:3030}/ds-sensing"
+      # Where to keep its belief base. A named volume, because beliefs must survive a
+      # restart — otherwise every start would be a partial re-birth.
+      AGORA_STORE: "/app/state"
+      # the ratified world, mounted below. The agent reads files, not a service.
+      AGORA_WORLD_DIR: "/app/world"
     env_file: [../.env]
     network_mode: host
-    # Rootless podman maps YOUR uid into the container. Without this it lands on a subuid that
-    # cannot read a 0600 credential owned by you, so the agent falls back to admin — silently
-    # undoing the isolation. Map it onto the image's unprivileged user instead.
+    # Rootless podman maps YOUR uid into the container; without this the agent lands on a
+    # subuid that cannot write its own belief-base volume. Map it onto the image's user.
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
-    depends_on:
-      seed:
-        condition: service_completed_successfully
     volumes:
-      # exactly one credential: its own. This is the isolation the ACL assumes.
-      - ../keys/fuseki/fern.pw:/app/keys/fuseki/fern.pw:ro
+      # its own belief base, and nobody else can name it
+      - agora-sensing-fern:/app/state
+      # the ratified world it belongs to. Mounted at a fixed path, so the agent is told only
+      # its own id and never learns that other worlds exist.
+      - ../genesis/sensing:/app/world:ro
       # the discovered trees, mounted so a code change needs a restart, not a rebuild
       - ../capabilities:/app/capabilities:ro
       - ../transports:/app/transports:ro
       - ../domain:/app/domain:ro
       - ../kernel:/app/kernel:ro
       - ../backend/src/agora:/app/backend/src/agora:ro
+
+volumes:
+  agora-sensing-fern:

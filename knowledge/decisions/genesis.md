@@ -29,16 +29,18 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
    agent** — no stake, proposes only.
 3. **Ratify** — the sovereign reviews, edits, accepts. Only the sovereign authors the world
    (see [constitution](/domain/constitution.md): only the sovereign amends).
-4. **Write** — the ratified draft is Turtle in `genesis/<world>/`, and `agora-seed <world>`
-   PUTs it: the wiring into `:world` (which agents read but never rewire), each agent's
-   opening beliefs into its own `:beliefs/<agent>` (which it alone may revise). The sovereign
-   authors the world in the same vocabulary the agents read — no config file, no translation
-   layer. See [world-graph](/decisions/world-graph.md).
+4. **Write** — the ratified draft is Turtle in `genesis/<world>/`, and that is the end of
+   genesis. There is nothing to load: each agent reads those files at boot, copies the wiring
+   into its own `:world` (which it never rewires) and writes its opening beliefs into its own
+   `:beliefs/<agent>` once, at birth. The sovereign authors the world in the same vocabulary
+   the agents read — no config file, no translation layer, and no store to provision. See
+   [world-graph](/decisions/world-graph.md),
+   [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md).
 
 # A genesis output is a whole world, and there may be several
 
 `genesis/` holds **one directory per ratified world**, each complete and seedable on its own —
-not a base with fragments layered on it. `agora-seed <name>` loads exactly one. What a world is
+not a base with fragments layered on it. An agent is given exactly one, mounted. What a world is
 made of, and how to author one, is [world](/domain/world.md).
 
 This matters more than convenience. A world is the *entire* model of a system, so a second one

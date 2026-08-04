@@ -16,7 +16,8 @@ There is no `agora-up`, no `agora-down`, no `agora-restart`. Running a society i
 that behaves the same here as everywhere else.
 
 The only agora-specific commands are the ones that **produce** something from the world:
-`agora-seed`, `agora-acl`, `agora-compose`, and `agora-validate` to check the result. Once
-they have run, you are holding an ordinary compose project. That line is deliberate: a wrapper
+`agora-compose`, and `agora-validate` to check the result. Once they have run, you are holding
+an ordinary compose project. There is nothing to seed and nothing to provision — an agent
+builds its own belief base at boot. That line is deliberate: a wrapper
 would be one more thing to learn, one more thing to document, and one more place for the truth
 about what is running to diverge from what compose thinks is running.

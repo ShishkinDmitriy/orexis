@@ -31,5 +31,5 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [constitution](/domain/constitution.md) - Hard, non-negotiable constraints enforced by code, not persuasion.
 * [wallet](/domain/wallet.md) - The single budget; how bids and metabolic cost are computed and debited.
-* [belief-base](/domain/belief-base.md) - Named-graph layout (`:sensed` / `:opinion` / structure), SOSA shape, provenance.
+* [belief-base](/domain/belief-base.md) - One belief base per agent, not one shared store: named-graph layout, SOSA shape, provenance, and why isolation is now structural rather than enforced.
 * [gateway](/domain/gateway.md) - Decommissioned in v1 (trusted-agent mode): the measurement-witness role, folded into the self-asserting plant edge; returns as a signing sensor only for an adversarial society.

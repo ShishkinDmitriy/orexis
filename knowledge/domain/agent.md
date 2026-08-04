@@ -74,12 +74,13 @@ is unmodelled; [genesis](/decisions/genesis.md) flags it as the hard case in a d
 migration, because a wallet and outstanding commitments have to go somewhere.
 
 In deployment the verbs line up: `podman compose up` is start, `down` is stop, and neither
-touches a belief. Birth is the `seed` service, which runs once before any agent does.
+touches a belief. **Birth is the agent's own first boot** — it writes its opening beliefs from
+the ratified files if, and only if, it has none, and logs `born`. Every start afterwards
+refreshes the public world and leaves beliefs alone.
 
-**But the three are still not properly separated.** `agora-seed` PUTs each beliefs graph,
-replacing it — so re-running the seed service is an unintended re-birth. Harmless only because
-nothing revises its own beliefs yet; the moment anything does, a re-seed silently resets it,
-which is the bug this distinction exists to prevent.
+The three are now separated in the code, not merely in this document. An agent's belief base is
+a persistent volume of its own, so a restart cannot reset who it became; discarding it takes an
+explicit `down -v`, which is a re-birth by another name and is meant to look like one.
 
 # What an agent may NOT do
 

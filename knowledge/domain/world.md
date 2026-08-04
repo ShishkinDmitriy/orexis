@@ -11,15 +11,15 @@ timestamp: 2026-08-04T00:00:00Z
 A **world** is the complete model of one society: what exists, what is wired to what, and what
 each agent privately wants. It is the ratified output of
 [genesis](/decisions/genesis.md) — the sovereign narrates, an LLM drafts, the sovereign
-ratifies — and it is what `agora-seed` loads into the belief base. The session that produces
+ratifies — and each agent loads it at boot. The session that produces
 one is [genesis-process](/domain/genesis-process.md).
 
 Worlds are whole, not layered. `genesis/` holds one directory per world, each seedable on its
 own; there is no base that variants extend.
 
 ```bash
-agora-seed society      # plants, a market, a supplier, valves
-agora-seed sensing      # one subject, one board, one agent
+agora-validate society  # plants, a market, a supplier, valves
+agora-validate sensing  # one subject, one board, one agent
 ```
 
 | | holds | derivation produces |
@@ -107,17 +107,17 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
    wiring will give it. Unsure which? Seed and read what derivation decided.
 4. **Register each beliefs graph** in the catalog inside `world.ttl`:
    `<.../graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .`
-5. **Seed, and read what came out.** `agora-seed orchard` prints `derived tree_north ->
-   Subscribing`. An agent that derived nothing has wiring implying no ability — usually a
-   missing `ag:senseMode`, or a device that is not a kind of anything the rules recognise.
+5. **Validate, and read what it derived.** `agora-validate orchard` builds the world from the
+   files and prints `tree_north  Subscribing`. An agent that derived nothing has wiring
+   implying no ability — usually a missing `ag:senseMode`, or a device that is not a kind of
+   anything the rules recognise.
 6. **Validate.** `agora-validate` is capability-aware: a shape applies to an agent only if that
    agent derived the capability it belongs to. It catches a subscribing agent with no interval,
    an interval outside the constitutional bounds, a listening agent that stated one anyway, a
    band whose floor is above its ceiling, a device on a bus with no channel, and an agent with
    no capability at all.
 7. **Bring it to life.** `agora-compose orchard` writes the compose file *from the world*, one
-   container per agent — nothing lists them. `agora-acl orchard` first, or the agents have no
-   credential and fall back to admin.
+   container per agent — nothing lists them, and nothing needs provisioning first.
 
 A new world is covered by the test suite automatically: the shape tests glob `genesis/*/` and
 hold every world they find to the same constitution, with no test edit.
@@ -133,26 +133,23 @@ either; which world is in the store decides whether its agent merely watches or 
 is the model-driven claim reduced to something checkable by re-seeding: the hardware did not
 change, the model did.
 
-# A world is a belief base
+# A world is files, and every agent holds its own copy
 
-Each world has its **own isolated Fuseki dataset** — `/ds-society`, `/ds-sensing`, each on its
-own TDB2 store. That is the whole of multi-world support, and it required no change to the
-graphs, the ontology or any agent, because `.env` already said the environment's only job is to
-name *where the belief base is*. Selecting a world is pointing at a different dataset.
+There is no shared store. A world is the Turtle in `genesis/<name>/`, and each agent builds its
+own belief base from it at boot — the vocabulary, the whole world, the derivation, and its own
+beliefs. See [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md).
 
-What it buys:
+What that buys:
 
-- **Seeding one world cannot overwrite another.** Before this, `:beliefs/fern` held whichever
-  world was seeded last — society's `fern` (9 triples) or sensing's (3). Now both exist at once.
-- **Readings stay with the world they were observed in.** `:sensed` is per-dataset, which
-  closes a real provenance hole: an observation records `ag:underWorldVersion`, but two worlds
-  can both be v1, so a single `:sensed` graph mixed readings that nothing could tell apart.
-- **No cross-world orphans.** An agent removed from one world leaves no residue in another.
-- **Two worlds can be up at once** — as far as the belief base is concerned.
-
-`agora-acl` generates the whole config, one dataset per world, with a per-dataset access
-registry. Credentials are per agent *id*, not per world: `fern` in two worlds is one principal,
-and it is the registry that decides which beliefs it may read where.
+- **Worlds cannot touch each other**, and adding one disturbs nothing that is running. There is
+  no shared config, no shared process and no restart.
+- **Readings stay with the agent that made them**, which closes a provenance hole: an
+  observation records `ag:underWorldVersion`, but two worlds can both be v1, so a shared
+  `:sensed` mixed readings nothing could tell apart.
+- **Isolation is structural.** An agent's store contains only what it may see, so there is
+  nothing to enforce, no credential to issue and no registry to keep in step.
+- **Derivation needs no authority.** Every agent runs `rules.ru` over its own copy and computes
+  the same answer from the same ratified files.
 
 **Parallel operation has a second requirement the belief base cannot supply: disjoint
 hardware.** `society` and `sensing` deliberately share device ids and channels, so one flashed
@@ -165,44 +162,39 @@ devices, which is a genesis decision, not an infra one.
 `agora-compose <world>` reads the same `world.ttl` and writes `deploy/compose.<world>.yml`: a
 `seed` service that runs to completion, then one container per agent, each told only its own
 `AGORA_AGENT_ID`. It is generated, never hand-edited — the roster is the ratified world, so a
-second list would be a second thing to drift, exactly as with `agora-acl`.
+second list would be a second thing to drift.
 
 Three details are load-bearing rather than packaging taste:
 
-- **One container per agent, mounting exactly one credential.** On a single filesystem every
-  agent can read every other agent's store password out of `keys/fuseki/`, which makes the
-  per-graph ACL a convention rather than a boundary. A container sees only its own `.pw`, so
-  it cannot authenticate as anybody else even if its code tried. Only an agent that derived
-  `ag:Actuation` is given the signing keys — the generator runs the real derivation rules in
-  memory to know which one that is, before anything has been seeded.
+- **One container per agent, holding its own belief base.** It is a file in that agent's own
+  volume, exclusively locked by its owner — nothing else can open it, including you. Only an
+  agent that derived `ag:Actuation` is given the signing keys; the generator runs the real
+  derivation rules in memory to know which one that is.
 - **`network_mode: host`.** The world states the bus as `ag:brokerHost "localhost"` because a
   channel name is meaningless without its broker and every member must agree on it. On a
   bridge network that stops being true for the agents while staying true for the ESP32 — two
   names for one bus, which is what stating it in the world exists to prevent.
-- **Ordering is expressed, not hoped for.** Agents wait on
-  `seed: service_completed_successfully`, and that is honoured — measured, the first agent
-  starts 45ms after the seeder exits 0. What it does *not* buy is store readiness: an agent
-  starting immediately after a graph replace has been seen to read a world that does not yet
-  contain it, crash with a `WorldError`, and be recovered by `restart: unless-stopped` about
-  700ms later. The restart policy is currently what closes that window rather than anything
-  deliberate — see the seam in [genesis-process](/domain/genesis-process.md).
+- **There is no ordering to express.** An agent builds its own belief base from files mounted
+  beside it, so it depends on nothing and can start whenever it likes. The seed service and its
+  `depends_on` are gone, and with them the readiness race they papered over.
 
 The source trees are mounted read-only, so a code change needs a restart rather than a rebuild.
 
 ```bash
-agora-acl && agora-compose society
+agora-compose society
 cd deploy && podman compose -f compose.society.yml up -d
 ```
 
 # Amending
 
-Edit and re-run `agora-seed <name>`. Bump `ag:versionNumber` on a structural change — every
+Edit the files and restart the agents. Bump `ag:versionNumber` on a structural change — every
 recorded observation cites the world version it was made under, so the version is how you tell
 *when* within a world a fact was true. (*Which* world it was true in is now the dataset it is
 stored in, since a version number alone cannot distinguish two worlds that are both v1.)
 
-Seeding replaces `:ontology`, `:world` and every `:beliefs/*` graph **in that world's dataset**,
-and touches no other world. It does not touch `:sensed`, so readings survive a re-seed.
+A start replaces `:ontology` and `:world` in each agent's own store, because those are not the
+agent's to keep. It does **not** touch `:beliefs/*` or `:sensed` — those are the agent's, and
+only an explicit re-birth discards them.
 
 # Two things that bite
 

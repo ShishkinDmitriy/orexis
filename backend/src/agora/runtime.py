@@ -2,16 +2,22 @@
 
   AGORA_AGENT_ID=fern agora-agent
 
-Startup is three reads and no configuration:
+Startup builds its own belief base and then reads it:
 
+  0. the ratified **world files** are loaded into a store that belongs to this process alone,
+     and the derivation rules are re-run over them — so what this agent can do is computed
+     from the world, not told to it, and no shared service has to be up for that to happen;
   1. the **world** says what I am — what I act for, what I may poll, which market I belong
      to, what I can do, where each of those lives on the wire, and which bus to meet on;
-  2. my **own beliefs** supply the parameters for each capability I composed;
-  3. the **packages** implementing those capabilities are loaded, and nothing else runs.
+  2. my **own beliefs** supply the parameters for each capability I composed. They are written
+     once, at birth, and are mine thereafter — a restart does not touch them;
+  3. the **packages** implementing those capabilities are loaded, and nothing else runs;
+  4. those beliefs are **validated against the shapes of the capabilities I derived**, and I
+     refuse to run if they do not hold — the check belongs where the data is.
 
-The environment tells it two things only: which agent it is, and where the belief base is.
-Everything else — including the broker — is discovered, because a channel name is meaningless
-without the bus it is on and every member must agree on it.
+The environment tells it which agent it is and where to keep its store. Everything else —
+including the broker — is discovered, because a channel name is meaningless without the bus it
+is on and every member must agree on it.
 
 Nothing in this process can reach another agent's beliefs, and no module knows the name of
 any instance. Adding a capability to an agent is a genesis edit: compose the capability in
@@ -24,12 +30,14 @@ from __future__ import annotations
 
 import logging
 import signal
+from pathlib import Path
 
 import paho.mqtt.client as mqtt
 
-from . import config, loader, store
+from . import config, genesis, loader
 from .beliefs import Beliefs
 from .store import bindings
+from .validate import validate_agent
 from .world import MessageBus, Self, World, load_bus, load_self, load_world
 
 log = logging.getLogger("agent")
@@ -49,7 +57,10 @@ class Agent:
 
     def __init__(self, agent_id: str, st=None):
         self.id = agent_id
-        self.store = st or store.from_env(config.env, agent_id)  # as myself, not as admin
+        # My own store, built from the ratified files. Nothing else can reach it — that is the
+        # isolation, and it is structural rather than enforced.
+        self.store = st or genesis.open_belief_base(
+            world_dir(), agent_id, config.env("AGORA_STORE"))
         self.world: World = load_world(self.store.query)
         self.bus: MessageBus = load_bus(self.store.query)  # discovered, not configured
         self.me: Self = load_self(self.store.query, agent_id)
@@ -68,6 +79,11 @@ class Agent:
         if unknown:
             log.warning("no package implements %s — the world expects more than this build has",
                         ", ".join(unknown))
+
+        # Check myself before acting. A shape applies only to capabilities I actually derived,
+        # so this asks exactly the right questions — and refusing to start is the enforcement.
+        # It is not self-report: the consequence is not running, not a claim to be fine.
+        validate_agent(self.store, agent_id, self.me.uri, self.me.capabilities)
 
     # --- how one capability reaches another, without knowing its name ---
 
@@ -161,6 +177,18 @@ class Agent:
                 module.stop()
             self.mqtt.loop_stop()
             self.mqtt.disconnect()
+
+
+def world_dir():
+    """The ratified world this agent belongs to.
+
+    A container is given exactly one world, mounted — so the agent is still told only its own
+    id and never learns that other worlds exist. Outside a container, name one for convenience.
+    """
+    explicit = config.env("AGORA_WORLD_DIR")
+    if explicit:
+        return Path(explicit)
+    return genesis.world_dir(config.env("AGORA_WORLD", genesis.DEFAULT_WORLD))
 
 
 def main() -> None:

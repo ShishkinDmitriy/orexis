@@ -39,9 +39,10 @@ record is worse than none, because it is still cited.
    `agora.loader` finds them. Adding one is adding a directory; no registry to edit. Capability
    packages never import each other's Python: ask `agent.provider(family)` or contribute via
    `annotate`/`urgency`.
-3. **A world is a belief base.** Each has its own Fuseki dataset (`/ds-<world>`), so worlds
-   never overwrite each other and readings stay with the world they were observed in. Agents
-   are handed a finished `FUSEKI_URL`; they know their own id and nothing about worlds.
+3. **There is no shared store.** The world is TTL files; each agent builds its own belief base
+   at boot and holds it in a volume of its own, so isolation is structural rather than
+   enforced. An agent is told its id and given one world, mounted — it never learns that other
+   worlds exist. See [where-the-belief-base-lives](knowledge/decisions/where-the-belief-base-lives.md).
 4. **There is no config file.** Topology lives in the world graph, desire and limits in each
    agent's own beliefs, both authored in `genesis/<world>/`. Deployment facts (`AGORA_ACTUATE`,
    service URLs) are environment, because they are not beliefs anyone holds. See
@@ -55,9 +56,7 @@ not contain `ag:hasCapability` — seeding computes it from the wiring.
 ```bash
 source .venv/bin/activate
 
-agora-seed <world>     # load one ratified world into ITS OWN dataset (society | sensing)
-agora-acl              # every world: one isolated Fuseki dataset each + per-agent credentials
-agora-validate <world> # SHACL over one world's belief base; exits non-zero on violation
+agora-validate <world> # build the world from its files and hold it to every package's shapes
 agora-compose <world>  # generate deploy/compose.<world>.yml from that world's roster
 podman compose -f deploy/compose.<world>.yml up -d    # one container per agent
 agora-sim              # virtual edge: subjects that dry, sense on cadence, get watered
@@ -65,6 +64,9 @@ pytest backend -q      # 176 tests, no infra needed
 ```
 
 `agora-validate` and `pytest` are the two gates. Both must pass before a change is done.
+
+Beliefs are the agent's: written once at birth, never touched by start or stop. Anything that
+would reset them on a restart is a bug, not a convenience.
 
 ## Two traps worth knowing
 

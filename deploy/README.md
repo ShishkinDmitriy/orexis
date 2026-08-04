@@ -4,7 +4,7 @@ Runs Agora as user services that start on boot and restart on failure. Rootless 
 user-level, so these are **user** units.
 
 Services:
-- `agora-infra` — brings up the InfluxDB / Fuseki / Grafana containers (podman compose).
+- `agora-infra` — brings up the InfluxDB / Grafana containers (podman compose). There is no triplestore.
 - `agora-agent@<id>` — **one unit per agent**, and the instance name is the agent id. That is
   the only thing the process is told; it reads the world to learn what it is wired to, its own
   beliefs for what it wants, and runs exactly the modules its capabilities name. A crashed
@@ -27,10 +27,9 @@ systemctl --user daemon-reload
 
 # one-time, in order, once infra is up
 systemctl --user start agora-infra
-.venv/bin/agora-acl           # one isolated dataset per world + per-agent credentials
-systemctl --user restart agora-infra   # Fuseki reads the access list at startup
+systemctl --user restart agora-infra
 .venv/bin/agora-keygen     # signing keys for the actuate boundary
-.venv/bin/agora-seed society  # the belief base
+.venv/bin/agora-validate society  # check the world before running it
 
 # one unit per agent — the id after @ is the agent's id, and nothing else is configured
 systemctl --user enable --now agora-agent@supplier.service
@@ -62,34 +61,15 @@ top-level README.
 
 ## Two things to know about the containers
 
-**Fuseki's config is generated, and its credentials are not in git.** `infra/fuseki/config.ttl`
-comes from `agora-acl` reading the seeded world's `world.ttl`; `keys/fuseki/` holds one credential per
-agent and is gitignored, like the signing keys. A fresh checkout therefore needs `agora-acl`
-before Fuseki will start, and Fuseki needs a restart after any re-run. Its data now lives in
-the `fuseki-data` volume, so rebuilding the container no longer destroys the belief base.
+**There is no shared store to authorise anyone into.** `infra/fuseki/` and the per-agent store
+credentials are gone. An agent's belief base is a file in its own named volume
+(`agora-<world>-<agent>`), exclusively locked by that agent — nothing else can open it,
+including you. `keys/` still holds the host + clearing **signing** keys and is gitignored, so a
+fresh checkout needs `agora-keygen` before the supplier can co-sign a valve command.
 
-An agent with no credential falls back to admin and **logs a warning** — if you see that, its
-isolation is not being enforced.
-
-**Do not `pkill -f agora`.** The containers are named `agora_*`, so a broad pattern matches
-podman's own `conmon` and `rootlessport` helpers: the containers keep running while their
-published ports quietly stop working, and `podman restart` then fails with "conmon exited
-prematurely". Recovery is `podman stop` followed by `podman start`. Match the actual process
-instead — `pkill -f agora-agent`, `pkill -f agora.simulator`.
-
-**The container path is now the supported one**, and the units below are the older host-process
-route. `agora-compose <world>` generates `deploy/compose.<world>.yml` from the world itself: a
-`seed` service that runs to completion, then one container per agent, each mounting exactly its
-own store credential. That last part is why it is preferred — on one filesystem every agent can
-read every other agent's password out of `keys/fuseki/`. See
-[`domain/world`](../knowledge/domain/world.md) §Deployment.
-
-```bash
-agora-acl && agora-compose society
-cd deploy && podman compose -f compose.society.yml up -d
-podman compose -f compose.society.yml logs -f
-podman compose -f compose.society.yml down
-```
+**Beliefs live in volumes, so they survive.** `up`, `down` and `restart` never touch them; an
+agent is born once, on its first boot, and logs `born`. Discarding a belief base takes an
+explicit `down -v`, which is a re-birth by another name.
 
 ## Sensor-only phase (now)
 

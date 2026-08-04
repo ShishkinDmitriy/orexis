@@ -2,11 +2,19 @@
 type: Decision
 title: Belief-base isolation — making privacy enforced rather than agreed
 description: Privacy is now enforced by the store, not by code discipline — per-graph ACLs behind per-agent credentials, with two doors because Jena's access control is read-only.
-status: accepted
+status: superseded
 stage: v1
 tags: [privacy, fuseki, isolation, security, seam]
 timestamp: 2026-08-03T00:00:00Z
 ---
+
+> **Superseded** by [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md).
+> The *intent* stands and is now stronger: an agent cannot read another's beliefs. The
+> *mechanism* is gone — there is no shared store to be let into, so there are no credentials,
+> no access registry, and nothing to enforce. Isolation became structural rather than
+> configured. What follows is kept because the reasoning about **why** the graph is the
+> boundary is still load-bearing, and because Option B below made a prediction worth
+> correcting.
 
 # Context
 
@@ -50,6 +58,8 @@ read of a graph you do not own.
   configuration (see below).
 
 # Option B — a dataset per agent
+
+*(Rejected here; a stronger form of it was later built. See the correction at the end.)*
 
 Blunter, and it buys isolation at the price of the thing that makes the belief base coherent.
 
@@ -123,6 +133,28 @@ surprising thing for the compose file not to say.
 
 **`get_graph` never sent credentials** — a latent bug that could not surface while everything
 was anonymous, and broke validation the moment reads required identity.
+
+# The correction, in hindsight
+
+Option B was rejected mainly on this: *"the derivation rules would not survive — they would
+have to move to client-side read-modify-write, losing the property that derivation is stated in
+the same language as everything else."*
+
+**That was wrong**, and only became clear by building the thing it warned against. The
+prediction assumed beliefs would be split *out* of a shared dataset, leaving rules to span
+stores. What was actually built gives each agent a **complete** dataset — the T-Box, the whole
+world, and its own beliefs — so `rules.ru` runs unchanged, in SPARQL, inside every agent. The
+rules never needed to span agents; they only ever needed the world and the vocabulary together,
+and Option B's own rule ("world and ontology stay together") is satisfied in every store rather
+than in one.
+
+Two other estimates here were pessimistic. Fuseki was measured at 237 MB rather than ~444 MB,
+and a per-agent embedded store turned out to be single-digit MB because it is a library rather
+than a server — the option was costed as "a dataset per agent *in Fuseki*", which is a much
+more expensive thing than a dataset per agent.
+
+What the rejection got right: cross-dataset queries do not exist. That is still true, and it is
+why validation had to move into the agent rather than stay central.
 
 # What this still does not buy
 

@@ -67,8 +67,8 @@ Every one of them is optional, and an omission is a statement: `domain/water/` h
 `capabilities/actuation/` has no `beliefs.py` because it decides nothing.
 
 Nothing lists these — `agora.loader` finds them by looking. So **adding a capability is
-adding a directory**: drop in `capabilities/forecast/`, and `agora-seed` loads its vocabulary,
-runs its derivation, and agents that the wiring qualifies boot with it. No registry line, no
+adding a directory**: drop in `capabilities/forecast/`, and agents load its vocabulary, run its
+derivation, and boot with it if the wiring qualifies them. No registry line, no
 term constant, no edit to any existing file — and deleting the directory removes it just as
 completely, because capabilities reach each other through T-Box terms and never through
 Python imports. See
@@ -88,14 +88,9 @@ cp .env.example .env
 docker compose up -d        # or: podman compose up -d
 ```
 
-Brings up: InfluxDB (`:8086`), Grafana (`:3000`), Fuseki (`:3030`). Grafana is pre-wired
+Brings up: InfluxDB (`:8086`) and Grafana (`:3000`). **No triplestore** — each agent holds its
+own belief base inside its own container. Grafana is pre-wired
 to InfluxDB (anonymous viewer enabled).
-
-Fuseki serves the belief base behind **two doors**, because Jena's per-graph access control is
-read-only: `/ds` is the secured one an agent reads through as itself, `/ds-rw` takes writes
-(updates from any agent, whole-graph operations from admin only). Its config is generated —
-see `agora-acl` below — and its data is in a named volume, so rebuilding the container does
-not destroy the world.
 
 **MQTT runs on the host, not in a container.** The Alpine/musl `eclipse-mosquitto` image
 can't open a config file on the Pi's kernel under rootless Podman/overlay; the Debian
@@ -122,27 +117,23 @@ pip install -e ./backend
 One-time setup, in order:
 
 ```bash
-agora-acl              # one isolated Fuseki dataset per world + per-agent credentials
-                       #   (re-run after adding a world or agent; restart Fuseki to load it)
-agora-keygen           # the host + clearing signing keys the valves check
-agora-seed society     # the belief base itself
+agora-keygen           # the host + clearing signing keys the valves check, once
+agora-validate society # build the world from its files and check it
 ```
 
-`agora-seed` takes **which world** to load. [`genesis/`](genesis/) holds one directory per
-ratified world, each complete on its own: `society` is the full example, `sensing` is the
-smallest one that produces a working agent. [`domain/world`](knowledge/domain/world.md) is the
-guide to authoring your own — what a world is made of, what you state versus what gets
-derived, and how to check it.
+[`genesis/`](genesis/) holds one directory per ratified world, each complete on its own:
+`society` is the full example, `sensing` is the smallest one that produces a working agent.
+[`domain/world`](knowledge/domain/world.md) is the guide to authoring your own — what a world
+is made of, what you state versus what gets derived, and how to check it.
 
-`agora-acl` is what makes privacy real rather than polite: it reads who exists from that
-world and writes a Fuseki access list granting each agent the shared graphs plus
-its *own* beliefs — so `fern` querying `:beliefs/tomato` gets nothing back. Credentials land
-in `keys/fuseki/` (gitignored); each agent reads its own. See
-[`belief-base-isolation`](knowledge/decisions/belief-base-isolation.md).
+**There is nothing to seed and no store to provision.** A world is Turtle; each agent builds its
+own belief base from it at boot and keeps it in a volume of its own, which nothing else can
+open. Privacy is structural rather than enforced — see
+[`where-the-belief-base-lives`](knowledge/decisions/where-the-belief-base-lives.md).
 
-`agora-seed` then loads the T-Box, the **world** (wiring), **derives each agent's
-capabilities** from that wiring, and loads each agent's **private beliefs** from
-[`genesis/`](genesis/). It prints what it derived:
+Each agent, at boot, loads the T-Box and the **world** (wiring), **derives its capabilities**
+from that wiring, and writes its **private beliefs** once if it has none. `agora-validate` does
+the same thing without running anything, and prints what it derived:
 
 ```
 derived fern      -> Bidding, Subscribing
@@ -171,8 +162,8 @@ edit anywhere — `agora-compose sensing` yields exactly one agent that only wat
 that variable.
 
 **One container per agent, and that is the point.** On one filesystem every agent could read
-every other agent's store credential out of `keys/fuseki/`, making the per-graph ACL a
-convention. Each container mounts exactly one `.pw` — its own — and only the agent that derived
+every other agent's beliefs. Now each agent's belief base is a file in its own volume, locked
+by its owner and unopenable by anything else — including you. Only the agent that derived
 `ag:Actuation` is given the signing keys. See
 [`domain/world`](knowledge/domain/world.md) §Deployment.
 
@@ -223,7 +214,8 @@ plant ids in `AGORA_SIM_PLANTS` and give the real ones ESP32s on the same topics
   Shows current moisture per plant (colored by band) and a moisture-over-time chart. The
   dashboard and datasource are **provisioned** from `infra/grafana/` — recreating Grafana
   restores them, nothing lives only in the container.
-- **Sensed measurement (what agents cite)** — query Fuseki. `:sensed` holds the *number* and
+- **Sensed measurement (what agents cite)** — lives inside each agent and cannot be queried
+  from outside; that is the isolation. `:sensed` holds the *number* and
   the time it was taken, never a band — "is it LOW?" is each agent's own call, and "is it
   still true?" is the freshness gate's. Query endpoint on this image is `/ds/sparql` (not
   `/ds/query`); updates go to `/ds/update`:
@@ -249,7 +241,7 @@ there is simply no market for a market capability to come from.
 sudo cp infra/mosquitto/lan.conf /etc/mosquitto/conf.d/agora.conf   # mosquitto 2.x binds to
 sudo systemctl restart mosquitto                                    # loopback until told not to
 
-agora-seed sensing && agora-compose sensing            # one agent, perception only
+agora-compose sensing                                 # one agent, perception only
 cd deploy && podman compose -f compose.sensing.yml up -d
 mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
 ```
@@ -286,12 +278,12 @@ reachable at any moment — one that deep-sleeps cannot hear the request. So it 
 the vocabulary with no rule granting it and no module providing it. The room is kept on
 purpose; adding it is a class and one line of `PROVIDES`.
 
-The ESP32 firmware is `ag:Scheduled`. Change the firmware, re-run `agora-seed`, and the
-capability changes with it — the agent is never edited.
+The ESP32 firmware is `ag:Scheduled`. Change the firmware, edit `ag:senseMode`, restart the
+agent, and the capability changes with it — the agent is never edited.
 
 The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
 ([`genesis/beliefs-<agent>.ttl`](genesis/)); the wiring and the valve calibration are the
-world's ([`genesis/world.ttl`](genesis/world.ttl)). Edit and re-run `agora-seed` — no reflash.
+world's ([`genesis/`](genesis/)). Edit the files and restart the agent — no reflash.
 The one thing firmware *does* enforce is the constitutional cadence clamp
 (`MIN_SLEEP_S`/`MAX_SLEEP_S` in `config.h`) — a buggy agent must not be able to talk a board
 into sleeping through a drought.
