@@ -115,8 +115,9 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
    an interval outside the constitutional bounds, a listening agent that stated one anyway, a
    band whose floor is above its ceiling, a device on a bus with no channel, and an agent with
    no capability at all.
-7. **Bring it to life.** `agora-up` asks the belief base who exists and starts one process each
-   — nothing lists them. `agora-acl orchard` first if you want read isolation enforced.
+7. **Bring it to life.** `agora-compose orchard` writes the compose file *from the world*, one
+   container per agent — nothing lists them. `agora-acl orchard` first, or the agents have no
+   credential and fall back to admin.
 
 A new world is covered by the test suite automatically: the shape tests glob `genesis/*/` and
 hold every world they find to the same constitution, with no test edit.
@@ -131,6 +132,36 @@ The two ship with **the same device ids and channels on purpose**. One flashed b
 either; which world is in the store decides whether its agent merely watches or also buys. That
 is the model-driven claim reduced to something checkable by re-seeding: the hardware did not
 change, the model did.
+
+# Deployment — one container per agent
+
+`agora-compose <world>` reads the same `world.ttl` and writes `deploy/compose.<world>.yml`: a
+`seed` service that runs to completion, then one container per agent, each told only its own
+`AGORA_AGENT_ID`. It is generated, never hand-edited — the roster is the ratified world, so a
+second list would be a second thing to drift, exactly as with `agora-acl`.
+
+Three details are load-bearing rather than packaging taste:
+
+- **One container per agent, mounting exactly one credential.** On a single filesystem every
+  agent can read every other agent's store password out of `keys/fuseki/`, which makes the
+  per-graph ACL a convention rather than a boundary. A container sees only its own `.pw`, so
+  it cannot authenticate as anybody else even if its code tried. Only an agent that derived
+  `ag:Actuation` is given the signing keys — the generator runs the real derivation rules in
+  memory to know which one that is, before anything has been seeded.
+- **`network_mode: host`.** The world states the bus as `ag:brokerHost "localhost"` because a
+  channel name is meaningless without its broker and every member must agree on it. On a
+  bridge network that stops being true for the agents while staying true for the ESP32 — two
+  names for one bus, which is what stating it in the world exists to prevent.
+- **Ordering is expressed, not hoped for.** Agents wait on
+  `seed: service_completed_successfully`. An agent started against an unseeded store fails on
+  its first read, loudly and pointlessly.
+
+The source trees are mounted read-only, so a code change needs a restart rather than a rebuild.
+
+```bash
+agora-acl society && agora-compose society
+cd deploy && podman compose -f compose.society.yml up -d
+```
 
 # Amending
 

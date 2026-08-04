@@ -79,15 +79,30 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
   }
 }
 
+// How strong the link is, in words. A board that cannot reach the broker looks identical
+// whether the address is wrong or the signal is too weak to carry a TCP handshake — and the
+// second is far more common on a battery node stuck behind a plant pot.
+static const char *signalQuality(int rssi) {
+  if (rssi >= -55) return "strong";
+  if (rssi >= -67) return "good";
+  if (rssi >= -75) return "weak — expect retries and dropped readings";
+  return "very weak — move the board or add an antenna";
+}
+
 static void connectWifi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.print("WiFi");
+  uint32_t began = millis();
   while (WiFi.status() != WL_CONNECTED) {
     delay(300);
     Serial.print(".");
   }
-  Serial.printf(" %s\n", WiFi.localIP().toString().c_str());
+  int rssi = WiFi.RSSI();
+  // Association time is the other half of the picture: a strong signal that takes ten seconds
+  // to associate is a congested channel, not a distance problem.
+  Serial.printf(" %s  rssi %d dBm (%s), associated in %ums\n",
+                WiFi.localIP().toString().c_str(), rssi, signalQuality(rssi), millis() - began);
 }
 
 // PubSubClient reports failures as a number and nothing else. Silence here is the worst

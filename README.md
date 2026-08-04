@@ -153,8 +153,9 @@ Then bring the society up. **Agents are not launched from a list — they are bo
 world**, one process each:
 
 ```bash
-agora-up        # asks the belief base who exists, starts one agora-agent per agent
-agora-sim       # virtual plants: sense when asked, get watered
+agora-compose society                                  # generate the compose file FROM the world
+cd deploy && podman compose -f compose.society.yml up -d
+agora-sim                                              # virtual plants, if you have no hardware
 ```
 
 ```
@@ -164,10 +165,16 @@ born  supplier   Hosting, Actuation
 born  tomato     Bidding, Subscribing
 ```
 
-The roster is the ratified world, so seeding a different world brings up a different society
-with no edit anywhere — `agora-seed sensing && agora-up` starts exactly one agent that only
-watches. `agora-up fern` starts a single one; `AGORA_AGENT_ID=fern agora-agent` is still the
-primitive underneath, and is what a systemd unit runs.
+The roster is the ratified world, so a different world brings up a different society with no
+edit anywhere — `agora-compose sensing` yields exactly one agent that only watches.
+`AGORA_AGENT_ID=fern agora-agent` is still the primitive underneath; the container merely sets
+that variable.
+
+**One container per agent, and that is the point.** On one filesystem every agent could read
+every other agent's store credential out of `keys/fuseki/`, making the per-graph ACL a
+convention. Each container mounts exactly one `.pw` — its own — and only the agent that derived
+`ag:Actuation` is given the signing keys. See
+[`domain/world`](knowledge/domain/world.md) §Deployment.
 
 Note what is *not* born this way: firmware. A board is hardware and is flashed by hand. What
 the model decides is what an **agent** is — which is why the same flashed board is a watcher
@@ -201,7 +208,7 @@ agent set, and gains moisture when it wins water — a closed loop driven by the
 ```bash
 # set AGORA_ACTUATE=true in .env (the supplier must be allowed to open valves)
 agora-sim      # virtual plants: dry, sense on their agent's interval, get watered
-agora-up       # the whole society, one process per agent
+cd deploy && podman compose -f compose.society.yml up -d   # the whole society
 ```
 
 Watch the plants dry, hit their own LOW, win water, and recover — `journalctl`/logs show
@@ -242,7 +249,8 @@ there is simply no market for a market capability to come from.
 sudo cp infra/mosquitto/lan.conf /etc/mosquitto/conf.d/agora.conf   # mosquitto 2.x binds to
 sudo systemctl restart mosquitto                                    # loopback until told not to
 
-agora-seed sensing && agora-up       # one agent, perception only — the line appears in Grafana
+agora-seed sensing && agora-compose sensing            # one agent, perception only
+cd deploy && podman compose -f compose.sensing.yml up -d
 mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
 ```
 

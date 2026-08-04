@@ -20,7 +20,7 @@ between a ratified world and a running society.
 
 ```
   narrate ──▶ draft ──▶ ratify ──▶ write ──▶ seed ──▶ birth ──▶ start ⇄ stop
-  (English)   (Turtle)  (human)   (genesis/) (derive)  (once)    (agora-up)
+  (English)   (Turtle)  (human)   (genesis/) (derive)  (once)   (compose up/down)
                                                           │
                                          beliefs authored ┘   nothing authored
 ```
@@ -76,8 +76,8 @@ the only sense the system needs.
 3. **Every derived capability has the beliefs it needs.** `agora-validate` is capability-aware:
    a shape applies to an agent only if that agent derived the capability it belongs to. A
    subscribing agent with no interval fails here rather than at 3am.
-4. **The society actually comes up.** `agora-up` starts one process per agent; each refuses to
-   boot if a belief its capability requires is missing, naming the term and the graph.
+4. **The society actually comes up.** One container per agent; each refuses to boot if a
+   belief its capability requires is missing, naming the term and the graph.
 
 Interconnection is not checked as such, and does not need to be: the graph *is* the
 interconnection, and a dangling reference shows up as a capability that failed to derive or a
@@ -143,12 +143,14 @@ beliefs yet.
 
 # Starting the society
 
-Once the world is seeded and its agents born, nothing lists them. `agora-up` asks the belief
-base `?a a ag:Agent` and starts one process per answer, handing each the only instance
+Once the world is seeded and its agents born, nothing lists them. `agora-compose <world>` reads
+the roster out of `world.ttl` and writes one service per agent, handing each the only instance
 identifier it will ever be given: its own id. The roster *is* the ratified world, so a
 different world brings up a different society with no edit anywhere.
 
-This is start, not birth. It authors nothing, and may be run as often as you like.
+`podman compose up` is start, not birth. It authors nothing, and may be run as often as you
+like; `down` is stop. See [world](/domain/world.md) §Deployment for why one container per agent
+is a boundary rather than packaging taste.
 
 Firmware is the exception and the contrast is the point: a board is hardware, flashed by hand.
 What genesis decides is what an **agent** is — which is why the same board is a watcher in one
