@@ -9,7 +9,7 @@ timestamp: 2026-08-04T00:00:00Z
 # The shape of it
 
 ```
-agora-acl <world>       ─┐
+agora-acl               ─┐  (all worlds at once)
 agora-compose <world>   ─┤ produce things from the world      (agora-specific)
                          │
 podman compose up -d    ─┤ run them                            (ordinary compose)
@@ -43,9 +43,13 @@ ss -lntp | grep 1883          # expect 0.0.0.0:1883
 # Deploy a world
 
 ```bash
-agora-acl society             # per-agent credentials — BEFORE compose, or agents fall back to admin
+agora-acl                     # every world at once: one dataset each, + per-agent credentials
 agora-compose society         # writes deploy/compose.society.yml FROM genesis/society/world.ttl
 ```
+
+`agora-acl` takes no world — it generates the Fuseki config for **all** of them, one isolated
+dataset per world. Restart Fuseki after it, and run it before `agora-compose`, or the `.pw`
+files do not exist and every agent falls back to admin.
 
 ```
 agent-fern       Bidding, Subscribing
@@ -91,24 +95,32 @@ podman build -t agora:local -f Containerfile .
 podman compose -f compose.society.yml up -d --force-recreate
 ```
 
-# Switching worlds
+# Switching worlds — nothing is lost
 
-Two worlds must not run at once — both would drive the same devices on the same topics.
+Each world has its own dataset, so switching destroys nothing and you can switch back:
 
 ```bash
 cd deploy
 podman compose -f compose.society.yml down
-agora-seed sensing && agora-acl sensing && agora-compose sensing
-podman compose -f compose.sensing.yml up -d
+podman compose -f compose.sensing.yml up -d        # already seeded? just bring it up
 ```
 
-Seeding a different world replaces `:world` and the beliefs graphs; the other world's beliefs
-graphs are *not* cleared, they simply stop being referenced.
+Seed once per world, not per switch:
+
+```bash
+agora-seed society && agora-seed sensing           # both coexist
+agora-validate society && agora-validate sensing   # each is validated on its own
+```
+
+**Two worlds may run at once only if their devices differ.** `society` and `sensing` share
+device ids on purpose — that is what lets one flashed board run in either — so both up
+together puts two agents on `sensors/fern/moisture` and both ingest every reading. Nothing
+prevents this; it is your job to know.
 
 # No hardware?
 
 ```bash
-agora-sim     # virtual subjects: dry over time, sense on their agent's interval, get watered
+agora-sim <world>   # virtual subjects: dry over time, sense on the agent's interval, get watered
 ```
 
 Set `AGORA_SIM_PLANTS` to **only the virtual ones** if any real board is connected. Empty means
@@ -119,7 +131,7 @@ same topic — it has done exactly that here, overwriting real readings with `0.
 
 | symptom | cause |
 |---|---|
-| agent logs `no store credential — connecting as admin` | `agora-acl <world>` was not run before `agora-compose`; the mount became a directory |
+| agent logs `no store credential — connecting as admin` | `agora-acl` was not run before `agora-compose`; the mount became a directory |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | an agent crashes once with `WorldError: knows no agent`, then recovers | store readiness, not ordering — the seeder had exited, but the replaced world graph was not yet queryable. `restart: unless-stopped` covers it. Only worrying if it does *not* recover |
 | readings arrive twice | two writers. A stray host process from an earlier run, or `agora-sim` covering a real board |

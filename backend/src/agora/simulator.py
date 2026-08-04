@@ -28,6 +28,7 @@ import paho.mqtt.client as mqtt
 
 from . import config, signing, store
 from .ontology import WORLD_GRAPH
+from .seed import DEFAULT_WORLD, worlds
 from .signing import verify_command
 from .store import bindings
 from .world import load_bus, load_world
@@ -82,8 +83,8 @@ class SimPlant:
 
 
 class Simulator:
-    def __init__(self):
-        st = store.from_env(config.env)
+    def __init__(self, world_name: str = DEFAULT_WORLD):
+        st = store.from_env(config.env, world=world_name)
         world = load_world(st.query)
         self.bus = load_bus(st.query)  # the same bus the agents meet on, from the same world
         self.tick_s = float(config.env("AGORA_SIM_TICK_S", "2"))
@@ -190,8 +191,17 @@ SELECT ?min ?max WHERE { GRAPH ?g {
 
 
 def main() -> None:
+    import argparse
+
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
-    Simulator().run()
+    p = argparse.ArgumentParser(
+        prog="agora-sim",
+        description="Virtual edge for one world: subjects that dry, sense on cadence, get watered.",
+    )
+    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
+                   help=f"which world to simulate (default: {DEFAULT_WORLD}). Available: "
+                        + ", ".join(worlds()))
+    Simulator(p.parse_args().world).run()
 
 
 if __name__ == "__main__":

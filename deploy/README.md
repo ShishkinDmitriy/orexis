@@ -27,7 +27,7 @@ systemctl --user daemon-reload
 
 # one-time, in order, once infra is up
 systemctl --user start agora-infra
-.venv/bin/agora-acl society   # store credentials + per-graph access list, from the world
+.venv/bin/agora-acl           # one isolated dataset per world + per-agent credentials
 systemctl --user restart agora-infra   # Fuseki reads the access list at startup
 .venv/bin/agora-keygen     # signing keys for the actuate boundary
 .venv/bin/agora-seed society  # the belief base
@@ -85,7 +85,7 @@ read every other agent's password out of `keys/fuseki/`. See
 [`domain/world`](../knowledge/domain/world.md) §Deployment.
 
 ```bash
-agora-acl society && agora-compose society
+agora-acl && agora-compose society
 cd deploy && podman compose -f compose.society.yml up -d
 podman compose -f compose.society.yml logs -f
 podman compose -f compose.society.yml down

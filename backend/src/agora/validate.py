@@ -7,7 +7,9 @@ checks are capability-aware: a shape applies to an agent only if that agent comp
 capability it belongs to. An agent that claims ag:Subscribing with no sensor or no interval fails
 here — before it fails at 3am. Exits non-zero on any violation.
 
-  agora-validate
+  agora-validate [world]
+
+Each world has its own isolated dataset, so this validates exactly one.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ from pyshacl import validate as shacl_validate
 
 from . import config, loader, store
 from .ontology import SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
+from .seed import DEFAULT_WORLD, worlds
 from .store import bindings
 
 log = logging.getLogger("validate")
@@ -29,8 +32,8 @@ _AGENTS_Q = f"""
 SELECT ?agentId WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?a a ag:Agent ; ag:localId ?agentId }} }}"""
 
 
-def validate() -> bool:
-    st = store.from_env(config.env)
+def validate(world: str = DEFAULT_WORLD) -> bool:
+    st = store.from_env(config.env, world=world)
 
     graphs = [WORLD_GRAPH, SENSED_GRAPH]
     graphs += [beliefs_graph(r["agentId"]) for r in bindings(st.query_all(_AGENTS_Q))]
@@ -60,8 +63,17 @@ def validate() -> bool:
 
 
 def main() -> None:
+    import argparse
+
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    sys.exit(0 if validate() else 1)
+    p = argparse.ArgumentParser(
+        prog="agora-validate",
+        description="Validate one world's belief base against every package's shapes.",
+    )
+    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
+                   help=f"which world (default: {DEFAULT_WORLD}). Available: "
+                        + ", ".join(worlds()))
+    sys.exit(0 if validate(p.parse_args().world) else 1)
 
 
 if __name__ == "__main__":
