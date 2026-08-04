@@ -36,14 +36,18 @@ Keys are **per world**, in `world/<name>/secrets/` and gitignored. Two worlds ar
 societies: the host that runs a market and the clearing authority that co-signs its vouchers
 belong to that society, and must not be able to sign for another.
 
-The MQTT broker runs on the **host**, not in compose, and binds to loopback until told
-otherwise — every LAN board gets `Connection refused` until:
+The MQTT broker is part of `infra/compose.yaml`, built from `infra/mosquitto/Containerfile`
+with a config that listens on `0.0.0.0` — mosquitto binds loopback only without one, and every
+LAN board gets `Connection refused`. Bringing infra up is all that is needed:
 
 ```bash
-sudo cp infra/mosquitto/lan.conf /etc/mosquitto/conf.d/agora.conf
-sudo systemctl restart mosquitto
+cd infra && podman compose up -d
 ss -lntp | grep 1883          # expect 0.0.0.0:1883
 ```
+
+A **host** mosquitto left over from an earlier setup will hold that port and win. Retained
+cadences live in whichever broker published them, so they do not follow you across the switch —
+each agent re-publishes one after its next reading.
 
 # Deploy a world
 
@@ -144,8 +148,9 @@ processes**, which is no longer a deployment mode — and worse, a unit left ena
 host agent on the same topics as its container, both ingesting every reading. That failure has
 already cost time here twice; the fix was to stop having two ways to run an agent.
 
-Mosquitto is the exception and is a **system** service, because it is not ours:
-`sudo systemctl enable --now mosquitto`.
+Mosquitto used to be the exception, running as a **system** service. It is now in
+`infra/compose.yaml` like everything else, so there is again only one way to run each thing —
+`sudo systemctl disable --now mosquitto` if a host one survives from before.
 
 # Sensor-only until a pump is wired
 

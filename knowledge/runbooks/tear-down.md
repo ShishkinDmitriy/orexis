@@ -19,7 +19,7 @@ Measured on a running system, immediately after `down` on a world:
 | that world's agent containers | **gone** | what `down` is for |
 | infra (Influx, Grafana) | **still up** | a separate compose project, shared across worlds |
 | each agent's belief base | **intact** | a named volume per agent; beliefs outlive any process, which is the point |
-| retained MQTT commands | **all four still standing** | they live in the broker, which is not in compose at all |
+| retained MQTT commands | **all four still standing** | they live in the **broker**, a different compose project (`infra/`) — and in its volume, so they outlive even that |
 
 Every one of those is deliberate. `down` is not incomplete — the society simply spans more than
 a compose project, and each layer has a lifetime the others do not.
@@ -39,6 +39,10 @@ That is the honest reason `down` cannot be "kill all": a retained message is the
 society deliberately designed to outlive the agent that published it — it is what lets a
 sleeping board receive an interval it was not awake for. The same property makes it survive the
 agent's removal.
+
+Moving the broker into `infra/compose.yaml` did not change this. Retained messages persist to
+`/var/lib/mosquitto` in a named volume, which is the point — but it does mean a cadence set by a
+world you have since deleted is still standing after everything is down.
 
 # Stop one world
 
@@ -76,6 +80,19 @@ Check nothing is left:
 podman ps
 pgrep -af agora | grep -v conmon
 ```
+
+# Known: the broker container does not stop
+
+`podman stop` on `agora_mosquitto_1` reports `given PID did not die within timeout` and the
+container sits in `Stopping` while still serving traffic. Not yet understood, and **not** the
+uid: it reproduces with the process mapped onto your own uid via `keep-id`, and `kill -9` from
+the owning user does not end it either. Same host as the [Alpine config-read
+failure](https://github.com/eclipse-mosquitto/mosquitto/issues/2557) that forced the custom
+image, so a shared cause is plausible but unproven.
+
+Consequence for teardown: `cd infra && podman compose down` will not remove the broker, and a
+stuck one keeps `:1883`, so a fresh one cannot bind. There is no clean workaround from userspace
+yet — a reboot clears it. Do not assume infra is down because `down` returned.
 
 # Clear standing instructions on the broker
 

@@ -14,10 +14,11 @@ name: agora
 # left is the history and the view of it. All images have arm64 builds, so this runs on
 # the Raspberry Pi as-is.
 #
-# MQTT is NOT here: the Alpine/musl mosquitto image can't open a config file on this
-# Pi's kernel (rootless overlay), so the broker runs on the host instead (apt install
-# mosquitto — a glibc build). See README. The gateway/agents are host processes too,
-# so a host broker is architecturally consistent.
+# The broker is here too, built from infra/mosquitto/Containerfile. It is a custom image for
+# one reason, recorded there: the official Alpine image cannot read a config file on this host
+# by ANY means — bind mount, baked layer, or a file it writes itself — while a Debian build of
+# the same package works first try. Without a config mosquitto binds localhost only, so the
+# boards would never reach it.
 
 services:
   influxdb:
@@ -38,6 +39,20 @@ services:
       timeout: 5s
       retries: 5
 
+  mosquitto:
+    build:
+      context: ./mosquitto
+      dockerfile: Containerfile
+    image: agora-mosquitto:local
+    ports: ["1883:1883"]
+    volumes:
+      # retained messages survive a restart — a board that is asleep must still receive the
+      # cadence its agent set before the broker bounced
+      # /var/lib/mosquitto is where the DEBIAN package persists — the Alpine image's
+      # /mosquitto/data would silently mount nothing and lose every retained cadence
+      - mosquitto-data:/var/lib/mosquitto
+    restart: unless-stopped
+
   grafana:
     image: docker.io/grafana/grafana:11.2.0
     ports: ["3000:3000"]
@@ -52,5 +67,6 @@ services:
     depends_on: [influxdb]
 
 volumes:
+  mosquitto-data:
   influxdb-data:
   grafana-data:

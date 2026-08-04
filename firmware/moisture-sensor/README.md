@@ -69,8 +69,7 @@ Read `ADC_DRY` (dry air) and `ADC_WET` (in water) from the monitor; the firmware
 box, so a board gets `Connection refused` and it looks like a firmware fault:
 
 ```bash
-sudo cp infra/mosquitto/lan.conf /etc/mosquitto/conf.d/agora.conf
-sudo systemctl restart mosquitto
+cd infra && podman compose up -d mosquitto
 ss -lntp | grep 1883        # expect 0.0.0.0:1883, not 127.0.0.1:1883
 ```
 

@@ -90,22 +90,27 @@ cp world/society/.env.example world/society/.env # what this installation may do
 cd infra && docker compose up -d                 # or: podman compose up -d
 ```
 
-Brings up: InfluxDB (`:8086`) and Grafana (`:3000`). **No triplestore** — each agent holds its
+Brings up: MQTT (`:1883`), InfluxDB (`:8086`) and Grafana (`:3000`). **No triplestore** — each agent holds its
 own belief base inside its own container. Grafana is pre-wired
 to InfluxDB (anonymous viewer enabled).
 
-**MQTT runs on the host, not in a container.** The Alpine/musl `eclipse-mosquitto` image
-can't open a config file on the Pi's kernel under rootless Podman/overlay; the Debian
-(glibc) build has no such issue, and since the agents are host processes anyway, a host
-broker is the clean choice:
+**MQTT is built here rather than pulled.** `infra/mosquitto/Containerfile` is six lines of
+Debian + the stock `mosquitto` package, and it exists because the official Alpine image cannot
+read a config file on this host by *any* means — bind-mounted file, bind-mounted directory,
+baked into a layer, or one mosquitto writes itself seconds earlier. That is not a mount or
+ownership problem, which is what the [upstream
+reports](https://github.com/eclipse-mosquitto/mosquitto/issues/2557) are; those fixes were tried
+and do not apply. Without a config mosquitto binds loopback only, so the boards never reach it.
+
+Install `mosquitto-clients` on the host for `mosquitto_sub`/`mosquitto_pub` — the broker itself
+is a container:
 
 ```bash
-sudo apt install -y mosquitto mosquitto-clients
-sudo systemctl enable --now mosquitto
+sudo apt install -y mosquitto-clients
 ```
 
-The default config listens on `localhost:1883` and accepts anonymous local connections —
-which is all v1 needs (everything talks over loopback on the Pi).
+If a **host** mosquitto is running from an earlier setup, disable it or it holds `:1883`:
+`sudo systemctl disable --now mosquitto`.
 
 ## 2. App
 
@@ -231,9 +236,6 @@ and nothing else. It reads, records, and stops. Nothing in that world declares i
 there is simply no market for a market capability to come from.
 
 ```bash
-sudo cp infra/mosquitto/lan.conf /etc/mosquitto/conf.d/agora.conf   # mosquitto 2.x binds to
-sudo systemctl restart mosquitto                                    # loopback until told not to
-
 agora-compose sensing                                 # one agent, perception only
 cd world/sensing && podman compose up -d
 mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
