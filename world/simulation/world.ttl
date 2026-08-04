@@ -1,0 +1,152 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+
+#  A ratified world, v1 — the society, with nothing physical in it.
+#
+#  Not genesis/society with a flag: a different world, wired to different devices. Every plant
+#  agent MODELS its subject (ag:models, ag:ModelledSubject) instead of polling a board, and the
+#  supplier holds SIMULATED valves (ag:hasSimulatedActuator, ag:SimulatedValve). Derivation
+#  gives them ag:SimulatedSensing and ag:SimulatedActuation, and you can see which world you
+#  are looking at by reading it.
+#
+#  The market is identical, deliberately. Bidding, hosting, clearing and the vouchers do not
+#  know that anything here is simulated — a bidder asks for "whoever perceives" and a host asks
+#  for "something that can redeem", and both are answered.
+#
+#  See knowledge/domain/world.md.
+
+##########  The bus everyone speaks over  ##########
+#  Here rather than in .env because a topic means nothing without the broker it is on, and a
+#  society whose members disagree about the bus is not one society. The ONLY thing the
+#  environment tells a process is where the belief base is; this is part of what it finds there.
+
+ag:local_bus a ag:MessageBus ;
+    ag:localId "local_bus" ;
+    ag:brokerHost "localhost" ;
+    ag:brokerPort 1883 .
+
+##########  World version  ##########
+#  Found by TYPE (?w a ag:World), never by a well-known IRI.
+
+ag:world a ag:World ; ag:currentVersion ag:version_1 .
+ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+
+##########  Typed graph catalog  ##########
+
+<http://example.org/agora/graph/ontology> a ag:OntologyGraph .
+<http://example.org/agora/graph/world>    a ag:WorldGraph .
+<http://example.org/agora/graph/sensed>   a ag:SensedGraph .
+
+<http://example.org/agora/graph/beliefs/fern>      a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .
+<http://example.org/agora/graph/beliefs/tomato>    a ag:BeliefsGraph ; ag:beliefsOf ag:tomato_agent .
+<http://example.org/agora/graph/beliefs/succulent> a ag:BeliefsGraph ; ag:beliefsOf ag:succulent_agent .
+<http://example.org/agora/graph/beliefs/supplier>  a ag:BeliefsGraph ; ag:beliefsOf ag:supplier .
+
+##########  The venue  ##########
+
+ag:barrel1_market a ag:Market ;
+    ag:localId "barrel1_market" ;
+    ag:marketFor ag:barrel1 ;
+    ag:offerTopic   "market/barrel1/offer" ;
+    ag:bidTopic     "market/barrel1/bid" ;
+    ag:voucherTopic "market/barrel1/voucher" .
+
+ag:barrel1 a ag:WaterSource ;
+    ag:localId "barrel1" ;
+    ag:suppliedBy ag:supplier ;
+    ag:capacityL 5.0 .
+
+##########  The supplier — runs the venue and owns the valves  ##########
+#  Derivation gives it Hosting (it owns a market) and Actuation (it holds valves), and NOT
+#  Subscribing or Bidding — it is wired to no sensor and plumbed into no market as a buyer. Its
+#  class says none of this; its connections do.
+
+ag:supplier a ag:Agent ;
+    ag:localId "supplier" ;
+    ag:hosts ag:barrel1_market ;
+    ag:hasSimulatedActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
+
+##########  Plants — sensed and watered; no stake of their own  ##########
+
+ag:fern a ag:Plant ;
+    ag:localId "fern" ; ag:servedBy ag:barrel1 ;
+    ag:dryRatePerTick 0.01 ; ag:litresPerFraction 2.0 .
+
+ag:tomato a ag:Plant ;
+    ag:localId "tomato" ; ag:servedBy ag:barrel1 ;
+    ag:dryRatePerTick 0.01 ; ag:litresPerFraction 2.0 .
+
+ag:succulent a ag:Plant ;
+    ag:localId "succulent" ; ag:servedBy ag:barrel1 ;
+    ag:dryRatePerTick 0.008 ; ag:litresPerFraction 2.0 .
+
+##########  Plant agents — each wired to its own sensor and into the market  ##########
+#  ag:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
+#  From these two connections, derivation gives each of them Subscribing + Bidding.
+
+ag:fern_agent a ag:Agent ;
+    ag:localId "fern" ;
+    ag:actsFor ag:fern ;
+    ag:models ag:model_fern ;
+    ag:bidsIn ag:barrel1_market ;
+    ag:eventTopic "readings/fern" .
+
+ag:tomato_agent a ag:Agent ;
+    ag:localId "tomato" ;
+    ag:actsFor ag:tomato ;
+    ag:models ag:model_tomato ;
+    ag:bidsIn ag:barrel1_market ;
+    ag:eventTopic "readings/tomato" .
+
+ag:succulent_agent a ag:Agent ;
+    ag:localId "succulent" ;
+    ag:actsFor ag:succulent ;
+    ag:models ag:model_succulent ;
+    ag:bidsIn ag:barrel1_market ;
+    ag:eventTopic "readings/succulent" .
+
+##########  Modelled subjects — no boards at all: the agent computes their state  ##########
+
+ag:model_fern a ag:ModelledSubject ;
+    ag:localId "model_fern" ;
+    ag:monitors ag:fern ;
+    sosa:observes ag:SoilMoisture ;
+    ag:senseMode ag:Modelled ;
+    ag:modelledInitialValue 0.45 ;
+    ag:modelledDryRate 0.02 ;
+    ag:modelledTickSeconds 3 .
+
+ag:model_tomato a ag:ModelledSubject ;
+    ag:localId "model_tomato" ;
+    ag:monitors ag:tomato ;
+    sosa:observes ag:SoilMoisture ;
+    ag:senseMode ag:Modelled ;
+    ag:modelledInitialValue 0.45 ;
+    ag:modelledDryRate 0.02 ;
+    ag:modelledTickSeconds 3 .
+
+ag:model_succulent a ag:ModelledSubject ;
+    ag:localId "model_succulent" ;
+    ag:monitors ag:succulent ;
+    sosa:observes ag:SoilMoisture ;
+    ag:senseMode ag:Modelled ;
+    ag:modelledInitialValue 0.45 ;
+    ag:modelledDryRate 0.02 ;
+    ag:modelledTickSeconds 3 .
+
+##########  Simulated valves — the supplier's, and none of them exist  ##########
+
+ag:valve_fern a ag:SimulatedValve ;
+    ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
+    ag:commandTopic "actuators/fern/valve" ;
+    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+
+ag:valve_tomato a ag:SimulatedValve ;
+    ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
+    ag:commandTopic "actuators/tomato/valve" ;
+    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+
+ag:valve_succulent a ag:SimulatedValve ;
+    ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
+    ag:commandTopic "actuators/succulent/valve" ;
+    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .

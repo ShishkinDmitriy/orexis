@@ -1,5 +1,11 @@
 """ag:Actuation — redeem a voucher against real hardware.
 
+There is no "armed" flag and no dry-run mode. This capability actuates; that is what it is
+for. An installation that must NOT move water does not disarm the module — it declares
+devices that do not move water, and derivation gives its agent a different capability. What a
+thing does belongs in the model, not in an environment variable that can disagree with it.
+
+
 Held by the resource owner, never by the winner: a voucher is a *claim on the owner*, and the
 owner is the one with the valves. This module decides nothing. It maps a voucher's subject to
 the device that serves it (`ag:actuates`), converts litres into open-seconds with that
@@ -19,7 +25,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
-from agora import config, signing
+from agora import signing
 from agora.module import Module
 
 from .terms import ACTUATION
@@ -42,13 +48,6 @@ class ActuationModule(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.settled: set[str] = set()
-        # A deployment toggle, not a belief: whether THIS box is allowed to move water yet.
-        # It is about the physical installation (is a pump actually wired and calibrated?),
-        # which is why it is in the environment rather than in anyone's graph.
-        self.armed = (config.env("AGORA_ACTUATE", "false") or "").lower() in ("1", "true", "yes")
-        if not self.armed:
-            self.log.info("sensor-only: vouchers will be honoured on paper, no valve opened "
-                          "(set AGORA_ACTUATE=true once a pump is wired)")
         # v1 in-process: the settlement side holds both keys and co-signs. The device opens
         # only for a token signed by BOTH the host and clearing.
         self.host_key = self.clearing_key = None
@@ -78,11 +77,10 @@ class ActuationModule(Module):
             data = signing.canonical(payload)
             payload["match_sig"] = signing.sign(self.host_key, data)  # the seller authorises
             payload["val_sig"] = signing.sign(self.clearing_key, data)  # clearing validated
-        if self.armed:
-            self.publish(device.command_topic, payload)
+        self.publish(device.command_topic, payload)
         self.settled.add(voucher.jti)  # single-use either way: a dry run still spends the jti
-        self.log.info("%s: open %.2fs (~%.0f ml) -> %s%s", cmd.plant, cmd.seconds, cmd.ml,
-                      device.command_topic, "" if self.armed else "  [dry run]")
+        self.log.info("%s: open %.2fs (~%.0f ml) -> %s", cmd.plant, cmd.seconds, cmd.ml,
+                      device.command_topic)
         return cmd
 
     def redeem_all(self, vouchers) -> list[Command]:

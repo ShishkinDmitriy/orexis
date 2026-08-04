@@ -86,7 +86,7 @@ That is the whole configuration story now.
   about that hardware, so the executor reads dosing from the device
 - barrel capacity → the **source** in `:world`; it is the constitution's allocation ceiling
 - drying rate + litres-per-fraction → the **plant** in `:world` (physics)
-- `executor.actuate`, simulator tick → **environment variables**; these are deployment
+- where the shared series store is → **an environment variable**; this is deployment
   toggles, not beliefs anyone holds
 - the **message broker** → the world, as an `ag:MessageBus`. It started in `.env` and moved:
   a channel name is meaningless without the broker it is on, and members who disagree about

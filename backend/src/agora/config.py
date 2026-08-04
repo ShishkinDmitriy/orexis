@@ -27,28 +27,18 @@ def _find_upwards(name: str, start: Path) -> Path | None:
 
 
 def _load_env() -> None:
-    """Two files, by scope, and neither at the repo root.
+    """One file, and not at the repo root: `infra/.env` says where the shared series store is.
 
-    `infra/.env` says where the shared series store is. `world/<name>/.env` says what this
-    installation may DO with that world — whether a pump is wired, which subjects are
-    simulated. Nothing is global, because nothing here is true of every world at once.
+    That is the whole of the environment now. What a thing IS and what it may DO are in the
+    model — a device that must not move water is declared as one, not disarmed by a variable
+    that can silently disagree with the world.
 
-    Both are optional: in a container the values arrive as `env_file` and there is no file to
-    find. This is the host-run convenience.
+    Optional: in a container the value arrives as `env_file`. This is host-run convenience.
     """
     infra = _find_upwards("infra/.env", PROJECT_ROOT)
     if infra:
         load_dotenv(infra)
 
-    # Resolved from the raw environment, not through env(), because this IS how env() gets
-    # populated. The world dir wins when set; a container always sets it.
-    world = os.environ.get("AGORA_WORLD_DIR")
-    if not world:
-        name = os.environ.get("AGORA_WORLD", "society")
-        world = PROJECT_ROOT.parent / "world" / name
-    candidate = Path(world) / ".env"
-    if candidate.exists():
-        load_dotenv(candidate)
 
 
 _load_env()

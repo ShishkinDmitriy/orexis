@@ -196,6 +196,28 @@ agora-compose society
 cd world/society && podman compose up -d
 ```
 
+# Simulation — a world, not a mode
+
+A society you can run without hardware is a **world whose devices are simulated**, not a flag
+on a real one and not a program running beside it.
+
+The model already states what every device is and how it is driven. A simulated device is a
+*kind of device*, so an agent derives a simulated capability from it the way it derives any
+other — and a world cannot then disagree with how it is actually running. That is the same
+rule as everywhere else: what a thing does follows from what the world says it is.
+
+What this replaced: a separate `agora-sim` process pretending to be hardware, told by an
+environment variable which subjects to pretend to be. Getting that variable wrong put two
+publishers on one topic and both readings were ingested — a failure that cost hours here more
+than once, and one the model could not warn about because the model did not know simulation
+existed.
+
+**Unbuilt.** The capability and its binding do not exist yet, so today a world needs real
+boards. The shape is known: a simulated *binding* fits the existing split better than a new
+capability — a capability distinguishes what an agent must decide, a binding distinguishes how
+a device is spoken to, and "this reading came from a soil model rather than a wire" is
+plainly the second.
+
 # Amending
 
 Edit the files and restart the agents. Bump `ag:versionNumber` on a structural change — every
@@ -212,9 +234,8 @@ only an explicit re-birth discards them.
 - **Readings are not stored on the wire.** A board publishes QoS 0 and unretained, so a reading
   published while no agent is running goes to nobody. Start the agents *before* the hardware,
   or the first readings are lost.
-- **the `sim` compose profile simulates every subject in the world when `AGORA_SIM_PLANTS` is empty** —
-  including ones a real board is already publishing for, on the same topic, silently
-  overwriting real readings. With any hardware connected, list only the virtual subjects.
+  ones a real board is already publishing for, on the same topic, and both are ingested. The
+  world cannot warn you, by design: it does not know that simulation exists.
 
 # Seams left open
 

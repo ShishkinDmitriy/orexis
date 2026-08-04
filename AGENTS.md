@@ -48,7 +48,6 @@ record is worse than none, because it is still cited.
    enforced. An agent is told its id and given one world, mounted — it never learns that other
    worlds exist. See [where-the-belief-base-lives](knowledge/decisions/where-the-belief-base-lives.md).
 5. **There is no config file for the model.** Topology lives in the world graph, desire and limits in each
-   agent's own beliefs, both authored in `world/<world>/`. Deployment facts (`AGORA_ACTUATE`,
    service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
@@ -63,7 +62,6 @@ source .venv/bin/activate
 agora-validate <world> # build the world from its files and hold it to every package's shapes
 agora-compose <world>       # generate world/<world>/compose.yaml from that world's roster
 cd world/<world> && podman compose up -d               # one container per agent
-cd world/<world> && podman compose --profile sim up -d # ... plus the virtual edge
 podman build -t agora:local -f backend/Containerfile .   # only when a dependency changes
 pytest backend -q      # 176 tests, no infra needed
 ```
@@ -78,9 +76,8 @@ would reset them on a restart is a bug, not a convenience.
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `backend/tests/test_store.py` checks this by scanning the source text.
-- **`AGORA_SIM_PLANTS` empty means every subject in the world** — including ones a real board
-  publishes for, on the same topic. With hardware connected, list only the virtual ones. The
-  simulator only runs under `--profile sim`, so forgetting it is now the safe default.
+  ones a real board publishes for, on the same topic, and both get ingested. The world does
+  not know simulation exists; naming the subjects is the operator's job.
 - **Stray host processes are the usual cause of doubled data.** Agents and the simulator both
   publish and ingest; a leaked one from an earlier run keeps writing. `podman compose down`
   removes a society deterministically, which is half of why deployment is containers.

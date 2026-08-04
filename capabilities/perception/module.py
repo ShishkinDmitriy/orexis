@@ -40,11 +40,9 @@ Derivation: capabilities/perception/rules.ru. See knowledge/domain/sensing.md.
 
 from __future__ import annotations
 
-from agora import config
 from agora.driver import driver_for
-from agora.influx_writer import InfluxWriter
 from agora.module import Module
-from agora.sensed_writer import SensedWriter
+from agora.observation import Observations
 from agora.store import bindings
 
 from .beliefs import LISTENING_BLOCK, SUBSCRIBING_BLOCK
@@ -74,13 +72,8 @@ class PerceptionModule(Module):
                 self.log.warning("%s states no binding I can speak — it will never be read",
                                  sensor.local_id)
 
-        self.influx = InfluxWriter(
-            config.env("INFLUX_URL", "http://localhost:8086"),
-            config.env("INFLUX_TOKEN", "dev-token-change-me"),
-            config.env("INFLUX_ORG", "agora"),
-            config.env("INFLUX_BUCKET", "sensors"),
-        )
-        self.sensed = SensedWriter(agent.store)
+        # Recording is not perception's to define — see agora/observation.py.
+        self.observations = Observations(agent)
 
     def _max_age_s(self) -> int:
         raise NotImplementedError
@@ -92,7 +85,7 @@ class PerceptionModule(Module):
                 for t in self.drivers[s.uri].subscriptions(s)]
 
     def stop(self) -> None:
-        self.influx.close()
+        self.observations.close()
 
     def handle(self, topic: str, payload: bytes) -> bool:
         for sensor in self.me.sensors:
@@ -108,33 +101,9 @@ class PerceptionModule(Module):
         return False
 
     def ingest(self, sensor, value: float) -> None:
-        """Record the reading as my own assertion, and announce what I make of it."""
-        try:
-            self.influx.write_reading(sensor.subject_id, sensor.local_id, value)
-        except Exception as exc:  # history is best-effort; never drop the reading over it
-            self.log.error("influx write failed: %s", exc)
-        try:
-            self.sensed.write(
-                subject_uri=sensor.subject, subject_id=sensor.subject_id,
-                value=round(value, 3), sensor_uri=sensor.uri,
-                observed_property=sensor.observes, author_uri=self.me.uri,
-                world_version=self.agent.world.version,
-            )
-        except Exception as exc:
-            self.log.error("sensed write failed: %s", exc)
-
-        if self.me.event_topic:
-            # Voluntary disclosure: I announce my own verdict, not my raw state. A host listens
-            # for this to know scarcity has appeared, and never reads my moisture. The verdict
-            # comes from whichever of my capabilities holds an opinion — perception supplies
-            # the number, the stake supplies the judgment.
-            self.publish(self.me.event_topic, {
-                "agent": self.me.agent_id, "subject": sensor.subject,
-                "value": round(value, 3),
-                **self.agent.annotations(sensor.subject, value),
-            })
+        """Record what the sensor read, then re-aim if this capability can."""
+        self.observations.record(self.log, sensor, value)
         self.on_reading(sensor, value)
-        self.agent.reading_recorded(sensor.subject, value)
 
     def on_reading(self, sensor, value: float) -> None:
         """What this capability does after recording. Subscribing re-aims; listening does not."""

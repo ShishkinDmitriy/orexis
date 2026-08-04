@@ -149,26 +149,24 @@ Mosquitto is the exception and is a **system** service, because it is not ours:
 
 # Sensor-only until a pump is wired
 
-a world's `.env` has `AGORA_ACTUATE=false` — rounds run and log the allocation, but publish **no** valve
 commands. Watch the supplier decide against real moisture first. When a pump is wired and
-calibrated, set `AGORA_ACTUATE=true` and restart that world.
 
 Valve *calibration* is not a deployment toggle: it lives on the valve in `world.ttl`, because
 it is a fact about the hardware rather than about this installation.
 
 # No hardware?
 
-The virtual edge is a service in the world's own compose, behind a profile:
+Not by running a simulator beside the agents — there isn't one any more, and there was no good
+place to put it. A program pretending to be hardware had to be told which subjects to pretend
+to be, and getting that wrong put two publishers on one topic with both readings ingested.
 
-```bash
-cd world/<name>
-podman compose --profile sim up -d    # agents + the virtual edge
-```
+**A simulation is a world.** The model already says what every device is and how it is driven;
+a device that is simulated is a *kind of device*, so an agent derives a simulated capability
+from it exactly as it derives any other. Nothing is toggled, nothing is passed a flag, and a
+world cannot disagree with how it is actually running.
 
-It is behind a profile because a world with real hardware must not have it running: two
-publishers on one topic both ingest, which has cost time here before. Set `AGORA_SIM_PLANTS`
-in that world's `.env` to the **virtual subjects only** when mixing with real boards; empty means every
-subject in that world.
+**That world does not exist yet** — the capability and its binding are unbuilt, so today the
+society needs real boards. See [world](/domain/world.md) §Simulation.
 
 # It went wrong
 
@@ -178,5 +176,4 @@ subject in that world.
 | agent logs `born` on every start | it is not keeping its volume — check the `agora-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
-| readings arrive twice | two writers. A stray host process from an earlier run, or the `sim` compose profile covering a real board |
 | agent cannot reach the broker | the world says `ag:brokerHost "localhost"`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |

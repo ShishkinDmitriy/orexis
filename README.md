@@ -148,7 +148,6 @@ world**, one process each:
 ```bash
 agora-compose society                                  # generate the compose file FROM the world
 cd world/society && podman compose up -d
-podman compose --profile sim up -d                     # + the virtual edge, if no hardware
 ```
 
 ```
@@ -178,7 +177,6 @@ that let me do?*), then its own beliefs (*what do I want, how closely should I w
 runs exactly the modules its capabilities name. A round is a conversation — a plant announces
 its own verdict, the host offers, bidders answer with numbers only they can compute, clearing
 validates, vouchers come back. Deterministic, no LLM. (For a closed loop where wins actually
-water the plants, set `AGORA_ACTUATE=true`.)
 
 A bidder **looks before it bids** and sits out the round if its sensor does not answer in
 time, or if the newest reading is older than its own `ag:maxReadingAgeS`. Owning the cadence
@@ -187,28 +185,20 @@ belief, so a slow-living succulent may accept older data than a fern.
 
 For unattended operation see [`runbooks/run-a-world`](knowledge/runbooks/run-a-world.md)
 §Unattended — there are no agora services, only podman's own restart handling.
-`AGORA_ACTUATE` in that world's `.env` gates whether the supplier actually opens
-valves (`false` = sensor-only: decide, log, water nothing). Deployment toggles like this stay
-in the environment — they are about the physical installation, not beliefs anyone holds.
 
-## Run the whole society in simulation (no hardware)
+## Running without hardware
 
-Because the physical edge is dumb and interchangeable, **virtual plants** (soil models) are
-indistinguishable from real ones to the agents and the auction — so you can run and watch
-the entire society in software, and even mix virtual + real plants. the `sim` compose profile replaces the
-sensor edge *and* the pump: each virtual plant dries over time, senses on the cadence its
-agent set, and gains moisture when it wins water — a closed loop driven by the market.
+Not by running a simulator beside the agents — there isn't one any more, and there was no good
+place to put it. A program pretending to be hardware had to be told which subjects to pretend
+to be, and getting that wrong put two publishers on one topic with both readings ingested.
 
-```bash
-# set AGORA_ACTUATE=true in .env (the supplier must be allowed to open valves)
-podman compose --profile sim up -d   # virtual plants: dry, sense, get watered
-cd world/society && podman compose up -d   # the whole society
-```
+**A simulation is a world.** The model already says what every device is and how it is driven;
+a device that is simulated is a *kind of device*, so an agent derives a simulated capability
+from it exactly as it derives any other. Nothing is toggled, nothing is passed a flag, and a
+world cannot disagree with how it is actually running.
 
-Watch the plants dry, hit their own LOW, win water, and recover — `journalctl`/logs show
-`running a round` → grants → `watered N ml -> moisture ...`. Grafana shows the moisture
-oscillate around each plant's target. To mix with real hardware, list only the *virtual*
-plant ids in `AGORA_SIM_PLANTS` and give the real ones ESP32s on the same topics.
+**That world does not exist yet** — the capability and its binding are unbuilt, so today the
+society needs real boards. See [`domain/world`](knowledge/domain/world.md) §Simulation.
 
 ## 4. Inspect
 

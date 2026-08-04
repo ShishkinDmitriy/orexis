@@ -102,7 +102,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       AGORA_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
       AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env, .env]
+    env_file: [../../infra/.env]
     network_mode: host
     # Rootless podman maps YOUR uid into the container; without this the agent lands on a
     # subuid that cannot write its own belief-base volume. Map it onto the image's user.
@@ -160,35 +160,6 @@ x-podman:
 
 services:
 {services}
-  # The virtual edge for THIS world: subjects that dry, sense on their agent's interval, and
-  # get watered. Behind a profile because a world with real hardware must not have it running
-  # — two publishers on one topic both ingest, which has cost time here before.
-  #
-  #   podman compose --profile sim up -d
-  #
-  # Set AGORA_SIM_PLANTS in ../../.env to the VIRTUAL subjects only when mixing with real
-  # boards; empty means every subject in this world.
-  sim:
-    image: {IMAGE}
-    command: ["agora-sim"]
-    profiles: [sim]
-    environment:
-      AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env, .env]
-    network_mode: host
-    userns_mode: "keep-id:uid=10001,gid=10001"
-    restart: unless-stopped
-    volumes:
-      - ./world.ttl:/app/world/world.ttl:ro
-      # it verifies the co-signed valve commands it receives, so it needs the PUBLIC keys
-      - ./secrets/host.pub:/app/world/secrets/host.pub:ro
-      - ./secrets/clearing.pub:/app/world/secrets/clearing.pub:ro
-      - ../../capabilities:/app/capabilities:ro
-      - ../../transports:/app/transports:ro
-      - ../../domain:/app/domain:ro
-      - ../../kernel:/app/kernel:ro
-      - ../../backend/src/agora:/app/backend/src/agora:ro
-
 volumes:
 {volumes}"""
 
