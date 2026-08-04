@@ -59,6 +59,7 @@ source .venv/bin/activate
 agora-validate <world> # build the world from its files and hold it to every package's shapes
 agora-compose <world>       # generate world/<world>/compose.yaml from that world's roster
 cd world/<world> && podman compose up -d    # one container per agent
+podman build -t agora:local -f backend/Containerfile .   # only when a dependency changes
 agora-sim              # virtual edge: subjects that dry, sense on cadence, get watered
 pytest backend -q      # 176 tests, no infra needed
 ```

@@ -41,10 +41,11 @@ kernel/        the T-Box everything layers on. Not a capability; there is one
 capabilities/  what an agent can DO — perception, market, actuation. The extendable axis
 transports/    how a device is REACHED — mqtt. Deliberately not a capability
 domain/        what the society is ABOUT — water. Vocabulary; the domain is a plug-in
-backend/       the runtime that loads all of the above, plus the pure market mechanism
+backend/       the runtime that loads all of the above, the pure market mechanism, and
+               the Containerfile that packages them
 world/         ratified worlds — one directory each: topology, beliefs, and its compose file
 firmware/      ESP32 edge — moisture sensors and pump/valve
-infra/         compose service configs — grafana, mosquitto
+infra/         how it runs: the infra compose, grafana and mosquitto configs
 knowledge/     OKF knowledge bundle (architecture decisions + domain model)
 ```
 

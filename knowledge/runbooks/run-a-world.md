@@ -99,7 +99,7 @@ Rebuild only when a **dependency** changes (`backend/pyproject.toml`) or you add
 image copies rather than mounts:
 
 ```bash
-podman build -t agora:local -f Containerfile .
+podman build -t agora:local -f backend/Containerfile .
 podman compose up -d --force-recreate
 ```
 
