@@ -1,11 +1,3 @@
----
-type: Index
-title: Decisions
-description: Index of architecture decisions (ADR-style) with rationale and open seams.
-tags: [index, decisions]
-timestamp: 2026-08-01T00:00:00Z
----
-
 # Decisions
 
 Architecture decisions, ADR-style: context, the choice, why, and — where it matters —

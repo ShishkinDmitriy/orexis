@@ -1,11 +1,3 @@
----
-type: Index
-title: Domain
-description: Index of domain concepts and components — the shared contract and invariants.
-tags: [index, domain]
-timestamp: 2026-08-01T00:00:00Z
----
-
 # Domain
 
 The shared contract — what each component is, what it's responsible for, and its
