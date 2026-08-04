@@ -38,7 +38,8 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
 # A genesis output is a whole world, and there may be several
 
 `genesis/` holds **one directory per ratified world**, each complete and seedable on its own —
-not a base with fragments layered on it. `agora-seed <name>` loads exactly one.
+not a base with fragments layered on it. `agora-seed <name>` loads exactly one. What a world is
+made of, and how to author one, is [world](/domain/world.md).
 
 This matters more than convenience. A world is the *entire* model of a system, so a second one
 is not a variant of the first: it is a different society. `genesis/society` has a market;

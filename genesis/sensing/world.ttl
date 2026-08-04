@@ -16,7 +16,7 @@
 #  The device ids and channels are deliberately IDENTICAL to genesis/society, so one flashed
 #  board works in either world. Which world is in the store decides what the agent becomes.
 #
-#  See genesis/README.md, knowledge/decisions/world-graph.md.
+#  See knowledge/domain/world.md, knowledge/decisions/world-graph.md.
 
 ##########  The bus everyone speaks over  ##########
 

@@ -22,7 +22,7 @@
 #  id — and discovers all of this from it.
 #
 #  This is ONE ratified world — the full example, with a market in it. genesis/ holds several;
-#  see genesis/README.md. Seed it with `agora-seed society`.
+#  see knowledge/domain/world.md. Seed it with `agora-seed society`.
 #
 #  See knowledge/decisions/world-graph.md, knowledge/decisions/capability-packages.md.
 

@@ -30,6 +30,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [sensing](/domain/sensing.md) - Perception split by WHO HOLDS THE CLOCK: Polling (the agent asks each time — reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). Either way the agent owns the freshness rule, and a bid must cite a reading it trusts.
 
+# Genesis and structure
+
+* [world](/domain/world.md) - What a ratified world is made of (public topology + one private beliefs file per agent), the three rules for authoring one, and what genesis DERIVES rather than accepts. Several worlds coexist; which one is seeded decides what each agent becomes.
+
 # Rules and resources
 
 * [constitution](/domain/constitution.md) - Hard, non-negotiable constraints enforced by code, not persuasion.

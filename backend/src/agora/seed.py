@@ -25,7 +25,8 @@ can never drift apart. Change the wiring, re-run genesis, and abilities follow.
 
 Re-run after editing (bump agora:versionNumber in world.ttl on a structural change).
 
-See genesis/README.md, knowledge/decisions/genesis.md, knowledge/decisions/world-graph.md.
+See knowledge/domain/world.md, knowledge/decisions/genesis.md,
+knowledge/decisions/world-graph.md.
 """
 
 from __future__ import annotations

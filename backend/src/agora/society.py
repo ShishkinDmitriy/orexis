@@ -21,7 +21,7 @@ Contrast the firmware, which cannot work this way: a board is hardware and is fl
 What the world decides is what an *agent* is — which is why the same flashed board is a
 watcher in one world and a bidder in another.
 
-See knowledge/decisions/capability-packages.md, genesis/README.md.
+See knowledge/decisions/capability-packages.md, knowledge/domain/world.md.
 """
 
 from __future__ import annotations

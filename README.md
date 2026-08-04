@@ -130,7 +130,7 @@ agora-seed society     # the belief base itself
 
 `agora-seed` takes **which world** to load. [`genesis/`](genesis/) holds one directory per
 ratified world, each complete on its own: `society` is the full example, `sensing` is the
-smallest one that produces a working agent. [`genesis/README.md`](genesis/README.md) is the
+smallest one that produces a working agent. [`domain/world`](knowledge/domain/world.md) is the
 guide to authoring your own — what a world is made of, what you state versus what gets
 derived, and how to check it.
 
