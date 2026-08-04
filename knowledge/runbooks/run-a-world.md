@@ -26,8 +26,9 @@ agent's belief base lives inside that agent. Infra is a separate compose project
 world and stays up across them.
 
 ```bash
-cp .env.example .env
-cd infra && podman compose up -d   # influxdb, grafana
+cp infra/.env.example infra/.env          # where the series store is
+cp world/<name>/.env.example world/<name>/.env   # what this installation may do with it
+cd infra && podman compose up -d          # influxdb, grafana
 agora-keygen <world>          # that world's host + clearing signing keys, once
 ```
 
@@ -148,7 +149,7 @@ Mosquitto is the exception and is a **system** service, because it is not ours:
 
 # Sensor-only until a pump is wired
 
-`.env` has `AGORA_ACTUATE=false` — rounds run and log the allocation, but publish **no** valve
+a world's `.env` has `AGORA_ACTUATE=false` — rounds run and log the allocation, but publish **no** valve
 commands. Watch the supplier decide against real moisture first. When a pump is wired and
 calibrated, set `AGORA_ACTUATE=true` and restart that world.
 
@@ -166,7 +167,7 @@ podman compose --profile sim up -d    # agents + the virtual edge
 
 It is behind a profile because a world with real hardware must not have it running: two
 publishers on one topic both ingest, which has cost time here before. Set `AGORA_SIM_PLANTS`
-in `.env` to the **virtual subjects only** when mixing with real boards; empty means every
+in that world's `.env` to the **virtual subjects only** when mixing with real boards; empty means every
 subject in that world.
 
 # It went wrong

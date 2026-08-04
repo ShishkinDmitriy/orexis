@@ -39,9 +39,10 @@ record is worse than none, because it is still cited.
    `agora.loader` finds them. Adding one is adding a directory; no registry to edit. Capability
    packages never import each other's Python: ask `agent.provider(family)` or contribute via
    `annotate`/`urgency`.
-3. **Two `.env` files, by scope.** The repo root says what this installation may *do*
-   (`AGORA_ACTUATE`, the sim toggles); `infra/.env` says where the shared series store is.
-   Both are loaded, root first.
+3. **No `.env` at the repo root, because nothing here is true of every world at once.**
+   `infra/.env` says where the shared series store is; `world/<name>/.env` says what this
+   installation may *do* with that world — whether a pump is wired, which subjects are
+   simulated. Both are loaded on a host run; in a container they arrive as `env_file`.
 4. **There is no shared store.** The world is TTL files; each agent builds its own belief base
    at boot and holds it in a volume of its own, so isolation is structural rather than
    enforced. An agent is told its id and given one world, mounted — it never learns that other

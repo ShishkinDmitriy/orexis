@@ -85,8 +85,9 @@ Python imports. See
 ## 1. Infra
 
 ```bash
-cp .env.example .env
-docker compose up -d        # or: podman compose up -d
+cp infra/.env.example infra/.env                 # where the series store is
+cp world/society/.env.example world/society/.env # what this installation may do with it
+cd infra && docker compose up -d                 # or: podman compose up -d
 ```
 
 Brings up: InfluxDB (`:8086`) and Grafana (`:3000`). **No triplestore** — each agent holds its
@@ -186,7 +187,7 @@ belief, so a slow-living succulent may accept older data than a fern.
 
 For unattended operation see [`runbooks/run-a-world`](knowledge/runbooks/run-a-world.md)
 §Unattended — there are no agora services, only podman's own restart handling.
-`AGORA_ACTUATE` in `.env` gates whether the supplier actually opens
+`AGORA_ACTUATE` in that world's `.env` gates whether the supplier actually opens
 valves (`false` = sensor-only: decide, log, water nothing). Deployment toggles like this stay
 in the environment — they are about the physical installation, not beliefs anyone holds.
 

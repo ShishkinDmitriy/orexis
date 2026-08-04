@@ -102,7 +102,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       AGORA_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
       AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env, ../../.env]
+    env_file: [../../infra/.env, .env]
     network_mode: host
     # Rootless podman maps YOUR uid into the container; without this the agent lands on a
     # subuid that cannot write its own belief-base volume. Map it onto the image's user.
@@ -174,7 +174,7 @@ services:
     profiles: [sim]
     environment:
       AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env, ../../.env]
+    env_file: [../../infra/.env, .env]
     network_mode: host
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
