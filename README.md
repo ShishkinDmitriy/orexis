@@ -122,8 +122,8 @@ pip install -e ./backend
 One-time setup, in order:
 
 ```bash
-agora-acl society      # per-agent store credentials + access list, generated from the world
-                       #   (re-run after adding an agent; restart Fuseki to pick it up)
+agora-acl              # one isolated Fuseki dataset per world + per-agent credentials
+                       #   (re-run after adding a world or agent; restart Fuseki to load it)
 agora-keygen           # the host + clearing signing keys the valves check
 agora-seed society     # the belief base itself
 ```

@@ -76,15 +76,15 @@ seeded fern      private beliefs -> .../graph/beliefs/fern
 that derived nothing has wiring implying no ability — almost always a missing `ag:senseMode`,
 or a device that is not a kind of anything the rules recognise.
 
-Seeding replaces `:ontology`, `:world` and every `:beliefs/*` graph. It leaves `:sensed` alone,
-so readings survive. It is also, today, an unintended re-*birth*: it overwrites beliefs an
-agent may have revised. Harmless while nothing revises them — see [agent](/domain/agent.md)
-§Lifecycle.
+Seeding replaces `:ontology`, `:world` and every `:beliefs/*` graph **in this world's dataset**
+and touches no other world. It leaves `:sensed` alone, so readings survive. It is also, today,
+an unintended re-*birth*: it overwrites beliefs an agent may have revised. Harmless while
+nothing revises them — see [agent](/domain/agent.md) §Lifecycle.
 
 # 5. Validate
 
 ```bash
-agora-validate      # exits non-zero on any violation
+agora-validate <name>   # one world's belief base; exits non-zero on any violation
 ```
 
 Capability-aware: a shape applies to an agent only if that agent derived the capability it
@@ -95,12 +95,15 @@ its ceiling, a device on a bus with no channel, and an agent with no capability 
 # 6. Credentials, then deploy
 
 ```bash
-agora-acl <name>    # one store credential per agent, + the Fuseki access list
+agora-acl           # every world: a dataset each, and one credential per agent
+# then restart Fuseki so it loads the new dataset
 ```
 
-Run this **before** generating the compose file. Without it the per-agent `.pw` files do not
-exist, the bind mount becomes a directory, and every agent silently falls back to admin —
-undoing the isolation. `agora-compose` warns, but only if you read it.
+`agora-acl` takes no world — a new world needs a new Fuseki **dataset**, and the config
+defining them all is one file. Run it **before** generating the compose file: without it the
+per-agent `.pw` files do not exist, the bind mount becomes a directory, and every agent
+silently falls back to admin, undoing the isolation. `agora-compose` warns, but only if you
+read it.
 
 Then [run-a-world](/runbooks/run-a-world.md).
 

@@ -129,13 +129,27 @@ def _secret_for(agent_id: str) -> str | None:
     return path.read_text().strip() if path.exists() else None
 
 
-def from_env(env: Callable[[str, str], str], agent_id: str | None = None) -> Store:
+def world_url(env: Callable[[str, str], str], world: str) -> str:
+    """Where ONE world's belief base lives.
+
+    A world is a belief base — each has its own isolated dataset, so seeding one cannot
+    overwrite another and readings stay with the world they were observed in. This is the only
+    thing that has to know the naming convention; agents are handed the finished URL, because
+    an agent knows its own id and nothing else about where it lives.
+    """
+    base = env("FUSEKI_BASE", "http://localhost:3030").rstrip("/")
+    return f"{base}/ds-{world}"
+
+
+def from_env(env: Callable[[str, str], str], agent_id: str | None = None,
+             world: str | None = None) -> Store:
     """The store as seen by one identity.
 
     With an agent id, it connects as that agent and sees only what the world entitles it to.
-    Without one — seeding, validation — it connects as admin.
+    Without one — seeding, validation — it connects as admin. With a world, it targets that
+    world's dataset; without one it takes FUSEKI_URL, which is what an agent is given.
     """
-    read_url = env("FUSEKI_URL", "http://localhost:3030/ds")
+    read_url = world_url(env, world) if world else env("FUSEKI_URL", "http://localhost:3030/ds")
     write_url = env("FUSEKI_WRITE_URL", read_url.rstrip("/") + "-rw")
 
     if agent_id:

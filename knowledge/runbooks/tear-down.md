@@ -18,7 +18,7 @@ Measured on a running system, immediately after `down` on a world:
 |---|---|---|
 | that world's agent containers | **gone** | what `down` is for |
 | infra (Fuseki, Influx, Grafana) | **still up** | a separate compose project, and shared across worlds |
-| the belief base — 418 triples | **intact** | in a volume; the world and every reading outlive any process |
+| that world's belief base | **intact** | in a volume, in that world's own dataset; the world and every reading outlive any process |
 | retained MQTT commands | **all four still standing** | they live in the broker, which is not in compose at all |
 | host processes (`agora-sim`, strays) | **still running** | compose never knew about them |
 
@@ -105,8 +105,9 @@ Rarely what you want — re-seeding replaces the world and beliefs anyway, and `
 record of what was actually observed.
 
 ```bash
-agora-seed <world>                    # replaces :ontology, :world, :beliefs/* — keeps :sensed
-podman compose down -v                # repo root: destroys the Fuseki AND Influx volumes
+agora-seed <world>                    # replaces that world's :ontology, :world, :beliefs/*
+podman compose down -v                # repo root: destroys the Fuseki AND Influx volumes —
+                                      # EVERY world's dataset, not just one
 ```
 
 `-v` is not reversible. It takes every reading and every graph with it.

@@ -133,6 +133,33 @@ either; which world is in the store decides whether its agent merely watches or 
 is the model-driven claim reduced to something checkable by re-seeding: the hardware did not
 change, the model did.
 
+# A world is a belief base
+
+Each world has its **own isolated Fuseki dataset** — `/ds-society`, `/ds-sensing`, each on its
+own TDB2 store. That is the whole of multi-world support, and it required no change to the
+graphs, the ontology or any agent, because `.env` already said the environment's only job is to
+name *where the belief base is*. Selecting a world is pointing at a different dataset.
+
+What it buys:
+
+- **Seeding one world cannot overwrite another.** Before this, `:beliefs/fern` held whichever
+  world was seeded last — society's `fern` (9 triples) or sensing's (3). Now both exist at once.
+- **Readings stay with the world they were observed in.** `:sensed` is per-dataset, which
+  closes a real provenance hole: an observation records `ag:underWorldVersion`, but two worlds
+  can both be v1, so a single `:sensed` graph mixed readings that nothing could tell apart.
+- **No cross-world orphans.** An agent removed from one world leaves no residue in another.
+- **Two worlds can be up at once** — as far as the belief base is concerned.
+
+`agora-acl` generates the whole config, one dataset per world, with a per-dataset access
+registry. Credentials are per agent *id*, not per world: `fern` in two worlds is one principal,
+and it is the registry that decides which beliefs it may read where.
+
+**Parallel operation has a second requirement the belief base cannot supply: disjoint
+hardware.** `society` and `sensing` deliberately share device ids and channels, so one flashed
+board runs in either — which also means both worlds up at once puts two agents on
+`sensors/fern/moisture`, and both ingest. Worlds meant to run concurrently need different
+devices, which is a genesis decision, not an infra one.
+
 # Deployment — one container per agent
 
 `agora-compose <world>` reads the same `world.ttl` and writes `deploy/compose.<world>.yml`: a
@@ -163,7 +190,7 @@ Three details are load-bearing rather than packaging taste:
 The source trees are mounted read-only, so a code change needs a restart rather than a rebuild.
 
 ```bash
-agora-acl society && agora-compose society
+agora-acl && agora-compose society
 cd deploy && podman compose -f compose.society.yml up -d
 ```
 
@@ -171,11 +198,11 @@ cd deploy && podman compose -f compose.society.yml up -d
 
 Edit and re-run `agora-seed <name>`. Bump `ag:versionNumber` on a structural change — every
 recorded observation cites the world version it was made under, so the version is how you tell
-which world a fact was true in.
+*when* within a world a fact was true. (*Which* world it was true in is now the dataset it is
+stored in, since a version number alone cannot distinguish two worlds that are both v1.)
 
-Seeding replaces `:ontology`, `:world` and every `:beliefs/*` graph. It does **not** touch
-`:sensed`, so readings survive a re-seed. Switching worlds does not clear the other world's
-beliefs graphs; re-run `agora-acl <name>` after a switch if you use per-agent credentials.
+Seeding replaces `:ontology`, `:world` and every `:beliefs/*` graph **in that world's dataset**,
+and touches no other world. It does not touch `:sensed`, so readings survive a re-seed.
 
 # Two things that bite
 
@@ -197,6 +224,10 @@ beliefs graphs; re-run `agora-acl <name>` after a switch if you use per-agent cr
   `:world`; removing a wire does not retract the capability until the world is re-seeded.
 - **No cross-world check.** Nothing verifies that two worlds sharing device ids agree about
   those devices' channels, which is exactly the property `society` and `sensing` rely on.
+- **Nothing stops two worlds with shared devices running at once.** The belief bases are
+  isolated; the MQTT topics are not, so both agents would ingest every reading. Refusing to
+  start a world whose devices are already claimed would need a registry of what is running,
+  which does not exist.
 - **World kind is not modelled.** A bench world and a production one want different operational
   beliefs, and nothing expresses that but the directory you seeded — so near-identical belief
   files are hand-copied between worlds, waiting to drift.

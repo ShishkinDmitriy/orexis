@@ -8,8 +8,19 @@
 #
 # Infra (Fuseki, Influx, Grafana) lives in the repo-root docker-compose.yml and is not repeated
 # here — bring it up first. The MQTT broker runs on the host; see infra/mosquitto/lan.conf.
+#
+# This world has its OWN Fuseki dataset (/ds-society), so bringing it up cannot disturb another
+# world's beliefs or readings. Two worlds may run at once as far as the belief base is
+# concerned — but only if their DEVICES differ, since two agents on one topic both ingest.
 
 name: agora-society
+
+# podman-compose puts every service in one pod by default, and a pod cannot combine with the
+# per-service user-namespace mapping below ("--userns and --pod cannot be set together"). The
+# mapping is the thing that makes an agent able to read its own credential and nothing else, so
+# the pod is what gives way. Ignored by docker compose, which does not create pods at all.
+x-podman:
+  in_pod: false
 
 services:
   # Genesis. Runs to completion, then the agents start — an agent against an unseeded store
@@ -34,6 +45,10 @@ services:
     command: ["agora-agent"]
     environment:
       AGORA_AGENT_ID: "fern"
+      # An agent is told its own id and where the belief base is — nothing else. Each world
+      # has its own dataset, so this is how a container knows which society it is part of,
+      # without the agent ever learning the concept of a "world".
+      FUSEKI_URL: "${FUSEKI_BASE:-http://localhost:3030}/ds-society"
     env_file: [../.env]
     network_mode: host
     # Rootless podman maps YOUR uid into the container. Without this it lands on a subuid that
@@ -59,6 +74,10 @@ services:
     command: ["agora-agent"]
     environment:
       AGORA_AGENT_ID: "succulent"
+      # An agent is told its own id and where the belief base is — nothing else. Each world
+      # has its own dataset, so this is how a container knows which society it is part of,
+      # without the agent ever learning the concept of a "world".
+      FUSEKI_URL: "${FUSEKI_BASE:-http://localhost:3030}/ds-society"
     env_file: [../.env]
     network_mode: host
     # Rootless podman maps YOUR uid into the container. Without this it lands on a subuid that
@@ -84,6 +103,10 @@ services:
     command: ["agora-agent"]
     environment:
       AGORA_AGENT_ID: "supplier"
+      # An agent is told its own id and where the belief base is — nothing else. Each world
+      # has its own dataset, so this is how a container knows which society it is part of,
+      # without the agent ever learning the concept of a "world".
+      FUSEKI_URL: "${FUSEKI_BASE:-http://localhost:3030}/ds-society"
     env_file: [../.env]
     network_mode: host
     # Rootless podman maps YOUR uid into the container. Without this it lands on a subuid that
@@ -112,6 +135,10 @@ services:
     command: ["agora-agent"]
     environment:
       AGORA_AGENT_ID: "tomato"
+      # An agent is told its own id and where the belief base is — nothing else. Each world
+      # has its own dataset, so this is how a container knows which society it is part of,
+      # without the agent ever learning the concept of a "world".
+      FUSEKI_URL: "${FUSEKI_BASE:-http://localhost:3030}/ds-society"
     env_file: [../.env]
     network_mode: host
     # Rootless podman maps YOUR uid into the container. Without this it lands on a subuid that

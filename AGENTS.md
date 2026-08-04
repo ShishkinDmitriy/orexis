@@ -39,7 +39,10 @@ record is worse than none, because it is still cited.
    `agora.loader` finds them. Adding one is adding a directory; no registry to edit. Capability
    packages never import each other's Python: ask `agent.provider(family)` or contribute via
    `annotate`/`urgency`.
-3. **There is no config file.** Topology lives in the world graph, desire and limits in each
+3. **A world is a belief base.** Each has its own Fuseki dataset (`/ds-<world>`), so worlds
+   never overwrite each other and readings stay with the world they were observed in. Agents
+   are handed a finished `FUSEKI_URL`; they know their own id and nothing about worlds.
+4. **There is no config file.** Topology lives in the world graph, desire and limits in each
    agent's own beliefs, both authored in `genesis/<world>/`. Deployment facts (`AGORA_ACTUATE`,
    service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
@@ -52,9 +55,9 @@ not contain `ag:hasCapability` — seeding computes it from the wiring.
 ```bash
 source .venv/bin/activate
 
-agora-seed <world>     # load one ratified world from genesis/ (society | sensing)
-agora-acl <world>      # per-agent store credentials + Fuseki access list
-agora-validate         # SHACL over the live belief base; exits non-zero on violation
+agora-seed <world>     # load one ratified world into ITS OWN dataset (society | sensing)
+agora-acl              # every world: one isolated Fuseki dataset each + per-agent credentials
+agora-validate <world> # SHACL over one world's belief base; exits non-zero on violation
 agora-compose <world>  # generate deploy/compose.<world>.yml from that world's roster
 podman compose -f deploy/compose.<world>.yml up -d    # one container per agent
 agora-sim              # virtual edge: subjects that dry, sense on cadence, get watered

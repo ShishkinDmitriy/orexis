@@ -95,7 +95,9 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
 
 def seed(world: str = DEFAULT_WORLD) -> None:
     genesis = world_dir(world)
-    st = store.from_env(config.env)
+    # Into THIS world's dataset. Seeding one world cannot touch another's graphs, because
+    # they are not the same graphs — they are not even the same store.
+    st = store.from_env(config.env, world=world)
 
     # every package's vocabulary into one T-Box graph — separate files so each capability
     # owns its terms, but agents read one merged vocabulary
@@ -104,7 +106,7 @@ def seed(world: str = DEFAULT_WORLD) -> None:
     log.info("loaded T-Box (%s) -> %s", loader.describe(), ONTOLOGY_GRAPH)
 
     st.put_graph(WORLD_GRAPH, (genesis / "world.ttl").read_text())
-    log.info("seeded world %r (topology) -> %s", world, WORLD_GRAPH)
+    log.info("seeded world %r (topology) -> %s", world, store.world_url(config.env, world))
 
     derive(st)
 
