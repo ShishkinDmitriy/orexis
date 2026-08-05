@@ -28,6 +28,87 @@ ag:actsFor a owl:ObjectProperty ; rdfs:domain ag:Agent ;
 ag:Device a owl:Class ; rdfs:label "Device" ;
     rdfs:comment "A physical edge node: mechanism, never policy, and interchangeable with a simulated one." .
 
+#################  The stand — what physically exists, and how it is wired  #################
+#
+# Here rather than in a capability or a domain because it is the same layer as ag:Device above:
+# what EXISTS, independent of what anything can do with it. A capability says an agent can
+# perceive; this says there is a probe, on this board, on this pin. A world about anything at
+# all has a stand, so it is not domain knowledge either.
+#
+# It is written down for three reasons: shapes can then refuse a wiring that cannot work (see
+# kernel/shapes.ttl), firmware configuration becomes derivable from the world rather than
+# hand-kept in a C header, and someone debugging at 2am can ask which pin a probe is on instead
+# of remembering.
+
+ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;
+    rdfs:comment "A machine that runs agent processes. Named so the world can say where its society actually executes." .
+
+ag:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Microcontroller" ;
+    rdfs:comment "A board at the edge, carrying peripherals and reachable over a bus. It runs firmware, not agents." .
+
+ag:Peripheral a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Peripheral" ;
+    rdfs:comment "Something wired to a microcontroller's pins. A sensor is one; so is an indicator." .
+
+ag:model a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model" ;
+    rdfs:comment "What this thing IS, as a human would order it — 'ESP32-WROOM-32D'. Free text on purpose: it identifies hardware to a person, and nothing derives behaviour from it. Behaviour comes from the CLASS." .
+
+ag:runsOn a owl:ObjectProperty ; rdfs:range ag:ComputeHost ; rdfs:label "runs on" ;
+    rdfs:comment "Which host executes this agent. Documents why the bus is where it is." .
+
+ag:carries a owl:ObjectProperty ; rdfs:domain ag:Microcontroller ; rdfs:range ag:Peripheral ;
+    rdfs:label "carries" ;
+    rdfs:comment "A peripheral is wired to this board. The board is what has pins, so the board is what owns the wiring." .
+
+#################  Pins — reified, because a pin assignment has a role  #################
+#
+# `ag:gpio 25` alone cannot describe an RGB LED: it has three pins and they are not
+# interchangeable. So an assignment is a NODE carrying both which line it is and which role it
+# plays, and a single-pin device simply has one of them.
+
+ag:PinAssignment a owl:Class ; rdfs:label "Pin assignment" ;
+    rdfs:comment "One peripheral leg on one GPIO line, in one role." .
+
+ag:pin a owl:ObjectProperty ; rdfs:domain ag:Peripheral ; rdfs:range ag:PinAssignment ;
+    rdfs:label "pin" .
+
+ag:gpio a owl:DatatypeProperty ; rdfs:domain ag:PinAssignment ; rdfs:range xsd:integer ;
+    rdfs:label "gpio" ;
+    rdfs:comment "The GPIO number as the board silkscreen and the firmware both name it." .
+
+ag:pinRole a owl:ObjectProperty ; rdfs:domain ag:PinAssignment ; rdfs:range ag:PinRole ;
+    rdfs:label "pin role" .
+
+ag:PinRole a owl:Class ; rdfs:label "Pin role" ;
+    rdfs:comment "What a leg is for. Roles are grouped by DIRECTION, because that is the part a shape can reason about: whether a line is driven decides which pins it may legally sit on." .
+
+ag:InputRole a owl:Class ; rdfs:subClassOf ag:PinRole ; rdfs:label "Input role" .
+ag:OutputRole a owl:Class ; rdfs:subClassOf ag:PinRole ; rdfs:label "Output role" ;
+    rdfs:comment "A driven line. The distinction earns its keep on the ESP32, whose 34-39 can be read but never driven." .
+
+ag:AnalogIn a ag:InputRole ; rdfs:label "analog in" ;
+    rdfs:comment "Read with an ADC. The role that cannot sit on ADC2 while WiFi is up — the failure returns plausible numbers rather than an error, which is why a shape checks it." .
+ag:DigitalIn a ag:InputRole ; rdfs:label "digital in" .
+ag:DigitalOut a ag:OutputRole ; rdfs:label "digital out" .
+ag:Red a ag:OutputRole ; rdfs:label "red" .
+ag:Green a ag:OutputRole ; rdfs:label "green" .
+ag:Blue a ag:OutputRole ; rdfs:label "blue" .
+ag:I2cData a ag:PinRole ; rdfs:label "I2C SDA" ;
+    rdfs:comment "Bidirectional, so neither an input nor an output role." .
+ag:I2cClock a ag:OutputRole ; rdfs:label "I2C SCL" .
+
+#################  The peripherals actually on the bench  #################
+
+ag:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf ag:Peripheral ;
+    rdfs:label "Capacitive soil moisture probe" ;
+    rdfs:comment "Reports a raw ADC count that falls as the soil wets. A class rather than a model string because how you READ it is what differs; the model is for the person holding it." .
+
+ag:RgbLed a owl:Class ; rdfs:subClassOf ag:Peripheral ; rdfs:label "RGB LED" ;
+    rdfs:comment "Three driven legs and a common return. The return is not modelled: nothing addresses it, and a shape that demanded it would be describing solder rather than software." .
+
+ag:TempHumiditySensor a owl:Class ; rdfs:subClassOf ag:Peripheral ;
+    rdfs:label "Temperature and humidity sensor" ;
+    rdfs:comment "Reserved: the vocabulary is here so a world can state one before anything reads it. Nothing derives a capability from it yet." .
+
 #################  Naming — stated, never derived  #################
 
 ag:localId a owl:DatatypeProperty ; rdfs:range xsd:string ;
