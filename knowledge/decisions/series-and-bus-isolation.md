@@ -263,3 +263,21 @@ And one that is not a permissions problem: **`GF_SECURITY_ADMIN_PASSWORD` applie
 database is first created.** Turning on login against an existing volume leaves the password as
 whatever it already was, which reads as a wrong password in `admin.env`. `grafana cli --homepath
 /usr/share/grafana admin reset-admin-password` is the repair.
+
+## Ed25519 is fine between our processes, and invisible to a browser
+
+The first cut used Ed25519 for every key. mosquitto verified it, paho verified it, `curl`
+verified it — and Firefox answered `SSL_ERROR_NO_CYPHER_OVERLAP`, which reads like a
+ciphersuite misconfiguration and is not one. **Browsers do not support Ed25519 certificates.**
+
+It applies to the whole chain, not the leaf alone: an ECDSA certificate signed by an Ed25519
+authority still asks the browser to verify an Ed25519 signature. So the *installation* CA and
+both server certificates are ECDSA P-256, while the per-world CAs and the agents' client
+certificates stay Ed25519 — nothing but our own code ever verifies those.
+
+The rule worth keeping: **anything a browser terminates is ECDSA; anything only our processes
+speak may be Ed25519.**
+
+Rotating the installation CA to change this replaced the broker's certificate too, which every
+agent verifies — so every agent had to be restarted to read the new `ca.crt`. That is the cost
+recorded in `agora-infra-certs --rotate`, observed rather than predicted.

@@ -41,6 +41,7 @@ from pathlib import Path
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.x509.oid import NameOID
 
@@ -53,6 +54,26 @@ REPO_ROOT = PROJECT_ROOT.parent
 CA_DAYS = 3650          # a world outlives its agents; reissuing the CA re-enrols everyone
 LEAF_DAYS = 397         # the CA/Browser Forum's cap, and a habit worth keeping
 RENEW_BEFORE_DAYS = 30  # reissue this far ahead, so a routine re-run is the cure
+
+
+def _new_key(browser_facing: bool):
+    """Ed25519 between our own processes; ECDSA P-256 for anything a BROWSER must verify.
+
+    Ed25519 is the better key and every client here speaks it — mosquitto, paho and curl all
+    verify it without complaint. Browsers do not support Ed25519 certificates at all, and the
+    failure is opaque from the other end: Firefox reports SSL_ERROR_NO_CYPHER_OVERLAP, which
+    reads like a ciphersuite misconfiguration rather than "your certificate uses an algorithm I
+    will not accept".
+
+    It applies to the whole chain, not just the leaf: an ECDSA certificate signed by an Ed25519
+    authority still asks the browser to verify an Ed25519 signature.
+    """
+    return ec.generate_private_key(ec.SECP256R1()) if browser_facing else Ed25519PrivateKey.generate()
+
+
+def _sign_with(key):
+    """Ed25519 carries its own hash and rejects one; ECDSA requires it."""
+    return None if isinstance(key, Ed25519PrivateKey) else hashes.SHA256()
 
 
 def _now() -> dt.datetime:
@@ -83,14 +104,15 @@ def _expiring(cert_path: Path) -> bool:
     return cert.not_valid_after_utc - _now() < dt.timedelta(days=RENEW_BEFORE_DAYS)
 
 
-def _ca(dir_: Path, common_name: str, rotate: bool) -> tuple[Path, Path]:
+def _ca(dir_: Path, common_name: str, rotate: bool,
+        browser_facing: bool = False) -> tuple[Path, Path]:
     """This authority's cert and key, created if absent. Rotating one re-enrols everyone it
     signed for, so it is never done as a side effect."""
     cert_path, key_path = dir_ / "ca.crt", dir_ / "ca.key"
     if cert_path.exists() and key_path.exists() and not rotate and not _expiring(cert_path):
         return cert_path, key_path
 
-    key = Ed25519PrivateKey.generate()
+    key = _new_key(browser_facing)
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name)])
     cert = (
         x509.CertificateBuilder()
@@ -100,7 +122,7 @@ def _ca(dir_: Path, common_name: str, rotate: bool) -> tuple[Path, Path]:
         .not_valid_before(_now() - dt.timedelta(minutes=5))  # tolerate a little clock skew
         .not_valid_after(_now() + dt.timedelta(days=CA_DAYS))
         .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
-        .sign(key, None)  # Ed25519 carries its own hash; passing one is an error
+        .sign(key, _sign_with(key))
     )
     _write(key_path, key.private_bytes(
         serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
@@ -111,14 +133,14 @@ def _ca(dir_: Path, common_name: str, rotate: bool) -> tuple[Path, Path]:
 
 
 def _leaf(dir_: Path, stem: str, common_name: str, ca: tuple[Path, Path],
-          server: bool, rotate: bool) -> bool:
+          server: bool, rotate: bool, browser_facing: bool = False) -> bool:
     """Issue `<stem>.crt`/`.key` for this identity. Returns whether it wrote anything."""
     cert_path, key_path = dir_ / f"{stem}.crt", dir_ / f"{stem}.key"
     if not rotate and key_path.exists() and not _expiring(cert_path):
         return False
 
     ca_cert, ca_key = _load_ca(*ca)
-    key = Ed25519PrivateKey.generate()
+    key = _new_key(browser_facing)
     usage = x509.ExtendedKeyUsage(
         [x509.oid.ExtendedKeyUsageOID.SERVER_AUTH] if server
         else [x509.oid.ExtendedKeyUsageOID.CLIENT_AUTH]
@@ -141,7 +163,7 @@ def _leaf(dir_: Path, stem: str, common_name: str, ca: tuple[Path, Path],
             x509.SubjectAlternativeName([x509.DNSName(common_name), x509.DNSName("localhost")]),
             critical=False,
         )
-    cert = builder.sign(ca_key, None)
+    cert = builder.sign(ca_key, _sign_with(ca_key))
     _write(key_path, key.private_bytes(
         serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
         serialization.NoEncryption()), private=True)

@@ -59,9 +59,12 @@ def issue(host: str = DEFAULT_HOST, rotate: bool = False) -> None:
     to reach the broker is the same operator reaching the dashboard. That is the opposite of the
     per-world CAs, which exist precisely so two societies cannot vouch for each other.
     """
-    ca = _ca(INFRA_SECRETS, "agora installation CA", rotate)
+    # Browser-facing: grafana is opened in one, and the broker shares this authority — a
+    # browser verifying grafana must verify a signature made by this key.
+    ca = _ca(INFRA_SECRETS, "agora installation CA", rotate, browser_facing=True)
     for service, published in (("broker", BROKER_DIR), ("grafana", GRAFANA_DIR)):
-        if _leaf(INFRA_SECRETS, service, host, ca, server=True, rotate=rotate):
+        if _leaf(INFRA_SECRETS, service, host, ca, server=True, rotate=rotate,
+                 browser_facing=True):
             log.info("  cert   %-14s CN=%s", service, host)
         # Published beside the service that mounts it. The originals stay in infra/secrets/,
         # which is where the admin token lives and which nothing else is given.
