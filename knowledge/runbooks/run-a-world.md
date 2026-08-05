@@ -101,9 +101,12 @@ being evidence of anything — check by connecting, not by reading the log.
 # Deploy a world
 
 ```bash
-agora-influx society          # a bucket per agent, and a token that opens only it
-agora-mqtt society            # a credential per principal, and the broker ACL, derived
-agora-compose society         # writes world/society/compose.yaml FROM the world.ttl beside it
+agora-onboard society         # validate, then all three below
+
+# or separately, when you want only one of them:
+#   agora-influx society        # a bucket per agent, and a token that opens only it
+#   agora-mqtt society          # a credential per principal, and the broker ACL, derived
+#   agora-compose society       # writes world/society/compose.yaml FROM the world.ttl beside it
 ```
 
 All three read the same `world.ttl` and grant exactly what its wiring implies, so adding an

@@ -33,10 +33,10 @@ import argparse
 import logging
 from pathlib import Path
 
-from . import ratified
-from .config import PROJECT_ROOT
-from .ontology import AG, WORLD_GRAPH
-from .genesis import DEFAULT_WORLD, world_dir, worlds
+from agora import ratified
+from agora.config import PROJECT_ROOT
+from agora.ontology import AG, WORLD_GRAPH
+from agora.genesis import world_dir, worlds
 
 log = logging.getLogger("compose")
 
@@ -163,7 +163,7 @@ volumes:
 {volumes}"""
 
 
-def generate(world: str = DEFAULT_WORLD) -> Path:
+def generate(world: str) -> Path:
     out = world_dir(world) / "compose.yaml"
     out.write_text(render(world))
     who = roster(world)
@@ -189,9 +189,8 @@ def main() -> None:
         prog="agora-compose",
         description="Generate the compose file for a world, from that world's roster.",
     )
-    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
-                   help=f"which world (default: {DEFAULT_WORLD}). Available: "
-                        + ", ".join(worlds()))
+    p.add_argument("world",
+                   help="which world. Available: " + ", ".join(worlds()))
     generate(p.parse_args().world)
 
 

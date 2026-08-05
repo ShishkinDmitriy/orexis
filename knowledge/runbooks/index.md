@@ -16,8 +16,11 @@ There is no `agora-up`, no `agora-down`, no `agora-restart`. Running a society i
 that behaves the same here as everywhere else.
 
 The only agora-specific commands are the ones that **produce** something from the world:
-`agora-compose`, and `agora-validate` to check the result. Once they have run, you are holding
-an ordinary compose project. There is nothing to seed and nothing to provision — an agent
-builds its own belief base at boot. That line is deliberate: a wrapper
+`agora-onboard`, and `agora-validate` to check the result. Once they have run, you are holding
+an ordinary compose project. There is still nothing to **seed** — an agent builds its own belief
+base at boot — but there is something to **provision**, and that is what onboarding is: a bucket
+and a token per agent, a bus credential and an ACL per principal, every one of them derived from
+the world's wiring rather than decided. See [onboarding](/domain/onboarding.md). That line is
+deliberate: a wrapper
 would be one more thing to learn, one more thing to document, and one more place for the truth
 about what is running to diverge from what compose thinks is running.

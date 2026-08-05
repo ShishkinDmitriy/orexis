@@ -54,7 +54,10 @@ record is worse than none, because it is still cited.
    service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
-And one that catches people out: **capabilities are derived, never declared.** `world.ttl` must
+And two that catch people out. **There is no default world** — every command takes one as a
+required argument and `current_world()` refuses rather than guessing, because a fallback puts a
+misconfigured agent on the same topics as the real one. Also: **capabilities are derived, never
+declared.** `world.ttl` must
 not contain `ag:hasCapability` — seeding computes it from the wiring.
 
 ## Commands
@@ -63,12 +66,13 @@ not contain `ag:hasCapability` — seeding computes it from the wiring.
 source .venv/bin/activate
 
 agora-validate <world> # build the world from its files and hold it to every package's shapes
-agora-influx <world>        # a bucket per agent, and a token that opens only it
-agora-mqtt <world>          # a credential per principal, and the broker ACL, derived
-agora-compose <world>       # generate world/<world>/compose.yaml from that world's roster
+agora-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.
+  agora-influx <world>      #   a bucket per agent, and a token that opens only it
+  agora-mqtt <world>        #   a credential per principal, and the broker ACL, derived
+  agora-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
 cd world/<world> && podman compose up -d               # one container per agent
 podman build -t agora:local -f backend/Containerfile .   # only when a dependency changes
-pytest backend -q      # 193 tests, no infra needed
+pytest backend -q      # 195 tests, no infra needed
 pytest infra -q        # 8 more, against the RUNNING broker and store — see below
 ```
 
@@ -84,8 +88,19 @@ change. Both files report the version they ran against and assert nothing about 
 `MOSQUITTO_VERSION` in `infra/mosquitto/Containerfile` or the Influx image in
 `infra/compose.yaml`, rebuild, and re-run `pytest infra`.
 
-The three generators all read the same `world.ttl` and grant exactly what its wiring implies, so
-adding an agent and re-running is the whole of deploying one. `agora-influx` and `agora-mqtt`
+**Onboarding is the phase between a ratified world and a running society** — see
+[onboarding](knowledge/domain/onboarding.md). Its three generators all read the same `world.ttl`
+and grant exactly what its wiring implies, so adding an agent and re-running `agora-onboard` is
+the whole of deploying one. They stay separately callable because rotating one service's
+credentials should not touch the other's.
+
+**Its code is in `onboarding/`, not `backend/`, and is installed separately** (`pip install -e
+./onboarding`). The line is drawn by **who calls a function**, not by file: `validate_agent`
+stays in `agora` because an agent checks itself at boot, while `validate_world` moved because
+only the sovereign asks it; `sign` and `verify_command` stay because an actuator co-signs, while
+`create_keypair` moved — an agent that could mint a society's keys could sign for it. `agora-influx` reads the admin token, which opens every bucket and which no agent
+may ever hold — and an agent image copies `backend/` wholesale, so the surest way to guarantee
+that is for the code to be absent. `agora-influx` and `agora-mqtt`
 need infra up; `agora-mqtt` must run before the broker will start at all, since its ACL is
 generated and mosquitto now refuses anonymous clients. It then **reloads** the broker itself
 (SIGHUP, not a restart — connected agents keep their sessions), so adding an agent or a world

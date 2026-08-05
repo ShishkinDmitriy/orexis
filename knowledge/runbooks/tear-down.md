@@ -47,8 +47,7 @@ world you have since deleted is still standing after everything is down.
 # Stop one world
 
 ```bash
-cd deploy
-podman compose -f world/society/compose.yaml down
+cd world/society && podman compose down
 ```
 
 Agents stop. Beliefs, readings, the world and any retained commands are untouched — this is
@@ -60,14 +59,13 @@ In this order, because each layer is independent:
 
 ```bash
 # 1. every world (each is its own compose project)
-cd deploy
-for w in ../world/*/; do (cd "$w" && podman compose down); done
+for w in world/*/; do (cd "$w" && podman compose down); done
 
 # 2. host processes — compose never knew about these
 pkill -f "agora.runtime|agora-agent"
 
-# 3. infra, if you want the belief base and dashboards down too
-cd .. && podman compose down
+# 3. infra, if you want the broker, the store and the dashboards down too
+cd infra && podman compose down
 ```
 
 **Step 2 is the one people skip, and it has cost real time here twice** — once a leaked
@@ -123,9 +121,9 @@ Rarely what you want. Beliefs are the agent's, and discarding them is a re-birth
 comes back as whatever the sovereign last authored, having forgotten anything it revised.
 
 ```bash
-cd deploy
-podman compose -f compose.yaml down -v   # destroys THAT world's agents' belief bases
-cd .. && podman compose down -v                 # repo root: destroys the Influx history
+cd world/<name> && podman compose down -v   # destroys THAT world's agents' belief bases
+cd infra && podman compose down -v          # destroys the Influx history and the broker's
+                                            # retained messages
 ```
 
 `-v` is not reversible. Per world it discards who those agents became — a re-birth by another
@@ -138,8 +136,8 @@ volume belonging to that agent alone.
 
 | you want | do |
 |---|---|
-| pause a society | `compose -f compose.yaml down` |
-| swap worlds | `down`, re-seed, `agora-compose`, `up` — see [run-a-world](/runbooks/run-a-world.md) |
+| pause a society | `cd world/<name> && podman compose down` |
+| swap worlds | `down`, `agora-onboard <other>`, `up` — see [run-a-world](/runbooks/run-a-world.md) |
 | stop everything | all worlds down, then `pkill`, then infra down |
 | a device is obeying a world that is gone | clear its retained `cmd` topic |
-| start completely fresh | the above, then `podman compose down -v`, then genesis from scratch |
+| start completely fresh | the above, then `cd infra && podman compose down -v`, then genesis from scratch |

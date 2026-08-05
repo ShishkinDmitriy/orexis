@@ -29,7 +29,7 @@ import uuid
 
 import pytest
 
-from agora import influx_admin
+from onboarding import influx as influx_admin
 from agora.config import env
 
 influxdb_client = pytest.importorskip("influxdb_client")

@@ -41,10 +41,10 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import ratified
-from .config import PROJECT_ROOT
-from .genesis import DEFAULT_WORLD, world_dir, worlds
-from .ontology import AG, WORLD_GRAPH
+from agora import ratified
+from agora.config import PROJECT_ROOT
+from agora.genesis import world_dir, worlds
+from agora.ontology import AG, WORLD_GRAPH
 
 log = logging.getLogger("mqtt")
 
@@ -256,7 +256,7 @@ def provisioned_worlds() -> list[str]:
     return [w for w in worlds() if any((world_dir(w) / "secrets").glob("mqtt-*.env"))]
 
 
-def provision(world: str = DEFAULT_WORLD, rotate: bool = False) -> None:
+def provision(world: str, rotate: bool = False) -> None:
     agents, devices = grants(world)
     if not agents:
         raise SystemExit(f"agora-mqtt: world {world!r} declares no agents")
@@ -403,8 +403,8 @@ def main() -> None:
     p = argparse.ArgumentParser(
         prog="agora-mqtt",
         description="Mint each principal's broker credential and derive the ACL from the world.")
-    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
-                   help=f"which world (default: {DEFAULT_WORLD}). Available: " + ", ".join(worlds()))
+    p.add_argument("world",
+                   help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("--rotate", action="store_true",
                    help="replace every AGENT password. Devices are never rotated this way — "
                         "their credential is flashed into a board.")

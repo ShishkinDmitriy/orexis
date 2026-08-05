@@ -33,37 +33,20 @@ def canonical(payload: dict) -> bytes:
     return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
 
 
-def _priv_path(name: str):
+def priv_path(name: str):
     return KEYS_DIR() / f"{name}.key"
 
 
-def _pub_path(name: str):
+def pub_path(name: str):
     return KEYS_DIR() / f"{name}.pub"
 
 
-def create_keypair(name: str) -> None:
-    KEYS_DIR().mkdir(parents=True, exist_ok=True)
-    key = Ed25519PrivateKey.generate()
-    _priv_path(name).write_bytes(
-        key.private_bytes(
-            serialization.Encoding.PEM,
-            serialization.PrivateFormat.PKCS8,
-            serialization.NoEncryption(),
-        )
-    )
-    _pub_path(name).write_bytes(
-        key.public_key().public_bytes(
-            serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-    )
-
-
 def load_private(name: str) -> Ed25519PrivateKey:
-    return serialization.load_pem_private_key(_priv_path(name).read_bytes(), password=None)
+    return serialization.load_pem_private_key(priv_path(name).read_bytes(), password=None)
 
 
 def load_public(name: str) -> Ed25519PublicKey:
-    return serialization.load_pem_public_key(_pub_path(name).read_bytes())
+    return serialization.load_pem_public_key(pub_path(name).read_bytes())
 
 
 def sign(key: Ed25519PrivateKey, data: bytes) -> str:
@@ -95,23 +78,6 @@ def verify_command(payload: dict, host_pub, clearing_pub) -> bool:
     data = canonical(cmd)
     return verify(host_pub, data, match_sig) and verify(clearing_pub, data, val_sig)
 
-
-def main() -> None:
-    """agora-keygen [world] — create that world's host + clearing signing keys."""
-    import argparse
-    import os
-
-    from .genesis import DEFAULT_WORLD, worlds
-
-    p = argparse.ArgumentParser(
-        prog="agora-keygen",
-        description="Create one world's signing keys. Two worlds are two societies and must "
-                    "not be able to sign for each other.",
-    )
-    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
-                   help=f"which world (default: {DEFAULT_WORLD}). Available: "
-                        + ", ".join(worlds()))
-    os.environ["AGORA_WORLD"] = p.parse_args().world
-    for name in ("host", "clearing"):
-        create_keypair(name)
-    print(f"created {KEYS_DIR()}/[host|clearing].[key|pub]")
+# Creating keys is NOT here: it is a once-per-world act by the sovereign, and an agent that
+# could mint a society's signing keys could sign for it. An actuator LOADS the two it is given
+# and can do nothing else. See onboarding/keygen.py.

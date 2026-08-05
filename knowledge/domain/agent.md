@@ -64,6 +64,10 @@ Three distinct events, and conflating any two of them turns a belief back into c
 | **start** | every time a process comes up | reads the world, reads its own beliefs, runs the modules its capabilities name | yes, freely |
 | **stop** | the process goes down | modules release timers and connections; **beliefs survive** | yes |
 
+Before any of them comes **onboarding**, which is not in the table because it is not something
+the agent does — it is done *to* it, from outside, and grants the means to act rather than
+authoring anything. It is repeatable where birth is not. See [onboarding](/domain/onboarding.md).
+
 Start and stop are **pause and resume**. Nothing about the agent changes across them — it is
 the same agent, not running. That is why opening beliefs can be the agent's own to revise
 thereafter: revision survives a restart precisely because a restart is not a birth.

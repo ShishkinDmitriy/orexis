@@ -134,7 +134,7 @@ If a **host** mosquitto is running from an earlier setup, disable it or it holds
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e ./backend
+pip install -e ./backend -e ./onboarding
 ```
 
 ## 3. Run the slice
@@ -169,7 +169,7 @@ Then bring the society up. **Agents are not launched from a list — they are bo
 world**, one process each:
 
 ```bash
-agora-compose society                                  # generate the compose file FROM the world
+agora-onboard society                                  # credentials, ACL and the compose file FROM the world
 cd world/society && podman compose up -d
 ```
 
@@ -181,7 +181,7 @@ born  tomato     Bidding, Subscribing
 ```
 
 The roster is the ratified world, so a different world brings up a different society with no
-edit anywhere — `agora-compose sensing` yields exactly one agent that only watches.
+edit anywhere — `agora-onboard sensing` yields exactly one agent that only watches.
 `AGORA_AGENT_ID=fern agora-agent` is still the primitive underneath; the container merely sets
 that variable.
 
@@ -254,7 +254,7 @@ and nothing else. It reads, records, and stops. Nothing in that world declares i
 there is simply no market for a market capability to come from.
 
 ```bash
-agora-compose sensing                                 # one agent, perception only
+agora-onboard sensing                                 # one agent, perception only
 cd world/sensing && podman compose up -d
 mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
 ```
@@ -306,7 +306,7 @@ into sleeping through a drought.
 The market layer (`clearing`, `auction`) is pure (no infra, no LLM), so it's fully unit-tested:
 
 ```bash
-pip install -e "./backend[dev]"
+pip install -e "./backend[dev]" -e ./onboarding
 pytest backend -q
 ```
 

@@ -89,10 +89,11 @@ its ceiling, a device on a bus with no channel, and an agent with no capability 
 # 5. Deploy
 
 ```bash
-agora-influx <name>       # a bucket per agent, and a token that opens only it
-agora-mqtt <name>         # a credential per principal, and the broker ACL, derived
-agora-compose <name>
-cd deploy && podman compose -f compose.<name>.yml up -d
+agora-onboard <name>      # ONBOARDING — validate, then grant all three:
+#   agora-influx <name>     #   a bucket per agent, and a token that opens only it
+#   agora-mqtt <name>       #   a credential per principal, and the broker ACL, derived
+#   agora-compose <name>    #   writes world/<name>/compose.yaml from that world's roster
+cd world/<name> && podman compose up -d
 ```
 
 All three read the world you just ratified and grant exactly what its wiring implies — there is

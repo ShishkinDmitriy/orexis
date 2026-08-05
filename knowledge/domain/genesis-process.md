@@ -142,18 +142,33 @@ stay elicited, because nothing can derive them.
 holds them in a volume of its own, and refreshes only the public world on each start. A restart
 cannot reset who an agent became; discarding a belief base takes an explicit `down -v`.
 
-# Starting the society
+# Genesis ends here — onboarding starts
 
-Once the world is seeded and its agents born, nothing lists them. `agora-compose <world>` reads
-the roster out of `world.ttl` and writes one service per agent, handing each the only instance
-identifier it will ever be given: its own id. The roster *is* the ratified world, so a
-different world brings up a different society with no edit anywhere.
+A genesis session ends with a **ratified world**, and that is a complete description of nothing
+running. What turns it into a society that can be started is a separate phase with its own name,
+[onboarding](/domain/onboarding.md):
+
+```bash
+agora-onboard <world>     # validate, then grant: a bucket and token per agent, a bus
+                          # credential and ACL per principal, and the compose file
+```
+
+Every one of those is **derived** from the wiring this session produced, so onboarding decides
+nothing and can be re-run freely. Adding an agent to the world and running it again is the whole
+of onboarding that agent.
+
+`agora-compose` is the part of it that reads the roster out of `world.ttl` and writes one service
+per agent, handing each the only instance identifier it will ever be given: its own id. The
+roster *is* the ratified world, so a different world brings up a different society with no edit
+anywhere.
 
 `podman compose up` is start, not birth. It authors nothing, and may be run as often as you
 like; `down` is stop. See [world](/domain/world.md) §Deployment for why one container per agent
 is a boundary rather than packaging taste.
 
-Firmware is the exception and the contrast is the point: a board is hardware, flashed by hand.
+Firmware is the exception and the contrast is the point: a board is hardware, flashed by hand —
+and since the broker stopped accepting anonymous clients, a board must also be given the
+credential `agora-mqtt` minted for it before it can connect at all.
 What genesis decides is what an **agent** is — which is why the same board is a watcher in one
 world and a bidder in another. See [world](/domain/world.md).
 

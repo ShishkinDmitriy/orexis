@@ -16,7 +16,8 @@ import hashlib
 
 import pytest
 
-from agora import influx_admin, mqtt_admin, ratified
+from agora import ratified
+from onboarding import influx as influx_admin, mqtt as mqtt_admin
 from agora.ontology import AG, WORLD_GRAPH
 
 from conftest import build_agent, genesis_store
@@ -148,7 +149,7 @@ def test_a_generated_password_line_is_one_mosquitto_can_verify():
 
 @pytest.mark.parametrize("world", WORLDS)
 def test_every_agent_gets_its_own_bucket(world):
-    from agora import compose
+    from onboarding import compose
 
     names = {a: influx_admin.bucket_name(world, a) for a in compose.agent_ids(world)}
     assert len(set(names.values())) == len(names), f"two agents share a bucket in {world}"
@@ -160,7 +161,7 @@ def test_bucket_names_cannot_collide_across_worlds():
     itself, because a world is not allowed to know the others exist."""
     seen = {}
     for world in WORLDS:
-        from agora import compose
+        from onboarding import compose
 
         for agent_id in compose.agent_ids(world):
             name = influx_admin.bucket_name(world, agent_id)

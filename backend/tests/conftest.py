@@ -26,6 +26,18 @@ WORLDS_ROOT = REPO_ROOT / "world"
 GENESIS_DIR = WORLDS_ROOT / "society"   # the world most tests are about
 
 
+@pytest.fixture(autouse=True)
+def name_the_world(monkeypatch):
+    """Tests run outside a container, so they must name their world like any other caller.
+
+    There is no default world — `genesis.current_world` refuses rather than guessing, because a
+    process that was not told which world it belongs to is misconfigured. These tests are about
+    the society, and anything under test that resolves signing keys finds them through it. The
+    line above said so already; this makes the code hear it.
+    """
+    monkeypatch.setenv("AGORA_WORLD", GENESIS_DIR.name)
+
+
 def genesis_store(readings: dict[str, float] | None = None,
                   result_time: datetime | None = None,
                   world: str = "society") -> Store:

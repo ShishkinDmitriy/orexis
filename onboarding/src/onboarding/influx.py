@@ -36,8 +36,8 @@ from influxdb_client import Authorization, BucketRetentionRules, InfluxDBClient,
     PermissionResource
 
 from . import compose
-from .config import PROJECT_ROOT, env
-from .genesis import DEFAULT_WORLD, world_dir, worlds
+from agora.config import PROJECT_ROOT, env
+from agora.genesis import world_dir, worlds
 
 log = logging.getLogger("influx")
 
@@ -98,7 +98,7 @@ def _write_credential(path: Path, bucket: str, token: str) -> None:
     path.chmod(0o600)
 
 
-def provision(world: str = DEFAULT_WORLD, rotate: bool = False) -> None:
+def provision(world: str, rotate: bool = False) -> None:
     """Bring the store into line with the world: a bucket and a scoped token per agent."""
     url = env("INFLUX_URL", "http://localhost:8086")
     org = env("INFLUX_ORG", "agora")
@@ -162,8 +162,8 @@ def main() -> None:
     p = argparse.ArgumentParser(
         prog="agora-influx",
         description="Give each of a world's agents its own bucket and a token scoped to it.")
-    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
-                   help=f"which world (default: {DEFAULT_WORLD}). Available: " + ", ".join(worlds()))
+    p.add_argument("world",
+                   help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("--rotate", action="store_true",
                    help="replace every token even if one is already held")
     args = p.parse_args()

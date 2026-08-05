@@ -1,0 +1,35 @@
+[project]
+name = "agora-onboarding"
+version = "0.1.0"
+description = "Onboarding — grant a ratified world the credentials and config it needs to run"
+requires-python = ">=3.10"
+# It reads worlds and mints credentials, so it needs the model (agora) and one client per
+# backing service. It is NOT installed in an agent image: an agent must never hold the admin
+# token, and the surest way to guarantee that is for the code that uses it to be absent.
+dependencies = [
+    "agora",
+    "influxdb-client>=1.40",
+    "cryptography>=42",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+# The umbrella, and the three it calls. They stay separately callable because rotating one
+# service's credentials should not touch the other's.
+agora-onboard = "onboarding.onboard:main"
+agora-validate = "onboarding.validate:main"
+agora-influx = "onboarding.influx:main"
+agora-mqtt = "onboarding.mqtt:main"
+agora-compose = "onboarding.compose:main"
+# Once per world, before it is onboarded. An agent may LOAD its two keys; it may not mint them.
+agora-keygen = "onboarding.keygen:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
