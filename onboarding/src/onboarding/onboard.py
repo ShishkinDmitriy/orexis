@@ -44,12 +44,12 @@ import logging
 from agora import validate
 
 from . import compose, influx, mqtt
-from agora.genesis import DEFAULT_WORLD, worlds
+from agora.genesis import worlds
 
 log = logging.getLogger("onboard")
 
 
-def onboard(world: str = DEFAULT_WORLD, rotate: bool = False, check: bool = True) -> None:
+def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     """Grant a ratified world everything it needs to be started.
 
     Safe to re-run: each step is idempotent unless `rotate` is asked for, which is the one
@@ -80,9 +80,8 @@ def main() -> None:
         description="Grant a ratified world its credentials and its compose file, all derived "
                     "from that world's own wiring.",
     )
-    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
-                   help=f"which world (default: {DEFAULT_WORLD}). Available: "
-                        + ", ".join(worlds()))
+    p.add_argument("world",
+                   help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("--rotate", action="store_true",
                    help="replace credentials that already exist. Anything still holding an old "
                         "one is locked out until restarted.")

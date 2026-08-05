@@ -101,16 +101,15 @@ def main() -> None:
     import argparse
     import os
 
-    from .genesis import DEFAULT_WORLD, worlds
+    from .genesis import worlds
 
     p = argparse.ArgumentParser(
         prog="agora-keygen",
         description="Create one world's signing keys. Two worlds are two societies and must "
                     "not be able to sign for each other.",
     )
-    p.add_argument("world", nargs="?", default=DEFAULT_WORLD,
-                   help=f"which world (default: {DEFAULT_WORLD}). Available: "
-                        + ", ".join(worlds()))
+    p.add_argument("world",
+                   help="which world. Available: " + ", ".join(worlds()))
     os.environ["AGORA_WORLD"] = p.parse_args().world
     for name in ("host", "clearing"):
         create_keypair(name)

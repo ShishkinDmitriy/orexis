@@ -103,7 +103,7 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities) -> No
 
 # --- the sovereign's check, over the ratified files -------------------------------------------
 
-def validate_world(world: str = genesis.DEFAULT_WORLD) -> bool:
+def validate_world(world: str) -> bool:
     """Check a whole ratified world, from its files, without running anything.
 
     Builds exactly what an agent would build — the vocabulary, the world, the derivation and
@@ -136,9 +136,8 @@ def main() -> None:
         prog="agora-validate",
         description="Validate one ratified world and the opening beliefs it authors.",
     )
-    p.add_argument("world", nargs="?", default=genesis.DEFAULT_WORLD,
-                   help=f"which world (default: {genesis.DEFAULT_WORLD}). Available: "
-                        + ", ".join(genesis.worlds()))
+    p.add_argument("world",
+                   help="which world. Available: " + ", ".join(genesis.worlds()))
     sys.exit(0 if validate_world(p.parse_args().world) else 1)
 
 

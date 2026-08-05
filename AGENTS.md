@@ -54,7 +54,10 @@ record is worse than none, because it is still cited.
    service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
-And one that catches people out: **capabilities are derived, never declared.** `world.ttl` must
+And two that catch people out. **There is no default world** — every command takes one as a
+required argument and `current_world()` refuses rather than guessing, because a fallback puts a
+misconfigured agent on the same topics as the real one. Also: **capabilities are derived, never
+declared.** `world.ttl` must
 not contain `ag:hasCapability` — seeding computes it from the wiring.
 
 ## Commands

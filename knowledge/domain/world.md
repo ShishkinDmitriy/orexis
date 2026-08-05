@@ -138,6 +138,27 @@ either; which world is in the store decides whether its agent merely watches or 
 is the model-driven claim reduced to something checkable by re-seeding: the hardware did not
 change, the model did.
 
+# There is no default world
+
+Nothing here is true of every world at once, so nothing may assume one. Every command takes the
+world as a required argument, and `genesis.current_world()` refuses rather than guessing:
+
+```
+no world: set AGORA_WORLD_DIR (a mounted world) or AGORA_WORLD (a name).
+Available: sensing, simulation, society
+```
+
+There was a `DEFAULT_WORLD = "society"` once, and it was wrong twice over. It put an **instance
+name** in kernel code, which the first rule above forbids — `"society"` is no more allowed there
+than `"supplier"` or a topic string. And its fallback was the dangerous kind: a process that was
+never told which world it belonged to did not fail, it quietly joined the society. That puts a
+misconfigured agent on the same topics as the real one, and two agents ingesting the same
+readings looks like doubled data rather than like a missing variable — a failure that has cost
+real time here twice.
+
+An agent never sets either variable itself. Its container is given `AGORA_WORLD_DIR` pointing at
+the one world mounted into it, which is also why it never learns that other worlds exist.
+
 # A world is files, and every agent holds its own copy
 
 There is no shared store. A world is the Turtle in `world/<name>/`, and each agent builds its

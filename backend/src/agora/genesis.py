@@ -37,7 +37,6 @@ log = logging.getLogger("genesis")
 
 REPO_ROOT = PROJECT_ROOT.parent
 WORLDS_ROOT = REPO_ROOT / "world"
-DEFAULT_WORLD = "society"
 BELIEFS_DIR = "beliefs"
 SECRETS_DIR = "secrets"
 BELIEFS_GLOB = "beliefs/*.ttl"
@@ -62,11 +61,26 @@ def current_world() -> Path:
 
     A container is given exactly one, mounted at a fixed path — so an agent is told only its
     own id and never learns that other worlds exist. Outside a container, name one.
+
+    **There is no default, deliberately.** Nothing here is true of every world at once, so a
+    process that was not told which world it belongs to has been misconfigured, and the useful
+    thing to do is say so. The alternative is worse than it looks: falling back to some world
+    puts a misconfigured agent on the same topics as the real one, and two agents ingesting the
+    same readings is a failure that has cost real time here twice — it looks like doubled data,
+    not like a missing variable.
     """
     from . import config
 
     explicit = config.env("AGORA_WORLD_DIR")
-    return Path(explicit) if explicit else world_dir(config.env("AGORA_WORLD", DEFAULT_WORLD))
+    if explicit:
+        return Path(explicit)
+    named = config.env("AGORA_WORLD")
+    if not named:
+        raise SystemExit(
+            "no world: set AGORA_WORLD_DIR (a mounted world) or AGORA_WORLD (a name). "
+            "Available: " + (", ".join(worlds()) or "none on disk")
+        )
+    return world_dir(named)
 
 
 def secrets_dir(world: Path) -> Path:
