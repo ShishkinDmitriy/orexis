@@ -17,15 +17,22 @@ system. Boards keep their password on the plaintext listener, and the broker enf
 ACL for both — one authorisation model, two ways of authenticating. See
 knowledge/domain/onboarding.md.
 
-**The broker's own certificate is NOT issued here.** Clients verify the broker, and the broker
-serves every world — so its identity belongs to the *installation*, not to any world, and its
-lifecycle is the infrastructure's: it may be deployed at a different time, on a different host,
-by someone who has no copy of these worlds at all. Mixing the two would make onboarding a world
-require write access to wherever the broker runs. See `onboarding/broker.py` (`agora-broker-cert`).
+**The broker's certificate IS issued here, from this world's authority.** One broker per world
+means the broker belongs to the world, so the world vouches for it — and an agent verifies its
+broker with the same `ca.crt` that vouches for the agent itself. Nothing installation-wide is
+involved in reaching the bus at all, which is what makes a world self-contained: its authority
+signs both ends of every connection its members make.
 
-What crosses that boundary is one public file: this world's `ca.crt`, which the broker must be
-given so it will trust the certificates issued below. Onboarding produces it; the infra side
-consumes it. On a single host that is a file copy, and it is still two steps.
+**What is NOT issued here** is any *shared* service's certificate — Grafana's, and anything else
+in `infra/`. Clients verify the broker, and the broker
+serves every world — so its identity belongs to the *installation*, not to any world, and its
+Those serve every world at once, so their identity belongs to the installation and their
+lifecycle is the infrastructure's — possibly another host, certainly another schedule. See
+`onboarding/infra_certs.py` (`agora-infra-certs`).
+
+Nothing crosses between the two any more. When the broker was shared it needed a bundle of every
+world's authority, rebuilt and reloaded whenever a world appeared; a broker that belongs to one
+world trusts exactly one authority and never learns the others exist.
 
 Certificates expire, which passwords did not. That is a real gain — it is the first thing here
 that can be revoked — and a real new failure mode: an agent whose certificate lapsed stops
@@ -180,8 +187,9 @@ def world_ca(world: str) -> Path:
     return world_dir(world) / "secrets" / "ca.crt"
 
 
-def issue_for_world(world: str, agent_ids, rotate: bool = False) -> None:
-    """This world's authority, and a client certificate for each of its agents.
+def issue_for_world(world: str, agent_ids, rotate: bool = False,
+                    broker_host: str | None = None) -> None:
+    """This world's authority, its broker's certificate, and one per agent.
 
     The CN is the agent's world-qualified username, so the broker maps it straight onto the ACL
     that is already derived from the wiring.
@@ -190,6 +198,10 @@ def issue_for_world(world: str, agent_ids, rotate: bool = False) -> None:
 
     secrets = world_dir(world) / "secrets"
     ca = _ca(secrets, f"agora {world} CA", rotate)
+    if broker_host and _leaf(secrets, "broker", broker_host, ca, server=True, rotate=rotate):
+        # Signed by the world, for the world. An agent verifies its broker with the same
+        # authority that vouches for the agent — one trust root per society, both directions.
+        log.info("  cert   broker         CN=%s", broker_host)
     for agent_id in sorted(agent_ids):
         if _leaf(secrets, agent_id, agent_username(world, agent_id), ca,
                  server=False, rotate=rotate):

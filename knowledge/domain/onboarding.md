@@ -63,7 +63,25 @@ different notion of who you are, and there is no second mapping to drift.
 on every wake costs radio time and battery on the most constrained thing in the system, which is
 also the thing already failing at −76 dBm. The password door stays open for them.
 
-**A CA per world, and an installation CA for the broker.** Two worlds are two societies: a
+**A broker per world, which is what makes the rest simple.** Mosquitto costs about 2 MB, so
+running one per world is nearly free — and it removes more than it adds. Each broker's ACL
+derives from *one* world's wiring instead of every provisioned world at once; each trusts exactly
+one certificate authority instead of a bundle reassembled whenever a world appears; and a new
+world disturbs nothing, because it brings its own. The ports come from that world's own
+`ag:MessageBus`, which the model already stated — no new vocabulary was needed, they had simply
+all said 1883 because there was one broker.
+
+It also makes the isolation **structural rather than enforced**, which is the rule the belief
+base already follows. Measured: a `sensing` certificate presented to `society`'s broker is
+refused, and accepted by its own. No ACL is consulted to achieve that — the two societies have no
+process in common.
+
+The old arrangement is worth remembering as the thing this replaced: one broker, a `passwd` and
+an ACL spanning every world (the code called it "the operator's view by necessity"), a trust
+bundle concatenating every authority, and a restart — dropping every connected agent — whenever
+a world was born.
+
+**A CA per world, and an installation CA for shared services.** Two worlds are two societies: a
 certificate issued by one must not authenticate into the other, the same argument that gives each
 world its own signing keys. The broker's own identity belongs to neither — it serves every world
 — so it is signed by an installation CA, and issuing it is a **separate command with a separate
@@ -74,9 +92,9 @@ only thing crossing that line is one public file per world, its `ca.crt`.
 ## Two operational facts worth knowing
 
 **SIGHUP does not reload TLS material.** Mosquitto rereads `password_file` and `acl_file` on a
-reload, but not `cafile`, `certfile` or `keyfile`. So adding an *agent* to an existing world still
-interrupts nothing — but introducing a **new world**, whose CA the broker has never seen, needs a
-restart, and that does drop connections.
+reload, but not `cafile`, `certfile` or `keyfile`. This used to mean a new world forced a restart
+of the shared broker; with one broker per world it no longer costs anything, because a new world
+starts its own. It still applies to rotating a world's own authority.
 
 **An unreadable key fails silently.** The broker binds the TLS port, negotiates no cipher, and
 logs nothing; every client reports only "connection lost". `entrypoint.sh` re-owns the key to the

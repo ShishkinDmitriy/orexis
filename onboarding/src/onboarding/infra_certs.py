@@ -62,7 +62,7 @@ def issue(host: str = DEFAULT_HOST, rotate: bool = False) -> None:
     # Browser-facing: grafana is opened in one, and the broker shares this authority — a
     # browser verifying grafana must verify a signature made by this key.
     ca = _ca(INFRA_SECRETS, "agora installation CA", rotate, browser_facing=True)
-    for service, published in (("broker", BROKER_DIR), ("grafana", GRAFANA_DIR)):
+    for service, published in (("grafana", GRAFANA_DIR),):
         if _leaf(INFRA_SECRETS, service, host, ca, server=True, rotate=rotate,
                  browser_facing=True):
             log.info("  cert   %-14s CN=%s", service, host)
