@@ -1,0 +1,51 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# The stand this world runs on: what is physically here and how it is wired.
+#
+# Separate from the society beside it because they change for different reasons and are read by
+# different people. A plant is added by editing the society; a probe is moved to another pin by
+# editing this. Both are loaded into the one world graph, so every query sees them together —
+# `ag:moisture_sensor_fern` is declared in world.ttl as a sensor and given its wiring here,
+# rather than being described twice.
+#
+# What this is FOR, beyond documentation: the shapes in kernel/shapes.ttl hold it to the
+# ESP32's actual rules, so `agora-validate` refuses a pin that cannot work before anything is
+# soldered or flashed.
+
+##########  What runs the society  ##########
+
+ag:raspberry a ag:ComputeHost ;
+    ag:localId "raspberry" ;
+    ag:model "Raspberry Pi 5" ;
+    rdfs:comment "Runs the agent containers, the broker for this world, and the shared store." .
+
+ag:fern_agent ag:runsOn ag:raspberry .
+
+##########  The board at the edge  ##########
+
+ag:esp32_fern a ag:Microcontroller ;
+    ag:localId "esp32_fern" ;
+    ag:model "ESP32-WROOM-32D" ;
+    ag:onBus ag:local_bus ;
+    ag:carries ag:moisture_sensor_fern , ag:status_led_fern ;
+    rdfs:comment "Deep-sleeps between readings, which is why its agent is ag:Subscribing: the board keeps the interval and cannot be reached in between." .
+
+##########  What is wired to it  ##########
+
+# Declared as a sensor in world.ttl; this says what KIND of instrument it is and where its leg
+# goes. GPIO 34 is deliberate and should not be moved casually: it is ADC1, the only ADC that
+# keeps working while WiFi is up.
+ag:moisture_sensor_fern a ag:CapacitiveMoistureProbe ;
+    ag:model "Capacitive Soil Moisture Sensor v2.0" ;
+    ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] .
+
+# Not yet read by anything: this board has no user LED of its own, so an external one is wired
+# to say from across the room whether a reading went out. 25/26/27 are safe outputs — no
+# strapping duty at boot, and their ADC2 membership costs nothing to a driven line.
+ag:status_led_fern a ag:RgbLed ;
+    ag:localId "status_led_fern" ;
+    ag:model "common-cathode RGB LED" ;
+    ag:pin [ ag:pinRole ag:Red   ; ag:gpio 25 ] ,
+           [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
+           [ ag:pinRole ag:Blue  ; ag:gpio 27 ] .

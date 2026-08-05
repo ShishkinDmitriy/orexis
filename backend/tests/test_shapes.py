@@ -171,3 +171,138 @@ def test_market_must_state_all_three_channels():
     assert not _conforms(_mutate(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market ag:voucherTopic ?t }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market ag:voucherTopic ?t }} }}"""))
+
+
+# --- the stand: wiring that cannot work must be refused --------------------------------------
+#
+# A shape that never fails is not a shape, so each of these asserts the REJECTION. They encode
+# the ESP32's rules rather than RDF's, and every one of them is a mistake that costs an
+# afternoon: a board that will not boot, an ADC that returns plausible rubbish, a colour that
+# never lights.
+
+_WIRING_PREAMBLE = """
+@prefix ag: <http://example.org/agora#> .
+ag:test_board a ag:Microcontroller ; ag:localId "test_board" ; ag:model "ESP32-WROOM-32D" ;
+"""
+
+
+def _wiring(body: str) -> rdflib.Graph:
+    """A board with the given wiring, held to the shapes exactly as a world would be."""
+    data = rdflib.Graph()
+    for path in loader.ontology_files():
+        data.parse(path, format="turtle")
+    data.parse(data=_WIRING_PREAMBLE + body, format="turtle")
+    return data
+
+
+def test_the_real_wiring_is_accepted():
+    """The guard against a shape so strict that nothing passes it."""
+    assert _conforms(_wiring("""
+    ag:carries ag:probe , ag:led .
+ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] .
+ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio 25 ] ,
+                            [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
+                            [ ag:pinRole ag:Blue ; ag:gpio 27 ] .
+"""))
+
+
+@pytest.mark.parametrize("gpio", [6, 8, 11])
+def test_a_flash_pin_is_refused(gpio):
+    """6-11 are wired to the SPI flash. A board driving one does not boot at all, which reads
+    as a dead board rather than as a wiring mistake."""
+    assert not _conforms(_wiring(f"""
+    ag:carries ag:probe .
+ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:DigitalOut ; ag:gpio {gpio} ] .
+"""))
+
+
+@pytest.mark.parametrize("gpio", [4, 12, 25, 27])
+def test_an_analog_input_on_adc2_is_refused(gpio):
+    """The sharpest of these: ADC2 is unusable while WiFi is up, and it fails by returning
+    numbers that look like readings. Nothing downstream can tell they are rubbish."""
+    assert not _conforms(_wiring(f"""
+    ag:carries ag:probe .
+ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio {gpio} ] .
+"""))
+
+
+@pytest.mark.parametrize("gpio", [32, 33, 34, 36, 39])
+def test_an_analog_input_on_adc1_is_accepted(gpio):
+    """The other half of the same rule: ADC1 is exactly what an analog input should use."""
+    assert _conforms(_wiring(f"""
+    ag:carries ag:probe .
+ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio {gpio} ] .
+"""))
+
+
+@pytest.mark.parametrize("gpio", [34, 36, 39])
+def test_driving_an_input_only_pin_is_refused(gpio):
+    """34-39 can be read and never driven. An LED wired there simply never lights."""
+    assert not _conforms(_wiring(f"""
+    ag:carries ag:led .
+ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio {gpio} ] ,
+                            [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
+                            [ ag:pinRole ag:Blue ; ag:gpio 27 ] .
+"""))
+
+
+@pytest.mark.parametrize("gpio", [-1, 40, 99])
+def test_a_gpio_off_the_board_is_refused(gpio):
+    assert not _conforms(_wiring(f"""
+    ag:carries ag:probe .
+ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio {gpio} ] .
+"""))
+
+
+def test_two_peripherals_on_one_gpio_are_refused():
+    """The mistake made months later, when a device is added and nobody re-reads the file."""
+    assert not _conforms(_wiring("""
+    ag:carries ag:probe , ag:led .
+ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] .
+ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio 34 ] ,
+                            [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
+                            [ ag:pinRole ag:Blue ; ag:gpio 27 ] .
+"""))
+
+
+def test_one_device_using_a_gpio_twice_is_refused():
+    """Same rule, inside a single device: an RGB LED with two legs on one line."""
+    assert not _conforms(_wiring("""
+    ag:carries ag:led .
+ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio 25 ] ,
+                            [ ag:pinRole ag:Green ; ag:gpio 25 ] ,
+                            [ ag:pinRole ag:Blue ; ag:gpio 27 ] .
+"""))
+
+
+@pytest.mark.parametrize("missing", ["Red", "Green", "Blue"])
+def test_an_rgb_led_missing_a_colour_is_refused(missing):
+    """One channel that never lights looks, from across the room, exactly like a sleeping board."""
+    legs = {"Red": "ag:gpio 25", "Green": "ag:gpio 26", "Blue": "ag:gpio 27"}
+    del legs[missing]
+    pins = " ,\n           ".join(f"[ ag:pinRole ag:{c} ; {g} ]" for c, g in legs.items())
+    assert not _conforms(_wiring(f"""
+    ag:carries ag:led .
+ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin {pins} .
+"""))
+
+
+def test_a_pin_without_a_role_is_refused():
+    """A number with no role cannot be checked for direction, so it cannot be checked at all."""
+    assert not _conforms(_wiring("""
+    ag:carries ag:probe .
+ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:gpio 34 ] .
+"""))
+
+
+def test_a_board_without_a_model_is_refused():
+    """The model is what a person orders a replacement by, and what a generated firmware
+    configuration will have to name."""
+    data = rdflib.Graph()
+    for path in loader.ontology_files():
+        data.parse(path, format="turtle")
+    data.parse(data="""
+@prefix ag: <http://example.org/agora#> .
+ag:nameless a ag:Microcontroller ; ag:localId "nameless" .
+""", format="turtle")
+    assert not _conforms(data)

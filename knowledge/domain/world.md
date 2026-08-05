@@ -31,7 +31,9 @@ agora-validate sensing  # one subject, one board, one agent
 
 ```
 world/<name>/
-  *.ttl                public topology: what exists, and what is wired to what
+  *.ttl                public topology, in as many files as suits it:
+    world.ttl            the society — agents, subjects, markets, what is wired to what
+    hardware.ttl         the stand — hosts, boards, peripherals, which pin each leg is on
   beliefs/<agent>.ttl  one per agent — its private parameters, its opinions
   secrets/             this society's signing keys (gitignored, never committed)
   mosquitto/           generated: this world's broker config, ACL and passwords
