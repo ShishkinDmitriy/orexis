@@ -189,15 +189,29 @@ class Agent:
                 # a downgrade nobody asked for, so it is said out loud.
                 log.warning("%s: the world states a TLS port but I hold no certificate — "
                             "connecting by password. Re-run `agora-onboard`.", self.id)
+        # Block them FIRST, then wait. Two reasons, and the second is the one that bit:
+        #
+        #   - `sigwait` requires it. Its own contract is that the signals be blocked in every
+        #     thread beforehand; otherwise the behaviour is undefined.
+        #   - an agent is PID 1 in its container, and the kernel discards a signal whose action
+        #     is still the default for a namespace's init. Waiting is not handling, so SIGTERM
+        #     was dropped on the floor and `podman stop` sat out its ten seconds before
+        #     SIGKILL — which meant no module ever got stop(), the Influx writer never flushed,
+        #     and the belief base was never closed. Blocking makes the signal PENDING rather
+        #     than defaulted, which is delivered to init like any other.
+        #
+        # Set before the modules start, so their threads inherit the mask and this thread is the
+        # one that receives it.
+        signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGINT, signal.SIGTERM})
+
         self.mqtt.username_pw_set(username, config.env("MQTT_PASSWORD"))
         self.mqtt.connect(self.bus.host, port)
         self.mqtt.loop_start()
         for module in self.modules:
             module.start()
 
-        stop = signal.sigwait  # block until INT/TERM, letting module timers run in their threads
         try:
-            stop({signal.SIGINT, signal.SIGTERM})
+            signal.sigwait({signal.SIGINT, signal.SIGTERM})
         except KeyboardInterrupt:
             pass
         finally:
