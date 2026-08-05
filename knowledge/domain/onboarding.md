@@ -81,6 +81,24 @@ own — but `compose.py` already mounts the world **file by file** so an agent c
 neighbours' opening beliefs, and it would be odd to take that care and then ship every agent the
 tool that mints credentials for all of them.
 
+## The line the split follows
+
+Not by file, because three modules serve both sides. By **who calls it**:
+
+| stays in `agora` (the agent runs it) | moved to `onboarding` (only the sovereign runs it) |
+|---|---|
+| `genesis.open_belief_base`, `current_world` — an agent builds its belief base at boot | |
+| `validate.validate_agent` — an agent checks *itself* and refuses to start | `validate_world` — does this world hold together *at all*, before anything starts |
+| `signing.sign`, `load_private`, `verify_command` — an actuator co-signs and a device checks | `create_keypair` — minting a society's keys |
+
+The last row is the sharpest. An actuator **loads** the two keys mounted into its container and
+can do nothing else with them; an agent that could *mint* a society's keys could sign for that
+society — authorise a match it never won, and validate its own voucher. Same argument as the
+admin token, one level down.
+
+`conforms` and `graph_from` are public in `agora.validate` because both checks run the same
+machinery over the same graphs. Two ways to decide whether beliefs hold would be one too many.
+
 See [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 
 # Seams left open

@@ -18,9 +18,7 @@ dev = ["pytest>=8"]
 
 [project.scripts]
 agora-agent = "agora.runtime:main"
-agora-validate = "agora.validate:main"
-agora-keygen = "agora.signing:main"
-# agora-onboard / -influx / -mqtt / -compose are NOT here. They mint credentials from a world
+# agora-onboard / -validate / -influx / -mqtt / -compose / -keygen are NOT here. They mint credentials from a world
 # and one of them reads the admin token, so they live in ../onboarding and are installed
 # separately — an agent image copies backend/ wholesale, and the surest way for an agent never
 # to hold the admin token is for that code to be absent from it.

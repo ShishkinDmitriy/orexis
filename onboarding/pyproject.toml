@@ -9,6 +9,7 @@ requires-python = ">=3.10"
 dependencies = [
     "agora",
     "influxdb-client>=1.40",
+    "cryptography>=42",
     "python-dotenv>=1.0",
 ]
 
@@ -19,9 +20,12 @@ dev = ["pytest>=8"]
 # The umbrella, and the three it calls. They stay separately callable because rotating one
 # service's credentials should not touch the other's.
 agora-onboard = "onboarding.onboard:main"
+agora-validate = "onboarding.validate:main"
 agora-influx = "onboarding.influx:main"
 agora-mqtt = "onboarding.mqtt:main"
 agora-compose = "onboarding.compose:main"
+# Once per world, before it is onboarded. An agent may LOAD its two keys; it may not mint them.
+agora-keygen = "onboarding.keygen:main"
 
 [build-system]
 requires = ["setuptools>=68"]

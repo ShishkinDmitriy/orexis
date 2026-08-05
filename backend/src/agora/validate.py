@@ -21,7 +21,6 @@ See knowledge/decisions/where-the-belief-base-lives.md.
 from __future__ import annotations
 
 import logging
-import sys
 
 import rdflib
 from pyshacl import validate as shacl_validate
@@ -52,7 +51,7 @@ def _shapes_and_vocabulary() -> tuple[rdflib.Graph, rdflib.Graph]:
     return ontology, shapes
 
 
-def _conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
+def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     """Validate, optionally about ONE node only.
 
     `focus` matters for an agent checking itself. A capability shape targets every agent the
@@ -64,14 +63,14 @@ def _conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     data += ontology
     # advanced=True enables SPARQL-based targets, which is how a shape scopes itself to the
     # agents that composed its capability.
-    conforms, _, report = shacl_validate(
+    ok, _, report = shacl_validate(
         data, shacl_graph=shapes, ont_graph=ontology, inference="rdfs", advanced=True,
         **({"focus_nodes": [focus]} if focus else {}),
     )
-    return conforms, report.strip()
+    return ok, report.strip()
 
 
-def _graph_from(st: Store, *graph_iris: str) -> rdflib.Graph:
+def graph_from(st: Store, *graph_iris: str) -> rdflib.Graph:
     data = rdflib.Graph()
     for iri in graph_iris:
         ttl = st.get_graph(iri)
@@ -90,9 +89,9 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities) -> No
     """
     if not capabilities:
         return
-    data = _graph_from(st, WORLD_GRAPH, beliefs_graph(agent_id), SENSED_GRAPH)
-    conforms, report = _conforms(data, focus=agent_uri)
-    if not conforms:
+    data = graph_from(st, WORLD_GRAPH, beliefs_graph(agent_id), SENSED_GRAPH)
+    ok, report = conforms(data, focus=agent_uri)
+    if not ok:
         raise BeliefsInvalid(
             f"{agent_id} will not start: its beliefs do not satisfy the shapes for the "
             f"capabilities the world derived for it.\n{report}"
@@ -101,45 +100,6 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities) -> No
              agent_id, len(capabilities))
 
 
-# --- the sovereign's check, over the ratified files -------------------------------------------
-
-def validate_world(world: str) -> bool:
-    """Check a whole ratified world, from its files, without running anything.
-
-    Builds exactly what an agent would build — the vocabulary, the world, the derivation and
-    every agent's opening beliefs — and validates the lot. This is what genesis is checked
-    with, and it needs no store, no server and no credentials.
-    """
-    path = genesis.world_dir(world)
-    st = Store()  # in memory: built, read, thrown away
-    genesis.refresh_public(st, path)
-
-    everyone = [genesis.agent_id_of(p) for p in sorted(path.glob(genesis.BELIEFS_GLOB))]
-    for agent_id in everyone:
-        genesis.birth(st, path, agent_id)
-
-    data = _graph_from(st, WORLD_GRAPH, *(beliefs_graph(a) for a in everyone))
-    conforms, report = _conforms(data)
-    print(report)
-
-    for agent_id, caps in genesis.derived(st):
-        marker = "" if agent_id in everyone else "   (no opening beliefs authored)"
-        log.info("  %-10s %s%s", agent_id, caps, marker)
-    return conforms
-
-
-def main() -> None:
-    import argparse
-
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
-    p = argparse.ArgumentParser(
-        prog="agora-validate",
-        description="Validate one ratified world and the opening beliefs it authors.",
-    )
-    p.add_argument("world",
-                   help="which world. Available: " + ", ".join(genesis.worlds()))
-    sys.exit(0 if validate_world(p.parse_args().world) else 1)
-
-
-if __name__ == "__main__":
-    main()
+# `conforms` and `graph_from` are public because onboarding's world-wide check runs the same
+# machinery over the same graphs. What is NOT here is that check itself: it is the sovereign's,
+# runs before anything starts, and an agent has no use for it. See onboarding/validate.py.

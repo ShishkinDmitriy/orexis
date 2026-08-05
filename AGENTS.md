@@ -95,7 +95,10 @@ the whole of deploying one. They stay separately callable because rotating one s
 credentials should not touch the other's.
 
 **Its code is in `onboarding/`, not `backend/`, and is installed separately** (`pip install -e
-./onboarding`). `agora-influx` reads the admin token, which opens every bucket and which no agent
+./onboarding`). The line is drawn by **who calls a function**, not by file: `validate_agent`
+stays in `agora` because an agent checks itself at boot, while `validate_world` moved because
+only the sovereign asks it; `sign` and `verify_command` stay because an actuator co-signs, while
+`create_keypair` moved — an agent that could mint a society's keys could sign for it. `agora-influx` reads the admin token, which opens every bucket and which no agent
 may ever hold — and an agent image copies `backend/` wholesale, so the surest way to guarantee
 that is for the code to be absent. `agora-influx` and `agora-mqtt`
 need infra up; `agora-mqtt` must run before the broker will start at all, since its ACL is

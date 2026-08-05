@@ -41,9 +41,7 @@ from __future__ import annotations
 import argparse
 import logging
 
-from agora import validate
-
-from . import compose, influx, mqtt
+from . import compose, influx, mqtt, validate
 from agora.genesis import worlds
 
 log = logging.getLogger("onboard")
