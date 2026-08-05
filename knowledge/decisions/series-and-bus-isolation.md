@@ -161,7 +161,7 @@ decision is built on.
 The Containerfile blamed musl: the Alpine `eclipse-mosquitto` image *"cannot open ANY config file
 on this host"* while a Debian build works. That was a real observation with the wrong cause.
 
-The host has mosquitto installed as an apt package, which ships `/etc/apparmor.d/mosquitto`. An
+The host **had** mosquitto installed as an apt package, which ships `/etc/apparmor.d/mosquitto`. An
 AppArmor profile attaches to an **executable path**, and the container's broker is at
 `/usr/sbin/mosquitto` like every other build — so the host's profile confines the container's
 process too. The profile grants:
@@ -179,14 +179,35 @@ correct its permissions are. Note also that `password_file` must be world-readab
 broker runs as an unprivileged user in a container that maps the host user to root. It holds
 PBKDF2 hashes; the plaintext stays 0600 in the per-principal files.
 
-The same profile mediates **signals**, which is why reloading took a second attempt. PID 1 in the
+The same profile mediated **signals**, which is why reloading took a second attempt. PID 1 in the
 container is a root shell that starts the broker as a child (`infra/mosquitto/entrypoint.sh`),
 because rootless podman cannot signal an unprivileged PID 1 — and dropping `USER` from the image
-is not enough on its own, since mosquitto drops privileges itself. Even then the root PID 1
-cannot forward the signal: the profile grants no `signal` rules, and a root shell in that
-container was measured signalling an unprivileged child fine and mosquitto with `EPERM`. From the
-host it works, because a user namespace's creator keeps `CAP_KILL` inside it. Hence
-`reload_broker()` signals the broker child of the container's PID 1, from the host.
+is not enough on its own, since mosquitto drops privileges itself. Even then the root PID 1 could
+not forward the signal: under `abi <abi/4.0>` a profile that declares no `signal` rules denies
+every signal sent to the process, and a root shell in that container was measured signalling an
+unprivileged child fine and mosquitto with `EPERM`. From the host it worked, because a user
+namespace's creator keeps `CAP_KILL` inside it. Hence `reload_broker()` signals the broker child
+of the container's PID 1, from the host — a path that works whether or not a profile is loaded,
+which is why it is still the one used.
+
+# Resolved: the package is off the host
+
+The broker no longer runs there, so the package that shipped the profile has no reason to be
+installed. Removing it unloads the profile, and the difference is measured rather than assumed:
+
+| | profile loaded | profile gone |
+|---|---|---|
+| broker's AppArmor label | `mosquitto (enforce)` | `crun (unconfined)` |
+| signal from container PID 1 | `Permission denied` | `exit=0` |
+| `podman stop` | 10s, then `SIGKILL`, exit 137 | **1s, exit 0** |
+
+The last row is the one that mattered and was nearly missed: a `SIGKILL`ed broker never flushes
+its persistence file, so every stop risked losing the retained cadences the volume exists to
+keep. Two cautions for anyone reinstating it — `apt remove` unloads the profile but leaves the
+conffile, so it can return on a rebuild, and `mosquitto-clients` is safe because the profile
+ships with the **server** package.
+
+The path constraints above are kept anyway. They cost nothing and hold if a profile ever returns.
 
 Worth the trouble twice over: an unprivileged PID 1 could not receive `SIGTERM` either, so
 `podman stop` timed out and left the container wedged in `Stopping`, needing `kill -9` on its

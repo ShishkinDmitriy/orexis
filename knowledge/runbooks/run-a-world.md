@@ -70,12 +70,16 @@ Both halves were necessary:
   Permission denied`), and the kernel shields a namespace's PID 1 from `kill` inside it. Simply
   dropping `USER` from the image is **not** enough — mosquitto drops privileges itself, so PID 1
   ends up unprivileged anyway.
-- the root PID 1 still cannot forward the signal: AppArmor mediates signals to a confined
-  process, and the host's mosquitto profile grants no `signal` rules. From the *host* it works,
-  because a user namespace's creator keeps `CAP_KILL` inside it.
+- while the host had mosquitto installed, the root PID 1 still could not forward the signal:
+  that package ships `/etc/apparmor.d/mosquitto`, a profile bound to `/usr/sbin/mosquitto` — so
+  it confined the *container's* broker too, and under `abi <abi/4.0>` a profile with no `signal`
+  rules denies every signal sent to it. **Removing the host package fixes this**, and the
+  difference is measurable: `podman stop` goes from 10s-then-`SIGKILL` (exit 137) to 1s and a
+  clean exit 0, which is what lets mosquitto flush its persistence file instead of losing
+  retained cadences.
 
-So the reload is sent from the host to that container's broker child, which is what `agora-mqtt`
-now does. By hand it is:
+`agora-mqtt` sends the reload from the host to that container's broker child either way — that
+path works whether or not the profile is loaded, which is why it was chosen. By hand it is:
 
 ```bash
 pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' agora_mosquitto_1)

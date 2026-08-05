@@ -1,10 +1,10 @@
 # The broker. A glibc build, and the config baked in.
 #
-# THE CAUSE, finally identified — the note that stood here blamed musl, and was wrong. What is
-# true is the observation it recorded: mosquitto could not open a config file on this host by
-# any means, while `cat` read the same file fine.
+# THE CAUSE, identified and since removed — the note that stood here blamed musl, and was wrong.
+# What was true is the observation it recorded: mosquitto could not open a config file on this
+# host by any means, while `cat` read the same file fine.
 #
-# The host has mosquitto installed as an apt package, which ships /etc/apparmor.d/mosquitto.
+# The host HAD mosquitto installed as an apt package, which ships /etc/apparmor.d/mosquitto.
 # An AppArmor profile attaches to an EXECUTABLE PATH, and every build of the broker lives at
 # /usr/sbin/mosquitto — so the host's profile confines the CONTAINER's process too. It grants:
 #
@@ -15,11 +15,16 @@
 # in /tmp does not, and Alpine's /mosquitto/config/ was outside the profile entirely — hence
 # "by ANY means", including --privileged, which does not lift AppArmor. It was never the libc.
 #
-# Two consequences for anything added here:
+# It also denied every signal to the broker (abi 4.0 mediates signals; the profile grants none),
+# which is why `podman stop` needed 10s and a SIGKILL. The package is now removed from the host
+# and the profile unloaded — measured: the broker process reads `crun (unconfined)`, stop takes
+# 1s and exits 0. DO NOT reinstall the server package on the host; mosquitto-clients is fine.
 #
-#   - Generated files (passwd, acl.conf) must be mounted DIRECTLY in /etc/mosquitto and never
-#     in a subdirectory of it. /etc/mosquitto/agora/passwd is refused however correct its
-#     permissions are.
+# Two consequences kept anyway, because they cost nothing and hold if a profile ever returns:
+#
+#   - Generated files (passwd, acl.conf) are mounted DIRECTLY in /etc/mosquitto and never in a
+#     subdirectory of it. /etc/mosquitto/agora/passwd was refused however correct its
+#     permissions were.
 #   - Without a config file mosquitto binds LOCALHOST ONLY and says so, so "just skip the
 #     config" is not an option: the boards would never reach it.
 #
