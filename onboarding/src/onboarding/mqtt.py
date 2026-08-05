@@ -42,6 +42,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from agora import ratified
+
+from . import certs
 from agora.config import PROJECT_ROOT
 from agora.genesis import world_dir, worlds
 from agora.ontology import AG, WORLD_GRAPH
@@ -142,6 +144,20 @@ _DEVICES_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ GRAPH <{WORLD_GRAPH
   OPTIONAL {{ ?d <{AG}readingTopic> ?readingTopic }}
   OPTIONAL {{ ?d <{AG}commandTopic> ?commandTopic }}
 }} }}""")
+
+
+_BUS_Q = f"""
+SELECT ?host WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?bus a <{AG}MessageBus> ; <{AG}brokerHost> ?host }} }}
+LIMIT 1"""
+
+
+def broker_host(world: str) -> str:
+    """The name this world's members meet the broker under — which must be the CN on its
+    certificate, or every agent that verifies it will refuse the connection."""
+    found = ratified.rows(ratified.dataset(world), _BUS_Q)
+    if not found:
+        raise SystemExit(f"agora-mqtt: world {world!r} declares no ag:MessageBus")
+    return found[0]["host"]
 
 
 def agent_username(world: str, agent_id: str) -> str:
@@ -278,6 +294,10 @@ def provision(world: str, rotate: bool = False) -> None:
         log.info("  device %-14s %-28s %2d grants%s", device_id, principal.username,
                  len(principal.grants), "  (new — reflash the board)" if fresh else "")
 
+    # Agents also get a client certificate. Boards deliberately do not: a deep-sleeping board
+    # would pay a TLS handshake on every wake, and the ACL below authorises both the same way.
+    certs.issue_for_world(world, agents.keys(), rotate=rotate)
+
     rebuild()
 
 
@@ -329,6 +349,10 @@ def rebuild() -> None:
     ACL_FILE.chmod(0o644)
     log.info("wrote %s and %s (%d principals)", PASSWD_FILE.relative_to(REPO_ROOT),
              ACL_FILE.relative_to(REPO_ROOT), len(passwd))
+
+    # The broker's trust is NOT written here. Which authorities it accepts is the
+    # installation's business and may live on another host — `agora-broker-cert`. What this
+    # world produces is one public file, world/<w>/secrets/ca.crt, for that side to be given.
 
 
 # The broker reads `passwd` and `acl.conf` only at startup, so a regenerated ACL means nothing

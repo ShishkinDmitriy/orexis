@@ -30,7 +30,7 @@ agora-onboard <world>
 | tool | grants | derived from |
 |---|---|---|
 | `agora-influx` | a bucket per agent, and a token that opens only it | who the agents are |
-| `agora-mqtt` | a credential per principal, and the broker ACL | what each agent is wired to |
+| `agora-mqtt` | a credential per principal, the broker ACL, **and a certificate per agent** | what each agent is wired to |
 | `agora-compose` | the roster, as services | the roster, and who actuates |
 
 `agora-onboard` runs all three, after `agora-validate`. They remain separately callable, because
@@ -49,6 +49,40 @@ the single source, and anything that could drift from it is computed instead of 
 Validation comes first for a reason worth stating. Onboarding a world that does not hold
 together mints real credentials for agents that will then refuse to start, and leaves them lying
 around — so `agora-onboard` refuses rather than grants.
+
+# Two ways to prove who you are, one way to be authorised
+
+Agents connect on `ag:brokerTlsPort` with a **client certificate**; boards connect on
+`ag:brokerPort` with a **password**. Same bus, same topics, and — this is the point — the same
+generated ACL. Mosquitto's `use_identity_as_username true` takes the certificate's CN as the
+username, and `agora-mqtt` issues each agent a certificate whose CN *is* the world-qualified
+username it already derived. So a certificate is a different way of proving who you are, not a
+different notion of who you are, and there is no second mapping to drift.
+
+**Boards are excluded deliberately.** A sensor deep-sleeps and wakes for seconds; a TLS handshake
+on every wake costs radio time and battery on the most constrained thing in the system, which is
+also the thing already failing at −76 dBm. The password door stays open for them.
+
+**A CA per world, and an installation CA for the broker.** Two worlds are two societies: a
+certificate issued by one must not authenticate into the other, the same argument that gives each
+world its own signing keys. The broker's own identity belongs to neither — it serves every world
+— so it is signed by an installation CA, and issuing it is a **separate command with a separate
+lifecycle**, `agora-broker-cert`. Infra may be deployed at another time on another host by
+someone holding none of these worlds; onboarding a world must not require write access to it. The
+only thing crossing that line is one public file per world, its `ca.crt`.
+
+## Two operational facts worth knowing
+
+**SIGHUP does not reload TLS material.** Mosquitto rereads `password_file` and `acl_file` on a
+reload, but not `cafile`, `certfile` or `keyfile`. So adding an *agent* to an existing world still
+interrupts nothing — but introducing a **new world**, whose CA the broker has never seen, needs a
+restart, and that does drop connections.
+
+**An unreadable key fails silently.** The broker binds the TLS port, negotiates no cipher, and
+logs nothing; every client reports only "connection lost". `entrypoint.sh` re-owns the key to the
+broker's user at 0600 while it is still root, because mosquitto opens it *after* dropping
+privileges — the tempting alternative, publishing it world-readable, puts a private key where
+every host user can read it.
 
 # It is not birth
 
@@ -108,6 +142,10 @@ See [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 - **`--rotate` is the one destructive option.** It replaces credentials that are in use, so
   anything holding an old one is locked out until restarted with the new. There is no staged
   rotation.
+- **Certificates expire; passwords did not.** That is the first thing here that can genuinely be
+  revoked, and a new failure mode: an agent whose certificate lapsed stops connecting and looks
+  exactly like a process that went quiet. Re-running `agora-onboard` reissues anything within 30
+  days of expiry, so the routine cure is the routine command — but nothing warns you first.
 - **Devices are onboarded but not configured.** `agora-mqtt` mints a credential per board, and
   putting it into firmware is still a manual flash. A board that has never been given one cannot
   connect at all, now that the broker refuses anonymous clients.

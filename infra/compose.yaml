@@ -53,7 +53,7 @@ services:
       context: ./mosquitto
       dockerfile: Containerfile
     image: agora-mosquitto:local
-    ports: ["1883:1883"]
+    ports: ["1883:1883", "8883:8883"]
     volumes:
       # retained messages survive a restart — a board that is asleep must still receive the
       # cadence its agent set before the broker bounced
@@ -69,6 +69,11 @@ services:
       # deeper, so `/etc/mosquitto/agora/passwd` is refused however correct its permissions are.
       - ./mosquitto/passwd:/etc/mosquitto/passwd:ro
       - ./mosquitto/acl.conf:/etc/mosquitto/acl.conf:ro
+      # mTLS for agents: whom the broker trusts to issue client certs (every provisioned
+      # world's CA), and its own identity, signed by the installation CA.
+      - ./mosquitto/clients-ca.crt:/etc/mosquitto/clients-ca.crt:ro
+      - ./mosquitto/broker.crt:/etc/mosquitto/broker.crt:ro
+      - ./mosquitto/broker.key:/etc/mosquitto/broker.key:ro
     restart: unless-stopped
 
   grafana:

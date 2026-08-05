@@ -70,9 +70,10 @@ agora-onboard <world>       # ONBOARDING: validate, then grant everything below.
   agora-influx <world>      #   a bucket per agent, and a token that opens only it
   agora-mqtt <world>        #   a credential per principal, and the broker ACL, derived
   agora-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
+agora-broker-cert           # INFRA, not onboarding — the broker's own cert and whom it trusts
 cd world/<world> && podman compose up -d               # one container per agent
 podman build -t agora:local -f backend/Containerfile .   # only when a dependency changes
-pytest backend -q      # 195 tests, no infra needed
+pytest backend -q      # 199 tests, no infra needed
 pytest infra -q        # 8 more, against the RUNNING broker and store — see below
 ```
 

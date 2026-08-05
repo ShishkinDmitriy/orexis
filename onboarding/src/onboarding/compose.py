@@ -93,6 +93,11 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       AGORA_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
       AGORA_WORLD_DIR: "/app/world"
+      # Where the three files mounted below live. The agent connects with the certificate when
+      # the world states a TLS port and it holds one.
+      MQTT_CERT: "/app/world/secrets/agent.crt"
+      MQTT_KEY: "/app/world/secrets/agent.key"
+      MQTT_CA: "/app/world/secrets/ca.crt"
     env_file:
       # where the series store is, and the org — safe for every agent to hold
       - ../../infra/.env
@@ -114,7 +119,14 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
       # agent has no business reading what anyone else was authored to want.
       - ./world.ttl:/app/world/world.ttl:ro
-      - ./beliefs/{agent_id}.ttl:/app/world/beliefs/{agent_id}.ttl:ro{signing}
+      - ./beliefs/{agent_id}.ttl:/app/world/beliefs/{agent_id}.ttl:ro
+      # Its own certificate and nothing else — the same rule as the beliefs above. The private
+      # key is the whole of its identity on the bus, so a neighbour's must be unreachable.
+      # ca.crt is the INSTALLATION authority: what it needs to verify the BROKER, not to prove
+      # itself. Public, and the same file for every agent in every world.
+      - ./secrets/{agent_id}.crt:/app/world/secrets/agent.crt:ro
+      - ./secrets/{agent_id}.key:/app/world/secrets/agent.key:ro
+      - ../../infra/secrets/ca.crt:/app/world/secrets/ca.crt:ro{signing}
       # the discovered trees, mounted so a code change needs a restart, not a rebuild
       - ../../capabilities:/app/capabilities:ro
       - ../../transports:/app/transports:ro

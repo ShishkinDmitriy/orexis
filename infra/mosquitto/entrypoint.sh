@@ -19,6 +19,22 @@
 # No `set -e`: this script's whole job is to outlive signals, and `wait` returns 128+n every
 # time one arrives.
 
+# The broker's PRIVATE key, handed over while we are still root.
+#
+# mosquitto drops to `user mosquitto` and only then opens its TLS files, so a key mounted 0600
+# from the host (owned there by you, and by container-root in here) is unreadable to it. The
+# tempting fix is to publish it 0644, which puts a private key where every host user can read
+# it. Instead: copy it to a mosquitto-owned 0600 file, so it is readable by exactly one process
+# and stays 0600 on both sides of the mount.
+#
+# Worth knowing WHY this had to be found by hand: mosquitto does not fail on an unreadable
+# keyfile. It binds 8883, negotiates no cipher, and logs nothing — the listener looks healthy
+# and every client reports only "connection lost".
+if [ -r /etc/mosquitto/broker.key ]; then
+    install -o mosquitto -g mosquitto -m 0600 \
+        /etc/mosquitto/broker.key /run/mosquitto/broker.key
+fi
+
 /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf &
 broker=$!
 

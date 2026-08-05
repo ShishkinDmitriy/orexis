@@ -34,7 +34,10 @@
 ag:local_bus a ag:MessageBus ;
     ag:localId "local_bus" ;
     ag:brokerHost "localhost" ;
-    ag:brokerPort 1883 .
+    ag:brokerPort 1883 ;
+    # Agents connect here and prove who they are with a certificate; the boards keep the
+    # plaintext port above. One bus, one ACL, two ways of authenticating.
+    ag:brokerTlsPort 8883 .
 
 ##########  World version  ##########
 #  Found by TYPE (?w a ag:World), never by a well-known IRI.
