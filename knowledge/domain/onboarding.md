@@ -32,8 +32,9 @@ agora-onboard <world>
 | `agora-influx` | a bucket per agent, and a token that opens only it | who the agents are |
 | `agora-mqtt` | a credential per principal, the broker ACL, **and a certificate per agent** | what each agent is wired to |
 | `agora-compose` | the roster, as services | the roster, and who actuates |
+| `agora-dashboards` | a Grafana folder per world | what each agent observes, and for which subject |
 
-`agora-onboard` runs all three, after `agora-validate`. They remain separately callable, because
+`agora-onboard` runs all four, after `agora-validate`. They remain separately callable, because
 rotating one service's credentials should not touch the other's.
 
 # Nothing here decides anything
@@ -88,6 +89,20 @@ world its own signing keys. The broker's own identity belongs to neither — it 
 lifecycle**, `agora-broker-cert`. Infra may be deployed at another time on another host by
 someone holding none of these worlds; onboarding a world must not require write access to it. The
 only thing crossing that line is one public file per world, its `ca.crt`.
+
+## The dashboard is generated too, and lands in shared infra
+
+A dashboard listing agents by hand is a second list to drift, and it had already drifted: the one
+shipped here queried a bucket named `sensors`, which has not existed since each agent got one of
+its own. It is derived now — a panel per watcher, against the bucket `agora-influx` actually
+created.
+
+Its output goes to `infra/grafana/dashboards/<world>/`, which is the one exception to
+*nothing in `infra/` is world-specific*, and the exception is the point: **Grafana is the only
+service that legitimately spans worlds.** It is the operator's view of every society at once,
+which is why it holds a read token across all buckets — splitting it per world would defeat what
+it is for. The alternative, mounting each world's directory into it, would hand a network-facing
+service read access to every world's private keys.
 
 ## Two operational facts worth knowing
 
