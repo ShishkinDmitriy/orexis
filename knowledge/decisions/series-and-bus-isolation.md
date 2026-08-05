@@ -226,3 +226,97 @@ conmon before the name could be reused. That is gone.
   is the only party who can see both worlds and judge.
 - **The wire is still in the clear.** Credentials authenticate; they do not encrypt. TLS on the
   broker remains the next step, as [roadmap](/decisions/roadmap.md) has it.
+
+# The dashboard was the hole in all of it
+
+Worth recording because it survived every round of this design and was found only by looking at
+what was left. While each agent got a bucket and a token that opens only it, Grafana sat on
+`:3000` with:
+
+    GF_AUTH_ANONYMOUS_ENABLED: "true"     no login, LAN-wide
+    token: $INFLUX_ADMIN_TOKEN            opens every bucket, and mints more tokens
+
+So anyone who could reach the port read every agent's history, through the one credential this
+document says no agent may ever hold. The bus had per-principal ACLs and mTLS; the dashboard
+beside it was an open door onto the same series. The intent was defensible — Grafana IS the
+operator's view and legitimately spans every bucket — but *anonymous* and *admin* are both more
+than that intent needs.
+
+Now: its own **read-only** token, org-scoped so a world onboarded tomorrow is visible without
+re-running anything; anonymous access off; and HTTPS with a certificate from the same
+installation CA the broker uses. Measured after the change — read `200`, write `403`, and the
+authorizations endpoint answers `200` with an **empty list**, so it cannot see another token's
+secret.
+
+Three things that cost time here, all of them the same shape — *a service cannot read its own
+key*:
+
+- Grafana runs as uid 472 and needs `userns_mode: keep-id:uid=472,gid=472`, exactly as the
+  agents do, or its 0600 certificate key is unreadable and it silently falls back to plain HTTP.
+- That mapping then collides with podman's default pod, so `infra/compose.yaml` needs the same
+  `x-podman: in_pod: false` the generated world files already carry.
+- Changing the mapping made the **existing** `grafana-data` volume unwritable, because it was
+  owned under the old one. `podman unshare chown -R 0:0 <mountpoint>` — 0 in that view is your
+  own uid.
+
+And one that is not a permissions problem: **`GF_SECURITY_ADMIN_PASSWORD` applies only when the
+database is first created.** Turning on login against an existing volume leaves the password as
+whatever it already was, which reads as a wrong password in `admin.env`. `grafana cli --homepath
+/usr/share/grafana admin reset-admin-password` is the repair.
+
+## Ed25519 is fine between our processes, and invisible to a browser
+
+The first cut used Ed25519 for every key. mosquitto verified it, paho verified it, `curl`
+verified it — and Firefox answered `SSL_ERROR_NO_CYPHER_OVERLAP`, which reads like a
+ciphersuite misconfiguration and is not one. **Browsers do not support Ed25519 certificates.**
+
+It applies to the whole chain, not the leaf alone: an ECDSA certificate signed by an Ed25519
+authority still asks the browser to verify an Ed25519 signature. So the *installation* CA and
+both server certificates are ECDSA P-256, while the per-world CAs and the agents' client
+certificates stay Ed25519 — nothing but our own code ever verifies those.
+
+The rule worth keeping: **anything a browser terminates is ECDSA; anything only our processes
+speak may be Ed25519.**
+
+Rotating the installation CA to change this replaced the broker's certificate too, which every
+agent verifies — so every agent had to be restarted to read the new `ca.crt`. That is the cost
+recorded in `agora-infra-certs --rotate`, observed rather than predicted.
+
+# The CA is files and a function, not a service
+
+Nothing in `podman ps` is a certificate authority and nothing is meant to be. An authority here
+is a private key on disk plus a function that signs — no issuing service, no ACME, no CRL, no
+OCSP responder. For one Pi that is proportionate; step-ca or Vault would be the largest thing in
+`infra/` and would bring its own availability and backup story.
+
+Three consequences, and only the first is comfortable.
+
+**Issuance is fine.** Re-running the command issues or renews, and anything within 30 days of
+expiry is reissued, so the routine command is the routine cure.
+
+**Revocation barely exists, and an earlier note here overstated it.** Certificates were described
+as "the first thing that can genuinely be revoked". They are not: with no CRL the broker cannot
+reject a certificate that is still inside its validity window. What revocation exists is coarse
+and comes from an accident of the design — `clients-ca.crt` is a *concatenation*, so deleting a
+world's authority from it and restarting the broker locks out that entire society. Per world,
+never per agent, and it costs every connected client.
+
+**The keys sit at rest** on whichever host runs each command, protected by file permissions and
+nothing more — the same standing as the admin token beside them.
+
+# Why the world authorities are not signed by the installation one
+
+They are three independent self-signed roots, not a hierarchy. Signing each world's authority
+with the installation one would be conventional, would let the broker trust a single root
+forever, and would make adding a world cost no restart at all. It was rejected for two reasons.
+
+The first is that the installation key would then be able to mint an identity in *any* world —
+one key that can speak for every society, which is the same collapse the per-world signing keys
+already refuse. The second is that creating a world's authority would need that key present, so
+onboarding a world could no longer happen on a host that infra is not on. That is the separation
+`agora-infra-certs` exists to keep.
+
+The cost is honest and worth stating plainly: **a new world requires a broker restart**, because
+the trust bundle changes and SIGHUP does not reload TLS material. Adding an *agent* to an
+existing world still costs nothing, since the authority is unchanged. And the coarse revocation
+above is only possible because the bundle is a list — a hierarchy would take that away too.

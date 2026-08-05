@@ -11,6 +11,8 @@ ag:MessageBusShape a sh:NodeShape ;
     sh:targetClass ag:MessageBus ;
     sh:property [ sh:path ag:brokerHost ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path ag:brokerPort ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minExclusive 0 ] ;
+    sh:property [ sh:path ag:brokerTlsPort ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ] .
 
 ag:MqttSensorShape a sh:NodeShape ;

@@ -92,8 +92,9 @@ cd infra && docker compose up -d                      # or: podman compose up -d
 ```
 
 Brings up: MQTT (`:1883`), InfluxDB (`:8086`) and Grafana (`:3000`). **No triplestore** — each agent holds its
-own belief base inside its own container. Grafana is pre-wired
-to InfluxDB (anonymous viewer enabled).
+own belief base inside its own container. Grafana is pre-wired to InfluxDB over a **read-only** token, requires a login, and serves
+HTTPS with a certificate from the installation CA — so your browser will warn until you trust
+`infra/secrets/ca.crt`.
 
 **MQTT is built here rather than pulled**, and **the broker refuses anonymous clients**: every
 agent and every board connects as itself, and may reach only the topics the world wires it to.

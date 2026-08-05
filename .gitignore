@@ -26,4 +26,11 @@ infra/secrets/
 # password file holds hashes; the ACL is derived, and a hand-edit would be a second list.
 infra/mosquitto/passwd
 infra/mosquitto/acl.conf
+# published here by `agora-mqtt` so the broker can mount them; the originals live in
+# infra/secrets/ and world/*/secrets/, which are ignored above. broker.key is a PRIVATE key.
+infra/mosquitto/clients-ca.crt
+infra/mosquitto/broker.crt
+infra/mosquitto/broker.key
+# same again for the dashboard's server certificate
+infra/grafana/certs/
 

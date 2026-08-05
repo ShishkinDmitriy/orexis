@@ -69,10 +69,13 @@ def _reachable(host: str, port: int) -> bool:
 @pytest.fixture(scope="module")
 def bus():
     host, port = _bus()
-    if not mqtt_admin.PASSWD_FILE.exists() or not mqtt_admin.ACL_FILE.exists():
-        pytest.skip("no broker credentials yet — run `agora-mqtt <world>` first")
+    d = mqtt_admin.mosquitto_dir(WORLD)
+    if not (d / "passwd").exists() or not (d / "acl.conf").exists():
+        pytest.skip(f"no broker files for {WORLD} — run `agora-mqtt {WORLD}` first")
     if not _reachable(host, port):
-        pytest.skip(f"no broker at {host}:{port} — bring infra up to run these")
+        # One broker per world, so this is that world's broker rather than shared infra:
+        # `cd world/<w> && podman compose up -d`.
+        pytest.skip(f"no broker at {host}:{port} — bring up world/{WORLD} to run these")
     return host, port
 
 
@@ -101,16 +104,16 @@ def _grants_block(probe: Probe, read: bool) -> str:
 def probe(bus):
     """Add a principal to the live broker, and guarantee it is gone again."""
     p = Probe()
-    passwd_before = mqtt_admin.PASSWD_FILE.read_text()
-    acl_before = mqtt_admin.ACL_FILE.read_text()
+    passwd_before = (mqtt_admin.mosquitto_dir(WORLD) / 'passwd').read_text()
+    acl_before = (mqtt_admin.mosquitto_dir(WORLD) / 'acl.conf').read_text()
 
     def apply(read: bool, password: str | None = None):
         """Rewrite the broker's two files, reload, and WAIT until the change is really live."""
         p.password = password or p.password
-        mqtt_admin.PASSWD_FILE.write_text(
+        (mqtt_admin.mosquitto_dir(WORLD) / 'passwd').write_text(
             passwd_before + f"{p.username}:{mqtt_admin._hash(p.password)}\n")
-        mqtt_admin.ACL_FILE.write_text(acl_before + _grants_block(p, read=read))
-        assert mqtt_admin.reload_broker(), "the broker did not accept a reload"
+        (mqtt_admin.mosquitto_dir(WORLD) / 'acl.conf').write_text(acl_before + _grants_block(p, read=read))
+        assert mqtt_admin.reload_broker(WORLD), "the broker did not accept a reload"
         _await_credential(bus, p.username, p.password)
 
     p.apply = apply
@@ -118,9 +121,9 @@ def probe(bus):
         apply(read=True)
         yield p
     finally:
-        mqtt_admin.PASSWD_FILE.write_text(passwd_before)
-        mqtt_admin.ACL_FILE.write_text(acl_before)
-        mqtt_admin.reload_broker()
+        (mqtt_admin.mosquitto_dir(WORLD) / 'passwd').write_text(passwd_before)
+        (mqtt_admin.mosquitto_dir(WORLD) / 'acl.conf').write_text(acl_before)
+        mqtt_admin.reload_broker(WORLD)
 
 
 def _open(host, port, username, password):

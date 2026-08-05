@@ -170,8 +170,27 @@ class Agent:
             raise RuntimeError(
                 "no MQTT_USERNAME in the environment — this agent has no credential for the "
                 "bus. Run `agora-mqtt <world>` and regenerate the compose file.")
+        cert, key, ca = (config.env("MQTT_CERT"), config.env("MQTT_KEY"), config.env("MQTT_CA"))
+        if self.bus.tls_port and cert and key and ca:
+            # Prove who I am with the certificate onboarding issued me. Its CN *is* the username
+            # above, and the broker authorises on that — so the same ACL applies whichever door
+            # I came through, and there is no second notion of identity to keep in step.
+            #
+            # username_pw_set stays: the broker takes the identity from the certificate, and a
+            # username costs nothing to send and makes the connection legible in its log.
+            self.mqtt.tls_set(ca_certs=ca, certfile=cert, keyfile=key)
+            port = self.bus.tls_port
+            log.info("%s: connecting with a certificate", self.id)
+        else:
+            port = self.bus.port
+            if self.bus.tls_port:
+                # The world offers mTLS and this container was not given a certificate. Not
+                # fatal — the password door is still open and the ACL is the same — but it is
+                # a downgrade nobody asked for, so it is said out loud.
+                log.warning("%s: the world states a TLS port but I hold no certificate — "
+                            "connecting by password. Re-run `agora-onboard`.", self.id)
         self.mqtt.username_pw_set(username, config.env("MQTT_PASSWORD"))
-        self.mqtt.connect(self.bus.host, self.bus.port)
+        self.mqtt.connect(self.bus.host, port)
         self.mqtt.loop_start()
         for module in self.modules:
             module.start()

@@ -41,7 +41,7 @@ from __future__ import annotations
 import argparse
 import logging
 
-from . import compose, influx, mqtt, validate
+from . import certs, compose, influx, mqtt, validate
 from agora.genesis import worlds
 
 log = logging.getLogger("onboard")
@@ -62,12 +62,14 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     log.info("onboarding %s", world)
     influx.provision(world, rotate=rotate)
     mqtt.provision(world, rotate=rotate)
-    if not mqtt.reload_broker():
+    if not mqtt.reload_broker(world):
         # Not fatal, and not silent. A broker that never reloaded holds the OLD acl, and
         # mosquitto accepts a SUBSCRIBE it will not honour — so this looks like an agent that
         # went quiet rather than like an error.
         log.warning("  ! the ACL on disk is ahead of the broker until it restarts or reloads")
     compose.generate(world)
+    if not certs.world_ca(world).exists():
+        log.warning("  ! no certificate authority for this world")
     log.info("onboarded %s — `cd world/%s && podman compose up -d` to start it", world, world)
 
 

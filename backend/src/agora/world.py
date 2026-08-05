@@ -35,6 +35,10 @@ class MessageBus:
     uri: str
     host: str
     port: int
+    # Optional second door on the SAME bus, where a principal proves itself with a certificate
+    # instead of a password. None means this world has no mTLS listener and everyone uses the
+    # port above. It is not a different bus: same topics, same ACL, same society.
+    tls_port: int | None = None
 
 
 @dataclass(frozen=True)
@@ -111,8 +115,9 @@ class World:
 
 
 _BUS_Q = f"""
-SELECT ?bus ?host ?port WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?bus a ag:MessageBus ; ag:brokerHost ?host ; ag:brokerPort ?port }} }}"""
+SELECT ?bus ?host ?port ?tlsPort WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?bus a ag:MessageBus ; ag:brokerHost ?host ; ag:brokerPort ?port .
+  OPTIONAL {{ ?bus ag:brokerTlsPort ?tlsPort }} }} }}"""
 
 _VERSION_Q = f"""
 SELECT ?v WHERE {{ GRAPH <{WORLD_GRAPH}> {{
@@ -261,7 +266,8 @@ def load_bus(query: QueryFn) -> MessageBus:
         # (ag:onBus) and this becomes a lookup. Refuse to guess.
         raise WorldError(f"{len(rows)} buses declared; ag:onBus routing is not implemented")
     row = rows[0]
-    return MessageBus(uri=row["bus"], host=row["host"], port=int(row["port"]))
+    return MessageBus(uri=row["bus"], host=row["host"], port=int(row["port"]),
+                      tls_port=int(row["tlsPort"]) if row.get("tlsPort") else None)
 
 
 def participants(query: QueryFn, market: Market) -> frozenset[str]:

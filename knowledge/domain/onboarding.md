@@ -30,7 +30,7 @@ agora-onboard <world>
 | tool | grants | derived from |
 |---|---|---|
 | `agora-influx` | a bucket per agent, and a token that opens only it | who the agents are |
-| `agora-mqtt` | a credential per principal, and the broker ACL | what each agent is wired to |
+| `agora-mqtt` | a credential per principal, the broker ACL, **and a certificate per agent** | what each agent is wired to |
 | `agora-compose` | the roster, as services | the roster, and who actuates |
 
 `agora-onboard` runs all three, after `agora-validate`. They remain separately callable, because
@@ -49,6 +49,58 @@ the single source, and anything that could drift from it is computed instead of 
 Validation comes first for a reason worth stating. Onboarding a world that does not hold
 together mints real credentials for agents that will then refuse to start, and leaves them lying
 around — so `agora-onboard` refuses rather than grants.
+
+# Two ways to prove who you are, one way to be authorised
+
+Agents connect on `ag:brokerTlsPort` with a **client certificate**; boards connect on
+`ag:brokerPort` with a **password**. Same bus, same topics, and — this is the point — the same
+generated ACL. Mosquitto's `use_identity_as_username true` takes the certificate's CN as the
+username, and `agora-mqtt` issues each agent a certificate whose CN *is* the world-qualified
+username it already derived. So a certificate is a different way of proving who you are, not a
+different notion of who you are, and there is no second mapping to drift.
+
+**Boards are excluded deliberately.** A sensor deep-sleeps and wakes for seconds; a TLS handshake
+on every wake costs radio time and battery on the most constrained thing in the system, which is
+also the thing already failing at −76 dBm. The password door stays open for them.
+
+**A broker per world, which is what makes the rest simple.** Mosquitto costs about 2 MB, so
+running one per world is nearly free — and it removes more than it adds. Each broker's ACL
+derives from *one* world's wiring instead of every provisioned world at once; each trusts exactly
+one certificate authority instead of a bundle reassembled whenever a world appears; and a new
+world disturbs nothing, because it brings its own. The ports come from that world's own
+`ag:MessageBus`, which the model already stated — no new vocabulary was needed, they had simply
+all said 1883 because there was one broker.
+
+It also makes the isolation **structural rather than enforced**, which is the rule the belief
+base already follows. Measured: a `sensing` certificate presented to `society`'s broker is
+refused, and accepted by its own. No ACL is consulted to achieve that — the two societies have no
+process in common.
+
+The old arrangement is worth remembering as the thing this replaced: one broker, a `passwd` and
+an ACL spanning every world (the code called it "the operator's view by necessity"), a trust
+bundle concatenating every authority, and a restart — dropping every connected agent — whenever
+a world was born.
+
+**A CA per world, and an installation CA for shared services.** Two worlds are two societies: a
+certificate issued by one must not authenticate into the other, the same argument that gives each
+world its own signing keys. The broker's own identity belongs to neither — it serves every world
+— so it is signed by an installation CA, and issuing it is a **separate command with a separate
+lifecycle**, `agora-broker-cert`. Infra may be deployed at another time on another host by
+someone holding none of these worlds; onboarding a world must not require write access to it. The
+only thing crossing that line is one public file per world, its `ca.crt`.
+
+## Two operational facts worth knowing
+
+**SIGHUP does not reload TLS material.** Mosquitto rereads `password_file` and `acl_file` on a
+reload, but not `cafile`, `certfile` or `keyfile`. This used to mean a new world forced a restart
+of the shared broker; with one broker per world it no longer costs anything, because a new world
+starts its own. It still applies to rotating a world's own authority.
+
+**An unreadable key fails silently.** The broker binds the TLS port, negotiates no cipher, and
+logs nothing; every client reports only "connection lost". `entrypoint.sh` re-owns the key to the
+broker's user at 0600 while it is still root, because mosquitto opens it *after* dropping
+privileges — the tempting alternative, publishing it world-readable, puts a private key where
+every host user can read it.
 
 # It is not birth
 
@@ -108,6 +160,9 @@ See [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 - **`--rotate` is the one destructive option.** It replaces credentials that are in use, so
   anything holding an old one is locked out until restarted with the new. There is no staged
   rotation.
+- **Certificates expire; passwords did not.** That is a new failure mode: an agent whose certificate lapsed stops connecting and looks
+  exactly like a process that went quiet. Re-running `agora-onboard` reissues anything within 30
+  days of expiry, so the routine cure is the routine command — but nothing warns you first.
 - **Devices are onboarded but not configured.** `agora-mqtt` mints a credential per board, and
   putting it into firmware is still a manual flash. A board that has never been given one cannot
   connect at all, now that the broker refuses anonymous clients.

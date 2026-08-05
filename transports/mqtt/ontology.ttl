@@ -19,7 +19,11 @@ ag:MessageBus a owl:Class ; rdfs:label "Message bus" ;
 ag:brokerHost a owl:DatatypeProperty ; rdfs:domain ag:MessageBus ; rdfs:range xsd:string ;
     rdfs:label "broker host" .
 ag:brokerPort a owl:DatatypeProperty ; rdfs:domain ag:MessageBus ; rdfs:range xsd:integer ;
-    rdfs:label "broker port" .
+    rdfs:label "broker port" ;
+    rdfs:comment "Where a principal that authenticates by password connects. The boards use this: a device that deep-sleeps between readings would pay a TLS handshake on every wake." .
+ag:brokerTlsPort a owl:DatatypeProperty ; rdfs:domain ag:MessageBus ; rdfs:range xsd:integer ;
+    rdfs:label "broker TLS port" ;
+    rdfs:comment "Where a principal that authenticates by CERTIFICATE connects. Optional: a world without it has no mTLS door, and its agents use the password one. Same bus and the same ACL either way — this is how you prove who you are, not which society you are in." .
 ag:onBus a owl:ObjectProperty ; rdfs:range ag:MessageBus ;
     rdfs:label "on bus" ;
     rdfs:comment "Which bus this resource is reachable on. Optional while a society has one." .
