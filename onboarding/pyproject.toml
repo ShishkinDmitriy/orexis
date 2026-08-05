@@ -26,9 +26,9 @@ agora-mqtt = "onboarding.mqtt:main"
 agora-compose = "onboarding.compose:main"
 # Once per world, before it is onboarded. An agent may LOAD its two keys; it may not mint them.
 agora-keygen = "onboarding.keygen:main"
-# INFRA, not onboarding: the broker's own identity and whom it trusts. Its lifecycle
+# INFRA, not onboarding: the services' own identities and whom the broker trusts. Lifecycle
 # is the infrastructure's — possibly another host, certainly another schedule.
-agora-broker-cert = "onboarding.broker:main"
+agora-infra-certs = "onboarding.infra_certs:main"
 
 [build-system]
 requires = ["setuptools>=68"]

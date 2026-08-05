@@ -31,4 +31,6 @@ infra/mosquitto/acl.conf
 infra/mosquitto/clients-ca.crt
 infra/mosquitto/broker.crt
 infra/mosquitto/broker.key
+# same again for the dashboard's server certificate
+infra/grafana/certs/
 

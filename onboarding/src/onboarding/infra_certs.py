@@ -1,7 +1,8 @@
-"""agora-broker-cert — the broker's own identity, and whom it trusts. An INFRA step.
+"""agora-infra-certs — identities for the services, and whom the broker trusts. An INFRA step.
 
-  agora-broker-cert                  # its certificate, and trust every local world's CA
-  agora-broker-cert --trust a/ca.crt # or name exactly which authorities to trust
+  agora-infra-certs                    # certificates, and trust every local world's CA
+  agora-infra-certs --trust a/ca.crt   # or name exactly which authorities to trust
+  agora-infra-certs --host pi.local    # the name clients will actually verify
 
 **Separate from onboarding on purpose.** Onboarding grants a *world's* agents the means to act;
 this grants the *installation's* broker an identity. They are different lifecycles: infra may be
@@ -12,8 +13,8 @@ false as soon as the broker is not on this machine.
 
 So there are two directions of trust, and they are established by two commands:
 
-  clients verify the BROKER    installation CA -> broker.crt          this command
-  broker verifies its CLIENTS  each world CA   -> agent certificates  agora-mqtt <world>
+  clients verify a SERVICE     installation CA -> broker.crt, grafana.crt   this command
+  broker verifies its CLIENTS  each world CA   -> agent certificates        agora-mqtt <world>
 
 The only thing that crosses is one **public** file per world, `world/<w>/secrets/ca.crt`. On a
 single host this command reads it directly; on a split deployment it has to be delivered, and
@@ -48,13 +49,26 @@ BROKER_DIR = REPO_ROOT / "infra" / "mosquitto"
 DEFAULT_HOST = "localhost"
 
 
+GRAFANA_DIR = REPO_ROOT / "infra" / "grafana" / "certs"
+
+
 def issue(host: str = DEFAULT_HOST, rotate: bool = False) -> None:
-    """The installation authority, and the broker's certificate signed by it."""
+    """The installation authority, and a server certificate for each service that needs one.
+
+    One authority for both, because they are one installation — an operator who trusts this CA
+    to reach the broker is the same operator reaching the dashboard. That is the opposite of the
+    per-world CAs, which exist precisely so two societies cannot vouch for each other.
+    """
     ca = _ca(INFRA_SECRETS, "agora installation CA", rotate)
-    if _leaf(INFRA_SECRETS, "broker", host, ca, server=True, rotate=rotate):
-        log.info("  cert   broker         CN=%s", host)
-    _write(BROKER_DIR / "broker.crt", (INFRA_SECRETS / "broker.crt").read_bytes(), private=False)
-    _write(BROKER_DIR / "broker.key", (INFRA_SECRETS / "broker.key").read_bytes(), private=True)
+    for service, published in (("broker", BROKER_DIR), ("grafana", GRAFANA_DIR)):
+        if _leaf(INFRA_SECRETS, service, host, ca, server=True, rotate=rotate):
+            log.info("  cert   %-14s CN=%s", service, host)
+        # Published beside the service that mounts it. The originals stay in infra/secrets/,
+        # which is where the admin token lives and which nothing else is given.
+        _write(published / f"{service}.crt",
+               (INFRA_SECRETS / f"{service}.crt").read_bytes(), private=False)
+        _write(published / f"{service}.key",
+               (INFRA_SECRETS / f"{service}.key").read_bytes(), private=True)
 
 
 def trust(ca_paths) -> None:
@@ -77,9 +91,9 @@ def trust(ca_paths) -> None:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
-        prog="agora-broker-cert",
-        description="Issue the broker's certificate and assemble the authorities it trusts. "
-                    "Infrastructure, not onboarding — run it where the broker runs.",
+        prog="agora-infra-certs",
+        description="Issue the infrastructure's server certificates and assemble the "
+                    "authorities the broker trusts. Not onboarding — run it where infra runs.",
     )
     p.add_argument("--host", default=DEFAULT_HOST,
                    help=f"the name clients reach the broker by; must match ag:brokerHost in the "

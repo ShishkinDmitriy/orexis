@@ -226,3 +226,40 @@ conmon before the name could be reused. That is gone.
   is the only party who can see both worlds and judge.
 - **The wire is still in the clear.** Credentials authenticate; they do not encrypt. TLS on the
   broker remains the next step, as [roadmap](/decisions/roadmap.md) has it.
+
+# The dashboard was the hole in all of it
+
+Worth recording because it survived every round of this design and was found only by looking at
+what was left. While each agent got a bucket and a token that opens only it, Grafana sat on
+`:3000` with:
+
+    GF_AUTH_ANONYMOUS_ENABLED: "true"     no login, LAN-wide
+    token: $INFLUX_ADMIN_TOKEN            opens every bucket, and mints more tokens
+
+So anyone who could reach the port read every agent's history, through the one credential this
+document says no agent may ever hold. The bus had per-principal ACLs and mTLS; the dashboard
+beside it was an open door onto the same series. The intent was defensible — Grafana IS the
+operator's view and legitimately spans every bucket — but *anonymous* and *admin* are both more
+than that intent needs.
+
+Now: its own **read-only** token, org-scoped so a world onboarded tomorrow is visible without
+re-running anything; anonymous access off; and HTTPS with a certificate from the same
+installation CA the broker uses. Measured after the change — read `200`, write `403`, and the
+authorizations endpoint answers `200` with an **empty list**, so it cannot see another token's
+secret.
+
+Three things that cost time here, all of them the same shape — *a service cannot read its own
+key*:
+
+- Grafana runs as uid 472 and needs `userns_mode: keep-id:uid=472,gid=472`, exactly as the
+  agents do, or its 0600 certificate key is unreadable and it silently falls back to plain HTTP.
+- That mapping then collides with podman's default pod, so `infra/compose.yaml` needs the same
+  `x-podman: in_pod: false` the generated world files already carry.
+- Changing the mapping made the **existing** `grafana-data` volume unwritable, because it was
+  owned under the old one. `podman unshare chown -R 0:0 <mountpoint>` — 0 in that view is your
+  own uid.
+
+And one that is not a permissions problem: **`GF_SECURITY_ADMIN_PASSWORD` applies only when the
+database is first created.** Turning on login against an existing volume leaves the password as
+whatever it already was, which reads as a wrong password in `admin.env`. `grafana cli --homepath
+/usr/share/grafana admin reset-admin-password` is the repair.
