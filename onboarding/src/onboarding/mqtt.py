@@ -21,11 +21,19 @@ Read that list against `capabilities/market/bidding.py` and `hosting.py` and it 
 set of topics they subscribe and publish. If it ever stops being, an agent fails to connect —
 which is the point of deriving it rather than maintaining it.
 
-**Agents are world-scoped principals; devices are not.** An agent runs in a container belonging
-to one world. A board is flashed once and is the same board whichever world is loaded — which
-`world/sensing` depends on deliberately, being device-for-device identical to `world/society`
-so one ESP32 works in either. So a device's credential lives in `infra/secrets/devices/` and is
-reused across worlds, and only agents get a world-qualified username.
+**Every principal is world-scoped, devices included.** An agent runs in a container belonging to
+one world. A board was argued to be different — flashed once, the same physical thing whichever
+world is loaded, which `world/sensing` depends on by being device-for-device identical to
+`world/society` so one ESP32 works in either.
+
+That stopped holding when each world got its own broker. A board is flashed with one host and one
+**port**, so it already reaches exactly one world; sharing its password meant every world's broker
+held a secret the others' boards also used. Its credential lives in `world/<w>/secrets/` now, like
+an agent's. The two worlds are still device-for-device identical — what differs is which broker
+the board is pointed at.
+
+Only agents get a world-qualified *username*, which is now belt-and-braces rather than load-
+bearing: a broker that serves one world has no namespace for `fern` to collide in.
 
 Like `influx_admin`, this is the operator's half and nothing inside an agent may import it.
 See knowledge/decisions/series-and-bus-isolation.md.
