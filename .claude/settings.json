@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(agora-validate *)",
+      "Bash(pytest backend *)",
+      "Bash(podman ps *)",
+      "Bash(podman logs *)",
+      "Bash(mosquitto_sub *)",
+      "Bash(podman inspect *)",
+      "Bash(podman volume ls *)",
+      "Bash(podman stats *)",
+      "Bash(dpkg -l *)",
+      "Bash(podman images *)",
+      "Bash(podman volume inspect *)"
+    ]
+  }
+}
