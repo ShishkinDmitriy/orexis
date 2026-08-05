@@ -24,7 +24,7 @@ from __future__ import annotations
 import rdflib
 
 from . import loader
-from .genesis import world_dir, worlds
+from .genesis import world_dir, world_files, worlds
 from .ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
 
 
@@ -33,7 +33,8 @@ def dataset(world: str) -> rdflib.Dataset:
     ds = rdflib.Dataset()
     for path in loader.ontology_files():
         ds.graph(rdflib.URIRef(ONTOLOGY_GRAPH)).parse(path, format="turtle")
-    ds.graph(rdflib.URIRef(WORLD_GRAPH)).parse(world_dir(world) / "world.ttl", format="turtle")
+    for path in world_files(world_dir(world)):
+        ds.graph(rdflib.URIRef(WORLD_GRAPH)).parse(path, format="turtle")
     for rule in loader.rule_files():
         ds.update(rule.read_text())
     return ds

@@ -47,12 +47,26 @@ def agent_id_of(path) -> str:
     return Path(path).stem
 
 
+def world_files(world: Path) -> list[Path]:
+    """Every Turtle file the world is written in, in a stable order.
+
+    A world is a DIRECTORY of `.ttl`, not one file. The society is one concern and the stand it
+    runs on is another; splitting them lets each be read, reviewed and validated on its own while
+    they remain one graph to every query. Nothing lists them — a new file is picked up by being
+    there, which is the same rule capabilities are found by.
+
+    `beliefs/` is deliberately not swept up: those are per-agent and private, and an agent is
+    mounted only its own. Only the world root is public knowledge.
+    """
+    return sorted(world.glob("*.ttl"))
+
+
 def worlds() -> list[str]:
     """Every ratified world on disk. Found by looking, like everything else."""
     if not WORLDS_ROOT.is_dir():
         return []
     return sorted(
-        d.name for d in WORLDS_ROOT.iterdir() if d.is_dir() and (d / "world.ttl").exists()
+        d.name for d in WORLDS_ROOT.iterdir() if d.is_dir() and world_files(d)
     )
 
 
@@ -96,7 +110,7 @@ def secrets_dir(world: Path) -> Path:
 def world_dir(name: str) -> Path:
     """One world, or a refusal that names the ones there are."""
     path = WORLDS_ROOT / name
-    if not (path / "world.ttl").exists():
+    if not world_files(path):
         raise SystemExit(
             f"no world called {name!r} in world/ — there is "
             f"{', '.join(worlds()) or 'nothing'}"
@@ -124,7 +138,7 @@ def refresh_public(st: Store, world: Path) -> None:
     """
     t_box = "\n".join(p.read_text() for p in loader.ontology_files())
     st.put_graph(ONTOLOGY_GRAPH, t_box)
-    st.put_graph(WORLD_GRAPH, (world / "world.ttl").read_text())
+    st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in world_files(world)))
     for rule in loader.rule_files():
         st.update(rule.read_text())
 

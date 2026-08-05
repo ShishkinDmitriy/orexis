@@ -218,7 +218,7 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
     if not rows:
         raise WorldError(
             f"the world knows no agent with localId {agent_id!r} — "
-            "check AGORA_AGENT_ID against the world.ttl it was given"
+            "check AGORA_AGENT_ID against the world it was given"
         )
 
     first = rows[0]

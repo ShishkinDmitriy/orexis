@@ -36,6 +36,7 @@ from pathlib import Path
 from agora import ratified
 from agora.config import PROJECT_ROOT
 from agora.ontology import AG, WORLD_GRAPH
+from agora import genesis
 from agora.genesis import world_dir, worlds
 
 log = logging.getLogger("compose")
@@ -86,6 +87,18 @@ def agent_ids(world: str) -> list[str]:
     return list(roster(world))
 
 
+def _world_files(world: str) -> str:
+    """Every Turtle the world is written in, mounted one by one.
+
+    Still file by file rather than the directory: mounting `world/<name>/` wholesale would hand
+    the agent the signing keys and every other agent's opening beliefs. A world is now several
+    files — the society, the stand it runs on — and an agent needs all of them, because they are
+    one graph to every query it makes.
+    """
+    return "\n".join(f"      - ./{p.name}:/app/world/{p.name}:ro"
+                      for p in genesis.world_files(world_dir(world)))
+
+
 def _service(agent_id: str, caps: set[str], world: str) -> str:
     # Only an agent that actuates has any use for a signing key, so only that one is given
     # them. Note the world is mounted FILE BY FILE rather than as a directory: mounting
@@ -96,6 +109,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
         signing = ("\n      # it actuates, so it co-signs — these two keys and nothing else\n"
                    "      - ./secrets/host.key:/app/world/secrets/host.key:ro\n"
                    "      - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro")
+    world_files = _world_files(world)
     return f"""
   agent-{agent_id}:
     image: {IMAGE}
@@ -132,7 +146,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       # the ratified world, at a fixed path — so the agent is told only its own id and never
       # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
       # agent has no business reading what anyone else was authored to want.
-      - ./world.ttl:/app/world/world.ttl:ro
+{world_files}
       - ./beliefs/{agent_id}.ttl:/app/world/beliefs/{agent_id}.ttl:ro
       # Its own certificate and nothing else — the same rule as the beliefs above. The private
       # key is the whole of its identity on the bus, so a neighbour's must be unreachable.

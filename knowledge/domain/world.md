@@ -31,14 +31,25 @@ agora-validate sensing  # one subject, one board, one agent
 
 ```
 world/<name>/
-  world.ttl            public topology: what exists, and what is wired to what
+  *.ttl                public topology: what exists, and what is wired to what
   beliefs/<agent>.ttl  one per agent — its private parameters, its opinions
   secrets/             this society's signing keys (gitignored, never committed)
-  compose.yaml        generated: one container per agent
+  mosquitto/           generated: this world's broker config, ACL and passwords
+  compose.yaml         generated: its broker and one container per agent
 ```
 
 A world is one self-contained directory. Nothing about it lives anywhere else, which is what
 makes adding, copying or deleting one a single move.
+
+**The public topology is every `*.ttl` at the world root, not one named file.** They are loaded
+into a single graph in sorted order, so splitting them changes nothing any query sees — it is
+purely about what a person reads and reviews at once. A world small enough to say in one file
+stays one file; one that has grown a second concern can separate it without telling anything.
+Nothing lists them: a new file is picked up by being there, the same rule capabilities are found
+by.
+
+`beliefs/` is deliberately not swept up. Those are per-agent and private, and an agent is
+mounted only its own — see below.
 
 That is all of it. There is no config file in this project; anything that looks like
 configuration is either a fact about the world or somebody's belief, and lives in one of these
@@ -196,12 +207,12 @@ Three details are load-bearing rather than packaging taste:
 
 - **One container per agent, holding its own belief base.** It is a file in that agent's own
   volume, exclusively locked by its owner — nothing else can open it, including you.
-- **The world is mounted file by file, not as a directory.** An agent gets `world.ttl` and its
-  **own** `beliefs/<id>.ttl`, and nothing else — it has no business reading what another agent
+- **The world is mounted file by file, not as a directory.** An agent gets every public `*.ttl`
+  and its **own** `beliefs/<id>.ttl`, and nothing else — it has no business reading what another agent
   was authored to want. Only an agent that derived `ag:Actuation` also gets
   `secrets/host.key` and `secrets/clearing.key`; the generator runs the real derivation rules
-  in memory to know which one that is. Verified: a plant agent's container contains exactly
-  two files under `/app/world`, and no key.
+  in memory to know which one that is. Verified: a plant agent's container contains exactly the
+  public topology plus its own beliefs under `/app/world`, and no key.
 - **`network_mode: host`.** The world states the bus as `ag:brokerHost "localhost"` because a
   channel name is meaningless without its broker and every member must agree on it. On a
   bridge network that stops being true for the agents while staying true for the ESP32 — two
