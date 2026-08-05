@@ -68,6 +68,14 @@ Before any of them comes **onboarding**, which is not in the table because it is
 the agent does — it is done *to* it, from outside, and grants the means to act rather than
 authoring anything. It is repeatable where birth is not. See [onboarding](/domain/onboarding.md).
 
+**Stop must be a signal the agent actually receives.** An agent is PID 1 in its container, and
+the kernel discards a signal whose action is still the default for a namespace's init — it
+delivers only what a process explicitly handles. Waiting on `sigwait` is not handling: the
+signals have to be *blocked* first, which makes them pending rather than defaulted. Without
+that, `podman stop` waits ten seconds and then `SIGKILL`s, so no module ever runs `stop()`, the
+series writer never flushes, and the belief base is never closed — a stop that skips everything
+stop is for. Measured: 10s and `SIGKILL` before, 1s and exit 0 after.
+
 Start and stop are **pause and resume**. Nothing about the agent changes across them — it is
 the same agent, not running. That is why opening beliefs can be the agent's own to revise
 thereafter: revision survives a restart precisely because a restart is not a birth.
