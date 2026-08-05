@@ -34,7 +34,7 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
 
 
 def _worlds():
-    return sorted(d.name for d in WORLDS_ROOT.iterdir() if (d / "world.ttl").exists())
+    return sorted(d.name for d in WORLDS_ROOT.iterdir() if genesis.world_files(d))
 
 
 @pytest.mark.parametrize("world", _worlds())
