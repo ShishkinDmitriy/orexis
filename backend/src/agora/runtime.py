@@ -160,6 +160,17 @@ class Agent:
                 log.error("%s: %s failed on %s: %s", self.id, module.name, msg.topic, exc)
 
     def run(self) -> None:
+        # Who I am on the bus. The broker refuses anonymous connections, and the ACL it holds
+        # grants this principal exactly the topics the world wires me to — so a missing
+        # credential is a deployment fault worth naming here rather than a bare "Not
+        # authorized" from the broker. Set at run() and not at construction: it is needed to
+        # connect, and nothing that merely builds an agent should require it.
+        username = config.env("MQTT_USERNAME")
+        if not username:
+            raise RuntimeError(
+                "no MQTT_USERNAME in the environment — this agent has no credential for the "
+                "bus. Run `agora-mqtt <world>` and regenerate the compose file.")
+        self.mqtt.username_pw_set(username, config.env("MQTT_PASSWORD"))
         self.mqtt.connect(self.bus.host, self.bus.port)
         self.mqtt.loop_start()
         for module in self.modules:

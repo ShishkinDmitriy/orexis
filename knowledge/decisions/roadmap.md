@@ -48,12 +48,14 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) (agents read the T-Box
   from context). Extract seams from watering *first*, don't abstract prematurely. (v3)
 
-- **Enforced bus privacy.** The *store* now enforces who may read which graph
-  ([belief-base-isolation](/decisions/belief-base-isolation.md)), but the broker does not:
-  any process that can reach MQTT can subscribe `sensors/#` and watch every reading. Per-agent
-  broker credentials and topic ACLs are the matching half, and the remaining precondition for
-  taking the society adversarial — a signing sensor stops an agent authoring its own readings,
-  and store ACLs stop it reading others' minds, but the wire is still in the clear.
+- **Enforced bus privacy — DONE**, by
+  [series-and-bus-isolation](/decisions/series-and-bus-isolation.md). Per-agent broker
+  credentials and topic ACLs derived from the wiring, plus a per-agent Influx bucket, so an
+  agent can no longer watch its neighbours' readings on the wire *or* read their history. What
+  remains of this item is **TLS**: credentials authenticate, they do not encrypt, so anything
+  with a port mirror still sees every payload. That is the last precondition for taking the
+  society adversarial — a signing sensor stops an agent authoring its own readings, isolation
+  stops it reading others' minds, and encryption stops it listening.
 
 # Working principle
 

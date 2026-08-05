@@ -36,7 +36,15 @@ services:
       AGORA_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
       AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env]
+    env_file:
+      # where the series store is, and the org — safe for every agent to hold
+      - ../../infra/.env
+      # this agent's own bucket and a token that opens only it, and its own broker
+      # credential. Minted by `agora-influx` and `agora-mqtt` from this world; mounted into
+      # THIS container and no other, which is what makes the isolation structural rather
+      # than a promise. Run both tools before `up`, or these files do not exist.
+      - ./secrets/influx-fern.env
+      - ./secrets/mqtt-fern.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; without this the agent lands on a
     # subuid that cannot write its own belief-base volume. Map it onto the image's user.
@@ -67,7 +75,15 @@ services:
       AGORA_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
       AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env]
+    env_file:
+      # where the series store is, and the org — safe for every agent to hold
+      - ../../infra/.env
+      # this agent's own bucket and a token that opens only it, and its own broker
+      # credential. Minted by `agora-influx` and `agora-mqtt` from this world; mounted into
+      # THIS container and no other, which is what makes the isolation structural rather
+      # than a promise. Run both tools before `up`, or these files do not exist.
+      - ./secrets/influx-succulent.env
+      - ./secrets/mqtt-succulent.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; without this the agent lands on a
     # subuid that cannot write its own belief-base volume. Map it onto the image's user.
@@ -98,7 +114,15 @@ services:
       AGORA_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
       AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env]
+    env_file:
+      # where the series store is, and the org — safe for every agent to hold
+      - ../../infra/.env
+      # this agent's own bucket and a token that opens only it, and its own broker
+      # credential. Minted by `agora-influx` and `agora-mqtt` from this world; mounted into
+      # THIS container and no other, which is what makes the isolation structural rather
+      # than a promise. Run both tools before `up`, or these files do not exist.
+      - ./secrets/influx-supplier.env
+      - ./secrets/mqtt-supplier.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; without this the agent lands on a
     # subuid that cannot write its own belief-base volume. Map it onto the image's user.
@@ -132,7 +156,15 @@ services:
       AGORA_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
       AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env]
+    env_file:
+      # where the series store is, and the org — safe for every agent to hold
+      - ../../infra/.env
+      # this agent's own bucket and a token that opens only it, and its own broker
+      # credential. Minted by `agora-influx` and `agora-mqtt` from this world; mounted into
+      # THIS container and no other, which is what makes the isolation structural rather
+      # than a promise. Run both tools before `up`, or these files do not exist.
+      - ./secrets/influx-tomato.env
+      - ./secrets/mqtt-tomato.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; without this the agent lands on a
     # subuid that cannot write its own belief-base volume. Map it onto the image's user.

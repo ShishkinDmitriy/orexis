@@ -21,6 +21,10 @@ agora-agent = "agora.runtime:main"
 agora-compose = "agora.compose:main"
 agora-validate = "agora.validate:main"
 agora-keygen = "agora.signing:main"
+# The two provisioning tools — one per backing service, so swapping either is swapping a tool
+# and not rewriting the model. Both derive what they grant from the world's own wiring.
+agora-influx = "agora.influx_admin:main"
+agora-mqtt = "agora.mqtt_admin:main"
 
 [build-system]
 requires = ["setuptools>=68"]

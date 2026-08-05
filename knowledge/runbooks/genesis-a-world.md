@@ -89,9 +89,15 @@ its ceiling, a device on a bus with no channel, and an agent with no capability 
 # 5. Deploy
 
 ```bash
+agora-influx <name>       # a bucket per agent, and a token that opens only it
+agora-mqtt <name>         # a credential per principal, and the broker ACL, derived
 agora-compose <name>
 cd deploy && podman compose -f compose.<name>.yml up -d
 ```
+
+All three read the world you just ratified and grant exactly what its wiring implies — there is
+no list to keep in step with it. A world with a **new device** in it mints a credential that has
+to be flashed into that board before it can connect.
 
 Nothing to provision first. Each agent builds its own belief base at boot from the world files
 mounted beside it, is born if it never has been, checks itself against the shapes for the

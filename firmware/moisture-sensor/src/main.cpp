@@ -127,8 +127,12 @@ static void connectMqtt() {
   String clientId = String("agora-sensor-") + PLANT_ID + "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
   unsigned attempt = 0;
   while (!mqtt.connected()) {
-    if (mqtt.connect(clientId.c_str())) {
-      Serial.printf("MQTT %s:%d connected as %s\n", MQTT_HOST, MQTT_PORT, clientId.c_str());
+    // The board connects AS ITSELF. The broker refuses anonymous clients and holds an ACL
+    // derived from the world, so this credential is what entitles it to publish its own
+    // readings and to hear its own cadence — and nothing else on the bus.
+    if (mqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASS)) {
+      Serial.printf("MQTT %s:%d connected as %s (user %s)\n", MQTT_HOST, MQTT_PORT,
+                    clientId.c_str(), MQTT_USER);
       mqtt.subscribe(CMD_TOPIC); // retained cadence command arrives here on subscribe
       Serial.printf("subscribed %s\n", CMD_TOPIC);
       return;

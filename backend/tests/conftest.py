@@ -117,6 +117,13 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
         # one place for every capability that records — see agora/observation.py
         monkeypatch.setattr(observation, "InfluxWriter", NoInflux)
         monkeypatch.setattr(runtime.mqtt, "Client", lambda *a, **k: _FakeClient())
+        # What a deployed agent is handed: its OWN bucket and a token that opens only it,
+        # mounted into its container by `agora-influx`. Set here rather than defaulted in the
+        # code, because a fallback to a shared bucket is exactly the isolation failure the
+        # per-agent credential exists to prevent — so the agent refuses to run without one,
+        # and the fixture has to say what it was given like any other deployment would.
+        monkeypatch.setenv("INFLUX_BUCKET", f"test-{agent_id}")
+        monkeypatch.setenv("INFLUX_TOKEN", f"test-token-{agent_id}")
 
     agent = runtime.Agent(agent_id, st=st or genesis_store())
     agent.sent = Sent()

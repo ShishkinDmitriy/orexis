@@ -126,10 +126,13 @@ validated world, so the check is a backstop rather than a burden.
   clearing-authored ledger does not exist yet (see
   [agent-centric-epistemics](/decisions/agent-centric-epistemics.md) §4). This is the honest
   stand-in, recorded rather than hidden — it is the one place the round trusts a self-report.
-- **Graph privacy is enforced for reads** as of
-  [belief-base-isolation](/decisions/belief-base-isolation.md) — per-agent store credentials
-  and a per-graph access list generated from the world. Writes are not scoped, and the message
-  bus has no ACLs at all, so a process on the broker can still watch every reading.
+- **Graph privacy is structural** as of
+  [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) — an agent's beliefs
+  are a store inside its own container, so there is no access list to keep. The message bus is
+  no longer open either: every principal connects as itself and may reach only the topics its
+  wiring implies, and its history is a bucket only it can open — see
+  [series-and-bus-isolation](/decisions/series-and-bus-isolation.md). The wire itself is still
+  in the clear; credentials authenticate, they do not encrypt.
 - **A capability is now a directory, discovered rather than listed** — see
   [capability-packages](/decisions/capability-packages.md), which also removed the last
   Python imports between capabilities.
