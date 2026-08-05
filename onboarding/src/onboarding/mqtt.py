@@ -61,7 +61,6 @@ def mosquitto_dir(world: str):
     Neither is true of a broker that belongs to one world.
     """
     return world_dir(world) / "mosquitto"
-DEVICE_SECRETS = REPO_ROOT / "infra" / "secrets" / "devices"
 
 READ, WRITE = "read", "write"
 
@@ -265,8 +264,18 @@ def agent_credential_file(world: str, agent_id: str) -> Path:
     return world_dir(world) / "secrets" / f"mqtt-{agent_id}.env"
 
 
-def device_credential_file(device_id: str) -> Path:
-    return DEVICE_SECRETS / f"{device_id}.env"
+def device_credential_file(world: str, device_id: str) -> Path:
+    """Beside that world's agent credentials, not in shared infra.
+
+    A board is flashed with ONE host and port, so it belongs to the world whose broker it was
+    flashed for — and that world's broker is the only one holding its password. When the broker
+    was shared, one credential per physical device was the right shape; with a broker per world
+    it left the last secret spanning worlds, which is exactly what `infra/` should not hold.
+
+    The cost is honest: a board moved to another world is re-flashed with that world's
+    credential. It was already being re-flashed with that world's port.
+    """
+    return world_dir(world) / "secrets" / f"mqtt-{device_id}.env"
 
 
 def provisioned_worlds() -> list[str]:
@@ -292,7 +301,7 @@ def provision(world: str, rotate: bool = False) -> None:
                  len(principal.grants), "  (new)" if fresh else "")
 
     for device_id, principal in sorted(devices.items()):
-        path = device_credential_file(device_id)
+        path = device_credential_file(world, device_id)
         # NOT rotated with the world: a device credential is flashed into a board, and rotating
         # it here would silently strand hardware that is not in front of you.
         fresh = not path.exists()
@@ -390,7 +399,7 @@ def rebuild(world: str) -> None:
             # it was flashed for. Two worlds naming the same device is now two brokers, only one
             # of which that board is talking to — which is a clearer story than one broker where
             # both worlds' agents ingested the same readings.
-            password = _read_password(device_credential_file(device_id))
+            password = _read_password(device_credential_file(world, device_id))
             if password is None:
                 continue
             passwd[principal.username] = password

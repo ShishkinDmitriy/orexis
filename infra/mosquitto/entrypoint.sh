@@ -11,7 +11,8 @@
 #     Note that setting no USER in the image is NOT enough on its own: mosquitto drops
 #     privileges itself, so PID 1 ends up unprivileged either way. Measured, not assumed.
 #   - Running the broker as root would be a real regression for a network-facing process. So
-#     mosquitto drops privileges exactly as before, via `user mosquitto` in lan.conf.
+#     mosquitto drops privileges exactly as before, via `user mosquitto` in the config
+#     `agora-mqtt <world>` generates.
 #
 # root shell as PID 1, unprivileged broker as its child: signals land, and nothing listens on
 # the network as root. See knowledge/decisions/series-and-bus-isolation.md.
