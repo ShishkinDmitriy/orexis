@@ -29,4 +29,6 @@ infra/secrets/
 world/*/mosquitto/
 # same again for the dashboard's server certificate
 infra/grafana/certs/
+# generated per world by `agora-dashboards`
+infra/grafana/dashboards/*/
 

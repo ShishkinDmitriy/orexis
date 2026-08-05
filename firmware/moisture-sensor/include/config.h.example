@@ -5,15 +5,20 @@
 #define WIFI_PASS "your-wifi-password"
 
 #define MQTT_HOST "192.168.1.50" // the Raspberry Pi's LAN IP (runs mosquitto)
+// Each world runs its own broker on its own port — see ag:brokerPort in that world's
+// world.ttl. society is 1883, sensing 1884, simulation 1885.
 #define MQTT_PORT 1883
 
 // --- Who this board is on the bus ---
 // The broker no longer accepts anonymous clients: every principal connects as itself and may
 // say and hear exactly what the world wires it to. Copy these two values out of
-// infra/secrets/devices/<SENSOR_ID>.env, which `agora-mqtt` generated for THIS board.
+// world/<world>/secrets/mqtt-<DEVICE_ID>.env, which `agora-mqtt <world>` generated for THIS
+// board IN THAT WORLD. A board belongs to one world: it is flashed with one host and port, so
+// it reaches exactly one broker, and each world mints its own password for it. Moving a board
+// between worlds means taking the credential AND the port from the other world and reflashing.
 // Changing a board's identity here means re-running `agora-mqtt` and reflashing.
 #define MQTT_USER "moisture_sensor_fern"
-#define MQTT_PASS "paste-from-infra/secrets/devices"
+#define MQTT_PASS "paste-from-world/<world>/secrets/mqtt-<device>.env"
 
 // Which subject this board measures. The topics are built from PLANT_ID, so it must match
 // the ag:readingTopic / ag:commandTopic that genesis/world.ttl states for this board's

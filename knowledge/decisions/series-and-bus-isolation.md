@@ -85,13 +85,22 @@ at a fixed path in the container, so the agent reads a path and never constructs
 | admin token | `infra/secrets/admin.env` | opens every bucket; no agent may hold it |
 | agent's bucket + token | `world/<w>/secrets/influx-<agent>.env` | mounted into that one container |
 | agent's broker credential | `world/<w>/secrets/mqtt-<agent>.env` | same |
-| device's broker credential | `infra/secrets/devices/<id>.env` | **not** world-scoped — see below |
+| device's broker credential | `world/<w>/secrets/mqtt-<id>.env` | world-scoped, since a broker is — see below |
 | `infra/.env` | committed template | now only `INFLUX_URL` and `INFLUX_ORG` |
 
-**Agents are world-scoped principals; devices are not.** An agent runs in a container belonging
-to one world. A board is flashed once and is the same board whichever world is loaded — which
-`world/sensing` depends on deliberately, being device-for-device identical to `world/society` so
-one ESP32 works in either. A world-qualified device credential would break that.
+**Both are world-scoped, though devices were not at first.** An agent runs in a container
+belonging to one world, so its credential obviously belongs to that world. A board was argued to
+be different: flashed once, the same physical thing whichever world is loaded, so one credential
+per device — and `world/sensing` is device-for-device identical to `world/society` precisely so
+one ESP32 works in either.
+
+That argument died with the shared broker. A board is flashed with one host and **one port**, and
+each world's broker now listens on its own — so a board already reaches exactly one world, and
+sharing its password across worlds meant every world's broker holding a secret the others' boards
+also used. It was the last thing spanning worlds, and it bought nothing: moving a board between
+worlds requires reflashing the port regardless, so it may as well carry that world's credential
+with it. The two worlds remain device-for-device identical; what differs is which broker the
+board is pointed at.
 
 # Why not InfluxDB 3
 

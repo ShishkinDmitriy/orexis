@@ -24,6 +24,7 @@ agora-validate = "onboarding.validate:main"
 agora-influx = "onboarding.influx:main"
 agora-mqtt = "onboarding.mqtt:main"
 agora-compose = "onboarding.compose:main"
+agora-dashboards = "onboarding.dashboards:main"
 # Once per world, before it is onboarded. An agent may LOAD its two keys; it may not mint them.
 agora-keygen = "onboarding.keygen:main"
 # INFRA, not onboarding: the services' own identities and whom the broker trusts. Lifecycle

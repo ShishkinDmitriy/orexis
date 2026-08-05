@@ -10,6 +10,7 @@ the same `world.ttl` and grant exactly what its wiring implies:
   agora-influx <world>    a bucket per agent, and a token that opens only it
   agora-mqtt <world>      a credential per principal, and the broker ACL, derived
   agora-compose <world>   the roster, as services
+  agora-dashboards <w>    what this world observes, as a Grafana folder
 
 Calling that phase **onboarding** is not decoration. It names the moment an agent stops being a
 description and acquires the means to act: an account of its own on the series store, a
@@ -41,7 +42,7 @@ from __future__ import annotations
 import argparse
 import logging
 
-from . import certs, compose, influx, mqtt, validate
+from . import certs, compose, dashboards, influx, mqtt, validate
 from agora.genesis import worlds
 
 log = logging.getLogger("onboard")
@@ -68,6 +69,7 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         # went quiet rather than like an error.
         log.warning("  ! the ACL on disk is ahead of the broker until it restarts or reloads")
     compose.generate(world)
+    dashboards.generate(world)
     if not certs.world_ca(world).exists():
         log.warning("  ! no certificate authority for this world")
     log.info("onboarded %s — `cd world/%s && podman compose up -d` to start it", world, world)
