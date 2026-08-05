@@ -25,6 +25,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Genesis and structure
 
 * [genesis-process](/domain/genesis-process.md) - The LLM-assisted session that turns a description into a living society: what must be elicited, what "consistent" means concretely, where opening beliefs come from, and why a world's KIND changes the operational ones but never the stake ones.
+* [onboarding](/domain/onboarding.md) - The phase between genesis and a running society: a bucket and token per agent, a bus credential and ACL per principal, a compose file — every one derived from the wiring rather than decided, which is why it is one command and safe to re-run. Not birth, and the difference is the point.
 * [world](/domain/world.md) - What a ratified world is made of (public topology + one private beliefs file per agent), the three rules for authoring one, and what genesis DERIVES rather than accepts. Several worlds coexist; which one is seeded decides what each agent becomes.
 
 # Rules and resources

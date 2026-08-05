@@ -41,10 +41,10 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import ratified
-from .config import PROJECT_ROOT
-from .genesis import DEFAULT_WORLD, world_dir, worlds
-from .ontology import AG, WORLD_GRAPH
+from agora import ratified
+from agora.config import PROJECT_ROOT
+from agora.genesis import DEFAULT_WORLD, world_dir, worlds
+from agora.ontology import AG, WORLD_GRAPH
 
 log = logging.getLogger("mqtt")
 

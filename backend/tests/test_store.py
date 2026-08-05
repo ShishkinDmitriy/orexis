@@ -28,6 +28,10 @@ _SOURCES = sorted(
     [p for p in (Path(store.__file__).parent).rglob("*.py")]
     + [p for p in loader.REPO_ROOT.glob("capabilities/*/*.py")]
     + [p for p in loader.REPO_ROOT.glob("transports/*/*.py")]
+    # Onboarding lives outside the agora package but queries the same worlds, and `compose` and
+    # `mqtt` both carry SPARQL. Listed explicitly because moving those files out of agora once
+    # took three cases off this guard without failing anything — the coverage went quiet.
+    + [p for p in loader.REPO_ROOT.glob("onboarding/src/onboarding/*.py")]
 )
 
 

@@ -36,8 +36,8 @@ from influxdb_client import Authorization, BucketRetentionRules, InfluxDBClient,
     PermissionResource
 
 from . import compose
-from .config import PROJECT_ROOT, env
-from .genesis import DEFAULT_WORLD, world_dir, worlds
+from agora.config import PROJECT_ROOT, env
+from agora.genesis import DEFAULT_WORLD, world_dir, worlds
 
 log = logging.getLogger("influx")
 
