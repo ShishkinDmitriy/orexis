@@ -281,3 +281,42 @@ speak may be Ed25519.**
 Rotating the installation CA to change this replaced the broker's certificate too, which every
 agent verifies — so every agent had to be restarted to read the new `ca.crt`. That is the cost
 recorded in `agora-infra-certs --rotate`, observed rather than predicted.
+
+# The CA is files and a function, not a service
+
+Nothing in `podman ps` is a certificate authority and nothing is meant to be. An authority here
+is a private key on disk plus a function that signs — no issuing service, no ACME, no CRL, no
+OCSP responder. For one Pi that is proportionate; step-ca or Vault would be the largest thing in
+`infra/` and would bring its own availability and backup story.
+
+Three consequences, and only the first is comfortable.
+
+**Issuance is fine.** Re-running the command issues or renews, and anything within 30 days of
+expiry is reissued, so the routine command is the routine cure.
+
+**Revocation barely exists, and an earlier note here overstated it.** Certificates were described
+as "the first thing that can genuinely be revoked". They are not: with no CRL the broker cannot
+reject a certificate that is still inside its validity window. What revocation exists is coarse
+and comes from an accident of the design — `clients-ca.crt` is a *concatenation*, so deleting a
+world's authority from it and restarting the broker locks out that entire society. Per world,
+never per agent, and it costs every connected client.
+
+**The keys sit at rest** on whichever host runs each command, protected by file permissions and
+nothing more — the same standing as the admin token beside them.
+
+# Why the world authorities are not signed by the installation one
+
+They are three independent self-signed roots, not a hierarchy. Signing each world's authority
+with the installation one would be conventional, would let the broker trust a single root
+forever, and would make adding a world cost no restart at all. It was rejected for two reasons.
+
+The first is that the installation key would then be able to mint an identity in *any* world —
+one key that can speak for every society, which is the same collapse the per-world signing keys
+already refuse. The second is that creating a world's authority would need that key present, so
+onboarding a world could no longer happen on a host that infra is not on. That is the separation
+`agora-infra-certs` exists to keep.
+
+The cost is honest and worth stating plainly: **a new world requires a broker restart**, because
+the trust bundle changes and SIGHUP does not reload TLS material. Adding an *agent* to an
+existing world still costs nothing, since the authority is unchanged. And the coarse revocation
+above is only possible because the bundle is a list — a hierarchy would take that away too.

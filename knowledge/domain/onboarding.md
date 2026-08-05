@@ -142,8 +142,7 @@ See [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 - **`--rotate` is the one destructive option.** It replaces credentials that are in use, so
   anything holding an old one is locked out until restarted with the new. There is no staged
   rotation.
-- **Certificates expire; passwords did not.** That is the first thing here that can genuinely be
-  revoked, and a new failure mode: an agent whose certificate lapsed stops connecting and looks
+- **Certificates expire; passwords did not.** That is a new failure mode: an agent whose certificate lapsed stops connecting and looks
   exactly like a process that went quiet. Re-running `agora-onboard` reissues anything within 30
   days of expiry, so the routine cure is the routine command — but nothing warns you first.
 - **Devices are onboarded but not configured.** `agora-mqtt` mints a credential per board, and
