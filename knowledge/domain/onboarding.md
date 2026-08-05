@@ -163,6 +163,11 @@ See [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 - **Certificates expire; passwords did not.** That is a new failure mode: an agent whose certificate lapsed stops connecting and looks
   exactly like a process that went quiet. Re-running `agora-onboard` reissues anything within 30
   days of expiry, so the routine cure is the routine command — but nothing warns you first.
+- **A board belongs to one world.** Its credential lives in `world/<w>/secrets/`, like an
+  agent's, because a board is flashed with one host and port and so connects to exactly one
+  world's broker. A board serving two worlds holds two credentials and is re-flashed to move —
+  it was already being re-flashed with that world's port. This was the last secret spanning
+  worlds; nothing in `infra/` is world-specific any more.
 - **Devices are onboarded but not configured.** `agora-mqtt` mints a credential per board, and
   putting it into firmware is still a manual flash. A board that has never been given one cannot
   connect at all, now that the broker refuses anonymous clients.

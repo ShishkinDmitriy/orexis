@@ -39,7 +39,10 @@ record is worse than none, because it is still cited.
    `agora.loader` finds them. Adding one is adding a directory; no registry to edit. Capability
    packages never import each other's Python: ask `agent.provider(family)` or contribute via
    `annotate`/`urgency`.
-3. **No `.env` at the repo root, because nothing here is true of every world at once.**
+3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
+installation: the broker image, the installation CA, Grafana's material, the admin token. A
+world's broker config, its ACL, its certificates and its device credentials live with the world.
+Also: **no `.env` at the repo root, because nothing there is true of every world at once.**
    `infra/.env` says where the shared series store is — the URL and the org, and nothing
    secret, because that file is handed to every agent container. What an agent may *do* with
    the store and the bus arrives as its own credentials, minted per agent into

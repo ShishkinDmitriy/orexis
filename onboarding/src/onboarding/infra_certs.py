@@ -1,7 +1,6 @@
 """agora-infra-certs — identities for the services, and whom the broker trusts. An INFRA step.
 
-  agora-infra-certs                    # certificates, and trust every local world's CA
-  agora-infra-certs --trust a/ca.crt   # or name exactly which authorities to trust
+  agora-infra-certs                    # certificates for the shared services
   agora-infra-certs --host pi.local    # the name clients will actually verify
 
 **Separate from onboarding on purpose.** Onboarding grants a *world's* agents the means to act;
@@ -30,18 +29,13 @@ from __future__ import annotations
 
 import argparse
 import logging
-from pathlib import Path
-
 from agora.config import PROJECT_ROOT
-from agora.genesis import worlds
-
-from .certs import _ca, _leaf, _write, world_ca
+from .certs import _ca, _leaf, _write
 
 log = logging.getLogger("broker-cert")
 
 REPO_ROOT = PROJECT_ROOT.parent
 INFRA_SECRETS = REPO_ROOT / "infra" / "secrets"
-BROKER_DIR = REPO_ROOT / "infra" / "mosquitto"
 
 # The name clients will verify. It has to match what the WORLDS state as ag:brokerHost, or every
 # agent rejects the certificate — but this side cannot read the worlds on a split deployment, so
@@ -74,23 +68,6 @@ def issue(host: str = DEFAULT_HOST, rotate: bool = False) -> None:
                (INFRA_SECRETS / f"{service}.key").read_bytes(), private=True)
 
 
-def trust(ca_paths) -> None:
-    """Assemble the authorities whose client certificates this broker will accept.
-
-    A concatenation, because one broker serves every world — the same shape as `passwd` and
-    `acl.conf`, and for the same reason. A world whose CA is missing here simply cannot connect
-    over mTLS; it is not an error, it is a world this broker has not been introduced to.
-    """
-    present = [p for p in ca_paths if p.exists()]
-    if not present:
-        log.warning("  ! no world authorities to trust — no agent will be able to connect over "
-                    "mTLS. Run `agora-mqtt <world>` first, or pass --trust.")
-    _write(BROKER_DIR / "clients-ca.crt",
-           "".join(p.read_text() for p in present).encode(), private=False)
-    log.info("  trust  %d world authorit(ies) -> %s",
-             len(present), (BROKER_DIR / "clients-ca.crt").relative_to(REPO_ROOT))
-
-
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
@@ -101,17 +78,13 @@ def main() -> None:
     p.add_argument("--host", default=DEFAULT_HOST,
                    help=f"the name clients reach the broker by; must match ag:brokerHost in the "
                         f"worlds that use it (default: {DEFAULT_HOST})")
-    p.add_argument("--trust", nargs="*", type=Path, default=None,
-                   help="world CA certificates to trust. Defaults to every world on this host, "
-                        "which is only right when the worlds and the broker share a machine.")
     p.add_argument("--rotate", action="store_true",
                    help="reissue the installation CA and broker certificate. Everything that "
                         "verifies the broker must be handed the new ca.crt before it reconnects.")
     args = p.parse_args()
 
     issue(args.host, rotate=args.rotate)
-    trust(args.trust if args.trust is not None else [world_ca(w) for w in worlds()])
-    log.info("the broker must be restarted or reloaded to read these")
+    log.info("restart the services to read these")
 
 
 if __name__ == "__main__":

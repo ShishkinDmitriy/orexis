@@ -66,7 +66,8 @@ RUN install -d -o mosquitto -g mosquitto /run/mosquitto
 
 # NO `USER` here, deliberately, and it is not a privilege regression — read entrypoint.sh.
 # PID 1 is a root shell so the container can be signalled at all; the broker it starts drops
-# to `user mosquitto` (lan.conf) before serving anyone. Measured, not assumed: with mosquitto
+# to `user mosquitto` (in the generated per-world config) before serving anyone. Measured,
+# not assumed: with mosquitto
 # itself as PID 1, `podman kill --signal HUP` fails with "send signal to pidfd: Permission
 # denied" whether or not the image sets USER, because mosquitto drops privileges either way.
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
