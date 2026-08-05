@@ -26,11 +26,15 @@ agent's belief base lives inside that agent. Infra is a separate compose project
 world and stays up across them.
 
 ```bash
-cp infra/.env.example infra/.env          # where the series store is
-cp world/<name>/.env.example world/<name>/.env   # what this installation may do with it
-cd infra && podman compose up -d          # influxdb, grafana
+cp infra/.env.example infra/.env             # where the series store is — URL and org, no secret
+cp infra/admin.env.example infra/secrets/admin.env   # the admin token. Fill it in; never committed
+cd infra && podman compose up -d influxdb grafana    # the broker needs its ACL first, below
 agora-keygen <world>          # that world's host + clearing signing keys, once
 ```
+
+`infra/.env` holds **only** the URL and the org, because the generated compose files hand that
+file to every agent container. The admin token opens every bucket and lives apart from it, read
+by the infra containers and the two provisioning tools and by nothing else.
 
 Keys are **per world**, in `world/<name>/secrets/` and gitignored. Two worlds are two
 societies: the host that runs a market and the clearing authority that co-signs its vouchers
@@ -38,9 +42,14 @@ belong to that society, and must not be able to sign for another.
 
 The MQTT broker is part of `infra/compose.yaml`, built from `infra/mosquitto/Containerfile`
 with a config that listens on `0.0.0.0` — mosquitto binds loopback only without one, and every
-LAN board gets `Connection refused`. Bringing infra up is all that is needed:
+LAN board gets `Connection refused`.
+
+It **no longer accepts anonymous clients**, and its password and ACL files are generated from
+the worlds' wiring, so at least one world must be provisioned before it will start. If the files
+are missing, podman creates directories in their place and mosquitto exits reading its config.
 
 ```bash
+agora-mqtt <world>            # credentials + the ACL, derived. Do this first
 cd infra && podman compose up -d
 ss -lntp | grep 1883          # expect 0.0.0.0:1883
 ```
@@ -49,14 +58,73 @@ A **host** mosquitto left over from an earlier setup will hold that port and win
 cadences live in whichever broker published them, so they do not follow you across the switch —
 each agent re-publishes one after its next reading.
 
+**Reloading it does not restart it, and `agora-mqtt` does the reload itself** — so the paragraph
+below is background, not a step you have to perform.
+
+Getting a signal to the broker took two goes, and the shape of the answer is worth keeping. PID 1
+in that container is a root shell (`infra/mosquitto/entrypoint.sh`) which starts mosquitto as a
+child; the broker still drops to `user mosquitto` and nothing listens on the network as root.
+Both halves were necessary:
+
+- rootless podman cannot signal a container whose PID 1 is unprivileged (`send signal to pidfd:
+  Permission denied`), and the kernel shields a namespace's PID 1 from `kill` inside it. Simply
+  dropping `USER` from the image is **not** enough — mosquitto drops privileges itself, so PID 1
+  ends up unprivileged anyway.
+- the root PID 1 still cannot forward the signal: AppArmor mediates signals to a confined
+  process, and the host's mosquitto profile grants no `signal` rules. From the *host* it works,
+  because a user namespace's creator keeps `CAP_KILL` inside it.
+
+So the reload is sent from the host to that container's broker child, which is what `agora-mqtt`
+now does. By hand it is:
+
+```bash
+pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' agora_mosquitto_1)
+```
+
+Making PID 1 a root shell fixed something else that had been wasting time: `podman stop` could
+not reach an unprivileged PID 1 either, so the container wedged in `Stopping` and needed `kill -9`
+on its conmon before the name could be reused. It stops cleanly now.
+
+**One caveat, seen once and not explained.** A broker instance that had been running for hours
+under repeated manual signalling stopped honouring SIGHUP: `agora-mqtt` reported a reload, the
+files on disk were right, and a newly added principal was refused until the container was
+restarted — at which point three reload cycles in a row worked again. If a freshly provisioned
+agent is refused and everything on disk looks correct, restart the broker before looking further.
+`infra/tests/test_bus_acl_runtime.py` (run with `pytest infra -q`) is what would catch this turning into a pattern. Note
+also that mosquitto's `log_dest stdout` goes quiet after its first reload, so `podman logs` stops
+being evidence of anything — check by connecting, not by reading the log.
+
 # Deploy a world
 
 ```bash
+agora-influx society          # a bucket per agent, and a token that opens only it
+agora-mqtt society            # a credential per principal, and the broker ACL, derived
 agora-compose society         # writes world/society/compose.yaml FROM the world.ttl beside it
 ```
 
-That is the whole of it. No credentials to generate, no store to prepare, no service to restart
-— adding a world or an agent disturbs nothing that is already running.
+All three read the same `world.ttl` and grant exactly what its wiring implies, so adding an
+agent to the world and re-running is the whole of deploying one — there is no list to keep in
+step. They are idempotent: an agent that already holds a bucket and a credential keeps them.
+
+Still no store to prepare, and **no agent and no world is disturbed** — existing containers keep
+running, keep their beliefs and keep their credentials, because every grant is per principal and
+nothing is re-issued that already exists. Adding a bucket restarts nothing.
+
+**The one shared thing that must hear about it is the broker**, since one broker serves every
+world and `agora-mqtt` rewrites `passwd` and `acl.conf` across all of them. Mosquitto reads both
+only at startup — but `agora-mqtt` **reloads it for you**, and a reload is not a restart:
+connected agents keep their sessions and nothing is interrupted. You will see it say so:
+
+```
+wrote infra/mosquitto/passwd and infra/mosquitto/acl.conf (15 principals)
+reloaded agora_mosquitto_1 — connected agents kept their sessions
+```
+
+If no broker is running it says that instead, and the files are simply read when it next starts.
+`--no-reload` suppresses it. Nothing else in the society is touched: **no restart, anywhere.**
+
+A world with a **new device** in it does still mint a credential that has to be flashed into that
+board before it can connect.
 
 ```
 agent-fern       Bidding, Subscribing
@@ -107,6 +175,37 @@ image copies rather than mounts:
 podman build -t agora:local -f backend/Containerfile .
 podman compose up -d --force-recreate
 ```
+
+# Changing what an agent may reach
+
+Three things you will actually want to do, on each of the two shared services. They behave
+differently, and the differences are not guessable — each line below is pinned by a test in
+`infra/tests/`, which is where to look if a
+version upgrade changes any of it.
+
+|  | the bus (mosquitto) | the series store (InfluxDB) |
+|---|---|---|
+| **grant** more | edit `world.ttl`, `agora-mqtt <w>` — reaches a connected agent that subscribed *before* the grant existed; no reconnect | `agora-influx <w>` mints the bucket and token; the agent must be recreated to be handed them |
+| **revoke** | edit `world.ttl`, `agora-mqtt <w>` — delivery stops at once, and the agent is **not** disconnected | delete the token; refused on its very next request |
+| **rotate** credential | `agora-mqtt <w> --rotate` — **evicts** the session it invalidates | `agora-influx <w> --rotate` — old token refused at once |
+
+**Revoking is immediate on both, and neither needs a restart.** Mosquitto re-checks the ACL on
+every *delivery*, not just at subscribe — which is also why an agent may subscribe `#` and still
+receive only its own topics. Influx checks the token on every request. The bus needs its SIGHUP,
+which `agora-mqtt` sends for you; the store needs nothing at all.
+
+**Rotation is a revocation, not a re-key.** Both credentials are handed to a container as an
+`env_file` when it is *created*, and the agent holds them in memory. So rotating takes that agent
+off the service and does not give it the new credential — it must be recreated to pick it up:
+
+```bash
+agora-mqtt <w> --rotate && agora-influx <w> --rotate
+cd world/<w> && podman compose up -d          # recreates the agents, with the new credentials
+```
+
+Which is the right shape for the emergency it exists for: rotate to *stop* an agent, recreate to
+let it back. `agora-mqtt --rotate` never touches a **device** password, because that one is
+flashed into a board that may not be in front of you.
 
 # Switching worlds — nothing is lost
 

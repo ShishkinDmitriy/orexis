@@ -16,6 +16,7 @@ change something, to check you're not welding shut a planned extension.
 # Identity & authorization
 
 * [authn-authz-capabilities](/decisions/authn-authz-capabilities.md) - Cert = who you are (durable); signed capability grant / JWT = what you may do now (ephemeral). Revoke only on provable violation.
+* [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) - A bucket and a scoped token per agent, and per-principal broker credentials whose topics are derived from the same wiring that derives capability. Closes the two holes where-the-belief-base-lives left open.
 
 # Economy
 

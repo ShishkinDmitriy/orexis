@@ -107,7 +107,9 @@ static void connectMqtt() {
     String clientId = String("agora-pump-") + PLANT_ID + "-" +
                       String((uint32_t)ESP.getEfuseMac(), HEX);
     Serial.print("MQTT...");
-    if (mqtt.connect(clientId.c_str())) {
+    // As itself: the broker refuses anonymous clients, and the ACL lets this valve hear its
+    // own command topic and nothing else. See knowledge/decisions/series-and-bus-isolation.md.
+    if (mqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASS)) {
       mqtt.subscribe(CMD_TOPIC, 1); // QoS 1
       Serial.printf("connected; subscribed %s\n", CMD_TOPIC);
     } else {

@@ -255,6 +255,11 @@ and a token scoped to it. Verified working: a scoped token read its own bucket a
 Deliberately **not** part of this change — it is independent, it applies to the current design
 too, and it deserves its own decision.
 
+**CLOSED** by [series-and-bus-isolation](/decisions/series-and-bus-isolation.md), which took the
+sketch above and found one thing wrong with it: the token could not simply be added beside the
+admin one, because `infra/.env` is handed to every agent container as an `env_file`, so the admin
+token had to leave that file first. The same decision closed the bus, which was the larger hole.
+
 # What is not the reason
 
 - **Not performance.** 15 ms per query, an idle store, one UPDATE per reading.
@@ -269,7 +274,11 @@ too, and it deserves its own decision.
 # Seams
 
 - **Nothing stops two worlds with shared devices running at once.** Isolating belief bases does
-  not isolate MQTT topics.
+  not isolate MQTT topics. Still true, and now deliberate: two worlds meet wherever they name the
+  same topic, `sensing` and `society` do it on purpose, and only authoring keeps apart the ones
+  that should be. What changed is that each principal is now confined to the topics its own
+  world wires it to — see
+  [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 - **An agent never re-reads the world.** Until it does something about a version bump, the
   `ag:underWorldVersion` stamp is only as true as the last restart.
 - **No store alternative offers graph-level per-user ACL.** [Oxigraph](https://github.com/oxigraph/oxigraph)

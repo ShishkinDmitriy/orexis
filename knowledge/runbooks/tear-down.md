@@ -81,18 +81,22 @@ podman ps
 pgrep -af agora | grep -v conmon
 ```
 
-# Known: the broker container does not stop
+# The broker stops, and reloads, because PID 1 is a shell
 
-`podman stop` on `agora_mosquitto_1` reports `given PID did not die within timeout` and the
-container sits in `Stopping` while still serving traffic. Not yet understood, and **not** the
-uid: it reproduces with the process mapped onto your own uid via `keep-id`, and `kill -9` from
-the owning user does not end it either. Same host as the [Alpine config-read
-failure](https://github.com/eclipse-mosquitto/mosquitto/issues/2557) that forced the custom
-image, so a shared cause is plausible but unproven.
+Worth knowing because it looks like a container bug and is not one. Rootless podman cannot
+deliver a signal to a container whose PID 1 is unprivileged — `send signal to pidfd: Permission
+denied` — and the kernel additionally shields a namespace's PID 1 from `kill` inside it. With
+mosquitto as PID 1 that combination is fatal twice over: `podman stop` cannot reach it, so it
+wedges in `Stopping` while still serving traffic and needs its conmon killed, and there is no
+way to SIGHUP it, so reloading the ACL would mean recreating the container and dropping every
+connected agent.
 
-Consequence for teardown: `cd infra && podman compose down` will not remove the broker, and a
-stuck one keeps `:1883`, so a fresh one cannot bind. There is no clean workaround from userspace
-yet — a reboot clears it. Do not assume infra is down because `down` returned.
+Setting no `USER` in the image does **not** fix it: mosquitto drops privileges itself, so PID 1
+ends up unprivileged either way. `infra/mosquitto/entrypoint.sh` is the fix — a root shell as
+PID 1 that runs the broker as a child and forwards signals to it. The broker still drops to
+`user mosquitto`, so nothing faces the network as root.
+
+That is what makes `agora-mqtt` cost a reload rather than a restart.
 
 # Clear standing instructions on the broker
 

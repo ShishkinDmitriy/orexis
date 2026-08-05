@@ -33,11 +33,9 @@ import argparse
 import logging
 from pathlib import Path
 
-import rdflib
-
-from . import loader
+from . import ratified
 from .config import PROJECT_ROOT
-from .ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
+from .ontology import AG, WORLD_GRAPH
 from .genesis import DEFAULT_WORLD, world_dir, worlds
 
 log = logging.getLogger("compose")
@@ -62,18 +60,11 @@ def roster(world: str) -> dict[str, set[str]]:
     the real rules rather than guessing is what lets a service mount only what its agent needs
     — a container that never actuates never sees a signing key.
     """
-    ds = rdflib.Dataset()
-    for path in loader.ontology_files():
-        ds.graph(rdflib.URIRef(ONTOLOGY_GRAPH)).parse(path, format="turtle")
-    ds.graph(rdflib.URIRef(WORLD_GRAPH)).parse(world_dir(world) / "world.ttl", format="turtle")
-    for rule in loader.rule_files():
-        ds.update(rule.read_text())
-
     out: dict[str, set[str]] = {}
-    for row in ds.query(_ROSTER_Q):
-        out.setdefault(str(row.id), set())
-        if row.cap:
-            out[str(row.id)].add(str(row.cap))
+    for row in ratified.rows(ratified.dataset(world), _ROSTER_Q):
+        out.setdefault(row["id"], set())
+        if row.get("cap"):
+            out[row["id"]].add(row["cap"])
     return dict(sorted(out.items()))
 
 
@@ -102,7 +93,15 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       AGORA_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
       AGORA_WORLD_DIR: "/app/world"
-    env_file: [../../infra/.env]
+    env_file:
+      # where the series store is, and the org — safe for every agent to hold
+      - ../../infra/.env
+      # this agent's own bucket and a token that opens only it, and its own broker
+      # credential. Minted by `agora-influx` and `agora-mqtt` from this world; mounted into
+      # THIS container and no other, which is what makes the isolation structural rather
+      # than a promise. Run both tools before `up`, or these files do not exist.
+      - ./secrets/influx-{agent_id}.env
+      - ./secrets/mqtt-{agent_id}.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; without this the agent lands on a
     # subuid that cannot write its own belief-base volume. Map it onto the image's user.

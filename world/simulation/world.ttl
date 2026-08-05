@@ -13,7 +13,15 @@
 #  know that anything here is simulated — a bidder asks for "whoever perceives" and a host asks
 #  for "something that can redeem", and both are answered.
 #
-#  See knowledge/domain/world.md.
+#  Its CHANNELS are not identical, and that is deliberate too. Every topic here is prefixed
+#  `sim/`, because this world once named the same strings as world/society: run both and the
+#  real supplier heard simulated bids, and a real plant agent ingested a modelled reading as
+#  testimony about itself. Isolating belief bases does not isolate a bus — two worlds meet
+#  wherever they name the same topic, and nothing but authoring keeps them apart. Contrast
+#  world/sensing, which shares society's topics ON PURPOSE so one flashed board works in
+#  either. Sharing is a choice; here the choice is no.
+#
+#  See knowledge/domain/world.md, knowledge/decisions/series-and-bus-isolation.md.
 
 ##########  The bus everyone speaks over  ##########
 #  Here rather than in .env because a topic means nothing without the broker it is on, and a
@@ -47,9 +55,9 @@ ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 ag:barrel1_market a ag:Market ;
     ag:localId "barrel1_market" ;
     ag:marketFor ag:barrel1 ;
-    ag:offerTopic   "market/barrel1/offer" ;
-    ag:bidTopic     "market/barrel1/bid" ;
-    ag:voucherTopic "market/barrel1/voucher" .
+    ag:offerTopic   "sim/market/barrel1/offer" ;
+    ag:bidTopic     "sim/market/barrel1/bid" ;
+    ag:voucherTopic "sim/market/barrel1/voucher" .
 
 ag:barrel1 a ag:WaterSource ;
     ag:localId "barrel1" ;
@@ -89,21 +97,21 @@ ag:fern_agent a ag:Agent ;
     ag:actsFor ag:fern ;
     ag:models ag:model_fern ;
     ag:bidsIn ag:barrel1_market ;
-    ag:eventTopic "readings/fern" .
+    ag:eventTopic "sim/readings/fern" .
 
 ag:tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
     ag:actsFor ag:tomato ;
     ag:models ag:model_tomato ;
     ag:bidsIn ag:barrel1_market ;
-    ag:eventTopic "readings/tomato" .
+    ag:eventTopic "sim/readings/tomato" .
 
 ag:succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
     ag:actsFor ag:succulent ;
     ag:models ag:model_succulent ;
     ag:bidsIn ag:barrel1_market ;
-    ag:eventTopic "readings/succulent" .
+    ag:eventTopic "sim/readings/succulent" .
 
 ##########  Modelled subjects — no boards at all: the agent computes their state  ##########
 
@@ -138,15 +146,15 @@ ag:model_succulent a ag:ModelledSubject ;
 
 ag:valve_fern a ag:SimulatedValve ;
     ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
-    ag:commandTopic "actuators/fern/valve" ;
+    ag:commandTopic "sim/actuators/fern/valve" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
 
 ag:valve_tomato a ag:SimulatedValve ;
     ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
-    ag:commandTopic "actuators/tomato/valve" ;
+    ag:commandTopic "sim/actuators/tomato/valve" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
 
 ag:valve_succulent a ag:SimulatedValve ;
     ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
-    ag:commandTopic "actuators/succulent/valve" ;
+    ag:commandTopic "sim/actuators/succulent/valve" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .

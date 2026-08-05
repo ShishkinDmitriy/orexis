@@ -40,9 +40,12 @@ record is worse than none, because it is still cited.
    packages never import each other's Python: ask `agent.provider(family)` or contribute via
    `annotate`/`urgency`.
 3. **No `.env` at the repo root, because nothing here is true of every world at once.**
-   `infra/.env` says where the shared series store is; `world/<name>/.env` says what this
-   installation may *do* with that world — whether a pump is wired, which subjects are
-   simulated. Both are loaded on a host run; in a container they arrive as `env_file`.
+   `infra/.env` says where the shared series store is — the URL and the org, and nothing
+   secret, because that file is handed to every agent container. What an agent may *do* with
+   the store and the bus arrives as its own credentials, minted per agent into
+   `world/<name>/secrets/` and mounted into that container alone. The admin token lives apart
+   from both, in `infra/secrets/`, and no agent ever holds it. See
+   [series-and-bus-isolation](knowledge/decisions/series-and-bus-isolation.md).
 4. **There is no shared store.** The world is TTL files; each agent builds its own belief base
    at boot and holds it in a volume of its own, so isolation is structural rather than
    enforced. An agent is told its id and given one world, mounted — it never learns that other
@@ -60,13 +63,35 @@ not contain `ag:hasCapability` — seeding computes it from the wiring.
 source .venv/bin/activate
 
 agora-validate <world> # build the world from its files and hold it to every package's shapes
+agora-influx <world>        # a bucket per agent, and a token that opens only it
+agora-mqtt <world>          # a credential per principal, and the broker ACL, derived
 agora-compose <world>       # generate world/<world>/compose.yaml from that world's roster
 cd world/<world> && podman compose up -d               # one container per agent
 podman build -t agora:local -f backend/Containerfile .   # only when a dependency changes
-pytest backend -q      # 176 tests, no infra needed
+pytest backend -q      # 193 tests, no infra needed
+pytest infra -q        # 8 more, against the RUNNING broker and store — see below
 ```
 
-`agora-validate` and `pytest` are the two gates. Both must pass before a change is done.
+`agora-validate` and `pytest backend` are the two gates. `pytest infra` is a third thing, run
+deliberately, and it is not part of them.
+
+**`infra/tests/` is a contract with the infrastructure, not with the code.** It holds mosquitto
+and InfluxDB to the behaviour the isolation design leans on — that a revoked grant stops delivery
+to an already-connected client, that a rotated credential is refused at once, that one agent's
+token cannot reach another's bucket. None of that is guaranteed by MQTT or computed by anything
+here; it is how those two services happen to behave, so it is worth re-proving whenever they
+change. Both files report the version they ran against and assert nothing about it: bump
+`MOSQUITTO_VERSION` in `infra/mosquitto/Containerfile` or the Influx image in
+`infra/compose.yaml`, rebuild, and re-run `pytest infra`.
+
+The three generators all read the same `world.ttl` and grant exactly what its wiring implies, so
+adding an agent and re-running is the whole of deploying one. `agora-influx` and `agora-mqtt`
+need infra up; `agora-mqtt` must run before the broker will start at all, since its ACL is
+generated and mosquitto now refuses anonymous clients. It then **reloads** the broker itself
+(SIGHUP, not a restart — connected agents keep their sessions), so adding an agent or a world
+still interrupts nothing.
+
+`agora-validate` and `pytest backend` are the two gates. Both must pass before a change is done.
 
 Beliefs are the agent's: written once at birth, never touched by start or stop. Anything that
 would reset them on a restart is a bug, not a convenience.

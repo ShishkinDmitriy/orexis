@@ -1,24 +1,52 @@
 # The broker. A glibc build, and the config baked in.
 #
-# Two things were learned the hard way and are worth writing down, because the previous note
-# in the compose file got both wrong:
+# THE CAUSE, finally identified — the note that stood here blamed musl, and was wrong. What is
+# true is the observation it recorded: mosquitto could not open a config file on this host by
+# any means, while `cat` read the same file fine.
 #
-#   - The Alpine/musl `eclipse-mosquitto` image cannot open ANY config file on this host —
-#     not a bind mount, not a baked layer, not a file it wrote itself seconds earlier in
-#     /tmp. `cat` reads it fine, and mosquitto with no `-c` starts fine. It is not the mount,
-#     not the permissions, not seccomp, not AppArmor: it fails under --privileged too.
+# The host has mosquitto installed as an apt package, which ships /etc/apparmor.d/mosquitto.
+# An AppArmor profile attaches to an EXECUTABLE PATH, and every build of the broker lives at
+# /usr/sbin/mosquitto — so the host's profile confines the CONTAINER's process too. It grants:
+#
+#     file @{etc_ro}/mosquitto/* r,          # one level, and no deeper
+#     file @{etc_ro}/mosquitto/conf.d/** r,
+#
+# which explains all of it: the baked conf.d file below works, a file mosquitto writes itself
+# in /tmp does not, and Alpine's /mosquitto/config/ was outside the profile entirely — hence
+# "by ANY means", including --privileged, which does not lift AppArmor. It was never the libc.
+#
+# Two consequences for anything added here:
+#
+#   - Generated files (passwd, acl.conf) must be mounted DIRECTLY in /etc/mosquitto and never
+#     in a subdirectory of it. /etc/mosquitto/agora/passwd is refused however correct its
+#     permissions are.
 #   - Without a config file mosquitto binds LOCALHOST ONLY and says so, so "just skip the
 #     config" is not an option: the boards would never reach it.
 #
-# The glibc build works, which is why the broker ran on the host as an apt package for so
-# long. It does not need to: it is the same package, in a container.
+# See knowledge/decisions/series-and-bus-isolation.md.
 #
 #   podman build -t agora-mosquitto:local -f infra/mosquitto/Containerfile infra/mosquitto
 
 FROM docker.io/library/debian:bookworm-slim
 
+# PINNED so that upgrading the broker is a decision, not a side effect of rebuilding on a day
+# Debian happened to publish something.
+#
+# `backend/tests/test_bus_acl_runtime.py` is what a bump has to survive. It holds mosquitto to
+# the behaviour the ACL design depends on — that a revoked grant stops delivery to a client that
+# is already connected, that a new grant reaches one that never re-subscribed, and that a rotated
+# password evicts the session it invalidates. None of that is in a spec; it is how this broker
+# happens to behave, so it is worth re-proving against every version we ship. Those tests report
+# the version they ran against and assert nothing about it — this line is the only place a
+# version is written down.
+#
+# To upgrade: change this, `podman compose up -d --build mosquitto`, run those tests. If the
+# version is gone from the archive (Debian removes superseded ones), that is the bump telling you
+# it is due rather than a build breaking mysteriously.
+ARG MOSQUITTO_VERSION=2.0.11-1.2+deb12u2
+
 RUN apt-get update \
- && apt-get install -y --no-install-recommends mosquitto \
+ && apt-get install -y --no-install-recommends "mosquitto=${MOSQUITTO_VERSION}" \
  && rm -rf /var/lib/apt/lists/*
 
 # conf.d is included by the packaged mosquitto.conf, so this adds the LAN listener without
@@ -29,6 +57,13 @@ COPY lan.conf /etc/mosquitto/conf.d/agora.conf
 # host install. There is no systemd here.
 RUN install -d -o mosquitto -g mosquitto /run/mosquitto
 
-USER mosquitto
+# NO `USER` here, deliberately, and it is not a privilege regression — read entrypoint.sh.
+# PID 1 is a root shell so the container can be signalled at all; the broker it starts drops
+# to `user mosquitto` (lan.conf) before serving anyone. Measured, not assumed: with mosquitto
+# itself as PID 1, `podman kill --signal HUP` fails with "send signal to pidfd: Permission
+# denied" whether or not the image sets USER, because mosquitto drops privileges either way.
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
+
 EXPOSE 1883
-CMD ["/usr/sbin/mosquitto", "-c", "/etc/mosquitto/mosquitto.conf"]
+CMD ["/usr/local/bin/entrypoint.sh"]
