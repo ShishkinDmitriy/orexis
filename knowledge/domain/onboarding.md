@@ -32,11 +32,15 @@ agora-onboard <world>
 | `agora-influx` | a bucket per agent, and a token that opens only it | who the agents are |
 | `agora-mqtt` | a credential per principal, the broker ACL, **and a certificate per agent** | what each agent is wired to |
 | `agora-compose` | the roster, as services | the roster, and who actuates |
-| `agora-dashboards` | a Grafana folder per world | what each agent observes, and for which subject |
+| `agora-dashboards` | a Grafana folder per world: what was measured, and how the agents are | what each agent observes, and the roster |
 | `agora-firmware` | a board's `config.h` | the broker, the ids and topics, the pins, the calibration, the credential |
 
-`agora-onboard` runs all four, after `agora-validate`. They remain separately callable, because
-rotating one service's credentials should not touch the other's.
+`agora-onboard` runs the first four, after `agora-validate`. They remain separately callable,
+because rotating one service's credentials should not touch the other's.
+
+`agora-firmware` is deliberately **not** in the umbrella. It writes into a firmware project rather
+than granting anything, and it is only useful when a board is in front of you — onboarding a world
+should not touch a source tree you are about to build from.
 
 # Nothing here decides anything
 
@@ -97,6 +101,11 @@ A dashboard listing agents by hand is a second list to drift, and it had already
 shipped here queried a bucket named `sensors`, which has not existed since each agent got one of
 its own. It is derived now — a panel per watcher, against the bucket `agora-influx` actually
 created.
+
+Two dashboards, not one: `agora.json` is what the plants are doing, `health.json` is whether the
+society reporting it is still working — see [agent-metrics](/domain/agent-metrics.md). They are
+separate because a flat-zero write-failure count next to a moisture curve reads as noise until
+the moment it is the only thing that matters.
 
 Its output goes to `infra/grafana/dashboards/<world>/`, which is the one exception to
 *nothing in `infra/` is world-specific*, and the exception is the point: **Grafana is the only

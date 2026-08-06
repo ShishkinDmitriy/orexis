@@ -128,6 +128,15 @@ ag:localId a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "local id" ;
     rdfs:comment "The short name a resource is known by outside RDF. Stated here so nothing has to infer it from the shape of a URI. The ONE instance identifier a process is given is an agent's localId; everything else it discovers." .
 
+#################  Self-reporting — what an agent says about itself  #################
+
+ag:SelfReporting a owl:Class ; rdfs:subClassOf ag:Capability ; rdfs:label "Self reporting" ;
+    rdfs:comment "Naming only, so a missing belief can say which block wanted it. NOT derived and NOT composed onto anyone: every agent reports, because every agent has a belief base and a connection whatever else it can do. See agora/metrics.py." .
+
+ag:metricsIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "metrics interval (s)" ;
+    rdfs:comment "How often this agent reports on itself. ABSENCE IS MEANINGFUL: an agent that states no interval reports nothing, which is a decision by omission rather than a default. A rate belongs in beliefs for the same reason the sensing cadence does — a test world may want it faster than a deployed one." .
+
 #################  The world and its versions  #################
 
 ag:World a owl:Class ; rdfs:label "World" ;

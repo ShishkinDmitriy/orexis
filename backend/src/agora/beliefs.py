@@ -136,6 +136,24 @@ class Beliefs:
             )
         return block.cls(**out)
 
+    def read_optional(self, block: Block):
+        """Fill a block, or None if the agent said nothing about it at all.
+
+        This is NOT a relaxation of the rule above. A block that is wholly absent is a decision
+        stated by omission — the same way a beliefs file with no `ag:Bidding` block says this
+        agent holds no stake — and the caller is expected to do nothing rather than to invent a
+        value. A block that is PARTIALLY present is still an error and still refuses, because
+        half an answer is an authoring slip rather than a choice.
+
+        Only for blocks whose absence is meaningful and harmless. A capability's parameters are
+        neither: an agent missing those must not start.
+        """
+        rows = bindings(self.query(_block_query(self.agent_uri, self.graph, block.terms)))
+        row = rows[0] if rows else {}
+        if not any(row.get(field) is not None for field in block.terms):
+            return None
+        return self.read(block)
+
     def current_reading(self, subject_uri: str) -> Reading | None:
         """The latest observation of a subject, with the time it was taken."""
         return _parse_reading(self.query(f"""

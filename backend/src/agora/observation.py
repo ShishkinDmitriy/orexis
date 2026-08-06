@@ -57,7 +57,11 @@ class Observations:
         try:
             self.influx.write_reading(sensor.subject_id, sensor.local_id, value)
         except Exception as exc:  # history is best-effort; never drop the reading over it
+            # Logged AND counted. Logging alone made this invisible: nothing reads a container's
+            # log until something is already known to be wrong, so a store that had quietly
+            # stopped accepting writes looked exactly like one that was working.
             log.error("influx write failed: %s", exc)
+            self.agent.metrics.influx_failed()
         try:
             self.sensed.write(
                 subject_uri=sensor.subject, subject_id=sensor.subject_id,
@@ -67,6 +71,7 @@ class Observations:
             )
         except Exception as exc:
             log.error("sensed write failed: %s", exc)
+            self.agent.metrics.sensed_failed()
 
         if self.me.event_topic:
             # Voluntary disclosure: the agent announces its own verdict, not its raw state. A
@@ -78,4 +83,8 @@ class Observations:
                 "value": round(value, 3),
                 **self.agent.annotations(sensor.subject, value),
             })
+        # Counted after the writes, so a reading that failed both still counts as heard: the
+        # sensor did deliver, and conflating "the board went quiet" with "the store refused" is
+        # what makes an outage hard to place.
+        self.agent.metrics.reading_recorded(sensor)
         self.agent.reading_recorded(sensor.subject, value)

@@ -108,3 +108,10 @@ ag:MicrocontrollerShape a sh:NodeShape ;
     sh:targetClass ag:Microcontroller ;
     sh:property [ sh:path ag:model ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
                   sh:message "a board must state its model" ] .
+
+ag:SelfReportingShape a sh:NodeShape ;
+    rdfs:comment "An agent need not report on itself, but if it says how often, the figure must be usable. Deliberately NOT sh:minCount 1: absence means it reports nothing, and refusing to start an agent over instrumentation would be disproportionate — the freshness of its readings is what it exists for, not the freshness of its telemetry." ;
+    sh:targetClass ag:Agent ;
+    sh:property [ sh:path ag:metricsIntervalS ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minExclusive 0 ;
+                  sh:message "if an agent states a metrics interval it must be a positive whole number of seconds" ] .
