@@ -63,6 +63,23 @@ misconfigured agent on the same topics as the real one. Also: **capabilities are
 declared.** `world.ttl` must
 not contain `ag:hasCapability` — seeding computes it from the wiring.
 
+## Unfinished work: an issue is a debt, a seam is a decision
+
+Three places can describe work that is not done, and they must not overlap.
+
+- **GitHub issues** — actionable debt, with a definition of done. Something is *wrong* or
+  *missing* and someone could close it. File one.
+- **"Seams left open"** in a decision record — things deliberately NOT done, and why. A seam is
+  a decision, not a to-do; it never becomes an issue and never gets closed.
+- **`decisions/roadmap.md`** — direction. It points at issues rather than restating them.
+
+The failure mode this avoids: a seams list quietly accumulating real defects, which nothing ever
+closes, until it is a graveyard nobody reads. "Nothing aggregates two sensors on one property" is
+a seam — it is a choice. "An observation is keyed by subject alone" is a debt — it is a bug.
+
+**The reasoning stays in the bundle; the issue says what is left.** Do not duplicate the analysis
+into an issue, and do not turn a decision record into a task list — link them instead.
+
 ## Commands
 
 ```bash
