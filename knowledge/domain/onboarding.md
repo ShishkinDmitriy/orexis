@@ -33,6 +33,7 @@ agora-onboard <world>
 | `agora-mqtt` | a credential per principal, the broker ACL, **and a certificate per agent** | what each agent is wired to |
 | `agora-compose` | the roster, as services | the roster, and who actuates |
 | `agora-dashboards` | a Grafana folder per world | what each agent observes, and for which subject |
+| `agora-firmware` | a board's `config.h` | the broker, the ids and topics, the pins, the calibration, the credential |
 
 `agora-onboard` runs all four, after `agora-validate`. They remain separately callable, because
 rotating one service's credentials should not touch the other's.
@@ -103,6 +104,26 @@ service that legitimately spans worlds.** It is the operator's view of every soc
 which is why it holds a read token across all buckets — splitting it per world would defeat what
 it is for. The alternative, mounting each world's directory into it, would hand a network-facing
 service read access to every world's private keys.
+
+## A board is told the same things the agents are
+
+`agora-firmware` generates a board's `config.h` from the world: the broker and port from
+`ag:MessageBus`, the ids and topics from the society, the pin and the calibration from the stand,
+the credential from `agora-mqtt`, the cadence bounds from the ontology. Every one of those was
+already written down; the header was a second copy, and the expensive kind — correcting it means
+retrieving the board.
+
+**Two routes to one broker.** An agent reaches it at `ag:brokerHost`, which is loopback and must
+be: agents are host-networked and every member has to agree on one name. A board on the wifi
+cannot use that name, so it is given the `ag:lanAddress` of whichever host runs the broker. That
+is a fact about the network rather than about the society, which is why it hangs off the
+ComputeHost and not the bus — and it is what the hand-written headers had been quietly working
+around.
+
+**What is deliberately not generated** is anything that is a property of the code rather than the
+deployment: retry counts, the listen window, the fallback cadence. The line is the one drawn
+everywhere else here — if changing it changes what this board IS, it comes from the world; if it
+changes how the firmware behaves, it is code, and it lives in the source with a default.
 
 ## Two operational facts worth knowing
 
@@ -183,6 +204,7 @@ See [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
   world's broker. A board serving two worlds holds two credentials and is re-flashed to move —
   it was already being re-flashed with that world's port. This was the last secret spanning
   worlds; nothing in `infra/` is world-specific any more.
-- **Devices are onboarded but not configured.** `agora-mqtt` mints a credential per board, and
-  putting it into firmware is still a manual flash. A board that has never been given one cannot
-  connect at all, now that the broker refuses anonymous clients.
+- **A board is configured but still flashed by hand.** `agora-firmware <world>` writes its
+  `config.h` from the world, so nothing in it is typed twice — but getting it onto the board is
+  still `pio run -t upload` with the board in front of you. That is the remaining manual step,
+  and it is hardware's nature rather than a gap here.

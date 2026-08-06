@@ -52,6 +52,14 @@ ag:Peripheral a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Peripheral" 
 ag:model a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model" ;
     rdfs:comment "What this thing IS, as a human would order it — 'ESP32-WROOM-32D'. Free text on purpose: it identifies hardware to a person, and nothing derives behaviour from it. Behaviour comes from the CLASS." .
 
+ag:lanAddress a owl:DatatypeProperty ; rdfs:domain ag:ComputeHost ; rdfs:range xsd:string ;
+    rdfs:label "LAN address" ;
+    rdfs:comment "Where this host answers for things NOT on it. A co-located agent reaches the broker at ag:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs the address of whichever host runs the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society." .
+
+ag:firmware a owl:DatatypeProperty ; rdfs:domain ag:Microcontroller ; rdfs:range xsd:string ;
+    rdfs:label "firmware" ;
+    rdfs:comment "Which project under firmware/ this board runs. Stated rather than derived from what it carries: two boards with the same peripherals may run different code, and guessing would be wrong exactly when it mattered." .
+
 ag:runsOn a owl:ObjectProperty ; rdfs:range ag:ComputeHost ; rdfs:label "runs on" ;
     rdfs:comment "Which host executes this agent. Documents why the bus is where it is." .
 
@@ -97,6 +105,11 @@ ag:I2cData a ag:PinRole ; rdfs:label "I2C SDA" ;
 ag:I2cClock a ag:OutputRole ; rdfs:label "I2C SCL" .
 
 #################  The peripherals actually on the bench  #################
+
+ag:rawDry a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when dry" ;
+    rdfs:comment "What this probe reads in air. A fact about THIS probe in THIS pot — two identical probes differ — so it belongs to the instance, not to the firmware, which is per model." .
+ag:rawWet a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when wet" ;
+    rdfs:comment "What it reads in saturated soil. Not free water: water is wetter than soil ever gets, so calibrating against it makes the top of the scale unreachable." .
 
 ag:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf ag:Peripheral ;
     rdfs:label "Capacitive soil moisture probe" ;

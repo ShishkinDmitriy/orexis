@@ -24,11 +24,25 @@
 
 #include "config.h"
 
-static const char *MOISTURE_TOPIC = "sensors/" PLANT_ID "/moisture";
-static const char *CMD_TOPIC = "sensors/" PLANT_ID "/cmd";
+// The topics come from config.h, which `agora-firmware` generates from the world's own
+// ag:readingTopic and ag:commandTopic. They used to be built here as "sensors/" PLANT_ID
+// "/moisture" — which assumed a topic SHAPE the world states explicitly, and would have gone
+// quietly wrong the day a world named a topic differently.
 
 WiFiClient wifi;
 PubSubClient mqtt(wifi);
+
+// These are properties of the FIRMWARE, not of this deployment, so they are not generated:
+// changing one changes how the board behaves, not what it is. config.h may still override them.
+#ifndef DEFAULT_SLEEP_S
+#define DEFAULT_SLEEP_S 60      // cadence until the agent sets one
+#endif
+#ifndef MQTT_TRIES
+#define MQTT_TRIES 10           // give up and sleep rather than hold the battery open
+#endif
+#ifndef CMD_WAIT_MS
+#define CMD_WAIT_MS 1500        // listen window after publishing, to catch a retained cadence
+#endif
 
 uint32_t sleep_s = DEFAULT_SLEEP_S;
 

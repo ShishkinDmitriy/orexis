@@ -18,6 +18,7 @@
 ag:raspberry a ag:ComputeHost ;
     ag:localId "raspberry" ;
     ag:model "Raspberry Pi 5" ;
+    ag:lanAddress "192.168.2.126" ;
     rdfs:comment "Runs the agent containers, the broker for this world, and the shared store." .
 
 ag:fern_agent ag:runsOn ag:raspberry .
@@ -28,6 +29,7 @@ ag:esp32_fern a ag:Microcontroller ;
     ag:localId "esp32_fern" ;
     ag:model "ESP32-WROOM-32D" ;
     ag:onBus ag:local_bus ;
+    ag:firmware "moisture-sensor" ;
     ag:carries ag:moisture_sensor_fern , ag:status_led_fern ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is ag:Subscribing: the board keeps the interval and cannot be reached in between." .
 
@@ -38,7 +40,11 @@ ag:esp32_fern a ag:Microcontroller ;
 # keeps working while WiFi is up.
 ag:moisture_sensor_fern a ag:CapacitiveMoistureProbe ;
     ag:model "Capacitive Soil Moisture Sensor v2.0" ;
-    ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] .
+    ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] ;
+    # Measured on this probe, in this pot. Carried here rather than in the firmware because it
+    # is per-instance and re-measured over time; changing it must not need a screwdriver.
+    ag:rawDry 3200 ;
+    ag:rawWet 1300 .
 
 # Not yet read by anything: this board has no user LED of its own, so an external one is wired
 # to say from across the room whether a reading went out. 25/26/27 are safe outputs — no
