@@ -58,8 +58,8 @@ ag:moisture_sensor_fern a ag:Sensor ;
     ag:senseMode ag:Scheduled ;     # keeps a given interval -> its agent gains ag:Subscribing
     ag:monitors ag:fern ;
     sosa:observes ag:SoilMoisture ;
-    ag:readingTopic "sensors/fern/moisture" ;
-    ag:commandTopic "sensors/fern/cmd" .
+    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    ag:commandTopic "sensors/moisture_sensor_fern/command" .
 
 ##########  The agent  ##########
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.

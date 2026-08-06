@@ -146,11 +146,19 @@ _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?valve <{AG}actuates> ?subject ; <{AG}statusTopic> ?statusTopic .
 }} }}""")
 
-# The stand-in valve itself: it listens where the real one listens and reports where the real one
-# reports. Both derived from the valve's own wiring, so a world that adds a valve grants one.
-_SIM_VALVE_Q = _q(f"""?id ?commandTopic ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}actuates> ?subject ;
-     <{AG}commandTopic> ?commandTopic ; <{AG}statusTopic> ?statusTopic .
+# Any valve that reports, stood in for or not. This used to require ag:simulatedBy, which meant
+# a REAL valve could not publish the status its own firmware sends — "so the executor knows water
+# actually flowed" — and the broker dropped it silently, because MQTT never refuses a publish out
+# loud. The simulation was strictly more capable than the hardware it stands for, which is the
+# wrong way round.
+_VALVE_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?v <{AG}localId> ?id ; <{AG}actuates> ?subject ; <{AG}statusTopic> ?statusTopic .
+}} }}""")
+
+# And whoever actuates it must be able to HEAR that report, or the confirmation goes nowhere.
+_ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hasActuator> ?v .
+  ?v <{AG}statusTopic> ?statusTopic .
 }} }}""")
 
 # One way of holding an actuator. There used to be two, because a simulated valve was a
@@ -239,10 +247,13 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
     for row in ratified.rows(ds, _SIM_DOSE_Q):
         devices.setdefault(row["id"], Principal(row["id"])).may(READ, row["statusTopic"])
 
-    for row in ratified.rows(ds, _SIM_VALVE_Q):
-        valve = devices.setdefault(row["id"], Principal(row["id"]))
-        valve.may(READ, row["commandTopic"])   # it listens for what to do
-        valve.may(WRITE, row["statusTopic"])   # and says what it actually did
+    for row in ratified.rows(ds, _VALVE_STATUS_Q):
+        # it already reads its command topic as any device does; this is the other direction
+        devices.setdefault(row["id"], Principal(row["id"])).may(WRITE, row["statusTopic"])
+
+    for row in ratified.rows(ds, _ACTUATOR_STATUS_Q):
+        agents.setdefault(row["id"], Principal(agent_username(world, row["id"]))).may(
+            READ, row["statusTopic"])
 
     return agents, devices
 
