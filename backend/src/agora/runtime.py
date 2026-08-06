@@ -35,6 +35,7 @@ import paho.mqtt.client as mqtt
 
 from . import config, genesis, loader
 from .beliefs import Beliefs
+from .metrics import SELF_REPORTING_BLOCK, Metrics
 from .store import bindings
 from .validate import validate_agent
 from .world import MessageBus, Self, World, load_bus, load_self, load_world
@@ -65,8 +66,13 @@ class Agent:
         self.me: Self = load_self(self.store.query, agent_id)
         self.beliefs = Beliefs(self.store.query, agent_id, self.me.uri)
 
+        # Built before the modules, because Observations counts into it and a module builds one
+        # of those. Counting only — nothing is reported until run() starts it.
+        self.metrics = Metrics(self)
+
         self.mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.mqtt.on_connect = self._on_connect
+        self.mqtt.on_disconnect = self._on_disconnect
         self.mqtt.on_message = self._on_message
 
         # exactly the modules this agent composed — no more, no less
@@ -132,11 +138,17 @@ class Agent:
         self.mqtt.publish(topic, json.dumps(payload), qos=1, retain=retain)
 
     def _on_connect(self, client, userdata, flags, reason_code, properties) -> None:
+        self.metrics.connected()
         for module in self.modules:
             for topic in module.subscriptions():
                 client.subscribe(topic)
         log.info("%s up — world v%s, running %s", self.id, self.world.version,
                  ", ".join(m.name for m in self.modules) or "nothing")
+
+    def _on_disconnect(self, client, userdata, flags, reason_code, properties) -> None:
+        # Counted rather than logged at every drop: a reconnecting agent is normal on a marginal
+        # link, and the number over time is what says whether it is getting worse.
+        self.metrics.disconnected()
 
     def reading_recorded(self, subject_uri: str, value: float) -> None:
         """Perception tells the rest of me that something new is known.
@@ -207,6 +219,10 @@ class Agent:
         self.mqtt.username_pw_set(username, config.env("MQTT_PASSWORD"))
         self.mqtt.connect(self.bus.host, port)
         self.mqtt.loop_start()
+        # After the mask, so the timer thread inherits it and this thread stays the one that
+        # wakes on a signal. Its thread is a daemon, so it cannot hold the process open either.
+        if (reporting := self.beliefs.read_optional(SELF_REPORTING_BLOCK)) is not None:
+            self.metrics.start(reporting.interval_s)
         for module in self.modules:
             module.start()
 
@@ -218,6 +234,7 @@ class Agent:
             log.info("%s shutting down", self.id)
             for module in self.modules:
                 module.stop()
+            self.metrics.stop()
             self.mqtt.loop_stop()
             self.mqtt.disconnect()
 

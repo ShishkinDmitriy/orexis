@@ -57,6 +57,15 @@ SELECT DISTINCT ?agentId ?subjectId WHERE {{ GRAPH <{WORLD_GRAPH}> {{
 # producing a dashboard that queries nothing.
 MEASUREMENT = "soil_moisture"
 FIELD = "value"
+AGENT_MEASUREMENT = "agent_health"
+SENSOR_MEASUREMENT = "agent_sensor_health"
+
+# Every agent, not only the ones that observe: a market host owns a belief base and a connection
+# and can go quiet exactly as loudly as a sensing agent can.
+_ROSTER_Q = f"""
+SELECT DISTINCT ?agentId WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?agent a <{AG}Agent> ; <{AG}localId> ?agentId .
+}} }}"""
 
 
 def _flux(bucket: str) -> str:
@@ -95,6 +104,100 @@ def _panel(title: str, bucket: str, kind: str, x: int, y: int, w: int, h: int, p
     }
 
 
+def _health_flux(bucket: str, measurement: str, field: str, last: bool = False) -> str:
+    tail = ("  |> last()" if last
+            else "  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)")
+    return (f'from(bucket: "{bucket}")\n'
+            "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
+            f'  |> filter(fn: (r) => r._measurement == "{measurement}")\n'
+            f'  |> filter(fn: (r) => r._field == "{field}")\n' + tail)
+
+
+def _health_panel(title: str, buckets: dict, measurement: str, field: str, kind: str,
+                  unit: str, x: int, y: int, w: int, h: int, panel_id: int,
+                  desc: str = "") -> dict:
+    """One panel, one target per agent — because each agent owns its own bucket.
+
+    There is no union across buckets and there could not be: an agent's token opens only its own,
+    so the only client that can see all of them at once is Grafana, holding the read-only token
+    minted for exactly that. See knowledge/decisions/series-and-bus-isolation.md.
+    """
+    return {
+        "id": panel_id,
+        "type": kind,
+        "title": title,
+        "description": desc,
+        "datasource": {"type": "influxdb", "uid": "influxdb"},
+        "gridPos": {"h": h, "w": w, "x": x, "y": y},
+        "targets": [
+            {"refId": chr(ord("A") + i),
+             "query": _health_flux(bucket, measurement, field, last=(kind == "stat"))}
+            for i, (_, bucket) in enumerate(sorted(buckets.items()))
+        ],
+        "fieldConfig": {"defaults": {"unit": unit, "color": {"mode": "palette-classic"}},
+                        "overrides": []},
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
+        if kind == "timeseries" else {},
+    }
+
+
+def render_health(world: str) -> dict:
+    """How the agents of this world are, as opposed to what they measured.
+
+    Derived from the roster exactly as the readings dashboard is derived from the wiring — so an
+    agent added to world.ttl appears here on the next `agora-onboard` with nothing to remember.
+    """
+    rows = ratified.rows(ratified.dataset(world), _ROSTER_Q)
+    agents = sorted({r["agentId"] for r in rows})
+    if not agents:
+        raise SystemExit(f"agora-dashboards: world {world!r} declares no agents")
+    buckets = {a: bucket_name(world, a) for a in agents}
+
+    # Ordered by what you would look at when something is wrong, top first.
+    spec = [
+        ("Seconds since last reading", SENSOR_MEASUREMENT, "reading_age_s", "timeseries", "s", 24, 8,
+         "The gap this world's agents are actually seeing. A sawtooth is the cadence; a plateau "
+         "is a board that stopped talking. Nothing appears here until a sensor has delivered "
+         "once — a flat-zero readings_total below is what says it never has."),
+        ("Write failures", AGENT_MEASUREMENT, "influx_write_failures", "timeseries", "short", 12, 7,
+         "Counts since boot of series writes that were caught and logged and otherwise invisible. "
+         "Flat at zero is the point; any slope means readings are being lost quietly."),
+        ("Belief base — triples", AGENT_MEASUREMENT, "belief_triples", "timeseries", "short", 12, 7,
+         "Expected to be FLAT. sensed_writer deletes before it inserts, so an agent holds one "
+         "current observation per subject however long it runs. A rising line means something "
+         "started appending."),
+        ("Belief base — on disk", AGENT_MEASUREMENT, "belief_bytes", "timeseries", "bytes", 12, 7,
+         "RocksDB compacts on its own schedule, so this is lumpier than the triple count and "
+         "should still be bounded."),
+        ("Reconnects", AGENT_MEASUREMENT, "mqtt_reconnects", "timeseries", "short", 12, 7,
+         "Since boot. A marginal link shows here before it shows anywhere else."),
+        ("Uptime", AGENT_MEASUREMENT, "uptime_s", "stat", "s", 12, 5,
+         "Resets to zero on restart, which is how a crash-looping agent announces itself."),
+        ("Readings heard", SENSOR_MEASUREMENT, "readings_total", "stat", "short", 12, 5,
+         "Since boot, per sensor. Zero on a sensing agent means its board has never once been "
+         "heard from — a different fault from one that went quiet."),
+    ]
+
+    panels, y, pid = [], 0, 1
+    for title, measurement, field, kind, unit, w, h, desc in spec:
+        panels.append(_health_panel(title, buckets, measurement, field, kind, unit,
+                                    x=0 if w == 24 else (pid % 2) * 12, y=y, w=w, h=h,
+                                    panel_id=pid, desc=desc))
+        pid += 1
+        y += h if w == 24 else (h if pid % 2 else 0)
+
+    return {
+        "uid": f"agora-{world}-health"[:40],
+        "title": f"Agora — {world} health",
+        "tags": ["agora", world, "health"],
+        "timezone": "browser",
+        "schemaVersion": 39,
+        "refresh": "1m",
+        "time": {"from": "now-6h", "to": "now"},
+        "panels": panels,
+    }
+
+
 def render(world: str) -> dict:
     rows = ratified.rows(ratified.dataset(world), _WATCHERS_Q)
     watchers = sorted({(r["agentId"], r["subjectId"]) for r in rows})
@@ -130,11 +233,14 @@ def render(world: str) -> dict:
 def generate(world: str) -> None:
     out_dir = DASHBOARD_ROOT / world
     out_dir.mkdir(parents=True, exist_ok=True)
-    out = out_dir / "agora.json"
-    out.write_text(json.dumps(render(world), indent=2) + "\n")
-    out.chmod(0o644)
-    log.info("  wrote %s (%d panels)", out.relative_to(REPO_ROOT),
-             len(render(world)["panels"]))
+    # Two dashboards, because they answer different questions and are looked at at different
+    # times: one is what the plants are doing, the other is whether the society reporting it is
+    # still working. Mixing them would put a flat-zero failure count next to a moisture curve.
+    for name, doc in (("agora.json", render(world)), ("health.json", render_health(world))):
+        out = out_dir / name
+        out.write_text(json.dumps(doc, indent=2) + "\n")
+        out.chmod(0o644)
+        log.info("  wrote %s (%d panels)", out.relative_to(REPO_ROOT), len(doc["panels"]))
 
 
 def main() -> None:
