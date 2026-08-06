@@ -48,8 +48,11 @@ services:
       - agora-simulation-mosquitto:/var/lib/mosquitto
 
   sim-sensor_fern:
-    image: agora:local
-    command: ["python", "/app/firmware/simulated-sensor/simulator.py"]
+    build:
+      # its own directory: it needs one file, and the repo root is excluded from image
+      # contexts anyway — the agent image must not carry the simulator, nor it the agent
+      context: ../../firmware/simulated-sensor
+    image: agora-simulator:local
     environment:
       SIM_SENSOR_ID: "sensor_fern"
       SIM_READING_TOPIC: "sim/sensors/fern/moisture"
@@ -71,12 +74,13 @@ services:
       - ./secrets/mqtt-sensor_fern.env
     network_mode: host
     restart: unless-stopped
-    volumes:
-      - ../../firmware/simulated-sensor:/app/firmware/simulated-sensor:ro
 
   sim-sensor_succulent:
-    image: agora:local
-    command: ["python", "/app/firmware/simulated-sensor/simulator.py"]
+    build:
+      # its own directory: it needs one file, and the repo root is excluded from image
+      # contexts anyway — the agent image must not carry the simulator, nor it the agent
+      context: ../../firmware/simulated-sensor
+    image: agora-simulator:local
     environment:
       SIM_SENSOR_ID: "sensor_succulent"
       SIM_READING_TOPIC: "sim/sensors/succulent/moisture"
@@ -98,12 +102,13 @@ services:
       - ./secrets/mqtt-sensor_succulent.env
     network_mode: host
     restart: unless-stopped
-    volumes:
-      - ../../firmware/simulated-sensor:/app/firmware/simulated-sensor:ro
 
   sim-sensor_tomato:
-    image: agora:local
-    command: ["python", "/app/firmware/simulated-sensor/simulator.py"]
+    build:
+      # its own directory: it needs one file, and the repo root is excluded from image
+      # contexts anyway — the agent image must not carry the simulator, nor it the agent
+      context: ../../firmware/simulated-sensor
+    image: agora-simulator:local
     environment:
       SIM_SENSOR_ID: "sensor_tomato"
       SIM_READING_TOPIC: "sim/sensors/tomato/moisture"
@@ -125,8 +130,6 @@ services:
       - ./secrets/mqtt-sensor_tomato.env
     network_mode: host
     restart: unless-stopped
-    volumes:
-      - ../../firmware/simulated-sensor:/app/firmware/simulated-sensor:ro
 
   agent-fern:
     image: agora:local

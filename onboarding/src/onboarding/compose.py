@@ -168,7 +168,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
 # more. It does not read the world: a real board could not, and letting this one would quietly
 # make it a different kind of thing than the hardware it stands in for.
 _SIMULATED_Q = f"""
-SELECT ?id ?readingTopic ?commandTopic ?senseMode ?initial ?dryRate ?tick ?litres ?doseTopic ?port
+SELECT ?id ?readingTopic ?commandTopic ?senseMode ?initial ?dryRate ?tick ?litres ?doseTopic ?port ?minValue ?maxValue
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}readingTopic> ?readingTopic ;
      <{AG}monitors> ?subject .
@@ -177,6 +177,8 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
   OPTIONAL {{ ?model <{AG}modelDryRate> ?dryRate }}
   OPTIONAL {{ ?model <{AG}modelTickSeconds> ?tick }}
+  OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
+  OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
   OPTIONAL {{ ?subject <{AG}litresPerFraction> ?litres }}
   OPTIONAL {{ ?valve <{AG}actuates> ?subject ; <{AG}commandTopic> ?doseTopic }}
   ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
@@ -204,8 +206,11 @@ def _simulator(world: str, row: dict) -> str:
         ) if v not in (None, ""))
     return f"""
   sim-{sim_id}:
-    image: {IMAGE}
-    command: ["python", "/app/firmware/simulated-sensor/simulator.py"]
+    build:
+      # its own directory: it needs one file, and the repo root is excluded from image
+      # contexts anyway — the agent image must not carry the simulator, nor it the agent
+      context: ../../firmware/simulated-sensor
+    image: agora-simulator:local
     environment:
       SIM_SENSOR_ID: "{sim_id}"
       SIM_READING_TOPIC: "{row['readingTopic']}"
@@ -221,8 +226,6 @@ def _simulator(world: str, row: dict) -> str:
       - ./secrets/mqtt-{sim_id}.env
     network_mode: host
     restart: unless-stopped
-    volumes:
-      - ../../firmware/simulated-sensor:/app/firmware/simulated-sensor:ro
 """
 
 

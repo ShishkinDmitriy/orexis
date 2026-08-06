@@ -128,6 +128,8 @@ ag:DeviceModelShape a sh:NodeShape ;
     rdfs:comment "What the stand-in computes between readings. Optional individually — a modelled valve has no dry rate — but each must be a number if stated at all, because the simulator reads them without a graph to check them against." ;
     sh:targetClass ag:DeviceModel ;
     sh:property [ sh:path ag:modelDryRate ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path ag:modelMinValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path ag:modelMaxValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path ag:modelInitialValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ;
                   sh:minInclusive 0.0 ; sh:maxInclusive 1.0 ;
                   sh:message "an initial value is a fraction of the observed property, so 0..1" ] ;

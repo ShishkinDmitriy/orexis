@@ -172,6 +172,31 @@ real time here twice.
 An agent never sets either variable itself. Its container is given `AGORA_WORLD_DIR` pointing at
 the one world mounted into it, which is also why it never learns that other worlds exist.
 
+# A stand-in is steered on the same topic a board is commanded on
+
+A simulated device needs a way to be repositioned — set it dry and watch what an agent does about
+it — and the obvious move is a second, simulation-only topic. It is the wrong move. The command
+topic **already** is a device's control surface: a real board reads the keys it knows off it and
+ignores the rest, so `{"set": 0.05}` reaching hardware is silently discarded. Riding the same
+channel costs no new term, no new shape, no new grant and no new topic, and it keeps the ACL for a
+stand-in identical in shape to a board's.
+
+What does NOT ride it is water. A valve opening reaches the soil over the dose topic, through the
+real actuation path, because that is physics rather than an operator's hand — routing it through
+the steering verbs would mean the simulation quietly stopped testing whether watering works.
+Measured, with the whole loop closing:
+
+```
+{"set":0.05}  ->  agent: moisture 0.050 -> bid 1.000 L @ EUR 0.727
+              ->  agent: won 1.000 L
+              ->  sim:   received 1000 ml -> 0.550     <- over the dose topic
+              ->  sim:   cadence now 30.0s, then 220s once recovered
+```
+
+A push device subscribes to that topic too, and refuses only the orders about its own clock. A
+real push board would not listen at all; the honest half of that is kept, and the other half is
+conceded, because a stand-in that cannot be repositioned is untestable.
+
 # A world is files, and every agent holds its own copy
 
 There is no shared store. A world is the Turtle in `world/<name>/`, and each agent builds its
