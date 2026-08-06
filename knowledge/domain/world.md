@@ -284,6 +284,23 @@ than a new capability — a capability distinguishes what an agent must decide, 
 distinguishes how a device is spoken to". That was right, and it is what now exists, one level
 lower: not a binding but the device itself.
 
+**An actuator is stood in for the same way, and the check is the point.** A simulated valve is
+an `ag:Valve` carrying `ag:simulatedBy`, held by `ag:hasActuator` like any other — so its
+supplier derives plain `ag:Actuation` and co-signs every command exactly as it would for
+hardware. The stand-in verifies both signatures before it opens, holding the two PUBLIC keys and
+no private one.
+
+That is a correction rather than an addition. The capability it replaced said plainly that it did
+not sign, "because there is nothing to convince" — honest about what it did, and wrong about what
+that cost: the simulation exercised every part of actuation except the part a market exists to
+make safe.
+
+**Water flows on `ag:statusTopic`, never on the command.** A real plant gets wet because water
+arrives; between containers the only channel is a message, so the simulated sensor waters on what
+the valve *reported having dispensed*. The old arrangement read the valve's command topic, which
+meant a command a real valve would refuse still watered the plant. Now a refusal publishes
+nothing and the soil stays dry — which is the behaviour worth having a test for, and there is one.
+
 **Sense mode is honoured rather than bypassed.** `ag:Scheduled` means the stand-in keeps the
 interval its agent gives it over the retained command, exactly as a deep-sleeping board does;
 `ag:Push` means it keeps its own clock and takes no orders. So the simulation exercises the
@@ -310,8 +327,12 @@ only an explicit re-birth discards them.
 - **Readings are not stored on the wire.** A board publishes QoS 0 and unretained, so a reading
   published while no agent is running goes to nobody. Start the agents *before* the hardware,
   or the first readings are lost.
-  ones a real board is already publishing for, on the same topic, and both are ingested. The
-  world cannot warn you, by design: it does not know that simulation exists.
+- **Two publishers on one topic are still two publishers.** A stand-in configured for subjects a
+  real board already publishes for puts both readings on the same topic and both are ingested.
+  The world *can* warn about this now — `ag:simulatedBy` is on the device, so a world states
+  which of its devices are stood in for — but nothing checks it yet, and a stray container from
+  an earlier run is outside what any shape can see. `podman compose down` removes a society
+  deterministically, which is half of why deployment is containers.
 
 # Seams left open
 

@@ -63,7 +63,7 @@ services:
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
       SIM_COMMAND_TOPIC: "sim/sensors/fern/cmd"
-      SIM_DOSE_TOPIC: "sim/actuators/fern/valve"
+      SIM_DOSE_TOPIC: "sim/actuators/fern/valve/status"
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.02"
       SIM_TICK_SECONDS: "3"
@@ -91,7 +91,7 @@ services:
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
       SIM_COMMAND_TOPIC: "sim/sensors/succulent/cmd"
-      SIM_DOSE_TOPIC: "sim/actuators/succulent/valve"
+      SIM_DOSE_TOPIC: "sim/actuators/succulent/valve/status"
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.015"
       SIM_TICK_SECONDS: "3"
@@ -119,7 +119,7 @@ services:
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
       SIM_COMMAND_TOPIC: "sim/sensors/tomato/cmd"
-      SIM_DOSE_TOPIC: "sim/actuators/tomato/valve"
+      SIM_DOSE_TOPIC: "sim/actuators/tomato/valve/status"
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.02"
       SIM_TICK_SECONDS: "3"
@@ -130,6 +130,90 @@ services:
       - ./secrets/mqtt-sensor_tomato.env
     network_mode: host
     restart: unless-stopped
+
+  valve-valve_fern:
+    build:
+      # its own directory: the repo root is excluded from image contexts, and firmware must not
+      # carry the agent any more than the agent carries firmware
+      context: ../../firmware/simulated-valve
+    image: agora-valve:local
+    environment:
+      VALVE_ID: "valve_fern"
+      VALVE_COMMAND_TOPIC: "sim/actuators/fern/valve"
+      VALVE_STATUS_TOPIC: "sim/actuators/fern/valve/status"
+      VALVE_ML_PER_SECOND: "10.0"
+      VALVE_MAX_DOSE_ML: "1000.0"
+      # public halves only — it verifies, it never signs
+      VALVE_HOST_PUB: "/keys/host.pub"
+      VALVE_CLEARING_PUB: "/keys/clearing.pub"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1885"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a real valve's would be
+      - ./secrets/mqtt-valve_fern.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      # the PUBLIC keys, and nothing else from secrets/. A stand-in that could reach host.key
+      # could sign for the society, and then verifying would be theatre.
+      - ./secrets/host.pub:/keys/host.pub:ro
+      - ./secrets/clearing.pub:/keys/clearing.pub:ro
+
+  valve-valve_succulent:
+    build:
+      # its own directory: the repo root is excluded from image contexts, and firmware must not
+      # carry the agent any more than the agent carries firmware
+      context: ../../firmware/simulated-valve
+    image: agora-valve:local
+    environment:
+      VALVE_ID: "valve_succulent"
+      VALVE_COMMAND_TOPIC: "sim/actuators/succulent/valve"
+      VALVE_STATUS_TOPIC: "sim/actuators/succulent/valve/status"
+      VALVE_ML_PER_SECOND: "10.0"
+      VALVE_MAX_DOSE_ML: "1000.0"
+      # public halves only — it verifies, it never signs
+      VALVE_HOST_PUB: "/keys/host.pub"
+      VALVE_CLEARING_PUB: "/keys/clearing.pub"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1885"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a real valve's would be
+      - ./secrets/mqtt-valve_succulent.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      # the PUBLIC keys, and nothing else from secrets/. A stand-in that could reach host.key
+      # could sign for the society, and then verifying would be theatre.
+      - ./secrets/host.pub:/keys/host.pub:ro
+      - ./secrets/clearing.pub:/keys/clearing.pub:ro
+
+  valve-valve_tomato:
+    build:
+      # its own directory: the repo root is excluded from image contexts, and firmware must not
+      # carry the agent any more than the agent carries firmware
+      context: ../../firmware/simulated-valve
+    image: agora-valve:local
+    environment:
+      VALVE_ID: "valve_tomato"
+      VALVE_COMMAND_TOPIC: "sim/actuators/tomato/valve"
+      VALVE_STATUS_TOPIC: "sim/actuators/tomato/valve/status"
+      VALVE_ML_PER_SECOND: "10.0"
+      VALVE_MAX_DOSE_ML: "1000.0"
+      # public halves only — it verifies, it never signs
+      VALVE_HOST_PUB: "/keys/host.pub"
+      VALVE_CLEARING_PUB: "/keys/clearing.pub"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1885"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a real valve's would be
+      - ./secrets/mqtt-valve_tomato.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      # the PUBLIC keys, and nothing else from secrets/. A stand-in that could reach host.key
+      # could sign for the society, and then verifying would be theatre.
+      - ./secrets/host.pub:/keys/host.pub:ro
+      - ./secrets/clearing.pub:/keys/clearing.pub:ro
 
   agent-fern:
     image: agora:local
@@ -277,6 +361,9 @@ services:
       - ./secrets/supplier.crt:/app/world/secrets/agent.crt:ro
       - ./secrets/supplier.key:/app/world/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro
+      # it actuates, so it co-signs — these two keys and nothing else
+      - ./secrets/host.key:/app/world/secrets/host.key:ro
+      - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro
       # the discovered trees, mounted so a code change needs a restart, not a rebuild
       - ../../capabilities:/app/capabilities:ro
       - ../../transports:/app/transports:ro

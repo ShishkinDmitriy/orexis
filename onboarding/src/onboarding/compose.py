@@ -180,7 +180,7 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
   OPTIONAL {{ ?subject <{AG}litresPerFraction> ?litres }}
-  OPTIONAL {{ ?valve <{AG}actuates> ?subject ; <{AG}commandTopic> ?doseTopic }}
+  OPTIONAL {{ ?valve <{AG}actuates> ?subject ; <{AG}statusTopic> ?doseTopic }}
   ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
 }} }}"""
 
@@ -229,6 +229,60 @@ def _simulator(world: str, row: dict) -> str:
 """
 
 
+_SIM_VALVES_Q = f"""
+SELECT ?id ?commandTopic ?statusTopic ?mlPerSecond ?maxDoseMl ?port
+WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}actuates> ?subject ;
+     <{AG}commandTopic> ?commandTopic ; <{AG}statusTopic> ?statusTopic .
+  OPTIONAL {{ ?v <{AG}mlPerSecond> ?mlPerSecond }}
+  OPTIONAL {{ ?v <{AG}maxDoseMl> ?maxDoseMl }}
+  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
+}} }}"""
+
+
+def _valve(world: str, row: dict) -> str:
+    """A valve that does not exist, refusing what a real one would refuse.
+
+    Its own image, holding `cryptography` the sensor's does not need — because it VERIFIES. The
+    supplier co-signs every command exactly as it would for hardware, and this opens only for a
+    token carrying both signatures, so the simulation exercises the part of actuation the market
+    exists to make safe rather than the part around it.
+
+    It is mounted the two PUBLIC keys and no private one. It cannot author a command, which is
+    what makes the check worth running.
+    """
+    valve_id = row["id"]
+    return f"""
+  valve-{valve_id}:
+    build:
+      # its own directory: the repo root is excluded from image contexts, and firmware must not
+      # carry the agent any more than the agent carries firmware
+      context: ../../firmware/simulated-valve
+    image: agora-valve:local
+    environment:
+      VALVE_ID: "{valve_id}"
+      VALVE_COMMAND_TOPIC: "{row['commandTopic']}"
+      VALVE_STATUS_TOPIC: "{row['statusTopic']}"
+      VALVE_ML_PER_SECOND: "{row.get('mlPerSecond', 10.0)}"
+      VALVE_MAX_DOSE_ML: "{row.get('maxDoseMl', 1000.0)}"
+      # public halves only — it verifies, it never signs
+      VALVE_HOST_PUB: "/keys/host.pub"
+      VALVE_CLEARING_PUB: "/keys/clearing.pub"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "{int(row['port'])}"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a real valve's would be
+      - ./secrets/mqtt-{valve_id}.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      # the PUBLIC keys, and nothing else from secrets/. A stand-in that could reach host.key
+      # could sign for the society, and then verifying would be theatre.
+      - ./secrets/host.pub:/keys/host.pub:ro
+      - ./secrets/clearing.pub:/keys/clearing.pub:ro
+"""
+
+
 def _broker(world: str, plain: int, tls: int | None) -> str:
     """This world's own broker. Not shared infra, and that is the point.
 
@@ -270,8 +324,10 @@ def render(world: str) -> str:
 
     plain, tls = _bus_ports(world)
     simulated = ratified.rows(ratified.dataset(world), _SIMULATED_Q)
+    valves = ratified.rows(ratified.dataset(world), _SIM_VALVES_Q)
     services = _broker(world, plain, tls) + "".join(
         _simulator(world, row) for row in sorted(simulated, key=lambda r: r["id"])) + "".join(
+        _valve(world, row) for row in sorted(valves, key=lambda r: r["id"])) + "".join(
         _service(a, caps, world) for a, caps in who.items())
     volumes = f"  agora-{world}-mosquitto:\n" + "".join(
         f"  agora-{world}-{a}:\n" for a in who)

@@ -124,6 +124,18 @@ ag:SimulatedDeviceShape a sh:NodeShape ;
     sh:property [ sh:path ag:simulatedBy ; sh:maxCount 1 ;
                   sh:message "one device, one stand-in" ] .
 
+ag:SimulatedActuatorShape a sh:NodeShape ;
+    rdfs:comment "A stood-in actuator must say where it reports. Water reaching soil is physics, and physics has no wire — so between containers the only way a simulated sensor can learn that water actually flowed is a message from the valve that flowed it. Without a status topic the stand-in valve would open into nowhere: the command would be verified, the dose computed, and the soil would stay dry forever." ;
+    sh:targetSubjectsOf ag:actuates ;
+    sh:property [ sh:path ag:statusTopic ; sh:maxCount 1 ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a simulated actuator must state ag:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/agora#simulatedBy> ?model .
+                FILTER NOT EXISTS { $this <http://example.org/agora#statusTopic> ?t }
+            }""" ] .
+
 ag:DeviceModelShape a sh:NodeShape ;
     rdfs:comment "What the stand-in computes between readings. Optional individually — a modelled valve has no dry rate — but each must be a number if stated at all, because the simulator reads them without a graph to check them against." ;
     sh:targetClass ag:DeviceModel ;

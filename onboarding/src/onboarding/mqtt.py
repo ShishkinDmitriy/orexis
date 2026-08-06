@@ -134,21 +134,31 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   OPTIONAL {{ ?b <{AG}bidsIn> ?m ; <{AG}eventTopic> ?bidderEvent }}
 }} }}""")
 
-# A simulated sensor learns it was watered by reading the same public command the valve reads.
-# A real plant gets wet because water arrives; nothing arrives here, so the dose is observed on
-# the wire instead — which is as close to "the water reached the pot" as a message can be. The
-# grant belongs to the DEVICE, not to its agent: the stand-in holds the model now, and an agent
-# in this world has no more business reading a valve command than one in any other world.
-_SIM_DOSE_Q = _q(f"""?id ?commandTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+# A simulated sensor learns it was watered by reading what the valve REPORTED, never what the
+# valve was told. A real plant gets wet because water arrives; nothing arrives here, so the
+# valve's own account of what it dispensed stands in for the water — and a command the valve
+# refused produces no report, so the soil stays dry. Reading the command instead would have
+# watered the plant on an unsigned order, which is exactly the failure the market exists to
+# prevent. The grant belongs to the DEVICE, not to its agent: an agent in this world has no
+# more business reading a valve's traffic than one in any other world.
+_SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}monitors> ?subject .
-  ?valve <{AG}actuates> ?subject ; <{AG}commandTopic> ?commandTopic .
+  ?valve <{AG}actuates> ?subject ; <{AG}statusTopic> ?statusTopic .
 }} }}""")
 
-# Both ways of holding an actuator. A simulated valve is driven over the same channel as a real
-# one — that is what makes the market unable to tell them apart — so it is granted the same way.
+# The stand-in valve itself: it listens where the real one listens and reports where the real one
+# reports. Both derived from the valve's own wiring, so a world that adds a valve grants one.
+_SIM_VALVE_Q = _q(f"""?id ?commandTopic ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}actuates> ?subject ;
+     <{AG}commandTopic> ?commandTopic ; <{AG}statusTopic> ?statusTopic .
+}} }}""")
+
+# One way of holding an actuator. There used to be two, because a simulated valve was a
+# different class held by a different property; it is an ag:Valve that happens to be stood in
+# for now, so the agent side of this stopped needing to know the difference at all.
 _ACTUATES_Q = _q(f"""?id ?commandTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?a a <{AG}Agent> ; <{AG}localId> ?id .
-  ?a <{AG}hasActuator>|<{AG}hasSimulatedActuator> ?v .
+  ?a <{AG}hasActuator> ?v .
   ?v <{AG}commandTopic> ?commandTopic .
 }} }}""")
 
@@ -227,7 +237,12 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
         device.may(READ, row.get("commandTopic"))  # it listens for what to do
 
     for row in ratified.rows(ds, _SIM_DOSE_Q):
-        devices.setdefault(row["id"], Principal(row["id"])).may(READ, row["commandTopic"])
+        devices.setdefault(row["id"], Principal(row["id"])).may(READ, row["statusTopic"])
+
+    for row in ratified.rows(ds, _SIM_VALVE_Q):
+        valve = devices.setdefault(row["id"], Principal(row["id"]))
+        valve.may(READ, row["commandTopic"])   # it listens for what to do
+        valve.may(WRITE, row["statusTopic"])   # and says what it actually did
 
     return agents, devices
 
