@@ -16,3 +16,7 @@ ag:tomato_agent
     ag:bandHigh 0.60 ;
     ag:litresPerFraction 2.0 ;
     ag:maxValuePerL 0.80 .
+
+##  How often it says how it is — belief base size, reading freshness, silent write failures.
+#   Omit this line and the agent reports nothing; see agora/metrics.py.
+ag:tomato_agent ag:metricsIntervalS 60 .
