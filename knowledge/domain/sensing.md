@@ -8,6 +8,11 @@ tags: [sensing, epistemics, firmware, cadence, freshness]
 timestamp: 2026-08-02T00:00:00Z
 ---
 
+**An agent may hold several sensors, and two combinations are broken.** Different properties on
+one subject destroy each other's record, and mixed sense modes leave one sensor's cadence
+un-aimed. Both are triggered by giving a subject a second kind of sensor — see
+[one-agent-many-sensors](/decisions/one-agent-many-sensors.md).
+
 # What it is
 
 Perception, in **capabilities decided by the hardware** and derived at genesis (see
