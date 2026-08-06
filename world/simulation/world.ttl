@@ -79,7 +79,7 @@ ag:barrel1 a ag:WaterSource ;
 ag:supplier a ag:Agent ;
     ag:localId "supplier" ;
     ag:hosts ag:barrel1_market ;
-    ag:hasSimulatedActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
+    ag:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
 
@@ -170,19 +170,34 @@ ag:sensor_succulent a ag:Sensor ;
         ag:modelDryRate 0.015 ;
         ag:modelTickSeconds 3 ] .
 
-##########  Simulated valves — the supplier's, and none of them exist  ##########
+##########  The supplier's valves — real valves, stood in for  ##########
+#
+#  ag:Valve, not a separate class: the supplier holds ag:hasActuator and derives plain
+#  ag:Actuation, so it co-signs every command exactly as it would for hardware. What is
+#  simulated is the DEVICE at the other end, which is what ag:simulatedBy says — the same
+#  mark the sensors carry.
+#
+#  ag:statusTopic is where the stand-in reports what it actually dispensed. A simulated
+#  sensor waters on THAT and never on the command, so a command it refuses leaves the soil
+#  dry — which is the whole point of making it verify.
 
-ag:valve_fern a ag:SimulatedValve ;
+ag:valve_fern a ag:Valve ;
     ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
+    ag:simulatedBy [ a ag:DeviceModel ] ;
     ag:commandTopic "sim/actuators/fern/valve" ;
+    ag:statusTopic "sim/actuators/fern/valve/status" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
 
-ag:valve_tomato a ag:SimulatedValve ;
+ag:valve_tomato a ag:Valve ;
     ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
+    ag:simulatedBy [ a ag:DeviceModel ] ;
     ag:commandTopic "sim/actuators/tomato/valve" ;
+    ag:statusTopic "sim/actuators/tomato/valve/status" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
 
-ag:valve_succulent a ag:SimulatedValve ;
+ag:valve_succulent a ag:Valve ;
     ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
+    ag:simulatedBy [ a ag:DeviceModel ] ;
     ag:commandTopic "sim/actuators/succulent/valve" ;
+    ag:statusTopic "sim/actuators/succulent/valve/status" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .

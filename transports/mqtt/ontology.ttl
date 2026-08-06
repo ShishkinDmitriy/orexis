@@ -36,6 +36,9 @@ ag:readingTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
 ag:commandTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "command topic" ;
     rdfs:comment "Where a device LISTENS for instructions: a cadence for a sensor, a dose for a valve. Only a device that accepts instruction has one." .
+ag:statusTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "status topic" ;
+    rdfs:comment "Where a device REPORTS what it actually did. A valve publishes here after it has opened, so the difference between a command being sent and water having flowed is on the wire rather than assumed. `firmware/pump-valve` has always published one, deriving the name in C as its command topic plus \"/status\"; stating it here is the same correction agora-firmware made when it found the sensor firmware building its own topics from PLANT_ID." .
 ag:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "event topic" ;
     rdfs:comment "Where an agent announces something it noticed. Peers may listen; nobody is obliged to." .
