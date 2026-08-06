@@ -120,8 +120,8 @@ would reset them on a restart is a bug, not a convenience.
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `backend/tests/test_store.py` checks this by scanning the source text.
-  ones a real board publishes for, on the same topic, and both get ingested. The world does
-  not know simulation exists; naming the subjects is the operator's job.
-- **Stray host processes are the usual cause of doubled data.** Agents and the simulator both
-  publish and ingest; a leaked one from an earlier run keeps writing. `podman compose down`
-  removes a society deterministically, which is half of why deployment is containers.
+- **Stray host processes are the usual cause of doubled data.** A leaked publisher from an
+  earlier run keeps writing to the same topic, and both readings get ingested. `podman compose
+  down` removes a society deterministically, which is half of why deployment is containers.
+  Simulated devices are containers too, and belong to their world's compose project — the
+  world knows they exist, so nothing is told by hand which subjects to pretend to be.

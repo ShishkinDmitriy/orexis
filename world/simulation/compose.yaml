@@ -47,6 +47,87 @@ services:
       # its agent set before the broker bounced
       - agora-simulation-mosquitto:/var/lib/mosquitto
 
+  sim-sensor_fern:
+    image: agora:local
+    command: ["python", "/app/firmware/simulated-sensor/simulator.py"]
+    environment:
+      SIM_SENSOR_ID: "sensor_fern"
+      SIM_READING_TOPIC: "sim/sensors/fern/moisture"
+      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # from the same fact and never learns which side of it this is.
+      SIM_SENSE_MODE: "scheduled"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1885"
+      SIM_COMMAND_TOPIC: "sim/sensors/fern/cmd"
+      SIM_DOSE_TOPIC: "sim/actuators/fern/valve"
+      SIM_INITIAL_VALUE: "0.45"
+      SIM_DRY_RATE: "0.02"
+      SIM_TICK_SECONDS: "3"
+      SIM_LITRES_PER_FRACTION: "2.0"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
+      # way to tell a stand-in from hardware, which is the point
+      - ./secrets/mqtt-sensor_fern.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ../../firmware/simulated-sensor:/app/firmware/simulated-sensor:ro
+
+  sim-sensor_succulent:
+    image: agora:local
+    command: ["python", "/app/firmware/simulated-sensor/simulator.py"]
+    environment:
+      SIM_SENSOR_ID: "sensor_succulent"
+      SIM_READING_TOPIC: "sim/sensors/succulent/moisture"
+      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # from the same fact and never learns which side of it this is.
+      SIM_SENSE_MODE: "scheduled"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1885"
+      SIM_COMMAND_TOPIC: "sim/sensors/succulent/cmd"
+      SIM_DOSE_TOPIC: "sim/actuators/succulent/valve"
+      SIM_INITIAL_VALUE: "0.45"
+      SIM_DRY_RATE: "0.015"
+      SIM_TICK_SECONDS: "3"
+      SIM_LITRES_PER_FRACTION: "2.0"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
+      # way to tell a stand-in from hardware, which is the point
+      - ./secrets/mqtt-sensor_succulent.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ../../firmware/simulated-sensor:/app/firmware/simulated-sensor:ro
+
+  sim-sensor_tomato:
+    image: agora:local
+    command: ["python", "/app/firmware/simulated-sensor/simulator.py"]
+    environment:
+      SIM_SENSOR_ID: "sensor_tomato"
+      SIM_READING_TOPIC: "sim/sensors/tomato/moisture"
+      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # from the same fact and never learns which side of it this is.
+      SIM_SENSE_MODE: "scheduled"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1885"
+      SIM_COMMAND_TOPIC: "sim/sensors/tomato/cmd"
+      SIM_DOSE_TOPIC: "sim/actuators/tomato/valve"
+      SIM_INITIAL_VALUE: "0.45"
+      SIM_DRY_RATE: "0.02"
+      SIM_TICK_SECONDS: "3"
+      SIM_LITRES_PER_FRACTION: "2.0"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
+      # way to tell a stand-in from hardware, which is the point
+      - ./secrets/mqtt-sensor_tomato.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ../../firmware/simulated-sensor:/app/firmware/simulated-sensor:ro
+
   agent-fern:
     image: agora:local
     command: ["agora-agent"]

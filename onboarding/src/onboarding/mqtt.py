@@ -134,12 +134,13 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   OPTIONAL {{ ?b <{AG}bidsIn> ?m ; <{AG}eventTopic> ?bidderEvent }}
 }} }}""")
 
-# A modelled subject listens for its own watering. There is no board to receive the dose, so
-# the agent holding the model applies it to the model — which means reading the command topic
-# of whatever actuates its subject. Mirrors the query in capabilities/simulated-sensing.
-_MODELS_Q = _q(f"""?id ?commandTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}models> ?m .
-  ?m <{AG}monitors> ?subject .
+# A simulated sensor learns it was watered by reading the same public command the valve reads.
+# A real plant gets wet because water arrives; nothing arrives here, so the dose is observed on
+# the wire instead — which is as close to "the water reached the pot" as a message can be. The
+# grant belongs to the DEVICE, not to its agent: the stand-in holds the model now, and an agent
+# in this world has no more business reading a valve command than one in any other world.
+_SIM_DOSE_Q = _q(f"""?id ?commandTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}monitors> ?subject .
   ?valve <{AG}actuates> ?subject ; <{AG}commandTopic> ?commandTopic .
 }} }}""")
 
@@ -215,9 +216,6 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
         me.may(READ, f"{row['bidTopic']}/+")
         me.may(READ, row.get("bidderEvent"))
 
-    for row in ratified.rows(ds, _MODELS_Q):
-        agent(row["id"]).may(READ, row["commandTopic"])
-
     for row in ratified.rows(ds, _ACTUATES_Q):
         agent(row["id"]).may(WRITE, row["commandTopic"])
 
@@ -227,6 +225,9 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
         device = devices.setdefault(row["id"], Principal(row["id"]))
         device.may(WRITE, row.get("readingTopic"))  # it publishes what it read
         device.may(READ, row.get("commandTopic"))  # it listens for what to do
+
+    for row in ratified.rows(ds, _SIM_DOSE_Q):
+        devices.setdefault(row["id"], Principal(row["id"])).may(READ, row["commandTopic"])
 
     return agents, devices
 

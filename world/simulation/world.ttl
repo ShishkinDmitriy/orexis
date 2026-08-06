@@ -3,11 +3,15 @@
 
 #  A ratified world, v1 — the society, with nothing physical in it.
 #
-#  Not genesis/society with a flag: a different world, wired to different devices. Every plant
-#  agent MODELS its subject (ag:models, ag:ModelledSubject) instead of polling a board, and the
-#  supplier holds SIMULATED valves (ag:hasSimulatedActuator, ag:SimulatedValve). Derivation
-#  gives them ag:SimulatedSensing and ag:SimulatedActuation, and you can see which world you
-#  are looking at by reading it.
+#  Not society with a flag, and no longer society with its own capabilities either. Every agent
+#  here is ORDINARY: it polls a sensor with ag:polls, derives ag:Subscribing, and runs the same
+#  perception module a world with real boards runs. What differs is one fact about the DEVICES —
+#  ag:simulatedBy — which says a process stands in for hardware that does not exist.
+#
+#  That is the point. This world used to be wired with ag:models to ag:ModelledSubject, and the
+#  agents derived a simulated capability with its own implementation of perceiving. So the
+#  simulation exercised a parallel code path, and could pass while the real one was broken —
+#  the weakest possible form of simulation. Now the only untested thing is the hardware.
 #
 #  The market is identical, deliberately. Bidding, hosting, clearing and the vouchers do not
 #  know that anything here is simulated — a bidder asks for "whoever perceives" and a host asks
@@ -98,52 +102,70 @@ ag:succulent a ag:Plant ;
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
     ag:actsFor ag:fern ;
-    ag:models ag:model_fern ;
+    ag:polls ag:sensor_fern ;
     ag:bidsIn ag:barrel1_market ;
     ag:eventTopic "sim/readings/fern" .
 
 ag:tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
     ag:actsFor ag:tomato ;
-    ag:models ag:model_tomato ;
+    ag:polls ag:sensor_tomato ;
     ag:bidsIn ag:barrel1_market ;
     ag:eventTopic "sim/readings/tomato" .
 
 ag:succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
     ag:actsFor ag:succulent ;
-    ag:models ag:model_succulent ;
+    ag:polls ag:sensor_succulent ;
     ag:bidsIn ag:barrel1_market ;
     ag:eventTopic "sim/readings/succulent" .
 
-##########  Modelled subjects — no boards at all: the agent computes their state  ##########
+##########  Sensors — ordinary in every respect but one: nothing is there  ##########
+#  Each states what any board states: the bus it is on, the subject it monitors, the property it
+#  observes, its topics, and who holds the clock. An agent reads these and cannot tell.
+#
+#  ag:senseMode ag:Scheduled means the stand-in keeps the interval its agent gives it, exactly
+#  as a deep-sleeping board does — so this world exercises the retained-cadence mechanism, which
+#  the old simulation never touched at all.
 
-ag:model_fern a ag:ModelledSubject ;
-    ag:localId "model_fern" ;
+ag:sensor_fern a ag:Sensor ;
+    ag:localId "sensor_fern" ;
+    ag:onBus ag:local_bus ;
+    ag:senseMode ag:Scheduled ;
     ag:monitors ag:fern ;
     sosa:observes ag:SoilMoisture ;
-    ag:senseMode ag:Modelled ;
-    ag:modelledInitialValue 0.45 ;
-    ag:modelledDryRate 0.02 ;
-    ag:modelledTickSeconds 3 .
+    ag:readingTopic "sim/sensors/fern/moisture" ;
+    ag:commandTopic "sim/sensors/fern/cmd" ;
+    ag:simulatedBy [ a ag:DeviceModel ;
+        ag:modelInitialValue 0.45 ;
+        ag:modelDryRate 0.02 ;
+        ag:modelTickSeconds 3 ] .
 
-ag:model_tomato a ag:ModelledSubject ;
-    ag:localId "model_tomato" ;
+ag:sensor_tomato a ag:Sensor ;
+    ag:localId "sensor_tomato" ;
+    ag:onBus ag:local_bus ;
+    ag:senseMode ag:Scheduled ;
     ag:monitors ag:tomato ;
     sosa:observes ag:SoilMoisture ;
-    ag:senseMode ag:Modelled ;
-    ag:modelledInitialValue 0.45 ;
-    ag:modelledDryRate 0.02 ;
-    ag:modelledTickSeconds 3 .
+    ag:readingTopic "sim/sensors/tomato/moisture" ;
+    ag:commandTopic "sim/sensors/tomato/cmd" ;
+    ag:simulatedBy [ a ag:DeviceModel ;
+        ag:modelInitialValue 0.45 ;
+        ag:modelDryRate 0.02 ;
+        ag:modelTickSeconds 3 ] .
 
-ag:model_succulent a ag:ModelledSubject ;
-    ag:localId "model_succulent" ;
+ag:sensor_succulent a ag:Sensor ;
+    ag:localId "sensor_succulent" ;
+    ag:onBus ag:local_bus ;
+    ag:senseMode ag:Scheduled ;
     ag:monitors ag:succulent ;
     sosa:observes ag:SoilMoisture ;
-    ag:senseMode ag:Modelled ;
-    ag:modelledInitialValue 0.45 ;
-    ag:modelledDryRate 0.02 ;
-    ag:modelledTickSeconds 3 .
+    ag:readingTopic "sim/sensors/succulent/moisture" ;
+    ag:commandTopic "sim/sensors/succulent/cmd" ;
+    ag:simulatedBy [ a ag:DeviceModel ;
+        ag:modelInitialValue 0.45 ;
+        ag:modelDryRate 0.015 ;
+        ag:modelTickSeconds 3 ] .
 
 ##########  Simulated valves — the supplier's, and none of them exist  ##########
 

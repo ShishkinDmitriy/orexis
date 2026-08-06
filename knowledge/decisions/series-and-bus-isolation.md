@@ -43,7 +43,7 @@ topics that capability needs:
 | wiring | granted |
 |---|---|
 | `ag:polls S` | read S's `readingTopic`, write S's `commandTopic` |
-| `ag:models M` | read the `commandTopic` of whatever actuates M's subject |
+| `ag:simulatedBy` on a device | that DEVICE reads the `commandTopic` of whatever actuates its subject |
 | `ag:bidsIn M` | read M's `offerTopic` and `voucherTopic/<me>`, write `bidTopic/<me>` |
 | `ag:hosts M` | write `offerTopic` and `voucherTopic/+`, read `bidTopic/+` and each bidder's `eventTopic` |
 | `ag:hasActuator V` | write V's `commandTopic` |
@@ -53,10 +53,15 @@ Read that against `capabilities/market/bidding.py` and `hosting.py` and it is th
 topics they subscribe and publish. This is the same move `agora-compose` makes for the roster:
 derived, never hand-maintained, because a second list is a second thing to drift.
 
-The `ag:models` row is the one that had to be *found* rather than reasoned out. A modelled
-subject listens for its own watering on the **valve's** command topic — no other capability does
-that, so no other row implied it. `backend/tests/test_isolation.py` now holds every module's
-`subscriptions()` to the derived grants, which is the check that caught it.
+The simulated-device row is the one that had to be *found* rather than reasoned out. A real
+plant gets wet because water physically arrives; nothing arrives to a stand-in, so it learns it
+was watered by reading the **valve's** command topic. No other wiring implies that grant, and
+`backend/tests/test_isolation.py` holds every module's `subscriptions()` to the derived grants,
+which is the check that caught it.
+
+It used to be granted to the *agent*, because the agent held the model. It is granted to the
+**device** now: the stand-in holds the model, and an agent in a simulated world has no more
+business reading a valve command than an agent anywhere else.
 
 ## What goes in the world, and what does not
 

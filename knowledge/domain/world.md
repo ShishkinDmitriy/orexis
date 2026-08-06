@@ -230,27 +230,44 @@ agora-compose society
 cd world/society && podman compose up -d
 ```
 
-# Simulation — a world, not a mode
+# Simulation — a device that is not there, and nothing else
 
-A society you can run without hardware is a **world whose devices are simulated**, not a flag
-on a real one and not a program running beside it.
+A society you can run without hardware is a **world whose devices are stood in for**: not a flag
+on a real one, not a program running beside it, and — this is the correction — not a capability
+of its own either.
 
-The model already states what every device is and how it is driven. A simulated device is a
-*kind of device*, so an agent derives a simulated capability from it the way it derives any
-other — and a world cannot then disagree with how it is actually running. That is the same
-rule as everywhere else: what a thing does follows from what the world says it is.
+A simulated sensor states everything a board states: the bus it is on, the subject it monitors,
+the property it observes, its topics, and who holds the clock. One extra fact, `ag:simulatedBy`,
+says a process stands in for it. An agent wired to one with `ag:polls` derives `ag:Subscribing`
+and runs the **ordinary perception module**, because from where the agent stands there is
+nothing else it could be.
 
-What this replaced: a separate `agora-sim` process pretending to be hardware, told by an
-environment variable which subjects to pretend to be. Getting that variable wrong put two
-publishers on one topic and both readings were ingested — a failure that cost hours here more
-than once, and one the model could not warn about because the model did not know simulation
-existed.
+The marker is on the device and never on the agent, and that is the whole design.
 
-**Unbuilt.** The capability and its binding do not exist yet, so today a world needs real
-boards. The shape is known: a simulated *binding* fits the existing split better than a new
-capability — a capability distinguishes what an agent must decide, a binding distinguishes how
-a device is spoken to, and "this reading came from a soil model rather than a wire" is
-plainly the second.
+**What this replaced, and why it was worse than it looked.** Agents used to be wired with
+`ag:models` to an `ag:ModelledSubject` and derive `ag:SimulatedSensing`, a capability that held
+the model and reimplemented perceiving. So `world/simulation` exercised a *parallel
+implementation* — it could pass while the real path was broken, which is the weakest possible
+form of simulation. It also cost five smaller things: agent metrics silently omitted every
+simulated agent, the ACL generator needed a second query, the readings dashboard caught them
+only by accident, `sense_now`/`fresh_reading` had two definitions, and `ag:models` was declared
+`rdfs:subPropertyOf ag:polls` — a promise nothing kept, since shapes run with RDFS inference and
+the runtime does not.
+
+An earlier draft of this page argued that "a simulated *binding* fits the existing split better
+than a new capability — a capability distinguishes what an agent must decide, a binding
+distinguishes how a device is spoken to". That was right, and it is what now exists, one level
+lower: not a binding but the device itself.
+
+**Sense mode is honoured rather than bypassed.** `ag:Scheduled` means the stand-in keeps the
+interval its agent gives it over the retained command, exactly as a deep-sleeping board does;
+`ag:Push` means it keeps its own clock and takes no orders. So the simulation exercises the
+retained-cadence mechanism, which the old one never touched at all.
+
+Before it: a separate `agora-sim` process told by an environment variable which subjects to
+pretend to be. Getting that variable wrong put two publishers on one topic and both readings
+were ingested — a failure that cost hours here more than once, and one the model could not warn
+about because the model did not know simulation existed. It knows now.
 
 # Amending
 
