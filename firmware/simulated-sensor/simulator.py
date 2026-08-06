@@ -70,7 +70,13 @@ class SimulatedSensor:
         # capability follows from this, and neither branch knows that.
         self.mode = _env("SIM_SENSE_MODE", "scheduled").lower()
 
-        self.value = _float("SIM_INITIAL_VALUE", 0.45)
+        # The range this device can report. A moisture fraction happens to be 0..1, but nothing
+        # about a simulated sensor is: a thermometer reports neither. Stated rather than assumed,
+        # so the same simulator stands in for the temperature sensor when it arrives.
+        self.min_value = _float("SIM_MIN_VALUE", 0.0)
+        self.max_value = _float("SIM_MAX_VALUE", 1.0)
+        self.initial = _float("SIM_INITIAL_VALUE", 0.45)
+        self.value = self.initial
         self.dry_rate = _float("SIM_DRY_RATE", 0.02)
         self.tick_s = _float("SIM_TICK_SECONDS", 3)
         # How much of the observed property a litre moves. The world states this about the
@@ -98,7 +104,10 @@ class SimulatedSensor:
             return
         # A retained cadence is delivered on subscribe, which is the whole mechanism that lets a
         # sleeping board be instructed by an agent it is never awake at the same time as.
-        if self.command_topic and self.mode != "push":
+        # Subscribed in BOTH modes. A real push board would not listen at all, and the honest
+        # part of that — refusing orders about its own clock — is kept below. What it cannot
+        # refuse is being repositioned by whoever is running the simulation.
+        if self.command_topic:
             client.subscribe(self.command_topic)
         if self.dose_topic:
             client.subscribe(self.dose_topic)
@@ -116,7 +125,14 @@ class SimulatedSensor:
             self._receive(float(doc.get("ml") or 0.0))
             return
 
-        # push devices take no orders, and saying so is the difference between the two modes
+        # The command topic IS the device's control surface — a real board reads named keys off
+        # it and ignores the rest, so the operator's verbs ride the same channel and no second
+        # topic, term, shape or grant has to exist. A board handed {"set": 0.9} discards it.
+        self._control(doc)
+
+        # push devices take no orders ABOUT THEIR CLOCK, and saying so is the difference between
+        # the two modes. They still answer the puppet strings above: a stand-in that could not be
+        # steered would be untestable, and steering is not something the device does.
         if self.mode == "push":
             return
         if isinstance(doc.get("sleep_s"), (int, float)):
@@ -130,16 +146,43 @@ class SimulatedSensor:
         payload = json.dumps({"value": round(self.value, 3), "sensor": self.sensor_id})
         self.client.publish(self.reading_topic, payload, qos=1)
 
+    def _control(self, doc: dict) -> None:
+        """Steer the simulation. NOT physics — this is a hand reaching into the model.
+
+        Watering is deliberately not here: water arriving at soil is something the world does, so
+        it comes over the dose topic and exercises the real actuation path. Routing it through
+        here would mean the simulation quietly stopped testing whether watering works.
+
+        What belongs here is what has no physical counterpart: putting the value somewhere to see
+        what an agent does about it, and putting it back.
+        """
+        if isinstance(doc.get("set"), (int, float)):
+            self.value = self._clamp(float(doc["set"]))
+            log.info("%s: set to %.3f", self.sensor_id, self.value)
+        if isinstance(doc.get("trend"), (int, float)):
+            # Signed, and it REPLACES the dry rate rather than adding to it: a positive trend is
+            # a pot being rained on, which is a different world, not a wetter one.
+            self.dry_rate = -float(doc["trend"])
+            log.info("%s: trend now %+.4f per tick", self.sensor_id, -self.dry_rate)
+        if doc.get("reset"):
+            self.value, self.dry_rate = self.initial, _float("SIM_DRY_RATE", 0.02)
+            log.info("%s: reset to %.3f", self.sensor_id, self.value)
+        if doc.get("publish"):
+            self._publish()
+
     # --- the physics ---
+
+    def _clamp(self, v: float) -> float:
+        return max(self.min_value, min(self.max_value, v))
 
     def _receive(self, ml: float) -> None:
         """Water arrived at the subject. How far it moves the reading is a fact about the pot."""
         if ml > 0 and self.litres_per_fraction > 0:
-            self.value = max(0.0, min(1.0, self.value + (ml / 1000.0) / self.litres_per_fraction))
+            self.value = self._clamp(self.value + (ml / 1000.0) / self.litres_per_fraction)
             log.info("%s: received %.0f ml -> %.3f", self.sensor_id, ml, self.value)
 
     def _dry(self) -> None:
-        self.value = max(0.0, min(1.0, self.value - self.dry_rate))
+        self.value = self._clamp(self.value - self.dry_rate)
 
     # --- the loop ---
 

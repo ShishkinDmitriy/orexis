@@ -42,6 +42,10 @@ ag:simulatedBy a owl:ObjectProperty ; rdfs:domain ag:Device ; rdfs:range ag:Devi
     rdfs:label "simulated by" ;
     rdfs:comment "No such device exists; a process stands in for it, publishing on the same topics and speaking the same protocol. Read by the generators, which give it a container and a credential, and by nothing an agent runs — an agent must not be able to tell, and the surest way is that nothing it executes ever asks." .
 
+ag:modelMinValue a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "model minimum" ;
+    rdfs:comment "The floor of what this stand-in can report. A moisture fraction happens to run 0..1; a thermometer does not, so the range is stated rather than assumed." .
+ag:modelMaxValue a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "model maximum" .
+
 ag:DeviceModel a owl:Class ; rdfs:label "Device model" ;
     rdfs:comment "The physics the stand-in computes between readings. Facts about the thing being modelled rather than opinions about it, which is why they sit on the device and not in anybody's beliefs." .
 

@@ -137,6 +137,9 @@ ag:sensor_fern a ag:Sensor ;
     ag:readingTopic "sim/sensors/fern/moisture" ;
     ag:commandTopic "sim/sensors/fern/cmd" ;
     ag:simulatedBy [ a ag:DeviceModel ;
+                     ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
+                     ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
+                     ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
         ag:modelInitialValue 0.45 ;
         ag:modelDryRate 0.02 ;
         ag:modelTickSeconds 3 ] .

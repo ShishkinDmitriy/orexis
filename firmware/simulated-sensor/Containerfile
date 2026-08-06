@@ -1,0 +1,38 @@
+# A stand-in for a sensor, and nothing else.
+#
+# This used to run on `agora:local` — 230 MB of pyoxigraph, pyshacl, rdflib, an Influx client and
+# a signing library, to publish one number every couple of minutes. The simulator imports the
+# standard library and paho, and that is the whole of it.
+#
+# Two reasons beyond size. A device has no business holding an agent's code: the agent image
+# already refuses to carry the simulator, and the reverse should be true or the rule is only
+# half a rule. And sharing an image means sharing a dependency set, so bumping something the
+# agent needs would rebuild and re-risk something that does not.
+#
+# The build context is THIS directory, not the repo root. Nothing else is needed, and the root
+# is excluded from it by .containerignore anyway — correctly, since the agent image must not
+# carry the simulator and the reverse is now true too.
+#
+#   podman build -t agora-simulator:local firmware/simulated-sensor
+
+FROM docker.io/library/python:3.12-alpine
+
+# PINNED, like the broker: an upgrade should be a decision, not a side effect of rebuilding on a
+# day upstream published something. This one speaks to a broker whose behaviour the isolation
+# tests depend on, so a silent client change is worth noticing.
+ARG PAHO_VERSION=2.1.0
+RUN pip install --no-cache-dir "paho-mqtt==${PAHO_VERSION}"
+
+# Not root. It holds one bus credential and talks to one broker; there is nothing here that
+# needs privilege, and a network-facing process should not have it by default.
+RUN adduser -D -u 10001 simulator
+USER simulator
+
+WORKDIR /app
+COPY simulator.py /app/simulator.py
+
+# Unbuffered, or the logs arrive in blocks and a silent simulator is indistinguishable from a
+# stalled one — which is exactly the diagnosis this exists to make easy.
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "/app/simulator.py"]
