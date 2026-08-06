@@ -11,7 +11,10 @@
       "Bash(podman stats *)",
       "Bash(dpkg -l *)",
       "Bash(podman images *)",
-      "Bash(podman volume inspect *)"
+      "Bash(podman volume inspect *)",
+      "Bash(bash ~/.claude/skills/okf-open-knowledge-format/scripts/validate.sh *)",
+      "Bash(.venv/bin/agora-validate *)",
+      "Bash(.venv/bin/pytest backend *)"
     ]
   }
 }
