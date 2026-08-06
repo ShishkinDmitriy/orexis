@@ -164,6 +164,68 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
 """
 
 
+# Everything a stand-in needs, which is exactly what a board is told in its config.h and no
+# more. It does not read the world: a real board could not, and letting this one would quietly
+# make it a different kind of thing than the hardware it stands in for.
+_SIMULATED_Q = f"""
+SELECT ?id ?readingTopic ?commandTopic ?senseMode ?initial ?dryRate ?tick ?litres ?doseTopic ?port
+WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}readingTopic> ?readingTopic ;
+     <{AG}monitors> ?subject .
+  OPTIONAL {{ ?d <{AG}commandTopic> ?commandTopic }}
+  OPTIONAL {{ ?d <{AG}senseMode> ?senseMode }}
+  OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
+  OPTIONAL {{ ?model <{AG}modelDryRate> ?dryRate }}
+  OPTIONAL {{ ?model <{AG}modelTickSeconds> ?tick }}
+  OPTIONAL {{ ?subject <{AG}litresPerFraction> ?litres }}
+  OPTIONAL {{ ?valve <{AG}actuates> ?subject ; <{AG}commandTopic> ?doseTopic }}
+  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
+}} }}"""
+
+
+def _simulator(world: str, row: dict) -> str:
+    """One container per stand-in, mirroring one container per agent.
+
+    So one principal holds one credential and the ACL model is unchanged — the broker cannot
+    tell this from a board, and neither can anything else. It reuses the agent image because it
+    needs one library that image already has; a second image for a hundred-line script would be
+    another thing to build and keep current, for nothing.
+    """
+    sim_id = row["id"]
+    mode = (row.get("senseMode") or "").rsplit("#", 1)[-1].lower() or "scheduled"
+    optional = "".join(
+        f'\n      {k}: "{v}"' for k, v in (
+            ("SIM_COMMAND_TOPIC", row.get("commandTopic")),
+            ("SIM_DOSE_TOPIC", row.get("doseTopic")),
+            ("SIM_INITIAL_VALUE", row.get("initial")),
+            ("SIM_DRY_RATE", row.get("dryRate")),
+            ("SIM_TICK_SECONDS", row.get("tick")),
+            ("SIM_LITRES_PER_FRACTION", row.get("litres")),
+        ) if v not in (None, ""))
+    return f"""
+  sim-{sim_id}:
+    image: {IMAGE}
+    command: ["python", "/app/firmware/simulated-sensor/simulator.py"]
+    environment:
+      SIM_SENSOR_ID: "{sim_id}"
+      SIM_READING_TOPIC: "{row['readingTopic']}"
+      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # from the same fact and never learns which side of it this is.
+      SIM_SENSE_MODE: "{mode}"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "{int(row['port'])}"{optional}
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
+      # way to tell a stand-in from hardware, which is the point
+      - ./secrets/mqtt-{sim_id}.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ../../firmware/simulated-sensor:/app/firmware/simulated-sensor:ro
+"""
+
+
 def _broker(world: str, plain: int, tls: int | None) -> str:
     """This world's own broker. Not shared infra, and that is the point.
 
@@ -204,7 +266,9 @@ def render(world: str) -> str:
         raise SystemExit(f"agora-compose: world {world!r} declares no agents")
 
     plain, tls = _bus_ports(world)
+    simulated = ratified.rows(ratified.dataset(world), _SIMULATED_Q)
     services = _broker(world, plain, tls) + "".join(
+        _simulator(world, row) for row in sorted(simulated, key=lambda r: r["id"])) + "".join(
         _service(a, caps, world) for a, caps in who.items())
     volumes = f"  agora-{world}-mosquitto:\n" + "".join(
         f"  agora-{world}-{a}:\n" for a in who)

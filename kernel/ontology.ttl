@@ -28,6 +28,35 @@ ag:actsFor a owl:ObjectProperty ; rdfs:domain ag:Agent ;
 ag:Device a owl:Class ; rdfs:label "Device" ;
     rdfs:comment "A physical edge node: mechanism, never policy, and interchangeable with a simulated one." .
 
+#################  Devices that are not there  #################
+# A simulated device is an ORDINARY device in every statement the world makes about it: it is
+# on a bus, it has topics, it has a sense mode, and an agent is wired to it with ag:polls like
+# any other. The only extra fact is that a process stands in for it.
+#
+# The marker is on the DEVICE and never on the agent, and that is the whole design. An agent
+# that could tell would be a second code path, and a second code path is what a simulation is
+# supposed to avoid: world/simulation used to exercise its own implementation, so it could pass
+# while the real one was broken.
+
+ag:simulatedBy a owl:ObjectProperty ; rdfs:domain ag:Device ; rdfs:range ag:DeviceModel ;
+    rdfs:label "simulated by" ;
+    rdfs:comment "No such device exists; a process stands in for it, publishing on the same topics and speaking the same protocol. Read by the generators, which give it a container and a credential, and by nothing an agent runs — an agent must not be able to tell, and the surest way is that nothing it executes ever asks." .
+
+ag:DeviceModel a owl:Class ; rdfs:label "Device model" ;
+    rdfs:comment "The physics the stand-in computes between readings. Facts about the thing being modelled rather than opinions about it, which is why they sit on the device and not in anybody's beliefs." .
+
+ag:modelInitialValue a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
+    rdfs:label "model initial value" ;
+    rdfs:comment "What it reads before anything has happened to it." .
+
+ag:modelDryRate a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
+    rdfs:label "model dry rate" ;
+    rdfs:comment "How much of the observed property is lost per tick. Named apart from domain/water's ag:dryRatePerTick, which carries rdfs:domain ag:Plant — reusing it would make every model infer as a plant and inherit a plant's obligations." .
+
+ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:integer ;
+    rdfs:label "model tick seconds" ;
+    rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a ag:Push device, which keeps its own clock; a ag:Scheduled one keeps the interval its agent gives it, exactly as a board does." .
+
 #################  The stand — what physically exists, and how it is wired  #################
 #
 # Here rather than in a capability or a domain because it is the same layer as ag:Device above:
