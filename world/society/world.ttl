@@ -127,8 +127,8 @@ ag:moisture_sensor_fern a ag:Sensor ;
     ag:senseMode ag:Scheduled ;     # firmware keeps a given interval -> its agent gains ag:Subscribing
     ag:monitors ag:fern ;
     sosa:observes ag:SoilMoisture ;
-    ag:readingTopic "sensors/fern/moisture" ;
-    ag:commandTopic "sensors/fern/cmd" .
+    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    ag:commandTopic "sensors/moisture_sensor_fern/command" .
 
 ag:moisture_sensor_tomato a ag:Sensor ;
     ag:localId "moisture_sensor_tomato" ;
@@ -136,8 +136,8 @@ ag:moisture_sensor_tomato a ag:Sensor ;
     ag:senseMode ag:Scheduled ;     # firmware keeps a given interval -> its agent gains ag:Subscribing
     ag:monitors ag:tomato ;
     sosa:observes ag:SoilMoisture ;
-    ag:readingTopic "sensors/tomato/moisture" ;
-    ag:commandTopic "sensors/tomato/cmd" .
+    ag:readingTopic "sensors/moisture_sensor_tomato/reading" ;
+    ag:commandTopic "sensors/moisture_sensor_tomato/command" .
 
 ag:moisture_sensor_succulent a ag:Sensor ;
     ag:localId "moisture_sensor_succulent" ;
@@ -145,22 +145,31 @@ ag:moisture_sensor_succulent a ag:Sensor ;
     ag:senseMode ag:Scheduled ;     # firmware keeps a given interval -> its agent gains ag:Subscribing
     ag:monitors ag:succulent ;
     sosa:observes ag:SoilMoisture ;
-    ag:readingTopic "sensors/succulent/moisture" ;
-    ag:commandTopic "sensors/succulent/cmd" .
+    ag:readingTopic "sensors/moisture_sensor_succulent/reading" ;
+    ag:commandTopic "sensors/moisture_sensor_succulent/command" .
 
 ##########  Valves — the supplier's, one per plant  ##########
 
 ag:valve_fern a ag:Valve ;
     ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
-    ag:commandTopic "actuators/fern/valve" ;
+    ag:commandTopic "actuators/valve_fern/command" ;
+    # the firmware publishes here so the executor learns water actually
+    # flowed; without it declared, nothing may send or receive that report
+    ag:statusTopic "actuators/valve_fern/status" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
 
 ag:valve_tomato a ag:Valve ;
     ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
-    ag:commandTopic "actuators/tomato/valve" ;
+    ag:commandTopic "actuators/valve_tomato/command" ;
+    # the firmware publishes here so the executor learns water actually
+    # flowed; without it declared, nothing may send or receive that report
+    ag:statusTopic "actuators/valve_tomato/status" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
 
 ag:valve_succulent a ag:Valve ;
     ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
-    ag:commandTopic "actuators/succulent/valve" ;
+    ag:commandTopic "actuators/valve_succulent/command" ;
+    # the firmware publishes here so the executor learns water actually
+    # flowed; without it declared, nothing may send or receive that report
+    ag:statusTopic "actuators/valve_succulent/status" ;
     ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
