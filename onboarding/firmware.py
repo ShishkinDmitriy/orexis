@@ -55,21 +55,36 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
          <{AG}carries> ?sensor .
   ?sensor a <{AG}CapacitiveMoistureProbe> ; <{AG}localId> ?sensorId ;
           <{AG}readingTopic> ?readTopic ;
-          <{AG}pin> [ <{AG}pinRole> <{AG}AnalogIn> ; <{AG}gpio> ?gpio ] ;
           <{AG}rawDry> ?rawDry ; <{AG}rawWet> ?rawWet .
   OPTIONAL {{ ?sensor <{AG}commandTopic> ?cmdTopic }}
   ?bus a <{AG}MessageBus> ; <{AG}brokerHost> ?host ; <{AG}brokerPort> ?port .
   OPTIONAL {{ ?pi a <{AG}ComputeHost> ; <{AG}lanAddress> ?lan }}
 
-  # What else the same board carries. All OPTIONAL and all separate, because a board without a
-  # status LED is an ordinary board and must still generate — the alternative is a query that
-  # silently returns no rows and a generator that reports the world states no boards at all.
-  OPTIONAL {{ ?board <{AG}carries> [ a <{AG}RgbLed> ;
-                <{AG}pin> [ <{AG}pinRole> <{AG}Red>   ; <{AG}gpio> ?ledRed   ] ,
-                          [ <{AG}pinRole> <{AG}Green> ; <{AG}gpio> ?ledGreen ] ,
-                          [ <{AG}pinRole> <{AG}Blue>  ; <{AG}gpio> ?ledBlue  ] ] }}
-  OPTIONAL {{ ?board <{AG}carries> [ a <{AG}TempHumiditySensor> ;
-                <{AG}pin> [ <{AG}pinRole> <{AG}OneWireData> ; <{AG}gpio> ?airPin ] ] }}
+  # Which LINE a leg is on is now two facts and a wire: the role belongs to the peripheral's
+  # pin, the number to the board's, and only the wire knows they are the same connection. That
+  # is the whole point of the remodelling, and it costs this query one hop per pin.
+  ?sensor <{AG}hasPin> ?probeLeg .
+  ?probeLeg <{AG}pinRole> <{AG}AnalogInPinRole> .
+  ?probeWire <{AG}joins> ?probeLeg, ?probePin .
+  ?probePin <{AG}gpio> ?gpio .
+
+  # All OPTIONAL and all separate, because a board without a status LED is an ordinary board
+  # and must still generate — the alternative is a query that silently returns no rows and a
+  # generator that reports the world states no boards at all.
+  OPTIONAL {{ ?board <{AG}carries> ?led . ?led a <{AG}RgbLed> ;
+                <{AG}hasPin> ?rLeg, ?gLeg, ?bLeg .
+             ?rLeg <{AG}pinRole> <{AG}RedPinRole>   . ?rw <{AG}joins> ?rLeg, ?rPin . ?rPin <{AG}gpio> ?ledRed .
+             ?gLeg <{AG}pinRole> <{AG}GreenPinRole> . ?gw <{AG}joins> ?gLeg, ?gPin . ?gPin <{AG}gpio> ?ledGreen .
+             ?bLeg <{AG}pinRole> <{AG}BluePinRole>  . ?bw <{AG}joins> ?bLeg, ?bPin . ?bPin <{AG}gpio> ?ledBlue }}
+  # Matched on the ROLE rather than on the device class, deliberately. ag:Dht11 is a subclass
+  # of ag:TempHumiditySensor and asking for the parent needs RDFS inference, which the shapes
+  # run with and this does not — issue #27, and it fails by silently returning no row rather
+  # than by complaining. The role is what the firmware actually needs to know anyway: this is
+  # the pin it must bit-bang, whatever part is on the end of it.
+  OPTIONAL {{ ?board <{AG}carries> ?air .
+             ?air <{AG}hasPin> ?airLeg .
+             ?airLeg <{AG}pinRole> <{AG}OneWireDataPinRole> .
+             ?aw <{AG}joins> ?airLeg, ?airPinNode . ?airPinNode <{AG}gpio> ?airPin }}
 }} }}"""
 
 _BOUNDS_Q = f"""

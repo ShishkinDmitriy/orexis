@@ -1,0 +1,119 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+<http://example.org/agora/stand> a owl:Ontology ;
+    rdfs:label "Agora stand" ;
+    rdfs:comment """What physically exists and how it is joined together: hosts, boards, peripherals, pins and the wires between them. Split out of the core because a society and a solder joint are different subjects that were sharing a file — the core says what an agent IS, this says what is screwed to the windowsill. Everything here is domain-neutral: a world about anything at all has a stand.
+
+It is written down for three reasons. Shapes can refuse a wiring that cannot work, before anything is soldered or flashed. Firmware configuration becomes derivable from the world rather than hand-kept in a C header. And someone debugging at 2am can ask which pin a probe is on instead of remembering.
+
+A CONCRETE peripheral does not live here — a DHT11 or an RGB LED is its own package, layered on this one. What is here is only what every stand has.""" .
+
+#################  What things are  #################
+
+ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;
+    rdfs:comment "A machine that runs agent processes. Named so the world can say where its society actually executes." .
+
+ag:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Microcontroller" ;
+    rdfs:comment "A board at the edge, carrying peripherals and reachable over a bus. It runs firmware, not agents." .
+
+ag:Peripheral a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Peripheral" ;
+    rdfs:comment "Something wired to a board's pins. A sensor is one; so is an indicator." .
+
+ag:model a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model" ;
+    rdfs:comment "What this thing IS, as a human would order it — 'ESP32-WROOM-32D'. Free text on purpose: it identifies hardware to a person, and nothing derives behaviour from it. Behaviour comes from the CLASS." .
+
+ag:lanAddress a owl:DatatypeProperty ; rdfs:domain ag:ComputeHost ; rdfs:range xsd:string ;
+    rdfs:label "LAN address" ;
+    rdfs:comment "Where this host answers for things NOT on it. A co-located agent reaches the broker at ag:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs the address of whichever host runs the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society. It is also a DHCP lease unless the router is told otherwise, which makes it a fact with an expiry date." .
+
+ag:firmware a owl:DatatypeProperty ; rdfs:domain ag:Microcontroller ; rdfs:range xsd:string ;
+    rdfs:label "firmware" ;
+    rdfs:comment "Which project under firmware/ this board runs. Stated rather than derived from what it carries: two boards with the same peripherals may run different code, and guessing would be wrong exactly when it mattered." .
+
+ag:runsOn a owl:ObjectProperty ; rdfs:range ag:ComputeHost ; rdfs:label "runs on" ;
+    rdfs:comment "Which host executes this agent. Documents why the bus is where it is." .
+
+ag:carries a owl:ObjectProperty ; rdfs:domain ag:Microcontroller ; rdfs:range ag:Peripheral ;
+    rdfs:label "carries" ;
+    rdfs:comment "A peripheral is mounted on this board. Which LEG goes where is said by the wires, not by this — carrying something is not the same as being wired to it, and a peripheral that is carried but unwired is a real state that a shape should be able to catch." .
+
+#################  Pins and wires  #################
+#
+# A pin belongs to a DEVICE and a wire joins two of them. That is a longer way to say what
+# `ag:pin [ ag:pinRole ag:AnalogInPinRole ; ag:gpio 34 ]` used to say in one node, and the length is
+# the point: the old form fused two facts about two different objects. `ag:AnalogInPinRole` is a fact
+# about the PROBE's leg — what that leg is for. `34` is a fact about the BOARD's leg — which
+# line it is on the silkscreen. Fusing them meant a peripheral could not describe a pin it had
+# that was not connected to anything, could not say which rail it was powered from, and could
+# not be wired to a second board without being redescribed.
+#
+# It also made a whole class of question unaskable. "Is this device's power leg on the 3V3 rail
+# or on VIN" decides whether its data line idles at 3.3V or at 5V into a 3.3V input, which is
+# the difference between working and slowly destroying a GPIO — and there was nowhere to say it.
+
+ag:Pin a owl:Class ; rdfs:label "Pin" ;
+    rdfs:comment "One leg of one device. It belongs to the device that physically has it, which is why both ends of a wire are pins and neither is special." .
+
+ag:hasPin a owl:ObjectProperty ; rdfs:domain ag:Device ; rdfs:range ag:Pin ;
+    rdfs:label "has pin" .
+
+ag:pinRole a owl:ObjectProperty ; rdfs:domain ag:Pin ; rdfs:range ag:PinRole ;
+    rdfs:label "pin role" ;
+    rdfs:comment "What this leg is for, on the device that owns it. A board's general-purpose line has no role until something is wired to it; a peripheral's legs always do." .
+
+ag:gpio a owl:DatatypeProperty ; rdfs:domain ag:Pin ; rdfs:range xsd:integer ;
+    rdfs:label "gpio" ;
+    rdfs:comment "The line number as the board silkscreen and the firmware both name it. A fact about the BOARD's pin — a peripheral's leg does not have one, it is merely wired to one." .
+
+# What is PRINTED next to the leg, which is not the same as its number and is what a person at
+# the bench is actually reading. On a DevKitC, GPIO 36 and 39 are silkscreened VP and VN — the
+# number appears nowhere on the board, so "put it on 36" is an instruction you cannot follow
+# without a datasheet. Power and ground legs have a notation and no number at all.
+#
+# skos:notation rather than rdfs:label deliberately: a label is for a human reading the graph,
+# and this is a CODE within a scheme — the board's own marking, the thing you match against the
+# silkscreen. rdfs:label on these pins would say "the fern probe's analog leg"; the notation
+# says "D34", and only one of those helps you count header positions with a jumper in your hand.
+skos:notation a owl:DatatypeProperty ; rdfs:domain ag:Pin ; rdfs:range xsd:string ;
+    rdfs:label "notation" .
+
+ag:railVolts a owl:DatatypeProperty ; rdfs:domain ag:Pin ; rdfs:range xsd:decimal ;
+    rdfs:label "rail volts" ;
+    rdfs:comment "What a power pin supplies. Stated on the SOURCE — a board's 3V3 and VIN legs — because a peripheral's VCC takes whatever it is wired to, which is exactly the mistake worth catching." .
+
+ag:logicVolts a owl:DatatypeProperty ; rdfs:domain ag:Device ; rdfs:range xsd:decimal ;
+    rdfs:label "logic volts" ;
+    rdfs:comment "The voltage this device's signal lines expect. An ESP32 is 3.3V and is not 5V tolerant; a device powered from a higher rail will idle its pull-up above that and damage the input over time. Held on the device rather than the pin because it is true of all of them at once." .
+
+ag:Wire a owl:Class ; rdfs:label "Wire" ;
+    rdfs:comment "A connection between exactly two pins. A first-class thing rather than a property, because it belongs to neither end: it is what someone can point at on the breadboard, and what they get wrong." .
+
+ag:joins a owl:ObjectProperty ; rdfs:domain ag:Wire ; rdfs:range ag:Pin ;
+    rdfs:label "joins" ;
+    rdfs:comment "The two pins a wire connects. Unordered on purpose — a wire has no direction, and pretending it did would invent a fact nobody can check by looking." .
+
+#################  Roles — grouped by DIRECTION, because that is what a shape can reason about  #################
+
+ag:PinRole a owl:Class ; rdfs:label "Pin role" ;
+    rdfs:comment "What a leg is for. Grouped by direction, because whether a line is driven decides which pins it may legally sit on." .
+
+ag:InputRole a owl:Class ; rdfs:subClassOf ag:PinRole ; rdfs:label "Input role" .
+ag:OutputRole a owl:Class ; rdfs:subClassOf ag:PinRole ; rdfs:label "Output role" ;
+    rdfs:comment "A driven line. The distinction earns its keep on the ESP32, whose 34-39 can be read but never driven." .
+ag:BidirectionalRole a owl:Class ; rdfs:subClassOf ag:InputRole , ag:OutputRole ;
+    rdfs:label "Bidirectional role" ;
+    rdfs:comment "Driven and read on the same line. A subclass of BOTH, and being an output role is the load-bearing half: the rule that keeps a driven line off 34-39 asks whether the role is an output, so a line classified as neither slipped past it. SDA was declared a bare PinRole for exactly the tidy-sounding reason that it is 'neither an input nor an output' — true about direction, false about what the shape needs to know, which is whether the board ever drives it." .
+
+ag:AnalogInPinRole a ag:InputRole ; rdfs:label "analog in" ;
+    rdfs:comment "Read with an ADC. The role that cannot sit on ADC2 while WiFi is up — the failure returns plausible numbers rather than an error, which is why a shape checks it." .
+ag:DigitalInPinRole a ag:InputRole ; rdfs:label "digital in" .
+ag:DigitalOutPinRole a ag:OutputRole ; rdfs:label "digital out" .
+
+ag:PowerPinRole a ag:PinRole ; rdfs:label "power" ;
+    rdfs:comment "Supplies or takes current. Neither an input nor an output in the signal sense — nothing is read from it and nothing is driven onto it — which is why it is a bare PinRole rather than either, and why the 34-39 rule does not apply to it." .
+ag:GroundPinRole a ag:PinRole ; rdfs:label "ground" ;
+    rdfs:comment "The return. Modelled, unlike before, because a floating ground is the single most common reason a three-legged sensor answers with silence, and 'the world does not mention it' is a poor reason for a checker to stay quiet about it." .

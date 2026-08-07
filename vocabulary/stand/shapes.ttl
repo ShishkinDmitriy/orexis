@@ -1,0 +1,121 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# The ESP32's rules, not RDF's. Every one of these is a mistake that costs an afternoon: a board
+# that will not boot, an ADC that returns plausible rubbish, a colour that never lights, a leg
+# that was never connected to anything.
+#
+# SPARQL constraints spell IRIs out in full: this runs on pyshacl, and a prefix declared in one
+# file and used in another is exactly the trap `store.PREFIXES` exists to catch elsewhere.
+
+ag:PinShape a sh:NodeShape ;
+    rdfs:comment "A GPIO number, where present, names a line this family actually has." ;
+    sh:targetClass ag:Pin ;
+    sh:property [ sh:path ag:gpio ; sh:maxCount 1 ; sh:datatype xsd:integer ;
+                  sh:minInclusive 0 ; sh:maxInclusive 39 ;
+                  sh:message "a GPIO line on this family is 0..39" ] ;
+    sh:property [ sh:path ag:pinRole ; sh:maxCount 1 ; sh:class ag:PinRole ] ;
+    sh:property [ sh:path ag:railVolts ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path skos:notation ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                  sh:message "a pin bears one marking on the silkscreen, not several" ] .
+
+ag:WireShape a sh:NodeShape ;
+    rdfs:comment "A wire joins exactly two pins. One is a dangling lead and three is a splice — both are real things on a breadboard and neither is what this model means, so saying so is better than letting a query silently pick one." ;
+    sh:targetClass ag:Wire ;
+    sh:property [ sh:path ag:joins ; sh:minCount 2 ; sh:maxCount 2 ; sh:class ag:Pin ;
+                  sh:message "a wire joins exactly two pins" ] .
+
+ag:BoardPinShape a sh:NodeShape ;
+    rdfs:comment "The flash lines. 6-11 are wired to the SPI flash, and a board driving one does not boot at all — which reads as a dead board rather than as a wiring mistake, and is why it is worth refusing on paper." ;
+    sh:targetClass ag:Pin ;
+    sh:sparql [
+        sh:message "GPIO 6-11 are wired to the SPI flash; driving one prevents the board booting at all" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/agora#gpio> ?value .
+                FILTER(?value >= 6 && ?value <= 11)
+            }""" ] .
+
+ag:WiredPinShape a sh:NodeShape ;
+    rdfs:comment "The two rules that decide whether a peripheral's leg can work on the line it is wired to. Both are asked of the WIRE, because that is where the two facts finally meet: the role lives on the peripheral's pin and the GPIO number on the board's, and neither end knows the other until something joins them." ;
+    sh:targetClass ag:Wire ;
+    sh:sparql [
+        sh:message "an analog input on an ADC2 line (0,2,4,12-15,25-27) reads rubbish whenever WiFi is up — and returns plausible numbers rather than an error. Use ADC1: 32,33,34,35,36,39" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/agora#joins> ?leg, ?line .
+                ?leg  <http://example.org/agora#pinRole> <http://example.org/agora#AnalogInPinRole> .
+                ?line <http://example.org/agora#gpio> ?value .
+                FILTER(?value IN (0, 2, 4, 12, 13, 14, 15, 25, 26, 27))
+            }""" ] ;
+    sh:sparql [
+        sh:message "GPIO 34-39 are input-only on this family and cannot drive anything" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/agora#joins> ?leg, ?line .
+                ?leg  <http://example.org/agora#pinRole> ?role .
+                ?role a <http://example.org/agora#OutputRole> .
+                ?line <http://example.org/agora#gpio> ?value .
+                FILTER(?value >= 34)
+            }""" ] .
+
+ag:OneGpioOneLegShape a sh:NodeShape ;
+    rdfs:comment "One line, one purpose. Two peripheral legs on the same GPIO is a short in the model, and it is the mistake a person makes when adding a device months after the first — which is exactly when nobody re-reads the whole file. Power and ground are excluded, because sharing a rail or a ground is not a mistake, it is how a breadboard works." ;
+    sh:targetClass ag:Pin ;
+    sh:sparql [
+        sh:message "two legs are wired to the same GPIO line" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/agora#gpio> ?line .
+                ?wa <http://example.org/agora#joins> $this, ?a .
+                ?wb <http://example.org/agora#joins> $this, ?b .
+                ?a <http://example.org/agora#pinRole> ?ra .
+                ?b <http://example.org/agora#pinRole> ?rb .
+                FILTER(?ra != <http://example.org/agora#PowerPinRole>)
+                FILTER(?ra != <http://example.org/agora#GroundPinRole>)
+                FILTER(?a != $this && ?b != $this && STR(?a) < STR(?b))
+            }""" ] .
+
+ag:PoweredPeripheralShape a sh:NodeShape ;
+    rdfs:comment "The rail decides the logic level, and that is the fault this whole remodelling exists to make sayable. A three-legged sensor carries a pull-up to its own VCC, so its data line idles at whatever it is powered from. Wire it to a 5V rail and it presents 5V to a 3.3V input that is not 5V tolerant — which does not fail, it degrades, over weeks, and looks like a flaky sensor." ;
+    sh:targetClass ag:Peripheral ;
+    sh:sparql [
+        sh:message "this device's power leg is on a rail that does not match the logic voltage of the board it signals into — its pull-up will idle the data line above what that input tolerates" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/agora#hasPin> ?vcc, ?signal .
+                ?vcc <http://example.org/agora#pinRole> <http://example.org/agora#PowerPinRole> .
+                ?signal <http://example.org/agora#pinRole> ?role .
+                ?role a <http://example.org/agora#PinRole> .
+                FILTER(?role != <http://example.org/agora#PowerPinRole>)
+                FILTER(?role != <http://example.org/agora#GroundPinRole>)
+
+                ?pw <http://example.org/agora#joins> ?vcc, ?rail .
+                ?rail <http://example.org/agora#railVolts> ?value .
+
+                ?sw <http://example.org/agora#joins> ?signal, ?line .
+                ?board <http://example.org/agora#hasPin> ?line ;
+                       <http://example.org/agora#logicVolts> ?logic .
+                FILTER(?rail != ?vcc && ?line != ?signal)
+                FILTER(?value != ?logic)
+            }""" ] .
+
+ag:MountedPeripheralShape a sh:NodeShape ;
+    rdfs:comment "A leg that is described and not wired. The old model could not express this at all — a pin WAS its connection — so an unconnected leg was invisible rather than wrong. A floating ground is the commonest reason a three-legged sensor answers with silence, and it looked exactly like a dead part." ;
+    sh:targetClass ag:Peripheral ;
+    sh:sparql [
+        sh:message "this peripheral has a leg that no wire reaches" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/agora#hasPin> ?value .
+                FILTER NOT EXISTS { ?w <http://example.org/agora#joins> ?value }
+            }""" ] .
+
+ag:MicrocontrollerShape a sh:NodeShape ;
+    rdfs:comment "A board says what it is, so a generated firmware config and a person ordering a replacement are reading the same fact." ;
+    sh:targetClass ag:Microcontroller ;
+    sh:property [ sh:path ag:model ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                  sh:message "a board must state its model" ] .

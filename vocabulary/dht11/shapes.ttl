@@ -1,0 +1,16 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ag:Dht11Shape a sh:NodeShape ;
+    rdfs:comment "Three legs, and all three named. A DHT that states only its data line was the old model's best effort — there was nowhere to put the other two — and it is precisely the missing ones that go wrong: a floating ground answers with silence, and the wrong rail idles the data line above what the input tolerates. The generic rules in the stand then apply to each leg on its own: the data line must reach a pin that can be driven, every leg must reach something, and the rail must match the board." ;
+    sh:targetClass ag:Dht11 ;
+    sh:property [ sh:path ag:hasPin ; sh:minCount 3 ; sh:class ag:Pin ;
+                  sh:message "a DHT11 has three legs: data, power and ground" ] ;
+    sh:property [ sh:path ( ag:hasPin ag:pinRole ) ; sh:minCount 1 ;
+                  sh:hasValue ag:OneWireDataPinRole ;
+                  sh:message "a DHT11 talks on one wire — one leg must be ag:OneWireDataPinRole" ] ;
+    sh:property [ sh:path ( ag:hasPin ag:pinRole ) ; sh:hasValue ag:PowerPinRole ;
+                  sh:message "a DHT11 must say which leg is its power, because the rail it is on decides its logic level" ] ;
+    sh:property [ sh:path ( ag:hasPin ag:pinRole ) ; sh:hasValue ag:GroundPinRole ;
+                  sh:message "a DHT11 must say which leg is its ground — a floating ground is the commonest reason one answers with silence, and it looks exactly like a dead part" ] .

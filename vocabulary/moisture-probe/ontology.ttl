@@ -1,0 +1,17 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/moisture-probe> a owl:Ontology ;
+    rdfs:label "Capacitive soil moisture probe" ;
+    rdfs:comment """One part, its own package. Three legs — an analog output, power and ground — and two calibration numbers that belong to the individual probe rather than to the model.""" .
+
+ag:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf ag:Peripheral ;
+    rdfs:label "Capacitive soil moisture probe" ;
+    rdfs:comment "Reports a raw ADC count that falls as the soil wets. A class rather than a model string because how you READ it is what differs; the model is for the person holding it." .
+
+ag:rawDry a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when dry" ;
+    rdfs:comment "What this probe reads in air. A fact about THIS probe in THIS pot — two identical probes differ — so it belongs to the instance, not to the firmware, which is per model." .
+ag:rawWet a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when wet" ;
+    rdfs:comment "What it reads in saturated soil. Not free water: water is wetter than soil ever gets, so calibrating against it makes the top of the scale unreachable." .

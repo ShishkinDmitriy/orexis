@@ -5,7 +5,9 @@
 
 <http://example.org/agora/core> a owl:Ontology ;
     rdfs:label "Agora core" ;
-    rdfs:comment """The society kernel: agents, the capabilities they compose, devices, and the versioned world they share. Everything else is a MODULE layered on this — polling, market, actuation, and the domain itself. Code may reference the terms defined here; it may never reference an instance.""" .
+    rdfs:comment """The society kernel: agents, the capabilities they compose, and the versioned world they share. Everything else is a MODULE layered on this — the stand it runs on, the protocols its parts speak, the parts themselves, the capabilities, and the domain. Code may reference the terms defined here; it may never reference an instance.
+
+What is NOT here any more is everything physical. `vocabulary/stand` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
 
 #################  Agents and capabilities (composition, not hierarchy)  #################
 
@@ -60,105 +62,6 @@ ag:modelDryRate a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range
 ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:integer ;
     rdfs:label "model tick seconds" ;
     rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a ag:Push device, which keeps its own clock; a ag:Scheduled one keeps the interval its agent gives it, exactly as a board does." .
-
-#################  The stand — what physically exists, and how it is wired  #################
-#
-# Here rather than in a capability or a domain because it is the same layer as ag:Device above:
-# what EXISTS, independent of what anything can do with it. A capability says an agent can
-# perceive; this says there is a probe, on this board, on this pin. A world about anything at
-# all has a stand, so it is not domain knowledge either.
-#
-# It is written down for three reasons: shapes can then refuse a wiring that cannot work (see
-# kernel/shapes.ttl), firmware configuration becomes derivable from the world rather than
-# hand-kept in a C header, and someone debugging at 2am can ask which pin a probe is on instead
-# of remembering.
-
-ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;
-    rdfs:comment "A machine that runs agent processes. Named so the world can say where its society actually executes." .
-
-ag:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Microcontroller" ;
-    rdfs:comment "A board at the edge, carrying peripherals and reachable over a bus. It runs firmware, not agents." .
-
-ag:Peripheral a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Peripheral" ;
-    rdfs:comment "Something wired to a microcontroller's pins. A sensor is one; so is an indicator." .
-
-ag:model a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model" ;
-    rdfs:comment "What this thing IS, as a human would order it — 'ESP32-WROOM-32D'. Free text on purpose: it identifies hardware to a person, and nothing derives behaviour from it. Behaviour comes from the CLASS." .
-
-ag:lanAddress a owl:DatatypeProperty ; rdfs:domain ag:ComputeHost ; rdfs:range xsd:string ;
-    rdfs:label "LAN address" ;
-    rdfs:comment "Where this host answers for things NOT on it. A co-located agent reaches the broker at ag:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs the address of whichever host runs the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society." .
-
-ag:firmware a owl:DatatypeProperty ; rdfs:domain ag:Microcontroller ; rdfs:range xsd:string ;
-    rdfs:label "firmware" ;
-    rdfs:comment "Which project under firmware/ this board runs. Stated rather than derived from what it carries: two boards with the same peripherals may run different code, and guessing would be wrong exactly when it mattered." .
-
-ag:runsOn a owl:ObjectProperty ; rdfs:range ag:ComputeHost ; rdfs:label "runs on" ;
-    rdfs:comment "Which host executes this agent. Documents why the bus is where it is." .
-
-ag:carries a owl:ObjectProperty ; rdfs:domain ag:Microcontroller ; rdfs:range ag:Peripheral ;
-    rdfs:label "carries" ;
-    rdfs:comment "A peripheral is wired to this board. The board is what has pins, so the board is what owns the wiring." .
-
-#################  Pins — reified, because a pin assignment has a role  #################
-#
-# `ag:gpio 25` alone cannot describe an RGB LED: it has three pins and they are not
-# interchangeable. So an assignment is a NODE carrying both which line it is and which role it
-# plays, and a single-pin device simply has one of them.
-
-ag:PinAssignment a owl:Class ; rdfs:label "Pin assignment" ;
-    rdfs:comment "One peripheral leg on one GPIO line, in one role." .
-
-ag:pin a owl:ObjectProperty ; rdfs:domain ag:Peripheral ; rdfs:range ag:PinAssignment ;
-    rdfs:label "pin" .
-
-ag:gpio a owl:DatatypeProperty ; rdfs:domain ag:PinAssignment ; rdfs:range xsd:integer ;
-    rdfs:label "gpio" ;
-    rdfs:comment "The GPIO number as the board silkscreen and the firmware both name it." .
-
-ag:pinRole a owl:ObjectProperty ; rdfs:domain ag:PinAssignment ; rdfs:range ag:PinRole ;
-    rdfs:label "pin role" .
-
-ag:PinRole a owl:Class ; rdfs:label "Pin role" ;
-    rdfs:comment "What a leg is for. Roles are grouped by DIRECTION, because that is the part a shape can reason about: whether a line is driven decides which pins it may legally sit on." .
-
-ag:InputRole a owl:Class ; rdfs:subClassOf ag:PinRole ; rdfs:label "Input role" .
-ag:OutputRole a owl:Class ; rdfs:subClassOf ag:PinRole ; rdfs:label "Output role" ;
-    rdfs:comment "A driven line. The distinction earns its keep on the ESP32, whose 34-39 can be read but never driven." .
-
-ag:AnalogIn a ag:InputRole ; rdfs:label "analog in" ;
-    rdfs:comment "Read with an ADC. The role that cannot sit on ADC2 while WiFi is up — the failure returns plausible numbers rather than an error, which is why a shape checks it." .
-ag:DigitalIn a ag:InputRole ; rdfs:label "digital in" .
-ag:DigitalOut a ag:OutputRole ; rdfs:label "digital out" .
-ag:Red a ag:OutputRole ; rdfs:label "red" .
-ag:Green a ag:OutputRole ; rdfs:label "green" .
-ag:Blue a ag:OutputRole ; rdfs:label "blue" .
-ag:BidirectionalRole a owl:Class ; rdfs:subClassOf ag:InputRole , ag:OutputRole ;
-    rdfs:label "Bidirectional role" ;
-    rdfs:comment "Driven and read on the same line. A subclass of BOTH, and being an output role is the load-bearing half: the rule that keeps a driven line off 34-39 asks whether the role is an output, so a line classified as neither slipped past it. SDA was declared a bare PinRole for exactly the tidy-sounding reason that it is 'neither an input nor an output' — which is true about direction and false about what the shape needs to know, namely whether the board ever drives it. It does, so it cannot sit on an input-only pin, and now nothing can say otherwise." .
-
-ag:I2cData a ag:BidirectionalRole ; rdfs:label "I2C SDA" .
-ag:I2cClock a ag:OutputRole ; rdfs:label "I2C SCL" .
-ag:OneWireData a ag:BidirectionalRole ; rdfs:label "one-wire data" ;
-    rdfs:comment "A single line carrying both directions in turn, as a DHT does: the board pulls it low to start a conversation and then releases it and listens. Same shape as SDA and the same trap — it looks like an input because almost all of the traffic is inbound." .
-
-#################  The peripherals actually on the bench  #################
-
-ag:rawDry a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when dry" ;
-    rdfs:comment "What this probe reads in air. A fact about THIS probe in THIS pot — two identical probes differ — so it belongs to the instance, not to the firmware, which is per model." .
-ag:rawWet a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when wet" ;
-    rdfs:comment "What it reads in saturated soil. Not free water: water is wetter than soil ever gets, so calibrating against it makes the top of the scale unreachable." .
-
-ag:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf ag:Peripheral ;
-    rdfs:label "Capacitive soil moisture probe" ;
-    rdfs:comment "Reports a raw ADC count that falls as the soil wets. A class rather than a model string because how you READ it is what differs; the model is for the person holding it." .
-
-ag:RgbLed a owl:Class ; rdfs:subClassOf ag:Peripheral ; rdfs:label "RGB LED" ;
-    rdfs:comment "Three driven legs and a common return. The return is not modelled: nothing addresses it, and a shape that demanded it would be describing solder rather than software." .
-
-ag:TempHumiditySensor a owl:Class ; rdfs:subClassOf ag:Peripheral ;
-    rdfs:label "Temperature and humidity sensor" ;
-    rdfs:comment "One device reporting TWO properties down one line, which is what makes it awkward: the model gives a sensor one sosa:observes and the runtime one reading per message, so a world can state this peripheral and wire it, but nothing polls it yet — see issue #51." .
 
 #################  Naming — stated, never derived  #################
 
