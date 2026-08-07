@@ -139,16 +139,35 @@ class Agent:
 
     def _on_connect(self, client, userdata, flags, reason_code, properties) -> None:
         self.metrics.connected()
+        topics = []
         for module in self.modules:
             for topic in module.subscriptions():
                 client.subscribe(topic)
+                topics.append(topic)
         log.info("%s up — world v%s, running %s", self.id, self.world.version,
                  ", ".join(m.name for m in self.modules) or "nothing")
+        # The topics, spelled out. An agent that is subscribed to the wrong thing looks exactly
+        # like a device that never speaks, and this is the one line that tells them apart —
+        # it can be read against the ACL and against the board's own config without guessing.
+        for topic in topics:
+            log.info("%s: listening on %s", self.id, topic)
+        if not topics:
+            log.warning("%s: subscribed to NOTHING — it will never hear anything", self.id)
 
     def _on_disconnect(self, client, userdata, flags, reason_code, properties) -> None:
-        # Counted rather than logged at every drop: a reconnecting agent is normal on a marginal
-        # link, and the number over time is what says whether it is getting worse.
         self.metrics.disconnected()
+        # It used to be counted and NOT logged, on the reasoning that a reconnecting agent is
+        # normal on a marginal link and the count over time is what matters. That reasoning is
+        # right about flapping and wrong about the case it actually produced: this agent lost
+        # its session and never came back, and the container went on looking perfectly healthy
+        # for two days while nothing was ingested. The metric existed and nobody was watching a
+        # metric, because nothing had gone visibly wrong.
+        #
+        # Logged at WARNING with the reason, and _on_connect already logs the way back. A
+        # flapping link therefore shows as paired lines — which is information about the link,
+        # not noise to be suppressed. A drop with no matching "up" line after it is the shape of
+        # the fault that cost the two days.
+        log.warning("%s: disconnected from the bus (%s) — paho will retry", self.id, reason_code)
 
     def reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
         """Perception tells the rest of me that something new is known.
@@ -171,6 +190,12 @@ class Agent:
                     return
             except Exception as exc:  # one bad message must not take the agent down
                 log.error("%s: %s failed on %s: %s", self.id, module.name, msg.topic, exc)
+        # Nobody claimed it, and until now nobody said so. This is the shape a topic
+        # disagreement takes — the world names one channel, the device publishes on another,
+        # both ends look healthy, and the message is dropped in silence. It cannot be an error
+        # (a wildcard subscription may legitimately catch more than one module wants) but it
+        # must not be invisible.
+        log.warning("%s: nothing handled a message on %s", self.id, msg.topic)
 
     def run(self) -> None:
         # Who I am on the bus. The broker refuses anonymous connections, and the ACL it holds

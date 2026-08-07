@@ -6,6 +6,7 @@ timekeeping. Driven through a real agent, so the numbers come from the agent's o
 the bounds from the ontology — neither is written down here.
 """
 
+import logging
 from dataclasses import replace
 
 import pytest
@@ -232,6 +233,121 @@ def test_the_scheduled_board_is_still_aimed_when_a_push_sensor_shares_the_agent(
     assert commanded == ["sensors/moisture_sensor_fern/command"], (
         "the scheduled board must be re-aimed, and the push one never commanded"
     )
+
+
+# --- what a person reading the log can tell ----------------------------------------------------
+
+
+def test_a_reading_is_logged(fern, caplog):
+    """The happy path used to log NOTHING.
+
+    Only a cadence CHANGE said anything, and only when it changed — so an agent receiving a
+    reading every ten seconds and an agent whose board had been silent for two days produced
+    identical logs: none. That is not a cosmetic gap. Diagnosing the second meant reading
+    Grafana, which is a poor place to learn that nothing is arriving.
+    """
+    with caplog.at_level(logging.INFO):
+        fern.deliver(sensor_of(fern).reading_topic, {"value": 0.123})
+
+    line = next((r.getMessage() for r in caplog.records if "0.123" in r.getMessage()), None)
+    assert line, "a reading must appear in the log"
+    assert "moisture_sensor_fern" in line, "which instrument"
+    assert "SoilMoisture" in line, "and which property — 0.123 alone does not say soil or air"
+    assert "band=LOW" in line, "and what this agent makes of it"
+
+
+class _Subscriber:
+    """Stands in for the paho client during a re-run of the connect callback."""
+
+    def subscribe(self, topic):
+        pass
+
+
+def test_the_topics_it_subscribed_to_are_logged(fern, caplog):
+    """An agent subscribed to the wrong thing looks exactly like a device that never speaks.
+
+    This is the line that tells them apart, and it can be read straight against the ACL and
+    against the board's own config without anyone having to guess.
+    """
+    with caplog.at_level(logging.INFO):
+        fern._on_connect(_Subscriber(), None, None, 0, None)
+
+    listening = [r.getMessage() for r in caplog.records if "listening on" in r.getMessage()]
+    assert any(sensor_of(fern).reading_topic in m for m in listening)
+
+
+def test_a_message_nobody_handles_is_not_silent(fern, caplog):
+    """The shape a topic disagreement takes: the world names one channel, the device publishes
+    on another, both ends look healthy, and the message is dropped without a word."""
+    with caplog.at_level(logging.WARNING):
+        fern.deliver("sensors/somebody_elses_probe/reading", {"value": 0.5})
+
+    assert any("nothing handled" in r.getMessage() for r in caplog.records)
+
+
+# --- what the device is told ------------------------------------------------------------------
+
+
+def commands(agent):
+    return agent.sent.to(sensor_of(agent).command_topic)
+
+
+def test_the_device_is_told_the_verdict_with_the_cadence(fern):
+    """One retained message carries both, because it is one instruction to one device.
+
+    A separate topic for the verdict would need its own ACL grant and its own retained slot,
+    and would arrive at a different moment from the cadence it belongs with. The board is
+    already subscribed here.
+    """
+    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
+    last = commands(fern)[-1]
+    assert last["band"] == "LOW"
+    assert last["sleep_s"] > 0
+
+
+def test_the_verdict_is_retained_like_the_cadence(fern):
+    """The whole point on a board that deep-sleeps: it must learn the current verdict when it
+    subscribes, not at the next reading it happens to take."""
+    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
+    retained = [r for t, p, r in fern.sent
+                if t == sensor_of(fern).command_topic and "band" in p]
+    assert retained and all(retained)
+
+
+def test_a_changed_verdict_is_sent_even_when_the_cadence_did_not_move(fern):
+    """The trap in reusing this message, and the reason the dedup had to change.
+
+    Sending was skipped whenever the interval was unchanged, which is right for an interval and
+    wrong the moment anything rides along with it. A pot drying from OK to LOW *within one
+    cadence band* would have left the old colour on the device indefinitely — the state most
+    worth seeing, shown as the state before it.
+    """
+    p = fern.subscribing()
+    p.set_cadence(sensor_of(fern), 60, {"band": "OK"})
+    p.set_cadence(sensor_of(fern), 60, {"band": "LOW"})
+
+    assert [c["band"] for c in commands(fern)] == ["OK", "LOW"]
+
+
+def test_the_same_message_twice_is_sent_once(fern):
+    """The other half: nothing changed, so the device is not woken to be told so."""
+    p = fern.subscribing()
+    for _ in range(3):
+        p.set_cadence(sensor_of(fern), 60, {"band": "OK"})
+    assert len(commands(fern)) == 1
+
+
+def test_a_device_whose_agent_holds_no_stake_is_told_only_a_cadence(monkeypatch, tmp_path):
+    """The sensing world has no market, so nothing there holds a band.
+
+    The verdict is collected the way every cross-capability opinion is: whoever has one
+    contributes. Nobody does here, and the message must not grow an empty field for it.
+    """
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="ag:AirTemperature"), monkeypatch)
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+
+    sent = [p for t, p, _ in agent.sent if t.endswith("/command")]
+    assert sent and all("band" not in p for p in sent)
 
 
 # --- one subject, two properties: the case an observation's key exists for --------------------

@@ -18,7 +18,14 @@
 ag:raspberry a ag:ComputeHost ;
     ag:localId "raspberry" ;
     ag:model "Raspberry Pi 5" ;
-    ag:lanAddress "192.168.2.126" ;
+    # DHCP, and therefore a fact with an expiry date. It was .126 when this was written and the
+    # lease has since moved to .130, which cost an evening: the board opened TCP to an address
+    # that is not this Pi, so it failed with a bare "connection failed" and the broker logged
+    # nothing at all — because nothing arrived. Every other participant was unaffected, since
+    # agents reach the broker on loopback via ag:brokerHost and only a board off-host uses this.
+    #
+    # The durable fix is a DHCP reservation on the router, so this line stops being a guess.
+    ag:lanAddress "192.168.2.130" ;
     rdfs:comment "Runs the agent containers, the broker for this world, and the shared store." .
 
 ag:fern_agent ag:runsOn ag:raspberry .
@@ -30,7 +37,7 @@ ag:esp32_fern a ag:Microcontroller ;
     ag:model "ESP32-WROOM-32D" ;
     ag:onBus ag:local_bus ;
     ag:firmware "moisture-sensor" ;
-    ag:carries ag:moisture_sensor_fern , ag:status_led_fern ;
+    ag:carries ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is ag:Subscribing: the board keeps the interval and cannot be reached in between." .
 
 ##########  What is wired to it  ##########
@@ -46,12 +53,29 @@ ag:moisture_sensor_fern a ag:CapacitiveMoistureProbe ;
     ag:rawDry 3200 ;
     ag:rawWet 1300 .
 
-# Not yet read by anything: this board has no user LED of its own, so an external one is wired
-# to say from across the room whether a reading went out. 25/26/27 are safe outputs — no
-# strapping duty at boot, and their ADC2 membership costs nothing to a driven line.
+# This board has no user LED of its own, so an external one says what the agent makes of the pot.
+# 25/26/27 are safe outputs — no strapping duty at boot, and their ADC2 membership costs nothing
+# to a driven line. It is lit only while the board is AWAKE and dark through every sleep: an LED
+# is 5-15 mA against a ~10 uA sleep budget, so holding a colour would make the lamp cost three
+# orders of magnitude more than everything else this board does.
 ag:status_led_fern a ag:RgbLed ;
     ag:localId "status_led_fern" ;
-    ag:model "common-cathode RGB LED" ;
+    ag:model "KY-016 4-pin RGB LED (common cathode)" ;
     ag:pin [ ag:pinRole ag:Red   ; ag:gpio 25 ] ,
            [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
            [ ag:pinRole ag:Blue  ; ag:gpio 27 ] .
+
+# Wired and stated, NOT yet polled. One device reports two properties down one line, and both
+# the model (a sensor observes one property) and the runtime (one reading per message) assume
+# one — so declaring it as an ag:Sensor would produce a sensor whose second property is silently
+# dropped. Stated here anyway, because the pin is soldered and the world is what is true.
+#
+# GPIO 32 rather than 34 or 35, and the difference is not cosmetic: a one-wire line is DRIVEN —
+# the board pulls it low to open a conversation — and 34-39 cannot drive. Powered from the 3V3
+# on the same header as everything else here, so nothing crosses the board; the KY-015's onboard
+# pull-up then idles at 3.3V, which is what the ESP32 wants. Powering it from VIN would idle the
+# data line at 5V into a 3.3V pin.
+ag:air_sensor_fern a ag:TempHumiditySensor ;
+    ag:localId "air_sensor_fern" ;
+    ag:model "KY-015 (DHT11)" ;
+    ag:pin [ ag:pinRole ag:OneWireData ; ag:gpio 32 ] .

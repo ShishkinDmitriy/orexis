@@ -45,9 +45,9 @@ This is the sensing face of
 # The contract
 
 ```
-agent -> board   ag:commandTopic   {"sleep_s":N} (retained) | {"sense":true}  [instructable only]
+agent -> board   ag:commandTopic   {"sleep_s":N,"band":"LOW"} (retained) | {"sense":true}
 board -> agent   ag:readingTopic   {"value":0.183,"sensor":"..."}
-agent -> peers   ag:eventTopic     {"agent":...,"value":...,"band":"LOW"}
+agent -> peers   ag:eventTopic     {"agent":...,"property":...,"value":...,"band":"LOW"}
 ```
 
 Every one of those channels is **stated in the world graph** on the resource that owns it —
@@ -75,6 +75,31 @@ moisture.
 - **Sense** (`sense:true`) is a *best-effort nudge* — it lands only if the board happens to be
   awake in its listen window, and is **never retained** (a retained `sense` would re-fire on
   every wake, forever).
+
+# The band rides the same message, and gets the retention for free
+
+`band` travels on the command topic beside `sleep_s`, for a device that can display it — a
+status LED. It is not a third lever and the board never acts on it: the colour is the agent's
+verdict about its own pot, painted by hardware that computes nothing.
+
+It goes here rather than on a topic of its own for the reason a control topic was never added
+either: **the channel already exists, the board is already subscribed, and the ACL already
+grants it.** A second topic would need its own grant, its own retained slot, and would arrive
+at a different moment from the cadence it belongs with.
+
+Retention is what makes it work at all. A board that deep-sleeps learns the current verdict the
+instant it subscribes, instead of showing the state before last until it happens to take
+another reading.
+
+**One consequence caught the dedup.** The cadence was only re-sent when the interval changed,
+which is correct for an interval and wrong once anything travels with it: a pot drying from OK
+to LOW *inside one cadence band* would have kept the old colour indefinitely — the state most
+worth seeing, displayed as the state before it. The comparison is now the whole message.
+
+The verdict is collected the way every cross-capability opinion is: perception asks, whoever
+holds a stake answers, and perception passes the answer on without reading it. An agent with no
+stake in the property contributes nothing and its device is told only a cadence. The transport
+driver never learns what a band is.
 
 The unequal pair is the whole reason `ag:Polling` is a separate capability rather than a mode
 of this one. `sense` is what polling would be built on, and its unreliability here is not an

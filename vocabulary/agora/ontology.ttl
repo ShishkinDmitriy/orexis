@@ -133,9 +133,14 @@ ag:DigitalOut a ag:OutputRole ; rdfs:label "digital out" .
 ag:Red a ag:OutputRole ; rdfs:label "red" .
 ag:Green a ag:OutputRole ; rdfs:label "green" .
 ag:Blue a ag:OutputRole ; rdfs:label "blue" .
-ag:I2cData a ag:PinRole ; rdfs:label "I2C SDA" ;
-    rdfs:comment "Bidirectional, so neither an input nor an output role." .
+ag:BidirectionalRole a owl:Class ; rdfs:subClassOf ag:InputRole , ag:OutputRole ;
+    rdfs:label "Bidirectional role" ;
+    rdfs:comment "Driven and read on the same line. A subclass of BOTH, and being an output role is the load-bearing half: the rule that keeps a driven line off 34-39 asks whether the role is an output, so a line classified as neither slipped past it. SDA was declared a bare PinRole for exactly the tidy-sounding reason that it is 'neither an input nor an output' — which is true about direction and false about what the shape needs to know, namely whether the board ever drives it. It does, so it cannot sit on an input-only pin, and now nothing can say otherwise." .
+
+ag:I2cData a ag:BidirectionalRole ; rdfs:label "I2C SDA" .
 ag:I2cClock a ag:OutputRole ; rdfs:label "I2C SCL" .
+ag:OneWireData a ag:BidirectionalRole ; rdfs:label "one-wire data" ;
+    rdfs:comment "A single line carrying both directions in turn, as a DHT does: the board pulls it low to start a conversation and then releases it and listens. Same shape as SDA and the same trap — it looks like an input because almost all of the traffic is inbound." .
 
 #################  The peripherals actually on the bench  #################
 
@@ -153,7 +158,7 @@ ag:RgbLed a owl:Class ; rdfs:subClassOf ag:Peripheral ; rdfs:label "RGB LED" ;
 
 ag:TempHumiditySensor a owl:Class ; rdfs:subClassOf ag:Peripheral ;
     rdfs:label "Temperature and humidity sensor" ;
-    rdfs:comment "Reserved: the vocabulary is here so a world can state one before anything reads it. Nothing derives a capability from it yet." .
+    rdfs:comment "One device reporting TWO properties down one line, which is what makes it awkward: the model gives a sensor one sosa:observes and the runtime one reading per message, so a world can state this peripheral and wire it, but nothing polls it yet — see issue #51." .
 
 #################  Naming — stated, never derived  #################
 

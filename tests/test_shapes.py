@@ -305,6 +305,36 @@ ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio {gp
 """))
 
 
+@pytest.mark.parametrize("role", ["ag:OneWireData", "ag:I2cData"])
+@pytest.mark.parametrize("gpio", [34, 35, 39])
+def test_a_bidirectional_line_on_an_input_only_pin_is_refused(role, gpio):
+    """The same rule, for the lines that look like inputs and are not.
+
+    A DHT's data leg and an I2C SDA carry almost all their traffic inbound, so both read as
+    inputs — but the board must PULL EACH LOW to start a conversation, and 34-39 cannot pull
+    anything. Wired there, a DHT returns nothing but a timeout and an SDA hangs the bus.
+
+    This passed validation until `ag:BidirectionalRole` existed. `ag:I2cData` was declared a
+    bare `ag:PinRole` for the tidy-sounding reason that it is 'neither an input nor an output',
+    which is true about direction and false about the only thing the shape asks: whether the
+    board ever drives the line.
+    """
+    assert not _conforms(_wiring(f"""
+    ag:carries ag:air .
+ag:air a ag:TempHumiditySensor ; ag:localId "air" ; ag:pin [ ag:pinRole {role} ; ag:gpio {gpio} ] .
+"""))
+
+
+@pytest.mark.parametrize("gpio", [32, 33, 25, 4])
+def test_a_bidirectional_line_on_a_drivable_pin_is_accepted(gpio):
+    """The other half: any pin that can be driven will do, ADC membership included — a
+    one-wire line is digital, so ADC2 costs it nothing."""
+    assert _conforms(_wiring(f"""
+    ag:carries ag:air .
+ag:air a ag:TempHumiditySensor ; ag:localId "air" ; ag:pin [ ag:pinRole ag:OneWireData ; ag:gpio {gpio} ] .
+"""))
+
+
 @pytest.mark.parametrize("gpio", [-1, 40, 99])
 def test_a_gpio_off_the_board_is_refused(gpio):
     assert not _conforms(_wiring(f"""

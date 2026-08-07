@@ -20,6 +20,11 @@ from .influx_writer import InfluxWriter
 from .sensed_writer import SensedWriter
 
 
+def _short(uri: str) -> str:
+    """A term's local name, for a human reading a log line. Never used as an identifier."""
+    return uri.rstrip("#/").split("#")[-1].split("/")[-1]
+
+
 class Observations:
     """One agent's record of what it has observed. Held by whichever module does the observing."""
 
@@ -54,6 +59,19 @@ class Observations:
         `log` belongs to the calling module so a failure is attributed to the capability that
         was observing, not to this helper.
         """
+        # A reading is the agent's whole reason to be running, and until now taking one logged
+        # NOTHING on the happy path — only a cadence CHANGE said anything, and only when it
+        # changed. So an agent receiving a reading every ten seconds and an agent whose board
+        # had been silent for two days produced identical logs: none. Diagnosing the second
+        # meant reading Grafana, which is a poor place to learn that nothing is arriving.
+        #
+        # One line, at INFO, naming the instrument and the property. Both matter now that a
+        # subject can be watched by more than one sensor: "0.183" alone does not say whether
+        # that is soil or air.
+        verdict = self.agent.annotations(sensor.subject, sensor.observes, value)
+        log.info("%s: %s %.3f%s", sensor.local_id, _short(sensor.observes), value,
+                 "".join(f"  {k}={v}" for k, v in sorted(verdict.items())))
+
         try:
             self.influx.write_reading(sensor.subject_id, sensor.local_id, value)
         except Exception as exc:  # history is best-effort; never drop the reading over it
@@ -84,7 +102,7 @@ class Observations:
                 # and a listener that cannot tell them apart is worse off than one told nothing.
                 "property": sensor.observes,
                 "value": round(value, 3),
-                **self.agent.annotations(sensor.subject, sensor.observes, value),
+                **verdict,
             })
         # Counted after the writes, so a reading that failed both still counts as heard: the
         # sensor did deliver, and conflating "the board went quiet" with "the store refused" is
