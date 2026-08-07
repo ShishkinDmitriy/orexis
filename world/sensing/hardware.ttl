@@ -46,10 +46,11 @@ ag:moisture_sensor_fern a ag:CapacitiveMoistureProbe ;
     ag:rawDry 3200 ;
     ag:rawWet 1300 .
 
-# This board has no user LED of its own, so an external one says from across the room what the
-# agent makes of the pot. 25/26/27 are safe outputs — no strapping duty at boot, and their ADC2
-# membership costs nothing to a driven line. They are also RTC-capable, which is what lets a
-# colour be HELD through deep sleep rather than merely flashed while the board is awake.
+# This board has no user LED of its own, so an external one says what the agent makes of the pot.
+# 25/26/27 are safe outputs — no strapping duty at boot, and their ADC2 membership costs nothing
+# to a driven line. It is lit only while the board is AWAKE and dark through every sleep: an LED
+# is 5-15 mA against a ~10 uA sleep budget, so holding a colour would make the lamp cost three
+# orders of magnitude more than everything else this board does.
 ag:status_led_fern a ag:RgbLed ;
     ag:localId "status_led_fern" ;
     ag:model "KY-016 4-pin RGB LED (common cathode)" ;

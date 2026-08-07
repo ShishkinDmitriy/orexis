@@ -26,7 +26,6 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <esp_sleep.h>
-#include <driver/gpio.h>
 #include <string.h>   // strcmp, for the band names — Arduino.h usually pulls this in, and
                       // "usually" is not a thing to depend on across toolchain versions
 
@@ -78,23 +77,20 @@ static void led(bool r, bool g, bool b) {
 }
 
 static void ledBegin() {
-  // Release the pads first: if the previous cycle held a colour through deep sleep, the hold
-  // is still latched and digitalWrite would appear to do nothing at all.
-  //
-  // gpio_hold_* and NOT rtc_gpio_hold_*, which is the pairing that matters and which I got
-  // wrong first: rtc_gpio_hold_en applies to a pad brought up as an RTC IO through
-  // rtc_gpio_init. These are driven with pinMode/digitalWrite, i.e. through the digital IO
-  // mux, and the digital half of the API is what holds those. The two compile identically and
-  // the wrong one simply does not latch.
-  gpio_deep_sleep_hold_dis();
-  gpio_hold_dis((gpio_num_t)LED_RED_PIN);
-  gpio_hold_dis((gpio_num_t)LED_GREEN_PIN);
-  gpio_hold_dis((gpio_num_t)LED_BLUE_PIN);
   pinMode(LED_RED_PIN, OUTPUT);
   pinMode(LED_GREEN_PIN, OUTPUT);
   pinMode(LED_BLUE_PIN, OUTPUT);
   led(1, 1, 0); // amber: awake, and nobody has told me anything yet
 }
+
+// Dark for the whole sleep, which is nearly all of the time.
+//
+// An earlier version latched the colour across deep sleep so the state was readable at any
+// moment. It worked and it was the wrong trade: 5-15 mA against a ~10 uA sleep budget makes
+// the lamp three orders of magnitude more expensive than everything else this board does, to
+// show a number that only changes when a reading is taken anyway. The LED reports what is
+// happening WHILE it happens; between wakes there is nothing happening to report.
+static void ledOff() { led(0, 0, 0); }
 
 static void ledBlink(bool r, bool g, bool b, int times) {
   for (int i = 0; i < times; i++) {
@@ -112,24 +108,56 @@ static void ledBand(const char *band) {
   else                            led(1, 1, 0);   // a band this firmware does not know
 }
 
-// Hold the colour across deep sleep, so the state is readable at a glance rather than only
-// during the few seconds the board is awake. This COSTS the deep sleep: an LED is 5-15 mA
-// against a ~10 uA sleep budget, so on a battery node it would be the dominant drain by three
-// orders of magnitude. It is deliberate here because this board is on USB. Anything on a
-// battery should call led(0,0,0) instead and accept that the colour is only a flash.
-static void ledHoldThroughSleep() {
-  gpio_hold_en((gpio_num_t)LED_RED_PIN);
-  gpio_hold_en((gpio_num_t)LED_GREEN_PIN);
-  gpio_hold_en((gpio_num_t)LED_BLUE_PIN);
-  gpio_deep_sleep_hold_en();
-}
-
 #else
 static void ledBegin() {}
 static void ledBlink(bool, bool, bool, int) {}
 static void ledBand(const char *) {}
-static void ledHoldThroughSleep() {}
+static void ledOff() {}
 static void led(bool, bool, bool) {}
+#endif
+
+// ---------------------------------------------------------------------------------------------
+// The air sensor — SERIAL ONLY, deliberately.
+//
+// Nothing publishes these numbers yet and nothing should. One device reports two properties
+// down one line, and both the model (a sensor observes one property) and the runtime (one
+// reading per message, first sensor that owns the topic wins) assume one — so wiring it to MQTT
+// today would deliver temperature OR humidity and silently drop the other. That is the same
+// failure keying an observation by subject alone produced, and it is tracked as its own issue.
+//
+// So this exists to answer one question: is the sensor alive and are its numbers sane. It goes
+// where a person can read it and nowhere an agent can.
+// ---------------------------------------------------------------------------------------------
+#ifdef AIR_SENSOR_PIN
+#include <DHT.h>
+
+// The KY-015 breakout carries the pull-up, so the line needs nothing added.
+static DHT dht(AIR_SENSOR_PIN, DHT11);
+
+static void airBegin() { dht.begin(); }
+
+static void logAir() {
+  // Called AFTER the network is up on purpose: a DHT11 needs roughly a second from power-on
+  // before it will answer, and connecting has already spent several. Reading it first would
+  // mean sleeping for a second to no purpose on every single wake.
+  float c = dht.readTemperature();
+  float rh = dht.readHumidity();
+  if (isnan(c) || isnan(rh)) {
+    // Almost always the wiring rather than the part: a missing ground, or the data leg on a
+    // pin that cannot drive. The sensor answers with silence either way.
+    Serial.printf("air sensor on GPIO %d: no answer\n", AIR_SENSOR_PIN);
+    return;
+  }
+  // Humidity printed as a FRACTION as well as a percentage, because the fraction is the form
+  // it would take on the wire — and it is the form that makes the hazard obvious: 0.46 is
+  // indistinguishable from a soil moisture by inspection, and lands inside the bands agents
+  // hold. Nothing in the number says which it is; only the property does.
+  Serial.printf("air sensor: %.1f C, %.0f%% RH (%.3f as a fraction) — logged only, not published\n",
+                c, rh, rh / 100.0f);
+}
+#else
+static void airBegin() {}
+static void logAir() {}
 #endif
 
 static float readMoisture() {
@@ -150,7 +178,15 @@ static void publishMoisture() {
   char payload[96];
   float frac = readMoisture();
   snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"}", frac, SENSOR_ID);
-  mqtt.publish(MOISTURE_TOPIC, payload);
+  // Green the moment the reading is away: wifi up, broker happy, number sent. That is the whole
+  // of what this board is for, so it is the plain "all good" colour. A band may replace it a
+  // moment later, and OK is green too — the two agree, which is the point and not a collision.
+  //
+  // Red if the publish itself failed, which is a different fault from not connecting: the
+  // session is up and the broker took the message and did not accept it, usually an ACL that
+  // does not grant this topic.
+  bool sent = mqtt.publish(MOISTURE_TOPIC, payload);
+  led(!sent, sent, 0);
   // The raw ADC goes to the serial line and NOT on the wire. Calibration is a fact about this
   // board's wiring, not something any agent should reason about — an agent reads a 0..1
   // fraction and would have no business knowing an ADC exists. But you cannot set ADC_DRY and
@@ -256,10 +292,12 @@ static void connectMqtt() {
     // the broker should sleep and retry on its own clock, not hold the battery open.
     if (attempt >= MQTT_TRIES) {
       Serial.printf("giving up for now — sleeping %us and trying again\n", sleep_s);
-      // Held through the sleep, so the fault is still visible on a board that is now idle.
-      // WiFi worked and the broker refused us: a credential or an ACL problem, which wants a
-      // different person than a red LED does.
-      ledHoldThroughSleep();
+      // Three magenta blinks and then dark. WiFi worked and the broker refused us, which is a
+      // credential or an ACL problem and wants a different person than a red LED does. Blinked
+      // rather than left on: a lamp that stays lit through the sleep costs more current than
+      // the rest of the board put together, and the fault will still be here next wake.
+      ledBlink(1, 0, 1, 3);
+      ledOff();
       esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
       esp_deep_sleep_start();
     }
@@ -272,6 +310,7 @@ void setup() {
   delay(200); // let the USB serial attach, or the first lines are lost on a fresh boot
   analogReadResolution(12); // 0..4095
   ledBegin();
+  airBegin();
 
   // Say what this build actually is. Checking a board against the world is otherwise
   // guesswork, and the ids here must match genesis/<world>/world.ttl exactly.
@@ -286,6 +325,7 @@ void setup() {
 
   // 1. sense + publish
   publishMoisture();
+  logAir();  // serial only — see above
 
   // 2. listen briefly for the agent's cadence (a retained cmd is delivered on subscribe)
   unsigned long until = millis() + CMD_WAIT_MS;
@@ -294,7 +334,7 @@ void setup() {
   // 3. deep-sleep for the agent-set cadence, then the board wakes and repeats setup()
   Serial.printf("sleeping %us\n", sleep_s);
   mqtt.disconnect();
-  ledHoldThroughSleep(); // whatever colour the agent last asked for stays lit
+  ledOff(); // dark for the sleep — see ledOff()
   delay(50);
   esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
   esp_deep_sleep_start();
