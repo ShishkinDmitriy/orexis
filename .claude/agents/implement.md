@@ -34,10 +34,19 @@ origin/main..HEAD` and `git merge-base --is-ancestor origin/main HEAD`.
 else is in the tree — another agent's worktree, someone's work in progress, a generated file
 carrying a password.
 
-**You cannot answer a permission prompt.** `podman build`, `podman run`, `podman compose` and
-`podman exec` are deliberately not allowlisted. Do not attempt them: you will block silently until
-someone notices. Do the code, the docs and the gates that need no container, then say exactly what
-needs running and let the session that dispatched you do it. An agent once sat for an hour on this.
+**A worktree isolates the filesystem, not the machine.** There is one container runtime, one set of
+volumes and one broker per world on this host, shared with whoever dispatched you and with three
+live worlds. `podman compose up` in "your" world does not start a second copy — it REPLACES the
+running one, and `down -v` destroys belief bases that are not yours. An agent did exactly this
+once: it took the parent's simulation down to bring its own up, and neither had any way to notice.
+
+So containers are not forbidden, but they are shared. Prefer building and inspecting an image, and
+running the non-container gates. If a change genuinely needs a world brought up to prove it, say so
+and let the dispatching session do it — that session knows what else is running.
+
+**A long silence is not a hang.** An end-to-end run waits on publish intervals and cadence round
+trips; an hour of no output can be a correct proof in progress. Say what you are waiting for before
+you start waiting, so nobody has to guess.
 
 **A guard that has never failed is not a guard.** If you add a test or a shape, break the thing it
 protects and confirm it fails, then put it back. This project has twice found coverage that had
