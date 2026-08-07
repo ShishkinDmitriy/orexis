@@ -79,6 +79,19 @@ def test_present_peripherals_emit_their_pins():
     assert "#define AIR_SENSOR_PIN 32" in out
 
 
+def test_the_board_is_told_who_it_is_and_not_what_it_watches(board):
+    """A probe does not know which plant it sits in, and has no use for the answer.
+
+    It carried a PLANT_ID until the subject's local id was removed from this query — a leftover
+    from when topics were built as "sensors/<plant>/moisture" instead of read from
+    ag:readingTopic. Which subject a reading is ABOUT is the world's statement and the agent's
+    to apply; the board is handed exactly one identifier, its own, the same way an agent process
+    is. Asserted on the query rather than on the header, so it cannot come back through either.
+    """
+    assert board["sensorId"] == "moisture_sensor_fern"
+    assert "subjectId" not in board
+
+
 def test_a_pin_appears_exactly_once_across_the_whole_board(board):
     """The shapes forbid two legs on one GPIO in the graph; this checks the GENERATOR did not
     reintroduce a collision by mapping two different roles onto one #define."""

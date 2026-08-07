@@ -48,16 +48,15 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 # Every board that states which firmware it runs, with the one peripheral this generator knows
 # how to describe. A board carrying something it has no template for is reported, not guessed at.
 _BOARDS_Q = f"""
-SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?subjectId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
+SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?ledRed ?ledGreen ?ledBlue ?airPin
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?board a <{AG}Microcontroller> ; <{AG}localId> ?boardId ; <{AG}firmware> ?firmware ;
          <{AG}carries> ?sensor .
   ?sensor a <{AG}CapacitiveMoistureProbe> ; <{AG}localId> ?sensorId ;
-          <{AG}monitors> ?subject ; <{AG}readingTopic> ?readTopic ;
+          <{AG}readingTopic> ?readTopic ;
           <{AG}pin> [ <{AG}pinRole> <{AG}AnalogIn> ; <{AG}gpio> ?gpio ] ;
           <{AG}rawDry> ?rawDry ; <{AG}rawWet> ?rawWet .
-  ?subject <{AG}localId> ?subjectId .
   OPTIONAL {{ ?sensor <{AG}commandTopic> ?cmdTopic }}
   ?bus a <{AG}MessageBus> ; <{AG}brokerHost> ?host ; <{AG}brokerPort> ?port .
   OPTIONAL {{ ?pi a <{AG}ComputeHost> ; <{AG}lanAddress> ?lan }}
@@ -141,8 +140,11 @@ def render(world: str, row: dict, bounds: tuple[int, int]) -> str:
 #define MQTT_USER "{user}"
 #define MQTT_PASS "{password}"
 
-// What it measures, and for whom. The topics are the world's, not built from these names.
-#define PLANT_ID "{row['subjectId']}"
+// Who this instrument is. NOT what it is monitoring: a probe does not know which plant it sits
+// in, and has no use for the answer. Which subject a reading is ABOUT is the world's statement
+// and the agent's to apply — the board is handed one identifier, its own, exactly as an agent
+// process is. It used to carry a PLANT_ID, left over from when topics were built as
+// "sensors/<plant>/moisture" rather than read from ag:readingTopic.
 #define SENSOR_ID "{row['sensorId']}"
 #define MOISTURE_TOPIC "{row['readTopic']}"
 #define CMD_TOPIC "{row.get('cmdTopic', '')}"

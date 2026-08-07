@@ -69,31 +69,47 @@ static bool published = false;
 //
 // Dark except while something is being attempted or reported, and dark through the whole sleep.
 //
-// While connecting to the broker:
+//   one magenta   a broker attempt failed — one per attempt, up to MQTT_TRIES of them
+//   TWO green     a broker attempt got in; the wake is going to work
+//   one red       the agent says LOW: this plant is thirsty
+//   one blue      the agent says HIGH: wetter than it wants
+//   three red     never reached the wifi
+//   three magenta reached the wifi; the broker refused the connection or the publish
 //
-//   one magenta  a broker attempt failed — one per attempt, up to MQTT_TRIES of them
-//   one green    a broker attempt got in
+// Green is doubled so that a SINGLE blink always means the agent's verdict and never the
+// board's own progress. The two are separated in time by the whole publish, but they are the
+// two things you would be looking at the lamp for at once, and a lone green among lone reds
+// and blues invited reading it as a third band.
 //
-// and then, once, on the way to sleep:
+// A green and then nothing is the ordinary healthy wake: it worked, and nobody is worried. OK
+// is not a colour, because saying so a second later would only repeat the green — and a lamp
+// that repeats itself is one you stop reading.
 //
-//   one blink    the reading went out. Its COLOUR is the agent's verdict, which arrived on the
-//                retained command message: red LOW, blue HIGH, green OK or no verdict offered.
-//   three red    never reached the wifi
-//   three mag.   reached the wifi; the broker refused the connection or the publish
-//
-// The colour is not this board's opinion — it never computes a band. The count is: one means an
+// The colour is not this board's opinion; it never computes a band. The COUNT is: one means an
 // outcome, three means a fault, which is what keeps a thirsty plant (one red) from reading like
 // a board that never found the network (three red).
 // ---------------------------------------------------------------------------------------------
 #ifdef LED_RED_PIN
 
-// Common cathode: a leg HIGH lights it. If yours is common anode, every colour here comes out
-// as its complement — which is the visible symptom, and the fix is the world's `ag:model`
-// being wrong rather than this file.
+// Common cathode: current out of a leg lights it. If yours is common anode, every colour here
+// comes out as its complement — which is the visible symptom, and the fix is the world's
+// `ag:model` being wrong rather than this file.
+//
+// Driven at a fraction of full duty rather than hard on. A modern indicator LED at 3.3V through
+// a 220R is unpleasant to look at across a room, and this one sits on a windowsill rather than
+// in a rack. LED_BRIGHTNESS is firmware, not world: it is a property of how this code behaves,
+// not of what the board IS, so it is not generated. Raise it if the pot is in daylight.
+//
+// Red will still look brighter than green and blue at equal duty — its forward voltage is lower,
+// so more current flows. If that bothers you, split this into three constants.
+#ifndef LED_BRIGHTNESS
+#define LED_BRIGHTNESS 20   // of 255
+#endif
+
 static void led(bool r, bool g, bool b) {
-  digitalWrite(LED_RED_PIN, r);
-  digitalWrite(LED_GREEN_PIN, g);
-  digitalWrite(LED_BLUE_PIN, b);
+  analogWrite(LED_RED_PIN,   r ? LED_BRIGHTNESS : 0);
+  analogWrite(LED_GREEN_PIN, g ? LED_BRIGHTNESS : 0);
+  analogWrite(LED_BLUE_PIN,  b ? LED_BRIGHTNESS : 0);
 }
 
 static void ledOff() { led(0, 0, 0); }
@@ -104,12 +120,7 @@ static void ledOff() { led(0, 0, 0); }
 // describing the ORDINARY case, which is the one nobody needs telling about, and a lamp lit
 // during normal operation has no way left to mean "look at me". Associating is not a fault;
 // failing to associate is.
-static void ledBegin() {
-  pinMode(LED_RED_PIN, OUTPUT);
-  pinMode(LED_GREEN_PIN, OUTPUT);
-  pinMode(LED_BLUE_PIN, OUTPUT);
-  ledOff();
-}
+static void ledBegin() { ledOff(); }  // analogWrite attaches the pad itself
 
 static void ledBlink(bool r, bool g, bool b, int times) {
   for (int i = 0; i < times; i++) {
@@ -118,17 +129,19 @@ static void ledBlink(bool r, bool g, bool b, int times) {
   }
 }
 
-// What one wake ended up meaning. Green until something says otherwise, so a board that gets
-// all the way through with nobody's opinion about it still reports plainly that it worked.
-static bool okR = 0, okG = 1, okB = 0;
-
 // LOW / OK / HIGH are the agent's bands — a verdict about ITS pot against ITS OWN limits, which
-// is why the same number is LOW for a fern and OK for a succulent. The board only paints it,
-// and paints it once, on the way out.
+// is why the same number is LOW for a fern and OK for a succulent. The board only paints it.
+//
+// OK is deliberately NOT a colour. Getting in already blinked green, and blinking green again a
+// second later to say the plant is fine is the lamp repeating itself — which trains you to stop
+// reading it. Silence after the green IS "OK": the wake worked and nobody is worried.
+static bool haveBand = false;
+static bool bandR = 0, bandG = 0, bandB = 0;
+
 static void ledBand(const char *band) {
-  if      (!strcmp(band, "LOW"))  { okR = 1; okG = 0; okB = 0; }  // thirsty
-  else if (!strcmp(band, "HIGH")) { okR = 0; okG = 0; okB = 1; }  // wetter than it wants
-  else                            { okR = 0; okG = 1; okB = 0; }  // OK, or one we do not know
+  if      (!strcmp(band, "LOW"))  { haveBand = 1; bandR = 1; bandG = 0; bandB = 0; }
+  else if (!strcmp(band, "HIGH")) { haveBand = 1; bandR = 0; bandG = 0; bandB = 1; }
+  else                              haveBand = 0;  // OK, or a band this firmware cannot read
 }
 
 // One blink per broker attempt, as it happens. The exception to reporting only outcomes, and a
@@ -136,10 +149,10 @@ static void ledBand(const char *band) {
 // which is a long time for a board to look exactly like one that is asleep. While it is failing,
 // reaching the broker is not the ordinary case — it is the thing being watched.
 static void ledAttemptFailed() { ledBlink(1, 0, 1, 1); }
-static void ledAttemptOk()     { ledBlink(0, 1, 0, 1); }
+static void ledAttemptOk()     { ledBlink(0, 1, 0, 2); }
 
-// ONE blink: the wake worked. Its colour is the agent's verdict if one arrived, green if not.
-static void ledWorked() { ledBlink(okR, okG, okB, 1); }
+// ONE blink, and only when the agent said something worth adding: red thirsty, blue too wet.
+static void ledVerdict() { if (haveBand) ledBlink(bandR, bandG, bandB, 1); }
 
 // THREE blinks: it did not. The count is what separates a fault from a verdict, because LOW is
 // also red — one red blink is a thirsty plant reported correctly, three is a board that never
@@ -154,7 +167,7 @@ static void ledBegin() {}
 static void ledBand(const char *) {}
 static void ledAttemptFailed() {}
 static void ledAttemptOk() {}
-static void ledWorked() {}
+static void ledVerdict() {}
 static void ledFault(bool, bool, bool) {}
 static void ledOff() {}
 static void led(bool, bool, bool) {}
@@ -329,7 +342,7 @@ static const char *mqttError(int state) {
 }
 
 static bool connectMqtt() {
-  String clientId = String("agora-sensor-") + PLANT_ID + "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
+  String clientId = String("agora-sensor-") + SENSOR_ID + "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
   unsigned attempt = 0;
   while (!mqtt.connected()) {
     // The board connects AS ITSELF. The broker refuses anonymous clients and holds an ACL
@@ -352,8 +365,14 @@ static bool connectMqtt() {
       Serial.printf("giving up on the broker for this wake\n");
       return false;
     }
+    // NOTE: every exit from this function is inside the loop, which is why the compiler warns
+    // that control can reach the end — the one path it cannot rule out is the loop condition
+    // being false on entry, i.e. a session already up. That is not reachable today (the client
+    // is disconnected before every sleep), and falling off the end of a bool function is
+    // undefined behaviour rather than a tidy false, so it is answered explicitly below.
     delay(1000);
   }
+  return mqtt.connected();  // already up on entry: report what is actually true
 }
 
 void setup() {
@@ -365,9 +384,9 @@ void setup() {
 
   // Say what this build actually is. Checking a board against the world is otherwise
   // guesswork, and the ids here must match genesis/<world>/world.ttl exactly.
-  Serial.printf("\nagora moisture sensor\n  subject   %s\n  sensor    %s\n"
+  Serial.printf("\nagora moisture sensor\n  sensor    %s\n"
                 "  broker    %s:%d\n  publishes %s\n  listens   %s\n",
-                PLANT_ID, SENSOR_ID, MQTT_HOST, MQTT_PORT, MOISTURE_TOPIC, CMD_TOPIC);
+                SENSOR_ID, MQTT_HOST, MQTT_PORT, MOISTURE_TOPIC, CMD_TOPIC);
 
   // 1. read the instruments and say what they said. FIRST, and unconditionally: this needs no
   //    network, and the wakes where the network is missing are exactly the ones somebody is
@@ -398,7 +417,7 @@ void setup() {
   //    ordinary case has nothing left to mean "look at me".
   if (!network)        ledFault(1, 0, 0);  // three red: never reached the wifi
   else if (!published) ledFault(1, 0, 1);  // three magenta: no broker, or the publish refused
-  else                 ledWorked();        // one blink, coloured by the agent's verdict
+  else                 ledVerdict();       // silent unless the agent had something to add
   ledOff();
 
   // 4. deep-sleep for the agent-set cadence, then the board wakes and repeats setup()
