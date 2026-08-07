@@ -50,20 +50,33 @@ PubSubClient mqtt(wifi);
 #ifndef CMD_WAIT_MS
 #define CMD_WAIT_MS 1500        // listen window after publishing, to catch a retained cadence
 #endif
+#ifndef WIFI_TIMEOUT_MS
+#define WIFI_TIMEOUT_MS 20000   // stop holding the radio up for a network that is not there
+#endif
 
 uint32_t sleep_s = DEFAULT_SLEEP_S;
 
 static float lastRaw = 0.0f; // kept for the serial line: calibration needs the RAW number
+
+// Did this wake achieve the one thing it exists for. Read once, on the way to sleep — the lamp
+// reports an OUTCOME rather than narrating progress, so nothing lights until this is settled.
+static bool published = false;
 
 // ---------------------------------------------------------------------------------------------
 // The status LED. Compiled out entirely unless the world says this board carries one — a board
 // with no LED must not drive whatever GPIO 0 happens to be, since that is a strapping pin and
 // holding it would leave the board in bootloader mode at the next reset.
 //
-// The colour is NOT this board's opinion. It shows the agent's verdict, which arrives on the
-// same retained command message as the cadence, so a board waking from deep sleep is told what
-// its agent currently thinks before it does anything else. The board contributes only the
-// things the agent cannot know: that the wifi failed, that the broker refused it.
+// ONE signal per wake, at the end, and dark the rest of the time — including the whole sleep.
+//
+//   one blink    the reading went out. Its COLOUR is the agent's verdict, which arrived on the
+//                retained command message: red LOW, blue HIGH, green OK or no verdict offered.
+//   three red    never reached the wifi
+//   three mag.   reached the wifi; the broker refused the connection or the publish
+//
+// The colour is not this board's opinion — it never computes a band. The count is: one means an
+// outcome, three means a fault, which is what keeps a thirsty plant (one red) from reading like
+// a board that never found the network (three red).
 // ---------------------------------------------------------------------------------------------
 #ifdef LED_RED_PIN
 
@@ -76,42 +89,55 @@ static void led(bool r, bool g, bool b) {
   digitalWrite(LED_BLUE_PIN, b);
 }
 
+static void ledOff() { led(0, 0, 0); }
+
+// Dark, and dark is the resting state — not amber, not anything.
+//
+// The lamp says one thing per wake, at the end, when there is something to report. It used to
+// narrate: amber on boot, red flashing throughout the wifi association. Both were describing
+// the ORDINARY case, which is the one nobody needs telling about, and a lamp that is lit during
+// normal operation has no way left to mean "look at me". Associating is not a fault; failing to
+// associate is.
 static void ledBegin() {
   pinMode(LED_RED_PIN, OUTPUT);
   pinMode(LED_GREEN_PIN, OUTPUT);
   pinMode(LED_BLUE_PIN, OUTPUT);
-  led(1, 1, 0); // amber: awake, and nobody has told me anything yet
+  ledOff();
 }
-
-// Dark for the whole sleep, which is nearly all of the time.
-//
-// An earlier version latched the colour across deep sleep so the state was readable at any
-// moment. It worked and it was the wrong trade: 5-15 mA against a ~10 uA sleep budget makes
-// the lamp three orders of magnitude more expensive than everything else this board does, to
-// show a number that only changes when a reading is taken anyway. The LED reports what is
-// happening WHILE it happens; between wakes there is nothing happening to report.
-static void ledOff() { led(0, 0, 0); }
 
 static void ledBlink(bool r, bool g, bool b, int times) {
   for (int i = 0; i < times; i++) {
-    led(r, g, b); delay(120);
-    led(0, 0, 0); delay(120);
+    led(r, g, b); delay(140);
+    ledOff();     delay(140);
   }
 }
 
+// What one wake ended up meaning. Green until something says otherwise, so a board that gets
+// all the way through with nobody's opinion about it still reports plainly that it worked.
+static bool okR = 0, okG = 1, okB = 0;
+
 // LOW / OK / HIGH are the agent's bands — a verdict about ITS pot against ITS OWN limits, which
-// is why the same number is LOW for a fern and OK for a succulent. The board only paints it.
+// is why the same number is LOW for a fern and OK for a succulent. The board only paints it,
+// and paints it once, on the way out.
 static void ledBand(const char *band) {
-  if      (!strcmp(band, "LOW"))  led(1, 0, 0);   // thirsty
-  else if (!strcmp(band, "OK"))   led(0, 1, 0);
-  else if (!strcmp(band, "HIGH")) led(0, 0, 1);   // wetter than it wants
-  else                            led(1, 1, 0);   // a band this firmware does not know
+  if      (!strcmp(band, "LOW"))  { okR = 1; okG = 0; okB = 0; }  // thirsty
+  else if (!strcmp(band, "HIGH")) { okR = 0; okG = 0; okB = 1; }  // wetter than it wants
+  else                            { okR = 0; okG = 1; okB = 0; }  // OK, or one we do not know
 }
+
+// ONE blink: the wake worked. Its colour is the agent's verdict if one arrived, green if not.
+static void ledWorked() { ledBlink(okR, okG, okB, 1); }
+
+// THREE blinks: it did not. The count is what separates a fault from a verdict, because LOW is
+// also red — one red blink is a thirsty plant reported correctly, three is a board that never
+// reached the wifi, and those must not be confusable from across the room.
+static void ledFault(bool r, bool g, bool b) { ledBlink(r, g, b, 3); }
 
 #else
 static void ledBegin() {}
-static void ledBlink(bool, bool, bool, int) {}
 static void ledBand(const char *) {}
+static void ledWorked() {}
+static void ledFault(bool, bool, bool) {}
 static void ledOff() {}
 static void led(bool, bool, bool) {}
 #endif
@@ -178,15 +204,7 @@ static void publishMoisture() {
   char payload[96];
   float frac = readMoisture();
   snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"}", frac, SENSOR_ID);
-  // Green the moment the reading is away: wifi up, broker happy, number sent. That is the whole
-  // of what this board is for, so it is the plain "all good" colour. A band may replace it a
-  // moment later, and OK is green too — the two agree, which is the point and not a collision.
-  //
-  // Red if the publish itself failed, which is a different fault from not connecting: the
-  // session is up and the broker took the message and did not accept it, usually an ACL that
-  // does not grant this topic.
-  bool sent = mqtt.publish(MOISTURE_TOPIC, payload);
-  led(!sent, sent, 0);
+  published = mqtt.publish(MOISTURE_TOPIC, payload);
   // The raw ADC goes to the serial line and NOT on the wire. Calibration is a fact about this
   // board's wiring, not something any agent should reason about — an agent reads a 0..1
   // fraction and would have no business knowing an ADC exists. But you cannot set ADC_DRY and
@@ -236,10 +254,19 @@ static void connectWifi() {
   Serial.print("WiFi");
   uint32_t began = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    // Red while trying. A board stuck here is otherwise indistinguishable from one asleep, and
-    // "stuck associating" is the single most common failure on this bench — see the −80 dBm.
-    ledBlink(1, 0, 0, 1);
-    delay(60);
+    // Bounded, which it was not. The loop had no exit but success, so a board out of range sat
+    // here with the radio up forever — the most expensive state it can be in, and the one it
+    // would reach precisely when it could least afford it. It also meant "wifi did not
+    // connect" was not an outcome anything could report, LED or otherwise.
+    if (millis() - began > WIFI_TIMEOUT_MS) {
+      Serial.printf("\nno wifi after %ums — sleeping %us and trying again\n",
+                    millis() - began, sleep_s);
+      ledFault(1, 0, 0); // three red: never reached the network
+      ledOff();
+      esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
+      esp_deep_sleep_start();
+    }
+    delay(300);
     Serial.print(".");
   }
   int rssi = WiFi.RSSI();
@@ -283,20 +310,13 @@ static void connectMqtt() {
     }
     Serial.printf("MQTT %s:%d attempt %u failed (state %d): %s\n",
                   MQTT_HOST, MQTT_PORT, ++attempt, mqtt.state(), mqttError(mqtt.state()));
-    // Magenta from the FIRST failure, not from the last. It used to light only once the board
-    // gave up, which is ten attempts and — with PubSubClient's socket timeout on an
-    // unreachable broker — can be minutes of a board that looks perfectly fine. The whole
-    // reason to have a lamp is to see the fault while it is happening.
-    led(1, 0, 1);
     // Give up eventually rather than spinning on a wall forever: a board that cannot reach
     // the broker should sleep and retry on its own clock, not hold the battery open.
     if (attempt >= MQTT_TRIES) {
       Serial.printf("giving up for now — sleeping %us and trying again\n", sleep_s);
-      // Three magenta blinks and then dark. WiFi worked and the broker refused us, which is a
-      // credential or an ACL problem and wants a different person than a red LED does. Blinked
-      // rather than left on: a lamp that stays lit through the sleep costs more current than
-      // the rest of the board put together, and the fault will still be here next wake.
-      ledBlink(1, 0, 1, 3);
+      // Three magenta: wifi worked and the broker refused us, which is a credential or an ACL
+      // problem and wants a different person than a red light does.
+      ledFault(1, 0, 1);
       ledOff();
       esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
       esp_deep_sleep_start();
@@ -331,10 +351,17 @@ void setup() {
   unsigned long until = millis() + CMD_WAIT_MS;
   while (millis() < until) mqtt.loop();
 
-  // 3. deep-sleep for the agent-set cadence, then the board wakes and repeats setup()
+  // 3. say how it went, once, and sleep. Everything before this point is silent: a lamp that
+  //    narrates the ordinary case has nothing left to mean "look at me".
+  //      one blink   it worked, coloured by the agent's verdict (green if it offered none)
+  //      three red   never reached the wifi
+  //      three mag.  reached the wifi, the broker would not have us, or refused the publish
+  published ? ledWorked() : ledFault(1, 0, 1);
+  ledOff();
+
+  // 4. deep-sleep for the agent-set cadence, then the board wakes and repeats setup()
   Serial.printf("sleeping %us\n", sleep_s);
   mqtt.disconnect();
-  ledOff(); // dark for the sleep — see ledOff()
   delay(50);
   esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
   esp_deep_sleep_start();
