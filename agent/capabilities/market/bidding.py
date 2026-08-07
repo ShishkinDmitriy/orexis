@@ -150,9 +150,29 @@ class BiddingModule(Module):
         if self._deadline:
             self._deadline.stop()
         if self.pending:
-            self.log.info("round %s: my sensor did not answer in time — sitting out",
-                          self.pending["round_id"])
+            self.log.info("round %s: sitting out — %s", self.pending["round_id"], self._why_blind())
             self.pending = None
+
+    def _why_blind(self) -> str:
+        """Not knowing and being broken are different, and were reported identically.
+
+        "my sensor did not answer in time" was said whenever a round closed without a reading —
+        including when the board was simply asleep on the cadence this agent itself set. A real
+        failure then reads exactly like the ordinary case, which is how a real failure gets
+        ignored.
+        """
+        perception = self.agent.provider(PERCEPTION)
+        reading = self.agent.beliefs.current_reading(self.me.acts_for)
+        if reading is None:
+            return "no reading yet from my sensor"
+        if perception is None:
+            return "nothing here perceives"
+        overdue_after = perception.stale_after_s(self.me.acts_for)
+        if reading.is_fresh(overdue_after):
+            return (f"my sensor is asleep and answered {reading.age_s():.0f}s ago; "
+                    f"it is not due for {overdue_after}s")
+        return (f"my sensor has not reported in {reading.age_s():.0f}s, past the {overdue_after}s "
+                f"I allow for the cadence I set — it has gone quiet")
 
     def submit(self, moisture: float) -> None:
         rnd, self.pending = self.pending, None

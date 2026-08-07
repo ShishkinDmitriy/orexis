@@ -31,13 +31,21 @@ class SubscribingBeliefs:
 
     fast_sleep_s: int
     slow_sleep_s: int
-    max_age_s: int
+    # Not an absolute age. This agent CHOOSES the interval, so staleness means "did not report
+    # within the interval I asked for, plus this much slack" — a board's wake time and a late
+    # wifi association. An absolute limit would contradict the agent's own instruction: it
+    # cannot both decide that 600s between looks is acceptable and refuse a 120s-old number.
+    grace_s: int
 
 
 @dataclass(frozen=True)
 class ListeningBeliefs:
-    """ag:Listening — only the freshness rule. There is no interval to hold: the hardware
-    keeps its own clock, so requiring one would be requiring a fiction."""
+    """ag:Listening — only the freshness rule, and here it IS an absolute.
+
+    The device keeps its own clock and takes no orders, so there is no interval for the agent to
+    be relative to. All it can state is how long it will wait before deciding the thing has gone
+    quiet. That asymmetry with ag:Subscribing is the point: the two capabilities differ in who
+    holds the clock, and the freshness rule differs the same way."""
 
     max_age_s: int
 
@@ -48,7 +56,7 @@ SUBSCRIBING_BLOCK = Block(
     terms={
         "fast_sleep_s": "fastSleepS",
         "slow_sleep_s": "slowSleepS",
-        "max_age_s": "maxReadingAgeS",
+        "grace_s": "readingGraceS",
     },
 )
 
