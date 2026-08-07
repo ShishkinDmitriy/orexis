@@ -14,7 +14,23 @@
       "Bash(podman volume inspect *)",
       "Bash(.venv/bin/agora-validate *)",
       "Bash(.venv/bin/pytest tests *)",
-      "Bash(./tools/validate-okf.sh *)"
+      "Bash(./tools/validate-okf.sh *)",
+      "Bash(lint-imports)",
+      "Bash(.venv/bin/lint-imports)",
+      "Bash(git switch *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git rebase *)",
+      "Bash(git stash *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr edit *)",
+      "Bash(gh issue create *)",
+      "Bash(gh issue edit *)",
+      "Bash(gh issue close *)"
     ]
   }
 }

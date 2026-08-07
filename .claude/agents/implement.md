@@ -24,6 +24,13 @@ Run them as separate bare commands. Wrapping them in `cd … &&`, a `for` loop o
 permission allowlist, and every one of them will then stop and wait for a human who may not be
 there.
 
+**Edit files with the editing tools, not with an interpreter.** `python3 - <<PY` and `sed -i` are
+arbitrary code execution, so they can never be allowlisted and every one of them stops and waits.
+The allowlist covers the gates and the whole `git`/`gh pr` path deliberately, so a change that is
+only code, tests and knowledge can go from branch to open PR without a human in the loop. What it
+does not cover — containers, `agora-*` generators, `mosquitto_pub`, `pytest infra` — is what
+touches the shared bench, and stopping there is the point rather than an obstacle.
+
 # Four things learned the hard way
 
 **Check your base before you run anything.** If your branch predates a merge, you will test code
