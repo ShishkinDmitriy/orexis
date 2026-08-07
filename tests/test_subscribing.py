@@ -126,3 +126,87 @@ def test_a_malformed_reading_changes_nothing(fern):
     fern.deliver(sensor_of(fern).reading_topic, {"sensor": "x"})  # no value
     assert cadences(fern) == []
     assert fern.beliefs.current_reading(fern.me.acts_for) is None
+
+
+# --- one agent, two sensors, two clocks --------------------------------------
+
+
+def _two_sensor_world(tmp_path):
+    """A fern watched by a scheduled board AND a push one, which no shipped world does.
+
+    The combination is unexercised rather than untested by oversight — every world here wires one
+    sensor per agent — which is exactly why the modules could take each other's sensors unnoticed.
+    """
+    import shutil
+
+    from agent import genesis
+
+    src = genesis.world_dir("sensing")
+    dst = tmp_path / "two-clocks"
+    shutil.copytree(src, dst)
+    w = dst / "world.ttl"
+    s = w.read_text()
+    s = s.replace(
+        "ag:fern_agent a ag:Agent ;",
+        'ag:chatter_fern a ag:Sensor ;\n'
+        '    ag:localId "chatter_fern" ;\n'
+        '    ag:onBus ag:local_bus ;\n'
+        '    ag:senseMode ag:Push ;\n'          # keeps its own clock, takes no orders
+        "    ag:monitors ag:fern ;\n"
+        "    sosa:observes ag:SoilMoisture ;\n"
+        '    ag:readingTopic "sensors/chatter_fern/reading" .\n\n'
+        "ag:fern_agent a ag:Agent ;",
+    )
+    s = s.replace("ag:polls ag:moisture_sensor_fern ;",
+                  "ag:polls ag:moisture_sensor_fern , ag:chatter_fern ;")
+    w.write_text(s)
+    (dst / "hardware.ttl").unlink(missing_ok=True)   # the stand describes one board, not this
+
+    # Gaining a push sensor means gaining ag:Listening, and that capability asks for a belief the
+    # agent did not need before. The refusal to start without it is the self-check working, so
+    # the world has to author it — exactly as a sovereign would when adding such a device.
+    b = dst / "beliefs" / "fern.ttl"
+    b.write_text(b.read_text().replace(
+        "ag:readingGraceS", "ag:maxReadingAgeS 300 ;\n    ag:readingGraceS", 1))
+    return dst
+
+
+def _agent_on(world_path, monkeypatch):
+    """Built the way an agent builds itself, from a world that is not one of the ratified three."""
+    from agent import genesis
+    from agent.store import Store
+
+    st = Store()
+    genesis.refresh_public(st, world_path)
+    genesis.birth(st, world_path, "fern")
+    return build_agent("fern", st=st, monkeypatch=monkeypatch)
+
+
+def test_each_module_takes_only_the_sensors_it_is_for(monkeypatch, tmp_path):
+    """The derivation splits the capabilities; the runtime must split the sensors the same way.
+
+    It did not. Both modules took every sensor, and since modules are ordered by
+    sorted(capabilities), ag:Listening claimed the scheduled board too — and listening never
+    re-aims, so its cadence was silently never set again.
+    """
+    agent = _agent_on(_two_sensor_world(tmp_path), monkeypatch)
+
+    by_name = {m.name: m for m in agent.modules}
+    assert {"subscribing", "listening"} <= set(by_name), "one of each mode should be derived"
+
+    assert [s.local_id for s in by_name["subscribing"].sensors] == ["moisture_sensor_fern"]
+    assert [s.local_id for s in by_name["listening"].sensors] == ["chatter_fern"]
+
+
+def test_the_scheduled_board_is_still_aimed_when_a_push_sensor_shares_the_agent(
+    monkeypatch, tmp_path
+):
+    """The bug, stated as behaviour: a cadence must still reach the board that takes one."""
+    agent = _agent_on(_two_sensor_world(tmp_path), monkeypatch)
+
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+
+    commanded = [t for t in agent.sent.topics() if t.endswith("/command")]
+    assert commanded == ["sensors/moisture_sensor_fern/command"], (
+        "the scheduled board must be re-aimed, and the push one never commanded"
+    )

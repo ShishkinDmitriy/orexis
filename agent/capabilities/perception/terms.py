@@ -17,3 +17,11 @@ PERCEPTION = term("PerceptionCapability")
 POLLING = term("Polling")  # the agent asks, each time — RESERVED, nothing implements it yet
 SUBSCRIBING = term("Subscribing")  # the agent states an interval; the device keeps to it
 LISTENING = term("Listening")  # the device announces on its own clock; the agent records
+
+# The other end of the same axis: what a DEVICE is, from which the capability above is derived.
+# A module names the mode it serves so it can take only the sensors it is actually for — the
+# pairing is stated in rules.ru as well, and the alternative is introspecting a SPARQL update to
+# recover it, which is worse. Both are T-Box terms, which the first rule permits in code.
+PULL = term("Pull")            # answers when asked — the unbuilt ag:Polling would serve it
+SCHEDULED = term("Scheduled")  # keeps an interval it is given -> ag:Subscribing
+PUSH = term("Push")            # keeps its own clock, takes no orders -> ag:Listening

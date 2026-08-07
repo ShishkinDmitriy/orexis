@@ -27,7 +27,7 @@ the right sensor and each cadence to its own command topic.
 | same mode, different subjects | **works**, as above |
 | same mode, same subject, same property | works; they share one record, last writer wins |
 | same mode, same subject, **different property** | **broken** — see below |
-| **different modes** | **broken** differently — see below |
+| **different modes** | **fixed** — see below |
 
 The mode is not what breaks. Both failures are triggered by the same event: giving one subject a
 *second kind* of sensor.
@@ -83,8 +83,19 @@ quieter. Modules are ordered by `sorted(capabilities)`, `ag:Listening` sorts bef
 cadence is never re-aimed**. The board keeps whatever interval it last had, indefinitely. In the
 other direction, subscribing publishes `{"sleep_s": N}` at a push device that takes no orders.
 
-The root cause is one line of absence: `Sensor` carries no sense mode. `_sensors_q` never selects
-`ag:senseMode`, so the runtime cannot partition what the derivation already separated.
+The root cause was one line of absence: `Sensor` carried no sense mode. `_sensors_q` never selected
+`ag:senseMode`, so the runtime could not partition what the derivation already separated. It does
+now, and each module declares the mode it serves beside the capability it already declares.
+
+**And the combination was not merely unhandled — it was unvalidatable.** Two shapes, each written
+for a pure agent, contradicted each other on a mixed one: the subscribing shape demanded an
+interval and the listening shape forbade it. So a perfectly ordinary rig — a plant with a scheduled
+moisture probe and a push thermometer — could not be expressed at all, and nothing said so. The
+prohibition was an accident of two rules meeting, not a decision anyone made.
+
+The listening prohibition now applies only to an agent that listens **and does not subscribe**,
+which is what it always meant. A sensor's mode is a fact about the device; the agent's capabilities
+are derived from the sensors it holds; and holding one kind never forbids holding another.
 
 **The fix**: select it, carry it on `Sensor`, and have each module declare the mode it serves —
 `SENSE_MODE` beside the `CAPABILITY` it already declares — and take only those sensors. That
