@@ -14,11 +14,11 @@ form when a resource becomes contested and clear away when it doesn't.
 
 # When it opens — condenses out of scarcity
 
-No scarcity, no auction. If supply ≥ demand, the [supplier](/domain/supplier.md) just
-**dispenses** (subject to the [constitution](/domain/constitution.md)). A round opens only
-when **demand exceeds available supply at/above the reserve** — the resource becomes
-*contested*. The trigger is always the same event, *excess demand crosses above zero*, moved
-by one of four shocks:
+**The design**: no scarcity, no auction. If supply ≥ demand, the
+[supplier](/domain/supplier.md) just **dispenses** (subject to the
+[constitution](/domain/constitution.md)). A round opens only when **demand exceeds available
+supply at/above the reserve** — the resource becomes *contested*. The trigger is always the same
+event, *excess demand crosses above zero*, moved by one of four shocks:
 
 - **Demand shock** — a consumer crosses into need (a plant hits `:LOW`).
 - **Supply shock** — available quantity changes (refill / delivery); triggers *only if*
@@ -26,6 +26,14 @@ by one of four shocks:
 - **Budget shock** — the allowance is minted; previously-**broke** agents can now bid, so
   latent demand activates. See [wallet](/domain/wallet.md).
 - **Belief shock** — an attested belief shifts valuations (rain forecast attested → re-bid).
+
+**What is built** is the demand shock and nothing else, and it is a weaker trigger than the
+above describes. A round opens when one agent announces `LOW` — a **band**, not a quantity —
+and the host cannot compare demand to supply at that moment because demand is private until
+bids are in. So "excess demand crosses above zero" is not what fires, and there is no dispense
+path: every round competes on price, including the ones where nothing turned out to be scarce.
+Why the host is deliberately blind to quantity beforehand, and what the gap costs, is in
+[the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md).
 
 # A market is a lot, not a property
 

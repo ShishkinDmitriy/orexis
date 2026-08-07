@@ -24,6 +24,7 @@ change something, to check you're not welding shut a planned extension.
 
 * [single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md) - One wallet for water and compute; thinking costs, so bounded rationality is priced in.
 * [strategic-supplier](/decisions/strategic-supplier.md) - The supplier is a genuine seller with costs and a reserve price (Design B), not a stake-free utility.
+* [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md) - A round is triggered by a band and sized by a fixed host belief, so its size has nothing to do with what anyone needs — the host is deliberately blind to quantity until bids are in. Measured: half the lot can be wanted by agents none of whom can convene a round.
 * [clearing-as-validator](/decisions/clearing-as-validator.md) - The scarce side runs the auction; clearing is a thin stake-free notary that checks integrity and co-signs the trade before settlement.
 
 # Belief base
