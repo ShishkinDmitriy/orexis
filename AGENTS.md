@@ -64,6 +64,16 @@ misconfigured agent on the same topics as the real one. Also: **capabilities are
 declared.** `world.ttl` must
 not contain `ag:hasCapability` — seeding computes it from the wiring.
 
+## Start by reading the open issues
+
+`gh issue list`. What is known to be wrong is tracked there, and several of the sharper questions
+about this project are already answered in one. Re-deriving a known defect is waste; discovering
+that your question is a recorded seam is a real answer.
+
+Two roles are defined in `.claude/agents/` — `deliberate` for thinking a question through and
+writing down the outcome, `implement` for carrying out something already decided. They say what a
+role does; this file says what is true of the project, and it wins wherever they seem to disagree.
+
 ## Unfinished work: an issue is a debt, a seam is a decision
 
 Three places can describe work that is not done, and they must not overlap.
