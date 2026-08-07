@@ -73,6 +73,24 @@ class BiddingModule(Module):
         self.won_l = 0.0
         self.pending: dict | None = None  # a round I have been asked to answer
         self._deadline: Timer | None = None
+        # Which property each of my markets is about. Refused at boot rather than defaulted:
+        # a bidder that cannot name its property would have to bid on whichever reading of its
+        # subject arrived last, which is precisely the confusion this is here to end. An agent
+        # that refuses to start is a visible fault; one bidding on a temperature is not.
+        blank = [m.local_id for m in self.me.markets if not m.relieves]
+        if blank:
+            raise RuntimeError(
+                f"{agent.id} bids in {', '.join(blank)} but nothing says which observable "
+                f"property that market's resource relieves — the domain ontology should state "
+                f"ag:relieves on the resource's class")
+
+    def _relieved_by(self, market) -> str:
+        """The property this market's resource acts on — what a bid here is a bid about."""
+        return market.relieves
+
+    @property
+    def _my_properties(self) -> frozenset[str]:
+        return frozenset(m.relieves for m in self.me.markets)
 
     def stop(self) -> None:
         if self._deadline:
@@ -97,18 +115,27 @@ class BiddingModule(Module):
 
     # --- what I make of a reading: the part only a stakeholder can supply ---
 
-    def annotate(self, subject_uri: str, value: float) -> dict:
+    def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
+        """My stake is in one property of one subject. Both have to match.
+
+        The property test is the new half. My band is a band of the thing my market relieves;
+        handed a reading of anything else about the same subject I hold no opinion, and saying
+        so is the difference between silence and a confident wrong verdict.
+        """
+        return subject_uri == self.me.acts_for and observed_property in self._my_properties
+
+    def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
         """My verdict on my own subject, for my agent's public announcement.
 
         A band and never a number: the host learns that I am in trouble, not how wet I am.
         """
-        if subject_uri != self.me.acts_for:
+        if not self._is_mine(subject_uri, observed_property):
             return {}
         return {"band": self.beliefs.band(value)}
 
-    def urgency(self, subject_uri: str, value: float) -> float | None:
+    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
         """How close this puts me to my floor. Perception uses it to set its cadence."""
-        if subject_uri != self.me.acts_for:
+        if not self._is_mine(subject_uri, observed_property):
             return None
         return self.beliefs.urgency(value)
 
@@ -131,7 +158,7 @@ class BiddingModule(Module):
         perception.sense_now()  # a listening agent cannot, and simply does not
 
         # If something current is already in hand, answer now; otherwise wait for the sensor.
-        reading = perception.fresh_reading(self.me.acts_for)
+        reading = perception.fresh_reading(self.me.acts_for, self._relieved_by(market))
         if reading is not None:
             self.submit(reading.value)
             return
@@ -141,19 +168,27 @@ class BiddingModule(Module):
         self._deadline = Timer(window, self.give_up)
         self._deadline.start()
 
-    def on_reading_recorded(self, subject_uri: str, value: float) -> None:
-        """The look I asked for came back. Now I can bid on it."""
-        if self.pending and subject_uri == self.me.acts_for:
-            self.submit(value)
+    def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
+        """The look I asked for came back. Now I can bid on it — if it is the one I asked for.
+
+        Matching on the subject alone meant that on a pot with two sensors, whichever reported
+        first won the race, and a temperature could be submitted as a bid on soil moisture.
+        """
+        if not self.pending or subject_uri != self.me.acts_for:
+            return
+        if observed_property != self._relieved_by(self.pending["market"]):
+            return
+        self.submit(value)
 
     def give_up(self) -> None:
         if self._deadline:
             self._deadline.stop()
         if self.pending:
-            self.log.info("round %s: sitting out — %s", self.pending["round_id"], self._why_blind())
+            self.log.info("round %s: sitting out — %s", self.pending["round_id"],
+                          self._why_blind(self.pending["market"]))
             self.pending = None
 
-    def _why_blind(self) -> str:
+    def _why_blind(self, market) -> str:
         """Not knowing and being broken are different, and were reported identically.
 
         "my sensor did not answer in time" was said whenever a round closed without a reading —
@@ -162,12 +197,17 @@ class BiddingModule(Module):
         ignored.
         """
         perception = self.agent.provider(PERCEPTION)
-        reading = self.agent.beliefs.current_reading(self.me.acts_for)
+        # The market is passed rather than read from `self.pending`, which is where it came from
+        # briefly and wrongly: this is called while giving up, and a state that is about to be
+        # cleared is a poor thing to depend on. It also says out loud that the answer is about
+        # ONE market's property — a bidder in two is blind in each for its own reasons.
+        prop = self._relieved_by(market)
+        reading = self.agent.beliefs.current_reading(self.me.acts_for, prop)
         if reading is None:
             return "no reading yet from my sensor"
         if perception is None:
             return "nothing here perceives"
-        overdue_after = perception.stale_after_s(self.me.acts_for)
+        overdue_after = perception.stale_after_s(self.me.acts_for, prop)
         if reading.is_fresh(overdue_after):
             return (f"my sensor is asleep and answered {reading.age_s():.0f}s ago; "
                     f"it is not due for {overdue_after}s")

@@ -13,8 +13,13 @@
 ag:Plant a owl:Class ; rdfs:subClassOf sosa:FeatureOfInterest ; rdfs:label "Plant" ;
     rdfs:comment "The physical thing sensed and watered. It has no stake — its agent does." .
 ag:WaterSource a owl:Class ; rdfs:label "Water source" ;
-    rdfs:comment "What a supplier dispenses; the plumbing node a market forms around." .
+    rdfs:comment "What a supplier dispenses; the plumbing node a market forms around." ;
+    ag:relieves ag:SoilMoisture .
 ag:SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" .
+ag:AirTemperature a sosa:ObservableProperty ; rdfs:label "Air temperature" ;
+    rdfs:comment "Sensed about a plant, and allocated to nobody — no market relieves it, so no agent bids on it. It is here because a second property of the same pot is what makes an observation's key matter: the temp/humidity board on the bench observes this, and the water market must not read it as dryness." .
+ag:AirHumidity a sosa:ObservableProperty ; rdfs:label "Air humidity" ;
+    rdfs:comment "The other half of that board, and the more dangerous half: it is a FRACTION, so its readings land in the same 0-1 range as soil moisture and inside the bands agents hold. A temperature mistaken for moisture reads as absurdly wet and is merely ignored; a humidity mistaken for moisture reads as a plausible, actionable dryness and gets bid on. Nothing in the number says which it is — only the property does." .
 
 ag:servedBy a owl:ObjectProperty ; rdfs:domain ag:Plant ; rdfs:range ag:WaterSource ;
     rdfs:label "served by" ;

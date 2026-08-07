@@ -13,7 +13,10 @@ from agent.beliefs import BeliefError, Beliefs, Reading
 from agent.capabilities.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
 from agent.capabilities.perception.beliefs import SUBSCRIBING_BLOCK
 
+from conftest import MOISTURE, TEMPERATURE
+
 FERN = "http://example.org/agora#fern_agent"
+FERN_URI = "http://example.org/agora#fern"  # the plant, not the agent that acts for it
 SUCCULENT = "http://example.org/agora#succulent_agent"
 SUPPLIER = "http://example.org/agora#supplier"
 
@@ -116,12 +119,32 @@ def _reading(age_s):
 
 def test_reads_its_subject(query_with_readings):
     b = Beliefs(query_with_readings({"fern": 0.18}), "fern", FERN)
-    reading = b.current_reading("http://example.org/agora#fern")
+    reading = b.current_reading("http://example.org/agora#fern", MOISTURE)
     assert reading.value == 0.18 and reading.is_fresh(120)
 
 
 def test_no_reading_yet_is_none(fern):
-    assert fern.current_reading("http://example.org/agora#fern") is None
+    assert fern.current_reading("http://example.org/agora#fern", MOISTURE) is None
+
+
+def test_two_properties_of_one_subject_both_survive(query_with_readings):
+    """The defect, stated as a test: a pot with a probe and a thermometer.
+
+    Keyed by subject alone, these two took turns destroying each other's record — and the loss
+    was the smaller half, because a lookup returned whichever wrote last. Asking for moisture
+    could hand back 21.0, a plausible number in the wrong unit that a market would act on.
+    """
+    b = Beliefs(query_with_readings({("fern", MOISTURE): 0.18,
+                                     ("fern", TEMPERATURE): 21.0}), "fern", FERN)
+    assert b.current_reading(FERN_URI, MOISTURE).value == 0.18
+    assert b.current_reading(FERN_URI, TEMPERATURE).value == 21.0
+
+
+def test_a_property_nothing_has_read_is_none_not_the_other_one(query_with_readings):
+    """The substitution, guarded from the other side. Silence must not be answered with a
+    number that happens to be about the same pot."""
+    b = Beliefs(query_with_readings({("fern", TEMPERATURE): 21.0}), "fern", FERN)
+    assert b.current_reading(FERN_URI, MOISTURE) is None
 
 
 def test_stale_reading_is_not_fresh():

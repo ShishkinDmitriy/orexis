@@ -36,7 +36,7 @@ and took a bespoke script to get. An agent knows all of it directly and was not 
 
 | | |
 |---|---|
-| `belief_triples`, `belief_bytes` | **expected to be flat.** `sensed_writer` deletes before it inserts, so an agent holds one current observation per subject however long it runs. A rising line means something started appending, and that is the failure this number exists to catch. |
+| `belief_triples`, `belief_bytes` | **expected to be flat.** `sensed_writer` deletes before it inserts, so an agent holds one current observation per subject *and property* however long it runs — a fixed number, set by its wiring. A rising line means something started appending, and that is the failure this number exists to catch. (`belief_bytes` is flat only in principle; see [#45](https://github.com/ShishkinDmitriy/agora/issues/45) — RocksDB grows on disk while the triple count does not move.) |
 | `reading_age_s` | per sensor, seconds since it last delivered. Absent until it has delivered once. |
 | `readings_total` | per sensor, since boot. Zero is the "this board has never once been heard from" signal, which is a different fault from a board that went quiet. |
 | `influx_write_failures`, `sensed_write_failures` | since boot. |

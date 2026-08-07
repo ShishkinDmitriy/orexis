@@ -136,11 +136,19 @@ an agent's own store the boundary is doubly held — `:world` is replaced from t
 on every start and is not the agent's to author, while `:beliefs/<agent>` is written once at
 birth and is the agent's alone thereafter.
 
-The **`:sensed` singleton is a v1 artifact of having one sensor per subject**. The natural unit
-is **one graph per witness**: add independent sensors or oracles and you get `:sensed/<witness>`
-graphs that may disagree, with agents forming beliefs by *weighing witnesses* — "different
-assumptions about the same facts" pushed up to the record itself. Nothing is welded to there
-being exactly one. The world is deliberately singular *as a document* — every agent holds the
+The **`:sensed` singleton is a v1 artifact**. Within it, an observation is keyed by its subject
+*and the property observed*, so a pot with a moisture probe and a temp/humidity board holds
+three current observations rather than one — see
+[one-agent-many-sensors](../decisions/one-agent-many-sensors.md). What is still singular is the
+graph, and the natural unit for that is **one per witness**: add independent sensors or oracles
+that disagree *about the same property* and you get `:sensed/<witness>` graphs, with agents
+forming beliefs by *weighing witnesses* — "different assumptions about the same facts" pushed up
+to the record itself. Nothing is welded to there being exactly one.
+
+The two are different axes and it is worth not confusing them: the key separates *different
+questions about one pot*, and a per-witness graph would separate *different answers to the same
+question*. Today the second case has no representation at all — two sensors on one property
+share a node and the last writer wins, which the shapes flag as a warning rather than refuse. The world is deliberately singular *as a document* — every agent holds the
 same ratified copy — because a world agents disagreed about would defeat the point of stating
 the wiring once.
 

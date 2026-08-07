@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from conftest import build_agent, genesis_store
+from conftest import HUMIDITY, MOISTURE, build_agent, genesis_store
 
 
 @pytest.fixture
@@ -154,7 +154,8 @@ def test_sitting_out_says_which_of_three_things_happened(make):
     from agent.capabilities.market.terms import BIDDING
 
     def why(agent):
-        return next(m for m in agent.modules if m.CAPABILITY == BIDDING)._why_blind()
+        bidding = next(m for m in agent.modules if m.CAPABILITY == BIDDING)
+        return bidding._why_blind(market_of(agent))
 
     never = why(make("fern"))
     asleep = why(make("fern", _with_reading(0.5, age_s=10)))
@@ -164,6 +165,33 @@ def test_sitting_out_says_which_of_three_things_happened(make):
     assert "asleep" in asleep
     assert "gone quiet" in quiet
     assert len({never, asleep, quiet}) == 3, "three states must not collapse into one message"
+
+
+def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
+    """The harm, at the place it would have been done: buying water because the AIR was dry.
+
+    A bidder that has asked its sensor and is waiting used to answer on the first reading of
+    its subject to arrive, whatever it was about. On a pot with a moisture probe and the
+    temp/humidity board that is a race.
+
+    The property used here is humidity rather than temperature, deliberately. Both are wrong,
+    but they fail differently, and only one of them costs money: 21.0 read as a moisture
+    fraction is far above any target, so the agent simply cedes and loses the round quietly.
+    0.10 read as a moisture fraction is a parched plant — a plausible, actionable number in the
+    wrong unit, which is exactly what the market cannot detect, because a bid is private and
+    this one is perfectly well-formed.
+    """
+    from agent.capabilities.market.terms import BIDDING
+
+    fern = make("fern")  # nothing in hand, so it waits
+    fern.deliver(market_of(fern).offer_topic, {"round_id": "r1", "closes_in_s": 3})
+    bidding = next(m for m in fern.modules if m.CAPABILITY == BIDDING)
+
+    bidding.on_reading_recorded(fern.me.acts_for, HUMIDITY, 0.10)
+    assert fern.sent.under("market/") == [], "dry air is not a reason to buy water"
+
+    bidding.on_reading_recorded(fern.me.acts_for, MOISTURE, 0.10)
+    assert fern.sent.under("market/") != [], "the reading it was actually waiting for"
 
 
 def test_a_reading_past_the_cadence_and_its_grace_is_stale(make):

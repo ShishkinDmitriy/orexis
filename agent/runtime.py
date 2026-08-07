@@ -103,7 +103,7 @@ class Agent:
         members = {r["capability"] for r in bindings(self.store.query(_family_q(family)))}
         return next((m for m in self.modules if m.CAPABILITY in members), None)
 
-    def annotations(self, subject_uri: str, value: float) -> dict:
+    def annotations(self, subject_uri: str, observed_property: str, value: float) -> dict:
         """Everything my modules want to say about a reading of mine, merged.
 
         This is what makes my announcement *mine* rather than perception's: whoever holds an
@@ -112,17 +112,17 @@ class Agent:
         out: dict = {}
         for module in self.modules:
             try:
-                out.update(module.annotate(subject_uri, value))
+                out.update(module.annotate(subject_uri, observed_property, value))
             except Exception as exc:
                 log.error("%s: %s could not annotate a reading: %s", self.id, module.name, exc)
         return out
 
-    def urgency(self, subject_uri: str, value: float) -> float | None:
+    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
         """How close this reading puts me to trouble — the sharpest opinion any of me holds."""
         opinions = []
         for module in self.modules:
             try:
-                opinion = module.urgency(subject_uri, value)
+                opinion = module.urgency(subject_uri, observed_property, value)
             except Exception as exc:
                 log.error("%s: %s could not judge a reading: %s", self.id, module.name, exc)
                 continue
@@ -150,16 +150,17 @@ class Agent:
         # link, and the number over time is what says whether it is getting worse.
         self.metrics.disconnected()
 
-    def reading_recorded(self, subject_uri: str, value: float) -> None:
+    def reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
         """Perception tells the rest of me that something new is known.
 
         The agent's own modules are the only audience: this is me noticing, not me telling
         anyone. It is what lets a bid wait for the reading it asked for instead of using
-        whatever happened to be lying around.
+        whatever happened to be lying around — and, now that a subject can have two sensors,
+        for it to wait for the reading it asked for rather than for the next one to arrive.
         """
         for module in self.modules:
             try:
-                module.on_reading_recorded(subject_uri, value)
+                module.on_reading_recorded(subject_uri, observed_property, value)
             except Exception as exc:
                 log.error("%s: %s failed on a new reading: %s", self.id, module.name, exc)
 

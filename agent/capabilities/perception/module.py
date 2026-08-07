@@ -136,14 +136,23 @@ class PerceptionModule(Module):
         is always listening, and would then drive every reading this way.
         """
 
-    def fresh_reading(self, subject_uri: str):
-        """The latest reading, or None if it is older than I am willing to trust."""
-        reading = self.agent.beliefs.current_reading(subject_uri)
-        return reading if reading and reading.is_fresh(self.stale_after_s(subject_uri)) else None
+    def fresh_reading(self, subject_uri: str, observed_property: str):
+        """The latest reading of one property, or None if it is older than I trust."""
+        reading = self.agent.beliefs.current_reading(subject_uri, observed_property)
+        if reading is None:
+            return None
+        return reading if reading.is_fresh(self.stale_after_s(subject_uri, observed_property)) else None
 
-    def sensor_for(self, subject_uri: str):
-        """Which of my sensors watches this subject, if any."""
-        return next((s for s in self.sensors if s.subject == subject_uri), None)
+    def sensor_for(self, subject_uri: str, observed_property: str):
+        """Which of my sensors watches this property of this subject, if any.
+
+        Two sensors may answer — two probes in one pot reporting the same property — and the
+        first is returned. That case is a `sh:Warning` at validation rather than an error,
+        because "these are one thing measured twice" is a legitimate wiring; see
+        knowledge/decisions/one-agent-many-sensors.md.
+        """
+        return next((s for s in self.sensors
+                     if s.subject == subject_uri and s.observes == observed_property), None)
 
 
 class SubscribingModule(PerceptionModule):
@@ -164,14 +173,18 @@ class SubscribingModule(PerceptionModule):
         self.min_sleep_s, self.max_sleep_s = self._bounds()
         self.sent_cadence: dict[str, int] = {}
 
-    def stale_after_s(self, subject_uri: str) -> int:
+    def stale_after_s(self, subject_uri: str, observed_property: str) -> int:
         """The interval I asked for, plus slack. NOT an absolute.
 
         I chose this cadence, so refusing a reading that arrived exactly when I asked for it
         would be refusing my own instruction — which is what a fixed limit did, silently, every
         time a comfortable plant let the cadence relax past it.
+
+        Per sensor, and therefore per property: two sensors on one subject can be running at
+        different cadences, and holding the slower one's reading to the faster one's clock
+        would report a healthy board as quiet.
         """
-        sensor = self.sensor_for(subject_uri)
+        sensor = self.sensor_for(subject_uri, observed_property)
         cadence = self.sent_cadence.get(sensor.local_id) if sensor else None
         if cadence is None:
             # Not aimed yet. Assume the slowest I would ask for, so a first reading is not
@@ -189,17 +202,19 @@ class SubscribingModule(PerceptionModule):
         self.sense_now()
 
     def on_reading(self, sensor, value: float) -> None:
-        self.set_cadence(sensor, self.cadence_for(sensor.subject, value))
+        self.set_cadence(sensor, self.cadence_for(sensor.subject, sensor.observes, value))
 
-    def cadence_for(self, subject_uri: str, value: float) -> int:
+    def cadence_for(self, subject_uri: str, observed_property: str, value: float) -> int:
         """How long the board may sleep: the closer to my own trouble, the closer I watch.
 
         Trouble is not perception's to define, so it is asked for. An agent with no stake in
-        the subject gets no answer and watches at its slow cadence — the honest reading of
-        "nothing here is urgent to me".
+        the subject — or none in *this property* of it — gets no answer and watches at its slow
+        cadence, which is the honest reading of "nothing here is urgent to me". That second
+        case is why the property is passed: a thermometer on a pot the agent bids water for
+        must not have its cadence driven by how dry the soil is.
         """
         b = self.beliefs
-        urgency = self.agent.urgency(subject_uri, value)
+        urgency = self.agent.urgency(subject_uri, observed_property, value)
         if urgency is None:
             return min(self.max_sleep_s, max(self.min_sleep_s, b.slow_sleep_s))
         sleep_s = b.slow_sleep_s + (b.fast_sleep_s - b.slow_sleep_s) * urgency
@@ -239,6 +254,6 @@ class ListeningModule(PerceptionModule):
         self.beliefs = agent.beliefs.read(LISTENING_BLOCK)
         super().__init__(agent)
 
-    def stale_after_s(self, subject_uri: str) -> int:
+    def stale_after_s(self, subject_uri: str, observed_property: str) -> int:
         """Absolute: this device keeps its own clock, so there is no interval to be relative to."""
         return self.beliefs.max_age_s

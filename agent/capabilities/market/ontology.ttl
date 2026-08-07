@@ -1,4 +1,5 @@
 @prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -23,6 +24,10 @@ ag:Market a owl:Class ; rdfs:label "Market" ;
 ag:marketFor a owl:ObjectProperty ; rdfs:domain ag:Market ;
     rdfs:label "market for" ;
     rdfs:comment "The resource being allocated. The cluster boundary: who competes with whom." .
+
+ag:relieves a owl:ObjectProperty ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "relieves" ;
+    rdfs:comment "Which observable property a resource acts on — stated on the resource's CLASS by the domain, not per world. A bidder holds readings of several properties of one subject and must bid on the right one; this is how it knows which, without the market package naming a domain property. Domain-neutral here, answered in domain/water: a water source relieves soil moisture." .
 
 ag:hosts a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Market ;
     rdfs:label "hosts" .
