@@ -80,6 +80,27 @@ a seam — it is a choice. "An observation is keyed by subject alone" is a debt 
 **The reasoning stays in the bundle; the issue says what is left.** Do not duplicate the analysis
 into an issue, and do not turn a decision record into a task list — link them instead.
 
+### Telling an issue from a decision
+
+A **decision record** explains why the code is as it is. An **issue** says the code is not yet as
+it should be. Three checks, in order of how quickly they settle it:
+
+| | issue | decision |
+|---|---|---|
+| can it be **closed**? | yes, by doing something | never — only superseded or amended |
+| what changes when it is resolved? | the **code** | what someone **believes** about the code |
+| how does the title read? | an imperative — *"key observations by subject and property"* | a claim — *"an observation is keyed by its subject alone, and that was wrong"* |
+
+They compose in both directions, which is the part worth internalising. Fixing an issue usually
+*produces* a decision worth recording. Writing a decision usually *emits* issues — the seams it
+leaves that someone could close. `decisions/one-agent-many-sensors.md` did exactly that: the record
+came first, and two issues fell out of it.
+
+**The tell that you have misfiled something: an issue that argues both sides is not an issue.** If
+it needs a section weighing alternatives, a choice has not been made yet, and the place for that is
+a decision record — with the trigger for revisiting written down, so the next person knows when it
+stops being theoretical.
+
 ## Commands
 
 ```bash
