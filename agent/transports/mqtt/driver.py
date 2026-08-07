@@ -46,9 +46,21 @@ class MqttDriver(Driver):
         except (ValueError, TypeError, KeyError):
             return None
 
-    def set_cadence(self, sensor, sleep_s: int) -> None:
+    def set_cadence(self, sensor, sleep_s: int, verdict: dict | None = None) -> None:
+        """The standing instruction, and whatever the agent wants its device to show.
+
+        One retained message rather than two, and the same one that was already being sent —
+        the device is told how often to look and what its agent made of the last look in the
+        same breath. Retained is what makes the second half work at all: a board that deep-sleeps
+        gets the current verdict the instant it subscribes, instead of showing nothing until the
+        next reading it takes has been judged.
+
+        The verdict is opaque here. Perception collects it from whichever module holds a stake
+        and passes it through; this driver never learns what a band is.
+        """
         if sensor.command_topic:
-            self.publish(sensor.command_topic, {"sleep_s": int(sleep_s)}, True)
+            self.publish(sensor.command_topic,
+                         {"sleep_s": int(sleep_s), **(verdict or {})}, True)
 
     def sense_now(self, sensor) -> None:
         if sensor.command_topic:

@@ -10,17 +10,23 @@
 // cadence command is what makes that reliable; `sense` is best-effort and lands only inside
 // the CMD_WAIT_MS window. See knowledge/domain/sensing.md.
 //
-//   publish:   sensors/<PLANT_ID>/moisture   {"value":0.183,"sensor":"<SENSOR_ID>"}
-//   subscribe: sensors/<PLANT_ID>/cmd         {"sleep_s":N}  and/or  {"sense":true}   (retained)
+//   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>"}
+//   subscribe: CMD_TOPIC        {"sleep_s":N, "band":"LOW"}  and/or  {"sense":true}  (retained)
+//
+// Both topic names come from config.h and are the world's own, so they are not spelled out
+// here — they used to be, as "sensors/<PLANT_ID>/moisture", which was already wrong.
 //
 // The board emits *numbers* only; the agent judges (band) and asserts them. Cadence ≠ content:
-// the agent chooses *when* to look, but the reading is what the sensor measured.
+// the agent chooses *when* to look, but the reading is what the sensor measured. The band comes
+// BACK on the command topic purely so the LED can show it — the board never computes one, and
+// stripping the LED out changes nothing about what this node means.
 
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <esp_sleep.h>
+#include <driver/rtc_io.h>
 
 #include "config.h"
 
@@ -47,6 +53,75 @@ PubSubClient mqtt(wifi);
 uint32_t sleep_s = DEFAULT_SLEEP_S;
 
 static float lastRaw = 0.0f; // kept for the serial line: calibration needs the RAW number
+
+// ---------------------------------------------------------------------------------------------
+// The status LED. Compiled out entirely unless the world says this board carries one — a board
+// with no LED must not drive whatever GPIO 0 happens to be, since that is a strapping pin and
+// holding it would leave the board in bootloader mode at the next reset.
+//
+// The colour is NOT this board's opinion. It shows the agent's verdict, which arrives on the
+// same retained command message as the cadence, so a board waking from deep sleep is told what
+// its agent currently thinks before it does anything else. The board contributes only the
+// things the agent cannot know: that the wifi failed, that the broker refused it.
+// ---------------------------------------------------------------------------------------------
+#ifdef LED_RED_PIN
+
+// Common cathode: a leg HIGH lights it. If yours is common anode, every colour here comes out
+// as its complement — which is the visible symptom, and the fix is the world's `ag:model`
+// being wrong rather than this file.
+static void led(bool r, bool g, bool b) {
+  digitalWrite(LED_RED_PIN, r);
+  digitalWrite(LED_GREEN_PIN, g);
+  digitalWrite(LED_BLUE_PIN, b);
+}
+
+static void ledBegin() {
+  // Release the pads first: if the previous cycle held a colour through deep sleep, the hold
+  // is still latched and digitalWrite would appear to do nothing at all.
+  rtc_gpio_hold_dis((gpio_num_t)LED_RED_PIN);
+  rtc_gpio_hold_dis((gpio_num_t)LED_GREEN_PIN);
+  rtc_gpio_hold_dis((gpio_num_t)LED_BLUE_PIN);
+  pinMode(LED_RED_PIN, OUTPUT);
+  pinMode(LED_GREEN_PIN, OUTPUT);
+  pinMode(LED_BLUE_PIN, OUTPUT);
+  led(1, 1, 0); // amber: awake, and nobody has told me anything yet
+}
+
+static void ledBlink(bool r, bool g, bool b, int times) {
+  for (int i = 0; i < times; i++) {
+    led(r, g, b); delay(120);
+    led(0, 0, 0); delay(120);
+  }
+}
+
+// LOW / OK / HIGH are the agent's bands — a verdict about ITS pot against ITS OWN limits, which
+// is why the same number is LOW for a fern and OK for a succulent. The board only paints it.
+static void ledBand(const char *band) {
+  if      (!strcmp(band, "LOW"))  led(1, 0, 0);   // thirsty
+  else if (!strcmp(band, "OK"))   led(0, 1, 0);
+  else if (!strcmp(band, "HIGH")) led(0, 0, 1);   // wetter than it wants
+  else                            led(1, 1, 0);   // a band this firmware does not know
+}
+
+// Hold the colour across deep sleep, so the state is readable at a glance rather than only
+// during the few seconds the board is awake. This COSTS the deep sleep: an LED is 5-15 mA
+// against a ~10 uA sleep budget, so on a battery node it would be the dominant drain by three
+// orders of magnitude. It is deliberate here because this board is on USB. Anything on a
+// battery should call led(0,0,0) instead and accept that the colour is only a flash.
+static void ledHoldThroughSleep() {
+  rtc_gpio_hold_en((gpio_num_t)LED_RED_PIN);
+  rtc_gpio_hold_en((gpio_num_t)LED_GREEN_PIN);
+  rtc_gpio_hold_en((gpio_num_t)LED_BLUE_PIN);
+  gpio_deep_sleep_hold_en();
+}
+
+#else
+static void ledBegin() {}
+static void ledBlink(bool, bool, bool, int) {}
+static void ledBand(const char *) {}
+static void ledHoldThroughSleep() {}
+static void led(bool, bool, bool) {}
+#endif
 
 static float readMoisture() {
   const int samples = 16;
@@ -88,6 +163,13 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
     sleep_s = s;
     Serial.printf("cadence set: sleep %us\n", sleep_s);
   }
+  // The agent's verdict, riding the same retained message as the cadence rather than a topic
+  // of its own — the board is already subscribed here, and the ACL already grants it.
+  if (doc["band"].is<const char *>()) {
+    const char *band = doc["band"];
+    Serial.printf("agent says: %s\n", band);
+    ledBand(band);
+  }
   if (doc["sense"] | false) {
     publishMoisture();
   }
@@ -109,7 +191,10 @@ static void connectWifi() {
   Serial.print("WiFi");
   uint32_t began = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    delay(300);
+    // Red while trying. A board stuck here is otherwise indistinguishable from one asleep, and
+    // "stuck associating" is the single most common failure on this bench — see the −80 dBm.
+    ledBlink(1, 0, 0, 1);
+    delay(60);
     Serial.print(".");
   }
   int rssi = WiFi.RSSI();
@@ -157,6 +242,10 @@ static void connectMqtt() {
     // the broker should sleep and retry on its own clock, not hold the battery open.
     if (attempt >= MQTT_TRIES) {
       Serial.printf("giving up for now — sleeping %us and trying again\n", sleep_s);
+      // Magenta, held: WiFi worked and the broker refused us, which is a credential or an ACL
+      // problem and wants a different person than a red LED does.
+      led(1, 0, 1);
+      ledHoldThroughSleep();
       esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
       esp_deep_sleep_start();
     }
@@ -168,6 +257,7 @@ void setup() {
   Serial.begin(115200);
   delay(200); // let the USB serial attach, or the first lines are lost on a fresh boot
   analogReadResolution(12); // 0..4095
+  ledBegin();
 
   // Say what this build actually is. Checking a board against the world is otherwise
   // guesswork, and the ids here must match genesis/<world>/world.ttl exactly.
@@ -190,6 +280,7 @@ void setup() {
   // 3. deep-sleep for the agent-set cadence, then the board wakes and repeats setup()
   Serial.printf("sleeping %us\n", sleep_s);
   mqtt.disconnect();
+  ledHoldThroughSleep(); // whatever colour the agent last asked for stays lit
   delay(50);
   esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
   esp_deep_sleep_start();

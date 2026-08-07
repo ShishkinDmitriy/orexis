@@ -171,7 +171,11 @@ class SubscribingModule(PerceptionModule):
         self.beliefs = agent.beliefs.read(SUBSCRIBING_BLOCK)
         super().__init__(agent)
         self.min_sleep_s, self.max_sleep_s = self._bounds()
+        # The interval in force, which the freshness rule reads, and the whole last message,
+        # which decides whether to send again. Two dicts because they answer different
+        # questions: "how long may this board sleep" and "does it already know all this".
         self.sent_cadence: dict[str, int] = {}
+        self.sent: dict[str, tuple] = {}
 
     def stale_after_s(self, subject_uri: str, observed_property: str) -> int:
         """The interval I asked for, plus slack. NOT an absolute.
@@ -202,7 +206,13 @@ class SubscribingModule(PerceptionModule):
         self.sense_now()
 
     def on_reading(self, sensor, value: float) -> None:
-        self.set_cadence(sensor, self.cadence_for(sensor.subject, sensor.observes, value))
+        # The verdict travels with the cadence because it is the same message and the same
+        # audience. Collected the way every cross-capability opinion is collected — whoever
+        # holds a stake contributes, perception passes it on without reading it. An agent with
+        # no stake in this property contributes nothing and the device is told only a cadence.
+        self.set_cadence(sensor,
+                         self.cadence_for(sensor.subject, sensor.observes, value),
+                         self.agent.annotations(sensor.subject, sensor.observes, value))
 
     def cadence_for(self, subject_uri: str, observed_property: str, value: float) -> int:
         """How long the board may sleep: the closer to my own trouble, the closer I watch.
@@ -220,16 +230,26 @@ class SubscribingModule(PerceptionModule):
         sleep_s = b.slow_sleep_s + (b.fast_sleep_s - b.slow_sleep_s) * urgency
         return int(round(min(self.max_sleep_s, max(self.min_sleep_s, sleep_s))))
 
-    def set_cadence(self, sensor, sleep_s: int) -> None:
-        """Standing policy. How it is delivered is the driver's problem, not mine."""
-        if self.sent_cadence.get(sensor.local_id) == sleep_s:
+    def set_cadence(self, sensor, sleep_s: int, verdict: dict | None = None) -> None:
+        """Standing policy. How it is delivered is the driver's problem, not mine.
+
+        Deduplicated on the whole message rather than on the interval alone. It used to skip
+        when the cadence was unchanged, which is right for a cadence and wrong the moment
+        anything else rides along: a pot drying from OK to LOW inside one cadence band would
+        have kept the old verdict on its device indefinitely, because the only thing being
+        compared had not moved.
+        """
+        message = (int(sleep_s), tuple(sorted((verdict or {}).items())))
+        if self.sent.get(sensor.local_id) == message:
             return
         driver = self.drivers[sensor.uri]
         if driver is None:
             return
-        driver.set_cadence(sensor, sleep_s)
+        driver.set_cadence(sensor, sleep_s, verdict)
+        self.sent[sensor.local_id] = message
         self.sent_cadence[sensor.local_id] = sleep_s
-        self.log.info("%s: cadence now %ss", sensor.local_id, sleep_s)
+        self.log.info("%s: cadence now %ss%s", sensor.local_id, sleep_s,
+                      f", showing {verdict}" if verdict else "")
 
     def sense_now(self) -> None:
         """Best-effort nudge — lands only if the device is awake to hear it."""

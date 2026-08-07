@@ -49,6 +49,7 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 # how to describe. A board carrying something it has no template for is reported, not guessed at.
 _BOARDS_Q = f"""
 SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?subjectId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
+       ?ledRed ?ledGreen ?ledBlue ?airPin
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?board a <{AG}Microcontroller> ; <{AG}localId> ?boardId ; <{AG}firmware> ?firmware ;
          <{AG}carries> ?sensor .
@@ -60,6 +61,16 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   OPTIONAL {{ ?sensor <{AG}commandTopic> ?cmdTopic }}
   ?bus a <{AG}MessageBus> ; <{AG}brokerHost> ?host ; <{AG}brokerPort> ?port .
   OPTIONAL {{ ?pi a <{AG}ComputeHost> ; <{AG}lanAddress> ?lan }}
+
+  # What else the same board carries. All OPTIONAL and all separate, because a board without a
+  # status LED is an ordinary board and must still generate — the alternative is a query that
+  # silently returns no rows and a generator that reports the world states no boards at all.
+  OPTIONAL {{ ?board <{AG}carries> [ a <{AG}RgbLed> ;
+                <{AG}pin> [ <{AG}pinRole> <{AG}Red>   ; <{AG}gpio> ?ledRed   ] ,
+                          [ <{AG}pinRole> <{AG}Green> ; <{AG}gpio> ?ledGreen ] ,
+                          [ <{AG}pinRole> <{AG}Blue>  ; <{AG}gpio> ?ledBlue  ] ] }}
+  OPTIONAL {{ ?board <{AG}carries> [ a <{AG}TempHumiditySensor> ;
+                <{AG}pin> [ <{AG}pinRole> <{AG}OneWireData> ; <{AG}gpio> ?airPin ] ] }}
 }} }}"""
 
 _BOUNDS_Q = f"""
@@ -142,12 +153,39 @@ def render(world: str, row: dict, bounds: tuple[int, int]) -> str:
 #define MOISTURE_PIN {int(row['gpio'])}
 #define ADC_DRY {int(row['rawDry'])}
 #define ADC_WET {int(row['rawWet'])}
-
+{_optional_pins(row)}
 // The constitutional bounds, from the ontology rather than compiled in twice: the agent will not
 // ask for a cadence outside these, and the board will not honour one.
 #define MIN_SLEEP_S {lo}
 #define MAX_SLEEP_S {hi}
 """
+
+
+def _optional_pins(row: dict) -> str:
+    """The rest of what the board carries, emitted only where the world states it.
+
+    A `#define` that is absent rather than zero is deliberate: the firmware guards on `#ifdef`,
+    so a board with no LED compiles the LED code out entirely instead of driving GPIO 0 — which
+    is a strapping pin, and would hold the board in bootloader mode on the next reset.
+    """
+    out = []
+    if row.get("ledRed"):
+        out += [
+            "",
+            "// The status LED, from the stand. Three driven legs and a common return; the return",
+            "// is solder rather than software and the world does not model it.",
+            f"#define LED_RED_PIN {int(row['ledRed'])}",
+            f"#define LED_GREEN_PIN {int(row['ledGreen'])}",
+            f"#define LED_BLUE_PIN {int(row['ledBlue'])}",
+        ]
+    if row.get("airPin"):
+        out += [
+            "",
+            "// Wired, and not yet published anywhere: one device reports two properties and the",
+            "// model gives a sensor one. Emitted so the pin is claimed and nothing else takes it.",
+            f"#define AIR_SENSOR_PIN {int(row['airPin'])}",
+        ]
+    return "\n".join(out) + "\n" if out else ""
 
 
 def generate(world: str, board: str | None = None) -> None:

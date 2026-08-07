@@ -234,6 +234,71 @@ def test_the_scheduled_board_is_still_aimed_when_a_push_sensor_shares_the_agent(
     )
 
 
+# --- what the device is told ------------------------------------------------------------------
+
+
+def commands(agent):
+    return agent.sent.to(sensor_of(agent).command_topic)
+
+
+def test_the_device_is_told_the_verdict_with_the_cadence(fern):
+    """One retained message carries both, because it is one instruction to one device.
+
+    A separate topic for the verdict would need its own ACL grant and its own retained slot,
+    and would arrive at a different moment from the cadence it belongs with. The board is
+    already subscribed here.
+    """
+    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
+    last = commands(fern)[-1]
+    assert last["band"] == "LOW"
+    assert last["sleep_s"] > 0
+
+
+def test_the_verdict_is_retained_like_the_cadence(fern):
+    """The whole point on a board that deep-sleeps: it must learn the current verdict when it
+    subscribes, not at the next reading it happens to take."""
+    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
+    retained = [r for t, p, r in fern.sent
+                if t == sensor_of(fern).command_topic and "band" in p]
+    assert retained and all(retained)
+
+
+def test_a_changed_verdict_is_sent_even_when_the_cadence_did_not_move(fern):
+    """The trap in reusing this message, and the reason the dedup had to change.
+
+    Sending was skipped whenever the interval was unchanged, which is right for an interval and
+    wrong the moment anything rides along with it. A pot drying from OK to LOW *within one
+    cadence band* would have left the old colour on the device indefinitely — the state most
+    worth seeing, shown as the state before it.
+    """
+    p = fern.subscribing()
+    p.set_cadence(sensor_of(fern), 60, {"band": "OK"})
+    p.set_cadence(sensor_of(fern), 60, {"band": "LOW"})
+
+    assert [c["band"] for c in commands(fern)] == ["OK", "LOW"]
+
+
+def test_the_same_message_twice_is_sent_once(fern):
+    """The other half: nothing changed, so the device is not woken to be told so."""
+    p = fern.subscribing()
+    for _ in range(3):
+        p.set_cadence(sensor_of(fern), 60, {"band": "OK"})
+    assert len(commands(fern)) == 1
+
+
+def test_a_device_whose_agent_holds_no_stake_is_told_only_a_cadence(monkeypatch, tmp_path):
+    """The sensing world has no market, so nothing there holds a band.
+
+    The verdict is collected the way every cross-capability opinion is: whoever has one
+    contributes. Nobody does here, and the message must not grow an empty field for it.
+    """
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="ag:AirTemperature"), monkeypatch)
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+
+    sent = [p for t, p, _ in agent.sent if t.endswith("/command")]
+    assert sent and all("band" not in p for p in sent)
+
+
 # --- one subject, two properties: the case an observation's key exists for --------------------
 
 
