@@ -18,7 +18,14 @@
 ag:raspberry a ag:ComputeHost ;
     ag:localId "raspberry" ;
     ag:model "Raspberry Pi 5" ;
-    ag:lanAddress "192.168.2.126" ;
+    # DHCP, and therefore a fact with an expiry date. It was .126 when this was written and the
+    # lease has since moved to .130, which cost an evening: the board opened TCP to an address
+    # that is not this Pi, so it failed with a bare "connection failed" and the broker logged
+    # nothing at all — because nothing arrived. Every other participant was unaffected, since
+    # agents reach the broker on loopback via ag:brokerHost and only a board off-host uses this.
+    #
+    # The durable fix is a DHCP reservation on the router, so this line stops being a guess.
+    ag:lanAddress "192.168.2.130" ;
     rdfs:comment "Runs the agent containers, the broker for this world, and the shared store." .
 
 ag:fern_agent ag:runsOn ag:raspberry .
