@@ -154,9 +154,10 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       - ./secrets/{agent_id}.crt:/app/world/secrets/agent.crt:ro
       - ./secrets/{agent_id}.key:/app/world/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro{signing}
-      # the discovered trees, mounted so a code change needs a restart, not a rebuild
-      - ../../capabilities:/app/capabilities:ro
-      - ../../transports:/app/transports:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
+      # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
+      # ride along with it. Their old root paths survived as empty husks — git does not track
+      # an empty directory, so `git mv` left them behind and mounting them silently succeeded.
       - ../../vocabulary:/app/vocabulary:ro
       - ../../agent:/app/agent:ro
 """
