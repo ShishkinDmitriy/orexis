@@ -1,6 +1,10 @@
-# The build context is the repo root, because the image needs every discovered tree
-# (kernel/, capabilities/, transports/, domain/) as well as backend/. These are the parts it
-# never needs, and sending them is pure cost on a Pi.
+# The build context is the repo root, because the image needs `agent/` (which carries the
+# capability and transport trees) and `vocabulary/`. These are the parts it never needs, and
+# sending them is pure cost on a Pi.
+#
+# NOTE: onboarding/ is deliberately NOT ignored here. Excluding it from the context would hide
+# the boundary in a file nobody reads; it is excluded by the Containerfile not naming it, where
+# a test can see the decision. See tests/test_layout.py.
 
 .git
 .venv

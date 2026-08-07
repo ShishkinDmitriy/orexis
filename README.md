@@ -37,12 +37,13 @@ look, and bids only on a fresh reading. See
 ## Layout
 
 ```
-kernel/        the T-Box everything layers on. Not a capability; there is one
-capabilities/  what an agent can DO — perception, market, actuation. The extendable axis
-transports/    how a device is REACHED — mqtt. Deliberately not a capability
-domain/        what the society is ABOUT — water. Vocabulary; the domain is a plug-in
-backend/       the runtime that loads all of the above, the pure market mechanism, and
-               the Containerfile that packages them
+vocabulary/    what terms MEAN — `agora` is the base everything layers on, `water` is
+               what this society is about. At the ROOT because onboarding reads it too
+agent/         everything an agent runs, and nothing else
+  capabilities/  what an agent can DO — perception, market, actuation. The extendable axis
+  transports/    how a device is REACHED — mqtt. Deliberately not a capability
+onboarding/    the sovereign's tools: what turns a ratified world into a running society
+tests/         the two gates, plus the layering the image depends on
 world/         ratified worlds — one directory each: topology, beliefs, and its compose file
 firmware/      ESP32 edge — moisture sensors and pump/valve
 infra/         how it runs: the infra compose, grafana and mosquitto configs
@@ -63,12 +64,12 @@ capabilities/perception/
   __init__.py    the manifest: PROVIDES = (PollingModule, ListeningModule)
 ```
 
-Every one of them is optional, and an omission is a statement: `domain/water/` has no code,
-`transports/mqtt/` has no `rules.ru` because a transport grants no capability, and
-`capabilities/actuation/` has no `beliefs.py` because it decides nothing.
+Every one of them is optional, and an omission is a statement: `vocabulary/water/` has no code,
+`agent/transports/mqtt/` has no `rules.ru` because a transport grants no capability, and
+`agent/capabilities/actuation/` has no `beliefs.py` because it decides nothing.
 
 Nothing lists these — `agora.loader` finds them by looking. So **adding a capability is
-adding a directory**: drop in `capabilities/forecast/`, and agents load its vocabulary, run its
+adding a directory**: drop in `agent/capabilities/forecast/`, and agents load its vocabulary, run its
 derivation, and boot with it if the wiring qualifies them. No registry line, no
 term constant, no edit to any existing file — and deleting the directory removes it just as
 completely, because capabilities reach each other through T-Box terms and never through
@@ -135,7 +136,7 @@ If a **host** mosquitto is running from an earlier setup, disable it or it holds
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e ./backend -e ./onboarding
+pip install -e .
 ```
 
 ## 3. Run the slice
@@ -307,8 +308,8 @@ into sleeping through a drought.
 The market layer (`clearing`, `auction`) is pure (no infra, no LLM), so it's fully unit-tested:
 
 ```bash
-pip install -e "./backend[dev]" -e ./onboarding
-pytest backend -q
+pip install -e ".[dev]"
+pytest tests -q
 ```
 
 Validate the live belief base against every package's `shapes.ttl`. The checks
