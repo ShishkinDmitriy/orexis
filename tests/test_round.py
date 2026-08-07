@@ -117,14 +117,47 @@ def test_a_stale_reading_cannot_back_a_bid(make):
     assert fern.sent.under("market/") == []
 
 
-def test_each_bidder_applies_its_own_staleness_limit(make):
-    """200s is past fern's 120s limit and inside the succulent's 300s."""
+def test_staleness_is_measured_against_the_cadence_the_agent_asked_for(make):
+    """A reading that arrived when the agent asked for it is not stale, however old.
+
+    The limit used to be absolute, which meant an agent that let a comfortable board sleep for
+    600s then refused every reading older than 120s — contradicting its own instruction and
+    reporting it as a failed sensor. It is now the interval in force plus a grace.
+
+    Nothing has aimed this agent yet, so the interval in force is the slowest it would ask for.
+    """
     fern = make("fern", _with_reading(0.05, age_s=200))
-    succulent = make("succulent", _with_reading(0.05, age_s=200))
-    for a in (fern, succulent):
-        a.deliver(market_of(a).offer_topic, {"round_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"round_id": "r1", "closes_in_s": 3})
+    assert fern.sent.under("market/") != [], (
+        "200s is well inside slowSleepS + grace, so this reading arrived as instructed")
+
+
+def test_sitting_out_says_which_of_three_things_happened(make):
+    """Content, ignorant and broken were reported identically, so a real failure read as routine.
+
+    Not a test of wording — of the distinction. If these three collapse to one string again, a
+    quiet sensor becomes indistinguishable from a board sleeping exactly as instructed.
+    """
+    from agent.capabilities.market.terms import BIDDING
+
+    def why(agent):
+        return next(m for m in agent.modules if m.CAPABILITY == BIDDING)._why_blind()
+
+    never = why(make("fern"))
+    asleep = why(make("fern", _with_reading(0.5, age_s=10)))
+    quiet = why(make("fern", _with_reading(0.5, age_s=6_000)))
+
+    assert "no reading yet" in never
+    assert "asleep" in asleep
+    assert "gone quiet" in quiet
+    assert len({never, asleep, quiet}) == 3, "three states must not collapse into one message"
+
+
+def test_a_reading_past_the_cadence_and_its_grace_is_stale(make):
+    """The rule still bites — it is relative, not absent."""
+    fern = make("fern", _with_reading(0.05, age_s=6_000))
+    fern.deliver(market_of(fern).offer_topic, {"round_id": "r1", "closes_in_s": 3})
     assert fern.sent.under("market/") == []
-    assert succulent.sent.under("market/") != []
 
 
 # --- look before you bid ---------------------------------------------------

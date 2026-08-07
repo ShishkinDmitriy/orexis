@@ -81,8 +81,8 @@ def test_polling_agent_must_state_a_cadence():
 
 def test_polling_agent_must_state_a_freshness_limit():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:maxReadingAgeS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:maxReadingAgeS ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:readingGraceS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:readingGraceS ?v }} }}"""))
 
 
 def test_cadence_may_not_be_slower_when_thirsty():

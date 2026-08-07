@@ -8,7 +8,7 @@
 ag:succulent_agent
     ag:fastSleepS 60 ;
     ag:slowSleepS 900 ;
-    ag:maxReadingAgeS 300 .
+    ag:readingGraceS 45 .
 
 ##  ag:Bidding
 ag:succulent_agent

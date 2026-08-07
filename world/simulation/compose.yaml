@@ -262,9 +262,8 @@ services:
       # the discovered trees, mounted so a code change needs a restart, not a rebuild
       - ../../capabilities:/app/capabilities:ro
       - ../../transports:/app/transports:ro
-      - ../../domain:/app/domain:ro
-      - ../../kernel:/app/kernel:ro
-      - ../../backend/src/agora:/app/backend/src/agora:ro
+      - ../../vocabulary:/app/vocabulary:ro
+      - ../../agent:/app/agent:ro
 
   agent-succulent:
     image: agora:local
@@ -313,9 +312,8 @@ services:
       # the discovered trees, mounted so a code change needs a restart, not a rebuild
       - ../../capabilities:/app/capabilities:ro
       - ../../transports:/app/transports:ro
-      - ../../domain:/app/domain:ro
-      - ../../kernel:/app/kernel:ro
-      - ../../backend/src/agora:/app/backend/src/agora:ro
+      - ../../vocabulary:/app/vocabulary:ro
+      - ../../agent:/app/agent:ro
 
   agent-supplier:
     image: agora:local
@@ -367,9 +365,8 @@ services:
       # the discovered trees, mounted so a code change needs a restart, not a rebuild
       - ../../capabilities:/app/capabilities:ro
       - ../../transports:/app/transports:ro
-      - ../../domain:/app/domain:ro
-      - ../../kernel:/app/kernel:ro
-      - ../../backend/src/agora:/app/backend/src/agora:ro
+      - ../../vocabulary:/app/vocabulary:ro
+      - ../../agent:/app/agent:ro
 
   agent-tomato:
     image: agora:local
@@ -418,9 +415,8 @@ services:
       # the discovered trees, mounted so a code change needs a restart, not a rebuild
       - ../../capabilities:/app/capabilities:ro
       - ../../transports:/app/transports:ro
-      - ../../domain:/app/domain:ro
-      - ../../kernel:/app/kernel:ro
-      - ../../backend/src/agora:/app/backend/src/agora:ro
+      - ../../vocabulary:/app/vocabulary:ro
+      - ../../agent:/app/agent:ro
 
 volumes:
   agora-simulation-mosquitto:

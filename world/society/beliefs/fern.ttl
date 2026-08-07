@@ -12,7 +12,7 @@
 ag:fern_agent
     ag:fastSleepS 30 ;          # at/below its own low band: watch closely
     ag:slowSleepS 600 ;         # comfortable: let the board sleep, save energy
-    ag:maxReadingAgeS 120 .     # older than this and it will not bid on the number
+    ag:readingGraceS 45 .     # slack past the cadence it asked for, before it calls the sensor quiet
 
 ##  ag:Bidding — what it wants and what it will pay
 ag:fern_agent

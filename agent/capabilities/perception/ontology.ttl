@@ -79,6 +79,10 @@ ag:slowSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:int
 
 # Required of EVERY perceiving agent, however it perceives: deciding what is too old to act
 # on is about belief, not control, so it survives losing the ability to drive the device.
+ag:readingGraceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "reading grace" ;
+    rdfs:comment "How long past the interval it ASKED for a subscribing agent still trusts a reading — a board's wake time and a late wifi association. Relative on purpose: an agent that chose to look every 600s cannot coherently refuse a 120s-old number, and an absolute limit made every comfortable plant look like a failed sensor." .
+
 ag:maxReadingAgeS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "max reading age seconds" ;
     rdfs:comment "How stale a reading may be and still back a decision. Without it, 'I choose when to look' becomes 'I choose which number to believe'." .

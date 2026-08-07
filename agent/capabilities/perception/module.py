@@ -64,7 +64,6 @@ class PerceptionModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.max_age_s = self._max_age_s()
         # one driver per sensor, chosen from its binding — not from anything the agent believes
         self.drivers = {s.uri: driver_for(s, self.publish) for s in self.me.sensors}
         for sensor in self.me.sensors:
@@ -75,7 +74,13 @@ class PerceptionModule(Module):
         # Recording is not perception's to define — see agent/observation.py.
         self.observations = Observations(agent)
 
-    def _max_age_s(self) -> int:
+    def stale_after_s(self, subject_uri: str) -> int:
+        """How old a reading of this subject may be before I stop trusting it.
+
+        A method rather than a number because the answer depends on who holds the clock. Where
+        the agent sets the interval it must be relative to that interval; where the device keeps
+        its own, an absolute is the only thing the agent can state.
+        """
         raise NotImplementedError
 
     def subscriptions(self) -> list[str]:
@@ -120,7 +125,11 @@ class PerceptionModule(Module):
     def fresh_reading(self, subject_uri: str):
         """The latest reading, or None if it is older than I am willing to trust."""
         reading = self.agent.beliefs.current_reading(subject_uri)
-        return reading if reading and reading.is_fresh(self.max_age_s) else None
+        return reading if reading and reading.is_fresh(self.stale_after_s(subject_uri)) else None
+
+    def sensor_for(self, subject_uri: str):
+        """Which of my sensors watches this subject, if any."""
+        return next((s for s in self.me.sensors if s.subject == subject_uri), None)
 
 
 class SubscribingModule(PerceptionModule):
@@ -140,8 +149,20 @@ class SubscribingModule(PerceptionModule):
         self.min_sleep_s, self.max_sleep_s = self._bounds()
         self.sent_cadence: dict[str, int] = {}
 
-    def _max_age_s(self) -> int:
-        return self.beliefs.max_age_s
+    def stale_after_s(self, subject_uri: str) -> int:
+        """The interval I asked for, plus slack. NOT an absolute.
+
+        I chose this cadence, so refusing a reading that arrived exactly when I asked for it
+        would be refusing my own instruction — which is what a fixed limit did, silently, every
+        time a comfortable plant let the cadence relax past it.
+        """
+        sensor = self.sensor_for(subject_uri)
+        cadence = self.sent_cadence.get(sensor.local_id) if sensor else None
+        if cadence is None:
+            # Not aimed yet. Assume the slowest I would ask for, so a first reading is not
+            # rejected for arriving on a schedule I have not set.
+            cadence = self.beliefs.slow_sleep_s
+        return int(cadence) + self.beliefs.grace_s
 
     def _bounds(self) -> tuple[int, int]:
         rows = bindings(self.agent.store.query(_BOUNDS_Q))
@@ -202,5 +223,6 @@ class ListeningModule(PerceptionModule):
         self.beliefs = agent.beliefs.read(LISTENING_BLOCK)
         super().__init__(agent)
 
-    def _max_age_s(self) -> int:
+    def stale_after_s(self, subject_uri: str) -> int:
+        """Absolute: this device keeps its own clock, so there is no interval to be relative to."""
         return self.beliefs.max_age_s

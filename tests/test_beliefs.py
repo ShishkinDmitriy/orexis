@@ -27,7 +27,7 @@ def fern(query):
 
 def test_subscribing_block(fern):
     p = fern.read(SUBSCRIBING_BLOCK)
-    assert (p.fast_sleep_s, p.slow_sleep_s, p.max_age_s) == (30, 600, 120)
+    assert (p.fast_sleep_s, p.slow_sleep_s, p.grace_s) == (30, 600, 45)
 
 
 def test_bidding_block(fern):
@@ -55,7 +55,7 @@ def test_slower_agent_tolerates_older_data(query):
     fern = Beliefs(query, "fern", FERN).read(SUBSCRIBING_BLOCK)
     succ = Beliefs(query, "succulent", SUCCULENT).read(SUBSCRIBING_BLOCK)
     assert succ.slow_sleep_s > fern.slow_sleep_s
-    assert succ.max_age_s > fern.max_age_s
+    assert succ.grace_s >= fern.grace_s
 
 
 # --- what a stake makes of a reading ---------------------------------------
@@ -103,7 +103,7 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
 def test_the_error_names_every_missing_term(query):
     with pytest.raises(BeliefError) as exc:
         Beliefs(query, "supplier", SUPPLIER).read(SUBSCRIBING_BLOCK)
-    for term in ("ag:fastSleepS", "ag:slowSleepS", "ag:maxReadingAgeS"):
+    for term in ("ag:fastSleepS", "ag:slowSleepS", "ag:readingGraceS"):
         assert term in str(exc.value)
 
 
