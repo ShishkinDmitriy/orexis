@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "author": "agora-diagram",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp32_fern",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "air_sensor_fern",
+      "top": -120,
+      "left": 300,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "moisture_sensor_fern",
+      "top": 10,
+      "left": 300,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-rgb-led",
+      "id": "status_led_fern",
+      "top": 140,
+      "left": 300,
+      "attrs": {
+        "common": "cathode"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "air_sensor_fern:GND",
+      "esp32_fern:GND",
+      "black",
+      []
+    ],
+    [
+      "air_sensor_fern:SDA",
+      "esp32_fern:D32",
+      "green",
+      []
+    ],
+    [
+      "air_sensor_fern:VCC",
+      "esp32_fern:3V3",
+      "red",
+      []
+    ],
+    [
+      "esp32_fern:3V3",
+      "moisture_sensor_fern:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp32_fern:D34",
+      "moisture_sensor_fern:SIG",
+      "green",
+      []
+    ],
+    [
+      "esp32_fern:GND",
+      "moisture_sensor_fern:GND",
+      "black",
+      []
+    ],
+    [
+      "status_led_fern:B",
+      "esp32_fern:D27",
+      "green",
+      []
+    ],
+    [
+      "status_led_fern:COM",
+      "esp32_fern:GND",
+      "black",
+      []
+    ],
+    [
+      "status_led_fern:G",
+      "esp32_fern:D26",
+      "green",
+      []
+    ],
+    [
+      "status_led_fern:R",
+      "esp32_fern:D25",
+      "green",
+      []
+    ]
+  ]
+}

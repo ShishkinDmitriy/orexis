@@ -6,6 +6,7 @@
 @prefix probe: <http://example.org/agora/moisture-probe#> .
 @prefix rgbled: <http://example.org/agora/rgb-led#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix esp32: <http://example.org/agora/esp32#> .
 
 # The hardware this world runs on: what is physically here and how it is wired.
 #
@@ -38,7 +39,12 @@ ag:fern_agent ag:runsOn ag:raspberry .
 
 ##########  The board at the edge  ##########
 
-ag:esp32_fern a mc:Microcontroller ;
+# BOTH, spelled out rather than inferred. esp32:DevKitC is rdfs:subClassOf
+# mc:Microcontroller and RDFS would derive the second from the first — but the
+# shapes run with inference and the runtime does not (issue #27), so a query for
+# a Microcontroller found nothing and the firmware generator reported that this
+# world states no boards at all. Third time that gap has cost something.
+ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     ag:localId "esp32_fern" ;
     mc:model "ESP32-WROOM-32D" ;
     ag:onBus ag:local_bus ;
@@ -95,7 +101,7 @@ ag:led_b      a mc:Pin ; mc:pinRole rgbled:BluePinRole .
 # Common CATHODE, so the return goes to ground. A common anode would go to the 3V3 rail instead,
 # and every colour would come out as its complement — which used to be a comment telling you to
 # check before soldering. It is a wire now, and a wire is a thing a checker can read.
-ag:led_common a mc:Pin ; mc:pinRole mc:GroundPinRole .
+ag:led_common a mc:Pin ; mc:pinRole rgbled:CommonPinRole .
 
 # Wired and stated, NOT yet polled — see issue #51. Its data leg is on 32 rather than 34 or 35
 # and the difference is not cosmetic: a one-wire line is DRIVEN, and 34-39 cannot drive.

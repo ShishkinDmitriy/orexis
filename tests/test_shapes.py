@@ -391,6 +391,20 @@ ag:air_float a mc:Pin ; mc:pinRole mc:GroundPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
 
 
+def test_a_leg_declared_NOT_CONNECTED_is_accepted():
+    """Real parts have legs nobody should wire — a DHT's third pin is NC, which is where this
+    came from. Without a word for it the rule that catches a FORGOTTEN leg also refuses a
+    deliberate one, and a checker that cannot tell those apart teaches people to ignore it.
+
+    The other half is the test above it: a leg with any OTHER role and no wire is still refused.
+    """
+    assert _conforms(_wiring("""
+    ag:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_nc .
+ag:air_nc a mc:Pin ; mc:pinRole mc:NotConnectedPinRole .
+""" + _leg("air", "d", "onewire:DataPinRole", 32)))
+
+
 def test_a_five_volt_rail_into_a_three_volt_input_is_refused():
     """The fault this whole remodelling exists to make sayable, and the one that cost an evening.
 

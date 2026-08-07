@@ -3,6 +3,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix probe: <http://example.org/agora/moisture-probe#> .
+@prefix wokwi: <http://example.org/agora/wokwi#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 
 <http://example.org/agora/moisture-probe> a owl:Ontology ;
@@ -10,6 +11,14 @@
     rdfs:comment """One part, its own package. Three legs — an analog output, power and ground — and two calibration numbers that belong to the individual probe rather than to the model.""" .
 
 probe:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf mc:Peripheral ;
+    # Wokwi has no capacitive soil probe, and a potentiometer is the honest stand-in rather
+    # than a fudge: what the board actually sees is a voltage it reads with an ADC, and a knob
+    # is a voltage you can turn. It makes the simulation useful for the thing calibration is
+    # hardest to get right — watching the fraction move as the raw count crosses rawDry/rawWet.
+    wokwi:part "wokwi-potentiometer" ;
+    wokwi:pin [ mc:pinRole mc:AnalogInPinRole ; wokwi:name "SIG" ] ,
+              [ mc:pinRole mc:PowerPinRole    ; wokwi:name "VCC" ] ,
+              [ mc:pinRole mc:GroundPinRole   ; wokwi:name "GND" ] ;
     rdfs:label "Capacitive soil moisture probe" ;
     rdfs:comment """Reports a raw ADC count that falls as the soil wets. A class rather than a model string because how you READ it is what differs; the model is for the person holding it.
 

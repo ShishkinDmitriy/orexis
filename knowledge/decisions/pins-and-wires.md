@@ -99,6 +99,40 @@ DevKitC, GPIO 36 and 39 are silkscreened VP and VN — the number appears nowher
 reading the graph; a notation is a code you match against the silkscreen with a jumper in your
 hand.
 
+# It is also now runnable
+
+`agora-diagram <world>` writes `world/<world>/wokwi/diagram.json` — the stand as a
+[wokwi.com](https://wokwi.com) project. Every part, every wire, coloured by what it carries.
+
+Two other renderings were tried and dropped, and the reasons are the useful part. **Grafana's
+node graph** could not express the one thing that makes a wiring diagram legible, which is that
+pins sit INSIDE their device: 21 nodes came out as a hairball, with no grouping, no per-node
+position and no control over size. Force-directed layout is the wrong shape for a thing whose
+arrangement is already known. **Mermaid** fixed that with subgraphs and was genuinely readable —
+and Wokwi beats it for one reason that has nothing to do with looks: it **runs**. It renders the
+real DevKit with its real header and then simulates the firmware on it, so the LED logic, the
+cadence handling and the calibration arithmetic can be exercised against a board that does not
+exist. That is the same trick `world/simulation` plays a layer up with containers speaking the
+real protocol.
+
+**A part says how it draws in its own package.** `vocabulary/dht11/` already states what a DHT11
+is and what legs it has; that it draws as `wokwi-dht22` with SDA/VCC/GND is the same kind of
+fact. Adding a part stays "adding a directory". A part that says nothing about Wokwi is reported
+and omitted rather than guessed at.
+
+**The board's pin names are not stated twice.** Its legs already carry `skos:notation` — D34,
+3V3, GND — which is what the silkscreen says and what Wokwi calls them, because both are naming
+the same header. One had to be authoritative and the silkscreen already was.
+
+Wokwi has no capacitive soil probe, so it stands in as a potentiometer. That is honest rather
+than a fudge: what the board sees is a voltage it reads with an ADC, and a knob is a voltage you
+can turn — which makes the simulation useful for the thing calibration is hardest to get right,
+watching the fraction move as the raw count crosses `rawDry`/`rawWet`.
+
+A generated picture can go stale in the one way a hand-drawn one cannot be saved from, so
+`tests/test_diagram.py` regenerates and compares. A stale drawing looks exactly like a current
+one, which is why trusting the author to remember was not an option.
+
 # What became checkable
 
 Three faults that the old model could not express, now refusable by `agora-validate`:

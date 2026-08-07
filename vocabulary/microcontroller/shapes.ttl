@@ -113,6 +113,8 @@ ag:MountedPeripheralShape a sh:NodeShape ;
             SELECT $this ?value WHERE {
                 $this <http://example.org/agora/microcontroller#hasPin> ?value .
                 FILTER NOT EXISTS { ?w <http://example.org/agora/microcontroller#joins> ?value }
+                FILTER NOT EXISTS { ?value <http://example.org/agora/microcontroller#pinRole>
+                    <http://example.org/agora/microcontroller#NotConnectedPinRole> }
             }""" ] .
 
 ag:MicrocontrollerShape a sh:NodeShape ;

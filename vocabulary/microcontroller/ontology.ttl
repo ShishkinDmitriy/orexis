@@ -111,5 +111,8 @@ mc:DigitalOutPinRole a mc:OutputRole ; rdfs:label "digital out" .
 
 mc:PowerPinRole a mc:PinRole ; rdfs:label "power" ;
     rdfs:comment "Supplies or takes current. Neither an input nor an output in the signal sense — nothing is read from it and nothing is driven onto it — which is why it is a bare PinRole rather than either, and why the 34-39 rule does not apply to it." .
+mc:NotConnectedPinRole a mc:PinRole ; rdfs:label "not connected" ;
+    rdfs:comment "A leg the part physically has and nobody should wire. Real parts carry them — a DHT's third pin is NC — and without a word for it the rule that catches a FORGOTTEN leg also refuses a deliberate one. Those are different mistakes and only one of them is a mistake; a checker that cannot tell them apart teaches people to ignore it." .
+
 mc:GroundPinRole a mc:PinRole ; rdfs:label "ground" ;
     rdfs:comment "The return. Modelled, unlike before, because a floating ground is the single most common reason a three-legged sensor answers with silence, and 'the world does not mention it' is a poor reason for a checker to stay quiet about it." .

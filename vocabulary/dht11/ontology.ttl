@@ -3,6 +3,8 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix dht11: <http://example.org/agora/dht11#> .
+@prefix wokwi: <http://example.org/agora/wokwi#> .
+@prefix onewire: <http://example.org/agora/onewire#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 
 <http://example.org/agora/dht11> a owl:Ontology ;
@@ -14,4 +16,8 @@ dht11:TempHumiditySensor a owl:Class ; rdfs:subClassOf mc:Peripheral ;
     rdfs:comment "The family. One device reporting TWO properties down one line, which is what makes it awkward: the model gives a sensor one sosa:observes and the runtime takes one reading per message, so a world can state and wire this and nothing polls it yet — see issue #51." .
 
 dht11:Dht11 a owl:Class ; rdfs:subClassOf dht11:TempHumiditySensor ; rdfs:label "DHT11" ;
+    wokwi:part "wokwi-dht22" ;
+    wokwi:pin [ mc:pinRole onewire:DataPinRole ; wokwi:name "SDA" ] ,
+              [ mc:pinRole mc:PowerPinRole     ; wokwi:name "VCC" ] ,
+              [ mc:pinRole mc:GroundPinRole    ; wokwi:name "GND" ] ;
     rdfs:comment "Three legs and a pull-up to its own VCC, which is the fact worth writing down: the data line idles at whatever the part is powered from, so the rail choice IS the logic level. On a KY-015 breakout the pull-up is on the board. Rated 3-5V, and that range is a trap next to a 3.3V microcontroller — it will run perfectly happily on 5V and present 5V to an input that is not 5V tolerant." .
