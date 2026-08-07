@@ -1,0 +1,93 @@
+[project]
+name = "agora"
+version = "0.1.0"
+description = "Agora — a market society of agents that bid for a scarce resource"
+requires-python = ">=3.10"
+
+# One distribution, where there used to be two. The split expressed an intent it did not
+# enforce: an agent image excludes the operator's tools by not COPYing `onboarding/`, never by
+# pip, because nothing here installs from an index. What the two pyprojects bought was the
+# appearance of a boundary — which is worse than none, since it invites trust. The boundary is
+# asserted now: see tests/test_layout.py and the importlinter contracts below.
+dependencies = [
+    "paho-mqtt>=2.0",
+    "pyoxigraph>=0.4",
+    "influxdb-client>=1.40",
+    "requests>=2.31",
+    "python-dotenv>=1.0",
+    "pyshacl>=0.26",
+    "cryptography>=42",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "import-linter>=2"]
+
+[project.scripts]
+# The agent. One process, one agent, told only its own id.
+agora-agent = "agent.runtime:main"
+
+# ONBOARDING — everything between a ratified world and a society that can be started. The
+# umbrella runs the four below; they stay separately callable because rotating one service's
+# credentials should not touch the other's.
+agora-onboard = "onboarding.onboard:main"
+agora-validate = "onboarding.validate:main"
+agora-influx = "onboarding.influx:main"
+agora-mqtt = "onboarding.mqtt:main"
+agora-compose = "onboarding.compose:main"
+agora-dashboards = "onboarding.dashboards:main"
+# A board's config.h is a per-instance deployment fact, and every value in it is already
+# stated by the world. Regenerating beats retrieving the board.
+agora-firmware = "onboarding.firmware:main"
+# Once per world, before it is onboarded. An agent may LOAD its two keys; it may not mint them.
+agora-keygen = "onboarding.keygen:main"
+# INFRA, not onboarding: the services' own identities and whom the broker trusts. Its lifecycle
+# is the infrastructure's — possibly another host, certainly another schedule.
+agora-infra-certs = "onboarding.infra_certs:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+# Flat: the packages sit at the repo root beside the trees they discover, which is how
+# `agent.capabilities.*` was already being imported before it was installable.
+where = ["."]
+include = ["agent*", "onboarding*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# ---------------------------------------------------------------------------------------------
+# The layering, stated and checked rather than implied by a directory.
+#
+# It is one-way and always was: onboarding reads the model an agent runs on. What the two
+# distributions could never express is the direction — pip is happy to install either alone,
+# and says nothing about who may import whom.
+#
+#   .venv/bin/lint-imports
+[tool.importlinter]
+root_packages = ["agent", "onboarding"]
+
+[[tool.importlinter.contracts]]
+name = "The agent never reaches for the operator's tools"
+type = "forbidden"
+source_modules = ["agent"]
+forbidden_modules = ["onboarding"]
+
+[[tool.importlinter.contracts]]
+# A capability that imported onboarding would put credential-minting code on the far side of a
+# boundary the image is built to keep it out of.
+name = "No capability or transport reaches for them either"
+type = "forbidden"
+source_modules = ["agent.capabilities", "agent.transports"]
+forbidden_modules = ["onboarding"]
+
+[[tool.importlinter.contracts]]
+# No capability imports another's Python: they meet through the T-Box, via agent.provider().
+name = "Capability packages do not import each other"
+type = "independence"
+modules = [
+    "agent.capabilities.actuation",
+    "agent.capabilities.market",
+    "agent.capabilities.perception",
+]

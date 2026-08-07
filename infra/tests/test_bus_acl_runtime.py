@@ -33,9 +33,9 @@ import uuid
 
 import pytest
 
-from agora import ratified
+from agent import ratified
 from onboarding import mqtt as mqtt_admin
-from agora.ontology import AG, WORLD_GRAPH
+from agent.ontology import AG, WORLD_GRAPH
 
 paho = pytest.importorskip("paho.mqtt.client")
 

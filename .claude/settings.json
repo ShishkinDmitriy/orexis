@@ -2,7 +2,7 @@
   "permissions": {
     "allow": [
       "Bash(agora-validate *)",
-      "Bash(pytest backend *)",
+      "Bash(pytest tests *)",
       "Bash(podman ps *)",
       "Bash(podman logs *)",
       "Bash(mosquitto_sub *)",
@@ -14,7 +14,7 @@
       "Bash(podman volume inspect *)",
       "Bash(bash ~/.claude/skills/okf-open-knowledge-format/scripts/validate.sh *)",
       "Bash(.venv/bin/agora-validate *)",
-      "Bash(.venv/bin/pytest backend *)"
+      "Bash(.venv/bin/pytest tests *)"
     ]
   }
 }

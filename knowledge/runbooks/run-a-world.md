@@ -175,11 +175,11 @@ The source trees are mounted read-only into the containers, so a restart is enou
 podman compose restart
 ```
 
-Rebuild only when a **dependency** changes (`backend/pyproject.toml`) or you added a file the
+Rebuild only when a **dependency** changes (`pyproject.toml`) or you added a file the
 image copies rather than mounts:
 
 ```bash
-podman build -t agora:local -f backend/Containerfile .
+podman build -t agora:local .
 podman compose up -d --force-recreate
 ```
 

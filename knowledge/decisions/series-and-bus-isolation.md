@@ -56,7 +56,7 @@ derived, never hand-maintained, because a second list is a second thing to drift
 The simulated-device row is the one that had to be *found* rather than reasoned out. A real
 plant gets wet because water physically arrives; nothing arrives to a stand-in, so it learns it
 was watered by reading the **valve's** command topic. No other wiring implies that grant, and
-`backend/tests/test_isolation.py` holds every module's `subscriptions()` to the derived grants,
+`tests/test_isolation.py` holds every module's `subscriptions()` to the derived grants,
 which is the check that caught it.
 
 It used to be granted to the *agent*, because the agent held the model. It is granted to the
@@ -141,9 +141,9 @@ decision is built on.
   delivers, so an under-derived ACL looks like an agent that has gone quiet rather than an error.
   Hence the test, rather than trust — and hence `agora-mqtt` reloading the broker itself rather
   than leaving it as a step to forget.
-- **The tests split by what they are a contract with.** `backend/tests/test_isolation.py` is a
+- **The tests split by what they are a contract with.** `tests/test_isolation.py` is a
   unit test of what the tools *derive* from a world, needs nothing running, and stays in the gate
-  (`pytest backend -q`). `infra/tests/` is a contract with mosquitto and InfluxDB themselves —
+  (`pytest tests -q`). `infra/tests/` is a contract with mosquitto and InfluxDB themselves —
   meaningless without them running, and about behaviour neither we nor any specification
   guarantees. It is run deliberately with `pytest infra -q` and is not part of the gate, so the
   fast suite stays fast and honest about needing no infrastructure.

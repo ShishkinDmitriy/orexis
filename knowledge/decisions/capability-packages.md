@@ -43,10 +43,16 @@ A **package** is a directory, and the tree it sits in says what kind it is:
 
 | | |
 |---|---|
-| `kernel/` | the T-Box everything layers on. Not a capability; there is exactly one |
-| `capabilities/<name>/` | what an agent can **do**. The extendable axis |
-| `transports/<name>/` | how a device is **reached**. Deliberately not a capability |
-| `domain/<name>/` | what the society is **about**. Vocabulary, usually no code |
+| `vocabulary/<name>/` | what terms MEAN. `agora` is the base everything layers on. At the repo ROOT, because onboarding validates and derives from the same terms |
+| `agent/capabilities/<name>/` | what an agent can **do**. The extendable axis |
+| `agent/transports/<name>/` | how a device is **reached**. Deliberately not a capability |
+
+**Two of the three sit inside `agent/`, and one does not.** A capability's Python is loaded by an
+agent runtime and by nothing else — onboarding reads its `ontology.ttl`, `shapes.ttl` and
+`rules.ru` through the loader, wherever they live, and never imports a module from one. So the
+tree belongs to the thing that runs it. Vocabulary is the opposite: onboarding validates worlds
+and derives capabilities from exactly those terms, so it is the one tree both halves genuinely
+share, and it stays at the root where neither owns it.
 
 Inside a package the same names mean the same things every time:
 
@@ -59,10 +65,10 @@ Inside a package the same names mean the same things every time:
 | `beliefs.py` | its `Block`s — the private parameters it reads, and their dataclasses |
 | `__init__.py` | the manifest: `PROVIDES = (…)` |
 
-**Every one of them is optional, and an omission is a statement.** `domain/water/` has no
-code, because a domain contributes vocabulary. `transports/mqtt/` has no `rules.ru`, because
+**Every one of them is optional, and an omission is a statement.** `vocabulary/water/` has no
+code, because a domain contributes vocabulary. `agent/transports/mqtt/` has no `rules.ru`, because
 a transport grants no capability — which is the whole point of it not being one.
-`capabilities/actuation/` has no `beliefs.py`, because it decides nothing: it reads the
+`agent/capabilities/actuation/` has no `beliefs.py`, because it decides nothing: it reads the
 device's own calibration from the world and obeys.
 
 `agora.loader` finds all of this by looking. There is no list of capabilities anywhere in the
@@ -72,7 +78,7 @@ codebase — not in the seeder, not in the validator, not in the runtime, not in
 
 **Adding a capability is adding a directory.** No registry line, no term constant, no belief
 accessor, no edit to any existing file. This is checkable, and it was checked: dropping a
-throwaway `capabilities/forecast/` into the tree made an agent load its vocabulary, run its
+throwaway `agent/capabilities/forecast/` into the tree made an agent load its vocabulary, run its
 derivation, and boot with `forecasting` in its module list — with nothing else
 in the repo touched. Deleting the directory removed it just as completely.
 
@@ -114,7 +120,7 @@ loading the module that issued it.
 **The market mechanism stayed in the kernel.** `market.py`, `auction.py` and `clearing.py` are
 pure and domain-neutral, and clearing is a separate authority on its way to being a separate
 service (see [standalone-clearing](/decisions/standalone-clearing.md)). What lives in
-`capabilities/market/` is the *choreography* — announce, collect, match, issue — which is the
+`agent/capabilities/market/` is the *choreography* — announce, collect, match, issue — which is the
 part that reads the vocabulary and holds a capability.
 
 # Cost, stated plainly

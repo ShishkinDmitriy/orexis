@@ -34,11 +34,12 @@ record is worse than none, because it is still cited.
    `"supplier"`, `"sensors/fern/moisture"`, `ag:world` are not. The single exception is the one
    identifier a process is handed at boot: its own agent id. Everything else is discovered from
    the graph. See [capability-packages](knowledge/decisions/capability-packages.md).
-2. **A capability is a directory.** `capabilities/<name>/` holds its own `ontology.ttl`,
+2. **A capability is a directory.** `agent/capabilities/<name>/` holds its own `ontology.ttl`,
    `shapes.ttl`, `rules.ru`, `terms.py`, `beliefs.py` and code. Nothing lists them —
-   `agora.loader` finds them. Adding one is adding a directory; no registry to edit. Capability
+   `agent.loader` finds them. Adding one is adding a directory; no registry to edit. Capability
    packages never import each other's Python: ask `agent.provider(family)` or contribute via
-   `annotate`/`urgency`.
+   `annotate`/`urgency`. They live *inside* `agent/` because only a runtime loads their Python;
+   onboarding reads their TTL through the loader and never imports a module from one.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
 installation: the broker image, the installation CA, Grafana's material, the admin token. A
 world's broker config, its ACL, its certificates and its device credentials live with the world.
@@ -90,14 +91,18 @@ agora-onboard <world>       # ONBOARDING: validate, then grant everything below.
   agora-influx <world>      #   a bucket per agent, and a token that opens only it
   agora-mqtt <world>        #   a credential per principal, and the broker ACL, derived
   agora-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
-agora-broker-cert           # INFRA, not onboarding — the broker's own cert and whom it trusts
-cd world/<world> && podman compose up -d               # one container per agent
-podman build -t agora:local -f backend/Containerfile .   # only when a dependency changes
-pytest backend -q      # 199 tests, no infra needed
+  agora-dashboards <world>  #   a Grafana folder per world, from what its agents observe
+agora-firmware <world>      # a board's config.h, from the world it belongs to
+agora-keygen <world>        # once per world, before it is onboarded
+agora-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
+cd world/<world> && podman compose up -d      # one container per agent
+podman build -t agora:local .                 # only when a dependency changes
+pytest tests -q        # 261 tests, no infra needed
 pytest infra -q        # 8 more, against the RUNNING broker and store — see below
+lint-imports           # the layering: onboarding may import agent, never the reverse
 ```
 
-`agora-validate` and `pytest backend` are the two gates. `pytest infra` is a third thing, run
+`agora-validate` and `pytest tests` are the two gates. `pytest infra` is a third thing, run
 deliberately, and it is not part of them.
 
 **`infra/tests/` is a contract with the infrastructure, not with the code.** It holds mosquitto
@@ -115,19 +120,25 @@ and grant exactly what its wiring implies, so adding an agent and re-running `ag
 the whole of deploying one. They stay separately callable because rotating one service's
 credentials should not touch the other's.
 
-**Its code is in `onboarding/`, not `backend/`, and is installed separately** (`pip install -e
-./onboarding`). The line is drawn by **who calls a function**, not by file: `validate_agent`
-stays in `agora` because an agent checks itself at boot, while `validate_world` moved because
-only the sovereign asks it; `sign` and `verify_command` stay because an actuator co-signs, while
-`create_keypair` moved — an agent that could mint a society's keys could sign for it. `agora-influx` reads the admin token, which opens every bucket and which no agent
-may ever hold — and an agent image copies `backend/` wholesale, so the surest way to guarantee
-that is for the code to be absent. `agora-influx` and `agora-mqtt`
+**Its code is in `onboarding/`, beside `agent/` and outside it.** The line is drawn by **who
+calls a function**, not by file: `validate_agent` stays in `agent` because an agent checks
+itself at boot, while `validate_world` moved because only the sovereign asks it; `sign` and
+`verify_command` stay because an actuator co-signs, while `create_keypair` moved — an agent that
+could mint a society's keys could sign for it. `agora-influx` reads the admin token, which opens
+every bucket and which no agent may ever hold, so the surest guarantee is that the code using it
+is absent from the image.
+
+**That absence is asserted, not implied.** There is ONE distribution now. What keeps onboarding
+out of an agent image is the `Containerfile` not naming it — `tests/test_layout.py` fails if a
+`COPY onboarding/` appears — and `lint-imports` holds the direction: onboarding may import
+agent, agent may never import onboarding. Two pyprojects used to look like that boundary while
+enforcing none of it. `agora-influx` and `agora-mqtt`
 need infra up; `agora-mqtt` must run before the broker will start at all, since its ACL is
 generated and mosquitto now refuses anonymous clients. It then **reloads** the broker itself
 (SIGHUP, not a restart — connected agents keep their sessions), so adding an agent or a world
 still interrupts nothing.
 
-`agora-validate` and `pytest backend` are the two gates. Both must pass before a change is done.
+`agora-validate` and `pytest tests` are the two gates. Both must pass before a change is done.
 
 Beliefs are the agent's: written once at birth, never touched by start or stop. Anything that
 would reset them on a restart is a bug, not a convenience.
@@ -136,7 +147,9 @@ would reset them on a restart is a bug, not a convenience.
 
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
-  production. `backend/tests/test_store.py` checks this by scanning the source text.
+  production. `tests/test_store.py` checks this by scanning the source text — and asserts each
+  source tree is still *found*, because moving files has twice emptied one of its globs and taken
+  cases off the guard without failing anything.
 - **Stray host processes are the usual cause of doubled data.** A leaked publisher from an
   earlier run keeps writing to the same topic, and both readings get ingested. `podman compose
   down` removes a society deterministically, which is half of why deployment is containers.
