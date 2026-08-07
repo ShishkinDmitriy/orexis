@@ -1,0 +1,66 @@
+# The gates, run on a machine that is not the Pi.
+#
+# These are the four checks AGENTS.md calls the gates, and they were being run by hand on every
+# change — on a Raspberry Pi, where the suite takes the better part of a minute and the person or
+# agent running it pays for reading the output. None of them need hardware, a broker, or a store:
+# `agora-validate` builds a world in memory, the tests build their belief bases in memory, and the
+# other two read files. So they belong here.
+#
+# What is deliberately NOT here, and still has to be done by hand on the bench:
+#
+#   pytest infra    it rewrites a live broker's passwd and ACL, SIGHUPs it, and creates and
+#                   deletes real Influx buckets. It is a contract with the infrastructure, not
+#                   with this code, and there is no infrastructure here to hold to it.
+#   the image       building it is easy; proving an agent BIRTHS, validates, connects over mTLS
+#                   and ingests is not, and that is the check that has actually caught things.
+#   a world         `podman compose up` and watching a reading travel simulator -> broker ->
+#                   agent -> store. Every interesting failure this project has had was found
+#                   there, not here.
+#
+# Green here means "nothing obviously broke". It does not mean the society runs.
+
+name: gates
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"      # what the agent image runs; see Containerfile
+          cache: pip
+
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # Each world is built from its files and held to every package's shapes. Separate steps so
+      # a failure names the world rather than making you read a log to find it.
+      - name: agora-validate sensing
+        run: agora-validate sensing
+      - name: agora-validate society
+        run: agora-validate society
+      - name: agora-validate simulation
+        run: agora-validate simulation
+
+      - name: pytest
+        run: pytest tests -q
+
+      # The layering the flat layout gave up a packaging split to assert: onboarding may import
+      # agent, agent may never import onboarding, and no capability or transport may touch
+      # onboarding at all. See knowledge/decisions/repository-layout.md.
+      - name: import contracts
+        run: lint-imports
+
+      # Vendored in tools/ rather than invoked from a skill in someone's home directory — a gate
+      # that only one machine can run is not a gate.
+      - name: OKF bundle
+        run: ./tools/validate-okf.sh knowledge

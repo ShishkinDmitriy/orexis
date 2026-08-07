@@ -17,7 +17,8 @@ If it is unavailable, the rules are short enough to follow by hand:
   Concept`, `Component`), plus `title` and `description`;
 - `index.md` carries **no** frontmatter — it is navigation, and its title is its heading. Only
   `knowledge/index.md` may declare `okf_version`;
-- validate with the skill's `scripts/validate.sh knowledge`, or `okflint`.
+- validate with `./tools/validate-okf.sh knowledge` — vendored from the skill, because a gate
+  that only runs from one person's home directory cannot be run by a fresh clone or by CI.
 
 **Durable knowledge goes in the bundle, never in a new README.** `domain/` says what a thing is
 and how to use it; `decisions/` says why a choice was made and which seams it leaves open. The

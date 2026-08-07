@@ -18,7 +18,7 @@ and the reasoning usually lives in a linked record under `knowledge/decisions/`.
 
     .venv/bin/agora-validate sensing        and society and simulation
     .venv/bin/pytest tests -q
-    bash ~/.claude/skills/okf-open-knowledge-format/scripts/validate.sh knowledge
+    ./tools/validate-okf.sh knowledge
 
 Run them as separate bare commands. Wrapping them in `cd … &&`, a `for` loop or a pipe defeats the
 permission allowlist, and every one of them will then stop and wait for a human who may not be
