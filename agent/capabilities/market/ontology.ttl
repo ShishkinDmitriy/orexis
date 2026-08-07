@@ -1,4 +1,5 @@
 @prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -23,6 +24,10 @@ ag:Market a owl:Class ; rdfs:label "Market" ;
 ag:marketFor a owl:ObjectProperty ; rdfs:domain ag:Market ;
     rdfs:label "market for" ;
     rdfs:comment "The resource being allocated. The cluster boundary: who competes with whom." .
+
+ag:aboutProperty a owl:ObjectProperty ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "about property" ;
+    rdfs:comment "Which observable property a bidder's DESIRE is expressed in — stated by the domain on the desire term itself, never on a market. A market is a lot: 1L of water is 1L of water whether or not anyone's soil is dry, and a market for a thing no instrument measures (a time slot, a right of way) must remain expressible. What is genuinely property-shaped is the stake: a target of 0.55 is 0.55 OF something, and until this term existed that number was dimensionless. A bidder holding readings of several properties of one subject needs to know which one its valuation is about; it follows this link from the term it already names." .
 
 ag:hosts a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Market ;
     rdfs:label "hosts" .

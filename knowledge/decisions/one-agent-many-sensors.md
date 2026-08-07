@@ -1,9 +1,9 @@
 ---
 type: Decision
 title: One agent, many sensors — what collides and what does not
-description: An agent may hold several sensors, and three of the four combinations work. The two that do not are both triggered by adding a second kind of sensor to a subject; this records what breaks, why, and the fix, including why the strictest reading is a warning rather than a refusal.
+description: An agent may hold several sensors, and every combination now works. Both failures were triggered by adding a second kind of sensor to a subject; this records what broke, why, what was done, and why the strictest reading is a warning rather than a refusal — which turned out to require changing what conformance means here.
 tags: [perception, sensors, observations, sense-mode, shacl, seams]
-timestamp: 2026-08-06T00:00:00Z
+timestamp: 2026-08-07T00:00:00Z
 ---
 
 # What is measured, not assumed
@@ -25,26 +25,77 @@ the right sensor and each cadence to its own command topic.
 | one agent, two sensors | |
 |---|---|
 | same mode, different subjects | **works**, as above |
-| same mode, same subject, same property | works; they share one record, last writer wins |
-| same mode, same subject, **different property** | **broken** — see below |
+| same mode, same subject, same property | works; they share one record, last writer wins — now warned about |
+| same mode, same subject, **different property** | **fixed** — see below |
 | **different modes** | **fixed** — see below |
 
-The mode is not what breaks. Both failures are triggered by the same event: giving one subject a
+The mode is not what broke. Both failures were triggered by the same event: giving one subject a
 *second kind* of sensor.
 
-# An observation is keyed by its subject alone
+# An observation was keyed by its subject alone
 
-`agora/sensed_writer.py` names the observation node `ag:obs_<subject_id>` and deletes it before
-each insert. The property observed is written *into* the node but is not part of its identity.
+`sensed_writer.py` named the observation node `ag:obs_<subject_id>` and deleted it before each
+insert. The property observed was written *into* the node but was not part of its identity.
 
-So a subject with a moisture probe and a temperature sensor has one record that the two take
-turns destroying. Worse than losing data: lookups are by subject, so whoever asks for moisture
-can be handed a temperature — a plausible number in the wrong unit, which is the worst shape a
-failure can take. A market can act on it.
+So a subject with a moisture probe and a temp/humidity board had one record the sensors took
+turns destroying. Losing data was the smaller half: lookups were by subject, so whoever asked
+for moisture could be handed something else — a number in the wrong unit, which is the worst
+shape a failure can take, because a market can act on it.
 
-**The fix is to key an observation by subject AND property**, and to make the reading lookup name
-the property it wants. That is wider than it sounds: `current_reading` is used by bidding and
-urgency, which currently assume one reading per subject.
+**How much it costs depends on the unit, and that is worth stating precisely**, because the
+first test written for this proved nothing and looked like it did. A *temperature* mistaken for
+a moisture fraction reads as 21.0 — far above any target — so the agent concludes it is
+comfortable, cedes, and quietly loses the round. That is a fault, but a cheap one, and an
+assertion about the resulting cadence passes whether or not the bug is present. *Humidity* is
+the dangerous half of the same board: it is a fraction, so 0.10 lands inside the bands agents
+actually hold and reads as a parched plant. The agent then bids real money for water because
+the **air** was dry, and nothing downstream can tell — a bid is private, and that one is
+perfectly well-formed.
+
+**The fix: an observation is keyed by subject AND property**, and `current_reading` takes the
+property it wants. It is a required argument rather than an optional one, because an omitted
+default would silently restore exactly the defect: a caller that cannot name the property does
+not know what it is asking.
+
+That reached further than the writer. Everything that carried "a reading of a subject" now
+carries the property too — `reading_recorded`, `on_reading_recorded`, `annotate`, `urgency`,
+`stale_after_s`, `sensor_for`, and the agent's public announcement, which now names the property
+because one event topic carries two kinds of number. A stake is held in a *property*, so a
+module handed a temperature answers `None` rather than judging it against the only scale it
+owns; the distinction that matters there is **no opinion versus an opinion of zero**.
+
+# How a bidder knows which property is its business — and why not from the market
+
+The market package must not name a domain property: `ag:SoilMoisture` in market code would be
+the domain leaking into the protocol. So it is derived. The question is *derived from what*, and
+the first answer was wrong.
+
+**The first answer put it on the market**: a market is `ag:marketFor` a resource, and the
+resource's class states which property it `ag:relieves`. It reads plausibly and it is wrong
+twice. A market is a **lot** — 1L of water is 1L of water whether or not anyone's soil is dry —
+so making a market carry a property means a market for something no instrument measures (a time
+slot, a right of way, a share of attention) cannot be declared at all. And it puts a fact about
+one *bidder's* valuation on the *venue*, which every participant would then have to share.
+
+**The property-shaped thing is the stake.** A target of 0.55 is 0.55 *of* something; the bands
+are in the same unit; and `ag:litresPerFraction` — "litres needed to raise moisture by 1.0" — is
+exactly the exchange rate between the lot and the property, which is where the coupling honestly
+lives. Until this was written down, that 0.55 was dimensionless, and the agent got away with it
+only because it had one kind of reading to compare against.
+
+So the domain states `ag:aboutProperty` on the desire term itself:
+
+```turtle
+ag:hasTarget ag:aboutProperty ag:SoilMoisture .
+```
+
+The bidder follows that link from `ag:hasTarget`, which its own beliefs block already names, so
+no domain property is written in market code and no world restates anything. A bidder whose
+desire names no property **refuses to start** — the only alternative left is judging whichever
+reading arrived last, which is the defect being fixed.
+
+Winning still changes the property. That is a consequence of the lot, not the identity of the
+market.
 
 # Two sensors, one property: a warning, not a refusal
 
@@ -57,7 +108,7 @@ legitimate simplification. Keying by subject and property makes it behave sensib
 the two sensors share one record and the last writer wins, which is what "these are one object"
 means.
 
-So `agora-validate` should say so at **`sh:Warning`** rather than `sh:Violation` — two sensors
+So `agora-validate` says so at **`sh:Warning`** rather than `sh:Violation` — two sensors
 observing one property of one subject may mean two subjects, and the world still conforms. That
 is an honest use of validation: it carries the judgement without refusing a world whose author
 simplified on purpose. The day zone-level watering is wanted, the tool has already pointed at the
@@ -65,6 +116,23 @@ place the model was thin.
 
 **Averaging them would be an opinion**, and opinions belong to capabilities rather than the
 kernel. Last-writer-wins is the right default precisely because it asserts nothing.
+
+## Writing a warning meant changing what conformance means here
+
+`sh:Warning` did nothing on its own, and the reason is in the spec rather than in pySHACL: SHACL
+defines conformance as *no validation results at all*, so a warning sets `conforms: false`
+exactly as a violation does. Adding one immediately failed a world that was fine — and the only
+thing `sh:Warning` had changed was a word in the report. A severity that cannot be survived is
+not a severity.
+
+So the verdict is now ours: `agent.validate.conforms` inspects the results graph and returns
+false only for `sh:Violation`. Everything else is printed and passed over, and nothing is
+hidden — the full report, warnings included, is what the caller prints.
+
+It also cost a duplicate. `tests/test_shapes.py` had its own copy of the pySHACL call, which was
+harmless while the two agreed and stopped being harmless the moment they diverged: the tests
+failed a world `agora-validate` accepted. It now calls the real function. Two ways to decide
+whether a world holds is one too many, and the one that ships is the one to test.
 
 # Mixed sense modes: the capabilities split, the sensors do not
 
@@ -105,15 +173,25 @@ first rule in AGENTS.md permits in code.
 
 # Why neither was caught
 
-Nothing in the suite gives one agent two sensors. Every world here wires one sensor per agent, so
-the combination is unexercised rather than untested-by-oversight — the tests are honest about
-what the worlds contain. A fix for either should bring the case into the suite: two sensors of
-one mode, two of different modes, and two observing different properties of one subject.
+Nothing in the suite gave one agent two sensors. Every ratified world wires one sensor per agent,
+so the combination was unexercised rather than untested-by-oversight — the tests were honest
+about what the worlds contain. All three cases are in the suite now: two of one mode, two of
+different modes, and two observing different properties of one subject. Each guard was verified
+by breaking the fix and watching it fail, which is the only way to know a guard works; one of
+them had to be rewritten when it turned out to pass with the fix removed.
 
 # Seams left open
 
 - **Nothing aggregates.** Two sensors on one property overwrite rather than combine, deliberately.
-- **`current_reading` is per subject.** Until it takes a property, a subject can hold exactly one
-  kind of reading, which is the bug above rather than a design.
-- **The warning does not exist yet.** It is described here and not implemented, so a world can
-  still under-model a pot in silence.
+- **No ratified world wires two sensors to one agent.** The behaviour is exercised only in tests,
+  against worlds built in a temporary directory. It has never run on the bench, and the board
+  that motivates it is not yet flashed.
+- **A desire is about exactly one property.** `ag:aboutProperty` is read as a single value, so an
+  agent whose stake spans two — wanting both moisture and nutrient held — has no representation.
+  Nothing depends on this yet, and widening it is one query and a loop.
+- **The link is on the term, so every agent in a domain shares it.** Two agents in one world
+  cannot denominate their desires differently. That is right for a domain where a target *means*
+  soil moisture, and it is the thing to revisit if a second kind of bidder appears in the same
+  society rather than in a second world.
+- **The warning is per sensor, not per pair.** Two probes on one property produce two warnings,
+  one from each end. Harmless, and mildly noisy at four probes.

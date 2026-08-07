@@ -42,7 +42,7 @@ class Module:
         """Return True if this module owns the message, so no other module sees it."""
         return False
 
-    def on_reading_recorded(self, subject_uri: str, value: float) -> None:
+    def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
         """This agent's perception recorded something new. Most modules do not care."""
 
     def start(self) -> None:
@@ -57,8 +57,12 @@ class Module:
     # merely needs it. Perception knows how to look; it does not know what counts as trouble,
     # because trouble is a fact about a stake, and the stake belongs to whoever holds the band.
     # So perception asks, and whoever can, answers.
+    #
+    # Both are asked about a (subject, property) pair rather than a subject. A stake is held in
+    # a property — a band is a band of moisture — so a module handed a temperature must be able
+    # to say it has no opinion, instead of judging it against the only scale it owns.
 
-    def annotate(self, subject_uri: str, value: float) -> dict:
+    def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
         """What I can add to my agent's public announcement about a reading.
 
         Voluntary disclosure: this is the agent saying what it makes of its own state, so
@@ -66,12 +70,12 @@ class Module:
         """
         return {}
 
-    def urgency(self, subject_uri: str, value: float) -> float | None:
+    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
         """How close this reading puts me to my own trouble: 0.0 (fine) to 1.0 (trouble).
 
-        None means I have no stake in this subject and therefore no opinion. Perception uses
-        it to decide how closely to watch — attention follows need, and need is not
-        perception's to define.
+        None means I have no stake in this subject and this property, and therefore no
+        opinion. Perception uses it to decide how closely to watch — attention follows need,
+        and need is not perception's to define.
         """
         return None
 

@@ -31,9 +31,18 @@ from __future__ import annotations
 
 from agent.market import EPS, Bid
 from agent.module import Module, Timer
+from agent.ontology import ONTOLOGY_GRAPH
+from agent.store import bindings
 
 from .beliefs import BIDDING_BLOCK
 from .terms import BIDDING, PERCEPTION
+
+# The term whose meaning this asks after is the one this package already names for its own
+# beliefs, so nothing here is written twice and nothing here is a domain property.
+_TARGET = BIDDING_BLOCK.terms["target"]
+_ABOUT_Q = f"""
+SELECT ?property WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+  ag:{_TARGET} ag:aboutProperty ?property }} }} LIMIT 1"""
 
 
 def value_bid(moisture: float, b, balance: float, allocated_l: float = 0.0) -> Bid | None:
@@ -73,6 +82,30 @@ class BiddingModule(Module):
         self.won_l = 0.0
         self.pending: dict | None = None  # a round I have been asked to answer
         self._deadline: Timer | None = None
+        self.about = self._what_my_desire_is_about()
+
+    def _what_my_desire_is_about(self) -> str:
+        """The observable property my valuation is denominated in.
+
+        Asked of my own desire, not of the market. A market is a LOT — 1L of water is 1L of
+        water whether or not anyone's soil is dry — and a market for something no instrument
+        measures has to stay expressible. What is genuinely property-shaped is the stake: my
+        target is 0.55 OF something, and my bands and my litres-per-fraction are in the same
+        unit. Until this link existed that number was dimensionless, and the agent got away
+        with it only because it had exactly one kind of reading to compare it to.
+
+        Read from the T-Box against the term this package already names, so no domain property
+        is written here and no world has to restate it. Refused rather than defaulted: with no
+        answer the only thing left is to judge whichever reading arrived last, which is the
+        confusion this exists to end. An agent that will not start is a visible fault; one
+        pricing water off a humidity is not.
+        """
+        rows = bindings(self.agent.store.query(_ABOUT_Q))
+        if not rows:
+            raise RuntimeError(
+                f"{self.agent.id} holds ag:{_TARGET} but the domain does not say what it is a "
+                f"target OF — state ag:aboutProperty on ag:{_TARGET} in the domain ontology")
+        return rows[0]["property"]
 
     def stop(self) -> None:
         if self._deadline:
@@ -97,18 +130,27 @@ class BiddingModule(Module):
 
     # --- what I make of a reading: the part only a stakeholder can supply ---
 
-    def annotate(self, subject_uri: str, value: float) -> dict:
+    def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
+        """My stake is in one property of one subject. Both have to match.
+
+        The property test is the new half. My band is a band of the thing my desire is
+        denominated in; handed a reading of anything else about the same subject I hold no
+        opinion, and saying so is the difference between silence and a confident wrong verdict.
+        """
+        return subject_uri == self.me.acts_for and observed_property == self.about
+
+    def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
         """My verdict on my own subject, for my agent's public announcement.
 
         A band and never a number: the host learns that I am in trouble, not how wet I am.
         """
-        if subject_uri != self.me.acts_for:
+        if not self._is_mine(subject_uri, observed_property):
             return {}
         return {"band": self.beliefs.band(value)}
 
-    def urgency(self, subject_uri: str, value: float) -> float | None:
+    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
         """How close this puts me to my floor. Perception uses it to set its cadence."""
-        if subject_uri != self.me.acts_for:
+        if not self._is_mine(subject_uri, observed_property):
             return None
         return self.beliefs.urgency(value)
 
@@ -131,7 +173,7 @@ class BiddingModule(Module):
         perception.sense_now()  # a listening agent cannot, and simply does not
 
         # If something current is already in hand, answer now; otherwise wait for the sensor.
-        reading = perception.fresh_reading(self.me.acts_for)
+        reading = perception.fresh_reading(self.me.acts_for, self.about)
         if reading is not None:
             self.submit(reading.value)
             return
@@ -141,16 +183,24 @@ class BiddingModule(Module):
         self._deadline = Timer(window, self.give_up)
         self._deadline.start()
 
-    def on_reading_recorded(self, subject_uri: str, value: float) -> None:
-        """The look I asked for came back. Now I can bid on it."""
-        if self.pending and subject_uri == self.me.acts_for:
-            self.submit(value)
+    def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
+        """The look I asked for came back. Now I can bid on it — if it is the one I asked for.
+
+        Matching on the subject alone meant that on a pot with two sensors, whichever reported
+        first won the race, and a temperature could be submitted as a bid on soil moisture.
+        """
+        if not self.pending or subject_uri != self.me.acts_for:
+            return
+        if observed_property != self.about:
+            return
+        self.submit(value)
 
     def give_up(self) -> None:
         if self._deadline:
             self._deadline.stop()
         if self.pending:
-            self.log.info("round %s: sitting out — %s", self.pending["round_id"], self._why_blind())
+            self.log.info("round %s: sitting out — %s",
+                          self.pending["round_id"], self._why_blind())
             self.pending = None
 
     def _why_blind(self) -> str:
@@ -162,12 +212,12 @@ class BiddingModule(Module):
         ignored.
         """
         perception = self.agent.provider(PERCEPTION)
-        reading = self.agent.beliefs.current_reading(self.me.acts_for)
+        reading = self.agent.beliefs.current_reading(self.me.acts_for, self.about)
         if reading is None:
             return "no reading yet from my sensor"
         if perception is None:
             return "nothing here perceives"
-        overdue_after = perception.stale_after_s(self.me.acts_for)
+        overdue_after = perception.stale_after_s(self.me.acts_for, self.about)
         if reading.is_fresh(overdue_after):
             return (f"my sensor is asleep and answered {reading.age_s():.0f}s ago; "
                     f"it is not due for {overdue_after}s")

@@ -19,11 +19,20 @@ import pytest
 from agent import genesis, loader
 from agent.genesis import agent_id_of
 from agent.ontology import SENSED_GRAPH
+from agent.sensed_writer import observation_uri
 from agent.store import Store
 
 REPO_ROOT = loader.REPO_ROOT
 WORLDS_ROOT = REPO_ROOT / "world"
 GENESIS_DIR = WORLDS_ROOT / "society"   # the world most tests are about
+
+# The property the water domain is about, spelled out because a reading is now keyed by it.
+MOISTURE = "http://example.org/agora#SoilMoisture"
+# Two more, for the tests that are about a subject with more than one property. HUMIDITY is
+# the pointed one: it is a fraction, so a reading of it is indistinguishable from a soil
+# moisture by inspection, and a bidder handed one will act on it.
+TEMPERATURE = "http://example.org/agora#AirTemperature"
+HUMIDITY = "http://example.org/agora#AirHumidity"
 
 
 @pytest.fixture(autouse=True)
@@ -56,12 +65,22 @@ def genesis_store(readings: dict[str, float] | None = None,
     if readings:
         ts = (result_time or datetime.now(timezone.utc)).isoformat()
         st.update("INSERT DATA { GRAPH <%s> {\n%s\n} }" % (SENSED_GRAPH, "\n".join(
-            f"""  ag:obs_{pid} a sosa:Observation ;
+            f"""  {observation_uri(pid, prop)} a sosa:Observation ;
                     sosa:hasFeatureOfInterest ag:{pid} ;
+                    sosa:observedProperty <{prop}> ;
                     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
                     sosa:resultTime "{ts}"^^xsd:dateTime ."""
-            for pid, value in readings.items())))
+            for (pid, prop), value in _by_subject_and_property(readings).items())))
     return st
+
+
+def _by_subject_and_property(readings: dict) -> dict[tuple[str, str], float]:
+    """`{"fern": 0.18}` means moisture; `{("fern", TEMPERATURE): 21.0}` says which.
+
+    Written through `observation_uri`, the same function the writer mints with, so a test can
+    never seed a node the production code would not have produced.
+    """
+    return {(k, MOISTURE) if isinstance(k, str) else k: v for k, v in readings.items()}
 
 
 def query_fn(st: Store):

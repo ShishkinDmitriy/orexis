@@ -51,23 +51,39 @@ def _shapes_and_vocabulary() -> tuple[rdflib.Graph, rdflib.Graph]:
     return ontology, shapes
 
 
+_SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+
+
 def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
-    """Validate, optionally about ONE node only.
+    """Validate, optionally about ONE node only. True means nothing was VIOLATED.
 
     `focus` matters for an agent checking itself. A capability shape targets every agent the
     world declares, but an agent holds only its own beliefs — so without it, fern would report
     tomato as missing a band it was never entitled to see. Scoping the focus asks the question
     the agent can actually answer: *am I* what my capabilities require me to be.
+
+    **The severity split is ours, not SHACL's.** The spec defines conformance as *no results at
+    all*, so pySHACL reports `conforms: False` for a `sh:Warning` exactly as it does for a
+    violation — which makes writing a warning pointless: it stops the world from onboarding and
+    the agent from starting, and the only thing `sh:Warning` changes is the word in the report.
+    A rig that is legal but worth a second look has to be sayable, so violations decide the
+    verdict here and everything else is printed and passed over.
+
+    Nothing is hidden by this. The full report, warnings included, is what the caller prints.
     """
     ontology, shapes = _shapes_and_vocabulary()
     data += ontology
     # advanced=True enables SPARQL-based targets, which is how a shape scopes itself to the
     # agents that composed its capability.
-    ok, _, report = shacl_validate(
+    _, results, report = shacl_validate(
         data, shacl_graph=shapes, ont_graph=ontology, inference="rdfs", advanced=True,
         **({"focus_nodes": [focus]} if focus else {}),
     )
-    return ok, report.strip()
+    violated = any(
+        results.value(result, _SH.resultSeverity) == _SH.Violation
+        for result in results.subjects(rdflib.RDF.type, _SH.ValidationResult)
+    )
+    return not violated, report.strip()
 
 
 def graph_from(st: Store, *graph_iris: str) -> rdflib.Graph:

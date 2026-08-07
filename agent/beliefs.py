@@ -154,11 +154,19 @@ class Beliefs:
             return None
         return self.read(block)
 
-    def current_reading(self, subject_uri: str) -> Reading | None:
-        """The latest observation of a subject, with the time it was taken."""
+    def current_reading(self, subject_uri: str, observed_property: str) -> Reading | None:
+        """The latest observation of one property of a subject, with the time it was taken.
+
+        The property is required rather than optional, and that is deliberate. It used to be
+        absent, and a subject with two sensors returned whichever had written last — so an
+        omitted argument would silently restore exactly the defect this signature exists to
+        prevent. A caller that does not know which property it means does not know what it is
+        asking.
+        """
         return _parse_reading(self.query(f"""
 SELECT ?value ?ts WHERE {{ GRAPH <{SENSED_GRAPH}> {{
   ?obs sosa:hasFeatureOfInterest <{subject_uri}> ;
+       sosa:observedProperty <{observed_property}> ;
        sosa:hasSimpleResult ?value .
   OPTIONAL {{ ?obs sosa:resultTime ?ts }}
 }} }} ORDER BY DESC(?ts) LIMIT 1"""))

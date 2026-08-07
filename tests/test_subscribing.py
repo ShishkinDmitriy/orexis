@@ -10,7 +10,7 @@ from dataclasses import replace
 
 import pytest
 
-from conftest import build_agent, genesis_store
+from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store
 
 
 @pytest.fixture
@@ -22,13 +22,14 @@ def sensor_of(agent):
     return agent.me.sensors[0]
 
 
-def cadence_for(agent, value):
+def cadence_for(agent, value, observed_property=MOISTURE):
     """The cadence the agent would choose for a reading of its own subject.
 
-    Two arguments now, and deliberately: perception asks *about a subject*, because whether a
-    number is trouble is the stakeholder's answer, not perception's.
+    Three arguments now, and deliberately: perception asks about a *property of* a subject,
+    because whether a number is trouble is the stakeholder's answer, and a stake is held in
+    one property. A thermometer's reading of the same pot is not the bidder's business.
     """
-    return agent.subscribing().cadence_for(agent.me.acts_for, value)
+    return agent.subscribing().cadence_for(agent.me.acts_for, observed_property, value)
 
 
 def cadences(agent):
@@ -52,8 +53,24 @@ def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
     """Urgency is supplied by whoever holds a band. Asked about a subject it has no stake in,
     the agent has no opinion — and an agent with no opinion does not watch closely."""
     p = fern.subscribing()
-    assert p.cadence_for("http://example.org/agora#someone_elses_plant", 0.0) == \
+    assert p.cadence_for("http://example.org/agora#someone_elses_plant", MOISTURE, 0.0) == \
         p.beliefs.slow_sleep_s
+
+
+def test_a_property_it_has_no_stake_in_gets_no_verdict(fern):
+    """Its own pot, its own sensor — but a temperature, and its band is a band of moisture.
+
+    The distinction that matters is *no opinion* versus *an opinion of zero*, which is why this
+    tests for None rather than for a cadence. 21.0 read as a moisture fraction lands far above
+    target and so scores as perfectly comfortable: the wrong answer and the right number, which
+    is the worst way for a bug to present. An assertion about the resulting cadence passes
+    whether or not the property is checked, and one about urgency does not.
+    """
+    assert fern.urgency(fern.me.acts_for, TEMPERATURE, 21.0) is None
+    assert fern.annotations(fern.me.acts_for, TEMPERATURE, 21.0) == {}
+
+    assert fern.urgency(fern.me.acts_for, MOISTURE, 0.10) is not None
+    assert fern.annotations(fern.me.acts_for, MOISTURE, 0.10) == {"band": "LOW"}
 
 
 def test_the_bounds_come_from_the_ontology_not_the_code(fern):
@@ -117,7 +134,7 @@ def test_it_announces_its_verdict_not_just_a_number(fern):
 
 def test_the_reading_is_recorded_as_its_own_assertion(fern):
     fern.deliver(sensor_of(fern).reading_topic, {"value": 0.123})
-    reading = fern.beliefs.current_reading(fern.me.acts_for)
+    reading = fern.beliefs.current_reading(fern.me.acts_for, MOISTURE)
     assert reading.value == pytest.approx(0.123)
     assert reading.is_fresh(120)
 
@@ -125,17 +142,22 @@ def test_the_reading_is_recorded_as_its_own_assertion(fern):
 def test_a_malformed_reading_changes_nothing(fern):
     fern.deliver(sensor_of(fern).reading_topic, {"sensor": "x"})  # no value
     assert cadences(fern) == []
-    assert fern.beliefs.current_reading(fern.me.acts_for) is None
+    assert fern.beliefs.current_reading(fern.me.acts_for, MOISTURE) is None
 
 
 # --- one agent, two sensors, two clocks --------------------------------------
 
 
-def _two_sensor_world(tmp_path):
+def _two_sensor_world(tmp_path, observes="ag:SoilMoisture"):
     """A fern watched by a scheduled board AND a push one, which no shipped world does.
 
     The combination is unexercised rather than untested by oversight — every world here wires one
     sensor per agent — which is exactly why the modules could take each other's sensors unnoticed.
+
+    `observes` picks which of the two cases this is. The default gives both sensors the SAME
+    property, which is the one the shapes warn about and where last-writer-wins is the defined
+    behaviour; passing a second property gives the ordinary rig — one pot, two things known
+    about it — which must be silent and must keep both records.
     """
     import shutil
 
@@ -153,7 +175,7 @@ def _two_sensor_world(tmp_path):
         '    ag:onBus ag:local_bus ;\n'
         '    ag:senseMode ag:Push ;\n'          # keeps its own clock, takes no orders
         "    ag:monitors ag:fern ;\n"
-        "    sosa:observes ag:SoilMoisture ;\n"
+        f"    sosa:observes {observes} ;\n"
         '    ag:readingTopic "sensors/chatter_fern/reading" .\n\n'
         "ag:fern_agent a ag:Agent ;",
     )
@@ -210,3 +232,39 @@ def test_the_scheduled_board_is_still_aimed_when_a_push_sensor_shares_the_agent(
     assert commanded == ["sensors/moisture_sensor_fern/command"], (
         "the scheduled board must be re-aimed, and the push one never commanded"
     )
+
+
+# --- one subject, two properties: the case an observation's key exists for --------------------
+
+
+def test_two_properties_of_one_pot_do_not_overwrite_each_other(monkeypatch, tmp_path):
+    """A moisture probe and a thermometer on one fern. Both records must survive.
+
+    Keyed by subject alone, the second reading deleted the first and lookups returned whichever
+    arrived last. Delivered in this order, asking for moisture would have answered 21.0 — the
+    right pot, the wrong quantity, and nothing in the number to say so.
+    """
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="ag:AirTemperature"), monkeypatch)
+
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+    agent.deliver("sensors/chatter_fern/reading", {"value": 21.0})
+
+    # The pot, not the agent — this world is sensing-only, so nobody acts for anything here.
+    pot = sensor_of(agent).subject
+    assert agent.beliefs.current_reading(pot, MOISTURE).value == pytest.approx(0.05)
+    assert agent.beliefs.current_reading(pot, TEMPERATURE).value == pytest.approx(21.0)
+
+
+def test_the_announcement_says_which_property_it_is_about(monkeypatch, tmp_path):
+    """One event topic now carries two kinds of number, so each has to name itself.
+
+    Nothing downstream could otherwise tell 0.05 from 21.0 except by how implausible it looks,
+    and "implausible" is not a unit.
+    """
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="ag:AirTemperature"), monkeypatch)
+
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+    agent.deliver("sensors/chatter_fern/reading", {"value": 21.0})
+
+    said = {e["property"]: e["value"] for e in agent.sent.to(agent.me.event_topic)}
+    assert said == {MOISTURE: 0.05, TEMPERATURE: 21.0}

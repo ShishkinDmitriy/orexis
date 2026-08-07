@@ -80,11 +80,14 @@ class Observations:
             # whichever capability holds a stake — see runtime.annotations.
             self.agent.publish(self.me.event_topic, {
                 "agent": self.me.agent_id, "subject": sensor.subject,
+                # Named, because a subject with two sensors announces two values on one topic
+                # and a listener that cannot tell them apart is worse off than one told nothing.
+                "property": sensor.observes,
                 "value": round(value, 3),
-                **self.agent.annotations(sensor.subject, value),
+                **self.agent.annotations(sensor.subject, sensor.observes, value),
             })
         # Counted after the writes, so a reading that failed both still counts as heard: the
         # sensor did deliver, and conflating "the board went quiet" with "the store refused" is
         # what makes an outage hard to place.
         self.agent.metrics.reading_recorded(sensor)
-        self.agent.reading_recorded(sensor.subject, value)
+        self.agent.reading_recorded(sensor.subject, sensor.observes, value)

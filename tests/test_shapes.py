@@ -7,10 +7,10 @@ asked for an interval it could not apply, and one on a scheduled board is requir
 
 import pytest
 import rdflib
-from pyshacl import validate
 
 from agent import genesis, loader
 from agent.ontology import WORLD_GRAPH, beliefs_graph
+from agent.validate import conforms as validate_conforms
 
 from agent.genesis import agent_id_of
 
@@ -48,14 +48,19 @@ def test_every_shipped_world_conforms(world):
 
 
 def _conforms(data: rdflib.Graph) -> bool:
-    ontology, shapes = rdflib.Graph(), rdflib.Graph()
-    for path in loader.ontology_files():
-        ontology.parse(path, format="turtle")
-    for path in loader.shapes_files():
-        shapes.parse(path, format="turtle")
-    conforms, _, _ = validate(data, shacl_graph=shapes, ont_graph=ontology,
-                              inference="rdfs", advanced=True)
-    return conforms
+    """The real verdict — `agent.validate.conforms`, not a second copy of it.
+
+    This used to call pySHACL itself with the same arguments, which was fine while the two
+    agreed and stopped being fine the moment the runtime learned to pass over `sh:Warning`:
+    the tests still failed a world that `agora-validate` accepted. Two ways to decide whether
+    a world holds is one too many, and the one that ships is the one to test.
+    """
+    ok, _ = validate_conforms(data)
+    return ok
+
+
+def _report(data: rdflib.Graph) -> str:
+    return validate_conforms(data)[1]
 
 
 def _mutate(update: str) -> rdflib.Graph:
@@ -174,6 +179,39 @@ def test_an_agent_may_hold_both_modes_at_once():
                 ag:readingTopic "sensors/chatter_fern/reading" .
             ag:fern_agent ag:polls ag:chatter_fern ; ag:hasCapability ag:Listening .
         }} }} WHERE {{}}"""))
+
+
+def _duplicate_probe(observes: str) -> rdflib.Graph:
+    return _mutate(f"""
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+            ag:second_probe_fern a ag:Sensor ; ag:localId "second_probe_fern" ;
+                ag:onBus ag:local_bus ; ag:senseMode ag:Scheduled ; ag:monitors ag:fern ;
+                sosa:observes {observes} ;
+                ag:readingTopic "sensors/second_probe_fern/reading" ;
+                ag:commandTopic "sensors/second_probe_fern/command" .
+            ag:fern_agent ag:polls ag:second_probe_fern .
+        }} }} WHERE {{}}""")
+
+
+def test_two_sensors_on_one_property_are_warned_about_and_not_refused():
+    """Two probes in one pot is legal wiring with defined behaviour — and a modelling smell.
+
+    They share one observation node and the last writer wins, which is right if they really are
+    one thing measured twice and wrong if they are in different soil. Neither reading can be
+    settled from the graph, so the world is accepted and the operator is told.
+    """
+    data = _duplicate_probe("ag:SoilMoisture")
+    assert _conforms(data), "a warning must not stop a world from being onboarded"
+    assert "another sensor already reads this property" in _report(data)
+
+
+def test_two_sensors_on_different_properties_are_not_warned_about():
+    """The ordinary rig, and the case the shape must not catch. A pot whose moisture and
+    temperature are both known is not a modelling error, and saying so would train the operator
+    to ignore the message that matters."""
+    data = _duplicate_probe("ag:AirTemperature")
+    assert _conforms(data)
+    assert "another sensor already reads this property" not in _report(data)
 
 
 def test_valve_must_carry_its_calibration():
