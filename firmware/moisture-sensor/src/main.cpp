@@ -26,7 +26,9 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <esp_sleep.h>
-#include <driver/rtc_io.h>
+#include <driver/gpio.h>
+#include <string.h>   // strcmp, for the band names — Arduino.h usually pulls this in, and
+                      // "usually" is not a thing to depend on across toolchain versions
 
 #include "config.h"
 
@@ -78,9 +80,16 @@ static void led(bool r, bool g, bool b) {
 static void ledBegin() {
   // Release the pads first: if the previous cycle held a colour through deep sleep, the hold
   // is still latched and digitalWrite would appear to do nothing at all.
-  rtc_gpio_hold_dis((gpio_num_t)LED_RED_PIN);
-  rtc_gpio_hold_dis((gpio_num_t)LED_GREEN_PIN);
-  rtc_gpio_hold_dis((gpio_num_t)LED_BLUE_PIN);
+  //
+  // gpio_hold_* and NOT rtc_gpio_hold_*, which is the pairing that matters and which I got
+  // wrong first: rtc_gpio_hold_en applies to a pad brought up as an RTC IO through
+  // rtc_gpio_init. These are driven with pinMode/digitalWrite, i.e. through the digital IO
+  // mux, and the digital half of the API is what holds those. The two compile identically and
+  // the wrong one simply does not latch.
+  gpio_deep_sleep_hold_dis();
+  gpio_hold_dis((gpio_num_t)LED_RED_PIN);
+  gpio_hold_dis((gpio_num_t)LED_GREEN_PIN);
+  gpio_hold_dis((gpio_num_t)LED_BLUE_PIN);
   pinMode(LED_RED_PIN, OUTPUT);
   pinMode(LED_GREEN_PIN, OUTPUT);
   pinMode(LED_BLUE_PIN, OUTPUT);
@@ -109,9 +118,9 @@ static void ledBand(const char *band) {
 // orders of magnitude. It is deliberate here because this board is on USB. Anything on a
 // battery should call led(0,0,0) instead and accept that the colour is only a flash.
 static void ledHoldThroughSleep() {
-  rtc_gpio_hold_en((gpio_num_t)LED_RED_PIN);
-  rtc_gpio_hold_en((gpio_num_t)LED_GREEN_PIN);
-  rtc_gpio_hold_en((gpio_num_t)LED_BLUE_PIN);
+  gpio_hold_en((gpio_num_t)LED_RED_PIN);
+  gpio_hold_en((gpio_num_t)LED_GREEN_PIN);
+  gpio_hold_en((gpio_num_t)LED_BLUE_PIN);
   gpio_deep_sleep_hold_en();
 }
 
@@ -238,13 +247,18 @@ static void connectMqtt() {
     }
     Serial.printf("MQTT %s:%d attempt %u failed (state %d): %s\n",
                   MQTT_HOST, MQTT_PORT, ++attempt, mqtt.state(), mqttError(mqtt.state()));
+    // Magenta from the FIRST failure, not from the last. It used to light only once the board
+    // gave up, which is ten attempts and — with PubSubClient's socket timeout on an
+    // unreachable broker — can be minutes of a board that looks perfectly fine. The whole
+    // reason to have a lamp is to see the fault while it is happening.
+    led(1, 0, 1);
     // Give up eventually rather than spinning on a wall forever: a board that cannot reach
     // the broker should sleep and retry on its own clock, not hold the battery open.
     if (attempt >= MQTT_TRIES) {
       Serial.printf("giving up for now — sleeping %us and trying again\n", sleep_s);
-      // Magenta, held: WiFi worked and the broker refused us, which is a credential or an ACL
-      // problem and wants a different person than a red LED does.
-      led(1, 0, 1);
+      // Held through the sleep, so the fault is still visible on a board that is now idle.
+      // WiFi worked and the broker refused us: a credential or an ACL problem, which wants a
+      // different person than a red LED does.
       ledHoldThroughSleep();
       esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
       esp_deep_sleep_start();
