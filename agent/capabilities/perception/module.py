@@ -46,7 +46,7 @@ from agent.observation import Observations
 from agent.store import bindings
 
 from .beliefs import LISTENING_BLOCK, SUBSCRIBING_BLOCK
-from .terms import LISTENING, SUBSCRIBING
+from .terms import LISTENING, PUSH, SCHEDULED, SUBSCRIBING
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future perception inherits them.
@@ -62,11 +62,25 @@ class PerceptionModule(Module):
     Identical whether the reading was asked for or simply arrived.
     """
 
+    # Which kind of device this module is for. The derivation grants the capability from the
+    # sensor's ag:senseMode; this is the same pairing, read from the other side.
+    SENSE_MODE: str | None = None
+
     def __init__(self, agent):
         super().__init__(agent)
+        # MINE, not the agent's. An agent may hold sensors of different modes, and it derives a
+        # capability for each — but a module that took all of them would aim a cadence at a device
+        # that takes no orders, and swallow readings from one it never re-aims. The derivation
+        # split the capabilities; this splits the sensors the same way.
+        self.sensors = tuple(s for s in self.me.sensors
+                             if self.SENSE_MODE is None or s.sense_mode == self.SENSE_MODE)
+        unclaimed = [s.local_id for s in self.me.sensors if s not in self.sensors]
+        if unclaimed:
+            self.log.debug("%s: not mine — %s", self.name, ", ".join(unclaimed))
+
         # one driver per sensor, chosen from its binding — not from anything the agent believes
-        self.drivers = {s.uri: driver_for(s, self.publish) for s in self.me.sensors}
-        for sensor in self.me.sensors:
+        self.drivers = {s.uri: driver_for(s, self.publish) for s in self.sensors}
+        for sensor in self.sensors:
             if self.drivers[sensor.uri] is None:
                 self.log.warning("%s states no binding I can speak — it will never be read",
                                  sensor.local_id)
@@ -86,14 +100,14 @@ class PerceptionModule(Module):
     def subscriptions(self) -> list[str]:
         # exactly my own sensors, and only where their binding listens at all — never a
         # wildcard, so the access grant stays visible in the subscription itself
-        return [t for s in self.me.sensors if self.drivers[s.uri]
+        return [t for s in self.sensors if self.drivers[s.uri]
                 for t in self.drivers[s.uri].subscriptions(s)]
 
     def stop(self) -> None:
         self.observations.close()
 
     def handle(self, topic: str, payload: bytes) -> bool:
-        for sensor in self.me.sensors:
+        for sensor in self.sensors:
             driver = self.drivers[sensor.uri]
             if driver is None or not driver.owns(sensor, topic):
                 continue
@@ -129,7 +143,7 @@ class PerceptionModule(Module):
 
     def sensor_for(self, subject_uri: str):
         """Which of my sensors watches this subject, if any."""
-        return next((s for s in self.me.sensors if s.subject == subject_uri), None)
+        return next((s for s in self.sensors if s.subject == subject_uri), None)
 
 
 class SubscribingModule(PerceptionModule):
@@ -141,6 +155,7 @@ class SubscribingModule(PerceptionModule):
     """
 
     CAPABILITY = SUBSCRIBING
+    SENSE_MODE = SCHEDULED
     name = "subscribing"
 
     def __init__(self, agent):
@@ -203,7 +218,7 @@ class SubscribingModule(PerceptionModule):
 
     def sense_now(self) -> None:
         """Best-effort nudge — lands only if the device is awake to hear it."""
-        for sensor in self.me.sensors:
+        for sensor in self.sensors:
             if self.drivers[sensor.uri]:
                 self.drivers[sensor.uri].sense_now(sensor)
 
@@ -217,6 +232,7 @@ class ListeningModule(PerceptionModule):
     """
 
     CAPABILITY = LISTENING
+    SENSE_MODE = PUSH
     name = "listening"
 
     def __init__(self, agent):

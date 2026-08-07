@@ -55,6 +55,12 @@ class Sensor:
     subject: str  # URI of what it monitors
     subject_id: str
     observes: str  # URI of the property it reads
+    # WHO HOLDS THE CLOCK — ag:Scheduled keeps an interval it is given, ag:Push keeps its own.
+    # The derivation already reads this to decide whether the agent gains ag:Subscribing or
+    # ag:Listening; carrying it here is what lets the runtime partition what the derivation
+    # separated. Without it an agent holding one of each gave both to both modules, and the
+    # scheduled sensor's cadence was silently never re-aimed.
+    sense_mode: str | None = None
     bus: str | None = None  # URI of the bus it declares itself on, if any
     reading_topic: str | None = None
     command_topic: str | None = None
@@ -138,10 +144,11 @@ def _sensors_q(agent_uri: str) -> str:
     """My sensors and their bindings. The binding parts are OPTIONAL: what a device states
     about how to reach it varies by transport, and a driver is picked from what is there."""
     return f"""
-SELECT ?sensor ?localId ?subject ?subjectId ?observes ?bus ?readingTopic ?commandTopic
+SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic ?commandTopic
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   <{agent_uri}> ag:polls ?sensor .
   ?sensor ag:localId ?localId ; ag:monitors ?subject ; sosa:observes ?observes .
+  OPTIONAL {{ ?sensor ag:senseMode ?senseMode }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
   OPTIONAL {{ ?sensor ag:onBus ?bus }}
   OPTIONAL {{ ?sensor ag:readingTopic ?readingTopic }}
@@ -235,6 +242,7 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
         Sensor(
             uri=r["sensor"], local_id=r["localId"], subject=r["subject"],
             subject_id=r.get("subjectId") or "", observes=r["observes"],
+            sense_mode=r.get("senseMode"),
             bus=r.get("bus"), reading_topic=r.get("readingTopic"),
             command_topic=r.get("commandTopic"),
         )

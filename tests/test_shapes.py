@@ -146,13 +146,34 @@ def test_a_device_on_the_bus_must_state_where_it_publishes():
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}"""))
 
 
-def test_a_listening_agent_must_not_hold_a_cadence():
-    """Requiring a policy it cannot enforce would be theatre; stating one misdescribes it."""
+def test_an_agent_that_only_listens_must_not_hold_a_cadence():
+    """Requiring a policy it cannot enforce would be theatre; stating one misdescribes it.
+
+    ONLY listens — the Subscribing capability has to go too. An agent that holds both is a
+    legitimate rig (a scheduled probe and a push thermometer on one plant) and needs both blocks.
+    """
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Scheduled .
+                                           ag:fern_agent ag:hasCapability ag:Subscribing }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Push .
                                            ag:fern_agent ag:hasCapability ag:Listening }} }}
         WHERE  {{}}"""))
+
+
+def test_an_agent_may_hold_both_modes_at_once():
+    """A plant with a scheduled probe and a push thermometer is ordinary, and was unvalidatable.
+
+    Two shapes each written for a pure agent contradicted each other here: one demanded an
+    interval, the other forbade it. Nothing said the combination was disallowed; it simply could
+    not be expressed.
+    """
+    assert _conforms(_mutate(f"""
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+            ag:chatter_fern a ag:Sensor ; ag:localId "chatter_fern" ; ag:onBus ag:local_bus ;
+                ag:senseMode ag:Push ; ag:monitors ag:fern ; sosa:observes ag:SoilMoisture ;
+                ag:readingTopic "sensors/chatter_fern/reading" .
+            ag:fern_agent ag:polls ag:chatter_fern ; ag:hasCapability ag:Listening .
+        }} }} WHERE {{}}"""))
 
 
 def test_valve_must_carry_its_calibration():
