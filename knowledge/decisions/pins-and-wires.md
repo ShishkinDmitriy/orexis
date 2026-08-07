@@ -20,13 +20,13 @@ It now splits along the seam the loader already provided — a directory under `
 package, found by looking and never listed, exactly like a capability:
 
 ```
-vocabulary/agora/            agents, capabilities, world, naming, graphs   (205 -> 108 lines)
-vocabulary/stand/            hosts, boards, peripherals, pins, wires, roles
-vocabulary/onewire/          a protocol
-vocabulary/i2c/              a protocol
-vocabulary/dht11/            a part, and the shapes that refuse it wired wrong
-vocabulary/rgb-led/          a part
-vocabulary/moisture-probe/   a part
+vocabulary/agora/            agents, capabilities, world, hosts, naming, graphs   (205 -> ~115)
+vocabulary/microcontroller/  boards, peripherals, pins, wires, roles       mc:
+vocabulary/onewire/          a protocol                                    onewire:
+vocabulary/i2c/              a protocol                                    i2c:
+vocabulary/dht11/            a part, and the shapes that refuse it wired wrong   dht11:
+vocabulary/rgb-led/          a part                                        rgbled:
+vocabulary/moisture-probe/   a part                                        probe:
 vocabulary/water/            the domain, unchanged
 ```
 
@@ -38,6 +38,29 @@ vocabulary/water/            the domain, unchanged
 **agent** reaches a device, and each has Python behind it. Nothing in this repository speaks
 one-wire — the *board* does, in firmware, and the agent never sees it. A transport package with
 no driver would be a promise the runtime cannot keep.
+
+## The hardware layer keeps its own namespaces
+
+Every module here used to declare an `owl:Ontology` IRI and then put all its terms in `ag:` —
+the ontology IRI and the term namespace disagreed, which reads as an error and was a
+convention: one namespace, many documents.
+
+The hardware packages now have namespaces of their own, and the reason is economy rather than
+tidiness. This is the layer that grows a term per pin. With one shared namespace every term has
+to carry its board's name to stay unambiguous — `ag:Esp32Gpio34` — and with its own it does not:
+`esp32:Gpio34Pin`. The prefix is already saying which board.
+
+**It can afford this because no runtime code names these terms.** An agent never queries a pin.
+`agent/ontology.py`'s `term()` mints `AG + name` and every capability's `terms.py` depends on
+that, so moving the *society* vocabulary would be a large and risky change for no benefit —
+but the hardware vocabulary is read only by `onboarding/firmware.py` and by the shapes, which
+spell IRIs in full anyway. Three files, none of them the runtime.
+
+The society kernel, the capabilities and the domain stay in `ag:`. Two conventions in one
+bundle is a cost, and the line between them is exactly the line the code already draws.
+
+`ComputeHost`, `lanAddress` and `runsOn` went back to the kernel while this was being done.
+They describe where agents execute; they are not electronics and never had pins.
 
 # A pin assignment was one node doing two objects' work
 
@@ -59,15 +82,16 @@ one thing on a breadboard that people actually get wrong, which is the wire.
 Now there are three objects and the wire is one of them:
 
 ```turtle
-ag:air_vcc a ag:Pin ; ag:pinRole ag:PowerPinRole .
-ag:pin_3v3 a ag:Pin ; ag:pinRole ag:PowerPinRole ; ag:railVolts 3.3 ; skos:notation "3V3" .
-[] a ag:Wire ; ag:joins ag:air_vcc , ag:pin_3v3 .
+ag:air_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+ag:pin_3v3 a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ; skos:notation "3V3" .
+[]         a mc:Wire ; mc:joins ag:air_vcc , ag:pin_3v3 .
 ```
 
-**An instance of `ag:Pin` is a piece of metal. An instance of `ag:PinRole` is abstract — it has
-no metal anywhere.** `ag:pinRole` links them, and a pin *plays* a role rather than *being* one.
-That distinction is why the roles are named `ag:RedPinRole` and not `ag:RedPin`: a term ending in
-"Pin" that is typed as a role is a category error sitting in plain sight, and it will be copied.
+**An instance of `mc:Pin` is a piece of metal. An instance of `mc:PinRole` is abstract — it has
+no metal anywhere.** `mc:pinRole` links them, and a pin *plays* a role rather than *being* one.
+That distinction is why the roles are named `rgbled:RedPinRole` and not `rgbled:RedPin`: a term
+ending in "Pin" that is typed as a role is a category error sitting in plain sight, and it gets
+copied.
 
 `skos:notation` carries what is **printed** next to the leg, which is not the number. On a
 DevKitC, GPIO 36 and 39 are silkscreened VP and VN — the number appears nowhere on the board, so
@@ -106,11 +130,15 @@ the only reason it was cheap.
 
 # Seams left open
 
-- **Only the sensing world has a stand.** Society and simulation declare no boards, so the whole
+- **Only the sensing world has a board.** Society and simulation declare no boards, so the whole
   of this is exercised by one world and the test stand.
-- **`ag:gpio` still implies the ESP32.** The ranges 0-39, 6-11 and 34-39 are that family's, stated
-  in the stand rather than per board model. A second family of board would need them keyed on
-  something — probably `ag:model`, which nothing derives behaviour from today by explicit choice.
+- **`mc:gpio` still implies the ESP32.** The ranges 0-39, 6-11 and 34-39 are that family's,
+  written as literals into the shapes rather than described per board model. The next step is a
+  `vocabulary/esp32/` package where each position is a class — `esp32:Gpio34Pin` carrying
+  `mc:gpio 34`, its silkscreen notation and whether it can be driven — so the rules read the
+  board's own description and stop knowing any numbers. That is also how a world says a board has
+  ONLY those pins: every position subclasses `esp32:Pin`, and one SHACL constraint refuses
+  anything else.
 - **A wire is untyped.** Nothing distinguishes a jumper from a solder joint from a PCB trace, and
   nothing needs to yet.
 - **Nothing checks a rail can supply the current drawn.** Every peripheral here draws milliamps;

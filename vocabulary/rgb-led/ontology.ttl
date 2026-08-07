@@ -1,14 +1,16 @@
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rgbled: <http://example.org/agora/rgb-led#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
 
 <http://example.org/agora/rgb-led> a owl:Ontology ;
     rdfs:label "RGB LED" ;
     rdfs:comment """One part, its own package. Four legs: three driven and one common return.""" .
 
-ag:RgbLed a owl:Class ; rdfs:subClassOf ag:Peripheral ; rdfs:label "RGB LED" ;
+rgbled:RgbLed a owl:Class ; rdfs:subClassOf mc:Peripheral ; rdfs:label "RGB LED" ;
     rdfs:comment "Three driven legs and a common return, which IS now modelled — a common cathode goes to ground and a common anode to a rail, and which one it is decides whether every colour comes out as itself or as its complement. That used to be a comment in a world file saying 'check before you solder'; a checker cannot read a comment." .
 
-ag:RedPinRole a ag:OutputRole ; rdfs:label "red" .
-ag:GreenPinRole a ag:OutputRole ; rdfs:label "green" .
-ag:BluePinRole a ag:OutputRole ; rdfs:label "blue" .
+rgbled:RedPinRole a mc:OutputRole ; rdfs:label "red" .
+rgbled:GreenPinRole a mc:OutputRole ; rdfs:label "green" .
+rgbled:BluePinRole a mc:OutputRole ; rdfs:label "blue" .

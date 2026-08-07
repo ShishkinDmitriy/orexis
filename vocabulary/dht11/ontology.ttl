@@ -2,14 +2,16 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix dht11: <http://example.org/agora/dht11#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
 
 <http://example.org/agora/dht11> a owl:Ontology ;
     rdfs:label "DHT11 temperature and humidity sensor" ;
-    rdfs:comment """One part, its own package, layered on the stand and on one-wire. This is the shape every concrete peripheral should take: what it IS, how many legs it has and what they are for, and the shapes that refuse it wired wrong. Adding a part is adding a directory.""" .
+    rdfs:comment """One part, its own package, layered on the microcontroller vocabulary and on one-wire. This is the shape every concrete peripheral should take: what it IS, how many legs it has and what they are for, and the shapes that refuse it wired wrong. Adding a part is adding a directory.""" .
 
-ag:TempHumiditySensor a owl:Class ; rdfs:subClassOf ag:Peripheral ;
+dht11:TempHumiditySensor a owl:Class ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "Temperature and humidity sensor" ;
     rdfs:comment "The family. One device reporting TWO properties down one line, which is what makes it awkward: the model gives a sensor one sosa:observes and the runtime takes one reading per message, so a world can state and wire this and nothing polls it yet — see issue #51." .
 
-ag:Dht11 a owl:Class ; rdfs:subClassOf ag:TempHumiditySensor ; rdfs:label "DHT11" ;
+dht11:Dht11 a owl:Class ; rdfs:subClassOf dht11:TempHumiditySensor ; rdfs:label "DHT11" ;
     rdfs:comment "Three legs and a pull-up to its own VCC, which is the fact worth writing down: the data line idles at whatever the part is powered from, so the rail choice IS the logic level. On a KY-015 breakout the pull-up is on the board. Rated 3-5V, and that range is a trap next to a 3.3V microcontroller — it will run perfectly happily on 5V and present 5V to an input that is not 5V tolerant." .

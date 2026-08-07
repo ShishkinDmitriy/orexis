@@ -1,8 +1,13 @@
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dht11: <http://example.org/agora/dht11#> .
+@prefix onewire: <http://example.org/agora/onewire#> .
+@prefix probe: <http://example.org/agora/moisture-probe#> .
+@prefix rgbled: <http://example.org/agora/rgb-led#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
 
-# The stand this world runs on: what is physically here and how it is wired.
+# The hardware this world runs on: what is physically here and how it is wired.
 #
 # Separate from the society beside it because they change for different reasons and are read by
 # different people. A plant is added by editing the society; a probe is moved to another pin by
@@ -18,7 +23,7 @@
 
 ag:raspberry a ag:ComputeHost ;
     ag:localId "raspberry" ;
-    ag:model "Raspberry Pi 5" ;
+    mc:model "Raspberry Pi 5" ;
     # DHCP, and therefore a fact with an expiry date. It was .126 when this was written and the
     # lease has since moved to .130, which cost an evening: the board opened TCP to an address
     # that is not this Pi, so it failed with a bare "connection failed" and the broker logged
@@ -33,12 +38,12 @@ ag:fern_agent ag:runsOn ag:raspberry .
 
 ##########  The board at the edge  ##########
 
-ag:esp32_fern a ag:Microcontroller ;
+ag:esp32_fern a mc:Microcontroller ;
     ag:localId "esp32_fern" ;
-    ag:model "ESP32-WROOM-32D" ;
+    mc:model "ESP32-WROOM-32D" ;
     ag:onBus ag:local_bus ;
-    ag:firmware "moisture-sensor" ;
-    ag:carries ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
+    mc:firmware "moisture-sensor" ;
+    mc:carries ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is ag:Subscribing: the board keeps the interval and cannot be reached in between." .
 
 ##########  The board's own legs  ##########
@@ -47,81 +52,81 @@ ag:esp32_fern a ag:Microcontroller ;
 # no role — it is general purpose until something is wired to it. A rail carries its voltage,
 # which is what makes the 3V3-versus-VIN choice checkable rather than a warning in a comment.
 
-ag:esp32_fern ag:hasPin ag:pin_gpio25 , ag:pin_gpio26 , ag:pin_gpio27 ,
+ag:esp32_fern mc:hasPin ag:pin_gpio25 , ag:pin_gpio26 , ag:pin_gpio27 ,
                         ag:pin_gpio32 , ag:pin_gpio34 , ag:pin_3v3 , ag:pin_gnd ;
-    ag:logicVolts 3.3 .
+    mc:logicVolts 3.3 .
 
-ag:pin_gpio25 a ag:Pin ; ag:gpio 25 ; skos:notation "D25" .
-ag:pin_gpio26 a ag:Pin ; ag:gpio 26 ; skos:notation "D26" .
-ag:pin_gpio27 a ag:Pin ; ag:gpio 27 ; skos:notation "D27" .
-ag:pin_gpio32 a ag:Pin ; ag:gpio 32 ; skos:notation "D32" .
-ag:pin_gpio34 a ag:Pin ; ag:gpio 34 ; skos:notation "D34" .
-ag:pin_3v3    a ag:Pin ; ag:pinRole ag:PowerPinRole ; ag:railVolts 3.3 ; skos:notation "3V3" .
-ag:pin_gnd    a ag:Pin ; ag:pinRole ag:GroundPinRole ; skos:notation "GND" .
+ag:pin_gpio25 a mc:Pin ; mc:gpio 25 ; skos:notation "D25" .
+ag:pin_gpio26 a mc:Pin ; mc:gpio 26 ; skos:notation "D26" .
+ag:pin_gpio27 a mc:Pin ; mc:gpio 27 ; skos:notation "D27" .
+ag:pin_gpio32 a mc:Pin ; mc:gpio 32 ; skos:notation "D32" .
+ag:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "D34" .
+ag:pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ; skos:notation "3V3" .
+ag:pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" .
 
 ##########  What is wired to it  ##########
 
 # Declared as a sensor in world.ttl; this says what KIND of instrument it is, what legs it has,
 # and what its numbers mean. GPIO 34 is deliberate and should not be moved casually: it is ADC1,
 # the only ADC that keeps working while WiFi is up.
-ag:moisture_sensor_fern a ag:CapacitiveMoistureProbe ;
-    ag:model "Capacitive Soil Moisture Sensor v2.0" ;
-    ag:hasPin ag:probe_out , ag:probe_vcc , ag:probe_gnd ;
+ag:moisture_sensor_fern a probe:CapacitiveMoistureProbe ;
+    mc:model "Capacitive Soil Moisture Sensor v2.0" ;
+    mc:hasPin ag:probe_out , ag:probe_vcc , ag:probe_gnd ;
     # Measured on this probe, in this pot. Carried here rather than in the firmware because it
     # is per-instance and re-measured over time; changing it must not need a screwdriver.
-    ag:rawDry 3200 ;
-    ag:rawWet 1300 .
+    probe:rawDry 3200 ;
+    probe:rawWet 1300 .
 
-ag:probe_out a ag:Pin ; ag:pinRole ag:AnalogInPinRole .
-ag:probe_vcc a ag:Pin ; ag:pinRole ag:PowerPinRole .
-ag:probe_gnd a ag:Pin ; ag:pinRole ag:GroundPinRole .
+ag:probe_out a mc:Pin ; mc:pinRole mc:AnalogInPinRole .
+ag:probe_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+ag:probe_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
 # This board has no user LED of its own, so an external one says what the agent makes of the pot.
 # 25/26/27 are safe outputs — no strapping duty at boot, and their ADC2 membership costs nothing
 # to a driven line. It is lit only while the board is awake and dark through every sleep.
-ag:status_led_fern a ag:RgbLed ;
+ag:status_led_fern a rgbled:RgbLed ;
     ag:localId "status_led_fern" ;
-    ag:model "KY-016 4-pin RGB LED (common cathode)" ;
-    ag:hasPin ag:led_r , ag:led_g , ag:led_b , ag:led_common .
+    mc:model "KY-016 4-pin RGB LED (common cathode)" ;
+    mc:hasPin ag:led_r , ag:led_g , ag:led_b , ag:led_common .
 
-ag:led_r      a ag:Pin ; ag:pinRole ag:RedPinRole .
-ag:led_g      a ag:Pin ; ag:pinRole ag:GreenPinRole .
-ag:led_b      a ag:Pin ; ag:pinRole ag:BluePinRole .
+ag:led_r      a mc:Pin ; mc:pinRole rgbled:RedPinRole .
+ag:led_g      a mc:Pin ; mc:pinRole rgbled:GreenPinRole .
+ag:led_b      a mc:Pin ; mc:pinRole rgbled:BluePinRole .
 # Common CATHODE, so the return goes to ground. A common anode would go to the 3V3 rail instead,
 # and every colour would come out as its complement — which used to be a comment telling you to
 # check before soldering. It is a wire now, and a wire is a thing a checker can read.
-ag:led_common a ag:Pin ; ag:pinRole ag:GroundPinRole .
+ag:led_common a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
 # Wired and stated, NOT yet polled — see issue #51. Its data leg is on 32 rather than 34 or 35
 # and the difference is not cosmetic: a one-wire line is DRIVEN, and 34-39 cannot drive.
-ag:air_sensor_fern a ag:Dht11 ;
+ag:air_sensor_fern a dht11:Dht11 ;
     ag:localId "air_sensor_fern" ;
-    ag:model "KY-015 (DHT11)" ;
-    ag:hasPin ag:air_data , ag:air_vcc , ag:air_gnd .
+    mc:model "KY-015 (DHT11)" ;
+    mc:hasPin ag:air_data , ag:air_vcc , ag:air_gnd .
 
-ag:air_data a ag:Pin ; ag:pinRole ag:OneWireDataPinRole .
-ag:air_vcc  a ag:Pin ; ag:pinRole ag:PowerPinRole .
-ag:air_gnd  a ag:Pin ; ag:pinRole ag:GroundPinRole .
+ag:air_data a mc:Pin ; mc:pinRole onewire:DataPinRole .
+ag:air_vcc  a mc:Pin ; mc:pinRole mc:PowerPinRole .
+ag:air_gnd  a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
 ##########  The wires  ##########
 #
 # What someone can point at on the breadboard, and what they get wrong. Every rule about this
-# stand is asked of these: the role lives on the peripheral's leg and the line number on the
+# board is asked of these: the role lives on the peripheral's leg and the line number on the
 # board's, and neither end knows the other until a wire joins them.
 #
 # The 3V3 rail rather than VIN for both powered parts. VIN is 5V, and a KY-015's pull-up idles
 # its data line at whatever it is powered from — 5V into a 3.3V input that is not 5V tolerant.
 # That is now a refusable statement rather than a paragraph hoping to be read.
 
-[] a ag:Wire ; ag:joins ag:probe_out , ag:pin_gpio34 .
-[] a ag:Wire ; ag:joins ag:probe_vcc , ag:pin_3v3 .
-[] a ag:Wire ; ag:joins ag:probe_gnd , ag:pin_gnd .
+[] a mc:Wire ; mc:joins ag:probe_out , ag:pin_gpio34 .
+[] a mc:Wire ; mc:joins ag:probe_vcc , ag:pin_3v3 .
+[] a mc:Wire ; mc:joins ag:probe_gnd , ag:pin_gnd .
 
-[] a ag:Wire ; ag:joins ag:led_r      , ag:pin_gpio25 .
-[] a ag:Wire ; ag:joins ag:led_g      , ag:pin_gpio26 .
-[] a ag:Wire ; ag:joins ag:led_b      , ag:pin_gpio27 .
-[] a ag:Wire ; ag:joins ag:led_common , ag:pin_gnd .
+[] a mc:Wire ; mc:joins ag:led_r      , ag:pin_gpio25 .
+[] a mc:Wire ; mc:joins ag:led_g      , ag:pin_gpio26 .
+[] a mc:Wire ; mc:joins ag:led_b      , ag:pin_gpio27 .
+[] a mc:Wire ; mc:joins ag:led_common , ag:pin_gnd .
 
-[] a ag:Wire ; ag:joins ag:air_data , ag:pin_gpio32 .
-[] a ag:Wire ; ag:joins ag:air_vcc  , ag:pin_3v3 .
-[] a ag:Wire ; ag:joins ag:air_gnd  , ag:pin_gnd .
+[] a mc:Wire ; mc:joins ag:air_data , ag:pin_gpio32 .
+[] a mc:Wire ; mc:joins ag:air_vcc  , ag:pin_3v3 .
+[] a mc:Wire ; mc:joins ag:air_gnd  , ag:pin_gnd .

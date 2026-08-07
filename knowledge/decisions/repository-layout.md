@@ -15,7 +15,7 @@ agent/capabilities/<name>/   what an agent can DO — discovered
 agent/transports/<name>/     how a device is REACHED — discovered
 onboarding/                  the sovereign's tools
 vocabulary/agora/            the society kernel everything layers on
-vocabulary/stand/            boards, peripherals, pins, wires
+vocabulary/microcontroller/  boards, peripherals, pins, wires
 vocabulary/<part>/           one concrete part, or one protocol — dht11, onewire, rgb-led
 vocabulary/water/            what this society is about
 tests/  firmware/  infra/  world/  knowledge/

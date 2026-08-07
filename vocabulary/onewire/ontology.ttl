@@ -1,6 +1,8 @@
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix onewire: <http://example.org/agora/onewire#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
 
 <http://example.org/agora/onewire> a owl:Ontology ;
     rdfs:label "One-wire" ;
@@ -8,5 +10,5 @@
 
 Deliberately NOT under agent/transports/. Those are how an AGENT reaches a device, and each has Python behind it. Nothing in this repository speaks one-wire: the BOARD does, in firmware, and the agent never sees it. A transport package with no driver would be a promise the runtime cannot keep.""" .
 
-ag:OneWireDataPinRole a ag:BidirectionalRole ; rdfs:label "one-wire data" ;
+onewire:DataPinRole a mc:BidirectionalRole ; rdfs:label "one-wire data" ;
     rdfs:comment "The board pulls the line low to open a conversation, then releases it and listens. It looks like an input because almost all the traffic is inbound, which is the trap: it is DRIVEN, so it cannot sit on a pin that can only be read." .

@@ -5,9 +5,9 @@
 
 <http://example.org/agora/core> a owl:Ontology ;
     rdfs:label "Agora core" ;
-    rdfs:comment """The society kernel: agents, the capabilities they compose, and the versioned world they share. Everything else is a MODULE layered on this — the stand it runs on, the protocols its parts speak, the parts themselves, the capabilities, and the domain. Code may reference the terms defined here; it may never reference an instance.
+    rdfs:comment """The society kernel: agents, the capabilities they compose, and the versioned world they share. Everything else is a MODULE layered on this — the microcontrollers it runs on, the protocols their parts speak, the parts themselves, the capabilities, and the domain. Code may reference the terms defined here; it may never reference an instance.
 
-What is NOT here any more is everything physical. `vocabulary/stand` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
+What is NOT here any more is everything physical. `vocabulary/microcontroller` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
 
 #################  Agents and capabilities (composition, not hierarchy)  #################
 
@@ -62,6 +62,17 @@ ag:modelDryRate a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range
 ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:integer ;
     rdfs:label "model tick seconds" ;
     rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a ag:Push device, which keeps its own clock; a ag:Scheduled one keeps the interval its agent gives it, exactly as a board does." .
+
+#################  Where a society executes  #################
+ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;
+    rdfs:comment "A machine that runs agent processes. Named so the world can say where its society actually executes." .
+
+ag:lanAddress a owl:DatatypeProperty ; rdfs:domain ag:ComputeHost ; rdfs:range xsd:string ;
+    rdfs:label "LAN address" ;
+    rdfs:comment "Where this host answers for things NOT on it. A co-located agent reaches the broker at ag:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs the address of whichever host runs the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society. It is also a DHCP lease unless the router is told otherwise, which makes it a fact with an expiry date." .
+
+ag:runsOn a owl:ObjectProperty ; rdfs:range ag:ComputeHost ; rdfs:label "runs on" ;
+    rdfs:comment "Which host executes this agent. Documents why the bus is where it is." .
 
 #################  Naming — stated, never derived  #################
 

@@ -2,16 +2,22 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix probe: <http://example.org/agora/moisture-probe#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
 
 <http://example.org/agora/moisture-probe> a owl:Ontology ;
     rdfs:label "Capacitive soil moisture probe" ;
     rdfs:comment """One part, its own package. Three legs — an analog output, power and ground — and two calibration numbers that belong to the individual probe rather than to the model.""" .
 
-ag:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf ag:Peripheral ;
+probe:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "Capacitive soil moisture probe" ;
-    rdfs:comment "Reports a raw ADC count that falls as the soil wets. A class rather than a model string because how you READ it is what differs; the model is for the person holding it." .
+    rdfs:comment """Reports a raw ADC count that falls as the soil wets. A class rather than a model string because how you READ it is what differs; the model is for the person holding it.
 
-ag:rawDry a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when dry" ;
+Deliberately NOT a subclass of ag:Sensor, though every probe in this repository is one. The two typings are orthogonal and that is what makes them useful: ag:Sensor says what a thing is TO THE SOCIETY — polled by an agent, with a subject, an observed property and a reading topic — while this says what it physically IS. The same node in world.ttl carries both, from two directions.
+
+Welding them would break the case the whole simulation rests on. A simulated sensor is an ag:Sensor with no peripheral class and no pins at all, and an agent must not be able to tell it from hardware; if being a probe implied being a sensor, the class would stop describing the part and start describing its employment. It would also make a spare probe lying on the bench — real, wired to nothing, polled by nobody — unstateable.""" .
+
+probe:rawDry a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when dry" ;
     rdfs:comment "What this probe reads in air. A fact about THIS probe in THIS pot — two identical probes differ — so it belongs to the instance, not to the firmware, which is per model." .
-ag:rawWet a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when wet" ;
+probe:rawWet a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when wet" ;
     rdfs:comment "What it reads in saturated soil. Not free water: water is wetter than soil ever gets, so calibrating against it makes the top of the scale unreachable." .

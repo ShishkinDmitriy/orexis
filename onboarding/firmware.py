@@ -5,7 +5,7 @@
 
 **Everything in a `config.h` is a per-instance deployment fact**, and every one of them was
 already written down somewhere else. The broker and its port are in the world's `ag:MessageBus`;
-the ids and topics are the society's; the pins are the stand's; the credential was minted by
+the ids and topics are the society's; the pins are the hardware's; the credential was minted by
 `agora-mqtt`; the cadence bounds are the ontology's. Keeping a second copy in a C header is the
 same second list this project refuses everywhere else — and it is the expensive kind, because
 correcting it means physically retrieving a board.
@@ -38,7 +38,8 @@ from pathlib import Path
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
-from agent.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
+from agent.ontology import (AG, DHT11, ONEWIRE, ONTOLOGY_GRAPH, PROBE, RGBLED,
+                            MC, WORLD_GRAPH)
 
 log = logging.getLogger("firmware")
 
@@ -51,11 +52,11 @@ _BOARDS_Q = f"""
 SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?ledRed ?ledGreen ?ledBlue ?airPin
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?board a <{AG}Microcontroller> ; <{AG}localId> ?boardId ; <{AG}firmware> ?firmware ;
-         <{AG}carries> ?sensor .
-  ?sensor a <{AG}CapacitiveMoistureProbe> ; <{AG}localId> ?sensorId ;
+  ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{MC}firmware> ?firmware ;
+         <{MC}carries> ?sensor .
+  ?sensor a <{PROBE}CapacitiveMoistureProbe> ; <{AG}localId> ?sensorId ;
           <{AG}readingTopic> ?readTopic ;
-          <{AG}rawDry> ?rawDry ; <{AG}rawWet> ?rawWet .
+          <{PROBE}rawDry> ?rawDry ; <{PROBE}rawWet> ?rawWet .
   OPTIONAL {{ ?sensor <{AG}commandTopic> ?cmdTopic }}
   ?bus a <{AG}MessageBus> ; <{AG}brokerHost> ?host ; <{AG}brokerPort> ?port .
   OPTIONAL {{ ?pi a <{AG}ComputeHost> ; <{AG}lanAddress> ?lan }}
@@ -63,28 +64,28 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   # Which LINE a leg is on is now two facts and a wire: the role belongs to the peripheral's
   # pin, the number to the board's, and only the wire knows they are the same connection. That
   # is the whole point of the remodelling, and it costs this query one hop per pin.
-  ?sensor <{AG}hasPin> ?probeLeg .
-  ?probeLeg <{AG}pinRole> <{AG}AnalogInPinRole> .
-  ?probeWire <{AG}joins> ?probeLeg, ?probePin .
-  ?probePin <{AG}gpio> ?gpio .
+  ?sensor <{MC}hasPin> ?probeLeg .
+  ?probeLeg <{MC}pinRole> <{MC}AnalogInPinRole> .
+  ?probeWire <{MC}joins> ?probeLeg, ?probePin .
+  ?probePin <{MC}gpio> ?gpio .
 
   # All OPTIONAL and all separate, because a board without a status LED is an ordinary board
   # and must still generate — the alternative is a query that silently returns no rows and a
   # generator that reports the world states no boards at all.
-  OPTIONAL {{ ?board <{AG}carries> ?led . ?led a <{AG}RgbLed> ;
-                <{AG}hasPin> ?rLeg, ?gLeg, ?bLeg .
-             ?rLeg <{AG}pinRole> <{AG}RedPinRole>   . ?rw <{AG}joins> ?rLeg, ?rPin . ?rPin <{AG}gpio> ?ledRed .
-             ?gLeg <{AG}pinRole> <{AG}GreenPinRole> . ?gw <{AG}joins> ?gLeg, ?gPin . ?gPin <{AG}gpio> ?ledGreen .
-             ?bLeg <{AG}pinRole> <{AG}BluePinRole>  . ?bw <{AG}joins> ?bLeg, ?bPin . ?bPin <{AG}gpio> ?ledBlue }}
-  # Matched on the ROLE rather than on the device class, deliberately. ag:Dht11 is a subclass
-  # of ag:TempHumiditySensor and asking for the parent needs RDFS inference, which the shapes
+  OPTIONAL {{ ?board <{MC}carries> ?led . ?led a <{RGBLED}RgbLed> ;
+                <{MC}hasPin> ?rLeg, ?gLeg, ?bLeg .
+             ?rLeg <{MC}pinRole> <{RGBLED}RedPinRole>   . ?rw <{MC}joins> ?rLeg, ?rPin . ?rPin <{MC}gpio> ?ledRed .
+             ?gLeg <{MC}pinRole> <{RGBLED}GreenPinRole> . ?gw <{MC}joins> ?gLeg, ?gPin . ?gPin <{MC}gpio> ?ledGreen .
+             ?bLeg <{MC}pinRole> <{RGBLED}BluePinRole>  . ?bw <{MC}joins> ?bLeg, ?bPin . ?bPin <{MC}gpio> ?ledBlue }}
+  # Matched on the ROLE rather than on the device class, deliberately. a DHT11 is a subclass
+  # of the temp/humidity family and asking for the parent needs RDFS inference, which the shapes
   # run with and this does not — issue #27, and it fails by silently returning no row rather
   # than by complaining. The role is what the firmware actually needs to know anyway: this is
   # the pin it must bit-bang, whatever part is on the end of it.
-  OPTIONAL {{ ?board <{AG}carries> ?air .
-             ?air <{AG}hasPin> ?airLeg .
-             ?airLeg <{AG}pinRole> <{AG}OneWireDataPinRole> .
-             ?aw <{AG}joins> ?airLeg, ?airPinNode . ?airPinNode <{AG}gpio> ?airPin }}
+  OPTIONAL {{ ?board <{MC}carries> ?air .
+             ?air <{MC}hasPin> ?airLeg .
+             ?airLeg <{MC}pinRole> <{ONEWIRE}DataPinRole> .
+             ?aw <{MC}joins> ?airLeg, ?airPinNode . ?airPinNode <{MC}gpio> ?airPin }}
 }} }}"""
 
 _BOUNDS_Q = f"""
@@ -134,7 +135,7 @@ def render(world: str, row: dict, bounds: tuple[int, int]) -> str:
     return f"""// GENERATED by `agora-firmware {world}` from that world — do not edit.
 //
 // Every value below is a fact the world already states: the broker and its port from the
-// ag:MessageBus, the ids and topics from the society, the pin from the stand, the credential
+// ag:MessageBus, the ids and topics from the society, the pin from the wiring, the credential
 // from `agora-mqtt`, the cadence bounds from the ontology. Editing this file makes it disagree
 // with the world, and the world is what the agents believe.
 //
@@ -189,8 +190,8 @@ def _optional_pins(row: dict) -> str:
     if row.get("ledRed"):
         out += [
             "",
-            "// The status LED, from the stand. Three driven legs and a common return; the return",
-            "// is solder rather than software and the world does not model it.",
+            "// The status LED, from the world's wiring. Three driven legs and a common return; the",
+            "// return goes to ground, which the world states as a wire like any other.",
             f"#define LED_RED_PIN {int(row['ledRed'])}",
             f"#define LED_GREEN_PIN {int(row['ledGreen'])}",
             f"#define LED_BLUE_PIN {int(row['ledBlue'])}",
@@ -211,7 +212,7 @@ def generate(world: str, board: str | None = None) -> None:
     if not rows:
         raise SystemExit(
             f"agora-firmware: no board in world {world!r}"
-            + (f" called {board!r}" if board else " states ag:firmware and carries a probe"))
+            + (f" called {board!r}" if board else " states mc:firmware and carries a probe"))
     b = ratified.rows(ds, _BOUNDS_Q)
     bounds = (int(b[0]["min"]), int(b[0]["max"])) if b else (5, 900)
 

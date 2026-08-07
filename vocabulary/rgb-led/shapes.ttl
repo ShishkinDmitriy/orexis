@@ -1,13 +1,15 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rgbled: <http://example.org/agora/rgb-led#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
 
 ag:RgbLedShape a sh:NodeShape ;
     rdfs:comment "All three colours, or the missing one silently never lights — indistinguishable, from across the room, from the board being asleep. Expressed with qualified value shapes rather than SPARQL because a SPARQL constraint may not contain VALUES: SHACL binds $this that way itself." ;
-    sh:targetClass ag:RgbLed ;
-    sh:property [ sh:path ( ag:hasPin ag:pinRole ) ; sh:hasValue ag:RedPinRole ;
+    sh:targetClass rgbled:RgbLed ;
+    sh:property [ sh:path ( mc:hasPin mc:pinRole ) ; sh:hasValue rgbled:RedPinRole ;
                   sh:message "an RGB LED without a red leg has a colour that never lights" ] ;
-    sh:property [ sh:path ( ag:hasPin ag:pinRole ) ; sh:hasValue ag:GreenPinRole ;
+    sh:property [ sh:path ( mc:hasPin mc:pinRole ) ; sh:hasValue rgbled:GreenPinRole ;
                   sh:message "an RGB LED without a green leg has a colour that never lights" ] ;
-    sh:property [ sh:path ( ag:hasPin ag:pinRole ) ; sh:hasValue ag:BluePinRole ;
+    sh:property [ sh:path ( mc:hasPin mc:pinRole ) ; sh:hasValue rgbled:BluePinRole ;
                   sh:message "an RGB LED without a blue leg has a colour that never lights" ] .

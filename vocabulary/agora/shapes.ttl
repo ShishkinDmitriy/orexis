@@ -33,7 +33,7 @@ ag:BeliefsGraphShape a sh:NodeShape ;
     sh:targetClass ag:BeliefsGraph ;
     sh:property [ sh:path ag:beliefsOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ag:Agent ] .
 
-#################  The stand — wiring that cannot work, refused before it is soldered  #########
+#################  Devices that are not there  #################################################
 #
 # These are the ESP32's rules, not RDF's. They are here because a world states its wiring and
 # `agora-validate` is the last moment anyone reads it before a board is flashed and buried in a
