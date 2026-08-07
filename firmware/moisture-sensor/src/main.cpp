@@ -67,7 +67,14 @@ static bool published = false;
 // with no LED must not drive whatever GPIO 0 happens to be, since that is a strapping pin and
 // holding it would leave the board in bootloader mode at the next reset.
 //
-// ONE signal per wake, at the end, and dark the rest of the time — including the whole sleep.
+// Dark except while something is being attempted or reported, and dark through the whole sleep.
+//
+// While connecting to the broker:
+//
+//   one magenta  a broker attempt failed — one per attempt, up to MQTT_TRIES of them
+//   one green    a broker attempt got in
+//
+// and then, once, on the way to sleep:
 //
 //   one blink    the reading went out. Its COLOUR is the agent's verdict, which arrived on the
 //                retained command message: red LOW, blue HIGH, green OK or no verdict offered.
@@ -93,11 +100,10 @@ static void ledOff() { led(0, 0, 0); }
 
 // Dark, and dark is the resting state — not amber, not anything.
 //
-// The lamp says one thing per wake, at the end, when there is something to report. It used to
-// narrate: amber on boot, red flashing throughout the wifi association. Both were describing
-// the ORDINARY case, which is the one nobody needs telling about, and a lamp that is lit during
-// normal operation has no way left to mean "look at me". Associating is not a fault; failing to
-// associate is.
+// It used to narrate: amber on boot, red flashing throughout the wifi association. Both were
+// describing the ORDINARY case, which is the one nobody needs telling about, and a lamp lit
+// during normal operation has no way left to mean "look at me". Associating is not a fault;
+// failing to associate is.
 static void ledBegin() {
   pinMode(LED_RED_PIN, OUTPUT);
   pinMode(LED_GREEN_PIN, OUTPUT);
@@ -125,6 +131,13 @@ static void ledBand(const char *band) {
   else                            { okR = 0; okG = 1; okB = 0; }  // OK, or one we do not know
 }
 
+// One blink per broker attempt, as it happens. The exception to reporting only outcomes, and a
+// deliberate one: a broker that will not have us costs ten attempts and a socket timeout each,
+// which is a long time for a board to look exactly like one that is asleep. While it is failing,
+// reaching the broker is not the ordinary case — it is the thing being watched.
+static void ledAttemptFailed() { ledBlink(1, 0, 1, 1); }
+static void ledAttemptOk()     { ledBlink(0, 1, 0, 1); }
+
 // ONE blink: the wake worked. Its colour is the agent's verdict if one arrived, green if not.
 static void ledWorked() { ledBlink(okR, okG, okB, 1); }
 
@@ -134,8 +147,13 @@ static void ledWorked() { ledBlink(okR, okG, okB, 1); }
 static void ledFault(bool r, bool g, bool b) { ledBlink(r, g, b, 3); }
 
 #else
+// A board the world gives no LED compiles all of this away. Every one of these must exist,
+// including the ones only called from the connect path — that is the half I forgot, and it
+// would have failed to build on exactly the boards that have no lamp to test it with.
 static void ledBegin() {}
 static void ledBand(const char *) {}
+static void ledAttemptFailed() {}
+static void ledAttemptOk() {}
 static void ledWorked() {}
 static void ledFault(bool, bool, bool) {}
 static void ledOff() {}
@@ -200,19 +218,33 @@ static float readMoisture() {
   return frac;
 }
 
-static void publishMoisture() {
-  char payload[96];
-  float frac = readMoisture();
-  snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"}", frac, SENSOR_ID);
-  published = mqtt.publish(MOISTURE_TOPIC, payload);
+// SENSING AND REPORTING ARE SEPARATE, and keeping them together was a real fault rather than
+// an untidiness. Both early exits — no wifi, no broker — deep-sleep from inside the function
+// that failed, so everything after them was unreachable. The moisture line and the air line
+// both lived after them. The board therefore said nothing at all about what it had measured on
+// exactly the wakes where it could not report: the ones you are holding a serial cable for.
+//
+// So it senses first, prints first, and only then goes looking for a network.
+static float lastFrac = 0.0f;
+
+static void senseMoisture() {
+  lastFrac = readMoisture();
   // The raw ADC goes to the serial line and NOT on the wire. Calibration is a fact about this
   // board's wiring, not something any agent should reason about — an agent reads a 0..1
   // fraction and would have no business knowing an ADC exists. But you cannot set ADC_DRY and
   // ADC_WET without seeing it, and a clamped 0.000 or 1.000 tells you nothing about how far
   // outside the range you are.
-  Serial.printf("%s %s   [raw %.0f, calibrated dry=%d wet=%d%s]\n",
-                MOISTURE_TOPIC, payload, lastRaw, ADC_DRY, ADC_WET,
-                (frac <= 0.0f || frac >= 1.0f) ? "  <- CLAMPED, recalibrate" : "");
+  Serial.printf("moisture %.3f   [raw %.0f, calibrated dry=%d wet=%d%s]\n",
+                lastFrac, lastRaw, ADC_DRY, ADC_WET,
+                (lastFrac <= 0.0f || lastFrac >= 1.0f) ? "  <- CLAMPED, recalibrate" : "");
+}
+
+static void publishMoisture() {
+  char payload[96];
+  snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"}", lastFrac, SENSOR_ID);
+  published = mqtt.publish(MOISTURE_TOPIC, payload);
+  Serial.printf("%s %s   %s\n", MOISTURE_TOPIC, payload,
+                published ? "sent" : "REFUSED by the broker — check the ACL for this topic");
 }
 
 // The agent sets the cadence (sleep_s) and can ask for an extra reading while we're awake.
@@ -234,6 +266,7 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
     ledBand(band);
   }
   if (doc["sense"] | false) {
+    senseMoisture();   // a nudge asks for a LOOK; republishing the last one would be a lie
     publishMoisture();
   }
 }
@@ -248,7 +281,11 @@ static const char *signalQuality(int rssi) {
   return "very weak — move the board or add an antenna";
 }
 
-static void connectWifi() {
+// Both connect functions REPORT rather than act. They used to deep-sleep from inside
+// themselves the moment they gave up, which made them the only exit from a wake and meant
+// everything after them was unreachable — a board with no broker never reached the end of its
+// own cycle. There is one exit now, at the bottom of setup(), and it is always taken.
+static bool connectWifi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.print("WiFi");
@@ -259,12 +296,8 @@ static void connectWifi() {
     // would reach precisely when it could least afford it. It also meant "wifi did not
     // connect" was not an outcome anything could report, LED or otherwise.
     if (millis() - began > WIFI_TIMEOUT_MS) {
-      Serial.printf("\nno wifi after %ums — sleeping %us and trying again\n",
-                    millis() - began, sleep_s);
-      ledFault(1, 0, 0); // three red: never reached the network
-      ledOff();
-      esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
-      esp_deep_sleep_start();
+      Serial.printf("\nno wifi after %ums\n", millis() - began);
+      return false;
     }
     delay(300);
     Serial.print(".");
@@ -274,6 +307,7 @@ static void connectWifi() {
   // to associate is a congested channel, not a distance problem.
   Serial.printf(" %s  rssi %d dBm (%s), associated in %ums\n",
                 WiFi.localIP().toString().c_str(), rssi, signalQuality(rssi), millis() - began);
+  return true;
 }
 
 // PubSubClient reports failures as a number and nothing else. Silence here is the worst
@@ -294,7 +328,7 @@ static const char *mqttError(int state) {
   }
 }
 
-static void connectMqtt() {
+static bool connectMqtt() {
   String clientId = String("agora-sensor-") + PLANT_ID + "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
   unsigned attempt = 0;
   while (!mqtt.connected()) {
@@ -306,20 +340,17 @@ static void connectMqtt() {
                     clientId.c_str(), MQTT_USER);
       mqtt.subscribe(CMD_TOPIC); // retained cadence command arrives here on subscribe
       Serial.printf("subscribed %s\n", CMD_TOPIC);
-      return;
+      ledAttemptOk();
+      return true;
     }
     Serial.printf("MQTT %s:%d attempt %u failed (state %d): %s\n",
                   MQTT_HOST, MQTT_PORT, ++attempt, mqtt.state(), mqttError(mqtt.state()));
+    ledAttemptFailed();
     // Give up eventually rather than spinning on a wall forever: a board that cannot reach
     // the broker should sleep and retry on its own clock, not hold the battery open.
     if (attempt >= MQTT_TRIES) {
-      Serial.printf("giving up for now — sleeping %us and trying again\n", sleep_s);
-      // Three magenta: wifi worked and the broker refused us, which is a credential or an ACL
-      // problem and wants a different person than a red light does.
-      ledFault(1, 0, 1);
-      ledOff();
-      esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
-      esp_deep_sleep_start();
+      Serial.printf("giving up on the broker for this wake\n");
+      return false;
     }
     delay(1000);
   }
@@ -338,25 +369,36 @@ void setup() {
                 "  broker    %s:%d\n  publishes %s\n  listens   %s\n",
                 PLANT_ID, SENSOR_ID, MQTT_HOST, MQTT_PORT, MOISTURE_TOPIC, CMD_TOPIC);
 
-  connectWifi();
-  mqtt.setServer(MQTT_HOST, MQTT_PORT);
-  mqtt.setCallback(onCmd);
-  connectMqtt();
-
-  // 1. sense + publish
-  publishMoisture();
+  // 1. read the instruments and say what they said. FIRST, and unconditionally: this needs no
+  //    network, and the wakes where the network is missing are exactly the ones somebody is
+  //    watching the serial line for.
+  senseMoisture();
   logAir();  // serial only — see above
 
-  // 2. listen briefly for the agent's cadence (a retained cmd is delivered on subscribe)
-  unsigned long until = millis() + CMD_WAIT_MS;
-  while (millis() < until) mqtt.loop();
+  // 2. try to report it. Neither of these aborts the wake — the readings above are already on
+  //    the serial line, and a board that cannot reach anyone is still a working sensor with
+  //    nowhere to send. It finishes its cycle, says so, and sleeps like any other wake.
+  bool network = connectWifi();
+  bool broker = false;
+  if (network) {
+    mqtt.setServer(MQTT_HOST, MQTT_PORT);
+    mqtt.setCallback(onCmd);
+    broker = connectMqtt();
+  }
 
-  // 3. say how it went, once, and sleep. Everything before this point is silent: a lamp that
-  //    narrates the ordinary case has nothing left to mean "look at me".
-  //      one blink   it worked, coloured by the agent's verdict (green if it offered none)
-  //      three red   never reached the wifi
-  //      three mag.  reached the wifi, the broker would not have us, or refused the publish
-  published ? ledWorked() : ledFault(1, 0, 1);
+  if (broker) {
+    // The same number already printed above, not a second look.
+    publishMoisture();
+    // Then listen briefly: a retained cadence and verdict arrive the moment we subscribe.
+    unsigned long until = millis() + CMD_WAIT_MS;
+    while (millis() < until) mqtt.loop();
+  }
+
+  // 3. say how it went, once. Everything before this point is silent: a lamp that narrates the
+  //    ordinary case has nothing left to mean "look at me".
+  if (!network)        ledFault(1, 0, 0);  // three red: never reached the wifi
+  else if (!published) ledFault(1, 0, 1);  // three magenta: no broker, or the publish refused
+  else                 ledWorked();        // one blink, coloured by the agent's verdict
   ledOff();
 
   // 4. deep-sleep for the agent-set cadence, then the board wakes and repeats setup()
