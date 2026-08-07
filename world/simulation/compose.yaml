@@ -55,15 +55,15 @@ services:
     image: agora-simulator:local
     environment:
       SIM_SENSOR_ID: "sensor_fern"
-      SIM_READING_TOPIC: "sim/sensors/fern/moisture"
+      SIM_READING_TOPIC: "sim/sensors/sensor_fern/reading"
       # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
       # ag:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
-      SIM_COMMAND_TOPIC: "sim/sensors/fern/cmd"
-      SIM_DOSE_TOPIC: "sim/actuators/fern/valve/status"
+      SIM_COMMAND_TOPIC: "sim/sensors/sensor_fern/command"
+      SIM_DOSE_TOPIC: "sim/actuators/valve_fern/status"
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.02"
       SIM_TICK_SECONDS: "3"
@@ -83,15 +83,15 @@ services:
     image: agora-simulator:local
     environment:
       SIM_SENSOR_ID: "sensor_succulent"
-      SIM_READING_TOPIC: "sim/sensors/succulent/moisture"
+      SIM_READING_TOPIC: "sim/sensors/sensor_succulent/reading"
       # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
       # ag:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
-      SIM_COMMAND_TOPIC: "sim/sensors/succulent/cmd"
-      SIM_DOSE_TOPIC: "sim/actuators/succulent/valve/status"
+      SIM_COMMAND_TOPIC: "sim/sensors/sensor_succulent/command"
+      SIM_DOSE_TOPIC: "sim/actuators/valve_succulent/status"
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.015"
       SIM_TICK_SECONDS: "3"
@@ -111,15 +111,15 @@ services:
     image: agora-simulator:local
     environment:
       SIM_SENSOR_ID: "sensor_tomato"
-      SIM_READING_TOPIC: "sim/sensors/tomato/moisture"
+      SIM_READING_TOPIC: "sim/sensors/sensor_tomato/reading"
       # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
       # ag:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
-      SIM_COMMAND_TOPIC: "sim/sensors/tomato/cmd"
-      SIM_DOSE_TOPIC: "sim/actuators/tomato/valve/status"
+      SIM_COMMAND_TOPIC: "sim/sensors/sensor_tomato/command"
+      SIM_DOSE_TOPIC: "sim/actuators/valve_tomato/status"
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.02"
       SIM_TICK_SECONDS: "3"
@@ -139,8 +139,8 @@ services:
     image: agora-valve:local
     environment:
       VALVE_ID: "valve_fern"
-      VALVE_COMMAND_TOPIC: "sim/actuators/fern/valve"
-      VALVE_STATUS_TOPIC: "sim/actuators/fern/valve/status"
+      VALVE_COMMAND_TOPIC: "sim/actuators/valve_fern/command"
+      VALVE_STATUS_TOPIC: "sim/actuators/valve_fern/status"
       VALVE_ML_PER_SECOND: "10.0"
       VALVE_MAX_DOSE_ML: "1000.0"
       # public halves only — it verifies, it never signs
@@ -167,8 +167,8 @@ services:
     image: agora-valve:local
     environment:
       VALVE_ID: "valve_succulent"
-      VALVE_COMMAND_TOPIC: "sim/actuators/succulent/valve"
-      VALVE_STATUS_TOPIC: "sim/actuators/succulent/valve/status"
+      VALVE_COMMAND_TOPIC: "sim/actuators/valve_succulent/command"
+      VALVE_STATUS_TOPIC: "sim/actuators/valve_succulent/status"
       VALVE_ML_PER_SECOND: "10.0"
       VALVE_MAX_DOSE_ML: "1000.0"
       # public halves only — it verifies, it never signs
@@ -195,8 +195,8 @@ services:
     image: agora-valve:local
     environment:
       VALVE_ID: "valve_tomato"
-      VALVE_COMMAND_TOPIC: "sim/actuators/tomato/valve"
-      VALVE_STATUS_TOPIC: "sim/actuators/tomato/valve/status"
+      VALVE_COMMAND_TOPIC: "sim/actuators/valve_tomato/command"
+      VALVE_STATUS_TOPIC: "sim/actuators/valve_tomato/status"
       VALVE_ML_PER_SECOND: "10.0"
       VALVE_MAX_DOSE_ML: "1000.0"
       # public halves only — it verifies, it never signs

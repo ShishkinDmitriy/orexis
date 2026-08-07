@@ -156,13 +156,18 @@ class SimulatedSensor:
         What belongs here is what has no physical counterpart: putting the value somewhere to see
         what an agent does about it, and putting it back.
         """
-        if isinstance(doc.get("set"), (int, float)):
-            self.value = self._clamp(float(doc["set"]))
+        # `value` in, `value` out: the same word the reading payload uses, so nobody has to ask
+        # what is being set. NOTE what is NOT renamed — `sleep_s` and `sense` are the REAL device
+        # protocol, implemented by a physical board, and the whole claim of this program is that
+        # nothing downstream can tell it from one. Tidying those would silently break every
+        # flashed board.
+        if isinstance(doc.get("value"), (int, float)):
+            self.value = self._clamp(float(doc["value"]))
             log.info("%s: set to %.3f", self.sensor_id, self.value)
-        if isinstance(doc.get("trend"), (int, float)):
+        if isinstance(doc.get("trend_per_tick"), (int, float)):
             # Signed, and it REPLACES the dry rate rather than adding to it: a positive trend is
             # a pot being rained on, which is a different world, not a wetter one.
-            self.dry_rate = -float(doc["trend"])
+            self.dry_rate = -float(doc["trend_per_tick"])
             log.info("%s: trend now %+.4f per tick", self.sensor_id, -self.dry_rate)
         if doc.get("reset"):
             self.value, self.dry_rate = self.initial, _float("SIM_DRY_RATE", 0.02)
