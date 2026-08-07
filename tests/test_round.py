@@ -22,7 +22,20 @@ def make(monkeypatch):
 
 
 @pytest.fixture
-def host(make):
+def host(make, tmp_path, monkeypatch):
+    """The supplier, with signing keys it mints for itself.
+
+    It used to read `world/society/secrets/`, which is gitignored — so this passed only on a
+    machine that happened to have keys lying there, and could not pass in a fresh clone. CI found
+    that on its first run, after two agents had reported it and I had called it environmental.
+    A test that depends on a secret nobody can commit has to make its own.
+    """
+    from onboarding.keygen import create_keypair
+
+    monkeypatch.setenv("AGORA_WORLD_DIR", str(tmp_path))
+    (tmp_path / "secrets").mkdir()
+    for name in ("host", "clearing"):
+        create_keypair(name)
     return make("supplier")
 
 
