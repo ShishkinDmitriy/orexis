@@ -25,9 +25,9 @@ ag:marketFor a owl:ObjectProperty ; rdfs:domain ag:Market ;
     rdfs:label "market for" ;
     rdfs:comment "The resource being allocated. The cluster boundary: who competes with whom." .
 
-ag:relieves a owl:ObjectProperty ; rdfs:range sosa:ObservableProperty ;
-    rdfs:label "relieves" ;
-    rdfs:comment "Which observable property a resource acts on — stated on the resource's CLASS by the domain, not per world. A bidder holds readings of several properties of one subject and must bid on the right one; this is how it knows which, without the market package naming a domain property. Domain-neutral here, answered in domain/water: a water source relieves soil moisture." .
+ag:aboutProperty a owl:ObjectProperty ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "about property" ;
+    rdfs:comment "Which observable property a bidder's DESIRE is expressed in — stated by the domain on the desire term itself, never on a market. A market is a lot: 1L of water is 1L of water whether or not anyone's soil is dry, and a market for a thing no instrument measures (a time slot, a right of way) must remain expressible. What is genuinely property-shaped is the stake: a target of 0.55 is 0.55 OF something, and until this term existed that number was dimensionless. A bidder holding readings of several properties of one subject needs to know which one its valuation is about; it follows this link from the term it already names." .
 
 ag:hosts a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Market ;
     rdfs:label "hosts" .

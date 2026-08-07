@@ -31,9 +31,18 @@ from __future__ import annotations
 
 from agent.market import EPS, Bid
 from agent.module import Module, Timer
+from agent.ontology import ONTOLOGY_GRAPH
+from agent.store import bindings
 
 from .beliefs import BIDDING_BLOCK
 from .terms import BIDDING, PERCEPTION
+
+# The term whose meaning this asks after is the one this package already names for its own
+# beliefs, so nothing here is written twice and nothing here is a domain property.
+_TARGET = BIDDING_BLOCK.terms["target"]
+_ABOUT_Q = f"""
+SELECT ?property WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+  ag:{_TARGET} ag:aboutProperty ?property }} }} LIMIT 1"""
 
 
 def value_bid(moisture: float, b, balance: float, allocated_l: float = 0.0) -> Bid | None:
@@ -73,24 +82,30 @@ class BiddingModule(Module):
         self.won_l = 0.0
         self.pending: dict | None = None  # a round I have been asked to answer
         self._deadline: Timer | None = None
-        # Which property each of my markets is about. Refused at boot rather than defaulted:
-        # a bidder that cannot name its property would have to bid on whichever reading of its
-        # subject arrived last, which is precisely the confusion this is here to end. An agent
-        # that refuses to start is a visible fault; one bidding on a temperature is not.
-        blank = [m.local_id for m in self.me.markets if not m.relieves]
-        if blank:
+        self.about = self._what_my_desire_is_about()
+
+    def _what_my_desire_is_about(self) -> str:
+        """The observable property my valuation is denominated in.
+
+        Asked of my own desire, not of the market. A market is a LOT — 1L of water is 1L of
+        water whether or not anyone's soil is dry — and a market for something no instrument
+        measures has to stay expressible. What is genuinely property-shaped is the stake: my
+        target is 0.55 OF something, and my bands and my litres-per-fraction are in the same
+        unit. Until this link existed that number was dimensionless, and the agent got away
+        with it only because it had exactly one kind of reading to compare it to.
+
+        Read from the T-Box against the term this package already names, so no domain property
+        is written here and no world has to restate it. Refused rather than defaulted: with no
+        answer the only thing left is to judge whichever reading arrived last, which is the
+        confusion this exists to end. An agent that will not start is a visible fault; one
+        pricing water off a humidity is not.
+        """
+        rows = bindings(self.agent.store.query(_ABOUT_Q))
+        if not rows:
             raise RuntimeError(
-                f"{agent.id} bids in {', '.join(blank)} but nothing says which observable "
-                f"property that market's resource relieves — the domain ontology should state "
-                f"ag:relieves on the resource's class")
-
-    def _relieved_by(self, market) -> str:
-        """The property this market's resource acts on — what a bid here is a bid about."""
-        return market.relieves
-
-    @property
-    def _my_properties(self) -> frozenset[str]:
-        return frozenset(m.relieves for m in self.me.markets)
+                f"{self.agent.id} holds ag:{_TARGET} but the domain does not say what it is a "
+                f"target OF — state ag:aboutProperty on ag:{_TARGET} in the domain ontology")
+        return rows[0]["property"]
 
     def stop(self) -> None:
         if self._deadline:
@@ -118,11 +133,11 @@ class BiddingModule(Module):
     def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
         """My stake is in one property of one subject. Both have to match.
 
-        The property test is the new half. My band is a band of the thing my market relieves;
-        handed a reading of anything else about the same subject I hold no opinion, and saying
-        so is the difference between silence and a confident wrong verdict.
+        The property test is the new half. My band is a band of the thing my desire is
+        denominated in; handed a reading of anything else about the same subject I hold no
+        opinion, and saying so is the difference between silence and a confident wrong verdict.
         """
-        return subject_uri == self.me.acts_for and observed_property in self._my_properties
+        return subject_uri == self.me.acts_for and observed_property == self.about
 
     def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
         """My verdict on my own subject, for my agent's public announcement.
@@ -158,7 +173,7 @@ class BiddingModule(Module):
         perception.sense_now()  # a listening agent cannot, and simply does not
 
         # If something current is already in hand, answer now; otherwise wait for the sensor.
-        reading = perception.fresh_reading(self.me.acts_for, self._relieved_by(market))
+        reading = perception.fresh_reading(self.me.acts_for, self.about)
         if reading is not None:
             self.submit(reading.value)
             return
@@ -176,7 +191,7 @@ class BiddingModule(Module):
         """
         if not self.pending or subject_uri != self.me.acts_for:
             return
-        if observed_property != self._relieved_by(self.pending["market"]):
+        if observed_property != self.about:
             return
         self.submit(value)
 
@@ -184,11 +199,11 @@ class BiddingModule(Module):
         if self._deadline:
             self._deadline.stop()
         if self.pending:
-            self.log.info("round %s: sitting out — %s", self.pending["round_id"],
-                          self._why_blind(self.pending["market"]))
+            self.log.info("round %s: sitting out — %s",
+                          self.pending["round_id"], self._why_blind())
             self.pending = None
 
-    def _why_blind(self, market) -> str:
+    def _why_blind(self) -> str:
         """Not knowing and being broken are different, and were reported identically.
 
         "my sensor did not answer in time" was said whenever a round closed without a reading —
@@ -197,17 +212,12 @@ class BiddingModule(Module):
         ignored.
         """
         perception = self.agent.provider(PERCEPTION)
-        # The market is passed rather than read from `self.pending`, which is where it came from
-        # briefly and wrongly: this is called while giving up, and a state that is about to be
-        # cleared is a poor thing to depend on. It also says out loud that the answer is about
-        # ONE market's property — a bidder in two is blind in each for its own reasons.
-        prop = self._relieved_by(market)
-        reading = self.agent.beliefs.current_reading(self.me.acts_for, prop)
+        reading = self.agent.beliefs.current_reading(self.me.acts_for, self.about)
         if reading is None:
             return "no reading yet from my sensor"
         if perception is None:
             return "nothing here perceives"
-        overdue_after = perception.stale_after_s(self.me.acts_for, prop)
+        overdue_after = perception.stale_after_s(self.me.acts_for, self.about)
         if reading.is_fresh(overdue_after):
             return (f"my sensor is asleep and answered {reading.age_s():.0f}s ago; "
                     f"it is not due for {overdue_after}s")

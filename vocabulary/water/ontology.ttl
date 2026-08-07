@@ -13,8 +13,7 @@
 ag:Plant a owl:Class ; rdfs:subClassOf sosa:FeatureOfInterest ; rdfs:label "Plant" ;
     rdfs:comment "The physical thing sensed and watered. It has no stake — its agent does." .
 ag:WaterSource a owl:Class ; rdfs:label "Water source" ;
-    rdfs:comment "What a supplier dispenses; the plumbing node a market forms around." ;
-    ag:relieves ag:SoilMoisture .
+    rdfs:comment "What a supplier dispenses; the plumbing node a market forms around." .
 ag:SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" .
 ag:AirTemperature a sosa:ObservableProperty ; rdfs:label "Air temperature" ;
     rdfs:comment "Sensed about a plant, and allocated to nobody — no market relieves it, so no agent bids on it. It is here because a second property of the same pot is what makes an observation's key matter: the temp/humidity board on the bench observes this, and the water market must not read it as dryness." .
@@ -48,7 +47,8 @@ ag:litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
 
 ag:hasTarget a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "has target" ;
-    rdfs:comment "Desire: the moisture fraction this agent is trying to hold. The deficit below it drives both how much it wants and how badly." .
+    ag:aboutProperty ag:SoilMoisture ;
+    rdfs:comment "Desire: the moisture fraction this agent is trying to hold. The deficit below it drives both how much it wants and how badly. What it is a fraction OF is stated here rather than left to the reader — the whole private valuation (this, the bands, litresPerFraction) is denominated in soil moisture, and an agent that now holds readings of several properties must not judge a humidity against it." .
 ag:maxValuePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "max value per litre" ;
     rdfs:comment "Willingness to pay at peak urgency — the private value curve. The market sees the bid, never this." .

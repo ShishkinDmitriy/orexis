@@ -64,17 +64,38 @@ because one event topic carries two kinds of number. A stake is held in a *prope
 module handed a temperature answers `None` rather than judging it against the only scale it
 owns; the distinction that matters there is **no opinion versus an opinion of zero**.
 
-# How a bidder knows which property is its business
+# How a bidder knows which property is its business — and why not from the market
 
-The market package must not name a domain property — `ag:SoilMoisture` in market code would be
-the domain leaking into the protocol. So it is derived: a market is `ag:marketFor` a resource,
-the resource's **class** states what it `ag:relieves`, and the domain answers — a water source
-relieves soil moisture. The bidder reads the reading of that property and no other.
+The market package must not name a domain property: `ag:SoilMoisture` in market code would be
+the domain leaking into the protocol. So it is derived. The question is *derived from what*, and
+the first answer was wrong.
 
-Stated on the class, in the domain vocabulary, rather than per world: it is a fact about what
-water *is*, not about a deployment, and no world author should have to restate it. A bidder
-whose market relieves nothing refuses to start, with a message naming the market — because the
-only alternative is bidding on whichever reading arrived last, which is the thing being fixed.
+**The first answer put it on the market**: a market is `ag:marketFor` a resource, and the
+resource's class states which property it `ag:relieves`. It reads plausibly and it is wrong
+twice. A market is a **lot** — 1L of water is 1L of water whether or not anyone's soil is dry —
+so making a market carry a property means a market for something no instrument measures (a time
+slot, a right of way, a share of attention) cannot be declared at all. And it puts a fact about
+one *bidder's* valuation on the *venue*, which every participant would then have to share.
+
+**The property-shaped thing is the stake.** A target of 0.55 is 0.55 *of* something; the bands
+are in the same unit; and `ag:litresPerFraction` — "litres needed to raise moisture by 1.0" — is
+exactly the exchange rate between the lot and the property, which is where the coupling honestly
+lives. Until this was written down, that 0.55 was dimensionless, and the agent got away with it
+only because it had one kind of reading to compare against.
+
+So the domain states `ag:aboutProperty` on the desire term itself:
+
+```turtle
+ag:hasTarget ag:aboutProperty ag:SoilMoisture .
+```
+
+The bidder follows that link from `ag:hasTarget`, which its own beliefs block already names, so
+no domain property is written in market code and no world restates anything. A bidder whose
+desire names no property **refuses to start** — the only alternative left is judging whichever
+reading arrived last, which is the defect being fixed.
+
+Winning still changes the property. That is a consequence of the lot, not the identity of the
+market.
 
 # Two sensors, one property: a warning, not a refusal
 
@@ -165,8 +186,12 @@ them had to be rewritten when it turned out to pass with the fix removed.
 - **No ratified world wires two sensors to one agent.** The behaviour is exercised only in tests,
   against worlds built in a temporary directory. It has never run on the bench, and the board
   that motivates it is not yet flashed.
-- **A resource relieves at most one property.** `ag:relieves` is read as a single value, so a
-  market for something that addresses two — a feed that changes both moisture and nutrient — has
-  no representation. Nothing depends on this yet and widening it later costs one query.
+- **A desire is about exactly one property.** `ag:aboutProperty` is read as a single value, so an
+  agent whose stake spans two — wanting both moisture and nutrient held — has no representation.
+  Nothing depends on this yet, and widening it is one query and a loop.
+- **The link is on the term, so every agent in a domain shares it.** Two agents in one world
+  cannot denominate their desires differently. That is right for a domain where a target *means*
+  soil moisture, and it is the thing to revisit if a second kind of bidder appears in the same
+  society rather than in a second world.
 - **The warning is per sensor, not per pair.** Two probes on one property produce two warnings,
   one from each end. Harmless, and mildly noisy at four probes.

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
+from .ontology import WORLD_GRAPH
 from .store import QueryFn, bindings
 
 
@@ -90,10 +90,6 @@ class Market:
     bid_topic: str
     voucher_topic: str
     capacity_l: float = 0.0  # physical ceiling of the resource — the allocation limit
-    # WHICH PROPERTY THE RESOURCE ACTS ON, from the resource's class in the domain vocabulary.
-    # A bidder now holds one reading per (subject, property) and has to say which one it is
-    # bidding on; this is where it finds out, without the market package naming a domain term.
-    relieves: str | None = None
 
 
 @dataclass
@@ -173,21 +169,13 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
 
 def _markets_q(agent_uri: str, relation: str) -> str:
     return f"""
-SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?voucherTopic ?capacity ?relieves
-WHERE {{
-  GRAPH <{WORLD_GRAPH}> {{
-    <{agent_uri}> ag:{relation} ?market .
-    ?market ag:localId ?localId ; ag:marketFor ?resource ;
-            ag:offerTopic ?offerTopic ; ag:bidTopic ?bidTopic ; ag:voucherTopic ?voucherTopic .
-    OPTIONAL {{ ?resource ag:capacityL ?capacity }}
-    OPTIONAL {{ ?resource a ?resourceClass }}
-  }}
-  # The link is on the CLASS and therefore in the ONTOLOGY graph, not the world: it is a fact
-  # about what water is, not about this deployment. Optional so a resource whose domain says
-  # nothing still loads — the refusal belongs to the module that needs it, with a message that
-  # can name the market.
-  OPTIONAL {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?resourceClass ag:relieves ?relieves }} }}
-}}"""
+SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?voucherTopic ?capacity
+WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+  <{agent_uri}> ag:{relation} ?market .
+  ?market ag:localId ?localId ; ag:marketFor ?resource ;
+          ag:offerTopic ?offerTopic ; ag:bidTopic ?bidTopic ; ag:voucherTopic ?voucherTopic .
+  OPTIONAL {{ ?resource ag:capacityL ?capacity }}
+}} }}"""
 
 
 # Physical facts about the subjects — public, because it is how the world behaves.
@@ -211,7 +199,6 @@ def _market_from(row: dict) -> Market:
         offer_topic=row["offerTopic"], bid_topic=row["bidTopic"],
         voucher_topic=row["voucherTopic"],
         capacity_l=float(row["capacity"]) if row.get("capacity") else 0.0,
-        relieves=row.get("relieves"),
     )
 
 

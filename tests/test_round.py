@@ -155,7 +155,7 @@ def test_sitting_out_says_which_of_three_things_happened(make):
 
     def why(agent):
         bidding = next(m for m in agent.modules if m.CAPABILITY == BIDDING)
-        return bidding._why_blind(market_of(agent))
+        return bidding._why_blind()
 
     never = why(make("fern"))
     asleep = why(make("fern", _with_reading(0.5, age_s=10)))
@@ -192,6 +192,26 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
 
     bidding.on_reading_recorded(fern.me.acts_for, MOISTURE, 0.10)
     assert fern.sent.under("market/") != [], "the reading it was actually waiting for"
+
+
+def test_a_bidder_whose_desire_names_no_property_refuses_to_start(make):
+    """The link is asked of the DESIRE, not of the market, so this is what its absence breaks.
+
+    A market is a lot — 1L of water is 1L of water whether or not anyone's soil is dry, and a
+    market for something no instrument measures must stay expressible. The stake is the
+    property-shaped thing: a target of 0.55 is 0.55 *of* something. With that unsaid the only
+    remaining rule is "judge whichever reading arrived last", which is the defect, so the agent
+    declines to run instead.
+    """
+    from agent.ontology import ONTOLOGY_GRAPH
+
+    ds = genesis_store()
+    ds.update(f"""DELETE WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+        <http://example.org/agora#hasTarget>
+        <http://example.org/agora#aboutProperty> ?p }} }}""")
+
+    with pytest.raises(RuntimeError, match="aboutProperty"):
+        make("fern", ds)
 
 
 def test_a_reading_past_the_cadence_and_its_grace_is_stale(make):

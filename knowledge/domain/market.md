@@ -27,14 +27,23 @@ by one of four shocks:
   latent demand activates. See [wallet](/domain/wallet.md).
 - **Belief shock** — an attested belief shifts valuations (rain forecast attested → re-bid).
 
-# What a market is about
+# A market is a lot, not a property
 
-A market is `ag:marketFor` a resource, and the resource's **class** states which observable
-property it `ag:relieves` — a water source relieves soil moisture. That link is what tells a
-bidder which of its readings a bid here is a bid about, on a subject it may know several things
-about. It is stated by the domain rather than by a world, because it is a fact about what the
-resource is; and the market capability never names a domain property itself, which is what keeps
-the protocol swappable. See
+`ag:marketFor` names a **resource** and nothing more. What is auctioned is a quantity of a
+thing — 1L of water — and that is true whether or not anyone's soil is dry. Winning changes a
+property; the auction is not *about* one.
+
+This was briefly modelled the other way, with the resource's class stating which observable
+property it relieved, so that a bidder could work out which of its readings to bid on. It reads
+plausibly and it is wrong twice over: it makes a market undeclarable when it allocates something
+no instrument measures — a time slot, a right of way, a share of attention — and it puts a fact
+about the *bidder's* valuation on the *venue*, where every participant would have to agree to it.
+
+The property-shaped thing is the **stake**. A target of 0.55 is 0.55 *of* something, and the
+bands and `ag:litresPerFraction` are denominated in the same unit — `litresPerFraction` is
+precisely the exchange rate between the lot and the property, which is where the coupling
+honestly lives. So the domain states `ag:aboutProperty` on the desire term itself, the bidder
+follows it from a term it already names, and the market stays a lot. See
 [one-agent-many-sensors](../decisions/one-agent-many-sensors.md).
 
 # Who hosts — the scarce side of the *good*
