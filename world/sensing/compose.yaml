@@ -82,7 +82,6 @@ services:
       # the ratified world, at a fixed path — so the agent is told only its own id and never
       # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
       # agent has no business reading what anyone else was authored to want.
-      - ./hardware.ttl:/app/world/hardware.ttl:ro
       - ./world.ttl:/app/world/world.ttl:ro
       - ./beliefs/fern.ttl:/app/world/beliefs/fern.ttl:ro
       # Its own certificate and nothing else — the same rule as the beliefs above. The private

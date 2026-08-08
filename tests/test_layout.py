@@ -89,3 +89,61 @@ def test_onboarding_is_not_hidden_from_the_build_context():
         ".containerignore excludes onboarding/. That works, but it hides the boundary: the "
         "Containerfile should be the one place that says what an agent image contains."
     )
+
+
+# --- what an AGENT is given, which is less than the world -------------------------------------
+
+def test_an_agent_is_given_the_society_and_not_the_hardware():
+    """It never asks which pin a probe is on.
+
+    The runtime queries what it acts for, what it may poll, which topics reach that sensor and
+    how it is driven. Pins, wires, rails, silkscreen markings and part models are the
+    sovereign's: they decide what CAN be built and what a board must be flashed with, and once
+    it is built the agent talks to topics.
+
+    Asserted on the CONTENT of what an agent would load rather than on the filename, so it also
+    catches a pin assignment put into world.ttl — where nothing about the file name would warn
+    anyone. Enforcement is that the container does not have the file at all, which is the same
+    shape as the Containerfile keeping onboarding out of the image.
+    """
+    import rdflib
+
+    from agent import genesis
+
+    HARDWARE_NAMESPACES = (
+        "http://example.org/agora/microcontroller#",
+        "http://example.org/agora/esp32#",
+        "http://example.org/agora/wokwi#",
+        "http://example.org/agora/dht11#",
+        "http://example.org/agora/rgb-led#",
+        "http://example.org/agora/moisture-probe#",
+        "http://example.org/agora/onewire#",
+        "http://example.org/agora/i2c#",
+    )
+
+    for world in genesis.worlds():
+        g = rdflib.Graph()
+        for path in genesis.society_files(genesis.world_dir(world)):
+            g.parse(path, format="turtle")
+        leaked = {str(t) for triple in g for t in triple
+                  if str(t).startswith(HARDWARE_NAMESPACES)}
+        assert not leaked, (
+            f"{world}: an agent would be handed hardware vocabulary it never queries: "
+            f"{sorted(leaked)[:5]}")
+
+
+def test_the_compose_file_does_not_mount_hardware_at_an_agent():
+    """The other half, and the one that actually enforces it: a rule the agent is trusted to
+    follow is not a boundary. What keeps the wiring out of an agent is that the file is not in
+    its filesystem."""
+    from agent.config import REPO_ROOT
+    from agent import genesis
+
+    for world in genesis.worlds():
+        compose = REPO_ROOT / "world" / world / "compose.yaml"
+        if not compose.exists():
+            continue
+        for name in genesis.HARDWARE_FILES:
+            assert f"/{name}:" not in compose.read_text(), (
+                f"{world}/compose.yaml mounts {name} into an agent — regenerate with "
+                f"`agora-compose {world}`")
