@@ -115,6 +115,8 @@ ag:MountedPeripheralShape a sh:NodeShape ;
                 FILTER NOT EXISTS { ?w <http://example.org/agora/microcontroller#joins> ?value }
                 FILTER NOT EXISTS { ?value <http://example.org/agora/microcontroller#pinRole>
                     <http://example.org/agora/microcontroller#NotConnectedPinRole> }
+                FILTER NOT EXISTS { ?value <http://example.org/agora/microcontroller#unused>
+                    true }
             }""" ] .
 
 ag:MicrocontrollerShape a sh:NodeShape ;

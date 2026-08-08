@@ -391,17 +391,39 @@ ag:air_float a mc:Pin ; mc:pinRole mc:GroundPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
 
 
-def test_a_leg_declared_NOT_CONNECTED_is_accepted():
-    """Real parts have legs nobody should wire — a DHT's third pin is NC, which is where this
-    came from. Without a word for it the rule that catches a FORGOTTEN leg also refuses a
-    deliberate one, and a checker that cannot tell those apart teaches people to ignore it.
-
-    The other half is the test above it: a leg with any OTHER role and no wire is still refused.
-    """
+def test_a_leg_the_PART_never_connects_is_accepted():
+    """What the component IS. A DHT's third pin connects to nothing inside it — the package has
+    four positions and the die uses three — and that is true of every DHT ever made. Intrinsic,
+    so it is a role."""
     assert _conforms(_wiring("""
     ag:carries ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_nc .
 ag:air_nc a mc:Pin ; mc:pinRole mc:NotConnectedPinRole .
+""" + _leg("air", "d", "onewire:DataPinRole", 32)))
+
+
+def test_a_leg_THIS_BUILD_leaves_unwired_is_accepted():
+    """What the build DID, which is a different fact and cannot be a role.
+
+    A board has thirty legs and a world wires seven; nothing about the ESP32 says which, and the
+    same board in another world uses different ones. Putting that in a role would file a fact
+    about one breadboard inside the description of a component.
+    """
+    assert _conforms(_wiring("""
+    ag:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
+ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole ; mc:unused true .
+""" + _leg("air", "d", "onewire:DataPinRole", 32)))
+
+
+def test_a_leg_that_is_merely_forgotten_is_still_refused():
+    """The whole point of the other two. Silence must go on meaning 'I have not thought about
+    this leg' — a floating ground is the commonest reason a three-legged part answers with
+    silence, and it looks exactly like a dead part."""
+    assert not _conforms(_wiring("""
+    ag:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
+ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
 
 

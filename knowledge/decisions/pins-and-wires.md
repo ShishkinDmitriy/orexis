@@ -156,6 +156,17 @@ Three faults that the old model could not express, now refusable by `agora-valid
 - **A part that does not name all its legs.** A DHT stating only its data line was the old
   model's best effort. It is precisely the other two that go wrong.
 
+The unwired-leg rule needed two exemptions, and telling them apart is the useful part. A DHT's
+third pin connects to nothing INSIDE the part — true of every DHT ever made, intrinsic, so
+`mc:NotConnectedPinRole` is a role. A board leg this build simply did not use is not intrinsic
+at all: an ESP32 has thirty legs, a world wires seven, and the same board in another world uses
+different ones. That is `mc:unused` on the pin, and it is deliberately not a role — a role
+travels with the component, and filing "unwired here" inside the description of a component puts
+a fact about one breadboard where every future build of that part will read it.
+
+Both cost a line to state, which is the point: silence must go on meaning *I have not thought
+about this leg*. A checker that could be quietened for free would be quietened everywhere.
+
 The generic rules — flash pins, ADC2, input-only 34-39, one line one leg — moved onto the
 **wire**, because that is where the two facts finally meet. Neither end knows the other until
 something joins them.
