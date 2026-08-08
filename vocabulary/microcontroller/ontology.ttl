@@ -118,15 +118,17 @@ mc:DigitalOutPinRole a mc:OutputRole ; rdfs:label "digital out" .
 mc:PowerPinRole a mc:PinRole ; rdfs:label "power" ;
     rdfs:comment "Supplies or takes current. Neither an input nor an output in the signal sense — nothing is read from it and nothing is driven onto it — which is why it is a bare PinRole rather than either, and why the 34-39 rule does not apply to it." .
 mc:NotConnectedPinRole a mc:PinRole ; rdfs:label "not connected" ;
-    rdfs:comment """A leg that connects to nothing INSIDE the part. A DHT's third pin is the standard example: it is there because the package has four positions and the die uses three, and it is true of every DHT ever made.
+    rdfs:comment """A leg that connects to nothing INSIDE the part, because the package has more positions than the die uses. Intrinsic, and therefore a role — what a leg is FOR travels with the part, which is the test for whether anything belongs here at all.
 
-Intrinsic, and therefore a role — which is the test for whether something belongs here at all. What a leg is FOR travels with the part; how a particular build happens to use it does not, and mc:unused is that. Conflating them puts a fact about one breadboard into the description of a component.""" .
+NOT DERIVED, and not derivable: nothing about a wiring says whether a leg is unwired by design or by omission. It is inherited instead — once a part's legs are declared on its type (issue #55) a world states nothing, and a DHT with an NC leg gets one from dht11:Dht11.
+
+Nothing on this bench has one, and the example I first reached for was wrong. A bare 4-pin DHT11 has an NC; the KY-015 breakout in world/sensing exposes three legs and all three are wired. Wokwi's model of the part has one, which is where I saw it and mistook it for ours. Kept because it is real for plenty of parts and costs a line, but exercised only by a test, and worth deleting if nothing ever uses it.""" .
 
 mc:unused a owl:DatatypeProperty ; rdfs:domain mc:Pin ; rdfs:range xsd:boolean ;
     rdfs:label "unused" ;
     rdfs:comment """This leg is deliberately left unwired in THIS build. Not a role: a board has thirty legs and a world wires seven, and nothing about the ESP32 says which — the wiring does, and the same board in another world uses different ones.
 
-It exists so that the rule catching a FORGOTTEN leg has something to distinguish a deliberate one by. Stating it costs a line, which is the point: silence should mean 'I have not thought about this leg', and a checker that could be quietened for free would be quietened everywhere.""" .
+NOT DERIVABLE, and this is the sharper case. The graph already shows a pin with no wire; what it cannot show is whether anyone MEANT that. Intent is not a consequence of other facts, so stating it is not redundant bookkeeping — it is the entire content. That is also why it costs a line: silence has to go on meaning 'I have not thought about this leg', and a checker that could be quietened for free would be quietened everywhere.""" .
 
 mc:GroundPinRole a mc:PinRole ; rdfs:label "ground" ;
     rdfs:comment "The return. Modelled, unlike before, because a floating ground is the single most common reason a three-legged sensor answers with silence, and 'the world does not mention it' is a poor reason for a checker to stay quiet about it." .
