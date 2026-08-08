@@ -1,8 +1,8 @@
 ---
 type: Decision
-title: Wokwi drafts a stand; the world ratifies it
+title: A drawing drafts a stand; the world ratifies it
 description: Why the import is one-way and produces a draft rather than a source of truth — what Wokwi's model can give back, what it cannot express at all, and why bidirectional sync was refused rather than deferred.
-tags: [wokwi, hardware, genesis, drafting, seams]
+tags: [wokwi, wireviz, hardware, genesis, drafting, seams]
 timestamp: 2026-08-08T00:00:00Z
 ---
 
@@ -57,6 +57,20 @@ whatever was drawn is by definition what the world now says.
 is emitted as an explicit marker, so a half-finished import fails validation loudly instead of
 looking finished. A draft that validates is worse than one that does not: it is the one nobody
 re-reads.
+
+# The same holds for WireViz, and it drafts better
+
+`agora-wireviz --import` reads a harness back by the same rule, and the asymmetry falls out
+differently. A harness is meant to be TYPED, so it carries the names you chose and the models you
+wrote — a Wokwi diagram gave back `sen1` and nothing else. What it cannot say is what a part IS:
+`type: KY-015 (DHT11)` is free text, and picking `dht11:Dht11` out of it would be guessing.
+
+Which connector is the BOARD is not stated in a harness at all. The one every cable touches is
+the usual answer, and the draft labels it `GUESSED` rather than asserting it quietly.
+
+Round-tripping our own stand recovers every role, every wire and every colour and leaves six
+markers. Two of the three tools have now been through this, and the shape has not changed: a
+drawing carries the wiring and never the meaning.
 
 # Seams left open
 
