@@ -100,10 +100,12 @@ def test_the_led_board_exists_because_its_order_differs():
     assert doc["pins"]["GND"]["target"].endswith(":COM")
 
 
-def test_the_dht_board_is_honest_about_delegating_to_the_wrong_chip():
-    """It targets wokwi-dht22 and the firmware asks for a DHT11, which do not encode alike —
-    so the checksum fails and logAir reports no answer. The board is still worth having; this
-    asserts the README goes on saying why, rather than the mismatch becoming folklore."""
+def test_the_dht_board_says_what_its_delegation_is_and_is_not_good_for():
+    """It targets wokwi-dht22 while the firmware asks for a DHT11, and those do not encode
+    alike. That costs nothing while these boards are a VISUAL model — the delegation only
+    supplies pin names for `target` to map onto — and would cost everything the day anything
+    runs. Asserted so the caveat stays attached to the file rather than becoming folklore.
+    """
     assert _board("KY-015")["chips"][0]["type"] == "wokwi-dht22"
     readme = (BOARDS / "README.md").read_text()
-    assert "wrong part" in readme and "DHT11" in readme
+    assert "DHT11" in readme and "visual model" in readme
