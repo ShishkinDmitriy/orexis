@@ -60,6 +60,28 @@ def world_files(world: Path) -> list[Path]:
     return sorted(world.glob("*.ttl"))
 
 
+# What an AGENT is given, which is less. The sovereign reads the whole world — to validate it,
+# to generate a board's config.h, to draw it — but an agent queries none of that.
+#
+# Nothing in the runtime asks which pin a probe is on. It asks what it acts for, what it may
+# poll, which topics reach that sensor and how it is driven, and every one of those is stated in
+# the society. Pins, wires, rails, silkscreen markings and part models are the sovereign's
+# concern: they decide what CAN be built and what a board must be flashed with, and once it is
+# built the agent talks to topics.
+#
+# So a hardware file is not mounted into an agent's container at all, and the enforcement is
+# that ABSENCE rather than a rule the agent is trusted to follow — the same shape as onboarding
+# being kept out of the image by the Containerfile not naming it. The invariant is checked
+# directly in tests/test_layout.py: an agent's world graph contains no hardware vocabulary,
+# which also catches someone putting a pin in world.ttl.
+HARDWARE_FILES = ("hardware.ttl",)
+
+
+def society_files(world: Path) -> list[Path]:
+    """The world as an AGENT is given it: everything except the stand it runs on."""
+    return [p for p in world_files(world) if p.name not in HARDWARE_FILES]
+
+
 def worlds() -> list[str]:
     """Every ratified world on disk. Found by looking, like everything else."""
     if not WORLDS_ROOT.is_dir():

@@ -108,12 +108,21 @@ Two other renderings were tried and dropped, and the reasons are the useful part
 node graph** could not express the one thing that makes a wiring diagram legible, which is that
 pins sit INSIDE their device: 21 nodes came out as a hairball, with no grouping, no per-node
 position and no control over size. Force-directed layout is the wrong shape for a thing whose
-arrangement is already known. **Mermaid** fixed that with subgraphs and was genuinely readable —
-and Wokwi beats it for one reason that has nothing to do with looks: it **runs**. It renders the
-real DevKit with its real header and then simulates the firmware on it, so the LED logic, the
-cadence handling and the calibration arithmetic can be exercised against a board that does not
-exist. That is the same trick `world/simulation` plays a layer up with containers speaking the
-real protocol.
+arrangement is already known. **Mermaid** fixed that with subgraphs and was genuinely readable, and Wokwi was chosen over it
+because it **runs** — the same trick `world/simulation` plays a layer up with containers speaking
+the real protocol.
+
+**That argument has since been withdrawn, and the choice survives it.** Simulation is not what
+this is for: it is a visual model of the bench. What Wokwi still gives that Mermaid cannot is
+PHYSICAL accuracy — the real DevKit graphic with its real header, the parts drawn as the parts,
+each leg where it actually sits. Boxes and lines answer "what is connected to what"; this answers
+"which hole does this go in", which is the question you have while holding a jumper. It is a
+closer call than the original reasoning made it, and worth saying so rather than resting on an
+argument that no longer applies.
+
+One consequence of dropping simulation: the chip a custom board delegates to only has to supply
+pin NAMES for `target` to map onto. So `wokwi-dht22` standing in for a DHT11 costs nothing here,
+and would cost everything the day anything runs — see boards/README.md.
 
 **A part says how it draws in its own package.** `vocabulary/dht11/` already states what a DHT11
 is and what legs it has; that it draws as `wokwi-dht22` with SDA/VCC/GND is the same kind of

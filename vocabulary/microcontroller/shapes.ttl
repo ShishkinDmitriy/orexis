@@ -124,3 +124,16 @@ ag:MicrocontrollerShape a sh:NodeShape ;
     sh:targetClass mc:Microcontroller ;
     sh:property [ sh:path mc:model ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
                   sh:message "a board must state its model" ] .
+
+ag:CarriedPeripheralShape a sh:NodeShape ;
+    rdfs:comment "A peripheral with legs that no board mounts. It is what a mistyped identifier LOOKS like: the world calls a sensor one thing and the stand calls it another, so instead of one device described twice there are two devices each described once — a sensor nothing is wired to, and a part nothing polls. Both halves validate on their own, which is why this is worth a rule. It matters more now that a stand can be authored elsewhere and imported, because the identifiers then come from a second file and agreeing is no longer automatic." ;
+    sh:targetClass mc:Peripheral ;
+    sh:sparql [
+        sh:message "this peripheral has legs but no board carries it — check the identifier matches the one the world uses" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/agora/microcontroller#hasPin> ?pin .
+                FILTER NOT EXISTS {
+                    ?board <http://example.org/agora/microcontroller#carries> $this
+                }
+            }""" ] .

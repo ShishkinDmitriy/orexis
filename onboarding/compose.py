@@ -90,12 +90,15 @@ def _world_files(world: str) -> str:
     """Every Turtle the world is written in, mounted one by one.
 
     Still file by file rather than the directory: mounting `world/<name>/` wholesale would hand
-    the agent the signing keys and every other agent's opening beliefs. A world is now several
-    files — the society, the stand it runs on — and an agent needs all of them, because they are
-    one graph to every query it makes.
+    the agent the signing keys and every other agent's opening beliefs.
+
+    And not every file. An agent is given the SOCIETY and not the hardware — it never asks which
+    pin a probe is on, only what it acts for, what it may poll and which topics reach it. The
+    container simply does not have the file, which is enforcement rather than etiquette: the
+    same shape as the Containerfile keeping onboarding out of the image.
     """
     return "\n".join(f"      - ./{p.name}:/app/world/{p.name}:ro"
-                      for p in genesis.world_files(world_dir(world)))
+                      for p in genesis.society_files(world_dir(world)))
 
 
 def _service(agent_id: str, caps: set[str], world: str) -> str:

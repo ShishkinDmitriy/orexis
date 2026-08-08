@@ -396,7 +396,7 @@ def test_a_leg_the_PART_never_connects_is_accepted():
     four positions and the die uses three — and that is true of every DHT ever made. Intrinsic,
     so it is a role."""
     assert _conforms(_wiring("""
-    ag:carries ag:air .
+    mc:carries ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_nc .
 ag:air_nc a mc:Pin ; mc:pinRole mc:NotConnectedPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
@@ -410,7 +410,7 @@ def test_a_leg_THIS_BUILD_leaves_unwired_is_accepted():
     about one breadboard inside the description of a component.
     """
     assert _conforms(_wiring("""
-    ag:carries ag:air .
+    mc:carries ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
 ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole ; mc:unused true .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
@@ -421,7 +421,7 @@ def test_a_leg_that_is_merely_forgotten_is_still_refused():
     this leg' — a floating ground is the commonest reason a three-legged part answers with
     silence, and it looks exactly like a dead part."""
     assert not _conforms(_wiring("""
-    ag:carries ag:air .
+    mc:carries ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
 ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))

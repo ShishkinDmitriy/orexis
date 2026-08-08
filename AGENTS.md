@@ -126,6 +126,9 @@ agora-onboard <world>       # ONBOARDING: validate, then grant everything below.
   agora-dashboards <world>  #   a Grafana folder per world, from what its agents observe
 agora-firmware <world>      # a board's config.h, from the world it belongs to
 agora-wokwi <world>         # world/<world>/wokwi/ — its hardware as a wokwi.com project, which RUNS
+agora-wokwi <world> --import d.json  # the other way: DRAFT a hardware.ttl from a drawing
+agora-wireviz <world>       # world/<world>/wiring.yaml — the wiring as a WireViz harness
+agora-wireviz <world> --import w.yaml   # and the same, drafted back from one
 agora-keygen <world>        # once per world, before it is onboarded
 agora-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent

@@ -9,7 +9,8 @@
     rdfs:label "RGB LED" ;
     rdfs:comment """One part, its own package. Four legs: three driven and one common return.""" .
 
-rgbled:RgbLed a owl:Class ; rdfs:subClassOf mc:Peripheral ; rdfs:label "RGB LED" ;
+rgbled:RgbLed a owl:Class ;
+    mc:modelName "KY-016 4-pin RGB LED (common cathode)" ; rdfs:subClassOf mc:Peripheral ; rdfs:label "RGB LED" ;
     wokwi:part "wokwi-rgb-led" ;
     # No wokwi:attrs stating the polarity. Which it is, is a fact about the PART SOLDERED HERE
     # and not about RGB LEDs, and the world already says it: the common leg's wire goes to

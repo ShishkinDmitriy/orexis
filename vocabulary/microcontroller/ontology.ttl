@@ -24,6 +24,13 @@ mc:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Microco
 mc:Peripheral a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Peripheral" ;
     rdfs:comment "Something wired to a board's pins. A sensor is one; so is an indicator." .
 
+mc:modelName a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model name" ;
+    rdfs:comment """The catalogue name of a part, stated on its CLASS — what a person orders, and what an authoring tool will have written down. mc:model is the same string on an INSTANCE; this is the one every instance of that class shares.
+
+It exists so a wiring authored elsewhere can be resolved back to a class. A WireViz harness says `type: KY-015 (DHT11)`, which is free text and connects to nothing; this is what turns that into dht11:Dht11 without a tool guessing from a string. Exactly what wokwi:part already does in the other direction — a package says how the thing it describes is identified outside this repository.
+
+No rdfs:domain, deliberately. It is stated on classes, and a domain axiom would make each of them infer as whatever it names, which is the trap that has already cost this project two afternoons.""" .
+
 mc:model a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model" ;
     rdfs:comment "What this thing IS, as a human would order it — 'ESP32-WROOM-32D'. Free text on purpose: it identifies hardware to a person, and nothing derives behaviour from it. Behaviour comes from the CLASS." .
 
