@@ -101,7 +101,7 @@ hand.
 
 # It is also now runnable
 
-`agora-diagram <world>` writes `world/<world>/wokwi/diagram.json` — the stand as a
+`agora-wokwi <world>` writes `world/<world>/wokwi/diagram.json` — the stand as a
 [wokwi.com](https://wokwi.com) project. Every part, every wire, coloured by what it carries.
 
 Two other renderings were tried and dropped, and the reasons are the useful part. **Grafana's
@@ -139,7 +139,7 @@ graph shows it and nothing contradicts it the day they change it. A leg with no 
 now reported and omitted, which is the same treatment a part with no `wokwi:part` gets.
 
 A generated picture can go stale in the one way a hand-drawn one cannot be saved from, so
-`tests/test_diagram.py` regenerates and compares. A stale drawing looks exactly like a current
+`tests/test_wokwi.py` regenerates and compares. A stale drawing looks exactly like a current
 one, which is why trusting the author to remember was not an option.
 
 # What became checkable

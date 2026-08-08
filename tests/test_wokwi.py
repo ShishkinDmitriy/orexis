@@ -1,4 +1,4 @@
-"""agora-diagram — the stand as a Wokwi project, drawn from the world and never by hand.
+"""agora-wokwi — the stand as a Wokwi project, drawn from the world and never by hand.
 
 A hand-maintained wiring diagram is wrong the first time a jumper moves, and wrong SILENTLY,
 which is worse than not having one. These check the generated one says what the world says,
@@ -14,7 +14,7 @@ import json
 import pytest
 
 from agent.genesis import world_dir
-from onboarding.diagram import render
+from onboarding.wokwi import render
 
 
 @pytest.fixture(scope="module")
@@ -72,7 +72,7 @@ def test_the_led_polarity_is_derived_from_the_wire(doc, tmp_path, monkeypatch):
     monkeypatch.setattr(genesis, "world_dir", lambda w: dst)
     monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst, raising=False)
 
-    from onboarding.diagram import render as render_again
+    from onboarding.wokwi import render as render_again
     flipped = next(p for p in render_again("anode")["parts"] if p["id"] == "status_led_fern")
     assert flipped["attrs"] == {"common": "anode"}, "on a rail it is a common-anode part"
 
@@ -118,7 +118,7 @@ def test_a_leg_with_no_wokwi_name_is_reported_rather_than_guessed(tmp_path, monk
     import shutil
 
     from agent import genesis
-    from onboarding.diagram import render as render_again
+    from onboarding.wokwi import render as render_again
 
     dst = tmp_path / "unnamed"
     shutil.copytree(genesis.world_dir("sensing"), dst)
@@ -168,7 +168,7 @@ def test_an_uncoloured_wire_falls_back_to_what_it_carries(tmp_path, monkeypatch)
     import shutil
 
     from agent import genesis
-    from onboarding.diagram import render as render_again
+    from onboarding.wokwi import render as render_again
 
     dst = tmp_path / "uncoloured"
     shutil.copytree(genesis.world_dir("sensing"), dst)
@@ -195,4 +195,4 @@ def test_the_committed_picture_is_in_step_with_the_world():
     """
     committed = json.loads((world_dir("sensing") / "wokwi" / "diagram.json").read_text())
     assert committed == render("sensing"), (
-        "world/sensing/wokwi/diagram.json is out of step — run `agora-diagram sensing`")
+        "world/sensing/wokwi/diagram.json is out of step — run `agora-wokwi sensing`")
