@@ -65,9 +65,10 @@ SELECT ?class ?role ?name WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
 }} }}"""
 
 _PINS_Q = f"""
-SELECT ?device ?pin ?notation ?role ?railVolts WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?device ?pin ?notation ?wokwiName ?role ?railVolts WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?device <{MC}hasPin> ?pin .
   OPTIONAL {{ ?pin <{SKOS}notation> ?notation }}
+  OPTIONAL {{ ?pin <{WOKWI}name> ?wokwiName }}
   OPTIONAL {{ ?pin <{MC}pinRole> ?role }}
   OPTIONAL {{ ?pin <{MC}railVolts> ?railVolts }}
 }} }}"""
@@ -76,8 +77,9 @@ _CLASSES_Q = f"""
 SELECT ?device ?class WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?device a ?class }} }}"""
 
 _WIRES_Q = f"""
-SELECT ?a ?b WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?a ?b ?colour WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?wire a <{MC}Wire> ; <{MC}joins> ?a , ?b .
+  OPTIONAL {{ ?wire <{MC}colour> ?colour }}
   FILTER(STR(?a) < STR(?b))
 }} }}"""
 
@@ -165,8 +167,11 @@ def render(world: str) -> dict | None:
         device = r["device"]
         if device not in drawable:
             continue
-        if r.get("notation"):
-            named[r["pin"]] = f"{_ident(device)}:{r['notation']}"
+        # wokwi:name first, then the silkscreen. The override exists because the tidy claim —
+        # that the silkscreen is authoritative because Wokwi names the same header — is only
+        # true where the silkscreen is unique, and a DevKit prints GND on three separate legs.
+        if r.get("wokwiName") or r.get("notation"):
+            named[r["pin"]] = f"{_ident(device)}:{r.get('wokwiName') or r['notation']}"
         elif r.get("role"):
             for cls in classes.get(device, ()):
                 if (name := part_pins.get(cls, {}).get(r["role"])):
@@ -177,12 +182,15 @@ def render(world: str) -> dict | None:
     for r in ratified.rows(ds, _WIRES_Q):
         a, b = named.get(r["a"]), named.get(r["b"])
         if a and b:
-            # Colour by what the wire carries, which is the one thing a person tracing a
-            # breadboard cares about first: red is live, black is ground, green is signal.
+            # The colour the jumper actually is, where the world says. Otherwise a guess from
+            # what the wire carries: red is live, black is a return, green is signal. Stating
+            # it replaces a guess about the bench with a fact about it — which is what makes
+            # the picture usable for finding one wire among nine identical ones.
             role = next((p.get("role") for p in pins if p["pin"] in (r["a"], r["b"])
                          and p.get("role")), "")
-            colour = ("red" if role.endswith("PowerPinRole")
-                      else "black" if role.endswith("GroundPinRole") else "green")
+            colour = r.get("colour") or ("red" if role.endswith("PowerPinRole")
+                                         else "black" if role.endswith("GroundPinRole")
+                                         else "green")
             connections.append([a, b, colour, []])
         else:
             unresolved.append((_local(r["a"]), _local(r["b"])))

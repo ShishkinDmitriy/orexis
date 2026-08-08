@@ -88,6 +88,12 @@ mc:logicVolts a owl:DatatypeProperty ; rdfs:domain ag:Device ; rdfs:range xsd:de
 mc:Wire a owl:Class ; rdfs:label "Wire" ;
     rdfs:comment "A connection between exactly two pins. A first-class thing rather than a property, because it belongs to neither end: it is what someone can point at on the breadboard, and what they get wrong." .
 
+mc:colour a owl:DatatypeProperty ; rdfs:domain mc:Wire ; rdfs:range xsd:string ;
+    rdfs:label "colour" ;
+    rdfs:comment """What colour the jumper actually is. A fact about the bench rather than about the circuit — nothing electrical depends on it — and worth stating for exactly that reason: it is how a person finds the right wire among nine identical ones without tracing each to its end.
+
+Optional. A wire that says nothing is drawn by what it CARRIES: red for a rail, black for a return, green for a signal. That default is a guess about the bench, and stating the colour replaces a guess with a fact.""" .
+
 mc:joins a owl:ObjectProperty ; rdfs:domain mc:Wire ; rdfs:range mc:Pin ;
     rdfs:label "joins" ;
     rdfs:comment "The two pins a wire connects. Unordered on purpose — a wire has no direction, and pretending it did would invent a fact nobody can check by looking." .

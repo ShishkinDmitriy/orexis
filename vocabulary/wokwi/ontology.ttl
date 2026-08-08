@@ -11,7 +11,9 @@
 
 It is a rendering concern and nothing else reads it. A world validates identically whether or not a part says how it draws; a part that says nothing simply does not appear.
 
-Note what is NOT here: the pin names of a BOARD. An ESP32's legs already carry skos:notation — D34, 3V3, GND — which is what the silkscreen says and what Wokwi calls them, because Wokwi is naming the same physical header. One of the two had to be authoritative and the silkscreen was already it.""" .
+A board's legs usually need nothing here — they carry skos:notation, and Wokwi is naming the same physical header the silkscreen is. Usually, and not always: a DevKit prints GND on three separate legs, so the silkscreen is not a unique key and Wokwi disambiguates where the board does not. wokwi:name on a PIN is that override, and it exists because the tidy version of this claim was wrong.
+
+Note what is otherwise NOT here: the pin names of a BOARD. An ESP32's legs already carry skos:notation — D34, 3V3, GND — which is what the silkscreen says and what Wokwi calls them, because Wokwi is naming the same physical header. One of the two had to be authoritative and the silkscreen was already it.""" .
 
 # Deliberately no rdfs:domain on any of these. They are stated on CLASSES — a DHT11 draws this
 # way, all of them — and a domain axiom is an inference rule: giving one `rdfs:domain mc:Peripheral`

@@ -11,11 +11,11 @@
     rdfs:comment """One part, its own package. Three legs — an analog output, power and ground — and two calibration numbers that belong to the individual probe rather than to the model.""" .
 
 probe:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf mc:Peripheral ;
-    # Wokwi has no capacitive soil probe, and a potentiometer is the honest stand-in rather
-    # than a fudge: what the board actually sees is a voltage it reads with an ADC, and a knob
-    # is a voltage you can turn. It makes the simulation useful for the thing calibration is
-    # hardest to get right — watching the fraction move as the raw count crosses rawDry/rawWet.
-    wokwi:part "wokwi-potentiometer" ;
+    # Wokwi has the actual part. It was drawn as a potentiometer for a while on my claim that
+    # it did not, which was simply wrong — and wrong in the way worth noticing, because a
+    # plausible stand-in is harder to doubt than a missing one. A knob would have simulated
+    # fine and quietly misdescribed the bench.
+    wokwi:part "wokwi-soil-moisture-sensor" ;
     wokwi:pin [ mc:pinRole mc:AnalogInPinRole ; wokwi:name "SIG" ] ,
               [ mc:pinRole mc:PowerPinRole    ; wokwi:name "VCC" ] ,
               [ mc:pinRole mc:GroundPinRole   ; wokwi:name "GND" ] ;

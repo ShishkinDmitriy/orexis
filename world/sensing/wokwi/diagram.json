@@ -18,7 +18,7 @@
       "attrs": {}
     },
     {
-      "type": "wokwi-potentiometer",
+      "type": "wokwi-soil-moisture-sensor",
       "id": "moisture_sensor_fern",
       "top": 10,
       "left": 300,
@@ -37,14 +37,14 @@
   "connections": [
     [
       "air_sensor_fern:GND",
-      "esp32_fern:GND",
+      "esp32_fern:GND.1",
       "black",
       []
     ],
     [
       "air_sensor_fern:SDA",
       "esp32_fern:D32",
-      "green",
+      "yellow",
       []
     ],
     [
@@ -66,7 +66,7 @@
       []
     ],
     [
-      "esp32_fern:GND",
+      "esp32_fern:GND.1",
       "moisture_sensor_fern:GND",
       "black",
       []
@@ -74,12 +74,12 @@
     [
       "status_led_fern:B",
       "esp32_fern:D27",
-      "green",
+      "blue",
       []
     ],
     [
       "status_led_fern:COM",
-      "esp32_fern:GND",
+      "esp32_fern:GND.1",
       "black",
       []
     ],
@@ -92,7 +92,7 @@
     [
       "status_led_fern:R",
       "esp32_fern:D25",
-      "green",
+      "red",
       []
     ]
   ]

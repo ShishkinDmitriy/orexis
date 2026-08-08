@@ -124,11 +124,6 @@ and omitted rather than guessed at.
 3V3, GND — which is what the silkscreen says and what Wokwi calls them, because both are naming
 the same header. One had to be authoritative and the silkscreen already was.
 
-Wokwi has no capacitive soil probe, so it stands in as a potentiometer. That is honest rather
-than a fudge: what the board sees is a voltage it reads with an ADC, and a knob is a voltage you
-can turn — which makes the simulation useful for the thing calibration is hardest to get right,
-watching the fraction move as the raw count crosses `rawDry`/`rawWet`.
-
 A generated picture can go stale in the one way a hand-drawn one cannot be saved from, so
 `tests/test_diagram.py` regenerates and compares. A stale drawing looks exactly like a current
 one, which is why trusting the author to remember was not an option.

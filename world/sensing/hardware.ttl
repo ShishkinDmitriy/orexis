@@ -7,6 +7,7 @@
 @prefix rgbled: <http://example.org/agora/rgb-led#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 @prefix esp32: <http://example.org/agora/esp32#> .
+@prefix wokwi: <http://example.org/agora/wokwi#> .
 
 # The hardware this world runs on: what is physically here and how it is wired.
 #
@@ -68,7 +69,11 @@ ag:pin_gpio27 a mc:Pin ; mc:gpio 27 ; skos:notation "D27" .
 ag:pin_gpio32 a mc:Pin ; mc:gpio 32 ; skos:notation "D32" .
 ag:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "D34" .
 ag:pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ; skos:notation "3V3" .
-ag:pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" .
+# Three legs on this board are printed GND, so the silkscreen does not identify one of them.
+# Wokwi disambiguates where the board does not, which is what wokwi:name is for. Everything
+# here grounds to the same rail, so which of the three is arbitrary — but it has to be SAID.
+ag:pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" ;
+                         wokwi:name "GND.1" .
 
 ##########  What is wired to it  ##########
 
@@ -124,15 +129,21 @@ ag:air_gnd  a mc:Pin ; mc:pinRole mc:GroundPinRole .
 # its data line at whatever it is powered from — 5V into a 3.3V input that is not 5V tolerant.
 # That is now a refusable statement rather than a paragraph hoping to be read.
 
-[] a mc:Wire ; mc:joins ag:probe_out , ag:pin_gpio34 .
-[] a mc:Wire ; mc:joins ag:probe_vcc , ag:pin_3v3 .
-[] a mc:Wire ; mc:joins ag:probe_gnd , ag:pin_gnd .
+# Named rather than blank, because a wire is the thing you point at when something is wrong,
+# and you cannot point at a blank node. The colour is the one on the actual jumper: it is a
+# fact about this bench and nothing electrical depends on it, which is exactly why it is worth
+# writing down — it is how you find the right wire among nine without tracing each to its end.
+ag:w_probe_sig a mc:Wire ; mc:joins ag:probe_out , ag:pin_gpio34 ; mc:colour "green" .
+ag:w_probe_pwr a mc:Wire ; mc:joins ag:probe_vcc , ag:pin_3v3    ; mc:colour "red" .
+ag:w_probe_gnd a mc:Wire ; mc:joins ag:probe_gnd , ag:pin_gnd    ; mc:colour "black" .
 
-[] a mc:Wire ; mc:joins ag:led_r      , ag:pin_gpio25 .
-[] a mc:Wire ; mc:joins ag:led_g      , ag:pin_gpio26 .
-[] a mc:Wire ; mc:joins ag:led_b      , ag:pin_gpio27 .
-[] a mc:Wire ; mc:joins ag:led_common , ag:pin_gnd .
+# The LED's three channels take their own colours, which is the case where this earns itself:
+# on the breadboard they are otherwise three identical jumpers into three adjacent pins.
+ag:w_led_r   a mc:Wire ; mc:joins ag:led_r      , ag:pin_gpio25 ; mc:colour "red" .
+ag:w_led_g   a mc:Wire ; mc:joins ag:led_g      , ag:pin_gpio26 ; mc:colour "green" .
+ag:w_led_b   a mc:Wire ; mc:joins ag:led_b      , ag:pin_gpio27 ; mc:colour "blue" .
+ag:w_led_com a mc:Wire ; mc:joins ag:led_common , ag:pin_gnd    ; mc:colour "black" .
 
-[] a mc:Wire ; mc:joins ag:air_data , ag:pin_gpio32 .
-[] a mc:Wire ; mc:joins ag:air_vcc  , ag:pin_3v3 .
-[] a mc:Wire ; mc:joins ag:air_gnd  , ag:pin_gnd .
+ag:w_air_data a mc:Wire ; mc:joins ag:air_data , ag:pin_gpio32 ; mc:colour "yellow" .
+ag:w_air_pwr  a mc:Wire ; mc:joins ag:air_vcc  , ag:pin_3v3    ; mc:colour "red" .
+ag:w_air_gnd  a mc:Wire ; mc:joins ag:air_gnd  , ag:pin_gnd    ; mc:colour "black" .
