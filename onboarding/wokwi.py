@@ -34,8 +34,11 @@ import re
 
 from agent import ratified
 from agent.config import REPO_ROOT
+from pathlib import Path
+
 from agent.genesis import world_dir, worlds
-from agent.ontology import AG, MC, ONTOLOGY_GRAPH, WORLD_GRAPH
+from agent.ontology import (AG, DHT11, ESP32, I2C, MC, ONEWIRE, ONTOLOGY_GRAPH,
+                            PROBE, RGBLED, WORLD_GRAPH)
 
 log = logging.getLogger("wokwi")
 
@@ -58,6 +61,10 @@ SELECT ?device ?deviceId ?part ?attrs WHERE {{
 }}"""
 
 # Which of OUR roles each of that part's legs answers to. The join between a role and a drawing.
+_DEVICES_PARTS_Q = f"""
+SELECT ?class ?part WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+  ?class <{WOKWI}part> ?part }} }}"""
+
 _PART_PINS_Q = f"""
 SELECT ?class ?role ?name WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
   ?class <{WOKWI}pin> ?p .
@@ -106,6 +113,11 @@ def _local(uri: str) -> str:
 
 def _ident(uri: str) -> str:
     return re.sub(r"[^A-Za-z0-9_]", "_", _local(uri))
+
+
+def _slug(name: str) -> str:
+    """A Wokwi pin name as a Turtle-safe suffix. GND.1 is a legal pin and not a legal name."""
+    return re.sub(r"[^A-Za-z0-9_]", "_", name).lower()
 
 
 def _placed(world: str) -> dict[str, dict]:
@@ -292,6 +304,159 @@ def generate(world: str) -> None:
              len(doc["parts"]), len(doc["connections"]))
 
 
+# ------------------------------------------------------------------------------------------
+# The other direction: a drawing DRAFTS a stand. It never becomes one.
+#
+# See knowledge/decisions/wokwi-drafts-it-the-world-ratifies-it.md. The short of it: the mapping
+# above is invertible, so reading a diagram back is cheap — but Wokwi recovers the SHAPE of a
+# wiring and none of its meaning. No calibration, no rails, no topics, no sense mode, no name a
+# person would recognise. That is fine for a draft and disqualifying for a source.
+#
+# So what cannot be derived is emitted as an explicit marker rather than guessed. A draft that
+# VALIDATES is worse than one that does not: it is the one nobody re-reads.
+# ------------------------------------------------------------------------------------------
+
+_TODO = "### TODO ###"
+
+
+def _inverse(ds) -> tuple[dict[str, str], dict[str, dict[str, str]]]:
+    """part type -> our class, and per class, wokwi pin name -> our role.
+
+    Refuses an ambiguous part rather than choosing. `wokwi-dht22` is `dht11:Dht11` today and
+    would be ambiguous the day a real DHT22 is added, and picking one silently is how a draft
+    comes out describing a part nobody owns.
+    """
+    by_part: dict[str, str] = {}
+    for r in ratified.rows(ds, _DEVICES_PARTS_Q):
+        if by_part.setdefault(r["part"], r["class"]) != r["class"]:
+            raise SystemExit(
+                f"agora-wokwi: {r['part']!r} is claimed by more than one class "
+                f"({by_part[r['part']]} and {r['class']}) — nothing says which to prefer")
+    roles: dict[str, dict[str, str]] = {}
+    for r in ratified.rows(ds, _PART_PINS_Q):
+        roles.setdefault(r["class"], {})[r["name"]] = r["role"]
+    return by_part, roles
+
+
+def _qname(uri: str) -> str:
+    """A prefixed name for a term, for readable output. Only the namespaces a draft can emit."""
+    for pfx, ns in (("mc", MC), ("onewire", ONEWIRE), ("i2c", I2C), ("dht11", DHT11),
+                    ("rgbled", RGBLED), ("probe", PROBE), ("esp32", ESP32), ("ag", AG)):
+        if uri.startswith(ns):
+            return f"{pfx}:{uri[len(ns):]}"
+    return f"<{uri}>"
+
+
+def draft(world: str, diagram: Path) -> str:
+    """Turn a Wokwi diagram into a hardware.ttl draft. Never authoritative."""
+    doc = json.loads(diagram.read_text())
+    ds = ratified.dataset(world)
+    by_part, roles = _inverse(ds)
+
+    # A board is whatever Wokwi drew as one. Its legs are named by the connections rather than
+    # declared, because a diagram lists only the pins something is wired to.
+    boards = {p["id"] for p in doc.get("parts", []) if p["type"].startswith("board-")}
+    unknown = sorted({p["type"] for p in doc.get("parts", [])
+                      if p["type"] not in by_part and p["id"] not in boards})
+
+    # A pin is "used" only where a wire joins two REAL things. Wokwi's serial monitor is one of
+    # its own parts rather than something on the windowsill, so its connections are dropped —
+    # and with them the board's TX and RX, which would otherwise arrive as legs no wire reaches.
+    used: dict[str, set[str]] = {}
+    for a, b, *_ in doc.get("connections", []):
+        if a.startswith("$") or b.startswith("$") or ":" not in a or ":" not in b:
+            continue
+        for end in (a, b):
+            part, pin = end.split(":", 1)
+            used.setdefault(part, set()).add(pin)
+
+    out = [f"# DRAFT, from {diagram.name}. Not a world yet.",
+           "#",
+           "# `agora-wokwi --import` recovers the SHAPE of a wiring and none of its meaning: a",
+           f"# diagram carries no calibration, no rails, no topics and no name a person would",
+           f"# recognise. Every {_TODO} below is something Wokwi cannot say and you must.",
+           "#",
+           "# It is left deliberately unvalidatable. A draft that passes agora-validate is the",
+           "# one nobody re-reads.",
+           "",
+           "@prefix ag:    <http://example.org/agora#> .",
+           "@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .",
+           "@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .",
+           f"@prefix mc:    <{MC}> .",
+           f"@prefix wokwi: <{WOKWI}> .",
+           f"@prefix onewire: <{ONEWIRE}> .",
+           f"@prefix dht11: <{DHT11}> .",
+           f"@prefix rgbled: <{RGBLED}> .",
+           f"@prefix probe: <{PROBE}> .",
+           ""]
+    if unknown:
+        out += [f"# NOT IMPORTED — no package claims these Wokwi parts: {', '.join(unknown)}",
+                "# Add a directory under vocabulary/ that states wokwi:part for each, then",
+                "# re-import. Guessing a class from a part name is how a draft acquires a",
+                "# device nobody owns.", ""]
+
+    for part in doc.get("parts", []):
+        pid, ptype = part["id"], part["type"]
+        if pid in boards:
+            out += [f"ag:{pid} a mc:Microcontroller ;",
+                    f'    ag:localId "{pid}" ;   # {_TODO} a name a person would use',
+                    f'    mc:model "{_TODO}" ;',
+                    f"    mc:logicVolts {_TODO} ;   # 3.3 for an ESP32; it decides what rail a part may take",
+                    f"    mc:hasPin " + " , ".join(f"ag:{pid}_{_slug(p)}"
+                                                   for p in sorted(used.get(pid, ()))) + " .",
+                    ""]
+            for pin in sorted(used.get(pid, ())):
+                gpio = f" mc:gpio {pin} ;" if pin.isdigit() else ""
+                notation = pin.split(".")[0]
+                out.append(f'ag:{pid}_{_slug(pin)} a mc:Pin ;{gpio} wokwi:name "{pin}" ; '
+                           f'skos:notation "{notation}" .   # {_TODO} check the silkscreen')
+            out.append("")
+            continue
+        if ptype not in by_part:
+            continue
+        cls = by_part[ptype]
+        legs = roles.get(cls, {})
+        out += [f"ag:{pid} a {_qname(cls)} ;",
+                f'    ag:localId "{pid}" ;   # {_TODO} a name a person would use',
+                f'    mc:model "{_TODO}" ;',
+                f"    mc:hasPin " + " , ".join(f"ag:{pid}_{_slug(p)}"
+                                               for p in sorted(used.get(pid, ()))) + " .",
+                ""]
+        for pin in sorted(used.get(pid, ())):
+            role = legs.get(pin)
+            out.append(f"ag:{pid}_{_slug(pin)} a mc:Pin ; mc:pinRole "
+                       + (_qname(role) if role else f"{_TODO}   # Wokwi calls this leg {pin!r}")
+                       + " .")
+        out.append("")
+
+    out.append("# The wires, which are the part a diagram is actually good at.")
+    for i, conn in enumerate(doc.get("connections", [])):
+        a, b, colour = conn[0], conn[1], (conn[2] if len(conn) > 2 else "")
+        if a.startswith("$") or b.startswith("$"):
+            continue   # the simulator's console, not a thing on the windowsill
+        pa, pina = a.split(":", 1)
+        pb, pinb = b.split(":", 1)
+        if pa not in used or pb not in used:
+            continue
+        col = f' ; mc:colour "{colour}"' if colour else ""
+        out.append(f"ag:w{i} a mc:Wire ; mc:joins ag:{pa}_{_slug(pina)} , "
+                   f"ag:{pb}_{_slug(pinb)}{col} .")
+    return "\n".join(out) + "\n"
+
+
+def import_diagram(world: str, diagram: Path) -> None:
+    out = world_dir(world) / "hardware.ttl"
+    if out.exists():
+        raise SystemExit(
+            f"agora-wokwi: {out} already exists. An import DRAFTS a stand; it does not "
+            f"reconcile one. Move it aside if you mean to start over.")
+    out.write_text(draft(world, diagram))
+    todos = out.read_text().count(_TODO)
+    log.info("  drafted %s", out)
+    log.warning("  %d things Wokwi cannot say — the draft will not validate until you say them",
+                todos)
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
@@ -299,7 +464,15 @@ def main() -> None:
         description="Draw this world's stand as a Wokwi project, from its own statements.",
     )
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
-    generate(p.parse_args().world)
+    p.add_argument("--import", dest="source", type=Path, metavar="DIAGRAM",
+                   help="the other direction: DRAFT a hardware.ttl from a Wokwi diagram.json. "
+                        "Never authoritative — see decisions/wokwi-drafts-it-the-world-"
+                        "ratifies-it.md")
+    args = p.parse_args()
+    if args.source:
+        import_diagram(args.world, args.source)
+    else:
+        generate(args.world)
 
 
 if __name__ == "__main__":

@@ -29,6 +29,7 @@ I2C = "http://example.org/agora/i2c#"
 DHT11 = "http://example.org/agora/dht11#"
 RGBLED = "http://example.org/agora/rgb-led#"
 PROBE = "http://example.org/agora/moisture-probe#"
+ESP32 = "http://example.org/agora/esp32#"
 
 SOSA = "http://www.w3.org/ns/sosa/"
 PROV = "http://www.w3.org/ns/prov#"
