@@ -65,8 +65,9 @@ SELECT ?class ?role ?name WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
 }} }}"""
 
 _PINS_Q = f"""
-SELECT ?device ?pin ?notation ?wokwiName ?role ?railVolts WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?device ?pin ?notation ?wokwiName ?gpio ?role ?railVolts WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   ?device <{MC}hasPin> ?pin .
+  OPTIONAL {{ ?pin <{MC}gpio> ?gpio }}
   OPTIONAL {{ ?pin <{SKOS}notation> ?notation }}
   OPTIONAL {{ ?pin <{WOKWI}name> ?wokwiName }}
   OPTIONAL {{ ?pin <{MC}pinRole> ?role }}
@@ -167,11 +168,20 @@ def render(world: str) -> dict | None:
         device = r["device"]
         if device not in drawable:
             continue
-        # wokwi:name first, then the silkscreen. The override exists because the tidy claim —
-        # that the silkscreen is authoritative because Wokwi names the same header — is only
-        # true where the silkscreen is unique, and a DevKit prints GND on three separate legs.
-        if r.get("wokwiName") or r.get("notation"):
-            named[r["pin"]] = f"{_ident(device)}:{r.get('wokwiName') or r['notation']}"
+        # wokwi:name, and nothing clever. It is what the simulator calls this leg, which is a
+        # different fact from what is printed on it: Wokwi says 34 where the board says D34, and
+        # GND.1/.2/.3 where the board says GND on all three legs. They agree on 3V3, which is
+        # exactly how the mismatch went unnoticed — that was the one wire that drew.
+        #
+        # The bare number was briefly derived from mc:gpio here. It gave the right answer and
+        # was the wrong shape: a rule about Wokwi's naming conventions, living in Python, where
+        # nothing in the graph would show it and nothing would contradict it the day they change.
+        # Stated on the pin, or — for a peripheral leg, which has no silkscreen of its own —
+        # from what its part's package calls that role. Never from the notation: 3V3 is the one
+        # leg where the two agree, and falling back to it would leave a rule in place that is
+        # right once and silently wrong everywhere else.
+        if r.get("wokwiName"):
+            named[r["pin"]] = f"{_ident(device)}:{r['wokwiName']}"
         elif r.get("role"):
             for cls in classes.get(device, ()):
                 if (name := part_pins.get(cls, {}).get(r["role"])):
@@ -197,6 +207,15 @@ def render(world: str) -> dict | None:
     for a, b in unresolved:
         log.warning("  %s -- %s could not be named for Wokwi — omitted", a, b)
 
+    # Wokwi's serial monitor, wired to whichever board there is. Not in our graph and it should
+    # not be: it is not a thing on the windowsill, it is the simulator's console. But this
+    # firmware's whole diagnostic story is the serial line — the moisture reading and its raw
+    # count, the air sensor, which attempt the broker refused — so a simulation without it
+    # would run and tell you nothing.
+    for board in sorted(boards & set(drawable)):
+        connections += [[f"{_ident(board)}:TX", "$serialMonitor:RX", "", []],
+                        [f"{_ident(board)}:RX", "$serialMonitor:TX", "", []]]
+
     return {
         "version": 1,
         "author": "agora-diagram",
@@ -221,11 +240,16 @@ def generate(world: str) -> None:
         "Open <https://wokwi.com/projects/new/esp32>, then paste `diagram.json` over the\n"
         "project's own. The parts and every wire come from the world; where they SIT is a\n"
         "starting layout and yours to drag.\n\n"
+        "**The soil sensor is a custom chip, not a catalogue part.** Its `chip-` prefix means\n"
+        "the project must also carry `soil-moisture-sensor.chip.json` and `.chip.c` — take\n"
+        "them from any published soil-moisture project. Without them the diagram fails to\n"
+        "load with nothing pointing at the cause.\n\n"
         "It simulates, which is the point of choosing Wokwi over a drawing: build\n"
         "`firmware/moisture-sensor` and the LED logic, the cadence handling and the\n"
-        "calibration arithmetic can be exercised against a board that does not exist.\n"
-        "The moisture probe stands in as a potentiometer — what the board sees is a voltage\n"
-        "it reads with an ADC, and a knob is a voltage you can turn.\n")
+        "calibration arithmetic can be exercised against a board that does not exist. The\n"
+        "serial monitor is wired, because this firmware's whole diagnostic story is that\n"
+        "line — the reading and its raw count, the air sensor, which attempt the broker\n"
+        "refused.\n")
     log.info("  wrote %s  (%d parts, %d wires)",
              (out_dir / "diagram.json").relative_to(REPO_ROOT),
              len(doc["parts"]), len(doc["connections"]))

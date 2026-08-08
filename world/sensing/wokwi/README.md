@@ -7,8 +7,14 @@ Open <https://wokwi.com/projects/new/esp32>, then paste `diagram.json` over the
 project's own. The parts and every wire come from the world; where they SIT is a
 starting layout and yours to drag.
 
+**The soil sensor is a custom chip, not a catalogue part.** Its `chip-` prefix means
+the project must also carry `soil-moisture-sensor.chip.json` and `.chip.c` — take
+them from any published soil-moisture project. Without them the diagram fails to
+load with nothing pointing at the cause.
+
 It simulates, which is the point of choosing Wokwi over a drawing: build
 `firmware/moisture-sensor` and the LED logic, the cadence handling and the
-calibration arithmetic can be exercised against a board that does not exist.
-The moisture probe stands in as a potentiometer — what the board sees is a voltage
-it reads with an ADC, and a knob is a voltage you can turn.
+calibration arithmetic can be exercised against a board that does not exist. The
+serial monitor is wired, because this firmware's whole diagnostic story is that
+line — the reading and its raw count, the air sensor, which attempt the broker
+refused.

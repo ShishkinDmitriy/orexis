@@ -120,9 +120,23 @@ is and what legs it has; that it draws as `wokwi-dht22` with SDA/VCC/GND is the 
 fact. Adding a part stays "adding a directory". A part that says nothing about Wokwi is reported
 and omitted rather than guessed at.
 
-**The board's pin names are not stated twice.** Its legs already carry `skos:notation` — D34,
-3V3, GND — which is what the silkscreen says and what Wokwi calls them, because both are naming
-the same header. One had to be authoritative and the silkscreen already was.
+**Two naming systems, neither derived from the other, both stated.** `skos:notation` is what is
+PRINTED beside a leg — for a person with a jumper in their hand. `wokwi:name` is what the
+simulator calls it. The tidy version of this — that one authority would do, since both name the
+same physical header — was written into a commit and is wrong:
+
+    printed      D34      GND      GND      GND      3V3
+    wokwi         34    GND.1    GND.2    GND.3     3V3
+
+Wokwi names a general-purpose leg by its bare number, and disambiguates the three ground legs
+that the board prints identically — so the silkscreen does not even identify a pin uniquely.
+**They agree on 3V3 and nothing else**, which is how it went unnoticed: that was the single wire
+that drew, and the result looked like a sparse circuit rather than a broken generator.
+
+The bare number was then briefly *computed* from `mc:gpio`. That gave the right answer and was
+the wrong shape — a rule about Wokwi's naming conventions living in Python, where nothing in the
+graph shows it and nothing contradicts it the day they change it. A leg with no `wokwi:name` is
+now reported and omitted, which is the same treatment a part with no `wokwi:part` gets.
 
 A generated picture can go stale in the one way a hand-drawn one cannot be saved from, so
 `tests/test_diagram.py` regenerates and compares. A stale drawing looks exactly like a current

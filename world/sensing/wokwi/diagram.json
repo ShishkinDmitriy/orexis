@@ -18,7 +18,7 @@
       "attrs": {}
     },
     {
-      "type": "wokwi-soil-moisture-sensor",
+      "type": "chip-soil-moisture-sensor",
       "id": "moisture_sensor_fern",
       "top": 10,
       "left": 300,
@@ -43,7 +43,7 @@
     ],
     [
       "air_sensor_fern:SDA",
-      "esp32_fern:D32",
+      "esp32_fern:32",
       "yellow",
       []
     ],
@@ -54,15 +54,15 @@
       []
     ],
     [
-      "esp32_fern:3V3",
-      "moisture_sensor_fern:VCC",
-      "red",
+      "esp32_fern:34",
+      "moisture_sensor_fern:SIG",
+      "green",
       []
     ],
     [
-      "esp32_fern:D34",
-      "moisture_sensor_fern:SIG",
-      "green",
+      "esp32_fern:3V3",
+      "moisture_sensor_fern:VCC",
+      "red",
       []
     ],
     [
@@ -72,8 +72,20 @@
       []
     ],
     [
+      "esp32_fern:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "esp32_fern:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
       "status_led_fern:B",
-      "esp32_fern:D27",
+      "esp32_fern:27",
       "blue",
       []
     ],
@@ -85,13 +97,13 @@
     ],
     [
       "status_led_fern:G",
-      "esp32_fern:D26",
+      "esp32_fern:26",
       "green",
       []
     ],
     [
       "status_led_fern:R",
-      "esp32_fern:D25",
+      "esp32_fern:25",
       "red",
       []
     ]

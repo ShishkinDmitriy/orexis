@@ -11,11 +11,15 @@
     rdfs:comment """One part, its own package. Three legs — an analog output, power and ground — and two calibration numbers that belong to the individual probe rather than to the model.""" .
 
 probe:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf mc:Peripheral ;
-    # Wokwi has the actual part. It was drawn as a potentiometer for a while on my claim that
-    # it did not, which was simply wrong — and wrong in the way worth noticing, because a
-    # plausible stand-in is harder to doubt than a missing one. A knob would have simulated
-    # fine and quietly misdescribed the bench.
-    wokwi:part "wokwi-soil-moisture-sensor" ;
+    # A CUSTOM CHIP rather than a catalogue part — the `chip-` prefix is the tell — so a Wokwi
+    # project referencing it must also carry soil-moisture-sensor.chip.json and .chip.c. That is
+    # a real constraint on anyone opening the generated diagram and it is said in the README
+    # beside it, because a missing chip fails at load with nothing pointing at the cause.
+    #
+    # It was drawn as a potentiometer for a while, on my claim that Wokwi had no soil probe.
+    # Wrong, and wrong in the way worth noticing: a plausible stand-in is harder to doubt than
+    # a missing one, so it would have simulated perfectly well while misdescribing the bench.
+    wokwi:part "chip-soil-moisture-sensor" ;
     wokwi:pin [ mc:pinRole mc:AnalogInPinRole ; wokwi:name "SIG" ] ,
               [ mc:pinRole mc:PowerPinRole    ; wokwi:name "VCC" ] ,
               [ mc:pinRole mc:GroundPinRole   ; wokwi:name "GND" ] ;

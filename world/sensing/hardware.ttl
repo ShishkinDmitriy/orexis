@@ -58,17 +58,33 @@ ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
 # Stated, because the other end of every wire is one of them. A GPIO line carries its number and
 # no role — it is general purpose until something is wired to it. A rail carries its voltage,
 # which is what makes the 3V3-versus-VIN choice checkable rather than a warning in a comment.
+#
+# TWO naming systems, and neither derives from the other, so both are said.
+#
+#   skos:notation  what is PRINTED beside the leg. For a person with a jumper in their hand.
+#   wokwi:name     what the SIMULATOR calls it. For a generated diagram.json.
+#
+# They disagree more often than not. Wokwi names a general-purpose leg by its bare number where
+# the board prints D34; it calls the three ground legs GND.1/.2/.3 where the board prints GND on
+# all three, so the silkscreen does not even identify a pin uniquely. They agree on 3V3, which
+# is exactly how this went unnoticed — that was the one wire that drew.
+#
+# Both stated rather than one computed from the other. `wokwi:name "34"` could be derived from
+# `mc:gpio 34` today and would be a rule about Wokwi's conventions hidden in Python, wrong the
+# day they name something differently, and unfindable from the graph. When issue #55 lands these
+# move to the board-model classes and are said once for the family instead of once per board.
 
 ag:esp32_fern mc:hasPin ag:pin_gpio25 , ag:pin_gpio26 , ag:pin_gpio27 ,
                         ag:pin_gpio32 , ag:pin_gpio34 , ag:pin_3v3 , ag:pin_gnd ;
     mc:logicVolts 3.3 .
 
-ag:pin_gpio25 a mc:Pin ; mc:gpio 25 ; skos:notation "D25" .
-ag:pin_gpio26 a mc:Pin ; mc:gpio 26 ; skos:notation "D26" .
-ag:pin_gpio27 a mc:Pin ; mc:gpio 27 ; skos:notation "D27" .
-ag:pin_gpio32 a mc:Pin ; mc:gpio 32 ; skos:notation "D32" .
-ag:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "D34" .
-ag:pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ; skos:notation "3V3" .
+ag:pin_gpio25 a mc:Pin ; mc:gpio 25 ; skos:notation "D25" ; wokwi:name "25" .
+ag:pin_gpio26 a mc:Pin ; mc:gpio 26 ; skos:notation "D26" ; wokwi:name "26" .
+ag:pin_gpio27 a mc:Pin ; mc:gpio 27 ; skos:notation "D27" ; wokwi:name "27" .
+ag:pin_gpio32 a mc:Pin ; mc:gpio 32 ; skos:notation "D32" ; wokwi:name "32" .
+ag:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "D34" ; wokwi:name "34" .
+ag:pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ;
+                         skos:notation "3V3" ; wokwi:name "3V3" .
 # Three legs on this board are printed GND, so the silkscreen does not identify one of them.
 # Wokwi disambiguates where the board does not, which is what wokwi:name is for. Everything
 # here grounds to the same rail, so which of the three is arbitrary — but it has to be SAID.
