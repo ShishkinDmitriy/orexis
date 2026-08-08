@@ -10,7 +10,8 @@
     rdfs:label "Capacitive soil moisture probe" ;
     rdfs:comment """One part, its own package. Three legs — an analog output, power and ground — and two calibration numbers that belong to the individual probe rather than to the model.""" .
 
-probe:CapacitiveMoistureProbe a owl:Class ; rdfs:subClassOf mc:Peripheral ;
+probe:CapacitiveMoistureProbe a owl:Class ;
+    mc:modelName "Capacitive Soil Moisture Sensor v2.0" ; rdfs:subClassOf mc:Peripheral ;
     # A CUSTOM CHIP rather than a catalogue part — the `chip-` prefix is the tell — so a Wokwi
     # project referencing it must also carry soil-moisture-sensor.chip.json and .chip.c. That is
     # a real constraint on anyone opening the generated diagram and it is said in the README

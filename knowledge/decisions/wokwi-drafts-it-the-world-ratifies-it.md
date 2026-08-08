@@ -68,9 +68,48 @@ wrote — a Wokwi diagram gave back `sen1` and nothing else. What it cannot say 
 Which connector is the BOARD is not stated in a harness at all. The one every cable touches is
 the usual answer, and the draft labels it `GUESSED` rather than asserting it quietly.
 
-Round-tripping our own stand recovers every role, every wire and every colour and leaves six
-markers. Two of the three tools have now been through this, and the shape has not changed: a
-drawing carries the wiring and never the meaning.
+# One triple turns a draft into a compilable source
+
+The gap between "drafts something you finish by hand" and "is enough to generate a world" turned
+out to be a single statement. A part's package now says what the part is CALLED:
+
+```turtle
+dht11:Dht11 mc:modelName "KY-015 (DHT11)" .
+```
+
+so `type: KY-015 (DHT11)` in a harness resolves to a class instead of being free text nobody can
+act on. It is the mirror of `wokwi:part`, which already says how a part is identified in the
+other tool — a package states how the thing it describes is named outside this repository, and
+both directions fall out of the same habit.
+
+**Which connector is the board stops being a guess** as a side effect: a type that resolves to
+something under `mc:Microcontroller` IS the board. The old heuristic — whichever connector every
+cable touches — survives only for a harness where nothing resolves, and says so when it fires.
+
+Round-tripping our own stand went from **eighteen markers to one**. The one left is
+`mc:logicVolts`, which is a fact about the DevKitC and not about our DevKitC, so it belongs on
+the class — which is [#55]. Once that lands, a harness plus the vocabulary IS a world.
+
+**That is deliberately not the same as the harness becoming the source.** `hardware.ttl` stays
+authoritative and `wiring.yaml` stays a view: author in YAML if you like, generate, read the
+diff, commit both. The moment the YAML is the truth we are back to two sources with no merge
+rule, and `agora-validate` is back to having nothing to refuse — which is the argument above,
+and it does not weaken because the import got better.
+
+## Identifiers come from the authoring file, which is a new way to be wrong
+
+A connector's name becomes a device's `ag:localId`, and `world.ttl` names the same sensors. When
+those disagree there is no error anywhere: instead of one device described twice you get two
+devices described once — a sensor nothing is wired to, and a part nothing polls. Both halves
+validate on their own.
+
+`ag:CarriedPeripheralShape` catches the visible half: a peripheral with legs that no board
+mounts. It also forced a real omission out of the importer, which was drafting stands with no
+`mc:carries` at all — so every generator that walks a board from its parts found none of them.
+
+Two of the three tools have now been through this, and the shape has not changed: a drawing
+carries the wiring and never the meaning. What changed is how much of the meaning the VOCABULARY
+can supply once asked.
 
 # Seams left open
 

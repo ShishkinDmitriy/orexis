@@ -97,18 +97,35 @@ def test_names_and_models_survive_where_a_drawing_lost_them(drafted):
     assert 'mc:model "KY-015 (DHT11)"' in drafted
 
 
-def test_what_a_harness_cannot_say_is_marked_and_not_guessed(drafted):
-    """It says what is plugged into what. It does not say what anything IS — no part class, no
-    rails, no calibration, and nothing at all from world.ttl."""
-    assert "### TODO ###" in drafted
-    assert "its class" in drafted
-    assert "mc:logicVolts ### TODO ###" in drafted
+def test_a_part_class_is_resolved_from_its_catalogue_name(drafted):
+    """One triple turned a draft into a compilable source. `type: KY-015 (DHT11)` is free text
+    until a package says that is what a dht11:Dht11 is CALLED — the mirror of wokwi:part, which
+    already says how the same part is identified in the other tool."""
+    assert "a dht11:Dht11 ;" in drafted
+    assert "a probe:CapacitiveMoistureProbe ;" in drafted
+    assert "a rgbled:RgbLed ;" in drafted
 
 
-def test_which_connector_is_the_board_is_marked_as_a_guess(drafted):
-    """Nothing in a harness says it. The one every cable touches is the usual answer and is
-    still a guess, so it is labelled rather than asserted quietly."""
-    assert "GUESSED" in drafted
+def test_the_board_is_identified_rather_than_guessed(drafted):
+    """A type resolving to something under mc:Microcontroller IS the board. The old heuristic —
+    whichever connector every cable touches — survives only where nothing resolves."""
+    assert "a esp32:DevKitC ;" in drafted
+    assert "GUESSED" not in drafted
+
+
+def test_the_board_declares_what_it_carries(drafted):
+    """Not the same statement as a wire — carrying is mounting, and a part can be carried and
+    unwired — but every generator that walks a board starts from mc:carries. Leaving it out
+    drafted a stand nothing downstream could find its parts in."""
+    assert "mc:carries ag:air_sensor_fern , ag:moisture_sensor_fern , ag:status_led_fern" in drafted
+
+
+def test_only_what_belongs_to_the_board_MODEL_is_left_over(drafted):
+    """Eighteen markers became one, and the one left is not a gap in the harness. logicVolts is
+    a fact about the DevKitC rather than about our DevKitC, so it belongs on the class — #55."""
+    body = drafted.split("@prefix")[-1]
+    assert body.count("### TODO ###") == 1
+    assert "mc:logicVolts ### TODO ###" in body
 
 
 def test_an_import_refuses_to_overwrite_a_world(tmp_path, monkeypatch):

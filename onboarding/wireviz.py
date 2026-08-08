@@ -29,8 +29,8 @@ from pathlib import Path
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
-from agent.ontology import (AG, DHT11, I2C, MC, ONEWIRE, ONTOLOGY_GRAPH, PROBE,
-                            RGBLED, WORLD_GRAPH)
+from agent.ontology import (AG, DHT11, ESP32, I2C, MC, ONEWIRE, ONTOLOGY_GRAPH,
+                            PROBE, RGBLED, WORLD_GRAPH)
 
 log = logging.getLogger("wireviz")
 
@@ -192,6 +192,15 @@ def _owner(order: dict[str, list[dict]], pin: str) -> str:
 
 _TODO = "### TODO ###"
 
+# What a part is CALLED in a catalogue, and therefore what an authoring tool will have written
+# in its `type:` field. This is the link that turns free text into a class without guessing.
+_MODELS_Q = f"""
+SELECT ?class ?name ?board WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+  ?class <{MC}modelName> ?name .
+  OPTIONAL {{ ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf>*
+                     <{MC}Microcontroller> . BIND(true AS ?board) }}
+}} }}"""
+
 _ROLES_Q = f"""
 SELECT ?role WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
   ?role a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <{MC}PinRole> }} }}"""
@@ -216,16 +225,26 @@ def draft(world: str, harness: Path) -> str:
     conns = doc.get("connectors", {})
     cables = doc.get("cables", {})
 
-    # Which connector is the BOARD is not stated anywhere in a harness — it is a fact about what
-    # the thing IS, and WireViz only knows what is plugged into what. The one every cable touches
-    # is the usual answer and is a guess, so it is marked as one rather than asserted quietly.
-    touched: dict[str, int] = {}
-    for group in doc.get("connections", []):
-        for entry in group:
-            for key in entry:
-                if key in conns:
-                    touched[key] = touched.get(key, 0) + 1
-    board = max(touched, key=touched.get) if touched else None
+    models, is_board_class = {}, set()
+    for r in ratified.rows(ds, _MODELS_Q):
+        models[r["name"]] = r["class"]
+        if r.get("board"):
+            is_board_class.add(r["class"])
+
+    # Which connector is the BOARD stops being a guess as soon as its type resolves: a class
+    # under mc:Microcontroller IS the board. Only where nothing resolves does this fall back to
+    # the connector every cable touches, which is the usual answer and still a guess.
+    resolved = {n: models.get((s or {}).get("type", "")) for n, s in conns.items()}
+    board = next((n for n, c in resolved.items() if c in is_board_class), None)
+    guessed = board is None
+    if guessed:
+        touched: dict[str, int] = {}
+        for group in doc.get("connections", []):
+            for entry in group:
+                for key in entry:
+                    if key in conns:
+                        touched[key] = touched.get(key, 0) + 1
+        board = max(touched, key=touched.get) if touched else None
 
     out = [f"# DRAFT, from {harness.name}. Not a world yet.",
            "#",
@@ -244,21 +263,34 @@ def draft(world: str, harness: Path) -> str:
            f"@prefix dht11:   <{DHT11}> .",
            f"@prefix rgbled:  <{RGBLED}> .",
            f"@prefix probe:   <{PROBE}> .",
+           f"@prefix esp32:   <{ESP32}> .",
            ""]
 
     pin_id: dict[tuple[str, int], str] = {}
     for name, spec in conns.items():
         labels = spec.get("pinlabels") or spec.get("pins") or []
-        kind = "mc:Microcontroller" if name == board else "mc:Peripheral"
-        note = ("   # the connector every cable touches — GUESSED, and the class below is not"
-                if name == board else "")
+        cls = resolved.get(name)
+        kind = _qname(cls) if cls else ("mc:Microcontroller" if name == board else "mc:Peripheral")
+        note = ("   # GUESSED: nothing here resolved to a board, so this is the connector every"
+                " cable touches" if name == board and guessed else "")
         out += [f"ag:{name} a {kind} ;{note}",
                 f'    ag:localId "{name}" ;']
         if spec.get("type"):
             out.append(f'    mc:model "{spec["type"]}" ;')
-        out.append(f"    # {_TODO} its class — dht11:Dht11, probe:CapacitiveMoistureProbe, ...")
+        if not cls:
+            out.append(f"    # {_TODO} its class — nothing states mc:modelName "
+                       f"{spec.get('type', '')!r}")
         if name == board:
             out.append(f"    mc:logicVolts {_TODO} ;   # decides what rail a part may take")
+        if name == board:
+            # What the board CARRIES, derived from what is wired to it. Not the same statement
+            # as a wire — carrying is mounting, and a peripheral can be carried and unwired —
+            # but a harness only knows connections, and every generator that walks a board
+            # starts from mc:carries. Leaving it out drafted a stand nothing downstream could
+            # find its parts in.
+            carried = sorted(n for n in conns if n != board)
+            if carried:
+                out.append("    mc:carries " + " , ".join(f"ag:{c}" for c in carried) + " ;")
         out.append("    mc:hasPin " + " , ".join(f"ag:{name}_{i+1}"
                                                  for i in range(len(labels))) + " .")
         out.append("")
@@ -301,7 +333,7 @@ def draft(world: str, harness: Path) -> str:
 
 def _qname(uri: str) -> str:
     for pfx, ns in (("mc", MC), ("onewire", ONEWIRE), ("i2c", I2C), ("dht11", DHT11),
-                    ("rgbled", RGBLED), ("probe", PROBE)):
+                    ("rgbled", RGBLED), ("probe", PROBE), ("esp32", ESP32)):
         if uri.startswith(ns):
             return f"{pfx}:{uri[len(ns):]}"
     return f"<{uri}>"

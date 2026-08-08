@@ -15,7 +15,8 @@ dht11:TempHumiditySensor a owl:Class ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "Temperature and humidity sensor" ;
     rdfs:comment "The family. One device reporting TWO properties down one line, which is what makes it awkward: the model gives a sensor one sosa:observes and the runtime takes one reading per message, so a world can state and wire this and nothing polls it yet — see issue #51." .
 
-dht11:Dht11 a owl:Class ; rdfs:subClassOf dht11:TempHumiditySensor ; rdfs:label "DHT11" ;
+dht11:Dht11 a owl:Class ;
+    mc:modelName "KY-015 (DHT11)" ; rdfs:subClassOf dht11:TempHumiditySensor ; rdfs:label "DHT11" ;
     wokwi:part "wokwi-dht22" ;
     wokwi:pin [ mc:pinRole onewire:DataPinRole ; wokwi:name "SDA" ] ,
               [ mc:pinRole mc:PowerPinRole     ; wokwi:name "VCC" ] ,

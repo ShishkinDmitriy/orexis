@@ -11,6 +11,7 @@
 
 Started here because a picture needs to know which board it is drawing, and that is a fact about the MODEL rather than about the particular board on the windowsill.""" .
 
-esp32:DevKitC a owl:Class ; rdfs:subClassOf mc:Microcontroller ; rdfs:label "ESP32 DevKitC" ;
+esp32:DevKitC a owl:Class ;
+    mc:modelName "ESP32-WROOM-32D" ; rdfs:subClassOf mc:Microcontroller ; rdfs:label "ESP32 DevKitC" ;
     wokwi:part "board-esp32-devkit-c-v4" ;
     rdfs:comment "The 38-pin development board, the one with 3V3 on the same header as GPIO 34. Its legs carry their own silkscreen notation, which is what a drawing names them by." .
