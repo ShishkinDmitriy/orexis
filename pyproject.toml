@@ -20,7 +20,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "import-linter>=2"]
+# wireviz is a DEV dependency and not a runtime one: agora-wireviz only writes YAML,
+# and nothing in agent/ or the other generators imports it. It is here because the
+# tests feed the generated harness to wireviz itself — the only check worth trusting
+# for an output format nobody here can eyeball, since it is easy to emit YAML that
+# parses and that the tool then rejects. Rendering to SVG additionally needs the
+# graphviz BINARY, which pip cannot install and no test needs.
+dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4"]
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.
