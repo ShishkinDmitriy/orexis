@@ -13,22 +13,22 @@
     {
       "type": "wokwi-dht22",
       "id": "air_sensor_fern",
-      "top": -120,
-      "left": 300,
+      "top": -140,
+      "left": -260,
       "attrs": {}
     },
     {
       "type": "chip-soil-moisture-sensor",
       "id": "moisture_sensor_fern",
-      "top": 10,
-      "left": 300,
+      "top": 30,
+      "left": -360,
       "attrs": {}
     },
     {
       "type": "wokwi-rgb-led",
       "id": "status_led_fern",
-      "top": 140,
-      "left": 300,
+      "top": 200,
+      "left": -260,
       "attrs": {
         "common": "cathode"
       }

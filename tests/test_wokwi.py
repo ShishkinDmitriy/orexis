@@ -69,8 +69,8 @@ def test_the_led_polarity_is_derived_from_the_wire(doc, tmp_path, monkeypatch):
     hw = dst / "hardware.ttl"
     hw.write_text(hw.read_text().replace("mc:joins ag:led_common , ag:pin_gnd",
                                          "mc:joins ag:led_common , ag:pin_3v3"))
-    monkeypatch.setattr(genesis, "world_dir", lambda w: dst)
-    monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst, raising=False)
+    monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
+    monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
 
     from onboarding.wokwi import render as render_again
     flipped = next(p for p in render_again("anode")["parts"] if p["id"] == "status_led_fern")
@@ -125,6 +125,7 @@ def test_a_leg_with_no_wokwi_name_is_reported_rather_than_guessed(tmp_path, monk
     hw = dst / "hardware.ttl"
     hw.write_text(re.sub(r' ;\s*wokwi:name "34"', "", hw.read_text()))
     monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
+    monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
 
     with caplog.at_level(logging.WARNING):
         doc = render_again("x")
@@ -174,8 +175,9 @@ def test_an_uncoloured_wire_falls_back_to_what_it_carries(tmp_path, monkeypatch)
     shutil.copytree(genesis.world_dir("sensing"), dst)
     hw = dst / "hardware.ttl"
     hw.write_text(re.sub(r' ; mc:colour "\w+"', "", hw.read_text()))
-    # ratified imported world_dir BY NAME, so patching it on genesis does not reach it.
+    # Both modules imported world_dir BY NAME, so patching it on genesis reaches neither.
     monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
+    monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
 
     wires = {frozenset((a, b)): c for a, b, c, _ in render_again("x")["connections"]}
     assert wires[frozenset(("esp32_fern:3V3", "moisture_sensor_fern:VCC"))] == "red"
@@ -196,3 +198,36 @@ def test_the_committed_picture_is_in_step_with_the_world():
     committed = json.loads((world_dir("sensing") / "wokwi" / "diagram.json").read_text())
     assert committed == render("sensing"), (
         "world/sensing/wokwi/diagram.json is out of step — run `agora-wokwi sensing`")
+
+
+def test_a_dragged_part_keeps_where_you_put_it(tmp_path, monkeypatch):
+    """The generator owns WHAT is connected; you own WHERE it sits.
+
+    Wokwi rewrites top/left as you drag, and a regeneration that ignored them would throw away
+    the arranging every time the wiring changed — which is exactly when you want the picture and
+    least want to redo it. A default layout is a guess; a position on disk is a decision.
+    """
+    import json
+    import shutil
+
+    from agent import genesis
+    from onboarding.wokwi import generate, render as render_again
+
+    dst = tmp_path / "dragged"
+    shutil.copytree(genesis.world_dir("sensing"), dst)
+    monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
+    monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
+
+    generate("x")
+    out = dst / "wokwi" / "diagram.json"
+    doc = json.loads(out.read_text())
+    for part in doc["parts"]:
+        if part["id"] == "status_led_fern":
+            part["top"], part["left"] = 999, -999
+    out.write_text(json.dumps(doc, indent=2) + "\n")
+
+    again = render_again("x")
+    led = next(p for p in again["parts"] if p["id"] == "status_led_fern")
+    assert (led["top"], led["left"]) == (999, -999), "an arranged part must stay arranged"
+    assert len([c for c in again["connections"] if "$serialMonitor" not in str(c)]) == 10, (
+        "and the wiring must still be regenerated in full")
