@@ -125,6 +125,7 @@ agora-onboard <world>       # ONBOARDING: validate, then grant everything below.
   agora-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
   agora-dashboards <world>  #   a Grafana folder per world, from what its agents observe
 agora-firmware <world>      # a board's config.h, from the world it belongs to
+agora-wokwi <world>         # world/<world>/wokwi/ — its hardware as a wokwi.com project, which RUNS
 agora-keygen <world>        # once per world, before it is onboarded
 agora-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent

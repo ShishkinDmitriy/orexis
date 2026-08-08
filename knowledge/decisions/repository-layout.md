@@ -14,7 +14,9 @@ agent/                       the runtime, and the model it reads
 agent/capabilities/<name>/   what an agent can DO — discovered
 agent/transports/<name>/     how a device is REACHED — discovered
 onboarding/                  the sovereign's tools
-vocabulary/agora/            the T-Box everything layers on
+vocabulary/agora/            the society kernel everything layers on
+vocabulary/microcontroller/  boards, peripherals, pins, wires
+vocabulary/<part>/           one concrete part, or one protocol — dht11, onewire, rgb-led
 vocabulary/water/            what this society is about
 tests/  firmware/  infra/  world/  knowledge/
 ```
@@ -101,7 +103,9 @@ correct. The import contract states the rule explicitly, so the name surprises a
 does not.
 
 `vocabulary/agora` and `vocabulary/water` rather than `kernel/` and `domain/water/`: those two were
-the only trees with no Python at all, which is exactly what they have in common.
+the only trees with no Python at all, which is exactly what they have in common. There are now
+more of them than two — the stand, a package per protocol, a package per part — and that is the
+same rule applied further: see [pins-and-wires](/decisions/pins-and-wires.md).
 
 # Seams left open
 

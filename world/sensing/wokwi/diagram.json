@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "author": "agora-wokwi",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp32_fern",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "air_sensor_fern",
+      "top": -120,
+      "left": 300,
+      "attrs": {}
+    },
+    {
+      "type": "chip-soil-moisture-sensor",
+      "id": "moisture_sensor_fern",
+      "top": 10,
+      "left": 300,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-rgb-led",
+      "id": "status_led_fern",
+      "top": 140,
+      "left": 300,
+      "attrs": {
+        "common": "cathode"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "air_sensor_fern:GND",
+      "esp32_fern:GND.1",
+      "black",
+      []
+    ],
+    [
+      "air_sensor_fern:SDA",
+      "esp32_fern:32",
+      "yellow",
+      []
+    ],
+    [
+      "air_sensor_fern:VCC",
+      "esp32_fern:3V3",
+      "red",
+      []
+    ],
+    [
+      "esp32_fern:34",
+      "moisture_sensor_fern:SIG",
+      "green",
+      []
+    ],
+    [
+      "esp32_fern:3V3",
+      "moisture_sensor_fern:VCC",
+      "red",
+      []
+    ],
+    [
+      "esp32_fern:GND.1",
+      "moisture_sensor_fern:GND",
+      "black",
+      []
+    ],
+    [
+      "esp32_fern:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "esp32_fern:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "status_led_fern:B",
+      "esp32_fern:27",
+      "blue",
+      []
+    ],
+    [
+      "status_led_fern:COM",
+      "esp32_fern:GND.1",
+      "black",
+      []
+    ],
+    [
+      "status_led_fern:G",
+      "esp32_fern:26",
+      "green",
+      []
+    ],
+    [
+      "status_led_fern:R",
+      "esp32_fern:25",
+      "red",
+      []
+    ]
+  ]
+}

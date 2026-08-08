@@ -1,7 +1,15 @@
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dht11: <http://example.org/agora/dht11#> .
+@prefix onewire: <http://example.org/agora/onewire#> .
+@prefix probe: <http://example.org/agora/moisture-probe#> .
+@prefix rgbled: <http://example.org/agora/rgb-led#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix esp32: <http://example.org/agora/esp32#> .
+@prefix wokwi: <http://example.org/agora/wokwi#> .
 
-# The stand this world runs on: what is physically here and how it is wired.
+# The hardware this world runs on: what is physically here and how it is wired.
 #
 # Separate from the society beside it because they change for different reasons and are read by
 # different people. A plant is added by editing the society; a probe is moved to another pin by
@@ -17,7 +25,7 @@
 
 ag:raspberry a ag:ComputeHost ;
     ag:localId "raspberry" ;
-    ag:model "Raspberry Pi 5" ;
+    mc:model "Raspberry Pi 5" ;
     # DHCP, and therefore a fact with an expiry date. It was .126 when this was written and the
     # lease has since moved to .130, which cost an evening: the board opened TCP to an address
     # that is not this Pi, so it failed with a bare "connection failed" and the broker logged
@@ -32,50 +40,126 @@ ag:fern_agent ag:runsOn ag:raspberry .
 
 ##########  The board at the edge  ##########
 
-ag:esp32_fern a ag:Microcontroller ;
+# BOTH, spelled out rather than inferred. esp32:DevKitC is rdfs:subClassOf
+# mc:Microcontroller and RDFS would derive the second from the first — but the
+# shapes run with inference and the runtime does not (issue #27), so a query for
+# a Microcontroller found nothing and the firmware generator reported that this
+# world states no boards at all. Third time that gap has cost something.
+ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     ag:localId "esp32_fern" ;
-    ag:model "ESP32-WROOM-32D" ;
+    mc:model "ESP32-WROOM-32D" ;
     ag:onBus ag:local_bus ;
-    ag:firmware "moisture-sensor" ;
-    ag:carries ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
+    mc:firmware "moisture-sensor" ;
+    mc:carries ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is ag:Subscribing: the board keeps the interval and cannot be reached in between." .
+
+##########  The board's own legs  ##########
+#
+# Stated, because the other end of every wire is one of them. A GPIO line carries its number and
+# no role — it is general purpose until something is wired to it. A rail carries its voltage,
+# which is what makes the 3V3-versus-VIN choice checkable rather than a warning in a comment.
+#
+# TWO naming systems, and neither derives from the other, so both are said.
+#
+#   skos:notation  what is PRINTED beside the leg. For a person with a jumper in their hand.
+#   wokwi:name     what the SIMULATOR calls it. For a generated diagram.json.
+#
+# They disagree more often than not. Wokwi names a general-purpose leg by its bare number where
+# the board prints D34; it calls the three ground legs GND.1/.2/.3 where the board prints GND on
+# all three, so the silkscreen does not even identify a pin uniquely. They agree on 3V3, which
+# is exactly how this went unnoticed — that was the one wire that drew.
+#
+# Both stated rather than one computed from the other. `wokwi:name "34"` could be derived from
+# `mc:gpio 34` today and would be a rule about Wokwi's conventions hidden in Python, wrong the
+# day they name something differently, and unfindable from the graph. When issue #55 lands these
+# move to the board-model classes and are said once for the family instead of once per board.
+
+ag:esp32_fern mc:hasPin ag:pin_gpio25 , ag:pin_gpio26 , ag:pin_gpio27 ,
+                        ag:pin_gpio32 , ag:pin_gpio34 , ag:pin_3v3 , ag:pin_gnd ;
+    mc:logicVolts 3.3 .
+
+ag:pin_gpio25 a mc:Pin ; mc:gpio 25 ; skos:notation "D25" ; wokwi:name "25" .
+ag:pin_gpio26 a mc:Pin ; mc:gpio 26 ; skos:notation "D26" ; wokwi:name "26" .
+ag:pin_gpio27 a mc:Pin ; mc:gpio 27 ; skos:notation "D27" ; wokwi:name "27" .
+ag:pin_gpio32 a mc:Pin ; mc:gpio 32 ; skos:notation "D32" ; wokwi:name "32" .
+ag:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "D34" ; wokwi:name "34" .
+ag:pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ;
+                         skos:notation "3V3" ; wokwi:name "3V3" .
+# Three legs on this board are printed GND, so the silkscreen does not identify one of them.
+# Wokwi disambiguates where the board does not, which is what wokwi:name is for. Everything
+# here grounds to the same rail, so which of the three is arbitrary — but it has to be SAID.
+ag:pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" ;
+                         wokwi:name "GND.1" .
 
 ##########  What is wired to it  ##########
 
-# Declared as a sensor in world.ttl; this says what KIND of instrument it is and where its leg
-# goes. GPIO 34 is deliberate and should not be moved casually: it is ADC1, the only ADC that
-# keeps working while WiFi is up.
-ag:moisture_sensor_fern a ag:CapacitiveMoistureProbe ;
-    ag:model "Capacitive Soil Moisture Sensor v2.0" ;
-    ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] ;
+# Declared as a sensor in world.ttl; this says what KIND of instrument it is, what legs it has,
+# and what its numbers mean. GPIO 34 is deliberate and should not be moved casually: it is ADC1,
+# the only ADC that keeps working while WiFi is up.
+ag:moisture_sensor_fern a probe:CapacitiveMoistureProbe ;
+    mc:model "Capacitive Soil Moisture Sensor v2.0" ;
+    mc:hasPin ag:probe_out , ag:probe_vcc , ag:probe_gnd ;
     # Measured on this probe, in this pot. Carried here rather than in the firmware because it
     # is per-instance and re-measured over time; changing it must not need a screwdriver.
-    ag:rawDry 3200 ;
-    ag:rawWet 1300 .
+    probe:rawDry 3200 ;
+    probe:rawWet 1300 .
+
+ag:probe_out a mc:Pin ; mc:pinRole mc:AnalogInPinRole .
+ag:probe_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+ag:probe_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
 # This board has no user LED of its own, so an external one says what the agent makes of the pot.
 # 25/26/27 are safe outputs — no strapping duty at boot, and their ADC2 membership costs nothing
-# to a driven line. It is lit only while the board is AWAKE and dark through every sleep: an LED
-# is 5-15 mA against a ~10 uA sleep budget, so holding a colour would make the lamp cost three
-# orders of magnitude more than everything else this board does.
-ag:status_led_fern a ag:RgbLed ;
+# to a driven line. It is lit only while the board is awake and dark through every sleep.
+ag:status_led_fern a rgbled:RgbLed ;
     ag:localId "status_led_fern" ;
-    ag:model "KY-016 4-pin RGB LED (common cathode)" ;
-    ag:pin [ ag:pinRole ag:Red   ; ag:gpio 25 ] ,
-           [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
-           [ ag:pinRole ag:Blue  ; ag:gpio 27 ] .
+    mc:model "KY-016 4-pin RGB LED (common cathode)" ;
+    mc:hasPin ag:led_r , ag:led_g , ag:led_b , ag:led_common .
 
-# Wired and stated, NOT yet polled. One device reports two properties down one line, and both
-# the model (a sensor observes one property) and the runtime (one reading per message) assume
-# one — so declaring it as an ag:Sensor would produce a sensor whose second property is silently
-# dropped. Stated here anyway, because the pin is soldered and the world is what is true.
-#
-# GPIO 32 rather than 34 or 35, and the difference is not cosmetic: a one-wire line is DRIVEN —
-# the board pulls it low to open a conversation — and 34-39 cannot drive. Powered from the 3V3
-# on the same header as everything else here, so nothing crosses the board; the KY-015's onboard
-# pull-up then idles at 3.3V, which is what the ESP32 wants. Powering it from VIN would idle the
-# data line at 5V into a 3.3V pin.
-ag:air_sensor_fern a ag:TempHumiditySensor ;
+ag:led_r      a mc:Pin ; mc:pinRole rgbled:RedPinRole .
+ag:led_g      a mc:Pin ; mc:pinRole rgbled:GreenPinRole .
+ag:led_b      a mc:Pin ; mc:pinRole rgbled:BluePinRole .
+# Common CATHODE, so the return goes to ground. A common anode would go to the 3V3 rail instead,
+# and every colour would come out as its complement — which used to be a comment telling you to
+# check before soldering. It is a wire now, and a wire is a thing a checker can read.
+ag:led_common a mc:Pin ; mc:pinRole rgbled:CommonPinRole .
+
+# Wired and stated, NOT yet polled — see issue #51. Its data leg is on 32 rather than 34 or 35
+# and the difference is not cosmetic: a one-wire line is DRIVEN, and 34-39 cannot drive.
+ag:air_sensor_fern a dht11:Dht11 ;
     ag:localId "air_sensor_fern" ;
-    ag:model "KY-015 (DHT11)" ;
-    ag:pin [ ag:pinRole ag:OneWireData ; ag:gpio 32 ] .
+    mc:model "KY-015 (DHT11)" ;
+    mc:hasPin ag:air_data , ag:air_vcc , ag:air_gnd .
+
+ag:air_data a mc:Pin ; mc:pinRole onewire:DataPinRole .
+ag:air_vcc  a mc:Pin ; mc:pinRole mc:PowerPinRole .
+ag:air_gnd  a mc:Pin ; mc:pinRole mc:GroundPinRole .
+
+##########  The wires  ##########
+#
+# What someone can point at on the breadboard, and what they get wrong. Every rule about this
+# board is asked of these: the role lives on the peripheral's leg and the line number on the
+# board's, and neither end knows the other until a wire joins them.
+#
+# The 3V3 rail rather than VIN for both powered parts. VIN is 5V, and a KY-015's pull-up idles
+# its data line at whatever it is powered from — 5V into a 3.3V input that is not 5V tolerant.
+# That is now a refusable statement rather than a paragraph hoping to be read.
+
+# Named rather than blank, because a wire is the thing you point at when something is wrong,
+# and you cannot point at a blank node. The colour is the one on the actual jumper: it is a
+# fact about this bench and nothing electrical depends on it, which is exactly why it is worth
+# writing down — it is how you find the right wire among nine without tracing each to its end.
+ag:w_probe_sig a mc:Wire ; mc:joins ag:probe_out , ag:pin_gpio34 ; mc:colour "green" .
+ag:w_probe_pwr a mc:Wire ; mc:joins ag:probe_vcc , ag:pin_3v3    ; mc:colour "red" .
+ag:w_probe_gnd a mc:Wire ; mc:joins ag:probe_gnd , ag:pin_gnd    ; mc:colour "black" .
+
+# The LED's three channels take their own colours, which is the case where this earns itself:
+# on the breadboard they are otherwise three identical jumpers into three adjacent pins.
+ag:w_led_r   a mc:Wire ; mc:joins ag:led_r      , ag:pin_gpio25 ; mc:colour "red" .
+ag:w_led_g   a mc:Wire ; mc:joins ag:led_g      , ag:pin_gpio26 ; mc:colour "green" .
+ag:w_led_b   a mc:Wire ; mc:joins ag:led_b      , ag:pin_gpio27 ; mc:colour "blue" .
+ag:w_led_com a mc:Wire ; mc:joins ag:led_common , ag:pin_gnd    ; mc:colour "black" .
+
+ag:w_air_data a mc:Wire ; mc:joins ag:air_data , ag:pin_gpio32 ; mc:colour "yellow" .
+ag:w_air_pwr  a mc:Wire ; mc:joins ag:air_vcc  , ag:pin_3v3    ; mc:colour "red" .
+ag:w_air_gnd  a mc:Wire ; mc:joins ag:air_gnd  , ag:pin_gnd    ; mc:colour "black" .

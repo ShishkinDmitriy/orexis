@@ -1,0 +1,16 @@
+@prefix ag:     <http://example.org/agora#> .
+@prefix mc:     <http://example.org/agora/microcontroller#> .
+@prefix esp32:  <http://example.org/agora/esp32#> .
+@prefix wokwi:  <http://example.org/agora/wokwi#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:    <http://www.w3.org/2002/07/owl#> .
+
+<http://example.org/agora/esp32> a owl:Ontology ;
+    rdfs:label "ESP32" ;
+    rdfs:comment """One family of board. A stub: it names the DevKit and says how it draws, and does NOT yet describe its header — the pin positions, which of them can be driven, which sit on ADC1. Those are still literals inside the microcontroller shapes, which is the open seam this package exists to eventually close.
+
+Started here because a picture needs to know which board it is drawing, and that is a fact about the MODEL rather than about the particular board on the windowsill.""" .
+
+esp32:DevKitC a owl:Class ; rdfs:subClassOf mc:Microcontroller ; rdfs:label "ESP32 DevKitC" ;
+    wokwi:part "board-esp32-devkit-c-v4" ;
+    rdfs:comment "The 38-pin development board, the one with 3V3 on the same header as GPIO 34. Its legs carry their own silkscreen notation, which is what a drawing names them by." .

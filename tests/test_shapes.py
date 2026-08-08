@@ -232,7 +232,7 @@ def test_market_must_state_all_three_channels():
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market ag:voucherTopic ?t }} }}"""))
 
 
-# --- the stand: wiring that cannot work must be refused --------------------------------------
+# --- the mc: wiring that cannot work must be refused --------------------------------------
 #
 # A shape that never fails is not a shape, so each of these asserts the REJECTION. They encode
 # the ESP32's rules rather than RDF's, and every one of them is a mistake that costs an
@@ -240,9 +240,48 @@ def test_market_must_state_all_three_channels():
 # never lights.
 
 _WIRING_PREAMBLE = """
-@prefix ag: <http://example.org/agora#> .
-ag:test_board a ag:Microcontroller ; ag:localId "test_board" ; ag:model "ESP32-WROOM-32D" ;
+@prefix ag:      <http://example.org/agora#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix onewire: <http://example.org/agora/onewire#> .
+@prefix i2c:     <http://example.org/agora/i2c#> .
+@prefix dht11:   <http://example.org/agora/dht11#> .
+@prefix rgbled:  <http://example.org/agora/rgb-led#> .
+@prefix probe:   <http://example.org/agora/moisture-probe#> .
+ag:test_board a mc:Microcontroller ; ag:localId "test_board" ; mc:model "ESP32-WROOM-32D" ;
+    mc:logicVolts 3.3 ; mc:hasPin ag:t_3v3 , ag:t_gnd ;
 """
+
+_RAILS = """
+ag:t_3v3 a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 .
+ag:t_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+"""
+
+
+def _leg(device, name, role, gpio=None, powered=True):
+    """One peripheral leg, the board pin it reaches, and the wire between them.
+
+    Three statements where there used to be one, which is the model's whole point: the ROLE is
+    a fact about the peripheral's leg and the GPIO NUMBER a fact about the board's, and only the
+    wire knows they are the same connection. `powered` gives the device its rail and ground too,
+    because a peripheral with an unwired leg is now itself a violation — so a test about pin 34
+    would otherwise fail for a reason it is not about.
+    """
+    ttl = f"""
+ag:{name}_leg a mc:Pin ; mc:pinRole {role} .
+[] a mc:Wire ; mc:joins ag:{name}_leg , ag:{name}_line .
+ag:{name}_line a mc:Pin {f'; mc:gpio {gpio}' if gpio is not None else ''} .
+ag:test_board mc:hasPin ag:{name}_line .
+ag:{device} mc:hasPin ag:{name}_leg .
+"""
+    if powered:
+        ttl += f"""
+ag:{device} mc:hasPin ag:{device}_vcc , ag:{device}_gnd .
+ag:{device}_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+ag:{device}_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+[] a mc:Wire ; mc:joins ag:{device}_vcc , ag:t_3v3 .
+[] a mc:Wire ; mc:joins ag:{device}_gnd , ag:t_gnd .
+"""
+    return ttl
 
 
 def _wiring(body: str) -> rdflib.Graph:
@@ -250,62 +289,63 @@ def _wiring(body: str) -> rdflib.Graph:
     data = rdflib.Graph()
     for path in loader.ontology_files():
         data.parse(path, format="turtle")
-    data.parse(data=_WIRING_PREAMBLE + body, format="turtle")
+    data.parse(data=_WIRING_PREAMBLE + body + _RAILS, format="turtle")
     return data
 
 
 def test_the_real_wiring_is_accepted():
     """The guard against a shape so strict that nothing passes it."""
     assert _conforms(_wiring("""
-    ag:carries ag:probe , ag:led .
-ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] .
-ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio 25 ] ,
-                            [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
-                            [ ag:pinRole ag:Blue ; ag:gpio 27 ] .
-"""))
+    mc:carries ag:probe , ag:led .
+ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+ag:led a rgbled:RgbLed ; ag:localId "led" .
+""" + _leg("probe", "p", "mc:AnalogInPinRole", 34)
+   + _leg("led", "r", "rgbled:RedPinRole", 25)
+   + _leg("led", "g", "rgbled:GreenPinRole", 26, powered=False)
+   + _leg("led", "b", "rgbled:BluePinRole", 27, powered=False)))
 
 
 @pytest.mark.parametrize("gpio", [6, 8, 11])
 def test_a_flash_pin_is_refused(gpio):
     """6-11 are wired to the SPI flash. A board driving one does not boot at all, which reads
     as a dead board rather than as a wiring mistake."""
-    assert not _conforms(_wiring(f"""
-    ag:carries ag:probe .
-ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:DigitalOut ; ag:gpio {gpio} ] .
-"""))
+    assert not _conforms(_wiring("""
+    mc:carries ag:probe .
+ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+""" + _leg("probe", "p", "mc:DigitalOutPinRole", gpio)))
 
 
 @pytest.mark.parametrize("gpio", [4, 12, 25, 27])
 def test_an_analog_input_on_adc2_is_refused(gpio):
     """The sharpest of these: ADC2 is unusable while WiFi is up, and it fails by returning
     numbers that look like readings. Nothing downstream can tell they are rubbish."""
-    assert not _conforms(_wiring(f"""
-    ag:carries ag:probe .
-ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio {gpio} ] .
-"""))
+    assert not _conforms(_wiring("""
+    mc:carries ag:probe .
+ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+""" + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
 
 
 @pytest.mark.parametrize("gpio", [32, 33, 34, 36, 39])
 def test_an_analog_input_on_adc1_is_accepted(gpio):
     """The other half of the same rule: ADC1 is exactly what an analog input should use."""
-    assert _conforms(_wiring(f"""
-    ag:carries ag:probe .
-ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio {gpio} ] .
-"""))
+    assert _conforms(_wiring("""
+    mc:carries ag:probe .
+ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+""" + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
 
 
 @pytest.mark.parametrize("gpio", [34, 36, 39])
 def test_driving_an_input_only_pin_is_refused(gpio):
     """34-39 can be read and never driven. An LED wired there simply never lights."""
-    assert not _conforms(_wiring(f"""
-    ag:carries ag:led .
-ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio {gpio} ] ,
-                            [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
-                            [ ag:pinRole ag:Blue ; ag:gpio 27 ] .
-"""))
+    assert not _conforms(_wiring("""
+    mc:carries ag:led .
+ag:led a rgbled:RgbLed ; ag:localId "led" .
+""" + _leg("led", "r", "rgbled:RedPinRole", gpio)
+   + _leg("led", "g", "rgbled:GreenPinRole", 26, powered=False)
+   + _leg("led", "b", "rgbled:BluePinRole", 27, powered=False)))
 
 
-@pytest.mark.parametrize("role", ["ag:OneWireData", "ag:I2cData"])
+@pytest.mark.parametrize("role", ["onewire:DataPinRole", "i2c:DataPinRole"])
 @pytest.mark.parametrize("gpio", [34, 35, 39])
 def test_a_bidirectional_line_on_an_input_only_pin_is_refused(role, gpio):
     """The same rule, for the lines that look like inputs and are not.
@@ -313,74 +353,147 @@ def test_a_bidirectional_line_on_an_input_only_pin_is_refused(role, gpio):
     A DHT's data leg and an I2C SDA carry almost all their traffic inbound, so both read as
     inputs — but the board must PULL EACH LOW to start a conversation, and 34-39 cannot pull
     anything. Wired there, a DHT returns nothing but a timeout and an SDA hangs the bus.
-
-    This passed validation until `ag:BidirectionalRole` existed. `ag:I2cData` was declared a
-    bare `ag:PinRole` for the tidy-sounding reason that it is 'neither an input nor an output',
-    which is true about direction and false about the only thing the shape asks: whether the
-    board ever drives the line.
     """
-    assert not _conforms(_wiring(f"""
-    ag:carries ag:air .
-ag:air a ag:TempHumiditySensor ; ag:localId "air" ; ag:pin [ ag:pinRole {role} ; ag:gpio {gpio} ] .
-"""))
+    assert not _conforms(_wiring("""
+    mc:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" .
+""" + _leg("air", "d", role, gpio)))
 
 
 @pytest.mark.parametrize("gpio", [32, 33, 25, 4])
 def test_a_bidirectional_line_on_a_drivable_pin_is_accepted(gpio):
     """The other half: any pin that can be driven will do, ADC membership included — a
     one-wire line is digital, so ADC2 costs it nothing."""
-    assert _conforms(_wiring(f"""
-    ag:carries ag:air .
-ag:air a ag:TempHumiditySensor ; ag:localId "air" ; ag:pin [ ag:pinRole ag:OneWireData ; ag:gpio {gpio} ] .
-"""))
+    assert _conforms(_wiring("""
+    mc:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" .
+""" + _leg("air", "d", "onewire:DataPinRole", gpio)))
 
 
 @pytest.mark.parametrize("gpio", [-1, 40, 99])
 def test_a_gpio_off_the_board_is_refused(gpio):
-    assert not _conforms(_wiring(f"""
-    ag:carries ag:probe .
-ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio {gpio} ] .
-"""))
+    assert not _conforms(_wiring("""
+    mc:carries ag:probe .
+ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
+""" + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
+
+
+# --- what the pin/wire model made sayable, and the old one could not -------------------------
+
+def test_a_leg_that_no_wire_reaches_is_refused():
+    """The old model could not express this at all: a pin WAS its connection, so an
+    unconnected leg was invisible rather than wrong. A floating ground is the commonest reason
+    a three-legged sensor answers with silence, and it looks exactly like a dead part."""
+    assert not _conforms(_wiring("""
+    mc:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_float .
+ag:air_float a mc:Pin ; mc:pinRole mc:GroundPinRole .
+""" + _leg("air", "d", "onewire:DataPinRole", 32)))
+
+
+def test_a_leg_the_PART_never_connects_is_accepted():
+    """What the component IS. A DHT's third pin connects to nothing inside it — the package has
+    four positions and the die uses three — and that is true of every DHT ever made. Intrinsic,
+    so it is a role."""
+    assert _conforms(_wiring("""
+    ag:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_nc .
+ag:air_nc a mc:Pin ; mc:pinRole mc:NotConnectedPinRole .
+""" + _leg("air", "d", "onewire:DataPinRole", 32)))
+
+
+def test_a_leg_THIS_BUILD_leaves_unwired_is_accepted():
+    """What the build DID, which is a different fact and cannot be a role.
+
+    A board has thirty legs and a world wires seven; nothing about the ESP32 says which, and the
+    same board in another world uses different ones. Putting that in a role would file a fact
+    about one breadboard inside the description of a component.
+    """
+    assert _conforms(_wiring("""
+    ag:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
+ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole ; mc:unused true .
+""" + _leg("air", "d", "onewire:DataPinRole", 32)))
+
+
+def test_a_leg_that_is_merely_forgotten_is_still_refused():
+    """The whole point of the other two. Silence must go on meaning 'I have not thought about
+    this leg' — a floating ground is the commonest reason a three-legged part answers with
+    silence, and it looks exactly like a dead part."""
+    assert not _conforms(_wiring("""
+    ag:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
+ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole .
+""" + _leg("air", "d", "onewire:DataPinRole", 32)))
+
+
+def test_a_five_volt_rail_into_a_three_volt_input_is_refused():
+    """The fault this whole remodelling exists to make sayable, and the one that cost an evening.
+
+    A three-legged sensor carries a pull-up to its OWN VCC, so its data line idles at whatever
+    it is powered from. On VIN that is 5V, presented to an input that is not 5V tolerant — which
+    does not fail, it degrades over weeks and looks like a flaky sensor. There was nowhere in
+    the old model to say which rail a device was on, so there was nothing to check.
+    """
+    assert not _conforms(_wiring("""
+    mc:carries ag:air .
+ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_vcc , ag:air_gnd .
+ag:air_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+ag:air_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+ag:t_vin a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 5.0 .
+ag:test_board mc:hasPin ag:t_vin .
+[] a mc:Wire ; mc:joins ag:air_vcc , ag:t_vin .
+[] a mc:Wire ; mc:joins ag:air_gnd , ag:t_gnd .
+""" + _leg("air", "d", "onewire:DataPinRole", 32, powered=False)))
+
+
+def test_a_dht_must_name_all_three_of_its_legs():
+    """Its data line alone was the old model's best effort — there was nowhere to put the
+    other two — and it is precisely the missing ones that go wrong."""
+    assert not _conforms(_wiring("""
+    mc:carries ag:air .
+ag:air a dht11:Dht11 ; ag:localId "air" .
+""" + _leg("air", "d", "onewire:DataPinRole", 32, powered=False)))
 
 
 def test_two_peripherals_on_one_gpio_are_refused():
     """The mistake made months later, when a device is added and nobody re-reads the file."""
     assert not _conforms(_wiring("""
-    ag:carries ag:probe , ag:led .
-ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:pinRole ag:AnalogIn ; ag:gpio 34 ] .
-ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio 34 ] ,
-                            [ ag:pinRole ag:Green ; ag:gpio 26 ] ,
-                            [ ag:pinRole ag:Blue ; ag:gpio 27 ] .
+    mc:carries ag:probe , ag:led .
+ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ] .
+ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin [ mc:pinRole rgbled:RedPinRole ; mc:gpio 34 ] ,
+                            [ mc:pinRole rgbled:GreenPinRole ; mc:gpio 26 ] ,
+                            [ mc:pinRole rgbled:BluePinRole ; mc:gpio 27 ] .
 """))
 
 
 def test_one_device_using_a_gpio_twice_is_refused():
     """Same rule, inside a single device: an RGB LED with two legs on one line."""
     assert not _conforms(_wiring("""
-    ag:carries ag:led .
-ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin [ ag:pinRole ag:Red ; ag:gpio 25 ] ,
-                            [ ag:pinRole ag:Green ; ag:gpio 25 ] ,
-                            [ ag:pinRole ag:Blue ; ag:gpio 27 ] .
+    mc:carries ag:led .
+ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin [ mc:pinRole rgbled:RedPinRole ; mc:gpio 25 ] ,
+                            [ mc:pinRole rgbled:GreenPinRole ; mc:gpio 25 ] ,
+                            [ mc:pinRole rgbled:BluePinRole ; mc:gpio 27 ] .
 """))
 
 
 @pytest.mark.parametrize("missing", ["Red", "Green", "Blue"])
 def test_an_rgb_led_missing_a_colour_is_refused(missing):
     """One channel that never lights looks, from across the room, exactly like a sleeping board."""
-    legs = {"Red": "ag:gpio 25", "Green": "ag:gpio 26", "Blue": "ag:gpio 27"}
+    legs = {"Red": "mc:gpio 25", "Green": "mc:gpio 26", "Blue": "mc:gpio 27"}
     del legs[missing]
-    pins = " ,\n           ".join(f"[ ag:pinRole ag:{c} ; {g} ]" for c, g in legs.items())
+    pins = " ,\n           ".join(f"[ mc:pinRole ag:{c} ; {g} ]" for c, g in legs.items())
     assert not _conforms(_wiring(f"""
-    ag:carries ag:led .
-ag:led a ag:RgbLed ; ag:localId "led" ; ag:pin {pins} .
+    mc:carries ag:led .
+ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin {pins} .
 """))
 
 
 def test_a_pin_without_a_role_is_refused():
     """A number with no role cannot be checked for direction, so it cannot be checked at all."""
     assert not _conforms(_wiring("""
-    ag:carries ag:probe .
-ag:probe a ag:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ ag:gpio 34 ] .
+    mc:carries ag:probe .
+ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ mc:gpio 34 ] .
 """))
 
 
@@ -391,7 +504,8 @@ def test_a_board_without_a_model_is_refused():
     for path in loader.ontology_files():
         data.parse(path, format="turtle")
     data.parse(data="""
-@prefix ag: <http://example.org/agora#> .
-ag:nameless a ag:Microcontroller ; ag:localId "nameless" .
+@prefix ag:    <http://example.org/agora#> .
+@prefix mc: <http://example.org/agora/microcontroller#> .
+ag:nameless a mc:Microcontroller ; ag:localId "nameless" .
 """, format="turtle")
     assert not _conforms(data)

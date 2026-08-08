@@ -17,6 +17,19 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 AG = "http://example.org/agora#"
+# The hardware layer keeps namespaces of its own, one per module, and NOT `ag:`. It is the
+# layer that grows a term per pin, and one shared namespace would make every one of them carry
+# its board's name to stay unambiguous — `ag:Esp32Gpio34` against `esp32:Gpio34Pin`. It can
+# afford this precisely because no runtime code names these terms: an agent never queries a
+# pin, so `term()` and `store.PREFIXES` are untouched and the trap they exist to prevent — a
+# prefix declared in one file and used in another — is not reachable from here.
+MC = "http://example.org/agora/microcontroller#"
+ONEWIRE = "http://example.org/agora/onewire#"
+I2C = "http://example.org/agora/i2c#"
+DHT11 = "http://example.org/agora/dht11#"
+RGBLED = "http://example.org/agora/rgb-led#"
+PROBE = "http://example.org/agora/moisture-probe#"
+
 SOSA = "http://www.w3.org/ns/sosa/"
 PROV = "http://www.w3.org/ns/prov#"
 

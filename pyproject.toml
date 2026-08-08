@@ -35,6 +35,7 @@ agora-influx = "onboarding.influx:main"
 agora-mqtt = "onboarding.mqtt:main"
 agora-compose = "onboarding.compose:main"
 agora-dashboards = "onboarding.dashboards:main"
+agora-wokwi = "onboarding.wokwi:main"
 # A board's config.h is a per-instance deployment fact, and every value in it is already
 # stated by the world. Regenerating beats retrieving the board.
 agora-firmware = "onboarding.firmware:main"

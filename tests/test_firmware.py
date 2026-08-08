@@ -56,8 +56,8 @@ def test_a_board_with_no_led_still_generates():
     ds = ratified.dataset("sensing")
     ds.update(f"""
         DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-            ?board <http://example.org/agora#carries> ?led .
-            ?led a <http://example.org/agora#RgbLed> }} }}""")
+            ?board <http://example.org/agora/microcontroller#carries> ?led .
+            ?led a <http://example.org/agora/rgb-led#RgbLed> }} }}""")
 
     rows = ratified.rows(ds, _BOARDS_Q)
     assert len(rows) == 1, "losing the LED must not lose the board"
