@@ -22,8 +22,8 @@ from test_shapes import _conforms, _flatten
 AG = "http://example.org/agora#"
 
 _CAPS_Q = f"""
-SELECT ?id ?cap WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hasCapability> ?cap }} }}"""
+SELECT ?id ?cap WHERE {{ 
+  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hasCapability> ?cap  }}"""
 
 
 def _caps(world: str) -> dict[str, set[str]]:

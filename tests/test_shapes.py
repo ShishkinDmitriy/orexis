@@ -9,7 +9,8 @@ import pytest
 import rdflib
 
 from agent import genesis, inference, loader
-from agent.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph
+from agent.ontology import (ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_GRAPH,
+                            beliefs_graph)
 from agent.validate import conforms as validate_conforms
 from agent.store import Store
 
@@ -29,7 +30,7 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
     seven pin-role tests failing was the only reason anyone noticed.
     """
     data = rdflib.Graph()
-    graphs = [ONTOLOGY_GRAPH, WORLD_GRAPH]
+    graphs = list(st.public_graphs())
     # every agent genesis authors, found the way an agent's birth finds them — so adding one
     # to the world is caught here rather than quietly skipped
     graphs += [beliefs_graph(agent_id_of(p)) for p in sorted(world_dir.glob(genesis.BELIEFS_GLOB))]
@@ -165,10 +166,13 @@ def test_an_agent_that_only_listens_must_not_hold_a_cadence():
     legitimate rig (a scheduled probe and a push thermometer on one plant) and needs both blocks.
     """
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Scheduled .
-                                           ag:fern_agent ag:hasCapability ag:Subscribing }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Push .
-                                           ag:fern_agent ag:hasCapability ag:Listening }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Push }} }}
+        WHERE  {{}} ;
+        DELETE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
+            ag:fern_agent ag:hasCapability ag:Subscribing }} }}
+        INSERT {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
+            ag:fern_agent ag:hasCapability ag:Listening }} }}
         WHERE  {{}}"""))
 
 
@@ -184,8 +188,10 @@ def test_an_agent_may_hold_both_modes_at_once():
             ag:chatter_fern a ag:Sensor ; ag:localId "chatter_fern" ; ag:onBus ag:local_bus ;
                 ag:senseMode ag:Push ; ag:monitors ag:fern ; sosa:observes ag:SoilMoisture ;
                 ag:readingTopic "sensors/chatter_fern/reading" .
-            ag:fern_agent ag:polls ag:chatter_fern ; ag:hasCapability ag:Listening .
-        }} }} WHERE {{}}"""))
+            ag:fern_agent ag:polls ag:chatter_fern .
+        }} }} WHERE {{}} ;
+        INSERT {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
+            ag:fern_agent ag:hasCapability ag:Listening }} }} WHERE {{}}"""))
 
 
 def _duplicate_probe(observes: str) -> rdflib.Graph:
@@ -306,8 +312,10 @@ def _wiring(body: str) -> rdflib.Graph:
     inference.materialise(st)
 
     data = rdflib.Graph()
-    for iri in (ONTOLOGY_GRAPH, WORLD_GRAPH):
-        data.parse(data=st.get_graph(iri), format="turtle")
+    for iri in st.public_graphs():
+        ttl = st.get_graph(iri)
+        if ttl.strip():
+            data.parse(data=ttl, format="turtle")
     return data
 
 

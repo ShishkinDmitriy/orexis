@@ -2,6 +2,7 @@
 @prefix ag:   <http://example.org/agora#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
 # Rules for the society kernel. Each ontology module ships its own shapes file next to it;
 # together they are the constitution as code. Validated with `agora-validate`.
@@ -48,6 +49,15 @@ ag:SelfReportingShape a sh:NodeShape ;
     sh:property [ sh:path ag:metricsIntervalS ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
                   sh:message "if an agent states a metrics interval it must be a positive whole number of seconds" ] .
+
+ag:PublicGraphShape a sh:NodeShape ;
+    rdfs:comment "Every public graph must say where it came from: read from files (prov:wasDerivedFrom) or computed by something (prov:wasGeneratedBy), one or the other. Public knowledge is several graphs and the difference between them decides whether a fact may be acted on, amended or revised — so a graph that cannot account for itself makes that question unanswerable for everything inside it. Stated in PROV-O because `prov:` is already how an observation records its author; nothing here is ours. Note what this shape CANNOT catch: a graph nobody described at all is not a prov:Entity and so is not targeted — silence is caught by tests/test_provenance.py, which walks the public set rather than waiting to be told about it." ;
+    sh:targetClass prov:Entity ;
+    sh:or (
+        [ sh:path prov:wasDerivedFrom ; sh:minCount 1 ; sh:nodeKind sh:IRI ]
+        [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ]
+    ) ;
+    sh:message "a public graph must record what it was derived from or what generated it — see agora/provenance.py" .
 
 ag:SelfReviewShape a sh:NodeShape ;
     rdfs:comment "An agent need not reconsider its own settings, but if it says how often at least, the figure must be usable. Not sh:minCount 1, for the same reason as the metrics interval: absence means it never revises anything and its beliefs stay exactly what genesis wrote, which is a decision rather than an omission. A floor of 60s because an arising re-validates the whole agent against every shape, and a society doing that every second would spend its Pi on second thoughts." ;

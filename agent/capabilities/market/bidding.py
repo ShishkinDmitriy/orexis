@@ -41,8 +41,8 @@ from .terms import BIDDING, PERCEPTION
 # beliefs, so nothing here is written twice and nothing here is a domain property.
 _TARGET = BIDDING_BLOCK.terms["target"]
 _ABOUT_Q = f"""
-SELECT ?property WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-  ag:{_TARGET} ag:aboutProperty ?property }} }} LIMIT 1"""
+SELECT ?property WHERE {{ 
+  ag:{_TARGET} ag:aboutProperty ?property  }} LIMIT 1"""
 
 
 def value_bid(moisture: float, b, balance: float, allocated_l: float = 0.0) -> Bid | None:

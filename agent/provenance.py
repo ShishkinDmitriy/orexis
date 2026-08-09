@@ -1,0 +1,180 @@
+"""What each public graph IS, said in the store rather than in a comment.
+
+Public knowledge is five graphs and the difference between them is load-bearing: one holds what
+a sovereign ratified, another what a rule computed, another what RDFS entailed. That was true
+before this module and **unreadable** — the knowledge lived in the names, in `ontology.py`'s
+comments, and in a decision record. A shape could not check it, an agent could not query it, and
+anyone with a SPARQL client saw five graphs and no way to ask which held computed facts.
+
+Which is the filename mistake one level up. A graph IRI is an identifier, not a description, and
+the proof is that renaming all five to `g1`..`g5` would leave every query in this repository
+working — nothing parses these strings, they are constants referenced by name. **After this
+module, the store still knows what each one is.** `tests/test_provenance.py` holds it to that.
+
+**PROV-O only, and nothing invented.** `prov:` is already in `store.PREFIXES` and every
+observation already carries `prov:wasGeneratedBy`, so this is the existing habit rather than a
+new vocabulary. There is no `ag:Ratified`, no `ag:DerivedGraph`, no term of ours at all.
+
+**Sovereign is a role, not an identity.** An installation has several users — one authors a
+world, another operates it with fewer powers — so "the sovereign" is not a person to be named
+but a capacity someone acted in, on one occasion. `prov:qualifiedAssociation` says exactly that:
+the ratification activity has an association carrying `prov:agent` (which user) and
+`prov:hadRole` (in what capacity). There is no `ag:Sovereign` *agent* and there must not be one.
+
+**And the world states the capacity, not this module.** The role was briefly a literal here,
+which reads as a detail and is not one: with the capacity assumed, a world could never say that
+alice OPERATES what dimonina RATIFIED, because every user it attributed became a sovereign on the
+way in. A world says `prov:qualifiedAttribution [ prov:agent … ; prov:hadRole … ]` and this
+copies both. Adding a second role is then a world edit rather than a code change, which is the
+whole point of there being more than one.
+
+**And none of it is evidence.** The ratified graph asserting who ratified it is circular: the
+attribution is a claim the files make about themselves, and anyone who can edit the file can edit
+the claim. It is legible, queryable and shapeable, which is worth having — but it is testimony,
+not proof, and the record says so where someone deciding whether to trust it will read it.
+
+See knowledge/decisions/who-put-the-fact-there.md.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from . import loader
+from .config import REPO_ROOT
+from .ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
+                       WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
+
+# A file, as something a graph can be derived FROM. Minted under our own namespace rather than
+# `file:` on purpose: an absolute path bakes one machine into the store, and the world sits at
+# `/app/world/` in a container and `world/<name>/` on a host — so the same world would describe
+# itself differently depending on where it was built, and two agents could not be compared.
+_FILE = "http://example.org/agora/file/"
+_ACTIVITY = "http://example.org/agora/activity/"
+
+# The two things that compute a graph. Named so the graphs they produce can point at them, and
+# so `prov:used` can say what each one read.
+CLOSURE = _ACTIVITY + "closure"  # agora/inference.py
+DERIVATION = _ACTIVITY + "derivation"  # every package's rules.ru
+RATIFICATION = _ACTIVITY + "ratification"  # a user authored the world files
+
+
+def file_iri(path: Path, world: Path | None = None) -> str:
+    """A stable identifier for a file, independent of where the tree happens to sit.
+
+    Package files are named relative to the repository root, which they are always inside. A
+    world's files are named `world/<name>/<file>` from the world directory's own name instead —
+    a mounted world is at an absolute path with no relationship to this checkout, and computing
+    `../../..` from it would put the build machine's layout into the graph.
+    """
+    if world is not None:
+        return f"{_FILE}world/{world.name}/{path.name}"
+    try:
+        return _FILE + path.resolve().relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        # Outside the repository entirely — a test tree, or an oddly installed package. Its own
+        # name is the most that can honestly be said about where it came from.
+        return _FILE + path.name
+
+
+# Who a world says authored it, and IN WHAT CAPACITY. Both come from the world; neither is
+# assumed here. The role used to be a literal in this module, which was the wrong place for it
+# twice over: an installation has several users with different powers, so a world attributing
+# someone had no way to say alice OPERATES what dimonina RATIFIED — and the machine was asserting
+# a capacity only the world can know.
+#
+# The world REFERENCES a user and declares nothing else about them, so this reads two identifiers
+# and copies them: no name, no key, no type, and nothing invented. A world that names nobody, or
+# that names someone without saying in what capacity, simply gets no association — the shape asks
+# a graph to say where it came from, not who to blame.
+_ATTRIBUTION_Q = """
+SELECT ?user ?role WHERE {
+  ?w a ag:World ; prov:qualifiedAttribution ?att .
+  ?att prov:agent ?user ; prov:hadRole ?role .
+} LIMIT 1"""
+
+
+def _turtle(world: Path, attribution: tuple[str, str] | None = None) -> str:
+    """The description, as Turtle. One `prov:Entity` per public graph, each accounting for
+    itself — see `ag:PublicGraphShape`, which refuses one that does not."""
+    ontology_files = " , ".join(f"<{file_iri(p)}>" for p in loader.ontology_files())
+    world_files_ = " , ".join(
+        f"<{file_iri(p, world)}>" for p in sorted(world.glob("*.ttl")))
+    rules = [file_iri(p) for p in loader.rule_files()]
+
+    lines = [
+        "@prefix prov: <http://www.w3.org/ns/prov#> .",
+        "@prefix ag:   <http://example.org/agora#> .",
+        "",
+        "# --- asserted: read from files, and the chain stops there (see the module note) ---",
+        f"<{ONTOLOGY_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {ontology_files} .",
+    ]
+    if world_files_:
+        lines.append(f"<{WORLD_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
+        if attribution:
+            user, role = attribution
+            # A qualified association, because the interesting part is the ROLE. `prov:agent`
+            # alone would say a user was involved; `prov:hadRole` says in what capacity, which is
+            # the only form that survives an installation having several users with different
+            # powers. Both are COPIED from what the world stated — the capacity someone acted in
+            # is a fact about the world, and a loader that assumed it could never represent a
+            # second user. The user is referenced and never typed here — the world did not say it
+            # was a Person, and this module describes what happened rather than adding to it.
+            lines += [
+                f"<{WORLD_GRAPH}> prov:wasGeneratedBy <{RATIFICATION}> .",
+                f"<{RATIFICATION}> a prov:Activity ; prov:qualifiedAssociation [",
+                f"    a prov:Association ; prov:agent <{user}> ; prov:hadRole <{role}> ] .",
+            ]
+    else:
+        # A world with no Turtle at all cannot be described as derived from anything, and the
+        # shape would then refuse it — which is the correct outcome and worth reaching honestly.
+        lines.append(f"<{WORLD_GRAPH}> a prov:Entity .")
+
+    lines += [
+        "",
+        "# --- derived: a rule computed it, and the rules are the software agents that did ---",
+        f"<{WORLD_DERIVED_GRAPH}> a prov:Entity ; prov:wasGeneratedBy <{DERIVATION}> .",
+        f"<{DERIVATION}> a prov:Activity ;",
+        "    prov:used <%s> , <%s> , <%s> , <%s> ;" % (
+            ONTOLOGY_GRAPH, ONTOLOGY_ENTAILED_GRAPH, WORLD_GRAPH, WORLD_ENTAILED_GRAPH),
+        "    prov:wasAssociatedWith " + (" , ".join(f"<{r}>" for r in rules) or "<%s>" % DERIVATION)
+        + " .",
+    ]
+    lines += [f"<{r}> a prov:SoftwareAgent ." for r in rules]
+
+    lines += [
+        "",
+        "# --- entailed: RDFS said it. The activity names what it closed over, which is the",
+        "#     whole difference from the graph above: no author, and nothing that could have",
+        "#     been decided otherwise.",
+        f"<{ONTOLOGY_ENTAILED_GRAPH}> a prov:Entity ; prov:wasGeneratedBy <{CLOSURE}> .",
+        f"<{WORLD_ENTAILED_GRAPH}> a prov:Entity ; prov:wasGeneratedBy <{CLOSURE}> .",
+        f"<{CLOSURE}> a prov:Activity ;",
+        f"    prov:used <{ONTOLOGY_GRAPH}> , <{WORLD_GRAPH}> ;",
+        f"    prov:wasAssociatedWith <{file_iri(Path(__file__).parent / 'inference.py')}> .",
+        f"<{file_iri(Path(__file__).parent / 'inference.py')}> a prov:SoftwareAgent .",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def attribution_of(st) -> tuple[str, str] | None:
+    """The user a world says authored it and the capacity they acted in, or None.
+
+    None for a world that names nobody, and equally for one that names someone without saying in
+    what capacity — a bare `prov:wasAttributedTo` is not enough, because the capacity is the part
+    that distinguishes ratifying from operating. Silence is a better answer than a guess.
+    """
+    from .store import bindings
+
+    rows = bindings(st.query(_ATTRIBUTION_Q))
+    return (rows[0]["user"], rows[0]["role"]) if rows else None
+
+
+def describe(st, world: Path) -> None:
+    """Replace the meta-graph with an account of what was just loaded.
+
+    Runs last in `refresh_public`, because it describes the result. Replaced rather than added
+    to, for the same reason the closure is recomputed: it is a function of the files, and a
+    description that accumulated would soon be describing a world that no longer exists.
+    """
+    st.put_graph(PROVENANCE_GRAPH, _turtle(world, attribution_of(st)))

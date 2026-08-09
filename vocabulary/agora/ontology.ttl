@@ -2,6 +2,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
 <http://example.org/agora/core> a owl:Ontology ;
     rdfs:label "Agora core" ;
@@ -88,6 +89,19 @@ ag:SelfReporting a owl:Class ; rdfs:subClassOf ag:Capability ; rdfs:label "Self 
 ag:metricsIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "metrics interval (s)" ;
     rdfs:comment "How often this agent reports on itself. ABSENCE IS MEANINGFUL: an agent that states no interval reports nothing, which is a decision by omission rather than a default. A rate belongs in beliefs for the same reason the sensing cadence does — a test world may want it faster than a deployed one." .
+
+#################  Who did it, and in what capacity  #################
+#  A ROLE, not an identity, and the distinction is the whole point. There is no `ag:Sovereign`
+#  agent and there must not be: an installation has several users — one authors a world, another
+#  operates it with fewer powers — and which of them was sovereign is a fact about ONE ACTIVITY,
+#  not a permanent property of a person. PROV-O models exactly this with `prov:qualifiedAssociation`,
+#  and expects the domain to name its own roles; naming one here is using PROV-O, not replacing it.
+#
+#  The role set is open on purpose. `ag:Operator` and whatever else will be needed are absent
+#  because nothing distinguishes them yet, and a role no activity cites is speculation.
+
+ag:Sovereign a prov:Role ; rdfs:label "Sovereign" ;
+    rdfs:comment "Held by whoever ratified a world: authored its files and stands behind them. A role a user has in one ratification, never a kind of user — the same person may hold it for one world and not another, and an installation's other users hold none. See knowledge/decisions/who-put-the-fact-there.md." .
 
 #################  The world and its versions  #################
 
@@ -224,16 +238,44 @@ ag:outcome a owl:DatatypeProperty ; rdfs:domain ag:Revision ; rdfs:range xsd:str
     rdfs:label "outcome" ; rdfs:comment "taken | declined | refused. Refused means the shapes rejected it, which is a bug in a rule rather than a decision an agent made." .
 
 #################  Graphs — typed, self-describing (not magic strings)  #################
+#
+#  A graph IRI is an INSTANCE. `ag:WorldGraph` is the term code may name;
+#  `…/graph/world` is a particular graph and code may not. The classes below are the terms;
+#  the instances at the end of this section are the data — and the split is what lets a reader
+#  ask for "public knowledge" without any Python knowing which graphs those happen to be.
+#
+#  They are declared HERE rather than in each world because they are the same in every world:
+#  installation-wide, like the shape of the store itself. Only the per-agent ones vary, and
+#  those are derived from the roster (rules.ru) rather than written out.
 
 ag:Graph a owl:Class ; rdfs:label "Named graph" .
-ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "World graph" ;
-    rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, versioned, sovereign-authored. Stated once so no agent's beliefs repeat it." .
+
+ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph" ;
+    rdfs:comment "Knowledge every agent in a world may read: the vocabulary, the topology, and what the rules and the RDFS closure made of them. This is the class `store.query` looks for — the default graph of every query is whatever is an instance of THIS, discovered rather than listed, so adding one is a vocabulary edit and touches no code. Membership is deliberately by declaration and not by exclusion: a graph nobody typed is invisible, which is the safe direction to fail — the other way round, a new private graph nobody remembered to exclude would leak into every query." .
+
+ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph ; rdfs:label "World graph" ;
+    rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see agora/provenance.py." .
 ag:BeliefsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Beliefs graph" ;
-    rdfs:comment "ONE agent's private parameters for the capabilities it composed. Opinion, not fact." .
+    rdfs:comment "ONE agent's private parameters for the capabilities it composed. Opinion, not fact. NOT a public graph: reachable only by naming it, which is what makes a review's write boundary checkable." .
 ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Sensed graph" ;
-    rdfs:comment "What sensors read. Measurement only; never a judgment." .
-ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Ontology graph" ;
-    rdfs:comment "The T-Box: this module and every other." .
+    rdfs:comment "What sensors read. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
+ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph ; rdfs:label "Ontology graph" ;
+    rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
+ag:ProvenanceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Provenance graph" ;
+    rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
+
 ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:Agent ;
     rdfs:label "beliefs of" ;
     rdfs:comment "Which agent owns this graph — the write boundary, made explicit." .
+
+##  The instances. Data, not terms — code names the classes above and finds these by asking.
+##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and the
+##  three ways a fact got there (asserted, derived, entailed) are provenance, recorded separately.
+
+<http://example.org/agora/graph/ontology>          a ag:OntologyGraph .
+<http://example.org/agora/graph/ontology/entailed> a ag:OntologyGraph .
+<http://example.org/agora/graph/world>             a ag:WorldGraph .
+<http://example.org/agora/graph/world/derived>     a ag:WorldGraph .
+<http://example.org/agora/graph/world/entailed>    a ag:WorldGraph .
+<http://example.org/agora/graph/sensed>            a ag:SensedGraph .
+<http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .

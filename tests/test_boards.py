@@ -23,10 +23,10 @@ BOARDS = REPO_ROOT / "boards"
 WOKWI = "http://example.org/agora/wokwi#"
 
 _MAPPING_Q = f"""
-SELECT ?part ?name ?role WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+SELECT ?part ?name ?role WHERE {{ 
   ?class <{WOKWI}part> ?part ; <{WOKWI}pin> ?p .
   ?p <{MC}pinRole> ?role ; <{WOKWI}name> ?name .
-}} }}"""
+ }}"""
 
 
 @pytest.fixture(scope="module")

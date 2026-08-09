@@ -21,24 +21,24 @@ connectors:
 cables:
   esp32_fern-to-air_sensor_fern:
     wirecount: 3
-    colors: [YE, RD, BK]
+    colors: [YE, BK, RD]
   esp32_fern-to-moisture_sensor_fern:
     wirecount: 3
-    colors: [GN, RD, BK]
+    colors: [RD, BK, GN]
   esp32_fern-to-status_led_fern:
     wirecount: 4
-    colors: [RD, GN, BU, BK]
+    colors: [BU, BK, GN, RD]
 
 connections:
   -
-    - esp32_fern: [6, 1, 2]
+    - esp32_fern: [6, 2, 1]
     - esp32_fern-to-air_sensor_fern: [1, 2, 3]
-    - air_sensor_fern: [3, 1, 2]
+    - air_sensor_fern: [3, 2, 1]
   -
-    - esp32_fern: [7, 1, 2]
+    - esp32_fern: [1, 2, 7]
     - esp32_fern-to-moisture_sensor_fern: [1, 2, 3]
-    - moisture_sensor_fern: [3, 1, 2]
+    - moisture_sensor_fern: [1, 2, 3]
   -
-    - esp32_fern: [3, 4, 5, 2]
+    - esp32_fern: [5, 2, 4, 3]
     - esp32_fern-to-status_led_fern: [1, 2, 3, 4]
-    - status_led_fern: [2, 3, 4, 1]
+    - status_led_fern: [4, 1, 3, 2]

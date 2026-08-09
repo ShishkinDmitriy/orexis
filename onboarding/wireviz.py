@@ -46,25 +46,31 @@ _COLOURS = {
 }
 
 _PINS_Q = f"""
-SELECT ?device ?deviceId ?model ?pin ?notation ?gpio ?role WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?device ?deviceId ?model ?pin ?notation ?gpio ?role WHERE {{ 
   ?device <{MC}hasPin> ?pin .
   OPTIONAL {{ ?device <{AG}localId> ?deviceId }}
   OPTIONAL {{ ?device <{MC}model> ?model }}
   OPTIONAL {{ ?pin <{SKOS}notation> ?notation }}
   OPTIONAL {{ ?pin <{MC}gpio> ?gpio }}
   OPTIONAL {{ ?pin <{MC}pinRole> ?role }}
-}} }}"""
+ }}"""
 
+# ORDER BY is load-bearing, not tidiness. This feeds a COMMITTED artefact, and SPARQL promises
+# nothing about the order of an unordered result — so the harness's wire order was whatever the
+# store happened to scan, and a diff appeared the moment public knowledge became five graphs
+# instead of one. `colors:` and the pins it pairs with are both built from these rows, so they
+# stay consistent whatever the order; what was missing was any guarantee it would not change
+# under the next unrelated edit.
 _WIRES_Q = f"""
-SELECT ?a ?b ?colour WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?a ?b ?colour WHERE {{
   ?wire a <{MC}Wire> ; <{MC}joins> ?a , ?b .
   OPTIONAL {{ ?wire <{MC}colour> ?colour }}
   FILTER(STR(?a) < STR(?b))
-}} }}"""
+ }} ORDER BY ?a ?b"""
 
 _BOARDS_Q = f"""
-SELECT ?device WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?device a <{MC}Microcontroller> }} }}"""
+SELECT ?device WHERE {{ 
+  ?device a <{MC}Microcontroller>  }}"""
 
 
 def _local(uri: str) -> str:
@@ -195,15 +201,15 @@ _TODO = "### TODO ###"
 # What a part is CALLED in a catalogue, and therefore what an authoring tool will have written
 # in its `type:` field. This is the link that turns free text into a class without guessing.
 _MODELS_Q = f"""
-SELECT ?class ?name ?board WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+SELECT ?class ?name ?board WHERE {{ 
   ?class <{MC}modelName> ?name .
   OPTIONAL {{ ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf>*
                      <{MC}Microcontroller> . BIND(true AS ?board) }}
-}} }}"""
+ }}"""
 
 _ROLES_Q = f"""
-SELECT ?role WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-  ?role a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <{MC}PinRole> }} }}"""
+SELECT ?role WHERE {{ 
+  ?role a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <{MC}PinRole>  }}"""
 
 
 def _roles(ds) -> dict[str, str]:

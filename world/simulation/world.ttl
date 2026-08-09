@@ -1,4 +1,5 @@
 @prefix ag:   <http://example.org/agora#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 
 #  A ratified world, v1 — the society, with nothing physical in it.
@@ -43,19 +44,16 @@ ag:local_bus a ag:MessageBus ;
 ##########  World version  ##########
 #  Found by TYPE (?w a ag:World), never by a well-known IRI.
 
-ag:world a ag:World ; ag:currentVersion ag:version_1 .
+#  Who ratified it. A REFERENCE, never a declaration: the world says which user stands behind
+#  these files and says nothing else about them — no name, no key, no type. A user is
+#  installation-level (AGENTS.md rule 3) and an agent is given only its world, so the URI is an
+#  identifier it never resolves, exactly as `ag:brokerHost` names a host it never introspects.
+#  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
+#  operate what this one ratified, and a loader that inferred the capacity could never say so.
+ag:world a ag:World ; ag:currentVersion ag:version_1 ;
+    prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
-##########  Typed graph catalog  ##########
-
-<http://example.org/agora/graph/ontology> a ag:OntologyGraph .
-<http://example.org/agora/graph/world>    a ag:WorldGraph .
-<http://example.org/agora/graph/sensed>   a ag:SensedGraph .
-
-<http://example.org/agora/graph/beliefs/fern>      a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .
-<http://example.org/agora/graph/beliefs/tomato>    a ag:BeliefsGraph ; ag:beliefsOf ag:tomato_agent .
-<http://example.org/agora/graph/beliefs/succulent> a ag:BeliefsGraph ; ag:beliefsOf ag:succulent_agent .
-<http://example.org/agora/graph/beliefs/supplier>  a ag:BeliefsGraph ; ag:beliefsOf ag:supplier .
 
 ##########  The venue  ##########
 

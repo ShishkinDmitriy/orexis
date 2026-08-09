@@ -103,10 +103,10 @@ class Range:
 
 _REVISABLE_Q = f"""
 SELECT ?term ?bound (MIN(?v) AS ?low) (MAX(?v) AS ?high) WHERE {{
-  GRAPH <{ONTOLOGY_GRAPH}> {{
+  
     ?term a ag:RevisableBelief ; ag:revisableToward ?bound .
     ?family ?bound ?v .
-  }}
+  
 }} GROUP BY ?term ?bound"""
 
 

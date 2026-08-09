@@ -3,19 +3,20 @@
 # Actuation is the power to touch the physical world, so it is never declared — it falls out
 # of holding the hardware. A plant agent wins vouchers and still cannot open a valve, because
 # it owns none.
-#
-# Note the two graphs: the WORLD says what type a device is, the T-BOX says what that type is
-# a kind of. So a rule written against ag:Actuator picks up an ag:Valve without naming it, and
-# a new kind of actuator works the day its class is declared.
 
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-#  One graph and one literal check. It used to join the ontology and walk `rdfs:subClassOf*`,
-#  because a device typed as a KIND of actuator was not observably an actuator to the runtime.
-#  The entailments are asserted before any rule runs now, so a subclass-typed device carries
-#  `a ag:Actuator` in the world graph itself — see agora/inference.py.
-INSERT { GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasCapability ag:Actuation } }
-WHERE  {
-    GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasActuator ?device . ?device a ag:Actuator }
-}
+#  The WHERE reads what is GIVEN — the sovereign's world and what the vocabulary entails of it —
+#  and never what another rule derived. `$given` becomes the `USING` clauses that merge those
+#  — substituted by the loader, so no rule names a graph — and it is doing real work:
+#  `?agent ag:hasActuator ?device` is the world's and `?device a ag:Actuator` may be entailed, so
+#  the two live in different graphs and no single `GRAPH` clause could match both.
+#
+#  The answer goes to the DERIVED graph, apart from the world it was computed from, so that
+#  "who put this here" is answerable by looking rather than by knowing. See
+#  knowledge/decisions/who-put-the-fact-there.md.
+INSERT { GRAPH $derived {
+    ?agent ag:hasCapability ag:Actuation } }
+$given
+WHERE  { ?agent ag:hasActuator ?device . ?device a ag:Actuator }

@@ -28,10 +28,16 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from . import inference, loader
+from . import inference, loader, provenance
 from .config import REPO_ROOT
-from .ontology import ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph
+from .ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH,
+                       WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from .store import Store, bindings
+
+# Everything public that is computed rather than read from a file. Emptied before each recompute
+# so the answer is the files' and not last boot's — a fact that stops being entailed, or a rule
+# that stops firing, must stop being present.
+COMPUTED_GRAPHS = (ONTOLOGY_ENTAILED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_DERIVED_GRAPH)
 
 log = logging.getLogger("genesis")
 
@@ -143,10 +149,40 @@ def world_dir(name: str) -> Path:
 
 _CAPABILITIES_Q = f"""
 SELECT ?agentId (GROUP_CONCAT(?cap; separator=", ") AS ?caps)
-WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+WHERE {{ 
   ?agent a ag:Agent ; ag:localId ?agentId ; ag:hasCapability ?c .
   BIND(REPLACE(STR(?c), "^.*#", "") AS ?cap)
-}} }} GROUP BY ?agentId ORDER BY ?agentId"""
+ }} GROUP BY ?agentId ORDER BY ?agentId"""
+
+
+def substitute(rule: str, st: Store) -> str:
+    """Fill a derivation rule's placeholders in: `$given` and `$derived`.
+
+    A rule says what it concludes; where the facts it reads are kept, and where its conclusions
+    go, are not its business. Both used to be typed out — four `USING` lines and an `INSERT
+    GRAPH`, per rule, per capability — which made every capability author maintain a copy of a
+    list, and a graph IRI is an instance that code was never supposed to name.
+
+    Same idiom as `capabilities/*/review.rq`, whose `$me` and `$evidence` are substituted for
+    exactly the same reason: a shipped rule cannot know an instance.
+
+    **`$given` is public MINUS the graph rules write to.** A derivation reads facts, never
+    conclusions — otherwise a rule could see what another rule derived and the answer would
+    depend on which package happened to load first. Excluding it here rather than trusting each
+    rule to leave it out is the difference between an invariant and a convention.
+
+    Comment lines are left alone. They talk *about* the placeholders, and substituting into
+    prose spliced a five-line `USING` block into the middle of a sentence — which SPARQL then
+    reported as a syntax error twenty lines from anything a reader had written.
+    """
+    given = "\n".join(f"USING <{g}>" for g in st.public_graphs()
+                      if g != WORLD_DERIVED_GRAPH)
+    out = []
+    for line in rule.splitlines():
+        if not line.lstrip().startswith("#"):
+            line = line.replace("$given", given).replace("$derived", f"<{WORLD_DERIVED_GRAPH}>")
+        out.append(line)
+    return "\n".join(out)
 
 
 def refresh_public(st: Store, world: Path) -> None:
@@ -161,13 +197,29 @@ def refresh_public(st: Store, world: Path) -> None:
     a thing IS rather than spelling out a subclass path, because by the time it runs the answer
     is asserted. Both are materialisation, one step apart — what the vocabulary implies, then
     what the wiring implies. See agora/inference.py.
+
+    **Each of the three lands somewhere different**, which is the whole of issue #58: the files
+    go to the asserted graphs, the closure to the entailed ones, the rules to the derived one.
+    Anything computed is cleared first, because it is a function of the files rather than an
+    accumulation — a fact that stopped being entailed must stop being present, and only clearing
+    makes that true.
+
+    The world is parsed as **TriG**, so a world file may name its own graphs. Every file today is
+    ordinary Turtle and behaves exactly as it did, since a document's default graph goes to
+    `to_graph` and Turtle is a syntactic subset of TriG.
     """
     t_box = "\n".join(p.read_text() for p in loader.ontology_files())
     st.put_graph(ONTOLOGY_GRAPH, t_box)
-    st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in world_files(world)))
+    st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in world_files(world)),
+                 dataset=True)
+    for graph in COMPUTED_GRAPHS:
+        st.clear_graph(graph)
     inference.materialise(st)
     for rule in loader.rule_files():
-        st.update(rule.read_text())
+        st.update(substitute(rule.read_text(), st))
+    # Last, because it describes the result: which graph holds what, in PROV-O, so the
+    # store answers that rather than this file's comments. See agora/provenance.py.
+    provenance.describe(st, world)
 
 
 def derived(st: Store) -> list[tuple[str, str]]:

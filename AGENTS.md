@@ -63,7 +63,10 @@ And two that catch people out. **There is no default world** — every command t
 required argument and `current_world()` refuses rather than guessing, because a fallback puts a
 misconfigured agent on the same topics as the real one. Also: **capabilities are derived, never
 declared.** `world.ttl` must
-not contain `ag:hasCapability` — seeding computes it from the wiring.
+not contain `ag:hasCapability` — seeding computes it from the wiring. That is no longer only a
+rule: a derivation writes to `graph/world/derived` and the ratified graph is exactly what the
+files say, so the two kinds of fact are told apart by looking rather than by remembering. See
+[who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
 
 ## Start by reading the open issues
 
@@ -188,7 +191,7 @@ legitimate exactly when `validate_agent` still passes, which is the same call th
 boot. An agent that states no interval never reviews itself. See
 [a-belief-is-a-pick-within-a-range](knowledge/decisions/a-belief-is-a-pick-within-a-range.md).
 
-## Two traps worth knowing, and one that is closed
+## Three traps worth knowing, and one that is closed
 
 **Closed: the two engines used to disagree about what the vocabulary says.** Shapes ran with RDFS
 inference and the runtime ran none, so a world could validate against a relationship the code
@@ -200,6 +203,19 @@ working around it — `tests/test_inference.py` refuses a seventh hand-rolled wa
 fails if pyshacl ever entails something the closure does not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
+- **Never wrap `GRAPH <…>` around a SELECT.** Public knowledge is five graphs — asserted,
+  derived and entailed, for the vocabulary and for the world — and `store.query` merges them as
+  the default graph, so an ordinary pattern reads all of them. A basic graph pattern inside one
+  `GRAPH` clause must match entirely *within* that graph, so narrowing it returns **nothing** the
+  moment a fact you wanted lives elsewhere, silently, because an empty result is not an error.
+  Updates are the exception and must name their target; a `rules.ru` writes `$given` and
+  `$derived` and the loader substitutes, so **no rule names a graph**.
+  `tests/test_provenance.py` refuses a narrowed SELECT. See
+  [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
+- **A graph IRI is an instance, so rule 1 applies to it.** `ag:WorldGraph` is the term code may
+  name; `…/graph/world` is not, any more than `ag:fern_agent` is. Ask `store.public_graphs()`.
+  Two things are still named and both are writes or the bootstrap root, never a reader
+  enumerating what to read — adding a public graph is a vocabulary edit that touches no Python.
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each

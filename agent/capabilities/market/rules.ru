@@ -6,15 +6,20 @@
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-#  One graph, one literal check: a market typed as a KIND of market carries `a ag:Market` in the
-#  world graph by the time this runs, because the vocabulary's entailments are materialised
-#  first. See agora/inference.py.
-INSERT { GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasCapability ag:Bidding } }
-WHERE  {
-    GRAPH <http://example.org/agora/graph/world> { ?agent ag:bidsIn ?market . ?market a ag:Market }
-} ;
+#  `$given` becomes the `USING` clauses naming every public graph, and `$derived` the graph
+#  conclusions land in — substituted by the loader, because a rule should say what it concludes
+#  and not know where anything is kept. A graph IRI is an instance, and a capability author who
+#  had to type four of them correctly per rule was being asked to maintain a registry.
+#
+#  What it merges is what is GIVEN: the sovereign's world, and what the vocabulary entails of
+#  it. Never another rule's output — a derivation reads facts, not conclusions, so no rule can
+#  quietly depend on the order the packages happen to load in.
+INSERT { GRAPH $derived {
+    ?agent ag:hasCapability ag:Bidding } }
+$given
+WHERE  { ?agent ag:bidsIn ?market . ?market a ag:Market } ;
 
-INSERT { GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasCapability ag:Hosting } }
-WHERE  {
-    GRAPH <http://example.org/agora/graph/world> { ?agent ag:hosts ?market . ?market a ag:Market }
-}
+INSERT { GRAPH $derived {
+    ?agent ag:hasCapability ag:Hosting } }
+$given
+WHERE  { ?agent ag:hosts ?market . ?market a ag:Market }

@@ -44,13 +44,13 @@ DASHBOARD_ROOT = REPO_ROOT / "infra" / "grafana" / "dashboards"
 # Whatever an agent observes, with the subject it observes it for. The agent is what owns a
 # bucket, so it is what a panel is keyed on; the subject is what a person reading it cares about.
 _WATCHERS_Q = f"""
-SELECT DISTINCT ?agentId ?subjectId WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT DISTINCT ?agentId ?subjectId WHERE {{ 
   ?agent a <{AG}Agent> ; <{AG}localId> ?agentId .
   {{ ?agent <{AG}polls> ?sensor . ?sensor <{AG}monitors> ?subject }}
   UNION
   {{ ?agent <{AG}actsFor> ?subject }}
   ?subject <{AG}localId> ?subjectId .
-}} }}"""
+ }}"""
 
 # Written by agent.influx_writer — named here so a change there fails visibly rather than
 # producing a dashboard that queries nothing.
@@ -62,9 +62,9 @@ SENSOR_MEASUREMENT = "agent_sensor_health"
 # Every agent, not only the ones that observe: a market host owns a belief base and a connection
 # and can go quiet exactly as loudly as a sensing agent can.
 _ROSTER_Q = f"""
-SELECT DISTINCT ?agentId WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT DISTINCT ?agentId WHERE {{ 
   ?agent a <{AG}Agent> ; <{AG}localId> ?agentId .
-}} }}"""
+ }}"""
 
 
 def _flux(bucket: str) -> str:

@@ -27,9 +27,25 @@ from typing import Callable
 
 import pyoxigraph as ox
 
+from .ontology import ONTOLOGY_GRAPH, PUBLIC_GRAPH
+
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
 QueryFn = Callable[[str], dict]
+
+# Which graphs are public — ASKED, not listed. A graph IRI is an instance, and code that named
+# five of them was doing what rule 1 forbids everywhere else; `ag:PublicGraph` is the term, the
+# instances are declared in `vocabulary/agora/ontology.ttl`, and adding one is a vocabulary edit
+# that touches no Python.
+#
+# `rdfs:subClassOf*` rather than a bare type, because this runs BEFORE the closure — it is what
+# tells the loader where to put the closure. The one graph named here is the bootstrap root: the
+# T-Box has to be loaded somewhere before it can be asked anything, exactly as an agent is handed
+# its own id before it can discover anything else.
+_DISCOVER = f"""
+SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+  ?g a ?class . ?class rdfs:subClassOf* <{PUBLIC_GRAPH}> .
+}} }}"""
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
 # common prefixes and others do not, so relying on that works in one and fails in another.
@@ -83,13 +99,44 @@ class Store:
     def __init__(self, path: str | Path | None = None):
         self.path = str(path) if path else None
         self._store = ox.Store(self.path) if self.path else ox.Store()
+        self._public: list | None = None  # discovered on demand; see public_graphs()
+
+    # --- what counts as public, according to the store itself ---
+
+    def public_graphs(self) -> list[str]:
+        """Every graph the vocabulary types as an `ag:PublicGraph`.
+
+        Cached because it is asked before every query and the answer only moves when something
+        is written. Any write drops the cache rather than trying to work out whether it mattered
+        — the query is small and a stale answer here is an empty result rather than an error,
+        which is the failure mode this whole design keeps having to guard against.
+
+        Empty until a T-Box is loaded, and that is correct: a store nobody has told anything to
+        has no public knowledge. Naming a graph explicitly still reads it, so the tools that
+        build a bare store and query one graph are unaffected.
+        """
+        if self._public is None:
+            rows = self._store.query(PREFIXES + _DISCOVER)
+            self._public = sorted(str(row["g"].value) for row in rows)
+        return self._public
 
     # --- reading ---
 
     def query(self, sparql: str) -> dict:
-        """Read. There is no privileged variant: it is all yours, and only yours."""
+        """Read. There is no privileged variant: it is all yours, and only yours.
+
+        An unqualified pattern reads **public knowledge** — the vocabulary, the world, and what
+        the rules and the RDFS closure made of them, merged. That is what almost every caller
+        wants, and stating it once here is what keeps the five public graphs from leaking into
+        sixty queries.
+
+        A `GRAPH <x>` clause still reads exactly `x`, private graphs included. So the two forms
+        say different things on purpose: *what does the society know* versus *what is written
+        precisely here* — and a review's write boundary is checkable because the second exists.
+        """
         out = io.BytesIO()
-        self._store.query(PREFIXES + sparql).serialize(
+        public = [ox.NamedNode(g) for g in self.public_graphs()]
+        self._store.query(PREFIXES + sparql, default_graph=public).serialize(
             output=out, format=ox.QueryResultsFormat.JSON
         )
         return json.loads(out.getvalue())
@@ -118,17 +165,38 @@ class Store:
 
     def update(self, sparql: str) -> None:
         self._store.update(PREFIXES + sparql)
+        self._public = None
 
-    def put_graph(self, graph_iri: str, ttl: str) -> None:
-        """Replace a graph with the given Turtle. Public knowledge only — see the module note."""
+    def put_graph(self, graph_iri: str, ttl: str, dataset: bool = False) -> None:
+        """Replace a graph with the given Turtle. Public knowledge only — see the module note.
+
+        `dataset=True` parses **TriG** instead, which is Turtle plus `GRAPH <iri> { … }` blocks.
+        Every existing `.ttl` is valid TriG unchanged — Turtle is a syntactic subset — and
+        `to_graph` is the destination for the document's *default* graph only, so a file with no
+        `GRAPH` block behaves exactly as it did. A file that grows one puts those triples where
+        it says, which is what a world will need when genesis starts writing values it picked
+        beside the ranges the sovereign stated.
+
+        Note what that does NOT clear: a graph named inside the file is not removed here, because
+        this method is told one name. Nothing declares one yet; see the decision record.
+        """
         graph = ox.NamedNode(graph_iri)
         self._store.remove_graph(graph)
-        self._store.load(ttl, format=ox.RdfFormat.TURTLE, to_graph=graph)
+        self._store.load(
+            ttl, format=ox.RdfFormat.TRIG if dataset else ox.RdfFormat.TURTLE, to_graph=graph)
+        self._public = None
+
+    def clear_graph(self, graph_iri: str) -> None:
+        """Empty one graph. For the computed ones, which are written by update rather than
+        loaded from a file and so have no `put_graph` to replace them wholesale."""
+        self._store.remove_graph(ox.NamedNode(graph_iri))
+        self._public = None
 
     def load_file(self, path: str | Path, graph_iri: str) -> None:
         """Read a ratified file straight into a graph, without going through a string."""
         self._store.load(path=str(path), format=ox.RdfFormat.TURTLE,
                          to_graph=ox.NamedNode(graph_iri))
+        self._public = None
 
     def optimize(self) -> None:
         """Compact the store. Blocking, and worth it only when something says it is needed.

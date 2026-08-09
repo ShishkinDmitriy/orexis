@@ -23,7 +23,8 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from agent import genesis, inference, loader
-from agent.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
+from agent.ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
+                            WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 from agent.store import Store, bindings
 
 MC = "http://example.org/agora/microcontroller#"
@@ -49,18 +50,42 @@ def test_a_t_box_individual_gets_the_whole_chain():
     Output, which are under PinRole. The shape keeping a driven line off pins 34-39 asks whether
     the role is an OUTPUT — asserted nowhere, entailed twice over, and the reason seven shape
     tests failed the moment inference was switched off."""
-    types = _types_of(_public(), ONTOLOGY_GRAPH, ONEWIRE + "DataPinRole")
-    assert {MC + "BidirectionalRole", MC + "InputRole",
-            MC + "OutputRole", MC + "PinRole"} <= types
+    types = _types_of(_public(), ONTOLOGY_ENTAILED_GRAPH, ONEWIRE + "DataPinRole")
+    assert {MC + "InputRole", MC + "OutputRole", MC + "PinRole"} <= types
 
 
 def test_a_world_instance_is_typed_by_what_its_class_is_under():
     """The probe is declared a `probe:CapacitiveMoistureProbe` in the stand and an `ag:Sensor` in
     the society. Being observably a Sensor to the RUNTIME is what let the derivation rules stop
     joining the ontology to walk a subclass path."""
-    types = _types_of(_public(), WORLD_GRAPH, AG + "moisture_sensor_fern")
-    assert AG + "Sensor" in types
+    types = _types_of(_public(), WORLD_ENTAILED_GRAPH, AG + "moisture_sensor_fern")
     assert MC + "Peripheral" in types
+
+
+def test_an_entailment_never_lands_in_the_graph_it_was_computed_from():
+    """The whole of issue #58, as one assertion.
+
+    A package's vocabulary stays exactly as that package wrote it, and what RDFS made of it sits
+    beside it — so "who put this here" is answerable by looking. Merge them and the question
+    becomes unanswerable for ever, because nothing records which triples were typed and which
+    were concluded.
+    """
+    st = _public()
+    asserted = _types_of(st, ONTOLOGY_GRAPH, ONEWIRE + "DataPinRole")
+    entailed = _types_of(st, ONTOLOGY_ENTAILED_GRAPH, ONEWIRE + "DataPinRole")
+    assert asserted == {MC + "BidirectionalRole"}  # what the file literally says
+    assert MC + "OutputRole" in entailed and MC + "OutputRole" not in asserted
+
+
+def test_a_reader_still_sees_one_world():
+    """And the split costs a reader nothing: an ordinary pattern spans every public graph,
+    because `store.query` makes them the default graph. A reader that had to know which of the
+    five holds its fact would be a worse design than the one #58 replaced."""
+    rows = bindings(_public().query(
+        f"SELECT ?t WHERE {{ <{AG}moisture_sensor_fern> a ?t }}"))
+    types = {r["t"] for r in rows}
+    assert AG + "Sensor" in types  # asserted in the world
+    assert MC + "Peripheral" in types  # entailed, in another graph entirely
 
 
 def test_the_closure_is_not_full_rdfs():
@@ -95,8 +120,10 @@ def test_pyshacl_agrees_with_the_materialised_closure(world):
     """
     st = _public(world)
     data = rdflib.Graph()
-    for iri in (ONTOLOGY_GRAPH, WORLD_GRAPH):
-        data.parse(data=st.get_graph(iri), format="turtle")
+    for iri in st.public_graphs():
+        ttl = st.get_graph(iri)
+        if ttl.strip():
+            data.parse(data=ttl, format="turtle")
 
     ontology, shapes = rdflib.Graph(), rdflib.Graph()
     for path in loader.ontology_files():
@@ -133,7 +160,11 @@ def test_every_source_group_is_still_found(group):
 
 
 # The one file allowed to walk the hierarchy, because it is the file that flattens it.
-_DEFINES_THE_CLOSURE = "inference.py"
+# The two files that may walk a subclass path, and the reason is the same for both: they run
+# BEFORE the closure exists. `inference.py` computes it. `store.py` finds the graphs it will be
+# written into — discovery is what tells the loader where the entailments go, so it cannot read
+# them. Everything else runs after and must simply ask what a thing IS.
+_BEFORE_THE_CLOSURE = ("inference.py", "store.py")
 
 
 def _query_text(path: Path) -> str:
@@ -171,9 +202,12 @@ def test_no_query_walks_a_subclass_path_by_hand(path):
 
     The entailments are asserted before anything reads them now, so a hand-rolled walk is either
     redundant or a sign that someone is working around the closure instead of extending it.
+
+    Two files are exempt because they run before there is a closure to read: the one that
+    computes it, and the one that discovers which graphs it lands in.
     """
-    if path.name == _DEFINES_THE_CLOSURE:
-        pytest.skip("this is the closure")
+    if path.name in _BEFORE_THE_CLOSURE:
+        pytest.skip("runs before the closure exists — see _BEFORE_THE_CLOSURE")
     text = _query_text(path)
     for walk in ("rdfs:subClassOf*", "rdfs:subClassOf+",
                  "rdfs:subPropertyOf*", "rdfs:subPropertyOf+"):

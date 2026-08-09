@@ -8,8 +8,8 @@ to, and cannot drift from it.
 import pytest
 import rdflib
 
-from agent import loader
-from agent.ontology import WORLD_GRAPH
+from agent import genesis, loader
+from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_self, load_world
 from agent.capabilities.actuation import ACTUATION
 from agent.capabilities.market import BIDDING, HOSTING
@@ -51,19 +51,29 @@ def test_plant_agent_cannot_actuate(me):
 # --- the hardware decides which perception you get -------------------------
 
 def _world_with_push_sensor():
-    """Swap fern's board for one that pushes on its own clock, and re-derive."""
+    """Swap fern's board for one that pushes on its own clock, and re-derive.
+
+    Only the RATIFIED fact is edited — the sense mode, which is the sovereign's. The old
+    capability is not deleted here because it is not the world's to delete: it was computed, it
+    lives in the derived graph, and the way to be rid of a conclusion is to drop the conclusions
+    and recompute. Clearing before re-running is exactly what `refresh_public` does, and skipping
+    it leaves last derivation's answer sitting beside this one — which is how this test read
+    `Listening` AND `Subscribing` and called it a pass.
+    """
     st = genesis_store()
     st.update(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern ag:senseMode ag:Scheduled .
-                 ag:fern_agent ag:hasCapability ag:Subscribing }} }}
+                 ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
                  ag:moisture_sensor_fern ag:senseMode ag:Push }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
                  ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
     """)
+    st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
-        st.update(rule.read_text())
+        # Through `substitute`, exactly as `refresh_public` runs them: a rule names no graph,
+        # so running one without filling `$given` and `$derived` in is not a rule at all.
+        st.update(genesis.substitute(rule.read_text(), st))
     return st
 
 

@@ -67,7 +67,7 @@ services:
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.02"
       SIM_TICK_SECONDS: "3"
-      SIM_LITRES_PER_FRACTION: "2.0"
+      SIM_LITRES_PER_FRACTION: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -95,7 +95,7 @@ services:
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.015"
       SIM_TICK_SECONDS: "3"
-      SIM_LITRES_PER_FRACTION: "2.0"
+      SIM_LITRES_PER_FRACTION: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -123,7 +123,7 @@ services:
       SIM_INITIAL_VALUE: "0.45"
       SIM_DRY_RATE: "0.02"
       SIM_TICK_SECONDS: "3"
-      SIM_LITRES_PER_FRACTION: "2.0"
+      SIM_LITRES_PER_FRACTION: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -141,8 +141,8 @@ services:
       VALVE_ID: "valve_fern"
       VALVE_COMMAND_TOPIC: "sim/actuators/valve_fern/command"
       VALVE_STATUS_TOPIC: "sim/actuators/valve_fern/status"
-      VALVE_ML_PER_SECOND: "10.0"
-      VALVE_MAX_DOSE_ML: "1000.0"
+      VALVE_ML_PER_SECOND: "10"
+      VALVE_MAX_DOSE_ML: "1000"
       # public halves only — it verifies, it never signs
       VALVE_HOST_PUB: "/keys/host.pub"
       VALVE_CLEARING_PUB: "/keys/clearing.pub"
@@ -169,8 +169,8 @@ services:
       VALVE_ID: "valve_succulent"
       VALVE_COMMAND_TOPIC: "sim/actuators/valve_succulent/command"
       VALVE_STATUS_TOPIC: "sim/actuators/valve_succulent/status"
-      VALVE_ML_PER_SECOND: "10.0"
-      VALVE_MAX_DOSE_ML: "1000.0"
+      VALVE_ML_PER_SECOND: "10"
+      VALVE_MAX_DOSE_ML: "1000"
       # public halves only — it verifies, it never signs
       VALVE_HOST_PUB: "/keys/host.pub"
       VALVE_CLEARING_PUB: "/keys/clearing.pub"
@@ -197,8 +197,8 @@ services:
       VALVE_ID: "valve_tomato"
       VALVE_COMMAND_TOPIC: "sim/actuators/valve_tomato/command"
       VALVE_STATUS_TOPIC: "sim/actuators/valve_tomato/status"
-      VALVE_ML_PER_SECOND: "10.0"
-      VALVE_MAX_DOSE_ML: "1000.0"
+      VALVE_ML_PER_SECOND: "10"
+      VALVE_MAX_DOSE_ML: "1000"
       # public halves only — it verifies, it never signs
       VALVE_HOST_PUB: "/keys/host.pub"
       VALVE_CLEARING_PUB: "/keys/clearing.pub"

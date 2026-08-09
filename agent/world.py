@@ -121,23 +121,23 @@ class World:
 
 
 _BUS_Q = f"""
-SELECT ?bus ?host ?port ?tlsPort WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?bus ?host ?port ?tlsPort WHERE {{ 
   ?bus a ag:MessageBus ; ag:brokerHost ?host ; ag:brokerPort ?port .
-  OPTIONAL {{ ?bus ag:brokerTlsPort ?tlsPort }} }} }}"""
+  OPTIONAL {{ ?bus ag:brokerTlsPort ?tlsPort }}  }}"""
 
 _VERSION_Q = f"""
-SELECT ?v WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?world a ag:World ; ag:currentVersion/ag:versionNumber ?v }} }} LIMIT 1"""
+SELECT ?v WHERE {{ 
+  ?world a ag:World ; ag:currentVersion/ag:versionNumber ?v  }} LIMIT 1"""
 
 
 def _self_q(agent_id: str) -> str:
     """Find me by my id — the only instance identifier the process is given."""
     return f"""
-SELECT ?agent ?capability ?actsFor ?actsForId ?eventTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?agent ?capability ?actsFor ?actsForId ?eventTopic WHERE {{ 
   ?agent a ag:Agent ; ag:localId "{agent_id}" ; ag:hasCapability ?capability .
   OPTIONAL {{ ?agent ag:actsFor ?actsFor . OPTIONAL {{ ?actsFor ag:localId ?actsForId }} }}
   OPTIONAL {{ ?agent ag:eventTopic ?eventTopic }}
-}} }}"""
+ }}"""
 
 
 def _sensors_q(agent_uri: str) -> str:
@@ -145,7 +145,7 @@ def _sensors_q(agent_uri: str) -> str:
     about how to reach it varies by transport, and a driver is picked from what is there."""
     return f"""
 SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic ?commandTopic
-WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+WHERE {{ 
   <{agent_uri}> ag:polls ?sensor .
   ?sensor ag:localId ?localId ; ag:monitors ?subject ; sosa:observes ?observes .
   OPTIONAL {{ ?sensor ag:senseMode ?senseMode }}
@@ -153,44 +153,44 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   OPTIONAL {{ ?sensor ag:onBus ?bus }}
   OPTIONAL {{ ?sensor ag:readingTopic ?readingTopic }}
   OPTIONAL {{ ?sensor ag:commandTopic ?commandTopic }}
-}} }}"""
+ }}"""
 
 
 def _actuators_q(agent_uri: str) -> str:
     return f"""
 SELECT ?actuator ?localId ?subject ?subjectId ?commandTopic ?mlPerSecond ?maxDoseMl
-WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+WHERE {{ 
   <{agent_uri}> ag:hasActuator ?actuator .
   ?actuator ag:localId ?localId ; ag:actuates ?subject ; ag:commandTopic ?commandTopic ;
             ag:mlPerSecond ?mlPerSecond ; ag:maxDoseMl ?maxDoseMl .
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
-}} }}"""
+ }}"""
 
 
 def _markets_q(agent_uri: str, relation: str) -> str:
     return f"""
 SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?voucherTopic ?capacity
-WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+WHERE {{ 
   <{agent_uri}> ag:{relation} ?market .
   ?market ag:localId ?localId ; ag:marketFor ?resource ;
           ag:offerTopic ?offerTopic ; ag:bidTopic ?bidTopic ; ag:voucherTopic ?voucherTopic .
   OPTIONAL {{ ?resource ag:capacityL ?capacity }}
-}} }}"""
+ }}"""
 
 
 # Physical facts about the subjects — public, because it is how the world behaves.
 _PHYSICS_Q = f"""
-SELECT ?subject ?subjectId ?dryRate ?litresPerFraction WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?subject ?subjectId ?dryRate ?litresPerFraction WHERE {{ 
   ?subject ag:localId ?subjectId .
   OPTIONAL {{ ?subject ag:dryRatePerTick ?dryRate }}
   OPTIONAL {{ ?subject ag:litresPerFraction ?litresPerFraction }}
-}} }}"""
+ }}"""
 
 # Everyone entitled to bid here — the host needs this to know who may answer an offer.
 def _participants_q(market_uri: str) -> str:
     return f"""
-SELECT ?agentId WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?agent ag:bidsIn <{market_uri}> ; ag:localId ?agentId }} }}"""
+SELECT ?agentId WHERE {{ 
+  ?agent ag:bidsIn <{market_uri}> ; ag:localId ?agentId  }}"""
 
 
 def _market_from(row: dict) -> Market:
