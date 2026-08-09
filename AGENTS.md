@@ -35,12 +35,21 @@ record is worse than none, because it is still cited.
    `"supplier"`, `"sensors/fern/moisture"`, `ag:world` are not. The single exception is the one
    identifier a process is handed at boot: its own agent id. Everything else is discovered from
    the graph. See [capability-packages](knowledge/decisions/capability-packages.md).
-2. **A capability is a directory.** `agent/capabilities/<name>/` holds its own `ontology.ttl`,
-   `shapes.ttl`, `rules.ru`, `terms.py`, `beliefs.py` and code. Nothing lists them —
-   `agent.loader` finds them. Adding one is adding a directory; no registry to edit. Capability
-   packages never import each other's Python: ask `agent.provider(family)` or contribute via
-   `annotate`/`urgency`. They live *inside* `agent/` because only a runtime loads their Python;
-   onboarding reads their TTL through the loader and never imports a module from one.
+2. **A capability is a named ability with interchangeable implementations, and it is a
+   directory.** The ability is a **family** — the slot; the implementations are its members.
+   `ag:PerceptionCapability` is a family and `ag:Subscribing` and `ag:Listening` are two ways of
+   having it, chosen by what the hardware can do. That is the shape to reach for: a capability
+   worth naming is one where the *how* could differ. Reviewing your own settings by strict rules
+   or by asking a model is one ability with two implementations; pay-as-bid and uniform-price are
+   one auction with two. Where nothing could differ, you have a function, not a capability.
+
+   `agent/capabilities/<name>/` holds its own `ontology.ttl`, `shapes.ttl`, `rules.ru`,
+   `terms.py`, `beliefs.py` and code. Nothing lists them — `agent.loader` finds them, and
+   `PROVIDES` in `__init__.py` is how an implementation registers. Adding one is adding a
+   directory; no registry to edit. Capability packages never import each other's Python: ask
+   `agent.provider(family)` or contribute via `annotate`/`urgency`. They live *inside* `agent/`
+   because only a runtime loads their Python; onboarding reads their TTL through the loader and
+   never imports a module from one.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
 installation: the broker image, the installation CA, Grafana's material, the admin token. A
 world's broker config, its ACL, its certificates and its device credentials live with the world.
@@ -61,11 +70,22 @@ Also: **no `.env` at the repo root, because nothing there is true of every world
 
 And two that catch people out. **There is no default world** — every command takes one as a
 required argument and `current_world()` refuses rather than guessing, because a fallback puts a
-misconfigured agent on the same topics as the real one. Also: **capabilities are derived, never
-declared.** `world.ttl` must
-not contain `ag:hasCapability` — seeding computes it from the wiring. That is no longer only a
-rule: a derivation writes to `graph/world/derived` and the ratified graph is exactly what the
-files say, so the two kinds of fact are told apart by looking rather than by remembering. See
+misconfigured agent on the same topics as the real one. Also: **capabilities are worked out at
+genesis, never hand-declared.** `world.ttl` must not contain `ag:hasCapability`.
+
+**Wiring is one input, not the definition.** Perception's are a strict function of the hardware —
+a board that keeps an interval gives its agent `ag:Subscribing`, and nothing could have decided
+otherwise. Others have no wiring to follow and are *deduced*: someone at genesis judged that this
+agent should have them, and could have judged differently. Both end up in the world graph and
+neither is hand-written, but they are not the same kind of fact — the first is `derived`, the
+second `deduced`, and since the provenance split they are distinguishable rather than merely
+distinct. So "deduced at genesis" is the rule; "computed from the wiring" is how it happens to
+work for the one family whose hardware forces the answer.
+
+**What the prohibition is actually against** is a capability nobody is answerable for. That was
+unenforceable while a declared one and a derived one looked identical in the graph — which is why
+the rule had to be absolute. It no longer is: a derivation writes to `graph/world/derived`, the
+ratified graph is exactly what the files say, and every graph says who put it there. See
 [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
 
 ## Start by reading the open issues
