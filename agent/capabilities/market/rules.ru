@@ -6,14 +6,15 @@
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
+#  One graph, one literal check: a market typed as a KIND of market carries `a ag:Market` in the
+#  world graph by the time this runs, because the vocabulary's entailments are materialised
+#  first. See agora/inference.py.
 INSERT { GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasCapability ag:Bidding } }
 WHERE  {
-    GRAPH <http://example.org/agora/graph/world> { ?agent ag:bidsIn ?market . ?market a ?type }
-    GRAPH <http://example.org/agora/graph/ontology> { ?type rdfs:subClassOf* ag:Market }
+    GRAPH <http://example.org/agora/graph/world> { ?agent ag:bidsIn ?market . ?market a ag:Market }
 } ;
 
 INSERT { GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasCapability ag:Hosting } }
 WHERE  {
-    GRAPH <http://example.org/agora/graph/world> { ?agent ag:hosts ?market . ?market a ?type }
-    GRAPH <http://example.org/agora/graph/ontology> { ?type rdfs:subClassOf* ag:Market }
+    GRAPH <http://example.org/agora/graph/world> { ?agent ag:hosts ?market . ?market a ag:Market }
 }

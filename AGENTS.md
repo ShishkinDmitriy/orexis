@@ -188,7 +188,17 @@ legitimate exactly when `validate_agent` still passes, which is the same call th
 boot. An agent that states no interval never reviews itself. See
 [a-belief-is-a-pick-within-a-range](knowledge/decisions/a-belief-is-a-pick-within-a-range.md).
 
-## Two traps worth knowing
+## Two traps worth knowing, and one that is closed
+
+**Closed: the two engines used to disagree about what the vocabulary says.** Shapes ran with RDFS
+inference and the runtime ran none, so a world could validate against a relationship the code
+would never observe — and six queries carried `rdfs:subClassOf*` by hand to compensate, for
+twenty-five declared axioms. The entailments are now materialised into the store at genesis, and
+validation runs with inference off against that same graph. **Ask what a thing IS; do not walk a
+subclass path.** If the closure does not cover your case, widen `agent/inference.py` rather than
+working around it — `tests/test_inference.py` refuses a seventh hand-rolled walk, and separately
+fails if pyshacl ever entails something the closure does not. See
+[one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in

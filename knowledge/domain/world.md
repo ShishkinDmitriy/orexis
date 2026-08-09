@@ -276,8 +276,11 @@ implementation* — it could pass while the real path was broken, which is the w
 form of simulation. It also cost five smaller things: agent metrics silently omitted every
 simulated agent, the ACL generator needed a second query, the readings dashboard caught them
 only by accident, `sense_now`/`fresh_reading` had two definitions, and `ag:models` was declared
-`rdfs:subPropertyOf ag:polls` — a promise nothing kept, since shapes run with RDFS inference and
-the runtime does not.
+`rdfs:subPropertyOf ag:polls` — a promise nothing kept, because shapes ran with RDFS inference
+and the runtime did not. That last one is now a promise the runtime *would* keep: the vocabulary's
+entailments are materialised into the store before anything reads it, so a sub-property declared
+today is followed everywhere rather than wherever someone remembered a property path. See
+[one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md).
 
 An earlier draft of this page argued that "a simulated *binding* fits the existing split better
 than a new capability — a capability distinguishes what an agent must decide, a binding
