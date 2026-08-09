@@ -208,9 +208,14 @@ fails if pyshacl ever entails something the closure does not. See
   the default graph, so an ordinary pattern reads all of them. A basic graph pattern inside one
   `GRAPH` clause must match entirely *within* that graph, so narrowing it returns **nothing** the
   moment a fact you wanted lives elsewhere, silently, because an empty result is not an error.
-  Updates are the exception and must name their target; their `WHERE` uses `USING`.
+  Updates are the exception and must name their target; a `rules.ru` writes `$given` and
+  `$derived` and the loader substitutes, so **no rule names a graph**.
   `tests/test_provenance.py` refuses a narrowed SELECT. See
   [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
+- **A graph IRI is an instance, so rule 1 applies to it.** `ag:WorldGraph` is the term code may
+  name; `…/graph/world` is not, any more than `ag:fern_agent` is. Ask `store.public_graphs()`.
+  Two things are still named and both are writes or the bootstrap root, never a reader
+  enumerating what to read — adding a public graph is a vocabulary edit that touches no Python.
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each

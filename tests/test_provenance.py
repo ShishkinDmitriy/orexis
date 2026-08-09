@@ -21,7 +21,7 @@ import pytest
 
 from agent import genesis, ratified
 from agent.ontology import (AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
-                            PUBLIC_GRAPHS, WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
+                            WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
                             WORLD_GRAPH)
 from agent.store import Store, bindings
 from agent.validate import conforms, graph_from
@@ -84,7 +84,7 @@ def _sizes(st: Store) -> dict[str, int]:
     renumbers blank nodes, so its LENGTH differs between two identical graphs."""
     return {g: int(bindings(st.query(
         f"SELECT (COUNT(*) AS ?n) WHERE {{ GRAPH <{g}> {{ ?s ?p ?o }} }}"))[0]["n"])
-        for g in PUBLIC_GRAPHS}
+        for g in st.public_graphs()}
 
 
 # --- the split costs a reader nothing ----------------------------------------------------------
@@ -129,11 +129,13 @@ def test_every_public_graph_accounts_for_itself(world):
     made it — but a graph nobody described at all is not a `prov:Entity`, so no shape targets it.
     That silence is what this catches, by walking the public set rather than waiting to be told.
     """
+    st = _public(world)
     described = {r["g"] for r in _in_graph(
-        _public(world), PROVENANCE_GRAPH,
+        st, PROVENANCE_GRAPH,
         "?g a prov:Entity ; ?p ?o FILTER(?p IN (prov:wasDerivedFrom, prov:wasGeneratedBy))")}
-    assert set(PUBLIC_GRAPHS) <= described, (
-        f"undescribed: {set(PUBLIC_GRAPHS) - described} — add it to agora/provenance.py")
+    public = set(st.public_graphs())
+    assert public <= described, (
+        f"undescribed: {public - described} — add it to agora/provenance.py")
 
 
 def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
@@ -156,7 +158,7 @@ def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
         "?agent a prov:SoftwareAgent")}
 
     # Every public graph accounts for itself, one way or the other.
-    assert from_files | computed == set(PUBLIC_GRAPHS)
+    assert from_files | computed == set(st.public_graphs())
 
     # And a machine made the computed ones, while a PERSON stands behind what was read from
     # files — recovered from the kind of agent the activity was associated with, not from a name.
@@ -179,13 +181,54 @@ def test_a_graph_that_explains_nothing_is_refused():
     st = _public("society")
     st.update(f"""INSERT DATA {{ GRAPH <{PROVENANCE_GRAPH}> {{
         <http://example.org/agora/graph/mystery> a prov:Entity }} }}""")
-    data = graph_from(st, *PUBLIC_GRAPHS, PROVENANCE_GRAPH)
+    data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
     ok, report = conforms(data)
     assert not ok and "mystery" in report
 
 
+def test_a_sixth_public_graph_needs_no_python():
+    """The test the discovery exists to pass.
+
+    A graph IRI is an INSTANCE. Code that listed five of them was doing what rule 1 forbids
+    everywhere else — and the cost was not theoretical: the same five were written out in
+    `ontology.py`, again in `provenance.py`, and again by hand in the `USING` clauses of every
+    rule of every capability, so a capability author maintained a copy of a registry.
+
+    Here a graph is declared public in the vocabulary alone. Nothing is imported, nothing is
+    edited, and it turns up in the default graph of an ordinary query.
+    """
+    st = _public("society")
+    before = set(st.public_graphs())
+
+    st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+        <http://example.org/agora/graph/sixth> a ag:PublicGraph }} }}""")
+    st.update("""INSERT DATA { GRAPH <http://example.org/agora/graph/sixth> {
+        ag:fern_agent ag:somethingNew "yes" } }""")
+
+    assert set(st.public_graphs()) - before == {"http://example.org/agora/graph/sixth"}
+    # And an unqualified pattern reads it, which is the whole point: a reader asks what the
+    # society knows and never learns which graph the answer came from.
+    assert bindings(st.query('SELECT ?v WHERE { ag:fern_agent ag:somethingNew ?v }'))
+
+
+def test_a_graph_typed_privately_stays_out_of_the_default_graph():
+    """Membership is by declaration, never by exclusion.
+
+    The tempting inversion — public means "not one of the private kinds" — fails in the
+    dangerous direction: a new private graph nobody remembered to exclude leaks into every
+    query. Declared membership fails the safe way round, with a graph nobody typed simply
+    invisible until someone says what it is.
+    """
+    st = _public("society")
+    st.update("""INSERT DATA { GRAPH <http://example.org/agora/graph/private> {
+        ag:fern_agent ag:aSecret "shh" } }""")
+    assert "http://example.org/agora/graph/private" not in st.public_graphs()
+    assert not bindings(st.query('SELECT ?v WHERE { ag:fern_agent ag:aSecret ?v }'))
+    assert _in_graph(st, "http://example.org/agora/graph/private", "?s ag:aSecret ?v")
+
+
 def test_provenance_is_not_in_the_default_graph():
-    """Deliberately out of `PUBLIC_GRAPHS`, and the reason is use versus mention.
+    """Deliberately not an `ag:PublicGraph`, and the reason is use versus mention.
 
     These are statements ABOUT the graphs, not facts IN the world. Merged into the default graph
     they would answer open patterns that mean something else entirely — `?device a ?class`, which

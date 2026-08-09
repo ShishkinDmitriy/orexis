@@ -6,21 +6,20 @@
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-#  `USING` merges what is GIVEN: the sovereign's world, and what the vocabulary entails of it.
-#  Never another rule's output — a derivation reads facts, not conclusions, so no rule can
+#  `$given` becomes the `USING` clauses naming every public graph, and `$derived` the graph
+#  conclusions land in — substituted by the loader, because a rule should say what it concludes
+#  and not know where anything is kept. A graph IRI is an instance, and a capability author who
+#  had to type four of them correctly per rule was being asked to maintain a registry.
+#
+#  What it merges is what is GIVEN: the sovereign's world, and what the vocabulary entails of
+#  it. Never another rule's output — a derivation reads facts, not conclusions, so no rule can
 #  quietly depend on the order the packages happen to load in.
-INSERT { GRAPH <http://example.org/agora/graph/world/derived> {
+INSERT { GRAPH $derived {
     ?agent ag:hasCapability ag:Bidding } }
-USING <http://example.org/agora/graph/ontology>
-USING <http://example.org/agora/graph/ontology/entailed>
-USING <http://example.org/agora/graph/world>
-USING <http://example.org/agora/graph/world/entailed>
+$given
 WHERE  { ?agent ag:bidsIn ?market . ?market a ag:Market } ;
 
-INSERT { GRAPH <http://example.org/agora/graph/world/derived> {
+INSERT { GRAPH $derived {
     ?agent ag:hasCapability ag:Hosting } }
-USING <http://example.org/agora/graph/ontology>
-USING <http://example.org/agora/graph/ontology/entailed>
-USING <http://example.org/agora/graph/world>
-USING <http://example.org/agora/graph/world/entailed>
+$given
 WHERE  { ?agent ag:hosts ?market . ?market a ag:Market }

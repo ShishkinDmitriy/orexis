@@ -41,13 +41,6 @@ ag:world a ag:World ; ag:currentVersion ag:version_1 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
-##########  Typed graph catalog  ##########
-
-<http://example.org/agora/graph/ontology> a ag:OntologyGraph .
-<http://example.org/agora/graph/world>    a ag:WorldGraph .
-<http://example.org/agora/graph/sensed>   a ag:SensedGraph .
-
-<http://example.org/agora/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .
 
 ##########  The subject — a thing that is watched, and nothing more  ##########
 #  NOT an ag:Plant here, and the difference is the point: a plant is a participant in a water

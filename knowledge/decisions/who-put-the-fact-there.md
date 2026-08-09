@@ -69,6 +69,56 @@ habit rather than a new vocabulary.
   ran, each a `prov:SoftwareAgent`
 - **entailed** — `prov:wasGeneratedBy` an activity that `prov:used` the graphs it closed over
 
+## A graph IRI is an instance, so code may not name one
+
+The same mistake had a second floor. Having stopped the *names* carrying the meaning, the code
+still **listed** them: five constants in `ontology.py`, a `PUBLIC_GRAPHS` tuple, and — worst —
+four `USING` lines typed by hand into every rule of every capability's `rules.ru`.
+
+That is rule 1, violated in the open. `ag:WorldGraph` is a T-Box term and code may name it;
+`…/graph/world` is a particular graph and is no more nameable than `ag:fern_agent`. The
+asymmetry gave it away: `beliefs_graph(agent_id)` *constructs* its IRI from the one identifier a
+process is legitimately handed, exactly as the rule allows, while the public five were bare
+constants nobody had questioned.
+
+The cost was not aesthetic. The same five were written out in three places — `ontology.py`,
+`provenance.py`, and by hand in every rule — so **a capability author maintained a copy of a
+registry**, correctly, per rule, or the derivation silently returned nothing.
+
+So the instances moved into `vocabulary/agora/ontology.ttl`, typed by class, and code asks:
+
+- `ag:PublicGraph` is the term. `store.public_graphs()` returns whatever is an instance of it.
+- A rule writes `$given` and `$derived`; the loader substitutes. No `rules.ru` names a graph.
+- Adding a public graph is a **vocabulary edit that touches no Python**, and there is a test
+  that says so.
+
+**Membership is by declaration, never by exclusion.** The tempting inversion — public means "not
+one of the private kinds" — fails in the dangerous direction, because a new private graph nobody
+remembered to exclude leaks into every query. Declared membership fails the safe way round: a
+graph nobody typed is invisible until someone says what it is.
+
+**Two things are still named, and they are not the same act.** The *bootstrap root*
+`ONTOLOGY_GRAPH`, because the T-Box has to be loaded somewhere before it can be asked anything —
+the same shape as the exception rule 1 already carries for an agent's own id. And the *write
+targets*, because a writer must say where it writes, exactly as `beliefs_graph(id)` does. Rule 1
+is about a reader enumerating what to read, and no reader does that any more.
+
+**One consequence worth flagging**: the discovery query walks `rdfs:subClassOf*` by hand, which
+the guard from #27 otherwise forbids. It is exempt for a stated reason — it runs *before* the
+closure, because it is what tells the loader which graphs the closure lands in. `inference.py`
+and `store.py` are the only two files that may, and both because they precede the thing they
+would otherwise read.
+
+## The per-agent catalog is derived, not written
+
+Every world used to carry `<…/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent`,
+once per agent, beside the roster it restated. A second list is a second thing to drift, and this
+one drifted silently — nothing failed if an agent was added and its line was not.
+
+It is a function of the roster, so `vocabulary/agora/rules.ru` derives it, building the IRI from
+the agent's own `ag:localId` exactly as `ontology.beliefs_graph()` does. That also closes the seam
+an earlier pass recorded, where a computed description stood beside a hand-written one.
+
 ## Sovereign is a role, and a user is the identity
 
 The chain does not stop at the file. It was going to — on the reasoning that the sovereign is

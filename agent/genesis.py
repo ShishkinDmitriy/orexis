@@ -155,6 +155,36 @@ WHERE {{
  }} GROUP BY ?agentId ORDER BY ?agentId"""
 
 
+def substitute(rule: str, st: Store) -> str:
+    """Fill a derivation rule's placeholders in: `$given` and `$derived`.
+
+    A rule says what it concludes; where the facts it reads are kept, and where its conclusions
+    go, are not its business. Both used to be typed out — four `USING` lines and an `INSERT
+    GRAPH`, per rule, per capability — which made every capability author maintain a copy of a
+    list, and a graph IRI is an instance that code was never supposed to name.
+
+    Same idiom as `capabilities/*/review.rq`, whose `$me` and `$evidence` are substituted for
+    exactly the same reason: a shipped rule cannot know an instance.
+
+    **`$given` is public MINUS the graph rules write to.** A derivation reads facts, never
+    conclusions — otherwise a rule could see what another rule derived and the answer would
+    depend on which package happened to load first. Excluding it here rather than trusting each
+    rule to leave it out is the difference between an invariant and a convention.
+
+    Comment lines are left alone. They talk *about* the placeholders, and substituting into
+    prose spliced a five-line `USING` block into the middle of a sentence — which SPARQL then
+    reported as a syntax error twenty lines from anything a reader had written.
+    """
+    given = "\n".join(f"USING <{g}>" for g in st.public_graphs()
+                      if g != WORLD_DERIVED_GRAPH)
+    out = []
+    for line in rule.splitlines():
+        if not line.lstrip().startswith("#"):
+            line = line.replace("$given", given).replace("$derived", f"<{WORLD_DERIVED_GRAPH}>")
+        out.append(line)
+    return "\n".join(out)
+
+
 def refresh_public(st: Store, world: Path) -> None:
     """Load the vocabulary and the world, then derive what the wiring implies.
 
@@ -186,7 +216,7 @@ def refresh_public(st: Store, world: Path) -> None:
         st.clear_graph(graph)
     inference.materialise(st)
     for rule in loader.rule_files():
-        st.update(rule.read_text())
+        st.update(substitute(rule.read_text(), st))
     # Last, because it describes the result: which graph holds what, in PROV-O, so the
     # store answers that rather than this file's comments. See agora/provenance.py.
     provenance.describe(st, world)

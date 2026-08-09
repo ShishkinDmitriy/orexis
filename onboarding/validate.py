@@ -26,7 +26,7 @@ import logging
 import sys
 
 from agent import genesis
-from agent.ontology import PROVENANCE_GRAPH, PUBLIC_GRAPHS, beliefs_graph
+from agent.ontology import PROVENANCE_GRAPH, beliefs_graph
 from agent.store import Store
 from agent.validate import conforms, graph_from
 
@@ -52,7 +52,7 @@ def validate_world(world: str) -> bool:
     # them, so `ag:PublicGraphShape` can fire. This check runs UNFOCUSED, over the whole
     # world, which is the only place a shape about graphs could ever fire: an agent's own
     # startup check is focused on its own node and would skip it silently.
-    data = graph_from(st, *PUBLIC_GRAPHS, PROVENANCE_GRAPH,
+    data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH,
                       *(beliefs_graph(a) for a in everyone))
     ok, report = conforms(data)
     print(report)

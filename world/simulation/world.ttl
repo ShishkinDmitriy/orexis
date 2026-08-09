@@ -54,16 +54,6 @@ ag:world a ag:World ; ag:currentVersion ag:version_1 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
-##########  Typed graph catalog  ##########
-
-<http://example.org/agora/graph/ontology> a ag:OntologyGraph .
-<http://example.org/agora/graph/world>    a ag:WorldGraph .
-<http://example.org/agora/graph/sensed>   a ag:SensedGraph .
-
-<http://example.org/agora/graph/beliefs/fern>      a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .
-<http://example.org/agora/graph/beliefs/tomato>    a ag:BeliefsGraph ; ag:beliefsOf ag:tomato_agent .
-<http://example.org/agora/graph/beliefs/succulent> a ag:BeliefsGraph ; ag:beliefsOf ag:succulent_agent .
-<http://example.org/agora/graph/beliefs/supplier>  a ag:BeliefsGraph ; ag:beliefsOf ag:supplier .
 
 ##########  The venue  ##########
 

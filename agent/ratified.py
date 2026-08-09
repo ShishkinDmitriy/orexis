@@ -24,7 +24,6 @@ from __future__ import annotations
 import rdflib
 
 from . import genesis
-from .ontology import PUBLIC_GRAPHS
 from .store import Store
 
 # Re-exported, because every tool that reads a ratified world reaches for these in the same
@@ -61,7 +60,7 @@ def dataset(world: str) -> rdflib.Dataset:
     genesis.refresh_public(st, world_dir(world))
 
     ds = rdflib.Dataset(default_union=True)
-    for iri in PUBLIC_GRAPHS:
+    for iri in st.public_graphs():
         turtle = st.get_graph(iri)
         if turtle.strip():
             ds.graph(rdflib.URIRef(iri)).parse(data=turtle, format="turtle")

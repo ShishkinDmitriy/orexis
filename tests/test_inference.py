@@ -23,7 +23,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from agent import genesis, inference, loader
-from agent.ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PUBLIC_GRAPHS,
+from agent.ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                             WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 from agent.store import Store, bindings
 
@@ -120,7 +120,7 @@ def test_pyshacl_agrees_with_the_materialised_closure(world):
     """
     st = _public(world)
     data = rdflib.Graph()
-    for iri in PUBLIC_GRAPHS:
+    for iri in st.public_graphs():
         ttl = st.get_graph(iri)
         if ttl.strip():
             data.parse(data=ttl, format="turtle")
@@ -160,7 +160,11 @@ def test_every_source_group_is_still_found(group):
 
 
 # The one file allowed to walk the hierarchy, because it is the file that flattens it.
-_DEFINES_THE_CLOSURE = "inference.py"
+# The two files that may walk a subclass path, and the reason is the same for both: they run
+# BEFORE the closure exists. `inference.py` computes it. `store.py` finds the graphs it will be
+# written into — discovery is what tells the loader where the entailments go, so it cannot read
+# them. Everything else runs after and must simply ask what a thing IS.
+_BEFORE_THE_CLOSURE = ("inference.py", "store.py")
 
 
 def _query_text(path: Path) -> str:
@@ -198,9 +202,12 @@ def test_no_query_walks_a_subclass_path_by_hand(path):
 
     The entailments are asserted before anything reads them now, so a hand-rolled walk is either
     redundant or a sign that someone is working around the closure instead of extending it.
+
+    Two files are exempt because they run before there is a closure to read: the one that
+    computes it, and the one that discovers which graphs it lands in.
     """
-    if path.name == _DEFINES_THE_CLOSURE:
-        pytest.skip("this is the closure")
+    if path.name in _BEFORE_THE_CLOSURE:
+        pytest.skip("runs before the closure exists — see _BEFORE_THE_CLOSURE")
     text = _query_text(path)
     for walk in ("rdfs:subClassOf*", "rdfs:subClassOf+",
                  "rdfs:subPropertyOf*", "rdfs:subPropertyOf+"):

@@ -23,25 +23,21 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 #  Both rules ask what a thing IS, literally — no `rdfs:subClassOf*` walk, because the
 #  vocabulary's entailments are asserted before any rule runs (agora/inference.py). What they
 #  cannot do is name one graph: `ag:polls` is the sovereign's and `a ag:Sensor` may be entailed,
-#  so the two facts live apart and a single `GRAPH` clause would match neither pair. `USING`
-#  merges what is GIVEN — asserted and entailed — and deliberately not what another rule derived.
+#  so the two facts live apart and a single `GRAPH` clause would match neither pair. `$given`
+#  becomes the `USING` clauses that merge what is GIVEN — asserted and entailed — and
+#  deliberately not what another rule derived. `$derived` is where conclusions land. Both are
+#  substituted by the loader: a graph IRI is an instance, and a rule should not name one.
 #
 #  The answers go to the DERIVED graph. See knowledge/decisions/who-put-the-fact-there.md.
 
 #  Keeps to an interval it is given -> the agent STATES that interval.
-INSERT { GRAPH <http://example.org/agora/graph/world/derived> {
+INSERT { GRAPH $derived {
     ?agent ag:hasCapability ag:Subscribing } }
-USING <http://example.org/agora/graph/ontology>
-USING <http://example.org/agora/graph/ontology/entailed>
-USING <http://example.org/agora/graph/world>
-USING <http://example.org/agora/graph/world/entailed>
+$given
 WHERE  { ?agent ag:polls ?sensor . ?sensor a ag:Sensor ; ag:senseMode ag:Scheduled } ;
 
 #  Announces on its own clock -> the agent can only RECEIVE, and is never asked for a cadence.
-INSERT { GRAPH <http://example.org/agora/graph/world/derived> {
+INSERT { GRAPH $derived {
     ?agent ag:hasCapability ag:Listening } }
-USING <http://example.org/agora/graph/ontology>
-USING <http://example.org/agora/graph/ontology/entailed>
-USING <http://example.org/agora/graph/world>
-USING <http://example.org/agora/graph/world/entailed>
+$given
 WHERE  { ?agent ag:polls ?sensor . ?sensor a ag:Sensor ; ag:senseMode ag:Push }

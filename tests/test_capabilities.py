@@ -8,7 +8,7 @@ to, and cannot drift from it.
 import pytest
 import rdflib
 
-from agent import loader
+from agent import genesis, loader
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_self, load_world
 from agent.capabilities.actuation import ACTUATION
@@ -71,7 +71,9 @@ def _world_with_push_sensor():
     """)
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
-        st.update(rule.read_text())
+        # Through `substitute`, exactly as `refresh_public` runs them: a rule names no graph,
+        # so running one without filling `$given` and `$derived` in is not a rule at all.
+        st.update(genesis.substitute(rule.read_text(), st))
     return st
 
 

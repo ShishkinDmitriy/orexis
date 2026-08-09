@@ -5,11 +5,25 @@ lives in. A term that belongs to one capability — `ag:Subscribing`, `ag:Biddin
 that capability's own package, so this file never grows when one is added. That is the whole
 reason it is this short.
 
-Everything here is a **T-Box term**: a class, a property, or a graph. Those are public and
-well-known, and code is written against them exactly as it is written against a function
-signature. What must never appear in code is an **instance** — no `"supplier"`, no `ag:world`,
-no `"sensors/{id}/moisture"`. Instances are discovered from the graph, starting from the
-single identifier a process is given: its own agent id.
+Everything here is a **T-Box term**: a class or a property. Those are public and well-known,
+and code is written against them exactly as it is written against a function signature. What
+must never appear in code is an **instance** — no `"supplier"`, no `ag:world`, no
+`"sensors/{id}/moisture"`. Instances are discovered from the graph, starting from the single
+identifier a process is given: its own agent id.
+
+**Graph IRIs used to be listed here as though they were terms, and they are not.**
+`ag:WorldGraph` is the term; `…/graph/world` is a particular graph, no more a term than
+`ag:fern_agent` is. The instances now live in `vocabulary/agora/ontology.ttl`, typed by class,
+and `store.public_graphs()` asks the store which ones they are — so a query means "public
+knowledge" without any Python knowing what that consists of, and a sixth public graph is a
+vocabulary edit that touches no code.
+
+What survives is the **bootstrap root** and the **write targets**, and they are different
+things. The root is `ONTOLOGY_GRAPH`: the T-Box has to be loaded somewhere before it can be
+asked anything, exactly as an agent is handed its own id before it can discover anything else.
+The write targets are named because a writer must say where it writes — `beliefs_graph(id)`
+does the same, from the one identifier it is given. Neither is a reader enumerating what to
+read, which is what rule 1 is actually about.
 
 See knowledge/decisions/capability-packages.md.
 """
@@ -75,23 +89,16 @@ SENSED_GRAPH = _GRAPH + "sensed"  # what sensors read
 PROVENANCE_GRAPH = _GRAPH + "provenance"
 _BELIEFS = _GRAPH + "beliefs/"
 
-# Everything public, in load order. This is the DEFAULT GRAPH of every query, which is what
-# lets a reader write an ordinary pattern and mean "whatever the society knows" without caring
-# which of the five happens to hold it. Naming a graph explicitly still reaches exactly that one.
+# The class a graph must be an instance of to be read by an unqualified pattern. This is a TERM,
+# and it is all the code needs: `store.public_graphs()` asks which graphs are instances of it,
+# so nothing here lists them and adding one is a vocabulary edit.
 #
-# The alternative — every reader wrapping `GRAPH <...>` around its patterns — is what the split
-# would otherwise have cost, and it is worse than verbose: a single basic graph pattern inside
-# one `GRAPH` clause must match entirely within that graph, so `?agent ag:polls ?s . ?s a
-# ag:Sensor` silently returns nothing the moment those two facts land in different graphs. The
-# failure is an empty result, not an error. See store.query and knowledge/decisions/.
-PUBLIC_GRAPHS = (
-    ONTOLOGY_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
-    WORLD_GRAPH, WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
-)
-
-# The same set for a SPARQL *update*, which takes no default-graph argument and must say it in
-# the text. `USING` is to `DELETE/INSERT ... WHERE` what `FROM` is to `SELECT`.
-USING_PUBLIC = "\n".join(f"USING <{g}>" for g in PUBLIC_GRAPHS)
+# Why it matters beyond tidiness: a single basic graph pattern inside one `GRAPH` clause must
+# match entirely within that graph, so `?agent ag:polls ?s . ?s a ag:Sensor` silently returns
+# nothing the moment those two facts land in different graphs. The default graph is what closes
+# that trap, and the trap's failure is an empty result rather than an error — which is why the
+# set must never be something a reader can forget to update.
+PUBLIC_GRAPH = term("PublicGraph")
 _REVISIONS = _GRAPH + "revisions/"
 _EVIDENCE = _GRAPH + "evidence/"
 _SUMMARIES = _GRAPH + "summaries/"
