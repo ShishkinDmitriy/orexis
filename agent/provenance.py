@@ -87,9 +87,15 @@ def file_iri(path: Path, world: Path | None = None) -> str:
 # and copies them: no name, no key, no type, and nothing invented. A world that names nobody, or
 # that names someone without saying in what capacity, simply gets no association — the shape asks
 # a graph to say where it came from, not who to blame.
+# Read through the VERSION rather than off the world, because ratifying is an act and acts are
+# what have authors. A world attributed once, for ever, could not say that alice ratified v2 of
+# what dimonina began — and that is the ordinary case the moment an installation has more than
+# one user. `ag:currentVersion` is derived (vocabulary/agora/rules.ru), so this follows the head
+# of the chain and describes whoever ratified the version actually in force.
 _ATTRIBUTION_Q = """
 SELECT ?user ?role WHERE {
-  ?w a ag:World ; prov:qualifiedAttribution ?att .
+  ?w a ag:World ; ag:currentVersion ?v .
+  ?v prov:qualifiedAttribution ?att .
   ?att prov:agent ?user ; prov:hadRole ?role .
 } LIMIT 1"""
 

@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 import sys
 
-from agent import genesis
+from agent import genesis, versions
 from agent.ontology import PROVENANCE_GRAPH, PUBLIC_GRAPHS, beliefs_graph
 from agent.store import Store
 from agent.validate import conforms, graph_from
@@ -43,6 +43,15 @@ def validate_world(world: str) -> bool:
     path = genesis.world_dir(world)
     st = Store()  # in memory: built, read, thrown away
     genesis.refresh_public(st, path)
+
+    # Before the shapes, because this asks a prior question: are these files even the ones the
+    # world claims to be? A world that validates perfectly while its version says it is something
+    # else is the failure `world_version` in the metrics exists to catch — an agent booting from
+    # edited files and reporting a version they no longer are. Shapes cannot see that; only the
+    # fingerprint can. See agora/versions.py.
+    if (wrong := versions.drift(st.query, genesis.ratified_files(path))) is not None:
+        log.error("%s is not the version it says it is.\n%s", world, wrong)
+        return False
 
     everyone = [genesis.agent_id_of(p) for p in sorted(path.glob(genesis.BELIEFS_GLOB))]
     for agent_id in everyone:

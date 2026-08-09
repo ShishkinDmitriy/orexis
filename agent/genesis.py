@@ -84,8 +84,34 @@ HARDWARE_FILES = ("hardware.ttl",)
 
 
 def society_files(world: Path) -> list[Path]:
-    """The world as an AGENT is given it: everything except the stand it runs on."""
+    """The world as an AGENT is given it: everything except the stand it runs on.
+
+    `versions.ttl` IS included, unlike `hardware.ttl`, and the difference is not taste. Hardware
+    is withheld because an agent must never learn which pin a probe is on — the absence is the
+    enforcement. A version chain is neither secret nor large, and the agent needs the version in
+    force to stamp on every observation it records, so withholding it would mean withholding
+    something it is required to cite.
+    """
     return [p for p in world_files(world) if p.name not in HARDWARE_FILES]
+
+
+# Where a world records what version it is. Kept OUT of the hash below, and that exclusion is
+# the whole reason it is a separate file: a version's fingerprint cannot cover the document that
+# states the fingerprint, because writing it would change what it describes.
+VERSIONS_FILE = "versions.ttl"
+
+
+def ratified_files(world: Path) -> list[Path]:
+    """Exactly what a version's content hash covers: the world, and the stand it runs on.
+
+    NOT `beliefs/` — those never enter the world graph, and an agent's opening beliefs are its
+    own. Were they covered, editing fern's target would bump the version stamped on every other
+    agent's observations, for a change none of them can see. `ag:underWorldVersion` would then
+    record a number that moves for reasons unrelated to the fact it is recording.
+
+    NOT `versions.ttl` — see above.
+    """
+    return [p for p in world_files(world) if p.name != VERSIONS_FILE]
 
 
 def worlds() -> list[str]:

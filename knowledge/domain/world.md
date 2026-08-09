@@ -322,10 +322,22 @@ about because the model did not know simulation existed. It knows now.
 
 # Amending
 
-Edit the files and restart the agents. Bump `ag:versionNumber` on a structural change — every
-recorded observation cites the world version it was made under, so the version is how you tell
-*when* within a world a fact was true. (*Which* world it was true in is now the dataset it is
-stored in, since a version number alone cannot distinguish two worlds that are both v1.)
+Edit the files, run **`agora-ratify <world>`**, and restart the agents. Every recorded
+observation cites the world version it was made under, so the version is how you tell *when*
+within a world a fact was true. (*Which* world it was true in is the dataset it is stored in,
+since a version number alone cannot distinguish two worlds that are both v1.)
+
+**Bumping is no longer something you remember to do.** A version records a content hash of
+`world.ttl` and `hardware.ttl`, and `agora-validate` refuses a world whose files have changed
+since it was last ratified — naming the command that fixes it. That check runs *before* the
+shapes, because it asks a prior question: a world can satisfy every shape while being something
+other than what it says it is, and no shape can see that.
+
+`agora-ratify` appends to `world/<name>/versions.ttl` and rewrites nothing, so `git log` on that
+file is the record of who ratified what and when. Which version is current is **derived** — the
+one nothing else revises — so no line ever has to be edited to move the head. Beliefs are
+deliberately outside the hash: re-authoring what one agent wants is not a change to the world
+everyone shares. See [a-version-is-a-snapshot](/decisions/a-version-is-a-snapshot.md).
 
 A start replaces `:ontology` and `:world` in each agent's own store, because those are not the
 agent's to keep. It does **not** touch `:beliefs/*` or `:sensed` — those are the agent's, and

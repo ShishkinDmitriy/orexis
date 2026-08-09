@@ -1,0 +1,24 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#  The version chain — APPEND-ONLY, and literally so: `agora-ratify` adds a node and never
+#  rewrites a line. Which version is current is not stated here at all; it is DERIVED as the
+#  one nothing else revises (vocabulary/agora/rules.ru), because a file that had to be edited
+#  to record its own head would be a pointer with history attached rather than a chain.
+#
+#  Apart from world.ttl because a version's content hash covers world.ttl and hardware.ttl, and
+#  cannot cover the file that states the hash. Mounted for agents, unlike hardware.ttl: an agent
+#  must cite the version in force on every observation it records.
+#
+#  Each entry says WHO ratified it and in what capacity — the same qualified attribution the
+#  world used to carry, now where it belongs, on the act rather than on the thing.
+#
+#  See agora/versions.py and knowledge/decisions/a-version-is-a-snapshot.md.
+
+ag:version_1 a ag:WorldVersion ;
+    ag:versionNumber 1 ;
+    ag:contentHash "sha256:9313a15e1de5d88d4a82e98bb110fc9f84cd3d697eea291721658dac3eb290b2" ;
+    prov:generatedAtTime "2026-08-09T17:35:45+00:00"^^xsd:dateTime ;
+    prov:qualifiedAttribution [
+        prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .

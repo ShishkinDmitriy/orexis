@@ -239,8 +239,11 @@ def test_the_world_references_a_user_and_declares_nothing_about_them():
     the URI is an identifier it never resolves, exactly as `ag:brokerHost` names a host it never
     introspects. Saying more here would be a world asserting facts about the installation."""
     st = _public("society")
+    # Attributed on the VERSION, not the world: ratifying is an act, and acts are what have
+    # authors — see decisions/a-version-is-a-snapshot.md.
     user = bindings(st.query(
-        "SELECT ?u WHERE { ?w a ag:World ; prov:qualifiedAttribution [ prov:agent ?u ] }"))[0]["u"]
+        "SELECT ?u WHERE { ?w a ag:World ; ag:currentVersion/prov:qualifiedAttribution "
+        "[ prov:agent ?u ] }"))[0]["u"]
     said = bindings(st.query(f"SELECT ?p WHERE {{ <{user}> ?p ?o }}"))
     assert not said, f"the world declares {[r['p'] for r in said]} about a user it only references"
 
@@ -270,9 +273,10 @@ def test_a_user_named_without_a_capacity_gets_no_association():
 
     st = _public("society")
     st.update(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?w prov:qualifiedAttribution ?a }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?w prov:wasAttributedTo <urn:someone> }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?w a ag:World ; prov:qualifiedAttribution ?a }} }}""")
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?v prov:qualifiedAttribution ?a }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?v prov:wasAttributedTo <urn:someone> }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
+            ?v a ag:WorldVersion ; prov:qualifiedAttribution ?a }} }}""")
     assert provenance.attribution_of(st) is None
 
 

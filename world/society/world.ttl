@@ -40,18 +40,14 @@ ag:local_bus a ag:MessageBus ;
     # plaintext port above. One bus, one ACL, two ways of authenticating.
     ag:brokerTlsPort 8883 .
 
-##########  World version  ##########
+##########  The world itself  ##########
 #  Found by TYPE (?w a ag:World), never by a well-known IRI.
-
-#  Who ratified it. A REFERENCE, never a declaration: the world says which user stands behind
-#  these files and says nothing else about them — no name, no key, no type. A user is
-#  installation-level (AGENTS.md rule 3) and an agent is given only its world, so the URI is an
-#  identifier it never resolves, exactly as `ag:brokerHost` names a host it never introspects.
-#  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
-#  operate what this one ratified, and a loader that inferred the capacity could never say so.
-ag:world a ag:World ; ag:currentVersion ag:version_1 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
-ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+#
+#  What is NOT here: which version this is, who ratified it, and when. Those live in
+#  versions.ttl, because a version's content hash covers THIS file and cannot also cover the
+#  document that states the hash — writing it would change what it describes. See
+#  agora/versions.py and decisions/a-version-is-a-snapshot.md.
+ag:world a ag:World .
 
 ##########  Typed graph catalog  ##########
 

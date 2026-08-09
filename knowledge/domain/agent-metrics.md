@@ -45,7 +45,7 @@ and took a bespoke script to get. An agent knows all of it directly and was not 
 | `influx_write_failures`, `sensed_write_failures` | since boot. |
 | `mqtt_connected`, `mqtt_reconnects` | a marginal link shows here before anywhere else. |
 | `uptime_s` | resets on restart, which is how a crash-looping agent announces itself. |
-| `world_version` | which world it is **running**, not which is on disk. A world can be re-ratified while agents keep running what they booted with. |
+| `world_version` | which world it is **running**, not which is on disk. A world can be re-ratified while agents keep running what they booted with. This was unreachable until `agora-ratify` existed — nothing ever bumped the number, so the one thing this metric is for could not happen. See [a-version-is-a-snapshot](/decisions/a-version-is-a-snapshot.md). |
 
 **The two failure counters are the highest-value entries.** `observation.py` caught both
 exceptions and logged them, which made lost data invisible: nothing reads a container's log until
