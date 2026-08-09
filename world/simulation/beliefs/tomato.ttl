@@ -20,3 +20,11 @@ ag:tomato_agent
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
 ag:tomato_agent ag:metricsIntervalS 60 .
+
+##  Self-review — how often at the very least, and how much room it gives itself.
+#   Omit ag:reviewIntervalS and it never revises anything: its beliefs stay exactly what
+#   genesis wrote. The commitment is the SELF constraint — narrower than the constitution's
+#   10..900 — so the figure above is a first pick rather than a floor, and this says how far
+#   the agent will let itself wander from it. See decisions/a-belief-is-a-pick-within-a-range.
+ag:tomato_agent ag:reviewIntervalS 300 .
+ag:tomato_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .

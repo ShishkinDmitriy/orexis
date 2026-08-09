@@ -45,6 +45,19 @@ class Module:
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
         """This agent's perception recorded something new. Most modules do not care."""
 
+    def on_belief_revised(self, belief_term: str, value) -> None:
+        """One of my agent's beliefs has been re-picked. Take it up, if it is one of mine.
+
+        A module reads its block once, at construction, into a frozen dataclass — which is right,
+        because a belief changing under a running module would otherwise be a belief nobody could
+        reason about. So a revision is announced rather than discovered, and acting on it is the
+        module's own business. Most never hold a revisable figure and can ignore this.
+
+        Note what is NOT here: a hook for contributing what to review. That is declared in the
+        package's `ontology.ttl` and asked of it in its `review.rq`, so a capability needs no
+        Python at all to be reviewable. See agora/review.py.
+        """
+
     def start(self) -> None:
         """Called once the connection is up."""
 

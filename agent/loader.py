@@ -19,6 +19,7 @@ Inside a package, the same four names mean the same four things every time:
     ontology.ttl   the vocabulary — what its terms mean
     shapes.ttl     the rules — what an agent must believe to hold it
     rules.ru       the derivation — what wiring GIVES an agent it
+    review.rq      the second thought — how an agent re-picks one of these beliefs
     __init__.py    the manifest — `PROVIDES = (…)`, the classes this package contributes
 
 Every one of them is optional, and what a package omits is a statement: a domain with no
@@ -66,6 +67,9 @@ KINDS = (VOCABULARY, CAPABILITIES, TRANSPORTS)
 ONTOLOGY = "ontology.ttl"
 SHAPES = "shapes.ttl"
 RULES = "rules.ru"
+# What a package would like its agents to reconsider about themselves. A SPARQL SELECT binding
+# ?term and ?value, run by the reviewer — never an update, and never Python. See agora/review.py.
+REVIEW = "review.rq"
 
 
 @dataclass(frozen=True)
@@ -158,6 +162,12 @@ def shapes_files() -> tuple[Path, ...]:
 
 def rule_files() -> tuple[Path, ...]:
     return files(RULES)
+
+
+def review_rules() -> tuple[Path, ...]:
+    """Every package's review rule, if it has one. Most do not, and that is a statement:
+    a capability with nothing worth reconsidering says so by shipping no file."""
+    return files(REVIEW)
 
 
 @lru_cache(maxsize=1)

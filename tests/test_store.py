@@ -71,6 +71,26 @@ def test_queries_use_only_declared_prefixes(path):
         )
 
 
+def test_a_review_rule_leans_on_the_stores_prefixes_like_any_other_query():
+    """The opposite rule to the one below, and the difference is who sends it.
+
+    A derivation rule is a standalone update applied to the store, so it carries its own
+    prefixes. A review rule goes through `store.query`, which prepends `PREFIXES` — so declaring
+    them again is a duplicate-prefix error, and using one that is not declared fails exactly the
+    way a hand-written query would. Same trap, other side.
+    """
+    found = loader.review_rules()
+    assert found, "no review.rq found — the glob has gone stale and this guard is checking nothing"
+    for path in found:
+        text = path.read_text()
+        assert "PREFIX " not in text.upper(), (
+            f"{path.name} declares its own prefixes, but store.query prepends them")
+        used = {m.group(1) for m in _PREFIXED.finditer(text)}
+        undeclared = used - store.DECLARED - {"http", "https", "urn"}
+        assert not undeclared, (
+            f"{path.name} uses {sorted(undeclared)}, which store.PREFIXES does not declare")
+
+
 def test_the_prefixes_a_derivation_rule_needs_are_carried_by_the_rule():
     """Rules are standalone updates, so they declare their own — and must."""
     for path in loader.rule_files():

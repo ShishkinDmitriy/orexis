@@ -36,6 +36,7 @@ import paho.mqtt.client as mqtt
 from . import config, genesis, loader
 from .beliefs import Beliefs
 from .metrics import SELF_REPORTING_BLOCK, Metrics
+from .review import Reviewer
 from .store import bindings
 from .validate import validate_agent
 from .world import MessageBus, Self, World, load_bus, load_self, load_world
@@ -89,6 +90,11 @@ class Agent:
         # so this asks exactly the right questions — and refusing to start is the enforcement.
         # It is not self-report: the consequence is not running, not a claim to be fine.
         validate_agent(self.store, agent_id, self.me.uri, self.me.capabilities)
+
+        # My second thoughts. Built after the modules, because a revision has to be announced to
+        # them; built before run(), because a test should be able to ask an agent to review
+        # itself without starting it. Nothing here touches the network or starts a thread.
+        self.reviewer = Reviewer(self)
 
     # --- how one capability reaches another, without knowing its name ---
 
@@ -249,6 +255,10 @@ class Agent:
         # wakes on a signal. Its thread is a daemon, so it cannot hold the process open either.
         if (reporting := self.beliefs.read_optional(SELF_REPORTING_BLOCK)) is not None:
             self.metrics.start(reporting.interval_s)
+        # Absence is the decision, and the reviewer holds it: an agent that states no interval
+        # never arises. Started here rather than at construction for the same reason reporting is
+        # — building an agent must start no threads, so a test can hold one without it acting.
+        self.reviewer.start()
         for module in self.modules:
             module.start()
 
@@ -260,6 +270,7 @@ class Agent:
             log.info("%s shutting down", self.id)
             for module in self.modules:
                 module.stop()
+            self.reviewer.stop()
             self.metrics.stop()
             self.mqtt.loop_stop()
             self.mqtt.disconnect()

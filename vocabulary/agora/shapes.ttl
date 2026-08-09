@@ -49,6 +49,30 @@ ag:SelfReportingShape a sh:NodeShape ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
                   sh:message "if an agent states a metrics interval it must be a positive whole number of seconds" ] .
 
+ag:SelfReviewShape a sh:NodeShape ;
+    rdfs:comment "An agent need not reconsider its own settings, but if it says how often at least, the figure must be usable. Not sh:minCount 1, for the same reason as the metrics interval: absence means it never revises anything and its beliefs stay exactly what genesis wrote, which is a decision rather than an omission. A floor of 60s because an arising re-validates the whole agent against every shape, and a society doing that every second would spend its Pi on second thoughts." ;
+    sh:targetClass ag:Agent ;
+    sh:property [ sh:path ag:reviewIntervalS ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minInclusive 60 ;
+                  sh:message "if an agent states a review interval it must be at least 60 seconds — arising is not free" ] .
+
+ag:CommitmentShape a sh:NodeShape ;
+    rdfs:comment "How much room an agent gives itself on one of its own terms. Both ends optional — a commitment may narrow one side only, and the world's figure holds on the other — but a commitment that names no term constrains nothing and is an authoring slip rather than a choice. It cannot widen anything: the reviewer intersects, so a commitment looser than the constitution is simply the constitution." ;
+    sh:targetClass ag:Commitment ;
+    sh:property [ sh:path ag:onTerm ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a commitment must say which term it is about" ] ;
+    sh:property [ sh:path ag:notBelow ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ag:notAbove ; sh:maxCount 1 ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a commitment's floor is above its own ceiling — it leaves the agent nowhere to stand" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/agora#notBelow> ?below ;
+                      <http://example.org/agora#notAbove> ?above .
+                FILTER (?below > ?above)
+            }
+        """ ] .
+
 ag:SimulatedDeviceShape a sh:NodeShape ;
     rdfs:comment "A device that is stood in for must still be reachable like a real one. Without ag:onBus it gets no credential from agora-mqtt and no service from agora-compose, so nothing would ever publish for it — and the failure is a sensor that is simply, permanently silent, which reads exactly like hardware that is not there. Which it is not. Catching it here costs nothing; catching it in a running world costs an afternoon." ;
     sh:targetSubjectsOf ag:simulatedBy ;

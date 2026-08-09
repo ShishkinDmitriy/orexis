@@ -63,7 +63,7 @@ SELF_REPORTING_BLOCK = Block(
     terms={"interval_s": "metricsIntervalS"},
 )
 
-def _tree_bytes(path: str | Path | None) -> int | None:
+def tree_bytes(path: str | Path | None) -> int | None:
     """Bytes on disk under the belief base, or None if it has none (an in-memory store).
 
     Walked rather than asked, because the store is a directory of files and no API reports its
@@ -153,6 +153,33 @@ class Metrics:
             # world can be re-ratified while agents keep running the version they booted with,
             # and nothing else at runtime would show the difference.
             "world_version": int(self.agent.world.version),
+            **self._upkeep_fields(),
+        }
+
+    def _upkeep_fields(self) -> dict:
+        """What the agent has had to do to keep its own house, and how many minds it has changed.
+
+        `belief_bytes` and `belief_triples` are reported separately above and the interesting
+        thing was always their QUOTIENT — flat triples under rising bytes is the signature of
+        write amplification, and neither number alone shows it. Now that the ratio triggers a
+        compaction, the compaction count is what tells a reader why the bytes line has teeth in
+        it, and `belief_revisions` is what tells them an agent is no longer running exactly the
+        beliefs its author wrote. See agora/upkeep.py and agora/review.py.
+        """
+        reviewer = getattr(self.agent, "reviewer", None)
+        if reviewer is None:
+            return {}  # an agent built before its reviewer, or a test that never made one
+        return {
+            "belief_compactions": reviewer.upkeep.compactions,
+            "belief_revisions": reviewer.revisions,
+            # Decisions to change nothing. A conscience that only reported the changes it made
+            # would look identical whether it was thinking hard and concluding no, or not
+            # arising at all — and those are very different states to be in.
+            "belief_reviews_declined": reviewer.declined,
+            # Revisions the shapes refused. Flat at zero says the rules are proposing only what
+            # the constitution allows; a rising line is a rule whose arithmetic disagrees with
+            # the shapes, which is a bug in the rule and not a misbehaving agent.
+            "belief_revisions_refused": reviewer.refused,
         }
 
     # --- reporting ---
@@ -208,7 +235,7 @@ class Metrics:
                 self.agent.id, self.agent_fields(),
                 {local_id: (self.readings.get(local_id, 0), self.reading_age_s(local_id))
                  for local_id in sorted(self.sensors_seen())},
-                belief_bytes=_tree_bytes(getattr(self.agent.store, "path", None)),
+                belief_bytes=tree_bytes(getattr(self.agent.store, "path", None)),
             )
         except Exception as exc:
             # Counted nowhere, deliberately: a failure to report the failure count is not worth
