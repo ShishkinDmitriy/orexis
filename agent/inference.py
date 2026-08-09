@@ -44,7 +44,6 @@ log = logging.getLogger("inference")
 # Both, because step 3 needs the transitivity steps 1 and 2 just computed — and those landed in
 # the entailed graph, not the asserted one it read them from.
 _T_BOX = f"USING <{ONTOLOGY_GRAPH}>\nUSING <{ONTOLOGY_ENTAILED_GRAPH}>"
-_T_BOX_AND_WORLD = f"{_T_BOX}\nUSING <{WORLD_GRAPH}>"
 
 # One pass, not a fixpoint loop: `+` is already the transitive closure, so asking for it directly
 # computes in one update what iterating single steps would take several rounds to reach.
@@ -74,20 +73,35 @@ CLOSURE = (
         {_T_BOX}
         WHERE  {{ ?x a ?class . ?class rdfs:subClassOf ?super FILTER(?class != ?super) }}""",
 
-    # 3. What a WORLD instance is, given classes the ontology declares. The join spans the
-    #    world and the vocabulary — and now the vocabulary's own closure as well, which is
-    #    exactly the case a single `GRAPH` clause cannot express and `USING` can.
+    # 3. What a WORLD instance is, given classes the ontology declares. The join spans the world
+    #    and the vocabulary — and the world side is NAMED rather than merged, which is the whole
+    #    correctness of this rule.
+    #
+    #    `USING` merges its graphs into one default graph, and a merged pattern cannot say which
+    #    graph it matched. So reading the vocabulary and the world together made this rule fire on
+    #    T-Box individuals as well — and since the graph catalog is itself asserted in the
+    #    vocabulary, `<…/graph/world> a ag:Graph` was entailed twice, once by rule 2 into
+    #    `ontology/entailed` and again by this one into `world/entailed`. Semantically harmless,
+    #    and it inflated a triple count that agent-metrics reports as flat while leaving "which
+    #    graph holds this entailment" without a single answer.
+    #
+    #    `USING NAMED` keeps the world reachable as itself, so the pattern can insist an instance
+    #    came from the world while still reading the vocabulary merged.
     f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?x a ?super }} }}
-        {_T_BOX_AND_WORLD}
-        WHERE  {{ ?x a ?class . ?class rdfs:subClassOf ?super FILTER(?class != ?super) }}""",
+        {_T_BOX}
+        USING NAMED <{WORLD_GRAPH}>
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?x a ?class }}
+                  ?class rdfs:subClassOf ?super FILTER(?class != ?super) }}""",
 
     # 4. And what a world statement implies under a subproperty. There are no `rdfs:subPropertyOf`
     #    axioms today — the simulated-device work removed the last one, `ag:models` under
     #    `ag:polls`, which is the very fault that opened issue #27. This is here so that
     #    reintroducing one is a vocabulary edit and not a debugging session.
     f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?x ?super ?y }} }}
-        {_T_BOX_AND_WORLD}
-        WHERE  {{ ?x ?p ?y . ?p rdfs:subPropertyOf ?super FILTER(?p != ?super) }}""",
+        {_T_BOX}
+        USING NAMED <{WORLD_GRAPH}>
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?x ?p ?y }}
+                  ?p rdfs:subPropertyOf ?super FILTER(?p != ?super) }}""",
 )
 
 # Emptied before recomputing, because they are a function of the files and not an accumulation.
