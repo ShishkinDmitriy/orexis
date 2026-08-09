@@ -80,8 +80,16 @@ Start and stop are **pause and resume**. Nothing about the agent changes across 
 the same agent, not running. That is why opening beliefs can be the agent's own to revise
 thereafter: revision survives a restart precisely because a restart is not a birth.
 
-Birth is the only event that may author beliefs, and it is the sovereign's act, not code's
-(see [genesis-process](/domain/genesis-process.md)). Death — an agent removed from the world —
+Birth is the only event that may **author** beliefs, and it is the sovereign's act, not code's
+(see [genesis-process](/domain/genesis-process.md)). It is no longer the only event that may
+change one. A belief is a **point chosen inside a range**, and what genesis wrote is the first
+pick rather than a bound: an agent that states `ag:reviewIntervalS` re-picks on its own clock,
+inside the room its own `ag:commits` leaves it. That is a fourth event, and it belongs to the
+agent alone — not to start, not to stop, and not to the sovereign — which is why the table above
+is unchanged by it. See
+[a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md).
+
+Death — an agent removed from the world —
 is unmodelled; [genesis](/decisions/genesis.md) flags it as the hard case in a destructive
 migration, because a wallet and outstanding commitments have to go somewhere.
 

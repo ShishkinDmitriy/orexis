@@ -176,8 +176,17 @@ still interrupts nothing.
 
 `agora-validate` and `pytest tests` are the two gates. Both must pass before a change is done.
 
-Beliefs are the agent's: written once at birth, never touched by start or stop. Anything that
-would reset them on a restart is a bug, not a convenience.
+Beliefs are the agent's: **authored** once at birth, never touched by start or stop. Anything
+that would reset them on a restart is a bug, not a convenience.
+
+But a belief is a **point chosen inside a range**, not a constant, and what genesis wrote is the
+first pick rather than a bound. An agent that states `ag:reviewIntervalS` re-picks on its own
+clock, inside the room its own `ag:commits` leaves it — so the author's job is to constrain well,
+not to guess well. Which terms may move is one triple in the owning package's `ontology.ttl`; a
+review rule is `capabilities/<name>/review.rq`, SPARQL and never Python; and a revision is
+legitimate exactly when `validate_agent` still passes, which is the same call the agent makes at
+boot. An agent that states no interval never reviews itself. See
+[a-belief-is-a-pick-within-a-range](knowledge/decisions/a-belief-is-a-pick-within-a-range.md).
 
 ## Two traps worth knowing
 

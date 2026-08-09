@@ -257,6 +257,25 @@ class SubscribingModule(PerceptionModule):
             if self.drivers[sensor.uri]:
                 self.drivers[sensor.uri].sense_now(sensor)
 
+    def on_belief_revised(self, belief_term: str, value) -> None:
+        """Take up a re-picked interval at once, rather than at the next restart.
+
+        Re-read rather than patched, so there is exactly one path by which this module learns
+        what it believes. Then re-aim every board from the reading I already hold: the
+        alternative is waiting out the OLD cadence, which after a relaxation is up to a quarter
+        of an hour of the agent knowingly running a policy it has just abandoned.
+        """
+        if belief_term.rsplit("#", 1)[-1] not in SUBSCRIBING_BLOCK.terms.values():
+            return
+        self.beliefs = self.agent.beliefs.read(SUBSCRIBING_BLOCK)
+        for sensor in self.sensors:
+            reading = self.agent.beliefs.current_reading(sensor.subject, sensor.observes)
+            if reading is not None:
+                self.set_cadence(
+                    sensor,
+                    self.cadence_for(sensor.subject, sensor.observes, reading.value),
+                    self.agent.annotations(sensor.subject, sensor.observes, reading.value))
+
 
 class ListeningModule(PerceptionModule):
     """ag:Listening — derived from being wired to a push-mode sensor.

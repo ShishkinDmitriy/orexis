@@ -95,3 +95,30 @@ ag:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd
     rdfs:label "maximum sleep seconds" .
 
 ag:PerceptionCapability ag:minSleepS 10 ; ag:maxSleepS 900 .
+
+#################  Re-picking the comfortable cadence  #################
+# ONE triple makes a belief revisable, and it names the two figures already stated above. The
+# reviewer finds it by asking the merged T-Box — nothing lists it and no Python knows it, which
+# is what keeps this a fact about the TERM rather than a fact about anyone holding it.
+#
+# Only the comfortable end. `cadence_for` interpolates from it toward ag:fastSleepS by urgency,
+# so a thirsty agent still watches at its fastest whatever a review concluded: attention follows
+# need first, and follows whether looking is telling it anything only inside the room need
+# leaves. That composition is the whole reason it is safe to let an agent slow itself down.
+
+ag:slowSleepS a ag:RevisableBelief ;
+    ag:revisableToward ag:minSleepS , ag:maxSleepS .
+
+# How still counts as still, and how much evidence is enough to say so. Constitutional rather
+# than private for the same reason the sleep bounds are: left to each agent, these are the two
+# numbers a lazy one tunes until it is entitled to stop looking.
+
+ag:steadyFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+    rdfs:label "steady fraction" ;
+    rdfs:comment "How far a reading may range, as a fraction of its own mean, and still count as unchanging. Relative rather than absolute because one agent's property is a fraction and another's is degrees, and a threshold in either unit is nonsense in the other." .
+
+ag:reviewWindow a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+    rdfs:label "review window" ;
+    rdfs:comment "How many readings must have accumulated before an agent may draw a conclusion about them. Guards the failure this mechanism could otherwise cause: two identical readings are a coincidence, and an agent that relaxed its attention on the strength of them would be reasoning from noise." .
+
+ag:PerceptionCapability ag:steadyFraction 0.02 ; ag:reviewWindow 20 .

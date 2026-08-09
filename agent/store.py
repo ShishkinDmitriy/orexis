@@ -49,6 +49,23 @@ DECLARED = frozenset(
 )
 
 
+# How many decimal places a derived number is written with. Well under the eighteen the store's
+# fixed-point xsd:decimal can hold, and far more than a statistic deserves.
+#
+# This is not tidiness. A Python float divided out to full precision produces lexical forms like
+# `0.0039920159680638745` — nineteen fractional digits — which the store accepts, returns, and
+# reports the datatype of quite happily, and then FAILS TO COMPARE: every `=` and `>` against it
+# raises, and a SPARQL `BIND` whose expression raises leaves its variable unbound while keeping
+# the row. So a rule silently produced a solution binding nothing instead of an error, which is
+# the most expensive shape a bug can take. Round on the way in and the whole class is gone.
+PLACES = 6
+
+
+def decimal(value: float) -> str:
+    """A derived number as a SPARQL literal the store can actually do arithmetic on."""
+    return f'"{value:.{PLACES}f}"^^xsd:decimal'
+
+
 def bindings(results: dict) -> list[dict]:
     """The rows of a SPARQL-JSON result, flattened to {var: value-string}."""
     rows = results.get("results", {}).get("bindings", [])
@@ -112,6 +129,19 @@ class Store:
         """Read a ratified file straight into a graph, without going through a string."""
         self._store.load(path=str(path), format=ox.RdfFormat.TURTLE,
                          to_graph=ox.NamedNode(graph_iri))
+
+    def optimize(self) -> None:
+        """Compact the store. Blocking, and worth it only when something says it is needed.
+
+        The belief base is an LSM tree, and every reading is a DELETE followed by an INSERT — so
+        each one appends a new version plus a tombstone, and the old versions are reclaimed only
+        by compaction. Compaction is size-triggered, and a few hundred triples never approach
+        any threshold: the file grows for ever while the triple count does not move. Nothing
+        reclaimed here is data, so nothing is lost by asking for it explicitly.
+
+        See knowledge/decisions/a-belief-is-a-pick-within-a-range.md and issue #45.
+        """
+        self._store.optimize()
 
     def __len__(self) -> int:
         return len(self._store)

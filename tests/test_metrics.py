@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from agent.beliefs import BeliefError, Block
-from agent.metrics import SELF_REPORTING_BLOCK, Metrics, SelfReportingBeliefs, _tree_bytes
+from agent.metrics import SELF_REPORTING_BLOCK, Metrics, SelfReportingBeliefs, tree_bytes
 
 from conftest import build_agent
 
@@ -74,8 +74,8 @@ def test_reporting_without_a_writer_is_silent(agent):
 
 
 def test_an_in_memory_store_has_no_size_on_disk():
-    assert _tree_bytes(None) is None
-    assert _tree_bytes("/nonexistent/belief/base") is None
+    assert tree_bytes(None) is None
+    assert tree_bytes("/nonexistent/belief/base") is None
 
 
 # --- the belief, whose absence is a decision -------------------------------------------------

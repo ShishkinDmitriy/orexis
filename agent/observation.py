@@ -18,6 +18,7 @@ from __future__ import annotations
 from . import config
 from .influx_writer import InfluxWriter
 from .sensed_writer import SensedWriter
+from .summary import Summaries
 
 
 def _short(uri: str) -> str:
@@ -49,6 +50,11 @@ class Observations:
             bucket,
         )
         self.sensed = SensedWriter(agent.store)
+        # What the readings COME TO, beside the latest one. Here rather than in a capability
+        # for the same reason the writer is: an agent that comes to know a value summarises it
+        # whatever obtained the number, and two capabilities keeping their own running totals
+        # would let one agent hold two accounts of its own past.
+        self.summaries = Summaries(agent.store, agent.id)
 
     def close(self) -> None:
         self.influx.close()
@@ -89,6 +95,14 @@ class Observations:
             )
         except Exception as exc:
             log.error("sensed write failed: %s", exc)
+            self.agent.metrics.sensed_failed()
+        try:
+            self.summaries.record(sensor.subject, sensor.observes, value)
+        except Exception as exc:
+            # Counted with the sensed failures it sits beside: both are the belief base refusing
+            # a write, and a reading whose summary was lost is a reading the agent cannot later
+            # reason about even though it acted on it at the time.
+            log.error("summary write failed: %s", exc)
             self.agent.metrics.sensed_failed()
 
         if self.me.event_topic:

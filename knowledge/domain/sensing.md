@@ -134,6 +134,15 @@ lives with the agent (`cadence_for`), never on the board — same reason the ban
 polling agent would read the same two figures: they describe an interval either way, and only
 whose timer runs it changes.
 
+**The comfortable end is a pick, not a constant.** `ag:slowSleepS` is what its author chose
+before the agent had seen a reading; an agent that watches a probe report the same value for a
+window may re-pick it, inside the room its own `ag:commits` leaves — and must come back the
+moment the readings move again. Only the comfortable end, so a thirsty plant is still watched at
+`ag:fastSleepS` whatever a review concluded: desire-relative is the first thing and this is the
+second. A reading that never changes **at all** argues for *tightening*, because an instrument
+that has not moved to the last bit is likelier broken than the world it measures is perfectly
+still. See [a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md).
+
 Bounds (`MIN_SLEEP_S` / `MAX_SLEEP_S`) are **constitutional** and enforced in *three* places:
 the SHACL shapes reject beliefs that exceed them, the agent clamps, and the firmware clamps
 again on receipt. Autonomy over attention, never the freedom to sleep through a drought.

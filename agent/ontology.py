@@ -50,8 +50,43 @@ ONTOLOGY_GRAPH = _GRAPH + "ontology"  # the T-Box, every package merged
 WORLD_GRAPH = _GRAPH + "world"  # topology + composed capabilities: public, versioned
 SENSED_GRAPH = _GRAPH + "sensed"  # what sensors read
 _BELIEFS = _GRAPH + "beliefs/"
+_REVISIONS = _GRAPH + "revisions/"
+_EVIDENCE = _GRAPH + "evidence/"
+_SUMMARIES = _GRAPH + "summaries/"
 
 
 def beliefs_graph(agent_id: str) -> str:
-    """The graph holding ONE agent's private parameters. Also its write boundary."""
+    """The graph holding ONE agent's private parameters. Also its write boundary.
+
+    Write boundary in the strong sense now: a review may write here and nowhere else. It reads
+    the world as constraint and `:sensed` as evidence, and changes neither — which is what makes
+    the four graph classes above load-bearing rather than documentation.
+    """
     return _BELIEFS + agent_id
+
+
+def revisions_graph(agent_id: str) -> str:
+    """What this agent has decided about itself, and when each is worth revisiting.
+
+    Apart from the beliefs graph on purpose. A belief has exactly one value — every capability's
+    shapes say so with `sh:maxCount 1` — so a decision cannot live beside the value it replaced
+    without making the agent fail its own validation.
+    """
+    return _REVISIONS + agent_id
+
+
+def evidence_graph(agent_id: str) -> str:
+    """The reviewer's scratch, rebuilt at every arising. Nothing else ever reads it."""
+    return _EVIDENCE + agent_id
+
+
+def summaries_graph(agent_id: str) -> str:
+    """What this agent's readings came to — running totals, not readings.
+
+    Apart from `:sensed` deliberately, and the separation is what makes the write boundary
+    checkable: `:sensed` is the measurement record, written by whatever observed and NEVER by a
+    review, while a summary is the agent's own derived account of its past and is rolled over
+    every time it arises. Keeping them in one graph would have made "a review does not touch the
+    sensed record" untestable, and an invariant nothing can check is a comment.
+    """
+    return _SUMMARIES + agent_id
