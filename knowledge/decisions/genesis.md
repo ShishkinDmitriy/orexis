@@ -135,11 +135,6 @@ amendment. It is used two ways, and the distinction matters:
 - **The world graph carries it as identity** — the ratified topology *is* world-vN.
   When amended, the new structure is written as v(N+1) and the prior version is kept as an
   **immutable snapshot**, not overwritten. The sequence of versions is append-only.
-  **This is now mechanised** rather than described: `agora-ratify` appends a node linked by
-  `prov:wasRevisionOf` and rewrites nothing, the snapshots are git's, and a content hash makes an
-  amendment that skipped ratification fail `agora-validate`. Retraction needs no vocabulary,
-  because a snapshot expresses it by omission. See
-  [a-version-is-a-snapshot](/decisions/a-version-is-a-snapshot.md).
 - **State references it as provenance** — each runtime attestation (a moisture reading)
   stamps *"sensed under world-vN"*. The reading still versions by its **timestamp** (it is a
   time series); the world-version records *which structure was in force* when it was recorded,

@@ -108,19 +108,11 @@ ag:Sovereign a prov:Role ; rdfs:label "Sovereign" ;
 ag:World a owl:Class ; rdfs:label "World" ;
     rdfs:comment "The ratified world produced by genesis. Found by TYPE, never by a well-known IRI." .
 ag:WorldVersion a owl:Class ; rdfs:label "World version" ;
-    rdfs:comment "One ratified version of the world's topology. The chain is append-only, and is now MECHANISED rather than merely claimed: `agora-ratify` adds a node linked to its predecessor by prov:wasRevisionOf, and nothing ever rewrites one. A version is a SNAPSHOT — the world as it stood, entire — so retraction needs no vocabulary at all: a device that moved is absent from the later version, and which version introduced a triple is computable rather than stated. The bodies live in git; what a world carries is the lineage. See agora/versions.py." .
-
+    rdfs:comment "One ratified version of the world's topology; the chain is append-only." .
 ag:currentVersion a owl:ObjectProperty ; rdfs:domain ag:World ; rdfs:range ag:WorldVersion ;
-    rdfs:label "current version" ;
-    rdfs:comment "DERIVED, never stated: the head of the chain is the version nothing else revises, computed by this package's rules.ru into the derived graph. Stating it would mean rewriting a line on every ratification, which is exactly what an append-only chain must not require." .
-
+    rdfs:label "current version" .
 ag:versionNumber a owl:DatatypeProperty ; rdfs:domain ag:WorldVersion ; rdfs:range xsd:integer ;
-    rdfs:label "version number" ;
-    rdfs:comment "Ordering, and the author's claim that this is a new version. It is NOT what builds the chain — prov:wasRevisionOf is — so a number that disagrees with the links is a typo the shapes catch rather than a second source of truth." .
-
-ag:contentHash a owl:DatatypeProperty ; rdfs:domain ag:WorldVersion ; rdfs:range xsd:string ;
-    rdfs:label "content hash" ;
-    rdfs:comment "A fingerprint of the files this version covers, computed at ratification and checked by agora-validate. It exists because the failure mode is not the model but discipline: someone edits a world and forgets to ratify, and every agent then reports a version its world no longer has. Over RAW BYTES, including each file's name, because the question is 'is what is on disk what was ratified' and not 'does it still mean the same' — under the second, a world could be reformatted and comments rewritten while still claiming to be a version it no longer is." .
+    rdfs:label "version number" .
 ag:underWorldVersion a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "under world version" ;
     rdfs:comment "The world-version in force when this fact was recorded (provenance)." .

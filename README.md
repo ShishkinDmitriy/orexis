@@ -145,8 +145,7 @@ One-time setup, in order:
 
 ```bash
 agora-keygen society   # that world's host + clearing signing keys, once
-agora-ratify society   # mint a version: fingerprint the world, record who ratified it
-agora-validate society # is it still that version? then check it against every shape
+agora-validate society # build the world from its files and check it
 ```
 
 [`world/`](world/) holds one directory per ratified world, each complete on its own:
@@ -321,8 +320,7 @@ cadence that watches more closely when thirsty, nobody sleeping past the constit
 ceiling, and every device stating where it is reachable.
 
 ```bash
-agora-validate         # the content hash first, then every package's shapes over
-                       # :world + :beliefs/* + :sensed
+agora-validate         # every package's shapes over :world + :beliefs/* + :sensed
 ```
 
 ## What's next

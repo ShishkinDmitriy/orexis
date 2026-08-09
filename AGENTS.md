@@ -121,8 +121,7 @@ stops being theoretical.
 ```bash
 source .venv/bin/activate
 
-agora-ratify <world>   # mint a version: fingerprint what the world says, record who ratified
-agora-validate <world> # is it still the version it says it is? then hold it to every shape
+agora-validate <world> # build the world from its files and hold it to every package's shapes
 agora-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.
   agora-influx <world>      #   a bucket per agent, and a token that opens only it
   agora-mqtt <world>        #   a credential per principal, and the broker ACL, derived

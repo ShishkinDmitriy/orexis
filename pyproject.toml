@@ -37,10 +37,6 @@ agora-agent = "agent.runtime:main"
 # credentials should not touch the other's.
 agora-onboard = "onboarding.onboard:main"
 agora-validate = "onboarding.validate:main"
-# The sovereign's act, and the only thing that mints a version. Here rather than in `agent/`
-# for the same reason `create_keypair` is: an agent able to version its own world could rewrite
-# the terms it is held to.
-agora-ratify = "onboarding.ratify:main"
 agora-influx = "onboarding.influx:main"
 agora-mqtt = "onboarding.mqtt:main"
 agora-compose = "onboarding.compose:main"
