@@ -17,7 +17,7 @@ def agent(monkeypatch):
 # --- it loads the modules its hardware implies, and no others --------------
 
 def test_plant_agent_runs_perception_and_bidding(agent):
-    assert {m.name for m in agent("fern").modules} == {"subscribing", "bidding"}
+    assert {m.name for m in agent("fern").modules} == {"subscribing", "bidding", "review"}
 
 
 def test_supplier_runs_hosting_and_actuation(agent):

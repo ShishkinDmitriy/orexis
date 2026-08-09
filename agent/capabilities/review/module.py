@@ -1,15 +1,25 @@
-"""An agent re-picking a belief, inside the room it committed to.
+"""An agent re-picking a belief, inside the room it was given.
 
 A belief is not a constant. It is a **point chosen inside a range** — a computer needs one value
 to act on, so genesis picks one and the agent lives with it. What genesis wrote is therefore the
 *first pick* and nothing more. Treating it as a bound confuses a choice with a constraint, and
 leaves the author's real job — saying how much room the agent has — unwritten.
 
-The room comes from three constraints, intersected:
+The room comes from three constraints, intersected, and **all three are public**:
 
-    WORLD   what the society allows at all — figures the capability family states
-    SENSOR  what the equipment can do — stated on a device (declared; nothing states one yet)
-    SELF    what this agent commits to — `ag:commits`, in its own beliefs, narrower than the world
+    CONSTITUTION  what the society allows at all — figures the capability family states
+    HARDWARE      what the equipment can do — stated on a device (declared; nothing states one yet)
+    MANDATE       what THIS agent's world allows it — `ag:commits`, narrower than the constitution
+
+The third was briefly private, on the reasoning that how far an agent will let itself move is its
+own opinion. That has it backwards: a range is what an agent is *allowed*, imposed by whoever
+ratified its world, and **an agent constraining itself is not a constraint, it is a choice**. The
+choice — the pick inside the range — is what stays private. Range public, value private.
+
+**And the mandate is what grants this capability at all.** An agent given room to move must be
+able to use it, so `ag:commits` is the premise the derivation rule reads (see `rules.ru`). An
+agent with no mandate does not have this module, keeps no summaries, and never arises: the
+mechanism is absent rather than idle, which is what a deployment wanting no drift should get.
 
 Four rules make this a re-pick rather than a drift.
 
@@ -35,13 +45,14 @@ could have accumulated. Checking sooner is reading the same evidence twice. Reco
 is what separates reflection from a twitch: without it the same question is re-argued at every
 arising and the agent can never notice it has said no eleven times.
 
-**Absence is meaningful.** An agent that states no `ag:reviewIntervalS` never reviews itself and
-its beliefs are exactly what genesis wrote.
-
 The one thing this may write is its own beliefs graph. It reads the world as constraint and
 `:sensed` as evidence, and changes neither.
 
-See knowledge/decisions/a-belief-is-a-pick-within-a-range.md.
+**Belief-base upkeep is not here.** Compacting a bloated store is not a choice an agent makes,
+so it stayed in the kernel on its own clock when this became optional — otherwise an agent with
+no mandate would silently stop compacting and undo the fix for #45. See `agora/upkeep.py`.
+
+See knowledge/decisions/a-capability-is-granted-by-latitude.md.
 """
 
 from __future__ import annotations
@@ -51,34 +62,23 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from . import loader
-from .beliefs import Block
-from .ontology import ONTOLOGY_GRAPH, beliefs_graph, evidence_graph, revisions_graph, term
-from .store import bindings, decimal
+from agent import loader
+from agent.module import Module
+from agent.ontology import beliefs_graph
+from agent.store import bindings, decimal
+from agent.validate import BeliefsInvalid, validate_agent
+
+from .beliefs import REVIEW_BLOCK
+from .graphs import evidence_graph, revisions_graph
 from .summary import Summaries
-from .upkeep import BeliefBaseUpkeep
-from .validate import BeliefsInvalid, validate_agent
+from .terms import RECKONING
 
 log = logging.getLogger("review")
-
-SELF_REVIEW = term("SelfReview")
 
 # What a `review.rq` may say instead of an instance identifier. The rule is shipped in a package
 # and must name no agent and no graph of one, so the three things it cannot know are substituted
 # before it runs. Everything else it needs it discovers, exactly as code here does.
 ME, EVIDENCE, BELIEFS = "$me", "$evidence", "$beliefs"
-
-
-@dataclass(frozen=True)
-class SelfReviewBeliefs:
-    interval_s: int
-
-
-SELF_REVIEW_BLOCK = Block(
-    capability=SELF_REVIEW,
-    cls=SelfReviewBeliefs,
-    terms={"interval_s": "reviewIntervalS"},
-)
 
 
 @dataclass(frozen=True)
@@ -125,33 +125,82 @@ def world_ranges(query) -> dict[str, Range]:
     return {t: Range(t, min(vs), max(vs)) for t, vs in seen.items() if vs}
 
 
-class Reviewer:
-    """The agent's second thoughts. Built always; arises only when told to."""
+class ReviewModule(Module):
+    """The agent's second thoughts — `ag:Reckoning`, derived from having been given room.
+
+    A module rather than a fixture of the runtime, because the judgement is the replaceable part:
+    an implementation that asked a model instead of running a rule would be a sibling of this
+    class registered in the same `PROVIDES`, and nothing else would move.
+    """
+
+    CAPABILITY = RECKONING
+    name = "review"
 
     def __init__(self, agent):
-        self.agent = agent
-        self.upkeep = BeliefBaseUpkeep(agent)
+        super().__init__(agent)
         self.summaries = Summaries(agent.store, agent.id)
         self.rules = loader.review_rules()
         self.revisions = self.declined = self.refused = 0
-        # The floor between two arisings, read here rather than handed in at start(), because it
-        # bounds the HORIZON as well as the timer — and a reviewer that has not been started can
-        # still be asked to review, which is exactly what a test does. Zero means the agent
-        # stated none and never reviews itself at all.
-        stated = agent.beliefs.read_optional(SELF_REVIEW_BLOCK)
-        self.interval_s = stated.interval_s if stated else 0
+        # The floor between two arisings. Required now, not optional: an agent holding this
+        # module was granted a mandate, and one that may re-pick must say how often it will look.
+        # Absence used to mean "never review", which put a public ability's switch in a private
+        # file — the mandate is the switch now, and it is in the world where a shape can see it.
+        self.interval_s = agent.beliefs.read(REVIEW_BLOCK).interval_s
         self._timer: threading.Timer | None = None
         self._stopped = False
+
+    # --- what I fold in as it arrives ------------------------------------------------------
+
+    def on_reading_recorded(self, subject_uri: str, observed_property: str,
+                            value: float) -> None:
+        """Keep the running account this module's own judgement is made from.
+
+        Through the hook every module already gets, rather than by the ingest path calling into
+        a capability. Two things follow that are worth having: the kernel does not import a
+        package that may not be installed, and an agent given no room to move accumulates
+        nothing — because there is nothing it could conclude from it.
+        """
+        try:
+            self.summaries.record(subject_uri, observed_property, value)
+        except Exception as exc:
+            # A lost summary is lost grounds for a later judgement, not a lost reading — the
+            # measurement is already recorded by the time this runs.
+            self.log.error("summary write failed: %s", exc)
+
+    def reports(self) -> dict:
+        """What this module wants in its agent's health series.
+
+        Contributed rather than read out of it: `metrics.py` cannot name a package that may not
+        be installed, and an agent with no mandate should be silent on these rather than report
+        three zeroes it could never move.
+        """
+        return {
+            "belief_revisions": self.revisions,
+            # Decisions to change nothing. A conscience that only reported the changes it made
+            # would look identical whether it was thinking hard and concluding no, or not
+            # arising at all — and those are very different states to be in.
+            "belief_reviews_declined": self.declined,
+            # Revisions the shapes refused. Flat at zero says the rules are proposing only what
+            # the constitution allows; a rising line is a rule whose arithmetic disagrees with
+            # the shapes, which is a bug in the rule and not a misbehaving agent.
+            "belief_revisions_refused": self.refused,
+        }
 
     # --- the room a term has -------------------------------------------------------------
 
     def ranges(self) -> dict[str, Range]:
-        """World, narrowed by what this agent committed to. Sensor constraints when any exist."""
+        """The constitution, narrowed by this agent's mandate. Hardware limits when any exist.
+
+        The mandate is read from the world rather than from beliefs, which is what lets the
+        derivation see it — a capability granted by a private fact could not be derived at all.
+        No graph is named: a commitment is the sovereign's and its term may be entailed, so the
+        two can live apart and the default graph is what merges them.
+        """
         out = world_ranges(self.agent.store.query)
         for row in bindings(self.agent.store.query(f"""
-SELECT ?term ?below ?above WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
+SELECT ?term ?below ?above WHERE {{
   <{self.agent.me.uri}> ag:commits ?c . ?c ag:onTerm ?term .
-  OPTIONAL {{ ?c ag:notBelow ?below }} OPTIONAL {{ ?c ag:notAbove ?above }} }} }}""")):
+  OPTIONAL {{ ?c ag:notBelow ?below }} OPTIONAL {{ ?c ag:notAbove ?above }} }}""")):
             held = out.get(row["term"])
             if held is None:
                 # A commitment about a term nothing declares revisable. Said out loud rather
@@ -238,11 +287,7 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
     # --- one arising -----------------------------------------------------------------------
 
     def review(self) -> None:
-        """Keep the house, close the window, look at what accumulated, decide. Never raises."""
-        try:
-            self.upkeep.consider()
-        except Exception as exc:
-            log.error("%s: upkeep failed: %s", self.agent.id, exc)
+        """Close the window, look at what accumulated, decide. Never raises."""
         try:
             self.summaries.roll()
             ranges = self.ranges()
@@ -377,10 +422,7 @@ SELECT (MIN(?due) AS ?soonest) WHERE {{ GRAPH <{revisions_graph(self.agent.id)}>
     # --- lifecycle ---------------------------------------------------------------------------
 
     def start(self) -> None:
-        """Begin arising. A no-op for an agent that stated no interval — absence is the decision,
-        and it is checked here so there is one place that knows what silence means."""
-        if not self.interval_s:
-            return
+        """Begin arising. Reached only by an agent the world gave room to move."""
         log.info("%s: reviewing itself, no sooner than every %ss",
                  self.agent.id, self.interval_s)
         self._schedule(float(self.interval_s))

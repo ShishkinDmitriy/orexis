@@ -25,7 +25,7 @@ equality with the minimum is the one thing a variance cannot express. A variance
 zero for a nearly-still world and *is* zero only for an instrument that has not moved at all,
 and those two cases want opposite responses.
 
-See knowledge/decisions/a-belief-is-a-pick-within-a-range.md.
+See knowledge/decisions/a-capability-is-granted-by-latitude.md.
 """
 
 from __future__ import annotations
@@ -34,8 +34,9 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from .ontology import summaries_graph
-from .store import Store, bindings, decimal
+from agent.store import Store, bindings, decimal
+
+from .graphs import summaries_graph
 
 # How many completed windows an agent keeps behind the one it is filling. Constant, so the
 # belief base stays a fixed size — and more than one, so a rule can tell "steady since I last
@@ -102,7 +103,12 @@ class Window:
 
 
 class Summaries:
-    """One agent's running account of everything it senses. Kernel, like the writer it follows."""
+    """One agent's running account of everything it senses.
+
+    This capability's, not the kernel's: a summary exists as evidence for a judgement, so an
+    agent given no room to make one keeps none. Fed through `Module.on_reading_recorded`, so the
+    ingest path never learns that summaries exist.
+    """
 
     def __init__(self, store: Store, agent_id: str):
         self.store = store

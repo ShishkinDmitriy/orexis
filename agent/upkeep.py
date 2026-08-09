@@ -10,12 +10,20 @@ dataset whose size never changed.
 **In the kernel, not a capability**, by exactly the argument `metrics.py` makes: every agent has
 a belief base whatever else it can do, and a rule granting a "please maintain yourself"
 capability would fire for everybody, which is the kernel wearing a disguise. What is a capability
-is the ability to review something an agent *chose*; keeping your own house is not a choice.
+is the ability to reconsider something an agent *chose* — and the test for one is whether the
+*how* could differ. Reviewing can be done by rule or by asking a model; compacting cannot be done
+two ways. **Keeping your own house is not a choice, so it is not a capability.**
+
+**And it holds its own clock, for the same reason.** It used to run on the reviewer's, which was
+fine while every agent had a reviewer. Self-review is a capability now, granted only to an agent
+the world gave room to move — so an agent without a mandate would have stopped compacting
+silently, undoing #45 for exactly the agents nobody was watching. A thing every agent does needs
+a timer no capability owns.
 
 **The ratio that revealed the problem is the ratio that triggers the remedy.** `metrics.py`
 already computes both numbers on its own clock, and neither alone shows anything: the triples are
 flat (correct) and the bytes rise (alarming only if you know the triples are flat). Their quotient
-is the whole signal, and it is the trigger. See knowledge/decisions/a-belief-is-a-pick-within-a-range.md and issue #45.
+is the whole signal, and it is the trigger. See knowledge/decisions/a-capability-is-granted-by-latitude.md and issue #45.
 
 The threshold lives in the ontology rather than here, for the same reason the cadence bounds do:
 it is what this society tolerates, not how this file happens to be written.
@@ -27,21 +35,28 @@ import logging
 import time
 
 from .metrics import tree_bytes
+from .module import Timer
 from .store import bindings
 
 log = logging.getLogger("upkeep")
 
-# Read from the T-Box, never compiled in. Hangs off ag:SelfReview because that is the term the
-# whole review mechanism is named by — the same shape as ag:PerceptionCapability holding the
-# sleep bounds for every transport that will ever perceive.
+# How often the ratio is looked at. Slow on purpose: compaction is a blocking full rewrite, and
+# the growth it answers is measured in megabytes per DAY. Checking hourly would be checking
+# sixty times more often than the signal can move.
+EVERY_S = 3600
+
+# Read from the T-Box, never compiled in. It hangs off `ag:BeliefBase` — a fact about the store
+# every agent keeps, which is where it had to move when the review vocabulary left the kernel:
+# the kernel cannot reference a term a capability owns, and a capability that may not be
+# installed cannot be what says how large a belief base may get.
 _RATIO_Q = """
 SELECT ?ratio WHERE {
-  GRAPH ?g { ag:SelfReview ag:maxBytesPerTriple ?ratio }
+  GRAPH ?g { ag:BeliefBase ag:maxBytesPerTriple ?ratio }
 } LIMIT 1"""
 
 
 class BeliefBaseUpkeep:
-    """Compact when the store is mostly write amplification. Runs on the reviewer's clock."""
+    """Compact when the store is mostly write amplification. Runs on its own clock."""
 
     name = "belief-base"
 
@@ -54,6 +69,7 @@ class BeliefBaseUpkeep:
                 "than its code")
         self.max_bytes_per_triple = int(rows[0]["ratio"])
         self.compactions = 0
+        self._timer: Timer | None = None
 
     def ratio(self) -> float | None:
         """Bytes on disk per triple held, or None for a store that has no disk.
@@ -93,3 +109,23 @@ class BeliefBaseUpkeep:
         log.info("%s: belief base compacted in %.1fs — %.0f bytes/triple, now %.0f",
                  self.agent.id, time.monotonic() - started, ratio, after if after else 0)
         return True
+
+    # --- its own clock ---------------------------------------------------------------------
+
+    def start(self) -> None:
+        """Begin looking. Started from `run()` like every other timer, so building an agent
+        starts no threads and a test can hold one without it acting."""
+        self._timer = Timer(EVERY_S, self._tick)
+        self._timer.start()
+
+    def _tick(self) -> None:
+        try:
+            self.consider()
+        except Exception as exc:
+            # Upkeep failing is a reason to say so, not a reason to stop being an agent — and a
+            # timer whose callback raises would stop rescheduling, so the guard is the clock's.
+            log.error("%s: upkeep failed: %s", self.agent.id, exc)
+
+    def stop(self) -> None:
+        if self._timer:
+            self._timer.stop()

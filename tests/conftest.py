@@ -168,6 +168,7 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     agent.hosting = lambda: agent.module("hosting")
     agent.bidding = lambda: agent.module("bidding")
     agent.subscribing = lambda: agent.module("subscribing")
+    agent.reviewing = lambda: agent.module("review")
     return agent
 
 

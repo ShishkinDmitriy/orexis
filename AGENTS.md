@@ -203,13 +203,16 @@ Beliefs are the agent's: **authored** once at birth, never touched by start or s
 that would reset them on a restart is a bug, not a convenience.
 
 But a belief is a **point chosen inside a range**, not a constant, and what genesis wrote is the
-first pick rather than a bound. An agent that states `ag:reviewIntervalS` re-picks on its own
-clock, inside the room its own `ag:commits` leaves it — so the author's job is to constrain well,
-not to guess well. Which terms may move is one triple in the owning package's `ontology.ttl`; a
-review rule is `capabilities/<name>/review.rq`, SPARQL and never Python; and a revision is
-legitimate exactly when `validate_agent` still passes, which is the same call the agent makes at
-boot. An agent that states no interval never reviews itself. See
-[a-belief-is-a-pick-within-a-range](knowledge/decisions/a-belief-is-a-pick-within-a-range.md).
+first pick rather than a bound. An agent whose **world gives it room to move** — `ag:commits`, in
+`world.ttl` — re-picks on its own clock inside that room, so the author's job is to constrain
+well, not to guess well. **The mandate is also the grant**: `capabilities/review/` derives its
+capability from exactly those triples, so an agent given no room has no review module, keeps no
+summaries and never arises. Which terms may move is one triple in the owning package's
+`ontology.ttl`; a review rule is `capabilities/<name>/review.rq`, SPARQL and never Python; and a
+revision is legitimate exactly when `validate_agent` still passes, which is the same call the
+agent makes at boot. **Compaction is not part of this** — it is not a choice, so it stayed in the
+kernel on a clock of its own. See
+[a-capability-is-granted-by-latitude](knowledge/decisions/a-capability-is-granted-by-latitude.md).
 
 ## Three traps worth knowing, and one that is closed
 

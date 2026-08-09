@@ -136,7 +136,7 @@ whose timer runs it changes.
 
 **The comfortable end is a pick, not a constant.** `ag:slowSleepS` is what its author chose
 before the agent had seen a reading; an agent that watches a probe report the same value for a
-window may re-pick it, inside the room its own `ag:commits` leaves — and must come back the
+window may re-pick it, inside the room its world's `ag:commits` leaves it — and must come back the
 moment the readings move again. Only the comfortable end, so a thirsty plant is still watched at
 `ag:fastSleepS` whatever a review concluded: desire-relative is the first thing and this is the
 second. A reading that never changes **at all** argues for *tightening*, because an instrument

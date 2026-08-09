@@ -14,6 +14,7 @@ from agent.world import WorldError, load_self, load_world
 from agent.capabilities.actuation import ACTUATION
 from agent.capabilities.market import BIDDING, HOSTING
 from agent.capabilities.perception import LISTENING, SUBSCRIBING
+from agent.capabilities.review import RECKONING
 
 from conftest import genesis_store, query_fn
 
@@ -26,8 +27,13 @@ def me(query):
 # --- what the shipped world derives ----------------------------------------
 
 def test_plant_agent_gets_subscribing_and_bidding(me):
-    """Wired to a scheduled sensor and into a market — so it perceives and it buys."""
-    assert me("fern").capabilities == {SUBSCRIBING, BIDDING}
+    """Wired to a scheduled sensor and into a market — so it perceives and it buys.
+
+    And given room to move on its cadence, so it may also re-pick it. Three premises, three
+    capabilities, none of them written down: two follow from what it is wired to and the third
+    from what its world allows it.
+    """
+    assert me("fern").capabilities == {SUBSCRIBING, BIDDING, RECKONING}
 
 
 def test_supplier_gets_hosting_and_actuation(me):
@@ -101,7 +107,7 @@ def test_the_smallest_world_yields_perception_and_nothing_else():
     stand alone, which is the whole claim of deriving them.
     """
     me = load_self(query_fn(genesis_store(world="sensing")), "fern")
-    assert me.capabilities == {SUBSCRIBING}
+    assert me.capabilities == {SUBSCRIBING, RECKONING}
     assert not me.can(BIDDING) and not me.can(ACTUATION)
     assert me.markets == () and me.actuators == ()
     assert me.acts_for is None  # it advances nobody's interest; it only records

@@ -12,9 +12,10 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis
-from agent.ontology import SENSED_GRAPH, summaries_graph, term
+from agent.capabilities.review.graphs import summaries_graph
+from agent.ontology import SENSED_GRAPH, term
 from agent.store import Store
-from agent.summary import RING, Summaries
+from agent.capabilities.review.summary import RING, Summaries
 
 from conftest import MOISTURE, WORLDS_ROOT, build_agent
 
@@ -133,7 +134,7 @@ def test_a_summary_is_not_part_of_the_sensed_record(fern):
     derived account of its past. Keeping them in one graph would make 'a review never writes the
     sensed record' untestable."""
     sensor = fern.subscribing().sensors[0]
-    fern.reviewer.summaries.record(sensor.subject, sensor.observes, 0.5)
+    fern.reviewing().summaries.record(sensor.subject, sensor.observes, 0.5)
     assert "ObservationSummary" not in fern.store.get_graph(SENSED_GRAPH)
     assert "ObservationSummary" in fern.store.get_graph(summaries_graph("fern"))
 
@@ -144,19 +145,19 @@ def test_the_ingest_path_summarises_every_reading(fern):
     sensor = fern.subscribing().sensors[0]
     for value in (0.30, 0.31, 0.32):
         fern.subscribing().ingest(sensor, value)
-    assert [w.count for w in fern.reviewer.summaries.accumulating()] == [3]
+    assert [w.count for w in fern.reviewing().summaries.accumulating()] == [3]
 
 
 # --- keeping its own house (issue #45) ---------------------------------------------------------
 
 def test_an_in_memory_store_has_no_ratio_and_is_never_compacted(fern):
     """Every test and every world-building tool holds one, and none has anything to compact."""
-    assert fern.reviewer.upkeep.ratio() is None
-    assert not fern.reviewer.upkeep.consider()
+    assert fern.upkeep.ratio() is None
+    assert not fern.upkeep.consider()
 
 
 def test_the_compaction_threshold_is_read_from_the_ontology(fern):
-    assert fern.reviewer.upkeep.max_bytes_per_triple > 0
+    assert fern.upkeep.max_bytes_per_triple > 0
 
 
 def test_a_belief_base_on_disk_is_compacted_when_it_is_mostly_history(tmp_path, monkeypatch):
@@ -164,7 +165,7 @@ def test_a_belief_base_on_disk_is_compacted_when_it_is_mostly_history(tmp_path, 
     rising bytes is write amplification, and neither number alone shows it."""
     store = genesis.open_belief_base(WORLDS_ROOT / "society", "fern", str(tmp_path / "beliefs"))
     agent = build_agent("fern", st=store, monkeypatch=monkeypatch)
-    upkeep = agent.reviewer.upkeep
+    upkeep = agent.upkeep
 
     assert upkeep.ratio() is not None  # it has a disk, so it has a ratio
     upkeep.max_bytes_per_triple = 0  # any real store is "mostly history" at this threshold
