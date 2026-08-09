@@ -240,9 +240,40 @@ def test_the_world_references_a_user_and_declares_nothing_about_them():
     introspects. Saying more here would be a world asserting facts about the installation."""
     st = _public("society")
     user = bindings(st.query(
-        "SELECT ?u WHERE { ?w a ag:World ; prov:wasAttributedTo ?u }"))[0]["u"]
+        "SELECT ?u WHERE { ?w a ag:World ; prov:qualifiedAttribution [ prov:agent ?u ] }"))[0]["u"]
     said = bindings(st.query(f"SELECT ?p WHERE {{ <{user}> ?p ?o }}"))
     assert not said, f"the world declares {[r['p'] for r in said]} about a user it only references"
+
+
+def test_the_world_states_the_capacity_and_the_loader_does_not_assume_it():
+    """The role was briefly a literal in `provenance.py`, and that is not a detail.
+
+    An installation has several users with different powers. With the capacity assumed, every
+    user a world attributed became a sovereign on the way in — so a world could never say that
+    one user OPERATES what another RATIFIED, and adding a second role would have meant editing
+    code rather than a world.
+    """
+    from agent import provenance
+
+    st = _public("society")
+    user, role = provenance.attribution_of(st)
+    assert role == AG + "Sovereign"
+    # Copied, not invented: change what the world says and the description follows.
+    assert f"prov:hadRole <{role}>" in provenance._turtle(
+        genesis.world_dir("society"), (user, role))
+
+
+def test_a_user_named_without_a_capacity_gets_no_association():
+    """A bare `prov:wasAttributedTo` says who was involved and not in what capacity, and the
+    capacity is the whole distinction. Silence is a better answer than a guess."""
+    from agent import provenance
+
+    st = _public("society")
+    st.update(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?w prov:qualifiedAttribution ?a }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?w prov:wasAttributedTo <urn:someone> }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?w a ag:World ; prov:qualifiedAttribution ?a }} }}""")
+    assert provenance.attribution_of(st) is None
 
 
 # --- the guard that matters --------------------------------------------------------------------

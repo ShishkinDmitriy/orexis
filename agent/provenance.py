@@ -19,8 +19,14 @@ new vocabulary. There is no `ag:Ratified`, no `ag:DerivedGraph`, no term of ours
 world, another operates it with fewer powers — so "the sovereign" is not a person to be named
 but a capacity someone acted in, on one occasion. `prov:qualifiedAssociation` says exactly that:
 the ratification activity has an association carrying `prov:agent` (which user) and
-`prov:hadRole ag:Sovereign` (in what capacity). There is no `ag:Sovereign` *agent* and there must
-not be one.
+`prov:hadRole` (in what capacity). There is no `ag:Sovereign` *agent* and there must not be one.
+
+**And the world states the capacity, not this module.** The role was briefly a literal here,
+which reads as a detail and is not one: with the capacity assumed, a world could never say that
+alice OPERATES what dimonina RATIFIED, because every user it attributed became a sovereign on the
+way in. A world says `prov:qualifiedAttribution [ prov:agent … ; prov:hadRole … ]` and this
+copies both. Adding a second role is then a world edit rather than a code change, which is the
+whole point of there being more than one.
 
 **And none of it is evidence.** The ratified graph asserting who ratified it is circular: the
 attribution is a claim the files make about themselves, and anyone who can edit the file can edit
@@ -71,14 +77,24 @@ def file_iri(path: Path, world: Path | None = None) -> str:
         return _FILE + path.name
 
 
-# Who a world says ratified it. The world REFERENCES a user and declares nothing about them, so
-# this reads an identifier and copies it — it does not learn a name, a key or a type, and must
-# not invent one. A world that names nobody simply has no association, which is honest: the
-# shape asks a graph to say where it came from, not who to blame.
-_SOVEREIGN_Q = "SELECT ?user WHERE { ?w a ag:World ; prov:wasAttributedTo ?user } LIMIT 1"
+# Who a world says authored it, and IN WHAT CAPACITY. Both come from the world; neither is
+# assumed here. The role used to be a literal in this module, which was the wrong place for it
+# twice over: an installation has several users with different powers, so a world attributing
+# someone had no way to say alice OPERATES what dimonina RATIFIED — and the machine was asserting
+# a capacity only the world can know.
+#
+# The world REFERENCES a user and declares nothing else about them, so this reads two identifiers
+# and copies them: no name, no key, no type, and nothing invented. A world that names nobody, or
+# that names someone without saying in what capacity, simply gets no association — the shape asks
+# a graph to say where it came from, not who to blame.
+_ATTRIBUTION_Q = """
+SELECT ?user ?role WHERE {
+  ?w a ag:World ; prov:qualifiedAttribution ?att .
+  ?att prov:agent ?user ; prov:hadRole ?role .
+} LIMIT 1"""
 
 
-def _turtle(world: Path, sovereign: str | None = None) -> str:
+def _turtle(world: Path, attribution: tuple[str, str] | None = None) -> str:
     """The description, as Turtle. One `prov:Entity` per public graph, each accounting for
     itself — see `ag:PublicGraphShape`, which refuses one that does not."""
     ontology_files = " , ".join(f"<{file_iri(p)}>" for p in loader.ontology_files())
@@ -95,16 +111,19 @@ def _turtle(world: Path, sovereign: str | None = None) -> str:
     ]
     if world_files_:
         lines.append(f"<{WORLD_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
-        if sovereign:
+        if attribution:
+            user, role = attribution
             # A qualified association, because the interesting part is the ROLE. `prov:agent`
             # alone would say a user was involved; `prov:hadRole` says in what capacity, which is
             # the only form that survives an installation having several users with different
-            # powers. The user is referenced and never typed here — the world did not say it was
-            # a Person, and this module describes what happened rather than adding to it.
+            # powers. Both are COPIED from what the world stated — the capacity someone acted in
+            # is a fact about the world, and a loader that assumed it could never represent a
+            # second user. The user is referenced and never typed here — the world did not say it
+            # was a Person, and this module describes what happened rather than adding to it.
             lines += [
                 f"<{WORLD_GRAPH}> prov:wasGeneratedBy <{RATIFICATION}> .",
                 f"<{RATIFICATION}> a prov:Activity ; prov:qualifiedAssociation [",
-                f"    a prov:Association ; prov:agent <{sovereign}> ; prov:hadRole ag:Sovereign ] .",
+                f"    a prov:Association ; prov:agent <{user}> ; prov:hadRole <{role}> ] .",
             ]
     else:
         # A world with no Turtle at all cannot be described as derived from anything, and the
@@ -138,12 +157,17 @@ def _turtle(world: Path, sovereign: str | None = None) -> str:
     return "\n".join(lines) + "\n"
 
 
-def sovereign_of(st) -> str | None:
-    """The user a world says ratified it, or None if it names nobody."""
+def attribution_of(st) -> tuple[str, str] | None:
+    """The user a world says authored it and the capacity they acted in, or None.
+
+    None for a world that names nobody, and equally for one that names someone without saying in
+    what capacity — a bare `prov:wasAttributedTo` is not enough, because the capacity is the part
+    that distinguishes ratifying from operating. Silence is a better answer than a guess.
+    """
     from .store import bindings
 
-    rows = bindings(st.query(_SOVEREIGN_Q))
-    return rows[0]["user"] if rows else None
+    rows = bindings(st.query(_ATTRIBUTION_Q))
+    return (rows[0]["user"], rows[0]["role"]) if rows else None
 
 
 def describe(st, world: Path) -> None:
@@ -153,4 +177,4 @@ def describe(st, world: Path) -> None:
     to, for the same reason the closure is recomputed: it is a function of the files, and a
     description that accumulated would soon be describing a world that no longer exists.
     """
-    st.put_graph(PROVENANCE_GRAPH, _turtle(world, sovereign_of(st)))
+    st.put_graph(PROVENANCE_GRAPH, _turtle(world, attribution_of(st)))

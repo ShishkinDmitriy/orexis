@@ -47,9 +47,10 @@ ag:local_bus a ag:MessageBus ;
 #  these files and says nothing else about them — no name, no key, no type. A user is
 #  installation-level (AGENTS.md rule 3) and an agent is given only its world, so the URI is an
 #  identifier it never resolves, exactly as `ag:brokerHost` names a host it never introspects.
-#  Sovereign is the ROLE that user held here, attached to the ratification in agora/provenance.py.
+#  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
+#  operate what this one ratified, and a loader that inferred the capacity could never say so.
 ag:world a ag:World ; ag:currentVersion ag:version_1 ;
-    prov:wasAttributedTo <http://example.org/agora/user/dimonina> .
+    prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 ##########  Typed graph catalog  ##########
