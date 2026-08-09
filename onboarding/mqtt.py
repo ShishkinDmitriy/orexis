@@ -108,30 +108,30 @@ def _q(body: str) -> str:
     return f"SELECT {body}"
 
 
-_AGENTS_Q = _q(f"""?id ?eventTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+_AGENTS_Q = _q(f"""?id ?eventTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id .
   OPTIONAL {{ ?a <{AG}eventTopic> ?eventTopic }}
-}} }}""")
+ }}""")
 
-_POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+_POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}polls> ?s .
   ?s <{AG}readingTopic> ?readingTopic .
   OPTIONAL {{ ?s <{AG}commandTopic> ?commandTopic }}
-}} }}""")
+ }}""")
 
-_BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?voucherTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+_BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?voucherTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}bidsIn> ?m .
   ?m <{AG}offerTopic> ?offerTopic ; <{AG}bidTopic> ?bidTopic ;
      <{AG}voucherTopic> ?voucherTopic .
-}} }}""")
+ }}""")
 
 _HOSTS_Q = _q(f"""?id ?offerTopic ?bidTopic ?voucherTopic ?bidderEvent
-WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hosts> ?m .
   ?m <{AG}offerTopic> ?offerTopic ; <{AG}bidTopic> ?bidTopic ;
      <{AG}voucherTopic> ?voucherTopic .
   OPTIONAL {{ ?b <{AG}bidsIn> ?m ; <{AG}eventTopic> ?bidderEvent }}
-}} }}""")
+ }}""")
 
 # A simulated sensor learns it was watered by reading what the valve REPORTED, never what the
 # valve was told. A real plant gets wet because water arrives; nothing arrives here, so the
@@ -140,46 +140,46 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
 # watered the plant on an unsigned order, which is exactly the failure the market exists to
 # prevent. The grant belongs to the DEVICE, not to its agent: an agent in this world has no
 # more business reading a valve's traffic than one in any other world.
-_SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+_SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{ 
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}monitors> ?subject .
   ?valve <{AG}actuates> ?subject ; <{AG}statusTopic> ?statusTopic .
-}} }}""")
+ }}""")
 
 # Any valve that reports, stood in for or not. This used to require ag:simulatedBy, which meant
 # a REAL valve could not publish the status its own firmware sends — "so the executor knows water
 # actually flowed" — and the broker dropped it silently, because MQTT never refuses a publish out
 # loud. The simulation was strictly more capable than the hardware it stands for, which is the
 # wrong way round.
-_VALVE_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+_VALVE_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ 
   ?v <{AG}localId> ?id ; <{AG}actuates> ?subject ; <{AG}statusTopic> ?statusTopic .
-}} }}""")
+ }}""")
 
 # And whoever actuates it must be able to HEAR that report, or the confirmation goes nowhere.
-_ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+_ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hasActuator> ?v .
   ?v <{AG}statusTopic> ?statusTopic .
-}} }}""")
+ }}""")
 
 # One way of holding an actuator. There used to be two, because a simulated valve was a
 # different class held by a different property; it is an ag:Valve that happens to be stood in
 # for now, so the agent side of this stopped needing to know the difference at all.
-_ACTUATES_Q = _q(f"""?id ?commandTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+_ACTUATES_Q = _q(f"""?id ?commandTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id .
   ?a <{AG}hasActuator> ?v .
   ?v <{AG}commandTopic> ?commandTopic .
-}} }}""")
+ }}""")
 
 # `ag:onBus` is the device's own declaration that it is reachable on a bus — the same test
 # `MqttDriver.claims()` applies. Anything without it speaks no MQTT and needs no credential.
-_DEVICES_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+_DEVICES_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
   ?d <{AG}localId> ?id ; <{AG}onBus> ?bus .
   OPTIONAL {{ ?d <{AG}readingTopic> ?readingTopic }}
   OPTIONAL {{ ?d <{AG}commandTopic> ?commandTopic }}
-}} }}""")
+ }}""")
 
 
 _BUS_Q = f"""
-SELECT ?host WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?bus a <{AG}MessageBus> ; <{AG}brokerHost> ?host }} }}
+SELECT ?host WHERE {{  ?bus a <{AG}MessageBus> ; <{AG}brokerHost> ?host  }}
 LIMIT 1"""
 
 
@@ -354,9 +354,9 @@ def provision(world: str, rotate: bool = False) -> None:
 
 
 _PORTS_Q = f"""
-SELECT ?port ?tlsPort WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?port ?tlsPort WHERE {{ 
   ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
-  OPTIONAL {{ ?bus <{AG}brokerTlsPort> ?tlsPort }} }} }} LIMIT 1"""
+  OPTIONAL {{ ?bus <{AG}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
 
 
 def write_config(world: str) -> None:

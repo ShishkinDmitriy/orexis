@@ -27,9 +27,18 @@ from typing import Callable
 
 import pyoxigraph as ox
 
+from .ontology import PUBLIC_GRAPHS
+
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
 QueryFn = Callable[[str], dict]
+
+# The default graph of every query: everything public, merged. A reader writes an ordinary
+# pattern and means "whatever the society knows", and never has to know that the fact it wants
+# was asserted, derived or entailed. Naming a graph explicitly still reaches only that one, and
+# the private graphs — beliefs, sensed, summaries — are reachable ONLY by naming them, which is
+# the same boundary as before and now enforced by the dataset rather than by remembering.
+_PUBLIC = [ox.NamedNode(g) for g in PUBLIC_GRAPHS]
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
 # common prefixes and others do not, so relying on that works in one and fails in another.
@@ -87,9 +96,19 @@ class Store:
     # --- reading ---
 
     def query(self, sparql: str) -> dict:
-        """Read. There is no privileged variant: it is all yours, and only yours."""
+        """Read. There is no privileged variant: it is all yours, and only yours.
+
+        An unqualified pattern reads **public knowledge** — the vocabulary, the world, and what
+        the rules and the RDFS closure made of them, merged. That is what almost every caller
+        wants, and stating it once here is what keeps the five public graphs from leaking into
+        sixty queries.
+
+        A `GRAPH <x>` clause still reads exactly `x`, private graphs included. So the two forms
+        say different things on purpose: *what does the society know* versus *what is written
+        precisely here* — and a review's write boundary is checkable because the second exists.
+        """
         out = io.BytesIO()
-        self._store.query(PREFIXES + sparql).serialize(
+        self._store.query(PREFIXES + sparql, default_graph=_PUBLIC).serialize(
             output=out, format=ox.QueryResultsFormat.JSON
         )
         return json.loads(out.getvalue())
@@ -119,11 +138,28 @@ class Store:
     def update(self, sparql: str) -> None:
         self._store.update(PREFIXES + sparql)
 
-    def put_graph(self, graph_iri: str, ttl: str) -> None:
-        """Replace a graph with the given Turtle. Public knowledge only — see the module note."""
+    def put_graph(self, graph_iri: str, ttl: str, dataset: bool = False) -> None:
+        """Replace a graph with the given Turtle. Public knowledge only — see the module note.
+
+        `dataset=True` parses **TriG** instead, which is Turtle plus `GRAPH <iri> { … }` blocks.
+        Every existing `.ttl` is valid TriG unchanged — Turtle is a syntactic subset — and
+        `to_graph` is the destination for the document's *default* graph only, so a file with no
+        `GRAPH` block behaves exactly as it did. A file that grows one puts those triples where
+        it says, which is what a world will need when genesis starts writing values it picked
+        beside the ranges the sovereign stated.
+
+        Note what that does NOT clear: a graph named inside the file is not removed here, because
+        this method is told one name. Nothing declares one yet; see the decision record.
+        """
         graph = ox.NamedNode(graph_iri)
         self._store.remove_graph(graph)
-        self._store.load(ttl, format=ox.RdfFormat.TURTLE, to_graph=graph)
+        self._store.load(
+            ttl, format=ox.RdfFormat.TRIG if dataset else ox.RdfFormat.TURTLE, to_graph=graph)
+
+    def clear_graph(self, graph_iri: str) -> None:
+        """Empty one graph. For the computed ones, which are written by update rather than
+        loaded from a file and so have no `put_graph` to replace them wholesale."""
+        self._store.remove_graph(ox.NamedNode(graph_iri))
 
     def load_file(self, path: str | Path, graph_iri: str) -> None:
         """Read a ratified file straight into a graph, without going through a string."""

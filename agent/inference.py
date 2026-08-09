@@ -35,9 +35,16 @@ from __future__ import annotations
 
 import logging
 
-from .ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
+from .ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH,
+                       WORLD_GRAPH)
 
 log = logging.getLogger("inference")
+
+# What this module reads: the asserted vocabulary, and whatever it has already entailed from it.
+# Both, because step 3 needs the transitivity steps 1 and 2 just computed — and those landed in
+# the entailed graph, not the asserted one it read them from.
+_T_BOX = f"USING <{ONTOLOGY_GRAPH}>\nUSING <{ONTOLOGY_ENTAILED_GRAPH}>"
+_T_BOX_AND_WORLD = f"{_T_BOX}\nUSING <{WORLD_GRAPH}>"
 
 # One pass, not a fixpoint loop: `+` is already the transitive closure, so asking for it directly
 # computes in one update what iterating single steps would take several rounds to reach.
@@ -45,38 +52,48 @@ log = logging.getLogger("inference")
 # The `FILTER(?a != ?b)` guards are not pedantry. A cycle in the class hierarchy — legal RDF, and
 # the kind of thing a generated vocabulary produces — makes every class in it a subclass of
 # itself, and `?x a ?x` after that. Neither is false, both are noise.
-_CLOSURE = (
+#
+# Every entailment lands in an `entailed` graph and never in the asserted one it was computed
+# from. That is what makes "who put this here" answerable: the vocabulary a package wrote stays
+# exactly as written, and what RDFS made of it sits beside it, distinguishable by anyone who
+# cares and invisible to everyone who does not — because `store.query` merges the lot by default.
+CLOSURE = (
     # 1. subClassOf and subPropertyOf are transitive. Done first, so the entailments below can
     #    read a single step and still see the whole chain.
-    f"""INSERT {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?a rdfs:subClassOf ?b }} }}
-        WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?a rdfs:subClassOf+ ?b }} FILTER(?a != ?b) }}""",
-    f"""INSERT {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?a rdfs:subPropertyOf ?b }} }}
-        WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?a rdfs:subPropertyOf+ ?b }} FILTER(?a != ?b) }}""",
+    f"""INSERT {{ GRAPH <{ONTOLOGY_ENTAILED_GRAPH}> {{ ?a rdfs:subClassOf ?b }} }}
+        {_T_BOX}
+        WHERE  {{ ?a rdfs:subClassOf+ ?b FILTER(?a != ?b) }}""",
+    f"""INSERT {{ GRAPH <{ONTOLOGY_ENTAILED_GRAPH}> {{ ?a rdfs:subPropertyOf ?b }} }}
+        {_T_BOX}
+        WHERE  {{ ?a rdfs:subPropertyOf+ ?b FILTER(?a != ?b) }}""",
 
     # 2. What a T-Box individual is. This is the one the shapes were quietly relying on:
     #    `onewire:DataPinRole a mc:BidirectionalRole` becomes `a mc:OutputRole` and `a mc:PinRole`,
     #    which is what the rule keeping a driven line off an input-only pin asks about.
-    f"""INSERT {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?x a ?super }} }}
-        WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?x a ?class . ?class rdfs:subClassOf ?super }}
-                  FILTER(?class != ?super) }}""",
+    f"""INSERT {{ GRAPH <{ONTOLOGY_ENTAILED_GRAPH}> {{ ?x a ?super }} }}
+        {_T_BOX}
+        WHERE  {{ ?x a ?class . ?class rdfs:subClassOf ?super FILTER(?class != ?super) }}""",
 
-    # 3. What a WORLD instance is, given classes the ontology declares. Two graphs, because an
-    #    instance is the world's and the class hierarchy is the vocabulary's — which is exactly
-    #    the join no single-graph query could make and every reader had to write out by hand.
-    f"""INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?x a ?super }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}>    {{ ?x a ?class }}
-                  GRAPH <{ONTOLOGY_GRAPH}> {{ ?class rdfs:subClassOf ?super }}
-                  FILTER(?class != ?super) }}""",
+    # 3. What a WORLD instance is, given classes the ontology declares. The join spans the
+    #    world and the vocabulary — and now the vocabulary's own closure as well, which is
+    #    exactly the case a single `GRAPH` clause cannot express and `USING` can.
+    f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?x a ?super }} }}
+        {_T_BOX_AND_WORLD}
+        WHERE  {{ ?x a ?class . ?class rdfs:subClassOf ?super FILTER(?class != ?super) }}""",
 
     # 4. And what a world statement implies under a subproperty. There are no `rdfs:subPropertyOf`
     #    axioms today — the simulated-device work removed the last one, `ag:models` under
     #    `ag:polls`, which is the very fault that opened issue #27. This is here so that
     #    reintroducing one is a vocabulary edit and not a debugging session.
-    f"""INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?x ?super ?y }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}>    {{ ?x ?p ?y }}
-                  GRAPH <{ONTOLOGY_GRAPH}> {{ ?p rdfs:subPropertyOf ?super }}
-                  FILTER(?p != ?super) }}""",
+    f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?x ?super ?y }} }}
+        {_T_BOX_AND_WORLD}
+        WHERE  {{ ?x ?p ?y . ?p rdfs:subPropertyOf ?super FILTER(?p != ?super) }}""",
 )
+
+# Emptied before recomputing, because they are a function of the files and not an accumulation.
+# `refresh_public` replaces the asserted graphs with `put_graph`, which clears as it loads; these
+# are written by update and would otherwise keep last boot's answer beside this boot's.
+ENTAILED_GRAPHS = (ONTOLOGY_ENTAILED_GRAPH, WORLD_ENTAILED_GRAPH)
 
 
 def materialise(store) -> None:
@@ -87,6 +104,6 @@ def materialise(store) -> None:
     spelling out a property path and hoping the next rule's author remembers to.
     """
     before = len(store)
-    for update in _CLOSURE:
+    for update in CLOSURE:
         store.update(update)
     log.debug("entailments materialised: %d triples -> %d", before, len(store))

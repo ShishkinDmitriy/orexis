@@ -26,7 +26,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from . import genesis, loader
-from .ontology import ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
+from .ontology import PUBLIC_GRAPHS, SENSED_GRAPH, beliefs_graph
 from .store import Store
 
 log = logging.getLogger("validate")
@@ -115,10 +115,11 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities) -> No
     """
     if not capabilities:
         return
-    # ONTOLOGY first: it carries the entailments materialised at genesis, and a shape's
-    # SPARQL asks about them literally. Leave it out and the shapes go quiet rather than
-    # failing — see agora/inference.py.
-    data = graph_from(st, ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph(agent_id), SENSED_GRAPH)
+    # Every public graph, flattened. pyshacl gets one graph and no reasoner, so anything the
+    # vocabulary merely IMPLIES has to arrive already asserted — leave the entailed graphs out
+    # and the shapes go quiet rather than failing, which is the worst way to be wrong. Passing
+    # PUBLIC_GRAPHS rather than a list written out here means a sixth can never be forgotten.
+    data = graph_from(st, *PUBLIC_GRAPHS, beliefs_graph(agent_id), SENSED_GRAPH)
     ok, report = conforms(data, focus=agent_uri)
     if not ok:
         raise BeliefsInvalid(

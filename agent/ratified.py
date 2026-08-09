@@ -23,20 +23,48 @@ from __future__ import annotations
 
 import rdflib
 
-from . import loader
-from .genesis import world_dir, world_files, worlds
-from .ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
+from . import genesis
+from .ontology import PUBLIC_GRAPHS
+from .store import Store
+
+# Re-exported, because every tool that reads a ratified world reaches for these in the same
+# breath as `dataset()` and should not have to know that one lives in `genesis`.
+from .genesis import world_dir, world_files, worlds  # noqa: F401
 
 
 def dataset(world: str) -> rdflib.Dataset:
-    """One world, composed exactly as an agent composes it: T-Box, topology, derivation."""
-    ds = rdflib.Dataset()
-    for path in loader.ontology_files():
-        ds.graph(rdflib.URIRef(ONTOLOGY_GRAPH)).parse(path, format="turtle")
-    for path in world_files(world_dir(world)):
-        ds.graph(rdflib.URIRef(WORLD_GRAPH)).parse(path, format="turtle")
-    for rule in loader.rule_files():
-        ds.update(rule.read_text())
+    """One world as an agent sees it, handed to rdflib to query.
+
+    **The derivation is not repeated here — it is copied.** A `Store` is built and
+    `refresh_public` run against it, exactly as an agent does at boot, and the resulting public
+    graphs are then poured into an rdflib Dataset. So the vocabulary, the entailments and every
+    package's rules are computed once, by one engine, and rdflib only ever *reads* the answer.
+
+    This used to be a second implementation: rdflib parsed the same files and re-ran the same
+    `rules.ru`, which is two engines deriving separately and hoping to agree. They did not. The
+    closure was never run on this side at all, so a world whose sensor is typed as a *kind* of
+    sensor derived its capabilities inside an agent and not in `agora-compose` — the same fault
+    issue #27 was opened for, surviving in the half of the system #27 did not look at.
+
+    It also sidesteps an rdflib behaviour worth knowing: **`USING` there attempts to dereference
+    the graph IRI over HTTP** rather than resolving it against the dataset, so the derivation
+    rules cannot run on rdflib at all now that they span graphs. Nothing is lost — they no longer
+    need to.
+
+    `default_union=True` is the rdflib spelling of what `store.query` does with `default_graph`:
+    an unqualified pattern reads everything public, so the same query means the same thing here
+    as against a running agent's store.
+    """
+    st = Store()  # in memory: built, copied out, thrown away
+    # The module-local name, not `genesis.world_dir` — a test that redirects a world redirects it
+    # here, and reaching through the other module would silently ignore that.
+    genesis.refresh_public(st, world_dir(world))
+
+    ds = rdflib.Dataset(default_union=True)
+    for iri in PUBLIC_GRAPHS:
+        turtle = st.get_graph(iri)
+        if turtle.strip():
+            ds.graph(rdflib.URIRef(iri)).parse(data=turtle, format="turtle")
     return ds
 
 

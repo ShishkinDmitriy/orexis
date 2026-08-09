@@ -51,7 +51,7 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 _BOARDS_Q = f"""
 SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?ledRed ?ledGreen ?ledBlue ?airPin
-WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+WHERE {{ 
   ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{MC}firmware> ?firmware ;
          <{MC}carries> ?sensor .
   ?sensor a <{PROBE}CapacitiveMoistureProbe> ; <{AG}localId> ?sensorId ;
@@ -87,11 +87,11 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
              ?air <{MC}hasPin> ?airLeg .
              ?airLeg <{MC}pinRole> <{ONEWIRE}DataPinRole> .
              ?aw <{MC}joins> ?airLeg, ?airPinNode . ?airPinNode <{MC}gpio> ?airPin }}
-}} }}"""
+ }}"""
 
 _BOUNDS_Q = f"""
-SELECT ?min ?max WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-  <{AG}PerceptionCapability> <{AG}minSleepS> ?min ; <{AG}maxSleepS> ?max }} }} LIMIT 1"""
+SELECT ?min ?max WHERE {{ 
+  <{AG}PerceptionCapability> <{AG}minSleepS> ?min ; <{AG}maxSleepS> ?max  }} LIMIT 1"""
 
 
 def _env(path: Path, key: str) -> str | None:

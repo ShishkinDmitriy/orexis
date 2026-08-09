@@ -49,51 +49,51 @@ WOKWI = "http://example.org/agora/wokwi#"
 # mapping is an ordinary device — it is reported and skipped, never guessed at.
 _DEVICES_Q = f"""
 SELECT ?device ?deviceId ?part ?attrs WHERE {{
-  GRAPH <{WORLD_GRAPH}> {{
+  
     ?device <{MC}hasPin> ?anyPin .
     OPTIONAL {{ ?device <{AG}localId> ?deviceId }}
     ?device a ?class .
-  }}
-  GRAPH <{ONTOLOGY_GRAPH}> {{
+  
+  
     ?class <{WOKWI}part> ?part .
     OPTIONAL {{ ?class <{WOKWI}attrs> ?attrs }}
-  }}
+  
 }}"""
 
 # Which of OUR roles each of that part's legs answers to. The join between a role and a drawing.
 _DEVICES_PARTS_Q = f"""
-SELECT ?class ?part WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-  ?class <{WOKWI}part> ?part }} }}"""
+SELECT ?class ?part WHERE {{ 
+  ?class <{WOKWI}part> ?part  }}"""
 
 _PART_PINS_Q = f"""
-SELECT ?class ?role ?name WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+SELECT ?class ?role ?name WHERE {{ 
   ?class <{WOKWI}pin> ?p .
   ?p <{MC}pinRole> ?role ; <{WOKWI}name> ?name .
-}} }}"""
+ }}"""
 
 _PINS_Q = f"""
-SELECT ?device ?pin ?notation ?wokwiName ?gpio ?role ?railVolts WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?device ?pin ?notation ?wokwiName ?gpio ?role ?railVolts WHERE {{ 
   ?device <{MC}hasPin> ?pin .
   OPTIONAL {{ ?pin <{MC}gpio> ?gpio }}
   OPTIONAL {{ ?pin <{SKOS}notation> ?notation }}
   OPTIONAL {{ ?pin <{WOKWI}name> ?wokwiName }}
   OPTIONAL {{ ?pin <{MC}pinRole> ?role }}
   OPTIONAL {{ ?pin <{MC}railVolts> ?railVolts }}
-}} }}"""
+ }}"""
 
 _CLASSES_Q = f"""
-SELECT ?device ?class WHERE {{ GRAPH <{WORLD_GRAPH}> {{ ?device a ?class }} }}"""
+SELECT ?device ?class WHERE {{  ?device a ?class  }}"""
 
 _WIRES_Q = f"""
-SELECT ?a ?b ?colour WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?a ?b ?colour WHERE {{ 
   ?wire a <{MC}Wire> ; <{MC}joins> ?a , ?b .
   OPTIONAL {{ ?wire <{MC}colour> ?colour }}
   FILTER(STR(?a) < STR(?b))
-}} }}"""
+ }}"""
 
 _BOARDS_Q = f"""
-SELECT ?device WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?device a <{MC}Microcontroller> }} }}"""
+SELECT ?device WHERE {{ 
+  ?device a <{MC}Microcontroller>  }}"""
 
 # Wokwi's canvas is pixels from the top-left. Every pin this stand uses is on the board's LEFT
 # header, so the parts go to its left — a part on the right means every one of its wires crosses

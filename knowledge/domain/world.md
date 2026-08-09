@@ -65,6 +65,12 @@ two files. See [world-graph](/decisions/world-graph.md) and [belief-base](/domai
 what; seeding runs each capability's `rules.ru` and derives what that wiring implies. This is
 load-bearing: a declaration can drift from reality, a derivation cannot.
 
+The rule is now kept by the shape of the store rather than by discipline. A derivation writes to
+`graph/world/derived` and the ratified graph holds exactly what the files say, so a declared
+capability and a derived one are told apart by reading rather than by remembering — and a reader
+that wants both simply asks, because every public graph is the default graph of a query. See
+[who-put-the-fact-there](/decisions/who-put-the-fact-there.md).
+
 | you state | genesis derives |
 |---|---|
 | `ag:polls` a sensor whose `ag:senseMode` is `ag:Scheduled` | `ag:Subscribing` |

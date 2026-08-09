@@ -36,8 +36,8 @@ from .terms import ACTUATION, HOSTING
 def _event_topics_q(market_uri: str) -> str:
     """Where my participants announce what they notice. Public, like the rest of the wiring."""
     return f"""
-SELECT ?agentId ?eventTopic WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-  ?agent ag:bidsIn <{market_uri}> ; ag:localId ?agentId ; ag:eventTopic ?eventTopic }} }}"""
+SELECT ?agentId ?eventTopic WHERE {{ 
+  ?agent ag:bidsIn <{market_uri}> ; ag:localId ?agentId ; ag:eventTopic ?eventTopic  }}"""
 
 
 class HostingModule(Module):

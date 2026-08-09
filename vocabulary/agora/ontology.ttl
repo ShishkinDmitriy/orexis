@@ -2,6 +2,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
 <http://example.org/agora/core> a owl:Ontology ;
     rdfs:label "Agora core" ;
@@ -88,6 +89,19 @@ ag:SelfReporting a owl:Class ; rdfs:subClassOf ag:Capability ; rdfs:label "Self 
 ag:metricsIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "metrics interval (s)" ;
     rdfs:comment "How often this agent reports on itself. ABSENCE IS MEANINGFUL: an agent that states no interval reports nothing, which is a decision by omission rather than a default. A rate belongs in beliefs for the same reason the sensing cadence does — a test world may want it faster than a deployed one." .
+
+#################  Who did it, and in what capacity  #################
+#  A ROLE, not an identity, and the distinction is the whole point. There is no `ag:Sovereign`
+#  agent and there must not be: an installation has several users — one authors a world, another
+#  operates it with fewer powers — and which of them was sovereign is a fact about ONE ACTIVITY,
+#  not a permanent property of a person. PROV-O models exactly this with `prov:qualifiedAssociation`,
+#  and expects the domain to name its own roles; naming one here is using PROV-O, not replacing it.
+#
+#  The role set is open on purpose. `ag:Operator` and whatever else will be needed are absent
+#  because nothing distinguishes them yet, and a role no activity cites is speculation.
+
+ag:Sovereign a prov:Role ; rdfs:label "Sovereign" ;
+    rdfs:comment "Held by whoever ratified a world: authored its files and stands behind them. A role a user has in one ratification, never a kind of user — the same person may hold it for one world and not another, and an installation's other users hold none. See knowledge/decisions/who-put-the-fact-there.md." .
 
 #################  The world and its versions  #################
 

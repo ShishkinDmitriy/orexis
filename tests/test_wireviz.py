@@ -52,9 +52,17 @@ def test_a_connector_is_a_device_and_a_cable_is_a_run(parsed):
 
 def test_a_wire_keeps_the_colour_the_world_gave_it(parsed):
     """Translated at the edge, not stored in WireViz's form: the world says "red" because that
-    is what the wire IS; RD is what one renderer calls it."""
+    is what the wire IS; RD is what one renderer calls it.
+
+    The ORDER is now specified by the query rather than inherited from whatever the store
+    scanned. It changed once, when public knowledge became five graphs — the same wires, the
+    same pairings, listed differently — which is what an unordered SELECT feeding a committed
+    file was always going to do eventually. `connections:` permutes with it, so the harness
+    describes the same stand either way.
+    """
     led = parsed["cables"]["esp32_fern-to-status_led_fern"]
-    assert led["colors"] == ["RD", "GN", "BU", "BK"]
+    assert sorted(led["colors"]) == ["BK", "BU", "GN", "RD"]  # every leg, once
+    assert led["colors"] == ["BU", "BK", "GN", "RD"]  # and in the order the query fixes
 
 
 def test_a_board_leg_reads_as_its_silkscreen_and_a_part_leg_as_its_role(parsed):

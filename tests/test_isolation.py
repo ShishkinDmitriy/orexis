@@ -82,14 +82,14 @@ def test_no_agent_may_hear_a_neighbours_private_channel(world):
 
     private = {}  # agent id -> the topics that are its alone
     for row in ratified.rows(ds, f"""SELECT ?id ?voucherTopic WHERE {{
-        GRAPH <{WORLD_GRAPH}> {{
+        
           ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}bidsIn> ?m .
-          ?m <{AG}voucherTopic> ?voucherTopic . }} }}"""):
+          ?m <{AG}voucherTopic> ?voucherTopic .  }}"""):
         private.setdefault(row["id"], set()).add(f"{row['voucherTopic']}/{row['id']}")
     for row in ratified.rows(ds, f"""SELECT ?id ?readingTopic WHERE {{
-        GRAPH <{WORLD_GRAPH}> {{
+        
           ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}polls> ?s .
-          ?s <{AG}readingTopic> ?readingTopic . }} }}"""):
+          ?s <{AG}readingTopic> ?readingTopic .  }}"""):
         private.setdefault(row["id"], set()).add(row["readingTopic"])
 
     assert private, f"{world} has no private channels to protect — the test proves nothing"

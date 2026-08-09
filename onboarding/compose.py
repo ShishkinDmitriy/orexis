@@ -44,17 +44,17 @@ log = logging.getLogger("compose")
 IMAGE = "agora:local"
 
 _ROSTER_Q = f"""
-SELECT ?id ?cap WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?id ?cap WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id .
   OPTIONAL {{ ?a <{AG}hasCapability> ?cap }}
-}} }}"""
+ }}"""
 
 ACTUATION = AG + "Actuation"
 
 _BUS_PORTS_Q = f"""
-SELECT ?port ?tlsPort WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+SELECT ?port ?tlsPort WHERE {{ 
   ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
-  OPTIONAL {{ ?bus <{AG}brokerTlsPort> ?tlsPort }} }} }} LIMIT 1"""
+  OPTIONAL {{ ?bus <{AG}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
 
 
 def _bus_ports(world: str) -> tuple[int, int | None]:
@@ -171,7 +171,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
 # make it a different kind of thing than the hardware it stands in for.
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?initial ?dryRate ?tick ?litres ?doseTopic ?port ?minValue ?maxValue
-WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+WHERE {{ 
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}readingTopic> ?readingTopic ;
      <{AG}monitors> ?subject .
   OPTIONAL {{ ?d <{AG}commandTopic> ?commandTopic }}
@@ -184,7 +184,7 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
   OPTIONAL {{ ?subject <{AG}litresPerFraction> ?litres }}
   OPTIONAL {{ ?valve <{AG}actuates> ?subject ; <{AG}statusTopic> ?doseTopic }}
   ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
-}} }}"""
+ }}"""
 
 
 def _simulator(world: str, row: dict) -> str:
@@ -233,13 +233,13 @@ def _simulator(world: str, row: dict) -> str:
 
 _SIM_VALVES_Q = f"""
 SELECT ?id ?commandTopic ?statusTopic ?mlPerSecond ?maxDoseMl ?port
-WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+WHERE {{ 
   ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}actuates> ?subject ;
      <{AG}commandTopic> ?commandTopic ; <{AG}statusTopic> ?statusTopic .
   OPTIONAL {{ ?v <{AG}mlPerSecond> ?mlPerSecond }}
   OPTIONAL {{ ?v <{AG}maxDoseMl> ?maxDoseMl }}
   ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
-}} }}"""
+ }}"""
 
 
 def _valve(world: str, row: dict) -> str:

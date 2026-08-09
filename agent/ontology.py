@@ -45,11 +45,53 @@ def term(name: str) -> str:
 CAPABILITY = term("Capability")  # the root every capability term is a kind of
 
 # --- named graphs ---------------------------------------------------------------------------
+#
+# Public knowledge is five graphs, not one, and the axis is **who put the fact there**. Three
+# kinds, and the difference between the last two is the one that took arguing:
+#
+#   asserted   somebody wrote it in a file — a package's vocabulary, or the sovereign's world
+#   derived    a rule computed it. `ag:hasCapability` is a DESIGN DECISION living in a
+#              `rules.ru` that could have said otherwise; the fact has no latitude once the
+#              rule exists, but the rule had latitude when it was written
+#   entailed   RDFS said it. No author, no alternative — any engine applying the same
+#              vocabulary gets the same answer, and nobody could have decided differently
+#
+# Which is why they are different graphs rather than one "computed" one: *why is the probe a
+# Sensor* sends you to the class hierarchy, *why does fern subscribe* sends you to a rule
+# somebody wrote, and amending the two has utterly different blast radius.
+#
+# See knowledge/decisions/who-put-the-fact-there.md.
 _GRAPH = "http://example.org/agora/graph/"
-ONTOLOGY_GRAPH = _GRAPH + "ontology"  # the T-Box, every package merged
-WORLD_GRAPH = _GRAPH + "world"  # topology + composed capabilities: public, versioned
+ONTOLOGY_GRAPH = _GRAPH + "ontology"  # the T-Box as the packages assert it
+ONTOLOGY_ENTAILED_GRAPH = _GRAPH + "ontology/entailed"  # what that vocabulary implies
+WORLD_GRAPH = _GRAPH + "world"  # topology, as the sovereign ratified it
+WORLD_DERIVED_GRAPH = _GRAPH + "world/derived"  # what each package's rules.ru computed
+WORLD_ENTAILED_GRAPH = _GRAPH + "world/entailed"  # what the vocabulary implies of instances
 SENSED_GRAPH = _GRAPH + "sensed"  # what sensors read
+# What the five above ARE, in PROV-O, so the store can say it rather than this file's comments.
+# Rename every graph to `g1`..`g5` and a reader could still work out which hold computed facts:
+# that is the test this graph exists to pass, and the reason the names above are a convenience
+# rather than the record. See agora/provenance.py.
+PROVENANCE_GRAPH = _GRAPH + "provenance"
 _BELIEFS = _GRAPH + "beliefs/"
+
+# Everything public, in load order. This is the DEFAULT GRAPH of every query, which is what
+# lets a reader write an ordinary pattern and mean "whatever the society knows" without caring
+# which of the five happens to hold it. Naming a graph explicitly still reaches exactly that one.
+#
+# The alternative — every reader wrapping `GRAPH <...>` around its patterns — is what the split
+# would otherwise have cost, and it is worse than verbose: a single basic graph pattern inside
+# one `GRAPH` clause must match entirely within that graph, so `?agent ag:polls ?s . ?s a
+# ag:Sensor` silently returns nothing the moment those two facts land in different graphs. The
+# failure is an empty result, not an error. See store.query and knowledge/decisions/.
+PUBLIC_GRAPHS = (
+    ONTOLOGY_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
+    WORLD_GRAPH, WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
+)
+
+# The same set for a SPARQL *update*, which takes no default-graph argument and must say it in
+# the text. `USING` is to `DELETE/INSERT ... WHERE` what `FROM` is to `SELECT`.
+USING_PUBLIC = "\n".join(f"USING <{g}>" for g in PUBLIC_GRAPHS)
 _REVISIONS = _GRAPH + "revisions/"
 _EVIDENCE = _GRAPH + "evidence/"
 _SUMMARIES = _GRAPH + "summaries/"
