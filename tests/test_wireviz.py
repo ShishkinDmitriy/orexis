@@ -74,9 +74,10 @@ def drafted():
 
 def test_every_role_survives_the_round_trip(drafted):
     """The inverse of the label. It found only two roles at first, because they are instances
-    of SUBCLASSES of mc:PinRole — onewire:DataPinRole is a mc:BidirectionalRole — and the
-    runtime does not run RDFS (#27, which has now cost five sessions). A property path closes
-    it without inference.
+    of SUBCLASSES of mc:PinRole — onewire:DataPinRole is a mc:BidirectionalRole — and the runtime
+    did not run RDFS (#27, which cost five sessions before it was closed). The entailments are
+    materialised now, so `a mc:PinRole` finds all of them; the generator still asks for the role
+    it was given rather than inferring one, which is a different question and the right one.
     """
     for role in ("mc:PowerPinRole", "mc:GroundPinRole", "onewire:DataPinRole",
                  "mc:AnalogInPinRole", "rgbled:RedPinRole", "rgbled:CommonPinRole"):

@@ -26,7 +26,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from . import genesis, loader
-from .ontology import SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
+from .ontology import ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph
 from .store import Store
 
 log = logging.getLogger("validate")
@@ -70,13 +70,23 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     verdict here and everything else is printed and passed over.
 
     Nothing is hidden by this. The full report, warnings included, is what the caller prints.
+
+    **`inference` is off, and that is the point rather than an economy.** It used to be `"rdfs"`,
+    which let pyshacl entail what the vocabulary implies — and the runtime entailed nothing, so a
+    world could satisfy a shape about a relationship the code would never observe. That is now
+    asserted once, into the store, by `agora/inference.py`, and the caller passes the graph that
+    holds it. Two engines, one closure, and `tests/test_inference.py` fails if they ever diverge.
+
+    The caller must therefore include the ONTOLOGY graph in `data`. Adding the files on top is
+    harmless — the materialised graph is a superset of them — and it keeps this correct for a
+    caller that has not been updated, which is worth more here than saving a union.
     """
     ontology, shapes = _shapes_and_vocabulary()
     data += ontology
     # advanced=True enables SPARQL-based targets, which is how a shape scopes itself to the
     # agents that composed its capability.
     _, results, report = shacl_validate(
-        data, shacl_graph=shapes, ont_graph=ontology, inference="rdfs", advanced=True,
+        data, shacl_graph=shapes, ont_graph=ontology, inference="none", advanced=True,
         **({"focus_nodes": [focus]} if focus else {}),
     )
     violated = any(
@@ -105,7 +115,10 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities) -> No
     """
     if not capabilities:
         return
-    data = graph_from(st, WORLD_GRAPH, beliefs_graph(agent_id), SENSED_GRAPH)
+    # ONTOLOGY first: it carries the entailments materialised at genesis, and a shape's
+    # SPARQL asks about them literally. Leave it out and the shapes go quiet rather than
+    # failing — see agora/inference.py.
+    data = graph_from(st, ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph(agent_id), SENSED_GRAPH)
     ok, report = conforms(data, focus=agent_uri)
     if not ok:
         raise BeliefsInvalid(

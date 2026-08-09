@@ -28,7 +28,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from . import loader
+from . import inference, loader
 from .config import REPO_ROOT
 from .ontology import ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph
 from .store import Store, bindings
@@ -156,10 +156,16 @@ def refresh_public(st: Store, world: Path) -> None:
     own. The derivation is re-run because it is a *function* of the world — materialising it
     into the world graph keeps every reader, and every SHACL shape, able to see an agent's
     capabilities without anyone having to compute them again.
+
+    The entailments come first, and the order is the point: a derivation rule may then ask what
+    a thing IS rather than spelling out a subclass path, because by the time it runs the answer
+    is asserted. Both are materialisation, one step apart — what the vocabulary implies, then
+    what the wiring implies. See agora/inference.py.
     """
     t_box = "\n".join(p.read_text() for p in loader.ontology_files())
     st.put_graph(ONTOLOGY_GRAPH, t_box)
     st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in world_files(world)))
+    inference.materialise(st)
     for rule in loader.rule_files():
         st.update(rule.read_text())
 

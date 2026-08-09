@@ -20,14 +20,19 @@
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
+#  Both rules read ONE graph and ask what a thing is, literally. They used to join the ontology
+#  and walk `rdfs:subClassOf*`, because a device typed as a KIND of sensor was not observably a
+#  sensor to the runtime while it was to the shapes. The vocabulary's entailments are asserted
+#  before any rule runs now, so a subclass-typed sensor carries `a ag:Sensor` in the world graph
+#  itself — see agora/inference.py and decisions/one-graph-both-engines-read.md.
+
 #  Keeps to an interval it is given -> the agent STATES that interval.
 INSERT { GRAPH <http://example.org/agora/graph/world> {
     ?agent ag:hasCapability ag:Subscribing } }
 WHERE  {
     GRAPH <http://example.org/agora/graph/world> {
-        ?agent ag:polls ?sensor . ?sensor a ?type ; ag:senseMode ag:Scheduled .
+        ?agent ag:polls ?sensor . ?sensor a ag:Sensor ; ag:senseMode ag:Scheduled .
     }
-    GRAPH <http://example.org/agora/graph/ontology> { ?type rdfs:subClassOf* ag:Sensor }
 } ;
 
 #  Announces on its own clock -> the agent can only RECEIVE, and is never asked for a cadence.
@@ -35,7 +40,6 @@ INSERT { GRAPH <http://example.org/agora/graph/world> {
     ?agent ag:hasCapability ag:Listening } }
 WHERE  {
     GRAPH <http://example.org/agora/graph/world> {
-        ?agent ag:polls ?sensor . ?sensor a ?type ; ag:senseMode ag:Push .
+        ?agent ag:polls ?sensor . ?sensor a ag:Sensor ; ag:senseMode ag:Push .
     }
-    GRAPH <http://example.org/agora/graph/ontology> { ?type rdfs:subClassOf* ag:Sensor }
 }

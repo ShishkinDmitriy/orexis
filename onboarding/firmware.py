@@ -77,11 +77,12 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
              ?rLeg <{MC}pinRole> <{RGBLED}RedPinRole>   . ?rw <{MC}joins> ?rLeg, ?rPin . ?rPin <{MC}gpio> ?ledRed .
              ?gLeg <{MC}pinRole> <{RGBLED}GreenPinRole> . ?gw <{MC}joins> ?gLeg, ?gPin . ?gPin <{MC}gpio> ?ledGreen .
              ?bLeg <{MC}pinRole> <{RGBLED}BluePinRole>  . ?bw <{MC}joins> ?bLeg, ?bPin . ?bPin <{MC}gpio> ?ledBlue }}
-  # Matched on the ROLE rather than on the device class, deliberately. a DHT11 is a subclass
-  # of the temp/humidity family and asking for the parent needs RDFS inference, which the shapes
-  # run with and this does not — issue #27, and it fails by silently returning no row rather
-  # than by complaining. The role is what the firmware actually needs to know anyway: this is
-  # the pin it must bit-bang, whatever part is on the end of it.
+  # Matched on the ROLE rather than on the device class, and it stays that way now that asking
+  # for the parent class would work — the entailments are materialised before anything reads
+  # them (see agora/inference.py), so the reason this was written defensively is gone. The role
+  # is what the firmware actually needs to know anyway: this is the pin it must bit-bang,
+  # whatever part is on the end of it. Matching the class would be asking a question whose
+  # answer it would then have to translate.
   OPTIONAL {{ ?board <{MC}carries> ?air .
              ?air <{MC}hasPin> ?airLeg .
              ?airLeg <{MC}pinRole> <{ONEWIRE}DataPinRole> .

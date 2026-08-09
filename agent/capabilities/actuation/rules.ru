@@ -11,8 +11,11 @@
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
+#  One graph and one literal check. It used to join the ontology and walk `rdfs:subClassOf*`,
+#  because a device typed as a KIND of actuator was not observably an actuator to the runtime.
+#  The entailments are asserted before any rule runs now, so a subclass-typed device carries
+#  `a ag:Actuator` in the world graph itself — see agora/inference.py.
 INSERT { GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasCapability ag:Actuation } }
 WHERE  {
-    GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasActuator ?device . ?device a ?type }
-    GRAPH <http://example.org/agora/graph/ontology> { ?type rdfs:subClassOf* ag:Actuator }
+    GRAPH <http://example.org/agora/graph/world> { ?agent ag:hasActuator ?device . ?device a ag:Actuator }
 }

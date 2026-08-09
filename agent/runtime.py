@@ -46,11 +46,26 @@ log = logging.getLogger("agent")
 
 def _family_q(family: str) -> str:
     """Which capability terms belong to a family. Asked of the T-Box, so a module can look
-    for "whoever perceives" without knowing that polling and listening are the two ways."""
+    for "whoever perceives" without knowing that polling and listening are the two ways.
+
+    Two branches, and the second is not the tidy-up it looks like. A caller may name a family
+    (`ag:PerceptionCapability`, whose members are `ag:Subscribing` and `ag:Listening`) or it may
+    name a capability that is its own family of one — `agent.provider(ACTUATION)` does exactly
+    that, and there is no term anywhere declared `a ag:Actuation`. That used to work by accident:
+    the branch said `rdfs:subClassOf*`, and a zero-length path matches reflexively, so the family
+    returned itself. Stating it is the same answer without depending on a property path's
+    reflexivity to carry a case nobody had written down.
+
+    The subclass walk itself is gone. `agora/inference.py` asserts what the vocabulary entails
+    before anything reads it, so a capability under a sub-family already carries the parent's
+    type here.
+    """
     return f"""
-SELECT ?capability WHERE {{ GRAPH ?g {{
-  {{ ?capability a <{family}> }} UNION {{ ?capability rdfs:subClassOf* <{family}> }}
-}} }}"""
+SELECT ?capability WHERE {{
+  {{ GRAPH ?g {{ ?capability a <{family}> }} }}
+  UNION
+  {{ BIND(<{family}> AS ?capability) }}
+}}"""
 
 
 class Agent:

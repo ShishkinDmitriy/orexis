@@ -8,9 +8,10 @@ asked for an interval it could not apply, and one on a scheduled board is requir
 import pytest
 import rdflib
 
-from agent import genesis, loader
-from agent.ontology import WORLD_GRAPH, beliefs_graph
+from agent import genesis, inference, loader
+from agent.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph
 from agent.validate import conforms as validate_conforms
+from agent.store import Store
 
 from agent.genesis import agent_id_of
 
@@ -18,11 +19,17 @@ from conftest import GENESIS_DIR, WORLDS_ROOT, genesis_store
 
 
 def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
-    """The vocabulary + the world + every agent's beliefs, exactly as validation sees it."""
+    """The vocabulary + the world + every agent's beliefs, exactly as validation sees it.
+
+    The vocabulary comes from the STORE and not from the files, which is the whole of what
+    "exactly as validation sees it" now means. `refresh_public` materialises what the T-Box
+    entails before anything reads it, so the store's copy carries `onewire:DataPinRole a
+    mc:OutputRole` and the files do not — and a shape's SPARQL asks about that literally. This
+    helper used to parse the files and was therefore validating something no caller builds; the
+    seven pin-role tests failing was the only reason anyone noticed.
+    """
     data = rdflib.Graph()
-    for path in loader.ontology_files():
-        data.parse(path, format="turtle")
-    graphs = [WORLD_GRAPH]
+    graphs = [ONTOLOGY_GRAPH, WORLD_GRAPH]
     # every agent genesis authors, found the way an agent's birth finds them — so adding one
     # to the world is caught here rather than quietly skipped
     graphs += [beliefs_graph(agent_id_of(p)) for p in sorted(world_dir.glob(genesis.BELIEFS_GLOB))]
@@ -285,11 +292,22 @@ ag:{device}_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
 
 def _wiring(body: str) -> rdflib.Graph:
-    """A board with the given wiring, held to the shapes exactly as a world would be."""
+    """A board with the given wiring, held to the shapes exactly as a world would be.
+
+    Through a real store, and that is load-bearing rather than ceremony. These wirings never see
+    `refresh_public`, so parsing the vocabulary straight from the files left them without the
+    entailments every other caller has — and the pin-role rules ask `?role a mc:OutputRole`,
+    which is asserted nowhere and entailed twice over. Building the store and materialising is
+    what makes "exactly as a world would be" true instead of approximately true.
+    """
+    st = Store()
+    st.put_graph(ONTOLOGY_GRAPH, "\n".join(p.read_text() for p in loader.ontology_files()))
+    st.put_graph(WORLD_GRAPH, _WIRING_PREAMBLE + body + _RAILS)
+    inference.materialise(st)
+
     data = rdflib.Graph()
-    for path in loader.ontology_files():
-        data.parse(path, format="turtle")
-    data.parse(data=_WIRING_PREAMBLE + body + _RAILS, format="turtle")
+    for iri in (ONTOLOGY_GRAPH, WORLD_GRAPH):
+        data.parse(data=st.get_graph(iri), format="turtle")
     return data
 
 
