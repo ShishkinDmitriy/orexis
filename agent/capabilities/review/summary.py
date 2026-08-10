@@ -25,7 +25,7 @@ equality with the minimum is the one thing a variance cannot express. A variance
 zero for a nearly-still world and *is* zero only for an instrument that has not moved at all,
 and those two cases want opposite responses.
 
-See knowledge/decisions/a-capability-is-granted-by-latitude.md.
+See knowledge/decisions/self-review-is-a-capability.md.
 """
 
 from __future__ import annotations

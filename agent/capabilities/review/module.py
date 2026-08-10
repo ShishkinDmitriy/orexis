@@ -52,7 +52,7 @@ The one thing this may write is its own beliefs graph. It reads the world as con
 so it stayed in the kernel on its own clock when this became optional — otherwise an agent with
 no mandate would silently stop compacting and undo the fix for #45. See `agora/upkeep.py`.
 
-See knowledge/decisions/a-capability-is-granted-by-latitude.md.
+See knowledge/decisions/self-review-is-a-capability.md.
 """
 
 from __future__ import annotations

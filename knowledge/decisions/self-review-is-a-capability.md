@@ -1,7 +1,7 @@
 ---
 type: Decision
-title: A capability is granted by latitude — room to move and the ability to use it are one fact
-description: Self-review left the kernel and became a capability family with members. What grants it is the mandate itself — an agent whose world gives it room to move gets the module that uses the room, derived rather than declared — which required the mandate to stop being a private belief.
+title: Self-review is a capability, and what grants it is latitude
+description: Self-review left the kernel and became a capability family with members. What grants it is the mandate itself — an agent whose world gives it room to move gets the module that uses the room, derived rather than declared — which required the mandate to stop being a private belief. Latitude is this capability's premise, not a rule about capabilities.
 status: accepted
 stage: v1
 tags: [capabilities, review, beliefs, constitution, provenance, upkeep]
@@ -28,6 +28,27 @@ differ, which is the test for a capability rather than a function. Left in the k
 model implementation would have been a redesign; as a family with members it is a directory.
 
 Which left the question this record exists to answer: **how does an agent come to have it?**
+
+# Latitude is THIS capability's premise, not a rule about capabilities
+
+Stated first, because the rest of this record is easy to over-read. There are four grants and they
+share no premise:
+
+| capability | granted by |
+|---|---|
+| `ag:Actuation` | `ag:hasActuator` — it is wired to a valve |
+| `ag:Bidding`, `ag:Hosting` | `ag:bidsIn`, `ag:hosts` — its position in a market |
+| `ag:Subscribing`, `ag:Listening` | `ag:polls` a sensor, and that sensor's mode |
+| `ag:Reckoning` | `ag:commits` — room to move |
+
+The general rule is that **a capability is granted by whatever fact makes it meaningful**, and what
+that fact is belongs to the capability, in its own package's `rules.ru`. Three of the four are
+about equipment or position, so wiring answers for them. Self-review is about revising your own
+settings, and what makes that meaningful is having settings you are permitted to move — so the
+premise is latitude. Neither is the pattern; both are answers to the same question.
+
+AGENTS.md puts the same point the other way round: *wiring is one input, not the definition.* This
+record is the second input.
 
 # Decision — the mandate is the grant
 

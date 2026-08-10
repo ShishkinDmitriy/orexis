@@ -23,7 +23,7 @@ a timer no capability owns.
 **The ratio that revealed the problem is the ratio that triggers the remedy.** `metrics.py`
 already computes both numbers on its own clock, and neither alone shows anything: the triples are
 flat (correct) and the bytes rise (alarming only if you know the triples are flat). Their quotient
-is the whole signal, and it is the trigger. See knowledge/decisions/a-capability-is-granted-by-latitude.md and issue #45.
+is the whole signal, and it is the trigger. See knowledge/decisions/self-review-is-a-capability.md and issue #45.
 
 The threshold lives in the ontology rather than here, for the same reason the cadence bounds do:
 it is what this society tolerates, not how this file happens to be written.

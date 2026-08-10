@@ -82,6 +82,15 @@ second `deduced`, and since the provenance split they are distinguishable rather
 distinct. So "deduced at genesis" is the rule; "computed from the wiring" is how it happens to
 work for the one family whose hardware forces the answer.
 
+**Each capability is granted by whatever fact makes it meaningful, and that fact is its own.** The
+premise lives in the capability's `rules.ru`, and there is no pattern to fit a new one into. Three
+are granted by wiring — `ag:hasActuator`, `ag:bidsIn`/`ag:hosts`, `ag:polls` and a sense mode —
+because they are about equipment or a position in a market. `ag:Reckoning` is granted by
+**latitude**: revising your own settings means nothing without settings you are permitted to move,
+so an `ag:commits` mandate whose ends differ is its premise. When you add one, ask what makes
+*yours* meaningful rather than which of these it resembles. See
+[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md).
+
 **What the prohibition is actually against** is a capability nobody is answerable for. That was
 unenforceable while a declared one and a derived one looked identical in the graph — which is why
 the rule had to be absolute. It no longer is: a derivation writes to `graph/world/derived`, the
@@ -212,7 +221,7 @@ summaries and never arises. Which terms may move is one triple in the owning pac
 revision is legitimate exactly when `validate_agent` still passes, which is the same call the
 agent makes at boot. **Compaction is not part of this** — it is not a choice, so it stayed in the
 kernel on a clock of its own. See
-[a-capability-is-granted-by-latitude](knowledge/decisions/a-capability-is-granted-by-latitude.md).
+[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md).
 
 ## Three traps worth knowing, and one that is closed
 

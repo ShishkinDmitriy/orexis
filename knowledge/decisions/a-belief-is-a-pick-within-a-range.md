@@ -58,7 +58,7 @@ constitution.
 > wants, and only that stays private. Range public, value private. Making it public is also what
 > made the capability derivable and put the two ends of "a world may not widen the constitution"
 > in graphs a single shape can compare. See
-> [a-capability-is-granted-by-latitude](a-capability-is-granted-by-latitude.md).
+> [self-review-is-a-capability](self-review-is-a-capability.md).
 
 The author's job becomes **constraining well rather than guessing well**, and how much autonomy
 each agent has stops being implied and becomes a line you can read and diff.
@@ -200,7 +200,7 @@ choice.
 > **Amended.** Still true, and it acquired teeth: once review became a capability an agent might
 > not have, upkeep riding the review timer would have made a mandate-less agent stop compacting
 > silently. It runs its own hourly clock now. See
-> [a-capability-is-granted-by-latitude](a-capability-is-granted-by-latitude.md).
+> [self-review-is-a-capability](self-review-is-a-capability.md).
 
 # Consequences
 
