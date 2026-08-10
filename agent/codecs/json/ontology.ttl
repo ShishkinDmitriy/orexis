@@ -23,7 +23,7 @@ codec:decodedBy a owl:ObjectProperty ; rdfs:range codec:Encoding ;
 #################  The members  #################
 
 codec:Json a codec:Encoding ; rdfs:label "JSON" ;
-    rdfs:comment "The one member with an implementation, and the default. Every board in every shipped world publishes a JSON object and is instructed with one — the cadence a sensor is given goes out the same way, which is why this is a CODEC and not a parser: it codes both directions." .
+    rdfs:comment "The one member with an implementation, and the default. Every board in every shipped world publishes a JSON object and is instructed with one. It is a CODEC rather than a parser because it codes both directions — though only DECODING is on a live path today: outbound messages are still serialised by agent/runtime.py, which json.dumps every publication whether it is a cadence, an offer or a voucher. So encode() is implemented, tested and unreached, and a society whose boards spoke CBOR would have to route that path through here too. See the seams in knowledge/decisions/bytes-become-a-quantity-in-stages.md." .
 
 codec:Cbor a codec:Encoding ; rdfs:label "CBOR" ;
     rdfs:comment "Declared, unimplemented. RFC 8949 — the same data model as JSON in a compact binary form, which is what a battery-powered board would reach for to shorten its radio time. Named first among the unbuilt because it is the cheapest: CBOR decodes to exactly the maps and arrays a pointer already walks, so a member would be a decode call and nothing else." .

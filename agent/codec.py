@@ -53,9 +53,11 @@ class Codec:
     def encode(self, document) -> bytes:
         """The bytes that document is, on the wire.
 
-        The other direction, and it is not decoration: an agent instructs its boards as well as
-        listening to them, and a society speaking a binary format to its sensors would have to
-        speak it back when it sets a cadence.
+        The other direction, and it is not decoration — but it is not yet reached either.
+        `agent/runtime.py` serialises every outbound message with `json.dumps`, so a cadence
+        published to a board does not pass through here. A society speaking a binary format to
+        its sensors would have to route that path through a codec first; until then this is
+        implemented and tested against `decode`, and nothing in production calls it.
         """
         raise NotImplementedError
 

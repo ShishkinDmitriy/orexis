@@ -175,6 +175,11 @@ into a conversion between *stated* units rather than a guess.
   property and not its unit, so the series store still cannot say what `21.4` is. Deliberate: #51
   changed the shape of that data once already, and doing it twice in consecutive changes would be
   two migrations where one would do.
+- **The codec is only on the READ path.** `agent/runtime.py` serialises every outbound message
+  with `json.dumps` — a cadence, an offer, a voucher — so `encode()` is implemented, tested and
+  unreached. A society whose boards spoke CBOR would need that path routed through a codec too,
+  and it is a wider change than this one because the same publish serves the market. The
+  asymmetry is worth naming: a codec that only decodes is half a codec.
 - **No second member of either family exists**, so the interchangeability is asserted rather than
   demonstrated. `codec:Cbor` would be the cheapest proof — CBOR decodes to exactly the maps and
   arrays a pointer already walks.
