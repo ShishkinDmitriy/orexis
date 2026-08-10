@@ -169,6 +169,19 @@ def _two_sensor_world(tmp_path, observes="ag:SoilMoisture"):
     shutil.copytree(src, dst)
     w = dst / "world.ttl"
     s = w.read_text()
+
+    # TWO sensors means two: the shipped world grew a KY-015's temperature and humidity
+    # channels (#51) and they are not what this fixture is about. Left in, `air_temp_fern`
+    # would already be observing AirTemperature on this fern, so passing `observes` here would
+    # silently produce the two-sensors-one-property case instead of the ordinary rig — the
+    # opposite of what the caller asked for.
+    for block in ("ag:air_temp_fern", "ag:air_humidity_fern"):
+        start = s.index(block)
+        s = s[:start] + s[s.index(" .\n", start) + 3:]
+    s = s.replace(
+        "ag:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;",
+        "ag:polls ag:moisture_sensor_fern ;")
+
     s = s.replace(
         "ag:fern_agent a ag:Agent ;",
         'ag:chatter_fern a ag:Sensor ;\n'

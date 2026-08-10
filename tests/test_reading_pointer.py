@@ -1,0 +1,181 @@
+"""One device reports two properties, and each sensor takes its own value out of one message.
+
+The board is one MQTT client with one credential, so it publishes once however many peripherals
+it carries. What separates the values is `ag:readingPointer` — a JSON Pointer (RFC 6901), which
+identifies exactly ONE value, which is exactly what a device reports per property.
+
+These cover the two halves that were broken: resolving the pointer, and offering one message to
+every sensor that owns the channel rather than only the first. See
+knowledge/decisions/a-reading-is-one-value-so-it-is-pointed-at.md and issue #51.
+"""
+
+import json
+
+import pytest
+
+from agent.transports.mqtt.driver import DEFAULT_POINTER, PointerError, resolve
+from agent.world import Sensor, load_self
+
+from conftest import build_agent, genesis_store, query_fn
+
+AIR_TEMP = "http://example.org/agora#AirTemperature"
+AIR_HUMIDITY = "http://example.org/agora#AirHumidity"
+MOISTURE = "http://example.org/agora#SoilMoisture"
+
+
+# --- the pointer itself ----------------------------------------------------
+
+def test_a_pointer_selects_a_named_field():
+    assert resolve("/temperature", {"temperature": 21.4, "humidity": 0.46}) == 21.4
+
+
+def test_a_pointer_walks_into_nesting():
+    """A flat field name could not express this, which is most of why it is a pointer."""
+    assert resolve("/readings/rh", {"readings": {"rh": 0.46}}) == 0.46
+
+
+def test_a_pointer_indexes_an_array():
+    assert resolve("/samples/1", {"samples": [1.0, 2.5, 3.0]}) == 2.5
+
+
+def test_the_escapes_are_decoded_in_the_order_the_rfc_states():
+    """`~1` becomes `/` FIRST, then `~0` becomes `~` — and the order is the whole trap.
+
+    Decoded the other way round, the `~01` below would become `~1` and then `/`, selecting a
+    field that was never asked for. RFC 6901 fixes the order precisely so a document may hold
+    a key with a literal tilde-one in it.
+    """
+    assert resolve("/a~1b", {"a/b": 1.0}) == 1.0        # ~1 is a slash
+    assert resolve("/a~0b", {"a~b": 2.0}) == 2.0        # ~0 is a tilde
+    assert resolve("/a~01b", {"a~1b": 3.0}) == 3.0      # NOT {"a/b"}, which reversing would give
+
+
+def test_the_default_is_what_every_single_property_board_already_sends():
+    assert DEFAULT_POINTER == "/value"
+    assert resolve(DEFAULT_POINTER, {"value": 0.183, "sensor": "probe"}) == 0.183
+
+
+@pytest.mark.parametrize("pointer, doc", [
+    ("/humidity", {"temperature": 21.4}),          # the field is simply absent
+    ("/a/b", {"a": {"c": 1}}),                     # absent one level down
+    ("/samples/9", {"samples": [1.0]}),            # past the end
+    ("/samples/rh", {"samples": [1.0]}),           # not an index
+    ("/a/b", {"a": 3.0}),                          # nothing left to select from
+    ("temperature", {"temperature": 21.4}),        # not a pointer at all — no leading slash
+    ("", {"value": 1.0}),                          # the RFC's whole-document pointer
+])
+def test_a_pointer_that_does_not_identify_a_value_is_refused(pointer, doc):
+    """Refused, never defaulted. A pointer that misses is a world stating something the device
+    does not send, and answering 0.0 would record that as a measurement."""
+    with pytest.raises((PointerError, ValueError)):
+        float(resolve(pointer, doc))
+
+
+# --- one message, several sensors ------------------------------------------
+
+def _fern():
+    return load_self(query_fn(genesis_store(world="sensing")), "fern")
+
+
+def test_the_shipped_world_reads_three_properties_off_one_board():
+    me = _fern()
+    assert {s.observes for s in me.sensors} == {MOISTURE, AIR_TEMP, AIR_HUMIDITY}
+    # one channel, three sensors — the board publishes once
+    assert len({s.reading_topic for s in me.sensors}) == 1
+
+
+def test_the_probe_states_no_pointer_because_the_default_is_what_it_sends():
+    """The whole point of the default: adding this term changed no existing sensor."""
+    probe = next(s for s in _fern().sensors if s.observes == MOISTURE)
+    assert probe.reading_pointer is None
+
+
+def test_one_message_produces_an_observation_for_every_sensor_on_the_channel(monkeypatch):
+    """The bug, stated as behaviour: `handle` returned after the first owning sensor.
+
+    Two sensors sharing a topic meant the second never saw a message and recorded nothing —
+    silently, because the topic HAD been handled, so nothing upstream complained.
+    """
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    fern = next(s.subject for s in agent.me.sensors)
+
+    agent.deliver("sensors/moisture_sensor_fern/reading",
+                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46,
+                   "sensor": "moisture_sensor_fern"})
+
+    # all three survive AT ONCE — the point of keying an observation by subject AND property
+    assert agent.beliefs.current_reading(fern, MOISTURE).value == pytest.approx(0.183)
+    assert agent.beliefs.current_reading(fern, AIR_TEMP).value == pytest.approx(21.4)
+    assert agent.beliefs.current_reading(fern, AIR_HUMIDITY).value == pytest.approx(0.46)
+
+
+def test_a_sensor_whose_field_is_missing_records_nothing_and_says_so(monkeypatch, caplog):
+    """One sensor missing its field while its neighbours read fine is the failure a shared
+    payload makes possible, so the warning has to name WHICH sensor found nothing."""
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    fern = next(s.subject for s in agent.me.sensors)
+
+    with caplog.at_level("WARNING"):
+        agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.183})
+
+    assert agent.beliefs.current_reading(fern, MOISTURE).value == pytest.approx(0.183)
+    assert agent.beliefs.current_reading(fern, AIR_TEMP) is None
+    assert "air_temp_fern" in caplog.text and "/temperature" in caplog.text
+
+
+def test_the_channel_is_claimed_even_when_no_sensor_could_read_it(monkeypatch, caplog):
+    """`handle` returns *this channel was mine*, which is about addressing and not success —
+    otherwise the runtime would report an unreadable payload as an unrouted topic."""
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    with caplog.at_level("WARNING"):
+        agent.deliver("sensors/moisture_sensor_fern/reading", {"nothing": "useful"})
+    assert "nothing handled a message" not in caplog.text
+
+
+# --- a cadence belongs to the board ----------------------------------------
+
+def test_one_board_is_aimed_once_however_many_sensors_it_carries(monkeypatch):
+    """Three sensors, one command topic, one retained instruction.
+
+    Aimed per sensor, each would compute its own interval from its own urgency and publish it
+    retained to the same topic — last writer winning, on every message.
+    """
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    agent.sent.clear()
+
+    agent.deliver("sensors/moisture_sensor_fern/reading",
+                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
+
+    cadences = [m for m in agent.sent if m[0] == "sensors/moisture_sensor_fern/command"]
+    assert len(cadences) == 1, f"the board was instructed {len(cadences)} times"
+
+
+def test_the_tightest_cadence_on_a_board_wins(monkeypatch):
+    """If anything on this board is urgent, the board watches closely.
+
+    The properties that are not urgent are then read more often than they need to be, which
+    costs a reading — the only safe direction to be wrong in.
+    """
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    subscribing = agent.subscribing()
+    sensors = {s.observes: s for s in subscribing.sensors}
+
+    slow = subscribing.cadence_for(sensors[AIR_TEMP].subject, AIR_TEMP, 21.4)
+    agent.sent.clear()
+    agent.deliver("sensors/moisture_sensor_fern/reading",
+                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
+
+    sent = [m for m in agent.sent if m[0] == "sensors/moisture_sensor_fern/command"]
+    assert sent, "the board must be aimed"
+    assert sent[0][1]["sleep_s"] <= slow
+    assert sent[0][2] is True, "a cadence is retained, or a sleeping board never hears it"
+
+
+def test_a_sensor_with_no_command_channel_is_aimed_alone(monkeypatch):
+    """The grouping is by command topic, so a sensor without one is a group of one — and the
+    driver sends nothing for it. Guards against grouping every unaimable sensor together."""
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    subscribing = agent.subscribing()
+    loose = Sensor(uri="urn:loose", local_id="loose", subject="urn:fern", subject_id="fern",
+                   observes=AIR_TEMP)
+    assert subscribing._aimed_with(loose) == (loose,)

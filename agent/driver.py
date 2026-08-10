@@ -40,7 +40,16 @@ class Driver:
         """Whether an inbound message on this channel is this sensor's reading."""
         return False
 
-    def parse(self, payload: bytes) -> float | None:
+    def parse(self, sensor, payload: bytes) -> float | None:
+        """The RAW VALUE this sensor's share of the payload holds, or None if unreadable.
+
+        Per sensor and not per message, because one message may carry several sensors' values:
+        a board with two peripherals is one client with one credential, so it publishes once.
+
+        Raw is the operative word. What a transport pulls off the wire is what the device sent;
+        turning that into an observed quantity is a third stage nothing here performs yet —
+        see issue #26 — and keeping the two nameable is what leaves room for it.
+        """
         raise NotImplementedError
 
     def set_cadence(self, sensor, sleep_s: int) -> None:

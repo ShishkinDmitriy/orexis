@@ -63,6 +63,10 @@ class Sensor:
     sense_mode: str | None = None
     bus: str | None = None  # URI of the bus it declares itself on, if any
     reading_topic: str | None = None
+    # WHICH value in that payload is mine — a JSON Pointer, and None means the default. Two
+    # sensors on one board share a topic and differ only here: the board is one MQTT client
+    # with one credential, so it sends one message and each sensor takes its own field.
+    reading_pointer: str | None = None
     command_topic: str | None = None
 
 
@@ -144,14 +148,16 @@ def _sensors_q(agent_uri: str) -> str:
     """My sensors and their bindings. The binding parts are OPTIONAL: what a device states
     about how to reach it varies by transport, and a driver is picked from what is there."""
     return f"""
-SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic ?commandTopic
-WHERE {{ 
+SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic
+       ?readingPointer ?commandTopic
+WHERE {{
   <{agent_uri}> ag:polls ?sensor .
   ?sensor ag:localId ?localId ; ag:monitors ?subject ; sosa:observes ?observes .
   OPTIONAL {{ ?sensor ag:senseMode ?senseMode }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
   OPTIONAL {{ ?sensor ag:onBus ?bus }}
   OPTIONAL {{ ?sensor ag:readingTopic ?readingTopic }}
+  OPTIONAL {{ ?sensor ag:readingPointer ?readingPointer }}
   OPTIONAL {{ ?sensor ag:commandTopic ?commandTopic }}
  }}"""
 
@@ -244,6 +250,7 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
             subject_id=r.get("subjectId") or "", observes=r["observes"],
             sense_mode=r.get("senseMode"),
             bus=r.get("bus"), reading_topic=r.get("readingTopic"),
+            reading_pointer=r.get("readingPointer"),
             command_topic=r.get("commandTopic"),
         )
         for r in bindings(query(_sensors_q(me.uri)))
