@@ -2,58 +2,59 @@
 @prefix ag:   <http://example.org/agora#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix market: <http://example.org/agora/market#> .
 
 # Rules for the Market module. Bidding and Hosting are separate capabilities with separate
 # rules, so an agent that only bids is never asked for a reserve price.
 
-ag:BiddingAgentShape a sh:NodeShape ;
+market:BiddingAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that bids must have a venue to bid in and a wallet to bid with. What it will PAY is domain-specific and checked by the domain's shapes." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
-                                       <http://example.org/agora#Bidding> }
+                                       <http://example.org/agora/market#Bidding> }
         """ ] ;
-    sh:property [ sh:path ag:bidsIn ; sh:minCount 1 ; sh:class ag:Market ;
+    sh:property [ sh:path market:bidsIn ; sh:minCount 1 ; sh:class market:Market ;
                   sh:message "a bidder must participate in a market" ] ;
-    sh:property [ sh:path ag:hasEndowment ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path market:hasEndowment ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minInclusive 0 ;
                   sh:message "a bidder must have an opening balance" ] .
 
-ag:HostingAgentShape a sh:NodeShape ;
+market:HostingAgentShape a sh:NodeShape ;
     rdfs:comment "A host must run a venue and state its terms: what it puts up, the floor it will not sell below, how long it waits for bids, and how often it will open a round at all." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
-                                       <http://example.org/agora#Hosting> }
+                                       <http://example.org/agora/market#Hosting> }
         """ ] ;
-    sh:property [ sh:path ag:hosts ; sh:minCount 1 ; sh:class ag:Market ] ;
-    sh:property [ sh:path ag:offerQuantityL ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path market:hosts ; sh:minCount 1 ; sh:class market:Market ] ;
+    sh:property [ sh:path market:offerQuantityL ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
-    sh:property [ sh:path ag:reservePricePerL ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path market:reservePricePerL ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
-    sh:property [ sh:path ag:bidWindowS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path market:bidWindowS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
                   sh:message "a host must say how long it waits for bids, or a round never closes" ] ;
-    sh:property [ sh:path ag:roundCooldownS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path market:roundCooldownS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 0 ] .
 
-ag:MarketShape a sh:NodeShape ;
+market:MarketShape a sh:NodeShape ;
     rdfs:comment "A market states all three of its channels; a venue you cannot answer on is not a venue." ;
-    sh:targetClass ag:Market ;
-    sh:property [ sh:path ag:marketFor ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
-    sh:property [ sh:path ag:offerTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
-    sh:property [ sh:path ag:bidTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
-    sh:property [ sh:path ag:voucherTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+    sh:targetClass market:Market ;
+    sh:property [ sh:path market:marketFor ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path market:offerTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path market:bidTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path market:voucherTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
 
-ag:HostStatesHowItMatchesShape a sh:NodeShape ;
+market:HostStatesHowItMatchesShape a sh:NodeShape ;
     rdfs:comment "A host must say how it matches. Without it no matching capability is derived, `agent.provider` finds nobody, and the failure arrives at the END of a round — bids collected, deadline passed, nothing to allocate them with, and every bidder waiting on a voucher that will not come. That is expensive and silent, and it is exactly what a world can be held to before anything starts. Targeted at whoever hosts rather than at ag:Agent, because an agent that hosts nothing has no auction to state terms for." ;
-    sh:targetSubjectsOf ag:hosts ;
-    sh:property [ sh:path ag:matchesBy ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:class ag:BidMatchingCapability ;
-                  sh:message "a host must state how it matches bids — one ag:matchesBy naming a matching capability" ] .
+    sh:targetSubjectsOf market:hosts ;
+    sh:property [ sh:path market:matchesBy ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:class market:BidMatchingCapability ;
+                  sh:message "a host must state how it matches bids — one market:matchesBy naming a matching capability" ] .
 
-ag:OnlyAHostMatchesShape a sh:NodeShape ;
-    rdfs:comment "The mirror: stating how you would run an auction you cannot convene is an authoring slip, not a choice. The derivation already ignores it — it is guarded on ag:hosts — so without this the statement would sit in the world doing nothing, which is the shape of a fact somebody will later believe." ;
-    sh:targetSubjectsOf ag:matchesBy ;
-    sh:property [ sh:path ag:hosts ; sh:minCount 1 ; sh:class ag:Market ;
+market:OnlyAHostMatchesShape a sh:NodeShape ;
+    rdfs:comment "The mirror: stating how you would run an auction you cannot convene is an authoring slip, not a choice. The derivation already ignores it — it is guarded on market:hosts — so without this the statement would sit in the world doing nothing, which is the shape of a fact somebody will later believe." ;
+    sh:targetSubjectsOf market:matchesBy ;
+    sh:property [ sh:path market:hosts ; sh:minCount 1 ; sh:class market:Market ;
                   sh:message "only a host states how it matches — this agent hosts no market" ] .

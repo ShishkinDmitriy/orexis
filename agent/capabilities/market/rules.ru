@@ -5,6 +5,7 @@
 
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX market: <http://example.org/agora/market#>
 
 #  `$given` becomes the `USING` clauses naming every public graph, and `$derived` the graph
 #  conclusions land in — substituted by the loader, because a rule should say what it concludes
@@ -15,14 +16,14 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 #  it. Never another rule's output — a derivation reads facts, not conclusions, so no rule can
 #  quietly depend on the order the packages happen to load in.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability ag:Bidding } }
+    ?agent ag:hasCapability market:Bidding } }
 $given
-WHERE  { ?agent ag:bidsIn ?market . ?market a ag:Market } ;
+WHERE  { ?agent market:bidsIn ?market . ?market a market:Market } ;
 
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability ag:Hosting } }
+    ?agent ag:hasCapability market:Hosting } }
 $given
-WHERE  { ?agent ag:hosts ?market . ?market a ag:Market } ;
+WHERE  { ?agent market:hosts ?market . ?market a market:Market } ;
 
 # Derivation: how a host matches, from what it says it matches by.
 #
@@ -32,11 +33,11 @@ WHERE  { ?agent ag:hosts ?market . ?market a ag:Market } ;
 # a market that stated the matching for them could not express that, and would also be claiming
 # something no participant asked it to hold.
 #
-# `ag:matchesBy` is stated; the capability is derived from it. That distinction is the whole
+# `market:matchesBy` is stated; the capability is derived from it. That distinction is the whole
 # reason this is derived and not declared: `world.ttl` may not contain `ag:hasCapability`,
 # and it does not — it contains what the host does, and the ability follows.
 #
-# Guarded on ag:hosts as well, so a would-be host that says how it matches but owns no venue
+# Guarded on market:hosts as well, so a would-be host that says how it matches but owns no venue
 # derives nothing. Stating how you would run an auction you cannot convene is an authoring slip,
 # and the shape says so; this derivation simply does not act on it.
 #
@@ -49,7 +50,7 @@ INSERT { GRAPH $derived {
     ?agent ag:hasCapability ?matching } }
 $given
 WHERE  {
-    ?agent ag:hosts ?market ; ag:matchesBy ?matching .
-    ?market a ag:Market .
-    ?matching a ag:BidMatchingCapability .
+    ?agent market:hosts ?market ; market:matchesBy ?matching .
+    ?market a market:Market .
+    ?matching a market:BidMatchingCapability .
 }

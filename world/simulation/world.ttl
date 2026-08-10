@@ -1,6 +1,7 @@
 @prefix ag:   <http://example.org/agora#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix market: <http://example.org/agora/market#> .
 
 #  A ratified world, v1 — the society, with nothing physical in it.
 #
@@ -57,12 +58,12 @@ ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 ##########  The venue  ##########
 
-ag:barrel1_market a ag:Market ;
+ag:barrel1_market a market:Market ;
     ag:localId "barrel1_market" ;
-    ag:marketFor ag:barrel1 ;
-    ag:offerTopic   "sim/market/barrel1/offer" ;
-    ag:bidTopic     "sim/market/barrel1/bid" ;
-    ag:voucherTopic "sim/market/barrel1/voucher" .
+    market:marketFor ag:barrel1 ;
+    market:offerTopic   "sim/market/barrel1/offer" ;
+    market:bidTopic     "sim/market/barrel1/bid" ;
+    market:voucherTopic "sim/market/barrel1/voucher" .
 
 ag:barrel1 a ag:WaterSource ;
     ag:localId "barrel1" ;
@@ -76,11 +77,11 @@ ag:barrel1 a ag:WaterSource ;
 
 ag:supplier a ag:Agent ;
     ag:localId "supplier" ;
-    ag:hosts ag:barrel1_market ;
+    market:hosts ag:barrel1_market ;
     #  How it matches bids to the lot. Public because a bidder cannot bid well against a
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
-    ag:matchesBy ag:PayAsBid ;
+    market:matchesBy market:PayAsBid ;
     ag:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
@@ -105,21 +106,21 @@ ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
     ag:actsFor ag:fern ;
     ag:polls ag:sensor_fern ;
-    ag:bidsIn ag:barrel1_market ;
+    market:bidsIn ag:barrel1_market ;
     ag:eventTopic "sim/readings/fern" .
 
 ag:tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
     ag:actsFor ag:tomato ;
     ag:polls ag:sensor_tomato ;
-    ag:bidsIn ag:barrel1_market ;
+    market:bidsIn ag:barrel1_market ;
     ag:eventTopic "sim/readings/tomato" .
 
 ag:succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
     ag:actsFor ag:succulent ;
     ag:polls ag:sensor_succulent ;
-    ag:bidsIn ag:barrel1_market ;
+    market:bidsIn ag:barrel1_market ;
     ag:eventTopic "sim/readings/succulent" .
 
 ##########  What each agent may re-pick, and how far  ##########

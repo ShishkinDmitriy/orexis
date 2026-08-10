@@ -1,4 +1,5 @@
 @prefix ag: <http://example.org/agora#> .
+@prefix market: <http://example.org/agora/market#> .
 
 #  Tomato's agent's PRIVATE beliefs. See genesis/beliefs-fern.ttl for what each term means.
 
@@ -8,9 +9,9 @@ ag:tomato_agent
     ag:slowSleepS 600 ;
     ag:readingGraceS 45 .
 
-##  ag:Bidding
+##  market:Bidding
 ag:tomato_agent
-    ag:hasEndowment 100.0 ;
+    market:hasEndowment 100.0 ;
     ag:hasTarget 0.50 ;
     ag:bandLow 0.30 ;
     ag:bandHigh 0.60 ;

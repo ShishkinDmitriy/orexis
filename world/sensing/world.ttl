@@ -1,6 +1,7 @@
 @prefix ag:   <http://example.org/agora#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix market: <http://example.org/agora/market#> .
 
 #  A ratified world, v1 — the SMALLEST one that produces a working agent.
 #
@@ -64,7 +65,7 @@ ag:moisture_sensor_fern a ag:Sensor ;
 
 ##########  The agent  ##########
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
-#  No ag:bidsIn and no ag:hosts, so no market capability can be derived for it.
+#  No market:bidsIn and no market:hosts, so no market capability can be derived for it.
 
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;

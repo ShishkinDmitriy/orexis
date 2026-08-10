@@ -3,6 +3,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix market: <http://example.org/agora/market#> .
 
 <http://example.org/agora/market> a owl:Ontology ;
     rdfs:label "Agora market" ;
@@ -10,59 +11,59 @@
 
 #################  Capabilities  #################
 
-ag:Bidding a ag:Capability ; rdfs:label "Bidding" ;
+market:Bidding a ag:Capability ; rdfs:label "Bidding" ;
     rdfs:comment "The agent answers offers in a market it participates in, with a bid computed from its own private valuation. Nobody else can compute that bid; that is the point of one process per agent." .
 
-ag:Hosting a ag:Capability ; rdfs:label "Hosting" ;
+market:Hosting a ag:Capability ; rdfs:label "Hosting" ;
     rdfs:comment "The agent runs rounds in a market: announces the offer, collects bids until the deadline, matches, has the trade validated, and issues vouchers. The scarce side hosts." .
 
 #################  The venue  #################
 
-ag:Market a owl:Class ; rdfs:label "Market" ;
+market:Market a owl:Class ; rdfs:label "Market" ;
     rdfs:comment "The standing STRUCTURE around a resource: what is allocated, who may supply it, who may consume it, and the channels they meet on (see transport), so participants discover the venue rather than being configured with it. A market is not an event — the AUCTION is the event, condensing out of scarcity and dissolving again, and a market with nothing contested is still a market with no auction in it. Both were called 'market' until recently and the two readings are opposites; see knowledge/domain/market.md." .
 
-ag:marketFor a owl:ObjectProperty ; rdfs:domain ag:Market ;
+market:marketFor a owl:ObjectProperty ; rdfs:domain market:Market ;
     rdfs:label "market for" ;
     rdfs:comment "The resource being allocated. The cluster boundary: who competes with whom." .
 
-ag:aboutProperty a owl:ObjectProperty ; rdfs:range sosa:ObservableProperty ;
+market:aboutProperty a owl:ObjectProperty ; rdfs:range sosa:ObservableProperty ;
     rdfs:label "about property" ;
     rdfs:comment "Which observable property a bidder's DESIRE is expressed in — stated by the domain on the desire term itself, never on a market. A market is a lot: 1L of water is 1L of water whether or not anyone's soil is dry, and a market for a thing no instrument measures (a time slot, a right of way) must remain expressible. What is genuinely property-shaped is the stake: a target of 0.55 is 0.55 OF something, and until this term existed that number was dimensionless. A bidder holding readings of several properties of one subject needs to know which one its valuation is about; it follows this link from the term it already names." .
 
-ag:hosts a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Market ;
+market:hosts a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range market:Market ;
     rdfs:label "hosts" .
-ag:bidsIn a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Market ;
+market:bidsIn a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range market:Market ;
     rdfs:label "bids in" ;
     rdfs:comment "Composed in the world: participation is public, so a host knows who may bid. What the agent will PAY stays private." .
 
-ag:offerTopic a owl:DatatypeProperty ; rdfs:domain ag:Market ; rdfs:range xsd:string ;
+market:offerTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
     rdfs:label "offer topic" ;
     rdfs:comment "Where the host announces a round." .
-ag:bidTopic a owl:DatatypeProperty ; rdfs:domain ag:Market ; rdfs:range xsd:string ;
+market:bidTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
     rdfs:label "bid topic" ;
     rdfs:comment "Where bidders answer. A prefix: each bidder publishes under its own localId." .
-ag:voucherTopic a owl:DatatypeProperty ; rdfs:domain ag:Market ; rdfs:range xsd:string ;
+market:voucherTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
     rdfs:label "voucher topic" ;
     rdfs:comment "Where the host returns what was won. A prefix, one segment per winner." .
 
 #################  The host's own terms (private belief)  #################
 
-ag:offerQuantityL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+market:offerQuantityL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "offer quantity litres" ;
     rdfs:comment "What the host puts up in a round." .
-ag:reservePricePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+market:reservePricePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "reserve price per litre" ;
     rdfs:comment "A genuine seller's floor: below this it would rather keep the resource. Private — buyers see the offer, never the reasoning." .
-ag:roundCooldownS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+market:roundCooldownS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "round cooldown seconds" ;
     rdfs:comment "The host's floor on how often it will open a round, so a flapping participant cannot spam the market." .
-ag:bidWindowS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+market:bidWindowS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "bid window seconds" ;
     rdfs:comment "How long the host waits for bids before matching. A bid that misses the deadline is simply not in the round." .
 
 #################  The bidder's own terms (private belief)  #################
 
-ag:hasEndowment a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+market:hasEndowment a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "has endowment" ;
     rdfs:comment "Opening wallet balance. The authoritative running balance is the mint's, never a self-report." .
 
@@ -72,18 +73,18 @@ ag:hasEndowment a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:d
 #  test for a capability rather than a function: the HOW could differ. Bidding and hosting have
 #  one way each and are therefore not families; all three are capabilities of this package.
 
-ag:BidMatchingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+market:BidMatchingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
     rdfs:label "Matching capability" ;
     rdfs:comment "The family. Anything that turns a lot and a set of bids into a proposed allocation with prices is one of these, so a host may ask for 'whoever matches' without knowing which member answered. The host PROPOSES; clearing still disposes — a matching capability decides an allocation, never whether it is permitted. Note the width of the term: a member supplies BOTH halves of what mechanism design calls a mechanism — an allocation rule (who gets how much) and a payment rule (what each winner pays) — but NOT how bidding proceeds. Ascending, descending and sealed-bid are the other half of what the literature calls an auction format, and that half is fixed here rather than pluggable — see knowledge/domain/bid-matching.md." .
 
-ag:PayAsBid a ag:BidMatchingCapability ; rdfs:label "Pay as bid" ;
+market:PayAsBid a market:BidMatchingCapability ; rdfs:label "Pay as bid" ;
     rdfs:comment "Greedy and discriminatory: bids at or above the reserve are filled highest-price-first, each up to its own maximum and capped by what is left, and each winner pays ITS OWN bid. The v1 member. It rewards bidding your true value only as far as you must — a winner that bid well above the clearing point pays all of it, so the honest strategy is to shade, which is the standard objection to pay-as-bid and the reason the alternative is declared beside it." .
 
-ag:UniformPrice a ag:BidMatchingCapability ; rdfs:label "Uniform price" ;
+market:UniformPrice a market:BidMatchingCapability ; rdfs:label "Uniform price" ;
     rdfs:comment "The same allocation rule as pay-as-bid, a different payment rule. Allocated exactly as pay-as-bid allocates — highest first, capped by what is left — and then every winner pays ONE price: the lowest accepted bid, which is where the demand curve crossed the lot. Bidding your true value costs nothing, because your own bid sets your bill only if you turn out to be the marginal buyer. Its own weakness is the mirror of that: a bidder large enough to be marginal can shade its QUANTITY rather than its price, taking less in order to leave the margin at a cheaper bid and pay less on everything it does take — demand reduction, the standard objection to uniform price, as shading is to the other. The reserve is the floor rather than a fallback: a round whose demand never reaches the lot is a walk that never crossed supply, so everyone is filled and everyone pays the reserve, with no contested-or-not test anywhere. That is what makes issue #50 a choice of member rather than a defect to patch." .
 
 #################  What a host states  #################
 
-ag:matchesBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:BidMatchingCapability ;
+market:matchesBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range market:BidMatchingCapability ;
     rdfs:label "matches by" ;
     rdfs:comment "How this host matches bids in the auctions it convenes. The host defines the terms of its own auction, so this is the host's fact and not the venue's — and it is PUBLIC, in the world, because a bidder cannot bid well against terms it does not know. Real auctions announce theirs; a sealed-bid first-price auction says so. Named `matchesBy` rather than `clearsBy` deliberately: clearing is a different thing here — the validator that co-signs a trade — and reusing the word would have made a host's allocation read as the notary's business. The capability is DERIVED from this, never declared." .

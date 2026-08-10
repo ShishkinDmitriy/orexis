@@ -14,6 +14,8 @@ from dataclasses import dataclass
 
 from agent.beliefs import Block
 
+from agent.ontology import term
+
 from .terms import RECKONING
 
 
@@ -31,5 +33,5 @@ class ReviewBeliefs:
 REVIEW_BLOCK = Block(
     capability=RECKONING,
     cls=ReviewBeliefs,
-    terms={"interval_s": "reviewIntervalS"},
+    terms={"interval_s": term("reviewIntervalS")},
 )

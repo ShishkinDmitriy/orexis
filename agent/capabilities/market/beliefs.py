@@ -12,16 +12,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from agent import ontology
 from agent.beliefs import Block
 
-from .terms import BIDDING, HOSTING
+from .terms import BIDDING, HOSTING, term
 
 BANDS = ("LOW", "OK", "HIGH")
 
 
 @dataclass(frozen=True)
 class BiddingBeliefs:
-    """ag:Bidding — its wallet, its desire, its limits, and its private value curve."""
+    """market:Bidding — its wallet, its desire, its limits, and its private value curve."""
 
     endowment: float
     target: float
@@ -52,7 +53,7 @@ class BiddingBeliefs:
 
 @dataclass(frozen=True)
 class HostingBeliefs:
-    """ag:Hosting — the seller's terms and the shape of a round."""
+    """market:Hosting — the seller's terms and the shape of a round."""
 
     quantity_l: float
     reserve_price_per_l: float
@@ -64,12 +65,17 @@ BIDDING_BLOCK = Block(
     capability=BIDDING,
     cls=BiddingBeliefs,
     terms={
-        "endowment": "hasEndowment",
-        "target": "hasTarget",
-        "low": "bandLow",
-        "high": "bandHigh",
-        "litres_per_fraction": "litresPerFraction",
-        "max_value_per_l": "maxValuePerL",
+        # Two namespaces, and the split is which package DECLARES the term. The wallet is
+        # the protocol's — how much a bidder brought to the venue. Everything under it is the
+        # water domain's: what a bid is WORTH here, which a market for anything else would
+        # answer differently. `vocabulary/water` has not taken a namespace of its own, so its
+        # terms are still `ag:` and reached through `agent.ontology`.
+        "endowment": term("hasEndowment"),
+        "target": ontology.term("hasTarget"),
+        "low": ontology.term("bandLow"),
+        "high": ontology.term("bandHigh"),
+        "litres_per_fraction": ontology.term("litresPerFraction"),
+        "max_value_per_l": ontology.term("maxValuePerL"),
     },
 )
 
@@ -77,9 +83,9 @@ HOSTING_BLOCK = Block(
     capability=HOSTING,
     cls=HostingBeliefs,
     terms={
-        "quantity_l": "offerQuantityL",
-        "reserve_price_per_l": "reservePricePerL",
-        "bid_window_s": "bidWindowS",
-        "cooldown_s": "roundCooldownS",
+        "quantity_l": term("offerQuantityL"),
+        "reserve_price_per_l": term("reservePricePerL"),
+        "bid_window_s": term("bidWindowS"),
+        "cooldown_s": term("roundCooldownS"),
     },
 )

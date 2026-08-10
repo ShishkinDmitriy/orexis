@@ -1,9 +1,10 @@
 @prefix ag: <http://example.org/agora#> .
+@prefix market: <http://example.org/agora/market#> .
 
 #  This agent's PRIVATE beliefs — and there is only one block, because it composed only one
 #  capability.
 #
-#  What is absent is the point. No ag:Bidding block: no endowment, no target, no band, no
+#  What is absent is the point. No market:Bidding block: no endowment, no target, no band, no
 #  price. This agent holds no stake, so it has no opinion about what a reading MEANS — it
 #  records the number and announces it. Compare world/society/beliefs-fern.ttl, which is the
 #  same agent in a world that gives it something to want.

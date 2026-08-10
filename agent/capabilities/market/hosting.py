@@ -1,18 +1,18 @@
-"""ag:Hosting — run rounds in a market: announce, collect, match, clear, issue.
+"""market:Hosting — run rounds in a market: announce, collect, match, clear, issue.
 
 This module exists in this shape *because* each agent is its own process. The host cannot
 compute anyone's bid — the valuation is private and lives in another process entirely — so a
 round is a conversation rather than a calculation:
 
     participant announces it is in trouble (its own judgment, voluntarily disclosed)
-        -> host announces an offer with a deadline          [ag:offerTopic]
-        -> each bidder answers with a number only it can compute   [ag:bidTopic/<agent>]
-        -> host matches, clearing validates, vouchers go back  [ag:voucherTopic/<agent>]
+        -> host announces an offer with a deadline          [market:offerTopic]
+        -> each bidder answers with a number only it can compute   [market:bidTopic/<agent>]
+        -> host matches, clearing validates, vouchers go back  [market:voucherTopic/<agent>]
         -> actuation redeems them against the hardware
 
 The host proposes; clearing disposes. `auction.py`, `clearing.py` and `market.py` are pure —
 this module is only the choreography around them. **How bids become an allocation is not part
-of the choreography**: it is matching, `ag:BidMatchingCapability`, asked for by family exactly as
+of the choreography**: it is matching, `market:BidMatchingCapability`, asked for by family exactly as
 actuation is, so this package does not know that pay-as-bid is implemented in Python at all. See
 knowledge/domain/bid-matching.md and knowledge/decisions/bid-matching-is-a-capability.md.
 
@@ -40,7 +40,7 @@ def _event_topics_q(market_uri: str) -> str:
     """Where my participants announce what they notice. Public, like the rest of the wiring."""
     return f"""
 SELECT ?agentId ?eventTopic WHERE {{ 
-  ?agent ag:bidsIn <{market_uri}> ; ag:localId ?agentId ; ag:eventTopic ?eventTopic  }}"""
+  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ; ag:eventTopic ?eventTopic  }}"""
 
 
 class HostingModule(Module):
@@ -186,7 +186,7 @@ class HostingModule(Module):
             # world can be amended between validation and a round, and losing a round's bids in
             # silence is worse than saying so — every bidder is waiting on a voucher.
             self.log.error("round %s cannot be matched — this host has no matching capability, "
-                           "so the bids are discarded. Check its ag:matchesBy.", round_id)
+                           "so the bids are discarded. Check its market:matchesBy.", round_id)
             return
 
         result = run_round(offer, bids, state, round_id=round_id, match=matcher.propose_match)

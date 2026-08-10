@@ -129,8 +129,8 @@ def test_bidder_must_have_a_valuation():
 def test_host_must_say_how_long_it_waits_for_bids():
     # without a window a round never closes
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("supplier")}> {{ ag:supplier ag:bidWindowS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("supplier")}> {{ ag:supplier ag:bidWindowS ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("supplier")}> {{ ag:supplier market:bidWindowS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("supplier")}> {{ ag:supplier market:bidWindowS ?v }} }}"""))
 
 
 def test_the_supplier_is_not_asked_for_a_cadence():
@@ -151,8 +151,8 @@ def test_a_host_must_say_how_it_matches():
     round: bids collected, deadline passed, nothing to allocate them with, every bidder waiting
     on a voucher that will not come. Refusing the world costs nothing by comparison."""
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier ag:matchesBy ?f }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier ag:matchesBy ?f }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier market:matchesBy ?f }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier market:matchesBy ?f }} }}"""))
 
 
 def test_only_a_host_may_state_how_it_matches():
@@ -160,7 +160,7 @@ def test_only_a_host_may_state_how_it_matches():
     an authoring slip, and the derivation already ignores it — so without a shape the statement
     would sit in the world doing nothing, which is the shape of a fact somebody later believes."""
     assert not _conforms(_mutate(f"""
-        INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent ag:matchesBy ag:PayAsBid }} }}"""))
+        INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent market:matchesBy market:PayAsBid }} }}"""))
 
 
 def test_pull_sensor_must_state_a_command_topic():
@@ -258,8 +258,8 @@ def test_a_plant_may_not_hold_a_desire():
 
 def test_market_must_state_all_three_channels():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market ag:voucherTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market ag:voucherTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market market:voucherTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market market:voucherTopic ?t }} }}"""))
 
 
 # --- the mc: wiring that cannot work must be refused --------------------------------------

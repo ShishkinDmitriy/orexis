@@ -223,7 +223,7 @@ def test_a_bidder_whose_desire_names_no_property_refuses_to_start(make):
     ds = genesis_store()
     ds.update(f"""DELETE WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
         <http://example.org/agora#hasTarget>
-        <http://example.org/agora#aboutProperty> ?p }} }}""")
+        <http://example.org/agora/market#aboutProperty> ?p }} }}""")
 
     with pytest.raises(RuntimeError, match="aboutProperty"):
         make("fern", ds)
@@ -399,14 +399,14 @@ def test_the_bidder_gives_up_when_the_window_passes(make):
 def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, monkeypatch):
     """The slot, demonstrated rather than asserted.
 
-    Everything between a world stating `ag:UniformPrice` and a bidder being billed at the
+    Everything between a world stating `market:UniformPrice` and a bidder being billed at the
     clearing price is machinery that already existed: the derivation grants whichever rule the
     host names, the loader registers whichever module declares it, and `provider` hands it over
     without the market package knowing either exists. Adding the second member moved nothing but
     its own package — this is what checks that.
 
     Built from a real world directory rather than by editing the graph, because the point is the
-    DERIVATION: patching `ag:matchesBy` after `refresh_public` has run leaves the capability the
+    DERIVATION: patching `market:matchesBy` after `refresh_public` has run leaves the capability the
     rules already computed, and the test would pass while proving nothing.
     """
     import shutil
@@ -423,7 +423,7 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
     (world / "secrets").mkdir(exist_ok=True)
     # The one edit a sovereign makes: this host runs a different auction.
     ttl = world / "world.ttl"
-    ttl.write_text(ttl.read_text().replace("ag:matchesBy ag:PayAsBid", "ag:matchesBy ag:UniformPrice"))
+    ttl.write_text(ttl.read_text().replace("market:matchesBy market:PayAsBid", "market:matchesBy market:UniformPrice"))
 
     monkeypatch.setenv("AGORA_WORLD_DIR", str(world))
     for name in ("host", "clearing"):
