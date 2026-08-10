@@ -36,6 +36,23 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
     assert me("fern").capabilities == {SUBSCRIBING, BIDDING, RECKONING}
 
 
+def test_a_mandate_whose_ends_meet_grants_nothing(me):
+    """`succulent`'s cadence is pinned — `ag:notBelow 900 ; ag:notAbove 900`.
+
+    That is not an oversight: it is how an author says a figure is not up for review, by leaving
+    nowhere to go rather than by a flag somewhere saying not to look, and `review.Range.fixed`
+    reads it exactly that way. Granting on the mere *presence* of a mandate would hand it a
+    capability whose every arising could only conclude nothing — a reviewer waking for ever to
+    re-derive that there is one permitted value and it already holds it.
+
+    Latitude is the grant, so where there is none there is nothing to grant. The wider rule is
+    AGENTS.md's: a capability nothing could vary is a function wearing a capability's name.
+    """
+    succulent = me("succulent")
+    assert RECKONING not in succulent.capabilities
+    assert succulent.capabilities == {SUBSCRIBING, BIDDING}
+
+
 def test_supplier_gets_hosting_and_actuation(me):
     """It owns the venue and the valves — so it sells and it opens them."""
     assert me("supplier").capabilities == {HOSTING, ACTUATION}

@@ -22,10 +22,22 @@
 
 PREFIX ag: <http://example.org/agora#>
 
+#  ROOM means room. A mandate whose ends meet grants nothing: it is how an author says a figure
+#  is not up for review — by leaving nowhere to go rather than by a flag somewhere saying not to
+#  look — and `review.Range.fixed` reads it exactly that way. Without the filter, `succulent`,
+#  whose cadence its world pins at 900, would hold a capability whose every arising could only
+#  conclude nothing. Granting is by LATITUDE, so where there is none there is nothing to grant.
+#
+#  Both ends are optional in a mandate — one side may be narrowed and the world's figure hold on
+#  the other — so this asks for the pair rather than assuming it, and a one-sided mandate is
+#  latitude too.
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability ag:Reckoning } }
 $given
 WHERE  {
     ?agent a ag:Agent ; ag:commits ?commitment .
     ?commitment ag:onTerm ?term .
+    OPTIONAL { ?commitment ag:notBelow ?below }
+    OPTIONAL { ?commitment ag:notAbove ?above }
+    FILTER(!BOUND(?below) || !BOUND(?above) || ?below < ?above)
 }

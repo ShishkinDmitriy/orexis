@@ -88,6 +88,26 @@ against every shape and is not free.
 
 What decides whether an agent reviews is the grant, and the grant is the mandate.
 
+## Room means room, and a mandate whose ends meet is none
+
+The rule asks for latitude, not for a mandate — those are not the same, and the difference has a
+worked example already in the worlds. `succulent`'s cadence is pinned: `ag:notBelow 900 ;
+ag:notAbove 900`. That is not an oversight but the documented way an author says a figure is not
+up for review — by leaving nowhere to go rather than by a flag somewhere saying not to look, which
+is exactly how `review.Range.fixed` reads it.
+
+Granting on the mere presence of `ag:commits` would have handed `succulent` a capability whose
+every arising could only conclude nothing: a reviewer waking on its interval for ever, re-deriving
+that there is one permitted value and it already holds it. Harmless, and it would have made the
+capability stop meaning what its own name says.
+
+So the grant filters on the ends actually differing. One-sided mandates still count — a world may
+narrow one end and let the constitution hold the other, and that is real room.
+
+The wider point is that **a capability nothing could vary is a function wearing a capability's
+name.** That is the test AGENTS.md rule 2 states, applied to the grant rather than to the design:
+where nothing could differ, do not grant.
+
 ## A family with two members, one of them empty
 
 `ag:ReviewCapability` is the slot. `ag:Reckoning` — works it out itself, from the rules the
