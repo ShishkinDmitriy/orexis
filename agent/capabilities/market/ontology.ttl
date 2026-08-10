@@ -6,7 +6,7 @@
 
 <http://example.org/agora/market> a owl:Ontology ;
     rdfs:label "Agora market" ;
-    rdfs:comment """The auction as a PROTOCOL: a venue, a host that announces offers, bidders that answer, and vouchers that come back. What a bid is worth is domain-specific and lives in the domain module; how a round is conducted is here. Two capabilities compose independently — an agent may bid, host, or do both.""" .
+    rdfs:comment """The auction: a venue, a host that announces offers, bidders that answer, vouchers that come back, and the matching that turns the bids into an allocation with prices. What a bid is WORTH is domain-specific and lives in the domain module; how a round is conducted is here. THREE capabilities compose independently — an agent may bid, host, or do both, and a host also has whichever matching its world put in force. Matching is a family with interchangeable members where bidding and hosting are single abilities; it shares this package because a directory is a package and not a capability, and the seam it needs is `PROVIDES` and a term, not a directory boundary.""" .
 
 #################  Capabilities  #################
 
@@ -65,3 +65,25 @@ ag:bidWindowS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:int
 ag:hasEndowment a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "has endowment" ;
     rdfs:comment "Opening wallet balance. The authoritative running balance is the mint's, never a self-report." .
+
+#################  Matching: the third capability, and the only family  #################
+#  A family, because given a lot and a set of bids there is genuinely more than one right
+#  answer, and which one is in force changes what a rational bidder should offer. That is the
+#  test for a capability rather than a function: the HOW could differ. Bidding and hosting have
+#  one way each and are therefore not families; all three are capabilities of this package.
+
+ag:BidMatchingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+    rdfs:label "Matching capability" ;
+    rdfs:comment "The family. Anything that turns a lot and a set of bids into a proposed allocation with prices is one of these, so a host may ask for 'whoever matches' without knowing which member answered. The host PROPOSES; clearing still disposes — a matching capability decides an allocation, never whether it is permitted. Note the width of the term: a member supplies BOTH halves of what mechanism design calls a mechanism — an allocation rule (who gets how much) and a payment rule (what each winner pays) — but NOT how bidding proceeds. Ascending, descending and sealed-bid are the other half of what the literature calls an auction format, and that half is fixed here rather than pluggable — see knowledge/domain/bid-matching.md." .
+
+ag:PayAsBid a ag:BidMatchingCapability ; rdfs:label "Pay as bid" ;
+    rdfs:comment "Greedy and discriminatory: bids at or above the reserve are filled highest-price-first, each up to its own maximum and capped by what is left, and each winner pays ITS OWN bid. The v1 member. It rewards bidding your true value only as far as you must — a winner that bid well above the clearing point pays all of it, so the honest strategy is to shade, which is the standard objection to pay-as-bid and the reason the alternative is declared beside it." .
+
+ag:UniformPrice a ag:BidMatchingCapability ; rdfs:label "Uniform price" ;
+    rdfs:comment "The same allocation rule as pay-as-bid, a different payment rule. Allocated exactly as pay-as-bid allocates — highest first, capped by what is left — and then every winner pays ONE price: the lowest accepted bid, which is where the demand curve crossed the lot. Bidding your true value costs nothing, because your own bid sets your bill only if you turn out to be the marginal buyer. Its own weakness is the mirror of that: a bidder large enough to be marginal can shade its QUANTITY rather than its price, taking less in order to leave the margin at a cheaper bid and pay less on everything it does take — demand reduction, the standard objection to uniform price, as shading is to the other. The reserve is the floor rather than a fallback: a round whose demand never reaches the lot is a walk that never crossed supply, so everyone is filled and everyone pays the reserve, with no contested-or-not test anywhere. That is what makes issue #50 a choice of member rather than a defect to patch." .
+
+#################  What a host states  #################
+
+ag:matchesBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:BidMatchingCapability ;
+    rdfs:label "matches by" ;
+    rdfs:comment "How this host matches bids in the auctions it convenes. The host defines the terms of its own auction, so this is the host's fact and not the venue's — and it is PUBLIC, in the world, because a bidder cannot bid well against terms it does not know. Real auctions announce theirs; a sealed-bid first-price auction says so. Named `matchesBy` rather than `clearsBy` deliberately: clearing is a different thing here — the validator that co-signs a trade — and reusing the word would have made a host's allocation read as the notary's business. The capability is DERIVED from this, never declared." .

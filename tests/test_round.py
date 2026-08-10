@@ -72,7 +72,7 @@ def test_the_offer_announces_the_rule_bidders_are_bidding_under(host):
     Read off the provider rather than a belief, so what is announced is necessarily what runs —
     a host cannot advertise one rule and apply another.
     """
-    from agent.capabilities.bid_matching import PAY_AS_BID
+    from agent.capabilities.market import PAY_AS_BID
 
     host.deliver("readings/fern", low_event())
     assert offer_from(host)["matches_by"] == PAY_AS_BID
@@ -414,7 +414,7 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
     from onboarding.keygen import create_keypair
 
     from agent import genesis
-    from agent.capabilities.bid_matching import UNIFORM_PRICE
+    from agent.capabilities.market import UNIFORM_PRICE
     from agent.genesis import agent_id_of
     from agent.store import Store
 
