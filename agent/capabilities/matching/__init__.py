@@ -1,16 +1,19 @@
 """The manifest: what this capability contributes to a build.
 
-One of the two ways of matching. `ag:UniformPrice` — every winner paying one clearing price — is
-declared in `ontology.ttl` and deliberately absent here, exactly as `ag:Polling` is for perception
-and `ag:Consulting` for review: the vocabulary should be honest that the allocation rule is the
-replaceable part, but nothing implements this one yet, and a world that states it derives a
-capability whose absence the agent reports at startup. Adding it is a class and one line of
-`PROVIDES`; no other package moves, which is the whole point of #66.
+Both ways of matching, now. `ag:UniformPrice` was declared here with no implementation when the
+format became a capability, under a note claiming that adding it would be *"a class and one line
+of PROVIDES; no other package moves"*. That turned out to be exactly true — this file and
+`module.py` are the whole of it, and `hosting.py` was not touched, because it asks
+`agent.provider(MATCHING)` for whoever matches and never learns which rule answered.
+
+Which is the point of a family. The market package still does not know that either rule is
+implemented in Python at all.
 """
 
-from .module import PayAsBidModule
+from .module import PayAsBidModule, UniformPriceModule
 from .terms import MATCHES_BY, MATCHING, PAY_AS_BID, UNIFORM_PRICE
 
-PROVIDES = (PayAsBidModule,)
+PROVIDES = (PayAsBidModule, UniformPriceModule)
 
-__all__ = ["PROVIDES", "PayAsBidModule", "MATCHING", "PAY_AS_BID", "UNIFORM_PRICE", "MATCHES_BY"]
+__all__ = ["PROVIDES", "PayAsBidModule", "UniformPriceModule",
+           "MATCHING", "PAY_AS_BID", "UNIFORM_PRICE", "MATCHES_BY"]
