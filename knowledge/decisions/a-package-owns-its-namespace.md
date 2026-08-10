@@ -1,0 +1,158 @@
+---
+type: Decision
+title: A package owns its namespace, and a directory is a package rather than a capability
+description: Every package has declared an owl:Ontology IRI of its own since there were packages, and then put its terms in someone else's namespace — because store.PREFIXES was a kernel constant, so a package wanting one had to edit the kernel to be nameable in SPARQL. The prefixes are now read off the ontologies that declare them, capabilities/market took market:, and bid matching folded into it. Three latent bugs only became visible once a second namespace existed.
+status: accepted
+stage: v1
+tags: [capabilities, packaging, vocabulary, store, market]
+timestamp: 2026-08-10T00:00:00Z
+---
+
+# Context
+
+Two things were true at once and should not have been.
+
+**Every package already declared a namespace of its own.** `capabilities/market/ontology.ttl` opens
+`<http://example.org/agora/market> a owl:Ontology`, and so does every other package — review,
+perception, actuation, the mqtt transport. The trees under `vocabulary/` went further and put their
+*terms* there too: `mc:`, `onewire:`, `i2c:`, `probe:`, since
+[pins-and-wires](pins-and-wires.md). So the convention existed, was in use, and was documented.
+
+**And every capability put its terms in `ag:` anyway.** `ag:Hosting`, `ag:matchesBy`,
+`ag:reviewIntervalS` — declared by a package, spelled as though the kernel owned them. An ontology
+that declares an IRI and then defines nothing under it is an ontology in name only.
+
+`agent/ontology.py` explained the split, and its explanation was the tell:
+
+> The hardware layer keeps namespaces of its own … It can afford this **precisely because no
+> runtime code names these terms**: an agent never queries a pin, so `term()` and
+> `store.PREFIXES` are untouched.
+
+True of the arrangement, false as a rule. The constraint was never that a namespace must go
+unqueried. It was that **`store.PREFIXES` was a kernel constant** — the only set a query may use,
+because rdflib pre-binds prefixes Fuseki does not and a query naming an undeclared one passes every
+test and 400s in production. A package wanting a namespace had to edit the kernel to be nameable.
+
+That is a registry, in the tree whose entire claim is that
+[adding a package edits nothing](capability-packages.md).
+
+# Decision — three of them, and the first is what made the others possible
+
+## The prefixes are read, not registered
+
+`agent.loader.prefixes()` scans every package's `ontology.ttl` for `@prefix` lines under this
+project's base and returns the label-to-IRI map. `store.PREFIXES` composes that with the external
+vocabularies it keeps. Nothing is listed, and adding a package with a namespace of its own is still
+adding a directory.
+
+**Read rather than imported, and that is forced.** Half the capabilities import `agent.store`, so a
+store that imported them back would close the loop. Reading Turtle text needs no import and runs
+before any capability's Python.
+
+**The external vocabularies stay in the kernel.** `rdfs:`, `owl:`, `xsd:`, `sosa:`, `prov:`, `rdf:`
+are standardised and stable, and a package that could rebind `rdfs:` could make `rdfs:subClassOf`
+mean what it liked — the walk [one-graph-both-engines-read](one-graph-both-engines-read.md)
+materialises and every shape leans on. `ag:` is *not* in that list: it arrives from
+`vocabulary/agora/ontology.ttl` like any other package's, because the base vocabulary is a package
+and hard-coding it would have made it an exception for no reason but habit.
+
+**A label bound to two namespaces is refused.** It is the quietest bug available — both spellings
+are valid SPARQL, so one package's query would read another's terms and no engine could tell
+anyone.
+
+## A directory is a package, and `capabilities/market/` holds three capabilities
+
+AGENTS.md rule 2 said *"a capability … is a directory"*. That was already false when it was
+written: `capabilities/market/` provided `ag:Bidding` and `ag:Hosting`, which are not
+interchangeable members of one family but two different abilities. The rule conflated two axes and
+hid the one that matters.
+
+**What isolates a capability is `PROVIDES` and its term, never the directory boundary.** So bid
+matching moved into `capabilities/market/` — `matching.py`, plus its share of the package's
+ontology, shapes and rules — and the family is unchanged. `hosting.py` still asks
+`agent.provider(BID_MATCHING)` and still never learns which member answered.
+
+**The claim #66 proved needs restating, not withdrawing.**
+[uniform-price-dissolves-the-uncontested-round](uniform-price-dissolves-the-uncontested-round.md)
+demonstrated that a second member landed without `hosting.py` moving. That was `PROVIDES` doing the
+work, not the directory: the module registers a term, the protocol asks for a family, and neither
+knows where the other's Python sits. Folding removes nothing from that argument.
+
+**What it does cost is deletion.** Removing the matching family used to be `rm -r` on a directory;
+it is now an edit to a shared `ontology.ttl`, `shapes.ttl` and `rules.ru`. That is the real price
+and it is worth naming: a directory is how a package is *found* and how one is *deleted*.
+
+In exchange the cross-package reference goes. `market/terms.py` had to re-declare the family term
+to ask for it, and under a namespace split would have had to re-declare the namespace IRI beside
+it — one string in two files, with nothing to catch drift.
+
+## `capabilities/market/` takes `market:`
+
+Nineteen terms and five shapes. The line is **who declares the term**:
+
+| stays `ag:` | why |
+|---|---|
+| `ag:Agent`, `ag:Capability`, `ag:hasCapability`, `ag:localId` | the kernel's — true of every agent |
+| `ag:hasTarget`, `ag:bandLow`, `ag:maxValuePerL` | `vocabulary/water`'s — what a bid is *worth* here |
+| `ag:eventTopic`, `ag:readingTopic` | the mqtt transport's |
+
+A bidder's belief block now reads from two namespaces at once, and that is the split stated rather
+than implied: the wallet is the protocol's (`market:hasEndowment` — what it brought to the venue),
+everything under it is the domain's answer to what water is worth to a plant.
+
+Only market converted. The other packages could, and the criterion for when it is worth it is
+below.
+
+# Three couplings that were bugs, not costs
+
+Each was invisible while every term shared one namespace, and each is a real defect that a second
+namespace merely exposed.
+
+**A belief block mapped a field to a bare local name** and `agent/beliefs.py` wrapped `ag:` around
+it. So the kernel decided where every capability's beliefs lived, and a package could not carry a
+belief of its own at all. Blocks now hold full IRIs, built by each package with its own `term()`,
+and the reader learns nothing about where any of them live.
+
+**Perception matched a revised belief by stripping the namespace off** and comparing local names:
+`belief_term.rsplit("#", 1)[-1] not in SUBSCRIBING_BLOCK.terms.values()`. Two packages may each
+declare a `slowSleepS`, and the stripped form cannot tell them apart — so a revision of someone
+else's belief would have been taken up as this module's. Compared whole now.
+
+**`onboarding/mqtt.py` derives the broker ACL from `bidsIn` and `hosts`.** A missed rename there
+un-grants every market topic and nothing fails: the generators are not run by either gate, which is
+exactly how [PR #62](https://github.com/ShishkinDmitriy/agora/pull/62) shipped a live regression in
+the supplier's signing keys. So the grants and the compose files were regenerated and diffed rather
+than assumed.
+
+# Consequences
+
+- **`tests/test_layout.py` holds `NS` to the namespace its own `ontology.ttl` declares.** They are
+  two copies of one fact — Python needs one without parsing Turtle, SHACL needs the other — and
+  drifting them apart fails in the worst available way: a world would conform while the agent
+  reading it found nothing, because an empty result is not an error. Proved by drifting it.
+- **`store.PREFIXES` grew the hardware prefixes** as a side effect, so a query *may* now name
+  `mc:` or `onewire:`. Nothing does. The point is that it would work rather than 400.
+- **A world author sees which package owns a term.** `world.ttl` reads `ag:hosts`… no longer: it
+  reads `market:hosts` beside `ag:localId`, and the prefix says where to look. Noisier to write and
+  self-documenting to read.
+- **`agent/world.py` still names market terms.** It queries `market:bidsIn` and `market:marketFor`
+  to load an agent's own view of itself. That the kernel knows what a market is predates this
+  change and is untouched by it; the namespace makes it visible rather than introducing it.
+
+# Seams left open
+
+- **The other four packages have not converted.** The criterion is not size, it is
+  `store.PREFIXES`: market was worth doing because it declares terms that world files and
+  onboarding both name, so the namespace buys legibility where a sovereign reads it. Perception,
+  review and actuation write their terms into SPARQL text heavily and would each be the same size
+  of change for less benefit. Nothing forces the question.
+- **`vocabulary/` packages ship no Python**, so they have no `terms.py` to hold an `NS` and their
+  namespaces stay as constants in `agent/ontology.py`. The one asymmetry left, and it follows from
+  a vocabulary package being pure knowledge rather than from anything about namespaces.
+- **Nothing stops a package declaring terms in another's namespace.** The loader would find the
+  prefix and every gate would pass; only a reader would notice. A shape could check that each
+  package's `ontology.ttl` defines only terms under its own base, and would need an exception for
+  the several packages that legitimately do not have one.
+- **The kernel still decides that `ag:` is what a package gets by default.** `agent.ontology.term()`
+  builds into `AG`, so a package that declares no `NS` silently inherits the kernel's namespace
+  rather than being asked to choose. That is the state four packages are in.

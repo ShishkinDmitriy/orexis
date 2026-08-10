@@ -11,7 +11,7 @@ timestamp: 2026-08-01T00:00:00Z
 The unit the [auction](/domain/auction.md) runs in, and the auction is the process — the
 [market](/domain/market.md) is the standing structure both happen inside. The round is run by the
 **host**: by design the scarce side, though nothing derives that and every shipped world states
-`ag:hosts` on the supplier (see [auction](/domain/auction.md), *who convenes it*).
+`market:hosts` on the supplier (see [auction](/domain/auction.md), *who convenes it*).
 Iterative-ascending so that
 conversation and auction genuinely interleave: agents see the partial allocation, converse,
 and re-bid. Bounded so it always terminates — primarily because deliberation costs, so rounds

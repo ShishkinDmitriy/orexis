@@ -39,7 +39,7 @@ thought about, and the questions only surface once something concrete is on the 
   that alone decides whether its agent gets `ag:Polling`, `ag:Subscribing` or `ag:Listening`
   (see [who-holds-the-clock](/decisions/who-holds-the-clock.md)).
 - "they share the barrel" → *who owns it?* — because owning the venue is what derives
-  `ag:Hosting`, and owning the valves is what derives `ag:Actuation`. A barrel with no owner
+  `market:Hosting`, and owning the valves is what derives `ag:Actuation`. A barrel with no owner
   produces a market nobody hosts.
 - "the fern is thirstier than the succulent" → *thirstier at what number?* — a band is the
   agent's own opinion and nothing can infer it.
@@ -108,7 +108,7 @@ So there are two families, and they behave differently:
   to watch, how stale is too stale. These track the *world's kind*: bench, staging, production.
   A sensible default could be supplied per kind, and hand-authoring near-identical numbers into
   every world is duplication waiting to drift.
-- **Stake beliefs** — `ag:hasTarget`, `ag:bandLow`/`ag:bandHigh`, `ag:hasEndowment`,
+- **Stake beliefs** — `ag:hasTarget`, `ag:bandLow`/`ag:bandHigh`, `market:hasEndowment`,
   `ag:maxValuePerL`. What this agent wants and what it will pay. **Not derivable from anything**
   — "this is a test world" tells you nothing about whether a fern is parched at 0.35. These are
   the agent's own and must be elicited.

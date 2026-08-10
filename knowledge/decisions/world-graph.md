@@ -38,7 +38,7 @@ agent's beliefs — that is its whole job. It is deliberately thin:
 
 ```turtle
 ag:fern_agent a ag:Agent ; ag:localId "fern" ;
-    ag:actsFor ag:fern ; ag:polls ag:moisture_sensor_fern ; ag:bidsIn ag:barrel1_market .
+    ag:actsFor ag:fern ; ag:polls ag:moisture_sensor_fern ; market:bidsIn ag:barrel1_market .
 ag:moisture_sensor_fern a ag:Sensor ; ag:monitors ag:fern ; ag:senseMode ag:Pull .
 ag:valve_fern a ag:Valve ; ag:actuates ag:fern ; ag:mlPerSecond 10.0 .
 ag:supplier a ag:Agent ; ag:hasActuator ag:valve_fern , … .

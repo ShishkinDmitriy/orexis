@@ -24,9 +24,9 @@ vocabulary before it could say anything else.
 
 | | what it is | where it lives |
 |---|---|---|
-| [market](/domain/market.md) | the standing structure it happens inside | `ag:Market` in the world |
+| [market](/domain/market.md) | the standing structure it happens inside | `market:Market` in the world |
 | [round](/domain/round.md) | the bounded unit it runs in | `capabilities/market/hosting.py` |
-| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `capabilities/bid_matching/` |
+| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `capabilities/market/matching.py` |
 | [clearing](/domain/clearing.md) | the notary that validates and co-signs — never allocates | `agent/clearing.py` |
 
 The line that holds them apart is **the host proposes, clearing disposes**. Matching decides
@@ -67,7 +67,7 @@ in a buyer's market a consumer would host a reverse one. Money-scarcity does not
 host — money is the medium, not the good; it only gates who can afford to bid. That is what
 [standalone-clearing](/decisions/standalone-clearing.md) and [market](/domain/market.md) record.
 
-**Nothing implements it.** `ag:hosts` is stated in `world.ttl`, and in every shipped world it
+**Nothing implements it.** `market:hosts` is stated in `world.ttl`, and in every shipped world it
 names the supplier statically. No code compares which side is short, and the host does not
 rotate. The principle is a documented intention, and this page says so rather than describing it
 as behaviour.

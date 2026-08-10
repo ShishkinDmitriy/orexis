@@ -70,7 +70,7 @@ The market package must not name a domain property: `ag:SoilMoisture` in market 
 the domain leaking into the protocol. So it is derived. The question is *derived from what*, and
 the first answer was wrong.
 
-**The first answer put it on the market**: a market is `ag:marketFor` a resource, and the
+**The first answer put it on the market**: a market is `market:marketFor` a resource, and the
 resource's class states which property it `ag:relieves`. It reads plausibly and it is wrong
 twice. A market is a **lot** — 1L of water is 1L of water whether or not anyone's soil is dry —
 so making a market carry a property means a market for something no instrument measures (a time
@@ -83,10 +83,10 @@ exactly the exchange rate between the lot and the property, which is where the c
 lives. Until this was written down, that 0.55 was dimensionless, and the agent got away with it
 only because it had one kind of reading to compare against.
 
-So the domain states `ag:aboutProperty` on the desire term itself:
+So the domain states `market:aboutProperty` on the desire term itself:
 
 ```turtle
-ag:hasTarget ag:aboutProperty ag:SoilMoisture .
+ag:hasTarget market:aboutProperty ag:SoilMoisture .
 ```
 
 The bidder follows that link from `ag:hasTarget`, which its own beliefs block already names, so
@@ -186,7 +186,7 @@ them had to be rewritten when it turned out to pass with the fix removed.
 - **No ratified world wires two sensors to one agent.** The behaviour is exercised only in tests,
   against worlds built in a temporary directory. It has never run on the bench, and the board
   that motivates it is not yet flashed.
-- **A desire is about exactly one property.** `ag:aboutProperty` is read as a single value, so an
+- **A desire is about exactly one property.** `market:aboutProperty` is read as a single value, so an
   agent whose stake spans two — wanting both moisture and nutrient held — has no representation.
   Nothing depends on this yet, and widening it is one query and a loop.
 - **The link is on the term, so every agent in a domain shares it.** Two agents in one world

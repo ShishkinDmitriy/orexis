@@ -50,7 +50,7 @@ matching* is the standard phrase and bids are our orders: the host posts one lot
 answer, so there is no two-sided book to have orders in. See
 [bid-matching-is-the-word](/decisions/bid-matching-is-the-word.md).
 
-The qualifier is carried where something could be misread and nowhere else. `ag:matchesBy` has a
+The qualifier is carried where something could be misread and nowhere else. `market:matchesBy` has a
 host for its domain and this family for its range, so *supplier matchesBy PayAsBid* admits one
 reading and stays as it is; so do `propose_match` and `Match`.
 
@@ -65,14 +65,14 @@ two independent things:
    / discriminatory (each winner pays its own bid), uniform (every winner pays one clearing
    price), second-price, and so on.
 
-**We model only the second.** `ag:BidMatchingCapability` is the allocation-and-payment half alone.
+**We model only the second.** `market:BidMatchingCapability` is the allocation-and-payment half alone.
 The first axis is fixed here: [round](/domain/round.md) describes an iterative-ascending round,
 and that is a property of the protocol in `capabilities/market`, not a slot anything plugs into.
 
 **Dutch makes it concrete.** A Dutch auction is descending open outcry — the auctioneer starts
 high and lowers the price until someone accepts. It is a complete mechanism, fixing both axes.
 But what makes it *Dutch* is the procedure; its payment rule is first-price, which is what we
-call `ag:PayAsBid`. The classic result sharpens it: **a Dutch auction is strategically equivalent
+call `market:PayAsBid`. The classic result sharpens it: **a Dutch auction is strategically equivalent
 to a first-price sealed-bid auction** — in both, the moment you commit fixes your price, so a
 bidder shades identically. Same payment rule, different procedure, same outcome.
 
@@ -80,7 +80,7 @@ bidder shades identically. Same payment rule, different procedure, same outcome.
 |---|---|---|
 | Dutch | descending open | first-price *(= pay-as-bid)* |
 | first-price sealed-bid | one-shot sealed | first-price *(= pay-as-bid)* |
-| our round today | iterative ascending | `ag:PayAsBid` or `ag:UniformPrice` |
+| our round today | iterative ascending | `market:PayAsBid` or `market:UniformPrice` |
 
 Dutch and sealed-bid differ on the left and agree on the right; our two differ on the right and
 agree on the left. So Dutch is not a bid-matching capability and would not become one: if the bidding
@@ -99,15 +99,15 @@ precisely why `matching` is our word and `format` is not.
 Bid matching is a **capability**, in the sense [capability-packages](/decisions/capability-packages.md)
 gives the word: a family with interchangeable members, asked for by family and never by name.
 
-- The host states `ag:matchesBy ag:PayAsBid` in the world. That is a fact about what it *does*.
-- The capability `ag:hasCapability ag:PayAsBid` is **derived** from it at genesis, never written
+- The host states `market:matchesBy market:PayAsBid` in the world. That is a fact about what it *does*.
+- The capability `ag:hasCapability market:PayAsBid` is **derived** from it at genesis, never written
   by hand — the same as every other capability here.
 - At runtime `hosting.py` asks `agent.provider(BID_MATCHING)` and gets whichever module registered
   that member. The market package does not know that pay-as-bid is implemented in Python at all.
 
 It is the **host's** fact and not the market's, because an auction's terms belong to whoever
 convenes it, and two hosts of one market could in principle run different auctions. A world that
-states `ag:matchesBy` on a non-host is refused by a shape; so is a host that states nothing.
+states `market:matchesBy` on a non-host is refused by a shape; so is a host that states nothing.
 
 **And it is public, announced in each offer.** `announce()` publishes `matches_by` alongside the
 quantity, the reserve and the deadline, read off the provider rather than off a belief so that
@@ -128,8 +128,8 @@ is an ordinary member and would share nothing with them.
 
 | | what a winner pays | what it rewards |
 |---|---|---|
-| `ag:PayAsBid` | its own bid | **shading** — bid the least you think will win |
-| `ag:UniformPrice` | the lowest accepted bid | **demand reduction** — take less to keep the margin cheap |
+| `market:PayAsBid` | its own bid | **shading** — bid the least you think will win |
+| `market:UniformPrice` | the lowest accepted bid | **demand reduction** — take less to keep the margin cheap |
 
 - **Pay-as-bid** is discriminatory: a winner that bid well above the clearing point pays all of
   it. So the honest strategy is to shade, and the prices the host sees are not what anyone
@@ -160,20 +160,27 @@ them is a governance call rather than a bug fix:
   detect `sum(max_qty_l) <= quantity_l` and allocate everyone their full request at the reserve.
   A second code path, which has to be tested and must not become a way to pay less by bidding in
   a quiet round.
-- **Switch the world to `ag:UniformPrice`** — one edit, `ag:matchesBy` on the supplier. There is
+- **Switch the world to `market:UniformPrice`** — one edit, `market:matchesBy` on the supplier. There is
   then nothing to detect: the clearing price *starts* at the reserve and rises only if the walk
   exhausts the lot, so a round whose demand never reaches the lot clears at the reserve because
   nothing else could have happened.
 
-**No world has switched.** All three still state `ag:matchesBy ag:PayAsBid`, deliberately —
+**No world has switched.** All three still state `market:matchesBy market:PayAsBid`, deliberately —
 changing it alters what every participant pays and how each should bid. See
 [uniform-price-dissolves-the-uncontested-round](/decisions/uniform-price-dissolves-the-uncontested-round.md).
 
 # Where it lives
 
-`agent/capabilities/bid_matching/` — `ontology.ttl` (the family and its members), `shapes.ttl` (a
-host must say how it matches; only a host may), `rules.ru` (the derivation), `module.py` (both
-implementations). `agent/auction.py` holds the path around it: propose, validate, issue.
+`agent/capabilities/market/`, in `market:`. `matching.py` holds both implementations; the family,
+its members and `market:matchesBy` are declared in the package's `ontology.ttl`, the two shapes (a
+host must say how it matches; only a host may) in its `shapes.ttl`, and the derivation is the third
+update in its `rules.ru`. `agent/auction.py` holds the path around it: propose, validate, issue.
+
+**It shares a package with the protocol and is still its own family.** A directory is a package,
+not a capability — `capabilities/market/` provides three. What keeps the two independent is
+`PROVIDES` and the term, never the directory: `hosting.py` asks `agent.provider(BID_MATCHING)` and
+never learns which member answered. See
+[a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md).
 
 See [auction](/domain/auction.md) for the process matching is one step of,
 [round](/domain/round.md) for the unit it runs in, and [clearing](/domain/clearing.md) for what

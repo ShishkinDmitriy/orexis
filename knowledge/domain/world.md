@@ -75,15 +75,15 @@ that wants both simply asks, because every public graph is the default graph of 
 |---|---|
 | `ag:polls` a sensor whose `ag:senseMode` is `ag:Scheduled` | `ag:Subscribing` |
 | `ag:polls` a sensor whose `ag:senseMode` is `ag:Push` | `ag:Listening` |
-| `ag:bidsIn` a market | `ag:Bidding` |
-| `ag:hosts` a market | `ag:Hosting` |
+| `market:bidsIn` a market | `market:Bidding` |
+| `market:hosts` a market | `market:Hosting` |
 | `ag:hasActuator` anything that is a kind of `ag:Actuator` | `ag:Actuation` |
 
 Reflash a board from `Push` to `Scheduled`, re-seed, and its agent gains an interval to state —
 with no edit to the agent, because there is nothing about the agent to edit. See
 [who-holds-the-clock](/decisions/who-holds-the-clock.md) for what those three sense modes mean.
 
-The market rows are the **weakest** of these, and worth naming as such: `ag:bidsIn` says "is a
+The market rows are the **weakest** of these, and worth naming as such: `market:bidsIn` says "is a
 bidder" in other words, where `ag:senseMode` states a physical fact about hardware. Deriving
 market roles from declared *goals* instead is an open seam — see below.
 
@@ -149,7 +149,7 @@ hold every world they find to the same constitution, with no test edit.
 # Why more than one world
 
 `sensing/` exists because "capabilities are derived, not declared" is worth nothing unless a
-capability can actually run alone. It has no market, so nothing can derive `ag:Bidding`, so no
+capability can actually run alone. It has no market, so nothing can derive `market:Bidding`, so no
 agent has it — and perception has to stand up by itself or the claim is false.
 
 The two ship with **the same device ids and channels on purpose**. One flashed board runs in
@@ -345,7 +345,7 @@ only an explicit re-birth discards them.
 
 # Seams left open
 
-- **Market roles are declared, not derived.** `ag:bidsIn` and `ag:hosts` are the two weakest
+- **Market roles are declared, not derived.** `market:bidsIn` and `market:hosts` are the two weakest
   rows in the derivation table. Stating an agent's *goal* — keep this plant alive, steward this
   source — and deriving both market capabilities from that would make them as honest as
   perception and actuation already are, and would also yield who the counterparties are without
