@@ -146,6 +146,23 @@ def test_sensor_must_state_how_it_is_driven():
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ?m }} }}"""))
 
 
+def test_a_host_must_say_how_it_matches():
+    """Without it no matching capability is derived and the failure arrives at the END of a
+    round: bids collected, deadline passed, nothing to allocate them with, every bidder waiting
+    on a voucher that will not come. Refusing the world costs nothing by comparison."""
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier ag:matchesBy ?f }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier ag:matchesBy ?f }} }}"""))
+
+
+def test_only_a_host_may_state_a_matching_rule():
+    """An auction's terms belong to whoever convenes it. A bidder saying how it would match is
+    an authoring slip, and the derivation already ignores it — so without a shape the statement
+    would sit in the world doing nothing, which is the shape of a fact somebody later believes."""
+    assert not _conforms(_mutate(f"""
+        INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent ag:matchesBy ag:PayAsBid }} }}"""))
+
+
 def test_pull_sensor_must_state_a_command_topic():
     assert not _conforms(_mutate(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:commandTopic ?t }} }}

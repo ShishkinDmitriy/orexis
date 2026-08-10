@@ -10,8 +10,11 @@ round is a conversation rather than a calculation:
         -> host matches, clearing validates, vouchers go back  [ag:voucherTopic/<agent>]
         -> actuation redeems them against the hardware
 
-The host proposes; clearing disposes. `auction.py`, `clearing.py` and `market.py` are pure
-and unchanged — this module is only the choreography around them.
+The host proposes; clearing disposes. `auction.py`, `clearing.py` and `market.py` are pure —
+this module is only the choreography around them. **How bids become an allocation is not part
+of the choreography**: it is `ag:MatchingCapability`, asked for by family exactly as actuation
+is, so this package does not know that pay-as-bid is implemented in Python at all. See
+knowledge/decisions/an-auction-format-is-a-capability.md.
 
 Vocabulary: capabilities/market/ontology.ttl. Rules: capabilities/market/shapes.ttl.
 See knowledge/domain/round.md, knowledge/decisions/clearing-as-validator.md.
@@ -30,7 +33,7 @@ from agent.store import bindings
 from agent.world import participants
 
 from .beliefs import HOSTING_BLOCK
-from .terms import ACTUATION, HOSTING
+from .terms import ACTUATION, HOSTING, MATCHING
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -94,10 +97,21 @@ class HostingModule(Module):
             return
         self.announce(market, trigger=event.get("agent", "?"))
 
+    def matcher(self):
+        """Whichever of my capabilities can turn bids into an allocation, or None.
+
+        Asked for by family, so this package does not know that pay-as-bid is implemented in
+        Python at all — the same way `redeem` asks for whoever can actuate. A host that states
+        a rule nothing implements gets None here, which is the honest outcome of declaring
+        `ag:UniformPrice` today.
+        """
+        return self.agent.provider(MATCHING)
+
     def announce(self, market, trigger: str) -> None:
         round_id = uuid.uuid4().hex[:8]
         self.last_round_at = time.monotonic()
         self.open_round = {"round_id": round_id, "market": market, "bids": {}}
+        matcher = self.matcher()
         self.log.info("round %s opened on %s (%s is LOW) — %.2f L, reserve €%.2f, %ss to bid",
                       round_id, market.local_id, trigger, self.beliefs.quantity_l,
                       self.beliefs.reserve_price_per_l, self.beliefs.bid_window_s)
@@ -107,6 +121,12 @@ class HostingModule(Module):
             "quantity_l": self.beliefs.quantity_l,
             "reserve_price_per_l": self.beliefs.reserve_price_per_l,
             "closes_in_s": self.beliefs.bid_window_s,
+            # The rules travel with the invitation, as a real auction announces its terms when
+            # it opens. A bidder cannot bid well against a rule it does not know — under
+            # pay-as-bid a winner pays what it offered, so the honest strategy is to shade,
+            # and under a uniform price it does not. Read off the provider rather than from a
+            # belief, so what is announced is necessarily what will run.
+            "matches_by": matcher.CAPABILITY if matcher else None,
         })
         self._timer = Timer(self.beliefs.bid_window_s, self.close)
         self._timer.start()
@@ -160,7 +180,16 @@ class HostingModule(Module):
             reserve_price_per_l=self.beliefs.reserve_price_per_l,
         )
 
-        result = run_round(offer, bids, state, round_id=round_id)
+        matcher = self.matcher()
+        if matcher is None:
+            # Nothing to allocate the bids with. Checked here as well as by the shape, because a
+            # world can be amended between validation and a round, and losing a round's bids in
+            # silence is worse than saying so — every bidder is waiting on a voucher.
+            self.log.error("round %s cannot be matched — this host has no matching capability, "
+                           "so the bids are discarded. Check its ag:matchesBy.", round_id)
+            return
+
+        result = run_round(offer, bids, state, round_id=round_id, match=matcher.propose_match)
         if not result.validation.ok:
             self.log.warning("round %s RED — clearing rejected: %s",
                              round_id, result.validation.violations)
