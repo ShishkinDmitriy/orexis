@@ -15,4 +15,4 @@ HOSTING = term("Hosting")  # owns the venue: it runs rounds
 # --- what this package asks OF others, by family ---
 PERCEPTION = term("PerceptionCapability")  # whoever can look, however it looks
 ACTUATION = term("Actuation")  # whoever can touch the hardware, if this agent can at all
-MATCHING = term("MatchingCapability")  # whoever can turn bids into an allocation, by whatever rule
+BID_MATCHING = term("BidMatchingCapability")  # whoever can turn bids into an allocation, however it does

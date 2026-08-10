@@ -1,22 +1,22 @@
-"""The auction: the path from bids to vouchers, whichever rule allocated them.
+"""The auction: the path from bids to vouchers, however they were matched.
 
 An auction is a **process** — it condenses when a resource becomes contested, allocates, and
 dissolves. The market is the standing structure it happens inside; see knowledge/domain/market.md,
 which said the opposite until #66 and had `ag:Market` declared with three MQTT topics all along.
 
-So this file keeps the process and lost the rule. `propose_match` — greedy pay-as-bid — used to
-live here, under a docstring calling the format "a replaceable v1 choice" while `hosting.py`
-imported it directly, which made it exactly not that. It is now
-`capabilities/matching/`: a family with pay-as-bid implemented and uniform-price declared beside
-it, so a second rule is a class and a line of `PROVIDES` rather than an edit to this file.
+So this file keeps the process and lost the matching. `propose_match` — greedy pay-as-bid —
+used to live here, under a docstring calling it "a replaceable v1 choice" while `hosting.py`
+imported it directly, which made it exactly not that. It is now `capabilities/bid_matching/`: a
+family with pay-as-bid and uniform price implemented, so a third way of matching is a class and
+a line of `PROVIDES` rather than an edit to this file.
 
-**What is left here is true of every rule**: propose, validate, issue. The host proposes and
-clearing disposes — that ordering is the auction's, not any one format's, which is why it did not
-move with the rule. `match` arrives as a callable so this stays honest about depending on nothing
-but the shape of the answer.
+**What is left here is true of every way of matching**: propose, validate, issue. The host
+proposes and clearing disposes — that ordering is the auction's, not any one member's, which is
+why it did not move. `match` arrives as a callable so this stays honest about depending on
+nothing but the shape of the answer.
 
-See knowledge/domain/round.md, knowledge/decisions/clearing-as-validator.md,
-knowledge/decisions/an-auction-format-is-a-capability.md.
+See knowledge/domain/auction.md, knowledge/domain/bid-matching.md, knowledge/domain/round.md,
+knowledge/decisions/clearing-as-validator.md, knowledge/decisions/bid-matching-is-a-capability.md.
 """
 
 from __future__ import annotations

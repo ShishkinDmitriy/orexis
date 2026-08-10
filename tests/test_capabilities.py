@@ -13,7 +13,7 @@ from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_self, load_world
 from agent.capabilities.actuation import ACTUATION
 from agent.capabilities.market import BIDDING, HOSTING
-from agent.capabilities.matching import PAY_AS_BID
+from agent.capabilities.bid_matching import PAY_AS_BID
 from agent.capabilities.perception import LISTENING, SUBSCRIBING
 from agent.capabilities.review import RECKONING
 
@@ -54,19 +54,19 @@ def test_a_mandate_whose_ends_meet_grants_nothing(me):
     assert succulent.capabilities == {SUBSCRIBING, BIDDING}
 
 
-def test_supplier_gets_hosting_actuation_and_a_matching_rule(me):
+def test_supplier_gets_hosting_actuation_and_matching(me):
     """It owns the venue and the valves — so it sells and it opens them.
 
     And it says how it matches bids, so it can also *run* what it convenes. Hosting is the
-    protocol — announce, collect, issue; the rule that turns bids into an allocation is a
-    separate ability, because there is more than one defensible answer and which one is in
-    force changes what a rational bidder should offer.
+    protocol — announce, collect, issue; matching, which turns bids into an allocation with
+    prices, is a separate ability, because there is more than one defensible answer and which
+    one is in force changes what a rational bidder should offer.
     """
     assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID}
 
 
-def test_only_a_host_states_a_matching_rule(me):
-    """A bidder has no auction to set terms for — the rule is the convenor's."""
+def test_only_a_host_matches(me):
+    """A bidder has no auction to set terms for — the matching is the convenor's."""
     assert PAY_AS_BID not in me("fern").capabilities
 
 

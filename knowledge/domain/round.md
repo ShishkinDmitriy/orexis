@@ -8,7 +8,10 @@ timestamp: 2026-08-01T00:00:00Z
 
 # What it is
 
-The unit of coordination, run by the **host** (the scarce side; v1 the supplier).
+The unit the [auction](/domain/auction.md) runs in, and the auction is the process — the
+[market](/domain/market.md) is the standing structure both happen inside. The round is run by the
+**host**: by design the scarce side, though nothing derives that and every shipped world states
+`ag:hosts` on the supplier (see [auction](/domain/auction.md), *who convenes it*).
 Iterative-ascending so that
 conversation and auction genuinely interleave: agents see the partial allocation, converse,
 and re-bid. Bounded so it always terminates — primarily because deliberation costs, so rounds
@@ -29,8 +32,9 @@ backstop, not the primary terminator.
 4. **Shocks land** — e.g. a rain forecast is recorded; a new deliberation round opens because
    a sensed belief changed; private value curves diverge and agents re-bid. This is why
    conversation earns its place over a one-shot auction.
-5. **Host proposes the match** — the scarce side (in v1 the [supplier](/domain/supplier.md))
-   selects the trade from the signed bids and signs it.
+5. **Host proposes the match** — the host (in v1 the [supplier](/domain/supplier.md)) selects the
+   trade from the signed bids and signs it, by whichever [bid matching](/domain/bid-matching.md) it
+   declared and announced when the round opened.
 6. **Validate + settle** — [clearing](/domain/clearing.md) checks the proposed trade
    (conservation, solvency, identity, [constitution](/domain/constitution.md),
    order-consistency) and **co-signs** the [voucher](/domain/voucher.md); then debits wallets

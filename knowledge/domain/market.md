@@ -20,8 +20,10 @@ This page said the opposite until recently — that a market "is not a standing 
 `ag:Market` was declared in `world.ttl` with three MQTT topics on it. Both were called *market*
 and they were opposites, which is worth recording rather than quietly fixing: the confusion sent
 two separate design attempts to the wrong premise, because a fact about the venue and a fact
-about the round genuinely belong in different places. **Structure is the market's; the rules of a
-given auction are its host's** (see [an-auction-format-is-a-capability](/decisions/an-auction-format-is-a-capability.md)).
+about the round genuinely belong in different places. **Structure is the market's; the terms of a
+given auction are its host's** (see
+[bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md)). What an auction *is* is
+[auction](/domain/auction.md).
 
 # When an auction opens — it condenses out of scarcity
 

@@ -1,20 +1,20 @@
-"""The allocation rule, and the host -> clearing path that runs whichever rule is in force.
+"""Matching, and the host -> clearing path that runs whichever member is in force.
 
-`propose_match` moved into `capabilities/matching/` when the format became a capability (#66),
+`propose_match` moved into `capabilities/bid_matching/` when matching became a capability (#66),
 so it is exercised here through the module that provides it — the same object `hosting.py` gets
 from `agent.provider`. `run_round` stayed in `agent/auction.py`, because propose-validate-issue
-is true of every rule, and it now takes the matcher rather than importing one.
+is true of every member, and it now takes the matcher rather than importing one.
 """
 
 import pytest
 
 from agent.auction import run_round
-from agent.capabilities.matching.module import PayAsBidModule, UniformPriceModule
+from agent.capabilities.bid_matching.module import PayAsBidModule, UniformPriceModule
 from agent.market import Bid, Limits, MarketState, Offer
 
-# The rule under test. It is static because a lot and a set of bids fully determine the answer —
-# which is what lets it be checked without a world, and a format be swapped without the host
-# knowing. `hosting.py` reaches this same function through `agent.provider`.
+# The matching under test. It is static because a lot and a set of bids fully determine the
+# answer — which is what lets it be checked without a world, and a way of matching be swapped
+# without the host knowing. `hosting.py` reaches this same function through `agent.provider`.
 propose_match = PayAsBidModule.propose_match
 
 

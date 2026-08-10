@@ -78,7 +78,7 @@ built to study scarcity.
 
 # The uncontested round is still priced as if contested
 
-`ag:PayAsBid` — the rule this society runs, in `capabilities/matching/` — is greedy and
+`ag:PayAsBid` — the rule this society runs, in `capabilities/bid_matching/` — is greedy and
 discriminatory: eligible bids sorted by price, filled highest first, each paying its own bid.
 When total demand comes in under the lot there is no rival for anything, and every bidder still
 pays what it offered — so an agent is charged for its own urgency in a round where nothing was
@@ -86,7 +86,7 @@ scarce.
 
 The rule is now one member of a family rather than the only thing there is, so *"pay-as-bid
 versus uniform price is a separate argument"* has somewhere to happen — see
-[an-auction-format-is-a-capability](an-auction-format-is-a-capability.md). That does not fix the
+[bid-matching-is-a-capability](bid-matching-is-a-capability.md). That does not fix the
 gap below, which is a defect **in** pay-as-bid rather than a reason to prefer another rule.
 
 [market](../domain/market.md) says the supplier should simply **dispense** in that case. Nothing
