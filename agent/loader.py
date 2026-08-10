@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+import re
 import sys
 from dataclasses import dataclass
 from functools import lru_cache
@@ -205,3 +206,46 @@ def drivers() -> tuple[type, ...]:
 def describe() -> str:
     """What this build is made of — logged at genesis so a deployment is legible."""
     return ", ".join(f"{p.kind}/{p.name}" for p in packages())
+
+
+# --- the fifth thing a package contributes: its namespace -----------------------------------
+#
+# A package that declares terms declares them somewhere, and where is its own business. The
+# base vocabulary keeps `ag:`; `capabilities/market` keeps `market:`; the hardware modules have
+# had `mc:`, `onewire:` and the rest since pins-and-wires. What was missing was any way for a
+# runtime query to USE one: `store.PREFIXES` was a kernel constant, so a package with a
+# namespace of its own could not be named in SPARQL without editing the kernel — a registry, in
+# the tree whose whole claim is that adding a package edits nothing.
+#
+# So it is read rather than registered, off the `@prefix` lines of the ontology that declares
+# the terms. Nothing is listed and nothing is imported: this runs before any capability's Python
+# and must, because `agent.store` needs the prefixes and half the capabilities import it.
+_NAMESPACE_BASE = "http://example.org/agora"
+_PREFIX_LINE = re.compile(
+    rf"@prefix\s+([A-Za-z][\w.-]*):\s*<({re.escape(_NAMESPACE_BASE)}[^>]*)>")
+
+
+@lru_cache(maxsize=1)
+def prefixes() -> dict[str, str]:
+    """Every project-internal namespace there is, label -> IRI, found by looking.
+
+    Only namespaces under this project's own base. An ontology also declares `rdfs:`, `owl:`,
+    `sh:` and friends, and those are the kernel's to know: they are stable, external, and not a
+    package's to redefine.
+
+    A label bound to two different IRIs is refused rather than resolved. It would otherwise be
+    the quietest possible bug — one package's query silently reading another's terms — and the
+    engine could not detect it, because both spellings are valid SPARQL.
+    """
+    out: dict[str, str] = {}
+    origin: dict[str, Path] = {}
+    for path in ontology_files():
+        for label, iri in _PREFIX_LINE.findall(path.read_text()):
+            if (prior := out.get(label)) is not None and prior != iri:
+                raise RuntimeError(
+                    f"prefix {label!r} means <{prior}> in {origin[label]} and <{iri}> in "
+                    f"{path}. One label, one namespace — a query cannot mean both."
+                )
+            out.setdefault(label, iri)
+            origin.setdefault(label, path)
+    return out

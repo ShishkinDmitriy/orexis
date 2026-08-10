@@ -27,6 +27,7 @@ from typing import Callable
 
 import pyoxigraph as ox
 
+from . import loader
 from .ontology import ONTOLOGY_GRAPH, PUBLIC_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
@@ -50,19 +51,34 @@ SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
 # common prefixes and others do not, so relying on that works in one and fails in another.
 # `test_store.py` holds the codebase to this list.
-PREFIXES = """
-PREFIX ag:   <http://example.org/agora#>
-PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
-"""
+#
+# Two halves, and the split is who owns the namespace. The EXTERNAL vocabularies are the
+# kernel's: stable, standardised, and not a package's to redefine. Everything under this
+# project's own base is ASSEMBLED — `agent.loader` reads it off the ontologies that declare the
+# terms, so a package with a namespace of its own is nameable in SPARQL without anything here
+# learning it exists. `ag:` arrives that way too, from `vocabulary/agora/ontology.ttl`: the base
+# vocabulary is a package like any other, and hard-coding it here would have made it the one
+# exception for no reason but habit.
+#
+# Assembled eagerly, at import. A malformed or missing ontology is then an error the moment the
+# store is imported rather than the first time a query runs, which is the failure that used to
+# arrive in production — see the module docstring of `tests/test_store.py`.
+_EXTERNAL = {
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+}
 
-DECLARED = frozenset(
-    line.split()[1].rstrip(":") for line in PREFIXES.splitlines() if line.startswith("PREFIX")
-)
+NAMESPACES = {**_EXTERNAL, **loader.prefixes()}
+
+PREFIXES = "\n" + "\n".join(
+    f"PREFIX {label}: <{iri}>" for label, iri in sorted(NAMESPACES.items())
+) + "\n"
+
+DECLARED = frozenset(NAMESPACES)
 
 
 # How many decimal places a derived number is written with. Well under the eighteen the store's
