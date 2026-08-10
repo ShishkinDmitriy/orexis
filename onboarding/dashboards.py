@@ -68,10 +68,20 @@ SELECT DISTINCT ?agentId WHERE {{
 
 
 def _flux(bucket: str) -> str:
+    """Every property this bucket holds, as its own series.
+
+    Split by the `property` tag rather than filtered to one. A board reporting soil moisture and
+    air humidity sends two fractions in the same 0-1 range and nothing in either says which it
+    is — so a panel that does not separate them plots an air temperature of 21.4 as a moisture,
+    which is the hazard `agent/influx_writer` added the tag to prevent. Grouping rather than
+    filtering also means a world that starts observing a new property gets it on the dashboard
+    without this file learning the property's name.
+    """
     return (f'from(bucket: "{bucket}")\n'
             "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
             f'  |> filter(fn: (r) => r._measurement == "{MEASUREMENT}")\n'
             f'  |> filter(fn: (r) => r._field == "{FIELD}")\n'
+            '  |> group(columns: ["property", "sensor"])\n'
             "  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)")
 
 

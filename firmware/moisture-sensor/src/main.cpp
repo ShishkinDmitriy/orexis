@@ -10,7 +10,11 @@
 // cadence command is what makes that reliable; `sense` is best-effort and lands only inside
 // the CMD_WAIT_MS window. See knowledge/domain/sensing.md.
 //
-//   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>"}
+//   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>",
+//                               "temperature":21.4,"humidity":0.463}
+//              one message for the whole board — one client, one credential, one
+//              channel. Each sensor in the world picks its own value out with an
+//              ag:readingPointer; the air fields are absent if the part did not answer.
 //   subscribe: CMD_TOPIC        {"sleep_s":N, "band":"LOW"}  and/or  {"sense":true}  (retained)
 //
 // Both topic names come from config.h and are the world's own, so they are not spelled out
@@ -174,16 +178,16 @@ static void led(bool, bool, bool) {}
 #endif
 
 // ---------------------------------------------------------------------------------------------
-// The air sensor — SERIAL ONLY, deliberately.
+// The air sensor — published in the SAME message as the moisture.
 //
-// Nothing publishes these numbers yet and nothing should. One device reports two properties
-// down one line, and both the model (a sensor observes one property) and the runtime (one
-// reading per message, first sensor that owns the topic wins) assume one — so wiring it to MQTT
-// today would deliver temperature OR humidity and silently drop the other. That is the same
-// failure keying an observation by subject alone produced, and it is tracked as its own issue.
+// One board is one MQTT client with one credential, so it publishes once however many
+// peripherals it carries. The world names three sensors on this one topic and each says which
+// value is its own with an ag:readingPointer (RFC 6901): the probe takes `/value`, and the
+// KY-015's two channels take `/temperature` and `/humidity`. Nothing new is granted — the
+// payload grew, the channel did not.
 //
-// So this exists to answer one question: is the sensor alive and are its numbers sane. It goes
-// where a person can read it and nowhere an agent can.
+// This used to be serial-only, because the model gave a sensor one property and the runtime
+// took one reading per message. Both are fixed; see issue #51.
 // ---------------------------------------------------------------------------------------------
 #ifdef AIR_SENSOR_PIN
 #include <DHT.h>
@@ -191,28 +195,42 @@ static void led(bool, bool, bool) {}
 // The KY-015 breakout carries the pull-up, so the line needs nothing added.
 static DHT dht(AIR_SENSOR_PIN, DHT11);
 
+static bool airValid = false;
+static float airC = 0.0f, airRh = 0.0f;   // RH as a FRACTION, which is what goes on the wire
+
 static void airBegin() { dht.begin(); }
 
 static void logAir() {
-  // Called AFTER the network is up on purpose: a DHT11 needs roughly a second from power-on
-  // before it will answer, and connecting has already spent several. Reading it first would
-  // mean sleeping for a second to no purpose on every single wake.
+  // A DHT11 needs roughly a second from power-on before it will answer. The moisture read and
+  // the serial banner ahead of this have already spent it, so nothing here sleeps to wait.
   float c = dht.readTemperature();
   float rh = dht.readHumidity();
   if (isnan(c) || isnan(rh)) {
     // Almost always the wiring rather than the part: a missing ground, or the data leg on a
     // pin that cannot drive. The sensor answers with silence either way.
+    //
+    // The fields are then OMITTED from the payload rather than sent as zero or as NaN. A
+    // pointer that finds nothing makes its agent record nothing and say so; a zero would be
+    // recorded as a measurement, and "0.0 C" is a plausible number in a way silence is not.
+    airValid = false;
     Serial.printf("air sensor on GPIO %d: no answer\n", AIR_SENSOR_PIN);
     return;
   }
-  // Humidity printed as a FRACTION as well as a percentage, because the fraction is the form
-  // it would take on the wire — and it is the form that makes the hazard obvious: 0.46 is
+  // Humidity travels as a FRACTION, which is the form that makes the hazard obvious: 0.46 is
   // indistinguishable from a soil moisture by inspection, and lands inside the bands agents
-  // hold. Nothing in the number says which it is; only the property does.
-  Serial.printf("air sensor: %.1f C, %.0f%% RH (%.3f as a fraction) — logged only, not published\n",
-                c, rh, rh / 100.0f);
+  // hold. Nothing in the number says which it is; only the property does — which is why the
+  // agent keys an observation by subject AND property, and why these are two sensors.
+  airValid = true;
+  airC = c;
+  airRh = rh / 100.0f;
+  Serial.printf("air sensor: %.1f C, %.0f%% RH (%.3f as a fraction)\n", c, rh, airRh);
 }
 #else
+// A board with no air sensor wired says nothing about air: the fields are absent, exactly as
+// they are when the part fails to answer. A world for such a board names no air sensors, so
+// nothing points at them and nothing is missed.
+static const bool airValid = false;
+static const float airC = 0.0f, airRh = 0.0f;
 static void airBegin() {}
 static void logAir() {}
 #endif
@@ -252,9 +270,21 @@ static void senseMoisture() {
                 (lastFrac <= 0.0f || lastFrac >= 1.0f) ? "  <- CLAMPED, recalibrate" : "");
 }
 
-static void publishMoisture() {
-  char payload[96];
-  snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"}", lastFrac, SENSOR_ID);
+// One message carrying everything this board read, because it is one client with one
+// credential and one channel. Each value is picked out by the pointer its sensor states in the
+// world; a field that is absent is simply not read, and its agent says so rather than
+// recording a zero.
+static void publishReading() {
+  char payload[160];
+  int n = snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"",
+                   lastFrac, SENSOR_ID);
+  if (airValid && n > 0 && n < (int)sizeof(payload)) {
+    n += snprintf(payload + n, sizeof(payload) - n, ",\"temperature\":%.1f,\"humidity\":%.3f",
+                  airC, airRh);
+  }
+  if (n > 0 && n < (int)sizeof(payload)) {
+    snprintf(payload + n, sizeof(payload) - n, "}");
+  }
   published = mqtt.publish(MOISTURE_TOPIC, payload);
   Serial.printf("%s %s   %s\n", MOISTURE_TOPIC, payload,
                 published ? "sent" : "REFUSED by the broker — check the ACL for this topic");
@@ -280,7 +310,8 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
   }
   if (doc["sense"] | false) {
     senseMoisture();   // a nudge asks for a LOOK; republishing the last one would be a lie
-    publishMoisture();
+    logAir();          // and the air with it, or the nudge would send a stale temperature
+    publishReading();
   }
 }
 
@@ -392,7 +423,7 @@ void setup() {
   //    network, and the wakes where the network is missing are exactly the ones somebody is
   //    watching the serial line for.
   senseMoisture();
-  logAir();  // serial only — see above
+  logAir();  // both instruments, before anything is sent — see publishReading
 
   // 2. try to report it. Neither of these aborts the wake — the readings above are already on
   //    the serial line, and a board that cannot reach anyone is still a working sensor with
@@ -406,8 +437,8 @@ void setup() {
   }
 
   if (broker) {
-    // The same number already printed above, not a second look.
-    publishMoisture();
+    // The same numbers already printed above, not a second look.
+    publishReading();
     // Then listen briefly: a retained cadence and verdict arrive the moment we subscribe.
     unsigned long until = millis() + CMD_WAIT_MS;
     while (millis() < until) mqtt.loop();

@@ -46,7 +46,8 @@ This is the sensing face of
 
 ```
 agent -> board   ag:commandTopic   {"sleep_s":N,"band":"LOW"} (retained) | {"sense":true}
-board -> agent   ag:readingTopic   {"value":0.183,"sensor":"..."}
+board -> agent   ag:readingTopic   {"value":0.183,"sensor":"...",
+                                    "temperature":21.4,"humidity":0.463}
 agent -> peers   ag:eventTopic     {"agent":...,"property":...,"value":...,"band":"LOW"}
 ```
 
@@ -54,6 +55,19 @@ Every one of those channels is **stated in the world graph** on the resource tha
 nothing builds a topic from a naming convention, so renaming a channel is a genesis edit. The
 broker they are on is stated there too, as an `ag:MessageBus`: a channel name means nothing
 without it, and members who disagree about the bus are not one society.
+
+**One board publishes ONE message, however many peripherals it carries.** A board is one MQTT
+client with one credential, so a second channel would mean a second principal. Which value in
+that message belongs to which sensor is stated per sensor, as an `ag:readingPointer` — a JSON
+Pointer, `/temperature`. Absent means `/value`, which is what every single-property board
+already sends, so most sensors state nothing. A device reporting two properties is therefore
+**two sensors sharing a reading topic**, not one sensor with two properties, and a field that
+is absent is recorded by nobody rather than defaulted to zero. See
+[a-reading-is-one-value-so-it-is-pointed-at](/decisions/a-reading-is-one-value-so-it-is-pointed-at.md).
+
+A cadence goes the other way and is the **board's**, not a property's: one device sleeps once,
+so the sensors sharing a command topic are aimed together and the tightest interval any of
+them asks for wins.
 ingest path and nothing downstream can tell them apart.
 
 Note what goes out on the event topic: the agent's **own verdict**, not its raw state. That is

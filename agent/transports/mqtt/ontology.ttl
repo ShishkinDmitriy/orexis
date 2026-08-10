@@ -32,7 +32,11 @@ ag:onBus a owl:ObjectProperty ; rdfs:range ag:MessageBus ;
 
 ag:readingTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "reading topic" ;
-    rdfs:comment "Where a sensor PUBLISHES what it read." .
+    rdfs:comment "Where a sensor PUBLISHES what it read. Several sensors may name the SAME topic: one board carrying two peripherals is one MQTT client with one credential, so it publishes one message and each sensor takes its own value out of it with ag:readingPointer." .
+
+ag:readingPointer a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "reading pointer" ;
+    rdfs:comment "WHICH value in the payload is this sensor's, as a JSON Pointer (RFC 6901, April 2013, Standards Track): `/temperature`, `/readings/0/rh`. Absent means `/value`, which is what every single-property device already publishes — so this is invisible until a device reports more than one thing. A POINTER and not a JSONPath (RFC 9535) because a pointer identifies exactly ONE value, which is exactly what a reading is; a query language returns a nodelist and would need a collapse rule invented on top of it. Nothing here says how the bytes became a document — that is the codec, and JSON is the only one. See knowledge/decisions/a-reading-is-one-value-so-it-is-pointed-at.md." .
 ag:commandTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "command topic" ;
     rdfs:comment "Where a device LISTENS for instructions: a cadence for a sensor, a dose for a valve. Only a device that accepts instruction has one." .

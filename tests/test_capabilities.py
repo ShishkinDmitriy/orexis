@@ -142,13 +142,30 @@ def test_the_smallest_world_yields_perception_and_nothing_else():
 
 
 def test_the_board_did_not_change_only_the_model_did():
-    """The point of the two worlds sharing device ids: one flashed board, either society."""
+    """The point of the two worlds sharing device ids: one flashed board, either society.
+
+    This used to compare the two sensor LISTS and require them equal, which was a stronger
+    claim than the invariant needs and stopped being true when `sensing` began reading the
+    KY-015's temperature and humidity (#51). What must hold is that the BOARD is the same: one
+    credential, one topic, publishing one message. How many values a world chooses to take out
+    of that message is the world's business, and a field nobody points at is simply ignored —
+    which is why the identical flashed board still works in either.
+    """
     watching = load_self(query_fn(genesis_store(world="sensing")), "fern")
     buying = load_self(query_fn(genesis_store(world="society")), "fern")
-    assert [s.local_id for s in watching.sensors] == [s.local_id for s in buying.sensors]
-    assert [s.reading_topic for s in watching.sensors] == \
-           [s.reading_topic for s in buying.sensors]
-    assert watching.capabilities < buying.capabilities  # strictly fewer, same hardware
+
+    assert {s.reading_topic for s in watching.sensors} == \
+           {s.reading_topic for s in buying.sensors}, "one channel, whichever world is seeded"
+
+    soil = {s.local_id: s for s in watching.sensors} | {}
+    for world in (watching, buying):
+        probe = next(s for s in world.sensors if s.local_id == "moisture_sensor_fern")
+        assert probe.command_topic == soil["moisture_sensor_fern"].command_topic
+        assert probe.reading_pointer is None  # `/value`, as every single-property board sends
+
+    # The same wire, read for more. Strictly more properties here, strictly fewer abilities.
+    assert {s.observes for s in buying.sensors} < {s.observes for s in watching.sensors}
+    assert watching.capabilities < buying.capabilities
 
 
 # --- an agent knows only itself --------------------------------------------

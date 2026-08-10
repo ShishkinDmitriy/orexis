@@ -13,7 +13,7 @@
 
 dht11:TempHumiditySensor a owl:Class ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "Temperature and humidity sensor" ;
-    rdfs:comment "The family. One device reporting TWO properties down one line, which is what makes it awkward: the model gives a sensor one sosa:observes and the runtime takes one reading per message, so a world can state and wire this and nothing polls it yet — see issue #51." .
+    rdfs:comment "The family. One device reporting TWO properties down one line, which is what made it awkward: a sensor observes one property, so a device like this is TWO sensors sharing one reading topic, and each says which value in the message is its own with ag:readingPointer. The board publishes once because it is one MQTT client with one credential. Closed #51; see knowledge/decisions/a-reading-is-one-value-so-it-is-pointed-at.md." .
 
 dht11:Dht11 a owl:Class ;
     mc:modelName "KY-015 (DHT11)" ; rdfs:subClassOf dht11:TempHumiditySensor ; rdfs:label "DHT11" ;

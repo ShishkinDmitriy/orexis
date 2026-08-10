@@ -200,8 +200,9 @@ def _optional_pins(row: dict) -> str:
     if row.get("airPin"):
         out += [
             "",
-            "// Wired, and not yet published anywhere: one device reports two properties and the",
-            "// model gives a sensor one. Emitted so the pin is claimed and nothing else takes it.",
+            "// The air sensor's data leg. Its two properties travel in the SAME message as the",
+            "// moisture — one board is one client with one credential, so it publishes once —",
+            "// and each is picked out by the ag:readingPointer its sensor states in the world.",
             f"#define AIR_SENSOR_PIN {int(row['airPin'])}",
         ]
     return "\n".join(out) + "\n" if out else ""

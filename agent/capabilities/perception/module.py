@@ -107,17 +107,33 @@ class PerceptionModule(Module):
         self.observations.close()
 
     def handle(self, topic: str, payload: bytes) -> bool:
+        """Offer the message to EVERY sensor that owns this channel, not just the first.
+
+        One board carrying two peripherals is one MQTT client with one credential, so it
+        publishes one message and its sensors share a topic — each taking its own value out by
+        pointer. Returning after the first match meant the second sensor never saw a message
+        and reported nothing, silently: the topic was handled, so nothing upstream complained.
+
+        The return value still means *this channel was mine*, which is true the moment any
+        sensor owns it — including when the payload turned out to be unreadable. That is a
+        statement about addressing, not about success.
+        """
+        mine = False
         for sensor in self.sensors:
             driver = self.drivers[sensor.uri]
             if driver is None or not driver.owns(sensor, topic):
                 continue
-            value = driver.parse(payload)
+            mine = True
+            value = driver.parse(sensor, payload)
             if value is None:
-                self.log.warning("unreadable payload on %s", topic)
+                # Named, because on a shared topic "unreadable payload" alone cannot say WHICH
+                # sensor found nothing — and one sensor missing its field while its neighbours
+                # read fine is the exact failure a pointer makes possible.
+                self.log.warning("%s: nothing at %s in the payload on %s", sensor.local_id,
+                                 sensor.reading_pointer or "/value", topic)
             else:
                 self.ingest(sensor, value)
-            return True
-        return False
+        return mine
 
     def ingest(self, sensor, value: float) -> None:
         """Record what the sensor read, then re-aim if this capability can."""
@@ -230,24 +246,66 @@ class SubscribingModule(PerceptionModule):
         sleep_s = b.slow_sleep_s + (b.fast_sleep_s - b.slow_sleep_s) * urgency
         return int(round(min(self.max_sleep_s, max(self.min_sleep_s, sleep_s))))
 
+    def _aimed_with(self, sensor):
+        """Every sensor this one shares a command channel with, itself included.
+
+        A cadence is a property of the BOARD, not of a property being measured: one device
+        sleeps once, however many things it reads on waking. So the unit being aimed is the
+        channel, and a sensor with no channel is alone in a group of one — nothing is sent for
+        it and nothing is merged with it.
+        """
+        if not sensor.command_topic:
+            return (sensor,)
+        return tuple(s for s in self.sensors if s.command_topic == sensor.command_topic)
+
     def set_cadence(self, sensor, sleep_s: int, verdict: dict | None = None) -> None:
-        """Standing policy. How it is delivered is the driver's problem, not mine.
+        """Standing policy for the CHANNEL this sensor is on, not for the sensor alone.
 
         Deduplicated on the whole message rather than on the interval alone. It used to skip
         when the cadence was unchanged, which is right for a cadence and wrong the moment
         anything else rides along: a pot drying from OK to LOW inside one cadence band would
         have kept the old verdict on its device indefinitely, because the only thing being
         compared had not moved.
+
+        Keyed on the command topic, because one board carrying several peripherals has several
+        sensors and ONE place to be instructed. Keyed per sensor, each would compute its own
+        interval from its own urgency and publish it retained to the same topic — soil moisture
+        asking for 30s and a thermometer with no stake asking for 900s, last writer winning, on
+        every message. The board would be aimed by whichever sensor spoke last.
+
+        So the TIGHTEST wins: if anything on this board is urgent, the board watches closely,
+        and the properties that are not urgent are read more often than they need to be — which
+        costs a reading and is the only safe direction to be wrong in. Verdicts merge, because
+        they are about different properties and the device shows all of them.
         """
+        group = self._aimed_with(sensor)
+        if len(group) > 1:
+            # Recompute the others from the last reading each of them has, so the answer does
+            # not depend on which sensor happened to trigger this. A sensor that has not read
+            # yet contributes nothing rather than a guess.
+            merged = dict(verdict or {})
+            intervals = [int(sleep_s)]
+            for peer in group:
+                if peer.local_id == sensor.local_id:
+                    continue
+                reading = self.agent.beliefs.current_reading(peer.subject, peer.observes)
+                if reading is None:
+                    continue
+                intervals.append(self.cadence_for(peer.subject, peer.observes, reading.value))
+                merged.update(self.agent.annotations(peer.subject, peer.observes, reading.value))
+            sleep_s, verdict = min(intervals), merged
+
+        key = sensor.command_topic or sensor.local_id
         message = (int(sleep_s), tuple(sorted((verdict or {}).items())))
-        if self.sent.get(sensor.local_id) == message:
+        if self.sent.get(key) == message:
             return
         driver = self.drivers[sensor.uri]
         if driver is None:
             return
         driver.set_cadence(sensor, sleep_s, verdict)
-        self.sent[sensor.local_id] = message
-        self.sent_cadence[sensor.local_id] = sleep_s
+        self.sent[key] = message
+        for aimed in group:
+            self.sent_cadence[aimed.local_id] = sleep_s
         self.log.info("%s: cadence now %ss%s", sensor.local_id, sleep_s,
                       f", showing {verdict}" if verdict else "")
 

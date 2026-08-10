@@ -14,6 +14,54 @@ import json
 
 from agent.driver import Driver
 
+# What a sensor's value is called when nothing says otherwise. Every single-property device
+# here already publishes `{"value": ...}`, so the default is what the fleet does — and a world
+# that never states a pointer reads exactly as it did before this existed.
+DEFAULT_POINTER = "/value"
+
+
+class PointerError(ValueError):
+    """A pointer that does not resolve to a number in this payload."""
+
+
+def resolve(pointer: str, doc):
+    """The one RAW VALUE a JSON Pointer identifies — RFC 6901, April 2013, Standards Track.
+
+    A pointer, not a query: RFC 6901 identifies exactly ONE value, which is exactly what a
+    device reports per property. RFC 9535's JSONPath returns a nodelist, and taking "the first"
+    of one would be a collapse rule we invented and then had to defend.
+
+    What comes out is **raw** — what the device put on the wire. Interpreting it is a third
+    stage that does not exist yet (issue #26), and this function is indifferent to it exactly
+    as it is indifferent to whichever codec produced `doc`.
+
+    The empty pointer is legal in the RFC and means the whole document. It is refused here
+    rather than supported, because a whole document is not a number and letting it through
+    would turn a mis-stated world into a parse failure much further away.
+    """
+    if not pointer.startswith("/"):
+        raise PointerError(f"{pointer!r} is not a JSON Pointer — it must start with '/'")
+
+    node = doc
+    for token in pointer.split("/")[1:]:
+        # Order matters and is the classic bug: `~1` becomes `/` FIRST, then `~0` becomes `~`.
+        # Reversed, a literal `~1` written as `~01` would decode to `/` instead of `~1`.
+        key = token.replace("~1", "/").replace("~0", "~")
+        if isinstance(node, list):
+            if not key.isdigit():
+                raise PointerError(f"{pointer!r}: {key!r} is not an array index")
+            index = int(key)
+            if index >= len(node):
+                raise PointerError(f"{pointer!r}: index {index} is past the end")
+            node = node[index]
+        elif isinstance(node, dict):
+            if key not in node:
+                raise PointerError(f"{pointer!r}: no {key!r} here")
+            node = node[key]
+        else:
+            raise PointerError(f"{pointer!r}: {key!r} has nothing to select from")
+    return node
+
 
 class MqttDriver(Driver):
     """A reading channel, and maybe a command channel.
@@ -30,8 +78,23 @@ class MqttDriver(Driver):
 
     @classmethod
     def claims(cls, sensor) -> bool:
-        """`ag:onBus` is the declaration — the device says it is reachable on a bus."""
-        return bool(sensor.bus)
+        """A channel of this transport's is the declaration — `ag:onBus` or `ag:readingTopic`.
+
+        It used to be `ag:onBus` alone, which contradicted that term's own vocabulary: *"which
+        bus this resource is reachable on. **Optional while a society has one.**"* A sensor may
+        legitimately state where it publishes and leave the bus to be the only one there is.
+
+        That gap is not academic. `ag:onBus` is also what mints a broker CREDENTIAL — it is the
+        test `onboarding/mqtt.py` applies to decide a principal exists — so a peripheral sharing
+        its board's connection must not carry one, or onboarding writes a password for a client
+        that never connects. Two sensors on one board are reached over MQTT and are not two
+        principals, and only a claim test that reads the channel can say both at once.
+
+        Still answered from what the world DECLARES rather than from what happens to be
+        present: a reading topic is one of this package's terms, so stating one is the sensor
+        saying it speaks MQTT.
+        """
+        return bool(sensor.bus or sensor.reading_topic)
 
     def subscriptions(self, sensor) -> list[str]:
         return [sensor.reading_topic] if sensor.reading_topic else []
@@ -39,11 +102,24 @@ class MqttDriver(Driver):
     def owns(self, sensor, topic: str) -> bool:
         return sensor.reading_topic == topic
 
-    def parse(self, payload: bytes) -> float | None:
+    def parse(self, sensor, payload: bytes) -> float | None:
+        """The RAW VALUE this sensor's pointer identifies, or None if it does not resolve.
+
+        Takes the sensor because one payload may carry several sensors' values — the board is
+        one MQTT client with one credential, so a device with two peripherals publishes one
+        message and each sensor points at its own field.
+
+        None rather than a default is the whole discipline here: a pointer that misses is a
+        world stating something the device does not send, and answering 0.0 would record that
+        as a measurement. The caller warns; nothing is written.
+        """
         try:
             doc = json.loads(payload)
-            return float(doc["value"])
-        except (ValueError, TypeError, KeyError):
+        except ValueError:
+            return None
+        try:
+            return float(resolve(sensor.reading_pointer or DEFAULT_POINTER, doc))
+        except (PointerError, TypeError, ValueError):
             return None
 
     def set_cadence(self, sensor, sleep_s: int, verdict: dict | None = None) -> None:

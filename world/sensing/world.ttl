@@ -54,6 +54,15 @@ ag:fern a sosa:FeatureOfInterest ;
 
 ##########  The board  ##########
 
+#  ONE board, THREE sensors. The ESP32 carries a capacitive probe and a KY-015, and it is one
+#  MQTT client with one credential — so it publishes ONE message on ONE topic, and each sensor
+#  says which value in it is its own. That is what ag:readingPointer is for; the probe states
+#  none because `/value` is the default and is what every single-property board already sends.
+#
+#  All three are ag:Scheduled and share ONE command topic, because there is one board and it
+#  sleeps once: a cadence is a property of the board, not of a property being measured. The
+#  agent aims that channel once, at the tightest cadence any sensor on it asks for.
+
 ag:moisture_sensor_fern a ag:Sensor ;
     ag:localId "moisture_sensor_fern" ;
     ag:onBus ag:local_bus ;
@@ -63,13 +72,36 @@ ag:moisture_sensor_fern a ag:Sensor ;
     ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
     ag:commandTopic "sensors/moisture_sensor_fern/command" .
 
+#  The KY-015's two channels. They are ag:Sensor and NOT devices: they have no ag:onBus of
+#  their own and mint no credential, because the thing that connects to the broker is the
+#  board, which already has one. `ag:air_sensor_fern` in hardware.ttl is the peripheral they
+#  read — its pins, its model and its wires are stated there and nothing here repeats them.
+
+ag:air_temp_fern a ag:Sensor ;
+    ag:localId "air_temp_fern" ;
+    ag:senseMode ag:Scheduled ;
+    ag:monitors ag:fern ;
+    sosa:observes ag:AirTemperature ;
+    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    ag:readingPointer "/temperature" ;
+    ag:commandTopic "sensors/moisture_sensor_fern/command" .
+
+ag:air_humidity_fern a ag:Sensor ;
+    ag:localId "air_humidity_fern" ;
+    ag:senseMode ag:Scheduled ;
+    ag:monitors ag:fern ;
+    sosa:observes ag:AirHumidity ;
+    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    ag:readingPointer "/humidity" ;
+    ag:commandTopic "sensors/moisture_sensor_fern/command" .
+
 ##########  The agent  ##########
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
 #  No market:bidsIn and no market:hosts, so no market capability can be derived for it.
 
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
-    ag:polls ag:moisture_sensor_fern ;
+    ag:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;
     ag:eventTopic "readings/fern" .
 
 ##########  What each agent may re-pick, and how far  ##########
