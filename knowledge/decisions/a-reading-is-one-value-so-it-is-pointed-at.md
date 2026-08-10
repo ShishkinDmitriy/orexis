@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: A reading is one value, so it is pointed at rather than queried
-description: Where a sensor's value sits in a payload is a JSON Pointer (RFC 6901), which identifies exactly one value — not a JSONPath (RFC 9535), which returns a nodelist and would need a collapse rule invented on top of it. Absent means /value, so no existing sensor states one. Getting a value off the wire is three stages — codec, pointer, transducer — and only the middle one is built here.
+description: Where a sensor's value sits in a payload is a JSON Pointer (RFC 6901), which identifies exactly one value — not a JSONPath (RFC 9535), which returns a nodelist and would need a collapse rule invented on top of it. Absent means /value, so no existing sensor states one. Getting a value off the wire is three stages — codec, pointer, calibration — and only the middle one is built here; the outer two became packages in bytes-become-a-quantity-in-stages, which also renamed the third.
 status: accepted
 stage: v1
 tags: [sensing, transports, payload, reuse, ubiquitous-language]
@@ -64,25 +64,38 @@ sending zero. `0.0 C` is a plausible number in a way silence is not.
 Getting a quantity off a wire is not one step:
 
 ```
-bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[transducer]──▶ quantity
+bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[calibration]──▶ quantity
 ```
 
 - **codec** — how bytes become a document. JSON is the only one, and nothing here names it.
 - **pointer** — which value in that document is this sensor's. **This record.**
-- **transducer** — what the raw value means. Today the board publishes an already-interpreted
-  fraction; moving that interpretation into the agent, with a calibration mode, is
+- **calibration** — what the raw value means. Today the board publishes an already-scaled
+  fraction; moving that work into the agent is
   [#26](https://github.com/ShishkinDmitriy/agora/issues/26).
+
+**Amended.** This record called the third stage a *transducer*; the word is now **calibration**,
+because a transducer is the physical device that converts one form of energy to another and this
+project's sensors are physical devices. Both outer stages became packages in
+[bytes-become-a-quantity-in-stages](bytes-become-a-quantity-in-stages.md), which also found that
+the third stage was never missing — it was set to identity, because the firmware scales before it
+publishes.
 
 **A pointer is indifferent to both of its neighbours, and that is the strongest argument for the
 layering.** It is valid whatever codec produced the document — a Kaitai-parsed binary struct is a
 tree you can point into exactly as you point into a parsed JSON object — and it is valid whatever
-transducer later consumes the value, because it hands back what the device sent and makes no claim
+calibration later consumes the value, because it hands back what the device sent and makes no claim
 about what it means. So neither neighbour can invalidate a pointer written today, which is why
 deferring both costs nothing.
 
-That is also why **no codec family was built.** Rule 2's test is whether the *how* could differ,
-and today nothing but JSON exists, so a family would be a slot with one member and no second in
-sight. The trigger is the first device that does not speak JSON.
+That is also why **no codec family was built here.** Rule 2's test is whether the *how* could
+differ, and at the time nothing but JSON existed, so a family looked like a slot with one member
+and no second in sight.
+
+**That was reconsidered rather than triggered**, and the reason is worth recording: what forced it
+was not a second format but the discovery that JSON was being *chosen* — by `json.loads` inside the
+MQTT driver and a default on a Python class — with the choice written down nowhere. A family whose
+one member is picked by an unstated default is not a deferred decision, it is an unrecorded one.
+See [bytes-become-a-quantity-in-stages](bytes-become-a-quantity-in-stages.md).
 
 The naming carries the split: a driver's `parse` returns **the raw value the pointer identifies**,
 and `ingest` records **what is observed**. Two nameable things with nothing between them yet.
@@ -128,8 +141,10 @@ without being made a principal. The ACL is byte-identical across all three world
 
 # Seams left open
 
-- **No codec family.** JSON is assumed by the driver and named nowhere. The first non-JSON device
-  is the trigger, and a pointer survives it.
+- ~~**No codec family.**~~ **Closed**, though not by the trigger this seam named. No non-JSON
+  device arrived; what arrived was the realisation that the default was a fact nothing could read.
+  `codec:Json` is now derived onto every sensor at genesis. See
+  [bytes-become-a-quantity-in-stages](bytes-become-a-quantity-in-stages.md).
 - **Nothing checks a pointer against what a device sends.** A world may state `/humidty` and
   validate perfectly; the agent warns at runtime, once per message, forever. A shape cannot catch
   it because the payload is not in the graph.
