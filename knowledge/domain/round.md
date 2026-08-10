@@ -33,7 +33,7 @@ backstop, not the primary terminator.
    a sensed belief changed; private value curves diverge and agents re-bid. This is why
    conversation earns its place over a one-shot auction.
 5. **Host proposes the match** — the host (in v1 the [supplier](/domain/supplier.md)) selects the
-   trade from the signed bids and signs it, by whichever [matching](/domain/matching.md) it
+   trade from the signed bids and signs it, by whichever [bid matching](/domain/bid-matching.md) it
    declared and announced when the round opened.
 6. **Validate + settle** — [clearing](/domain/clearing.md) checks the proposed trade
    (conservation, solvency, identity, [constitution](/domain/constitution.md),

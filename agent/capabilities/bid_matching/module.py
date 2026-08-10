@@ -23,8 +23,8 @@ is an ordinary answer — and a helper factored out today would encode an invari
 does not have. Ten duplicated lines are cheaper than a false abstraction, and the tests hold
 both to the same allocation where they should agree.
 
-Vocabulary: capabilities/matching/ontology.ttl. Rules: capabilities/matching/rules.ru.
-See knowledge/domain/matching.md, knowledge/decisions/matching-is-a-capability.md and
+Vocabulary: capabilities/bid_matching/ontology.ttl. Rules: capabilities/bid_matching/rules.ru.
+See knowledge/domain/bid-matching.md, knowledge/decisions/bid-matching-is-a-capability.md and
 knowledge/decisions/uniform-price-dissolves-the-uncontested-round.md.
 """
 

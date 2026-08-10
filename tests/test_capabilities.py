@@ -13,7 +13,7 @@ from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_self, load_world
 from agent.capabilities.actuation import ACTUATION
 from agent.capabilities.market import BIDDING, HOSTING
-from agent.capabilities.matching import PAY_AS_BID
+from agent.capabilities.bid_matching import PAY_AS_BID
 from agent.capabilities.perception import LISTENING, SUBSCRIBING
 from agent.capabilities.review import RECKONING
 

@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Uniform price dissolves the uncontested round rather than branching on it
-description: The second member of ag:MatchingCapability, which both tests the family's claim that adding one moves nothing else and changes what issue #50 is. Under pay-as-bid an uncontested round needs a special case; under a uniform price with the reserve as its floor, a round whose demand never reaches the lot simply clears at the reserve — so #50 becomes a choice of mechanism rather than a defect to patch.
+description: The second member of ag:BidMatchingCapability, which both tests the family's claim that adding one moves nothing else and changes what issue #50 is. Under pay-as-bid an uncontested round needs a special case; under a uniform price with the reserve as its floor, a round whose demand never reaches the lot simply clears at the reserve — so #50 becomes a choice of mechanism rather than a defect to patch.
 status: accepted
 stage: v1
 tags: [market, auction, capabilities, mechanism]
@@ -10,8 +10,8 @@ timestamp: 2026-08-10T00:00:00Z
 
 # Context
 
-[matching-is-a-capability](matching-is-a-capability.md) made matching a family,
-`ag:MatchingCapability`, with pay-as-bid implemented and `ag:UniformPrice` declared beside it
+[bid-matching-is-a-capability](bid-matching-is-a-capability.md) made matching a family,
+`ag:BidMatchingCapability`, with pay-as-bid implemented and `ag:UniformPrice` declared beside it
 under a claim: *"adding it is a class and one line of `PROVIDES`; no other package moves."*
 
 A declared member with nothing behind it proves nothing. Two members do — and the claim was
@@ -19,7 +19,7 @@ falsifiable, which is most of why this was worth doing next.
 
 # The claim held
 
-Everything that changed is inside `capabilities/matching/`, plus tests:
+Everything that changed is inside `capabilities/bid_matching/`, plus tests:
 
 | | |
 |---|---|
@@ -30,7 +30,7 @@ Everything that changed is inside `capabilities/matching/`, plus tests:
 
 `hosting.py`, `auction.py`, the market package, the derivation rule and the shapes were not
 touched. The derivation already granted whichever member a host named; the loader already
-registered whichever module declared one; `agent.provider(MATCHING)` already handed it over. A
+registered whichever module declared one; `agent.provider(BID_MATCHING)` already handed it over. A
 world that says `ag:matchesBy ag:UniformPrice` now gets a host that runs it and announces it, and
 nothing in between knew a second member was coming.
 
@@ -110,7 +110,7 @@ supplier — and the argument above is what that edit should be weighed against.
 # Seams left open
 
 - **Nothing selects between the two.** A world names one and gets it. With two implemented, the
-  question [matching-is-a-capability](matching-is-a-capability.md) recorded is now live rather
+  question [bid-matching-is-a-capability](bid-matching-is-a-capability.md) recorded is now live rather
   than hypothetical: nothing stops a world naming both, and nothing would choose.
 - **The allocation walk is written out twice**, deliberately. That these two members allocate
   identically is a fact about them and not about the family — a pro-rata member across everyone

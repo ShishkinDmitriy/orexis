@@ -17,7 +17,7 @@ meet on.
 That distinction is load-bearing and the bundle had it backwards until recently. **Structure is
 the market's; the terms of a given auction are its host's.** A market with nothing contested is
 still a market; there is simply no auction happening in it. See
-[matching-is-a-capability](/decisions/matching-is-a-capability.md), which had to fix the
+[bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md), which had to fix the
 vocabulary before it could say anything else.
 
 # The four things it is made of
@@ -26,7 +26,7 @@ vocabulary before it could say anything else.
 |---|---|---|
 | [market](/domain/market.md) | the standing structure it happens inside | `ag:Market` in the world |
 | [round](/domain/round.md) | the bounded unit it runs in | `capabilities/market/hosting.py` |
-| [matching](/domain/matching.md) | how a lot and the bids become an allocation with prices | `capabilities/matching/` |
+| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `capabilities/bid_matching/` |
 | [clearing](/domain/clearing.md) | the notary that validates and co-signs — never allocates | `agent/clearing.py` |
 
 The line that holds them apart is **the host proposes, clearing disposes**. Matching decides
@@ -48,7 +48,7 @@ which they take turns.
    host cannot see. Bids from agents that do not bid in that market are ignored; late bids and
    bids for another round are dropped.
 4. **It matches.** At the deadline the host asks whichever of its capabilities can match, and
-   gets a proposed trade. See [matching](/domain/matching.md).
+   gets a proposed trade. See [bid matching](/domain/bid-matching.md).
 5. **It is validated and settled.** [Clearing](/domain/clearing.md) checks the proposed trade and
    co-signs [vouchers](/domain/voucher.md); the [executor](/domain/executor.md) redeems them
    against the hardware.
@@ -84,7 +84,7 @@ moves toward that.
 - **Not the matching.** Propose, validate, issue is the auction's shape however the bids were
   matched — which is why `agent/auction.py` kept the sequence and lost the allocation.
 - **Not a format.** *Auction format* names a bidding procedure and a payment rule together; this
-  project models only the second, and [matching](/domain/matching.md) says why and what the word
+  project models only the second, and [bid matching](/domain/bid-matching.md) says why and what the word
   costs when it is used loosely.
 - **Not an object in the graph.** There is no `ag:Auction` to point at. Looking for one is the
   usual sign that a market fact and a round fact have been confused.

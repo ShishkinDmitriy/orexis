@@ -6,7 +6,7 @@ which said the opposite until #66 and had `ag:Market` declared with three MQTT t
 
 So this file keeps the process and lost the matching. `propose_match` — greedy pay-as-bid —
 used to live here, under a docstring calling it "a replaceable v1 choice" while `hosting.py`
-imported it directly, which made it exactly not that. It is now `capabilities/matching/`: a
+imported it directly, which made it exactly not that. It is now `capabilities/bid_matching/`: a
 family with pay-as-bid and uniform price implemented, so a third way of matching is a class and
 a line of `PROVIDES` rather than an edit to this file.
 
@@ -15,8 +15,8 @@ proposes and clearing disposes — that ordering is the auction's, not any one m
 why it did not move. `match` arrives as a callable so this stays honest about depending on
 nothing but the shape of the answer.
 
-See knowledge/domain/auction.md, knowledge/domain/matching.md, knowledge/domain/round.md,
-knowledge/decisions/clearing-as-validator.md, knowledge/decisions/matching-is-a-capability.md.
+See knowledge/domain/auction.md, knowledge/domain/bid-matching.md, knowledge/domain/round.md,
+knowledge/decisions/clearing-as-validator.md, knowledge/decisions/bid-matching-is-a-capability.md.
 """
 
 from __future__ import annotations

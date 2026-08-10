@@ -1,7 +1,7 @@
 ---
 type: Decision
-title: Matching is a capability, and the host announces how it matches
-description: Turning a lot and a set of bids into an allocation with prices left agent/auction.py and became ag:MatchingCapability, with pay-as-bid implemented and uniform-price declared beside it. The host states how it matches, the capability is derived from that, and it travels in the offer — because a bidder cannot bid well against terms it does not know. Separating it first required separating market from auction, which the bundle had backwards.
+title: Bid matching is a capability, and the host announces how it matches
+description: Turning a lot and a set of bids into an allocation with prices left agent/auction.py and became ag:BidMatchingCapability, with pay-as-bid implemented and uniform-price declared beside it. The host states how it matches, the capability is derived from that, and it travels in the offer — because a bidder cannot bid well against terms it does not know. Separating it first required separating market from auction, which the bundle had backwards.
 status: accepted
 stage: v1
 tags: [market, auction, capabilities, protocol]
@@ -11,7 +11,7 @@ timestamp: 2026-08-10T00:00:00Z
 This record was filed as *an-auction-format-is-a-capability* and retitled when the vocabulary was
 settled: the thing described here is **matching**, and *auction format* means something wider that
 this project does not model. Nothing else in it changed. See
-[matching-is-the-word](matching-is-the-word.md) and [matching](/domain/matching.md).
+[bid-matching-is-the-word](bid-matching-is-the-word.md) and [bid matching](/domain/bid-matching.md).
 
 # Context
 
@@ -48,7 +48,7 @@ keep, and could not express two hosts running different auctions in one market.
 
 # Decision — matching is a capability, and the host states how it matches
 
-`ag:MatchingCapability` is the family. `ag:PayAsBid` is implemented; `ag:UniformPrice` is declared
+`ag:BidMatchingCapability` is the family. `ag:PayAsBid` is implemented; `ag:UniformPrice` is declared
 beside it with no `PROVIDES` behind it, exactly as `ag:Polling` and `ag:Consulting` are.
 
 This is a capability by [AGENTS.md rule 2](../../AGENTS.md)'s test — the *how* could differ, and
@@ -60,7 +60,7 @@ The host states `ag:matchesBy` and the capability is derived from it:
 
 ```sparql
 ?agent ag:hosts ?market ; ag:matchesBy ?matching .
-?matching a ag:MatchingCapability .
+?matching a ag:BidMatchingCapability .
 ```
 
 The stated fact is what the host *does*; the ability follows. So `world.ttl` still contains no
@@ -90,13 +90,13 @@ announced is necessarily what will run — a host cannot advertise one and apply
 
 # Where the code went
 
-- `propose_match` → `capabilities/matching/module.py`, as `ag:PayAsBid`'s implementation. It is
+- `propose_match` → `capabilities/bid_matching/module.py`, as `ag:PayAsBid`'s implementation. It is
   `@staticmethod`, because a lot and a set of bids fully determine the answer; a member that later
   needs the host's beliefs can stop being static then.
 - `run_round` **stayed** in `agent/auction.py`. Propose, validate, issue is the auction's shape
   however the bids were matched — so under the vocabulary above, that file now holds exactly the
   auction and nothing of the matching. It takes `match` as a callable.
-- `hosting.py` asks `agent.provider(MATCHING)`, the same way `redeem` already asks for whoever can
+- `hosting.py` asks `agent.provider(BID_MATCHING)`, the same way `redeem` already asks for whoever can
   actuate. The market package no longer knows pay-as-bid is implemented in Python at all.
 
 # Consequences
@@ -122,9 +122,22 @@ announced is necessarily what will run — a host cannot advertise one and apply
 - **A market could be derived** rather than declared — agents that can supply a resource, agents
   that can consume it, and a link between them is the whole definition, and it is the same move
   capabilities already make. Not attempted.
-- **Nothing selects between two implementations.** With one member the question does not arise; the
-  moment `ag:UniformPrice` is implemented, a world stating both would need a tie-break. The same seam
-  `ag:Consulting` leaves in [self-review-is-a-capability](self-review-is-a-capability.md).
-- **The offer announces the matching; nothing verifies it.** A bidder reads `matches_by` and
-  trusts it.
-  What would make that checkable is the same signing question left open elsewhere.
+- ~~**Nothing selects between two implementations.**~~ **Closed, by a shape rather than by a
+  tie-break.** This seam anticipated that once `ag:UniformPrice` was implemented a world stating
+  both would need something to choose. It cannot: `ag:matchesBy` carries `sh:maxCount 1`, so a host
+  states exactly one member and there is no ambiguity to resolve. The question the seam was really
+  reaching for survives as the one below it — not *which member* but *whether the one announced is
+  the one that ran*. `ag:Consulting` leaves the genuine version of this seam in
+  [self-review-is-a-capability](self-review-is-a-capability.md), where the grant names a member
+  directly and a second premise would be needed.
+- **The offer announces the bid matching; nothing verifies it.** A bidder reads `matches_by` and
+  trusts it. Clearing does not recompute the allocation — `validate` checks identity, no duplicate
+  lines, each line within that buyer's own signed bid and at or above the reserve, conservation
+  against the lot, solvency and the constitution. Every one of those still passes for a host that
+  announces `ag:UniformPrice` and then charges each winner its own bid, because each line is
+  individually within its bidder's bid; the bidder shaded less because of what it was told, and
+  pays for it. Under-allocating a rival is equally invisible. **This is the seam where bid matching
+  would stop being the host's alone**: giving clearing the announced member and comparing turns the
+  notary from a bounds-checker into a referee — and decides, as a side effect, whether clearing must
+  see every bid. What would otherwise make it checkable is the same signing question left open
+  elsewhere.

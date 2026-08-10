@@ -22,7 +22,7 @@ and they were opposites, which is worth recording rather than quietly fixing: th
 two separate design attempts to the wrong premise, because a fact about the venue and a fact
 about the round genuinely belong in different places. **Structure is the market's; the terms of a
 given auction are its host's** (see
-[matching-is-a-capability](/decisions/matching-is-a-capability.md)). What an auction *is* is
+[bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md)). What an auction *is* is
 [auction](/domain/auction.md).
 
 # When an auction opens — it condenses out of scarcity

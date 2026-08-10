@@ -17,7 +17,7 @@
 # A member declared but unimplemented is deliberately reachable by this same derivation.
 # A world that states one derives the capability, and the agent then logs at startup that
 # nothing provides it — which is the honest failure and exactly what `ag:Polling` and
-# `ag:Consulting` already do. See knowledge/domain/matching.md.
+# `ag:Consulting` already do. See knowledge/domain/bid-matching.md.
 
 PREFIX ag:   <http://example.org/agora#>
 
@@ -27,5 +27,5 @@ $given
 WHERE  {
     ?agent ag:hosts ?market ; ag:matchesBy ?matching .
     ?market a ag:Market .
-    ?matching a ag:MatchingCapability .
+    ?matching a ag:BidMatchingCapability .
 }

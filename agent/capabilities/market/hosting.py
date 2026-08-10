@@ -12,9 +12,9 @@ round is a conversation rather than a calculation:
 
 The host proposes; clearing disposes. `auction.py`, `clearing.py` and `market.py` are pure —
 this module is only the choreography around them. **How bids become an allocation is not part
-of the choreography**: it is matching, `ag:MatchingCapability`, asked for by family exactly as
+of the choreography**: it is matching, `ag:BidMatchingCapability`, asked for by family exactly as
 actuation is, so this package does not know that pay-as-bid is implemented in Python at all. See
-knowledge/domain/matching.md and knowledge/decisions/matching-is-a-capability.md.
+knowledge/domain/bid-matching.md and knowledge/decisions/bid-matching-is-a-capability.md.
 
 Vocabulary: capabilities/market/ontology.ttl. Rules: capabilities/market/shapes.ttl.
 See knowledge/domain/round.md, knowledge/decisions/clearing-as-validator.md.
@@ -33,7 +33,7 @@ from agent.store import bindings
 from agent.world import participants
 
 from .beliefs import HOSTING_BLOCK
-from .terms import ACTUATION, HOSTING, MATCHING
+from .terms import ACTUATION, HOSTING, BID_MATCHING
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -105,7 +105,7 @@ class HostingModule(Module):
         a way of matching nothing implements gets None here, which is the honest outcome of
         declaring a member ahead of its module.
         """
-        return self.agent.provider(MATCHING)
+        return self.agent.provider(BID_MATCHING)
 
     def announce(self, market, trigger: str) -> None:
         round_id = uuid.uuid4().hex[:8]

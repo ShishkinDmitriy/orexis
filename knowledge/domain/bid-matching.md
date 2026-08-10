@@ -1,14 +1,14 @@
 ---
 type: Domain Concept
-title: Matching
-description: Turning a lot and a set of bids into a proposed allocation with prices — an allocation rule and a payment rule together. The host declares how it matches and the offer announces it; pay-as-bid and uniform price share the first and differ in the second, and each costs the bidder something different. Matching is deliberately narrower than an auction format.
+title: Bid matching
+description: Turning a lot and a set of bids into a proposed allocation with prices — an allocation rule and a payment rule together. The host declares how it matches and the offer announces it; pay-as-bid and uniform price share the first and differ in the second, and each costs the bidder something different. Deliberately narrower than an auction format, and qualified because bare matching collides with matching a capability to a provider.
 tags: [auction, matching, mechanism, ubiquitous-language]
 timestamp: 2026-08-10T00:00:00Z
 ---
 
 # What it is
 
-**Matching** is the step that turns a lot and a set of bids into a **proposed allocation with
+**Bid matching** is the step that turns a lot and a set of bids into a **proposed allocation with
 prices** — who gets how much, and what each of them pays. It is one input, one output, and no
 conversation:
 
@@ -33,16 +33,28 @@ proposes, clearing disposes* is the line, and matching is what the host does whe
 # The word
 
 Three words were in circulation for this one thing — *matching*, *rule* and *format* — and all
-three appeared in `hosting.py` alone. **Matching is the word.** It is accurate about the width of
-what we model: it covers the allocation rule *and* the payment rule, and it survives a member that
-varies the first rather than the second — pro-rata rather than highest-first — which is exactly the
-case the family exists to allow.
+three appeared in `hosting.py` alone. **Matching is the root word.** It is accurate about the width
+of what we model: it covers the allocation rule *and* the payment rule, and it survives a member
+that varies the first rather than the second — pro-rata rather than highest-first — which is
+exactly the case the family exists to allow.
 
 *Rule* was the worst of the three, because `rules.ru` already means something specific in every
 capability directory here — a SPARQL derivation. *Format* over-claims, for the reason the next
-section gives. See [matching-is-the-word](/decisions/matching-is-the-word.md).
+section gives.
 
-# What matching is NOT — the format it is only half of
+**And the qualifier is load-bearing, not decoration.** Bare *matching* collides inside this
+project: `agent.provider(family)` matches a request for an ability to whichever module registered a
+member of it, which is what every package here does. So *matching capability* parses two ways —
+the capability of matching, and matching, of capabilities. **Bid matching** says which. *Order
+matching* is the standard phrase and bids are our orders: the host posts one lot and bidders
+answer, so there is no two-sided book to have orders in. See
+[bid-matching-is-the-word](/decisions/bid-matching-is-the-word.md).
+
+The qualifier is carried where something could be misread and nowhere else. `ag:matchesBy` has a
+host for its domain and this family for its range, so *supplier matchesBy PayAsBid* admits one
+reading and stays as it is; so do `propose_match` and `Match`.
+
+# What bid matching is NOT — the format it is only half of
 
 In the literature an **auction format** (equivalently *auction type*) is a named combination of
 two independent things:
@@ -53,7 +65,7 @@ two independent things:
    / discriminatory (each winner pays its own bid), uniform (every winner pays one clearing
    price), second-price, and so on.
 
-**We model only the second.** `ag:MatchingCapability` is the allocation-and-payment half alone.
+**We model only the second.** `ag:BidMatchingCapability` is the allocation-and-payment half alone.
 The first axis is fixed here: [round](/domain/round.md) describes an iterative-ascending round,
 and that is a property of the protocol in `capabilities/market`, not a slot anything plugs into.
 
@@ -71,7 +83,7 @@ bidder shades identically. Same payment rule, different procedure, same outcome.
 | our round today | iterative ascending | `ag:PayAsBid` or `ag:UniformPrice` |
 
 Dutch and sealed-bid differ on the left and agree on the right; our two differ on the right and
-agree on the left. So Dutch is not a matching capability and would not become one: if the bidding
+agree on the left. So Dutch is not a bid-matching capability and would not become one: if the bidding
 procedure were ever made pluggable, Dutch would join *that* family and still match by pay-as-bid.
 
 **And the term is worse than merely wide — it is ambiguous.** In finance, "Dutch auction" usually
@@ -84,13 +96,13 @@ precisely why `matching` is our word and `format` is not.
 
 # How a host says which one it runs
 
-Matching is a **capability**, in the sense [capability-packages](/decisions/capability-packages.md)
+Bid matching is a **capability**, in the sense [capability-packages](/decisions/capability-packages.md)
 gives the word: a family with interchangeable members, asked for by family and never by name.
 
 - The host states `ag:matchesBy ag:PayAsBid` in the world. That is a fact about what it *does*.
 - The capability `ag:hasCapability ag:PayAsBid` is **derived** from it at genesis, never written
   by hand — the same as every other capability here.
-- At runtime `hosting.py` asks `agent.provider(MATCHING)` and gets whichever module registered
+- At runtime `hosting.py` asks `agent.provider(BID_MATCHING)` and gets whichever module registered
   that member. The market package does not know that pay-as-bid is implemented in Python at all.
 
 It is the **host's** fact and not the market's, because an auction's terms belong to whoever
@@ -102,7 +114,7 @@ quantity, the reserve and the deadline, read off the provider rather than off a 
 what is advertised is necessarily what will run. A bidder cannot bid well against terms it does
 not know: how much to shade is a direct function of which member is in force. Real auctions
 announce their terms when they open, and so does this one. Nothing verifies the announcement —
-see the seams in [matching-is-a-capability](/decisions/matching-is-a-capability.md).
+see the seams in [bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md).
 
 # The two members, and what each costs you
 
@@ -159,7 +171,7 @@ changing it alters what every participant pays and how each should bid. See
 
 # Where it lives
 
-`agent/capabilities/matching/` — `ontology.ttl` (the family and its members), `shapes.ttl` (a
+`agent/capabilities/bid_matching/` — `ontology.ttl` (the family and its members), `shapes.ttl` (a
 host must say how it matches; only a host may), `rules.ru` (the derivation), `module.py` (both
 implementations). `agent/auction.py` holds the path around it: propose, validate, issue.
 
