@@ -2,8 +2,8 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 
-<http://example.org/agora/matching> a owl:Ontology ;
-    rdfs:label "Agora matching" ;
+<http://example.org/agora/bid-matching> a owl:Ontology ;
+    rdfs:label "Agora bid matching" ;
     rdfs:comment """How a lot and a set of bids become an allocation with prices — the auction's BID_MATCHING, apart from its protocol. `capabilities/market` says who announces, who answers and by when; this says what the answers are worth. They are separable because the protocol is the same whichever matching runs, and matching is the part with more than one defensible answer. **Matching** is the word: see knowledge/domain/bid-matching.md, which defines it and says what it deliberately does not reach.""" .
 
 #################  The capability  #################
