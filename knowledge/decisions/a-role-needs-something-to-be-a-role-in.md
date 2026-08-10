@@ -25,9 +25,9 @@ context — rather than a predicate plus the capability derived from it.
 
 The question is sharper than it first looks, because
 [bid-matching-is-a-capability](bid-matching-is-a-capability.md) left a seam that seems to demand
-roles: **hosting a market is structural, hosting an auction is per-round.** If the host rotates
+roles: **owning the venue is structural, convening an auction is per-auction.** If the host rotates
 with whichever side is short, then "host" cannot be a standing fact about an agent — it is
-something an agent *is*, for the duration of one round. That is exactly the shape a role has and a
+something an agent *is*, for the duration of one auction. That is exactly the shape a role has and a
 predicate does not.
 
 # Decision — positions stay predicates, and the trigger is written down
@@ -61,7 +61,7 @@ ratifier, you are a ratifier **of** something.
 
 **And an auction has no object.** [auction](/domain/auction.md) says so deliberately: an auction is
 a process, it condenses and dissolves, and *there is no `ag:Auction` to point at — looking for one
-is the usual sign that a market fact and a round fact have been confused.* So a per-round role has
+is the usual sign that a market fact and an auction fact have been confused.* So a per-auction role has
 nothing to be a role in. Making one first-class today would mean either:
 
 - attaching it to the **market**, which is structural — and then it is `market:hosts` with more
@@ -87,7 +87,7 @@ own:
 - `bidding.py` iterates `me.markets`
 
 So it hosts in A only and bids in B only. **The position is already per-market**; what it is not is
-per-round, and per-round is precisely the thing with no object to hang on.
+per-auction, and per-auction is precisely the thing with no object to hang on.
 
 This also settles what a role would add that a capability does not. A capability says *what an
 agent can do*; a position says *where it stands*. They coincide here only because every capability
@@ -110,8 +110,8 @@ telling the truth about which is which. That it *looks* untidy is the cost of it
 # Consequences
 
 - **The seam about who hosts stays where it is.** This record does not move it, and deliberately
-  removes one wrong way to close it: a per-round host is not reachable by promoting `market:hosts`
-  to a role, because the promotion needs a round object first.
+  removes one wrong way to close it: a per-auction host is not reachable by promoting `market:hosts`
+  to a role, because the promotion needs an auction object first.
 - **Two questions are now known to be one.** *Should positions be roles?* and *should an auction be
   an object?* have the same answer, and the second is the one to argue. Anyone reaching for roles
   again should be sent to [auction](/domain/auction.md) rather than to this record's conclusion.
@@ -121,7 +121,7 @@ telling the truth about which is which. That it *looks* untidy is the cost of it
 # Seams left open
 
 - **An auction is not an object, and this record does not argue that it should become one.** It
-  says only that roles depend on the answer. The argument for a round object — that it would give
+  says only that roles depend on the answer. The argument for an auction object — that it would give
   bids, the offer, the trade and the host a single thing to be about — is real and is not made
   here.
 - **Nothing reads a peer's position.** `market:bidsIn` is public and no agent asks who else bids in

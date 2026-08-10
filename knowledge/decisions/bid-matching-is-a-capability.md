@@ -117,7 +117,7 @@ announced is necessarily what will run — a host cannot advertise one and apply
 - **Who hosts.** [standalone-clearing](standalone-clearing.md) says the scarce side hosts and that
   the host rotates with topology; nothing implements it, and v1 declares the supplier statically.
   Under the split above the question sharpens rather than resolves: **hosting a market is
-  structural, hosting an auction is per-round**, so who convenes *this* round could follow from
+  structural, **convening an auction is per-auction**, so who convenes *this* auction could follow from
   which side is short at that moment. Nothing here moves toward it.
 - **A market could be derived** rather than declared — agents that can supply a resource, agents
   that can consume it, and a link between them is the whole definition, and it is the same move
