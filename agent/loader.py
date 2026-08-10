@@ -7,12 +7,21 @@ A **package** is one self-contained thing the society is made of, and it is a di
                              At the repo ROOT, because onboarding validates and derives from it
                              too: it is the one tree both sides genuinely share.
     agent/capabilities/<n>/  what an agent can DO. The extendable axis.
-    agent/transports/<n>/    how a device is REACHED. Not a capability, deliberately — a
-                             protocol changes nothing an agent must decide.
+    agent/transports/<n>/    how a device is REACHED.
+    agent/codecs/<n>/        how its bytes become a DOCUMENT.
+    agent/calibrations/<n>/  how a raw value becomes a QUANTITY, with a unit.
 
-The last two live INSIDE `agent/` because only an agent runtime loads their Python. Onboarding
-reads their `ontology.ttl`, `shapes.ttl` and `rules.ru` — which it finds here, wherever they
-sit — and never imports a module from either.
+All four of those live INSIDE `agent/` because only an agent runtime loads their Python.
+Onboarding reads their `ontology.ttl`, `shapes.ttl` and `rules.ru` — which it finds here,
+wherever they sit — and never imports a module from any of them.
+
+**The trees are one mechanism split by BEARER, not by importance.** Every one of them is a
+family with interchangeable members registered by `PROVIDES`, which is what rule 2 calls a
+capability. What differs is what carries it, and selection follows from that: a capability is
+borne by an AGENT and derived into the graph at genesis, while a transport, a codec and a
+calibration are borne by a BINDING and chosen at runtime by `claims()`. An agent's ability is
+about what it IS, which the world should hold and validate; a binding's is about what a device
+SPEAKS, which only the device can say and no world should have to restate.
 
 Inside a package, the same four names mean the same four things every time:
 
@@ -54,6 +63,13 @@ AGENT_ROOT = Path(__file__).resolve().parent
 VOCABULARY = "vocabulary"
 CAPABILITIES = "capabilities"
 TRANSPORTS = "transports"
+CODECS = "codecs"
+CALIBRATIONS = "calibrations"
+
+# The trees whose members are chosen per BINDING at runtime rather than derived onto an agent at
+# genesis. Grouped because they share a selection protocol — `TERM`, `DEFAULT`, `claims()` — and
+# the same guarantee that an explicit statement beats a default.
+BOUND_KINDS = (TRANSPORTS, CODECS, CALIBRATIONS)
 
 # The base vocabulary, merged before anything else.
 BASE = "agora"
@@ -63,7 +79,7 @@ BASE = "agora"
 # every other package layers on those terms, and reading a merge that puts them last is reading
 # it backwards. `vocabulary/agora` is sorted to the front explicitly rather than by luck of the
 # alphabet — `agora` happens to sort before `water`, and that is not a thing to rely on.
-KINDS = (VOCABULARY, CAPABILITIES, TRANSPORTS)
+KINDS = (VOCABULARY, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
 
 ONTOLOGY = "ontology.ttl"
 SHAPES = "shapes.ttl"
@@ -134,7 +150,7 @@ def packages() -> tuple[Package, ...]:
             found.append(Package(kind=VOCABULARY, name=name, path=tree / name))
 
     # the agent's own trees: Python only it loads
-    for kind in (CAPABILITIES, TRANSPORTS):
+    for kind in (CAPABILITIES, *BOUND_KINDS):
         tree = AGENT_ROOT / kind
         if not tree.is_dir():
             continue
@@ -201,6 +217,60 @@ def drivers() -> tuple[type, ...]:
     """Every transport's driver. Which one speaks to a given sensor is the driver's own
     answer — see `agent.driver.driver_for`."""
     return tuple(cls for p in of_kind(TRANSPORTS) for cls in p.provides())
+
+
+def _selectable(kind: str) -> tuple[type, ...]:
+    """Every member of a binding-borne family, checked for the two ways it could be ambiguous.
+
+    Selection walks these and takes the first whose `claims()` answers — so the build is only
+    well-defined if at most one member can answer any given question. Two ways it might not be,
+    and both are refused here rather than resolved:
+
+      * **two members of one term** — a binding naming it would get whichever the filesystem
+        yielded first, which is a coin flip dressed as a choice;
+      * **two defaults** — worse, because it needs no world to trigger it. Every existing
+        binding names nothing, so the wrong default would be what the whole fleet silently got.
+
+    Refusing at load is the only place this is cheap. Neither shows up as an error later: both
+    produce a build that runs and reads its devices through the wrong member.
+    """
+    members: dict[str, type] = {}
+    default: type | None = None
+    for package in of_kind(kind):
+        for cls in package.provides():
+            term = getattr(cls, "TERM", "")
+            if not term:
+                raise RuntimeError(
+                    f"{package.import_name} provides {cls.__name__}, which names no TERM — "
+                    f"a {kind[:-1]} must say which term a binding uses to ask for it"
+                )
+            if term in members:
+                raise RuntimeError(
+                    f"{term} is implemented twice: {members[term].__name__} and "
+                    f"{cls.__name__}. One term, one member."
+                )
+            members[term] = cls
+            if getattr(cls, "DEFAULT", False):
+                if default is not None:
+                    raise RuntimeError(
+                        f"{default.__name__} and {cls.__name__} both claim to be what a "
+                        f"binding stating no {kind[:-1]} gets. One default, or none."
+                    )
+                default = cls
+    return tuple(members.values())
+
+
+@lru_cache(maxsize=1)
+def codecs() -> tuple[type, ...]:
+    """Every codec there is. Which one a binding speaks is its own declaration — see
+    `agent.codec.codec_for`."""
+    return _selectable(CODECS)
+
+
+@lru_cache(maxsize=1)
+def calibrations() -> tuple[type, ...]:
+    """Every calibration there is — see `agent.calibration.calibration_for`."""
+    return _selectable(CALIBRATIONS)
 
 
 def describe() -> str:

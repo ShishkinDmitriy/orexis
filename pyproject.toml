@@ -87,7 +87,12 @@ forbidden_modules = ["onboarding"]
 # boundary the image is built to keep it out of.
 name = "No capability or transport reaches for them either"
 type = "forbidden"
-source_modules = ["agent.capabilities", "agent.transports"]
+source_modules = [
+    "agent.capabilities",
+    "agent.transports",
+    "agent.codecs",
+    "agent.calibrations",
+]
 forbidden_modules = ["onboarding"]
 
 [[tool.importlinter.contracts]]

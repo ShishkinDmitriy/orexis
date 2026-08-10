@@ -10,57 +10,9 @@ See knowledge/domain/sensing.md.
 
 from __future__ import annotations
 
-import json
-
+from agent.codec import CodecError, codec_for
 from agent.driver import Driver
-
-# What a sensor's value is called when nothing says otherwise. Every single-property device
-# here already publishes `{"value": ...}`, so the default is what the fleet does — and a world
-# that never states a pointer reads exactly as it did before this existed.
-DEFAULT_POINTER = "/value"
-
-
-class PointerError(ValueError):
-    """A pointer that does not resolve to a number in this payload."""
-
-
-def resolve(pointer: str, doc):
-    """The one RAW VALUE a JSON Pointer identifies — RFC 6901, April 2013, Standards Track.
-
-    A pointer, not a query: RFC 6901 identifies exactly ONE value, which is exactly what a
-    device reports per property. RFC 9535's JSONPath returns a nodelist, and taking "the first"
-    of one would be a collapse rule we invented and then had to defend.
-
-    What comes out is **raw** — what the device put on the wire. Interpreting it is a third
-    stage that does not exist yet (issue #26), and this function is indifferent to it exactly
-    as it is indifferent to whichever codec produced `doc`.
-
-    The empty pointer is legal in the RFC and means the whole document. It is refused here
-    rather than supported, because a whole document is not a number and letting it through
-    would turn a mis-stated world into a parse failure much further away.
-    """
-    if not pointer.startswith("/"):
-        raise PointerError(f"{pointer!r} is not a JSON Pointer — it must start with '/'")
-
-    node = doc
-    for token in pointer.split("/")[1:]:
-        # Order matters and is the classic bug: `~1` becomes `/` FIRST, then `~0` becomes `~`.
-        # Reversed, a literal `~1` written as `~01` would decode to `/` instead of `~1`.
-        key = token.replace("~1", "/").replace("~0", "~")
-        if isinstance(node, list):
-            if not key.isdigit():
-                raise PointerError(f"{pointer!r}: {key!r} is not an array index")
-            index = int(key)
-            if index >= len(node):
-                raise PointerError(f"{pointer!r}: index {index} is past the end")
-            node = node[index]
-        elif isinstance(node, dict):
-            if key not in node:
-                raise PointerError(f"{pointer!r}: no {key!r} here")
-            node = node[key]
-        else:
-            raise PointerError(f"{pointer!r}: {key!r} has nothing to select from")
-    return node
+from agent.pointer import DEFAULT_POINTER, PointerError, resolve
 
 
 class MqttDriver(Driver):
@@ -109,13 +61,22 @@ class MqttDriver(Driver):
         one MQTT client with one credential, so a device with two peripherals publishes one
         message and each sensor points at its own field.
 
+        **This transport no longer decodes.** It used to call `json.loads` itself, which made
+        JSON a property of speaking MQTT rather than of what the device sends — two independent
+        facts fused in one line. Bytes go to whichever codec the sensor's binding selects; what
+        comes back is a document, and the pointer is indifferent to which codec made it.
+
         None rather than a default is the whole discipline here: a pointer that misses is a
         world stating something the device does not send, and answering 0.0 would record that
-        as a measurement. The caller warns; nothing is written.
+        as a measurement. The caller warns; nothing is written. A binding naming a codec this
+        build does not carry lands here the same way, for the same reason.
         """
+        codec = codec_for(sensor)
+        if codec is None:
+            return None
         try:
-            doc = json.loads(payload)
-        except ValueError:
+            doc = codec.decode(payload)
+        except CodecError:
             return None
         try:
             return float(resolve(sensor.reading_pointer or DEFAULT_POINTER, doc))

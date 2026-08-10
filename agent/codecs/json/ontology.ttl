@@ -1,0 +1,28 @@
+@prefix ag:    <http://example.org/agora#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix codec: <http://example.org/agora/codec#> .
+
+<http://example.org/agora/codec> a owl:Ontology ;
+    rdfs:label "Agora codecs" ;
+    rdfs:comment """How bytes become a DOCUMENT — the first of the three stages a reading passes through, the others being the pointer that says which value in that document is a given sensor's and the calibration that turns a raw number into a quantity. A family with interchangeable members, borne by a BINDING rather than by an agent: which format a device speaks is something only the device can say, so it is declared on the sensor and selected at runtime, and there is nothing about an agent to derive. That is why this package ships no rules.ru and grants no capability — not because it is a lesser kind of thing, but because the bearer is different. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.""" .
+
+#################  The family  #################
+
+codec:Encoding a owl:Class ; rdfs:label "Encoding" ;
+    rdfs:comment "A wire format. Anything that turns bytes into a document is one of these, so a binding may name what it speaks without knowing which package answers. Note what is NOT here: which value in the document is anyone's. That is ag:readingPointer, and it is deliberately not a member of any family — RFC 6901 works over any tree, so a pointer written today keeps meaning the same thing whichever member below produced the document. That indifference is what makes declaring these two cost nothing to defer." .
+
+codec:encoding a owl:ObjectProperty ; rdfs:range codec:Encoding ;
+    rdfs:label "encoding" ;
+    rdfs:comment "What format this device's payloads are in. ABSENT means codec:Json, which is what every board here already sends — so this is invisible until a society acquires a device that speaks something else. A stated encoding is answered only by the member whose term it is, so naming one can never be overruled by the default." .
+
+#################  The members  #################
+
+codec:Json a codec:Encoding ; rdfs:label "JSON" ;
+    rdfs:comment "The one member with an implementation, and the default. Every board in every shipped world publishes a JSON object and is instructed with one — the cadence a sensor is given goes out the same way, which is why this is a CODEC and not a parser: it codes both directions." .
+
+codec:Cbor a codec:Encoding ; rdfs:label "CBOR" ;
+    rdfs:comment "Declared, unimplemented. RFC 8949 — the same data model as JSON in a compact binary form, which is what a battery-powered board would reach for to shorten its radio time. Named first among the unbuilt because it is the cheapest: CBOR decodes to exactly the maps and arrays a pointer already walks, so a member would be a decode call and nothing else." .
+
+codec:Kaitai a codec:Encoding ; rdfs:label "Kaitai Struct" ;
+    rdfs:comment "Declared, unimplemented. For a device that speaks a genuine BINARY protocol rather than a serialisation format — a packed struct of fixed-width fields, described declaratively in a .ksy spec rather than parsed by hand. Worth naming because it is the case that looks like it would break the design and does not: what a Kaitai spec yields is a TREE, so ag:readingPointer addresses into it unchanged. A codec is where a binary format would land, and no other stage would move." .

@@ -40,6 +40,7 @@ Derivation: capabilities/perception/rules.ru. See knowledge/domain/sensing.md.
 
 from __future__ import annotations
 
+from agent.calibration import calibration_for
 from agent.driver import driver_for
 from agent.module import Module
 from agent.observation import Observations
@@ -85,6 +86,16 @@ class PerceptionModule(Module):
                 self.log.warning("%s states no binding I can speak — it will never be read",
                                  sensor.local_id)
 
+        # And one calibration, chosen the same way and for the same reason: what turns a raw
+        # value into a quantity is a fact about the DEVICE, not about the agent watching it.
+        # Today every sensor gets the identity member, because the firmware scales before it
+        # publishes — the stage is not absent, it is set to identity. See issue #26.
+        self.calibrations = {s.uri: calibration_for(s) for s in self.sensors}
+        for sensor in self.sensors:
+            if self.calibrations[sensor.uri] is None:
+                self.log.warning("%s names a calibration this build does not carry — it will "
+                                 "never be read", sensor.local_id)
+
         # Recording is not perception's to define — see agent/observation.py.
         self.observations = Observations(agent)
 
@@ -124,7 +135,13 @@ class PerceptionModule(Module):
             if driver is None or not driver.owns(sensor, topic):
                 continue
             mine = True
-            value = driver.parse(sensor, payload)
+            raw = driver.parse(sensor, payload)
+            # The last stage: a raw value is what the device sent, a quantity is what it means.
+            # A binding whose calibration this build lacks is treated exactly as an unreadable
+            # payload — the sensor is reported unread rather than recorded uncalibrated, because
+            # a number nobody could interpret is worse in the store than a gap.
+            calibration = self.calibrations[sensor.uri]
+            value = None if raw is None or calibration is None else calibration.apply(sensor, raw)
             if value is None:
                 # Named, because on a shared topic "unreadable payload" alone cannot say WHICH
                 # sensor found nothing — and one sensor missing its field while its neighbours

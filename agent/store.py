@@ -70,6 +70,16 @@ _EXTERNAL = {
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
+    # Units, as IRIs rather than as strings. SOSA deliberately defines none and names QUDT as
+    # one of the vocabularies to reach for, so this is the standard companion to what is already
+    # in use. `http://`, not `https://`, which is the canonical form QUDT publishes.
+    #
+    # Here rather than in `calibrations/identity/ontology.ttl` even though that package is the
+    # only one that uses it, because the split above is about OWNERSHIP and not about who reads
+    # it: an external vocabulary is not a package's to bind, and a package that could rebind
+    # `unit:` could silently redirect every unit in the society. Borrowed and not imported — the
+    # IRIs are referenced, nothing of QUDT is loaded, and `agent/inference.py` gains no axioms.
+    "unit": "http://qudt.org/vocab/unit/",
 }
 
 NAMESPACES = {**_EXTERNAL, **loader.prefixes()}
