@@ -183,9 +183,13 @@ them had to be rewritten when it turned out to pass with the fix removed.
 # Seams left open
 
 - **Nothing aggregates.** Two sensors on one property overwrite rather than combine, deliberately.
-- **No ratified world wires two sensors to one agent.** The behaviour is exercised only in tests,
-  against worlds built in a temporary directory. It has never run on the bench, and the board
-  that motivates it is not yet flashed.
+- ~~**No ratified world wires two sensors to one agent.**~~ **Closed.** `world/sensing` now wires
+  three to `fern` — the capacitive probe, and the KY-015's temperature and humidity — so the
+  behaviour this record describes is exercised by a shipped world rather than only by worlds
+  built in a temporary directory. The board is flashed and publishing all three. What made that
+  possible was giving the two air channels a way to say which value in the shared message is
+  theirs; see
+  [a-reading-is-one-value-so-it-is-pointed-at](a-reading-is-one-value-so-it-is-pointed-at.md).
 - **A desire is about exactly one property.** `market:aboutProperty` is read as a single value, so an
   agent whose stake spans two — wanting both moisture and nutrient held — has no representation.
   Nothing depends on this yet, and widening it is one query and a loop.
