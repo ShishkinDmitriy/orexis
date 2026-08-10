@@ -1,18 +1,29 @@
 ---
 type: Domain Concept
-title: Market (formation & membership)
-description: How an auction condenses out of scarcity, who hosts, who's in the cluster, and how participants find each other.
+title: Market (structure & membership)
+description: A market is the standing structure — a resource, who can supply it, who can consume it, and the links between them. The auction is the process that condenses inside it and dissolves again.
 tags: [market, auction, topology, discovery, emergence]
 timestamp: 2026-08-01T00:00:00Z
 ---
 
-# What it is
+# What it is — structure, not an event
 
-A market is **not a standing thing** — it *condenses out of scarcity* and dissolves again.
-There is no permanent "the auction"; there are momentary [rounds](/domain/round.md) that
-form when a resource becomes contested and clear away when it doesn't.
+A market is the **standing structure**: a resource, agents that can supply it, agents that can
+consume it, and the links between them. It is in the world, it has a name and channels, and
+participants discover it rather than being configured with it. `ag:Market` is exactly this.
 
-# When it opens — condenses out of scarcity
+**The auction is the process.** It condenses out of scarcity, allocates, and dissolves — see
+[round](/domain/round.md), which is the unit it runs in. A market with nothing contested is
+still a market; there is simply no auction happening in it.
+
+This page said the opposite until recently — that a market "is not a standing thing" — while
+`ag:Market` was declared in `world.ttl` with three MQTT topics on it. Both were called *market*
+and they were opposites, which is worth recording rather than quietly fixing: the confusion sent
+two separate design attempts to the wrong premise, because a fact about the venue and a fact
+about the round genuinely belong in different places. **Structure is the market's; the rules of a
+given auction are its host's** (see [an-auction-format-is-a-capability](/decisions/an-auction-format-is-a-capability.md)).
+
+# When an auction opens — it condenses out of scarcity
 
 **The design**: no scarcity, no auction. If supply ≥ demand, the
 [supplier](/domain/supplier.md) just **dispenses** (subject to the

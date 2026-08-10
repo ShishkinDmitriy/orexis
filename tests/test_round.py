@@ -64,6 +64,21 @@ def test_scarcity_opens_a_round(host):
     assert offer["round_id"]
 
 
+def test_the_offer_announces_the_rule_bidders_are_bidding_under(host):
+    """Terms travel with the invitation, as a real auction announces its format when it opens.
+
+    A bidder cannot bid well against a rule it does not know: under pay-as-bid a winner pays
+    what it offered, so the honest strategy is to shade, and under a uniform price it is not.
+    Read off the provider rather than a belief, so what is announced is necessarily what runs —
+    a host cannot advertise one rule and apply another.
+    """
+    from agent.capabilities.matching import PAY_AS_BID
+
+    host.deliver("readings/fern", low_event())
+    assert offer_from(host)["matches_by"] == PAY_AS_BID
+    assert host.hosting().matcher().CAPABILITY == PAY_AS_BID
+
+
 def test_a_comfortable_participant_opens_nothing(host):
     host.deliver("readings/fern", {"agent": "fern", "band": "OK", "value": 0.5})
     assert host.sent == []

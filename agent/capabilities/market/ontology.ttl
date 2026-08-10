@@ -19,7 +19,7 @@ ag:Hosting a ag:Capability ; rdfs:label "Hosting" ;
 #################  The venue  #################
 
 ag:Market a owl:Class ; rdfs:label "Market" ;
-    rdfs:comment "Where a scarce resource is allocated. Its channels are stated on it (see transport), so participants discover the venue rather than being configured with it." .
+    rdfs:comment "The standing STRUCTURE around a resource: what is allocated, who may supply it, who may consume it, and the channels they meet on (see transport), so participants discover the venue rather than being configured with it. A market is not an event — the AUCTION is the event, condensing out of scarcity and dissolving again, and a market with nothing contested is still a market with no auction in it. Both were called 'market' until recently and the two readings are opposites; see knowledge/domain/market.md." .
 
 ag:marketFor a owl:ObjectProperty ; rdfs:domain ag:Market ;
     rdfs:label "market for" ;

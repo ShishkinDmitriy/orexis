@@ -77,6 +77,10 @@ ag:barrel1 a ag:WaterSource ;
 ag:supplier a ag:Agent ;
     ag:localId "supplier" ;
     ag:hosts ag:barrel1_market ;
+    #  How it matches bids to the lot. Public because a bidder cannot bid well against a
+    #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
+    #  convenes it, not to the venue. The capability is derived from this, never declared.
+    ag:matchesBy ag:PayAsBid ;
     ag:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########

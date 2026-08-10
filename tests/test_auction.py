@@ -1,9 +1,21 @@
-"""Tests for the host's auction (propose_match) and the host -> clearing round."""
+"""The allocation rule, and the host -> clearing path that runs whichever rule is in force.
+
+`propose_match` moved into `capabilities/matching/` when the format became a capability (#66),
+so it is exercised here through the module that provides it — the same object `hosting.py` gets
+from `agent.provider`. `run_round` stayed in `agent/auction.py`, because propose-validate-issue
+is true of every rule, and it now takes the matcher rather than importing one.
+"""
 
 import pytest
 
-from agent.auction import propose_match, run_round
+from agent.auction import run_round
+from agent.capabilities.matching.module import PayAsBidModule
 from agent.market import Bid, Limits, MarketState, Offer
+
+# The rule under test. It is static because a lot and a set of bids fully determine the answer —
+# which is what lets it be checked without a world, and a format be swapped without the host
+# knowing. `hosting.py` reaches this same function through `agent.provider`.
+propose_match = PayAsBidModule.propose_match
 
 
 def offer(quantity_l=5.0, reserve=0.20) -> Offer:
@@ -71,7 +83,7 @@ def test_full_demand_when_supply_ample():
 def test_round_happy_path_issues_grants():
     bids = [Bid("tomato", 4.0, 0.55), Bid("fern", 4.0, 0.40)]
     st = state(bids={b.agent: b for b in bids})
-    result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1")
+    result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1", match=propose_match)
     assert result.validation.ok, result.validation.violations
     assert {g.sub for g in result.vouchers} == {"tomato", "fern"}
     assert result.trade.total_qty_l == 5.0
@@ -86,7 +98,7 @@ def test_round_red_light_on_constitution():
         bids={b.agent: b for b in bids},
         limits=Limits(tank_capacity_l=100.0, rot_headroom_l={"tomato": 1.0}),
     )
-    result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1")
+    result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1", match=propose_match)
     assert not result.validation.ok
     assert result.vouchers == []
     assert any("rot headroom" in v for v in result.validation.violations)
@@ -95,7 +107,7 @@ def test_round_red_light_on_constitution():
 def test_round_red_light_on_insolvency():
     bids = [Bid("fern", 3.0, 0.50)]
     st = state(bids={b.agent: b for b in bids}, wallets={"fern": 0.50})  # cost 1.50 > 0.50
-    result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1")
+    result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1", match=propose_match)
     assert not result.validation.ok
     assert result.vouchers == []
     assert any("exceeds wallet" in v for v in result.validation.violations)

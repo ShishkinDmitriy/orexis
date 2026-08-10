@@ -1,0 +1,28 @@
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<http://example.org/agora/matching> a owl:Ontology ;
+    rdfs:label "Agora matching" ;
+    rdfs:comment """How bids become an allocation — the auction's RULE, apart from its protocol. `capabilities/market` says who announces, who answers and by when; this says what the answers are worth. They are separable because the protocol is the same whichever rule runs, and the rule is the part with more than one defensible answer.""" .
+
+#################  The capability  #################
+#  A family, because given a lot and a set of bids there is genuinely more than one right
+#  answer, and which one is in force changes what a rational bidder should offer. That is the
+#  test for a capability rather than a function: the HOW could differ.
+
+ag:MatchingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+    rdfs:label "Matching capability" ;
+    rdfs:comment "The family. Anything that turns a lot and a set of bids into a proposed allocation is one of these, so a host may ask for 'whoever matches' without knowing which rule answered. The host PROPOSES; clearing still disposes — a matching capability decides an allocation, never whether it is permitted." .
+
+ag:PayAsBid a ag:MatchingCapability ; rdfs:label "Pay as bid" ;
+    rdfs:comment "Greedy and discriminatory: bids at or above the reserve are filled highest-price-first, each up to its own maximum and capped by what is left, and each winner pays ITS OWN bid. The v1 rule. It rewards bidding your true value only as far as you must — a winner that bid well above the clearing point pays all of it, so the honest strategy is to shade, which is the standard objection to this format and the reason the alternative is declared beside it." .
+
+ag:UniformPrice a ag:MatchingCapability ; rdfs:label "Uniform price" ;
+    rdfs:comment "Every winner pays the same price — the lowest accepted bid, or the highest rejected one. RESERVED: declared so the vocabulary is honest that the rule is the replaceable part, but no module implements it, so no agent can hold it yet. Adding it is a class and one line of PROVIDES; no other package moves." .
+
+#################  What a host states  #################
+
+ag:matchesBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:MatchingCapability ;
+    rdfs:label "matches by" ;
+    rdfs:comment "Which rule this host runs in the auctions it convenes. The host defines the rules of its own auction, so this is the host's fact and not the venue's — and it is PUBLIC, in the world, because a bidder cannot bid well against a rule it does not know. Real auctions announce their format; a sealed-bid first-price auction says so. Named `matchesBy` rather than `clearsBy` deliberately: clearing is a different thing here — the validator that co-signs a trade — and reusing the word would have made a host's allocation rule read as the notary's business. The capability is DERIVED from this, never declared." .
