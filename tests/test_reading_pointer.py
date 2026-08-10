@@ -171,6 +171,44 @@ def test_the_tightest_cadence_on_a_board_wins(monkeypatch):
     assert sent[0][2] is True, "a cadence is retained, or a sleeping board never hears it"
 
 
+def test_the_series_store_is_told_which_property_each_reading_is(monkeypatch):
+    """Two fractions in the same 0-1 range, and nothing in either number says which it is.
+
+    The reading went to Influx tagged by plant and sensor only, into a measurement called
+    `soil_moisture` — so an air temperature of 21.4 was written as this fern's soil moisture,
+    and every dashboard and later query would read it as one. The belief base was always fine;
+    it keys by subject AND property. The series store, which is the record, was not.
+    """
+    from agent import observation
+
+    written = []
+
+    class Recorder:
+        def __init__(self, *a, **k):
+            pass
+
+        def write_reading(self, plant_id, sensor, value, observed_property):
+            written.append((sensor, value, observed_property))
+
+        def write_agent_health(self, *a, **k):
+            pass
+
+        def close(self):
+            pass
+
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    monkeypatch.setattr(observation, "InfluxWriter", Recorder)
+    agent.subscribing().observations = observation.Observations(agent)
+
+    agent.deliver("sensors/moisture_sensor_fern/reading",
+                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
+
+    by_property = {p: v for _, v, p in written}
+    assert by_property == {"SoilMoisture": pytest.approx(0.183),
+                           "AirTemperature": pytest.approx(21.4),
+                           "AirHumidity": pytest.approx(0.46)}
+
+
 def test_a_sensor_with_no_command_channel_is_aimed_alone(monkeypatch):
     """The grouping is by command topic, so a sensor without one is a group of one — and the
     driver sends nothing for it. Guards against grouping every unaimable sensor together."""

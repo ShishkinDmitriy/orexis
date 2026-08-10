@@ -73,7 +73,8 @@ class Observations:
                  "".join(f"  {k}={v}" for k, v in sorted(verdict.items())))
 
         try:
-            self.influx.write_reading(sensor.subject_id, sensor.local_id, value)
+            self.influx.write_reading(sensor.subject_id, sensor.local_id, value,
+                                      _short(sensor.observes))
         except Exception as exc:  # history is best-effort; never drop the reading over it
             # Logged AND counted. Logging alone made this invisible: nothing reads a container's
             # log until something is already known to be wrong, so a store that had quietly
