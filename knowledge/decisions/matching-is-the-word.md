@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Matching is the word, and auction format is not
-description: Three words were in circulation for one concept — matching, rule and format — all three in hosting.py alone. Matching wins because it is accurate about what we model: allocation and prices, not how bidding proceeds. Format was rejected for over-claiming and for being ambiguous in the wild; rule for colliding with rules.ru. No identifier changed.
+description: Three words were in circulation for one concept — matching, rule and format — all three in hosting.py alone. Matching wins because it is accurate about what we model: the allocation rule and the payment rule, not how bidding proceeds. Format was rejected for over-claiming and for being ambiguous in the wild; rule for colliding with rules.ru. No identifier changed.
 status: accepted
 stage: v1
 tags: [ubiquitous-language, auction, matching, documentation]
@@ -37,21 +37,30 @@ they say.
 
 ## Why matching
 
-It is **accurate about the width of what we model**. Matching covers who gets how much *and* what
-each pays — both halves of the answer a member returns — and it stays true of a member that
-allocates differently. A pro-rata member that fills everyone who cleared the reserve in proportion
-to what they asked for is an ordinary answer and is still *matching*; that possibility is why the
-allocation walk is written out twice rather than factored into a shared helper, and a term that
-implied highest-first would have quietly contradicted that.
+It is **accurate about the width of what we model**, and the width has a standard name. Mechanism
+design decomposes a mechanism into an **allocation rule** (who gets what) and a **payment rule**
+(what each winner pays); a member of this family supplies both, so the family is not a pricing slot
+and no word implying one would do.
+
+That decomposition also says what varies. `ag:PayAsBid` and `ag:UniformPrice` share an allocation
+rule and differ in their payment rule — which is a property of *those two members* and not of the
+family. A pro-rata member that fills everyone who cleared the reserve in proportion to what they
+asked for varies the allocation rule instead, is an ordinary answer, and is still *matching*; that
+possibility is why the allocation walk is written out twice rather than factored into a shared
+helper, and a term that implied highest-first would have quietly contradicted it.
+
+The bundle says **payment rule** and not *pricing rule*, which the auction literature uses for the
+same axis. Both are current; one word per concept is the point of this record, and *payment rule*
+is the half of a pair whose other half we also need.
 
 ## Why not format
 
 Two reasons, and the second is the stronger.
 
 **It over-claims.** In the literature an *auction format* — equivalently *auction type* — names a
-bidding procedure and a pricing rule together: Dutch is descending open outcry *with* first-price;
-a first-price sealed-bid auction is one-shot sealed *with* first-price. We model the pricing axis
-only. [round](/domain/round.md) describes an iterative-ascending round, which is a fact about the
+bidding procedure and a payment rule together: Dutch is descending open outcry *with* first-price;
+a first-price sealed-bid auction is one-shot sealed *with* first-price. We model the
+allocation-and-payment half only. [round](/domain/round.md) describes an iterative-ascending round, which is a fact about the
 bidding procedure and is fixed in the protocol rather than pluggable. Calling
 `ag:MatchingCapability` a format would advertise a second slot that does not exist.
 

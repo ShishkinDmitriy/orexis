@@ -83,7 +83,7 @@ moves toward that.
   address.
 - **Not the matching.** Propose, validate, issue is the auction's shape however the bids were
   matched — which is why `agent/auction.py` kept the sequence and lost the allocation.
-- **Not a format.** *Auction format* names a bidding procedure and a pricing rule together; this
+- **Not a format.** *Auction format* names a bidding procedure and a payment rule together; this
   project models only the second, and [matching](/domain/matching.md) says why and what the word
   costs when it is used loosely.
 - **Not an object in the graph.** There is no `ag:Auction` to point at. Looking for one is the

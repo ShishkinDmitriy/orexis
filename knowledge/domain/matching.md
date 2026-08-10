@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Matching
-description: Turning a lot and a set of bids into a proposed allocation with prices. The host declares how it matches and the offer announces it; pay-as-bid and uniform price are implemented, and each costs the bidder something different. Matching is deliberately narrower than an auction format.
+description: Turning a lot and a set of bids into a proposed allocation with prices — an allocation rule and a payment rule together. The host declares how it matches and the offer announces it; pay-as-bid and uniform price share the first and differ in the second, and each costs the bidder something different. Matching is deliberately narrower than an auction format.
 tags: [auction, matching, mechanism, ubiquitous-language]
 timestamp: 2026-08-10T00:00:00Z
 ---
@@ -19,6 +19,13 @@ conversation:
 That is the whole contract. `agent/auction.py` names it `Match`, and every member of the family
 satisfies it.
 
+**Its two halves have standard names.** Mechanism design decomposes any mechanism into an
+**allocation rule** — who gets what — and a **payment rule** — what each winner pays. A matching
+member supplies *both*, and that is the exact statement of the width this word has to cover: the
+family is not a pricing slot, and a member that priced without allocating would not satisfy
+`Match`. (The auction literature often says *pricing rule* for the payment rule; this bundle says
+payment rule throughout, because one word per concept is the point.)
+
 Matching **proposes**; it never permits. Whether a proposed trade is well-formed, solvent and
 constitutional is [clearing](/domain/clearing.md)'s, and clearing never allocates. *The host
 proposes, clearing disposes* is the line, and matching is what the host does when it proposes.
@@ -27,9 +34,9 @@ proposes, clearing disposes* is the line, and matching is what the host does whe
 
 Three words were in circulation for this one thing — *matching*, *rule* and *format* — and all
 three appeared in `hosting.py` alone. **Matching is the word.** It is accurate about the width of
-what we model: it covers the allocation *and* the prices, and it survives a member that allocates
-differently (pro-rata rather than highest-first), which is exactly the case the family exists to
-allow.
+what we model: it covers the allocation rule *and* the payment rule, and it survives a member that
+varies the first rather than the second — pro-rata rather than highest-first — which is exactly the
+case the family exists to allow.
 
 *Rule* was the worst of the three, because `rules.ru` already means something specific in every
 capability directory here — a SPARQL derivation. *Format* over-claims, for the reason the next
@@ -42,21 +49,22 @@ two independent things:
 
 1. **How bidding proceeds** — ascending open outcry (English), descending open outcry (Dutch),
    one-shot sealed bid, and so on.
-2. **How the price is set** — first-price / discriminatory (each winner pays its own bid),
-   uniform (every winner pays one clearing price), second-price, and so on.
+2. **What the bidding produces** — the allocation rule and the payment rule together: first-price
+   / discriminatory (each winner pays its own bid), uniform (every winner pays one clearing
+   price), second-price, and so on.
 
-**We model only the second.** `ag:MatchingCapability` is the pricing-and-allocation axis alone.
+**We model only the second.** `ag:MatchingCapability` is the allocation-and-payment half alone.
 The first axis is fixed here: [round](/domain/round.md) describes an iterative-ascending round,
 and that is a property of the protocol in `capabilities/market`, not a slot anything plugs into.
 
 **Dutch makes it concrete.** A Dutch auction is descending open outcry — the auctioneer starts
 high and lowers the price until someone accepts. It is a complete mechanism, fixing both axes.
-But what makes it *Dutch* is the procedure; its pricing rule is first-price, which is what we
+But what makes it *Dutch* is the procedure; its payment rule is first-price, which is what we
 call `ag:PayAsBid`. The classic result sharpens it: **a Dutch auction is strategically equivalent
 to a first-price sealed-bid auction** — in both, the moment you commit fixes your price, so a
-bidder shades identically. Same pricing rule, different procedure, same outcome.
+bidder shades identically. Same payment rule, different procedure, same outcome.
 
-| | bidding procedure | pricing rule |
+| | bidding procedure | payment rule |
 |---|---|---|
 | Dutch | descending open | first-price *(= pay-as-bid)* |
 | first-price sealed-bid | one-shot sealed | first-price *(= pay-as-bid)* |
@@ -98,8 +106,13 @@ see the seams in [matching-is-a-capability](/decisions/matching-is-a-capability.
 
 # The two members, and what each costs you
 
-Both are implemented. Both walk the same demand curve — bids at or above the reserve, filled
-highest-price-first, each capped by what is left — and disagree only about the bill.
+Both are implemented, and in the decomposition above they **share an allocation rule and differ in
+their payment rule**. Both walk the same demand curve — bids at or above the reserve, filled
+highest-price-first, each capped by what is left — and disagree only about the bill. That is why
+the walk is written out twice rather than factored into a shared helper: the agreement is a
+property of *these two* members, not of the family, and a third that varied the allocation rule
+instead — pro-rata, filling everyone who cleared the reserve in proportion to what they asked for —
+is an ordinary member and would share nothing with them.
 
 | | what a winner pays | what it rewards |
 |---|---|---|
