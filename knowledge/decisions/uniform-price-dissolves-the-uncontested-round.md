@@ -10,10 +10,9 @@ timestamp: 2026-08-10T00:00:00Z
 
 # Context
 
-[an-auction-format-is-a-capability](an-auction-format-is-a-capability.md) made the allocation rule
-a family, `ag:MatchingCapability`, with pay-as-bid implemented and `ag:UniformPrice` declared
-beside it under a claim: *"adding it is a class and one line of `PROVIDES`; no other package
-moves."*
+[matching-is-a-capability](matching-is-a-capability.md) made matching a family,
+`ag:MatchingCapability`, with pay-as-bid implemented and `ag:UniformPrice` declared beside it
+under a claim: *"adding it is a class and one line of `PROVIDES`; no other package moves."*
 
 A declared member with nothing behind it proves nothing. Two members do — and the claim was
 falsifiable, which is most of why this was worth doing next.
@@ -30,10 +29,10 @@ Everything that changed is inside `capabilities/matching/`, plus tests:
 | `terms.py` | a comment |
 
 `hosting.py`, `auction.py`, the market package, the derivation rule and the shapes were not
-touched. The rule already granted whichever format a host named; the loader already registered
-whichever module declared one; `agent.provider(MATCHING)` already handed it over. A world that
-says `ag:matchesBy ag:UniformPrice` now gets a host that runs it and announces it, and nothing in
-between knew a second rule was coming.
+touched. The derivation already granted whichever member a host named; the loader already
+registered whichever module declared one; `agent.provider(MATCHING)` already handed it over. A
+world that says `ag:matchesBy ag:UniformPrice` now gets a host that runs it and announces it, and
+nothing in between knew a second member was coming.
 
 That is what a family is for, and it is now demonstrated rather than asserted.
 
@@ -80,7 +79,7 @@ itself warns of the failure mode: *"this must not become a way to pay less by bi
 round."* With one code path there is no quiet-round path to game — a contested round clears at the
 margin whatever anyone hoped.
 
-# What each format costs you, which is what a sovereign is choosing between
+# What each member costs you, which is what a sovereign is choosing between
 
 Each member's `rdfs:comment` states its own weakness, and holding new ones to that is the standard
 this family should keep. A member that advertises only its strengths is worse than none.
@@ -101,7 +100,7 @@ where one is much thirstier than the others, demand reduction is the live risk.
 
 **No world switched.** All three still state `ag:matchesBy ag:PayAsBid`, and every existing round
 clears exactly as it did — `test_round.py` and the existing `test_auction.py` cases pass untouched,
-which is the evidence that this added a rule rather than changed one.
+which is the evidence that this added a member rather than changed one.
 
 **#50 stays open**, deliberately. Whether a world should run uniform price is the sovereign's call,
 not this change's: it alters what every participant pays and how they should bid, which is a
@@ -111,14 +110,14 @@ supplier — and the argument above is what that edit should be weighed against.
 # Seams left open
 
 - **Nothing selects between the two.** A world names one and gets it. With two implemented, the
-  question [an-auction-format-is-a-capability](an-auction-format-is-a-capability.md) recorded is
-  now live rather than hypothetical: nothing stops a world naming both, and nothing would choose.
-- **The allocation walk is written out twice**, deliberately. That these two rules allocate
-  identically is a fact about them and not about the family — a pro-rata rule across everyone who
-  cleared the reserve is an ordinary answer and allocates differently. A helper factored out today
-  would encode an invariant the family does not have; a test holds them to agreeing where they
+  question [matching-is-a-capability](matching-is-a-capability.md) recorded is now live rather
+  than hypothetical: nothing stops a world naming both, and nothing would choose.
+- **The allocation walk is written out twice**, deliberately. That these two members allocate
+  identically is a fact about them and not about the family — a pro-rata member across everyone
+  who cleared the reserve is an ordinary answer and allocates differently. A helper factored out
+  today would encode an invariant the family does not have; a test holds them to agreeing where they
   should.
-- **Neither rule is strategy-proof**, and no member here could be. The mechanism that is —
+- **Neither member is strategy-proof**, and none here could be. The mechanism that is —
   Vickrey-Clarke-Groves — prices each winner at the externality it imposes, which needs the
   allocation recomputed with that bidder absent. It fits the family's signature and nothing here
   attempts it.

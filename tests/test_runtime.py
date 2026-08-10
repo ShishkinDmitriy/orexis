@@ -20,7 +20,7 @@ def test_plant_agent_runs_perception_and_bidding(agent):
     assert {m.name for m in agent("fern").modules} == {"subscribing", "bidding", "review"}
 
 
-def test_supplier_runs_hosting_actuation_and_a_matching_rule(agent):
+def test_supplier_runs_hosting_actuation_and_matching(agent):
     """Three modules, three abilities: it runs the protocol, it opens valves, and it knows one
     way of turning bids into an allocation. Hosting reaches the third through `agent.provider`,
     so the market package never learns that pay-as-bid is implemented in Python."""

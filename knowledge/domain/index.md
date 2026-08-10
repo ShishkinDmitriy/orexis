@@ -13,7 +13,9 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Market
 
 * [market](/domain/market.md) - A market is the standing structure — a resource, who can supply it, who can consume it, and the links between them; the auction is the process that condenses inside it and dissolves. Who hosts, who's in the cluster, and how participants know each other (attested topology).
+* [auction](/domain/auction.md) - The process, not a place: it condenses out of scarcity, announces its terms, collects bids, matches, is co-signed by clearing, and dissolves. What it is made of (market, round, matching, clearing) and what it is not. Who convenes it is stated in v1 — the short-side principle is documented and unimplemented.
 * [round](/domain/round.md) - The auction round: how a situation opens, iterates, and clears.
+* [matching](/domain/matching.md) - Turning a lot and a set of bids into a proposed allocation with prices — the host declares how it matches and every offer announces it. Pay-as-bid rewards shading, uniform price rewards demand reduction. Deliberately narrower than an auction format, which also fixes how bidding proceeds; that axis is ours to keep fixed.
 * [clearing](/domain/clearing.md) - Thin stake-free validator / public function (a notary): checks a proposed trade and co-signs the voucher. The host computes the match, not clearing.
 * [voucher](/domain/voucher.md) - What you win: a co-signed, single-use claim on the supplier for N litres, redeemed to actuate (spot now, futures later).
 * [executor](/domain/executor.md) - The supplier's actuation arm: verifies the voucher and drives its own valve, bounded by clearing + the device fail-safe.

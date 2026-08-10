@@ -65,9 +65,9 @@ def test_scarcity_opens_a_round(host):
 
 
 def test_the_offer_announces_the_rule_bidders_are_bidding_under(host):
-    """Terms travel with the invitation, as a real auction announces its format when it opens.
+    """Terms travel with the invitation, as a real auction announces them when it opens.
 
-    A bidder cannot bid well against a rule it does not know: under pay-as-bid a winner pays
+    A bidder cannot bid well against terms it does not know: under pay-as-bid a winner pays
     what it offered, so the honest strategy is to shade, and under a uniform price it is not.
     Read off the provider rather than a belief, so what is announced is necessarily what runs —
     a host cannot advertise one rule and apply another.

@@ -86,7 +86,7 @@ scarce.
 
 The rule is now one member of a family rather than the only thing there is, so *"pay-as-bid
 versus uniform price is a separate argument"* has somewhere to happen — see
-[an-auction-format-is-a-capability](an-auction-format-is-a-capability.md). That does not fix the
+[matching-is-a-capability](matching-is-a-capability.md). That does not fix the
 gap below, which is a defect **in** pay-as-bid rather than a reason to prefer another rule.
 
 [market](../domain/market.md) says the supplier should simply **dispense** in that case. Nothing

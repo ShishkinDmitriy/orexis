@@ -1,30 +1,30 @@
 """The two ways of turning a lot and a set of bids into a proposed allocation.
 
 This was `auction.propose_match`, a module-level function that `hosting.py` imported directly —
-while `auction.py`'s own docstring called the format "a replaceable v1 choice". It was not
+while `auction.py`'s own docstring called the matching "a replaceable v1 choice". It was not
 replaceable: swapping it meant editing that file, so the claimed seam was a claim only. Issue #66.
 
 **What makes this a capability and not a function** is that given a lot and a set of bids there
 is more than one defensible answer, and the choice is visible to everyone bidding: under
 pay-as-bid a winner pays what it offered, so the honest strategy is to shade; under a uniform
-price it pays the clearing price, so bidding your true value costs you nothing. The rule changes
-what a rational participant should say. That is the test in AGENTS.md rule 2 — where the *how*
-could differ, it is a capability.
+price it pays the clearing price, so bidding your true value costs you nothing. How a host
+matches changes what a rational participant should say. That is the test in AGENTS.md rule 2 —
+where the *how* could differ, it is a capability.
 
 **What stays outside it.** The host proposes and clearing disposes: this decides an allocation,
 never whether it is permitted. Solvency, the constitution and identity are `clearing.py`'s, and
-`auction.run_round` is the path between them — the same whichever rule runs, which is why it did
-not move.
+`auction.run_round` is the path between them — the same whichever member runs, which is why it
+did not move.
 
 **Both walk the same demand curve and disagree only about the bill.** That is a fact about these
-two rules and not about the family, so the walk is written out twice rather than shared. A third
-rule need not allocate highest-first at all — pro-rata across everyone who cleared the reserve is
-an ordinary answer — and a helper factored out today would encode an invariant the family does not
-have. Ten duplicated lines are cheaper than a false abstraction, and the tests hold both to the
-same allocation where they should agree.
+two members and not about the family, so the walk is written out twice rather than shared. A
+third need not allocate highest-first at all — pro-rata across everyone who cleared the reserve
+is an ordinary answer — and a helper factored out today would encode an invariant the family
+does not have. Ten duplicated lines are cheaper than a false abstraction, and the tests hold
+both to the same allocation where they should agree.
 
 Vocabulary: capabilities/matching/ontology.ttl. Rules: capabilities/matching/rules.ru.
-See knowledge/decisions/an-auction-format-is-a-capability.md and
+See knowledge/domain/matching.md, knowledge/decisions/matching-is-a-capability.md and
 knowledge/decisions/uniform-price-dissolves-the-uncontested-round.md.
 """
 
@@ -48,9 +48,9 @@ class PayAsBidModule(Module):
     def propose_match(offer: Offer, bids: Iterable[Bid]) -> Trade:
         """Allocate the offered quantity among the bids and propose a Trade.
 
-        Static because this rule reads nothing about the agent running it — a lot and a set of
+        Static because this member reads nothing about the agent running it — a lot and a set of
         bids fully determine the answer, which is what makes it testable without a world and
-        auditable without a trace. A rule that later needs the host's own beliefs can stop being
+        auditable without a trace. A member that later needs the host's own beliefs can stop being
         static then; the family's contract is the signature, not the binding.
 
         Keep only bids at or above the reserve, fill them highest-price-first (deterministic
@@ -61,9 +61,9 @@ class PayAsBidModule(Module):
         The host respects its *own* terms here (supply and reserve). The hard constraints are
         clearing's to enforce; this only proposes.
 
-        Unchanged from the function it replaces, deliberately: #66 is about there being somewhere
-        to put a second rule, not about this one being wrong. The uncontested-round defect in it
-        is #50 and is still open.
+        Unchanged from the function it replaces, deliberately: #66 is about there being
+        somewhere to put a second way of matching, not about this one being wrong. The
+        uncontested-round defect in it is #50 and is still open.
         """
         eligible = sorted(
             (b for b in bids
@@ -107,7 +107,7 @@ class UniformPriceModule(Module):
         **The reserve is the floor, not a special case.** `clearing` starts there and is only
         raised if the walk actually exhausts the lot. So a round whose demand never reaches the
         lot is not detected and handled — it is simply a walk that never crossed supply, and the
-        price stays where the curve began. That is the whole of why this rule has no
+        price stays where the curve began. That is the whole of why this member has no
         contested-or-not test in it, and issue #50 has nothing left to fix here: two bidders whose
         combined demand fits are both filled in full and both pay the reserve, because nothing
         else could have happened.

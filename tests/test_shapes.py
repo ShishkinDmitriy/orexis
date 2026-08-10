@@ -155,7 +155,7 @@ def test_a_host_must_say_how_it_matches():
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier ag:matchesBy ?f }} }}"""))
 
 
-def test_only_a_host_may_state_a_matching_rule():
+def test_only_a_host_may_state_how_it_matches():
     """An auction's terms belong to whoever convenes it. A bidder saying how it would match is
     an authoring slip, and the derivation already ignores it — so without a shape the statement
     would sit in the world doing nothing, which is the shape of a fact somebody later believes."""
