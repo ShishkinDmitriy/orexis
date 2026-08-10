@@ -394,3 +394,47 @@ def test_the_bidder_gives_up_when_the_window_passes(make):
     deadline = fern.bidding()._deadline
     assert deadline is not None and deadline.interval_s == 3
     deadline.stop()
+
+
+def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, monkeypatch):
+    """The slot, demonstrated rather than asserted.
+
+    Everything between a world stating `ag:UniformPrice` and a bidder being billed at the
+    clearing price is machinery that already existed: the derivation grants whichever rule the
+    host names, the loader registers whichever module declares it, and `provider` hands it over
+    without the market package knowing either exists. Adding the second member moved nothing but
+    its own package — this is what checks that.
+
+    Built from a real world directory rather than by editing the graph, because the point is the
+    DERIVATION: patching `ag:matchesBy` after `refresh_public` has run leaves the capability the
+    rules already computed, and the test would pass while proving nothing.
+    """
+    import shutil
+
+    from onboarding.keygen import create_keypair
+
+    from agent import genesis
+    from agent.capabilities.matching import UNIFORM_PRICE
+    from agent.genesis import agent_id_of
+    from agent.store import Store
+
+    world = tmp_path / "world"
+    shutil.copytree(genesis.world_dir("society"), world, dirs_exist_ok=True)
+    (world / "secrets").mkdir(exist_ok=True)
+    # The one edit a sovereign makes: this host runs a different auction.
+    ttl = world / "world.ttl"
+    ttl.write_text(ttl.read_text().replace("ag:matchesBy ag:PayAsBid", "ag:matchesBy ag:UniformPrice"))
+
+    monkeypatch.setenv("AGORA_WORLD_DIR", str(world))
+    for name in ("host", "clearing"):
+        create_keypair(name)
+
+    store = Store()
+    genesis.refresh_public(store, world)
+    for beliefs in sorted(world.glob(genesis.BELIEFS_GLOB)):
+        genesis.birth(store, world, agent_id_of(beliefs))
+    host = make("supplier", store)
+
+    assert host.hosting().matcher().CAPABILITY == UNIFORM_PRICE
+    host.deliver("readings/fern", low_event())
+    assert offer_from(host)["matches_by"] == UNIFORM_PRICE

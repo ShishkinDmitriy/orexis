@@ -17,9 +17,9 @@ from agent.ontology import term
 # for "whoever matches" without knowing which rule answered.
 MATCHING = term("MatchingCapability")
 
-# The members, by what a winner pays.
-PAY_AS_BID = term("PayAsBid")          # each winner pays its own bid — implemented
-UNIFORM_PRICE = term("UniformPrice")   # every winner pays one price — RESERVED, see __init__
+# The members, by what a winner pays. Both implemented; a world says which its host runs.
+PAY_AS_BID = term("PayAsBid")          # each winner pays its own bid
+UNIFORM_PRICE = term("UniformPrice")   # every winner pays the lowest accepted bid
 
 # What a host states to say which rule it runs. Read by this package's rule; the capability is
 # derived from it and never declared.

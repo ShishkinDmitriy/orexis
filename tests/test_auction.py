@@ -9,7 +9,7 @@ is true of every rule, and it now takes the matcher rather than importing one.
 import pytest
 
 from agent.auction import run_round
-from agent.capabilities.matching.module import PayAsBidModule
+from agent.capabilities.matching.module import PayAsBidModule, UniformPriceModule
 from agent.market import Bid, Limits, MarketState, Offer
 
 # The rule under test. It is static because a lot and a set of bids fully determine the answer —
@@ -111,3 +111,87 @@ def test_round_red_light_on_insolvency():
     assert not result.validation.ok
     assert result.vouchers == []
     assert any("exceeds wallet" in v for v in result.validation.violations)
+
+
+# --- uniform price ---------------------------------------------------------
+#
+# The second member of the family, and the reason it exists: the same allocation as pay-as-bid,
+# a different bill. Reached the same way `hosting.py` reaches it — off the module that provides
+# it — so these check the object a host would actually be handed.
+
+uniform_price = UniformPriceModule.propose_match
+
+
+def test_uniform_price_allocates_exactly_as_pay_as_bid():
+    """The rules differ about the bill, not about who gets what.
+
+    Worth pinning: the two walk the same demand curve and the walk is written out twice, so
+    nothing but a test stops them drifting apart where they are meant to agree.
+    """
+    bids = [Bid("fern", 4.0, 0.40), Bid("tomato", 4.0, 0.55)]
+    discriminatory = propose_match(offer(quantity_l=5.0), bids)
+    uniform = uniform_price(offer(quantity_l=5.0), bids)
+    assert ({(l.agent, l.qty_l) for l in uniform.lines}
+            == {(l.agent, l.qty_l) for l in discriminatory.lines})
+
+
+def test_every_winner_pays_the_lowest_accepted_bid():
+    # 5 L supply; tomato (0.55) fills 4, fern (0.40) fills the last 1 and is marginal.
+    bids = [Bid("fern", 4.0, 0.40), Bid("tomato", 4.0, 0.55)]
+    trade = uniform_price(offer(quantity_l=5.0), bids)
+    assert {l.price_per_l for l in trade.lines} == {0.40}
+    # And that is the whole difference from pay-as-bid, which charges tomato its own 0.55.
+    assert {l.price_per_l for l in propose_match(offer(quantity_l=5.0), bids).lines} == {0.40, 0.55}
+
+
+def test_an_uncontested_round_clears_at_the_reserve():
+    """#50, dissolved rather than branched.
+
+    Combined demand of 3 L against a 10 L lot: nothing was scarce, nobody had a rival, and the
+    demand curve never crossed supply — so the clearing price is where it started, the reserve.
+    No contested-or-not test computes this; it is what the walk leaves behind.
+    """
+    bids = [Bid("fern", 2.0, 0.40), Bid("tomato", 1.0, 0.50)]
+    trade = uniform_price(offer(quantity_l=10.0, reserve=0.20), bids)
+    assert trade.total_qty_l == 3.0                       # everyone filled
+    assert {l.price_per_l for l in trade.lines} == {0.20}  # everyone pays the reserve
+    # Under pay-as-bid the same round charges each its own urgency — the defect #50 records.
+    assert {l.price_per_l for l in propose_match(offer(quantity_l=10.0), bids).lines} == {0.40, 0.50}
+
+
+def test_a_contested_round_does_not_fall_to_the_reserve():
+    """The other half of #50's warning: this must not become a way to pay less by bidding late."""
+    bids = [Bid("fern", 4.0, 0.40), Bid("tomato", 4.0, 0.55)]
+    trade = uniform_price(offer(quantity_l=5.0, reserve=0.20), bids)
+    assert {l.price_per_l for l in trade.lines} == {0.40}  # the margin, not the floor
+
+
+def test_uniform_price_still_excludes_below_reserve():
+    assert uniform_price(offer(), [Bid("fern", 3.0, 0.10)]).lines == ()
+
+
+def test_uniform_price_no_bids_is_no_sale():
+    assert uniform_price(offer(), []).lines == ()
+
+
+def test_a_lot_exhausted_exactly_prices_at_the_last_bid_filled():
+    """The one case where lowest-accepted and highest-rejected could differ.
+
+    Demand meets supply exactly on fern's bid, so nothing is partially filled and nothing is
+    rejected. The price is the lowest bid that WAS accepted — 0.40, not the reserve, because the
+    curve did cross supply, and not tomato's 0.55, because fern's units cleared too.
+    """
+    bids = [Bid("fern", 2.0, 0.40), Bid("tomato", 3.0, 0.55)]
+    trade = uniform_price(offer(quantity_l=5.0, reserve=0.20), bids)
+    assert trade.total_qty_l == 5.0
+    assert {l.price_per_l for l in trade.lines} == {0.40}
+
+
+def test_a_round_run_under_uniform_price_clears_and_issues():
+    """End to end through the path every rule shares — `run_round` takes the matcher."""
+    bids = [Bid("tomato", 4.0, 0.55), Bid("fern", 4.0, 0.40)]
+    st = state(bids={b.agent: b for b in bids})
+    result = run_round(offer(quantity_l=5.0), bids, st, round_id="R-1", match=uniform_price)
+    assert result.validation.ok, result.validation.violations
+    tomato = next(g for g in result.vouchers if g.sub == "tomato")
+    assert tomato.debit == pytest.approx(4.0 * 0.40)  # billed at the clearing price, not its bid
