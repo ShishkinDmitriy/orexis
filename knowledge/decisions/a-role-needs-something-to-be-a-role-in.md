@@ -69,9 +69,29 @@ nothing to be a role in. Making one first-class today would mean either:
 - inventing `ag:Auction` to attach it to, which is a decision already taken the other way, and
   taking it as a side effect of a vocabulary tidy-up is the worst way to take it.
 
-Two precedents, one rule: **a role is a fact about a relationship, so it needs the relationship to
-exist as a node.** Where the node exists, roles earn their place. Where it does not, they are a
+**And a W3C Recommendation says the same thing in as many words.** The Organization Ontology
+(`org:`, `http://www.w3.org/ns/org#`, Recommendation of 16 January 2014) does not attach a role to
+an agent either. It introduces `org:Membership` as an n-ary node carrying `org:member`,
+`org:organization` and `org:role`, and explains why:
+
+> The situation of an Agent fulfilling that role within an organization is then expressed through
+> instances of the `org:Membership` n-ary relationship. This also makes it possible to annotate the
+> relationship with qualifying information such as duration, salary, reference to the employment
+> contract and so forth.
+
+*Duration* is the word that matters here. A membership is annotatable precisely because it is a
+node, and "for the length of this auction" is exactly the annotation a rotating host would need —
+on a node we do not have.
+
+Three precedents, one rule: **a role is a fact about a relationship, so it needs the relationship
+to exist as a node.** Where the node exists, roles earn their place. Where it does not, they are a
 second spelling.
+
+**So when the trigger fires, the shape is off the shelf.** `org:` is small — `Role`, `Membership`,
+`member`, `organization` — and importing four terms is nothing like importing an accounting
+ontology (see [settlement-speaks-rea](settlement-speaks-rea.md) for why that distinction is about
+the hand-materialised RDFS closure). Nothing is imported today, because there is no membership to
+represent while positions are standing facts.
 
 # The predicate already does the work a role is wanted for
 
