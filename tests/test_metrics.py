@@ -10,6 +10,7 @@ whole design keeps making.
 from __future__ import annotations
 
 import pytest
+from agent.ontology import term
 
 from agent.beliefs import BeliefError, Block
 from agent.metrics import SELF_REPORTING_BLOCK, Metrics, SelfReportingBeliefs, tree_bytes
@@ -85,7 +86,7 @@ def test_an_agent_that_states_no_interval_reports_nothing(agent):
     Refusing to boot over instrumentation would be disproportionate."""
     absent = Block(capability=SELF_REPORTING_BLOCK.capability,
                    cls=SelfReportingBeliefs,
-                   terms={"interval_s": "noSuchTermAnyoneAuthored"})
+                   terms={"interval_s": term("NoSuchTermAnyoneAuthored")})
     assert agent.beliefs.read_optional(absent) is None
 
 
@@ -105,7 +106,7 @@ def test_half_a_block_is_still_an_error(agent):
         other: int
 
     partial = Block(capability=SELF_REPORTING_BLOCK.capability, cls=TwoFields,
-                    terms={"interval_s": "metricsIntervalS", "other": "noSuchTerm"})
+                    terms={"interval_s": term("metricsIntervalS"), "other": term("noSuchTerm")})
     with pytest.raises(BeliefError):
         agent.beliefs.read_optional(partial)
 

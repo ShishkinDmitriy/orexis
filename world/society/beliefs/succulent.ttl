@@ -1,4 +1,5 @@
 @prefix ag: <http://example.org/agora#> .
+@prefix market: <http://example.org/agora/market#> .
 
 #  Succulent's agent's PRIVATE beliefs. Note how far these diverge from fern's: it wants a
 #  fifth of the moisture, shrugs at readings that would have fern bidding hard, and is
@@ -10,9 +11,9 @@ ag:succulent_agent
     ag:slowSleepS 900 ;
     ag:readingGraceS 45 .
 
-##  ag:Bidding
+##  market:Bidding
 ag:succulent_agent
-    ag:hasEndowment 100.0 ;
+    market:hasEndowment 100.0 ;
     ag:hasTarget 0.22 ;
     ag:bandLow 0.12 ;
     ag:bandHigh 0.30 ;

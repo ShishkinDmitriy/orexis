@@ -1,6 +1,6 @@
 """Matching, and the host -> clearing path that runs whichever member is in force.
 
-`propose_match` moved into `capabilities/bid_matching/` when matching became a capability (#66),
+`propose_match` moved into `capabilities/market/matching.py` when matching became a capability (#66),
 so it is exercised here through the module that provides it — the same object `hosting.py` gets
 from `agent.provider`. `run_round` stayed in `agent/auction.py`, because propose-validate-issue
 is true of every member, and it now takes the matcher rather than importing one.
@@ -9,7 +9,7 @@ is true of every member, and it now takes the matcher rather than importing one.
 import pytest
 
 from agent.auction import run_round
-from agent.capabilities.bid_matching.module import PayAsBidModule, UniformPriceModule
+from agent.capabilities.market.matching import PayAsBidModule, UniformPriceModule
 from agent.market import Bid, Limits, MarketState, Offer
 
 # The matching under test. It is static because a lot and a set of bids fully determine the

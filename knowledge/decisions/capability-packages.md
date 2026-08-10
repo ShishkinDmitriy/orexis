@@ -1,7 +1,7 @@
 ---
 type: Decision
-title: A capability is a directory — discovered, never listed
-description: Each capability is one self-contained package (ontology, shapes, derivation rules, code, beliefs) found by looking rather than named in a registry; capabilities reach each other through T-Box terms, never through Python imports. Adding one is adding a directory.
+title: A package is a directory — discovered, never listed
+description: Each package is one self-contained directory (ontology, shapes, derivation rules, code, beliefs, and its own namespace) found by looking rather than named in a registry; capabilities reach each other through T-Box terms, never through Python imports. Adding one is adding a directory. A package may provide SEVERAL capabilities — that distinction was added later.
 status: accepted
 stage: v1
 tags: [ontology, modules, capabilities, architecture, extensibility, packaging]
@@ -47,6 +47,11 @@ A **package** is a directory, and the tree it sits in says what kind it is:
 | `agent/capabilities/<name>/` | what an agent can **do**. The extendable axis |
 | `agent/transports/<name>/` | how a device is **reached**. Deliberately not a capability |
 
+A package may also declare a **namespace of its own**, in its `ontology.ttl`, and
+`agent.loader.prefixes()` reads it from there so a query can name its terms. That was added after
+this record: the prefix map used to be a kernel constant, which made a namespace the one thing a
+package could not have without editing the kernel.
+
 **Two of the three sit inside `agent/`, and one does not.** A capability's Python is loaded by an
 agent runtime and by nothing else — onboarding reads its `ontology.ttl`, `shapes.ttl` and
 `rules.ru` through the loader, wherever they live, and never imports a module from one. So the
@@ -75,6 +80,13 @@ device's own calibration from the world and obeys.
 codebase — not in the seeder, not in the validator, not in the runtime, not in the tests.
 
 # Consequences that were the point
+
+**A package is not a capability, and this record originally said it was.** The title above said *a
+capability is a directory*, and `capabilities/market/` already provided two — bidding and hosting —
+when it was written. A directory is how a package is FOUND and how one is DELETED; what isolates a
+capability is `PROVIDES` and its term. See
+[a-package-owns-its-namespace](a-package-owns-its-namespace.md), which corrected the rule and folded
+a third capability into that same package to show the seam holds without it.
 
 **Adding a capability is adding a directory.** No registry line, no term constant, no belief
 accessor, no edit to any existing file. This is checkable, and it was checked: dropping a

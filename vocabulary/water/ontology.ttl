@@ -3,6 +3,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix market: <http://example.org/agora/market#> .
 
 <http://example.org/agora/water> a owl:Ontology ;
     rdfs:label "Agora water domain" ;
@@ -47,7 +48,7 @@ ag:litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
 
 ag:hasTarget a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "has target" ;
-    ag:aboutProperty ag:SoilMoisture ;
+    market:aboutProperty ag:SoilMoisture ;
     rdfs:comment "Desire: the moisture fraction this agent is trying to hold. The deficit below it drives both how much it wants and how badly. What it is a fraction OF is stated here rather than left to the reader — the whole private valuation (this, the bands, litresPerFraction) is denominated in soil moisture, and an agent that now holds readings of several properties must not judge a humidity against it." .
 ag:maxValuePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "max value per litre" ;

@@ -44,8 +44,8 @@ topics that capability needs:
 |---|---|
 | `ag:polls S` | read S's `readingTopic`, write S's `commandTopic` |
 | `ag:simulatedBy` on a device | that DEVICE reads the `commandTopic` of whatever actuates its subject |
-| `ag:bidsIn M` | read M's `offerTopic` and `voucherTopic/<me>`, write `bidTopic/<me>` |
-| `ag:hosts M` | write `offerTopic` and `voucherTopic/+`, read `bidTopic/+` and each bidder's `eventTopic` |
+| `market:bidsIn M` | read M's `offerTopic` and `voucherTopic/<me>`, write `bidTopic/<me>` |
+| `market:hosts M` | write `offerTopic` and `voucherTopic/+`, read `bidTopic/+` and each bidder's `eventTopic` |
 | `ag:hasActuator V` | write V's `commandTopic` |
 | `ag:eventTopic E` | write E |
 

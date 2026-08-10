@@ -64,7 +64,7 @@ what. Each capability's `rules.ru` then computes ability from connection:
 - wired to a **scheduled** sensor → `ag:Subscribing`: the agent states the interval;
 - wired to a **push-mode** sensor → `ag:Listening`: it records what arrives, and is never
   asked for a cadence, because it has no way to apply one;
-- plumbed into a market → `ag:Bidding`; owning the venue → `ag:Hosting`;
+- plumbed into a market → `market:Bidding`; owning the venue → `market:Hosting`;
 - holding actuators → `ag:Actuation`.
 
 This is the load-bearing part. A declaration can drift from reality; a derivation cannot.
@@ -88,9 +88,9 @@ valuation is private and lives in another process — so a round is a conversati
 
 ```
 participant announces its own verdict (voluntary disclosure, not its raw state)
-    -> host announces an offer with a deadline        [ag:offerTopic]
-    -> each bidder looks at its own sensor and answers  [ag:bidTopic/<agent>]
-    -> host matches, clearing validates, vouchers return [ag:voucherTopic/<agent>]
+    -> host announces an offer with a deadline        [market:offerTopic]
+    -> each bidder looks at its own sensor and answers  [market:bidTopic/<agent>]
+    -> host matches, clearing validates, vouchers return [market:voucherTopic/<agent>]
     -> the owner redeems them against its own hardware
 ```
 

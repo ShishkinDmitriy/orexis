@@ -17,6 +17,8 @@ from dataclasses import dataclass
 
 from agent.beliefs import Block
 
+from agent.ontology import term
+
 from .terms import LISTENING, SUBSCRIBING
 
 
@@ -54,14 +56,14 @@ SUBSCRIBING_BLOCK = Block(
     capability=SUBSCRIBING,
     cls=SubscribingBeliefs,
     terms={
-        "fast_sleep_s": "fastSleepS",
-        "slow_sleep_s": "slowSleepS",
-        "grace_s": "readingGraceS",
+        "fast_sleep_s": term("fastSleepS"),
+        "slow_sleep_s": term("slowSleepS"),
+        "grace_s": term("readingGraceS"),
     },
 )
 
 LISTENING_BLOCK = Block(
     capability=LISTENING,
     cls=ListeningBeliefs,
-    terms={"max_age_s": "maxReadingAgeS"},
+    terms={"max_age_s": term("maxReadingAgeS")},
 )

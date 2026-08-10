@@ -50,7 +50,12 @@ class Block:
 
     capability: str  # the term, so a missing belief names the capability that wanted it
     cls: type
-    terms: dict[str, str]  # field name -> the ag: term carrying it
+    # field name -> the FULL IRI of the term carrying it. Full, not a local name with `ag:`
+    # assumed around it: a belief term belongs to the package that declares it, and since
+    # `capabilities/market` took a namespace of its own there is no one prefix to assume.
+    # Each package builds these with its own `term()`, so this reader never learns where any
+    # of them live. See knowledge/decisions/a-package-owns-its-namespace.md.
+    terms: dict[str, str]
 
     def casts(self) -> dict:
         hints = get_type_hints(self.cls)
@@ -100,7 +105,7 @@ def _parse_reading(results: dict) -> Reading | None:
 
 def _block_query(agent_uri: str, graph: str, terms: dict[str, str]) -> str:
     lines = "\n".join(
-        f"  OPTIONAL {{ <{agent_uri}> ag:{term} ?{var} }}" for var, term in terms.items()
+        f"  OPTIONAL {{ <{agent_uri}> <{term}> ?{var} }}" for var, term in terms.items()
     )
     return f"""
 SELECT {" ".join("?" + v for v in terms)} WHERE {{ GRAPH <{graph}> {{
@@ -126,7 +131,7 @@ class Beliefs:
         for field, term in block.terms.items():
             raw = row.get(field)
             if raw is None:
-                missing.append(f"ag:{term}")
+                missing.append(term)
             else:
                 out[field] = casts[field](raw)
         if missing:
@@ -140,7 +145,7 @@ class Beliefs:
         """Fill a block, or None if the agent said nothing about it at all.
 
         This is NOT a relaxation of the rule above. A block that is wholly absent is a decision
-        stated by omission — the same way a beliefs file with no `ag:Bidding` block says this
+        stated by omission — the same way a beliefs file with no `market:Bidding` block says this
         agent holds no stake — and the caller is expected to do nothing rather than to invent a
         value. A block that is PARTIALLY present is still an error and still refuses, because
         half an answer is an authoring slip rather than a choice.

@@ -2,11 +2,11 @@
 
 An auction is a **process** — it condenses when a resource becomes contested, allocates, and
 dissolves. The market is the standing structure it happens inside; see knowledge/domain/market.md,
-which said the opposite until #66 and had `ag:Market` declared with three MQTT topics all along.
+which said the opposite until #66 and had `market:Market` declared with three MQTT topics all along.
 
 So this file keeps the process and lost the matching. `propose_match` — greedy pay-as-bid —
 used to live here, under a docstring calling it "a replaceable v1 choice" while `hosting.py`
-imported it directly, which made it exactly not that. It is now `capabilities/bid_matching/`: a
+imported it directly, which made it exactly not that. It is now `capabilities/market/matching.py`: a
 family with pay-as-bid and uniform price implemented, so a third way of matching is a class and
 a line of `PROVIDES` rather than an edit to this file.
 

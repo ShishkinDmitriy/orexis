@@ -37,7 +37,7 @@ share no premise:
 | capability | granted by |
 |---|---|
 | `ag:Actuation` | `ag:hasActuator` — it is wired to a valve |
-| `ag:Bidding`, `ag:Hosting` | `ag:bidsIn`, `ag:hosts` — its position in a market |
+| `market:Bidding`, `market:Hosting` | `market:bidsIn`, `market:hosts` — its position in a market |
 | `ag:Subscribing`, `ag:Listening` | `ag:polls` a sensor, and that sensor's mode |
 | `ag:Reckoning` | `ag:commits` — room to move |
 

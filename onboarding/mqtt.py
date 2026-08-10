@@ -11,8 +11,8 @@ the world already states every channel and who is wired to it.
 capability give it exactly the topics that capability needs:
 
     ag:polls S          read S's readingTopic, write S's commandTopic
-    ag:bidsIn M         read M's offerTopic and M's voucherTopic/<me>, write M's bidTopic/<me>
-    ag:hosts M          write M's offerTopic and voucherTopic/<bidder>, read bidTopic/+
+    market:bidsIn M         read M's offerTopic and M's voucherTopic/<me>, write M's bidTopic/<me>
+    market:hosts M          write M's offerTopic and voucherTopic/<bidder>, read bidTopic/+
                         and each bidder's eventTopic
     ag:hasActuator V    write V's commandTopic
     ag:eventTopic E     write E
@@ -54,6 +54,7 @@ from agent import ratified
 from . import certs
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
+from agent.capabilities.market.terms import NS as MARKET
 from agent.ontology import AG, WORLD_GRAPH
 
 log = logging.getLogger("mqtt")
@@ -120,17 +121,17 @@ _POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{
  }}""")
 
 _BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?voucherTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}bidsIn> ?m .
-  ?m <{AG}offerTopic> ?offerTopic ; <{AG}bidTopic> ?bidTopic ;
-     <{AG}voucherTopic> ?voucherTopic .
+  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}bidsIn> ?m .
+  ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
+     <{MARKET}voucherTopic> ?voucherTopic .
  }}""")
 
 _HOSTS_Q = _q(f"""?id ?offerTopic ?bidTopic ?voucherTopic ?bidderEvent
 WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hosts> ?m .
-  ?m <{AG}offerTopic> ?offerTopic ; <{AG}bidTopic> ?bidTopic ;
-     <{AG}voucherTopic> ?voucherTopic .
-  OPTIONAL {{ ?b <{AG}bidsIn> ?m ; <{AG}eventTopic> ?bidderEvent }}
+  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}hosts> ?m .
+  ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
+     <{MARKET}voucherTopic> ?voucherTopic .
+  OPTIONAL {{ ?b <{MARKET}bidsIn> ?m ; <{AG}eventTopic> ?bidderEvent }}
  }}""")
 
 # A simulated sensor learns it was watered by reading what the valve REPORTED, never what the

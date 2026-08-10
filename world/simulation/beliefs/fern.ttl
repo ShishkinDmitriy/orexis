@@ -1,4 +1,5 @@
 @prefix ag: <http://example.org/agora#> .
+@prefix market: <http://example.org/agora/market#> .
 
 #  Fern's agent's PRIVATE beliefs — the parameters for the capabilities it composed.
 #
@@ -14,9 +15,9 @@ ag:fern_agent
     ag:slowSleepS 600 ;         # comfortable: let the board sleep, save energy
     ag:readingGraceS 45 .     # slack past the cadence it asked for, before it calls the sensor quiet
 
-##  ag:Bidding — what it wants and what it will pay
+##  market:Bidding — what it wants and what it will pay
 ag:fern_agent
-    ag:hasEndowment 100.0 ;
+    market:hasEndowment 100.0 ;
     ag:hasTarget 0.55 ;         # the desire
     ag:bandLow 0.35 ;           # a fern is parched where a succulent shrugs
     ag:bandHigh 0.65 ;

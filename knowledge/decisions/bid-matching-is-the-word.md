@@ -13,9 +13,9 @@ timestamp: 2026-08-10T00:00:00Z
 The domain layer is where terms are defined, and everything else — code, ontology, conversation —
 speaks them. That only works if there is one word per concept.
 
-There were three. `agent/capabilities/bid_matching/` implements one thing: turning a lot and a set
-of bids into a proposed allocation with prices. It was called **matching** (the directory, the
-class, the property `ag:matchesBy`, `propose_match`), **rule** (six places, in newer comments and
+There were three. One thing was implemented — turning a lot and a set of bids into a proposed
+allocation with prices, then its own package and now `capabilities/market/matching.py`. It was called **matching** (the directory, the
+class, the property `market:matchesBy`, `propose_match`), **rule** (six places, in newer comments and
 error messages), and **format** (seven places, from `auction.py`'s original framing). All three
 appeared in `hosting.py` alone, and the family class's own `rdfs:comment` managed two in one
 sentence: the class was a *"Matching capability"* whose text said *"a host may ask for 'whoever
@@ -30,10 +30,11 @@ shape messages, test names and this bundle. `knowledge/domain/bid-matching.md` d
 `knowledge/domain/auction.md` defines the process it is a step of; those two pages are the
 deliverable, and this record is why they say what they say.
 
-The identifiers that carry the family name moved with it: `ag:BidMatchingCapability`,
-`agent/capabilities/bid_matching/`, and the `BID_MATCHING` constant in the two `terms.py` that name
-it. **`ag:matchesBy` did not**, and neither did `propose_match`, the `Match` callable or
-`ag:HostStatesHowItMatchesShape` — see below. No behaviour changed.
+The identifiers that carry the family name moved with it: `market:BidMatchingCapability`, the
+directory, and the `BID_MATCHING` constant. (The directory was `capabilities/bid_matching/` when
+this was written and is now `capabilities/market/`, which also took the namespace — see
+[a-package-owns-its-namespace](a-package-owns-its-namespace.md).) **`market:matchesBy` did not**, and neither did `propose_match`, the `Match` callable or
+`market:HostStatesHowItMatchesShape` — see below. No behaviour changed.
 
 ## Why the qualifier — the collision is inside this repository
 
@@ -66,7 +67,7 @@ design decomposes a mechanism into an **allocation rule** (who gets what) and a 
 (what each winner pays); a member of this family supplies both, so the family is not a pricing slot
 and no word implying one would do.
 
-That decomposition also says what varies. `ag:PayAsBid` and `ag:UniformPrice` share an allocation
+That decomposition also says what varies. `market:PayAsBid` and `market:UniformPrice` share an allocation
 rule and differ in their payment rule — which is a property of *those two members* and not of the
 family. A pro-rata member that fills everyone who cleared the reserve in proportion to what they
 asked for varies the allocation rule instead, is an ordinary answer, and is still *matching*; that
@@ -86,7 +87,7 @@ bidding procedure and a payment rule together: Dutch is descending open outcry *
 a first-price sealed-bid auction is one-shot sealed *with* first-price. We model the
 allocation-and-payment half only. [round](/domain/round.md) describes an iterative-ascending round, which is a fact about the
 bidding procedure and is fixed in the protocol rather than pluggable. Calling
-`ag:BidMatchingCapability` a format would advertise a second slot that does not exist.
+`market:BidMatchingCapability` a format would advertise a second slot that does not exist.
 
 **It is ambiguous in the wild.** To an auction theorist a "Dutch auction" is the descending-price
 open outcry. In finance the same phrase usually means close to the opposite — a sealed-bid
@@ -99,7 +100,7 @@ That is the whole argument for `domain/bid-matching.md` existing, and it is on t
 
 **`rule` already means something here.** Every capability directory has a `rules.ru` — the SPARQL
 that derives capabilities and other conclusions into the derived graph. A sentence like *"the rule
-is guarded on `ag:hosts`"* is about `rules.ru`; *"a host that states a rule nothing implements"*
+is guarded on `market:hosts`"* is about `rules.ru`; *"a host that states a rule nothing implements"*
 was about pay-as-bid. Two meanings, one word, in the same package. That collision is most of why
 this word drifted in and why it is the one that had to go.
 
@@ -108,31 +109,33 @@ names it: pay-as-bid, uniform price.
 
 ## What was corrected, and what deliberately was not
 
-- `ag:HostStatesItsRuleShape` → `ag:HostStatesHowItMatchesShape`. A shape IRI is prose that
+- `ag:HostStatesItsRuleShape` → `market:HostStatesHowItMatchesShape`. A shape IRI is prose that
   happens to be an identifier; it was carrying the rejected word.
 - Comments, docstrings, `sh:message` texts, and four test names.
-- The ontology's `rdfs:comment`s, including the two-axes scope note on `ag:BidMatchingCapability`,
+- The ontology's `rdfs:comment`s, including the two-axes scope note on `market:BidMatchingCapability`,
   so the T-Box carries the boundary rather than only the bundle.
 - `decisions/an-auction-format-is-a-capability.md` → `bid-matching-is-a-capability.md`, retitled. A
   decision record is cited by name, and the most-cited record on this subject asserting the
   rejected term in its title is exactly the stale-record failure AGENTS.md warns about. Its
   argument is unchanged; only its words are.
-- **`propose_match` and the `match` callable stay**, and so does `ag:matchesBy`. They agree with
+- **`propose_match` and the `match` callable stay**, and so does `market:matchesBy`. They agree with
   the term rather than sitting beside it. *Bid matching* is the noun for the ability; *match* is
   what a member does to a lot and a set of bids; the two are the same word in different parts of
   speech, which is what a ubiquitous language is supposed to produce. **The qualifier is not
-  carried where nothing could be misread**: `ag:matchesBy` has a host for its domain and the family
+  carried where nothing could be misread**: `market:matchesBy` has a host for its domain and the family
   for its range, so *supplier matchesBy PayAsBid* admits one reading, and `ag:matchesBidsBy` would
   be noise. A qualifier exists to remove an ambiguity, not to be spelled consistently.
-- `ag:HostStatesHowItMatchesShape` stays, for the same reason.
+- `market:HostStatesHowItMatchesShape` stays, for the same reason.
 
 # Consequences
 
-- **A capability directory name is part of the language.** `agent.loader` finds packages by
-  directory, so `capabilities/bid_matching/` is not an implementation detail — it is the term,
-  spelled once more. That is also why renaming the term meant moving the directory and touching
-  every import of it, where the earlier draft of this change had touched none.
-- **The scope boundary is now written down twice** — in `ag:BidMatchingCapability`'s comment and in
+- **A package directory name is part of the language.** `agent.loader` finds packages by
+  directory, so the name is not an implementation detail. That is why renaming the term meant
+  moving the directory and touching every import of it, where the earlier draft of this change had
+  touched none. What the directory does NOT name is a capability: it named this one only while
+  this one had a package to itself, and [a-package-owns-its-namespace](a-package-owns-its-namespace.md)
+  folded it into `capabilities/market/` shortly afterwards. The term is what survived.
+- **The scope boundary is now written down twice** — in `market:BidMatchingCapability`'s comment and in
   `domain/bid-matching.md`. Unstated scope is what a ubiquitous language exists to prevent, and *we
   do not model the bidding procedure* had never been said anywhere.
 - **The gates are unmoved.** `agora-validate` on all three worlds, `pytest tests`, `lint-imports`
@@ -148,7 +151,7 @@ names it: pay-as-bid, uniform price.
   prefixes; nothing comparable scans prose for a rejected word, and the drift this record fixes
   would recur silently. A grep in CI would catch it and would also be a new kind of gate; not
   attempted.
-- **`ag:BidMatchingCapability` keeps the `<X>Capability` suffix** that `ag:PerceptionCapability` and
+- **`market:BidMatchingCapability` keeps the `<X>Capability` suffix** that `ag:PerceptionCapability` and
   `ag:ReviewCapability` follow. Under the term the class could as well be `ag:BidMatching`, which
   already reads as an ability without help; the suffix is a live convention, and dropping it for
   one family is really a proposal to drop it for all three. Worth deciding deliberately, not as a

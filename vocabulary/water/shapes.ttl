@@ -11,7 +11,7 @@ ag:WaterBidderShape a sh:NodeShape ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora#hasCapability> <http://example.org/agora#Bidding> .
+                ?this <http://example.org/agora#hasCapability> <http://example.org/agora/market#Bidding> .
                 ?this <http://example.org/agora#actsFor>       ?plant .
                 ?plant a <http://example.org/agora#Plant> .
             }

@@ -100,3 +100,54 @@ def test_the_prefixes_a_derivation_rule_needs_are_carried_by_the_rule():
         assert not (used - declared - {"http", "https"}), (
             f"{path} uses a prefix it does not declare — it is sent as its own update"
         )
+
+
+# --- the assembly itself ---------------------------------------------------------------------
+#
+# `store.PREFIXES` is no longer a list somebody maintains: the project-internal half is read off
+# the ontologies that declare the terms. Everything above tests what a query may SAY; these test
+# that the set it is held to is still the set the packages actually declare.
+
+def test_every_package_namespace_reaches_the_prefixes_a_query_is_sent_with():
+    """The guard on the assembly. If the collection silently returned nothing, every test above
+    would still pass — they check that queries use only DECLARED prefixes, and an empty set with
+    an empty codebase is vacuously fine. What would break is production, where `market:` is in
+    the query text and no engine has heard of it.
+
+    So this asserts the direction that cannot fail safely: every namespace a package declares is
+    one a query may use.
+    """
+    found = loader.prefixes()
+    assert found, "no project-internal namespaces found — the ontology glob has gone stale"
+    assert "ag" in found, "the base vocabulary's own namespace is missing from the assembly"
+    missing = set(found) - store.DECLARED
+    assert not missing, (
+        f"{sorted(missing)} are declared by a package's ontology.ttl but are not in "
+        "store.PREFIXES — a query naming one would 400 against Fuseki"
+    )
+
+
+def test_a_prefix_meaning_two_things_is_refused(tmp_path, monkeypatch):
+    """One label, one namespace. Two packages binding `market:` to different IRIs is the
+    quietest bug available — both spellings are valid SPARQL, so one package's query would
+    silently read the other's terms and no engine could tell anyone.
+    """
+    a, b = tmp_path / "a.ttl", tmp_path / "b.ttl"
+    a.write_text("@prefix dup: <http://example.org/agora/one#> .\n")
+    b.write_text("@prefix dup: <http://example.org/agora/two#> .\n")
+    monkeypatch.setattr(loader, "ontology_files", lambda: (a, b))
+    loader.prefixes.cache_clear()
+    try:
+        with pytest.raises(RuntimeError, match="One label, one namespace"):
+            loader.prefixes()
+    finally:
+        loader.prefixes.cache_clear()
+
+
+def test_an_external_vocabulary_is_not_a_packages_to_move(monkeypatch):
+    """`rdfs:` and friends stay in the kernel. They are standardised and stable, and a package
+    that could rebind one could make `rdfs:subClassOf` mean whatever it liked — which is exactly
+    the walk `agent/inference.py` materialises and every shape leans on.
+    """
+    assert {"rdfs", "owl", "xsd", "sosa", "prov", "rdf"} <= store.DECLARED
+    assert not {"rdfs", "owl", "xsd", "sosa", "prov", "rdf"} & set(loader.prefixes())

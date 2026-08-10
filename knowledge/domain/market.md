@@ -10,14 +10,14 @@ timestamp: 2026-08-01T00:00:00Z
 
 A market is the **standing structure**: a resource, agents that can supply it, agents that can
 consume it, and the links between them. It is in the world, it has a name and channels, and
-participants discover it rather than being configured with it. `ag:Market` is exactly this.
+participants discover it rather than being configured with it. `market:Market` is exactly this.
 
 **The auction is the process.** It condenses out of scarcity, allocates, and dissolves — see
 [round](/domain/round.md), which is the unit it runs in. A market with nothing contested is
 still a market; there is simply no auction happening in it.
 
 This page said the opposite until recently — that a market "is not a standing thing" — while
-`ag:Market` was declared in `world.ttl` with three MQTT topics on it. Both were called *market*
+`market:Market` was declared in `world.ttl` with three MQTT topics on it. Both were called *market*
 and they were opposites, which is worth recording rather than quietly fixing: the confusion sent
 two separate design attempts to the wrong premise, because a fact about the venue and a fact
 about the round genuinely belong in different places. **Structure is the market's; the terms of a
@@ -50,7 +50,7 @@ Why the host is deliberately blind to quantity beforehand, and what the gap cost
 
 # A market is a lot, not a property
 
-`ag:marketFor` names a **resource** and nothing more. What is auctioned is a quantity of a
+`market:marketFor` names a **resource** and nothing more. What is auctioned is a quantity of a
 thing — 1L of water — and that is true whether or not anyone's soil is dry. Winning changes a
 property; the auction is not *about* one.
 
@@ -63,7 +63,7 @@ about the *bidder's* valuation on the *venue*, where every participant would hav
 The property-shaped thing is the **stake**. A target of 0.55 is 0.55 *of* something, and the
 bands and `ag:litresPerFraction` are denominated in the same unit — `litresPerFraction` is
 precisely the exchange rate between the lot and the property, which is where the coupling
-honestly lives. So the domain states `ag:aboutProperty` on the desire term itself, the bidder
+honestly lives. So the domain states `market:aboutProperty` on the desire term itself, the bidder
 follows it from a term it already names, and the market stays a lot. See
 [one-agent-many-sensors](../decisions/one-agent-many-sensors.md).
 

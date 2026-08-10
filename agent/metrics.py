@@ -60,7 +60,7 @@ class SelfReportingBeliefs:
 SELF_REPORTING_BLOCK = Block(
     capability=METRICS,
     cls=SelfReportingBeliefs,
-    terms={"interval_s": "metricsIntervalS"},
+    terms={"interval_s": term("metricsIntervalS")},
 )
 
 def tree_bytes(path: str | Path | None) -> int | None:

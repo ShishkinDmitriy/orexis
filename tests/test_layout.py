@@ -147,3 +147,36 @@ def test_the_compose_file_does_not_mount_hardware_at_an_agent():
             assert f"/{name}:" not in compose.read_text(), (
                 f"{world}/compose.yaml mounts {name} into an agent — regenerate with "
                 f"`agora-compose {world}`")
+
+
+def test_a_packages_python_namespace_is_the_one_its_ontology_declares():
+    """`terms.py` writes `NS` so Python can name a term without parsing Turtle, and
+    `ontology.ttl` declares the same namespace so a query can reach it through the prefix the
+    loader assembles. Two copies of one fact, and nothing but this holds them together.
+
+    Drifting them apart fails in the worst available way: Python would build terms in one
+    namespace while SHACL validated them in another, and a world would conform while the agent
+    reading it found nothing — an empty result, which is not an error.
+    """
+    import importlib
+
+    from agent import loader
+
+    checked = []
+    for package in loader.packages():
+        if not (package.path / "terms.py").exists():
+            continue
+        ns = getattr(importlib.import_module(f"{package.import_name}.terms"), "NS", None)
+        if ns is None:
+            continue  # a package still living in the kernel's `ag:` names no namespace of its own
+        declared = {iri for iri in loader.prefixes().values()}
+        assert ns in declared, (
+            f"{package.name}/terms.py declares NS={ns!r}, which no ontology.ttl declares as a "
+            "prefix — the loader cannot give a query the prefix to reach it"
+        )
+        assert ns in (package.file("ontology.ttl") or package.path).read_text(), (
+            f"{package.name}/terms.py declares NS={ns!r} but its own ontology.ttl does not — "
+            "Python would build terms in a namespace the vocabulary never defines"
+        )
+        checked.append(package.name)
+    assert checked, "no package declares a namespace of its own — this guard is checking nothing"

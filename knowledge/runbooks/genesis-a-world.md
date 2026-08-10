@@ -20,7 +20,7 @@ Not ceremony. The questions it forces are the ones the Turtle has to answer, and
 only once something concrete is on the table:
 
 - *is that board reachable at any moment, or does it sleep?* → decides the perception capability
-- *who owns the barrel?* → owning the venue derives `ag:Hosting`, owning valves `ag:Actuation`
+- *who owns the barrel?* → owning the venue derives `market:Hosting`, owning valves `ag:Actuation`
 - *thirsty at what number?* → a band is opinion; nothing can infer it
 
 # 2. Write `world/<name>/world.ttl`
@@ -36,8 +36,8 @@ reality, a derivation cannot.
 |---|---|
 | `ag:polls` a sensor with `ag:senseMode ag:Scheduled` | `ag:Subscribing` |
 | `ag:polls` a sensor with `ag:senseMode ag:Push` | `ag:Listening` |
-| `ag:bidsIn` a market | `ag:Bidding` |
-| `ag:hosts` a market | `ag:Hosting` |
+| `market:bidsIn` a market | `market:Bidding` |
+| `market:hosts` a market | `market:Hosting` |
 | `ag:hasActuator` a kind of `ag:Actuator` | `ag:Actuation` |
 
 Every device states its own channels — nothing builds a topic from a naming convention. A
@@ -51,7 +51,7 @@ output.
 Two families, and they behave differently ([genesis-process](/domain/genesis-process.md)):
 **operational** (`ag:fastSleepS`, `ag:slowSleepS`, `ag:maxReadingAgeS`) follows the *kind* of
 world — a bench rig wants 10s, a garden wants 600s; **stake** (`ag:hasTarget`, `ag:bandLow`,
-`ag:bandHigh`, `ag:hasEndowment`, `ag:maxValuePerL`) is the agent's own and derivable from
+`ag:bandHigh`, `market:hasEndowment`, `ag:maxValuePerL`) is the agent's own and derivable from
 nothing.
 
 Register each in the catalog inside `world.ttl`:

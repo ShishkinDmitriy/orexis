@@ -23,8 +23,15 @@ is an ordinary answer — and a helper factored out today would encode an invari
 does not have. Ten duplicated lines are cheaper than a false abstraction, and the tests hold
 both to the same allocation where they should agree.
 
-Vocabulary: capabilities/bid_matching/ontology.ttl. Rules: capabilities/bid_matching/rules.ru.
-See knowledge/domain/bid-matching.md, knowledge/decisions/bid-matching-is-a-capability.md and
+**It shares a package with the protocol and is still a separate family.** A directory is a
+package, not a capability: `capabilities/market/` already held two — a bidder answers, a host
+runs the round — and holds three now. What keeps the seam honest is `PROVIDES` and the term:
+`hosting.py` asks `agent.provider(BID_MATCHING)` and never learns which member answered, so the
+protocol could not depend on one if it tried. The directory boundary was never what guaranteed
+that. See knowledge/decisions/a-package-owns-its-namespace.md.
+
+Vocabulary and rules are the package's, in `capabilities/market/`. See
+knowledge/domain/bid-matching.md, knowledge/decisions/bid-matching-is-a-capability.md and
 knowledge/decisions/uniform-price-dissolves-the-uncontested-round.md.
 """
 

@@ -35,18 +35,30 @@ record is worse than none, because it is still cited.
    `"supplier"`, `"sensors/fern/moisture"`, `ag:world` are not. The single exception is the one
    identifier a process is handed at boot: its own agent id. Everything else is discovered from
    the graph. See [capability-packages](knowledge/decisions/capability-packages.md).
-2. **A capability is a named ability with interchangeable implementations, and it is a
-   directory.** The ability is a **family** — the slot; the implementations are its members.
-   `ag:PerceptionCapability` is a family and `ag:Subscribing` and `ag:Listening` are two ways of
-   having it, chosen by what the hardware can do. That is the shape to reach for: a capability
-   worth naming is one where the *how* could differ. Reviewing your own settings by strict rules
-   or by asking a model is one ability with two implementations; pay-as-bid and uniform-price are
-   one auction with two. Where nothing could differ, you have a function, not a capability.
+2. **A capability is a named ability with interchangeable implementations. A DIRECTORY IS A
+   PACKAGE, and a package may hold several.** The ability is a **family** — the slot; the
+   implementations are its members. `ag:PerceptionCapability` is a family and `ag:Subscribing`
+   and `ag:Listening` are two ways of having it, chosen by what the hardware can do. That is the
+   shape to reach for: a capability worth naming is one where the *how* could differ. Reviewing
+   your own settings by strict rules or by asking a model is one ability with two
+   implementations; pay-as-bid and uniform-price are one auction with two. Where nothing could
+   differ, you have a function, not a capability.
+
+   The two are not the same axis, and saying "a capability is a directory" hid that.
+   `capabilities/market/` provides three — bidding, hosting, and the matching family — and it is
+   one package. **What isolates a capability is `PROVIDES` and its term, never the directory
+   boundary**: `hosting.py` asks `agent.provider(BID_MATCHING)` and never learns which member
+   answered, so uniform price landed without touching a line of it. A directory is how a package
+   is FOUND and how one is deleted. See
+   [a-package-owns-its-namespace](knowledge/decisions/a-package-owns-its-namespace.md).
 
    `agent/capabilities/<name>/` holds its own `ontology.ttl`, `shapes.ttl`, `rules.ru`,
-   `terms.py`, `beliefs.py` and code. Nothing lists them — `agent.loader` finds them, and
-   `PROVIDES` in `__init__.py` is how an implementation registers. Adding one is adding a
-   directory; no registry to edit. Capability packages never import each other's Python: ask
+   `terms.py`, `beliefs.py` and code — **and its own namespace**, if it wants one, declared in
+   its `ontology.ttl` and mirrored in `terms.py`. `agent.loader` reads every project namespace
+   off the ontology that declares it, so `market:` reaches a query without `store.PREFIXES`
+   learning the package exists. Nothing lists them — `agent.loader` finds them, and `PROVIDES`
+   in `__init__.py` is how an implementation registers. Adding one is adding a directory; no
+   registry to edit. Capability packages never import each other's Python: ask
    `agent.provider(family)` or contribute via `annotate`/`urgency`. They live *inside* `agent/`
    because only a runtime loads their Python; onboarding reads their TTL through the loader and
    never imports a module from one.
@@ -84,7 +96,7 @@ work for the one family whose hardware forces the answer.
 
 **Each capability is granted by whatever fact makes it meaningful, and that fact is its own.** The
 premise lives in the capability's `rules.ru`, and there is no pattern to fit a new one into. Three
-are granted by wiring — `ag:hasActuator`, `ag:bidsIn`/`ag:hosts`, `ag:polls` and a sense mode —
+are granted by wiring — `ag:hasActuator`, `market:bidsIn`/`market:hosts`, `ag:polls` and a sense mode —
 because they are about equipment or a position in a market. `ag:Reckoning` is granted by
 **latitude**: revising your own settings means nothing without settings you are permitted to move,
 so an `ag:commits` mandate whose ends differ is its premise. When you add one, ask what makes

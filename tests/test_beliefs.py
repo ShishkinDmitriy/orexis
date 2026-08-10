@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from agent import loader  # noqa: F401  (puts the package trees on sys.path)
+from agent import ontology
 from agent.beliefs import BeliefError, Beliefs, Reading
 from agent.capabilities.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
 from agent.capabilities.perception.beliefs import SUBSCRIBING_BLOCK
@@ -99,14 +100,18 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
     """The supplier holds no bidding terms — it must fail, never silently invent a target."""
     with pytest.raises(BeliefError) as exc:
         Beliefs(query, "supplier", SUPPLIER).read(BIDDING_BLOCK)
-    assert "ag:hasTarget" in str(exc.value)  # it names the term and the graph
+    # The FULL IRI, not `ag:hasTarget`. Belief terms come from whichever package
+    # declares them and packages own their namespaces, so a prefix here would be a
+    # guess — and a wrong one for anything market: owns.
+    assert ontology.term("hasTarget") in str(exc.value)
     assert "supplier" in str(exc.value)
 
 
 def test_the_error_names_every_missing_term(query):
     with pytest.raises(BeliefError) as exc:
         Beliefs(query, "supplier", SUPPLIER).read(SUBSCRIBING_BLOCK)
-    for term in ("ag:fastSleepS", "ag:slowSleepS", "ag:readingGraceS"):
+    for term in (ontology.term("fastSleepS"), ontology.term("slowSleepS"),
+                 ontology.term("readingGraceS")):
         assert term in str(exc.value)
 
 

@@ -14,7 +14,7 @@ Three steps, and the quantity appears in none of the first two.
    `HIGH`. A verdict, never a demand. The host works fine with no `value` in the payload at
    all, which a test pins.
 2. The host hears `LOW`, checks its cooldown, and announces a round for
-   `ag:offerQuantityL` at `ag:reservePricePerL`. Both are its own standing beliefs. Nothing
+   `market:offerQuantityL` at `market:reservePricePerL`. Both are its own standing beliefs. Nothing
    about the trigger enters the offer except the log line naming who it was.
 3. Only now does anyone state a quantity, in a **sealed bid** computed from a deficit no one
    else can see.
@@ -78,7 +78,7 @@ built to study scarcity.
 
 # The uncontested round is still priced as if contested
 
-`ag:PayAsBid` — the rule this society runs, in `capabilities/bid_matching/` — is greedy and
+`market:PayAsBid` — the member this society runs, in `capabilities/market/matching.py` — is greedy and
 discriminatory: eligible bids sorted by price, filled highest first, each paying its own bid.
 When total demand comes in under the lot there is no rival for anything, and every bidder still
 pays what it offered — so an agent is charged for its own urgency in a round where nothing was
@@ -104,7 +104,7 @@ can answer a price with a quantity honestly at every tick.
 Three costs, and the third is the one that matters:
 
 - **Latency.** A round becomes several exchanges. Boards sleep between readings and the link
-  here runs at −80 dBm; `ag:bidWindowS` multiplies by the number of ticks.
+  here runs at −80 dBm; `market:bidWindowS` multiplies by the number of ticks.
 - **More state.** The host holds an open round across rounds of messages, and every failure
   mode of a partially-completed auction becomes real.
 - **It changes what is private.** A sealed bid discloses a valuation to nobody. An ascending

@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Uniform price dissolves the uncontested round rather than branching on it
-description: The second member of ag:BidMatchingCapability, which both tests the family's claim that adding one moves nothing else and changes what issue #50 is. Under pay-as-bid an uncontested round needs a special case; under a uniform price with the reserve as its floor, a round whose demand never reaches the lot simply clears at the reserve — so #50 becomes a choice of mechanism rather than a defect to patch.
+description: The second member of market:BidMatchingCapability, which both tests the family's claim that adding one moves nothing else and changes what issue #50 is. Under pay-as-bid an uncontested round needs a special case; under a uniform price with the reserve as its floor, a round whose demand never reaches the lot simply clears at the reserve — so #50 becomes a choice of mechanism rather than a defect to patch.
 status: accepted
 stage: v1
 tags: [market, auction, capabilities, mechanism]
@@ -11,7 +11,7 @@ timestamp: 2026-08-10T00:00:00Z
 # Context
 
 [bid-matching-is-a-capability](bid-matching-is-a-capability.md) made matching a family,
-`ag:BidMatchingCapability`, with pay-as-bid implemented and `ag:UniformPrice` declared beside it
+`market:BidMatchingCapability`, with pay-as-bid implemented and `market:UniformPrice` declared beside it
 under a claim: *"adding it is a class and one line of `PROVIDES`; no other package moves."*
 
 A declared member with nothing behind it proves nothing. Two members do — and the claim was
@@ -19,7 +19,10 @@ falsifiable, which is most of why this was worth doing next.
 
 # The claim held
 
-Everything that changed is inside `capabilities/bid_matching/`, plus tests:
+Everything that changed is inside the matching package, plus tests. (It was its own directory at
+the time — `capabilities/bid_matching/` — and is now `capabilities/market/matching.py`; see
+[a-package-owns-its-namespace](a-package-owns-its-namespace.md). The claim below is about what
+did NOT have to move, and folding it in did not weaken that: `hosting.py` is still untouched.)
 
 | | |
 |---|---|
@@ -31,7 +34,7 @@ Everything that changed is inside `capabilities/bid_matching/`, plus tests:
 `hosting.py`, `auction.py`, the market package, the derivation rule and the shapes were not
 touched. The derivation already granted whichever member a host named; the loader already
 registered whichever module declared one; `agent.provider(BID_MATCHING)` already handed it over. A
-world that says `ag:matchesBy ag:UniformPrice` now gets a host that runs it and announces it, and
+world that says `market:matchesBy market:UniformPrice` now gets a host that runs it and announces it, and
 nothing in between knew a second member was coming.
 
 That is what a family is for, and it is now demonstrated rather than asserted.
@@ -42,7 +45,7 @@ Allocation is identical to pay-as-bid — bids at or above the reserve, highest 
 by what is left. Only the bill differs: **every winner pays the lowest accepted bid**, the one
 that was still filling when supply ran out.
 
-`ag:UniformPrice`'s comment previously said *"the lowest accepted bid, or the highest rejected
+`market:UniformPrice`'s comment previously said *"the lowest accepted bid, or the highest rejected
 one"*, which describes a family of conventions rather than naming one. Settled as **lowest
 accepted**, for two reasons:
 
@@ -98,13 +101,13 @@ where one is much thirstier than the others, demand reduction is the live risk.
 
 # What is not decided here
 
-**No world switched.** All three still state `ag:matchesBy ag:PayAsBid`, and every existing round
+**No world switched.** All three still state `market:matchesBy market:PayAsBid`, and every existing round
 clears exactly as it did — `test_round.py` and the existing `test_auction.py` cases pass untouched,
 which is the evidence that this added a member rather than changed one.
 
 **#50 stays open**, deliberately. Whether a world should run uniform price is the sovereign's call,
 not this change's: it alters what every participant pays and how they should bid, which is a
-governance decision rather than a bug fix. Closing it takes one edit — `ag:matchesBy` on the
+governance decision rather than a bug fix. Closing it takes one edit — `market:matchesBy` on the
 supplier — and the argument above is what that edit should be weighed against.
 
 # Seams left open

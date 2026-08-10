@@ -7,7 +7,7 @@ belongs to, what it can do — and where every one of those things lives on the 
 Two rules hold throughout this module:
 
 - **Discovery by term, never by name.** The world is found by `?w a ag:World`, the market by
-  `ag:bidsIn`, the supplier by whoever hosts. No query mentions an instance.
+  `market:bidsIn`, the supplier by whoever hosts. No query mentions an instance.
 - **No defaults for anything the graph should state.** A missing topic or a missing capability
   parameter is a genesis error, and it fails loudly at startup rather than quietly at 3am.
   The SHACL modules exist to catch it before that.
@@ -171,9 +171,9 @@ def _markets_q(agent_uri: str, relation: str) -> str:
     return f"""
 SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?voucherTopic ?capacity
 WHERE {{ 
-  <{agent_uri}> ag:{relation} ?market .
-  ?market ag:localId ?localId ; ag:marketFor ?resource ;
-          ag:offerTopic ?offerTopic ; ag:bidTopic ?bidTopic ; ag:voucherTopic ?voucherTopic .
+  <{agent_uri}> market:{relation} ?market .
+  ?market ag:localId ?localId ; market:marketFor ?resource ;
+          market:offerTopic ?offerTopic ; market:bidTopic ?bidTopic ; market:voucherTopic ?voucherTopic .
   OPTIONAL {{ ?resource ag:capacityL ?capacity }}
  }}"""
 
@@ -190,7 +190,7 @@ SELECT ?subject ?subjectId ?dryRate ?litresPerFraction WHERE {{
 def _participants_q(market_uri: str) -> str:
     return f"""
 SELECT ?agentId WHERE {{ 
-  ?agent ag:bidsIn <{market_uri}> ; ag:localId ?agentId  }}"""
+  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId  }}"""
 
 
 def _market_from(row: dict) -> Market:

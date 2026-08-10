@@ -1,7 +1,7 @@
 """The kernel vocabulary — prefixes and graph names, and deliberately nothing else.
 
 Everything here is true of *every* capability: how a term is spelled, and which graph a fact
-lives in. A term that belongs to one capability — `ag:Subscribing`, `ag:Bidding` — is named by
+lives in. A term that belongs to one capability — `ag:Subscribing`, `market:Bidding` — is named by
 that capability's own package, so this file never grows when one is added. That is the whole
 reason it is this short.
 
@@ -31,12 +31,23 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 AG = "http://example.org/agora#"
-# The hardware layer keeps namespaces of its own, one per module, and NOT `ag:`. It is the
-# layer that grows a term per pin, and one shared namespace would make every one of them carry
-# its board's name to stay unambiguous — `ag:Esp32Gpio34` against `esp32:Gpio34Pin`. It can
-# afford this precisely because no runtime code names these terms: an agent never queries a
-# pin, so `term()` and `store.PREFIXES` are untouched and the trap they exist to prevent — a
-# prefix declared in one file and used in another — is not reachable from here.
+# **A package owns its namespace, and this is only the kernel's.** `ag:` is what every agent
+# has; `capabilities/market` keeps `market:`, and the hardware modules have kept `mc:`,
+# `onewire:` and the rest since pins-and-wires. A package names its own terms through its own
+# `terms.py`, not through `term()` here.
+#
+# This used to say the hardware layer could afford separate namespaces *precisely because no
+# runtime code names those terms* — that `term()` and `store.PREFIXES` were therefore untouched,
+# and the trap they exist to prevent unreachable. That was true of the arrangement and false as
+# a rule: the constraint was never that a namespace must go unqueried, it was that
+# `store.PREFIXES` was a kernel constant, so any package wanting one had to edit the kernel to
+# be nameable in SPARQL. `agent.loader` now reads every project namespace off the ontology that
+# declares it, so the prefix arrives with the package. See
+# knowledge/decisions/a-package-owns-its-namespace.md.
+#
+# The hardware constants stay here because the trees under `vocabulary/` ship no Python at all,
+# so there is no `terms.py` of their own to hold them — the one asymmetry left, and it follows
+# from a vocabulary package being pure knowledge rather than from anything about namespaces.
 MC = "http://example.org/agora/microcontroller#"
 ONEWIRE = "http://example.org/agora/onewire#"
 I2C = "http://example.org/agora/i2c#"

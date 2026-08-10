@@ -1,4 +1,4 @@
-"""ag:Bidding — answer offers with a number only this agent can compute.
+"""market:Bidding — answer offers with a number only this agent can compute.
 
 This is where one-process-per-agent earns itself: the bid is a function of the agent's
 *private* valuation and its *own* fresh reading. No host and no peer can compute it, so it
@@ -38,11 +38,14 @@ from .beliefs import BIDDING_BLOCK
 from .terms import BIDDING, PERCEPTION
 
 # The term whose meaning this asks after is the one this package already names for its own
-# beliefs, so nothing here is written twice and nothing here is a domain property.
+# beliefs, so nothing here is written twice and nothing here is a domain property. A block's
+# terms are full IRIs, so this is written `<...>` rather than under an assumed prefix — which
+# is what lets the target live in the domain's namespace and `market:aboutProperty` in this
+# package's, without either being spelled twice.
 _TARGET = BIDDING_BLOCK.terms["target"]
 _ABOUT_Q = f"""
-SELECT ?property WHERE {{ 
-  ag:{_TARGET} ag:aboutProperty ?property  }} LIMIT 1"""
+SELECT ?property WHERE {{
+  <{_TARGET}> market:aboutProperty ?property  }} LIMIT 1"""
 
 
 def value_bid(moisture: float, b, balance: float, allocated_l: float = 0.0) -> Bid | None:
@@ -103,8 +106,8 @@ class BiddingModule(Module):
         rows = bindings(self.agent.store.query(_ABOUT_Q))
         if not rows:
             raise RuntimeError(
-                f"{self.agent.id} holds ag:{_TARGET} but the domain does not say what it is a "
-                f"target OF — state ag:aboutProperty on ag:{_TARGET} in the domain ontology")
+                f"{self.agent.id} holds <{_TARGET}> but the domain does not say what it is a "
+                f"target OF — state market:aboutProperty on it in the domain ontology")
         return rows[0]["property"]
 
     def stop(self) -> None:

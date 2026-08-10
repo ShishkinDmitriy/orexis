@@ -265,7 +265,12 @@ class SubscribingModule(PerceptionModule):
         alternative is waiting out the OLD cadence, which after a relaxation is up to a quarter
         of an hour of the agent knowingly running a policy it has just abandoned.
         """
-        if belief_term.rsplit("#", 1)[-1] not in SUBSCRIBING_BLOCK.terms.values():
+        # Compared whole. This used to strip the namespace off and match on the local name,
+        # which was a latent bug rather than a shortcut: two packages may each declare a
+        # `slowSleepS` in their own namespace, and the stripped form cannot tell them apart —
+        # so a revision of somebody else's belief would have been taken up as this module's.
+        # A block's terms are full IRIs, so there is nothing to strip.
+        if belief_term not in SUBSCRIBING_BLOCK.terms.values():
             return
         self.beliefs = self.agent.beliefs.read(SUBSCRIBING_BLOCK)
         for sensor in self.sensors:
