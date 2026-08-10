@@ -15,13 +15,11 @@ temperature 21.4 — three numbers in two dimensions, two of which look identica
 was a convention in prose; it is a stated fact now, and `calibration:quantityUnit` is where a
 sensor says it.
 
-**The same plug-in mechanism as a capability; a different bearer.** Rule 2 defines a capability
-as a named ability with interchangeable implementations and says nothing about who bears it, so
-this is one. What differs is what bears it, and selection follows from that: a capability is
-borne by an AGENT and derived into the graph at genesis, while a calibration is borne by a
-BINDING and chosen at runtime from what the sensor declares. An agent's capability is about what
-it IS, which the world should hold and validate; a calibration is about what a device SPEAKS,
-which only the device can say.
+**The same mechanism as a capability; a different bearer.** A capability is derived onto an
+agent as `ag:hasCapability`; a calibration is derived onto a SENSOR as
+`calibration:calibratedBy`, from the `calibration:curve` its world states or from the absence of
+one. Premise in the world, conclusion in the derived graph, lookup at runtime — the discipline
+is the same, and only the bearer and the predicate differ.
 
 **Today's member is `Identity`, and that is honest rather than a placeholder.** The firmware
 already scales before it publishes, so from the agent's side the calibration genuinely is the
@@ -41,19 +39,11 @@ from . import loader
 class Calibration:
     """One way of turning a raw value into a quantity.
 
-    `TERM` and `DEFAULT` work exactly as they do for a codec: a stated calibration is answered
-    only by the member whose term it is, silence only by the default, and `agent.loader` refuses
-    a build with two defaults or two members of one term. Explicit beats default structurally,
-    not by ordering.
+    `TERM` names what this class implements, and there is no default here: which member serves a
+    sensor that states no curve is decided by `calibrations/identity/rules.ru`.
     """
 
     TERM: str = ""
-    DEFAULT: bool = False
-
-    @classmethod
-    def claims(cls, sensor) -> bool:
-        stated = getattr(sensor, "calibration", None)
-        return stated == cls.TERM if stated else cls.DEFAULT
 
     def apply(self, sensor, raw: float) -> float:
         """The quantity this raw value stands for, in the unit the sensor declares.
@@ -68,12 +58,11 @@ class Calibration:
 
 
 def calibration_for(sensor) -> Calibration | None:
-    """The calibration this binding selects, or None if this build carries no such member.
+    """Whichever calibration genesis decided serves this sensor, or None if this build lacks it.
 
-    None is reported rather than raised, as everywhere else here: a world naming a curve a
-    leaner build does not carry should cost one unread sensor and a warning, not a dead agent.
+    A lookup of the derived `calibration:calibratedBy`. None is reported rather than raised, as
+    everywhere else here: a world naming a curve a leaner build does not carry should cost one
+    unread sensor and a warning, not a dead agent.
     """
-    for cls in loader.calibrations():
-        if cls.claims(sensor):
-            return cls()
-    return None
+    cls = loader.calibrations().get(sensor.calibrated_by)
+    return cls() if cls else None

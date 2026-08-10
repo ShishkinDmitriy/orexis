@@ -68,11 +68,11 @@ class Sensor:
     # with one credential, so it sends one message and each sensor takes its own field.
     reading_pointer: str | None = None
     command_topic: str | None = None
-    # The two ends of the pipeline the pointer sits in the middle of, and both are None in every
-    # shipped world: a binding that names neither gets the default member of each, which is what
-    # keeps a world written before they existed reading exactly as it did.
-    encoding: str | None = None      # how its bytes become a document — codec:encoding
-    calibration: str | None = None   # how a raw value becomes a quantity — calibration:calibratedBy
+    # The two ends of the pipeline the pointer sits in the middle of. Both are DERIVED — genesis
+    # writes them from what the world stated, or from its silence — so neither is ever None in a
+    # world that has been through genesis, and a shape refuses one that is.
+    decoded_by: str | None = None     # which codec — codec:decodedBy
+    calibrated_by: str | None = None  # which calibration — calibration:calibratedBy
     # What unit that quantity is in, as a QUDT IRI. Not the same kind of fact as the two above:
     # they choose an implementation, this states what the number MEANS. A board reporting soil
     # moisture 0.183 and air humidity 0.46 sends two numbers that look identical, and nothing but
@@ -159,7 +159,7 @@ def _sensors_q(agent_uri: str) -> str:
     about how to reach it varies by transport, and a driver is picked from what is there."""
     return f"""
 SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic
-       ?readingPointer ?commandTopic ?encoding ?calibration ?quantityUnit
+       ?readingPointer ?commandTopic ?decodedBy ?calibratedBy ?quantityUnit
 WHERE {{
   <{agent_uri}> ag:polls ?sensor .
   ?sensor ag:localId ?localId ; ag:monitors ?subject ; sosa:observes ?observes .
@@ -169,8 +169,8 @@ WHERE {{
   OPTIONAL {{ ?sensor ag:readingTopic ?readingTopic }}
   OPTIONAL {{ ?sensor ag:readingPointer ?readingPointer }}
   OPTIONAL {{ ?sensor ag:commandTopic ?commandTopic }}
-  OPTIONAL {{ ?sensor codec:encoding ?encoding }}
-  OPTIONAL {{ ?sensor calibration:calibratedBy ?calibration }}
+  OPTIONAL {{ ?sensor codec:decodedBy ?decodedBy }}
+  OPTIONAL {{ ?sensor calibration:calibratedBy ?calibratedBy }}
   OPTIONAL {{ ?sensor calibration:quantityUnit ?quantityUnit }}
  }}"""
 
@@ -265,7 +265,7 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
             bus=r.get("bus"), reading_topic=r.get("readingTopic"),
             reading_pointer=r.get("readingPointer"),
             command_topic=r.get("commandTopic"),
-            encoding=r.get("encoding"), calibration=r.get("calibration"),
+            decoded_by=r.get("decodedBy"), calibrated_by=r.get("calibratedBy"),
             quantity_unit=r.get("quantityUnit"),
         )
         for r in bindings(query(_sensors_q(me.uri)))

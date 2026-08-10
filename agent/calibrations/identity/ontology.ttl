@@ -5,16 +5,20 @@
 
 <http://example.org/agora/calibration> a owl:Ontology ;
     rdfs:label "Agora calibrations" ;
-    rdfs:comment """How a raw value becomes a QUANTITY — the last of the three stages a reading passes through. Two things happen here and only one of them is arithmetic: a raw number is SCALED by whatever curve this device follows, and the result is given a UNIT. The second is easy to forget and bites first, because a board reporting several properties puts a soil moisture of 0.183 and an air humidity of 0.46 in the same store looking identical while meaning different things. A family borne by a BINDING rather than by an agent, so a member is declared on the sensor and chosen at runtime; nothing about an agent is derived from it. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.""" .
+    rdfs:comment """How a raw value becomes a QUANTITY — the last of the three stages a reading passes through. Two things happen here and only one of them is arithmetic: a raw number is SCALED by whatever curve this device follows, and the result is given a UNIT. The second is easy to forget and bites first, because a board reporting several properties puts a soil moisture of 0.183 and an air humidity of 0.46 in the same store looking identical while meaning different things. A family borne by a BINDING rather than by an agent — so what is derived at genesis is a fact about the SENSOR, calibration:calibratedBy, and not ag:hasCapability on anyone. Same mechanism as a capability, same discipline of premise-then-conclusion; only the bearer and the predicate differ. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.""" .
 
 #################  The family  #################
 
 calibration:Calibration a owl:Class ; rdfs:label "Calibration" ;
     rdfs:comment "One way of turning what a device reported into what it means. A family because a curve is per-DEVICE and not per-model: two probes of one part number in different soil do not share one, which is the test for a family rather than a constant." .
 
+calibration:curve a owl:ObjectProperty ; rdfs:range calibration:Calibration ;
+    rdfs:label "curve" ;
+    rdfs:comment "THE PREMISE, stated by the world: which curve this device's raw values follow. ABSENT means calibration:Identity, which is what every sensor here relies on today because the firmware scales before it publishes — so no shipped world states one." .
+
 calibration:calibratedBy a owl:ObjectProperty ; rdfs:range calibration:Calibration ;
     rdfs:label "calibrated by" ;
-    rdfs:comment "Which curve turns this device's raw values into quantities. ABSENT means calibration:Identity, which is what every sensor here relies on today. A stated calibration is answered only by the member whose term it is, so it can never be overruled by the default." .
+    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which calibration actually serves this sensor. A world states the curve a probe follows; genesis writes down what serves it. The same premise-and-conclusion discipline as ag:senseMode and ag:hasCapability, applied to a fact borne by a binding rather than by an agent." .
 
 #################  The unit  #################
 

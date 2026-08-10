@@ -7,24 +7,22 @@ which value in the document is anyone's, not what the number means. It codes bot
 is why it is a codec and not a parser — a cadence published to a board is encoded by the same
 package that decodes what the board sends back.
 
-**The same plug-in mechanism as a capability; a different bearer.** Rule 2 defines a capability
-as a named ability with interchangeable implementations, and says nothing about who bears it —
-so this is one, by that definition. What differs is what it is attached to, and the selection
-follows from that:
+**The same mechanism as a capability; a different bearer.** Rule 2 defines a capability as a
+named ability with interchangeable implementations and says nothing about who bears it, so this
+is one — it is simply not something an AGENT has. A capability is derived onto an agent as
+`ag:hasCapability`; a codec is derived onto a SENSOR as `codec:decodedBy`. Same discipline
+either way: the world states a premise, genesis writes the conclusion into the derived graph,
+and the runtime looks it up.
 
-    capabilities/                      borne by an AGENT   selected at genesis, derived into
-                                                           the graph as `ag:hasCapability`
-    transports/ codecs/ calibrations/  borne by a BINDING  selected at runtime, by `claims()`
-                                                           from what the sensor declares
+**Which is why nothing here searches.** An earlier draft of this file asked each class whether
+it `claims()` a sensor — re-deciding at every boot what genesis already knew, from facts that
+were already in the graph, and then not writing the answer down. That cost three things this
+project normally refuses: a world could name a codec no build implements and still validate;
+nothing could inspect a sensor's pipeline, because it existed only as the outcome of a Python
+loop; and which member won depended on `PROVIDES` iteration order, which guarantees nothing.
+`codecs/json/rules.ru` decides it now, and a shape checks there is exactly one answer.
 
-That is not a convention, it follows from the bearer. An agent's capability is about what it
-IS, which is a fact the world should hold and validate. A binding's is about what a device
-SPEAKS, which only the device can say and which no world should have to restate. So this tree
-ships no `rules.ru` and grants nothing — not because it is lesser, but because there is nothing
-about an agent to derive.
-
-Adding a codec is adding a directory under `codecs/`: no capability, no derivation, no edit
-here. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.
+See knowledge/decisions/bytes-become-a-quantity-in-stages.md.
 """
 
 from __future__ import annotations
@@ -39,31 +37,14 @@ class CodecError(ValueError):
 class Codec:
     """One wire format.
 
-    Two class attributes decide selection, and between them they make *explicit beats default*
-    structural rather than a matter of who is asked first:
-
-    `TERM`      the T-Box term a binding names to ask for this codec by name.
-    `DEFAULT`   whether a binding that names NO codec gets this one.
-
-    Exactly one member may be the default and no two may share a term; `agent.loader` refuses
-    a build that breaks either, because both would otherwise resolve silently to whichever
-    class the filesystem happened to yield first.
+    `TERM` is the T-Box term this class implements — the same contract a capability module's
+    `CAPABILITY` has, and how `agent.loader` maps a derived fact back to the code that serves
+    it. There is no `DEFAULT` here: what a sensor gets when its world states nothing is decided
+    by this package's `rules.ru`, which is where a default belongs, because a default computed
+    in Python is a fact nothing can read.
     """
 
     TERM: str = ""
-    DEFAULT: bool = False
-
-    @classmethod
-    def claims(cls, sensor) -> bool:
-        """Whether this codec is the one that binding asked for.
-
-        A stated encoding is answered ONLY by the codec whose term it is — so a default can
-        never shadow an explicit choice, however the classes are ordered. Silence is answered
-        only by the default. The two branches are disjoint by construction, which is the whole
-        reason this is not a `for` loop over claims that happen to be written carefully.
-        """
-        stated = getattr(sensor, "encoding", None)
-        return stated == cls.TERM if stated else cls.DEFAULT
 
     def decode(self, payload: bytes):
         """The document these bytes hold. Raises `CodecError` if they are not one."""
@@ -80,14 +61,15 @@ class Codec:
 
 
 def codec_for(sensor) -> Codec | None:
-    """The codec this binding selects, or None if this build carries no such format.
+    """Whichever codec genesis decided serves this sensor, or None if this build lacks it.
 
-    None is a legitimate answer and is reported, not raised — the same shape of fact as a
-    transport that cannot speak to a device or a capability no package implements. A world may
-    legitimately name a format a leaner build does not carry, and the honest failure is one
-    sensor going unread with a warning, not an agent that will not start.
+    A lookup of the derived `codec:decodedBy`, exactly as `agent.provider(family)` looks up a
+    capability — never a search, and never a default applied here.
+
+    None is a legitimate answer and is reported, not raised: a world may name a member that is
+    declared in the vocabulary and implemented by nobody, which is the position `ag:Polling` and
+    `ag:Consulting` already hold. The honest cost is one unread sensor and a warning, not a
+    society that cannot start.
     """
-    for cls in loader.codecs():
-        if cls.claims(sensor):
-            return cls()
-    return None
+    cls = loader.codecs().get(sensor.decoded_by)
+    return cls() if cls else None

@@ -22,10 +22,6 @@ class IdentityCalibration(Calibration):
 
     TERM = IDENTITY
 
-    # What a binding that names no calibration gets, which is every sensor in every shipped
-    # world. Exactly one member may claim it; `agent.loader` refuses a build where two do.
-    DEFAULT = True
-
     def apply(self, sensor, raw: float) -> float:
         """The raw value, as it stands.
 

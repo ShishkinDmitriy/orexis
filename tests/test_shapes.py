@@ -72,9 +72,24 @@ def _report(data: rdflib.Graph) -> str:
 
 
 def _mutate(update: str) -> rdflib.Graph:
-    """Apply a change to the seeded belief base and re-validate the result."""
+    """Apply a change to the seeded belief base, re-derive, and validate the result.
+
+    The re-derivation is what makes a mutated world one genesis could actually have produced.
+    A test that ADDS a sensor and stops there builds a graph with a premise and no conclusion —
+    which no world ever has, and which now fails validation for a reason that has nothing to do
+    with what the test is about: every sensor is derived a codec and a calibration, and one
+    inserted by hand has neither.
+
+    Additive rather than cleared-and-recomputed, which is the opposite of what
+    `test_capabilities._world_with_push_sensor` does and deliberately so. That one CHANGES a
+    premise and needs the previous conclusion gone. These mostly delete beliefs and hand-write
+    the one derived fact they are about, so clearing would take away what they just set up.
+    Adding what the rules would add leaves both intact.
+    """
     ds = genesis_store()
     ds.update("PREFIX ag: <http://example.org/agora#>\n" + update)
+    for rule in loader.rule_files():
+        ds.update(genesis.substitute(rule.read_text(), ds))
     return _flatten(ds)
 
 

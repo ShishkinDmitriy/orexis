@@ -19,12 +19,6 @@ class JsonCodec(Codec):
 
     TERM = JSON
 
-    # What a binding that names no encoding gets. Every shipped world states none, so this is
-    # what keeps them reading exactly as they did before this package existed. Exactly one
-    # member may claim it — `agent.loader` refuses a build where two do, because "the default"
-    # resolving to whichever class was yielded first is the quietest kind of wrong.
-    DEFAULT = True
-
     def decode(self, payload: bytes):
         """The document these bytes hold.
 

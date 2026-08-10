@@ -17,11 +17,14 @@ wherever they sit — and never imports a module from any of them.
 
 **The trees are one mechanism split by BEARER, not by importance.** Every one of them is a
 family with interchangeable members registered by `PROVIDES`, which is what rule 2 calls a
-capability. What differs is what carries it, and selection follows from that: a capability is
-borne by an AGENT and derived into the graph at genesis, while a transport, a codec and a
-calibration are borne by a BINDING and chosen at runtime by `claims()`. An agent's ability is
-about what it IS, which the world should hold and validate; a binding's is about what a device
-SPEAKS, which only the device can say and no world should have to restate.
+capability. What differs is what carries the conclusion: `ag:hasCapability` on an AGENT for the
+first, a predicate on the SENSOR for the rest. Both are derived at genesis from a premise the
+world states, because both are known before anything runs — a board's protocol and its wire
+format are hardware, not discoveries.
+
+`transports/` is the exception and is known to be one: `MqttDriver.claims()` still re-decides at
+every boot what genesis could have written down. See the seams in
+knowledge/decisions/bytes-become-a-quantity-in-stages.md.
 
 Inside a package, the same four names mean the same four things every time:
 
@@ -66,9 +69,11 @@ TRANSPORTS = "transports"
 CODECS = "codecs"
 CALIBRATIONS = "calibrations"
 
-# The trees whose members are chosen per BINDING at runtime rather than derived onto an agent at
-# genesis. Grouped because they share a selection protocol — `TERM`, `DEFAULT`, `claims()` — and
-# the same guarantee that an explicit statement beats a default.
+# The trees whose members are borne by a BINDING rather than by an agent. Everything else is the
+# same: the world states a premise, that package's `rules.ru` derives which member serves the
+# SENSOR, and the runtime looks the term up against `PROVIDES`. What differs from a capability is
+# the bearer and the predicate — `codec:decodedBy` on a sensor rather than `ag:hasCapability` on
+# an agent — and not when it is decided, which is genesis either way.
 BOUND_KINDS = (TRANSPORTS, CODECS, CALIBRATIONS)
 
 # The base vocabulary, merged before anything else.
@@ -219,58 +224,47 @@ def drivers() -> tuple[type, ...]:
     return tuple(cls for p in of_kind(TRANSPORTS) for cls in p.provides())
 
 
-def _selectable(kind: str) -> tuple[type, ...]:
-    """Every member of a binding-borne family, checked for the two ways it could be ambiguous.
+def _members(kind: str) -> dict[str, type]:
+    """term -> the class implementing it, for one binding-borne family.
 
-    Selection walks these and takes the first whose `claims()` answers — so the build is only
-    well-defined if at most one member can answer any given question. Two ways it might not be,
-    and both are refused here rather than resolved:
+    The same shape as `registry()` and for the same reason: a derived fact names a TERM, and
+    something has to map that back to code. Which member serves a sensor is decided by that
+    package's `rules.ru` at genesis and read off the graph — nothing here searches, and there is
+    no default to apply, because a default that lived in Python would be a fact nothing could
+    query.
 
-      * **two members of one term** — a binding naming it would get whichever the filesystem
-        yielded first, which is a coin flip dressed as a choice;
-      * **two defaults** — worse, because it needs no world to trigger it. Every existing
-        binding names nothing, so the wrong default would be what the whole fleet silently got.
-
-    Refusing at load is the only place this is cheap. Neither shows up as an error later: both
-    produce a build that runs and reads its devices through the wrong member.
+    One term implemented twice is refused rather than resolved. It would otherwise be settled by
+    whichever package the filesystem yielded first, which is a coin flip dressed as a choice,
+    and it produces not an error but a build that reads its devices through the wrong member.
     """
-    members: dict[str, type] = {}
-    default: type | None = None
+    out: dict[str, type] = {}
     for package in of_kind(kind):
         for cls in package.provides():
             term = getattr(cls, "TERM", "")
             if not term:
                 raise RuntimeError(
                     f"{package.import_name} provides {cls.__name__}, which names no TERM — "
-                    f"a {kind[:-1]} must say which term a binding uses to ask for it"
+                    f"a member must say which term a derivation uses to reach it"
                 )
-            if term in members:
+            if term in out:
                 raise RuntimeError(
-                    f"{term} is implemented twice: {members[term].__name__} and "
+                    f"{term} is implemented twice: {out[term].__name__} and "
                     f"{cls.__name__}. One term, one member."
                 )
-            members[term] = cls
-            if getattr(cls, "DEFAULT", False):
-                if default is not None:
-                    raise RuntimeError(
-                        f"{default.__name__} and {cls.__name__} both claim to be what a "
-                        f"binding stating no {kind[:-1]} gets. One default, or none."
-                    )
-                default = cls
-    return tuple(members.values())
+            out[term] = cls
+    return out
 
 
 @lru_cache(maxsize=1)
-def codecs() -> tuple[type, ...]:
-    """Every codec there is. Which one a binding speaks is its own declaration — see
-    `agent.codec.codec_for`."""
-    return _selectable(CODECS)
+def codecs() -> dict[str, type]:
+    """codec term -> the class that decodes it — see `agent.codec.codec_for`."""
+    return _members(CODECS)
 
 
 @lru_cache(maxsize=1)
-def calibrations() -> tuple[type, ...]:
-    """Every calibration there is — see `agent.calibration.calibration_for`."""
-    return _selectable(CALIBRATIONS)
+def calibrations() -> dict[str, type]:
+    """calibration term -> the class that applies it — see `agent.calibration.calibration_for`."""
+    return _members(CALIBRATIONS)
 
 
 def describe() -> str:
