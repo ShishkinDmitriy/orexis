@@ -164,23 +164,22 @@ class Metrics:
         write amplification, and neither number alone shows it. Now that the ratio triggers a
         compaction, the compaction count is what tells a reader why the bytes line has teeth in
         it, and `belief_revisions` is what tells them an agent is no longer running exactly the
-        beliefs its author wrote. See agora/upkeep.py and agora/review.py.
+        beliefs its author wrote. See agora/upkeep.py and capabilities/review/.
+
+        **Two sources, because they are two different things now.** Compaction is every agent's
+        and comes off the kernel; the revision counts come off a module an agent may not have.
+        An agent given no room to move reports the first and not the others — and the ABSENCE of
+        those lines is itself the reading, saying this one was never granted any latitude rather
+        than that it has had no second thoughts.
         """
-        reviewer = getattr(self.agent, "reviewer", None)
-        if reviewer is None:
-            return {}  # an agent built before its reviewer, or a test that never made one
-        return {
-            "belief_compactions": reviewer.upkeep.compactions,
-            "belief_revisions": reviewer.revisions,
-            # Decisions to change nothing. A conscience that only reported the changes it made
-            # would look identical whether it was thinking hard and concluding no, or not
-            # arising at all — and those are very different states to be in.
-            "belief_reviews_declined": reviewer.declined,
-            # Revisions the shapes refused. Flat at zero says the rules are proposing only what
-            # the constitution allows; a rising line is a rule whose arithmetic disagrees with
-            # the shapes, which is a bug in the rule and not a misbehaving agent.
-            "belief_revisions_refused": reviewer.refused,
-        }
+        upkeep = getattr(self.agent, "upkeep", None)
+        out = {} if upkeep is None else {"belief_compactions": upkeep.compactions}
+        for module in getattr(self.agent, "modules", ()):
+            try:
+                out.update(module.reports())
+            except Exception as exc:
+                log.error("%s: %s could not report on itself: %s", self.agent.id, module.name, exc)
+        return out
 
     # --- reporting ---
 

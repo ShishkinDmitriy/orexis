@@ -14,6 +14,7 @@ from agent.world import WorldError, load_self, load_world
 from agent.capabilities.actuation import ACTUATION
 from agent.capabilities.market import BIDDING, HOSTING
 from agent.capabilities.perception import LISTENING, SUBSCRIBING
+from agent.capabilities.review import RECKONING
 
 from conftest import genesis_store, query_fn
 
@@ -26,8 +27,30 @@ def me(query):
 # --- what the shipped world derives ----------------------------------------
 
 def test_plant_agent_gets_subscribing_and_bidding(me):
-    """Wired to a scheduled sensor and into a market — so it perceives and it buys."""
-    assert me("fern").capabilities == {SUBSCRIBING, BIDDING}
+    """Wired to a scheduled sensor and into a market — so it perceives and it buys.
+
+    And given room to move on its cadence, so it may also re-pick it. Three premises, three
+    capabilities, none of them written down: two follow from what it is wired to and the third
+    from what its world allows it.
+    """
+    assert me("fern").capabilities == {SUBSCRIBING, BIDDING, RECKONING}
+
+
+def test_a_mandate_whose_ends_meet_grants_nothing(me):
+    """`succulent`'s cadence is pinned — `ag:notBelow 900 ; ag:notAbove 900`.
+
+    That is not an oversight: it is how an author says a figure is not up for review, by leaving
+    nowhere to go rather than by a flag somewhere saying not to look, and `review.Range.fixed`
+    reads it exactly that way. Granting on the mere *presence* of a mandate would hand it a
+    capability whose every arising could only conclude nothing — a reviewer waking for ever to
+    re-derive that there is one permitted value and it already holds it.
+
+    Latitude is the grant, so where there is none there is nothing to grant. The wider rule is
+    AGENTS.md's: a capability nothing could vary is a function wearing a capability's name.
+    """
+    succulent = me("succulent")
+    assert RECKONING not in succulent.capabilities
+    assert succulent.capabilities == {SUBSCRIBING, BIDDING}
 
 
 def test_supplier_gets_hosting_and_actuation(me):
@@ -101,7 +124,7 @@ def test_the_smallest_world_yields_perception_and_nothing_else():
     stand alone, which is the whole claim of deriving them.
     """
     me = load_self(query_fn(genesis_store(world="sensing")), "fern")
-    assert me.capabilities == {SUBSCRIBING}
+    assert me.capabilities == {SUBSCRIBING, RECKONING}
     assert not me.can(BIDDING) and not me.can(ACTUATION)
     assert me.markets == () and me.actuators == ()
     assert me.acts_for is None  # it advances nobody's interest; it only records

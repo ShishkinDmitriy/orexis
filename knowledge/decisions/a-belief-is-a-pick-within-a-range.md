@@ -44,15 +44,26 @@ So the room comes from constraints, and there are three sources:
 
 | | what it says | where it lives |
 |---|---|---|
-| **world** | what the society allows *any* agent | figures on the capability family, e.g. `ag:minSleepS` / `ag:maxSleepS` |
-| **sensor** | what the equipment can do | on a device — *declared, and nothing states one yet* |
-| **self** | what **this** agent commits to | `ag:commits` in its own beliefs |
+| **constitution** | what the society allows *any* agent | figures on the capability family, e.g. `ag:minSleepS` / `ag:maxSleepS` |
+| **hardware** | what the equipment can do | on a device — *declared, and nothing states one yet* |
+| **mandate** | what **this** agent's world allows it | `ag:commits`, in `world.ttl` |
 
-They intersect, and a commitment can only narrow: one looser than the constitution *is* the
-constitution. The author's job becomes **constraining well rather than guessing well**, and how
-much autonomy each agent has stops being implied and becomes a line you can read and diff.
+They intersect, and a mandate can only narrow: one looser than the constitution *is* the
+constitution.
 
-An author who wants a figure fixed writes a commitment with no room in it. **"Leave this alone" is
+> **Amended.** The third source was called *self* and lived in the agent's own beliefs, on the
+> reasoning that how far an agent will let itself move is its own opinion. That is backwards —
+> **an agent constraining itself is not a constraint, it is a choice.** A range is what an agent
+> is *allowed*, imposed by whoever ratified its world; the pick inside it is what the agent
+> wants, and only that stays private. Range public, value private. Making it public is also what
+> made the capability derivable and put the two ends of "a world may not widen the constitution"
+> in graphs a single shape can compare. See
+> [self-review-is-a-capability](self-review-is-a-capability.md).
+
+The author's job becomes **constraining well rather than guessing well**, and how much autonomy
+each agent has stops being implied and becomes a line you can read and diff.
+
+An author who wants a figure fixed writes a mandate with no room in it. **"Leave this alone" is
 said by leaving nowhere to go**, not by a flag somewhere that says not to look.
 
 ## Which beliefs may move is a fact about the term
@@ -186,6 +197,11 @@ have to fire for everybody — which is the kernel wearing a disguise. Compactio
 *is* capability-shaped is reviewing something an agent **chose**; keeping your own house is not a
 choice.
 
+> **Amended.** Still true, and it acquired teeth: once review became a capability an agent might
+> not have, upkeep riding the review timer would have made a mandate-less agent stop compacting
+> silently. It runs its own hourly clock now. See
+> [self-review-is-a-capability](self-review-is-a-capability.md).
+
 # Consequences
 
 - **"Authored once at birth, never touched by start or stop" still holds**, and is now
@@ -196,8 +212,10 @@ choice.
   What replaces it is the revisions graph: every decision records the term, the values either
   side, the evidence in words, the time, and when to look again. An agent that cannot say why it
   changed its mind — or why it did not — has not reviewed anything.
-- **Every world's beliefs files grew a commitment.** That is the cost of moving the author's job
-  from picking to constraining, and it is the readable half of the change.
+- **Every world's files grew a mandate.** That is the cost of moving the author's job from
+  picking to constraining, and it is the readable half of the change. It went into the beliefs
+  files first and belongs in `world.ttl` — what an agent is *allowed* is a governance fact, not
+  an opinion it holds about itself.
 - **Derived numbers are rounded on the way into the store.** A Python float divided to full
   precision produces nineteen-digit decimals, which the store accepts and returns and then fails
   to compare — and a SPARQL `BIND` whose expression raises leaves its variable *unbound while

@@ -117,6 +117,24 @@ ag:succulent_agent a ag:Agent ;
     ag:bidsIn ag:barrel1_market ;
     ag:eventTopic "readings/succulent" .
 
+##########  What each agent may re-pick, and how far  ##########
+#  A MANDATE: the room this world gives an agent on one of its own settings. Here rather than in
+#  its beliefs because latitude GRANTED is a governance fact — what an agent is allowed, not what
+#  it wants. The pick inside the range stays private; the range does not.
+#
+#  Stating one is also what GRANTS the review capability: room to move and the ability to use it
+#  are one decision said once, so `capabilities/review/rules.ru` derives ag:Reckoning from exactly
+#  these triples. An agent with no mandate never arises, which is how a deployment that wants no
+#  drift says so — by granting none, rather than by omitting a belief and hoping something
+#  notices. The supplier has none: it holds no revisable setting, so there is nothing to give it
+#  room on.
+#
+#  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
+
+ag:fern_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .
+ag:tomato_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .
+ag:succulent_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 900 ; ag:notAbove 900 ] .
+
 ##########  Sensors — scheduled boards: they keep to an interval and sleep between  ##########
 
 ag:moisture_sensor_fern a ag:Sensor ;

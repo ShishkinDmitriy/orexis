@@ -98,4 +98,5 @@ modules = [
     "agent.capabilities.actuation",
     "agent.capabilities.market",
     "agent.capabilities.perception",
+    "agent.capabilities.review",
 ]

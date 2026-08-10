@@ -21,10 +21,9 @@ ag:tomato_agent
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
 ag:tomato_agent ag:metricsIntervalS 60 .
 
-##  Self-review — how often at the very least, and how much room it gives itself.
-#   Omit ag:reviewIntervalS and it never revises anything: its beliefs stay exactly what
-#   genesis wrote. The commitment is the SELF constraint — narrower than the constitution's
-#   10..900 — so the figure above is a first pick rather than a floor, and this says how far
-#   the agent will let itself wander from it. See decisions/a-belief-is-a-pick-within-a-range.
+##  Self-review — how often at the very least.
+#   Required because the world gave this agent room to move (ag:commits, in world.ttl): an
+#   agent granted none derives no review capability and needs no interval. A FLOOR and not a
+#   schedule — a decision plans its own next arising from when its effect could show.
+#   See knowledge/decisions/self-review-is-a-capability.md.
 ag:tomato_agent ag:reviewIntervalS 300 .
-ag:tomato_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .

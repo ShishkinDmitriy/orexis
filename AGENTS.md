@@ -82,6 +82,15 @@ second `deduced`, and since the provenance split they are distinguishable rather
 distinct. So "deduced at genesis" is the rule; "computed from the wiring" is how it happens to
 work for the one family whose hardware forces the answer.
 
+**Each capability is granted by whatever fact makes it meaningful, and that fact is its own.** The
+premise lives in the capability's `rules.ru`, and there is no pattern to fit a new one into. Three
+are granted by wiring — `ag:hasActuator`, `ag:bidsIn`/`ag:hosts`, `ag:polls` and a sense mode —
+because they are about equipment or a position in a market. `ag:Reckoning` is granted by
+**latitude**: revising your own settings means nothing without settings you are permitted to move,
+so an `ag:commits` mandate whose ends differ is its premise. When you add one, ask what makes
+*yours* meaningful rather than which of these it resembles. See
+[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md).
+
 **What the prohibition is actually against** is a capability nobody is answerable for. That was
 unenforceable while a declared one and a derived one looked identical in the graph — which is why
 the rule had to be absolute. It no longer is: a derivation writes to `graph/world/derived`, the
@@ -203,13 +212,16 @@ Beliefs are the agent's: **authored** once at birth, never touched by start or s
 that would reset them on a restart is a bug, not a convenience.
 
 But a belief is a **point chosen inside a range**, not a constant, and what genesis wrote is the
-first pick rather than a bound. An agent that states `ag:reviewIntervalS` re-picks on its own
-clock, inside the room its own `ag:commits` leaves it — so the author's job is to constrain well,
-not to guess well. Which terms may move is one triple in the owning package's `ontology.ttl`; a
-review rule is `capabilities/<name>/review.rq`, SPARQL and never Python; and a revision is
-legitimate exactly when `validate_agent` still passes, which is the same call the agent makes at
-boot. An agent that states no interval never reviews itself. See
-[a-belief-is-a-pick-within-a-range](knowledge/decisions/a-belief-is-a-pick-within-a-range.md).
+first pick rather than a bound. An agent whose **world gives it room to move** — `ag:commits`, in
+`world.ttl` — re-picks on its own clock inside that room, so the author's job is to constrain
+well, not to guess well. **The mandate is also the grant**: `capabilities/review/` derives its
+capability from exactly those triples, so an agent given no room has no review module, keeps no
+summaries and never arises. Which terms may move is one triple in the owning package's
+`ontology.ttl`; a review rule is `capabilities/<name>/review.rq`, SPARQL and never Python; and a
+revision is legitimate exactly when `validate_agent` still passes, which is the same call the
+agent makes at boot. **Compaction is not part of this** — it is not a choice, so it stayed in the
+kernel on a clock of its own. See
+[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md).
 
 ## Three traps worth knowing, and one that is closed
 

@@ -83,6 +83,17 @@ class Module:
         """
         return {}
 
+    def reports(self) -> dict:
+        """Fields this module wants in its agent's own health series. Most have none.
+
+        Here rather than in `metrics.py` because the kernel must not name a capability: a build
+        without a package would otherwise import one that is not there, and the reporting code
+        would carry a list of every capability that ever wanted a number. A module that is not
+        loaded contributes no fields, and the ABSENCE of its lines is itself a reading — it says
+        this agent was never granted that ability, rather than that it has had nothing to say.
+        """
+        return {}
+
     def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
         """How close this reading puts me to my own trouble: 0.0 (fine) to 1.0 (trouble).
 
