@@ -77,6 +77,13 @@ structural, hosting an auction is per-round.** So who convenes *this* auction co
 which side is short at that moment, while who owns the venue stays where it is. Nothing here
 moves toward that.
 
+And one route to it is closed rather than merely unbuilt. A per-round host looks like a job for a
+**role** — an agent that *is* the host for the duration of one auction — but a role has to be a
+role of something, and this page's own decision is that there is no auction object to be it of. See
+[a-role-needs-something-to-be-a-role-in](/decisions/a-role-needs-something-to-be-a-role-in.md):
+whether positions become roles and whether an auction becomes an object are the same question, and
+the second is the one to argue.
+
 # What an auction is not
 
 - **Not a venue.** Discovery, membership and channels are the market's. An auction has no
