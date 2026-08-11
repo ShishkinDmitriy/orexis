@@ -1,6 +1,6 @@
 """How bytes become a DOCUMENT — one directory per wire format, discovered by looking.
 
-The first of the three stages a reading passes through: codec, then pointer, then calibration.
+The first of the three stages a reading passes through: codec, then pointer, then scaling.
 Borne by a binding rather than by an agent, so a member is chosen at runtime from what the
 sensor declares and nothing is derived into the graph — see `agent/codec.py` for why the bearer
 is what decides that, and knowledge/decisions/bytes-become-a-quantity-in-stages.md for the rest.

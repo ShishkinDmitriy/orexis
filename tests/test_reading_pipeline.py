@@ -1,6 +1,6 @@
 """Bytes become a quantity in three stages, and two of them are derived at genesis.
 
-    bytes ─[codec]→ document ─[pointer]→ raw value ─[calibration]→ quantity
+    bytes ─[codec]→ document ─[pointer]→ raw value ─[scaling]→ quantity
 
 The pointer has its own file (`test_reading_pointer.py`) because it is a function, not a family.
 What is tested here is the two families around it: that which member serves a sensor is DERIVED
@@ -16,8 +16,8 @@ See knowledge/decisions/bytes-become-a-quantity-in-stages.md and issue #26.
 import pytest
 
 from agent import genesis, loader
-from agent.calibration import calibration_for
-from agent.calibrations.identity.terms import IDENTITY, LINEAR
+from agent.scaling import scaling_for
+from agent.scalings.identity.terms import IDENTITY, LINEAR
 from agent.codec import Codec, CodecError, codec_for
 from agent.codecs.json.codec import JsonCodec
 from agent.codecs.json.terms import CBOR, JSON
@@ -43,7 +43,7 @@ def test_every_sensor_is_given_a_codec_and_a_calibration():
     """
     for sensor in sensors_of().values():
         assert sensor.decoded_by == JSON
-        assert sensor.calibrated_by == IDENTITY
+        assert sensor.scaled_by == IDENTITY
 
 
 def test_the_conclusions_land_in_the_derived_graph_not_the_world():
@@ -52,7 +52,7 @@ def test_the_conclusions_land_in_the_derived_graph_not_the_world():
     store = genesis_store(world="sensing")
     asserted = bindings(store.query(PREFIXES + f"""
         SELECT ?s WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-          {{ ?s codec:decodedBy ?a }} UNION {{ ?s calibration:calibratedBy ?b }} }} }}"""))
+          {{ ?s codec:decodedBy ?a }} UNION {{ ?s scaling:scaledBy ?b }} }} }}"""))
     assert asserted == [], "a conclusion was stated in the world rather than derived"
 
     derived = bindings(store.query(PREFIXES + f"""
@@ -64,7 +64,7 @@ def test_the_other_worlds_get_them_too():
     """Nothing about this is specific to the world that grew a second peripheral."""
     for world, agent in (("society", "fern"), ("simulation", "tomato")):
         for sensor in sensors_of(world, agent).values():
-            assert sensor.decoded_by == JSON and sensor.calibrated_by == IDENTITY
+            assert sensor.decoded_by == JSON and sensor.scaled_by == IDENTITY
 
 
 # --- an explicit statement beats the default, and the rule decides it ------
@@ -101,9 +101,9 @@ def test_stating_an_encoding_beats_the_default():
 
 
 def test_stating_a_curve_beats_the_default():
-    me = load_self(query_fn(_world_stating("calibration:curve", "calibration:Linear")), "fern")
+    me = load_self(query_fn(_world_stating("scaling:curve", "scaling:Linear")), "fern")
     probe = {s.local_id: s for s in me.sensors}["moisture_sensor_fern"]
-    assert probe.calibrated_by == LINEAR
+    assert probe.scaled_by == LINEAR
 
 
 def test_a_stated_premise_produces_exactly_one_conclusion():
@@ -121,7 +121,7 @@ def test_a_stated_premise_produces_exactly_one_conclusion():
 def test_the_lookup_finds_the_implementation():
     probe = sensors_of()["moisture_sensor_fern"]
     assert isinstance(codec_for(probe), JsonCodec)
-    assert calibration_for(probe).TERM == IDENTITY
+    assert scaling_for(probe).TERM == IDENTITY
 
 
 def test_a_member_this_build_does_not_implement_is_reported_not_raised():
@@ -130,13 +130,13 @@ def test_a_member_this_build_does_not_implement_is_reported_not_raised():
     honest cost is one unread sensor and a warning rather than a society that cannot start."""
     probe = sensors_of()["moisture_sensor_fern"]
     assert codec_for(probe.__class__(**{**vars(probe), "decoded_by": CBOR})) is None
-    assert calibration_for(probe.__class__(**{**vars(probe), "calibrated_by": LINEAR})) is None
+    assert scaling_for(probe.__class__(**{**vars(probe), "scaled_by": LINEAR})) is None
 
 
 def test_the_identity_calibration_changes_nothing():
     """Not `float(raw)` and not a rounding — the contract is that nothing happens."""
     probe = sensors_of()["moisture_sensor_fern"]
-    calibration = calibration_for(probe)
+    calibration = scaling_for(probe)
     for raw in (0.183, 0.0, 21.4, -5.5, 1e-9):
         assert calibration.apply(probe, raw) == raw
 
@@ -213,4 +213,4 @@ def test_stating_a_unit_converted_nothing():
     not touch a single number — #26 is where conversion would arrive, deliberately not here, and
     a calibration that quietly scaled would make every band in every world wrong."""
     for sensor in sensors_of().values():
-        assert calibration_for(sensor).apply(sensor, 0.183) == 0.183
+        assert scaling_for(sensor).apply(sensor, 0.183) == 0.183

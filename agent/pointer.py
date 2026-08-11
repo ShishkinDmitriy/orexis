@@ -2,13 +2,13 @@
 
 A reading arrives as bytes and becomes a quantity in three steps:
 
-    bytes ─[codec]→ document ─[pointer]→ raw value ─[calibration]→ quantity
+    bytes ─[codec]→ document ─[pointer]→ raw value ─[scaling]→ quantity
 
-The outer two are families: `agent/codecs/` and `agent/calibrations/`, each a tree of packages
+The outer two are families: `agent/codecs/` and `agent/scalings/`, each a tree of packages
 whose members are interchangeable. This one is not, and that is a claim worth defending rather
 than an omission. **RFC 6901 works over any tree**, so a pointer written against JSON keeps
 meaning the same thing over CBOR, over MessagePack, and over a struct a binary parser produced —
-nothing about it varies with the codec that made the document or the calibration that consumes
+nothing about it varies with the codec that made the document or the scaling that consumes
 the value. By rule 2, where nothing could differ you have a function.
 
 That indifference is also why deferring the other two cost nothing: a pointer stated today
@@ -39,7 +39,7 @@ def resolve(pointer: str, doc):
     of one would be a collapse rule we invented and then had to defend.
 
     What comes out is **raw** — what the device put on the wire. Turning it into an observed
-    quantity is the calibration's job, and this function is indifferent to it exactly as it is
+    quantity is the scaling's job, and this function is indifferent to it exactly as it is
     indifferent to whichever codec produced `doc`.
 
     The empty pointer is legal in the RFC and means the whole document. It is refused here

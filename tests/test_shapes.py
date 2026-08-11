@@ -77,7 +77,7 @@ def _mutate(update: str) -> rdflib.Graph:
     The re-derivation is what makes a mutated world one genesis could actually have produced.
     A test that ADDS a sensor and stops there builds a graph with a premise and no conclusion —
     which no world ever has, and which now fails validation for a reason that has nothing to do
-    with what the test is about: every sensor is derived a codec and a calibration, and one
+    with what the test is about: every sensor is derived a codec and a scaling, and one
     inserted by hand has neither.
 
     Additive rather than cleared-and-recomputed, which is the opposite of what

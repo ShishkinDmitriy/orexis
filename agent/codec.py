@@ -1,6 +1,6 @@
 """How bytes become a document — the first stage, and a family.
 
-    bytes ─[codec]→ document ─[pointer]→ raw value ─[calibration]→ quantity
+    bytes ─[codec]→ document ─[pointer]→ raw value ─[scaling]→ quantity
 
 A codec knows one wire format and nothing else: not which channel the bytes arrived on, not
 which value in the document is anyone's, not what the number means. It codes both ways, which

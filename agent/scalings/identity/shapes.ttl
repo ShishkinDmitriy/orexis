@@ -1,0 +1,25 @@
+@prefix sh:          <http://www.w3.org/ns/shacl#> .
+@prefix ag:          <http://example.org/agora#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix scaling: <http://example.org/agora/scaling#> .
+
+scaling:SensorIsScaledByExactlyOneShape a sh:NodeShape ;
+    rdfs:comment "Every sensor's raw values are turned into quantities by exactly one scaling, checked on the DERIVED fact. The failure this refuses is quiet in a way the codec one is not: two scalings would not produce a parse error or an empty reading, they would produce a NUMBER — a plausible one, recorded as a measurement, differing from the truth by whatever the losing curve would have done. A reading that is merely wrong is the worst kind to leave to iteration order." ;
+    sh:targetClass ag:Sensor ;
+    sh:property [ sh:path scaling:scaledBy ;
+                  sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:class scaling:Scaling ;
+                  sh:message "a sensor must be scaled by exactly one curve — this is derived from scaling:curve, or from its absence" ] .
+
+scaling:OnlyACurveIsStatedShape a sh:NodeShape ;
+    rdfs:comment "What a world states must be a member of the family. `scaling:Linear` and `scaling:TwoPoint` are declared without implementations and are deliberately NOT refused here — a world may name one, and the build says at startup that it cannot serve it, exactly as ag:Polling does. Declaring a seam has to remain possible." ;
+    sh:targetSubjectsOf scaling:curve ;
+    sh:property [ sh:path scaling:curve ;
+                  sh:maxCount 1 ; sh:class scaling:Scaling ;
+                  sh:message "a device follows one curve — scaling:curve takes one member of scaling:Scaling" ] .
+
+scaling:AUnitIsAUnitShape a sh:NodeShape ;
+    rdfs:comment "At most one unit per sensor. NOT minCount 1, which is a deliberate gap and not an oversight: only world/sensing states units so far, and requiring them would refuse the other two worlds for a fact this change did not set out to backfill. What it does refuse is a sensor claiming to be in two units at once, which is the shape of a bad merge rather than of a bad world." ;
+    sh:targetSubjectsOf scaling:quantityUnit ;
+    sh:property [ sh:path scaling:quantityUnit ; sh:maxCount 1 ;
+                  sh:message "a quantity is in one unit" ] .

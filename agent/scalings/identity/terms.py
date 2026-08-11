@@ -11,15 +11,15 @@ same one and is the authority. See knowledge/decisions/a-package-owns-its-namesp
 from __future__ import annotations
 
 # Where this package's terms live. Held against `ontology.ttl` by `tests/test_layout.py`.
-NS = "http://example.org/agora/calibration#"
+NS = "http://example.org/agora/scaling#"
 
 
 def term(name: str) -> str:
     return NS + name
 
 
-# The family. A member is what `calibration:curve` states and `calibration:calibratedBy` derives.
-CALIBRATION = term("Calibration")
+# The family. A member is what `scaling:curve` states and `scaling:scaledBy` derives.
+SCALING = term("Scaling")
 
 # The members. Identity is what runs today, because the firmware scales before it publishes;
 # the other two are declared so that moving that work off the board (issue #26) is adding a

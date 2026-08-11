@@ -74,7 +74,7 @@ _EXTERNAL = {
     # one of the vocabularies to reach for, so this is the standard companion to what is already
     # in use. `http://`, not `https://`, which is the canonical form QUDT publishes.
     #
-    # Here rather than in `calibrations/identity/ontology.ttl` even though that package is the
+    # Here rather than in `scalings/identity/ontology.ttl` even though that package is the
     # only one that uses it, because the split above is about OWNERSHIP and not about who reads
     # it: an external vocabulary is not a package's to bind, and a package that could rebind
     # `unit:` could silently redirect every unit in the society. Borrowed and not imported — the

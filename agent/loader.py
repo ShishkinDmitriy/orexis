@@ -9,7 +9,7 @@ A **package** is one self-contained thing the society is made of, and it is a di
     agent/capabilities/<n>/  what an agent can DO. The extendable axis.
     agent/transports/<n>/    how a device is REACHED.
     agent/codecs/<n>/        how its bytes become a DOCUMENT.
-    agent/calibrations/<n>/  how a raw value becomes a QUANTITY, with a unit.
+    agent/scalings/<n>/  how a raw value becomes a QUANTITY, with a unit.
 
 All four of those live INSIDE `agent/` because only an agent runtime loads their Python.
 Onboarding reads their `ontology.ttl`, `shapes.ttl` and `rules.ru` — which it finds here,
@@ -67,7 +67,7 @@ VOCABULARY = "vocabulary"
 CAPABILITIES = "capabilities"
 TRANSPORTS = "transports"
 CODECS = "codecs"
-CALIBRATIONS = "calibrations"
+CALIBRATIONS = "scalings"
 
 # The trees whose members are borne by a BINDING rather than by an agent. Everything else is the
 # same: the world states a premise, that package's `rules.ru` derives which member serves the
@@ -262,8 +262,8 @@ def codecs() -> dict[str, type]:
 
 
 @lru_cache(maxsize=1)
-def calibrations() -> dict[str, type]:
-    """calibration term -> the class that applies it — see `agent.calibration.calibration_for`."""
+def scalings() -> dict[str, type]:
+    """scaling term -> the class that applies it — see `agent.scaling.scaling_for`."""
     return _members(CALIBRATIONS)
 
 

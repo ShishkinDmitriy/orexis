@@ -1,6 +1,6 @@
 """The quantity is the raw value.
 
-The only calibration this project has, and the reason it is worth writing down rather than
+The only scaling this project has, and the reason it is worth writing down rather than
 leaving implicit: the stage is not missing, it is set to identity. `firmware/moisture-sensor`
 maps its ADC counts to a fraction before it publishes, so what arrives has already been through
 a curve — one that lives in C, on the board, where changing it means reflashing.
@@ -12,12 +12,12 @@ open to being re-picked as a probe drifts.
 
 from __future__ import annotations
 
-from agent.calibration import Calibration
+from agent.scaling import Scaling
 
 from .terms import IDENTITY
 
 
-class IdentityCalibration(Calibration):
+class IdentityScaling(Scaling):
     """Pass the number through, unchanged and unrounded."""
 
     TERM = IDENTITY

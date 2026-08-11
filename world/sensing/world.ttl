@@ -2,7 +2,7 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix market: <http://example.org/agora/market#> .
-@prefix calibration: <http://example.org/agora/calibration#> .
+@prefix scaling: <http://example.org/agora/scaling#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
 
 #  A ratified world, v1 — the SMALLEST one that produces a working agent.
@@ -69,7 +69,7 @@ ag:fern a sosa:FeatureOfInterest ;
 #  like this one: soil moisture 0.183 and air humidity 0.46 are both dimensionless fractions
 #  and look identical, while 21.4 is degrees Celsius — three numbers, two dimensions, and
 #  before this nothing in the graph said which was which. None of them states a calibration,
-#  so all three get calibration:Identity: the firmware scales before it publishes, and what
+#  so all three get scaling:Identity: the firmware scales before it publishes, and what
 #  arrives is already the quantity. Stating the unit converts nothing.
 
 ag:moisture_sensor_fern a ag:Sensor ;
@@ -78,7 +78,7 @@ ag:moisture_sensor_fern a ag:Sensor ;
     ag:senseMode ag:Scheduled ;     # keeps a given interval -> its agent gains ag:Subscribing
     ag:monitors ag:fern ;
     sosa:observes ag:SoilMoisture ;
-    calibration:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
+    scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
     ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
     ag:commandTopic "sensors/moisture_sensor_fern/command" .
 
@@ -92,7 +92,7 @@ ag:air_temp_fern a ag:Sensor ;
     ag:senseMode ag:Scheduled ;
     ag:monitors ag:fern ;
     sosa:observes ag:AirTemperature ;
-    calibration:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
+    scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
     ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
     ag:readingPointer "/temperature" ;
     ag:commandTopic "sensors/moisture_sensor_fern/command" .
@@ -102,7 +102,7 @@ ag:air_humidity_fern a ag:Sensor ;
     ag:senseMode ag:Scheduled ;
     ag:monitors ag:fern ;
     sosa:observes ag:AirHumidity ;
-    calibration:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
+    scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
     ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
     ag:readingPointer "/humidity" ;
     ag:commandTopic "sensors/moisture_sensor_fern/command" .

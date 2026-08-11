@@ -34,13 +34,13 @@ unrecorded one.** That is the trigger this record acted on.
 
 # Decision — two families, one function, and a package tree each
 
-`agent/codecs/json/` and `agent/calibrations/identity/`, beside `agent/transports/`. Each declares
+`agent/codecs/json/` and `agent/scalings/identity/`, beside `agent/transports/`. Each declares
 its family and three members, of which one is implemented:
 
 | | family | implemented | declared |
 |---|---|---|---|
 | codec | `codec:Encoding` | `codec:Json` | `codec:Cbor`, `codec:Kaitai` |
-| calibration | `calibration:Calibration` | `calibration:Identity` | `calibration:Linear`, `calibration:TwoPoint` |
+| scaling | `scaling:Scaling` | `scaling:Identity` | `scaling:Linear`, `scaling:TwoPoint` |
 
 **The pointer stays a function** and moved to `agent/pointer.py`. RFC 6901 works over any tree, so a
 pointer written against JSON keeps meaning the same thing over CBOR and over a struct a binary
@@ -51,6 +51,36 @@ That indifference is also what made deferring the other two cost nothing.
 `codec:Kaitai` is the member worth declaring even unbuilt, because it is the case that looks like it
 would break the design and does not: a Kaitai spec yields a **tree**, so `ag:readingPointer`
 addresses into it unchanged. A binary format lands in a codec and no other stage moves.
+
+# Why *scaling* and not *calibration*
+
+The last stage was called **calibration** first, and that was wrong — it took a word that names
+something else, and something this project intends to build.
+
+Standard usage separates them, and so should we:
+
+| | what it is |
+|---|---|
+| **calibration** | the **procedure** that establishes the relation between raw output and the measured quantity — hold the probe in air, then in water, record the endpoints — and the numbers it yields |
+| **scaling** | applying those numbers to every reading afterwards |
+
+So `scaling:TwoPoint` **consumes** a calibration; it is not one. A calibration is obtained once
+and then held; a scaling runs on every message. Naming the stage *calibration* would have left
+the procedure — [#26](https://github.com/ShishkinDmitriy/agora/issues/26)'s calibration mode,
+where an agent walks someone through the dry and wet references — with no word of its own, in a
+project that keeps one word per concept.
+
+*Scaling* is also the standard word for the operation. In data acquisition, scaling raw counts to
+**engineering units** is exactly this stage: 730 counts become 0.17 of full scale. One
+imprecision, stated rather than hidden: a lookup-table member is not strictly scaling, and the
+field calls it that anyway.
+
+The rename happened before this record was ever merged, which is the only reason it cost a
+`sed` rather than a migration — the same timing that made
+[bid-matching-is-the-word](bid-matching-is-the-word.md) cheap. A term of art is only clear
+relative to the vocabulary it lands in, and here the vocabulary that mattered was not the
+literature's but **the user's plans**: a word can be free in the codebase and already spoken for
+in the design.
 
 # The trees are one mechanism split by bearer
 
@@ -64,7 +94,7 @@ something an *agent* has. What differs is the bearer, and the predicate follows 
 | tree | borne by | conclusion |
 |---|---|---|
 | `capabilities/` | an agent | `ag:hasCapability` on the agent |
-| `transports/`, `codecs/`, `calibrations/` | a binding | a predicate on the **sensor** |
+| `transports/`, `codecs/`, `scalings/` | a binding | a predicate on the **sensor** |
 
 The reason is not convention. An agent's capability is about what it **is**, which is a fact the
 world should hold and validate. A binding's is about what a device **speaks**, which only the
@@ -81,7 +111,7 @@ The world states a **premise**; `rules.ru` writes the **conclusion** into the de
 | premise, stated | conclusion, derived |
 |---|---|
 | `codec:encoding` | `codec:decodedBy` |
-| `calibration:curve` | `calibration:calibratedBy` |
+| `scaling:curve` | `scaling:scaledBy` |
 
 Two predicates rather than one, because collapsing them would let a world state its own conclusion —
 the same discipline that keeps `ag:hasCapability` out of `world.ttl`. And `codec_for(sensor)` is now
@@ -115,7 +145,7 @@ What the shapes deliberately do **not** refuse is a member that is declared and 
 seam exists, the build reports at startup that it cannot fill it, and refusing the world instead
 would make declaring a seam impossible.
 
-# Calibration is where a number acquires a unit
+# Scaling is where a number acquires a unit
 
 The half that is not arithmetic, and the one that bites first.
 
@@ -125,7 +155,7 @@ air humidity `0.46` and air temperature `21.4` — three numbers in two dimensio
 identical. The convention lived in prose, in `vocabulary/water`: *"the whole private valuation is
 denominated in soil moisture."*
 
-`calibration:quantityUnit` states it instead, with **QUDT** IRIs as objects — `unit:UNITLESS` for
+`scaling:quantityUnit` states it instead, with **QUDT** IRIs as objects — `unit:UNITLESS` for
 the two fractions, `unit:DEG_C` for the temperature. SOSA deliberately defines no units and names
 QUDT as one of the vocabularies to reach for, so it is the standard companion to what is already in
 use here.
@@ -147,7 +177,7 @@ into a conversion between *stated* units rather than a guess.
   adding a package, not by editing a kernel.
 - **A sensor's pipeline is queryable.** Which codec and which calibration serve it are triples in
   `graph/world/derived`, alongside every other conclusion genesis reached.
-- **`calibration:Identity` is the honest name for what runs**, and it says something true about the
+- **`scaling:Identity` is the honest name for what runs**, and it says something true about the
   deployment: the scaling happens on the board, in C, where changing it means reflashing. The
   moment #26 moves it, a curve stops being a compiled constant and becomes a **belief** — one an
   agent may hold within stated bounds and re-pick as a probe drifts, which is worth more than the
