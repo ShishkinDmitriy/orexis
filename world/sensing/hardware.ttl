@@ -1,3 +1,4 @@
+@prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
@@ -30,7 +31,7 @@ ag:raspberry a ag:ComputeHost ;
     # lease has since moved to .130, which cost an evening: the board opened TCP to an address
     # that is not this Pi, so it failed with a bare "connection failed" and the broker logged
     # nothing at all — because nothing arrived. Every other participant was unaffected, since
-    # agents reach the broker on loopback via ag:brokerHost and only a board off-host uses this.
+    # agents reach the broker on loopback via mqtt:brokerHost and only a board off-host uses this.
     #
     # The durable fix is a DHCP reservation on the router, so this line stops being a guess.
     ag:lanAddress "192.168.2.130" ;
@@ -48,7 +49,7 @@ ag:fern_agent ag:runsOn ag:raspberry .
 ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     ag:localId "esp32_fern" ;
     mc:model "ESP32-WROOM-32D" ;
-    ag:onBus ag:local_bus ;
+    mqtt:onBus ag:local_bus ;
     mc:firmware "moisture-sensor" ;
     mc:carries ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is ag:Subscribing: the board keeps the interval and cannot be reached in between." .

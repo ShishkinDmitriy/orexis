@@ -131,7 +131,7 @@ def test_one_device_disagreeing_about_a_shared_stream_is_refused():
     store = _world_stating("codec:encoding", "codec:Cbor")  # the probe alone
     rows = bindings(store.query(PREFIXES + f"""
         SELECT ?c WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-          ?ch a ag:Channel ; ag:channelTopic "sensors/moisture_sensor_fern/reading" ;
+          ?ch a mqtt:Channel ; mqtt:channelTopic "sensors/moisture_sensor_fern/reading" ;
               codec:decodedBy ?c }} }}"""))
     assert len(rows) == 2, "a stream with two claims on it must show both, for the shape to see"
 
@@ -148,7 +148,7 @@ def test_a_stated_premise_produces_exactly_one_conclusion():
     store = _world_stating("codec:encoding", "codec:Cbor", subjects=BOARD)
     rows = bindings(store.query(PREFIXES + f"""
         SELECT ?c WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-          ?ch a ag:Channel ; ag:channelTopic "sensors/moisture_sensor_fern/reading" ;
+          ?ch a mqtt:Channel ; mqtt:channelTopic "sensors/moisture_sensor_fern/reading" ;
               codec:decodedBy ?c }} }}"""))
     assert len(rows) == 1
 

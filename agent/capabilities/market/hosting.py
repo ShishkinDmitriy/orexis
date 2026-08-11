@@ -40,7 +40,7 @@ def _event_topics_q(market_uri: str) -> str:
     """Where my participants announce what they notice. Public, like the rest of the wiring."""
     return f"""
 SELECT ?agentId ?eventTopic WHERE {{ 
-  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ; ag:eventTopic ?eventTopic  }}"""
+  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ; mqtt:eventTopic ?eventTopic  }}"""
 
 
 class HostingModule(Module):

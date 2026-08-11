@@ -195,11 +195,11 @@ def _two_sensor_world(tmp_path, observes="ag:SoilMoisture"):
         "ag:fern_agent a ag:Agent ;",
         'ag:chatter_fern a ag:Sensor ;\n'
         '    ag:localId "chatter_fern" ;\n'
-        '    ag:onBus ag:local_bus ;\n'
+        '    mqtt:onBus ag:local_bus ;\n'
         '    ag:senseMode ag:Push ;\n'          # keeps its own clock, takes no orders
         "    ag:monitors ag:fern ;\n"
         f"    sosa:observes {observes} ;\n"
-        '    ag:readingTopic "sensors/chatter_fern/reading" .\n\n'
+        '    mqtt:readingTopic "sensors/chatter_fern/reading" .\n\n'
         "ag:fern_agent a ag:Agent ;",
     )
     s = s.replace("ag:polls ag:moisture_sensor_fern ;",

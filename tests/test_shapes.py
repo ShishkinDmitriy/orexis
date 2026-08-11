@@ -180,15 +180,15 @@ def test_only_a_host_may_state_how_it_matches():
 
 def test_pull_sensor_must_state_a_command_topic():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:commandTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:commandTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:commandTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:commandTopic ?t }} }}"""))
 
 
 def test_a_device_on_the_bus_must_state_where_it_publishes():
     """Declaring a binding and then not completing it is the failure worth catching."""
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:readingTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:readingTopic ?t }} }}"""))
 
 
 def test_an_agent_that_only_listens_must_not_hold_a_cadence():
@@ -217,9 +217,9 @@ def test_an_agent_may_hold_both_modes_at_once():
     """
     assert _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:chatter_fern a ag:Sensor ; ag:localId "chatter_fern" ; ag:onBus ag:local_bus ;
+            ag:chatter_fern a ag:Sensor ; ag:localId "chatter_fern" ; mqtt:onBus ag:local_bus ;
                 ag:senseMode ag:Push ; ag:monitors ag:fern ; sosa:observes ag:SoilMoisture ;
-                ag:readingTopic "sensors/chatter_fern/reading" .
+                mqtt:readingTopic "sensors/chatter_fern/reading" .
             ag:fern_agent ag:polls ag:chatter_fern .
         }} }} WHERE {{}} ;
         INSERT {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
@@ -230,10 +230,10 @@ def _duplicate_probe(observes: str) -> rdflib.Graph:
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:second_probe_fern a ag:Sensor ; ag:localId "second_probe_fern" ;
-                ag:onBus ag:local_bus ; ag:senseMode ag:Scheduled ; ag:monitors ag:fern ;
+                mqtt:onBus ag:local_bus ; ag:senseMode ag:Scheduled ; ag:monitors ag:fern ;
                 sosa:observes {observes} ;
-                ag:readingTopic "sensors/second_probe_fern/reading" ;
-                ag:commandTopic "sensors/second_probe_fern/command" .
+                mqtt:readingTopic "sensors/second_probe_fern/reading" ;
+                mqtt:commandTopic "sensors/second_probe_fern/command" .
             ag:fern_agent ag:polls ag:second_probe_fern .
         }} }} WHERE {{}}""")
 

@@ -15,7 +15,7 @@ capability give it exactly the topics that capability needs:
     market:hosts M          write M's offerTopic and voucherTopic/<bidder>, read bidTopic/+
                         and each bidder's eventTopic
     actuation:hasActuator V    write V's commandTopic
-    ag:eventTopic E     write E
+    mqtt:eventTopic E     write E
 
 Read that list against `capabilities/market/bidding.py` and `hosting.py` and it is the same
 set of topics they subscribe and publish. If it ever stops being, an agent fails to connect —
@@ -55,7 +55,7 @@ from . import certs
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from agent.capabilities.market.terms import NS as MARKET
-from agent.ontology import AG, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MQTT, WORLD_GRAPH
 
 log = logging.getLogger("mqtt")
 
@@ -111,13 +111,13 @@ def _q(body: str) -> str:
 
 _AGENTS_Q = _q(f"""?id ?eventTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id .
-  OPTIONAL {{ ?a <{AG}eventTopic> ?eventTopic }}
+  OPTIONAL {{ ?a <{MQTT}eventTopic> ?eventTopic }}
  }}""")
 
 _POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}polls> ?s .
-  ?s <{AG}readingTopic> ?readingTopic .
-  OPTIONAL {{ ?s <{AG}commandTopic> ?commandTopic }}
+  ?s <{MQTT}readingTopic> ?readingTopic .
+  OPTIONAL {{ ?s <{MQTT}commandTopic> ?commandTopic }}
  }}""")
 
 _BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?voucherTopic WHERE {{ 
@@ -131,7 +131,7 @@ WHERE {{
   ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}hosts> ?m .
   ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
      <{MARKET}voucherTopic> ?voucherTopic .
-  OPTIONAL {{ ?b <{MARKET}bidsIn> ?m ; <{AG}eventTopic> ?bidderEvent }}
+  OPTIONAL {{ ?b <{MARKET}bidsIn> ?m ; <{MQTT}eventTopic> ?bidderEvent }}
  }}""")
 
 # A simulated sensor learns it was watered by reading what the valve REPORTED, never what the
@@ -143,7 +143,7 @@ WHERE {{
 # more business reading a valve's traffic than one in any other world.
 _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{ 
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}monitors> ?subject .
-  ?valve <{AG}actuates> ?subject ; <{AG}statusTopic> ?statusTopic .
+  ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
  }}""")
 
 # Any valve that reports, stood in for or not. This used to require ag:simulatedBy, which meant
@@ -152,13 +152,13 @@ _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
 # loud. The simulation was strictly more capable than the hardware it stands for, which is the
 # wrong way round.
 _VALVE_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ 
-  ?v <{AG}localId> ?id ; <{AG}actuates> ?subject ; <{AG}statusTopic> ?statusTopic .
+  ?v <{AG}localId> ?id ; <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
  }}""")
 
 # And whoever actuates it must be able to HEAR that report, or the confirmation goes nowhere.
 _ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}hasActuator> ?v .
-  ?v <{AG}statusTopic> ?statusTopic .
+  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{ACTUATION}hasActuator> ?v .
+  ?v <{MQTT}statusTopic> ?statusTopic .
  }}""")
 
 # One way of holding an actuator. There used to be two, because a simulated valve was a
@@ -166,21 +166,21 @@ _ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{
 # for now, so the agent side of this stopped needing to know the difference at all.
 _ACTUATES_Q = _q(f"""?id ?commandTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id .
-  ?a <{AG}hasActuator> ?v .
-  ?v <{AG}commandTopic> ?commandTopic .
+  ?a <{ACTUATION}hasActuator> ?v .
+  ?v <{MQTT}commandTopic> ?commandTopic .
  }}""")
 
-# `ag:onBus` is the device's own declaration that it is reachable on a bus — the same test
+# `mqtt:onBus` is the device's own declaration that it is reachable on a bus — the same test
 # `MqttDriver.claims()` applies. Anything without it speaks no MQTT and needs no credential.
 _DEVICES_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
-  ?d <{AG}localId> ?id ; <{AG}onBus> ?bus .
-  OPTIONAL {{ ?d <{AG}readingTopic> ?readingTopic }}
-  OPTIONAL {{ ?d <{AG}commandTopic> ?commandTopic }}
+  ?d <{AG}localId> ?id ; <{MQTT}onBus> ?bus .
+  OPTIONAL {{ ?d <{MQTT}readingTopic> ?readingTopic }}
+  OPTIONAL {{ ?d <{MQTT}commandTopic> ?commandTopic }}
  }}""")
 
 
 _BUS_Q = f"""
-SELECT ?host WHERE {{  ?bus a <{AG}MessageBus> ; <{AG}brokerHost> ?host  }}
+SELECT ?host WHERE {{  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerHost> ?host  }}
 LIMIT 1"""
 
 
@@ -189,7 +189,7 @@ def broker_host(world: str) -> str:
     certificate, or every agent that verifies it will refuse the connection."""
     found = ratified.rows(ratified.dataset(world), _BUS_Q)
     if not found:
-        raise SystemExit(f"agora-mqtt: world {world!r} declares no ag:MessageBus")
+        raise SystemExit(f"agora-mqtt: world {world!r} declares no mqtt:MessageBus")
     return found[0]["host"]
 
 
@@ -356,8 +356,8 @@ def provision(world: str, rotate: bool = False) -> None:
 
 _PORTS_Q = f"""
 SELECT ?port ?tlsPort WHERE {{ 
-  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
-  OPTIONAL {{ ?bus <{AG}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
+  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
+  OPTIONAL {{ ?bus <{MQTT}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
 
 
 def write_config(world: str) -> None:
@@ -369,13 +369,13 @@ def write_config(world: str) -> None:
     """
     found = ratified.rows(ratified.dataset(world), _PORTS_Q)
     if not found:
-        raise SystemExit(f"agora-mqtt: world {world!r} declares no ag:MessageBus")
+        raise SystemExit(f"agora-mqtt: world {world!r} declares no mqtt:MessageBus")
     plain, tls = int(found[0]["port"]), found[0].get("tlsPort")
 
     lines = [
         f"# GENERATED by `agora-mqtt {world}` — do not edit. One broker per world.",
         "#",
-        "# The ports come from this world's ag:MessageBus, which is also where its agents read",
+        "# The ports come from this world's mqtt:MessageBus, which is also where its agents read",
         "# them. Two worlds are two brokers on two ports, and neither can hear the other.",
         "",
         "log_dest stdout",

@@ -18,7 +18,7 @@ there is no shared store to be let into. See knowledge/decisions/where-the-belie
 at boot from the world files mounted read-only beside it, runs the derivation itself, and is
 born if it has never been. So a service can start whenever it likes and depends on nothing.
 
-**`network_mode: host` is deliberate.** The world states the bus as `ag:brokerHost "localhost"`
+**`network_mode: host` is deliberate.** The world states the bus as `mqtt:brokerHost "localhost"`
 because a channel name is meaningless without the broker it is on and every member must agree
 on it. Put the agents on a bridge network and that stops being true for them while staying true
 for the ESP32 — two names for one bus, which is exactly what stating it in the world prevents.
@@ -35,7 +35,7 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import AG, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MQTT, WORLD_GRAPH
 from agent import genesis
 from agent.genesis import world_dir, worlds
 
@@ -53,15 +53,15 @@ ACTUATION = AG + "Actuation"
 
 _BUS_PORTS_Q = f"""
 SELECT ?port ?tlsPort WHERE {{ 
-  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
-  OPTIONAL {{ ?bus <{AG}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
+  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
+  OPTIONAL {{ ?bus <{MQTT}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
 
 
 def _bus_ports(world: str) -> tuple[int, int | None]:
     """The ports this world states. Two worlds are two brokers, so they must differ."""
     rows = ratified.rows(ratified.dataset(world), _BUS_PORTS_Q)
     if not rows:
-        raise SystemExit(f"agora-compose: world {world!r} declares no ag:MessageBus")
+        raise SystemExit(f"agora-compose: world {world!r} declares no mqtt:MessageBus")
     tls = rows[0].get("tlsPort")
     return int(rows[0]["port"]), int(tls) if tls else None
 
@@ -172,9 +172,9 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?initial ?dryRate ?tick ?litres ?doseTopic ?port ?minValue ?maxValue
 WHERE {{ 
-  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}readingTopic> ?readingTopic ;
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{MQTT}readingTopic> ?readingTopic ;
      <{AG}monitors> ?subject .
-  OPTIONAL {{ ?d <{AG}commandTopic> ?commandTopic }}
+  OPTIONAL {{ ?d <{MQTT}commandTopic> ?commandTopic }}
   OPTIONAL {{ ?d <{AG}senseMode> ?senseMode }}
   OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
   OPTIONAL {{ ?model <{AG}modelDryRate> ?dryRate }}
@@ -182,8 +182,8 @@ WHERE {{
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
   OPTIONAL {{ ?subject <{AG}litresPerFraction> ?litres }}
-  OPTIONAL {{ ?valve <{AG}actuates> ?subject ; <{AG}statusTopic> ?doseTopic }}
-  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
+  OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
+  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
 
@@ -234,11 +234,11 @@ def _simulator(world: str, row: dict) -> str:
 _SIM_VALVES_Q = f"""
 SELECT ?id ?commandTopic ?statusTopic ?mlPerSecond ?maxDoseMl ?port
 WHERE {{ 
-  ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}actuates> ?subject ;
-     <{AG}commandTopic> ?commandTopic ; <{AG}statusTopic> ?statusTopic .
-  OPTIONAL {{ ?v <{AG}mlPerSecond> ?mlPerSecond }}
-  OPTIONAL {{ ?v <{AG}maxDoseMl> ?maxDoseMl }}
-  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
+  ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{ACTUATION}actuates> ?subject ;
+     <{MQTT}commandTopic> ?commandTopic ; <{MQTT}statusTopic> ?statusTopic .
+  OPTIONAL {{ ?v <{ACTUATION}mlPerSecond> ?mlPerSecond }}
+  OPTIONAL {{ ?v <{ACTUATION}maxDoseMl> ?maxDoseMl }}
+  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
 

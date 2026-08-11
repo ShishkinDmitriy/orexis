@@ -1,3 +1,4 @@
+@prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -25,20 +26,20 @@
 
 ##########  The bus everyone speaks over  ##########
 
-ag:local_bus a ag:MessageBus ;
+ag:local_bus a mqtt:MessageBus ;
     ag:localId "local_bus" ;
-    ag:brokerHost "localhost" ;
-    ag:brokerPort 1884 ;
+    mqtt:brokerHost "localhost" ;
+    mqtt:brokerPort 1884 ;
     # Agents connect here and prove who they are with a certificate; the boards keep the
     # plaintext port above. One bus, one ACL, two ways of authenticating.
-    ag:brokerTlsPort 8884 .
+    mqtt:brokerTlsPort 8884 .
 
 ##########  World version  ##########
 
 #  Who ratified it. A REFERENCE, never a declaration: the world says which user stands behind
 #  these files and says nothing else about them — no name, no key, no type. A user is
 #  installation-level (AGENTS.md rule 3) and an agent is given only its world, so the URI is an
-#  identifier it never resolves, exactly as `ag:brokerHost` names a host it never introspects.
+#  identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never introspects.
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
 ag:world a ag:World ; ag:currentVersion ag:version_1 ;
@@ -59,7 +60,7 @@ ag:fern a sosa:FeatureOfInterest ;
 
 #  ONE board, THREE sensors. The ESP32 carries a capacitive probe and a KY-015, and it is one
 #  MQTT client with one credential — so it publishes ONE message on ONE topic, and each sensor
-#  says which value in it is its own. That is what ag:readingPointer is for; the probe states
+#  says which value in it is its own. That is what mqtt:readingPointer is for; the probe states
 #  none because `/value` is the default and is what every single-property board already sends.
 #
 #  All three are ag:Scheduled and share ONE command topic, because there is one board and it
@@ -103,15 +104,15 @@ ag:air_sensor_fern a sosa:Platform ;
 
 ag:moisture_sensor_fern a ag:Sensor ;
     ag:localId "moisture_sensor_fern" ;
-    ag:onBus ag:local_bus ;
+    mqtt:onBus ag:local_bus ;
     ag:senseMode ag:Scheduled ;     # keeps a given interval -> its agent gains ag:Subscribing
     ag:monitors ag:fern ;
     sosa:observes ag:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
-    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    ag:commandTopic "sensors/moisture_sensor_fern/command" .
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
-#  The KY-015's two channels. They are ag:Sensor and NOT devices: they have no ag:onBus of
+#  The KY-015's two channels. They are ag:Sensor and NOT devices: they have no mqtt:onBus of
 #  their own and mint no credential, because the thing that connects to the broker is the
 #  board, which already has one. `ag:air_sensor_fern` in hardware.ttl is the peripheral they
 #  read — its pins, its model and its wires are stated there and nothing here repeats them.
@@ -122,9 +123,9 @@ ag:air_temp_fern a ag:Sensor ;
     ag:monitors ag:fern ;
     sosa:observes ag:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
-    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    ag:readingPointer "/temperature" ;
-    ag:commandTopic "sensors/moisture_sensor_fern/command" .
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:readingPointer "/temperature" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
 ag:air_humidity_fern a ag:Sensor ;
     ag:localId "air_humidity_fern" ;
@@ -132,9 +133,9 @@ ag:air_humidity_fern a ag:Sensor ;
     ag:monitors ag:fern ;
     sosa:observes ag:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
-    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    ag:readingPointer "/humidity" ;
-    ag:commandTopic "sensors/moisture_sensor_fern/command" .
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:readingPointer "/humidity" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
 ##########  The agent  ##########
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
@@ -143,7 +144,7 @@ ag:air_humidity_fern a ag:Sensor ;
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
     ag:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;
-    ag:eventTopic "readings/fern" .
+    mqtt:eventTopic "readings/fern" .
 
 ##########  What each agent may re-pick, and how far  ##########
 #  A MANDATE: the room this world gives an agent on one of its own settings. Here rather than in

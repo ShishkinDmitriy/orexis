@@ -32,7 +32,7 @@ Two things deliberately do NOT appear here:
   That is why nothing here imports another capability.
 
 Everything touched is discovered: which sensors (`ag:polls`), what property they read
-(`sosa:observes`), and where to announce a perception (`ag:eventTopic`).
+(`sosa:observes`), and where to announce a perception (`mqtt:eventTopic`).
 
 Vocabulary: capabilities/perception/ontology.ttl. Rules: capabilities/perception/shapes.ttl.
 Derivation: capabilities/perception/rules.ru. See knowledge/domain/sensing.md.

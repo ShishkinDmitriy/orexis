@@ -22,6 +22,7 @@
 # world. That is the intended reading: two devices disagreeing about the format of one stream is
 # the error, however quietly one of them disagrees.
 
+PREFIX mqtt: <http://example.org/agora/mqtt#>
 PREFIX ag:    <http://example.org/agora#>
 PREFIX codec: <http://example.org/agora/codec#>
 
@@ -31,8 +32,8 @@ INSERT { GRAPH $derived {
 $given
 WHERE  {
     ?device codec:encoding ?encoding . ?encoding a codec:Encoding .
-    { ?device ag:readingTopic ?topic } UNION { ?device ag:commandTopic ?topic }
-    UNION { ?device ag:statusTopic ?topic }
+    { ?device mqtt:readingTopic ?topic } UNION { ?device mqtt:commandTopic ?topic }
+    UNION { ?device mqtt:statusTopic ?topic }
     BIND(IRI(CONCAT("http://example.org/agora#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
 } ;
 
@@ -43,8 +44,8 @@ INSERT { GRAPH $derived {
     ?channel codec:decodedBy codec:Json } }
 $given
 WHERE  {
-    { ?device ag:readingTopic ?topic } UNION { ?device ag:commandTopic ?topic }
-    UNION { ?device ag:statusTopic ?topic }
+    { ?device mqtt:readingTopic ?topic } UNION { ?device mqtt:commandTopic ?topic }
+    UNION { ?device mqtt:statusTopic ?topic }
     FILTER NOT EXISTS { ?device codec:encoding ?stated }
     BIND(IRI(CONCAT("http://example.org/agora#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
 }

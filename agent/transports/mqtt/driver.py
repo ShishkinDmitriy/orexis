@@ -30,13 +30,13 @@ class MqttDriver(Driver):
 
     @classmethod
     def claims(cls, sensor) -> bool:
-        """A channel of this transport's is the declaration — `ag:onBus` or `ag:readingTopic`.
+        """A channel of this transport's is the declaration — `mqtt:onBus` or `mqtt:readingTopic`.
 
-        It used to be `ag:onBus` alone, which contradicted that term's own vocabulary: *"which
+        It used to be `mqtt:onBus` alone, which contradicted that term's own vocabulary: *"which
         bus this resource is reachable on. **Optional while a society has one.**"* A sensor may
         legitimately state where it publishes and leave the bus to be the only one there is.
 
-        That gap is not academic. `ag:onBus` is also what mints a broker CREDENTIAL — it is the
+        That gap is not academic. `mqtt:onBus` is also what mints a broker CREDENTIAL — it is the
         test `onboarding/mqtt.py` applies to decide a principal exists — so a peripheral sharing
         its board's connection must not carry one, or onboarding writes a password for a client
         that never connects. Two sensors on one board are reached over MQTT and are not two

@@ -1,3 +1,4 @@
+@prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -6,27 +7,27 @@
 # Rules for the MQTT binding: the bus must be reachable, channels must be stated, and only an
 # agent that can actually DRIVE a device is required to hold a cadence.
 
-ag:MessageBusShape a sh:NodeShape ;
+mqtt:MessageBusShape a sh:NodeShape ;
     rdfs:comment "A bus states where it is. This is the one piece of infrastructure that lives in the world rather than the environment, because a topic is meaningless without the broker it is on and every agent must agree on it." ;
-    sh:targetClass ag:MessageBus ;
-    sh:property [ sh:path ag:brokerHost ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
-    sh:property [ sh:path ag:brokerPort ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:targetClass mqtt:MessageBus ;
+    sh:property [ sh:path mqtt:brokerHost ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path mqtt:brokerPort ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ] ;
-    sh:property [ sh:path ag:brokerTlsPort ; sh:maxCount 1 ;
+    sh:property [ sh:path mqtt:brokerTlsPort ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ] .
 
-ag:MqttSensorShape a sh:NodeShape ;
-    rdfs:comment "A sensor that declares itself on a bus must say where it publishes; nothing derives a topic from a name. Keyed on ag:onBus rather than on having a topic, or the rule would evaporate exactly when the topic is missing — which is the case worth catching." ;
+mqtt:MqttSensorShape a sh:NodeShape ;
+    rdfs:comment "A sensor that declares itself on a bus must say where it publishes; nothing derives a topic from a name. Keyed on mqtt:onBus rather than on having a topic, or the rule would evaporate exactly when the topic is missing — which is the case worth catching." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora#onBus> ?bus ;
+                ?this <http://example.org/agora/mqtt#onBus> ?bus ;
                       <http://example.org/agora#monitors> ?subject .
             }
         """ ] ;
-    sh:property [ sh:path ag:readingTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+    sh:property [ sh:path mqtt:readingTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
 
-ag:InstructableSensorShape a sh:NodeShape ;
+mqtt:InstructableSensorShape a sh:NodeShape ;
     rdfs:comment "Only a device that accepts instruction has a command channel. Stating one for a self-clocked board would be a lie about the hardware — and stating none for a board that DOES take instruction makes it undrivable, so its agent would silently get no capability at all. Both instructable modes are covered: ag:Pull takes a request, ag:Scheduled takes an interval, and neither can be reached without a channel to say it on." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
@@ -34,19 +35,19 @@ ag:InstructableSensorShape a sh:NodeShape ;
                 VALUES ?mode { <http://example.org/agora#Pull>
                                <http://example.org/agora#Scheduled> }
                 ?this <http://example.org/agora#senseMode> ?mode ;
-                      <http://example.org/agora#onBus> ?bus .
+                      <http://example.org/agora/mqtt#onBus> ?bus .
             }
         """ ] ;
-    sh:property [ sh:path ag:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+    sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
                   sh:message "a sensor that takes instruction over MQTT must state where it takes it" ] .
 
-ag:MqttActuatorShape a sh:NodeShape ;
+mqtt:MqttActuatorShape a sh:NodeShape ;
     rdfs:comment "An actuator reached over MQTT must say where it takes its commands." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora#onBus> ?bus ;
-                      <http://example.org/agora#actuates> ?subject .
+                ?this <http://example.org/agora/mqtt#onBus> ?bus ;
+                      <http://example.org/agora/actuation#actuates> ?subject .
             }
         """ ] ;
-    sh:property [ sh:path ag:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+    sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .

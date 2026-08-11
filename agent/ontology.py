@@ -56,6 +56,24 @@ RGBLED = "http://example.org/agora/rgb-led#"
 PROBE = "http://example.org/agora/moisture-probe#"
 ESP32 = "http://example.org/agora/esp32#"
 
+# And the packages the SOVEREIGN's tooling reads across. `onboarding/` builds full IRIs by
+# interpolation rather than by prefix, because it queries the ratified files directly and not
+# through a `Store` that would carry `store.PREFIXES`. That is a third way to name a term, after
+# a `pkg:Term` in SPARQL text and a package's own `terms.py`, and it is the one a rename cannot
+# see: an `AG`-interpolated `bidsIn` went on compiling and matching nothing from the moment
+# market owned `market:bidsIn`, and a test that iterated its empty result asserted nothing while
+# passing — for four merged PRs, until this sweep looked.
+#
+# These are NOT a prefix registry — `agent.loader` reads those off each ontology. They are the
+# handful of namespaces one tree names in the other's terms, and a package listed here still
+# owns its own vocabulary.
+MARKET = "http://example.org/agora/market#"
+MQTT = "http://example.org/agora/mqtt#"
+PERCEPTION = "http://example.org/agora/perception#"
+ACTUATION = "http://example.org/agora/actuation#"
+REVIEW = "http://example.org/agora/review#"
+WATER = "http://example.org/agora/water#"
+
 SOSA = "http://www.w3.org/ns/sosa/"
 PROV = "http://www.w3.org/ns/prov#"
 

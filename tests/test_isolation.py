@@ -18,7 +18,7 @@ import pytest
 
 from agent import ratified
 from onboarding import influx as influx_admin, mqtt as mqtt_admin
-from agent.ontology import AG, WORLD_GRAPH
+from agent.ontology import AG, MARKET, MQTT, WORLD_GRAPH
 
 from conftest import build_agent, genesis_store
 
@@ -83,13 +83,13 @@ def test_no_agent_may_hear_a_neighbours_private_channel(world):
     private = {}  # agent id -> the topics that are its alone
     for row in ratified.rows(ds, f"""SELECT ?id ?voucherTopic WHERE {{
         
-          ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}bidsIn> ?m .
-          ?m <{AG}voucherTopic> ?voucherTopic .  }}"""):
+          ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}bidsIn> ?m .
+          ?m <{MARKET}voucherTopic> ?voucherTopic .  }}"""):
         private.setdefault(row["id"], set()).add(f"{row['voucherTopic']}/{row['id']}")
     for row in ratified.rows(ds, f"""SELECT ?id ?readingTopic WHERE {{
         
           ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}polls> ?s .
-          ?s <{AG}readingTopic> ?readingTopic .  }}"""):
+          ?s <{MQTT}readingTopic> ?readingTopic .  }}"""):
         private.setdefault(row["id"], set()).add(row["readingTopic"])
 
     assert private, f"{world} has no private channels to protect — the test proves nothing"

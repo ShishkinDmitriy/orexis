@@ -279,7 +279,7 @@ def test_there_is_no_sovereign_agent_only_a_sovereign_role():
 
 def test_the_world_references_a_user_and_declares_nothing_about_them():
     """A user is installation-level (AGENTS.md rule 3) and an agent is given only its world — so
-    the URI is an identifier it never resolves, exactly as `ag:brokerHost` names a host it never
+    the URI is an identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never
     introspects. Saying more here would be a world asserting facts about the installation."""
     st = _public("society")
     user = bindings(st.query(

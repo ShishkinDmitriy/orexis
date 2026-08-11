@@ -136,8 +136,8 @@ class World:
 
 _BUS_Q = f"""
 SELECT ?bus ?host ?port ?tlsPort WHERE {{ 
-  ?bus a ag:MessageBus ; ag:brokerHost ?host ; ag:brokerPort ?port .
-  OPTIONAL {{ ?bus ag:brokerTlsPort ?tlsPort }}  }}"""
+  ?bus a mqtt:MessageBus ; mqtt:brokerHost ?host ; mqtt:brokerPort ?port .
+  OPTIONAL {{ ?bus mqtt:brokerTlsPort ?tlsPort }}  }}"""
 
 _VERSION_Q = f"""
 SELECT ?v WHERE {{ 
@@ -150,7 +150,7 @@ def _self_q(agent_id: str) -> str:
 SELECT ?agent ?capability ?actsFor ?actsForId ?eventTopic WHERE {{ 
   ?agent a ag:Agent ; ag:localId "{agent_id}" ; ag:hasCapability ?capability .
   OPTIONAL {{ ?agent ag:actsFor ?actsFor . OPTIONAL {{ ?actsFor ag:localId ?actsForId }} }}
-  OPTIONAL {{ ?agent ag:eventTopic ?eventTopic }}
+  OPTIONAL {{ ?agent mqtt:eventTopic ?eventTopic }}
  }}"""
 
 
@@ -165,14 +165,14 @@ WHERE {{
   ?sensor ag:localId ?localId ; ag:monitors ?subject ; sosa:observes ?observes .
   OPTIONAL {{ ?sensor ag:senseMode ?senseMode }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
-  OPTIONAL {{ ?sensor ag:onBus ?bus }}
-  OPTIONAL {{ ?sensor ag:readingTopic ?readingTopic }}
-  OPTIONAL {{ ?sensor ag:readingPointer ?readingPointer }}
-  OPTIONAL {{ ?sensor ag:commandTopic ?commandTopic }}
+  OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
+  OPTIONAL {{ ?sensor mqtt:readingTopic ?readingTopic }}
+  OPTIONAL {{ ?sensor mqtt:readingPointer ?readingPointer }}
+  OPTIONAL {{ ?sensor mqtt:commandTopic ?commandTopic }}
   # Through the stream it publishes on, because an encoding is the stream's — see
   # knowledge/decisions/a-stream-is-a-thing.md. Both halves are derived; this query runs over
   # the whole store at boot rather than over `$given`, so it may read a conclusion.
-  OPTIONAL {{ ?sensor ag:publishesOn ?readingChannel . ?readingChannel codec:decodedBy ?decodedBy }}
+  OPTIONAL {{ ?sensor mqtt:publishesOn ?readingChannel . ?readingChannel codec:decodedBy ?decodedBy }}
   OPTIONAL {{ ?sensor scaling:scaledBy ?scaledBy }}
   OPTIONAL {{ ?sensor scaling:quantityUnit ?quantityUnit }}
  }}"""
@@ -183,7 +183,7 @@ def _actuators_q(agent_uri: str) -> str:
 SELECT ?actuator ?localId ?subject ?subjectId ?commandTopic ?mlPerSecond ?maxDoseMl
 WHERE {{ 
   <{agent_uri}> actuation:hasActuator ?actuator .
-  ?actuator ag:localId ?localId ; actuation:actuates ?subject ; ag:commandTopic ?commandTopic ;
+  ?actuator ag:localId ?localId ; actuation:actuates ?subject ; mqtt:commandTopic ?commandTopic ;
             actuation:mlPerSecond ?mlPerSecond ; actuation:maxDoseMl ?maxDoseMl .
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
  }}"""
@@ -293,11 +293,11 @@ def load_bus(query: QueryFn) -> MessageBus:
     environment variable — because everyone must agree on it."""
     rows = bindings(query(_BUS_Q))
     if not rows:
-        raise WorldError("the world declares no ag:MessageBus — has it been seeded?")
+        raise WorldError("the world declares no mqtt:MessageBus — has it been seeded?")
     if len(rows) > 1:
         # A second bus is meaningful, but then resources must say which one they are on
-        # (ag:onBus) and this becomes a lookup. Refuse to guess.
-        raise WorldError(f"{len(rows)} buses declared; ag:onBus routing is not implemented")
+        # (mqtt:onBus) and this becomes a lookup. Refuse to guess.
+        raise WorldError(f"{len(rows)} buses declared; mqtt:onBus routing is not implemented")
     row = rows[0]
     return MessageBus(uri=row["bus"], host=row["host"], port=int(row["port"]),
                       tls_port=int(row["tlsPort"]) if row.get("tlsPort") else None)
