@@ -2,6 +2,8 @@
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -40,6 +42,24 @@ perception:Listening a perception:PerceptionCapability ; rdfs:label "Listening" 
 
 perception:Sensor a owl:Class ; rdfs:subClassOf ag:Device , sosa:Sensor ; rdfs:label "Sensor" ;
     rdfs:comment "Reads a property of a subject. Emits numbers; never judgments." .
+
+# BORROWED, AND RESTATED — the one axiom this project holds about somebody else's class.
+#
+# `ssn-system:hasSystemCapability` hangs off an `ssn:System`, and what makes it reach a sensor is
+# `sosa:Sensor rdfs:subClassOf ssn:System`. That is asserted in <http://www.w3.org/ns/ssn/> —
+# neither in SOSA nor in the systems module — and nothing here loads it. Measured before this
+# line existed: three things typed `sosa:Sensor` in `world/sensing`, zero typed `ssn:System`.
+#
+# So the general shape, which is worth more than the line: borrowing an IRI brings its
+# DEFINITION and none of the axioms other documents state ABOUT it. For each borrowed term, ask
+# whether what makes it apply arrives with the IRI or has to be restated. `mc:carries
+# rdfs:subPropertyOf sosa:hosts` is the same move from the other direction.
+#
+# HERE rather than in `vocabulary/agora/`, though the subject is a class this package does not
+# own: the axiom is only load-bearing because sensors have capabilities, and perception is where
+# a sensor is. A package restates what it needs to be true; the kernel would be asserting it on
+# behalf of a package that may not be installed.
+sosa:Sensor rdfs:subClassOf ssn:System .
 
 perception:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range perception:Sensor ;
     rdfs:label "polls" ;
@@ -97,6 +117,32 @@ perception:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:r
     rdfs:label "maximum sleep seconds" .
 
 perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 900 .
+
+#################  What the DEVICE can honour, which is a different question  #################
+#
+# The two figures above are what the society ALLOWS. They say nothing about what a particular
+# board can do, and until now nothing could: `ranges()` has documented a third source —
+# "hardware limits when any exist" — since it was written, and none existed. An agent could
+# therefore ask for a ten-second cadence a board would never keep, and `stale_after_s` would
+# compute freshness from the interval it ASKED for, so a healthy board read as a quiet one.
+#
+# Borrowed rather than invented, because SSN already says exactly this. `ssn-system:Frequency`:
+#
+#     "The smallest possible time between one Observation, Actuation, or Sampling and the next,
+#      under the defined Conditions."
+#
+# A TIME, despite the name — the smallest gap, which is a floor and maps onto review:notBelow
+# with nothing to convert. And `under the defined Conditions` is in the definition itself, which
+# is why a capability is qualified by an `ssn-system:Condition` rather than being one number
+# with a caveat: "ten seconds on mains" and "fifteen minutes on battery" are two capabilities of
+# one device, and #78's argument is precisely that the right wake depends on the power budget.
+#
+# What this package adds is the VALUE, because SSN deliberately leaves values to other
+# vocabularies. The class carries the meaning; this carries the number.
+
+perception:seconds a owl:DatatypeProperty ; rdfs:domain ssn-system:Frequency ; rdfs:range xsd:integer ;
+    rdfs:label "seconds" ;
+    rdfs:comment "How many seconds the Frequency it hangs off is. Named for the unit and not for what it bounds, because ssn-system:Frequency already says which end it is: the SMALLEST possible gap, so a floor. A device that can be read no faster than every thirty seconds states 30 here, and an agent may not commit to less." .
 
 #################  Re-picking the comfortable cadence  #################
 # ONE triple makes a belief revisable, and it names the two figures already stated above. The

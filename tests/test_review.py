@@ -321,3 +321,96 @@ def test_upkeep_still_runs_for_an_agent_that_reviews_nothing(monkeypatch):
     supplier = build_agent("supplier", monkeypatch=monkeypatch)
     assert supplier.upkeep.max_bytes_per_triple > 0
     assert supplier.upkeep.consider() is False  # in memory: nothing to compact, and it looked
+
+
+# --- what the equipment allows, which is the third source ------------------------------------
+#
+# `ranges()` has documented three narrowing sources since it was written — constitution, mandate,
+# hardware — and the third existed only in the docstring. These are it. The world used is
+# `sensing`, because it is the only one with hardware to state a limit; a simulated device has no
+# physical floor, and that is the honest reason `simulation` narrows nothing.
+
+def _sensing_with(update: str = ""):
+    """The sensing world, optionally mutated, re-derived exactly as genesis derives it.
+
+    Cleared before re-running: a rule's conclusion is not idempotent when its premise changed,
+    and leaving the old one beside the new is how `test_capabilities` once read BOTH perception
+    capabilities and called it a pass.
+    """
+    from agent import loader
+    from agent.ontology import WORLD_DERIVED_GRAPH
+
+    st = genesis_store(world="sensing")
+    if update:
+        st.update(update)
+    st.clear_graph(WORLD_DERIVED_GRAPH)
+    for rule in loader.rule_files():
+        st.update(genesis.substitute(rule.read_text(), st))
+    return st
+
+
+_ONE = """  ag:{sensor} ssn-system:hasSystemCapability [
+      a ssn-system:SystemCapability ;
+      ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds {seconds} ] ] ."""
+
+
+def _states(**floors: int) -> str:
+    """One update however many devices it speaks about: each carries its own PREFIX block, so
+    two of them concatenated is a syntax error rather than two statements."""
+    body = "\n".join(_ONE.format(sensor=s, seconds=n) for s, n in floors.items())
+    return f"""
+PREFIX ag: <http://example.org/agora#>
+PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+PREFIX perception: <http://example.org/agora/perception#>
+INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
+{body}
+}} }}"""
+
+
+def _limit(st):
+    rows = bindings(st.query("""
+SELECT ?floor WHERE { ?a review:limitedTo ?l . ?l review:onTerm ?t ; review:notBelow ?floor }"""))
+    return [float(r["floor"]) for r in rows]
+
+
+def test_what_a_board_can_honour_reaches_the_agent_that_polls_it():
+    """The limit is stated on the DEVICE and needed by the AGENT, and only the agent holds a
+    belief to narrow. So the derivation carries it across `perception:polls` — which is why this
+    is a rule at genesis and not a query at review time: an agent is never given the wiring."""
+    assert _limit(_sensing_with()) == [2.0]   # the KY-015's datasheet sampling period
+
+
+def test_a_device_that_states_nothing_narrows_nothing(monkeypatch):
+    """The capacitive probe declares no Frequency, because an ADC read has no meaningful floor.
+    Absence is the ordinary case and must not be read as zero — a floor of zero would widen the
+    range rather than leave it alone."""
+    st = _sensing_with()
+    room = build_agent("fern", st=st, monkeypatch=monkeypatch).reviewing().ranges()[SLOW]
+    assert room.floor == 10.0, "the constitution's floor, untouched by a device that stated none"
+
+
+def test_a_board_slower_than_the_constitution_narrows_the_range(monkeypatch):
+    """The case the mechanism exists for, and the one no shipped device exercises: nothing in
+    this repository is slower than the society's own floor of ten seconds. Stated here rather
+    than invented in a world, because a hardware fact nobody measured is worse than none."""
+    st = _sensing_with(_states(air_temp_fern=60))
+    room = build_agent("fern", st=st, monkeypatch=monkeypatch).reviewing().ranges()[SLOW]
+    assert room.floor == 60.0, "the board's floor should have raised the agent's"
+    assert room.ceiling == 900.0, "and left the ceiling where the constitution put it"
+
+
+def test_an_agent_polling_two_boards_is_held_to_the_slower():
+    """MAX, not MIN. An agent reads all its sensors on one wake, so it can go no faster than its
+    slowest device — taking the minimum would ask the slow board for a cadence it never keeps,
+    which is the exact failure this exists to prevent, reached from the other side."""
+    st = _sensing_with(_states(air_temp_fern=45, moisture_sensor_fern=90))
+    assert _limit(st) == [90.0]
+
+
+def test_the_floor_is_the_equipments_and_the_mandate_cannot_lower_it(monkeypatch):
+    """Two sources, one arithmetic: whichever binds tighter wins, and a mandate that reaches
+    past the hardware does not get its way. The shape refuses that world at validation; this is
+    what the runtime does with one that slipped through anyway."""
+    st = _sensing_with(_states(air_temp_fern=120))
+    room = build_agent("fern", st=st, monkeypatch=monkeypatch).reviewing().ranges()[SLOW]
+    assert room.floor == 120.0, "sensing's fern commits notBelow 10, and the board says 120"

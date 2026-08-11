@@ -190,6 +190,73 @@ def test_the_society_hosting_agrees_with_the_wiring():
             f"but the wiring mounts it elsewhere")
 
 
+def test_the_society_repeats_every_limit_the_wiring_states():
+    """A device's floor is stated on the PART and needed by the AGENT, which is never given the
+    part. So it is said twice — `ssn-system:Frequency` on `dht11:Dht11` in the vocabulary, and
+    again on each sensor that part hosts in the society — and only the sovereign loads both.
+
+    Checked in the direction drift goes. A part gaining a limit, or having it changed, is an edit
+    to the vocabulary; the society keeps the old answer and every gate stays green, because each
+    file is internally consistent and no query spans them. The agent then commits to a cadence
+    its board will never keep, which is the whole of #59.
+
+    NOT symmetric, and for a different reason than the hosting guard above. There it was that a
+    hardware-only part must not be forced into the society. Here it is that a society MAY state a
+    floor the wiring does not — a simulated device has no part and no datasheet, and a deployment
+    that knows its board wakes slowly on battery is stating something true that no class
+    declares. Extra is allowed; missing and contradicting are not.
+    """
+    import rdflib
+
+    from agent import genesis
+
+    SSNS = rdflib.Namespace("http://www.w3.org/ns/ssn/systems/")
+    SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
+    PERC = rdflib.Namespace("http://example.org/agora/perception#")
+
+    def floors(g, subject):
+        """Every Frequency, in seconds, that this node states — through the two hops SSN puts
+        between a system and a number."""
+        out = set()
+        for cap in g.objects(subject, SSNS.hasSystemCapability):
+            for prop in g.objects(cap, SSNS.hasSystemProperty):
+                if (prop, rdflib.RDF.type, SSNS.Frequency) in g:
+                    out |= {int(s) for s in g.objects(prop, PERC.seconds)}
+        return out
+
+    vocabulary = rdflib.Graph()
+    for path in sorted(genesis.REPO_ROOT.glob("vocabulary/*/ontology.ttl")):
+        vocabulary.parse(path, format="turtle")
+
+    for world in genesis.worlds():
+        world_path = genesis.world_dir(world)
+        society, wiring = rdflib.Graph(), rdflib.Graph()
+        for path in genesis.society_files(world_path):
+            society.parse(path, format="turtle")
+        for name in genesis.HARDWARE_FILES:
+            if (world_path / name).exists():
+                wiring.parse(world_path / name, format="turtle")
+        if not wiring:
+            continue  # no parts, so nothing the society could be failing to repeat
+
+        for part in set(wiring.subjects()):
+            stated = {f for cls in wiring.objects(part, rdflib.RDF.type) for f in floors(vocabulary, cls)}
+            stated |= floors(wiring, part)
+            if not stated:
+                continue
+            # Whatever that part hosts, or the part itself where it hosts nothing — a
+            # single-property probe IS its sensor and carries the limit directly, while a KY-015
+            # is a platform whose two channels carry it and which states none of its own.
+            hosted = set(society.objects(part, SOSA.hosts))
+            for sensor in hosted or {part}:
+                if (sensor, None, None) not in society:
+                    continue
+                assert floors(society, sensor) >= stated, (
+                    f"{world}: the wiring says {sorted(stated)}s for <{sensor}> and the society "
+                    f"says {sorted(floors(society, sensor))}s — an agent would commit to a "
+                    f"cadence its board will not keep")
+
+
 def test_the_compose_file_does_not_mount_hardware_at_an_agent():
     """The other half, and the one that actually enforces it: a rule the agent is trusted to
     follow is not a boundary. What keeps the wiring out of an agent is that the file is not in

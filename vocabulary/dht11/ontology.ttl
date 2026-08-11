@@ -7,6 +7,8 @@
 @prefix wokwi: <http://example.org/agora/wokwi#> .
 @prefix onewire: <http://example.org/agora/onewire#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix perception: <http://example.org/agora/perception#> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 
 <http://example.org/agora/dht11> a owl:Ontology ;
     rdfs:label "DHT11 temperature and humidity sensor" ;
@@ -23,3 +25,26 @@ dht11:Dht11 a owl:Class ;
               [ mc:pinRole mc:PowerPinRole     ; wokwi:name "VCC" ] ,
               [ mc:pinRole mc:GroundPinRole    ; wokwi:name "GND" ] ;
     rdfs:comment "Three legs and a pull-up to its own VCC, which is the fact worth writing down: the data line idles at whatever the part is powered from, so the rail choice IS the logic level. On a KY-015 breakout the pull-up is on the board. Rated 3-5V, and that range is a trap next to a 3.3V microcontroller — it will run perfectly happily on 5V and present 5V to an input that is not 5V tolerant." .
+
+#################  What it can honour  #################
+#
+# A datasheet fact, and therefore on the CLASS: every DHT11 has it, unlike `probe:rawDry` which
+# is measured per probe in the pot it sits in. A device that reports slowly is not a device
+# wired badly, so this is not a shape — it is what the part IS.
+#
+# `ssn-system:Frequency` is SSN's term, and its definition is what makes it the right one:
+# "The smallest possible time between one Observation, Actuation, or Sampling and the next,
+# under the defined Conditions." A time and not a rate, so it reads as a floor.
+#
+# TWO seconds because that is the part's specified sampling period — it will return the
+# previous reading if asked sooner. Below the society's own floor of ten, so it constrains
+# nothing here today, and that is worth stating rather than hiding: the mechanism binds when a
+# device is slower than the constitution, and none of the hardware in this repository is.
+dht11:Dht11 ssn-system:hasSystemCapability [
+    a ssn-system:SystemCapability ;
+    # One condition, because there is only one way this board is run. The qualifier is not
+    # decoration: SSN puts "under the defined Conditions" in the definition itself, so a part
+    # that could be read faster on mains than on a battery states two of these rather than one
+    # number with a caveat. Nothing here is battery-powered yet — see issue #78.
+    ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
+    ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 2 ] ] .

@@ -45,7 +45,7 @@ So the room comes from constraints, and there are three sources:
 | | what it says | where it lives |
 |---|---|---|
 | **constitution** | what the society allows *any* agent | figures on the capability family, e.g. `perception:minSleepS` / `perception:maxSleepS` |
-| **hardware** | what the equipment can do | on a device — *declared, and nothing states one yet* |
+| **hardware** | what the equipment can do | on a device, as an `ssn-system:Frequency` — borrowed from SSN rather than invented, and carried to the agent at genesis. See [a-board-says-what-it-can-honour](a-board-says-what-it-can-honour.md) |
 | **mandate** | what **this** agent's world allows it | `review:commits`, in `world.ttl` |
 
 They intersect, and a mandate can only narrow: one looser than the constitution *is* the

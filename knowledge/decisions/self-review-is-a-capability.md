@@ -86,7 +86,7 @@ private.** `review:commits` moved to `world.ttl`; `ag:sleepS` and the rest staye
 | source | what it is |
 |---|---|
 | constitution | what the society allows any agent — figures on the capability family |
-| hardware | what the equipment can do |
+| hardware | what the equipment can do — an `ssn-system:Frequency` a device states, carried to the agent that polls it as `review:limitedTo`; see [a-board-says-what-it-can-honour](a-board-says-what-it-can-honour.md), which is where this row stopped being aspiration |
 | mandate | what *this* agent's world allows it — `review:commits` |
 
 Two things fell out of that which were not available before:

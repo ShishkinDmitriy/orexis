@@ -36,6 +36,14 @@ which is the standing test for whether something deserves to be a capability.
 Strictly decreasing agent control, and each asks the agent for strictly less. What was
 `perception:Polling` is now `perception:Subscribing`, and `perception:Pull` is now `perception:Scheduled`.
 
+**"Agent sets, device keeps" was unqualified for as long as this record existed**, and a device
+that cannot keep what it is given is the whole of
+[#59](https://github.com/ShishkinDmitriy/agora/issues/59). A board now states the smallest gap it
+will honour and the agent cannot commit to less — see
+[a-board-says-what-it-can-honour](a-board-says-what-it-can-honour.md). It does not change which
+capability a sense mode grants: how a device is DRIVEN and what it can DO are different facts, and
+only the first decides the family.
+
 # Polling is declared and not built, on purpose
 
 `perception:Polling` is the simplest exchange there is — one request, one response, nothing retained

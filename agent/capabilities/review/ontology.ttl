@@ -66,6 +66,14 @@ review:Commitment a owl:Class ; rdfs:label "Commitment" ;
 review:commits a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range review:Commitment ;
     rdfs:label "commits" ;
     rdfs:comment "Reads as what the world commits this agent to — the range it may move within, and by stating it, the grant of the capability to move at all." .
+review:limitedTo a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range review:Commitment ;
+    rdfs:label "limited to" ;
+    rdfs:comment """What the EQUIPMENT allows this agent, as against what the world does. The third source `ranges()` has always named and never had: constitution, mandate, hardware.
+
+Shaped like a commitment and deliberately not one. Both narrow the same term the same way, so they intersect by the same arithmetic — but a mandate is a governance fact somebody ratified and could have written differently, and this is a fact about a board that nobody chose. Collapsing them would make `review:commits` mean two things and lose which one refused a revision.
+
+DERIVED, never stated. `capabilities/perception/rules.ru` computes it from the sensors an agent polls, so it lands in the derived graph like every other conclusion and a world stating it by hand is stating something it does not know.""" .
+
 review:onTerm a owl:ObjectProperty ; rdfs:domain review:Commitment ; rdfs:label "on term" .
 review:notBelow a owl:DatatypeProperty ; rdfs:label "not below" .
 review:notAbove a owl:DatatypeProperty ; rdfs:label "not above" .
