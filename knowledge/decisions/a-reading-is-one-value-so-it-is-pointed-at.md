@@ -147,7 +147,11 @@ without being made a principal. The ACL is byte-identical across all three world
   [bytes-become-a-quantity-in-stages](bytes-become-a-quantity-in-stages.md).
 - **Nothing checks a pointer against what a device sends.** A world may state `/humidty` and
   validate perfectly; the agent warns at runtime, once per message, forever. A shape cannot catch
-  it because the payload is not in the graph.
+  it because the payload is not in the graph. **Narrowed**: a pointer is now exercised against a
+  real payload from a real device in `world/simulation`, so a pointer that matches nothing shows
+  up in a world that runs — see
+  [a-stand-in-reports-what-its-world-says-it-does](a-stand-in-reports-what-its-world-says-it-does.md).
+  A world nobody brings up is still unguarded.
 - **The tightest cadence wins, and nothing says a sensor may be exempt.** A board carrying one
   urgent property and five indifferent ones reads all six at the urgent rate.
 - **`world/society` still reads only moisture** from the same board. The extra fields are ignored
