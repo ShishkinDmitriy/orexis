@@ -33,18 +33,18 @@ Match = Callable[[Offer, Iterable[Bid]], Trade]
 
 
 @dataclass
-class RoundResult:
-    """The full host → clearing path for one round."""
+class AuctionResult:
+    """The full host → clearing path for one auction."""
 
     trade: Trade
     validation: Validation
     vouchers: list[Voucher]  # empty unless the trade validated
 
 
-def run_round(offer: Offer, bids: Iterable[Bid], state: MarketState, round_id: str,
-              match: Match) -> RoundResult:
+def run_auction(offer: Offer, bids: Iterable[Bid], state: MarketState, auction_id: str,
+              match: Match) -> AuctionResult:
     """Host proposes the match; clearing validates; vouchers issue only on a green light."""
     trade = match(offer, bids)
     result = validate(trade, state)
-    vouchers = issue_vouchers(trade, round_id) if result.ok else []
-    return RoundResult(trade=trade, validation=result, vouchers=vouchers)
+    vouchers = issue_vouchers(trade, auction_id) if result.ok else []
+    return AuctionResult(trade=trade, validation=result, vouchers=vouchers)

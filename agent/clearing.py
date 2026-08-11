@@ -90,11 +90,11 @@ class Voucher:
     scope: str  # what
     amount_l: float  # water leg
     debit: float  # credit leg
-    round_id: str  # binds to this round
+    auction_id: str  # binds to the auction it was won in, never to a bidding pass
     jti: str  # anti-replay id
 
 
-def issue_vouchers(trade: Trade, round_id: str) -> list[Voucher]:
+def issue_vouchers(trade: Trade, auction_id: str) -> list[Voucher]:
     """Turn a *validated* trade into per-buyer settlement vouchers. Caller must have
     confirmed `validate(trade, state).ok` first."""
     return [
@@ -103,16 +103,16 @@ def issue_vouchers(trade: Trade, round_id: str) -> list[Voucher]:
             scope=f"actuate:valve/{line.agent}",
             amount_l=line.qty_l,
             debit=line.cost,
-            round_id=round_id,
+            auction_id=auction_id,
             jti=uuid4().hex,
         )
         for line in trade.lines
     ]
 
 
-def clear(trade: Trade, state: MarketState, round_id: str) -> list[Voucher]:
+def clear(trade: Trade, state: MarketState, auction_id: str) -> list[Voucher]:
     """Validate then issue vouchers; raise if the trade is invalid."""
     result = validate(trade, state)
     if not result.ok:
         raise ValueError("invalid trade: " + "; ".join(result.violations))
-    return issue_vouchers(trade, round_id)
+    return issue_vouchers(trade, auction_id)

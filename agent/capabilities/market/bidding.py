@@ -8,7 +8,7 @@ stays silent, which is a legitimate answer.
 An offer therefore starts with *looking*, not with computing: the agent asks its sensor and
 waits for that answer before it bids. Nudging and then reading whatever was already stored
 would defeat the point — it would bid on the past while pretending to have just looked. If
-the reading does not arrive before the round closes, the agent simply misses the round, which
+the reading does not arrive before the auction closes, the agent simply misses it, which
 is the honest outcome.
 
 Two reasons it stays silent, and both are deliberate:
@@ -83,7 +83,7 @@ class BiddingModule(Module):
         self.beliefs = agent.beliefs.read(BIDDING_BLOCK)
         self.balance = self.beliefs.endowment
         self.won_l = 0.0
-        self.pending: dict | None = None  # a round I have been asked to answer
+        self.pending: dict | None = None  # an auction I have been asked to answer
         self._deadline: Timer | None = None
         self.about = self._what_my_desire_is_about()
 
@@ -161,15 +161,15 @@ class BiddingModule(Module):
 
     def on_offer(self, market, offer: dict) -> None:
         """Look first. The bid is submitted when the reading comes back, not before."""
-        round_id = offer.get("round_id")
-        if not round_id or not self.me.acts_for:
+        auction_id = offer.get("auction_id")
+        if not auction_id or not self.me.acts_for:
             return
 
-        self.pending = {"round_id": round_id, "market": market}
+        self.pending = {"auction_id": auction_id, "market": market}
         perception = self.agent.provider(PERCEPTION)
         if perception is None:
             # bidding while perceiving nothing leaves no reading to cite, so no honest bid
-            self.log.info("round %s: I perceive nothing — sitting out", round_id)
+            self.log.info("auction %s: I perceive nothing — sitting out", auction_id)
             self.pending = None
             return
 
@@ -181,7 +181,7 @@ class BiddingModule(Module):
             self.submit(reading.value)
             return
 
-        # Give up when the round closes — a bid nobody can count is not a bid.
+        # Give up when the auction closes — a bid nobody can count is not a bid.
         window = float(offer.get("closes_in_s") or 0) or 1.0
         self._deadline = Timer(window, self.give_up)
         self._deadline.start()
@@ -202,14 +202,14 @@ class BiddingModule(Module):
         if self._deadline:
             self._deadline.stop()
         if self.pending:
-            self.log.info("round %s: sitting out — %s",
-                          self.pending["round_id"], self._why_blind())
+            self.log.info("auction %s: sitting out — %s",
+                          self.pending["auction_id"], self._why_blind())
             self.pending = None
 
     def _why_blind(self) -> str:
         """Not knowing and being broken are different, and were reported identically.
 
-        "my sensor did not answer in time" was said whenever a round closed without a reading —
+        "my sensor did not answer in time" was said whenever an auction closed without a reading —
         including when the board was simply asleep on the cadence this agent itself set. A real
         failure then reads exactly like the ordinary case, which is how a real failure gets
         ignored.
@@ -233,18 +233,18 @@ class BiddingModule(Module):
             self._deadline.stop()
         if rnd is None:
             return
-        round_id, market = rnd["round_id"], rnd["market"]
+        auction_id, market = rnd["auction_id"], rnd["market"]
 
         bid = value_bid(moisture, self.beliefs, self.balance)
         if bid is None:
-            self.log.info("round %s: moisture %.3f, target %.2f — cede",
-                          round_id, moisture, self.beliefs.target)
+            self.log.info("auction %s: moisture %.3f, target %.2f — cede",
+                          auction_id, moisture, self.beliefs.target)
             return
 
-        self.log.info("round %s: moisture %.3f -> bid %.3f L @ €%.3f",
-                      round_id, moisture, bid.max_qty_l, bid.max_price_per_l)
+        self.log.info("auction %s: moisture %.3f -> bid %.3f L @ €%.3f",
+                      auction_id, moisture, bid.max_qty_l, bid.max_price_per_l)
         self.publish(f"{market.bid_topic}/{self.me.agent_id}", {
-            "round_id": round_id,
+            "auction_id": auction_id,
             "agent": self.me.agent_id,
             "max_qty_l": bid.max_qty_l,
             "max_price_per_l": bid.max_price_per_l,

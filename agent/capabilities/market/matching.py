@@ -13,7 +13,7 @@ where the *how* could differ, it is a capability.
 
 **What stays outside it.** The host proposes and clearing disposes: this decides an allocation,
 never whether it is permitted. Solvency, the constitution and identity are `clearing.py`'s, and
-`auction.run_round` is the path between them — the same whichever member runs, which is why it
+`auction.run_auction` is the path between them — the same whichever member runs, which is why it
 did not move.
 
 **Both walk the same demand curve and disagree only about the bill.** That is a fact about these

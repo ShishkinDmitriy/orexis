@@ -157,7 +157,7 @@ def test_clear_issues_grants_for_valid_trade():
         TradeLine("tomato", qty_l=4.0, price_per_l=0.40),
         TradeLine("fern", qty_l=1.0, price_per_l=0.40),
     )
-    vouchers = clear(trade, base_state(), round_id="R-1")
+    vouchers = clear(trade, base_state(), auction_id="R-1")
     assert {g.sub for g in vouchers} == {"tomato", "fern"}
     tomato = next(g for g in vouchers if g.sub == "tomato")
     assert tomato.amount_l == 4.0
@@ -169,4 +169,4 @@ def test_clear_issues_grants_for_valid_trade():
 def test_clear_raises_on_invalid_trade():
     trade = trade_with(TradeLine("fern", qty_l=99.0, price_per_l=0.40))
     with pytest.raises(ValueError, match="invalid trade"):
-        clear(trade, base_state(), round_id="R-1")
+        clear(trade, base_state(), auction_id="R-1")

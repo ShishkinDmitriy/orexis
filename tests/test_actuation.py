@@ -42,7 +42,7 @@ def module(agent=None):
 
 def voucher(jti="j1", sub="fern", amount_l=0.64):
     return Voucher(sub=sub, scope=f"actuate:valve/{sub}", amount_l=amount_l,
-                   debit=0.3, round_id="R-1", jti=jti)
+                   debit=0.3, auction_id="R-1", jti=jti)
 
 
 # --- dosing follows the device ---------------------------------------------

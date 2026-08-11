@@ -18,7 +18,7 @@ provisional picture out, and the chance to bid again. It is not the auction and 
 | [auction](/domain/auction.md) | the process that allocates one lot: it condenses, allocates, dissolves |
 | **round** | one pass of bidding inside that process |
 
-**Exactly one round is built.** `run_round` in `agent/auction.py` takes an offer and a set of bids
+**Exactly one round is built.** `run_auction` in `agent/auction.py` takes an offer and a set of bids
 and returns a proposed trade — there is no loop, so an auction opens, collects once, matches, and
 settles. Today an auction therefore has a single round and the two coincide exactly. Everything
 below step 3 is the designed shape and not the running one.
@@ -87,10 +87,14 @@ The transcript IS the explanation ("Fern got only 1 L because rain was forecast 
 Tomato's afternoon need"). A single optimizer can't hand you that sentence — and it is a transcript
 *of rounds*, which is the other reason the iteration deserves its own word.
 
-# What still calls a round an auction
+# Nothing calls a round an auction any more
 
-`round_id` is minted once per auction, and a [voucher](/domain/voucher.md) carries `round` as a
-signed claim. Under this page that identifier names the auction rather than the iteration, which is
-harmless while there is one round per auction and wrong the moment step 4 exists. Deciding what a
-voucher names is [#74](https://github.com/ShishkinDmitriy/agora/issues/74), and it is worth
-deciding before the wire format is in use rather than after.
+`auction_id` is minted once per auction and travels on all four payloads — the offer, the bid, the
+[voucher](/domain/voucher.md) and the signed command. It names the auction, which is what it always
+was, and the [voucher](/domain/voucher.md)'s replay check is keyed on it because a voucher is won
+once per auction rather than once per bidding pass.
+
+The one name still spelled the old way is `market:roundCooldownS`, deliberately: it is a persisted
+belief, and renaming one is what [#87](https://github.com/ShishkinDmitriy/agora/issues/87) exists
+to make safe. See
+[a-round-is-an-iteration-not-the-auction](/decisions/a-round-is-an-iteration-not-the-auction.md).

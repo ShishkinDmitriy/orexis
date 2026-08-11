@@ -9,13 +9,13 @@ timestamp: 2026-08-02T00:00:00Z
 # What it is
 
 The auction result as an object. A **voucher** is what you *win*: "bearer is owed N litres of
-water from supplier S this round." It is distinct from the **access grant** that statically
+water from supplier S this auction." It is distinct from the **access grant** that statically
 binds an agent to a device — the access grant is *granted* (at genesis), the voucher is *won*
 (each round). See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
 
 # Shape
 
-`sub` (who won), the supplier, `amount_l`, `debit` (the price), `round`, `jti` (single-use),
+`sub` (who won), the supplier, `amount_l`, `debit` (the price), `auction_id`, `jti` (single-use),
 `exp`. **Co-signed** by the **host** (`match_sig` — the seller offered it) and
 **clearing** (`val_sig` — it passed validation). Concretely a JWT/JWS; v1 signs with Ed25519.
 

@@ -38,7 +38,7 @@ class Command:
     scope: str
     ml: float
     seconds: float
-    round_id: str
+    auction_id: str
 
 
 class ActuationModule(Module):
@@ -65,7 +65,7 @@ class ActuationModule(Module):
         return Command(
             jti=voucher.jti, plant=voucher.sub, scope=voucher.scope,
             ml=round(ml, 1), seconds=round(ml / device.ml_per_second, 2),
-            round_id=voucher.round_id,
+            auction_id=voucher.auction_id,
         ), device
 
     def redeem(self, voucher) -> Command:
