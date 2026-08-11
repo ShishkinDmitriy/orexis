@@ -85,6 +85,14 @@ Being on one board is what *permits* one message — not what causes it. SSN say
 how observations are transmitted, so the topics decide that and the hosting only tells you what
 could have shared one.
 
+**A world that runs does this now**, rather than a world that is described doing it.
+`world/simulation` states a stand-in reporting soil moisture and air temperature down one wire,
+and bringing it up produces `{"sensor": "sensor_fern", "temperature": 21.15, "value": 0.39}` on
+the broker and two observations from it — one per sensor, each with its own property and its own
+unit. Until that existed, every claim on this page below the wire was argued in fixtures: the
+real firmware sends three values and has never been compiled here, and the stand-in sent one. See
+[a-stand-in-reports-what-its-world-says-it-does](/decisions/a-stand-in-reports-what-its-world-says-it-does.md).
+
 **A reading becomes a number in three stages**, and each is a fact about the binding rather than
 about the agent watching it:
 

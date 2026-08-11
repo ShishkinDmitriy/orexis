@@ -62,12 +62,23 @@ ag:PublicGraphShape a sh:NodeShape ;
     sh:message "a public graph must record what it was derived from or what generated it — see agora/provenance.py" .
 
 ag:SimulatedDeviceShape a sh:NodeShape ;
-    rdfs:comment "A device that is stood in for must still be reachable like a real one. Without mqtt:onBus it gets no credential from agora-mqtt and no service from agora-compose, so nothing would ever publish for it — and the failure is a sensor that is simply, permanently silent, which reads exactly like hardware that is not there. Which it is not. Catching it here costs nothing; catching it in a running world costs an afternoon." ;
+    rdfs:comment """A device that is stood in for must still be reachable like a real one, or the failure is a sensor that is simply, permanently silent — which reads exactly like hardware that is not there. Which it is not.
+
+What makes it reachable is no longer only its own credential. A KY-015 reports two properties down ONE line, and `world/sensing` states that shape already: `ag:air_temp_fern` has no `mqtt:onBus` at all, because a peripheral sharing its board's connection must not mint a principal for a client that never connects. So the test is REACHABILITY rather than ownership — on a bus, or sharing the reading topic of something that is. This shape used to demand the credential, and demanding it of a simulated multi-property board would have forced exactly the second principal the hardware world refuses.""" ;
     sh:targetSubjectsOf ag:simulatedBy ;
-    sh:property [ sh:path mqtt:onBus ; sh:minCount 1 ;
-                  sh:message "a simulated device must be on a bus: its stand-in speaks over the wire, exactly as the real one would" ] ;
     sh:property [ sh:path ag:simulatedBy ; sh:maxCount 1 ;
-                  sh:message "one device, one stand-in" ] .
+                  sh:message "one device, one stand-in" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a simulated device must be reachable: on a bus of its own, or sharing the reading topic of a device that is — otherwise nothing would ever publish for it" ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER NOT EXISTS { $this <http://example.org/agora/mqtt#onBus> ?bus }
+                FILTER NOT EXISTS {
+                    $this <http://example.org/agora/mqtt#readingTopic> ?topic .
+                    ?peer <http://example.org/agora/mqtt#readingTopic> ?topic ;
+                          <http://example.org/agora/mqtt#onBus> ?peerBus .
+                }
+            }""" ] .
 
 ag:SimulatedActuatorShape a sh:NodeShape ;
     rdfs:comment "A stood-in actuator must say where it reports. Water reaching soil is physics, and physics has no wire — so between containers the only way a simulated sensor can learn that water actually flowed is a message from the valve that flowed it. Without a status topic the stand-in valve would open into nowhere: the command would be verified, the dose computed, and the soil would stay dry forever." ;
@@ -82,13 +93,24 @@ ag:SimulatedActuatorShape a sh:NodeShape ;
             }""" ] .
 
 ag:DeviceModelShape a sh:NodeShape ;
-    rdfs:comment "What the stand-in computes between readings. Optional individually — a modelled valve has no dry rate — but each must be a number if stated at all, because the simulator reads them without a graph to check them against." ;
+    rdfs:comment """What the stand-in computes between readings. Optional individually — a modelled valve has no dry rate — but each must be a number if stated at all, because the simulator reads them without a graph to check them against.
+
+An initial value used to be held to 0..1, on the reasoning that it is a fraction of the observed property. That was true of every value this project had and false of sensing: a KY-015 reports degrees Celsius, and 21.4 is not a fraction of anything. It is held to the model's OWN range now, which catches the slip the old rule was written for — 45 where 0.45 was meant, in a model that says it runs 0..1 — and catches it in a thermometer too, where the old rule could not look.""" ;
     sh:targetClass ag:DeviceModel ;
     sh:property [ sh:path ag:modelDryRate ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path ag:modelMinValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path ag:modelMaxValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path ag:modelInitialValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ;
-                  sh:minInclusive 0.0 ; sh:maxInclusive 1.0 ;
-                  sh:message "an initial value is a fraction of the observed property, so 0..1" ] ;
+    sh:property [ sh:path ag:modelInitialValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path ag:modelTickSeconds ; sh:maxCount 1 ; sh:datatype xsd:integer ;
-                  sh:minExclusive 0 ] .
+                  sh:minExclusive 0 ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "an initial value must lie inside the range this model states — 45 where 0.45 was meant would clamp and read as a permanently soaking pot" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/agora#modelInitialValue> ?initial .
+                OPTIONAL { $this <http://example.org/agora#modelMinValue> ?min }
+                OPTIONAL { $this <http://example.org/agora#modelMaxValue> ?max }
+                BIND(COALESCE(?min, 0.0) AS ?low)
+                BIND(COALESCE(?max, 1.0) AS ?high)
+                FILTER(?initial < ?low || ?initial > ?high)
+            }""" ] .

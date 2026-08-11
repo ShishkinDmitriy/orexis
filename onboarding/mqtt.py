@@ -141,8 +141,13 @@ WHERE {{
 # watered the plant on an unsigned order, which is exactly the failure the market exists to
 # prevent. The grant belongs to the DEVICE, not to its agent: an agent in this world has no
 # more business reading a valve's traffic than one in any other world.
-_SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{ 
-  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{PERCEPTION}monitors> ?subject .
+# Guarded on mqtt:onBus, because the grant belongs to whatever CONNECTS. A board reporting two
+# properties is two sensors and one process: without this, the second sensor mints a principal
+# of its own holding a single dose grant, for a client that never connects — the same defect
+# #81 names one level up, where a board authenticates as one of its own peripherals.
+_SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{PERCEPTION}monitors> ?subject ;
+     <{MQTT}onBus> ?bus .
   ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
  }}""")
 
