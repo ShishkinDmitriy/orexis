@@ -28,7 +28,19 @@ mc:Peripheral a owl:Class ; rdfs:subClassOf ag:Device , ssn:System ;
     rdfs:label "Peripheral" ;
     rdfs:comment """Something wired to a board's pins. A sensor is one; so is an indicator.
 
-An `ssn:System` — *a unit of abstraction for pieces of infrastructure that implement Procedures* — and not a `sosa:Platform`, which is what #79 first made it. The W3C's own worked example of a DHT22 settles it: the part is a System with `ssn:hasSubSystem`, and hosting is left for mounting.
+An `ssn:System` — *a unit of abstraction for pieces of infrastructure that implement Procedures* — and not a `sosa:Platform`, which is what #79 first made it.
+
+The W3C's own deployment example of a DHT22 shows all three cases in one chain, and they are ORTHOGONAL rather than alternatives:
+
+| | relation |
+|---|---|
+| wall → board | `sosa:hosts` only — placed, not a component |
+| board → part | BOTH, *when the mounting is permanent* |
+| part → channel | `ssn:hasSubSystem` only — never placed at all |
+
+Their comment licenses the middle row explicitly: *PCB Board 1 hosts DHT22 #4578 permanently, one can say it has it as one of its subsystems*. Permanence is what earns the second relation.
+
+**Here the board states `sosa:hosts` alone, deliberately.** Ours are plausibly soldered — the wiring's own prose says so — but nothing in the graph records whether a mounting is permanent or socketed, and that distinction has become load-bearing. Asserting `hasSubSystem` would be inferring permanence from the absence of a socket. `mc:Wire` is where it would go if stated, since a mounting is closer to a wire than to a part; that is a change of its own.
 
 Both of SSN's restrictions agree with that reading. `sosa:Platform` carries `hosts allValuesFrom ssn:System`, so a board's hostee must be a System; and `ssn:System` carries `hasSubSystem allValuesFrom ssn:System`, so a part with channels must be one too. A peripheral is hosted and has sub-systems, which makes it a System twice over and a Platform for no reason — nothing is MOUNTED on a KY-015.
 
