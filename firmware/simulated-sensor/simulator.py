@@ -7,14 +7,26 @@ what a directory under `firmware/` answers is *what runs on the device*, and the
 device happens to run is not the interesting part.
 
 **The whole claim is that nothing downstream can tell.** So this publishes what the real board
-publishes, byte for byte — `{"value": 0.183, "sensor": "..."}` — obeys the same retained
-`{"sleep_s": N}`, answers the same `{"sense": true}`, and holds the same constitutional floor and
-ceiling on its cadence. An agent wired to one of these derives `ag:Subscribing` and runs the
-ordinary perception module, because from where it stands there is nothing else it could be.
+publishes, byte for byte — obeys the same retained `{"sleep_s": N}`, answers the same
+`{"sense": true}`, and holds the same constitutional floor and ceiling on its cadence. An agent
+wired to one of these derives `ag:Subscribing` and runs the ordinary perception module, because
+from where it stands there is nothing else it could be.
 
 That is the point of the exercise. The simulation world used to exercise a parallel
 implementation, which meant it could pass while the real path was broken — the weakest possible
 form of simulation.
+
+**One board, several values.** A KY-015 reports temperature and humidity down one line, so a
+board's message carries a value per property and each sensor takes its own out with a JSON
+Pointer. This publishes the same shape: `SIM_VALUES` lists what this device reports and where in
+its document each one goes, and a device that reports one thing is simply a list of one. The
+claim above went quietly false when the real firmware learned to send three values and this still
+sent one; nothing noticed, because no world had asked it for more.
+
+**A temperature is not a fraction.** Each value drifts inside its own range, from its own start,
+by its own step — because 0..1 was never a fact about sensing, only about soil moisture. Water
+moves the one value whose property the domain's valuation is denominated in; the rest are
+untouched by a dose, which is what makes a thermometer on a watered pot behave like a thermometer.
 
 **Sense mode is honoured rather than assumed.** `scheduled` obeys the cadence command like a
 sleeping board; `push` publishes on its own clock and ignores commands, so its agent derives
@@ -58,8 +70,62 @@ def _float(name: str, default: float) -> float:
     return float(raw) if raw else default
 
 
+def place(doc: dict, pointer: str, value: float) -> None:
+    """Put `value` where an RFC 6901 pointer says it goes, making the objects on the way.
+
+    The mirror of what an agent does to read it, and deliberately a separate implementation: a
+    board does not import the reader's code, and one that could would stop being a stand-in for
+    something that cannot. Unescaping is ordered — `~1` to `/` FIRST, then `~0` to `~` — because
+    reversing it decodes a literal `~1` written `~01` as a separator.
+
+    Object keys only. An array index would need a length to grow to, and nothing here reports
+    one; refusing is better than half-supporting it, since the failure would otherwise be a
+    value quietly landing somewhere nobody reads.
+    """
+    if not pointer.startswith("/"):
+        raise ValueError(f"{pointer!r} is not a JSON Pointer — it must start with '/'")
+    tokens = [t.replace("~1", "/").replace("~0", "~") for t in pointer.split("/")[1:]]
+    node = doc
+    for token in tokens[:-1]:
+        node = node.setdefault(token, {})
+        if not isinstance(node, dict):
+            raise ValueError(f"{pointer!r}: {token!r} is already a value, not an object")
+    node[tokens[-1]] = value
+
+
+class Value:
+    """One property this device reports: where it goes in the message, and how it moves.
+
+    Its own range and its own step, because a range was never a fact about sensing. A moisture
+    fraction happens to run 0..1 and a temperature in degrees does not, and a board that reported
+    both would be describing two different kinds of number down one wire — which is exactly what
+    a KY-015 does.
+    """
+
+    def __init__(self, spec: dict) -> None:
+        self.pointer = str(spec.get("pointer") or "/value")
+        self.min = float(spec.get("min", 0.0))
+        self.max = float(spec.get("max", 1.0))
+        self.initial = float(spec.get("initial", self.min))
+        self.drift = float(spec.get("drift", 0.0))
+        # Only the value the domain's valuation is denominated in moves when water arrives. A
+        # thermometer on a watered pot reads the same before and after, which is the whole
+        # difference between modelling a property and modelling a number.
+        self.litres_per_fraction = float(spec.get("litres", 0.0) or 0.0)
+        self._drift_at_boot = self.drift
+        self.value = self.clamp(self.initial)
+
+    def clamp(self, v: float) -> float:
+        return max(self.min, min(self.max, v))
+
+    def reset(self) -> None:
+        """Back to how it booted — the value AND the trend, because a trend someone set is part
+        of the scenario they set up, not a property of the device."""
+        self.value, self.drift = self.clamp(self.initial), self._drift_at_boot
+
+
 class SimulatedSensor:
-    """One device: a value that drifts, a clock, and a connection."""
+    """One device: the values it reports, a clock, and a connection."""
 
     def __init__(self) -> None:
         self.sensor_id = _env("SIM_SENSOR_ID")
@@ -70,18 +136,18 @@ class SimulatedSensor:
         # capability follows from this, and neither branch knows that.
         self.mode = _env("SIM_SENSE_MODE", "scheduled").lower()
 
-        # The range this device can report. A moisture fraction happens to be 0..1, but nothing
-        # about a simulated sensor is: a thermometer reports neither. Stated rather than assumed,
-        # so the same simulator stands in for the temperature sensor when it arrives.
-        self.min_value = _float("SIM_MIN_VALUE", 0.0)
-        self.max_value = _float("SIM_MAX_VALUE", 1.0)
-        self.initial = _float("SIM_INITIAL_VALUE", 0.45)
-        self.value = self.initial
-        self.dry_rate = _float("SIM_DRY_RATE", 0.02)
+        # What this device reports, and where each one goes in its message. One entry for a
+        # single-property board, several for a part that reports several down one line. Required
+        # rather than defaulted: a board that reports nothing is not a board, and guessing a
+        # range is how a thermometer ends up clamped to a fraction.
+        self.values = [Value(spec) for spec in json.loads(_env("SIM_VALUES"))]
+        if not self.values:
+            raise SystemExit("SIM_VALUES is empty — a device that reports nothing is not one")
+        seen = [v.pointer for v in self.values]
+        if len(set(seen)) != len(seen):
+            raise SystemExit(f"SIM_VALUES repeats a pointer {sorted(seen)} — two properties "
+                             f"would overwrite each other in one message")
         self.tick_s = _float("SIM_TICK_SECONDS", 3)
-        # How much of the observed property a litre moves. The world states this about the
-        # subject; the simulator is told it, exactly as calibration is flashed into a board.
-        self.litres_per_fraction = _float("SIM_LITRES_PER_FRACTION", 0.0)
 
         self.min_sleep_s = _float("SIM_MIN_SLEEP_S", 10)
         self.max_sleep_s = _float("SIM_MAX_SLEEP_S", 900)
@@ -143,8 +209,32 @@ class SimulatedSensor:
             self._publish()
 
     def _publish(self) -> None:
-        payload = json.dumps({"value": round(self.value, 3), "sensor": self.sensor_id})
-        self.client.publish(self.reading_topic, payload, qos=1)
+        """One message carrying every property this device reports.
+
+        One message and not one per value, because that is what the hardware does: a board wakes
+        once, reads what it is wired to, and spends one radio transmission on the lot. Publishing
+        per value would be cheaper to write and would stop exercising the thing that made all of
+        this necessary — several sensors taking their own number out of one payload.
+        """
+        doc: dict = {"sensor": self.sensor_id}
+        for v in self.values:
+            place(doc, v.pointer, round(v.value, 3))
+        self.client.publish(self.reading_topic, json.dumps(doc), qos=1)
+
+    def _at(self, doc: dict) -> Value | None:
+        """Which value a control verb is aimed at — `/value` unless it says otherwise.
+
+        The default keeps every scenario that steers a single-property device working unchanged,
+        while `"at"` reaches the others. One extra key rather than a second verb per property:
+        the control surface should grow with what a device reports, not with what it might.
+        """
+        pointer = doc.get("at") or "/value"
+        for v in self.values:
+            if v.pointer == pointer:
+                return v
+        log.warning("%s: nothing is reported at %s — this device reports %s", self.sensor_id,
+                    pointer, ", ".join(v.pointer for v in self.values))
+        return None
 
     def _control(self, doc: dict) -> None:
         """Steer the simulation. NOT physics — this is a hand reaching into the model.
@@ -162,32 +252,45 @@ class SimulatedSensor:
         # nothing downstream can tell it from one. Tidying those would silently break every
         # flashed board.
         if isinstance(doc.get("value"), (int, float)):
-            self.value = self._clamp(float(doc["value"]))
-            log.info("%s: set to %.3f", self.sensor_id, self.value)
+            if (v := self._at(doc)) is not None:
+                v.value = v.clamp(float(doc["value"]))
+                log.info("%s: %s set to %.3f", self.sensor_id, v.pointer, v.value)
         if isinstance(doc.get("trend_per_tick"), (int, float)):
-            # Signed, and it REPLACES the dry rate rather than adding to it: a positive trend is
+            # Signed, and it REPLACES the drift rather than adding to it: a positive trend is
             # a pot being rained on, which is a different world, not a wetter one.
-            self.dry_rate = -float(doc["trend_per_tick"])
-            log.info("%s: trend now %+.4f per tick", self.sensor_id, -self.dry_rate)
+            if (v := self._at(doc)) is not None:
+                v.drift = -float(doc["trend_per_tick"])
+                log.info("%s: %s trend now %+.4f per tick", self.sensor_id, v.pointer, -v.drift)
         if doc.get("reset"):
-            self.value, self.dry_rate = self.initial, _float("SIM_DRY_RATE", 0.02)
-            log.info("%s: reset to %.3f", self.sensor_id, self.value)
+            # Everything, not just what `at` names: a reset puts the device back, and a board
+            # half-reset is a scenario nobody meant to set up.
+            for v in self.values:
+                v.reset()
+            log.info("%s: reset to %s", self.sensor_id,
+                     ", ".join(f"{v.pointer}={v.value:.3f}" for v in self.values))
         if doc.get("publish"):
             self._publish()
 
     # --- the physics ---
 
-    def _clamp(self, v: float) -> float:
-        return max(self.min_value, min(self.max_value, v))
-
     def _receive(self, ml: float) -> None:
-        """Water arrived at the subject. How far it moves the reading is a fact about the pot."""
-        if ml > 0 and self.litres_per_fraction > 0:
-            self.value = self._clamp(self.value + (ml / 1000.0) / self.litres_per_fraction)
-            log.info("%s: received %.0f ml -> %.3f", self.sensor_id, ml, self.value)
+        """Water arrived at the subject. How far it moves a reading is a fact about the pot.
+
+        It moves only the values that say how much a litre is worth to them, which in practice is
+        the one property the domain's valuation is denominated in. A thermometer sharing the board
+        is not cooled by watering the plant, and a simulation in which it was would be teaching an
+        agent something false about the world.
+        """
+        if ml <= 0:
+            return
+        for v in self.values:
+            if v.litres_per_fraction > 0:
+                v.value = v.clamp(v.value + (ml / 1000.0) / v.litres_per_fraction)
+                log.info("%s: received %.0f ml -> %s=%.3f", self.sensor_id, ml, v.pointer, v.value)
 
     def _dry(self) -> None:
-        self.value = self._clamp(self.value - self.dry_rate)
+        for v in self.values:
+            v.value = v.clamp(v.value - v.drift)
 
     # --- the loop ---
 
