@@ -1,4 +1,4 @@
-"""ag:Actuation — voucher to bounded, co-signed command. The actuate boundary.
+"""actuation:Actuation — voucher to bounded, co-signed command. The actuate boundary.
 
 Dosing is not configured here: it comes from the valve's own calibration in the world, so
 these tests build a device and check the module obeys it.

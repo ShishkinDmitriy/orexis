@@ -1,3 +1,7 @@
+@prefix review: <http://example.org/agora/review#> .
+@prefix perception: <http://example.org/agora/perception#> .
+@prefix water: <http://example.org/agora/water#> .
+@prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -15,7 +19,7 @@
 #  What it is FOR: bringing a real board up, and integration tests that have no business
 #  starting a market. It is also the clearest demonstration of the central claim — nothing
 #  here says what the agent can DO. It is wired to a sensor and to nothing else, and
-#  derivation gives it ag:Subscribing and nothing else. Seed world/society instead, without
+#  derivation gives it perception:Subscribing and nothing else. Seed world/society instead, without
 #  touching the board or the agent, and the very same hardware joins a market.
 #
 #  The device ids and channels are deliberately IDENTICAL to world/society, so one flashed
@@ -25,20 +29,20 @@
 
 ##########  The bus everyone speaks over  ##########
 
-ag:local_bus a ag:MessageBus ;
+ag:local_bus a mqtt:MessageBus ;
     ag:localId "local_bus" ;
-    ag:brokerHost "localhost" ;
-    ag:brokerPort 1884 ;
+    mqtt:brokerHost "localhost" ;
+    mqtt:brokerPort 1884 ;
     # Agents connect here and prove who they are with a certificate; the boards keep the
     # plaintext port above. One bus, one ACL, two ways of authenticating.
-    ag:brokerTlsPort 8884 .
+    mqtt:brokerTlsPort 8884 .
 
 ##########  World version  ##########
 
 #  Who ratified it. A REFERENCE, never a declaration: the world says which user stands behind
 #  these files and says nothing else about them — no name, no key, no type. A user is
 #  installation-level (AGENTS.md rule 3) and an agent is given only its world, so the URI is an
-#  identifier it never resolves, exactly as `ag:brokerHost` names a host it never introspects.
+#  identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never introspects.
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
 ag:world a ag:World ; ag:currentVersion ag:version_1 ;
@@ -47,10 +51,10 @@ ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 
 ##########  The subject — a thing that is watched, and nothing more  ##########
-#  NOT an ag:Plant here, and the difference is the point: a plant is a participant in a water
+#  NOT an water:Plant here, and the difference is the point: a plant is a participant in a water
 #  economy (it is served by a source, it has a pot size), and this world has no economy for it
 #  to participate in. It is a feature of interest — something a sensor reads. The same IRI is
-#  an ag:Plant over in world/society, because there it is one.
+#  an water:Plant over in world/society, because there it is one.
 
 ag:fern a sosa:FeatureOfInterest ;
     ag:localId "fern" .
@@ -59,10 +63,10 @@ ag:fern a sosa:FeatureOfInterest ;
 
 #  ONE board, THREE sensors. The ESP32 carries a capacitive probe and a KY-015, and it is one
 #  MQTT client with one credential — so it publishes ONE message on ONE topic, and each sensor
-#  says which value in it is its own. That is what ag:readingPointer is for; the probe states
+#  says which value in it is its own. That is what mqtt:readingPointer is for; the probe states
 #  none because `/value` is the default and is what every single-property board already sends.
 #
-#  All three are ag:Scheduled and share ONE command topic, because there is one board and it
+#  All three are perception:Scheduled and share ONE command topic, because there is one board and it
 #  sleeps once: a cadence is a property of the board, not of a property being measured. The
 #  agent aims that channel once, at the tightest cadence any sensor on it asks for.
 #
@@ -101,40 +105,40 @@ ag:air_sensor_fern a sosa:Platform ;
     sosa:hosts ag:air_temp_fern , ag:air_humidity_fern ;
     rdfs:comment "One part reporting two properties. A Platform rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it hosts the two that do." .
 
-ag:moisture_sensor_fern a ag:Sensor ;
+ag:moisture_sensor_fern a perception:Sensor ;
     ag:localId "moisture_sensor_fern" ;
-    ag:onBus ag:local_bus ;
-    ag:senseMode ag:Scheduled ;     # keeps a given interval -> its agent gains ag:Subscribing
-    ag:monitors ag:fern ;
-    sosa:observes ag:SoilMoisture ;
+    mqtt:onBus ag:local_bus ;
+    perception:senseMode perception:Scheduled ;     # keeps a given interval -> its agent gains perception:Subscribing
+    perception:monitors ag:fern ;
+    sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
-    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    ag:commandTopic "sensors/moisture_sensor_fern/command" .
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
-#  The KY-015's two channels. They are ag:Sensor and NOT devices: they have no ag:onBus of
+#  The KY-015's two channels. They are perception:Sensor and NOT devices: they have no mqtt:onBus of
 #  their own and mint no credential, because the thing that connects to the broker is the
 #  board, which already has one. `ag:air_sensor_fern` in hardware.ttl is the peripheral they
 #  read — its pins, its model and its wires are stated there and nothing here repeats them.
 
-ag:air_temp_fern a ag:Sensor ;
+ag:air_temp_fern a perception:Sensor ;
     ag:localId "air_temp_fern" ;
-    ag:senseMode ag:Scheduled ;
-    ag:monitors ag:fern ;
-    sosa:observes ag:AirTemperature ;
+    perception:senseMode perception:Scheduled ;
+    perception:monitors ag:fern ;
+    sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
-    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    ag:readingPointer "/temperature" ;
-    ag:commandTopic "sensors/moisture_sensor_fern/command" .
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:readingPointer "/temperature" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
-ag:air_humidity_fern a ag:Sensor ;
+ag:air_humidity_fern a perception:Sensor ;
     ag:localId "air_humidity_fern" ;
-    ag:senseMode ag:Scheduled ;
-    ag:monitors ag:fern ;
-    sosa:observes ag:AirHumidity ;
+    perception:senseMode perception:Scheduled ;
+    perception:monitors ag:fern ;
+    sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
-    ag:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    ag:readingPointer "/humidity" ;
-    ag:commandTopic "sensors/moisture_sensor_fern/command" .
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:readingPointer "/humidity" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
 ##########  The agent  ##########
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
@@ -142,8 +146,8 @@ ag:air_humidity_fern a ag:Sensor ;
 
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
-    ag:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;
-    ag:eventTopic "readings/fern" .
+    perception:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;
+    mqtt:eventTopic "readings/fern" .
 
 ##########  What each agent may re-pick, and how far  ##########
 #  A MANDATE: the room this world gives an agent on one of its own settings. Here rather than in
@@ -151,7 +155,7 @@ ag:fern_agent a ag:Agent ;
 #  it wants. The pick inside the range stays private; the range does not.
 #
 #  Stating one is also what GRANTS the review capability: room to move and the ability to use it
-#  are one decision said once, so `capabilities/review/rules.ru` derives ag:Reckoning from exactly
+#  are one decision said once, so `capabilities/review/rules.ru` derives review:Reckoning from exactly
 #  these triples. An agent with no mandate never arises, which is how a deployment that wants no
 #  drift says so — by granting none, rather than by omitting a belief and hoping something
 #  notices. The supplier has none: it holds no revisable setting, so there is nothing to give it
@@ -159,4 +163,4 @@ ag:fern_agent a ag:Agent ;
 #
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
-ag:fern_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 10 ; ag:notAbove 900 ] .
+ag:fern_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .

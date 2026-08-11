@@ -20,7 +20,7 @@ Two more properties follow from keeping it in the store rather than in memory:
   and have to earn them again;
 - reflection **never waits on the series store**, which attention must never do.
 
-`ag:sampleMax` is kept beside the sums although a variance could be derived without it, because
+`review:sampleMax` is kept beside the sums although a variance could be derived without it, because
 equality with the minimum is the one thing a variance cannot express. A variance *approaches*
 zero for a nearly-still world and *is* zero only for an instrument that has not moved at all,
 and those two cases want opposite responses.
@@ -139,16 +139,16 @@ class Summaries:
 WITH <{self.graph}>
 DELETE {{ {node} ?p ?o }} WHERE {{ {node} ?p ?o }} ;
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  {node} a ag:ObservationSummary ;
+  {node} a review:ObservationSummary ;
     sosa:hasFeatureOfInterest <{subject_uri}> ;
     sosa:observedProperty <{observed_property}> ;
-    ag:sampleCount {count} ;
-    ag:sampleMin {decimal(low)} ;
-    ag:sampleMax {decimal(high)} ;
-    ag:sampleSum {decimal(total)} ;
-    ag:sampleSumSquares {decimal(squares)} ;
-    ag:firstAt "{first}"^^xsd:dateTime ;
-    ag:lastAt "{at}"^^xsd:dateTime .
+    review:sampleCount {count} ;
+    review:sampleMin {decimal(low)} ;
+    review:sampleMax {decimal(high)} ;
+    review:sampleSum {decimal(total)} ;
+    review:sampleSumSquares {decimal(squares)} ;
+    review:firstAt "{first}"^^xsd:dateTime ;
+    review:lastAt "{at}"^^xsd:dateTime .
 }} }}""")
 
     # --- rolling over -------------------------------------------------------------------
@@ -168,7 +168,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             self.store.update(f"""
 WITH <{self.graph}>
 DELETE {{ {live} ?p ?o }}
-INSERT {{ {completed} ?p ?o ; ag:windowSeq {seq} }}
+INSERT {{ {completed} ?p ?o ; review:windowSeq {seq} }}
 WHERE  {{ {live} ?p ?o }}""")
             self._prune(window.subject, window.observed_property, seq)
             closed += 1
@@ -177,8 +177,8 @@ WHERE  {{ {live} ?p ?o }}""")
     def _next_seq(self, subject_uri: str, observed_property: str) -> int:
         rows = bindings(self.store.query(f"""
 SELECT (MAX(?n) AS ?seq) WHERE {{ GRAPH <{self.graph}> {{
-  ?s a ag:ObservationSummary ; sosa:hasFeatureOfInterest <{subject_uri}> ;
-     sosa:observedProperty <{observed_property}> ; ag:windowSeq ?n }} }}"""))
+  ?s a review:ObservationSummary ; sosa:hasFeatureOfInterest <{subject_uri}> ;
+     sosa:observedProperty <{observed_property}> ; review:windowSeq ?n }} }}"""))
         held = rows[0].get("seq") if rows else None
         return (int(held) + 1) if held is not None else 1
 
@@ -187,19 +187,19 @@ SELECT (MAX(?n) AS ?seq) WHERE {{ GRAPH <{self.graph}> {{
         self.store.update(f"""
 WITH <{self.graph}>
 DELETE {{ ?s ?p ?o }}
-WHERE  {{ ?s a ag:ObservationSummary ; sosa:hasFeatureOfInterest <{subject_uri}> ;
-            sosa:observedProperty <{observed_property}> ; ag:windowSeq ?n ; ?p ?o .
+WHERE  {{ ?s a review:ObservationSummary ; sosa:hasFeatureOfInterest <{subject_uri}> ;
+            sosa:observedProperty <{observed_property}> ; review:windowSeq ?n ; ?p ?o .
           FILTER(?n <= {newest - RING}) }}""")
 
     # --- reading ------------------------------------------------------------------------
 
     def accumulating(self) -> list[Window]:
         """Every window currently being filled — one per subject and property."""
-        return self._windows("FILTER NOT EXISTS { ?s ag:windowSeq ?any }")
+        return self._windows("FILTER NOT EXISTS { ?s review:windowSeq ?any }")
 
     def completed(self) -> list[Window]:
         """Every closed window still held, newest first."""
-        return sorted(self._windows("?s ag:windowSeq ?seq"),
+        return sorted(self._windows("?s review:windowSeq ?seq"),
                       key=lambda w: w.seq or 0, reverse=True)
 
     def newest(self) -> list[Window]:
@@ -216,11 +216,11 @@ WHERE  {{ ?s a ag:ObservationSummary ; sosa:hasFeatureOfInterest <{subject_uri}>
         rows = bindings(self.store.query(f"""
 SELECT ?subject ?property ?count ?min ?max ?sum ?squares ?first ?last ?seq
 WHERE {{ GRAPH <{self.graph}> {{
-  ?s a ag:ObservationSummary ;
+  ?s a review:ObservationSummary ;
      sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ;
-     ag:sampleCount ?count ; ag:sampleMin ?min ; ag:sampleMax ?max ;
-     ag:sampleSum ?sum ; ag:sampleSumSquares ?squares ;
-     ag:firstAt ?first ; ag:lastAt ?last .
+     review:sampleCount ?count ; review:sampleMin ?min ; review:sampleMax ?max ;
+     review:sampleSum ?sum ; review:sampleSumSquares ?squares ;
+     review:firstAt ?first ; review:lastAt ?last .
   {extra}
 }} }}"""))
         return [Window(
@@ -234,9 +234,9 @@ WHERE {{ GRAPH <{self.graph}> {{
     def _read(self, node: str) -> Window | None:
         rows = bindings(self.store.query(f"""
 SELECT ?count ?min ?max ?sum ?squares ?first ?last WHERE {{ GRAPH <{self.graph}> {{
-  {node} ag:sampleCount ?count ; ag:sampleMin ?min ; ag:sampleMax ?max ;
-         ag:sampleSum ?sum ; ag:sampleSumSquares ?squares ;
-         ag:firstAt ?first ; ag:lastAt ?last }} }} LIMIT 1"""))
+  {node} review:sampleCount ?count ; review:sampleMin ?min ; review:sampleMax ?max ;
+         review:sampleSum ?sum ; review:sampleSumSquares ?squares ;
+         review:firstAt ?first ; review:lastAt ?last }} }} LIMIT 1"""))
         if not rows:
             return None
         r = rows[0]

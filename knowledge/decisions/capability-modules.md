@@ -61,11 +61,11 @@ must decide, a binding distinguishes how a device is spoken to.
 The sovereign never writes down what an agent can do — only what exists and what is wired to
 what. Each capability's `rules.ru` then computes ability from connection:
 
-- wired to a **scheduled** sensor → `ag:Subscribing`: the agent states the interval;
-- wired to a **push-mode** sensor → `ag:Listening`: it records what arrives, and is never
+- wired to a **scheduled** sensor → `perception:Subscribing`: the agent states the interval;
+- wired to a **push-mode** sensor → `perception:Listening`: it records what arrives, and is never
   asked for a cadence, because it has no way to apply one;
 - plumbed into a market → `market:Bidding`; owning the venue → `market:Hosting`;
-- holding actuators → `ag:Actuation`.
+- holding actuators → `actuation:Actuation`.
 
 This is the load-bearing part. A declaration can drift from reality; a derivation cannot.
 Reflash a board from push to pull, re-run genesis, and the agent gains a cadence with no edit
@@ -74,8 +74,8 @@ agent is required to believe follows from its hardware too* — a listening agen
 cadence would fail validation, because that cadence would be a fiction.
 
 The rules read across two graphs deliberately: the **world** says what type a device is, the
-**T-Box** says what that type is a kind of. So a rule written against `ag:Actuator` picks up
-an `ag:Valve` without naming it, and a new kind of actuator works the day its class exists.
+**T-Box** says what that type is a kind of. So a rule written against `actuation:Actuator` picks up
+an `actuation:Valve` without naming it, and a new kind of actuator works the day its class exists.
 
 # One process per agent
 

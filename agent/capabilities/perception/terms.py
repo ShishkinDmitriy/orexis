@@ -1,13 +1,20 @@
 """The terms this package implements — the Python end of `ontology.ttl`.
 
 Every capability package names its terms in one small file like this, so nothing central has
-to know they exist. `term()` builds the IRI from the kernel prefix; nothing is imported from
-another capability, because a term is spelled the same way wherever it is referred to.
+to know they exist. **This package owns a namespace**, and `term()` here builds into it —
+perceiving is what an agent wired to a sensor does, not what every agent does, so `ag:` was
+never the right place for it. `tests/test_layout.py` holds `NS` and the `@prefix` in
+`ontology.ttl` together.
 """
 
 from __future__ import annotations
 
-from agent.ontology import term
+NS = "http://example.org/agora/perception#"
+
+
+def term(name: str) -> str:
+    """A term of this package's, by local name."""
+    return NS + name
 
 # The family. Anything that perceives is one of these — which is what lets another capability
 # ask for "whoever perceives" without knowing which way it does it.
@@ -22,6 +29,6 @@ LISTENING = term("Listening")  # the device announces on its own clock; the agen
 # A module names the mode it serves so it can take only the sensors it is actually for — the
 # pairing is stated in rules.ru as well, and the alternative is introspecting a SPARQL update to
 # recover it, which is worse. Both are T-Box terms, which the first rule permits in code.
-PULL = term("Pull")            # answers when asked — the unbuilt ag:Polling would serve it
-SCHEDULED = term("Scheduled")  # keeps an interval it is given -> ag:Subscribing
-PUSH = term("Push")            # keeps its own clock, takes no orders -> ag:Listening
+PULL = term("Pull")            # answers when asked — the unbuilt perception:Polling would serve it
+SCHEDULED = term("Scheduled")  # keeps an interval it is given -> perception:Subscribing
+PUSH = term("Push")            # keeps its own clock, takes no orders -> perception:Listening

@@ -36,7 +36,7 @@ log = logging.getLogger("broker-cert")
 
 INFRA_SECRETS = REPO_ROOT / "infra" / "secrets"
 
-# The name clients will verify. It has to match what the WORLDS state as ag:brokerHost, or every
+# The name clients will verify. It has to match what the WORLDS state as mqtt:brokerHost, or every
 # agent rejects the certificate — but this side cannot read the worlds on a split deployment, so
 # it is an argument with a default rather than a lookup.
 DEFAULT_HOST = "localhost"
@@ -75,7 +75,7 @@ def main() -> None:
                     "authorities the broker trusts. Not onboarding — run it where infra runs.",
     )
     p.add_argument("--host", default=DEFAULT_HOST,
-                   help=f"the name clients reach the broker by; must match ag:brokerHost in the "
+                   help=f"the name clients reach the broker by; must match mqtt:brokerHost in the "
                         f"worlds that use it (default: {DEFAULT_HOST})")
     p.add_argument("--rotate", action="store_true",
                    help="reissue the installation CA and broker certificate. Everything that "

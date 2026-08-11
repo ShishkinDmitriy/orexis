@@ -61,7 +61,7 @@ no instrument measures — a time slot, a right of way, a share of attention —
 about the *bidder's* valuation on the *venue*, where every participant would have to agree to it.
 
 The property-shaped thing is the **stake**. A target of 0.55 is 0.55 *of* something, and the
-bands and `ag:litresPerFraction` are denominated in the same unit — `litresPerFraction` is
+bands and `water:litresPerFraction` are denominated in the same unit — `litresPerFraction` is
 precisely the exchange rate between the lot and the property, which is where the coupling
 honestly lives. So the domain states `market:aboutProperty` on the desire term itself, the bidder
 follows it from a term it already names, and the market stays a lot. See

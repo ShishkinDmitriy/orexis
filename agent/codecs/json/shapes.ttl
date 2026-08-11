@@ -1,3 +1,6 @@
+@prefix review: <http://example.org/agora/review#> .
+@prefix perception: <http://example.org/agora/perception#> .
+@prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix sh:    <http://www.w3.org/ns/shacl#> .
 @prefix ag:    <http://example.org/agora#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
@@ -5,14 +8,14 @@
 
 codec:ChannelIsDecodedByExactlyOneShape a sh:NodeShape ;
     rdfs:comment "Every stream is decoded by exactly one codec, checked on the DERIVED fact rather than on what any world stated — so it holds a world to the outcome of its own derivation instead of to its wording. This is the shape the encoding moved onto a channel FOR. While the fact sat on each sensor, three sensors sharing one topic carried three copies of it and nothing compared them: giving two of them different encodings validated clean, and the disagreement would have surfaced as one board's readings decoding through the wrong format at the first message. A stream has one format or the world is wrong about it. Two ways to fail, and both are now refusable: NONE means the derivation did not run, and TWO means two devices on one topic disagree — including the quiet case, where one states CBOR and another states nothing and is therefore saying JSON." ;
-    sh:targetClass ag:Channel ;
+    sh:targetClass mqtt:Channel ;
     sh:property [ sh:path codec:decodedBy ;
                   sh:minCount 1 ; sh:maxCount 1 ;
                   sh:class codec:Encoding ;
                   sh:message "a stream must be decoded by exactly one codec — two means the devices on this topic disagree about its format, and a device that states nothing is stating JSON" ] .
 
 codec:OnlyAnEncodingIsStatedShape a sh:NodeShape ;
-    rdfs:comment "The mirror, on the premise rather than the conclusion: what a world STATES must be a member of the family. A typo or an invented IRI would otherwise derive itself faithfully into the world and fail much later, when a sensor turns out to be served by a codec no package has ever heard of. Note what this deliberately does NOT refuse: a member that is declared but unimplemented, `codec:Cbor` today. That is the same position `ag:Polling` and `ag:Consulting` hold — the vocabulary says the seam exists, the build reports at startup that it cannot fill it, and refusing the world instead would make declaring a seam impossible." ;
+    rdfs:comment "The mirror, on the premise rather than the conclusion: what a world STATES must be a member of the family. A typo or an invented IRI would otherwise derive itself faithfully into the world and fail much later, when a sensor turns out to be served by a codec no package has ever heard of. Note what this deliberately does NOT refuse: a member that is declared but unimplemented, `codec:Cbor` today. That is the same position `perception:Polling` and `review:Consulting` hold — the vocabulary says the seam exists, the build reports at startup that it cannot fill it, and refusing the world instead would make declaring a seam impossible." ;
     sh:targetSubjectsOf codec:encoding ;
     sh:property [ sh:path codec:encoding ;
                   sh:maxCount 1 ; sh:class codec:Encoding ;

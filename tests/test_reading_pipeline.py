@@ -131,7 +131,7 @@ def test_one_device_disagreeing_about_a_shared_stream_is_refused():
     store = _world_stating("codec:encoding", "codec:Cbor")  # the probe alone
     rows = bindings(store.query(PREFIXES + f"""
         SELECT ?c WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-          ?ch a ag:Channel ; ag:channelTopic "sensors/moisture_sensor_fern/reading" ;
+          ?ch a mqtt:Channel ; mqtt:channelTopic "sensors/moisture_sensor_fern/reading" ;
               codec:decodedBy ?c }} }}"""))
     assert len(rows) == 2, "a stream with two claims on it must show both, for the shape to see"
 
@@ -148,7 +148,7 @@ def test_a_stated_premise_produces_exactly_one_conclusion():
     store = _world_stating("codec:encoding", "codec:Cbor", subjects=BOARD)
     rows = bindings(store.query(PREFIXES + f"""
         SELECT ?c WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-          ?ch a ag:Channel ; ag:channelTopic "sensors/moisture_sensor_fern/reading" ;
+          ?ch a mqtt:Channel ; mqtt:channelTopic "sensors/moisture_sensor_fern/reading" ;
               codec:decodedBy ?c }} }}"""))
     assert len(rows) == 1
 
@@ -163,7 +163,7 @@ def test_the_lookup_finds_the_implementation():
 
 def test_a_member_this_build_does_not_implement_is_reported_not_raised():
     """A world may name a declared-but-unimplemented member — `codec:Cbor` is exactly the
-    position `ag:Polling` and `ag:Consulting` hold. The shapes deliberately allow it, so the
+    position `perception:Polling` and `review:Consulting` hold. The shapes deliberately allow it, so the
     honest cost is one unread sensor and a warning rather than a society that cannot start."""
     probe = sensors_of()["moisture_sensor_fern"]
     assert codec_for(probe.__class__(**{**vars(probe), "decoded_by": CBOR})) is None

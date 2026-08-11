@@ -43,8 +43,8 @@ Two different numbers do two different jobs, and nothing said so until now:
 
 | | fern | tomato | succulent |
 |---|---|---|---|
-| `ag:bandLow` — what opens a round | 0.35 | 0.30 | 0.12 |
-| `ag:hasTarget` — what makes a bid | 0.55 | 0.50 | 0.22 |
+| `water:bandLow` — what opens a round | 0.35 | 0.30 | 0.12 |
+| `water:hasTarget` — what makes a bid | 0.55 | 0.50 | 0.22 |
 
 A bid is computed from `target - moisture`; the announcement is computed from `bandLow`. An
 agent between the two is below its target, will bid if a round opens, and **cannot open one**.
@@ -57,7 +57,7 @@ file with nothing to notice.
 
 ## What the gap costs, in this world
 
-With `ag:litresPerFraction 2.0` for all three, the demand that exists between `bandLow` and
+With `water:litresPerFraction 2.0` for all three, the demand that exists between `bandLow` and
 `hasTarget` is:
 
 ```
@@ -98,7 +98,7 @@ is known at `close()`. That is a real and closable gap, filed as [#50](https://g
 
 An ascending clock — the host names a price, bidders answer with a quantity, the price rises
 until demand meets supply — would let the lot be *discovered* instead of declared. The domain
-already has the machinery: `ag:litresPerFraction` converts a deficit into litres, so a bidder
+already has the machinery: `water:litresPerFraction` converts a deficit into litres, so a bidder
 can answer a price with a quantity honestly at every tick.
 
 Three costs, and the third is the one that matters:
@@ -116,7 +116,7 @@ Three costs, and the third is the one that matters:
 # Seams left open
 
 - **The lot is one number for every round.** It does not vary with the season, the tank level,
-  or how many agents are plumbed in. `ag:capacityL` is the physical ceiling and is checked by
+  or how many agents are plumbed in. `water:capacityL` is the physical ceiling and is checked by
   clearing, but nothing connects it to what is offered.
 - **Nothing ties `bandLow` to `hasTarget`.** A beliefs file can state a `bandLow` above its
   target, which would make an agent announce trouble it will not bid on. No shape forbids it,

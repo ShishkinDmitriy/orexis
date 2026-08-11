@@ -47,5 +47,13 @@ UNIFORM_PRICE = term("UniformPrice")   # every winner pays the lowest accepted b
 MATCHES_BY = term("matchesBy")
 
 # --- what this package asks OF others, by family. Their namespaces, not this one's ---
-PERCEPTION = ontology.term("PerceptionCapability")  # whoever can look, however it looks
-ACTUATION = ontology.term("Actuation")  # whoever can touch the hardware, if this agent can at all
+#
+# Declared as literals rather than imported: capability packages never import each other's
+# Python, so the namespace IRI is the interface. Building these with the KERNEL's `term()` is
+# the mistake to avoid — it compiles silently, names a term nobody declares, and
+# `agent.provider` then finds nobody. `test_round.py::test_winning_opens_the_valve` caught
+# exactly that when actuation took a namespace of its own.
+ACTUATION_NS = "http://example.org/agora/actuation#"
+
+PERCEPTION = ontology.PERCEPTION + "PerceptionCapability"  # whoever can look, however it looks
+ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if this agent can at all

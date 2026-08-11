@@ -37,8 +37,8 @@ record is worse than none, because it is still cited.
    the graph. See [capability-packages](knowledge/decisions/capability-packages.md).
 2. **A capability is a named ability with interchangeable implementations. A DIRECTORY IS A
    PACKAGE, and a package may hold several.** The ability is a **family** — the slot; the
-   implementations are its members. `ag:PerceptionCapability` is a family and `ag:Subscribing`
-   and `ag:Listening` are two ways of having it, chosen by what the hardware can do. That is the
+   implementations are its members. `perception:PerceptionCapability` is a family and `perception:Subscribing`
+   and `perception:Listening` are two ways of having it, chosen by what the hardware can do. That is the
    shape to reach for: a capability worth naming is one where the *how* could differ. Reviewing
    your own settings by strict rules or by asking a model is one ability with two
    implementations; pay-as-bid and uniform-price are one auction with two. Where nothing could
@@ -86,7 +86,7 @@ misconfigured agent on the same topics as the real one. Also: **capabilities are
 genesis, never hand-declared.** `world.ttl` must not contain `ag:hasCapability`.
 
 **Wiring is one input, not the definition.** Perception's are a strict function of the hardware —
-a board that keeps an interval gives its agent `ag:Subscribing`, and nothing could have decided
+a board that keeps an interval gives its agent `perception:Subscribing`, and nothing could have decided
 otherwise. Others have no wiring to follow and are *deduced*: someone at genesis judged that this
 agent should have them, and could have judged differently. Both end up in the world graph and
 neither is hand-written, but they are not the same kind of fact — the first is `derived`, the
@@ -96,10 +96,10 @@ work for the one family whose hardware forces the answer.
 
 **Each capability is granted by whatever fact makes it meaningful, and that fact is its own.** The
 premise lives in the capability's `rules.ru`, and there is no pattern to fit a new one into. Three
-are granted by wiring — `ag:hasActuator`, `market:bidsIn`/`market:hosts`, `ag:polls` and a sense mode —
-because they are about equipment or a position in a market. `ag:Reckoning` is granted by
+are granted by wiring — `actuation:hasActuator`, `market:bidsIn`/`market:hosts`, `perception:polls` and a sense mode —
+because they are about equipment or a position in a market. `review:Reckoning` is granted by
 **latitude**: revising your own settings means nothing without settings you are permitted to move,
-so an `ag:commits` mandate whose ends differ is its premise. When you add one, ask what makes
+so an `review:commits` mandate whose ends differ is its premise. When you add one, ask what makes
 *yours* meaningful rather than which of these it resembles. See
 [self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md).
 
@@ -224,7 +224,7 @@ Beliefs are the agent's: **authored** once at birth, never touched by start or s
 that would reset them on a restart is a bug, not a convenience.
 
 But a belief is a **point chosen inside a range**, not a constant, and what genesis wrote is the
-first pick rather than a bound. An agent whose **world gives it room to move** — `ag:commits`, in
+first pick rather than a bound. An agent whose **world gives it room to move** — `review:commits`, in
 `world.ttl` — re-picks on its own clock inside that room, so the author's job is to constrain
 well, not to guess well. **The mandate is also the grant**: `capabilities/review/` derives its
 capability from exactly those triples, so an agent given no room has no review module, keeps no

@@ -1,7 +1,7 @@
 """One device reports two properties, and each sensor takes its own value out of one message.
 
 The board is one MQTT client with one credential, so it publishes once however many peripherals
-it carries. What separates the values is `ag:readingPointer` — a JSON Pointer (RFC 6901), which
+it carries. What separates the values is `mqtt:readingPointer` — a JSON Pointer (RFC 6901), which
 identifies exactly ONE value, which is exactly what a device reports per property.
 
 These cover the two halves that were broken: resolving the pointer, and offering one message to
@@ -18,9 +18,9 @@ from agent.world import Sensor, load_self
 
 from conftest import build_agent, genesis_store, query_fn
 
-AIR_TEMP = "http://example.org/agora#AirTemperature"
-AIR_HUMIDITY = "http://example.org/agora#AirHumidity"
-MOISTURE = "http://example.org/agora#SoilMoisture"
+AIR_TEMP = "http://example.org/agora/water#AirTemperature"
+AIR_HUMIDITY = "http://example.org/agora/water#AirHumidity"
+MOISTURE = "http://example.org/agora/water#SoilMoisture"
 
 
 # --- the pointer itself ----------------------------------------------------

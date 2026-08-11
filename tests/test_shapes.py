@@ -103,42 +103,42 @@ def test_genesis_conforms():
 
 def test_polling_agent_must_state_a_cadence():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:fastSleepS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:fastSleepS ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent perception:fastSleepS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent perception:fastSleepS ?v }} }}"""))
 
 
 def test_polling_agent_must_state_a_freshness_limit():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:readingGraceS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:readingGraceS ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent perception:readingGraceS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent perception:readingGraceS ?v }} }}"""))
 
 
 def test_cadence_may_not_be_slower_when_thirsty():
     # watching LESS closely exactly when in trouble inverts the whole policy
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:fastSleepS 30 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:fastSleepS 800 }} }}
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent perception:fastSleepS 30 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent perception:fastSleepS 800 }} }}
         WHERE  {{}}"""))
 
 
 def test_nobody_may_sleep_past_the_constitutional_ceiling():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:slowSleepS 600 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:slowSleepS 5000 }} }}
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent perception:slowSleepS 600 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent perception:slowSleepS 5000 }} }}
         WHERE  {{}}"""))
 
 
 def test_inverted_band_is_not_a_band():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:bandLow 0.35 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:bandLow 0.90 }} }}
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent water:bandLow 0.35 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent water:bandLow 0.90 }} }}
         WHERE  {{}}"""))
 
 
 def test_bidder_must_have_a_valuation():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent ag:maxValuePerL ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent ag:maxValuePerL ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent water:maxValuePerL ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent water:maxValuePerL ?v }} }}"""))
 
 
 def test_host_must_say_how_long_it_waits_for_bids():
@@ -157,8 +157,8 @@ def test_the_supplier_is_not_asked_for_a_cadence():
 
 def test_sensor_must_state_how_it_is_driven():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ?m }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ?m }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern perception:senseMode ?m }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern perception:senseMode ?m }} }}"""))
 
 
 def test_a_host_must_say_how_it_matches():
@@ -180,15 +180,15 @@ def test_only_a_host_may_state_how_it_matches():
 
 def test_pull_sensor_must_state_a_command_topic():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:commandTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:commandTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:commandTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:commandTopic ?t }} }}"""))
 
 
 def test_a_device_on_the_bus_must_state_where_it_publishes():
     """Declaring a binding and then not completing it is the failure worth catching."""
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:readingTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:readingTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:readingTopic ?t }} }}"""))
 
 
 def test_an_agent_that_only_listens_must_not_hold_a_cadence():
@@ -198,13 +198,13 @@ def test_an_agent_that_only_listens_must_not_hold_a_cadence():
     legitimate rig (a scheduled probe and a push thermometer on one plant) and needs both blocks.
     """
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern ag:senseMode ag:Push }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern perception:senseMode perception:Scheduled }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern perception:senseMode perception:Push }} }}
         WHERE  {{}} ;
         DELETE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-            ag:fern_agent ag:hasCapability ag:Subscribing }} }}
+            ag:fern_agent ag:hasCapability perception:Subscribing }} }}
         INSERT {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-            ag:fern_agent ag:hasCapability ag:Listening }} }}
+            ag:fern_agent ag:hasCapability perception:Listening }} }}
         WHERE  {{}}"""))
 
 
@@ -217,24 +217,24 @@ def test_an_agent_may_hold_both_modes_at_once():
     """
     assert _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:chatter_fern a ag:Sensor ; ag:localId "chatter_fern" ; ag:onBus ag:local_bus ;
-                ag:senseMode ag:Push ; ag:monitors ag:fern ; sosa:observes ag:SoilMoisture ;
-                ag:readingTopic "sensors/chatter_fern/reading" .
-            ag:fern_agent ag:polls ag:chatter_fern .
+            ag:chatter_fern a perception:Sensor ; ag:localId "chatter_fern" ; mqtt:onBus ag:local_bus ;
+                perception:senseMode perception:Push ; perception:monitors ag:fern ; sosa:observes water:SoilMoisture ;
+                mqtt:readingTopic "sensors/chatter_fern/reading" .
+            ag:fern_agent perception:polls ag:chatter_fern .
         }} }} WHERE {{}} ;
         INSERT {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-            ag:fern_agent ag:hasCapability ag:Listening }} }} WHERE {{}}"""))
+            ag:fern_agent ag:hasCapability perception:Listening }} }} WHERE {{}}"""))
 
 
 def _duplicate_probe(observes: str) -> rdflib.Graph:
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:second_probe_fern a ag:Sensor ; ag:localId "second_probe_fern" ;
-                ag:onBus ag:local_bus ; ag:senseMode ag:Scheduled ; ag:monitors ag:fern ;
+            ag:second_probe_fern a perception:Sensor ; ag:localId "second_probe_fern" ;
+                mqtt:onBus ag:local_bus ; perception:senseMode perception:Scheduled ; perception:monitors ag:fern ;
                 sosa:observes {observes} ;
-                ag:readingTopic "sensors/second_probe_fern/reading" ;
-                ag:commandTopic "sensors/second_probe_fern/command" .
-            ag:fern_agent ag:polls ag:second_probe_fern .
+                mqtt:readingTopic "sensors/second_probe_fern/reading" ;
+                mqtt:commandTopic "sensors/second_probe_fern/command" .
+            ag:fern_agent perception:polls ag:second_probe_fern .
         }} }} WHERE {{}}""")
 
 
@@ -245,7 +245,7 @@ def test_two_sensors_on_one_property_are_warned_about_and_not_refused():
     one thing measured twice and wrong if they are in different soil. Neither reading can be
     settled from the graph, so the world is accepted and the operator is told.
     """
-    data = _duplicate_probe("ag:SoilMoisture")
+    data = _duplicate_probe("water:SoilMoisture")
     assert _conforms(data), "a warning must not stop a world from being onboarded"
     assert "another sensor already reads this property" in _report(data)
 
@@ -254,21 +254,21 @@ def test_two_sensors_on_different_properties_are_not_warned_about():
     """The ordinary rig, and the case the shape must not catch. A pot whose moisture and
     temperature are both known is not a modelling error, and saying so would train the operator
     to ignore the message that matters."""
-    data = _duplicate_probe("ag:AirTemperature")
+    data = _duplicate_probe("water:AirTemperature")
     assert _conforms(data)
     assert "another sensor already reads this property" not in _report(data)
 
 
 def test_valve_must_carry_its_calibration():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern ag:maxDoseMl ?v }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern ag:maxDoseMl ?v }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern actuation:maxDoseMl ?v }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern actuation:maxDoseMl ?v }} }}"""))
 
 
 def test_a_plant_may_not_hold_a_desire():
     """The target belongs to an agent's beliefs; a plant that held one would be a category error."""
     assert not _conforms(_mutate(f"""
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern ag:hasTarget 0.55 }} }} WHERE {{}}"""))
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern water:hasTarget 0.55 }} }} WHERE {{}}"""))
 
 
 def test_market_must_state_all_three_channels():

@@ -25,7 +25,7 @@ Two things assumed one property per device, and both were small:
 
 # Decision — the world says which value, as a JSON Pointer
 
-`ag:readingPointer` on a sensor. **Absent means `/value`**, which is what every single-property
+`mqtt:readingPointer` on a sensor. **Absent means `/value`**, which is what every single-property
 board here already publishes, so no existing sensor states one and no world changed except the one
 that gained sensors.
 
@@ -117,12 +117,12 @@ wrong the other way costs an agent watching a drying pot on a thermometer's sche
 
 # The claim test had to widen, and it was wrong before
 
-`MqttDriver.claims` tested `ag:onBus` alone, which contradicted that term's own vocabulary —
+`MqttDriver.claims` tested `mqtt:onBus` alone, which contradicted that term's own vocabulary —
 *"which bus this resource is reachable on. **Optional while a society has one.**"*
 
-It mattered for a reason that is not about drivers at all: **`ag:onBus` is also what mints a broker
+It mattered for a reason that is not about drivers at all: **`mqtt:onBus` is also what mints a broker
 credential.** `onboarding/mqtt.py` treats a node declaring it as a principal, so giving the two air
-channels an `ag:onBus` to satisfy the driver produced two extra device principals — measured, not
+channels an `mqtt:onBus` to satisfy the driver produced two extra device principals — measured, not
 predicted — each with a real password written into `world/sensing/secrets/` for a client that never
 connects. The board is one MQTT client with one credential; its peripherals are not principals.
 

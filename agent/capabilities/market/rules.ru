@@ -3,6 +3,8 @@
 # An agent plumbed into a market is a bidder there; the one that owns the venue hosts it.
 # Neither is a declaration — both are consequences of how the world is wired.
 
+PREFIX review: <http://example.org/agora/review#>
+PREFIX perception: <http://example.org/agora/perception#>
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX market: <http://example.org/agora/market#>
@@ -43,8 +45,8 @@ WHERE  { ?agent market:hosts ?market . ?market a market:Market } ;
 #
 # A member declared but unimplemented is deliberately reachable by this same derivation.
 # A world that states one derives the capability, and the agent then logs at startup that
-# nothing provides it — which is the honest failure and exactly what `ag:Polling` and
-# `ag:Consulting` already do. See knowledge/domain/bid-matching.md.
+# nothing provides it — which is the honest failure and exactly what `perception:Polling` and
+# `review:Consulting` already do. See knowledge/domain/bid-matching.md.
 
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability ?matching } }

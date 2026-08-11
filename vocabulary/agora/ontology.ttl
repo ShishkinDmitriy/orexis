@@ -1,3 +1,6 @@
+@prefix perception: <http://example.org/agora/perception#> .
+@prefix water: <http://example.org/agora/water#> .
+@prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -33,7 +36,7 @@ ag:Device a owl:Class ; rdfs:label "Device" ;
 
 #################  Devices that are not there  #################
 # A simulated device is an ORDINARY device in every statement the world makes about it: it is
-# on a bus, it has topics, it has a sense mode, and an agent is wired to it with ag:polls like
+# on a bus, it has topics, it has a sense mode, and an agent is wired to it with perception:polls like
 # any other. The only extra fact is that a process stands in for it.
 #
 # The marker is on the DEVICE and never on the agent, and that is the whole design. An agent
@@ -58,11 +61,11 @@ ag:modelInitialValue a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:
 
 ag:modelDryRate a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
     rdfs:label "model dry rate" ;
-    rdfs:comment "How much of the observed property is lost per tick. Named apart from domain/water's ag:dryRatePerTick, which carries rdfs:domain ag:Plant — reusing it would make every model infer as a plant and inherit a plant's obligations." .
+    rdfs:comment "How much of the observed property is lost per tick. Named apart from domain/water's water:dryRatePerTick, which carries rdfs:domain water:Plant — reusing it would make every model infer as a plant and inherit a plant's obligations." .
 
 ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:integer ;
     rdfs:label "model tick seconds" ;
-    rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a ag:Push device, which keeps its own clock; a ag:Scheduled one keeps the interval its agent gives it, exactly as a board does." .
+    rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a perception:Push device, which keeps its own clock; a perception:Scheduled one keeps the interval its agent gives it, exactly as a board does." .
 
 #################  Where a society executes  #################
 ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;
@@ -70,7 +73,7 @@ ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute hos
 
 ag:lanAddress a owl:DatatypeProperty ; rdfs:domain ag:ComputeHost ; rdfs:range xsd:string ;
     rdfs:label "LAN address" ;
-    rdfs:comment "Where this host answers for things NOT on it. A co-located agent reaches the broker at ag:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs the address of whichever host runs the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society. It is also a DHCP lease unless the router is told otherwise, which makes it a fact with an expiry date." .
+    rdfs:comment "Where this host answers for things NOT on it. A co-located agent reaches the broker at mqtt:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs the address of whichever host runs the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society. It is also a DHCP lease unless the router is told otherwise, which makes it a fact with an expiry date." .
 
 ag:runsOn a owl:ObjectProperty ; rdfs:range ag:ComputeHost ; rdfs:label "runs on" ;
     rdfs:comment "Which host executes this agent. Documents why the bus is where it is." .

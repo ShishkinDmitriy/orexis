@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix sh:          <http://www.w3.org/ns/shacl#> .
 @prefix ag:          <http://example.org/agora#> .
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
@@ -5,14 +6,14 @@
 
 scaling:SensorIsScaledByExactlyOneShape a sh:NodeShape ;
     rdfs:comment "Every sensor's raw values are turned into quantities by exactly one scaling, checked on the DERIVED fact. The failure this refuses is quiet in a way the codec one is not: two scalings would not produce a parse error or an empty reading, they would produce a NUMBER — a plausible one, recorded as a measurement, differing from the truth by whatever the losing curve would have done. A reading that is merely wrong is the worst kind to leave to iteration order." ;
-    sh:targetClass ag:Sensor ;
+    sh:targetClass perception:Sensor ;
     sh:property [ sh:path scaling:scaledBy ;
                   sh:minCount 1 ; sh:maxCount 1 ;
                   sh:class scaling:Scaling ;
                   sh:message "a sensor must be scaled by exactly one curve — this is derived from scaling:curve, or from its absence" ] .
 
 scaling:OnlyACurveIsStatedShape a sh:NodeShape ;
-    rdfs:comment "What a world states must be a member of the family. `scaling:Linear` and `scaling:TwoPoint` are declared without implementations and are deliberately NOT refused here — a world may name one, and the build says at startup that it cannot serve it, exactly as ag:Polling does. Declaring a seam has to remain possible." ;
+    rdfs:comment "What a world states must be a member of the family. `scaling:Linear` and `scaling:TwoPoint` are declared without implementations and are deliberately NOT refused here — a world may name one, and the build says at startup that it cannot serve it, exactly as perception:Polling does. Declaring a seam has to remain possible." ;
     sh:targetSubjectsOf scaling:curve ;
     sh:property [ sh:path scaling:curve ;
                   sh:maxCount 1 ; sh:class scaling:Scaling ;

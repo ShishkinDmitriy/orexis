@@ -218,7 +218,7 @@ class Metrics:
         never delivered belongs here so it can report zero — that is the whole "the board has
         never been heard from" signal. And a sensor that HAS delivered belongs here even when it
         is not in `me.sensors`, which is not a hypothetical: a simulated sensor is wired with
-        `ag:models`, a sub-property of `ag:polls`, and SPARQL does not follow sub-properties
+        `ag:models`, a sub-property of `perception:polls`, and SPARQL does not follow sub-properties
         without inference — so a simulated agent's wired set is empty while it is recording
         readings every few seconds. Reporting only the wired set silently omitted every
         simulated agent, which is exactly the world one tests instrumentation in.

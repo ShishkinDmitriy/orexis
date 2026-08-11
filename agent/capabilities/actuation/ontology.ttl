@@ -1,3 +1,4 @@
+@prefix actuation: <http://example.org/agora/actuation#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -8,24 +9,24 @@
     rdfs:label "Agora actuation" ;
     rdfs:comment """Touching the physical world. Held by the RESOURCE OWNER, not by the agent that won — a voucher is a claim on the owner, redeemed by it. Dosing is a fact about the hardware and is stated on the device, so recalibrating is a genesis edit rather than a code change.""" .
 
-ag:Actuation a ag:Capability ; rdfs:label "Actuation" ;
+actuation:Actuation a ag:Capability ; rdfs:label "Actuation" ;
     rdfs:comment "The agent may drive actuators it owns, bounded by a validated voucher and by the device's own cap. No plant agent has this: winning water is not the same as being able to open a valve." .
 
-ag:Actuator a owl:Class ; rdfs:subClassOf ag:Device , sosa:Actuator ; rdfs:label "Actuator" .
-ag:Valve a owl:Class ; rdfs:subClassOf ag:Actuator ; rdfs:label "Valve" ;
+actuation:Actuator a owl:Class ; rdfs:subClassOf ag:Device , sosa:Actuator ; rdfs:label "Actuator" .
+actuation:Valve a owl:Class ; rdfs:subClassOf actuation:Actuator ; rdfs:label "Valve" ;
     rdfs:comment "Opens for a bounded time to deliver to one subject. Verifies its command before acting and runs its own fail-safe." .
 
-ag:hasActuator a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Actuator ;
+actuation:hasActuator a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range actuation:Actuator ;
     rdfs:label "has actuator" .
-ag:actuates a owl:ObjectProperty ; rdfs:domain ag:Actuator ;
+actuation:actuates a owl:ObjectProperty ; rdfs:domain actuation:Actuator ;
     rdfs:label "actuates" ;
     rdfs:comment "The subject this device delivers to — the map from a won voucher to real hardware." .
-ag:drawsFrom a owl:ObjectProperty ; rdfs:domain ag:Actuator ;
+actuation:drawsFrom a owl:ObjectProperty ; rdfs:domain actuation:Actuator ;
     rdfs:label "draws from" .
 
-ag:mlPerSecond a owl:DatatypeProperty ; rdfs:domain ag:Actuator ; rdfs:range xsd:decimal ;
+actuation:mlPerSecond a owl:DatatypeProperty ; rdfs:domain actuation:Actuator ; rdfs:range xsd:decimal ;
     rdfs:label "ml per second" ;
     rdfs:comment "Flow calibration: converts an amount won into device-open seconds." .
-ag:maxDoseMl a owl:DatatypeProperty ; rdfs:domain ag:Actuator ; rdfs:range xsd:decimal ;
+actuation:maxDoseMl a owl:DatatypeProperty ; rdfs:domain actuation:Actuator ; rdfs:range xsd:decimal ;
     rdfs:label "max dose ml" ;
     rdfs:comment "Hard cap on a single dose — defence in depth, independent of whatever cleared." .

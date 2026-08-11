@@ -23,7 +23,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from agent import genesis, inference, loader
-from agent.ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
+from agent.ontology import (AG, MC, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PERCEPTION,
                             WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 from agent.store import Store, bindings
 
@@ -55,7 +55,7 @@ def test_a_t_box_individual_gets_the_whole_chain():
 
 
 def test_a_world_instance_is_typed_by_what_its_class_is_under():
-    """The probe is declared a `probe:CapacitiveMoistureProbe` in the stand and an `ag:Sensor` in
+    """The probe is declared a `probe:CapacitiveMoistureProbe` in the stand and an `perception:Sensor` in
     the society. Being observably a Sensor to the RUNTIME is what let the derivation rules stop
     joining the ontology to walk a subclass path."""
     types = _types_of(_public(), WORLD_ENTAILED_GRAPH, AG + "moisture_sensor_fern")
@@ -84,7 +84,7 @@ def test_a_reader_still_sees_one_world():
     rows = bindings(_public().query(
         f"SELECT ?t WHERE {{ <{AG}moisture_sensor_fern> a ?t }}"))
     types = {r["t"] for r in rows}
-    assert AG + "Sensor" in types  # asserted in the world
+    assert PERCEPTION + "Sensor" in types  # asserted in the world
     assert MC + "Peripheral" in types  # entailed, in another graph entirely
 
 

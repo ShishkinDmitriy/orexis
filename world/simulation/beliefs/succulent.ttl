@@ -1,3 +1,6 @@
+@prefix review: <http://example.org/agora/review#> .
+@prefix perception: <http://example.org/agora/perception#> .
+@prefix water: <http://example.org/agora/water#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
 
@@ -5,28 +8,28 @@
 #  fifth of the moisture, shrugs at readings that would have fern bidding hard, and is
 #  content to look rarely and to trust older data. Same world, same ontology, different mind.
 
-##  ag:Subscribing
+##  perception:Subscribing
 ag:succulent_agent
-    ag:fastSleepS 60 ;
-    ag:slowSleepS 900 ;
-    ag:readingGraceS 45 .
+    perception:fastSleepS 60 ;
+    perception:slowSleepS 900 ;
+    perception:readingGraceS 45 .
 
 ##  market:Bidding
 ag:succulent_agent
     market:hasEndowment 100.0 ;
-    ag:hasTarget 0.22 ;
-    ag:bandLow 0.12 ;
-    ag:bandHigh 0.30 ;
-    ag:litresPerFraction 2.0 ;
-    ag:maxValuePerL 0.80 .
+    water:hasTarget 0.22 ;
+    water:bandLow 0.12 ;
+    water:bandHigh 0.30 ;
+    water:litresPerFraction 2.0 ;
+    water:maxValuePerL 0.80 .
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
 ag:succulent_agent ag:metricsIntervalS 60 .
 
 ##  Self-review — how often at the very least.
-#   Required because the world gave this agent room to move (ag:commits, in world.ttl): an
+#   Required because the world gave this agent room to move (review:commits, in world.ttl): an
 #   agent granted none derives no review capability and needs no interval. A FLOOR and not a
 #   schedule — a decision plans its own next arising from when its effect could show.
 #   See knowledge/decisions/self-review-is-a-capability.md.
-ag:succulent_agent ag:reviewIntervalS 300 .
+ag:succulent_agent review:reviewIntervalS 300 .

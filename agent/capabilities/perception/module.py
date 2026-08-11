@@ -3,15 +3,15 @@
 Which one an agent gets is decided by its **hardware**, and derived at genesis from the
 device's own nature:
 
-- **ag:Polling** (`ag:Pull` device) — the agent's own timer; it asks for each reading and the
+- **perception:Polling** (`perception:Pull` device) — the agent's own timer; it asks for each reading and the
   device replies. The simplest exchange and the most agent control, but it needs a device that
   is reachable at any moment. **Not implemented**: no rule grants it and no class here
   provides it, because a board that deep-sleeps cannot hear the request. The room is kept
   deliberately — see ontology.ttl.
-- **ag:Subscribing** (`ag:Scheduled` device) — the agent states an interval and the device
+- **perception:Subscribing** (`perception:Scheduled` device) — the agent states an interval and the device
   keeps to it. The agent still decides how often to look; what it delegates is the
   timekeeping, which is exactly what lets the device sleep in between.
-- **ag:Listening** (`ag:Push` device) — the device announces on its own clock and takes no
+- **perception:Listening** (`perception:Push` device) — the device announces on its own clock and takes no
   orders. The agent records what arrives, and that is all it can do.
 
 What survives the whole range is the **freshness judgment**: however the reading arrived, the
@@ -31,8 +31,8 @@ Two things deliberately do NOT appear here:
   publicly — and an agent with no stake simply gets no answer and watches at its slow cadence.
   That is why nothing here imports another capability.
 
-Everything touched is discovered: which sensors (`ag:polls`), what property they read
-(`sosa:observes`), and where to announce a perception (`ag:eventTopic`).
+Everything touched is discovered: which sensors (`perception:polls`), what property they read
+(`sosa:observes`), and where to announce a perception (`mqtt:eventTopic`).
 
 Vocabulary: capabilities/perception/ontology.ttl. Rules: capabilities/perception/shapes.ttl.
 Derivation: capabilities/perception/rules.ru. See knowledge/domain/sensing.md.
@@ -53,7 +53,7 @@ from .terms import LISTENING, PUSH, SCHEDULED, SUBSCRIBING
 # off the capability FAMILY, so every transport and every future perception inherits them.
 _BOUNDS_Q = """
 SELECT ?min ?max WHERE {
-  GRAPH ?g { ag:PerceptionCapability ag:minSleepS ?min ; ag:maxSleepS ?max }
+  GRAPH ?g { perception:PerceptionCapability perception:minSleepS ?min ; perception:maxSleepS ?max }
 } LIMIT 1"""
 
 
@@ -64,7 +64,7 @@ class PerceptionModule(Module):
     """
 
     # Which kind of device this module is for. The derivation grants the capability from the
-    # sensor's ag:senseMode; this is the same pairing, read from the other side.
+    # sensor's perception:senseMode; this is the same pairing, read from the other side.
     SENSE_MODE: str | None = None
 
     def __init__(self, agent):
@@ -165,7 +165,7 @@ class PerceptionModule(Module):
 
         Best-effort even where it is allowed: a device that sleeps between readings only hears
         this if the nudge happens to land inside its waking window. It is the seed of
-        ag:Polling, not a substitute for it — a real polling module would need a device that
+        perception:Polling, not a substitute for it — a real polling module would need a device that
         is always listening, and would then drive every reading this way.
         """
 
@@ -189,7 +189,7 @@ class PerceptionModule(Module):
 
 
 class SubscribingModule(PerceptionModule):
-    """ag:Subscribing — derived from being wired to a device that keeps to a given interval.
+    """perception:Subscribing — derived from being wired to a device that keeps to a given interval.
 
     The standing request is the whole mechanism: the interval is published *retained*, so a
     device that is asleep now receives it the instant it wakes and subscribes. That is why
@@ -358,7 +358,7 @@ class SubscribingModule(PerceptionModule):
 
 
 class ListeningModule(PerceptionModule):
-    """ag:Listening — derived from being wired to a push-mode sensor.
+    """perception:Listening — derived from being wired to a push-mode sensor.
 
     No interval, because the device would not take one. The agent keeps its freshness rule,
     which now works as a *detector* rather than a control: if the board goes quiet, readings

@@ -1,3 +1,5 @@
+@prefix perception: <http://example.org/agora/perception#> .
+@prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:    <http://example.org/agora#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
@@ -10,15 +12,15 @@
 #################  The family  #################
 
 codec:Encoding a owl:Class ; rdfs:label "Encoding" ;
-    rdfs:comment "A wire format. Anything that turns bytes into a document is one of these, so a binding may name what it speaks without knowing which package answers. Note what is NOT here: which value in the document is anyone's. That is ag:readingPointer, and it is deliberately not a member of any family — RFC 6901 works over any tree, so a pointer written today keeps meaning the same thing whichever member below produced the document. That indifference is what makes declaring these two cost nothing to defer." .
+    rdfs:comment "A wire format. Anything that turns bytes into a document is one of these, so a binding may name what it speaks without knowing which package answers. Note what is NOT here: which value in the document is anyone's. That is mqtt:readingPointer, and it is deliberately not a member of any family — RFC 6901 works over any tree, so a pointer written today keeps meaning the same thing whichever member below produced the document. That indifference is what makes declaring these two cost nothing to defer." .
 
 codec:encoding a owl:ObjectProperty ; rdfs:range codec:Encoding ;
     rdfs:label "encoding" ;
-    rdfs:comment "THE PREMISE, stated by the world: what format this device's payloads are in. A fact about the board's firmware, like ag:senseMode, and the only half of this a world may write. ABSENT means codec:Json, which is what every board here already sends — so no shipped world states one." .
+    rdfs:comment "THE PREMISE, stated by the world: what format this device's payloads are in. A fact about the board's firmware, like perception:senseMode, and the only half of this a world may write. ABSENT means codec:Json, which is what every board here already sends — so no shipped world states one." .
 
 codec:decodedBy a owl:ObjectProperty ; rdfs:range codec:Encoding ;
     rdfs:label "decoded by" ;
-    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which codec actually serves this CHANNEL. Two predicates rather than one because a world states what is TRUE of a device and genesis writes down what SERVES it — collapsing them would let a world state its own conclusion. Deriving it also puts the DEFAULT in the graph: before this, every sensor in every world was decoded as JSON by a flag on a Python class, which was true, load-bearing and unreadable by anything. A sensor's pipeline is now something you can query rather than something you infer from which classes a build imported — read through ag:publishesOn, since the fact belongs to the stream." .
+    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which codec actually serves this CHANNEL. Two predicates rather than one because a world states what is TRUE of a device and genesis writes down what SERVES it — collapsing them would let a world state its own conclusion. Deriving it also puts the DEFAULT in the graph: before this, every sensor in every world was decoded as JSON by a flag on a Python class, which was true, load-bearing and unreadable by anything. A sensor's pipeline is now something you can query rather than something you infer from which classes a build imported — read through mqtt:publishesOn, since the fact belongs to the stream." .
 
 #################  The members  #################
 
@@ -29,4 +31,4 @@ codec:Cbor a codec:Encoding ; rdfs:label "CBOR" ;
     rdfs:comment "Declared, unimplemented. RFC 8949 — the same data model as JSON in a compact binary form, which is what a battery-powered board would reach for to shorten its radio time. Named first among the unbuilt because it is the cheapest: CBOR decodes to exactly the maps and arrays a pointer already walks, so a member would be a decode call and nothing else." .
 
 codec:Kaitai a codec:Encoding ; rdfs:label "Kaitai Struct" ;
-    rdfs:comment "Declared, unimplemented. For a device that speaks a genuine BINARY protocol rather than a serialisation format — a packed struct of fixed-width fields, described declaratively in a .ksy spec rather than parsed by hand. Worth naming because it is the case that looks like it would break the design and does not: what a Kaitai spec yields is a TREE, so ag:readingPointer addresses into it unchanged. A codec is where a binary format would land, and no other stage would move." .
+    rdfs:comment "Declared, unimplemented. For a device that speaks a genuine BINARY protocol rather than a serialisation format — a packed struct of fixed-width fields, described declaratively in a .ksy spec rather than parsed by hand. Worth naming because it is the case that looks like it would break the design and does not: what a Kaitai spec yields is a TREE, so mqtt:readingPointer addresses into it unchanged. A codec is where a binary format would land, and no other stage would move." .

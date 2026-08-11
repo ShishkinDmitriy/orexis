@@ -1,3 +1,4 @@
+@prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -13,37 +14,37 @@
 # thing a process is told by its environment is where the belief base is; the belief base
 # then says everything else, including this.
 
-ag:MessageBus a owl:Class ; rdfs:label "Message bus" ;
-    rdfs:comment "A broker agents reach each other through. Found by type; when there is more than one, resources name theirs with ag:onBus." .
+mqtt:MessageBus a owl:Class ; rdfs:label "Message bus" ;
+    rdfs:comment "A broker agents reach each other through. Found by type; when there is more than one, resources name theirs with mqtt:onBus." .
 
-ag:brokerHost a owl:DatatypeProperty ; rdfs:domain ag:MessageBus ; rdfs:range xsd:string ;
+mqtt:brokerHost a owl:DatatypeProperty ; rdfs:domain mqtt:MessageBus ; rdfs:range xsd:string ;
     rdfs:label "broker host" .
-ag:brokerPort a owl:DatatypeProperty ; rdfs:domain ag:MessageBus ; rdfs:range xsd:integer ;
+mqtt:brokerPort a owl:DatatypeProperty ; rdfs:domain mqtt:MessageBus ; rdfs:range xsd:integer ;
     rdfs:label "broker port" ;
     rdfs:comment "Where a principal that authenticates by password connects. The boards use this: a device that deep-sleeps between readings would pay a TLS handshake on every wake." .
-ag:brokerTlsPort a owl:DatatypeProperty ; rdfs:domain ag:MessageBus ; rdfs:range xsd:integer ;
+mqtt:brokerTlsPort a owl:DatatypeProperty ; rdfs:domain mqtt:MessageBus ; rdfs:range xsd:integer ;
     rdfs:label "broker TLS port" ;
     rdfs:comment "Where a principal that authenticates by CERTIFICATE connects. Optional: a world without it has no mTLS door, and its agents use the password one. Same bus and the same ACL either way — this is how you prove who you are, not which society you are in." .
-ag:onBus a owl:ObjectProperty ; rdfs:range ag:MessageBus ;
+mqtt:onBus a owl:ObjectProperty ; rdfs:range mqtt:MessageBus ;
     rdfs:label "on bus" ;
     rdfs:comment "Which bus this resource is reachable on. Optional while a society has one." .
 
 #################  Channels  #################
 
-ag:readingTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+mqtt:readingTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "reading topic" ;
-    rdfs:comment "Where a sensor PUBLISHES what it read. Several sensors may name the SAME topic: one board carrying two peripherals is one MQTT client with one credential, so it publishes one message and each sensor takes its own value out of it with ag:readingPointer." .
+    rdfs:comment "Where a sensor PUBLISHES what it read. Several sensors may name the SAME topic: one board carrying two peripherals is one MQTT client with one credential, so it publishes one message and each sensor takes its own value out of it with mqtt:readingPointer." .
 
-ag:readingPointer a owl:DatatypeProperty ; rdfs:range xsd:string ;
+mqtt:readingPointer a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "reading pointer" ;
     rdfs:comment "WHICH value in the payload is this sensor's, as a JSON Pointer (RFC 6901, April 2013, Standards Track): `/temperature`, `/readings/0/rh`. Absent means `/value`, which is what every single-property device already publishes — so this is invisible until a device reports more than one thing. A POINTER and not a JSONPath (RFC 9535) because a pointer identifies exactly ONE value, which is exactly what a reading is; a query language returns a nodelist and would need a collapse rule invented on top of it. Nothing here says how the bytes became a document — that is the codec, and JSON is the only one. See knowledge/decisions/a-reading-is-one-value-so-it-is-pointed-at.md." .
-ag:commandTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+mqtt:commandTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "command topic" ;
     rdfs:comment "Where a device LISTENS for instructions: a cadence for a sensor, a dose for a valve. Only a device that accepts instruction has one." .
-ag:statusTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+mqtt:statusTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "status topic" ;
     rdfs:comment "Where a device REPORTS what it actually did. A valve publishes here after it has opened, so the difference between a command being sent and water having flowed is on the wire rather than assumed. `firmware/pump-valve` has always published one, deriving the name in C as its command topic plus \"/status\"; stating it here is the same correction agora-firmware made when it found the sensor firmware building its own topics from PLANT_ID." .
-ag:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+mqtt:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "event topic" ;
     rdfs:comment "Where an agent announces something it noticed. Peers may listen; nobody is obliged to." .
 
@@ -54,7 +55,7 @@ ag:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
 
 #################  A channel is a thing, not a string  #################
 #
-# `ag:readingTopic` and the two beside it are LITERALS, and until now the stream each one named
+# `mqtt:readingTopic` and the two beside it are LITERALS, and until now the stream each one named
 # had no node. That is why nothing could say *this stream is JSON* — the thing the fact is about
 # was never declared — and why `_aimed_with` recovers a group by comparing strings. It is the
 # same defect the board had before it was a `sosa:Platform`, one level down.
@@ -63,17 +64,17 @@ ag:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
 # node per distinct topic. Two sensors naming the same string land on the same node, which is
 # the whole point — sharing a stream is a fact about the world, not a coincidence of authoring.
 
-ag:Channel a owl:Class ; rdfs:label "Channel" ;
+mqtt:Channel a owl:Class ; rdfs:label "Channel" ;
     rdfs:comment "One named stream on a bus. Derived from the topics devices state, one node per distinct topic, so it is discovered rather than authored — a world that names a topic twice has one channel and knows it. What it bears is the ENCODING: one stream, one format, which is the claim worth refusing to break and which no sensor-borne fact could make, because a command channel has no sensor at all. Not a member of anything: there is one way to be a stream. Named here rather than in the kernel because its premise is this transport's — a REST binding would derive its own from URLs, and the day that exists is the day this is worth hoisting." .
 
-ag:channelTopic a owl:DatatypeProperty ; rdfs:domain ag:Channel ; rdfs:range xsd:string ;
+mqtt:channelTopic a owl:DatatypeProperty ; rdfs:domain mqtt:Channel ; rdfs:range xsd:string ;
     rdfs:label "channel topic" ;
     rdfs:comment "The string this channel is named by, carried so that anything holding the node can address it without walking back to whichever device stated it. The node's own IRI is minted from this and is stable because of it: two rules in two packages compute the same IRI from the same topic without either reading the other's conclusions, which is what makes a derived node usable as a join key at all." .
 
-ag:publishesOn a owl:ObjectProperty ; rdfs:range ag:Channel ;
+mqtt:publishesOn a owl:ObjectProperty ; rdfs:range mqtt:Channel ;
     rdfs:label "publishes on" ;
-    rdfs:comment "This device SENDS on that channel — derived from ag:readingTopic or ag:statusTopic. The direction lives on the relation rather than on the channel, because a stream is one thing however many parties read it: putting read/write in the channel's identity would split one topic into two nodes the moment a device both sent and listened on it." .
+    rdfs:comment "This device SENDS on that channel — derived from mqtt:readingTopic or mqtt:statusTopic. The direction lives on the relation rather than on the channel, because a stream is one thing however many parties read it: putting read/write in the channel's identity would split one topic into two nodes the moment a device both sent and listened on it." .
 
-ag:listensOn a owl:ObjectProperty ; rdfs:range ag:Channel ;
+mqtt:listensOn a owl:ObjectProperty ; rdfs:range mqtt:Channel ;
     rdfs:label "listens on" ;
-    rdfs:comment "This device RECEIVES on that channel — derived from ag:commandTopic. The mirror of ag:publishesOn, and together they are the direction a principal's grants already carry: `Principal.grants` has been a set of (read|write, topic) pairs since series-and-bus-isolation, which is a set of directed channels written in the form mosquitto wants." .
+    rdfs:comment "This device RECEIVES on that channel — derived from mqtt:commandTopic. The mirror of mqtt:publishesOn, and together they are the direction a principal's grants already carry: `Principal.grants` has been a set of (read|write, topic) pairs since series-and-bus-isolation, which is a set of directed channels written in the form mosquitto wants." .

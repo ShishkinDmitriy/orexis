@@ -29,12 +29,12 @@ only where whoever wrote the query happened to remember to walk it, and the othe
 reader at all. That is the sharper defect, and it is the one that scales badly: every new
 capability inherits the obligation to remember.
 
-The trap had already caught the code twice. `ag:models rdfs:subPropertyOf ag:polls` made shapes
+The trap had already caught the code twice. `ag:models rdfs:subPropertyOf perception:polls` made shapes
 see simulated sensors as polled while the runtime did not, and the workarounds are still legible
 — `onboarding/mqtt.py` asks a second time, `dashboards.py` survives on a `UNION`. And it had just
 caught it a third time: `review.py`'s `_REVISABLE_Q`, shipped in
 [a-belief-is-a-pick-within-a-range](a-belief-is-a-pick-within-a-range.md), reads
-`?term a ag:RevisableBelief` with no path, so a package declaring a revisable belief through a
+`?term a review:RevisableBelief` with no path, so a package declaring a revisable belief through a
 subclass would have validated perfectly and returned nothing.
 
 # Decision
@@ -92,7 +92,7 @@ entailments, which is a different claim.
   now sufficient; no reader has to be told.
 - **`_family_q` stopped depending on an accident.** Its subclass branch matched *reflexively*, and
   that zero-length match is what made `agent.provider(ACTUATION)` resolve at all — there is no
-  term anywhere declared `a ag:Actuation`. The reflexive case is now stated outright, because a
+  term anywhere declared `a actuation:Actuation`. The reflexive case is now stated outright, because a
   behaviour nobody wrote down is a behaviour the next edit removes.
 - **Two test helpers were validating something no caller builds.** `_flatten` and `_wiring` in
   `tests/test_shapes.py` parsed the vocabulary from *files*, so they never saw the materialised

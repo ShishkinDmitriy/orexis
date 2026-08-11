@@ -8,9 +8,9 @@ timestamp: 2026-08-07T00:00:00Z
 
 # What is measured, not assumed
 
-An agent's sensors are per-sensor throughout: topics hang off the sensor (`ag:readingTopic`), a
+An agent's sensors are per-sensor throughout: topics hang off the sensor (`mqtt:readingTopic`), a
 driver is chosen per sensor, and cadence is tracked per sensor. So the obvious worry — that two
-sensors share machinery — is unfounded. Driven through the real module with two `ag:Scheduled`
+sensors share machinery — is unfounded. Driven through the real module with two `perception:Scheduled`
 sensors on one agent:
 
 ```
@@ -19,7 +19,7 @@ subscribes to: sensors/basil/moisture, sensors/fern/moisture
   RECORD  moisture_sensor_basil  0.9      PUBLISH sensors/basil/cmd  {'sleep_s': 10}
 ```
 
-One capability — `ag:Subscribing` is derived once, not once per sensor — routing each message to
+One capability — `perception:Subscribing` is derived once, not once per sensor — routing each message to
 the right sensor and each cadence to its own command topic.
 
 | one agent, two sensors | |
@@ -66,7 +66,7 @@ owns; the distinction that matters there is **no opinion versus an opinion of ze
 
 # How a bidder knows which property is its business — and why not from the market
 
-The market package must not name a domain property: `ag:SoilMoisture` in market code would be
+The market package must not name a domain property: `water:SoilMoisture` in market code would be
 the domain leaking into the protocol. So it is derived. The question is *derived from what*, and
 the first answer was wrong.
 
@@ -78,7 +78,7 @@ slot, a right of way, a share of attention) cannot be declared at all. And it pu
 one *bidder's* valuation on the *venue*, which every participant would then have to share.
 
 **The property-shaped thing is the stake.** A target of 0.55 is 0.55 *of* something; the bands
-are in the same unit; and `ag:litresPerFraction` — "litres needed to raise moisture by 1.0" — is
+are in the same unit; and `water:litresPerFraction` — "litres needed to raise moisture by 1.0" — is
 exactly the exchange rate between the lot and the property, which is where the coupling honestly
 lives. Until this was written down, that 0.55 was dimensionless, and the agent got away with it
 only because it had one kind of reading to compare against.
@@ -86,10 +86,10 @@ only because it had one kind of reading to compare against.
 So the domain states `market:aboutProperty` on the desire term itself:
 
 ```turtle
-ag:hasTarget market:aboutProperty ag:SoilMoisture .
+water:hasTarget market:aboutProperty water:SoilMoisture .
 ```
 
-The bidder follows that link from `ag:hasTarget`, which its own beliefs block already names, so
+The bidder follows that link from `water:hasTarget`, which its own beliefs block already names, so
 no domain property is written in market code and no world restates anything. A bidder whose
 desire names no property **refuses to start** — the only alternative left is judging whichever
 reading arrived last, which is the defect being fixed.
@@ -136,8 +136,8 @@ whether a world holds is one too many, and the one that ships is the one to test
 
 # Mixed sense modes: the capabilities split, the sensors do not
 
-An agent with one `ag:Scheduled` and one `ag:Push` sensor derives both `ag:Subscribing` and
-`ag:Listening`. Both modules then take **every** sensor the agent has:
+An agent with one `perception:Scheduled` and one `perception:Push` sensor derives both `perception:Subscribing` and
+`perception:Listening`. Both modules then take **every** sensor the agent has:
 
 ```python
 def handle(self, topic, payload):
@@ -146,13 +146,13 @@ def handle(self, topic, payload):
 
 `Agent._on_message` returns after the first module that handles a message, so nothing is ingested
 twice — an earlier note in this repo claimed double ingest and was wrong. What happens instead is
-quieter. Modules are ordered by `sorted(capabilities)`, `ag:Listening` sorts before
-`ag:Subscribing`, and listening's `on_reading` is a deliberate no-op — so **the scheduled sensor's
+quieter. Modules are ordered by `sorted(capabilities)`, `perception:Listening` sorts before
+`perception:Subscribing`, and listening's `on_reading` is a deliberate no-op — so **the scheduled sensor's
 cadence is never re-aimed**. The board keeps whatever interval it last had, indefinitely. In the
 other direction, subscribing publishes `{"sleep_s": N}` at a push device that takes no orders.
 
 The root cause was one line of absence: `Sensor` carried no sense mode. `_sensors_q` never selected
-`ag:senseMode`, so the runtime could not partition what the derivation already separated. It does
+`perception:senseMode`, so the runtime could not partition what the derivation already separated. It does
 now, and each module declares the mode it serves beside the capability it already declares.
 
 **And the combination was not merely unhandled — it was unvalidatable.** Two shapes, each written

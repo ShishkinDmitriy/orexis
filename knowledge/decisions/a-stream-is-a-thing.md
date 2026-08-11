@@ -11,7 +11,7 @@ timestamp: 2026-08-11T00:00:00Z
 # Context
 
 [the-wire-is-ours-and-it-has-two-levels](the-wire-is-ours-and-it-has-two-levels.md) said the
-encoding belongs to the stream and left the stream undeclared: *"`ag:readingTopic` is still a
+encoding belongs to the stream and left the stream undeclared: *"`mqtt:readingTopic` is still a
 literal, and until a stream is a thing the shape that would refuse two encodings on one has
 nothing to target."*
 
@@ -19,8 +19,8 @@ This builds it.
 
 # Decision — one node per distinct topic, minted from the topic
 
-`transports/mqtt/rules.ru` derives an `ag:Channel` for every topic a device states, and
-`ag:publishesOn` / `ag:listensOn` for who sends and who receives on it. An author restates
+`transports/mqtt/rules.ru` derives an `mqtt:Channel` for every topic a device states, and
+`mqtt:publishesOn` / `mqtt:listensOn` for who sends and who receives on it. An author restates
 nothing: the topics were already there, and the node is the conclusion drawn from them.
 
 Measured, because grouping is the whole point: `sensing` derives **two** channels used by three
@@ -98,7 +98,7 @@ collides with a property this project already holds.
 either"*. A device credential is deliberately not world-scoped, and that is
 [series-and-bus-isolation](series-and-bus-isolation.md)'s doing.
 
-Moving `ag:onBus` onto the board makes `sensing`'s only device principal `esp32_fern`, while
+Moving `mqtt:onBus` onto the board makes `sensing`'s only device principal `esp32_fern`, while
 `society` — which states no hardware and therefore no board — keeps three sensor principals. The
 intersection becomes empty and a board flashed for one world cannot authenticate in the other.
 
@@ -137,6 +137,6 @@ the prerequisite for #81, and it is not a decision to take inside a change about
   changing both at once would make neither reviewable.
 - **A channel is derived by the MQTT package**, so the class lives with the transport whose
   topics are its premise. A REST binding would derive its own from URLs, and the day that exists
-  is the day `ag:Channel` is worth hoisting to the kernel.
+  is the day `mqtt:Channel` is worth hoisting to the kernel.
 - **`ag:Principal` was not built.** The wire record names it and nothing declares it; with the
-  credential move reverted there was nothing for it to bear that `ag:onBus` does not already say.
+  credential move reverted there was nothing for it to bear that `mqtt:onBus` does not already say.

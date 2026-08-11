@@ -11,7 +11,12 @@ exactly as it asks for whoever perceives.
 
 from __future__ import annotations
 
-from agent.ontology import term
+NS = "http://example.org/agora/review#"
+
+
+def term(name: str) -> str:
+    """A term of this package's, by local name."""
+    return NS + name
 
 # The family. Anything that reconsiders its own settings is one of these — so a caller may ask
 # for "whoever reviews" without knowing which way it does it.

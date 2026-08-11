@@ -58,8 +58,8 @@ around — so `agora-onboard` refuses rather than grants.
 
 # Two ways to prove who you are, one way to be authorised
 
-Agents connect on `ag:brokerTlsPort` with a **client certificate**; boards connect on
-`ag:brokerPort` with a **password**. Same bus, same topics, and — this is the point — the same
+Agents connect on `mqtt:brokerTlsPort` with a **client certificate**; boards connect on
+`mqtt:brokerPort` with a **password**. Same bus, same topics, and — this is the point — the same
 generated ACL. Mosquitto's `use_identity_as_username true` takes the certificate's CN as the
 username, and `agora-mqtt` issues each agent a certificate whose CN *is* the world-qualified
 username it already derived. So a certificate is a different way of proving who you are, not a
@@ -74,7 +74,7 @@ running one per world is nearly free — and it removes more than it adds. Each 
 derives from *one* world's wiring instead of every provisioned world at once; each trusts exactly
 one certificate authority instead of a bundle reassembled whenever a world appears; and a new
 world disturbs nothing, because it brings its own. The ports come from that world's own
-`ag:MessageBus`, which the model already stated — no new vocabulary was needed, they had simply
+`mqtt:MessageBus`, which the model already stated — no new vocabulary was needed, they had simply
 all said 1883 because there was one broker.
 
 It also makes the isolation **structural rather than enforced**, which is the rule the belief
@@ -117,12 +117,12 @@ service read access to every world's private keys.
 ## A board is told the same things the agents are
 
 `agora-firmware` generates a board's `config.h` from the world: the broker and port from
-`ag:MessageBus`, the ids and topics from the society, the pin and the calibration from the stand,
+`mqtt:MessageBus`, the ids and topics from the society, the pin and the calibration from the stand,
 the credential from `agora-mqtt`, the cadence bounds from the ontology. Every one of those was
 already written down; the header was a second copy, and the expensive kind — correcting it means
 retrieving the board.
 
-**Two routes to one broker.** An agent reaches it at `ag:brokerHost`, which is loopback and must
+**Two routes to one broker.** An agent reaches it at `mqtt:brokerHost`, which is loopback and must
 be: agents are host-networked and every member has to agree on one name. A board on the wifi
 cannot use that name, so it is given the `ag:lanAddress` of whichever host runs the broker. That
 is a fact about the network rather than about the society, which is why it hangs off the

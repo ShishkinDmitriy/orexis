@@ -83,7 +83,7 @@ thereafter: revision survives a restart precisely because a restart is not a bir
 Birth is the only event that may **author** beliefs, and it is the sovereign's act, not code's
 (see [genesis-process](/domain/genesis-process.md)). It is no longer the only event that may
 change one. A belief is a **point chosen inside a range**, and what genesis wrote is the first
-pick rather than a bound: an agent its world gives room to move — `ag:commits`, in `world.ttl` —
+pick rather than a bound: an agent its world gives room to move — `review:commits`, in `world.ttl` —
 re-picks on its own clock, inside that room. That is a fourth event, and it belongs to the
 agent alone — not to start, not to stop, and not to the sovereign — which is why the table above
 is unchanged by it. See

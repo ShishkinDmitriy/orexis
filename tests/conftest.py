@@ -27,12 +27,12 @@ WORLDS_ROOT = REPO_ROOT / "world"
 GENESIS_DIR = WORLDS_ROOT / "society"   # the world most tests are about
 
 # The property the water domain is about, spelled out because a reading is now keyed by it.
-MOISTURE = "http://example.org/agora#SoilMoisture"
+MOISTURE = "http://example.org/agora/water#SoilMoisture"
 # Two more, for the tests that are about a subject with more than one property. HUMIDITY is
 # the pointed one: it is a fraction, so a reading of it is indistinguishable from a soil
 # moisture by inspection, and a bidder handed one will act on it.
-TEMPERATURE = "http://example.org/agora#AirTemperature"
-HUMIDITY = "http://example.org/agora#AirHumidity"
+TEMPERATURE = "http://example.org/agora/water#AirTemperature"
+HUMIDITY = "http://example.org/agora/water#AirHumidity"
 
 
 @pytest.fixture(autouse=True)

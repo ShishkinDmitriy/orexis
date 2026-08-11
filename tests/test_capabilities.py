@@ -37,7 +37,7 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
 
 
 def test_a_mandate_whose_ends_meet_grants_nothing(me):
-    """`succulent`'s cadence is pinned — `ag:notBelow 900 ; ag:notAbove 900`.
+    """`succulent`'s cadence is pinned — `review:notBelow 900 ; review:notAbove 900`.
 
     That is not an oversight: it is how an author says a figure is not up for review, by leaving
     nowhere to go rather than by a flag somewhere saying not to look, and `review.Range.fixed`
@@ -97,11 +97,11 @@ def _world_with_push_sensor():
     st = genesis_store()
     st.update(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
+                 ag:moisture_sensor_fern perception:senseMode perception:Scheduled }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern ag:senseMode ag:Push }} }}
+                 ag:moisture_sensor_fern perception:senseMode perception:Push }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
+                 ag:moisture_sensor_fern perception:senseMode perception:Scheduled }} }}
     """)
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():

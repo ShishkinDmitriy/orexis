@@ -95,7 +95,7 @@ CLOSURE = (
 
     # 4. And what a world statement implies under a subproperty. There are no `rdfs:subPropertyOf`
     #    axioms today — the simulated-device work removed the last one, `ag:models` under
-    #    `ag:polls`, which is the very fault that opened issue #27. This is here so that
+    #    `perception:polls`, which is the very fault that opened issue #27. This is here so that
     #    reintroducing one is a vocabulary edit and not a debugging session.
     f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?x ?super ?y }} }}
         {_T_BOX}
@@ -114,7 +114,7 @@ def materialise(store) -> None:
     """Assert what the vocabulary entails, so that every reader sees one graph.
 
     Run from `genesis.refresh_public` after the files are loaded and BEFORE each package's
-    `rules.ru`, so a derivation rule may ask `?type a ag:Sensor` and mean it — rather than
+    `rules.ru`, so a derivation rule may ask `?type a perception:Sensor` and mean it — rather than
     spelling out a property path and hoping the next rule's author remembers to.
     """
     before = len(store)

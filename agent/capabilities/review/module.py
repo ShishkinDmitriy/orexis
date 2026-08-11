@@ -9,7 +9,7 @@ The room comes from three constraints, intersected, and **all three are public**
 
     CONSTITUTION  what the society allows at all — figures the capability family states
     HARDWARE      what the equipment can do — stated on a device (declared; nothing states one yet)
-    MANDATE       what THIS agent's world allows it — `ag:commits`, narrower than the constitution
+    MANDATE       what THIS agent's world allows it — `review:commits`, narrower than the constitution
 
 The third was briefly private, on the reasoning that how far an agent will let itself move is its
 own opinion. That has it backwards: a range is what an agent is *allowed*, imposed by whoever
@@ -17,7 +17,7 @@ ratified its world, and **an agent constraining itself is not a constraint, it i
 choice — the pick inside the range — is what stays private. Range public, value private.
 
 **And the mandate is what grants this capability at all.** An agent given room to move must be
-able to use it, so `ag:commits` is the premise the derivation rule reads (see `rules.ru`). An
+able to use it, so `review:commits` is the premise the derivation rule reads (see `rules.ru`). An
 agent with no mandate does not have this module, keeps no summaries, and never arises: the
 mechanism is absent rather than idle, which is what a deployment wanting no drift should get.
 
@@ -104,7 +104,7 @@ class Range:
 _REVISABLE_Q = f"""
 SELECT ?term ?bound (MIN(?v) AS ?low) (MAX(?v) AS ?high) WHERE {{
   
-    ?term a ag:RevisableBelief ; ag:revisableToward ?bound .
+    ?term a review:RevisableBelief ; review:revisableToward ?bound .
     ?family ?bound ?v .
   
 }} GROUP BY ?term ?bound"""
@@ -126,7 +126,7 @@ def world_ranges(query) -> dict[str, Range]:
 
 
 class ReviewModule(Module):
-    """The agent's second thoughts — `ag:Reckoning`, derived from having been given room.
+    """The agent's second thoughts — `review:Reckoning`, derived from having been given room.
 
     A module rather than a fixture of the runtime, because the judgement is the replaceable part:
     an implementation that asked a model instead of running a rule would be a sibling of this
@@ -199,8 +199,8 @@ class ReviewModule(Module):
         out = world_ranges(self.agent.store.query)
         for row in bindings(self.agent.store.query(f"""
 SELECT ?term ?below ?above WHERE {{
-  <{self.agent.me.uri}> ag:commits ?c . ?c ag:onTerm ?term .
-  OPTIONAL {{ ?c ag:notBelow ?below }} OPTIONAL {{ ?c ag:notAbove ?above }} }}""")):
+  <{self.agent.me.uri}> review:commits ?c . ?c review:onTerm ?term .
+  OPTIONAL {{ ?c review:notBelow ?below }} OPTIONAL {{ ?c review:notAbove ?above }} }}""")):
             held = out.get(row["term"])
             if held is None:
                 # A commitment about a term nothing declares revisable. Said out loud rather
@@ -236,22 +236,22 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
             age = (now - window.last_at).total_seconds() if window.last_at else 0.0
             gap = window.gap_s
             lines.append(f"""
-  [] a ag:Evidence ;
+  [] a review:Evidence ;
      sosa:hasFeatureOfInterest <{window.subject}> ;
-     ag:ofProperty <{window.observed_property}> ;
-     ag:sampleCount {window.count} ;
-     ag:sampleMin {decimal(window.minimum)} ;
-     ag:sampleMax {decimal(window.maximum)} ;
-     ag:sampleMean {decimal(window.mean)} ;
-     ag:sampleSpread {decimal(window.spread)} ;
-     ag:newestAgeS {decimal(age)} ;
-     ag:windowsHeld {held} ;
-     {f'ag:sampleGapS {decimal(gap)} ;' if gap else ''}
-     ag:windowSeq {window.seq or 0} .""")
+     review:ofProperty <{window.observed_property}> ;
+     review:sampleCount {window.count} ;
+     review:sampleMin {decimal(window.minimum)} ;
+     review:sampleMax {decimal(window.maximum)} ;
+     review:sampleMean {decimal(window.mean)} ;
+     review:sampleSpread {decimal(window.spread)} ;
+     review:newestAgeS {decimal(age)} ;
+     review:windowsHeld {held} ;
+     {f'review:sampleGapS {decimal(gap)} ;' if gap else ''}
+     review:windowSeq {window.seq or 0} .""")
         for r in ranges.values():
             lines.append(f"""
-  [] a ag:Range ; ag:onTerm <{r.term}> ;
-     ag:notBelow {decimal(r.floor)} ; ag:notAbove {decimal(r.ceiling)} .""")
+  [] a review:Range ; review:onTerm <{r.term}> ;
+     review:notBelow {decimal(r.floor)} ; review:notAbove {decimal(r.ceiling)} .""")
         self.agent.store.put_graph(graph, "")
         if lines:
             self.agent.store.update(
@@ -379,14 +379,14 @@ WHERE  {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> ?old }} }}"""
         due = at + timedelta(seconds=self.horizon_s())
         self.agent.store.update(f"""
 INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
-  [] a ag:Revision ;
-     ag:revisedTerm <{belief_term}> ;
-     ag:fromValue {_literal(was)} ;
-     ag:toValue {_literal(now)} ;
-     ag:outcome "{outcome}" ;
-     ag:atTime "{at.isoformat()}"^^xsd:dateTime ;
-     ag:dueAt "{due.isoformat()}"^^xsd:dateTime ;
-     ag:becauseOf {_string(why)} .
+  [] a review:Revision ;
+     review:revisedTerm <{belief_term}> ;
+     review:fromValue {_literal(was)} ;
+     review:toValue {_literal(now)} ;
+     review:outcome "{outcome}" ;
+     review:atTime "{at.isoformat()}"^^xsd:dateTime ;
+     review:dueAt "{due.isoformat()}"^^xsd:dateTime ;
+     review:becauseOf {_string(why)} .
 }} }}""")
 
     def _due(self) -> set[str]:
@@ -394,19 +394,19 @@ INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
         now = datetime.now(timezone.utc).isoformat()
         return {r["term"] for r in bindings(self.agent.store.query(f"""
 SELECT DISTINCT ?term WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
-  ?r a ag:Revision ; ag:revisedTerm ?term ; ag:dueAt ?due .
+  ?r a review:Revision ; review:revisedTerm ?term ; review:dueAt ?due .
   FILTER(?due > "{now}"^^xsd:dateTime) }} }}"""))}
 
     def next_wake_s(self) -> float:
         """When to arise again: the soonest outstanding decision, floored by the stated interval.
 
-        The floor is all `ag:reviewIntervalS` is. It stops a review planning something absurdly
+        The floor is all `review:reviewIntervalS` is. It stops a review planning something absurdly
         soon; it does not set the schedule, because only the decision knows when its own effect
         could show.
         """
         rows = bindings(self.agent.store.query(f"""
 SELECT (MIN(?due) AS ?soonest) WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
-  ?r a ag:Revision ; ag:dueAt ?due }} }}"""))
+  ?r a review:Revision ; review:dueAt ?due }} }}"""))
         soonest = rows[0].get("soonest") if rows else None
         if not soonest:
             return float(self.interval_s)

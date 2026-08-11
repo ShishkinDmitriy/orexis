@@ -55,9 +55,9 @@ class Sensor:
     subject: str  # URI of what it monitors
     subject_id: str
     observes: str  # URI of the property it reads
-    # WHO HOLDS THE CLOCK — ag:Scheduled keeps an interval it is given, ag:Push keeps its own.
-    # The derivation already reads this to decide whether the agent gains ag:Subscribing or
-    # ag:Listening; carrying it here is what lets the runtime partition what the derivation
+    # WHO HOLDS THE CLOCK — perception:Scheduled keeps an interval it is given, perception:Push keeps its own.
+    # The derivation already reads this to decide whether the agent gains perception:Subscribing or
+    # perception:Listening; carrying it here is what lets the runtime partition what the derivation
     # separated. Without it an agent holding one of each gave both to both modules, and the
     # scheduled sensor's cadence was silently never re-aimed.
     sense_mode: str | None = None
@@ -136,8 +136,8 @@ class World:
 
 _BUS_Q = f"""
 SELECT ?bus ?host ?port ?tlsPort WHERE {{ 
-  ?bus a ag:MessageBus ; ag:brokerHost ?host ; ag:brokerPort ?port .
-  OPTIONAL {{ ?bus ag:brokerTlsPort ?tlsPort }}  }}"""
+  ?bus a mqtt:MessageBus ; mqtt:brokerHost ?host ; mqtt:brokerPort ?port .
+  OPTIONAL {{ ?bus mqtt:brokerTlsPort ?tlsPort }}  }}"""
 
 _VERSION_Q = f"""
 SELECT ?v WHERE {{ 
@@ -150,7 +150,7 @@ def _self_q(agent_id: str) -> str:
 SELECT ?agent ?capability ?actsFor ?actsForId ?eventTopic WHERE {{ 
   ?agent a ag:Agent ; ag:localId "{agent_id}" ; ag:hasCapability ?capability .
   OPTIONAL {{ ?agent ag:actsFor ?actsFor . OPTIONAL {{ ?actsFor ag:localId ?actsForId }} }}
-  OPTIONAL {{ ?agent ag:eventTopic ?eventTopic }}
+  OPTIONAL {{ ?agent mqtt:eventTopic ?eventTopic }}
  }}"""
 
 
@@ -161,18 +161,18 @@ def _sensors_q(agent_uri: str) -> str:
 SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic
        ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit
 WHERE {{
-  <{agent_uri}> ag:polls ?sensor .
-  ?sensor ag:localId ?localId ; ag:monitors ?subject ; sosa:observes ?observes .
-  OPTIONAL {{ ?sensor ag:senseMode ?senseMode }}
+  <{agent_uri}> perception:polls ?sensor .
+  ?sensor ag:localId ?localId ; perception:monitors ?subject ; sosa:observes ?observes .
+  OPTIONAL {{ ?sensor perception:senseMode ?senseMode }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
-  OPTIONAL {{ ?sensor ag:onBus ?bus }}
-  OPTIONAL {{ ?sensor ag:readingTopic ?readingTopic }}
-  OPTIONAL {{ ?sensor ag:readingPointer ?readingPointer }}
-  OPTIONAL {{ ?sensor ag:commandTopic ?commandTopic }}
+  OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
+  OPTIONAL {{ ?sensor mqtt:readingTopic ?readingTopic }}
+  OPTIONAL {{ ?sensor mqtt:readingPointer ?readingPointer }}
+  OPTIONAL {{ ?sensor mqtt:commandTopic ?commandTopic }}
   # Through the stream it publishes on, because an encoding is the stream's — see
   # knowledge/decisions/a-stream-is-a-thing.md. Both halves are derived; this query runs over
   # the whole store at boot rather than over `$given`, so it may read a conclusion.
-  OPTIONAL {{ ?sensor ag:publishesOn ?readingChannel . ?readingChannel codec:decodedBy ?decodedBy }}
+  OPTIONAL {{ ?sensor mqtt:publishesOn ?readingChannel . ?readingChannel codec:decodedBy ?decodedBy }}
   OPTIONAL {{ ?sensor scaling:scaledBy ?scaledBy }}
   OPTIONAL {{ ?sensor scaling:quantityUnit ?quantityUnit }}
  }}"""
@@ -182,9 +182,9 @@ def _actuators_q(agent_uri: str) -> str:
     return f"""
 SELECT ?actuator ?localId ?subject ?subjectId ?commandTopic ?mlPerSecond ?maxDoseMl
 WHERE {{ 
-  <{agent_uri}> ag:hasActuator ?actuator .
-  ?actuator ag:localId ?localId ; ag:actuates ?subject ; ag:commandTopic ?commandTopic ;
-            ag:mlPerSecond ?mlPerSecond ; ag:maxDoseMl ?maxDoseMl .
+  <{agent_uri}> actuation:hasActuator ?actuator .
+  ?actuator ag:localId ?localId ; actuation:actuates ?subject ; mqtt:commandTopic ?commandTopic ;
+            actuation:mlPerSecond ?mlPerSecond ; actuation:maxDoseMl ?maxDoseMl .
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
  }}"""
 
@@ -196,7 +196,7 @@ WHERE {{
   <{agent_uri}> market:{relation} ?market .
   ?market ag:localId ?localId ; market:marketFor ?resource ;
           market:offerTopic ?offerTopic ; market:bidTopic ?bidTopic ; market:voucherTopic ?voucherTopic .
-  OPTIONAL {{ ?resource ag:capacityL ?capacity }}
+  OPTIONAL {{ ?resource water:capacityL ?capacity }}
  }}"""
 
 
@@ -204,8 +204,8 @@ WHERE {{
 _PHYSICS_Q = f"""
 SELECT ?subject ?subjectId ?dryRate ?litresPerFraction WHERE {{ 
   ?subject ag:localId ?subjectId .
-  OPTIONAL {{ ?subject ag:dryRatePerTick ?dryRate }}
-  OPTIONAL {{ ?subject ag:litresPerFraction ?litresPerFraction }}
+  OPTIONAL {{ ?subject water:dryRatePerTick ?dryRate }}
+  OPTIONAL {{ ?subject water:litresPerFraction ?litresPerFraction }}
  }}"""
 
 # Everyone entitled to bid here — the host needs this to know who may answer an offer.
@@ -293,11 +293,11 @@ def load_bus(query: QueryFn) -> MessageBus:
     environment variable — because everyone must agree on it."""
     rows = bindings(query(_BUS_Q))
     if not rows:
-        raise WorldError("the world declares no ag:MessageBus — has it been seeded?")
+        raise WorldError("the world declares no mqtt:MessageBus — has it been seeded?")
     if len(rows) > 1:
         # A second bus is meaningful, but then resources must say which one they are on
-        # (ag:onBus) and this becomes a lookup. Refuse to guess.
-        raise WorldError(f"{len(rows)} buses declared; ag:onBus routing is not implemented")
+        # (mqtt:onBus) and this becomes a lookup. Refuse to guess.
+        raise WorldError(f"{len(rows)} buses declared; mqtt:onBus routing is not implemented")
     row = rows[0]
     return MessageBus(uri=row["bus"], host=row["host"], port=int(row["port"]),
                       tls_port=int(row["tlsPort"]) if row.get("tlsPort") else None)

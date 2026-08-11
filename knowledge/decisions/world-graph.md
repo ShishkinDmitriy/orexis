@@ -38,23 +38,23 @@ agent's beliefs — that is its whole job. It is deliberately thin:
 
 ```turtle
 ag:fern_agent a ag:Agent ; ag:localId "fern" ;
-    ag:actsFor ag:fern ; ag:polls ag:moisture_sensor_fern ; market:bidsIn ag:barrel1_market .
-ag:moisture_sensor_fern a ag:Sensor ; ag:monitors ag:fern ; ag:senseMode ag:Pull .
-ag:valve_fern a ag:Valve ; ag:actuates ag:fern ; ag:mlPerSecond 10.0 .
-ag:supplier a ag:Agent ; ag:hasActuator ag:valve_fern , … .
+    ag:actsFor ag:fern ; perception:polls ag:moisture_sensor_fern ; market:bidsIn ag:barrel1_market .
+ag:moisture_sensor_fern a perception:Sensor ; perception:monitors ag:fern ; perception:senseMode perception:Pull .
+ag:valve_fern a actuation:Valve ; actuation:actuates ag:fern ; actuation:mlPerSecond 10.0 .
+ag:supplier a ag:Agent ; actuation:hasActuator ag:valve_fern , … .
 ```
 
 and each agent's own graph carries what it thinks:
 
 ```turtle
-ag:fern_agent ag:hasTarget 0.55 ; ag:bandLow 0.35 ; ag:bandHigh 0.65 ;
-    ag:fastSleepS 30 ; ag:slowSleepS 600 ; ag:maxReadingAgeS 120 ;
-    ag:litresPerFraction 2.0 ; ag:maxValuePerL 0.80 .
+ag:fern_agent water:hasTarget 0.55 ; water:bandLow 0.35 ; water:bandHigh 0.65 ;
+    perception:fastSleepS 30 ; perception:slowSleepS 600 ; perception:maxReadingAgeS 120 ;
+    water:litresPerFraction 2.0 ; water:maxValuePerL 0.80 .
 ```
 
 # Agent, Sensor, Actuator become first-class
 
-The T-Box gains `ag:Agent`, `ag:Sensor` (`sosa:Sensor`), `ag:Actuator`/`ag:Valve`
+The T-Box gains `ag:Agent`, `perception:Sensor` (`sosa:Sensor`), `actuation:Actuator`/`actuation:Valve`
 (`sosa:Actuator`), and the connection properties `actsFor` / `polls` / `hasActuator` /
 `monitors` / `actuates`. (These were first drafted as `agentFor`/`hasSensor`; the later split
 into capability modules renamed them to the transport-neutral forms used above. See
@@ -88,7 +88,7 @@ That is the whole configuration story now.
 - drying rate + litres-per-fraction → the **plant** in `:world` (physics)
 - where the shared series store is → **an environment variable**; this is deployment
   toggles, not beliefs anyone holds
-- the **message broker** → the world, as an `ag:MessageBus`. It started in `.env` and moved:
+- the **message broker** → the world, as an `mqtt:MessageBus`. It started in `.env` and moved:
   a channel name is meaningless without the broker it is on, and members who disagree about
   the bus are not one society. What is left in the environment is the bootstrap pair — which
   agent this process is, and where the belief base lives — plus deployment toggles.

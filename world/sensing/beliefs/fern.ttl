@@ -1,3 +1,5 @@
+@prefix review: <http://example.org/agora/review#> .
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
 
@@ -9,24 +11,24 @@
 #  records the number and announces it. Compare world/society/beliefs-fern.ttl, which is the
 #  same agent in a world that gives it something to want.
 
-##  ag:Subscribing — the interval it asks its board to keep
+##  perception:Subscribing — the interval it asks its board to keep
 #
-#  Both figures sit on the constitutional floor (ag:minSleepS 10, in
+#  Both figures sit on the constitutional floor (perception:minSleepS 10, in
 #  capabilities/perception/ontology.ttl), because a board being brought up should be seen
 #  often. They are EQUAL, and honestly so: with no stake there is no trouble to watch harder
 #  for, so there is one rate. A plant agent's two differ because it has a band to be near.
 ag:fern_agent
-    ag:fastSleepS 10 ;
-    ag:slowSleepS 10 ;
-    ag:readingGraceS 45 .     # it still decides what is too old to be current
+    perception:fastSleepS 10 ;
+    perception:slowSleepS 10 ;
+    perception:readingGraceS 45 .     # it still decides what is too old to be current
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
 ag:fern_agent ag:metricsIntervalS 60 .
 
 ##  Self-review — how often at the very least.
-#   Required because the world gave this agent room to move (ag:commits, in world.ttl): an
+#   Required because the world gave this agent room to move (review:commits, in world.ttl): an
 #   agent granted none derives no review capability and needs no interval. A FLOOR and not a
 #   schedule — a decision plans its own next arising from when its effect could show.
 #   See knowledge/decisions/self-review-is-a-capability.md.
-ag:fern_agent ag:reviewIntervalS 300 .
+ag:fern_agent review:reviewIntervalS 300 .

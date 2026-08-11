@@ -21,7 +21,7 @@ correct. Rising bytes are alarming only if you already know the triples are flat
 is the signal, and the metrics added in #21 had been computing both halves every minute without
 anyone drawing the conclusion.
 
-The second is that `ag:slowSleepS` is a guess. An author writes "look every ten minutes when
+The second is that `perception:slowSleepS` is a guess. An author writes "look every ten minutes when
 comfortable" before the agent has seen a single reading. Six hours later the agent knows something
 the author could not: whether looking that often is telling it anything. Nothing let it act on
 that, and the only route to a better number was a human editing a Turtle file.
@@ -44,9 +44,9 @@ So the room comes from constraints, and there are three sources:
 
 | | what it says | where it lives |
 |---|---|---|
-| **constitution** | what the society allows *any* agent | figures on the capability family, e.g. `ag:minSleepS` / `ag:maxSleepS` |
+| **constitution** | what the society allows *any* agent | figures on the capability family, e.g. `perception:minSleepS` / `perception:maxSleepS` |
 | **hardware** | what the equipment can do | on a device — *declared, and nothing states one yet* |
-| **mandate** | what **this** agent's world allows it | `ag:commits`, in `world.ttl` |
+| **mandate** | what **this** agent's world allows it | `review:commits`, in `world.ttl` |
 
 They intersect, and a mandate can only narrow: one looser than the constitution *is* the
 constitution.
@@ -71,7 +71,7 @@ said by leaving nowhere to go**, not by a flag somewhere that says not to look.
 One triple, in the `ontology.ttl` of the package that owns the term:
 
 ```turtle
-ag:slowSleepS a ag:RevisableBelief ; ag:revisableToward ag:minSleepS , ag:maxSleepS .
+perception:slowSleepS a review:RevisableBelief ; review:revisableToward perception:minSleepS , perception:maxSleepS .
 ```
 
 The reviewer finds it by asking the merged T-Box. Nothing lists it, no Python knows its name, and
@@ -132,7 +132,7 @@ gives three things at once:
   judgement instead of earning them again;
 - reflection **never waits on the series store**, which attention must never do.
 
-`ag:sampleMax` is kept beside the sums although a variance could be derived without it, because
+`review:sampleMax` is kept beside the sums although a variance could be derived without it, because
 **equality with the minimum is the one thing a variance cannot express**. A variance *approaches*
 zero for a nearly-still world and *is* zero only for an instrument that has not moved at all, and
 those two cases want opposite responses.
@@ -152,7 +152,7 @@ Every decision — **taken or declined** — records when it is worth revisiting
 rate readings are actually arriving at: a window's worth of them, and no sooner. Checking earlier
 is reading the same evidence twice.
 
-So `ag:reviewIntervalS` is a **floor, not a schedule**. It only stops a review planning something
+So `review:reviewIntervalS` is a **floor, not a schedule**. It only stops a review planning something
 absurdly soon; the decision knows better than the clock does when its own effect could show.
 
 Recording a *decline* is what separates reflection from a twitch. Without it the same question is
@@ -167,13 +167,13 @@ in perfect equilibrium, and relaxing attention on a broken instrument is precise
 is the moment the freshness rule most needs to fire.
 
 So **frozen argues for tightening, alongside moving**; only *steady* — ranging, but by less than
-`ag:steadyFraction` of its own mean — argues for relaxing. Two asymmetries follow:
+`perception:steadyFraction` of its own mean — argues for relaxing. Two asymmetries follow:
 
 - **Relaxing needs unanimity; tightening needs one dissenter.** One agent holds one
-  `ag:slowSleepS` covering every sensor it has, so a single moving or frozen instrument pulls the
+  `perception:slowSleepS` covering every sensor it has, so a single moving or frozen instrument pulls the
   whole agent back. The cost of watching a still pot too closely is some battery; the cost of the
   reverse is a dead plant.
-- **`ag:reviewWindow` readings before any conclusion.** Two identical readings are a coincidence,
+- **`perception:reviewWindow` readings before any conclusion.** Two identical readings are a coincidence,
   and an agent that relaxed on the strength of them would be reasoning from noise.
 
 Both figures are constitutional rather than private. Left to each agent they are the two numbers a
@@ -181,7 +181,7 @@ lazy one tunes until it is entitled to stop looking.
 
 # Attention still follows need
 
-`cadence_for` interpolates from `ag:slowSleepS` toward `ag:fastSleepS` by urgency, and **only the
+`cadence_for` interpolates from `perception:slowSleepS` toward `perception:fastSleepS` by urgency, and **only the
 comfortable end is revisable**. At urgency 1.0 an agent watches at its fastest whatever a review
 concluded. The existing claim — *attention follows need, and need is not perception's to define* —
 stands unamended; what is added is that attention **also** follows whether looking is telling the
@@ -226,7 +226,7 @@ choice.
 
 - **No device states a sensor constraint.** The third source of room is declared and intersected
   and nothing uses it. It is real the moment a board says what interval it can honour.
-- **Only `ag:slowSleepS` is reviewable.** Instruments only, deliberately. An agent revising what
+- **Only `perception:slowSleepS` is reviewable.** Instruments only, deliberately. An agent revising what
   it *wants* — a target, a band, a price — is a much larger claim than one revising how often it
   looks: it could satisfy itself by wanting less, which is the failure the band exists to make
   visible. In BDI terms this is just another desire and could be specified properly; it has not

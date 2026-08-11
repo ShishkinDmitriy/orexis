@@ -19,7 +19,7 @@ perception, actuation, the mqtt transport. The trees under `vocabulary/` went fu
 [pins-and-wires](pins-and-wires.md). So the convention existed, was in use, and was documented.
 
 **And every capability put its terms in `ag:` anyway.** `ag:Hosting`, `ag:matchesBy`,
-`ag:reviewIntervalS` — declared by a package, spelled as though the kernel owned them. An ontology
+`review:reviewIntervalS` — declared by a package, spelled as though the kernel owned them. An ontology
 that declares an IRI and then defines nothing under it is an ontology in name only.
 
 `agent/ontology.py` explained the split, and its explanation was the tell:
@@ -93,15 +93,17 @@ Nineteen terms and five shapes. The line is **who declares the term**:
 | stays `ag:` | why |
 |---|---|
 | `ag:Agent`, `ag:Capability`, `ag:hasCapability`, `ag:localId` | the kernel's — true of every agent |
-| `ag:hasTarget`, `ag:bandLow`, `ag:maxValuePerL` | `vocabulary/water`'s — what a bid is *worth* here |
-| `ag:eventTopic`, `ag:readingTopic` | the mqtt transport's |
+| `water:hasTarget`, `water:bandLow`, `water:maxValuePerL` | `vocabulary/water`'s — what a bid is *worth* here |
+| `mqtt:eventTopic`, `mqtt:readingTopic` | the mqtt transport's |
 
 A bidder's belief block now reads from two namespaces at once, and that is the split stated rather
 than implied: the wallet is the protocol's (`market:hasEndowment` — what it brought to the venue),
 everything under it is the domain's answer to what water is worth to a plant.
 
 Only market converted. The other packages could, and the criterion for when it is worth it is
-below.
+below — **superseded**: all five converted in
+[every-term-in-its-own-house](every-term-in-its-own-house.md), and the reasoning below turned
+out to weigh the wrong thing.
 
 # Three couplings that were bugs, not costs
 
@@ -141,11 +143,14 @@ than assumed.
 
 # Seams left open
 
-- **The other four packages have not converted.** The criterion is not size, it is
-  `store.PREFIXES`: market was worth doing because it declares terms that world files and
-  onboarding both name, so the namespace buys legibility where a sovereign reads it. Perception,
-  review and actuation write their terms into SPARQL text heavily and would each be the same size
-  of change for less benefit. Nothing forces the question.
+- ~~**The other four packages have not converted.**~~ **Closed, and the criterion was wrong.**
+  This said the benefit was legibility where a sovereign reads a world file, so packages writing
+  their terms into SPARQL text heavily would be "the same size of change for less benefit". Both
+  halves missed the point. The size was not in the SPARQL text at all — that form is the one a
+  rename can see — it was in the six forms that name a term some other way and fail silently. And
+  the benefit was not legibility but a bounded kernel: `agent/ontology.py` claims everything in it
+  is true of every agent, and 102 terms were making that false. See
+  [every-term-in-its-own-house](every-term-in-its-own-house.md).
 - **`vocabulary/` packages ship no Python**, so they have no `terms.py` to hold an `NS` and their
   namespaces stay as constants in `agent/ontology.py`. The one asymmetry left, and it follows from
   a vocabulary package being pure knowledge rather than from anything about namespaces.

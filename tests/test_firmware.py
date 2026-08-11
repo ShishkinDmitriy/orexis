@@ -17,7 +17,7 @@ import pytest
 import rdflib
 
 from agent import ratified
-from agent.ontology import WORLD_GRAPH
+from agent.ontology import PERCEPTION, WORLD_GRAPH
 from onboarding.firmware import _BOARDS_Q, _optional_pins
 
 
@@ -84,7 +84,7 @@ def test_the_board_is_told_who_it_is_and_not_what_it_watches(board):
 
     It carried a PLANT_ID until the subject's local id was removed from this query — a leftover
     from when topics were built as "sensors/<plant>/moisture" instead of read from
-    ag:readingTopic. Which subject a reading is ABOUT is the world's statement and the agent's
+    mqtt:readingTopic. Which subject a reading is ABOUT is the world's statement and the agent's
     to apply; the board is handed exactly one identifier, its own, the same way an agent process
     is. Asserted on the query rather than on the header, so it cannot come back through either.
     """

@@ -100,18 +100,22 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
     """The supplier holds no bidding terms — it must fail, never silently invent a target."""
     with pytest.raises(BeliefError) as exc:
         Beliefs(query, "supplier", SUPPLIER).read(BIDDING_BLOCK)
-    # The FULL IRI, not `ag:hasTarget`. Belief terms come from whichever package
+    # The FULL IRI, not `water:hasTarget`. Belief terms come from whichever package
     # declares them and packages own their namespaces, so a prefix here would be a
     # guess — and a wrong one for anything market: owns.
-    assert ontology.term("hasTarget") in str(exc.value)
+    #
+    # Built from WATER and not from the kernel's `term()`, which is the whole point of the
+    # sweep: what a bidder wants held is the water domain's to name, and this assertion said
+    # `ag:` for as long as nobody had asked whose term it was.
+    assert ontology.WATER + "hasTarget" in str(exc.value)
     assert "supplier" in str(exc.value)
 
 
 def test_the_error_names_every_missing_term(query):
     with pytest.raises(BeliefError) as exc:
         Beliefs(query, "supplier", SUPPLIER).read(SUBSCRIBING_BLOCK)
-    for term in (ontology.term("fastSleepS"), ontology.term("slowSleepS"),
-                 ontology.term("readingGraceS")):
+    for term in (ontology.PERCEPTION + "fastSleepS", ontology.PERCEPTION + "slowSleepS",
+                 ontology.PERCEPTION + "readingGraceS"):
         assert term in str(exc.value)
 
 

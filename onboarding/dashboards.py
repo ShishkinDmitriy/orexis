@@ -18,7 +18,7 @@ So the generated files are published into the shared service's directory, gitign
 subdirectory per world. With `foldersFromFilesStructure`, Grafana shows a folder per world, and a
 world removed from disk simply stops having one.
 
-Vocabulary: nothing new. The panels are built from `ag:monitors`/`ag:polls`, and the bucket name
+Vocabulary: nothing new. The panels are built from `perception:monitors`/`perception:polls`, and the bucket name
 comes from `onboarding.influx`, so the dashboard cannot disagree with what the agent writes to.
 
 See knowledge/domain/onboarding.md.
@@ -46,7 +46,7 @@ DASHBOARD_ROOT = REPO_ROOT / "infra" / "grafana" / "dashboards"
 _WATCHERS_Q = f"""
 SELECT DISTINCT ?agentId ?subjectId WHERE {{ 
   ?agent a <{AG}Agent> ; <{AG}localId> ?agentId .
-  {{ ?agent <{AG}polls> ?sensor . ?sensor <{AG}monitors> ?subject }}
+  {{ ?agent <{PERCEPTION}polls> ?sensor . ?sensor <{PERCEPTION}monitors> ?subject }}
   UNION
   {{ ?agent <{AG}actsFor> ?subject }}
   ?subject <{AG}localId> ?subjectId .

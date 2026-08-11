@@ -222,7 +222,7 @@ def test_a_bidder_whose_desire_names_no_property_refuses_to_start(make):
 
     ds = genesis_store()
     ds.update(f"""DELETE WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-        <http://example.org/agora#hasTarget>
+        <http://example.org/agora/water#hasTarget>
         <http://example.org/agora/market#aboutProperty> ?p }} }}""")
 
     with pytest.raises(RuntimeError, match="aboutProperty"):

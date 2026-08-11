@@ -36,7 +36,7 @@ def _caps(world: str) -> dict[str, set[str]]:
 
 def test_a_simulated_sensor_derives_the_ordinary_capability():
     """The point of the exercise. `fern` polls a device that does not exist and still comes out
-    ag:Subscribing — the same capability, running the same module, as a fern on a real board."""
+    perception:Subscribing — the same capability, running the same module, as a fern on a real board."""
     assert "Subscribing" in _caps("simulation")["fern"]
 
 
@@ -71,11 +71,11 @@ def test_the_shipped_simulation_conforms():
 
 
 def test_a_stand_in_that_is_on_no_bus_is_refused():
-    """Without ag:onBus it gets no credential and no container, so it would never publish —
+    """Without mqtt:onBus it gets no credential and no container, so it would never publish —
     and a sensor that is permanently silent reads exactly like hardware that is not there."""
     assert not _conforms(_mutate_simulation(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:sensor_fern ag:onBus ?b }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:sensor_fern ag:onBus ?b }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:sensor_fern mqtt:onBus ?b }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:sensor_fern mqtt:onBus ?b }} }}"""))
 
 
 def test_an_initial_value_outside_the_range_is_refused():

@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Freshness follows the cadence, except where the agent does not set it
-description: A subscribing agent chose how long to wait between readings, so an absolute staleness limit contradicts its own instruction. Why the rule is relative for ag:Subscribing and absolute for ag:Listening, and why "I do not know" is not the same answer as "I am fine".
+description: A subscribing agent chose how long to wait between readings, so an absolute staleness limit contradicts its own instruction. Why the rule is relative for perception:Subscribing and absolute for perception:Listening, and why "I do not know" is not the same answer as "I am fine".
 tags: [perception, freshness, cadence, beliefs, subscribing, listening]
 timestamp: 2026-08-07T00:00:00Z
 ---
@@ -11,8 +11,8 @@ timestamp: 2026-08-07T00:00:00Z
 Every agent held both of these:
 
 ```turtle
-ag:slowSleepS 600       # comfortable: let the board sleep, save energy
-ag:maxReadingAgeS 120   # older than this and it will not bid on the number
+perception:slowSleepS 600       # comfortable: let the board sleep, save energy
+perception:maxReadingAgeS 120   # older than this and it will not bid on the number
 ```
 
 The first says six hundred seconds of not looking is acceptable. The second says anything over a
@@ -38,15 +38,15 @@ So this was never only a wrong log line. The belief was malformed.
 
 # The rule is relative where the agent sets the clock
 
-An `ag:Subscribing` agent **chooses** the interval — that is what the capability is. So staleness
+An `perception:Subscribing` agent **chooses** the interval — that is what the capability is. So staleness
 means *the sensor did not report within the interval I asked for, plus some slack*. That cannot be
 a constant when the interval it sets ranges from thirty seconds to six hundred.
 
-It is now derived: a reading is stale past **the cadence currently in force plus `ag:readingGraceS`**,
+It is now derived: a reading is stale past **the cadence currently in force plus `perception:readingGraceS`**,
 the slack that covers a board's wake time and a late wifi association. The grace is a belief because
 it is a judgement about this deployment — a board on a strong signal needs less than one at −80 dBm.
 
-An `ag:Listening` agent is the opposite case and keeps `ag:maxReadingAgeS` unchanged. The device
+An `perception:Listening` agent is the opposite case and keeps `perception:maxReadingAgeS` unchanged. The device
 keeps its own clock and takes no orders, so there is no interval for the agent to be relative to.
 The only thing it can state is how long it is willing to wait before deciding the device has gone
 quiet — which is exactly what an absolute is.
@@ -64,12 +64,12 @@ The three states are distinguished, because conflating them is how a real failur
 
 # Renaming a belief strands every agent already born
 
-Changing `ag:maxReadingAgeS` to `ag:readingGraceS` is a schema change, and beliefs are written
+Changing `perception:maxReadingAgeS` to `perception:readingGraceS` is a schema change, and beliefs are written
 **once at birth and never touched by start or stop**. So every agent already running held the old
 term, the new code required the new one, and each refused to start:
 
 ```
-fern composed ag:Subscribing but its beliefs graph is missing ag:readingGraceS — run agora-validate
+fern composed perception:Subscribing but its beliefs graph is missing perception:readingGraceS — run agora-validate
 ```
 
 That refusal is correct — it is the self-check doing its job rather than an agent running on beliefs

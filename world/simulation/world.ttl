@@ -1,3 +1,8 @@
+@prefix review: <http://example.org/agora/review#> .
+@prefix perception: <http://example.org/agora/perception#> .
+@prefix water: <http://example.org/agora/water#> .
+@prefix mqtt: <http://example.org/agora/mqtt#> .
+@prefix actuation: <http://example.org/agora/actuation#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -6,7 +11,7 @@
 #  A ratified world, v1 — the society, with nothing physical in it.
 #
 #  Not society with a flag, and no longer society with its own capabilities either. Every agent
-#  here is ORDINARY: it polls a sensor with ag:polls, derives ag:Subscribing, and runs the same
+#  here is ORDINARY: it polls a sensor with perception:polls, derives perception:Subscribing, and runs the same
 #  perception module a world with real boards runs. What differs is one fact about the DEVICES —
 #  ag:simulatedBy — which says a process stands in for hardware that does not exist.
 #
@@ -34,13 +39,13 @@
 #  society whose members disagree about the bus is not one society. The ONLY thing the
 #  environment tells a process is where the belief base is; this is part of what it finds there.
 
-ag:local_bus a ag:MessageBus ;
+ag:local_bus a mqtt:MessageBus ;
     ag:localId "local_bus" ;
-    ag:brokerHost "localhost" ;
-    ag:brokerPort 1885 ;
+    mqtt:brokerHost "localhost" ;
+    mqtt:brokerPort 1885 ;
     # Agents connect here and prove who they are with a certificate; the boards keep the
     # plaintext port above. One bus, one ACL, two ways of authenticating.
-    ag:brokerTlsPort 8885 .
+    mqtt:brokerTlsPort 8885 .
 
 ##########  World version  ##########
 #  Found by TYPE (?w a ag:World), never by a well-known IRI.
@@ -48,7 +53,7 @@ ag:local_bus a ag:MessageBus ;
 #  Who ratified it. A REFERENCE, never a declaration: the world says which user stands behind
 #  these files and says nothing else about them — no name, no key, no type. A user is
 #  installation-level (AGENTS.md rule 3) and an agent is given only its world, so the URI is an
-#  identifier it never resolves, exactly as `ag:brokerHost` names a host it never introspects.
+#  identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never introspects.
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
 ag:world a ag:World ; ag:currentVersion ag:version_1 ;
@@ -65,10 +70,10 @@ ag:barrel1_market a market:Market ;
     market:bidTopic     "sim/market/barrel1/bid" ;
     market:voucherTopic "sim/market/barrel1/voucher" .
 
-ag:barrel1 a ag:WaterSource ;
+ag:barrel1 a water:WaterSource ;
     ag:localId "barrel1" ;
-    ag:suppliedBy ag:supplier ;
-    ag:capacityL 5.0 .
+    water:suppliedBy ag:supplier ;
+    water:capacityL 5.0 .
 
 ##########  The supplier — runs the venue and owns the valves  ##########
 #  Derivation gives it Hosting (it owns a market) and Actuation (it holds valves), and NOT
@@ -82,46 +87,46 @@ ag:supplier a ag:Agent ;
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
     market:matchesBy market:PayAsBid ;
-    ag:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
+    actuation:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
 
-ag:fern a ag:Plant ;
-    ag:localId "fern" ; ag:servedBy ag:barrel1 ;
-    ag:dryRatePerTick 0.01 ; ag:litresPerFraction 2.0 .
+ag:fern a water:Plant ;
+    ag:localId "fern" ; water:servedBy ag:barrel1 ;
+    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 .
 
-ag:tomato a ag:Plant ;
-    ag:localId "tomato" ; ag:servedBy ag:barrel1 ;
-    ag:dryRatePerTick 0.01 ; ag:litresPerFraction 2.0 .
+ag:tomato a water:Plant ;
+    ag:localId "tomato" ; water:servedBy ag:barrel1 ;
+    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 .
 
-ag:succulent a ag:Plant ;
-    ag:localId "succulent" ; ag:servedBy ag:barrel1 ;
-    ag:dryRatePerTick 0.008 ; ag:litresPerFraction 2.0 .
+ag:succulent a water:Plant ;
+    ag:localId "succulent" ; water:servedBy ag:barrel1 ;
+    water:dryRatePerTick 0.008 ; water:litresPerFraction 2.0 .
 
 ##########  Plant agents — each wired to its own sensor and into the market  ##########
-#  ag:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
+#  perception:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
 #  From these two connections, derivation gives each of them Subscribing + Bidding.
 
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
     ag:actsFor ag:fern ;
-    ag:polls ag:sensor_fern ;
+    perception:polls ag:sensor_fern ;
     market:bidsIn ag:barrel1_market ;
-    ag:eventTopic "sim/readings/fern" .
+    mqtt:eventTopic "sim/readings/fern" .
 
 ag:tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
     ag:actsFor ag:tomato ;
-    ag:polls ag:sensor_tomato ;
+    perception:polls ag:sensor_tomato ;
     market:bidsIn ag:barrel1_market ;
-    ag:eventTopic "sim/readings/tomato" .
+    mqtt:eventTopic "sim/readings/tomato" .
 
 ag:succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
     ag:actsFor ag:succulent ;
-    ag:polls ag:sensor_succulent ;
+    perception:polls ag:sensor_succulent ;
     market:bidsIn ag:barrel1_market ;
-    ag:eventTopic "sim/readings/succulent" .
+    mqtt:eventTopic "sim/readings/succulent" .
 
 ##########  What each agent may re-pick, and how far  ##########
 #  A MANDATE: the room this world gives an agent on one of its own settings. Here rather than in
@@ -129,7 +134,7 @@ ag:succulent_agent a ag:Agent ;
 #  it wants. The pick inside the range stays private; the range does not.
 #
 #  Stating one is also what GRANTS the review capability: room to move and the ability to use it
-#  are one decision said once, so `capabilities/review/rules.ru` derives ag:Reckoning from exactly
+#  are one decision said once, so `capabilities/review/rules.ru` derives review:Reckoning from exactly
 #  these triples. An agent with no mandate never arises, which is how a deployment that wants no
 #  drift says so — by granting none, rather than by omitting a belief and hoping something
 #  notices. The supplier has none: it holds no revisable setting, so there is nothing to give it
@@ -137,26 +142,26 @@ ag:succulent_agent a ag:Agent ;
 #
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
-ag:fern_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .
-ag:tomato_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .
-ag:succulent_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 900 ; ag:notAbove 900 ] .
+ag:fern_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
+ag:tomato_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
+ag:succulent_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 900 ; review:notAbove 900 ] .
 
 ##########  Sensors — ordinary in every respect but one: nothing is there  ##########
 #  Each states what any board states: the bus it is on, the subject it monitors, the property it
 #  observes, its topics, and who holds the clock. An agent reads these and cannot tell.
 #
-#  ag:senseMode ag:Scheduled means the stand-in keeps the interval its agent gives it, exactly
+#  perception:senseMode perception:Scheduled means the stand-in keeps the interval its agent gives it, exactly
 #  as a deep-sleeping board does — so this world exercises the retained-cadence mechanism, which
 #  the old simulation never touched at all.
 
-ag:sensor_fern a ag:Sensor ;
+ag:sensor_fern a perception:Sensor ;
     ag:localId "sensor_fern" ;
-    ag:onBus ag:local_bus ;
-    ag:senseMode ag:Scheduled ;
-    ag:monitors ag:fern ;
-    sosa:observes ag:SoilMoisture ;
-    ag:readingTopic "sim/sensors/sensor_fern/reading" ;
-    ag:commandTopic "sim/sensors/sensor_fern/command" ;
+    mqtt:onBus ag:local_bus ;
+    perception:senseMode perception:Scheduled ;
+    perception:monitors ag:fern ;
+    sosa:observes water:SoilMoisture ;
+    mqtt:readingTopic "sim/sensors/sensor_fern/reading" ;
+    mqtt:commandTopic "sim/sensors/sensor_fern/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
                      ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
                      ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
@@ -165,27 +170,27 @@ ag:sensor_fern a ag:Sensor ;
         ag:modelDryRate 0.02 ;
         ag:modelTickSeconds 3 ] .
 
-ag:sensor_tomato a ag:Sensor ;
+ag:sensor_tomato a perception:Sensor ;
     ag:localId "sensor_tomato" ;
-    ag:onBus ag:local_bus ;
-    ag:senseMode ag:Scheduled ;
-    ag:monitors ag:tomato ;
-    sosa:observes ag:SoilMoisture ;
-    ag:readingTopic "sim/sensors/sensor_tomato/reading" ;
-    ag:commandTopic "sim/sensors/sensor_tomato/command" ;
+    mqtt:onBus ag:local_bus ;
+    perception:senseMode perception:Scheduled ;
+    perception:monitors ag:tomato ;
+    sosa:observes water:SoilMoisture ;
+    mqtt:readingTopic "sim/sensors/sensor_tomato/reading" ;
+    mqtt:commandTopic "sim/sensors/sensor_tomato/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
         ag:modelDryRate 0.02 ;
         ag:modelTickSeconds 3 ] .
 
-ag:sensor_succulent a ag:Sensor ;
+ag:sensor_succulent a perception:Sensor ;
     ag:localId "sensor_succulent" ;
-    ag:onBus ag:local_bus ;
-    ag:senseMode ag:Scheduled ;
-    ag:monitors ag:succulent ;
-    sosa:observes ag:SoilMoisture ;
-    ag:readingTopic "sim/sensors/sensor_succulent/reading" ;
-    ag:commandTopic "sim/sensors/sensor_succulent/command" ;
+    mqtt:onBus ag:local_bus ;
+    perception:senseMode perception:Scheduled ;
+    perception:monitors ag:succulent ;
+    sosa:observes water:SoilMoisture ;
+    mqtt:readingTopic "sim/sensors/sensor_succulent/reading" ;
+    mqtt:commandTopic "sim/sensors/sensor_succulent/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
         ag:modelDryRate 0.015 ;
@@ -193,32 +198,32 @@ ag:sensor_succulent a ag:Sensor ;
 
 ##########  The supplier's valves — real valves, stood in for  ##########
 #
-#  ag:Valve, not a separate class: the supplier holds ag:hasActuator and derives plain
-#  ag:Actuation, so it co-signs every command exactly as it would for hardware. What is
+#  actuation:Valve, not a separate class: the supplier holds actuation:hasActuator and derives plain
+#  actuation:Actuation, so it co-signs every command exactly as it would for hardware. What is
 #  simulated is the DEVICE at the other end, which is what ag:simulatedBy says — the same
 #  mark the sensors carry.
 #
-#  ag:statusTopic is where the stand-in reports what it actually dispensed. A simulated
+#  mqtt:statusTopic is where the stand-in reports what it actually dispensed. A simulated
 #  sensor waters on THAT and never on the command, so a command it refuses leaves the soil
 #  dry — which is the whole point of making it verify.
 
-ag:valve_fern a ag:Valve ;
-    ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
+ag:valve_fern a actuation:Valve ;
+    ag:localId "valve_fern" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:fern ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
-    ag:commandTopic "sim/actuators/valve_fern/command" ;
-    ag:statusTopic "sim/actuators/valve_fern/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    mqtt:commandTopic "sim/actuators/valve_fern/command" ;
+    mqtt:statusTopic "sim/actuators/valve_fern/status" ;
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
-ag:valve_tomato a ag:Valve ;
-    ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
+ag:valve_tomato a actuation:Valve ;
+    ag:localId "valve_tomato" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:tomato ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
-    ag:commandTopic "sim/actuators/valve_tomato/command" ;
-    ag:statusTopic "sim/actuators/valve_tomato/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    mqtt:commandTopic "sim/actuators/valve_tomato/command" ;
+    mqtt:statusTopic "sim/actuators/valve_tomato/status" ;
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
-ag:valve_succulent a ag:Valve ;
-    ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
+ag:valve_succulent a actuation:Valve ;
+    ag:localId "valve_succulent" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:succulent ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
-    ag:commandTopic "sim/actuators/valve_succulent/command" ;
-    ag:statusTopic "sim/actuators/valve_succulent/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    mqtt:commandTopic "sim/actuators/valve_succulent/command" ;
+    mqtt:statusTopic "sim/actuators/valve_succulent/status" ;
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .

@@ -7,6 +7,7 @@ reason for having the node is gone.
 
 import pytest
 
+from agent.ontology import MQTT
 from agent.store import bindings
 
 from conftest import genesis_store
@@ -15,16 +16,16 @@ AG = "http://example.org/agora#"
 
 _CHANNELS = f"""
 SELECT DISTINCT ?topic ?channel WHERE {{
-  ?channel a <{AG}Channel> ; <{AG}channelTopic> ?topic
+  ?channel a <{MQTT}Channel> ; <{MQTT}channelTopic> ?topic
 }}"""
 
 _USERS = f"""
 SELECT ?id ?topic ?dir WHERE {{
   ?d <{AG}localId> ?id .
-  {{ ?d <{AG}publishesOn> ?c . BIND("publishes" AS ?dir) }}
+  {{ ?d <{MQTT}publishesOn> ?c . BIND("publishes" AS ?dir) }}
   UNION
-  {{ ?d <{AG}listensOn> ?c . BIND("listens" AS ?dir) }}
-  ?c <{AG}channelTopic> ?topic
+  {{ ?d <{MQTT}listensOn> ?c . BIND("listens" AS ?dir) }}
+  ?c <{MQTT}channelTopic> ?topic
 }}"""
 
 

@@ -1,6 +1,6 @@
 """The manifest: what this capability contributes to a build.
 
-Two of the three perception capabilities. `ag:Polling` is declared in the vocabulary and
+Two of the three perception capabilities. `perception:Polling` is declared in the vocabulary and
 deliberately absent here: it needs a device that is reachable at any moment, and nothing in
 this world is. Adding it later is a class and one line of PROVIDES — no other package moves.
 """

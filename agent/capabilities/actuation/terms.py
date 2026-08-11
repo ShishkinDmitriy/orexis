@@ -1,7 +1,20 @@
-"""The terms this package implements — the Python end of `ontology.ttl`."""
+"""The terms this package implements — the Python end of `ontology.ttl`.
+
+**This package owns a namespace**, and `term()` here builds into it. `ag:` is what every agent
+has whatever it composed; touching the physical world is not that, so its vocabulary is this
+package's and says so. `tests/test_layout.py` holds `NS` and the `@prefix` in `ontology.ttl`
+together — drifting them apart would have Python name terms SHACL never validates, and the world
+would conform while the agent read nothing.
+"""
 
 from __future__ import annotations
 
-from agent.ontology import term
+NS = "http://example.org/agora/actuation#"
+
+
+def term(name: str) -> str:
+    """A term of this package's, by local name."""
+    return NS + name
+
 
 ACTUATION = term("Actuation")  # holds the hardware, and may therefore touch the world

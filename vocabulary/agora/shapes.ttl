@@ -1,3 +1,5 @@
+@prefix mqtt: <http://example.org/agora/mqtt#> .
+@prefix actuation: <http://example.org/agora/actuation#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -60,23 +62,23 @@ ag:PublicGraphShape a sh:NodeShape ;
     sh:message "a public graph must record what it was derived from or what generated it — see agora/provenance.py" .
 
 ag:SimulatedDeviceShape a sh:NodeShape ;
-    rdfs:comment "A device that is stood in for must still be reachable like a real one. Without ag:onBus it gets no credential from agora-mqtt and no service from agora-compose, so nothing would ever publish for it — and the failure is a sensor that is simply, permanently silent, which reads exactly like hardware that is not there. Which it is not. Catching it here costs nothing; catching it in a running world costs an afternoon." ;
+    rdfs:comment "A device that is stood in for must still be reachable like a real one. Without mqtt:onBus it gets no credential from agora-mqtt and no service from agora-compose, so nothing would ever publish for it — and the failure is a sensor that is simply, permanently silent, which reads exactly like hardware that is not there. Which it is not. Catching it here costs nothing; catching it in a running world costs an afternoon." ;
     sh:targetSubjectsOf ag:simulatedBy ;
-    sh:property [ sh:path ag:onBus ; sh:minCount 1 ;
+    sh:property [ sh:path mqtt:onBus ; sh:minCount 1 ;
                   sh:message "a simulated device must be on a bus: its stand-in speaks over the wire, exactly as the real one would" ] ;
     sh:property [ sh:path ag:simulatedBy ; sh:maxCount 1 ;
                   sh:message "one device, one stand-in" ] .
 
 ag:SimulatedActuatorShape a sh:NodeShape ;
     rdfs:comment "A stood-in actuator must say where it reports. Water reaching soil is physics, and physics has no wire — so between containers the only way a simulated sensor can learn that water actually flowed is a message from the valve that flowed it. Without a status topic the stand-in valve would open into nowhere: the command would be verified, the dose computed, and the soil would stay dry forever." ;
-    sh:targetSubjectsOf ag:actuates ;
-    sh:property [ sh:path ag:statusTopic ; sh:maxCount 1 ] ;
+    sh:targetSubjectsOf actuation:actuates ;
+    sh:property [ sh:path mqtt:statusTopic ; sh:maxCount 1 ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a simulated actuator must state ag:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
+        sh:message "a simulated actuator must state mqtt:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
         sh:select """
             SELECT $this WHERE {
                 $this <http://example.org/agora#simulatedBy> ?model .
-                FILTER NOT EXISTS { $this <http://example.org/agora#statusTopic> ?t }
+                FILTER NOT EXISTS { $this <http://example.org/agora/mqtt#statusTopic> ?t }
             }""" ] .
 
 ag:DeviceModelShape a sh:NodeShape ;

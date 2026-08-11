@@ -18,7 +18,7 @@ there is no shared store to be let into. See knowledge/decisions/where-the-belie
 at boot from the world files mounted read-only beside it, runs the derivation itself, and is
 born if it has never been. So a service can start whenever it likes and depends on nothing.
 
-**`network_mode: host` is deliberate.** The world states the bus as `ag:brokerHost "localhost"`
+**`network_mode: host` is deliberate.** The world states the bus as `mqtt:brokerHost "localhost"`
 because a channel name is meaningless without the broker it is on and every member must agree
 on it. Put the agents on a bridge network and that stops being true for them while staying true
 for the ESP32 — two names for one bus, which is exactly what stating it in the world prevents.
@@ -35,7 +35,7 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import AG, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MQTT, PERCEPTION, WATER, WORLD_GRAPH
 from agent import genesis
 from agent.genesis import world_dir, worlds
 
@@ -49,19 +49,23 @@ SELECT ?id ?cap WHERE {{
   OPTIONAL {{ ?a <{AG}hasCapability> ?cap }}
  }}"""
 
-ACTUATION = AG + "Actuation"
+# The CAPABILITY, not the namespace `ACTUATION` imported above. Naming both the same thing
+# shadowed the namespace and turned every `<{ACTUATION}actuates>` into nonsense — which cost
+# nothing visible, because those patterns sit in OPTIONAL clauses that match nothing when the
+# IRI is garbage. The supplier quietly stopped being mounted its signing keys.
+ACTUATES = ACTUATION + "Actuation"
 
 _BUS_PORTS_Q = f"""
 SELECT ?port ?tlsPort WHERE {{ 
-  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
-  OPTIONAL {{ ?bus <{AG}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
+  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
+  OPTIONAL {{ ?bus <{MQTT}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
 
 
 def _bus_ports(world: str) -> tuple[int, int | None]:
     """The ports this world states. Two worlds are two brokers, so they must differ."""
     rows = ratified.rows(ratified.dataset(world), _BUS_PORTS_Q)
     if not rows:
-        raise SystemExit(f"agora-compose: world {world!r} declares no ag:MessageBus")
+        raise SystemExit(f"agora-compose: world {world!r} declares no mqtt:MessageBus")
     tls = rows[0].get("tlsPort")
     return int(rows[0]["port"]), int(tls) if tls else None
 
@@ -107,7 +111,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
     # world/<name>/ wholesale would hand every agent the signing keys and every other agent's
     # opening beliefs, neither of which it has any business reading.
     signing = ""
-    if ACTUATION in caps:
+    if ACTUATES in caps:
         signing = ("\n      # it actuates, so it co-signs — these two keys and nothing else\n"
                    "      - ./secrets/host.key:/app/world/secrets/host.key:ro\n"
                    "      - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro")
@@ -172,18 +176,18 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?initial ?dryRate ?tick ?litres ?doseTopic ?port ?minValue ?maxValue
 WHERE {{ 
-  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}readingTopic> ?readingTopic ;
-     <{AG}monitors> ?subject .
-  OPTIONAL {{ ?d <{AG}commandTopic> ?commandTopic }}
-  OPTIONAL {{ ?d <{AG}senseMode> ?senseMode }}
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{MQTT}readingTopic> ?readingTopic ;
+     <{PERCEPTION}monitors> ?subject .
+  OPTIONAL {{ ?d <{MQTT}commandTopic> ?commandTopic }}
+  OPTIONAL {{ ?d <{PERCEPTION}senseMode> ?senseMode }}
   OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
   OPTIONAL {{ ?model <{AG}modelDryRate> ?dryRate }}
   OPTIONAL {{ ?model <{AG}modelTickSeconds> ?tick }}
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
-  OPTIONAL {{ ?subject <{AG}litresPerFraction> ?litres }}
-  OPTIONAL {{ ?valve <{AG}actuates> ?subject ; <{AG}statusTopic> ?doseTopic }}
-  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
+  OPTIONAL {{ ?subject <{WATER}litresPerFraction> ?litres }}
+  OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
+  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
 
@@ -216,8 +220,8 @@ def _simulator(world: str, row: dict) -> str:
     environment:
       SIM_SENSOR_ID: "{sim_id}"
       SIM_READING_TOPIC: "{row['readingTopic']}"
-      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
-      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "{mode}"
       MQTT_HOST: "localhost"
@@ -234,11 +238,11 @@ def _simulator(world: str, row: dict) -> str:
 _SIM_VALVES_Q = f"""
 SELECT ?id ?commandTopic ?statusTopic ?mlPerSecond ?maxDoseMl ?port
 WHERE {{ 
-  ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}actuates> ?subject ;
-     <{AG}commandTopic> ?commandTopic ; <{AG}statusTopic> ?statusTopic .
-  OPTIONAL {{ ?v <{AG}mlPerSecond> ?mlPerSecond }}
-  OPTIONAL {{ ?v <{AG}maxDoseMl> ?maxDoseMl }}
-  ?bus a <{AG}MessageBus> ; <{AG}brokerPort> ?port .
+  ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{ACTUATION}actuates> ?subject ;
+     <{MQTT}commandTopic> ?commandTopic ; <{MQTT}statusTopic> ?statusTopic .
+  OPTIONAL {{ ?v <{ACTUATION}mlPerSecond> ?mlPerSecond }}
+  OPTIONAL {{ ?v <{ACTUATION}maxDoseMl> ?maxDoseMl }}
+  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
 
