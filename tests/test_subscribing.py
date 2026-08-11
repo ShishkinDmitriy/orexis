@@ -181,7 +181,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     # them, so the cut started inside the platform block and took the rest of it with it. The
     # part goes too — a KY-015 hosting two channels this world no longer has would be a
     # platform pointing at nothing.
-    for block in ("ag:air_temp_fern a perception:Sensor ;", "ag:air_humidity_fern a perception:Sensor ;",
+    for block in ("ag:air_temp_fern a sosa:Sensor , ag:Device ;", "ag:air_humidity_fern a sosa:Sensor , ag:Device ;",
                   "ag:air_sensor_fern a sosa:Platform ;"):
         start = s.index(block)
         s = s[:start] + s[s.index(" .\n", start) + 3:]
@@ -193,7 +193,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
 
     s = s.replace(
         "ag:fern_agent a ag:Agent ;",
-        'ag:chatter_fern a perception:Sensor ;\n'
+        'ag:chatter_fern a sosa:Sensor , ag:Device ;\n'
         '    ag:localId "chatter_fern" ;\n'
         '    mqtt:onBus ag:local_bus ;\n'
         '    perception:senseMode perception:Push ;\n'          # keeps its own clock, takes no orders

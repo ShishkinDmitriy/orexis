@@ -19,7 +19,7 @@ perception:PerceivingAgentShape a sh:NodeShape ;
                 ?cap a <http://example.org/agora/perception#PerceptionCapability> .
             }
         """ ] ;
-    sh:property [ sh:path perception:polls ; sh:minCount 1 ; sh:class perception:Sensor ;
+    sh:property [ sh:path perception:polls ; sh:minCount 1 ; sh:class sosa:Sensor , ag:Device ;
                   sh:message "an agent that perceives must be wired to at least one sensor" ] ;
     sh:property [ sh:path perception:readingGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
@@ -27,7 +27,7 @@ perception:PerceivingAgentShape a sh:NodeShape ;
 
 perception:SensorShape a sh:NodeShape ;
     rdfs:comment "A sensor reads exactly one subject, says which property it observes, and states how it is driven — because its agent's capability is derived from that." ;
-    sh:targetClass perception:Sensor ;
+    sh:targetClass sosa:Sensor ;
     sh:property [ sh:path perception:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path perception:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class perception:SenseMode ;
@@ -35,7 +35,7 @@ perception:SensorShape a sh:NodeShape ;
 
 perception:DoubleCoveredPropertyShape a sh:NodeShape ;
     rdfs:comment "Two sensors reading the SAME property of the SAME subject. A Warning and not a Violation, because it is a legitimate rig — two probes at opposite ends of one pot are one feature of interest measured twice — and the behaviour is defined: they share one observation node and the last writer wins. It is flagged because the other reading of it is a modelling slip: strictly, two probes in different soil observe different features of interest, and saying so gives each its own record instead of a value that flickers between them. Different properties of one subject are ordinary and silent; that is the case this shape must not catch, and why it tests the property and not just the subject." ;
-    sh:targetClass perception:Sensor ;
+    sh:targetClass sosa:Sensor ;
     sh:severity sh:Warning ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "another sensor already reads this property of this subject — they will share one observation and the last writer wins. If they are really measuring different soil, model them as two subjects." ;
@@ -43,7 +43,7 @@ perception:DoubleCoveredPropertyShape a sh:NodeShape ;
             SELECT $this WHERE {
                 $this <http://example.org/agora/perception#monitors> ?subject ;
                       <http://www.w3.org/ns/sosa/observes> ?property .
-                ?other a <http://example.org/agora/perception#Sensor> ;
+                ?other a <http://www.w3.org/ns/sosa/Sensor> ;
                        <http://example.org/agora/perception#monitors> ?subject ;
                        <http://www.w3.org/ns/sosa/observes> ?property .
                 FILTER (?other != $this)

@@ -93,14 +93,14 @@ def _sizes(st: Store) -> dict[str, int]:
 def test_an_ordinary_pattern_spans_every_public_graph(world):
     """A reader asks what the society knows and gets one answer, whichever graph holds it.
 
-    `?agent perception:polls ?s . ?s a perception:Sensor` is the case in miniature: the first is the sovereign's
+    `?agent perception:polls ?s . ?s a ssn:System` is the case in miniature: the first is the sovereign's
     and the second may be entailed, so the two live apart. Written inside a single `GRAPH` clause
     this returns NOTHING — silently, because an empty result is not an error. That is the trap
     the default graph exists to close, and it is why queries here name no graph at all.
     """
     st = _public(world)
     spanning = bindings(st.query(
-        "SELECT ?agent WHERE { ?agent perception:polls ?s . ?s a perception:Sensor ; perception:senseMode ?m }"))
+        "SELECT ?agent WHERE { ?agent perception:polls ?s . ?s a ssn:System ; perception:senseMode ?m }"))
     assert spanning, "a pattern spanning the asserted/entailed split found nothing"
 
     narrowed = _in_graph(st, WORLD_GRAPH,

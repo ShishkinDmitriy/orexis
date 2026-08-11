@@ -18,6 +18,7 @@
 # question for that transport's shapes, not for this rule.
 
 PREFIX perception: <http://example.org/agora/perception#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX review: <http://example.org/agora/review#>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX ag:   <http://example.org/agora#>
@@ -37,13 +38,13 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability perception:Subscribing } }
 $given
-WHERE  { ?agent perception:polls ?sensor . ?sensor a perception:Sensor ; perception:senseMode perception:Scheduled } ;
+WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:senseMode perception:Scheduled } ;
 
 #  Announces on its own clock -> the agent can only RECEIVE, and is never asked for a cadence.
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability perception:Listening } }
 $given
-WHERE  { ?agent perception:polls ?sensor . ?sensor a perception:Sensor ; perception:senseMode perception:Push } ;
+WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:senseMode perception:Push } ;
 
 #  What the EQUIPMENT allows, carried from the sensor to the agent that polls it.
 #

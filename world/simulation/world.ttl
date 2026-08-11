@@ -165,7 +165,7 @@ ag:succulent_agent review:commits [ review:onTerm perception:slowSleepS ; review
 #  for a client that never connects is exactly what the hardware world refuses. It is reachable
 #  because its neighbour publishes for it, which is what `ag:SimulatedDeviceShape` now tests.
 
-ag:moisture_sensor_fern a perception:Sensor ;
+ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
     perception:senseMode perception:Scheduled ;
@@ -184,7 +184,7 @@ ag:moisture_sensor_fern a perception:Sensor ;
 #  it is the same device speaking, and the only thing that makes it a separate SENSOR is that it
 #  observes a different property. Its range is degrees, not a fraction, which is the assumption
 #  ag:DeviceModelShape had to stop making.
-ag:air_temp_fern a perception:Sensor ;
+ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
     perception:senseMode perception:Scheduled ;
     perception:monitors ag:fern ;
@@ -201,7 +201,7 @@ ag:air_temp_fern a perception:Sensor ;
         ag:modelDryRate -0.05 ;
         ag:modelTickSeconds 3 ] .
 
-ag:moisture_sensor_tomato a perception:Sensor ;
+ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_tomato" ;
     mqtt:onBus ag:local_bus ;
     perception:senseMode perception:Scheduled ;
@@ -214,7 +214,7 @@ ag:moisture_sensor_tomato a perception:Sensor ;
         ag:modelDryRate 0.02 ;
         ag:modelTickSeconds 3 ] .
 
-ag:moisture_sensor_succulent a perception:Sensor ;
+ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_succulent" ;
     mqtt:onBus ag:local_bus ;
     perception:senseMode perception:Scheduled ;

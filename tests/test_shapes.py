@@ -223,7 +223,7 @@ def test_an_agent_may_hold_both_modes_at_once():
     """
     assert _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:chatter_fern a perception:Sensor ; ag:localId "chatter_fern" ; mqtt:onBus ag:local_bus ;
+            ag:chatter_fern a sosa:Sensor , ag:Device ; ag:localId "chatter_fern" ; mqtt:onBus ag:local_bus ;
                 perception:senseMode perception:Push ; perception:monitors ag:fern ; sosa:observes water:SoilMoisture ;
                 mqtt:readingTopic "sensors/chatter_fern/reading" .
             ag:fern_agent perception:polls ag:chatter_fern .
@@ -235,7 +235,7 @@ def test_an_agent_may_hold_both_modes_at_once():
 def _duplicate_probe(observes: str) -> rdflib.Graph:
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:second_probe_fern a perception:Sensor ; ag:localId "second_probe_fern" ;
+            ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
                 mqtt:onBus ag:local_bus ; perception:senseMode perception:Scheduled ; perception:monitors ag:fern ;
                 sosa:observes {observes} ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;

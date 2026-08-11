@@ -40,8 +40,33 @@ perception:Listening a perception:PerceptionCapability ; rdfs:label "Listening" 
 
 #################  Sensors  #################
 
-perception:Sensor a owl:Class ; rdfs:subClassOf ag:Device , sosa:Sensor ; rdfs:label "Sensor" ;
-    rdfs:comment "Reads a property of a subject. Emits numbers; never judgments." .
+#  `perception:Sensor` was here, and it was `sosa:Sensor` wearing our name.
+#
+#  It was an intersection, not a synonym — `ag:Device ∧ sosa:Sensor` — and that is why the earlier
+#  audits kept it. But a named class is not the only way to state an intersection: an instance
+#  can carry both types, and the two constraints can sit side by side in the one shape that
+#  enforced the conjunction. What the name bought was saying it once; what it cost was a reader
+#  having to learn that our word for a sensor is not the standard one.
+#
+#  `ag:Device` STAYS, and why is the principle this whole audit turns on.
+#
+#  SOSA's axis is FUNCTIONAL: `sosa:Platform` asks *where is it mounted* — its own examples are
+#  a post, a buoy, a ship, a cell-phone, a human — and `ssn:System` asks *what implements the
+#  procedure*. Neither is about what a thing is made of, and the spec is explicit that all its
+#  major classes may be virtual, a correction it made deliberately.
+#
+#  `ag:Device`'s axis is SUBSTRATE: a physical edge node with legs, interchangeable with a
+#  stand-in. That is a different question, so a term answering it necessarily cuts ACROSS their
+#  classes rather than duplicating one — `mc:Microcontroller` and `mc:Peripheral` are Platforms,
+#  sensors and actuators are Systems, and `mc:hasPin`, `mc:logicVolts` and `ag:simulatedBy` all
+#  take `ag:Device` as their domain. Boards have pins.
+#
+#  So the test for keeping one of ours is not whether a standard has a similar word. It is
+#  whether the standard is answering the same QUESTION. Here it is not, which is why
+#  `perception:Sensor` goes and `ag:Device` stays.
+#
+#  See knowledge/decisions/one-word-for-one-relation.md.
+
 
 # BORROWED, AND RESTATED — the one axiom this project holds about somebody else's class.
 #
@@ -61,11 +86,11 @@ perception:Sensor a owl:Class ; rdfs:subClassOf ag:Device , sosa:Sensor ; rdfs:l
 # behalf of a package that may not be installed.
 sosa:Sensor rdfs:subClassOf ssn:System .
 
-perception:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range perception:Sensor ;
+perception:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
     rdfs:label "polls" ;
     rdfs:comment "The agent may read this sensor. This IS the access grant — expressed as topology rather than as a separate permission system, so isolation is visible in the wiring." .
 
-perception:monitors a owl:ObjectProperty ; rdfs:domain perception:Sensor ;
+perception:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
     rdfs:label "monitors" ;
     rdfs:comment "The subject this sensor reads. Pairs with sosa:observes, which says WHICH property." .
 
@@ -85,7 +110,7 @@ perception:Scheduled a perception:SenseMode ; rdfs:label "Scheduled" ;
 perception:Push a perception:SenseMode ; rdfs:label "Push" ;
     rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives perception:Listening. The edge holds the policy, and no agent can take it back." .
 
-perception:senseMode a owl:ObjectProperty ; rdfs:domain perception:Sensor ; rdfs:range perception:SenseMode ;
+perception:senseMode a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range perception:SenseMode ;
     rdfs:label "sense mode" .
 
 #################  Attention — the agent's private policy  #################

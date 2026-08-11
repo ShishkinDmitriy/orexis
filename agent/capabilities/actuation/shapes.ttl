@@ -1,6 +1,7 @@
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix actuation: <http://example.org/agora/actuation#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -14,7 +15,7 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
             SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
                                        <http://example.org/agora/actuation#Actuation> }
         """ ] ;
-    sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class actuation:Actuator ;
+    sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class sosa:Actuator , ag:Device ;
                   sh:message "an agent that actuates must own at least one actuator" ] ;
     sh:property [ sh:path actuation:doseGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 0 ;
@@ -22,7 +23,7 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
 
 actuation:ActuatorShape a sh:NodeShape ;
     rdfs:comment "An actuator delivers to exactly one subject, states where it takes its commands, and carries its own calibration and hard cap — so dosing is a fact about the device, not a constant in code." ;
-    sh:targetClass actuation:Actuator ;
+    sh:targetClass sosa:Actuator ;
     sh:property [ sh:path actuation:actuates ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path actuation:mlPerSecond ; sh:minCount 1 ; sh:maxCount 1 ;
