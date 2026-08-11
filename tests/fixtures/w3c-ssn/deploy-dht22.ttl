@@ -1,0 +1,42 @@
+# OURS, not theirs — the deployment half of `dht22.ttl`.
+#
+# Their file describes a PART: what a DHT22 is, what its two channels can do, and how accurate
+# they are under stated conditions. None of it mentions this society, and it could not: a vendor
+# cannot know that you drive the board on a schedule, that it watches your fern, or which topic
+# it publishes on. That is the part/deployment boundary, and this file is the deployment side of
+# it — everything their description is missing and everything it is right to be missing.
+#
+# Nothing here restates a fact their file already carries. The frequency floor, the accuracy, the
+# operating range and the sub-system structure all come from them, untouched.
+
+@prefix ag:         <http://example.org/agora#> .
+@prefix perception: <http://example.org/agora/perception#> .
+@prefix mqtt:       <http://example.org/agora/mqtt#> .
+@prefix scaling:    <http://example.org/agora/scaling#> .
+@prefix water:      <http://example.org/agora/water#> .
+@prefix unit:       <http://qudt.org/vocab/unit/> .
+@prefix sosa:       <http://www.w3.org/ns/sosa/> .
+@prefix dht22:      <http://example.org/data/DHT22/4578#> .
+
+# Their two channels, deployed. `ag:Device` is ours and is the conjunct that carries a name on
+# our wire — see the audit in capabilities/perception/ontology.ttl for why that class survives
+# where `perception:Sensor` did not.
+dht22:TemperatureSensor a ag:Device ;
+    ag:localId "vendor_air_temp" ;
+    perception:senseMode perception:Scheduled ;
+    perception:monitors ag:fern ;
+    sosa:observes water:AirTemperature ;
+    scaling:quantityUnit unit:DEG_C ;
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:readingPointer "/temperature" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
+
+dht22:HumiditySensor a ag:Device ;
+    ag:localId "vendor_air_humidity" ;
+    perception:senseMode perception:Scheduled ;
+    perception:monitors ag:fern ;
+    sosa:observes water:AirHumidity ;
+    scaling:quantityUnit unit:UNITLESS ;
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:readingPointer "/humidity" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
