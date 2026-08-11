@@ -1,8 +1,8 @@
-"""market:Hosting — run rounds in a market: announce, collect, match, clear, issue.
+"""market:Hosting — run auctions in a market: announce, collect, match, clear, issue.
 
 This module exists in this shape *because* each agent is its own process. The host cannot
-compute anyone's bid — the valuation is private and lives in another process entirely — so a
-round is a conversation rather than a calculation:
+compute anyone's bid — the valuation is private and lives in another process entirely — so an
+auction is a conversation rather than a calculation:
 
     participant announces it is in trouble (its own judgment, voluntarily disclosed)
         -> host announces an offer with a deadline          [market:offerTopic]
@@ -17,7 +17,8 @@ actuation is, so this package does not know that pay-as-bid is implemented in Py
 knowledge/domain/bid-matching.md and knowledge/decisions/bid-matching-is-a-capability.md.
 
 Vocabulary: capabilities/market/ontology.ttl. Rules: capabilities/market/shapes.ttl.
-See knowledge/domain/round.md, knowledge/decisions/clearing-as-validator.md.
+See knowledge/domain/auction.md, knowledge/domain/round.md,
+knowledge/decisions/clearing-as-validator.md.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from __future__ import annotations
 import time
 import uuid
 
-from agent.auction import run_round
+from agent.auction import run_auction
 from agent.market import Bid, Limits, MarketState, Offer
 from agent.module import Module, Timer
 from agent.ontology import WORLD_GRAPH
@@ -59,8 +60,8 @@ class HostingModule(Module):
             for row in bindings(agent.store.query(_event_topics_q(market.uri))):
                 self.event_topics[row["eventTopic"]] = market
 
-        self.open_round: dict | None = None
-        self.last_round_at = 0.0
+        self.open_auction: dict | None = None
+        self.last_auction_at = 0.0
         self._timer: Timer | None = None
 
     def subscriptions(self) -> list[str]:
@@ -73,7 +74,7 @@ class HostingModule(Module):
         if self._timer:
             self._timer.stop()
 
-    # --- what opens a round ---
+    # --- what opens an auction ---
 
     def handle(self, topic: str, payload: bytes) -> bool:
         market = self.event_topics.get(topic)
@@ -87,13 +88,13 @@ class HostingModule(Module):
         return False
 
     def on_participant_event(self, market, event: dict) -> None:
-        """A participant said it is in trouble. Scarcity is what condenses a round."""
+        """A participant said it is in trouble. Scarcity is what condenses an auction."""
         if event.get("band") != "LOW":
             return
         now = time.monotonic()
-        if now - self.last_round_at < self.beliefs.cooldown_s:
+        if now - self.last_auction_at < self.beliefs.cooldown_s:
             return  # a flapping participant must not be able to spam the market
-        if self.open_round is not None:
+        if self.open_auction is not None:
             return
         self.announce(market, trigger=event.get("agent", "?"))
 
@@ -108,15 +109,15 @@ class HostingModule(Module):
         return self.agent.provider(BID_MATCHING)
 
     def announce(self, market, trigger: str) -> None:
-        round_id = uuid.uuid4().hex[:8]
-        self.last_round_at = time.monotonic()
-        self.open_round = {"round_id": round_id, "market": market, "bids": {}}
+        auction_id = uuid.uuid4().hex[:8]
+        self.last_auction_at = time.monotonic()
+        self.open_auction = {"auction_id": auction_id, "market": market, "bids": {}}
         matcher = self.matcher()
-        self.log.info("round %s opened on %s (%s is LOW) — %.2f L, reserve €%.2f, %ss to bid",
-                      round_id, market.local_id, trigger, self.beliefs.quantity_l,
+        self.log.info("auction %s opened on %s (%s is LOW) — %.2f L, reserve €%.2f, %ss to bid",
+                      auction_id, market.local_id, trigger, self.beliefs.quantity_l,
                       self.beliefs.reserve_price_per_l, self.beliefs.bid_window_s)
         self.publish(market.offer_topic, {
-            "round_id": round_id,
+            "auction_id": auction_id,
             "host": self.me.agent_id,
             "quantity_l": self.beliefs.quantity_l,
             "reserve_price_per_l": self.beliefs.reserve_price_per_l,
@@ -134,9 +135,9 @@ class HostingModule(Module):
     # --- collecting ---
 
     def on_bid(self, market, bid: dict) -> None:
-        rnd = self.open_round
-        if rnd is None or bid.get("round_id") != rnd["round_id"]:
-            return  # late, or for a round that is not mine
+        rnd = self.open_auction
+        if rnd is None or bid.get("auction_id") != rnd["auction_id"]:
+            return  # late, or for an auction that is not mine
         agent = bid.get("agent")
         if agent not in self.participants[market.uri]:
             self.log.warning("bid from %s, who does not bid in this market — ignored", agent)
@@ -148,13 +149,13 @@ class HostingModule(Module):
     def close(self) -> None:
         if self._timer:
             self._timer.stop()
-        rnd, self.open_round = self.open_round, None
+        rnd, self.open_auction = self.open_auction, None
         if rnd is None:
             return
-        market, round_id = rnd["market"], rnd["round_id"]
+        market, auction_id = rnd["market"], rnd["auction_id"]
 
         if not rnd["bids"]:
-            self.log.info("round %s closed with no bids", round_id)
+            self.log.info("auction %s closed with no bids", auction_id)
             return
 
         bids = [
@@ -183,26 +184,26 @@ class HostingModule(Module):
         matcher = self.matcher()
         if matcher is None:
             # Nothing to allocate the bids with. Checked here as well as by the shape, because a
-            # world can be amended between validation and a round, and losing a round's bids in
+            # world can be amended between validation and an auction, and losing its bids in
             # silence is worse than saying so — every bidder is waiting on a voucher.
-            self.log.error("round %s cannot be matched — this host has no matching capability, "
-                           "so the bids are discarded. Check its market:matchesBy.", round_id)
+            self.log.error("auction %s cannot be matched — this host has no matching capability, "
+                           "so the bids are discarded. Check its market:matchesBy.", auction_id)
             return
 
-        result = run_round(offer, bids, state, round_id=round_id, match=matcher.propose_match)
+        result = run_auction(offer, bids, state, auction_id=auction_id, match=matcher.propose_match)
         if not result.validation.ok:
-            self.log.warning("round %s RED — clearing rejected: %s",
-                             round_id, result.validation.violations)
+            self.log.warning("auction %s RED — clearing rejected: %s",
+                             auction_id, result.validation.violations)
             return
         if not result.vouchers:
-            self.log.info("round %s closed — nothing cleared the reserve", round_id)
+            self.log.info("auction %s closed — nothing cleared the reserve", auction_id)
             return
 
-        self.log.info("round %s GREEN — %.3f L allocated to %d",
-                      round_id, result.trade.total_qty_l, len(result.vouchers))
+        self.log.info("auction %s GREEN — %.3f L allocated to %d",
+                      auction_id, result.trade.total_qty_l, len(result.vouchers))
         for voucher in result.vouchers:
             self.publish(f"{market.voucher_topic}/{voucher.sub}", {
-                "round_id": round_id, "jti": voucher.jti, "sub": voucher.sub,
+                "auction_id": auction_id, "jti": voucher.jti, "sub": voucher.sub,
                 "scope": voucher.scope, "amount_l": voucher.amount_l, "debit": voucher.debit,
             })
         self.redeem(result.vouchers)
