@@ -1,7 +1,7 @@
 ---
 type: Decision
-title: Physical, procedural, and the wire — and only the last one is ours
-description: A codec and a credential are facts about a connection, not about a board, so they belong to the principal rather than the platform. SOSA gives the physical decomposition and SSN the procedural one, and neither says anything about transmission — that axis is the project's own. Which means a simulated world correctly has no platforms at all, and the question that blocked moving the codec dissolves rather than needing an answer.
+title: The wire is ours, and it has two levels — the connection and the stream
+description: A codec and a credential are facts about the wire rather than about a board, but not about the same part of it: a credential belongs to the connection and an encoding to the stream, because a transport and a codec vary independently — JSON over MQTT or over REST. SOSA gives the physical decomposition and SSN the procedural one, and neither says anything about transmission, so the wire is the project's own. Which means a simulated world correctly has no platforms, and scaling was never a wire fact at all.
 status: accepted
 stage: v1
 tags: [sensing, platform, transport, vocabulary, reuse, ubiquitous-language]
@@ -24,15 +24,34 @@ physical hosts.
 **The question was the wrong one.** It only arose because a fact about a *connection* was being
 hung on a node that exists for a different reason.
 
-# The three axes, and which of them is ours
+# Five distinctions, and the wire is two of them
 
-| axis | what it groups | vocabulary |
+| | question | bearer |
 |---|---|---|
-| **physical** | what is mounted on what — which things share a rail, a wake, a radio | `sosa:Platform`, `sosa:hosts` |
-| **procedural** | what implements what | `ssn:System`, `ssn:hasSubSystem` |
-| **communication** | one credential, one connection, **one message** | **ours** |
+| **physical** | what is mounted on what — which things share a rail, a wake, a radio | `sosa:Platform` |
+| **procedural** | what implements what | `ssn:System` |
+| **transport** | how bytes get here — MQTT, REST, serial | the **principal**: one credential, one connection |
+| **encoding** | what those bytes mean — JSON, CBOR, a binary format | the **stream**: one channel, one encoding |
+| **measurement** | what the number means | the **sensor**: pointer, scaling, unit |
 
-The third is ours because nobody standardises it. The SSN specification has **no guidance** on
+Two structural decompositions, and three properties bound at three different levels.
+
+**Transport and encoding are orthogonal**, which the first draft of this record got wrong by
+calling them one axis. Any codec over any transport: JSON over MQTT, JSON over REST, CBOR over
+MQTT. Neither constrains the other, so one name over both hides the fact that they are chosen
+separately — the deployment picks the transport, the firmware picks the encoding.
+
+**And scaling is on neither.** It is a fact about the *measurand*, not the message: the same probe
+read over a serial cable would need the same curve and the same unit. That is why it derives onto
+the sensor and always did, and it means the reading pipeline straddles two worlds rather than
+being three stages of one:
+
+```
+bytes ─[codec]→ document ─[pointer]→ raw  │  ─[scaling]→ quantity
+        the message's                     │    the measurand's
+```
+
+The wire is ours because nobody standardises it. The SSN specification has **no guidance** on
 how hosting or sub-system composition affects the way observations are communicated — checked,
 not assumed. That is deliberate: SOSA and SSN model the world and the instruments, not the wire.
 
@@ -43,11 +62,35 @@ contradicting anything physical. That is why the topic question in
 [#51](https://github.com/ShishkinDmitriy/agora/issues/51) was not derivable from the hardware and
 had to be settled against the credential model instead.
 
-# Decision — a communication fact belongs to the principal
+# Decision — the credential is the principal's, the encoding is the stream's
 
-**`ag:Principal`** — the thing that holds one credential and one connection — bears the codec, the
-bus and the encoding of what it sends. It is derived from `ag:onBus`, which every world already
-states, so this is a name for something that exists rather than a new requirement on an author.
+**`ag:Principal`** — the thing that holds one credential and one connection — bears the transport
+and the bus. It is derived from `ag:onBus`, which every world already states, so this is a name
+for something that exists rather than a new requirement on an author.
+
+**The encoding is not the principal's.** A principal may hold several streams, and
+`moisture_sensor_fern` already holds two: a reading topic it writes and a command topic it reads.
+One encoding per *connection* is a claim nobody would defend; one encoding per *stream* is exactly
+the thing worth refusing to break. So the codec belongs to the **channel**, and the channel
+belongs to a principal.
+
+Deriving the codec onto the principal would be **right by accident** — today one principal happens
+to have one reading stream — and wrong by construction. The first draft of this record said
+principal, and its own last seam said why that could not be the end of it.
+
+## A channel is a string, which is the same defect one level down
+
+`ag:readingTopic` is a literal. The stream it names has no node, so nothing can say *this stream
+is JSON* — exactly as nothing could say *these sensors share a wake* before
+[a-board-is-a-platform](a-board-is-a-platform.md), and for the same reason: the thing the fact is
+about was never declared. `_aimed_with` recovering a group by comparing topic strings is the same
+symptom.
+
+The shape of the answer is already visible in the code. `onboarding/mqtt.py` holds
+`Principal.grants` as `set[(read|write, topic)]` — **a set of directed channels.** The ACL is not a
+list of permissions bolted onto a connection; it is that connection's stream list, written in the
+form mosquitto wants. Which makes [#81](https://github.com/ShishkinDmitriy/agora/issues/81)'s
+*"a peripheral's topics roll up into its board's grants"* a consequence rather than a rule.
 
 The concept is not new either. `onboarding/mqtt.py` has carried it since
 [series-and-bus-isolation](series-and-bus-isolation.md):
@@ -127,8 +170,9 @@ principal, and its sensors' topics are its grants.
 
 # Seams left open
 
-- **Nothing is built.** This record is the design; `ag:Principal` does not exist yet, the codec has
-  not moved, and the hole it would close is still open.
+- **Nothing is built.** This record is the design; neither `ag:Principal` nor a channel exists
+  yet, the codec has not moved, and the hole it would close — two sensors on one stream with two
+  encodings validating clean — is still open.
 - **The firmware's identity is wrong and unfixed.** Filed rather than folded in, because changing
   which principal a board connects as rewrites its credential and its ACL — the regression class
   that [#62](https://github.com/ShishkinDmitriy/agora/pull/62) belongs to — and needs a reflash to
@@ -137,7 +181,8 @@ principal, and its sensors' topics are its grants.
   the day something needs them, and `ag:senseMode`'s values are `sosa:Procedure`s by definition —
   a cheap alignment that belongs with whatever next touches
   [who-holds-the-clock](who-holds-the-clock.md).
-- **A principal is assumed to send one message.** It is one connection, which is not the same
-  thing: a client may publish on several topics, and `_aimed_with` already groups by command topic
-  rather than by client. Whether a principal needs sub-channels is undecided and nothing yet
-  forces it.
+- **A channel is not a node yet.** This record says the encoding belongs to one and nothing
+  declares one: `ag:readingTopic` is still a literal, and until a stream is a thing the shape that
+  would refuse two encodings on one has nothing to target. That is the whole of what remains of
+  [#79](https://github.com/ShishkinDmitriy/agora/issues/79)'s second stage, and its remaining
+  checkboxes name the wrong bearer as a result.
