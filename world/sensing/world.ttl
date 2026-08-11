@@ -1,3 +1,4 @@
+@prefix review: <http://example.org/agora/review#> .
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
@@ -154,7 +155,7 @@ ag:fern_agent a ag:Agent ;
 #  it wants. The pick inside the range stays private; the range does not.
 #
 #  Stating one is also what GRANTS the review capability: room to move and the ability to use it
-#  are one decision said once, so `capabilities/review/rules.ru` derives ag:Reckoning from exactly
+#  are one decision said once, so `capabilities/review/rules.ru` derives review:Reckoning from exactly
 #  these triples. An agent with no mandate never arises, which is how a deployment that wants no
 #  drift says so — by granting none, rather than by omitting a belief and hoping something
 #  notices. The supplier has none: it holds no revisable setting, so there is nothing to give it
@@ -162,4 +163,4 @@ ag:fern_agent a ag:Agent ;
 #
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
-ag:fern_agent ag:commits [ ag:onTerm perception:slowSleepS ; ag:notBelow 10 ; ag:notAbove 900 ] .
+ag:fern_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .

@@ -17,14 +17,8 @@ from dataclasses import dataclass
 
 from agent.beliefs import Block
 
-NS = "http://example.org/agora/perception#"
 
-
-def term(name: str) -> str:
-    """A term of this package's, by local name."""
-    return NS + name
-
-from .terms import LISTENING, SUBSCRIBING
+from .terms import LISTENING, SUBSCRIBING, term
 
 
 @dataclass(frozen=True)

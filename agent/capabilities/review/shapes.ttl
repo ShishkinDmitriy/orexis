@@ -1,54 +1,55 @@
+@prefix review: <http://example.org/agora/review#> .
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-ag:ReviewingAgentShape a sh:NodeShape ;
+review:ReviewingAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that may re-pick must say how often it is willing to look. This is now an ordinary required parameter, exactly as perception:fastSleepS is for one that subscribes — where it used to be OPTIONAL and its absence was the activation signal. Absence meaning 'never review' was a side channel dressed as a decision by omission: nothing could check it, and it put the question 'does this agent reflect' in a private file where no shape and no peer could read the answer. What says whether an agent reviews is now whether the world gave it any room, and that is checked by the rule that grants the capability rather than by the silence of a beliefs file. A floor of 60s because an arising re-validates the whole agent against every shape." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://example.org/agora#hasCapability> ?cap .
-                ?cap a <http://example.org/agora#ReviewCapability> .
+                ?cap a <http://example.org/agora/review#ReviewCapability> .
             }
         """ ] ;
-    sh:property [ sh:path ag:reviewIntervalS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path review:reviewIntervalS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 60 ;
                   sh:message "an agent that may re-pick must state a review interval of at least 60 seconds — reviewing itself is not free" ] .
 
-ag:CommitmentShape a sh:NodeShape ;
-    rdfs:comment "A mandate is a range, so it must have at least one end, and the ends must be the right way round. Stated in the world and therefore reviewable by whoever ratifies it — which is the point of moving it out of beliefs. Targeted by what POINTS at it rather than by its class: a mandate is written inline as `ag:commits [ ... ]` and nobody types a blank node they are already describing, so a targetClass shape here matched nothing at all — which is exactly what the version of this shape in the kernel used to do, silently, for as long as it existed." ;
-    sh:targetObjectsOf ag:commits ;
-    sh:property [ sh:path ag:onTerm ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+review:CommitmentShape a sh:NodeShape ;
+    rdfs:comment "A mandate is a range, so it must have at least one end, and the ends must be the right way round. Stated in the world and therefore reviewable by whoever ratifies it — which is the point of moving it out of beliefs. Targeted by what POINTS at it rather than by its class: a mandate is written inline as `review:commits [ ... ]` and nobody types a blank node they are already describing, so a targetClass shape here matched nothing at all — which is exactly what the version of this shape in the kernel used to do, silently, for as long as it existed." ;
+    sh:targetObjectsOf review:commits ;
+    sh:property [ sh:path review:onTerm ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "a commitment must say which term it is about" ] ;
-    sh:property [ sh:path ag:notBelow ; sh:maxCount 1 ; sh:lessThanOrEquals ag:notAbove ;
+    sh:property [ sh:path review:notBelow ; sh:maxCount 1 ; sh:lessThanOrEquals review:notAbove ;
                   sh:message "the floor of a mandate may not be above its ceiling" ] ;
-    sh:property [ sh:path ag:notAbove ; sh:maxCount 1 ] ;
+    sh:property [ sh:path review:notAbove ; sh:maxCount 1 ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a mandate must name at least one bound — a commitment with neither is not a range, and an agent would be told it has room without being told how much" ;
         sh:select """
             SELECT $this WHERE {
-                FILTER NOT EXISTS { $this <http://example.org/agora#notBelow> ?lo }
-                FILTER NOT EXISTS { $this <http://example.org/agora#notAbove> ?hi }
+                FILTER NOT EXISTS { $this <http://example.org/agora/review#notBelow> ?lo }
+                FILTER NOT EXISTS { $this <http://example.org/agora/review#notAbove> ?hi }
             }
         """ ] .
 
-ag:MandateWithinTheConstitutionShape a sh:NodeShape ;
-    rdfs:comment "A world may narrow what the society allows; it may not widen it. Checkable only now that both figures are public — the mandate used to be a private belief, so the two ends of this comparison sat in different graphs and nothing could hold them together. The constitutional figures are found through ag:revisableToward, so this shape names no capability family and no term: a package that declares a new revisable belief is covered by it without editing anything here." ;
-    sh:targetObjectsOf ag:commits ;
+review:MandateWithinTheConstitutionShape a sh:NodeShape ;
+    rdfs:comment "A world may narrow what the society allows; it may not widen it. Checkable only now that both figures are public — the mandate used to be a private belief, so the two ends of this comparison sat in different graphs and nothing could hold them together. The constitutional figures are found through review:revisableToward, so this shape names no capability family and no term: a package that declares a new revisable belief is covered by it without editing anything here." ;
+    sh:targetObjectsOf review:commits ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "this mandate reaches outside what the society allows for that term — a world may narrow the constitution, never widen it" ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/agora#onTerm> ?term .
-                ?term <http://example.org/agora#revisableToward> ?bound .
+                $this <http://example.org/agora/review#onTerm> ?term .
+                ?term <http://example.org/agora/review#revisableToward> ?bound .
                 ?family ?bound ?limit .
-                { $this <http://example.org/agora#notBelow> ?v } UNION
-                { $this <http://example.org/agora#notAbove> ?v }
+                { $this <http://example.org/agora/review#notBelow> ?v } UNION
+                { $this <http://example.org/agora/review#notAbove> ?v }
                 {
                     SELECT ?term (MIN(?l) AS ?lo) (MAX(?l) AS ?hi) WHERE {
-                        ?term <http://example.org/agora#revisableToward> ?b .
+                        ?term <http://example.org/agora/review#revisableToward> ?b .
                         ?f ?b ?l .
                     } GROUP BY ?term
                 }

@@ -111,9 +111,9 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
 
     st, graphs = built()
     st.update(f"""
-DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?c ag:notAbove ?a }} }}
-INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?c ag:notAbove 99999 }} }}
-WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?c ag:onTerm ?t ; ag:notAbove ?a }} }}""")
+DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:notAbove ?a }} }}
+INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:notAbove 99999 }} }}
+WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:onTerm ?t ; review:notAbove ?a }} }}""")
     assert not conforms(graph_from(st, *graphs))[0]
 
 
@@ -125,9 +125,9 @@ def test_a_mandate_never_widens_what_the_constitution_allows(fern):
     validation; the intersection here is the second line of defence, for a world already running.
     """
     fern.store.update(f"""
-DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?c ag:notAbove ?a }} }}
-INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?c ag:notAbove 99999 }} }}
-WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?c ag:onTerm <{SLOW}> ; ag:notAbove ?a }} }}""")
+DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:notAbove ?a }} }}
+INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:notAbove 99999 }} }}
+WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:onTerm <{SLOW}> ; review:notAbove ?a }} }}""")
     assert fern.reviewing().ranges()[SLOW].ceiling == CEILING
 
 
@@ -169,8 +169,8 @@ def _evidence(agent, spreads):
     n = window(agent) + 2
     agent.store.update("INSERT DATA { GRAPH <%s> { %s } }" % (
         evidence_graph(agent.id),
-        "".join(f'[] a ag:Evidence ; ag:sampleSpread "{s:.6f}"^^xsd:decimal ; '
-                f'ag:sampleCount {n} . ' for s in spreads)))
+        "".join(f'[] a review:Evidence ; review:sampleSpread "{s:.6f}"^^xsd:decimal ; '
+                f'review:sampleCount {n} . ' for s in spreads)))
 
 
 def test_relaxing_needs_every_sensor_to_agree(fern):
@@ -290,14 +290,14 @@ def test_a_review_touches_no_other_agents_beliefs(fern):
 def _decisions(agent) -> list[dict]:
     return bindings(agent.store.query(f"""
 SELECT ?term ?from ?to ?why ?outcome ?at ?due WHERE {{ GRAPH <{revisions_graph(agent.id)}> {{
-  ?r a ag:Revision ; ag:revisedTerm ?term ; ag:fromValue ?from ; ag:toValue ?to ;
-     ag:becauseOf ?why ; ag:outcome ?outcome ; ag:atTime ?at ; ag:dueAt ?due }} }}"""))
+  ?r a review:Revision ; review:revisedTerm ?term ; review:fromValue ?from ; review:toValue ?to ;
+     review:becauseOf ?why ; review:outcome ?outcome ; review:atTime ?at ; review:dueAt ?due }} }}"""))
 
 
 def test_an_agent_given_no_room_has_no_review_at_all(monkeypatch):
     """The mandate is the switch, and it is in the world where anyone can read it.
 
-    This used to be the absence of `ag:reviewIntervalS` in a private beliefs file — a public
+    This used to be the absence of `review:reviewIntervalS` in a private beliefs file — a public
     ability switched by a fact no peer, no shape and no operator could see. Now an agent the
     world grants no room derives no capability, loads no module, keeps no summaries and never
     arises: the mechanism is *absent* rather than idle, which is a different and better thing.

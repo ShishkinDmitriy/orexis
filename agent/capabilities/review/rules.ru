@@ -10,16 +10,17 @@
 # There is then nothing to review, no interval demanded, no summaries kept, and no arising —
 # the whole mechanism is absent rather than idle.
 #
-# This replaces belief-presence activation. A beliefs file mentioning `ag:reviewIntervalS` used
+# This replaces belief-presence activation. A beliefs file mentioning `review:reviewIntervalS` used
 # to be the signal, which existed only because a capability could not be granted without wiring
 # to derive it from — and worked by a side channel nothing could validate. See
 # knowledge/decisions/a-capability-is-granted-by-latitude.md.
 #
-# ag:Consulting is deliberately ABSENT. The vocabulary declares it because the judgement is the
+# review:Consulting is deliberately ABSENT. The vocabulary declares it because the judgement is the
 # replaceable part and the T-Box should say so; but no module implements it, and granting a
 # capability nothing provides would only produce a startup warning. What would SELECT between
 # the two once both exist is an open seam — the rule is the last piece to add, not the first.
 
+PREFIX review: <http://example.org/agora/review#>
 PREFIX ag: <http://example.org/agora#>
 
 #  ROOM means room. A mandate whose ends meet grants nothing: it is how an author says a figure
@@ -32,12 +33,12 @@ PREFIX ag: <http://example.org/agora#>
 #  the other — so this asks for the pair rather than assuming it, and a one-sided mandate is
 #  latitude too.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability ag:Reckoning } }
+    ?agent ag:hasCapability review:Reckoning } }
 $given
 WHERE  {
-    ?agent a ag:Agent ; ag:commits ?commitment .
-    ?commitment ag:onTerm ?term .
-    OPTIONAL { ?commitment ag:notBelow ?below }
-    OPTIONAL { ?commitment ag:notAbove ?above }
+    ?agent a ag:Agent ; review:commits ?commitment .
+    ?commitment review:onTerm ?term .
+    OPTIONAL { ?commitment review:notBelow ?below }
+    OPTIONAL { ?commitment review:notAbove ?above }
     FILTER(!BOUND(?below) || !BOUND(?above) || ?below < ?above)
 }

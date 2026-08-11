@@ -1,3 +1,4 @@
+@prefix review: <http://example.org/agora/review#> .
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -107,8 +108,8 @@ perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 9
 # need first, and follows whether looking is telling it anything only inside the room need
 # leaves. That composition is the whole reason it is safe to let an agent slow itself down.
 
-perception:slowSleepS a ag:RevisableBelief ;
-    ag:revisableToward perception:minSleepS , perception:maxSleepS .
+perception:slowSleepS a review:RevisableBelief ;
+    review:revisableToward perception:minSleepS , perception:maxSleepS .
 
 # How still counts as still, and how much evidence is enough to say so. Constitutional rather
 # than private for the same reason the sleep bounds are: left to each agent, these are the two

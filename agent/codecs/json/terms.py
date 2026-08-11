@@ -22,7 +22,7 @@ def term(name: str) -> str:
 ENCODING = term("Encoding")
 
 # The members. Only the first has an implementation behind it; the other two are declared for
-# the same reason `perception:Polling` and `ag:Consulting` are — the seam is worth naming before the
+# the same reason `perception:Polling` and `review:Consulting` are — the seam is worth naming before the
 # second member exists, so building one is adding a directory rather than re-deciding a shape.
 JSON = term("Json")
 CBOR = term("Cbor")

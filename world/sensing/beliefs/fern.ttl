@@ -1,3 +1,4 @@
+@prefix review: <http://example.org/agora/review#> .
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
@@ -26,8 +27,8 @@ ag:fern_agent
 ag:fern_agent ag:metricsIntervalS 60 .
 
 ##  Self-review — how often at the very least.
-#   Required because the world gave this agent room to move (ag:commits, in world.ttl): an
+#   Required because the world gave this agent room to move (review:commits, in world.ttl): an
 #   agent granted none derives no review capability and needs no interval. A FLOOR and not a
 #   schedule — a decision plans its own next arising from when its effect could show.
 #   See knowledge/decisions/self-review-is-a-capability.md.
-ag:fern_agent ag:reviewIntervalS 300 .
+ag:fern_agent review:reviewIntervalS 300 .

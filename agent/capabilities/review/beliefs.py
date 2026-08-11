@@ -14,9 +14,8 @@ from dataclasses import dataclass
 
 from agent.beliefs import Block
 
-from agent.ontology import term
 
-from .terms import RECKONING
+from .terms import RECKONING, term
 
 
 @dataclass(frozen=True)

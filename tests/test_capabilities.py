@@ -37,7 +37,7 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
 
 
 def test_a_mandate_whose_ends_meet_grants_nothing(me):
-    """`succulent`'s cadence is pinned — `ag:notBelow 900 ; ag:notAbove 900`.
+    """`succulent`'s cadence is pinned — `review:notBelow 900 ; review:notAbove 900`.
 
     That is not an oversight: it is how an author says a figure is not up for review, by leaving
     nowhere to go rather than by a flag somewhere saying not to look, and `review.Range.fixed`
