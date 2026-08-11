@@ -112,9 +112,14 @@ def test_nobody_is_granted_a_wildcard_over_the_whole_bus(world):
             assert head not in ("#", "+"), f"{principal.username} is granted {topic!r}"
 
 
-def test_a_board_flashed_for_one_world_is_accepted_by_the_other():
-    """`sensing` and `simulation` name the same probe the same way, so one flashed board works
-    in either — and this checks the whole of what that needs, not just the name.
+def test_a_board_is_known_by_the_same_name_and_granted_the_same_channels_in_both():
+    """`sensing` and `simulation` model the same probe identically — same id, same channels.
+
+    Stated precisely, because the older name for this — *one flashed board works in either* —
+    overclaims and `series-and-bus-isolation` says so itself: each world mints its own random
+    password for that username, and each broker listens on its own port, both of which are in
+    `config.h`. Moving a board is a credential swap and a reflash. What this property buys is
+    that it is ONLY that: the board is not re-modelled, re-identified or re-granted.
 
     The name alone proves nothing, which is how this test used to be written. A device
     credential is world-independent by construction (`Principal(row["id"])`, no world in it)
@@ -128,11 +133,6 @@ def test_a_board_flashed_for_one_world_is_accepted_by_the_other():
     `simulation` grants its stand-in one thing a real probe never needs — `actuators/…/status`,
     so the simulated soil can get wetter when the valve opens. A board ignores it.
 
-    What this does NOT claim is that the board needs no reflashing. Each world runs its own
-    broker on its own port, and the port is in `config.h` beside the credential. The property is
-    that a board's IDENTITY and its CHANNELS are world-independent; which broker it dials is
-    not, and never was — `society` was 1883 to `sensing`'s 1884 when this test was first
-    written.
     """
     _, sensing = mqtt_admin.grants("sensing")
     _, simulation = mqtt_admin.grants("simulation")

@@ -18,14 +18,19 @@ Worlds are whole, not layered. `world/` holds one directory per world, each seed
 own; there is no base that variants extend.
 
 ```bash
-agora-validate society  # plants, a market, a supplier, valves
-agora-validate sensing  # one subject, one board, one agent
+agora-validate simulation  # plants, a market, a supplier, valves — devices stood in for
+agora-validate sensing     # one subject, one real board, one agent
 ```
 
 | | holds | derivation produces |
 |---|---|---|
-| `society/` | 3 plants + agents, a supplier, a barrel market, 3 valves | `Subscribing` + `Bidding` per plant agent; `Hosting` + `Actuation` for the supplier |
-| `sensing/` | one subject, one board, one agent | `Subscribing`, and nothing else |
+| `simulation/` | 3 plants + agents, a supplier, a barrel market, 3 valves — every device stood in for | `Subscribing` + `Bidding` per plant agent; `Hosting` + `Actuation` for the supplier |
+| `sensing/` | one subject, one real board, one agent | `Subscribing`, and nothing else |
+
+There were three. `society/` held what `simulation/` holds and expected real devices for it, and
+the two differed by 45 lines of ~230 with identical beliefs — so it went, and the world that can
+run without hardware is the one that stays. See
+[two-worlds-were-one](/decisions/two-worlds-were-one.md).
 
 # Anatomy
 
@@ -112,7 +117,7 @@ thinks, and no other agent can read it — enforced, not polite
 If two agents could reasonably disagree about it, it is a belief.
 
 Beliefs then divide again, and the two shipped worlds show it: the same agent has
-`perception:slowSleepS` 600 in `society` and 10 in `sensing`, because the **circumstance** differs, not
+`perception:slowSleepS` 600 in `simulation` and 10 in `sensing`, because the **circumstance** differs, not
 because it wants anything different. Operational beliefs (cadence, freshness) track the kind of
 world; stake beliefs (target, band, endowment, price) are the agent's own and derivable from
 nothing. See [genesis-process](/domain/genesis-process.md) §"Where opening beliefs come from".
@@ -164,7 +169,7 @@ world as a required argument, and `genesis.current_world()` refuses rather than 
 
 ```
 no world: set AGORA_WORLD_DIR (a mounted world) or AGORA_WORLD (a name).
-Available: sensing, simulation, society
+Available: sensing, simulation
 ```
 
 There was a `DEFAULT_WORLD = "society"` once, and it was wrong twice over. It put an **instance
@@ -222,10 +227,16 @@ What that buys:
   the same answer from the same ratified files.
 
 **Parallel operation has a second requirement the belief base cannot supply: disjoint
-hardware.** `society` and `sensing` deliberately share device ids and channels, so one flashed
-board runs in either — which also means both worlds up at once puts two agents on
-`sensors/fern/moisture`, and both ingest. Worlds meant to run concurrently need different
-devices, which is a genesis decision, not an infra one.
+hardware.** `simulation` and `sensing` deliberately share device ids and channels, so one
+flashed board runs in either.
+
+What that does and does not cost is worth being exact about, because the obvious fear is the
+wrong one. Each world runs **its own broker on its own port** with its own ACL, so two worlds
+holding `sensors/moisture_sensor_fern/reading` are two different channels and a publisher
+reaches only the broker it dialled. Buckets are world-scoped too. What genuinely cannot be
+shared is the **board**: one physical probe publishes to one broker, so whichever world is not
+holding it sees a sensor that has gone quiet. Worlds meant to run concurrently against real
+hardware need different devices, which is a genesis decision and not an infra one.
 
 # Deployment — one container per agent
 
@@ -257,8 +268,8 @@ Three details are load-bearing rather than packaging taste:
 The source trees are mounted read-only, so a code change needs a restart rather than a rebuild.
 
 ```bash
-agora-compose society
-cd world/society && podman compose up -d
+agora-compose simulation
+cd world/simulation && podman compose up -d
 ```
 
 # Simulation — a device that is not there, and nothing else
@@ -353,7 +364,7 @@ only an explicit re-birth discards them.
 - **Derivation is materialised, not maintained.** Rules run at seed time and write triples into
   `:world`; removing a wire does not retract the capability until the world is re-seeded.
 - **No cross-world check.** Nothing verifies that two worlds sharing device ids agree about
-  those devices' channels, which is exactly the property `society` and `sensing` rely on.
+  those devices' channels, which is exactly the property `simulation` and `sensing` rely on.
 - **Nothing stops two worlds with shared devices running at once.** The belief bases are
   isolated; the MQTT topics are not, so both agents would ingest every reading. Refusing to
   start a world whose devices are already claimed would need a registry of what is running,

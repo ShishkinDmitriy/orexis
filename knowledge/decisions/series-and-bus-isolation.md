@@ -96,8 +96,9 @@ at a fixed path in the container, so the agent reads a path and never constructs
 **Both are world-scoped, though devices were not at first.** An agent runs in a container
 belonging to one world, so its credential obviously belongs to that world. A board was argued to
 be different: flashed once, the same physical thing whichever world is loaded, so one credential
-per device — and `world/sensing` is device-for-device identical to `world/society` precisely so
-one ESP32 works in either.
+per device — and `world/sensing` was device-for-device identical to `world/society` precisely so
+one ESP32 works in either. (`society` has since been removed and `simulation` took its place in
+that pair; see [two-worlds-were-one](two-worlds-were-one.md).)
 
 That argument died with the shared broker. A board is flashed with one host and **one port**, and
 each world's broker now listens on its own — so a board already reaches exactly one world, and
@@ -134,9 +135,12 @@ decision is built on.
   its neighbours. Its Flux panels name `sensors` and are **broken on landing**; fixing them is
   deferred and tracked, not done.
 - **`world/simulation` had to be re-authored.** It published on byte-identical topics to
-  `world/society`, so running both cross-fed them. Its channels are now `sim/`-prefixed. An ACL
-  cannot fix this and should not pretend to: two worlds meet wherever they name the same topic,
-  and only authoring keeps them apart.
+  `world/society` **while both shared one broker**, so running both cross-fed them, and its
+  channels were given a `sim/` prefix. That prefix is gone again: each world now runs its own
+  broker on its own port, so two worlds naming one topic are two channels and cannot meet. The
+  sentence this replaced — *two worlds meet wherever they name the same topic* — was true of a
+  shared bus and is not true of separate ones. See
+  [two-worlds-were-one](two-worlds-were-one.md).
 - **A missed grant is silent.** Mosquitto accepts a SUBSCRIBE it will not honour and simply never
   delivers, so an under-derived ACL looks like an agent that has gone quiet rather than an error.
   Hence the test, rather than trust — and hence `agora-mqtt` reloading the broker itself rather
@@ -235,9 +239,10 @@ conmon before the name could be reused. That is gone.
   now: there is one of each, and a package tree with one member is a guess about the future.
 - **A device's credential is minted here but flashed by hand.** `agora-mqtt` will not rotate a
   device password, because rotating it silently strands hardware that is not in front of you.
-- **Nothing stops two worlds sharing a bus on purpose.** That is a feature — `sensing` and
-  `society` do — and it means topic overlap can never be an error, only a choice. The operator
-  is the only party who can see both worlds and judge.
+- **Nothing stops two worlds sharing a bus on purpose.** It means topic overlap can never be an
+  error, only a choice; the operator is the only party who can see both worlds and judge. No
+  shipped world does it any more — `sensing` and `simulation` each run their own broker, which is
+  what made the `sim/` prefix removable.
 - **The wire is still in the clear.** Credentials authenticate; they do not encrypt. TLS on the
   broker remains the next step, as [roadmap](/decisions/roadmap.md) has it.
 
