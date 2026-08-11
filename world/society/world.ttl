@@ -1,3 +1,4 @@
+@prefix actuation: <http://example.org/agora/actuation#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -12,7 +13,7 @@
 #  Note what is NOT written here: no ag:hasCapability. What an agent can DO is *derived* at
 #  genesis from this wiring (each capability's rules.ru) — an agent on a scheduled sensor gains
 #  ag:Subscribing, one on a push-mode sensor gains ag:Listening instead, one plumbed into a market gains
-#  market:Bidding, one holding valves gains ag:Actuation. Capability follows from hardware and
+#  market:Bidding, one holding valves gains actuation:Actuation. Capability follows from hardware and
 #  connections, so it cannot drift from them: swap a sensor's firmware, re-run genesis, and
 #  the agent's abilities change with it.
 #
@@ -81,7 +82,7 @@ ag:supplier a ag:Agent ;
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
     market:matchesBy market:PayAsBid ;
-    ag:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
+    actuation:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
 
@@ -171,26 +172,26 @@ ag:moisture_sensor_succulent a ag:Sensor ;
 
 ##########  Valves — the supplier's, one per plant  ##########
 
-ag:valve_fern a ag:Valve ;
-    ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
+ag:valve_fern a actuation:Valve ;
+    ag:localId "valve_fern" ; ag:onBus ag:local_bus ; actuation:actuates ag:fern ; actuation:drawsFrom ag:barrel1 ;
     ag:commandTopic "actuators/valve_fern/command" ;
     # the firmware publishes here so the executor learns water actually
     # flowed; without it declared, nothing may send or receive that report
     ag:statusTopic "actuators/valve_fern/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
-ag:valve_tomato a ag:Valve ;
-    ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
+ag:valve_tomato a actuation:Valve ;
+    ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; actuation:actuates ag:tomato ; actuation:drawsFrom ag:barrel1 ;
     ag:commandTopic "actuators/valve_tomato/command" ;
     # the firmware publishes here so the executor learns water actually
     # flowed; without it declared, nothing may send or receive that report
     ag:statusTopic "actuators/valve_tomato/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
-ag:valve_succulent a ag:Valve ;
-    ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
+ag:valve_succulent a actuation:Valve ;
+    ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; actuation:actuates ag:succulent ; actuation:drawsFrom ag:barrel1 ;
     ag:commandTopic "actuators/valve_succulent/command" ;
     # the firmware publishes here so the executor learns water actually
     # flowed; without it declared, nothing may send or receive that report
     ag:statusTopic "actuators/valve_succulent/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .

@@ -1,3 +1,4 @@
+@prefix actuation: <http://example.org/agora/actuation#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -69,7 +70,7 @@ ag:SimulatedDeviceShape a sh:NodeShape ;
 
 ag:SimulatedActuatorShape a sh:NodeShape ;
     rdfs:comment "A stood-in actuator must say where it reports. Water reaching soil is physics, and physics has no wire — so between containers the only way a simulated sensor can learn that water actually flowed is a message from the valve that flowed it. Without a status topic the stand-in valve would open into nowhere: the command would be verified, the dose computed, and the soil would stay dry forever." ;
-    sh:targetSubjectsOf ag:actuates ;
+    sh:targetSubjectsOf actuation:actuates ;
     sh:property [ sh:path ag:statusTopic ; sh:maxCount 1 ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a simulated actuator must state ag:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;

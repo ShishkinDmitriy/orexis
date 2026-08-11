@@ -261,8 +261,8 @@ def test_two_sensors_on_different_properties_are_not_warned_about():
 
 def test_valve_must_carry_its_calibration():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern ag:maxDoseMl ?v }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern ag:maxDoseMl ?v }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern actuation:maxDoseMl ?v }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern actuation:maxDoseMl ?v }} }}"""))
 
 
 def test_a_plant_may_not_hold_a_desire():

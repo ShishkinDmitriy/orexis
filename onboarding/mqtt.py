@@ -14,7 +14,7 @@ capability give it exactly the topics that capability needs:
     market:bidsIn M         read M's offerTopic and M's voucherTopic/<me>, write M's bidTopic/<me>
     market:hosts M          write M's offerTopic and voucherTopic/<bidder>, read bidTopic/+
                         and each bidder's eventTopic
-    ag:hasActuator V    write V's commandTopic
+    actuation:hasActuator V    write V's commandTopic
     ag:eventTopic E     write E
 
 Read that list against `capabilities/market/bidding.py` and `hosting.py` and it is the same
@@ -162,7 +162,7 @@ _ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{
  }}""")
 
 # One way of holding an actuator. There used to be two, because a simulated valve was a
-# different class held by a different property; it is an ag:Valve that happens to be stood in
+# different class held by a different property; it is an actuation:Valve that happens to be stood in
 # for now, so the agent side of this stopped needing to know the difference at all.
 _ACTUATES_Q = _q(f"""?id ?commandTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id .

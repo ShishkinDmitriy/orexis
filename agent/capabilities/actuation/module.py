@@ -1,4 +1,4 @@
-"""ag:Actuation — redeem a voucher against real hardware.
+"""actuation:Actuation — redeem a voucher against real hardware.
 
 There is no "armed" flag and no dry-run mode. This capability actuates; that is what it is
 for. An installation that must NOT move water does not disarm the module — it declares
@@ -8,9 +8,9 @@ thing does belongs in the model, not in an environment variable that can disagre
 
 Held by the resource owner, never by the winner: a voucher is a *claim on the owner*, and the
 owner is the one with the valves. This module decides nothing. It maps a voucher's subject to
-the device that serves it (`ag:actuates`), converts litres into open-seconds with that
-device's own calibration (`ag:mlPerSecond`), caps the dose at the device's own limit
-(`ag:maxDoseMl`) regardless of what cleared, co-signs, and publishes to the device's own
+the device that serves it (`actuation:actuates`), converts litres into open-seconds with that
+device's own calibration (`actuation:mlPerSecond`), caps the dose at the device's own limit
+(`actuation:maxDoseMl`) regardless of what cleared, co-signs, and publishes to the device's own
 command topic. Every one of those is read from the world.
 
 Single-use is enforced here by `jti`; the device enforces its own fail-safe watchdog. Two

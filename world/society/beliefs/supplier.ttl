@@ -1,9 +1,10 @@
+@prefix actuation: <http://example.org/agora/actuation#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
 
 #  The supplier's PRIVATE beliefs — its terms as a genuine seller, not a stake-free utility.
 #
-#  It composed market:Hosting and ag:Actuation, so only those modules' terms appear. There is no
+#  It composed market:Hosting and actuation:Actuation, so only those modules' terms appear. There is no
 #  target here and no cadence: it neither wants anything watered nor perceives anything.
 
 ##  market:Hosting — how it runs a round

@@ -182,9 +182,9 @@ def _actuators_q(agent_uri: str) -> str:
     return f"""
 SELECT ?actuator ?localId ?subject ?subjectId ?commandTopic ?mlPerSecond ?maxDoseMl
 WHERE {{ 
-  <{agent_uri}> ag:hasActuator ?actuator .
-  ?actuator ag:localId ?localId ; ag:actuates ?subject ; ag:commandTopic ?commandTopic ;
-            ag:mlPerSecond ?mlPerSecond ; ag:maxDoseMl ?maxDoseMl .
+  <{agent_uri}> actuation:hasActuator ?actuator .
+  ?actuator ag:localId ?localId ; actuation:actuates ?subject ; ag:commandTopic ?commandTopic ;
+            actuation:mlPerSecond ?mlPerSecond ; actuation:maxDoseMl ?maxDoseMl .
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
  }}"""
 

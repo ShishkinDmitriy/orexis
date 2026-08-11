@@ -329,7 +329,7 @@ def test_both_engines_derive_the_same_world(world):
     **This caught a live one.** After the closure was materialised, `agent/ratified.py` still
     re-ran the derivation rules on rdflib — which had no closure of its own, so a device typed as
     a KIND of actuator was not observably an actuator there. `roster()` therefore stopped
-    deriving `ag:Actuation` for the supplier, and `agora-compose` would have written a compose
+    deriving `actuation:Actuation` for the supplier, and `agora-compose` would have written a compose
     file with the signing keys silently unmounted: the supplier could no longer co-sign a dose,
     and every voucher redemption would have failed. Nothing noticed, because compose.yaml is
     committed and regenerating it is not a gate.

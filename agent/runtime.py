@@ -51,7 +51,7 @@ def _family_q(family: str) -> str:
     Two branches, and the second is not the tidy-up it looks like. A caller may name a family
     (`ag:PerceptionCapability`, whose members are `ag:Subscribing` and `ag:Listening`) or it may
     name a capability that is its own family of one — `agent.provider(ACTUATION)` does exactly
-    that, and there is no term anywhere declared `a ag:Actuation`. That used to work by accident:
+    that, and there is no term anywhere declared `a actuation:Actuation`. That used to work by accident:
     the branch said `rdfs:subClassOf*`, and a zero-length path matches reflexively, so the family
     returned itself. Stating it is the same answer without depending on a property path's
     reflexivity to carry a case nobody had written down.

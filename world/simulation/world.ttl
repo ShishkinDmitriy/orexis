@@ -1,3 +1,4 @@
+@prefix actuation: <http://example.org/agora/actuation#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -82,7 +83,7 @@ ag:supplier a ag:Agent ;
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
     market:matchesBy market:PayAsBid ;
-    ag:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
+    actuation:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
 
@@ -193,8 +194,8 @@ ag:sensor_succulent a ag:Sensor ;
 
 ##########  The supplier's valves — real valves, stood in for  ##########
 #
-#  ag:Valve, not a separate class: the supplier holds ag:hasActuator and derives plain
-#  ag:Actuation, so it co-signs every command exactly as it would for hardware. What is
+#  actuation:Valve, not a separate class: the supplier holds actuation:hasActuator and derives plain
+#  actuation:Actuation, so it co-signs every command exactly as it would for hardware. What is
 #  simulated is the DEVICE at the other end, which is what ag:simulatedBy says — the same
 #  mark the sensors carry.
 #
@@ -202,23 +203,23 @@ ag:sensor_succulent a ag:Sensor ;
 #  sensor waters on THAT and never on the command, so a command it refuses leaves the soil
 #  dry — which is the whole point of making it verify.
 
-ag:valve_fern a ag:Valve ;
-    ag:localId "valve_fern" ; ag:onBus ag:local_bus ; ag:actuates ag:fern ; ag:drawsFrom ag:barrel1 ;
+ag:valve_fern a actuation:Valve ;
+    ag:localId "valve_fern" ; ag:onBus ag:local_bus ; actuation:actuates ag:fern ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
     ag:commandTopic "sim/actuators/valve_fern/command" ;
     ag:statusTopic "sim/actuators/valve_fern/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
-ag:valve_tomato a ag:Valve ;
-    ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; ag:actuates ag:tomato ; ag:drawsFrom ag:barrel1 ;
+ag:valve_tomato a actuation:Valve ;
+    ag:localId "valve_tomato" ; ag:onBus ag:local_bus ; actuation:actuates ag:tomato ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
     ag:commandTopic "sim/actuators/valve_tomato/command" ;
     ag:statusTopic "sim/actuators/valve_tomato/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
-ag:valve_succulent a ag:Valve ;
-    ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; ag:actuates ag:succulent ; ag:drawsFrom ag:barrel1 ;
+ag:valve_succulent a actuation:Valve ;
+    ag:localId "valve_succulent" ; ag:onBus ag:local_bus ; actuation:actuates ag:succulent ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
     ag:commandTopic "sim/actuators/valve_succulent/command" ;
     ag:statusTopic "sim/actuators/valve_succulent/status" ;
-    ag:mlPerSecond 10.0 ; ag:maxDoseMl 1000.0 .
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
