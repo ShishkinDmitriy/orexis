@@ -65,7 +65,7 @@ had to be settled against the credential model instead.
 # Decision — the credential is the principal's, the encoding is the stream's
 
 **`ag:Principal`** — the thing that holds one credential and one connection — bears the transport
-and the bus. It is derived from `ag:onBus`, which every world already states, so this is a name
+and the bus. It is derived from `mqtt:onBus`, which every world already states, so this is a name
 for something that exists rather than a new requirement on an author.
 
 **The encoding is not the principal's.** A principal may hold several streams, and
@@ -80,7 +80,7 @@ principal, and its own last seam said why that could not be the end of it.
 
 ## A channel is a string, which is the same defect one level down
 
-`ag:readingTopic` is a literal. The stream it names has no node, so nothing can say *this stream
+`mqtt:readingTopic` is a literal. The stream it names has no node, so nothing can say *this stream
 is JSON* — exactly as nothing could say *these sensors share a wake* before
 [a-board-is-a-platform](a-board-is-a-platform.md), and for the same reason: the thing the fact is
 about was never declared. `_aimed_with` recovering a group by comparing topic strings is the same
@@ -180,7 +180,7 @@ principal, and its sensors' topics are its grants.
   that [#62](https://github.com/ShishkinDmitriy/agora/pull/62) belongs to — and needs a reflash to
   match.
 - **The procedural axis stays unadopted.** `ssn:System` and `ssn:hasSubSystem` are the right terms
-  the day something needs them, and `ag:senseMode`'s values are `sosa:Procedure`s by definition —
+  the day something needs them, and `perception:senseMode`'s values are `sosa:Procedure`s by definition —
   a cheap alignment that belongs with whatever next touches
   [who-holds-the-clock](who-holds-the-clock.md).
 - ~~**A channel is not a node yet.**~~ **Built** in

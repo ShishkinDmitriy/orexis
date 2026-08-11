@@ -49,7 +49,7 @@ keep, and could not express two hosts running different auctions in one market.
 # Decision — matching is a capability, and the host states how it matches
 
 `market:BidMatchingCapability` is the family. `market:PayAsBid` is implemented; `market:UniformPrice` is declared
-beside it with no `PROVIDES` behind it, exactly as `ag:Polling` and `ag:Consulting` are.
+beside it with no `PROVIDES` behind it, exactly as `perception:Polling` and `review:Consulting` are.
 
 This is a capability by [AGENTS.md rule 2](../../AGENTS.md)'s test — the *how* could differ, and
 visibly: under pay-as-bid a winner pays what it offered, so the honest strategy is to shade; under
@@ -108,7 +108,7 @@ announced is necessarily what will run — a host cannot advertise one and apply
   because a world can be amended after validation and losing a round's bids in silence is worse
   than saying so — every bidder is waiting on a voucher.
 - **A world may state `market:UniformPrice` today** and derive a capability nothing provides. The agent
-  reports it at startup, which is the honest failure and the same one `ag:Polling` produces.
+  reports it at startup, which is the honest failure and the same one `perception:Polling` produces.
 - **#50 is unaffected and still open.** The uncontested-round defect is *in* pay-as-bid; this
   change gives it somewhere to be argued against, and deliberately did not touch the allocation.
 
@@ -127,7 +127,7 @@ announced is necessarily what will run — a host cannot advertise one and apply
   both would need something to choose. It cannot: `market:matchesBy` carries `sh:maxCount 1`, so a host
   states exactly one member and there is no ambiguity to resolve. The question the seam was really
   reaching for survives as the one below it — not *which member* but *whether the one announced is
-  the one that ran*. `ag:Consulting` leaves the genuine version of this seam in
+  the one that ran*. `review:Consulting` leaves the genuine version of this seam in
   [self-review-is-a-capability](self-review-is-a-capability.md), where the grant names a member
   directly and a second premise would be needed.
 - **The offer announces the bid matching; nothing verifies it.** A bidder reads `matches_by` and

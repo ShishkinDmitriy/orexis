@@ -151,3 +151,82 @@ def test_an_external_vocabulary_is_not_a_packages_to_move(monkeypatch):
     """
     assert {"rdfs", "owl", "xsd", "sosa", "prov", "rdf"} <= store.DECLARED
     assert not {"rdfs", "owl", "xsd", "sosa", "prov", "rdf"} & set(loader.prefixes())
+
+
+# --- the kernel namespace, spelled out ----------------------------------------------------
+#
+# `store.PREFIXES` catches an undeclared PREFIX. It cannot catch the opposite mistake, which is
+# what the namespace sweep found seven ways of making: a term named by its FULL IRI in the
+# kernel namespace, when the package that declares it has a namespace of its own.
+#
+#     <{AG}bidsIn>                interpolated in the sovereign's tooling
+#     AG + "Sensor"               concatenated
+#     "http://example.org/agora#SoilMoisture"   a plain constant
+#     term("slowSleepS")          the kernel builder, imported into a package or a test
+#
+# Every one compiles. Every one names something no ontology declares once the term moves, and a
+# pattern with an unknown IRI does not raise — it matches nothing. `tests/test_isolation.py`
+# built `bidsIn` this way from the moment market took `market:`, so the voucher half of a
+# privacy test asserted nothing for four merged PRs while passing, and its own `assert private`
+# guard did not fire because a second query kept the dict non-empty.
+# The three forms that spell the kernel namespace outright, whatever the file.
+_KERNEL_IRI = re.compile(
+    r'(?:\{AG\}|AG \+ "|"http://example\.org/agora#)([A-Za-z][A-Za-z0-9]*)')
+# And the fourth, which is only the kernel's when the KERNEL's builder is the one in scope. A
+# package's own `terms.py` defines a `term()` into its own namespace and every capability
+# imports that one — same call, different answer, which is precisely the confusion this sweep
+# was about.
+_BUILT = re.compile(r'(?<![.\w])term\("([A-Za-z][A-Za-z0-9]*)"\)')
+_KERNEL_BUILDER = re.compile(r"from agent\.ontology import [^\n]*\bterm\b")
+
+_ALL_TREES = _SOURCES + sorted(loader.REPO_ROOT.glob("tests/*.py"))
+
+# Deliberately unauthored: `test_metrics` asks what happens when a block names a term nobody
+# declares, so these two MUST NOT resolve. Listed rather than pattern-matched, because the
+# point of the test is that they look exactly like real ones.
+_NOT_A_TERM = {"NoSuchTermAnyoneAuthored", "noSuchTerm"}
+
+
+def _kernel_terms() -> set[str]:
+    """What `vocabulary/agora` actually declares, read rather than listed."""
+    text = (loader.REPO_ROOT / "vocabulary/agora/ontology.ttl").read_text()
+    return set(re.findall(r"^ag:([A-Za-z][A-Za-z0-9]*)\b", text, re.M))
+
+
+def test_the_kernel_vocabulary_is_still_found():
+    """The guard on the guard, again: an empty set would make the scan below vacuous."""
+    assert len(_kernel_terms()) > 20, "vocabulary/agora declares almost nothing — has it moved?"
+
+
+@pytest.mark.parametrize("path", _ALL_TREES, ids=lambda p: p.name)
+def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
+    """A full IRI in `ag:` must name something `vocabulary/agora` declares.
+
+    Instances are exempt and are the reason this is a name check rather than a ban: a world's
+    `ag:moisture_sensor_fern` is a thing, not a term, and lives in `ag:` correctly. So the rule
+    is not "never spell out the kernel namespace" — it is that when you do, the local name has
+    to be one the kernel actually has.
+    """
+    if path.name == "test_store.py":
+        pytest.skip("quotes the offending forms as examples, which is what makes it readable")
+
+    text = path.read_text()
+    names = set(_KERNEL_IRI.findall(text))
+    if _KERNEL_BUILDER.search(text):
+        names |= set(_BUILT.findall(text))
+
+    kernel, offenders = _kernel_terms(), []
+    for name in names:
+        if name in kernel or name in _NOT_A_TERM:
+            continue
+        # An INSTANCE is a single lowercase word or has an underscore — `ag:fern`,
+        # `ag:moisture_sensor_fern`. A TERM is Capitalised or camelCase. That is a convention
+        # rather than a rule, which is why the message says what to do if it guesses wrong.
+        if "_" in name or name.islower():
+            continue
+        offenders.append(name)
+    assert not offenders, (
+        f"{path.name} names {sorted(offenders)} in the kernel namespace, and "
+        "vocabulary/agora declares no such term — whichever package owns it has a namespace "
+        "of its own, and this pattern will match nothing rather than fail"
+    )

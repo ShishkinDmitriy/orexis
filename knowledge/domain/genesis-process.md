@@ -36,10 +36,10 @@ A world is not a form to fill in. Almost every field implies a question the sove
 thought about, and the questions only surface once something concrete is on the table:
 
 - "the fern's sensor" → *is that board reachable at any moment, or does it sleep?* — because
-  that alone decides whether its agent gets `ag:Polling`, `ag:Subscribing` or `ag:Listening`
+  that alone decides whether its agent gets `perception:Polling`, `perception:Subscribing` or `perception:Listening`
   (see [who-holds-the-clock](/decisions/who-holds-the-clock.md)).
 - "they share the barrel" → *who owns it?* — because owning the venue is what derives
-  `market:Hosting`, and owning the valves is what derives `ag:Actuation`. A barrel with no owner
+  `market:Hosting`, and owning the valves is what derives `actuation:Actuation`. A barrel with no owner
   produces a market nobody hosts.
 - "the fern is thirstier than the succulent" → *thirstier at what number?* — a band is the
   agent's own opinion and nothing can infer it.
@@ -56,9 +56,9 @@ can supply honestly:
 | | why it cannot be guessed |
 |---|---|
 | every subject, and what is observed about it | the domain is a plug-in; nothing knows a "plant" is intended |
-| every device, and **how it is driven** (`ag:senseMode`) | this is what derives the perception capability |
+| every device, and **how it is driven** (`perception:senseMode`) | this is what derives the perception capability |
 | where each device is reachable — its bus and channels | nothing builds a topic from a naming convention |
-| who is wired to what (`ag:polls`, `ag:hasActuator`) | this *is* the access grant, not a separate permission system |
+| who is wired to what (`perception:polls`, `actuation:hasActuator`) | this *is* the access grant, not a separate permission system |
 | whether there is anything scarce, and who owns it | a market with no owner is a market nobody can host |
 | each agent's desire and limits | opinion; a fern and a succulent may disagree and neither is wrong |
 | **what kind of world this is** | see below — it changes the operational beliefs, and nothing else |
@@ -72,7 +72,7 @@ the only sense the system needs.
    that transport's shapes.
 2. **Derivation produces the abilities the sovereign expected.** `agora-validate` builds the
    world from the files and prints what it derived; read it. An agent that derived nothing has
-   wiring implying no ability — almost always a missing `ag:senseMode`. This is the step where a
+   wiring implying no ability — almost always a missing `perception:senseMode`. This is the step where a
    misunderstanding surfaces cheaply.
 3. **Every derived capability has the beliefs it needs.** `agora-validate` is capability-aware:
    a shape applies to an agent only if that agent derived the capability it belongs to. A
@@ -95,8 +95,8 @@ visible. The same agent id, the same hardware, two worlds:
 
 | | `world/society` | `world/sensing` |
 |---|---|---|
-| `ag:slowSleepS` | 600 | 10 |
-| `ag:hasTarget` | 0.55 | *absent — it holds no stake* |
+| `perception:slowSleepS` | 600 | 10 |
+| `water:hasTarget` | 0.55 | *absent — it holds no stake* |
 
 The cadence differs because the **circumstance** differs, not because the agent wants anything
 different. A bench rig should be watched every ten seconds; a battery board in a garden should
@@ -104,12 +104,12 @@ not. That is a fact about the deployment.
 
 So there are two families, and they behave differently:
 
-- **Operational beliefs** — `ag:fastSleepS`, `ag:slowSleepS`, `ag:maxReadingAgeS`. How closely
+- **Operational beliefs** — `perception:fastSleepS`, `perception:slowSleepS`, `perception:maxReadingAgeS`. How closely
   to watch, how stale is too stale. These track the *world's kind*: bench, staging, production.
   A sensible default could be supplied per kind, and hand-authoring near-identical numbers into
   every world is duplication waiting to drift.
-- **Stake beliefs** — `ag:hasTarget`, `ag:bandLow`/`ag:bandHigh`, `market:hasEndowment`,
-  `ag:maxValuePerL`. What this agent wants and what it will pay. **Not derivable from anything**
+- **Stake beliefs** — `water:hasTarget`, `water:bandLow`/`water:bandHigh`, `market:hasEndowment`,
+  `water:maxValuePerL`. What this agent wants and what it will pay. **Not derivable from anything**
   — "this is a test world" tells you nothing about whether a fern is parched at 0.35. These are
   the agent's own and must be elicited.
 

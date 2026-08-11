@@ -20,7 +20,7 @@ Not ceremony. The questions it forces are the ones the Turtle has to answer, and
 only once something concrete is on the table:
 
 - *is that board reachable at any moment, or does it sleep?* → decides the perception capability
-- *who owns the barrel?* → owning the venue derives `market:Hosting`, owning valves `ag:Actuation`
+- *who owns the barrel?* → owning the venue derives `market:Hosting`, owning valves `actuation:Actuation`
 - *thirsty at what number?* → a band is opinion; nothing can infer it
 
 # 2. Write `world/<name>/world.ttl`
@@ -34,11 +34,11 @@ reality, a derivation cannot.
 
 | you state | genesis derives |
 |---|---|
-| `ag:polls` a sensor with `ag:senseMode ag:Scheduled` | `ag:Subscribing` |
-| `ag:polls` a sensor with `ag:senseMode ag:Push` | `ag:Listening` |
+| `perception:polls` a sensor with `perception:senseMode perception:Scheduled` | `perception:Subscribing` |
+| `perception:polls` a sensor with `perception:senseMode perception:Push` | `perception:Listening` |
 | `market:bidsIn` a market | `market:Bidding` |
 | `market:hosts` a market | `market:Hosting` |
-| `ag:hasActuator` a kind of `ag:Actuator` | `ag:Actuation` |
+| `actuation:hasActuator` a kind of `actuation:Actuator` | `actuation:Actuation` |
 
 Every device states its own channels — nothing builds a topic from a naming convention. A
 board whose `PLANT_ID` disagrees with the world simply never gets read, and nothing warns you.
@@ -49,9 +49,9 @@ Only the blocks for capabilities the wiring will give it. Unsure which? Do step 
 output.
 
 Two families, and they behave differently ([genesis-process](/domain/genesis-process.md)):
-**operational** (`ag:fastSleepS`, `ag:slowSleepS`, `ag:maxReadingAgeS`) follows the *kind* of
-world — a bench rig wants 10s, a garden wants 600s; **stake** (`ag:hasTarget`, `ag:bandLow`,
-`ag:bandHigh`, `market:hasEndowment`, `ag:maxValuePerL`) is the agent's own and derivable from
+**operational** (`perception:fastSleepS`, `perception:slowSleepS`, `perception:maxReadingAgeS`) follows the *kind* of
+world — a bench rig wants 10s, a garden wants 600s; **stake** (`water:hasTarget`, `water:bandLow`,
+`water:bandHigh`, `market:hasEndowment`, `water:maxValuePerL`) is the agent's own and derivable from
 nothing.
 
 Register each in the catalog inside `world.ttl`:
@@ -77,7 +77,7 @@ Conforms: True
 
 **Read the derived line for each agent.** It is the cheapest place a misunderstanding surfaces.
 An agent that derived nothing has wiring implying no ability — almost always a missing
-`ag:senseMode`, or a device that is not a kind of anything the rules recognise. An agent marked
+`perception:senseMode`, or a device that is not a kind of anything the rules recognise. An agent marked
 *(no opening beliefs authored)* is declared but has no `beliefs-<id>.ttl`, and will refuse to
 start.
 
@@ -110,8 +110,8 @@ Then [run-a-world](/runbooks/run-a-world.md).
 
 | symptom | cause |
 |---|---|
-| `derived <agent> -> ` nothing | wiring implies no ability; check `ag:senseMode` and that devices are typed |
+| `derived <agent> -> ` nothing | wiring implies no ability; check `perception:senseMode` and that devices are typed |
 | `agora-validate` fails on a missing belief | the wiring derived a capability whose block you did not write |
 | agent refuses to start, `BeliefsInvalid` | the same thing, caught at startup by the agent itself |
-| agent boots, no readings | the board's `PLANT_ID` and the world's `ag:readingTopic` disagree |
+| agent boots, no readings | the board's `PLANT_ID` and the world's `mqtt:readingTopic` disagree |
 | `no world called '<name>'` | the directory needs a `world.ttl`; the error lists what it found |

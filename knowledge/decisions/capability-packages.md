@@ -98,9 +98,9 @@ in the repo touched. Deleting the directory removed it just as completely.
 when packages import each other. So they do not:
 
 - **`agent.provider(family)`** — a module asks its agent for whoever provides a *capability
-  family*, resolved through the T-Box. `bidding` asks for `ag:PerceptionCapability` and gets
+  family*, resolved through the T-Box. `bidding` asks for `perception:PerceptionCapability` and gets
   polling or listening without knowing there are two ways to perceive. `hosting` asks for
-  `ag:Actuation` and issues paper vouchers if the answer is None.
+  `actuation:Actuation` and issues paper vouchers if the answer is None.
 - **`annotate` / `urgency`** — where a capability needs a *judgment* it does not hold, it
   asks every sibling and takes what it gets. This replaced the worst coupling in the old
   layout: perception reading bidding's band through a swallowed exception.

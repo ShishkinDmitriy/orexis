@@ -36,10 +36,10 @@ share no premise:
 
 | capability | granted by |
 |---|---|
-| `ag:Actuation` | `ag:hasActuator` — it is wired to a valve |
+| `actuation:Actuation` | `actuation:hasActuator` — it is wired to a valve |
 | `market:Bidding`, `market:Hosting` | `market:bidsIn`, `market:hosts` — its position in a market |
-| `ag:Subscribing`, `ag:Listening` | `ag:polls` a sensor, and that sensor's mode |
-| `ag:Reckoning` | `ag:commits` — room to move |
+| `perception:Subscribing`, `perception:Listening` | `perception:polls` a sensor, and that sensor's mode |
+| `review:Reckoning` | `review:commits` — room to move |
 
 The general rule is that **a capability is granted by whatever fact makes it meaningful**, and what
 that fact is belongs to the capability, in its own package's `rules.ru`. Three of the four are
@@ -56,8 +56,8 @@ An agent that its world gives room to move gets the ability to use the room. One
 rule, in `capabilities/review/rules.ru`:
 
 ```sparql
-INSERT { GRAPH $derived { ?agent ag:hasCapability ag:Reckoning } }
-WHERE  { ?agent a ag:Agent ; ag:commits ?commitment . ?commitment ag:onTerm ?term }
+INSERT { GRAPH $derived { ?agent ag:hasCapability review:Reckoning } }
+WHERE  { ?agent a ag:Agent ; review:commits ?commitment . ?commitment review:onTerm ?term }
 ```
 
 Nothing declares it, nothing is listed anywhere, and there is no separate switch that could
@@ -72,14 +72,14 @@ something already stated, so it is `derived` and not `deduced`, and it lands in
 
 ## Which meant the mandate had to become public
 
-The premise has to be readable by a rule that runs at genesis, and `ag:commits` was a private
+The premise has to be readable by a rule that runs at genesis, and `review:commits` was a private
 belief. Moving it was not a mechanical consequence of the derivation; it corrected the original
 placement.
 
 **An agent constraining itself is not a constraint, it is a choice.** A range is what an agent is
 *allowed* — that is a governance fact, and it belongs to whoever ratified the world. The pick
 inside the range is what the agent wants, and only that is an opinion. So: **range public, value
-private.** `ag:commits` moved to `world.ttl`; `ag:sleepS` and the rest stayed in beliefs.
+private.** `review:commits` moved to `world.ttl`; `ag:sleepS` and the rest stayed in beliefs.
 
 `Range`'s three sources are therefore all public now, and all intersect:
 
@@ -87,23 +87,23 @@ private.** `ag:commits` moved to `world.ttl`; `ag:sleepS` and the rest stayed in
 |---|---|
 | constitution | what the society allows any agent — figures on the capability family |
 | hardware | what the equipment can do |
-| mandate | what *this* agent's world allows it — `ag:commits` |
+| mandate | what *this* agent's world allows it — `review:commits` |
 
 Two things fell out of that which were not available before:
 
 - **"A world may narrow the constitution, never widen it" became checkable.** Both ends of the
   comparison are now in graphs a single SHACL shape can see. `ag:MandateWithinTheConstitutionShape`
-  finds the constitutional figures through `ag:revisableToward`, so it names no family and no
+  finds the constitutional figures through `review:revisableToward`, so it names no family and no
   term: a package declaring a new revisable belief is covered without editing the shape.
 - **A peer could read it.** What an agent may do is now a fact about the society rather than a
   claim in a file only that agent mounts. Nothing uses this yet.
 
 ## The interval stopped being a switch
 
-`ag:reviewIntervalS` was optional, and its absence meant "never review". That was a side channel
+`review:reviewIntervalS` was optional, and its absence meant "never review". That was a side channel
 dressed as a decision by omission: nothing could check it, and it put the question *does this
 agent reflect* in a private file where no shape and no peer could read the answer. It is now an
-ordinary required parameter of the capability, exactly as `ag:fastSleepS` is for one that
+ordinary required parameter of the capability, exactly as `perception:fastSleepS` is for one that
 subscribes — `sh:minCount 1`, floor 60 seconds, because an arising re-validates the whole agent
 against every shape and is not free.
 
@@ -112,12 +112,12 @@ What decides whether an agent reviews is the grant, and the grant is the mandate
 ## Room means room, and a mandate whose ends meet is none
 
 The rule asks for latitude, not for a mandate — those are not the same, and the difference has a
-worked example already in the worlds. `succulent`'s cadence is pinned: `ag:notBelow 900 ;
-ag:notAbove 900`. That is not an oversight but the documented way an author says a figure is not
+worked example already in the worlds. `succulent`'s cadence is pinned: `review:notBelow 900 ;
+review:notAbove 900`. That is not an oversight but the documented way an author says a figure is not
 up for review — by leaving nowhere to go rather than by a flag somewhere saying not to look, which
 is exactly how `review.Range.fixed` reads it.
 
-Granting on the mere presence of `ag:commits` would have handed `succulent` a capability whose
+Granting on the mere presence of `review:commits` would have handed `succulent` a capability whose
 every arising could only conclude nothing: a reviewer waking on its interval for ever, re-deriving
 that there is one permitted value and it already holds it. Harmless, and it would have made the
 capability stop meaning what its own name says.
@@ -131,8 +131,8 @@ where nothing could differ, do not grant.
 
 ## A family with two members, one of them empty
 
-`ag:ReviewCapability` is the slot. `ag:Reckoning` — works it out itself, from the rules the
-packages ship — is what exists and what the derivation grants. `ag:Consulting` — asks something
+`review:ReviewCapability` is the slot. `review:Reckoning` — works it out itself, from the rules the
+packages ship — is what exists and what the derivation grants. `review:Consulting` — asks something
 else — is declared and reserved, with no member behind it.
 
 An unimplemented member is deliberate, and it is the whole reason for splitting: it fixes the
@@ -168,15 +168,15 @@ latitude, rather than having had no second thoughts.
 - A review rule still belongs to the package owning the term it re-picks — `review.rq` for the
   sensing cadence stays in `capabilities/perception/`. The review capability owns *reviewing*; it
   does not own what may be reviewed.
-- The old kernel `ag:CommitmentShape` used `sh:targetClass ag:Commitment` and matched nothing for
-  as long as it existed: a mandate is written inline as `ag:commits [ ... ]`, and nobody types a
-  blank node they are already describing. The replacements target `sh:targetObjectsOf ag:commits`.
+- The old kernel `ag:CommitmentShape` used `sh:targetClass review:Commitment` and matched nothing for
+  as long as it existed: a mandate is written inline as `review:commits [ ... ]`, and nobody types a
+  blank node they are already describing. The replacements target `sh:targetObjectsOf review:commits`.
   Worth remembering as a class of bug — a shape that never fires passes.
 
 # Seams left open
 
-- **Nothing chooses between members.** With one implementation the derivation names `ag:Reckoning`
-  directly. When `ag:Consulting` exists, something has to select — and unlike perception, no
+- **Nothing chooses between members.** With one implementation the derivation names `review:Reckoning`
+  directly. When `review:Consulting` exists, something has to select — and unlike perception, no
   hardware fact forces the answer, so it will be a `deduced` judgement at genesis rather than a
   `derived` one. The rule will need a second premise; what that premise is, is not decided.
 - **A mandate covers one term, and an agent may hold several.** They are independent ranges with

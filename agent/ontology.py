@@ -1,9 +1,16 @@
 """The kernel vocabulary — prefixes and graph names, and deliberately nothing else.
 
 Everything here is true of *every* capability: how a term is spelled, and which graph a fact
-lives in. A term that belongs to one capability — `perception:Subscribing`, `market:Bidding` — is named by
-that capability's own package, so this file never grows when one is added. That is the whole
-reason it is this short.
+lives in. A term that belongs to one capability — `perception:Subscribing`, `market:Bidding` — is
+named by that capability's own package, so this file never grows when one is added. That is the
+whole reason it is this short.
+
+**Eleven terms in `vocabulary/agora` still make that claim false, and they are named rather than
+implied**: the seven of the simulated device model, which only `world/simulation` uses and which
+want a simulation package that does not exist; `ag:ComputeHost`, `ag:runsOn` and `ag:lanAddress`,
+which only `world/sensing` states; and `ag:SelfReporting`, which is declared a capability, has a
+shape, and appears in no world at all. See
+knowledge/decisions/every-term-in-its-own-house.md.
 
 Everything here is a **T-Box term**: a class or a property. Those are public and well-known,
 and code is written against them exactly as it is written against a function signature. What

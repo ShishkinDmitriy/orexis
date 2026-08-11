@@ -39,9 +39,9 @@ Public knowledge is **five named graphs**, and the axis is who put the fact ther
 Both are computed, and it would have been cheaper to have one graph for "not asserted". The
 difference is **authorship**:
 
-- an **entailment has no author**. `?x a ag:Sensor` follows from RDFS semantics; nobody could
+- an **entailment has no author**. `?x a perception:Sensor` follows from RDFS semantics; nobody could
   have decided otherwise and still be doing RDFS, and any engine agrees.
-- a **rule-derivation is authored**. *"A scheduled sensor gives its agent `ag:Subscribing`"* is a
+- a **rule-derivation is authored**. *"A scheduled sensor gives its agent `perception:Subscribing`"* is a
   design decision living in a `rules.ru` that could have said something else. The fact has no
   latitude once the rule exists — but the rule had latitude when it was written.
 
@@ -153,7 +153,7 @@ them from nothing — every one of them is a `prov:SoftwareAgent` doing the only
 **Where users are declared: nowhere, yet.** A user is installation-level — AGENTS.md rule 3 puts
 what is true of an installation in `infra/` — and an agent is given only its world and never sees
 `infra/`. So **the world references a user URI and declares nothing about them**: no name, no key,
-not even `a prov:Person`. It is an identifier the agent never resolves, exactly as `ag:brokerHost`
+not even `a prov:Person`. It is an identifier the agent never resolves, exactly as `mqtt:brokerHost`
 names a host it never introspects. Typing the user in the world graph would be a world asserting
 facts about the installation it runs in, which it has no standing to do — and would make an
 agent's provenance depend on a file it is deliberately not given.
@@ -207,16 +207,16 @@ so it is not given it and nothing pretends otherwise.
 whatever the society knows, and a reader never learns which graph holds its fact:
 
 ```sparql
-SELECT ?agent WHERE { ?agent ag:polls ?s . ?s a ag:Sensor }
+SELECT ?agent WHERE { ?agent perception:polls ?s . ?s a perception:Sensor }
 ```
 
-`ag:polls` is the sovereign's and `a ag:Sensor` may be entailed. Naming a graph still reads
+`perception:polls` is the sovereign's and `a perception:Sensor` may be entailed. Naming a graph still reads
 exactly that one, which is what keeps a review's write boundary checkable.
 
 # The trap this would otherwise have set
 
 **A basic graph pattern inside one `GRAPH` clause must match entirely within that graph.** So
-the query above, written as `GRAPH <…/world> { ?agent ag:polls ?s . ?s a ag:Sensor }`, returns
+the query above, written as `GRAPH <…/world> { ?agent perception:polls ?s . ?s a perception:Sensor }`, returns
 **nothing** the moment those two facts land in different graphs — silently, because an empty
 result is not an error.
 
@@ -245,7 +245,7 @@ now builds a `Store`, runs `refresh_public`, and pours the result into an rdflib
 
 That was not tidiness. The two had already diverged: after the closure was materialised, the
 rdflib side had none of its own, so a device typed as a *kind* of actuator was not observably an
-actuator there. `roster()` stopped deriving `ag:Actuation` for the supplier, and the next
+actuator there. `roster()` stopped deriving `actuation:Actuation` for the supplier, and the next
 `agora-compose` would have written a compose file with the signing keys silently unmounted — the
 supplier unable to co-sign a dose, and every voucher redemption failing. Nothing noticed, because
 `compose.yaml` is committed and regenerating it is not a gate.
@@ -287,7 +287,7 @@ treatment if that ever changes.
   at all; it is now structural and covered for every world.
 - **Re-running the rules without clearing leaves stale conclusions.** `refresh_public` clears the
   computed graphs first, so production is fine — but anything re-deriving by hand must too. One
-  test was silently passing on a stale `ag:Subscribing` until this landed.
+  test was silently passing on a stale `perception:Subscribing` until this landed.
 - **Decimal literals reach the operator's tools canonicalised.** `agent/ratified.py` now hands
   rdflib what the store computed, so a value written `2.0` in a world file arrives as `2` —
   oxigraph's fixed-point decimal canonicalises it. The value is identical and every consumer

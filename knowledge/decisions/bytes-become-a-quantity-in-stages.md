@@ -49,7 +49,7 @@ differ you have a function, and a function indifferent to both neighbours belong
 That indifference is also what made deferring the other two cost nothing.
 
 `codec:Kaitai` is the member worth declaring even unbuilt, because it is the case that looks like it
-would break the design and does not: a Kaitai spec yields a **tree**, so `ag:readingPointer`
+would break the design and does not: a Kaitai spec yields a **tree**, so `mqtt:readingPointer`
 addresses into it unchanged. A binary format lands in a codec and no other stage moves.
 
 # Why *scaling* and not *calibration*
@@ -141,7 +141,7 @@ sensor with none, and a stated encoding that is not a member of the family are e
 their own message, **before a society starts** rather than at the first message.
 
 What the shapes deliberately do **not** refuse is a member that is declared and unimplemented.
-`codec:Cbor` holds exactly the position `ag:Polling` and `ag:Consulting` do: the vocabulary says the
+`codec:Cbor` holds exactly the position `perception:Polling` and `review:Consulting` do: the vocabulary says the
 seam exists, the build reports at startup that it cannot fill it, and refusing the world instead
 would make declaring a seam impossible.
 
@@ -209,7 +209,7 @@ use here for `sosa:observes`.
 Once it exists, four facts currently expressed as string equality between sensors become
 properties of one node: the codec, the wake interval
 ([#78](https://github.com/ShishkinDmitriy/agora/issues/78)), the broker credential that
-`ag:onBus` puts on one peripheral standing in for its board, and the single outbound command
+`mqtt:onBus` puts on one peripheral standing in for its board, and the single outbound command
 message that carries several values. That last one is also where the unused `encode()` gets a
 caller, since actuation is this pipeline reversed.
 
@@ -234,14 +234,14 @@ SOSA's sense is exactly what has to be decided first.
 This record derives `codec:decodedBy` onto the **sensor**, and it no longer does. An encoding is a
 property of a stream: three sensors sharing a topic carried three copies of one fact with nothing
 comparing them, and a command channel — which has no sensor at all — could not carry one. It is
-derived onto an `ag:Channel` now, and a sensor reads its codec through `ag:publishesOn`. See
+derived onto an `mqtt:Channel` now, and a sensor reads its codec through `mqtt:publishesOn`. See
 [a-stream-is-a-thing](a-stream-is-a-thing.md). Everything else here stands: the families, the
 premise-then-conclusion discipline, and the pointer staying a function.
 
 # Seams left open
 
 - **`transports/` still searches at boot, and it is the same defect.** `MqttDriver.claims()`
-  re-decides from `ag:onBus` and `ag:readingTopic` — facts already in the graph — what genesis could
+  re-decides from `mqtt:onBus` and `mqtt:readingTopic` — facts already in the graph — what genesis could
   have written down once. Two of the three binding-borne trees now derive their member and one does
   not. It was left alone deliberately: converting it touches the working read path for every sensor
   in every world, and [#76](https://github.com/ShishkinDmitriy/agora/pull/76) had just changed that
@@ -253,7 +253,7 @@ premise-then-conclusion discipline, and the pointer staying a function.
 - **Nothing checks a unit against the property it measures.** A world could state `unit:DEG_C` on a
   soil moisture sensor and everything would validate. The graph would then be confidently wrong,
   which is a different failure from being silent and arguably a worse one.
-- **Nothing compares units before comparing numbers.** `ag:bandLow` is a bare decimal and no code
+- **Nothing compares units before comparing numbers.** `water:bandLow` is a bare decimal and no code
   asks what unit the reading it is compared against is in. Stating units makes that check
   *possible*; it does not perform it.
 - **The unit reaches nothing downstream.** `agent/influx_writer.py` tags a reading with its

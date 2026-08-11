@@ -140,7 +140,7 @@ agent-supplier   Actuation, Hosting  +signing keys
 
 The file is **generated, never hand-edited**. Adding an agent is adding it to `world.ttl` and
 regenerating; a hand-edit is a second roster waiting to drift from the model. Only the agent
-that derived `ag:Actuation` is given signing keys, and each container mounts exactly one store
+that derived `actuation:Actuation` is given signing keys, and each container mounts exactly one store
 credential — its own. That is the boundary, not packaging taste
 ([world](/domain/world.md) §Deployment).
 
@@ -287,4 +287,4 @@ society needs real boards. See [world](/domain/world.md) §Simulation.
 | agent logs `born` on every start | it is not keeping its volume — check the `agora-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
-| agent cannot reach the broker | the world says `ag:brokerHost "localhost"`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |
+| agent cannot reach the broker | the world says `mqtt:brokerHost "localhost"`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |

@@ -151,8 +151,8 @@ names it: pay-as-bid, uniform price.
   prefixes; nothing comparable scans prose for a rejected word, and the drift this record fixes
   would recur silently. A grep in CI would catch it and would also be a new kind of gate; not
   attempted.
-- **`market:BidMatchingCapability` keeps the `<X>Capability` suffix** that `ag:PerceptionCapability` and
-  `ag:ReviewCapability` follow. Under the term the class could as well be `ag:BidMatching`, which
+- **`market:BidMatchingCapability` keeps the `<X>Capability` suffix** that `perception:PerceptionCapability` and
+  `review:ReviewCapability` follow. Under the term the class could as well be `ag:BidMatching`, which
   already reads as an ability without help; the suffix is a live convention, and dropping it for
   one family is really a proposal to drop it for all three. Worth deciding deliberately, not as a
   side effect of a rename.

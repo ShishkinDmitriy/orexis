@@ -110,7 +110,7 @@ There is a plausible exception — a short-lived agent spawned for one task, who
 not worth keeping — but it is an **optimisation**, and the rule this architecture already
 follows applies: state it in the world and let the runtime derive the consequence. An ephemeral
 belief store would be a declared property of an agent in `world/<world>/world.ttl`, the way
-`ag:senseMode` declares a device's nature, and the default in its absence is durable. Nothing
+`perception:senseMode` declares a device's nature, and the default in its absence is durable. Nothing
 should be ephemeral because of how it happened to be deployed.
 
 This is not yet modelled and should not be until there is a real short-lived agent to model it

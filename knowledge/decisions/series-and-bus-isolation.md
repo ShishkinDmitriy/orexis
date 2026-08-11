@@ -42,12 +42,12 @@ topics that capability needs:
 
 | wiring | granted |
 |---|---|
-| `ag:polls S` | read S's `readingTopic`, write S's `commandTopic` |
+| `perception:polls S` | read S's `readingTopic`, write S's `commandTopic` |
 | `ag:simulatedBy` on a device | that DEVICE reads the `commandTopic` of whatever actuates its subject |
 | `market:bidsIn M` | read M's `offerTopic` and `voucherTopic/<me>`, write `bidTopic/<me>` |
 | `market:hosts M` | write `offerTopic` and `voucherTopic/+`, read `bidTopic/+` and each bidder's `eventTopic` |
-| `ag:hasActuator V` | write V's `commandTopic` |
-| `ag:eventTopic E` | write E |
+| `actuation:hasActuator V` | write V's `commandTopic` |
+| `mqtt:eventTopic E` | write E |
 
 Read that against `capabilities/market/bidding.py` and `hosting.py` and it is the same set of
 topics they subscribe and publish. This is the same move `agora-compose` makes for the roster:

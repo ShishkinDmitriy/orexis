@@ -73,24 +73,24 @@ that wants both simply asks, because every public graph is the default graph of 
 
 | you state | genesis derives |
 |---|---|
-| `ag:polls` a sensor whose `ag:senseMode` is `ag:Scheduled` | `ag:Subscribing` |
-| `ag:polls` a sensor whose `ag:senseMode` is `ag:Push` | `ag:Listening` |
+| `perception:polls` a sensor whose `perception:senseMode` is `perception:Scheduled` | `perception:Subscribing` |
+| `perception:polls` a sensor whose `perception:senseMode` is `perception:Push` | `perception:Listening` |
 | `market:bidsIn` a market | `market:Bidding` |
 | `market:hosts` a market | `market:Hosting` |
-| `ag:hasActuator` anything that is a kind of `ag:Actuator` | `ag:Actuation` |
+| `actuation:hasActuator` anything that is a kind of `actuation:Actuator` | `actuation:Actuation` |
 
 Reflash a board from `Push` to `Scheduled`, re-seed, and its agent gains an interval to state —
 with no edit to the agent, because there is nothing about the agent to edit. See
 [who-holds-the-clock](/decisions/who-holds-the-clock.md) for what those three sense modes mean.
 
 The market rows are the **weakest** of these, and worth naming as such: `market:bidsIn` says "is a
-bidder" in other words, where `ag:senseMode` states a physical fact about hardware. Deriving
+bidder" in other words, where `perception:senseMode` states a physical fact about hardware. Deriving
 market roles from declared *goals* instead is an open seam — see below.
 
 ## 2. Every wire name is stated
 
-No process builds a topic from a naming convention. A sensor states its own `ag:readingTopic`
-and `ag:commandTopic`; a market states its three channels; the bus states its host and port. A
+No process builds a topic from a naming convention. A sensor states its own `mqtt:readingTopic`
+and `mqtt:commandTopic`; a market states its three channels; the bus states its host and port. A
 process is handed exactly one instance identifier — its own agent id — and discovers everything
 else from it.
 
@@ -112,7 +112,7 @@ thinks, and no other agent can read it — enforced, not polite
 If two agents could reasonably disagree about it, it is a belief.
 
 Beliefs then divide again, and the two shipped worlds show it: the same agent has
-`ag:slowSleepS` 600 in `society` and 10 in `sensing`, because the **circumstance** differs, not
+`perception:slowSleepS` 600 in `society` and 10 in `sensing`, because the **circumstance** differs, not
 because it wants anything different. Operational beliefs (cadence, freshness) track the kind of
 world; stake beliefs (target, band, endowment, price) are the agent's own and derivable from
 nothing. See [genesis-process](/domain/genesis-process.md) §"Where opening beliefs come from".
@@ -133,7 +133,7 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
    `<.../graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .`
 5. **Validate, and read what it derived.** `agora-validate orchard` builds the world from the
    files and prints `tree_north  Subscribing`. An agent that derived nothing has wiring
-   implying no ability — usually a missing `ag:senseMode`, or a device that is not a kind of
+   implying no ability — usually a missing `perception:senseMode`, or a device that is not a kind of
    anything the rules recognise.
 6. **Validate.** `agora-validate` is capability-aware: a shape applies to an agent only if that
    agent derived the capability it belongs to. It catches a subscribing agent with no interval,
@@ -242,11 +242,11 @@ Three details are load-bearing rather than packaging taste:
   volume, exclusively locked by its owner — nothing else can open it, including you.
 - **The world is mounted file by file, not as a directory.** An agent gets every public `*.ttl`
   and its **own** `beliefs/<id>.ttl`, and nothing else — it has no business reading what another agent
-  was authored to want. Only an agent that derived `ag:Actuation` also gets
+  was authored to want. Only an agent that derived `actuation:Actuation` also gets
   `secrets/host.key` and `secrets/clearing.key`; the generator runs the real derivation rules
   in memory to know which one that is. Verified: a plant agent's container contains exactly the
   public topology plus its own beliefs under `/app/world`, and no key.
-- **`network_mode: host`.** The world states the bus as `ag:brokerHost "localhost"` because a
+- **`network_mode: host`.** The world states the bus as `mqtt:brokerHost "localhost"` because a
   channel name is meaningless without its broker and every member must agree on it. On a
   bridge network that stops being true for the agents while staying true for the ESP32 — two
   names for one bus, which is what stating it in the world exists to prevent.
@@ -269,7 +269,7 @@ of its own either.
 
 A simulated sensor states everything a board states: the bus it is on, the subject it monitors,
 the property it observes, its topics, and who holds the clock. One extra fact, `ag:simulatedBy`,
-says a process stands in for it. An agent wired to one with `ag:polls` derives `ag:Subscribing`
+says a process stands in for it. An agent wired to one with `perception:polls` derives `perception:Subscribing`
 and runs the **ordinary perception module**, because from where the agent stands there is
 nothing else it could be.
 
@@ -282,7 +282,7 @@ implementation* — it could pass while the real path was broken, which is the w
 form of simulation. It also cost five smaller things: agent metrics silently omitted every
 simulated agent, the ACL generator needed a second query, the readings dashboard caught them
 only by accident, `sense_now`/`fresh_reading` had two definitions, and `ag:models` was declared
-`rdfs:subPropertyOf ag:polls` — a promise nothing kept, because shapes ran with RDFS inference
+`rdfs:subPropertyOf perception:polls` — a promise nothing kept, because shapes ran with RDFS inference
 and the runtime did not. That last one is now a promise the runtime *would* keep: the vocabulary's
 entailments are materialised into the store before anything reads it, so a sub-property declared
 today is followed everywhere rather than wherever someone remembered a property path. See
@@ -294,8 +294,8 @@ distinguishes how a device is spoken to". That was right, and it is what now exi
 lower: not a binding but the device itself.
 
 **An actuator is stood in for the same way, and the check is the point.** A simulated valve is
-an `ag:Valve` carrying `ag:simulatedBy`, held by `ag:hasActuator` like any other — so its
-supplier derives plain `ag:Actuation` and co-signs every command exactly as it would for
+an `actuation:Valve` carrying `ag:simulatedBy`, held by `actuation:hasActuator` like any other — so its
+supplier derives plain `actuation:Actuation` and co-signs every command exactly as it would for
 hardware. The stand-in verifies both signatures before it opens, holding the two PUBLIC keys and
 no private one.
 
@@ -304,15 +304,15 @@ not sign, "because there is nothing to convince" — honest about what it did, a
 that cost: the simulation exercised every part of actuation except the part a market exists to
 make safe.
 
-**Water flows on `ag:statusTopic`, never on the command.** A real plant gets wet because water
+**Water flows on `mqtt:statusTopic`, never on the command.** A real plant gets wet because water
 arrives; between containers the only channel is a message, so the simulated sensor waters on what
 the valve *reported having dispensed*. The old arrangement read the valve's command topic, which
 meant a command a real valve would refuse still watered the plant. Now a refusal publishes
 nothing and the soil stays dry — which is the behaviour worth having a test for, and there is one.
 
-**Sense mode is honoured rather than bypassed.** `ag:Scheduled` means the stand-in keeps the
+**Sense mode is honoured rather than bypassed.** `perception:Scheduled` means the stand-in keeps the
 interval its agent gives it over the retained command, exactly as a deep-sleeping board does;
-`ag:Push` means it keeps its own clock and takes no orders. So the simulation exercises the
+`perception:Push` means it keeps its own clock and takes no orders. So the simulation exercises the
 retained-cadence mechanism, which the old one never touched at all.
 
 Before it: a separate `agora-sim` process told by an environment variable which subjects to

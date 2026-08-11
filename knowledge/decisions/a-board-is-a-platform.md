@@ -17,8 +17,8 @@ or string equality between sensors computed in Python:
 | fact | expressed as |
 |---|---|
 | which codec decodes the bytes | `codec:decodedBy` derived onto each sensor, three copies |
-| the wake interval | `_aimed_with` comparing `ag:commandTopic` **strings** |
-| the broker credential | `ag:onBus` on one peripheral standing in for its board |
+| the wake interval | `_aimed_with` comparing `mqtt:commandTopic` **strings** |
+| the broker credential | `mqtt:onBus` on one peripheral standing in for its board |
 | one message carrying several values | emergent, unmodelled |
 
 And it let a real contradiction through: two sensors on one stream may be given two different
@@ -29,7 +29,7 @@ sensor* and nothing can ask for one *per stream*.
 
 **`sosa:Platform`** — *"an entity that hosts other entities, particularly Sensors, Actuators,
 Samplers, and other Platforms"* — with **`sosa:hosts`**. SOSA is already in use here for
-`sosa:observes` and `ag:Sensor` is already `rdfs:subClassOf sosa:Sensor`, so this is a vocabulary
+`sosa:observes` and `perception:Sensor` is already `rdfs:subClassOf sosa:Sensor`, so this is a vocabulary
 the project speaks rather than one it is adopting.
 
 The recursion is what makes the shape expressible without inventing anything:
@@ -123,7 +123,7 @@ things mounted together, so by [AGENTS.md](../../AGENTS.md) rule 2 it is not wor
 nothing could differ, there is nothing to choose.
 
 One alignment is worth recording as available and cheap, and is **not taken here**:
-`ag:senseMode`'s values are `sosa:Procedure`s by definition — *"a workflow, protocol, plan,
+`perception:senseMode`'s values are `sosa:Procedure`s by definition — *"a workflow, protocol, plan,
 algorithm, or computational method specifying how to make an Observation"* is exactly what
 Scheduled, Push and Pull each are. That would be alignment triples and no rename, and it belongs
 with whatever next touches [who-holds-the-clock](who-holds-the-clock.md) rather than with a change
@@ -149,10 +149,10 @@ about boards.
   [the-wire-is-ours-and-it-has-two-levels](the-wire-is-ours-and-it-has-two-levels.md): the bearer is the principal, every
   world already has principals, and **a simulated world correctly has no platforms at all.** The
   measured hole is still open; what was blocking it is not.
-- **`ag:onBus` did not move either**, and it is the sharper case: it mints the broker credential,
+- **`mqtt:onBus` did not move either**, and it is the sharper case: it mints the broker credential,
   the firmware's `MQTT_USER` is `moisture_sensor_fern`, and moving it renames a principal. Worth
   knowing meanwhile — **`ag:esp32_fern` already mints a credential with no grants at all**,
-  because `hardware.ttl` states `ag:onBus` on it and onboarding reads the whole world. One board,
+  because `hardware.ttl` states `mqtt:onBus` on it and onboarding reads the whole world. One board,
   two principals: one real and mislabelled as a peripheral, one empty and correctly named. Filed
   as [#81](https://github.com/ShishkinDmitriy/agora/issues/81).
 - **The wake interval still groups by comparing command-topic strings.**
