@@ -205,17 +205,39 @@ class Agent:
                 log.error("%s: %s failed on a new reading: %s", self.id, module.name, exc)
 
     def _on_message(self, client, userdata, msg) -> None:
+        """Offer the message to EVERY module, and note whether any of them wanted it.
+
+        It used to `return` on the first module whose `handle` came back true, which read as an
+        optimisation and was a defect: a second module subscribed to the same topic never saw
+        the message, and nothing anywhere said so. Exactly what #51 fixed one level down, where
+        `PerceptionModule.handle` returned after the first SENSOR owning a topic and a board's
+        second channel went unread.
+
+        It stayed here because nothing wanted one topic twice. Actuation reading its valves'
+        status is the case that wants it — a supplier runs actuation beside hosting — and the
+        old loop would have handed the status to whichever module came first in the list.
+
+        `reading_recorded` above has always offered to every module. This is the same shape,
+        and the two now agree.
+        """
+        handled = False
         for module in self.modules:
             try:
                 if module.handle(msg.topic, msg.payload):
-                    return
+                    handled = True
             except Exception as exc:  # one bad message must not take the agent down
                 log.error("%s: %s failed on %s: %s", self.id, module.name, msg.topic, exc)
+        if handled:
+            return
         # Nobody claimed it, and until now nobody said so. This is the shape a topic
         # disagreement takes — the world names one channel, the device publishes on another,
         # both ends look healthy, and the message is dropped in silence. It cannot be an error
         # (a wildcard subscription may legitimately catch more than one module wants) but it
         # must not be invisible.
+        #
+        # `handled` means at least one module TOOK it, not that every module was asked. The
+        # difference is the whole value of this line: offering the message to everyone would
+        # otherwise silence the warning for ever.
         log.warning("%s: nothing handled a message on %s", self.id, msg.topic)
 
     def run(self) -> None:
