@@ -1,4 +1,4 @@
-"""ag:Subscribing — attention as the agent's own decision, bounded by the constitution.
+"""perception:Subscribing — attention as the agent's own decision, bounded by the constitution.
 
 The agent states an interval and the device keeps to it. What is the agent's here is the
 *policy* — how often to look, and how that moves with trouble; what it delegates is only the
@@ -181,38 +181,38 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     # them, so the cut started inside the platform block and took the rest of it with it. The
     # part goes too — a KY-015 hosting two channels this world no longer has would be a
     # platform pointing at nothing.
-    for block in ("ag:air_temp_fern a ag:Sensor ;", "ag:air_humidity_fern a ag:Sensor ;",
+    for block in ("ag:air_temp_fern a perception:Sensor ;", "ag:air_humidity_fern a perception:Sensor ;",
                   "ag:air_sensor_fern a sosa:Platform ;"):
         start = s.index(block)
         s = s[:start] + s[s.index(" .\n", start) + 3:]
     s = s.replace("    sosa:hosts ag:moisture_sensor_fern , ag:air_sensor_fern ;",
                   "    sosa:hosts ag:moisture_sensor_fern ;")
     s = s.replace(
-        "ag:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;",
-        "ag:polls ag:moisture_sensor_fern ;")
+        "perception:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;",
+        "perception:polls ag:moisture_sensor_fern ;")
 
     s = s.replace(
         "ag:fern_agent a ag:Agent ;",
-        'ag:chatter_fern a ag:Sensor ;\n'
+        'ag:chatter_fern a perception:Sensor ;\n'
         '    ag:localId "chatter_fern" ;\n'
         '    mqtt:onBus ag:local_bus ;\n'
-        '    ag:senseMode ag:Push ;\n'          # keeps its own clock, takes no orders
-        "    ag:monitors ag:fern ;\n"
+        '    perception:senseMode perception:Push ;\n'          # keeps its own clock, takes no orders
+        "    perception:monitors ag:fern ;\n"
         f"    sosa:observes {observes} ;\n"
         '    mqtt:readingTopic "sensors/chatter_fern/reading" .\n\n'
         "ag:fern_agent a ag:Agent ;",
     )
-    s = s.replace("ag:polls ag:moisture_sensor_fern ;",
-                  "ag:polls ag:moisture_sensor_fern , ag:chatter_fern ;")
+    s = s.replace("perception:polls ag:moisture_sensor_fern ;",
+                  "perception:polls ag:moisture_sensor_fern , ag:chatter_fern ;")
     w.write_text(s)
     (dst / "hardware.ttl").unlink(missing_ok=True)   # the stand describes one board, not this
 
-    # Gaining a push sensor means gaining ag:Listening, and that capability asks for a belief the
+    # Gaining a push sensor means gaining perception:Listening, and that capability asks for a belief the
     # agent did not need before. The refusal to start without it is the self-check working, so
     # the world has to author it — exactly as a sovereign would when adding such a device.
     b = dst / "beliefs" / "fern.ttl"
     b.write_text(b.read_text().replace(
-        "ag:readingGraceS", "ag:maxReadingAgeS 300 ;\n    ag:readingGraceS", 1))
+        "perception:readingGraceS", "perception:maxReadingAgeS 300 ;\n    perception:readingGraceS", 1))
     return dst
 
 
@@ -231,7 +231,7 @@ def test_each_module_takes_only_the_sensors_it_is_for(monkeypatch, tmp_path):
     """The derivation splits the capabilities; the runtime must split the sensors the same way.
 
     It did not. Both modules took every sensor, and since modules are ordered by
-    sorted(capabilities), ag:Listening claimed the scheduled board too — and listening never
+    sorted(capabilities), perception:Listening claimed the scheduled board too — and listening never
     re-aims, so its cadence was silently never set again.
     """
     agent = _agent_on(_two_sensor_world(tmp_path), monkeypatch)

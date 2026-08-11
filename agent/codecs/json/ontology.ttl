@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:    <http://example.org/agora#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
@@ -15,7 +16,7 @@ codec:Encoding a owl:Class ; rdfs:label "Encoding" ;
 
 codec:encoding a owl:ObjectProperty ; rdfs:range codec:Encoding ;
     rdfs:label "encoding" ;
-    rdfs:comment "THE PREMISE, stated by the world: what format this device's payloads are in. A fact about the board's firmware, like ag:senseMode, and the only half of this a world may write. ABSENT means codec:Json, which is what every board here already sends — so no shipped world states one." .
+    rdfs:comment "THE PREMISE, stated by the world: what format this device's payloads are in. A fact about the board's firmware, like perception:senseMode, and the only half of this a world may write. ABSENT means codec:Json, which is what every board here already sends — so no shipped world states one." .
 
 codec:decodedBy a owl:ObjectProperty ; rdfs:range codec:Encoding ;
     rdfs:label "decoded by" ;

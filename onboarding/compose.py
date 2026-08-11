@@ -35,7 +35,7 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import ACTUATION, AG, MQTT, WATER, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MQTT, PERCEPTION, WATER, WORLD_GRAPH
 from agent import genesis
 from agent.genesis import world_dir, worlds
 
@@ -173,9 +173,9 @@ _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?initial ?dryRate ?tick ?litres ?doseTopic ?port ?minValue ?maxValue
 WHERE {{ 
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{MQTT}readingTopic> ?readingTopic ;
-     <{AG}monitors> ?subject .
+     <{PERCEPTION}monitors> ?subject .
   OPTIONAL {{ ?d <{MQTT}commandTopic> ?commandTopic }}
-  OPTIONAL {{ ?d <{AG}senseMode> ?senseMode }}
+  OPTIONAL {{ ?d <{PERCEPTION}senseMode> ?senseMode }}
   OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
   OPTIONAL {{ ?model <{AG}modelDryRate> ?dryRate }}
   OPTIONAL {{ ?model <{AG}modelTickSeconds> ?tick }}
@@ -216,8 +216,8 @@ def _simulator(world: str, row: dict) -> str:
     environment:
       SIM_SENSOR_ID: "{sim_id}"
       SIM_READING_TOPIC: "{row['readingTopic']}"
-      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
-      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "{mode}"
       MQTT_HOST: "localhost"

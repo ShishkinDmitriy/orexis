@@ -36,7 +36,7 @@ def _caps(world: str) -> dict[str, set[str]]:
 
 def test_a_simulated_sensor_derives_the_ordinary_capability():
     """The point of the exercise. `fern` polls a device that does not exist and still comes out
-    ag:Subscribing — the same capability, running the same module, as a fern on a real board."""
+    perception:Subscribing — the same capability, running the same module, as a fern on a real board."""
     assert "Subscribing" in _caps("simulation")["fern"]
 
 

@@ -5,7 +5,7 @@ decides how stale a reading may be, because that is about belief; only one that 
 is asked for an interval, because only it could apply one. Nothing central lists these — the
 block travels with the module that reads it.
 
-A future `ag:Polling` module would read the same two figures, since they are an interval
+A future `perception:Polling` module would read the same two figures, since they are an interval
 either way — the difference is only whose timer runs it.
 
 Vocabulary: capabilities/perception/ontology.ttl. Rules: capabilities/perception/shapes.ttl.
@@ -17,14 +17,19 @@ from dataclasses import dataclass
 
 from agent.beliefs import Block
 
-from agent.ontology import term
+NS = "http://example.org/agora/perception#"
+
+
+def term(name: str) -> str:
+    """A term of this package's, by local name."""
+    return NS + name
 
 from .terms import LISTENING, SUBSCRIBING
 
 
 @dataclass(frozen=True)
 class SubscribingBeliefs:
-    """ag:Subscribing — how closely this agent watches, and how stale it lets a reading get.
+    """perception:Subscribing — how closely this agent watches, and how stale it lets a reading get.
 
     The two intervals are the agent's policy; the device merely keeps to whichever is in
     force. They are how long the device may REST, not the period between readings: the
@@ -42,11 +47,11 @@ class SubscribingBeliefs:
 
 @dataclass(frozen=True)
 class ListeningBeliefs:
-    """ag:Listening — only the freshness rule, and here it IS an absolute.
+    """perception:Listening — only the freshness rule, and here it IS an absolute.
 
     The device keeps its own clock and takes no orders, so there is no interval for the agent to
     be relative to. All it can state is how long it will wait before deciding the thing has gone
-    quiet. That asymmetry with ag:Subscribing is the point: the two capabilities differ in who
+    quiet. That asymmetry with perception:Subscribing is the point: the two capabilities differ in who
     holds the clock, and the freshness rule differs the same way."""
 
     max_age_s: int

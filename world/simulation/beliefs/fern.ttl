@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
@@ -10,11 +11,11 @@
 #  Nothing here is repeated from the world: the wiring (which plant, which sensor, which
 #  market) is stated once, publicly, there. This file is only what fern *thinks*.
 
-##  ag:Subscribing — the interval it asks its board to keep
+##  perception:Subscribing — the interval it asks its board to keep
 ag:fern_agent
-    ag:fastSleepS 30 ;          # at/below its own low band: watch closely
-    ag:slowSleepS 600 ;         # comfortable: let the board sleep, save energy
-    ag:readingGraceS 45 .     # slack past the cadence it asked for, before it calls the sensor quiet
+    perception:fastSleepS 30 ;          # at/below its own low band: watch closely
+    perception:slowSleepS 600 ;         # comfortable: let the board sleep, save energy
+    perception:readingGraceS 45 .     # slack past the cadence it asked for, before it calls the sensor quiet
 
 ##  market:Bidding — what it wants and what it will pay
 ag:fern_agent

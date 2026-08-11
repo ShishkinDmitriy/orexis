@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix ag:   <http://example.org/agora#> .
@@ -22,19 +23,19 @@ mqtt:MqttSensorShape a sh:NodeShape ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://example.org/agora/mqtt#onBus> ?bus ;
-                      <http://example.org/agora#monitors> ?subject .
+                      <http://example.org/agora/perception#monitors> ?subject .
             }
         """ ] ;
     sh:property [ sh:path mqtt:readingTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
 
 mqtt:InstructableSensorShape a sh:NodeShape ;
-    rdfs:comment "Only a device that accepts instruction has a command channel. Stating one for a self-clocked board would be a lie about the hardware — and stating none for a board that DOES take instruction makes it undrivable, so its agent would silently get no capability at all. Both instructable modes are covered: ag:Pull takes a request, ag:Scheduled takes an interval, and neither can be reached without a channel to say it on." ;
+    rdfs:comment "Only a device that accepts instruction has a command channel. Stating one for a self-clocked board would be a lie about the hardware — and stating none for a board that DOES take instruction makes it undrivable, so its agent would silently get no capability at all. Both instructable modes are covered: perception:Pull takes a request, perception:Scheduled takes an interval, and neither can be reached without a channel to say it on." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                VALUES ?mode { <http://example.org/agora#Pull>
-                               <http://example.org/agora#Scheduled> }
-                ?this <http://example.org/agora#senseMode> ?mode ;
+                VALUES ?mode { <http://example.org/agora/perception#Pull>
+                               <http://example.org/agora/perception#Scheduled> }
+                ?this <http://example.org/agora/perception#senseMode> ?mode ;
                       <http://example.org/agora/mqtt#onBus> ?bus .
             }
         """ ] ;

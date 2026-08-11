@@ -22,10 +22,10 @@
 SELECT ?term ?value WHERE {
   { SELECT (MIN(?s) AS ?lo) (MAX(?s) AS ?hi) (MIN(?n) AS ?least) WHERE {
       GRAPH <$evidence> { ?e a ag:Evidence ; ag:sampleSpread ?s ; ag:sampleCount ?n } } }
-  GRAPH ?o { ag:PerceptionCapability ag:steadyFraction ?steady ; ag:reviewWindow ?window }
-  GRAPH <$evidence> { ?r a ag:Range ; ag:onTerm ag:slowSleepS ;
+  GRAPH ?o { perception:PerceptionCapability perception:steadyFraction ?steady ; perception:reviewWindow ?window }
+  GRAPH <$evidence> { ?r a ag:Range ; ag:onTerm perception:slowSleepS ;
                          ag:notBelow ?floor ; ag:notAbove ?ceiling }
   FILTER(?least >= ?window)
-  BIND(ag:slowSleepS AS ?term)
+  BIND(perception:slowSleepS AS ?term)
   BIND(IF(?lo = 0.0 || ?hi > ?steady, ?floor, ?ceiling) AS ?value)
 }

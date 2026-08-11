@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix actuation: <http://example.org/agora/actuation#> .
@@ -14,7 +15,7 @@
 #
 #  Note what is NOT written here: no ag:hasCapability. What an agent can DO is *derived* at
 #  genesis from this wiring (each capability's rules.ru) — an agent on a scheduled sensor gains
-#  ag:Subscribing, one on a push-mode sensor gains ag:Listening instead, one plumbed into a market gains
+#  perception:Subscribing, one on a push-mode sensor gains perception:Listening instead, one plumbed into a market gains
 #  market:Bidding, one holding valves gains actuation:Actuation. Capability follows from hardware and
 #  connections, so it cannot drift from them: swap a sensor's firmware, re-run genesis, and
 #  the agent's abilities change with it.
@@ -101,27 +102,27 @@ ag:succulent a water:Plant ;
     water:dryRatePerTick 0.008 ; water:litresPerFraction 2.0 .
 
 ##########  Plant agents — each wired to its own sensor and into the market  ##########
-#  ag:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
+#  perception:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
 #  From these two connections, derivation gives each of them Subscribing + Bidding.
 
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
     ag:actsFor ag:fern ;
-    ag:polls ag:moisture_sensor_fern ;
+    perception:polls ag:moisture_sensor_fern ;
     market:bidsIn ag:barrel1_market ;
     mqtt:eventTopic "readings/fern" .
 
 ag:tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
     ag:actsFor ag:tomato ;
-    ag:polls ag:moisture_sensor_tomato ;
+    perception:polls ag:moisture_sensor_tomato ;
     market:bidsIn ag:barrel1_market ;
     mqtt:eventTopic "readings/tomato" .
 
 ag:succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
     ag:actsFor ag:succulent ;
-    ag:polls ag:moisture_sensor_succulent ;
+    perception:polls ag:moisture_sensor_succulent ;
     market:bidsIn ag:barrel1_market ;
     mqtt:eventTopic "readings/succulent" .
 
@@ -139,35 +140,35 @@ ag:succulent_agent a ag:Agent ;
 #
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
-ag:fern_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .
-ag:tomato_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .
-ag:succulent_agent ag:commits [ ag:onTerm ag:slowSleepS ; ag:notBelow 900 ; ag:notAbove 900 ] .
+ag:fern_agent ag:commits [ ag:onTerm perception:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .
+ag:tomato_agent ag:commits [ ag:onTerm perception:slowSleepS ; ag:notBelow 600 ; ag:notAbove 900 ] .
+ag:succulent_agent ag:commits [ ag:onTerm perception:slowSleepS ; ag:notBelow 900 ; ag:notAbove 900 ] .
 
 ##########  Sensors — scheduled boards: they keep to an interval and sleep between  ##########
 
-ag:moisture_sensor_fern a ag:Sensor ;
+ag:moisture_sensor_fern a perception:Sensor ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
-    ag:senseMode ag:Scheduled ;     # firmware keeps a given interval -> its agent gains ag:Subscribing
-    ag:monitors ag:fern ;
+    perception:senseMode perception:Scheduled ;     # firmware keeps a given interval -> its agent gains perception:Subscribing
+    perception:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
-ag:moisture_sensor_tomato a ag:Sensor ;
+ag:moisture_sensor_tomato a perception:Sensor ;
     ag:localId "moisture_sensor_tomato" ;
     mqtt:onBus ag:local_bus ;
-    ag:senseMode ag:Scheduled ;     # firmware keeps a given interval -> its agent gains ag:Subscribing
-    ag:monitors ag:tomato ;
+    perception:senseMode perception:Scheduled ;     # firmware keeps a given interval -> its agent gains perception:Subscribing
+    perception:monitors ag:tomato ;
     sosa:observes water:SoilMoisture ;
     mqtt:readingTopic "sensors/moisture_sensor_tomato/reading" ;
     mqtt:commandTopic "sensors/moisture_sensor_tomato/command" .
 
-ag:moisture_sensor_succulent a ag:Sensor ;
+ag:moisture_sensor_succulent a perception:Sensor ;
     ag:localId "moisture_sensor_succulent" ;
     mqtt:onBus ag:local_bus ;
-    ag:senseMode ag:Scheduled ;     # firmware keeps a given interval -> its agent gains ag:Subscribing
-    ag:monitors ag:succulent ;
+    perception:senseMode perception:Scheduled ;     # firmware keeps a given interval -> its agent gains perception:Subscribing
+    perception:monitors ag:succulent ;
     sosa:observes water:SoilMoisture ;
     mqtt:readingTopic "sensors/moisture_sensor_succulent/reading" ;
     mqtt:commandTopic "sensors/moisture_sensor_succulent/command" .

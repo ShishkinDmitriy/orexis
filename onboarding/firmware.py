@@ -38,8 +38,8 @@ from pathlib import Path
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
-from agent.ontology import (AG, DHT11, MC, MQTT, ONEWIRE, ONTOLOGY_GRAPH, PROBE,
-                            RGBLED, WORLD_GRAPH)
+from agent.ontology import (AG, DHT11, MC, MQTT, ONEWIRE, ONTOLOGY_GRAPH, PERCEPTION,
+                            PROBE, RGBLED, WORLD_GRAPH)
 
 log = logging.getLogger("firmware")
 
@@ -91,7 +91,7 @@ WHERE {{
 
 _BOUNDS_Q = f"""
 SELECT ?min ?max WHERE {{ 
-  <{AG}PerceptionCapability> <{AG}minSleepS> ?min ; <{AG}maxSleepS> ?max  }} LIMIT 1"""
+  <{PERCEPTION}PerceptionCapability> <{PERCEPTION}minSleepS> ?min ; <{PERCEPTION}maxSleepS> ?max  }} LIMIT 1"""
 
 
 def _env(path: Path, key: str) -> str | None:

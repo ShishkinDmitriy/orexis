@@ -163,7 +163,7 @@ def test_the_lookup_finds_the_implementation():
 
 def test_a_member_this_build_does_not_implement_is_reported_not_raised():
     """A world may name a declared-but-unimplemented member — `codec:Cbor` is exactly the
-    position `ag:Polling` and `ag:Consulting` hold. The shapes deliberately allow it, so the
+    position `perception:Polling` and `ag:Consulting` hold. The shapes deliberately allow it, so the
     honest cost is one unread sensor and a warning rather than a society that cannot start."""
     probe = sensors_of()["moisture_sensor_fern"]
     assert codec_for(probe.__class__(**{**vars(probe), "decoded_by": CBOR})) is None

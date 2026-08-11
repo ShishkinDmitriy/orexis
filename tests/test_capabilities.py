@@ -97,11 +97,11 @@ def _world_with_push_sensor():
     st = genesis_store()
     st.update(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
+                 ag:moisture_sensor_fern perception:senseMode perception:Scheduled }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern ag:senseMode ag:Push }} }}
+                 ag:moisture_sensor_fern perception:senseMode perception:Push }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern ag:senseMode ag:Scheduled }} }}
+                 ag:moisture_sensor_fern perception:senseMode perception:Scheduled }} }}
     """)
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():

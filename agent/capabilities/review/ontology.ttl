@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -33,7 +34,7 @@ ag:Consulting a ag:ReviewCapability ; rdfs:label "Consulting" ;
 
 ag:reviewIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "review interval (s)" ;
-    rdfs:comment "The FLOOR between two arisings, not the schedule. A review plans its own next one from when its decision could possibly show an effect — checking sooner than a fresh window of readings can accumulate is looking at the same evidence twice. This figure only stops it planning something absurdly soon. Required of an agent that reviews, exactly as ag:fastSleepS is required of one that subscribes; what says whether an agent reviews at all is whether it was given any room to move." .
+    rdfs:comment "The FLOOR between two arisings, not the schedule. A review plans its own next one from when its decision could possibly show an effect — checking sooner than a fresh window of readings can accumulate is looking at the same evidence twice. This figure only stops it planning something absurdly soon. Required of an agent that reviews, exactly as perception:fastSleepS is required of one that subscribes; what says whether an agent reviews at all is whether it was given any room to move." .
 
 #################  What may be re-picked, and how far  #################
 #  ONE triple per revisable belief, in the ontology of the package that owns the term, naming

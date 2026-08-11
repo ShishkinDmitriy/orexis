@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -6,50 +7,50 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 # Rules that hold for perception however it is done. They target the capability FAMILY, so a
-# new transport inherits them by declaring its capabilities as ag:PerceptionCapability rather
+# new transport inherits them by declaring its capabilities as perception:PerceptionCapability rather
 # than by restating any of this.
 
-ag:PerceivingAgentShape a sh:NodeShape ;
+perception:PerceivingAgentShape a sh:NodeShape ;
     rdfs:comment "Anything that perceives must be wired to something to perceive with, and must say how stale a reading may be before it stops trusting it. That judgment is about belief, not control, so it is required of every perceiver — including one that cannot drive its device at all." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://example.org/agora#hasCapability> ?cap .
-                ?cap a <http://example.org/agora#PerceptionCapability> .
+                ?cap a <http://example.org/agora/perception#PerceptionCapability> .
             }
         """ ] ;
-    sh:property [ sh:path ag:polls ; sh:minCount 1 ; sh:class ag:Sensor ;
+    sh:property [ sh:path perception:polls ; sh:minCount 1 ; sh:class perception:Sensor ;
                   sh:message "an agent that perceives must be wired to at least one sensor" ] ;
-    sh:property [ sh:path ag:readingGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path perception:readingGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
                   sh:message "a perceiving agent must say how stale a reading may be before it stops trusting it" ] .
 
-ag:SensorShape a sh:NodeShape ;
+perception:SensorShape a sh:NodeShape ;
     rdfs:comment "A sensor reads exactly one subject, says which property it observes, and states how it is driven — because its agent's capability is derived from that." ;
-    sh:targetClass ag:Sensor ;
-    sh:property [ sh:path ag:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:targetClass perception:Sensor ;
+    sh:property [ sh:path perception:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
-    sh:property [ sh:path ag:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ag:SenseMode ;
+    sh:property [ sh:path perception:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class perception:SenseMode ;
                   sh:message "a sensor must say how it is driven — its agent's capability follows from it" ] .
 
-ag:DoubleCoveredPropertyShape a sh:NodeShape ;
+perception:DoubleCoveredPropertyShape a sh:NodeShape ;
     rdfs:comment "Two sensors reading the SAME property of the SAME subject. A Warning and not a Violation, because it is a legitimate rig — two probes at opposite ends of one pot are one feature of interest measured twice — and the behaviour is defined: they share one observation node and the last writer wins. It is flagged because the other reading of it is a modelling slip: strictly, two probes in different soil observe different features of interest, and saying so gives each its own record instead of a value that flickers between them. Different properties of one subject are ordinary and silent; that is the case this shape must not catch, and why it tests the property and not just the subject." ;
-    sh:targetClass ag:Sensor ;
+    sh:targetClass perception:Sensor ;
     sh:severity sh:Warning ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "another sensor already reads this property of this subject — they will share one observation and the last writer wins. If they are really measuring different soil, model them as two subjects." ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/agora#monitors> ?subject ;
+                $this <http://example.org/agora/perception#monitors> ?subject ;
                       <http://www.w3.org/ns/sosa/observes> ?property .
-                ?other a <http://example.org/agora#Sensor> ;
-                       <http://example.org/agora#monitors> ?subject ;
+                ?other a <http://example.org/agora/perception#Sensor> ;
+                       <http://example.org/agora/perception#monitors> ?subject ;
                        <http://www.w3.org/ns/sosa/observes> ?property .
                 FILTER (?other != $this)
             }
         """ ] .
 
-ag:ObservationShape a sh:NodeShape ;
+perception:ObservationShape a sh:NodeShape ;
     rdfs:comment "Every observation is a complete, authored, versioned MEASUREMENT, carrying the time it was taken — which is what the freshness rule checks. No band: the verdict is each agent's own and is never recorded." ;
     sh:targetClass sosa:Observation ;
     sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
@@ -62,32 +63,32 @@ ag:ObservationShape a sh:NodeShape ;
                   sh:message "every reading carries an author" ] .
 
 
-ag:SubscribingAgentShape a sh:NodeShape ;
+perception:SubscribingAgentShape a sh:NodeShape ;
     rdfs:comment "Stating an interval is what makes these figures meaningful, so only this capability demands them. It must watch more closely when in trouble than when comfortable, and neither figure may leave the constitutional bounds — which are stated in this package's ontology.ttl, clamped again by the agent, and clamped a third time by the firmware. A polling agent would need the same two, since they are its own timer rather than the device's; a listening one can hold neither." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
-                                       <http://example.org/agora#Subscribing> }
+                                       <http://example.org/agora/perception#Subscribing> }
         """ ] ;
-    sh:property [ sh:path ag:fastSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path perception:fastSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
-                  sh:lessThanOrEquals ag:slowSleepS ;
+                  sh:lessThanOrEquals perception:slowSleepS ;
                   sh:message "the fast interval must be within the constitutional bounds and no slower than the slow one" ] ;
-    sh:property [ sh:path ag:slowSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path perception:slowSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
                   sh:message "no agent may sleep past the constitutional ceiling — autonomy over attention, never the freedom to sleep through a drought" ] .
 
-ag:ListeningAgentShape a sh:NodeShape ;
+perception:ListeningAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that ONLY listens must not hold an interval: requiring a policy it cannot enforce would be theatre, and stating one would misdescribe the hardware. The exclusion matters — an agent may hold a scheduled sensor and a push one, and then it needs both blocks. Written as 'listens and does not subscribe' rather than 'listens', because the earlier form made the two shapes contradict each other on such an agent: one demanded an interval and the other forbade it, so a perfectly ordinary rig — a plant with a scheduled moisture probe and a push thermometer — could not be validated at all." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://example.org/agora#hasCapability>
-                      <http://example.org/agora#Listening> .
+                      <http://example.org/agora/perception#Listening> .
                 FILTER NOT EXISTS { ?this <http://example.org/agora#hasCapability>
-                                          <http://example.org/agora#Subscribing> }
+                                          <http://example.org/agora/perception#Subscribing> }
             }
         """ ] ;
-    sh:property [ sh:path ag:fastSleepS ; sh:maxCount 0 ;
+    sh:property [ sh:path perception:fastSleepS ; sh:maxCount 0 ;
                   sh:message "a listening agent states no interval — its device does not take one" ] ;
-    sh:property [ sh:path ag:slowSleepS ; sh:maxCount 0 ] .
+    sh:property [ sh:path perception:slowSleepS ; sh:maxCount 0 ] .

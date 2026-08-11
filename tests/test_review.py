@@ -11,7 +11,7 @@ import pytest
 
 from agent import genesis
 from agent.capabilities.review.graphs import evidence_graph, revisions_graph
-from agent.ontology import SENSED_GRAPH, WORLD_GRAPH, beliefs_graph, term
+from agent.ontology import PERCEPTION, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph, term
 from agent.capabilities.review import RECKONING, REVIEW
 from agent.capabilities.review.module import Range, world_ranges
 from agent.store import bindings
@@ -19,7 +19,9 @@ from agent.capabilities.review.summary import RING, Summaries
 
 from conftest import WORLDS_ROOT, build_agent, genesis_store
 
-SLOW = term("slowSleepS")
+# Perception's term, built from perception's namespace. The kernel `term()` is still
+# imported for review's own, which is the distinction this sweep exists to make visible.
+SLOW = PERCEPTION + "slowSleepS"
 AUTHORED = 600.0   # fern's first pick
 COMMITTED = 600.0  # and the floor it commits to
 CEILING = 900.0    # the constitutional ceiling it may relax to
@@ -42,7 +44,7 @@ def feed(agent, values, sensor=None):
 
 def window(agent) -> int:
     rows = bindings(agent.store.query(
-        "SELECT ?n WHERE { GRAPH ?g { ag:PerceptionCapability ag:reviewWindow ?n } }"))
+        "SELECT ?n WHERE { GRAPH ?g { perception:PerceptionCapability perception:reviewWindow ?n } }"))
     return int(rows[0]["n"])
 
 

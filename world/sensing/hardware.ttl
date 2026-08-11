@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -52,7 +53,7 @@ ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     mqtt:onBus ag:local_bus ;
     mc:firmware "moisture-sensor" ;
     mc:carries ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
-    rdfs:comment "Deep-sleeps between readings, which is why its agent is ag:Subscribing: the board keeps the interval and cannot be reached in between." .
+    rdfs:comment "Deep-sleeps between readings, which is why its agent is perception:Subscribing: the board keeps the interval and cannot be reached in between." .
 
 ##########  The board's own legs  ##########
 #

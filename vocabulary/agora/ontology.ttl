@@ -1,3 +1,4 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
@@ -35,7 +36,7 @@ ag:Device a owl:Class ; rdfs:label "Device" ;
 
 #################  Devices that are not there  #################
 # A simulated device is an ORDINARY device in every statement the world makes about it: it is
-# on a bus, it has topics, it has a sense mode, and an agent is wired to it with ag:polls like
+# on a bus, it has topics, it has a sense mode, and an agent is wired to it with perception:polls like
 # any other. The only extra fact is that a process stands in for it.
 #
 # The marker is on the DEVICE and never on the agent, and that is the whole design. An agent
@@ -64,7 +65,7 @@ ag:modelDryRate a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range
 
 ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:integer ;
     rdfs:label "model tick seconds" ;
-    rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a ag:Push device, which keeps its own clock; a ag:Scheduled one keeps the interval its agent gives it, exactly as a board does." .
+    rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a perception:Push device, which keeps its own clock; a perception:Scheduled one keeps the interval its agent gives it, exactly as a board does." .
 
 #################  Where a society executes  #################
 ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;

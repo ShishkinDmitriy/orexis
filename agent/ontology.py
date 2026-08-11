@@ -1,7 +1,7 @@
 """The kernel vocabulary — prefixes and graph names, and deliberately nothing else.
 
 Everything here is true of *every* capability: how a term is spelled, and which graph a fact
-lives in. A term that belongs to one capability — `ag:Subscribing`, `market:Bidding` — is named by
+lives in. A term that belongs to one capability — `perception:Subscribing`, `market:Bidding` — is named by
 that capability's own package, so this file never grows when one is added. That is the whole
 reason it is this short.
 
@@ -123,7 +123,7 @@ _BELIEFS = _GRAPH + "beliefs/"
 # so nothing here lists them and adding one is a vocabulary edit.
 #
 # Why it matters beyond tidiness: a single basic graph pattern inside one `GRAPH` clause must
-# match entirely within that graph, so `?agent ag:polls ?s . ?s a ag:Sensor` silently returns
+# match entirely within that graph, so `?agent perception:polls ?s . ?s a perception:Sensor` silently returns
 # nothing the moment those two facts land in different graphs. The default graph is what closes
 # that trap, and the trap's failure is an empty result rather than an error — which is why the
 # set must never be something a reader can forget to update.

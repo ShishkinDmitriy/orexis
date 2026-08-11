@@ -1,14 +1,15 @@
+@prefix perception: <http://example.org/agora/perception#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
 
 #  Tomato's agent's PRIVATE beliefs. See genesis/beliefs-fern.ttl for what each term means.
 
-##  ag:Subscribing
+##  perception:Subscribing
 ag:tomato_agent
-    ag:fastSleepS 30 ;
-    ag:slowSleepS 600 ;
-    ag:readingGraceS 45 .
+    perception:fastSleepS 30 ;
+    perception:slowSleepS 600 ;
+    perception:readingGraceS 45 .
 
 ##  market:Bidding
 ag:tomato_agent

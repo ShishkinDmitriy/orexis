@@ -69,7 +69,7 @@ def codec_for(sensor) -> Codec | None:
     capability — never a search, and never a default applied here.
 
     None is a legitimate answer and is reported, not raised: a world may name a member that is
-    declared in the vocabulary and implemented by nobody, which is the position `ag:Polling` and
+    declared in the vocabulary and implemented by nobody, which is the position `perception:Polling` and
     `ag:Consulting` already hold. The honest cost is one unread sensor and a warning, not a
     society that cannot start.
     """

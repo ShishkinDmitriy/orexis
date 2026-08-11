@@ -7,7 +7,7 @@
 # gains an interval to state with no edit to the agent, because there is nothing about it to
 # edit.
 #
-# ag:Pull -> ag:Polling is deliberately ABSENT. The vocabulary declares both, because there
+# perception:Pull -> perception:Polling is deliberately ABSENT. The vocabulary declares both, because there
 # are three ways to hold a clock and the T-Box should say so; but no board here is always
 # reachable, and granting a capability no module implements would only produce a startup
 # warning. The rule is the last piece to add, not the first.
@@ -17,12 +17,13 @@
 # Whether a given binding is COMPLETE (a pull sensor on a bus needs a command channel) is a
 # question for that transport's shapes, not for this rule.
 
+PREFIX perception: <http://example.org/agora/perception#>
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 #  Both rules ask what a thing IS, literally — no `rdfs:subClassOf*` walk, because the
 #  vocabulary's entailments are asserted before any rule runs (agora/inference.py). What they
-#  cannot do is name one graph: `ag:polls` is the sovereign's and `a ag:Sensor` may be entailed,
+#  cannot do is name one graph: `perception:polls` is the sovereign's and `a perception:Sensor` may be entailed,
 #  so the two facts live apart and a single `GRAPH` clause would match neither pair. `$given`
 #  becomes the `USING` clauses that merge what is GIVEN — asserted and entailed — and
 #  deliberately not what another rule derived. `$derived` is where conclusions land. Both are
@@ -32,12 +33,12 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 #  Keeps to an interval it is given -> the agent STATES that interval.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability ag:Subscribing } }
+    ?agent ag:hasCapability perception:Subscribing } }
 $given
-WHERE  { ?agent ag:polls ?sensor . ?sensor a ag:Sensor ; ag:senseMode ag:Scheduled } ;
+WHERE  { ?agent perception:polls ?sensor . ?sensor a perception:Sensor ; perception:senseMode perception:Scheduled } ;
 
 #  Announces on its own clock -> the agent can only RECEIVE, and is never asked for a cadence.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability ag:Listening } }
+    ?agent ag:hasCapability perception:Listening } }
 $given
-WHERE  { ?agent ag:polls ?sensor . ?sensor a ag:Sensor ; ag:senseMode ag:Push }
+WHERE  { ?agent perception:polls ?sensor . ?sensor a perception:Sensor ; perception:senseMode perception:Push }

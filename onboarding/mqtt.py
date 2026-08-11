@@ -10,7 +10,7 @@ the world already states every channel and who is wired to it.
 **The ACL is the wiring.** Nothing is listed by hand. The same connections that give an agent a
 capability give it exactly the topics that capability needs:
 
-    ag:polls S          read S's readingTopic, write S's commandTopic
+    perception:polls S          read S's readingTopic, write S's commandTopic
     market:bidsIn M         read M's offerTopic and M's voucherTopic/<me>, write M's bidTopic/<me>
     market:hosts M          write M's offerTopic and voucherTopic/<bidder>, read bidTopic/+
                         and each bidder's eventTopic
@@ -55,7 +55,7 @@ from . import certs
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from agent.capabilities.market.terms import NS as MARKET
-from agent.ontology import ACTUATION, AG, MQTT, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MQTT, PERCEPTION, WORLD_GRAPH
 
 log = logging.getLogger("mqtt")
 
@@ -115,7 +115,7 @@ _AGENTS_Q = _q(f"""?id ?eventTopic WHERE {{
  }}""")
 
 _POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{AG}polls> ?s .
+  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{PERCEPTION}polls> ?s .
   ?s <{MQTT}readingTopic> ?readingTopic .
   OPTIONAL {{ ?s <{MQTT}commandTopic> ?commandTopic }}
  }}""")
@@ -142,7 +142,7 @@ WHERE {{
 # prevent. The grant belongs to the DEVICE, not to its agent: an agent in this world has no
 # more business reading a valve's traffic than one in any other world.
 _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{ 
-  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{AG}monitors> ?subject .
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{PERCEPTION}monitors> ?subject .
   ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
  }}""")
 
