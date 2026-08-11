@@ -229,6 +229,15 @@ the platform was missing, but that a platform in a world with no stated hardware
 modelling question. A simulated device is a container, and whether that is *physical hosting* in
 SOSA's sense is exactly what has to be decided first.
 
+# The codec's bearer moved after this was written
+
+This record derives `codec:decodedBy` onto the **sensor**, and it no longer does. An encoding is a
+property of a stream: three sensors sharing a topic carried three copies of one fact with nothing
+comparing them, and a command channel — which has no sensor at all — could not carry one. It is
+derived onto an `ag:Channel` now, and a sensor reads its codec through `ag:publishesOn`. See
+[a-stream-is-a-thing](a-stream-is-a-thing.md). Everything else here stands: the families, the
+premise-then-conclusion discipline, and the pointer staying a function.
+
 # Seams left open
 
 - **`transports/` still searches at boot, and it is the same defect.** `MqttDriver.claims()`

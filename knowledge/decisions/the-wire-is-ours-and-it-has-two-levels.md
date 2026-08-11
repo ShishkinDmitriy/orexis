@@ -170,9 +170,11 @@ principal, and its sensors' topics are its grants.
 
 # Seams left open
 
-- **Nothing is built.** This record is the design; neither `ag:Principal` nor a channel exists
-  yet, the codec has not moved, and the hole it would close — two sensors on one stream with two
-  encodings validating clean — is still open.
+- **Half is built.** The channel exists and the codec moved onto it. `ag:Principal` does not:
+  moving the credential onto the board collides with a property
+  [series-and-bus-isolation](series-and-bus-isolation.md) holds — that one flashed board works in
+  either world — and the collision is described in [a-stream-is-a-thing](a-stream-is-a-thing.md)
+  rather than resolved.
 - **The firmware's identity is wrong and unfixed.** Filed rather than folded in, because changing
   which principal a board connects as rewrites its credential and its ACL — the regression class
   that [#62](https://github.com/ShishkinDmitriy/agora/pull/62) belongs to — and needs a reflash to
@@ -181,8 +183,8 @@ principal, and its sensors' topics are its grants.
   the day something needs them, and `ag:senseMode`'s values are `sosa:Procedure`s by definition —
   a cheap alignment that belongs with whatever next touches
   [who-holds-the-clock](who-holds-the-clock.md).
-- **A channel is not a node yet.** This record says the encoding belongs to one and nothing
-  declares one: `ag:readingTopic` is still a literal, and until a stream is a thing the shape that
-  would refuse two encodings on one has nothing to target. That is the whole of what remains of
-  [#79](https://github.com/ShishkinDmitriy/agora/issues/79)'s second stage, and its remaining
-  checkboxes name the wrong bearer as a result.
+- ~~**A channel is not a node yet.**~~ **Built** in
+  [a-stream-is-a-thing](a-stream-is-a-thing.md): one node per distinct topic, derived from what
+  devices already state, with the encoding on it and a shape refusing a second. The hole this
+  record predicted turned out to be real — accepted on `main`, refused now — though the evidence
+  first offered for it was not, which that record explains.
