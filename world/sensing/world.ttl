@@ -1,4 +1,5 @@
 @prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix market: <http://example.org/agora/market#> .
@@ -71,6 +72,34 @@ ag:fern a sosa:FeatureOfInterest ;
 #  before this nothing in the graph said which was which. None of them states a calibration,
 #  so all three get scaling:Identity: the firmware scales before it publishes, and what
 #  arrives is already the quantity. Stating the unit converts nothing.
+
+#  WHAT IS MOUNTED ON WHAT, in the one vocabulary an agent may hold for it. `sosa:Platform` is
+#  *an entity that hosts other entities, particularly Sensors, Actuators, Samplers, and other
+#  Platforms*, and `sosa:hosts` is that relation — so a board hosting a part hosting two
+#  channels is expressible without inventing a term. See decisions/a-board-is-a-platform.md.
+#
+#  It is stated HERE rather than read from the wiring because an agent is never given
+#  `hardware.ttl` (agent/genesis.py, HARDWARE_FILES) — the enforcement is that the file is not
+#  in the container. The wiring says the same thing in its own words: `mc:carries` is now
+#  `rdfs:subPropertyOf sosa:hosts`, so a sovereign loading both sees one fact twice and
+#  `tests/test_layout.py` refuses a society whose hosting contradicts its hardware.
+#
+#  `ag:status_led_fern` is deliberately absent. The board carries it and the society has no
+#  business knowing: an agent polls sensors, and a thing it can never observe is the
+#  sovereign's. What is projected is the hosting of things the society already names.
+
+ag:esp32_fern a sosa:Platform ;
+    ag:localId "esp32_fern" ;
+    sosa:hosts ag:moisture_sensor_fern , ag:air_sensor_fern ;
+    rdfs:comment "The board. One MQTT client, one credential, one wake — which is why its three channels share a topic and a cadence, and why those are facts about IT rather than about any one of them." .
+
+#  The KY-015 itself, which until now the society did not name at all: its two channels were
+#  loose sensors with nothing tying them to the part they read. That was the gap issue #51 left
+#  open when it split them, and hosting is the thing that closes it.
+ag:air_sensor_fern a sosa:Platform ;
+    ag:localId "air_sensor_fern" ;
+    sosa:hosts ag:air_temp_fern , ag:air_humidity_fern ;
+    rdfs:comment "One part reporting two properties. A Platform rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it hosts the two that do." .
 
 ag:moisture_sensor_fern a ag:Sensor ;
     ag:localId "moisture_sensor_fern" ;
