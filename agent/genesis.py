@@ -28,7 +28,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from . import inference, loader, provenance
+from . import config, inference, loader, provenance, vocabulary
 from .config import REPO_ROOT
 from .ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
@@ -256,9 +256,17 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
 
 def open_belief_base(world: Path, agent_id: str, path: str | None = None,
                      rebirth: bool = False) -> Store:
-    """An agent's whole boot sequence: open the store, refresh the world, be born if new."""
+    """An agent's whole boot sequence: open the store, refresh the world, be born if new.
+
+    Then check that the store still speaks this vocabulary. A volume outlives the code that
+    wrote it — that is what makes beliefs the agent's rather than the sovereign's — so it can be
+    older than the terms the code now asks for, and reading it would find nothing rather than
+    fail. Last, because it is about what is in the store once everything that writes has run.
+    See agora/vocabulary.py and issue #87.
+    """
     st = Store(path)
     refresh_public(st, world)
     if birth(st, world, agent_id, rebirth):
         log.info("%s born — opening beliefs written", agent_id)
+    vocabulary.check(st, migrating=bool(config.env("AGORA_MIGRATE_BELIEFS")))
     return st

@@ -150,6 +150,13 @@ agent that already exists. **Done** — an agent is born on its first boot and l
 verified that a restart logs only validation and startup, and that its RocksDB volume
 persists. Discarding a belief base now takes `down -v`, which is meant to look deliberate.
 
+**And the cost of that arrived later, from the other direction.** A volume that survives every
+restart also survives every *code* change, so it can hold a vocabulary the code no longer
+speaks — which the namespace sweep proved by moving 102 terms with both gates green. Birth
+happening once is still right; what was missing was anything asking, on the way in, whether the
+store still says what the code reads. See
+[a-volume-can-be-older-than-the-vocabulary](a-volume-can-be-older-than-the-vocabulary.md).
+
 # When the world changes under a running agent
 
 The world **does** change: genesis is amendable, `ag:versionNumber` exists for exactly this, and

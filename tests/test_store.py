@@ -186,6 +186,18 @@ _ALL_TREES = _SOURCES + sorted(loader.REPO_ROOT.glob("tests/*.py"))
 # point of the test is that they look exactly like real ones.
 _NOT_A_TERM = {"NoSuchTermAnyoneAuthored", "noSuchTerm"}
 
+# The two files where naming a moved term IS the subject. Exempt by name and with a reason
+# each, rather than by a pattern: an exemption that could be met accidentally is a hole, and
+# the whole value of this guard is that a moved term cannot be spelled the old way by mistake.
+_QUOTES_THE_OLD_SPELLINGS = {
+    "test_store.py":
+        "quotes the offending forms as examples, which is what makes it readable",
+    "test_vocabulary.py":
+        "IS the old spellings — it authors a belief base the way the code wrote them before "
+        "the sweep, then opens it with the code that came after. A fixture generated from the "
+        "current vocabulary would move whenever the vocabulary did and stop being the old world",
+}
+
 
 def _kernel_terms() -> set[str]:
     """What `vocabulary/agora` actually declares, read rather than listed."""
@@ -207,8 +219,8 @@ def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
     is not "never spell out the kernel namespace" — it is that when you do, the local name has
     to be one the kernel actually has.
     """
-    if path.name == "test_store.py":
-        pytest.skip("quotes the offending forms as examples, which is what makes it readable")
+    if (why := _QUOTES_THE_OLD_SPELLINGS.get(path.name)):
+        pytest.skip(why)
 
     text = path.read_text()
     names = set(_KERNEL_IRI.findall(text))

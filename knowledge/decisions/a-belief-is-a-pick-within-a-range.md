@@ -129,7 +129,10 @@ gives three things at once:
 - the triple count **stays flat**, so the guarantee in [agent-metrics](/domain/agent-metrics.md)
   survives and #45's signal is not buried under a growing window;
 - the evidence **survives a restart**, so a rebooting agent keeps the grounds for its own
-  judgement instead of earning them again;
+  judgement instead of earning them again — and therefore outlives the code that wrote it, which
+  is why boot now checks that the vocabulary still declares what the store holds. Everything
+  persisted here is in that scope, not only the beliefs. See
+  [a-volume-can-be-older-than-the-vocabulary](a-volume-can-be-older-than-the-vocabulary.md);
 - reflection **never waits on the series store**, which attention must never do.
 
 `review:sampleMax` is kept beside the sums although a variance could be derived without it, because
