@@ -99,15 +99,31 @@ perception:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
 # One sense mode per capability, and the pairing is the whole derivation: what an agent can
 # decide about looking follows from what its hardware can be told.
 
-perception:SenseMode a owl:Class ; rdfs:label "Sense mode" .
+# A sense mode IS a `sosa:Procedure` — SOSA's definition is *a workflow, protocol, plan,
+# algorithm, or computational method specifying how to make an Observation*, and who holds the
+# clock is exactly that. So the three below are typed as Procedures as well, which makes them
+# legible to anything speaking SSN.
+#
+# The RELATION stays ours, and that is the part worth explaining. `ssn:implements` is what SSN
+# uses, and it is wider: a System may implement several Procedures. `perception:senseMode`
+# carries `sh:maxCount 1`, because a sensor has exactly one answer to *who holds the clock* and
+# the derivation is guarded on it — `perception:Subscribing` from Scheduled, `Listening` from
+# Push. Swapping the predicate would either lose that count or, keeping it, forbid a sensor ever
+# implementing a second procedure of any kind. Neither is worth the tidiness.
+#
+# So: the VALUES defer to the standard, the RELATION does not, and the reason is a cardinality
+# ours checks and theirs cannot.
 
-perception:Pull a perception:SenseMode ; rdfs:label "Pull" ;
+perception:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
+    rdfs:comment "The class exists for the count: `perception:SensorShape` asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .
+
+perception:Pull a perception:SenseMode , sosa:Procedure ; rdfs:label "Pull" ;
     rdfs:comment "Always reachable, and answers each request: ask, and it reads and replies. Gives perception:Polling. A board that deep-sleeps is NOT this, however it is asked — it cannot hear the request. RESERVED alongside perception:Polling: no rule maps it yet." .
 
-perception:Scheduled a perception:SenseMode ; rdfs:label "Scheduled" ;
+perception:Scheduled a perception:SenseMode , sosa:Procedure ; rdfs:label "Scheduled" ;
     rdfs:comment "Takes an interval and keeps to it, sleeping in between: it accepts instruction about WHEN, then clocks itself. Gives perception:Subscribing. This is what a deep-sleeping battery board is, and the reason the middle capability exists at all." .
 
-perception:Push a perception:SenseMode ; rdfs:label "Push" ;
+perception:Push a perception:SenseMode , sosa:Procedure ; rdfs:label "Push" ;
     rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives perception:Listening. The edge holds the policy, and no agent can take it back." .
 
 perception:senseMode a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range perception:SenseMode ;
