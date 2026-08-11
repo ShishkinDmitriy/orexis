@@ -14,7 +14,7 @@ timestamp: 2026-08-10T00:00:00Z
 three stages and built one:
 
 ```
-bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[calibration]──▶ quantity
+bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[scaling]──▶ quantity
 ```
 
 It deferred both outer stages on rule 2's test — nothing but JSON existed, and the board already
@@ -216,6 +216,18 @@ caller, since actuation is this pipeline reversed.
 Filed as [#79](https://github.com/ShishkinDmitriy/agora/issues/79). It is left out of this change
 deliberately: introducing a platform touches every world's topology, and doing it inside a change
 about package layout would make neither reviewable.
+
+**Half of it has since landed, and the half that did not is the interesting half.**
+[a-board-is-a-platform](a-board-is-a-platform.md) gave the fern's board a `sosa:Platform` and its
+hosting, so the entity exists. The codec did **not** move onto it, because the other two worlds
+have **nine sensors and no platform between them** — `society` and `simulation` state no wiring, so
+there is nothing to project a board from. Deriving the codec onto a platform would leave every one
+of those sensors with none, which the shape above correctly refuses.
+
+So the measured hole in this section is still open, and its cause is now known precisely: not that
+the platform was missing, but that a platform in a world with no stated hardware is an unanswered
+modelling question. A simulated device is a container, and whether that is *physical hosting* in
+SOSA's sense is exactly what has to be decided first.
 
 # Seams left open
 

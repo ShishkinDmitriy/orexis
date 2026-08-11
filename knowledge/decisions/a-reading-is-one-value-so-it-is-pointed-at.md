@@ -64,7 +64,7 @@ sending zero. `0.0 C` is a plausible number in a way silence is not.
 Getting a quantity off a wire is not one step:
 
 ```
-bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[calibration]──▶ quantity
+bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[scaling]──▶ quantity
 ```
 
 - **codec** — how bytes become a document. JSON is the only one, and nothing here names it.

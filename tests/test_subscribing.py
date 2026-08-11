@@ -175,9 +175,18 @@ def _two_sensor_world(tmp_path, observes="ag:SoilMoisture"):
     # would already be observing AirTemperature on this fern, so passing `observes` here would
     # silently produce the two-sensors-one-property case instead of the ordinary rig — the
     # opposite of what the caller asked for.
-    for block in ("ag:air_temp_fern", "ag:air_humidity_fern"):
+    #
+    # Anchored on the DECLARATION rather than on the bare name. Anchoring on the name meant the
+    # first mention won, and #79 gave those sensors an earlier one: `ag:air_sensor_fern` hosts
+    # them, so the cut started inside the platform block and took the rest of it with it. The
+    # part goes too — a KY-015 hosting two channels this world no longer has would be a
+    # platform pointing at nothing.
+    for block in ("ag:air_temp_fern a ag:Sensor ;", "ag:air_humidity_fern a ag:Sensor ;",
+                  "ag:air_sensor_fern a sosa:Platform ;"):
         start = s.index(block)
         s = s[:start] + s[s.index(" .\n", start) + 3:]
+    s = s.replace("    sosa:hosts ag:moisture_sensor_fern , ag:air_sensor_fern ;",
+                  "    sosa:hosts ag:moisture_sensor_fern ;")
     s = s.replace(
         "ag:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;",
         "ag:polls ag:moisture_sensor_fern ;")

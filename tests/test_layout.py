@@ -132,6 +132,64 @@ def test_an_agent_is_given_the_society_and_not_the_hardware():
             f"{sorted(leaked)[:5]}")
 
 
+def test_the_society_hosting_agrees_with_the_wiring():
+    """One fact said twice, in two vocabularies, to two audiences — held to agreeing.
+
+    A board hosting its sensors is stated in `hardware.ttl` as `mc:carries` and in the society
+    as `sosa:hosts`, because an agent is never handed the wiring and `mc:` is exactly what the
+    test above forbids it. `mc:carries rdfs:subPropertyOf sosa:hosts` makes them one fact for
+    anyone who loads both — but only the SOVEREIGN loads both, so nothing in the running system
+    would ever notice them diverging. That is what this is for.
+
+    Checked in the direction drift actually goes. Rewiring a probe onto a different board edits
+    `hardware.ttl`; the society keeps the old answer and every gate stays green, because the
+    society is internally consistent and the wiring is internally consistent and no query spans
+    them. So: wherever the wiring hosts something the society also names, the society must say
+    the same — and nothing in the society may claim a host the wiring contradicts.
+
+    NOT symmetric, deliberately. `ag:status_led_fern` is carried by the board and absent from
+    the society, which is correct: an agent polls sensors and has no business knowing about an
+    indicator it can never observe. Demanding the society mirror the wiring would force
+    hardware-only parts into it, which is the leak the test above exists to prevent.
+    """
+    import rdflib
+
+    from agent import genesis
+
+    MC = rdflib.Namespace("http://example.org/agora/microcontroller#")
+    SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
+
+    for world in genesis.worlds():
+        world_path = genesis.world_dir(world)
+        society, wiring = rdflib.Graph(), rdflib.Graph()
+        for path in genesis.society_files(world_path):
+            society.parse(path, format="turtle")
+        for name in genesis.HARDWARE_FILES:
+            if (world_path / name).exists():
+                wiring.parse(world_path / name, format="turtle")
+        if not wiring:
+            continue  # a world with no stated hardware has nothing to disagree with
+
+        carried = set(wiring.subject_objects(MC.carries))
+        hosted = set(society.subject_objects(SOSA.hosts))
+        named = {s for s, _, _ in society} | {o for _, _, o in society}
+
+        missing = {(h, t) for h, t in carried if t in named} - hosted
+        assert not missing, (
+            f"{world}: the wiring carries {sorted(str(t) for _, t in missing)} and the society "
+            f"does not host it — an agent would not know which board its sensor is on")
+
+        # And nothing may claim a host the wiring puts elsewhere. Only pairs the wiring can
+        # speak about are checked: `mc:carries` has mc:Microcontroller for its domain, so it
+        # cannot express a KY-015 hosting its own two channels, and the society states that
+        # chain alone rather than in contradiction to anything.
+        carriers = {t: h for h, t in carried}
+        contradicted = {(h, t) for h, t in hosted if t in carriers and carriers[t] != h}
+        assert not contradicted, (
+            f"{world}: the society hosts {sorted((str(h), str(t)) for h, t in contradicted)} "
+            f"but the wiring mounts it elsewhere")
+
+
 def test_the_compose_file_does_not_mount_hardware_at_an_agent():
     """The other half, and the one that actually enforces it: a rule the agent is trusted to
     follow is not a boundary. What keeps the wiring out of an agent is that the file is not in

@@ -3,6 +3,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 
 <http://example.org/agora/microcontroller> a owl:Ontology ;
@@ -18,11 +19,13 @@ A CONCRETE part does not live here — a DHT11 or an RGB LED is its own package,
 #################  What things are  #################
 
 
-mc:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Microcontroller" ;
-    rdfs:comment "A board at the edge, carrying peripherals and reachable over a bus. It runs firmware, not agents." .
+mc:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device , sosa:Platform ;
+    rdfs:label "Microcontroller" ;
+    rdfs:comment "A board at the edge, carrying peripherals and reachable over a bus. It runs firmware, not agents. Also a sosa:Platform — *an entity that hosts other entities, particularly Sensors, Actuators, Samplers, and other Platforms* — which is what a board is and what nothing here said until issue #79." .
 
-mc:Peripheral a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Peripheral" ;
-    rdfs:comment "Something wired to a board's pins. A sensor is one; so is an indicator." .
+mc:Peripheral a owl:Class ; rdfs:subClassOf ag:Device , sosa:Platform ;
+    rdfs:label "Peripheral" ;
+    rdfs:comment "Something wired to a board's pins. A sensor is one; so is an indicator. A Platform too, and not vacuously: a KY-015 is one part reporting temperature AND humidity, so it hosts two sensors of its own. SOSA is explicit that a Platform may host other Platforms, which is what makes the board-carries-part-carries-channel chain expressible without inventing anything. A peripheral hosting nothing — an indicator — is a Platform with nothing on it, which the class permits." .
 
 mc:modelName a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model name" ;
     rdfs:comment """The catalogue name of a part, stated on its CLASS — what a person orders, and what an authoring tool will have written down. mc:model is the same string on an INSTANCE; this is the one every instance of that class shares.
@@ -40,9 +43,16 @@ mc:firmware a owl:DatatypeProperty ; rdfs:domain mc:Microcontroller ; rdfs:range
     rdfs:comment "Which project under firmware/ this board runs. Stated rather than derived from what it carries: two boards with the same peripherals may run different code, and guessing would be wrong exactly when it mattered." .
 
 
-mc:carries a owl:ObjectProperty ; rdfs:domain mc:Microcontroller ; rdfs:range mc:Peripheral ;
+mc:carries a owl:ObjectProperty ; rdfs:subPropertyOf sosa:hosts ;
+    rdfs:domain mc:Microcontroller ; rdfs:range mc:Peripheral ;
     rdfs:label "carries" ;
-    rdfs:comment "A peripheral is mounted on this board. Which LEG goes where is said by the wires, not by this — carrying something is not the same as being wired to it, and a peripheral that is carried but unwired is a real state that a shape should be able to catch." .
+    rdfs:comment """A peripheral is mounted on this board. Which LEG goes where is said by the wires, not by this — carrying something is not the same as being wired to it, and a peripheral that is carried but unwired is a real state that a shape should be able to catch.
+
+**This was `sosa:hosts` all along**, and saying so is most of issue #79. `sosa:hosts` is *the relation between a Platform and a Sensor, Actuator, Sampler, or Platform, hosted or mounted on it* — the same fact, already standardised, in a vocabulary this project already speaks for `sosa:observes`. Declaring the subproperty rather than renaming keeps the hardware layer reading in its own terms while making the fact legible to anything that speaks SOSA.
+
+It is also the FIRST `rdfs:subPropertyOf` axiom here, which `agent/inference.py` rule 4 was written for and had nothing to exercise. Stating `mc:carries` now entails `sosa:hosts` into the world's entailed graph — for the SOVEREIGN, who loads `hardware.ttl`. An agent is never given that file, so the society states its hosting directly; `tests/test_layout.py` holds the two to agreeing.
+
+Note the domain is narrower than the superproperty's: `mc:carries` is a BOARD carrying a PART, so it cannot say that a KY-015 hosts its two channels. `sosa:hosts` can, which is why the society uses the general relation and the hardware layer keeps the specific one.""" .
 
 #################  Pins and wires  #################
 #
