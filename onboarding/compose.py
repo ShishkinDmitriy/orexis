@@ -30,12 +30,13 @@ See knowledge/domain/world.md.
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import ACTUATION, AG, MQTT, PERCEPTION, WATER, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MARKET, MQTT, PERCEPTION, SOSA, WATER, WORLD_GRAPH
 from agent import genesis
 from agent.genesis import world_dir, worlds
 
@@ -173,42 +174,80 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
 # Everything a stand-in needs, which is exactly what a board is told in its config.h and no
 # more. It does not read the world: a real board could not, and letting this one would quietly
 # make it a different kind of thing than the hardware it stands in for.
+# Everything a stand-in needs, which is exactly what a board is told in its config.h and no
+# more — but one row PER VALUE it reports, because a part may report several down one line.
+#
+# The container belongs to whichever device holds the credential (`mqtt:onBus`), and the values
+# belong to every simulated sensor on that device's reading topic, itself included. That is the
+# shape `world/sensing` already states for a real KY-015: one peripheral owns the connection and
+# its neighbours share the wire without minting a principal that never connects.
+#
+# `?litres` is joined through the PROPERTY the domain's valuation is denominated in rather than
+# through the subject alone. Three sensors on one board can monitor one plant, so the subject
+# cannot say which reading a litre of water moves — `water:hasTarget market:aboutProperty` can,
+# and it says soil moisture. Without that join a dose would warm the thermometer.
 _SIMULATED_Q = f"""
-SELECT ?id ?readingTopic ?commandTopic ?senseMode ?initial ?dryRate ?tick ?litres ?doseTopic ?port ?minValue ?maxValue
-WHERE {{ 
-  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{MQTT}readingTopic> ?readingTopic ;
+SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?port
+       ?pointer ?initial ?dryRate ?litres ?minValue ?maxValue
+WHERE {{
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
+     <{MQTT}onBus> ?onBus .
+  ?s <{MQTT}readingTopic> ?readingTopic ; <{AG}simulatedBy> ?model ;
      <{PERCEPTION}monitors> ?subject .
   OPTIONAL {{ ?d <{MQTT}commandTopic> ?commandTopic }}
   OPTIONAL {{ ?d <{PERCEPTION}senseMode> ?senseMode }}
+  OPTIONAL {{ ?deviceModel <{AG}modelTickSeconds> ?tick }}
+  OPTIONAL {{ ?s <{MQTT}readingPointer> ?pointer }}
   OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
   OPTIONAL {{ ?model <{AG}modelDryRate> ?dryRate }}
-  OPTIONAL {{ ?model <{AG}modelTickSeconds> ?tick }}
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
-  OPTIONAL {{ ?subject <{WATER}litresPerFraction> ?litres }}
+  OPTIONAL {{ ?s <{SOSA}observes> ?wetProperty .
+             <{WATER}hasTarget> <{MARKET}aboutProperty> ?wetProperty .
+             ?subject <{WATER}litresPerFraction> ?litres }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
 
-def _simulator(world: str, row: dict) -> str:
+def _values(rows: list[dict]) -> str:
+    """What this device reports, as the JSON its firmware is handed.
+
+    A pointer per property, defaulted to `/value` for the one that states none — which is what a
+    single-property board sends and what `agent/pointer.py` reads when a sensor says nothing.
+    Sorted so regenerating an unchanged world produces an unchanged file.
+    """
+    specs = []
+    for row in sorted(rows, key=lambda r: r.get("pointer") or "/value"):
+        spec = {"pointer": row.get("pointer") or "/value"}
+        for key, field in (("min", "minValue"), ("max", "maxValue"),
+                           ("initial", "initial"), ("drift", "dryRate"), ("litres", "litres")):
+            if row.get(field) not in (None, ""):
+                spec[key] = float(row[field])
+        specs.append(spec)
+    return json.dumps(specs, separators=(",", ":"))
+
+
+def _simulator(world: str, rows: list[dict]) -> str:
     """One container per stand-in, mirroring one container per agent.
 
     So one principal holds one credential and the ACL model is unchanged — the broker cannot
     tell this from a board, and neither can anything else. It reuses the agent image because it
     needs one library that image already has; a second image for a hundred-line script would be
     another thing to build and keep current, for nothing.
+
+    Takes every row for one device rather than one row, because a device reports a value per
+    property and the container is the device. What varies per value goes into `SIM_VALUES`; what
+    is true of the whole board — its identity, its topics, who holds its clock — stays here.
     """
+    row = rows[0]
     sim_id = row["id"]
     mode = (row.get("senseMode") or "").rsplit("#", 1)[-1].lower() or "scheduled"
     optional = "".join(
         f'\n      {k}: "{v}"' for k, v in (
             ("SIM_COMMAND_TOPIC", row.get("commandTopic")),
             ("SIM_DOSE_TOPIC", row.get("doseTopic")),
-            ("SIM_INITIAL_VALUE", row.get("initial")),
-            ("SIM_DRY_RATE", row.get("dryRate")),
             ("SIM_TICK_SECONDS", row.get("tick")),
-            ("SIM_LITRES_PER_FRACTION", row.get("litres")),
         ) if v not in (None, ""))
     return f"""
   sim-{sim_id}:
@@ -220,6 +259,9 @@ def _simulator(world: str, row: dict) -> str:
     environment:
       SIM_SENSOR_ID: "{sim_id}"
       SIM_READING_TOPIC: "{row['readingTopic']}"
+      # What this board reports and where each value goes in its one message. A part that
+      # reports two properties down one line is a list of two; a probe is a list of one.
+      SIM_VALUES: '{_values(rows)}'
       # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
       # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -329,10 +371,14 @@ def render(world: str) -> str:
         raise SystemExit(f"agora-compose: world {world!r} declares no agents")
 
     plain, tls = _bus_ports(world)
-    simulated = ratified.rows(ratified.dataset(world), _SIMULATED_Q)
+    # One row per value, grouped back into one container per device: the query cannot return a
+    # list, and the device is what gets a container, a credential and a clock.
+    simulated: dict[str, list[dict]] = {}
+    for row in ratified.rows(ratified.dataset(world), _SIMULATED_Q):
+        simulated.setdefault(row["id"], []).append(row)
     valves = ratified.rows(ratified.dataset(world), _SIM_VALVES_Q)
     services = _broker(world, plain, tls) + "".join(
-        _simulator(world, row) for row in sorted(simulated, key=lambda r: r["id"])) + "".join(
+        _simulator(world, simulated[sim_id]) for sim_id in sorted(simulated)) + "".join(
         _valve(world, row) for row in sorted(valves, key=lambda r: r["id"])) + "".join(
         _service(a, caps, world) for a, caps in who.items())
     volumes = f"  agora-{world}-mosquitto:\n" + "".join(

@@ -56,6 +56,9 @@ services:
     environment:
       SIM_SENSOR_ID: "sensor_fern"
       SIM_READING_TOPIC: "sim/sensors/sensor_fern/reading"
+      # What this board reports and where each value goes in its one message. A part that
+      # reports two properties down one line is a list of two; a probe is a list of one.
+      SIM_VALUES: '[{"pointer":"/temperature","min":-10.0,"max":45.0,"initial":21.0,"drift":-0.05},{"pointer":"/value","min":0.0,"max":1.0,"initial":0.45,"drift":0.02,"litres":2.0}]'
       # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
       # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -64,10 +67,7 @@ services:
       MQTT_PORT: "1885"
       SIM_COMMAND_TOPIC: "sim/sensors/sensor_fern/command"
       SIM_DOSE_TOPIC: "sim/actuators/valve_fern/status"
-      SIM_INITIAL_VALUE: "0.45"
-      SIM_DRY_RATE: "0.02"
       SIM_TICK_SECONDS: "3"
-      SIM_LITRES_PER_FRACTION: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -84,6 +84,9 @@ services:
     environment:
       SIM_SENSOR_ID: "sensor_succulent"
       SIM_READING_TOPIC: "sim/sensors/sensor_succulent/reading"
+      # What this board reports and where each value goes in its one message. A part that
+      # reports two properties down one line is a list of two; a probe is a list of one.
+      SIM_VALUES: '[{"pointer":"/value","initial":0.45,"drift":0.015,"litres":2.0}]'
       # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
       # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -92,10 +95,7 @@ services:
       MQTT_PORT: "1885"
       SIM_COMMAND_TOPIC: "sim/sensors/sensor_succulent/command"
       SIM_DOSE_TOPIC: "sim/actuators/valve_succulent/status"
-      SIM_INITIAL_VALUE: "0.45"
-      SIM_DRY_RATE: "0.015"
       SIM_TICK_SECONDS: "3"
-      SIM_LITRES_PER_FRACTION: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -112,6 +112,9 @@ services:
     environment:
       SIM_SENSOR_ID: "sensor_tomato"
       SIM_READING_TOPIC: "sim/sensors/sensor_tomato/reading"
+      # What this board reports and where each value goes in its one message. A part that
+      # reports two properties down one line is a list of two; a probe is a list of one.
+      SIM_VALUES: '[{"pointer":"/value","initial":0.45,"drift":0.02,"litres":2.0}]'
       # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
       # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -120,10 +123,7 @@ services:
       MQTT_PORT: "1885"
       SIM_COMMAND_TOPIC: "sim/sensors/sensor_tomato/command"
       SIM_DOSE_TOPIC: "sim/actuators/valve_tomato/status"
-      SIM_INITIAL_VALUE: "0.45"
-      SIM_DRY_RATE: "0.02"
       SIM_TICK_SECONDS: "3"
-      SIM_LITRES_PER_FRACTION: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
