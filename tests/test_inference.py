@@ -108,7 +108,7 @@ def test_materialising_twice_changes_nothing():
 
 # --- the guard that matters ------------------------------------------------------------------
 
-@pytest.mark.parametrize("world", ["society", "simulation", "sensing"])
+@pytest.mark.parametrize("world", ["simulation", "sensing"])
 def test_pyshacl_agrees_with_the_materialised_closure(world):
     """The drift guard, and the reason this file exists.
 

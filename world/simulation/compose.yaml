@@ -47,15 +47,15 @@ services:
       # its agent set before the broker bounced
       - agora-simulation-mosquitto:/var/lib/mosquitto
 
-  sim-sensor_fern:
+  sim-moisture_sensor_fern:
     build:
       # its own directory: it needs one file, and the repo root is excluded from image
       # contexts anyway — the agent image must not carry the simulator, nor it the agent
       context: ../../firmware/simulated-sensor
     image: agora-simulator:local
     environment:
-      SIM_SENSOR_ID: "sensor_fern"
-      SIM_READING_TOPIC: "sim/sensors/sensor_fern/reading"
+      SIM_SENSOR_ID: "moisture_sensor_fern"
+      SIM_READING_TOPIC: "sensors/moisture_sensor_fern/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
       SIM_VALUES: '[{"pointer":"/temperature","min":-10.0,"max":45.0,"initial":21.0,"drift":-0.05},{"pointer":"/value","min":0.0,"max":1.0,"initial":0.45,"drift":0.02,"litres":2.0}]'
@@ -65,25 +65,25 @@ services:
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
-      SIM_COMMAND_TOPIC: "sim/sensors/sensor_fern/command"
-      SIM_DOSE_TOPIC: "sim/actuators/valve_fern/status"
+      SIM_COMMAND_TOPIC: "sensors/moisture_sensor_fern/command"
+      SIM_DOSE_TOPIC: "actuators/valve_fern/status"
       SIM_TICK_SECONDS: "3"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
-      - ./secrets/mqtt-sensor_fern.env
+      - ./secrets/mqtt-moisture_sensor_fern.env
     network_mode: host
     restart: unless-stopped
 
-  sim-sensor_succulent:
+  sim-moisture_sensor_succulent:
     build:
       # its own directory: it needs one file, and the repo root is excluded from image
       # contexts anyway — the agent image must not carry the simulator, nor it the agent
       context: ../../firmware/simulated-sensor
     image: agora-simulator:local
     environment:
-      SIM_SENSOR_ID: "sensor_succulent"
-      SIM_READING_TOPIC: "sim/sensors/sensor_succulent/reading"
+      SIM_SENSOR_ID: "moisture_sensor_succulent"
+      SIM_READING_TOPIC: "sensors/moisture_sensor_succulent/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
       SIM_VALUES: '[{"pointer":"/value","initial":0.45,"drift":0.015,"litres":2.0}]'
@@ -93,25 +93,25 @@ services:
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
-      SIM_COMMAND_TOPIC: "sim/sensors/sensor_succulent/command"
-      SIM_DOSE_TOPIC: "sim/actuators/valve_succulent/status"
+      SIM_COMMAND_TOPIC: "sensors/moisture_sensor_succulent/command"
+      SIM_DOSE_TOPIC: "actuators/valve_succulent/status"
       SIM_TICK_SECONDS: "3"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
-      - ./secrets/mqtt-sensor_succulent.env
+      - ./secrets/mqtt-moisture_sensor_succulent.env
     network_mode: host
     restart: unless-stopped
 
-  sim-sensor_tomato:
+  sim-moisture_sensor_tomato:
     build:
       # its own directory: it needs one file, and the repo root is excluded from image
       # contexts anyway — the agent image must not carry the simulator, nor it the agent
       context: ../../firmware/simulated-sensor
     image: agora-simulator:local
     environment:
-      SIM_SENSOR_ID: "sensor_tomato"
-      SIM_READING_TOPIC: "sim/sensors/sensor_tomato/reading"
+      SIM_SENSOR_ID: "moisture_sensor_tomato"
+      SIM_READING_TOPIC: "sensors/moisture_sensor_tomato/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
       SIM_VALUES: '[{"pointer":"/value","initial":0.45,"drift":0.02,"litres":2.0}]'
@@ -121,13 +121,13 @@ services:
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
-      SIM_COMMAND_TOPIC: "sim/sensors/sensor_tomato/command"
-      SIM_DOSE_TOPIC: "sim/actuators/valve_tomato/status"
+      SIM_COMMAND_TOPIC: "sensors/moisture_sensor_tomato/command"
+      SIM_DOSE_TOPIC: "actuators/valve_tomato/status"
       SIM_TICK_SECONDS: "3"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
-      - ./secrets/mqtt-sensor_tomato.env
+      - ./secrets/mqtt-moisture_sensor_tomato.env
     network_mode: host
     restart: unless-stopped
 
@@ -139,8 +139,8 @@ services:
     image: agora-valve:local
     environment:
       VALVE_ID: "valve_fern"
-      VALVE_COMMAND_TOPIC: "sim/actuators/valve_fern/command"
-      VALVE_STATUS_TOPIC: "sim/actuators/valve_fern/status"
+      VALVE_COMMAND_TOPIC: "actuators/valve_fern/command"
+      VALVE_STATUS_TOPIC: "actuators/valve_fern/status"
       VALVE_ML_PER_SECOND: "10"
       VALVE_MAX_DOSE_ML: "1000"
       # public halves only — it verifies, it never signs
@@ -167,8 +167,8 @@ services:
     image: agora-valve:local
     environment:
       VALVE_ID: "valve_succulent"
-      VALVE_COMMAND_TOPIC: "sim/actuators/valve_succulent/command"
-      VALVE_STATUS_TOPIC: "sim/actuators/valve_succulent/status"
+      VALVE_COMMAND_TOPIC: "actuators/valve_succulent/command"
+      VALVE_STATUS_TOPIC: "actuators/valve_succulent/status"
       VALVE_ML_PER_SECOND: "10"
       VALVE_MAX_DOSE_ML: "1000"
       # public halves only — it verifies, it never signs
@@ -195,8 +195,8 @@ services:
     image: agora-valve:local
     environment:
       VALVE_ID: "valve_tomato"
-      VALVE_COMMAND_TOPIC: "sim/actuators/valve_tomato/command"
-      VALVE_STATUS_TOPIC: "sim/actuators/valve_tomato/status"
+      VALVE_COMMAND_TOPIC: "actuators/valve_tomato/command"
+      VALVE_STATUS_TOPIC: "actuators/valve_tomato/status"
       VALVE_ML_PER_SECOND: "10"
       VALVE_MAX_DOSE_ML: "1000"
       # public halves only — it verifies, it never signs

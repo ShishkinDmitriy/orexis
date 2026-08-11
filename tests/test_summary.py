@@ -116,7 +116,7 @@ def test_an_accumulator_survives_a_restart(tmp_path, monkeypatch):
     for its own judgement instead of earning them again — and never has to ask the series store
     for them, which attention must never wait on.
     """
-    path, world = str(tmp_path / "beliefs"), WORLDS_ROOT / "society"
+    path, world = str(tmp_path / "beliefs"), WORLDS_ROOT / "simulation"
 
     store = genesis.open_belief_base(world, "fern", path)
     Summaries(store, "fern").record(FERN, MOISTURE, 0.42)
@@ -163,7 +163,7 @@ def test_the_compaction_threshold_is_read_from_the_ontology(fern):
 def test_a_belief_base_on_disk_is_compacted_when_it_is_mostly_history(tmp_path, monkeypatch):
     """The ratio that revealed #45 is the ratio that triggers the remedy: flat triples under
     rising bytes is write amplification, and neither number alone shows it."""
-    store = genesis.open_belief_base(WORLDS_ROOT / "society", "fern", str(tmp_path / "beliefs"))
+    store = genesis.open_belief_base(WORLDS_ROOT / "simulation", "fern", str(tmp_path / "beliefs"))
     agent = build_agent("fern", st=store, monkeypatch=monkeypatch)
     upkeep = agent.upkeep
 

@@ -24,7 +24,7 @@ from agent.store import Store
 
 REPO_ROOT = loader.REPO_ROOT
 WORLDS_ROOT = REPO_ROOT / "world"
-GENESIS_DIR = WORLDS_ROOT / "society"   # the world most tests are about
+GENESIS_DIR = WORLDS_ROOT / "simulation"   # the world most tests are about
 
 # The property the water domain is about, spelled out because a reading is now keyed by it.
 MOISTURE = "http://example.org/agora/water#SoilMoisture"
@@ -41,7 +41,7 @@ def name_the_world(monkeypatch):
 
     There is no default world — `genesis.current_world` refuses rather than guessing, because a
     process that was not told which world it belongs to is misconfigured. These tests are about
-    the society, and anything under test that resolves signing keys finds them through it. The
+    the simulation, and anything under test that resolves signing keys finds them through it. The
     line above said so already; this makes the code hear it.
     """
     monkeypatch.setenv("AGORA_WORLD", GENESIS_DIR.name)
@@ -49,7 +49,7 @@ def name_the_world(monkeypatch):
 
 def genesis_store(readings: dict[str, float] | None = None,
                   result_time: datetime | None = None,
-                  world: str = "society") -> Store:
+                  world: str = "simulation") -> Store:
     """One belief base, built the way an agent builds it — derivation included.
 
     The rules are applied exactly as an agent applies them, so tests see the capabilities the

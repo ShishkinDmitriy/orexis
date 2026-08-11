@@ -22,7 +22,7 @@ from agent.ontology import AG, MARKET, MQTT, PERCEPTION, WORLD_GRAPH
 
 from conftest import build_agent, genesis_store
 
-WORLDS = ["society", "sensing", "simulation"]
+WORLDS = ["sensing", "simulation"]
 
 
 def covers(pattern: str, topic: str) -> bool:
@@ -112,24 +112,51 @@ def test_nobody_is_granted_a_wildcard_over_the_whole_bus(world):
             assert head not in ("#", "+"), f"{principal.username} is granted {topic!r}"
 
 
-def test_two_worlds_that_share_a_device_share_its_credential():
-    """`world/sensing` is device-for-device identical to `world/society` on purpose, so one
-    flashed board works in either. A world-scoped device credential would break that — the
-    board would hold a name only one of them accepts."""
+def test_a_board_is_known_by_the_same_name_and_granted_the_same_channels_in_both():
+    """`sensing` and `simulation` model the same probe identically — same id, same channels.
+
+    Stated precisely, because the older name for this — *one flashed board works in either* —
+    overclaims and `series-and-bus-isolation` says so itself: each world mints its own random
+    password for that username, and each broker listens on its own port, both of which are in
+    `config.h`. Moving a board is a credential swap and a reflash. What this property buys is
+    that it is ONLY that: the board is not re-modelled, re-identified or re-granted.
+
+    The name alone proves nothing, which is how this test used to be written. A device
+    credential is world-independent by construction (`Principal(row["id"])`, no world in it)
+    while an agent's is world-qualified, so the usernames would have matched even if the two
+    worlds had granted entirely disjoint topics — and then the board would authenticate and be
+    denied on its first publish. That is a green test asserting a false property, and it is the
+    failure this project keeps finding in other forms.
+
+    So the assertion is about the GRANTS, and it is a subset rather than an equality: every
+    topic the real board uses must be granted in the other world too. Not equality, because
+    `simulation` grants its stand-in one thing a real probe never needs — `actuators/…/status`,
+    so the simulated soil can get wetter when the valve opens. A board ignores it.
+
+    """
     _, sensing = mqtt_admin.grants("sensing")
-    _, society = mqtt_admin.grants("society")
-    shared = set(sensing) & set(society)
+    _, simulation = mqtt_admin.grants("simulation")
+    shared = set(sensing) & set(simulation)
     assert shared, "the two worlds no longer share a device; this test has lost its subject"
     for device_id in shared:
-        assert sensing[device_id].username == society[device_id].username
+        assert sensing[device_id].username == simulation[device_id].username
+        assert sensing[device_id].grants <= simulation[device_id].grants, (
+            f"{device_id} is granted {sensing[device_id].grants - simulation[device_id].grants} "
+            f"in sensing and not in simulation — the same board would be denied")
 
 
 def test_agent_principals_are_world_scoped():
     """Two worlds each holding a `fern` are two agents, on two belief bases. One name would
-    let either answer for the other."""
-    society, _ = mqtt_admin.grants("society")
+    let either answer for the other.
+
+    The exact counterpart of the test above, over the same pair of worlds: a DEVICE is the same
+    device wherever it is wired, so its credential is its id; an AGENT is a different agent per
+    world even under the same name, so its credential carries the world. The asymmetry is the
+    design, and holding both to it in one place is what makes it legible.
+    """
+    sensing, _ = mqtt_admin.grants("sensing")
     simulation, _ = mqtt_admin.grants("simulation")
-    assert society["fern"].username != simulation["fern"].username
+    assert sensing["fern"].username != simulation["fern"].username
 
 
 def test_a_generated_password_line_is_one_mosquitto_can_verify():

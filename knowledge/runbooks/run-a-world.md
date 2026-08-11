@@ -101,12 +101,12 @@ being evidence of anything — check by connecting, not by reading the log.
 # Deploy a world
 
 ```bash
-agora-onboard society         # validate, then all three below
+agora-onboard simulation      # validate, then all three below
 
 # or separately, when you want only one of them:
-#   agora-influx society        # a bucket per agent, and a token that opens only it
-#   agora-mqtt society          # a credential per principal, and the broker ACL, derived
-#   agora-compose society       # writes world/society/compose.yaml FROM the world.ttl beside it
+#   agora-influx simulation     # a bucket per agent, and a token that opens only it
+#   agora-mqtt simulation       # a credential per principal, and the broker ACL, derived
+#   agora-compose simulation    # writes world/simulation/compose.yaml FROM the world.ttl beside it
 ```
 
 All three read the same `world.ttl` and grant exactly what its wiring implies, so adding an
@@ -147,7 +147,7 @@ credential — its own. That is the boundary, not packaging taste
 # Up, down, and watch
 
 ```bash
-cd world/society
+cd world/simulation
 podman compose up -d            # each agent builds its own belief base
 podman compose logs -f          # all of them, interleaved
 podman compose logs -f agent-fern
@@ -219,7 +219,7 @@ flashed into a board that may not be in front of you.
 Each world has its own dataset, so switching destroys nothing and you can switch back:
 
 ```bash
-podman compose -f world/society/compose.yaml down
+podman compose -f world/simulation/compose.yaml down
 podman compose -f world/sensing/compose.yaml up -d
 ```
 
@@ -227,10 +227,10 @@ Nothing to seed, and nothing shared to overwrite: each agent's belief base is it
 so worlds cannot touch each other at all.
 
 ```bash
-agora-validate society && agora-validate sensing   # checked from the files, no store needed
+agora-validate simulation && agora-validate sensing   # checked from the files, no store needed
 ```
 
-**Two worlds may run at once only if their devices differ.** `society` and `sensing` share
+**Two worlds may run at once only if their devices differ.** `simulation` and `sensing` share
 device ids on purpose — that is what lets one flashed board run in either — so both up
 together puts two agents on `sensors/fern/moisture` and both ingest every reading. Nothing
 prevents this; it is your job to know.
@@ -267,17 +267,19 @@ it is a fact about the hardware rather than about this installation.
 
 # No hardware?
 
-Not by running a simulator beside the agents — there isn't one any more, and there was no good
-place to put it. A program pretending to be hardware had to be told which subjects to pretend
-to be, and getting that wrong put two publishers on one topic with both readings ingested.
+Not by running a simulator beside the agents and telling it which subjects to pretend to be —
+getting that wrong put two publishers on one topic with both readings ingested.
 
 **A simulation is a world.** The model already says what every device is and how it is driven;
-a device that is simulated is a *kind of device*, so an agent derives a simulated capability
-from it exactly as it derives any other. Nothing is toggled, nothing is passed a flag, and a
-world cannot disagree with how it is actually running.
+a device that is simulated is a *kind of device*, so an agent derives its capability from one
+exactly as it derives any other. Nothing is toggled, nothing is passed a flag, and a world
+cannot disagree with how it is actually running.
 
-**That world does not exist yet** — the capability and its binding are unbuilt, so today the
-society needs real boards. See [world](/domain/world.md) §Simulation.
+**That world is `simulation`, and it is now the one to reach for.** Every device in it is stood
+in for by a container that reads its own model out of the world, so `podman compose up` in it
+needs no hardware at all. `sensing` is the world with a real board. See
+[world](/domain/world.md) §Simulation and
+[two-worlds-were-one](/decisions/two-worlds-were-one.md).
 
 # It went wrong
 

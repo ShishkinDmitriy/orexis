@@ -17,7 +17,7 @@
 #                   agent -> store. Every interesting failure this project has had was found
 #                   there, not here.
 #
-# Green here means "nothing obviously broke". It does not mean the society runs.
+# Green here means "nothing obviously broke". It does not mean a world runs.
 
 name: gates
 
@@ -42,14 +42,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      # Each world is built from its files and held to every package's shapes. Separate steps so
-      # a failure names the world rather than making you read a log to find it.
-      - name: agora-validate sensing
-        run: agora-validate sensing
-      - name: agora-validate society
-        run: agora-validate society
-      - name: agora-validate simulation
-        run: agora-validate simulation
+      # Each world is built from its files and held to every package's shapes.
+      #
+      # Found by looking, not listed — the same rule capabilities and packages are found by, and
+      # for the same reason: a list here goes stale silently. It did. Removing `society` left
+      # three hardcoded steps validating a world that no longer existed, and CI failed on a
+      # change whose four local gates were all green, because none of them reads this file.
+      #
+      # The world is still named on failure, which is why the loop groups and annotates rather
+      # than just running: a red X should say WHICH world, not send you into a log.
+      - name: agora-validate every world
+        run: |
+          for w in $(python -c "from agent import genesis; print(' '.join(genesis.worlds()))"); do
+            echo "::group::agora-validate $w"
+            agora-validate "$w" || { echo "::error::$w failed validation"; exit 1; }
+            echo "::endgroup::"
+          done
 
       - name: pytest
         run: pytest tests -q

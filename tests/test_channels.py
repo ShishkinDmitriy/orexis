@@ -78,13 +78,13 @@ def test_direction_is_on_the_relation_not_the_channel(sensing):
     assert any(s == {"listens"} for s in dirs.values())
 
 
-@pytest.mark.parametrize("world", ["society", "simulation"])
+@pytest.mark.parametrize("world", ["simulation"])
 def test_a_world_with_no_hardware_still_has_channels(world):
     """The reason the codec could move at all.
 
-    `society` and `simulation` state no wiring, so they have no platforms — correctly, since
-    nothing is mounted on anything there. They have topics, so they have channels, which is what
-    made the stream the right bearer for an encoding and the board the wrong one.
+    `simulation` states no wiring, so it has no platforms — correctly, since nothing is
+    mounted on anything there. It has topics, so it has channels, which is what made the stream
+    the right bearer for an encoding and the board the wrong one.
     """
     rows = _rows(genesis_store(world=world), _CHANNELS)
     assert len(rows) >= 6, f"{world} derived only {len(rows)} channels"

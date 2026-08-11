@@ -47,7 +47,7 @@ world you have since deleted is still standing after everything is down.
 # Stop one world
 
 ```bash
-cd world/society && podman compose down
+cd world/simulation && podman compose down
 ```
 
 Agents stop. Beliefs, readings, the world and any retained commands are untouched — this is

@@ -46,16 +46,33 @@ def test_no_agent_derives_a_simulated_perception():
     A world that grew a `SimulatedSensing` back would be a second perception implementation,
     which is exactly the thing that let a broken real path go undetected.
     """
-    for world in ("society", "sensing", "simulation"):
+    for world in ("sensing", "simulation"):
         for agent, caps in _caps(world).items():
             assert not any("Simulated" in c and "Sensing" in c for c in caps), \
                 f"{world}/{agent} derived {caps}"
 
 
-def test_the_simulated_world_derives_what_the_real_one_does():
-    """Same wiring shape, same capabilities. If these ever diverge, the simulation has stopped
-    standing in for anything."""
-    assert _caps("simulation")["fern"] == _caps("society")["fern"]
+def test_the_simulated_world_derives_what_a_wired_one_does():
+    """If these ever diverge, the simulation has stopped standing in for anything.
+
+    This compared `simulation` to `society` — two market worlds with the same wiring shape, one
+    simulated and one not — and asserted the two ferns derived exactly the same set. `society`
+    is gone, and the only world left with real devices is `sensing`, which has no market. So
+    equality is the wrong assertion: a fern that cannot bid is not a divergence, it is a
+    different world.
+
+    What survives is sharper. Everything `sensing`'s fern derives, `simulation`'s fern derives
+    too, and the only thing the market world adds is the market capability. Pinning the
+    difference rather than asserting sameness is what still catches the failure this was written
+    for: if a simulated probe ever stopped deriving `Subscribing` the way a real one does, it
+    would fall out of the subset.
+    """
+    wired, simulated = _caps("sensing")["fern"], _caps("simulation")["fern"]
+    assert wired <= simulated, (
+        f"the wired fern derives {wired - simulated} that the simulated one does not — "
+        f"the simulation has stopped standing in for hardware")
+    assert simulated - wired == {"Bidding"}, \
+        "the simulated world differs by something other than having a market"
 
 
 # --- the shapes, each proved to reject something ----------------------------
@@ -74,8 +91,8 @@ def test_a_stand_in_that_is_on_no_bus_is_refused():
     """Without mqtt:onBus it gets no credential and no container, so it would never publish —
     and a sensor that is permanently silent reads exactly like hardware that is not there."""
     assert not _conforms(_mutate_simulation(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:sensor_fern mqtt:onBus ?b }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:sensor_fern mqtt:onBus ?b }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:onBus ?b }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:onBus ?b }} }}"""))
 
 
 def test_an_initial_value_outside_the_range_is_refused():
@@ -104,7 +121,7 @@ def test_a_tick_of_zero_seconds_is_refused():
 # broker. These are about the simulated world catching up.
 
 def test_a_stand_in_may_share_a_neighbours_wire_without_a_bus_of_its_own():
-    """`ag:air_fern` states no mqtt:onBus, and the shipped world conforms.
+    """`ag:air_temp_fern` states no mqtt:onBus, and the shipped world conforms.
 
     A second credential for a client that never connects is exactly what the hardware world
     refuses, and demanding one here would have forced the simulation to model something real
@@ -114,7 +131,7 @@ def test_a_stand_in_may_share_a_neighbours_wire_without_a_bus_of_its_own():
     rows = bindings(st.query(f"""
         SELECT ?id WHERE {{ ?s <{AG}localId> ?id ; <{AG}simulatedBy> ?m .
                             FILTER NOT EXISTS {{ ?s <http://example.org/agora/mqtt#onBus> ?b }} }}"""))
-    assert [r["id"] for r in rows] == ["air_fern"], \
+    assert [r["id"] for r in rows] == ["air_temp_fern"], \
         "the world that this test is about no longer has a stand-in sharing a wire"
 
 
@@ -122,8 +139,8 @@ def test_a_stand_in_with_no_bus_and_no_publishing_peer_is_refused():
     """The rule the old one stated, kept: reachable, or permanently silent — and permanently
     silent reads exactly like hardware that is not there."""
     assert not _conforms(_mutate_simulation(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:sensor_fern mqtt:onBus ?b }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:sensor_fern mqtt:onBus ?b }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:onBus ?b }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:onBus ?b }} }}"""))
 
 
 def test_an_initial_value_outside_a_models_own_range_is_refused():
@@ -141,9 +158,9 @@ def test_a_temperature_is_not_refused_for_not_being_a_fraction():
     the old shape refused it, because it held every model to 0..1."""
     st = genesis_store(world="simulation")
     rows = bindings(st.query(f"""
-        SELECT ?initial WHERE {{ ag:air_fern <{AG}simulatedBy> ?m .
+        SELECT ?initial WHERE {{ ag:air_temp_fern <{AG}simulatedBy> ?m .
                                  ?m <{AG}modelInitialValue> ?initial }}"""))
-    assert rows, "air_fern states no initial value; this test has lost its subject"
+    assert rows, "air_temp_fern states no initial value; this test has lost its subject"
     assert float(rows[0]["initial"]) == 21.0
 
 
@@ -154,5 +171,5 @@ def test_a_second_sensor_on_an_existing_topic_mints_no_principal():
     from onboarding import mqtt as mqtt_admin
 
     agents, devices = mqtt_admin.grants("simulation")
-    assert "sensor_fern" in devices, "this test has lost its subject"
-    assert "air_fern" not in devices and "air_fern" not in agents
+    assert "moisture_sensor_fern" in devices, "this test has lost its subject"
+    assert "air_temp_fern" not in devices and "air_temp_fern" not in agents
