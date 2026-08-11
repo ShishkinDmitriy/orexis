@@ -91,6 +91,11 @@ class Actuator:
     command_topic: str
     ml_per_second: float
     max_dose_ml: float
+    # Where the device says what it actually dispensed. OPTIONAL because a world may wire a
+    # valve it cannot hear back from, and that is a real deployment rather than an error — but
+    # an agent with no status channel cannot tell a delivered dose from a refused one, which is
+    # what `ActuationModule` reports when it is missing.
+    status_topic: str | None = None
 
 
 @dataclass(frozen=True)
@@ -180,12 +185,13 @@ WHERE {{
 
 def _actuators_q(agent_uri: str) -> str:
     return f"""
-SELECT ?actuator ?localId ?subject ?subjectId ?commandTopic ?mlPerSecond ?maxDoseMl
-WHERE {{ 
+SELECT ?actuator ?localId ?subject ?subjectId ?commandTopic ?mlPerSecond ?maxDoseMl ?statusTopic
+WHERE {{
   <{agent_uri}> actuation:hasActuator ?actuator .
   ?actuator ag:localId ?localId ; actuation:actuates ?subject ; mqtt:commandTopic ?commandTopic ;
             actuation:mlPerSecond ?mlPerSecond ; actuation:maxDoseMl ?maxDoseMl .
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
+  OPTIONAL {{ ?actuator mqtt:statusTopic ?statusTopic }}
  }}"""
 
 
@@ -278,6 +284,7 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
             uri=r["actuator"], local_id=r["localId"], subject=r["subject"],
             subject_id=r.get("subjectId") or "", command_topic=r["commandTopic"],
             ml_per_second=float(r["mlPerSecond"]), max_dose_ml=float(r["maxDoseMl"]),
+            status_topic=r.get("statusTopic"),
         )
         for r in bindings(query(_actuators_q(me.uri)))
     )

@@ -15,7 +15,10 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
                                        <http://example.org/agora/actuation#Actuation> }
         """ ] ;
     sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class actuation:Actuator ;
-                  sh:message "an agent that actuates must own at least one actuator" ] .
+                  sh:message "an agent that actuates must own at least one actuator" ] ;
+    sh:property [ sh:path actuation:doseGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minInclusive 0 ;
+                  sh:message "an agent that actuates must say how long it waits for a device to confirm a dose — actuation:doseGraceS, added to the open-seconds it computed for that dose" ] .
 
 actuation:ActuatorShape a sh:NodeShape ;
     rdfs:comment "An actuator delivers to exactly one subject, states where it takes its commands, and carries its own calibration and hard cap — so dosing is a fact about the device, not a constant in code." ;

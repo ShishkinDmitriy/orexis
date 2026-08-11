@@ -4,6 +4,8 @@ These use the real `Agent`, the real world and the real modules — only MQTT an
 stubbed, because they are the two things that would leave the machine.
 """
 
+import logging
+
 import pytest
 
 from conftest import build_agent
@@ -70,13 +72,62 @@ def test_host_subscribes_its_participants_and_bid_channel(agent):
 
 # --- routing ---------------------------------------------------------------
 
-def test_a_message_is_handled_by_exactly_one_module(agent, monkeypatch):
+def test_a_message_is_offered_to_every_module(agent, monkeypatch):
+    """One message, every module that wants it — not the first one that speaks up.
+
+    This test used to assert `len(seen) == 1`, which was the defect written down as the
+    contract. `_on_message` returned as soon as a module's `handle` came back true, so a
+    second module subscribed to the same topic never saw the message at all.
+
+    Exactly the defect #51 fixed one level down, where `PerceptionModule.handle` returned
+    after the first SENSOR owning a topic and a board's second channel went unread. The
+    module-level version stayed because nothing yet wanted one topic twice. #36 wants it:
+    actuation subscribes to its valves' status, and a supplier runs actuation beside hosting.
+
+    `reading_recorded` immediately above already offers to every module. This is that.
+    """
     fern = agent("fern")
     seen = []
     for m in fern.modules:
         monkeypatch.setattr(m, "handle", lambda t, p, n=m.name: (seen.append(n), True)[1])
     fern.deliver(fern.me.sensors[0].reading_topic, {"value": 0.2})
-    assert len(seen) == 1
+    assert len(seen) == len(fern.modules), f"only {seen} were offered it"
+
+
+def test_a_module_that_claims_a_topic_does_not_silence_the_next(agent, monkeypatch):
+    """The narrow case, stated on its own because it is the one that bit.
+
+    The FIRST module claims and the SECOND is the one with work to do. Under the old loop the
+    second is never called, and nothing anywhere says so — the message is simply gone.
+    """
+    fern = agent("fern")
+    first, second = fern.modules[0], fern.modules[1]
+    monkeypatch.setattr(first, "handle", lambda t, p: True)
+    reached = []
+    monkeypatch.setattr(second, "handle", lambda t, p: (reached.append(t), True)[1])
+    fern.deliver("shared/channel", {})
+    assert reached, "the first module claiming the topic hid it from the second"
+
+
+def test_the_unhandled_warning_still_fires_only_when_nobody_took_it(agent, monkeypatch, caplog):
+    """A regression guard rather than a failing test: unchanged by the fix, and worth holding.
+
+    The warning is what makes a topic disagreement visible — the world names one channel, the
+    device publishes on another, both ends look healthy. Offering the message to everyone must
+    not turn `handled` into "somebody was asked", which would silence it forever.
+    """
+    fern = agent("fern")
+    for m in fern.modules:
+        monkeypatch.setattr(m, "handle", lambda t, p: False)
+    with caplog.at_level(logging.WARNING):
+        fern.deliver("nobody/wants/this", {})
+    assert "nothing handled a message" in caplog.text
+
+    caplog.clear()
+    monkeypatch.setattr(fern.modules[0], "handle", lambda t, p: True)
+    with caplog.at_level(logging.WARNING):
+        fern.deliver("somebody/wants/this", {})
+    assert "nothing handled a message" not in caplog.text
 
 
 def test_an_unrelated_topic_is_ignored(agent):

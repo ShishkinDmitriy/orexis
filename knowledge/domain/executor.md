@@ -65,6 +65,18 @@ So the pump is a **guarded** MQTT subscriber, with four properties the sensor ed
    so the executor knows water actually flowed and the receipt is truthful. Subscriber *and*
    publisher.
 
+   **This is read now.** It was granted in PR #34 and had no listener until
+   [an-unconfirmed-dose-is-not-a-delivered-one](/decisions/an-unconfirmed-dose-is-not-a-delivered-one.md),
+   so a dose that never happened looked exactly like one that did. Actuation matches the report
+   to the command by `jti`, and a dose nobody confirms before its deadline — that dose's own
+   open-seconds plus `actuation:doseGraceS` — is logged and counted as `doses_unconfirmed`.
+   **Silence is the device's refusal**, not an oversight: the valve publishes here after
+   dispensing and says nothing when it rejects a command.
+
+   An unconfirmed dose **stays spent**. The device refuses replays itself, so re-sending buys
+   nothing, and a lost report followed by a re-send would risk watering twice — where an
+   unopened valve costs one round the plant bids again for.
+
 # Responsibilities (per grant)
 
 1. **Validate the grant** — issued by clearing, scope matches the valve, passed the
