@@ -66,7 +66,7 @@ def test_the_conclusions_land_in_the_derived_graph_not_the_world():
 
 def test_the_other_worlds_get_them_too():
     """Nothing about this is specific to the world that grew a second peripheral."""
-    for world, agent in (("society", "fern"), ("simulation", "tomato")):
+    for world, agent in (("sensing", "fern"), ("simulation", "tomato")):
         for sensor in sensors_of(world, agent).values():
             assert sensor.decoded_by == JSON and sensor.scaled_by == IDENTITY
 
@@ -164,7 +164,7 @@ def test_the_lookup_finds_the_implementation():
 def test_a_member_this_build_does_not_implement_is_reported_not_raised():
     """A world may name a declared-but-unimplemented member — `codec:Cbor` is exactly the
     position `perception:Polling` and `review:Consulting` hold. The shapes deliberately allow it, so the
-    honest cost is one unread sensor and a warning rather than a society that cannot start."""
+    honest cost is one unread sensor and a warning rather than a world that cannot start."""
     probe = sensors_of()["moisture_sensor_fern"]
     assert codec_for(probe.__class__(**{**vars(probe), "decoded_by": CBOR})) is None
     assert scaling_for(probe.__class__(**{**vars(probe), "scaled_by": LINEAR})) is None

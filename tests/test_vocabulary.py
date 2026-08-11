@@ -49,14 +49,14 @@ def _aged_store():
     the world and the T-Box from the ratified files, and the volume it was already holding did
     not move, because birth happens once.
     """
-    st = genesis_store(world="society")
+    st = genesis_store(world="simulation")
     st.put_graph(beliefs_graph("fern"), BEFORE_THE_SWEEP)
     return st
 
 
 # --- the vocabulary agrees with itself -----------------------------------------------------
 
-@pytest.mark.parametrize("world", ["society", "simulation", "sensing"])
+@pytest.mark.parametrize("world", ["simulation", "sensing"])
 def test_a_shipped_world_is_current_by_construction(world):
     """Nothing shipped is stale, or the check would refuse every agent on every start.
 
@@ -76,7 +76,7 @@ def test_a_kernel_term_that_still_exists_is_not_a_rename():
     `capabilities/reporting/`. The subject had to change; the assertion did not. Any term the
     kernel still declares serves, and `ag:localId` is the one least likely to move next.
     """
-    settled, _ = vocabulary.renames(genesis_store(world="society"))
+    settled, _ = vocabulary.renames(genesis_store(world="simulation"))
     assert AG + "localId" not in settled
 
 
@@ -88,7 +88,7 @@ def test_a_name_two_packages_share_is_contested_rather_than_guessed():
     neither was ever a kernel term, so refusing at load would have stopped every agent booting
     over a collision no volume can contain.
     """
-    settled, contested = vocabulary.renames(genesis_store(world="society"))
+    settled, contested = vocabulary.renames(genesis_store(world="simulation"))
     assert AG + "DataPinRole" in contested
     assert AG + "DataPinRole" not in settled
     assert len(contested[AG + "DataPinRole"]) == 2
@@ -188,7 +188,7 @@ def test_an_aged_volume_refuses_to_open(tmp_path, monkeypatch):
     """
     monkeypatch.delenv("AGORA_MIGRATE_BELIEFS", raising=False)
     path = str(tmp_path / "beliefs")
-    world = WORLDS_ROOT / "society"
+    world = WORLDS_ROOT / "simulation"
 
     genesis.open_belief_base(world, "fern", path)  # born, current
     aged = Store(path)
@@ -201,7 +201,7 @@ def test_an_aged_volume_refuses_to_open(tmp_path, monkeypatch):
 
 def test_and_opens_when_asked_to_migrate(tmp_path, monkeypatch):
     path = str(tmp_path / "beliefs")
-    world = WORLDS_ROOT / "society"
+    world = WORLDS_ROOT / "simulation"
 
     genesis.open_belief_base(world, "fern", path)
     aged = Store(path)

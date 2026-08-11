@@ -26,7 +26,7 @@ from agent.ontology import (AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENA
 from agent.store import Store, bindings
 from agent.validate import conforms, graph_from
 
-WORLDS = ["society", "simulation", "sensing"]
+WORLDS = ["simulation", "sensing"]
 
 
 def _public(world: str) -> Store:
@@ -73,9 +73,9 @@ def test_computed_graphs_do_not_accumulate_across_starts():
     """`refresh_public` runs on every boot, and an agent may run for months between restarts.
     A closure or a derivation that appended rather than replaced would grow the belief base by
     restart count — and `belief_triples` is reported as flat (see domain/agent-metrics.md)."""
-    st = _public("society")
+    st = _public("simulation")
     sizes = _sizes(st)
-    genesis.refresh_public(st, genesis.world_dir("society"))
+    genesis.refresh_public(st, genesis.world_dir("simulation"))
     assert _sizes(st) == sizes
 
 
@@ -113,8 +113,8 @@ def test_private_graphs_are_not_in_the_default_graph():
     only by naming their graph, which is what keeps a review's write boundary checkable."""
     from agent.ontology import beliefs_graph
 
-    st = _public("society")
-    genesis.birth(st, genesis.world_dir("society"), "fern")
+    st = _public("simulation")
+    genesis.birth(st, genesis.world_dir("simulation"), "fern")
     assert _in_graph(st, beliefs_graph("fern"), "?a perception:slowSleepS ?v")
     assert not bindings(st.query("SELECT * WHERE { ?a perception:slowSleepS ?v }"))
 
@@ -149,7 +149,7 @@ def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
     versus what an activity produced, and which activity. A reader who had never seen this
     codebase could ask the same questions.
     """
-    st = _public("society")
+    st = _public("simulation")
     from_files = {r["g"] for r in _in_graph(
         st, PROVENANCE_GRAPH, "?g a prov:Entity ; prov:wasDerivedFrom ?f")}
     computed = {r["g"] for r in _in_graph(
@@ -178,7 +178,7 @@ def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
 def test_a_graph_that_explains_nothing_is_refused():
     """The shape, exercised. Without this the shape could be silently wrong and nothing would
     say so — a constitution nobody tests is a comment with extra syntax."""
-    st = _public("society")
+    st = _public("simulation")
     st.update(f"""INSERT DATA {{ GRAPH <{PROVENANCE_GRAPH}> {{
         <http://example.org/agora/graph/mystery> a prov:Entity }} }}""")
     data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
@@ -197,7 +197,7 @@ def test_a_sixth_public_graph_needs_no_python():
     Here a graph is declared public in the vocabulary alone. Nothing is imported, nothing is
     edited, and it turns up in the default graph of an ordinary query.
     """
-    st = _public("society")
+    st = _public("simulation")
     before = set(st.public_graphs())
 
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
@@ -219,7 +219,7 @@ def test_a_graph_typed_privately_stays_out_of_the_default_graph():
     query. Declared membership fails the safe way round, with a graph nobody typed simply
     invisible until someone says what it is.
     """
-    st = _public("society")
+    st = _public("simulation")
     st.update("""INSERT DATA { GRAPH <http://example.org/agora/graph/private> {
         ag:fern_agent ag:aSecret "shh" } }""")
     assert "http://example.org/agora/graph/private" not in st.public_graphs()
@@ -235,7 +235,7 @@ def test_provenance_is_not_in_the_default_graph():
     `agora-wokwi` really asks, would start returning activities — and every graph IRI would become
     a subject in a society that otherwise contains only things a society has.
     """
-    st = _public("society")
+    st = _public("simulation")
     assert not bindings(st.query("SELECT * WHERE { ?s a prov:Activity }"))
     assert _in_graph(st, PROVENANCE_GRAPH, "?s a prov:Activity")
 
@@ -271,7 +271,7 @@ def test_there_is_no_sovereign_agent_only_a_sovereign_role():
     """The distinction the whole design turns on. `ag:Sovereign` is a `prov:Role`; if it were
     ever also typed as an agent, "who is the sovereign" would become a permanent property of a
     person rather than a fact about one ratification, and a second user could not exist."""
-    st = _public("society")
+    st = _public("simulation")
     kinds = {r["t"] for r in bindings(st.query(f"SELECT ?t WHERE {{ <{AG}Sovereign> a ?t }}"))}
     assert "http://www.w3.org/ns/prov#Role" in kinds
     assert not {k for k in kinds if k.endswith(("Agent", "Person", "SoftwareAgent"))}
@@ -281,7 +281,7 @@ def test_the_world_references_a_user_and_declares_nothing_about_them():
     """A user is installation-level (AGENTS.md rule 3) and an agent is given only its world — so
     the URI is an identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never
     introspects. Saying more here would be a world asserting facts about the installation."""
-    st = _public("society")
+    st = _public("simulation")
     user = bindings(st.query(
         "SELECT ?u WHERE { ?w a ag:World ; prov:qualifiedAttribution [ prov:agent ?u ] }"))[0]["u"]
     said = bindings(st.query(f"SELECT ?p WHERE {{ <{user}> ?p ?o }}"))
@@ -298,12 +298,12 @@ def test_the_world_states_the_capacity_and_the_loader_does_not_assume_it():
     """
     from agent import provenance
 
-    st = _public("society")
+    st = _public("simulation")
     user, role = provenance.attribution_of(st)
     assert role == AG + "Sovereign"
     # Copied, not invented: change what the world says and the description follows.
     assert f"prov:hadRole <{role}>" in provenance._turtle(
-        genesis.world_dir("society"), (user, role))
+        genesis.world_dir("simulation"), (user, role))
 
 
 def test_a_user_named_without_a_capacity_gets_no_association():
@@ -311,7 +311,7 @@ def test_a_user_named_without_a_capacity_gets_no_association():
     capacity is the whole distinction. Silence is a better answer than a guess."""
     from agent import provenance
 
-    st = _public("society")
+    st = _public("simulation")
     st.update(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?w prov:qualifiedAttribution ?a }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?w prov:wasAttributedTo <urn:someone> }} }}

@@ -92,6 +92,14 @@ def test_plant_agent_cannot_actuate(me):
 def _world_with_push_sensor():
     """Swap fern's board for one that pushes on its own clock, and re-derive.
 
+    EVERY sensor fern polls, not one named one. This used to edit `ag:moisture_sensor_fern`
+    alone, which was the whole of fern's wiring when the world it ran against had one sensor per
+    agent. It has two now — a probe and a thermometer sharing the board's one message — and
+    switching only the probe leaves the thermometer scheduled, so the agent keeps `Subscribing`
+    as well and the test reads as a failure when the design is working exactly as
+    `who-holds-the-clock` describes. What is under test is that the HARDWARE decides, so the
+    edit has to be about the board rather than about one channel on it.
+
     Only the RATIFIED fact is edited — the sense mode, which is the sovereign's. The old
     capability is not deleted here because it is not the world's to delete: it was computed, it
     lives in the derived graph, and the way to be rid of a conclusion is to drop the conclusions
@@ -101,12 +109,11 @@ def _world_with_push_sensor():
     """
     st = genesis_store()
     st.update(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern perception:senseMode perception:Scheduled }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern perception:senseMode perception:Push }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:Scheduled }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:Push }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:moisture_sensor_fern perception:senseMode perception:Scheduled }} }}
+                 ag:fern_agent perception:polls ?s .
+                 ?s perception:senseMode perception:Scheduled }} }}
     """)
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
@@ -127,7 +134,7 @@ def test_swapping_the_board_does_not_touch_the_agent():
     """Nothing about fern_agent was edited — only the device it is wired to."""
     me = load_self(query_fn(_world_with_push_sensor()), "fern")
     assert me.can(BIDDING)  # its market wiring is untouched
-    assert [s.local_id for s in me.sensors] == ["moisture_sensor_fern"]
+    assert [s.local_id for s in me.sensors] == ["air_temp_fern", "moisture_sensor_fern"]
 
 
 # --- the same hardware, a different world ----------------------------------
@@ -157,7 +164,7 @@ def test_the_board_did_not_change_only_the_model_did():
     which is why the identical flashed board still works in either.
     """
     watching = load_self(query_fn(genesis_store(world="sensing")), "fern")
-    buying = load_self(query_fn(genesis_store(world="society")), "fern")
+    buying = load_self(query_fn(genesis_store(world="simulation")), "fern")
 
     assert {s.reading_topic for s in watching.sensors} == \
            {s.reading_topic for s in buying.sensors}, "one channel, whichever world is seeded"

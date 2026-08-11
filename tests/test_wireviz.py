@@ -27,7 +27,7 @@ def parsed(harness):
 
 
 def test_a_world_with_no_hardware_documents_nothing():
-    assert render("society") is None
+    assert render("simulation") is None
     assert render("simulation") is None
 
 

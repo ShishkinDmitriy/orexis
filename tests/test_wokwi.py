@@ -32,7 +32,7 @@ def wires(doc):
 def test_a_world_with_no_hardware_draws_nothing():
     """Two of the three shipped worlds have no boards. An empty diagram is a picture of nothing
     that looks like a picture of a broken generator."""
-    assert render("society") is None
+    assert render("simulation") is None
     assert render("simulation") is None
 
 

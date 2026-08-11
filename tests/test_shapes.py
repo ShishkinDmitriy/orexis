@@ -196,15 +196,21 @@ def test_an_agent_that_only_listens_must_not_hold_a_cadence():
 
     ONLY listens — the Subscribing capability has to go too. An agent that holds both is a
     legitimate rig (a scheduled probe and a push thermometer on one plant) and needs both blocks.
+
+    Every sensor fern polls is switched, and the derived capability is left to the rules rather
+    than hand-written. It used to switch `ag:moisture_sensor_fern` and then edit the derived
+    graph directly, which worked only while fern had exactly one sensor: it has two now, so the
+    untouched one kept it `Scheduled`, and `_mutate` re-derives ADDITIVELY — so the
+    hand-deleted `Subscribing` came straight back and the agent conformed, holding both modes
+    legitimately. Stating the premise properly is what makes the conclusion follow.
     """
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern perception:senseMode perception:Scheduled }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern perception:senseMode perception:Push }} }}
-        WHERE  {{}} ;
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:Scheduled }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:Push }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent perception:polls ?s .
+                                           ?s perception:senseMode perception:Scheduled }} }} ;
         DELETE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
             ag:fern_agent ag:hasCapability perception:Subscribing }} }}
-        INSERT {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-            ag:fern_agent ag:hasCapability perception:Listening }} }}
         WHERE  {{}}"""))
 
 
@@ -252,9 +258,14 @@ def test_two_sensors_on_one_property_are_warned_about_and_not_refused():
 
 def test_two_sensors_on_different_properties_are_not_warned_about():
     """The ordinary rig, and the case the shape must not catch. A pot whose moisture and
-    temperature are both known is not a modelling error, and saying so would train the operator
-    to ignore the message that matters."""
-    data = _duplicate_probe("water:AirTemperature")
+    humidity are both known is not a modelling error, and saying so would train the operator
+    to ignore the message that matters.
+
+    Humidity rather than temperature, because fern already reads a temperature — the world this
+    runs against has a probe and a thermometer sharing one board. Adding a second thermometer
+    would be the duplicate case, which is the test above, and it fired exactly as it should.
+    """
+    data = _duplicate_probe("water:AirHumidity")
     assert _conforms(data)
     assert "another sensor already reads this property" not in _report(data)
 

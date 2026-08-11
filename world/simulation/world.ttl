@@ -68,9 +68,9 @@ ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 ag:barrel1_market a market:Market ;
     ag:localId "barrel1_market" ;
     market:marketFor ag:barrel1 ;
-    market:offerTopic   "sim/market/barrel1/offer" ;
-    market:bidTopic     "sim/market/barrel1/bid" ;
-    market:voucherTopic "sim/market/barrel1/voucher" .
+    market:offerTopic   "market/barrel1/offer" ;
+    market:bidTopic     "market/barrel1/bid" ;
+    market:voucherTopic "market/barrel1/voucher" .
 
 ag:barrel1 a water:WaterSource ;
     ag:localId "barrel1" ;
@@ -112,23 +112,23 @@ ag:succulent a water:Plant ;
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
     ag:actsFor ag:fern ;
-    perception:polls ag:sensor_fern , ag:air_fern ;
+    perception:polls ag:moisture_sensor_fern , ag:air_temp_fern ;
     market:bidsIn ag:barrel1_market ;
-    mqtt:eventTopic "sim/readings/fern" .
+    mqtt:eventTopic "readings/fern" .
 
 ag:tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
     ag:actsFor ag:tomato ;
-    perception:polls ag:sensor_tomato ;
+    perception:polls ag:moisture_sensor_tomato ;
     market:bidsIn ag:barrel1_market ;
-    mqtt:eventTopic "sim/readings/tomato" .
+    mqtt:eventTopic "readings/tomato" .
 
 ag:succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
     ag:actsFor ag:succulent ;
-    perception:polls ag:sensor_succulent ;
+    perception:polls ag:moisture_sensor_succulent ;
     market:bidsIn ag:barrel1_market ;
-    mqtt:eventTopic "sim/readings/succulent" .
+    mqtt:eventTopic "readings/succulent" .
 
 ##########  What each agent may re-pick, and how far  ##########
 #  A MANDATE: the room this world gives an agent on one of its own settings. Here rather than in
@@ -161,19 +161,19 @@ ag:succulent_agent review:commits [ review:onTerm perception:slowSleepS ; review
 #  each takes its own number out of it with a JSON Pointer.
 #
 #  Note which one carries mqtt:onBus and which does not. The board holds ONE credential and
-#  publishes ONE message, so `ag:air_fern` mints no principal of its own: a second credential
+#  publishes ONE message, so `ag:air_temp_fern` mints no principal of its own: a second credential
 #  for a client that never connects is exactly what the hardware world refuses. It is reachable
 #  because its neighbour publishes for it, which is what `ag:SimulatedDeviceShape` now tests.
 
-ag:sensor_fern a perception:Sensor ;
-    ag:localId "sensor_fern" ;
+ag:moisture_sensor_fern a perception:Sensor ;
+    ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
     perception:senseMode perception:Scheduled ;
     perception:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
-    mqtt:readingTopic "sim/sensors/sensor_fern/reading" ;
-    mqtt:commandTopic "sim/sensors/sensor_fern/command" ;
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
         ag:modelInitialValue 0.45 ;
@@ -184,15 +184,15 @@ ag:sensor_fern a perception:Sensor ;
 #  it is the same device speaking, and the only thing that makes it a separate SENSOR is that it
 #  observes a different property. Its range is degrees, not a fraction, which is the assumption
 #  ag:DeviceModelShape had to stop making.
-ag:air_fern a perception:Sensor ;
-    ag:localId "air_fern" ;
+ag:air_temp_fern a perception:Sensor ;
+    ag:localId "air_temp_fern" ;
     perception:senseMode perception:Scheduled ;
     perception:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
-    mqtt:readingTopic "sim/sensors/sensor_fern/reading" ;
+    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:readingPointer "/temperature" ;
-    mqtt:commandTopic "sim/sensors/sensor_fern/command" ;
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelMinValue -10.0 ; ag:modelMaxValue 45.0 ;
         ag:modelInitialValue 21.0 ;
@@ -201,27 +201,27 @@ ag:air_fern a perception:Sensor ;
         ag:modelDryRate -0.05 ;
         ag:modelTickSeconds 3 ] .
 
-ag:sensor_tomato a perception:Sensor ;
-    ag:localId "sensor_tomato" ;
+ag:moisture_sensor_tomato a perception:Sensor ;
+    ag:localId "moisture_sensor_tomato" ;
     mqtt:onBus ag:local_bus ;
     perception:senseMode perception:Scheduled ;
     perception:monitors ag:tomato ;
     sosa:observes water:SoilMoisture ;
-    mqtt:readingTopic "sim/sensors/sensor_tomato/reading" ;
-    mqtt:commandTopic "sim/sensors/sensor_tomato/command" ;
+    mqtt:readingTopic "sensors/moisture_sensor_tomato/reading" ;
+    mqtt:commandTopic "sensors/moisture_sensor_tomato/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
         ag:modelDryRate 0.02 ;
         ag:modelTickSeconds 3 ] .
 
-ag:sensor_succulent a perception:Sensor ;
-    ag:localId "sensor_succulent" ;
+ag:moisture_sensor_succulent a perception:Sensor ;
+    ag:localId "moisture_sensor_succulent" ;
     mqtt:onBus ag:local_bus ;
     perception:senseMode perception:Scheduled ;
     perception:monitors ag:succulent ;
     sosa:observes water:SoilMoisture ;
-    mqtt:readingTopic "sim/sensors/sensor_succulent/reading" ;
-    mqtt:commandTopic "sim/sensors/sensor_succulent/command" ;
+    mqtt:readingTopic "sensors/moisture_sensor_succulent/reading" ;
+    mqtt:commandTopic "sensors/moisture_sensor_succulent/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
         ag:modelDryRate 0.015 ;
@@ -241,20 +241,20 @@ ag:sensor_succulent a perception:Sensor ;
 ag:valve_fern a actuation:Valve ;
     ag:localId "valve_fern" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:fern ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
-    mqtt:commandTopic "sim/actuators/valve_fern/command" ;
-    mqtt:statusTopic "sim/actuators/valve_fern/status" ;
+    mqtt:commandTopic "actuators/valve_fern/command" ;
+    mqtt:statusTopic "actuators/valve_fern/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
 ag:valve_tomato a actuation:Valve ;
     ag:localId "valve_tomato" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:tomato ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
-    mqtt:commandTopic "sim/actuators/valve_tomato/command" ;
-    mqtt:statusTopic "sim/actuators/valve_tomato/status" ;
+    mqtt:commandTopic "actuators/valve_tomato/command" ;
+    mqtt:statusTopic "actuators/valve_tomato/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
 ag:valve_succulent a actuation:Valve ;
     ag:localId "valve_succulent" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:succulent ; actuation:drawsFrom ag:barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
-    mqtt:commandTopic "sim/actuators/valve_succulent/command" ;
-    mqtt:statusTopic "sim/actuators/valve_succulent/status" ;
+    mqtt:commandTopic "actuators/valve_succulent/command" ;
+    mqtt:statusTopic "actuators/valve_succulent/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .

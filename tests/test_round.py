@@ -419,7 +419,7 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
     from agent.store import Store
 
     world = tmp_path / "world"
-    shutil.copytree(genesis.world_dir("society"), world, dirs_exist_ok=True)
+    shutil.copytree(genesis.world_dir("simulation"), world, dirs_exist_ok=True)
     (world / "secrets").mkdir(exist_ok=True)
     # The one edit a sovereign makes: this host runs a different auction.
     ttl = world / "world.ttl"

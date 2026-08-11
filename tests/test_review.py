@@ -94,7 +94,7 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
     from agent.store import Store
     from agent.validate import conforms, graph_from
 
-    path = genesis.world_dir("society")
+    path = genesis.world_dir("simulation")
 
     def built():
         """Exactly what `agora-validate` builds: the public graphs plus everyone's beliefs."""
