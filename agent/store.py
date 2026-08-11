@@ -80,6 +80,18 @@ _EXTERNAL = {
     # `unit:` could silently redirect every unit in the society. Borrowed and not imported — the
     # IRIs are referenced, nothing of QUDT is loaded, and `agent/inference.py` gains no axioms.
     "unit": "http://qudt.org/vocab/unit/",
+    # What a device can honour, rather than what it is being asked for. SSN's System
+    # capabilities module, borrowed on the same terms as everything else here: the IRIs are
+    # referenced and none of SSN is loaded.
+    #
+    # `ssn:` is here for one axiom and would otherwise not be. `ssn-system:hasSystemCapability`
+    # hangs off an `ssn:System`, and what makes that reach a sensor is `sosa:Sensor
+    # rdfs:subClassOf ssn:System` — asserted in the SSN document, which is neither SOSA nor this
+    # module, and which nothing here loads. Borrowing an IRI brings its DEFINITION and not the
+    # axioms other documents state ABOUT it; `capabilities/perception/ontology.ttl` restates that
+    # one so the module reaches what it is supposed to reach.
+    "ssn": "http://www.w3.org/ns/ssn/",
+    "ssn-system": "http://www.w3.org/ns/ssn/systems/",
 }
 
 NAMESPACES = {**_EXTERNAL, **loader.prefixes()}

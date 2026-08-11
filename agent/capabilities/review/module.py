@@ -189,17 +189,25 @@ class ReviewModule(Module):
     # --- the room a term has -------------------------------------------------------------
 
     def ranges(self) -> dict[str, Range]:
-        """The constitution, narrowed by this agent's mandate. Hardware limits when any exist.
+        """The constitution, narrowed by this agent's mandate, and by what its equipment allows.
 
         The mandate is read from the world rather than from beliefs, which is what lets the
         derivation see it — a capability granted by a private fact could not be derived at all.
         No graph is named: a commitment is the sovereign's and its term may be entailed, so the
         two can live apart and the default graph is what merges them.
+
+        The third source stopped being hypothetical. `review:limitedTo` is what the equipment
+        allows, derived at genesis from the `ssn-system:Frequency` an agent's sensors declare —
+        so a board that cannot be read faster than every thirty seconds floors its agent at
+        thirty, and the agent can no longer commit to a cadence the board will never keep. Both
+        narrow by the same arithmetic, which is why one alternation covers them; they are
+        separate predicates because a mandate is a governance fact and this is a fact about a
+        board, and a revision refused by one should not read as refused by the other.
         """
         out = world_ranges(self.agent.store.query)
         for row in bindings(self.agent.store.query(f"""
 SELECT ?term ?below ?above WHERE {{
-  <{self.agent.me.uri}> review:commits ?c . ?c review:onTerm ?term .
+  <{self.agent.me.uri}> review:commits|review:limitedTo ?c . ?c review:onTerm ?term .
   OPTIONAL {{ ?c review:notBelow ?below }} OPTIONAL {{ ?c review:notAbove ?above }} }}""")):
             held = out.get(row["term"])
             if held is None:

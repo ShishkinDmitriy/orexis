@@ -56,3 +56,21 @@ review:MandateWithinTheConstitutionShape a sh:NodeShape ;
                 FILTER(?v < ?lo || ?v > ?hi)
             }
         """ ] .
+
+review:MandateWithinWhatTheEquipmentCanHonourShape a sh:NodeShape ;
+    rdfs:comment "A world may commit an agent to less than its equipment allows; it may not commit it to more. The mandate above is checked against the CONSTITUTION, which is what the society permits anyone — this is the other end, and it is what the hardware permits this one. Both stated ends must sit inside what the board can honour: a floor below it is an author claiming a cadence the device will never keep, and a ceiling below it leaves no legal value at all. Only STATED bounds are checked, because a mandate that names neither inherits the constitution and has claimed nothing. What it compares against is derived rather than typed — `review:limitedTo` is computed at genesis from the ssn-system:Frequency an agent's sensors declare — so this refuses an author who contradicts a datasheet, not one who forgot to repeat it." ;
+    sh:targetObjectsOf review:commits ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "this mandate reaches past what the agent's own equipment can honour — a board states the smallest gap it will keep, and a world may not commit an agent to less" ;
+        sh:select """
+            SELECT $this WHERE {
+                ?agent <http://example.org/agora/review#commits> $this .
+                $this <http://example.org/agora/review#onTerm> ?term .
+                { $this <http://example.org/agora/review#notBelow> ?v } UNION
+                { $this <http://example.org/agora/review#notAbove> ?v }
+                ?agent <http://example.org/agora/review#limitedTo> ?limit .
+                ?limit <http://example.org/agora/review#onTerm> ?term ;
+                       <http://example.org/agora/review#notBelow> ?floor .
+                FILTER(?v < ?floor)
+            }
+        """ ] .

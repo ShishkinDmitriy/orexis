@@ -18,6 +18,8 @@
 # question for that transport's shapes, not for this rule.
 
 PREFIX perception: <http://example.org/agora/perception#>
+PREFIX review: <http://example.org/agora/review#>
+PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX ag:   <http://example.org/agora#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
@@ -41,4 +43,32 @@ WHERE  { ?agent perception:polls ?sensor . ?sensor a perception:Sensor ; percept
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability perception:Listening } }
 $given
-WHERE  { ?agent perception:polls ?sensor . ?sensor a perception:Sensor ; perception:senseMode perception:Push }
+WHERE  { ?agent perception:polls ?sensor . ?sensor a perception:Sensor ; perception:senseMode perception:Push } ;
+
+#  What the EQUIPMENT allows, carried from the sensor to the agent that polls it.
+#
+#  An agent cannot ask its sensors what they can do — `ranges()` narrows a belief it holds, and
+#  a belief is the agent's, so the limit has to reach the agent as a fact ABOUT THE AGENT. This
+#  is the carry: whatever floor any sensor an agent polls declares becomes a floor on that
+#  agent's cadence, because an agent polling two devices can go no faster than its slowest.
+#
+#  `MAX`, and that is the whole of the arithmetic. Two sensors on one agent, one honouring 30s
+#  and one 60s, leave the agent with 60: a floor is the tightest constraint that binds, and
+#  taking the min would let the slower board be asked for something it will never keep — which
+#  is the exact failure this exists to prevent, arrived at from the other side.
+#
+#  Shaped as a review:Commitment because it narrows the same term the same way and `ranges()`
+#  can then intersect both with one arithmetic. Under review:limitedTo and never
+#  review:commits: one is what a board can do and the other what a sovereign allowed, and a
+#  refused revision should say which of the two refused it.
+INSERT { GRAPH $derived {
+    ?agent review:limitedTo [ review:onTerm perception:slowSleepS ; review:notBelow ?floor ] } }
+$given
+WHERE  {
+    { SELECT ?agent (MAX(?s) AS ?floor) WHERE {
+        ?agent perception:polls ?sensor .
+        ?sensor ssn-system:hasSystemCapability ?cap .
+        ?cap ssn-system:hasSystemProperty ?freq .
+        ?freq a ssn-system:Frequency ; perception:seconds ?s .
+      } GROUP BY ?agent }
+}

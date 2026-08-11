@@ -9,6 +9,7 @@
 @prefix market: <http://example.org/agora/market#> .
 @prefix scaling: <http://example.org/agora/scaling#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 
 #  A ratified world, v1 — the SMALLEST one that produces a working agent.
 #
@@ -128,7 +129,14 @@ ag:air_temp_fern a perception:Sensor ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:readingPointer "/temperature" ;
-    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
+    # PROJECTED from the wiring, not typed. `dht11:Dht11` states this floor on the class, and an
+    # agent is never given hardware.ttl — so it is restated here in the one vocabulary an agent
+    # may hold for it. `tests/test_layout.py` holds the two to agreeing.
+    ssn-system:hasSystemCapability [
+        a ssn-system:SystemCapability ;
+        ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
+        ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 2 ] ] .
 
 ag:air_humidity_fern a perception:Sensor ;
     ag:localId "air_humidity_fern" ;
@@ -138,7 +146,14 @@ ag:air_humidity_fern a perception:Sensor ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:readingPointer "/humidity" ;
-    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
+    mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
+    # PROJECTED from the wiring, not typed. `dht11:Dht11` states this floor on the class, and an
+    # agent is never given hardware.ttl — so it is restated here in the one vocabulary an agent
+    # may hold for it. `tests/test_layout.py` holds the two to agreeing.
+    ssn-system:hasSystemCapability [
+        a ssn-system:SystemCapability ;
+        ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
+        ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 2 ] ] .
 
 ##########  The agent  ##########
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.

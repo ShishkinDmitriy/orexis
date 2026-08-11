@@ -578,3 +578,43 @@ def test_a_board_without_a_model_is_refused():
 ag:nameless a mc:Microcontroller ; ag:localId "nameless" .
 """, format="turtle")
     assert not _conforms(data)
+
+
+# --- what the equipment can honour ------------------------------------------------------------
+
+def test_a_mandate_past_what_the_board_can_honour_is_refused():
+    """A world may commit an agent to less than its equipment allows; never to more.
+
+    `MandateWithinTheConstitutionShape` checks the other end — what the SOCIETY permits anyone.
+    This is what the HARDWARE permits this one, and until `ssn-system:Frequency` there was
+    nothing to check it against: an agent could be committed to a ten-second cadence a board
+    would never keep, `stale_after_s` would compute freshness from the interval it asked for,
+    and a healthy board would read as a quiet one.
+
+    700 against `simulation`'s fern, which commits `notBelow 600`. The floor has to exceed the
+    mandate to conflict with it — a board FASTER than its mandate contradicts nothing, which is
+    why the shipped worlds still validate with a KY-015 declaring two seconds.
+    """
+    report = _report(_mutate("""
+PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+PREFIX perception: <http://example.org/agora/perception#>
+INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
+  ag:moisture_sensor_fern ssn-system:hasSystemCapability [
+      a ssn-system:SystemCapability ;
+      ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 700 ] ] } }"""))
+    assert "Conforms: False" in report
+    assert "equipment can honour" in report
+
+
+def test_a_board_faster_than_its_mandate_is_not_refused():
+    """The negative half, and the reason the shipped worlds still pass: a device that can be read
+    every second under a mandate committing to ten minutes has contradicted nothing. Without this
+    the shape above would be satisfied by any floor at all, which is a shape that fires on the
+    ordinary case."""
+    assert "Conforms: True" in _report(_mutate("""
+PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+PREFIX perception: <http://example.org/agora/perception#>
+INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
+  ag:moisture_sensor_fern ssn-system:hasSystemCapability [
+      a ssn-system:SystemCapability ;
+      ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 1 ] ] } }"""))
