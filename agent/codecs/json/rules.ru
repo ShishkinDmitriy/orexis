@@ -1,38 +1,50 @@
-# Derivation: which codec serves each sensor, from what its device SENDS.
+# Derivation: which codec serves each CHANNEL, from what the devices on it send.
 #
-# The premise is `codec:encoding` — a fact about the board's firmware, the same kind of fact as
-# `ag:senseMode`. Nobody's opinion, and nothing an agent decides. The conclusion is
-# `codec:decodedBy`, and like every other conclusion here it lands in the derived graph and is
-# never written by hand.
+# The premise is `codec:encoding` — a fact about a board's firmware, the same kind of fact as
+# `ag:senseMode`. The conclusion moved: it used to land on the sensor and now lands on the
+# stream, because an encoding is a property of a stream and never was one of a sensor. Three
+# sensors sharing one topic are three copies of one fact the moment it sits on them, and nothing
+# stops the copies disagreeing — which is exactly what validated clean before this.
 #
-# Why derive it at all when the premise names the member directly: because the DEFAULT has to
-# exist somewhere, and a default computed in Python is a fact nothing can read. Before this,
-# every sensor in every world was decoded as JSON by a `DEFAULT = True` on a class — true, load-
-# bearing, and absent from the graph. Now genesis writes it down, so a sensor's pipeline is
-# something you can query rather than something you infer from which classes a build imported.
+# A channel also outlives the sensor case. A command channel has no sensor at all, so a
+# sensor-borne encoding could never describe what an agent PUBLISHES to a board. That is the
+# path `codec:Json.encode()` was written for and nothing has ever reached.
 #
-# The two rules are DISJOINT by `FILTER NOT EXISTS`, which is what makes an explicit statement
-# beat the default structurally. It used to be a Python claim test that had to be written
-# carefully, ordered against a `PROVIDES` tuple that guarantees no order at all; here the
-# premises cannot both hold, so there is no order to get wrong.
+# The channel IRI is recomputed here rather than read, and that is forced rather than chosen:
+# `$given` is public MINUS the derived graph, so this rule cannot see the node
+# `transports/mqtt/rules.ru` mints. Both compute the same expression from the same topic, so
+# both name the same node without either depending on the other having run. The duplicated
+# CONCAT is the price of a rule never reading a conclusion, and it is the right price.
 #
-# A second codec package declaring itself the default as well would produce TWO conclusions for
-# one sensor, and `codec:SensorIsDecodedByExactlyOneShape` refuses that at validation — before
-# a society starts, rather than at the first message.
+# Silence is an assertion, not an absence. A device that states nothing is saying JSON, which is
+# what every board here sends — so a stream carrying one device that says CBOR and another that
+# says nothing has two claims on it and `codec:ChannelIsDecodedByExactlyOneShape` refuses the
+# world. That is the intended reading: two devices disagreeing about the format of one stream is
+# the error, however quietly one of them disagrees.
 
 PREFIX ag:    <http://example.org/agora#>
 PREFIX codec: <http://example.org/agora/codec#>
 
-#  Says what it sends -> that member decodes it.
+#  Says what it sends -> that member decodes every stream it is on.
 INSERT { GRAPH $derived {
-    ?sensor codec:decodedBy ?encoding } }
+    ?channel codec:decodedBy ?encoding } }
 $given
-WHERE  { ?sensor a ag:Sensor ; codec:encoding ?encoding . ?encoding a codec:Encoding } ;
+WHERE  {
+    ?device codec:encoding ?encoding . ?encoding a codec:Encoding .
+    { ?device ag:readingTopic ?topic } UNION { ?device ag:commandTopic ?topic }
+    UNION { ?device ag:statusTopic ?topic }
+    BIND(IRI(CONCAT("http://example.org/agora#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
+} ;
 
 #  Says nothing -> JSON, which is what every board in every shipped world sends. The default
 #  belongs to THIS package rather than to the kernel: it is a claim about what the fleet does,
 #  and a society whose boards all spoke CBOR would move it by adding a directory.
 INSERT { GRAPH $derived {
-    ?sensor codec:decodedBy codec:Json } }
+    ?channel codec:decodedBy codec:Json } }
 $given
-WHERE  { ?sensor a ag:Sensor . FILTER NOT EXISTS { ?sensor codec:encoding ?stated } }
+WHERE  {
+    { ?device ag:readingTopic ?topic } UNION { ?device ag:commandTopic ?topic }
+    UNION { ?device ag:statusTopic ?topic }
+    FILTER NOT EXISTS { ?device codec:encoding ?stated }
+    BIND(IRI(CONCAT("http://example.org/agora#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
+}

@@ -169,7 +169,10 @@ WHERE {{
   OPTIONAL {{ ?sensor ag:readingTopic ?readingTopic }}
   OPTIONAL {{ ?sensor ag:readingPointer ?readingPointer }}
   OPTIONAL {{ ?sensor ag:commandTopic ?commandTopic }}
-  OPTIONAL {{ ?sensor codec:decodedBy ?decodedBy }}
+  # Through the stream it publishes on, because an encoding is the stream's — see
+  # knowledge/decisions/a-stream-is-a-thing.md. Both halves are derived; this query runs over
+  # the whole store at boot rather than over `$given`, so it may read a conclusion.
+  OPTIONAL {{ ?sensor ag:publishesOn ?readingChannel . ?readingChannel codec:decodedBy ?decodedBy }}
   OPTIONAL {{ ?sensor scaling:scaledBy ?scaledBy }}
   OPTIONAL {{ ?sensor scaling:quantityUnit ?quantityUnit }}
  }}"""
