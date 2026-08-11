@@ -1,3 +1,4 @@
+@prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix actuation: <http://example.org/agora/actuation#> .
 @prefix ag:   <http://example.org/agora#> .
@@ -67,10 +68,10 @@ ag:barrel1_market a market:Market ;
     market:bidTopic     "sim/market/barrel1/bid" ;
     market:voucherTopic "sim/market/barrel1/voucher" .
 
-ag:barrel1 a ag:WaterSource ;
+ag:barrel1 a water:WaterSource ;
     ag:localId "barrel1" ;
-    ag:suppliedBy ag:supplier ;
-    ag:capacityL 5.0 .
+    water:suppliedBy ag:supplier ;
+    water:capacityL 5.0 .
 
 ##########  The supplier — runs the venue and owns the valves  ##########
 #  Derivation gives it Hosting (it owns a market) and Actuation (it holds valves), and NOT
@@ -88,17 +89,17 @@ ag:supplier a ag:Agent ;
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
 
-ag:fern a ag:Plant ;
-    ag:localId "fern" ; ag:servedBy ag:barrel1 ;
-    ag:dryRatePerTick 0.01 ; ag:litresPerFraction 2.0 .
+ag:fern a water:Plant ;
+    ag:localId "fern" ; water:servedBy ag:barrel1 ;
+    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 .
 
-ag:tomato a ag:Plant ;
-    ag:localId "tomato" ; ag:servedBy ag:barrel1 ;
-    ag:dryRatePerTick 0.01 ; ag:litresPerFraction 2.0 .
+ag:tomato a water:Plant ;
+    ag:localId "tomato" ; water:servedBy ag:barrel1 ;
+    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 .
 
-ag:succulent a ag:Plant ;
-    ag:localId "succulent" ; ag:servedBy ag:barrel1 ;
-    ag:dryRatePerTick 0.008 ; ag:litresPerFraction 2.0 .
+ag:succulent a water:Plant ;
+    ag:localId "succulent" ; water:servedBy ag:barrel1 ;
+    water:dryRatePerTick 0.008 ; water:litresPerFraction 2.0 .
 
 ##########  Plant agents — each wired to its own sensor and into the market  ##########
 #  ag:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
@@ -156,7 +157,7 @@ ag:sensor_fern a ag:Sensor ;
     mqtt:onBus ag:local_bus ;
     ag:senseMode ag:Scheduled ;
     ag:monitors ag:fern ;
-    sosa:observes ag:SoilMoisture ;
+    sosa:observes water:SoilMoisture ;
     mqtt:readingTopic "sim/sensors/sensor_fern/reading" ;
     mqtt:commandTopic "sim/sensors/sensor_fern/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
@@ -172,7 +173,7 @@ ag:sensor_tomato a ag:Sensor ;
     mqtt:onBus ag:local_bus ;
     ag:senseMode ag:Scheduled ;
     ag:monitors ag:tomato ;
-    sosa:observes ag:SoilMoisture ;
+    sosa:observes water:SoilMoisture ;
     mqtt:readingTopic "sim/sensors/sensor_tomato/reading" ;
     mqtt:commandTopic "sim/sensors/sensor_tomato/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
@@ -185,7 +186,7 @@ ag:sensor_succulent a ag:Sensor ;
     mqtt:onBus ag:local_bus ;
     ag:senseMode ag:Scheduled ;
     ag:monitors ag:succulent ;
-    sosa:observes ag:SoilMoisture ;
+    sosa:observes water:SoilMoisture ;
     mqtt:readingTopic "sim/sensors/sensor_succulent/reading" ;
     mqtt:commandTopic "sim/sensors/sensor_succulent/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;

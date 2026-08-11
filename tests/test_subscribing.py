@@ -149,7 +149,7 @@ def test_a_malformed_reading_changes_nothing(fern):
 # --- one agent, two sensors, two clocks --------------------------------------
 
 
-def _two_sensor_world(tmp_path, observes="ag:SoilMoisture"):
+def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     """A fern watched by a scheduled board AND a push one, which no shipped world does.
 
     The combination is unexercised rather than untested by oversight — every world here wires one
@@ -365,7 +365,7 @@ def test_a_device_whose_agent_holds_no_stake_is_told_only_a_cadence(monkeypatch,
     The verdict is collected the way every cross-capability opinion is: whoever has one
     contributes. Nobody does here, and the message must not grow an empty field for it.
     """
-    agent = _agent_on(_two_sensor_world(tmp_path, observes="ag:AirTemperature"), monkeypatch)
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
     agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
 
     sent = [p for t, p, _ in agent.sent if t.endswith("/command")]
@@ -382,7 +382,7 @@ def test_two_properties_of_one_pot_do_not_overwrite_each_other(monkeypatch, tmp_
     arrived last. Delivered in this order, asking for moisture would have answered 21.0 — the
     right pot, the wrong quantity, and nothing in the number to say so.
     """
-    agent = _agent_on(_two_sensor_world(tmp_path, observes="ag:AirTemperature"), monkeypatch)
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
 
     agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
     agent.deliver("sensors/chatter_fern/reading", {"value": 21.0})
@@ -399,7 +399,7 @@ def test_the_announcement_says_which_property_it_is_about(monkeypatch, tmp_path)
     Nothing downstream could otherwise tell 0.05 from 21.0 except by how implausible it looks,
     and "implausible" is not a unit.
     """
-    agent = _agent_on(_two_sensor_world(tmp_path, observes="ag:AirTemperature"), monkeypatch)
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
 
     agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
     agent.deliver("sensors/chatter_fern/reading", {"value": 21.0})

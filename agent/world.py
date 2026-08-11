@@ -196,7 +196,7 @@ WHERE {{
   <{agent_uri}> market:{relation} ?market .
   ?market ag:localId ?localId ; market:marketFor ?resource ;
           market:offerTopic ?offerTopic ; market:bidTopic ?bidTopic ; market:voucherTopic ?voucherTopic .
-  OPTIONAL {{ ?resource ag:capacityL ?capacity }}
+  OPTIONAL {{ ?resource water:capacityL ?capacity }}
  }}"""
 
 
@@ -204,8 +204,8 @@ WHERE {{
 _PHYSICS_Q = f"""
 SELECT ?subject ?subjectId ?dryRate ?litresPerFraction WHERE {{ 
   ?subject ag:localId ?subjectId .
-  OPTIONAL {{ ?subject ag:dryRatePerTick ?dryRate }}
-  OPTIONAL {{ ?subject ag:litresPerFraction ?litresPerFraction }}
+  OPTIONAL {{ ?subject water:dryRatePerTick ?dryRate }}
+  OPTIONAL {{ ?subject water:litresPerFraction ?litresPerFraction }}
  }}"""
 
 # Everyone entitled to bid here — the host needs this to know who may answer an offer.

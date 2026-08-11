@@ -18,9 +18,9 @@ from agent.world import Sensor, load_self
 
 from conftest import build_agent, genesis_store, query_fn
 
-AIR_TEMP = "http://example.org/agora#AirTemperature"
-AIR_HUMIDITY = "http://example.org/agora#AirHumidity"
-MOISTURE = "http://example.org/agora#SoilMoisture"
+AIR_TEMP = "http://example.org/agora/water#AirTemperature"
+AIR_HUMIDITY = "http://example.org/agora/water#AirHumidity"
+MOISTURE = "http://example.org/agora/water#SoilMoisture"
 
 
 # --- the pointer itself ----------------------------------------------------

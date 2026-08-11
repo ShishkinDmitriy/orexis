@@ -1,3 +1,4 @@
+@prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -48,10 +49,10 @@ ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 
 ##########  The subject — a thing that is watched, and nothing more  ##########
-#  NOT an ag:Plant here, and the difference is the point: a plant is a participant in a water
+#  NOT an water:Plant here, and the difference is the point: a plant is a participant in a water
 #  economy (it is served by a source, it has a pot size), and this world has no economy for it
 #  to participate in. It is a feature of interest — something a sensor reads. The same IRI is
-#  an ag:Plant over in world/society, because there it is one.
+#  an water:Plant over in world/society, because there it is one.
 
 ag:fern a sosa:FeatureOfInterest ;
     ag:localId "fern" .
@@ -107,7 +108,7 @@ ag:moisture_sensor_fern a ag:Sensor ;
     mqtt:onBus ag:local_bus ;
     ag:senseMode ag:Scheduled ;     # keeps a given interval -> its agent gains ag:Subscribing
     ag:monitors ag:fern ;
-    sosa:observes ag:SoilMoisture ;
+    sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
@@ -121,7 +122,7 @@ ag:air_temp_fern a ag:Sensor ;
     ag:localId "air_temp_fern" ;
     ag:senseMode ag:Scheduled ;
     ag:monitors ag:fern ;
-    sosa:observes ag:AirTemperature ;
+    sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:readingPointer "/temperature" ;
@@ -131,7 +132,7 @@ ag:air_humidity_fern a ag:Sensor ;
     ag:localId "air_humidity_fern" ;
     ag:senseMode ag:Scheduled ;
     ag:monitors ag:fern ;
-    sosa:observes ag:AirHumidity ;
+    sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:readingPointer "/humidity" ;

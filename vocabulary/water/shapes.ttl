@@ -1,3 +1,4 @@
+@prefix water: <http://example.org/agora/water#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -6,43 +7,43 @@
 # Rules for the water domain. These check what a bid MEANS here: an agent bidding for water
 # must hold a coherent valuation. Swap the domain module and these go with it.
 
-ag:WaterBidderShape a sh:NodeShape ;
+water:WaterBidderShape a sh:NodeShape ;
     rdfs:comment "A bidder for water values it by its deficit below a target, so it needs a target, a pot size, and a ceiling price — plus a comfort band that is actually a band." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://example.org/agora#hasCapability> <http://example.org/agora/market#Bidding> .
                 ?this <http://example.org/agora#actsFor>       ?plant .
-                ?plant a <http://example.org/agora#Plant> .
+                ?plant a <http://example.org/agora/water#Plant> .
             }
         """ ] ;
-    sh:property [ sh:path ag:hasTarget ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path water:hasTarget ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ] ;
-    sh:property [ sh:path ag:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path water:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
-    sh:property [ sh:path ag:maxValuePerL ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path water:maxValuePerL ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
     # a "band" whose floor is above its ceiling is not a band
-    sh:property [ sh:path ag:bandLow ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path water:bandLow ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ;
-                  sh:lessThan ag:bandHigh ;
+                  sh:lessThan water:bandHigh ;
                   sh:message "the low band must sit below the high one" ] ;
-    sh:property [ sh:path ag:bandHigh ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path water:bandHigh ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ] .
 
-ag:PlantShape a sh:NodeShape ;
+water:PlantShape a sh:NodeShape ;
     rdfs:comment "A plant is drawn from a source and states its physics. It holds no desire — that belongs to its agent." ;
-    sh:targetClass ag:Plant ;
+    sh:targetClass water:Plant ;
     sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
-    sh:property [ sh:path ag:servedBy ; sh:minCount 1 ; sh:class ag:WaterSource ] ;
-    sh:property [ sh:path ag:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path water:servedBy ; sh:minCount 1 ; sh:class water:WaterSource ] ;
+    sh:property [ sh:path water:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
-    sh:property [ sh:path ag:hasTarget ; sh:maxCount 0 ;
+    sh:property [ sh:path water:hasTarget ; sh:maxCount 0 ;
                   sh:message "a plant holds no desire — the target belongs to its agent's beliefs" ] .
 
-ag:WaterSourceShape a sh:NodeShape ;
+water:WaterSourceShape a sh:NodeShape ;
     rdfs:comment "Every source has a supplier and a physical ceiling — the constitution's allocation limit." ;
-    sh:targetClass ag:WaterSource ;
-    sh:property [ sh:path ag:suppliedBy ; sh:minCount 1 ; sh:class ag:Agent ] ;
-    sh:property [ sh:path ag:capacityL ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:targetClass water:WaterSource ;
+    sh:property [ sh:path water:suppliedBy ; sh:minCount 1 ; sh:class ag:Agent ] ;
+    sh:property [ sh:path water:capacityL ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] .

@@ -130,15 +130,15 @@ def test_nobody_may_sleep_past_the_constitutional_ceiling():
 
 def test_inverted_band_is_not_a_band():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:bandLow 0.35 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent ag:bandLow 0.90 }} }}
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent water:bandLow 0.35 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent water:bandLow 0.90 }} }}
         WHERE  {{}}"""))
 
 
 def test_bidder_must_have_a_valuation():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent ag:maxValuePerL ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent ag:maxValuePerL ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent water:maxValuePerL ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent water:maxValuePerL ?v }} }}"""))
 
 
 def test_host_must_say_how_long_it_waits_for_bids():
@@ -218,7 +218,7 @@ def test_an_agent_may_hold_both_modes_at_once():
     assert _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:chatter_fern a ag:Sensor ; ag:localId "chatter_fern" ; mqtt:onBus ag:local_bus ;
-                ag:senseMode ag:Push ; ag:monitors ag:fern ; sosa:observes ag:SoilMoisture ;
+                ag:senseMode ag:Push ; ag:monitors ag:fern ; sosa:observes water:SoilMoisture ;
                 mqtt:readingTopic "sensors/chatter_fern/reading" .
             ag:fern_agent ag:polls ag:chatter_fern .
         }} }} WHERE {{}} ;
@@ -245,7 +245,7 @@ def test_two_sensors_on_one_property_are_warned_about_and_not_refused():
     one thing measured twice and wrong if they are in different soil. Neither reading can be
     settled from the graph, so the world is accepted and the operator is told.
     """
-    data = _duplicate_probe("ag:SoilMoisture")
+    data = _duplicate_probe("water:SoilMoisture")
     assert _conforms(data), "a warning must not stop a world from being onboarded"
     assert "another sensor already reads this property" in _report(data)
 
@@ -254,7 +254,7 @@ def test_two_sensors_on_different_properties_are_not_warned_about():
     """The ordinary rig, and the case the shape must not catch. A pot whose moisture and
     temperature are both known is not a modelling error, and saying so would train the operator
     to ignore the message that matters."""
-    data = _duplicate_probe("ag:AirTemperature")
+    data = _duplicate_probe("water:AirTemperature")
     assert _conforms(data)
     assert "another sensor already reads this property" not in _report(data)
 
@@ -268,7 +268,7 @@ def test_valve_must_carry_its_calibration():
 def test_a_plant_may_not_hold_a_desire():
     """The target belongs to an agent's beliefs; a plant that held one would be a category error."""
     assert not _conforms(_mutate(f"""
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern ag:hasTarget 0.55 }} }} WHERE {{}}"""))
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern water:hasTarget 0.55 }} }} WHERE {{}}"""))
 
 
 def test_market_must_state_all_three_channels():

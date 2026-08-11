@@ -1,3 +1,4 @@
+@prefix water: <http://example.org/agora/water#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
 
@@ -18,11 +19,11 @@ ag:fern_agent
 ##  market:Bidding — what it wants and what it will pay
 ag:fern_agent
     market:hasEndowment 100.0 ;
-    ag:hasTarget 0.55 ;         # the desire
-    ag:bandLow 0.35 ;           # a fern is parched where a succulent shrugs
-    ag:bandHigh 0.65 ;
-    ag:litresPerFraction 2.0 ;  # what it BELIEVES its pot takes (the world knows the truth)
-    ag:maxValuePerL 0.80 .      # willingness to pay at peak urgency — never disclosed
+    water:hasTarget 0.55 ;         # the desire
+    water:bandLow 0.35 ;           # a fern is parched where a succulent shrugs
+    water:bandHigh 0.65 ;
+    water:litresPerFraction 2.0 ;  # what it BELIEVES its pot takes (the world knows the truth)
+    water:maxValuePerL 0.80 .      # willingness to pay at peak urgency — never disclosed
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.

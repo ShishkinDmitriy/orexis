@@ -68,14 +68,14 @@ BIDDING_BLOCK = Block(
         # Two namespaces, and the split is which package DECLARES the term. The wallet is
         # the protocol's — how much a bidder brought to the venue. Everything under it is the
         # water domain's: what a bid is WORTH here, which a market for anything else would
-        # answer differently. `vocabulary/water` has not taken a namespace of its own, so its
-        # terms are still `ag:` and reached through `agent.ontology`.
+        # answer differently. That split is visible now: swapping the domain swaps a namespace,
+        # which is what AGENTS.md means by the domain being a plug-in.
         "endowment": term("hasEndowment"),
-        "target": ontology.term("hasTarget"),
-        "low": ontology.term("bandLow"),
-        "high": ontology.term("bandHigh"),
-        "litres_per_fraction": ontology.term("litresPerFraction"),
-        "max_value_per_l": ontology.term("maxValuePerL"),
+        "target": ontology.WATER + "hasTarget",
+        "low": ontology.WATER + "bandLow",
+        "high": ontology.WATER + "bandHigh",
+        "litres_per_fraction": ontology.WATER + "litresPerFraction",
+        "max_value_per_l": ontology.WATER + "maxValuePerL",
     },
 )
 

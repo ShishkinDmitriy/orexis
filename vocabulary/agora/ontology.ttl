@@ -1,3 +1,4 @@
+@prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -59,7 +60,7 @@ ag:modelInitialValue a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:
 
 ag:modelDryRate a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
     rdfs:label "model dry rate" ;
-    rdfs:comment "How much of the observed property is lost per tick. Named apart from domain/water's ag:dryRatePerTick, which carries rdfs:domain ag:Plant — reusing it would make every model infer as a plant and inherit a plant's obligations." .
+    rdfs:comment "How much of the observed property is lost per tick. Named apart from domain/water's water:dryRatePerTick, which carries rdfs:domain water:Plant — reusing it would make every model infer as a plant and inherit a plant's obligations." .
 
 ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:integer ;
     rdfs:label "model tick seconds" ;

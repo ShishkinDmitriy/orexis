@@ -35,7 +35,7 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import ACTUATION, AG, MQTT, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MQTT, WATER, WORLD_GRAPH
 from agent import genesis
 from agent.genesis import world_dir, worlds
 
@@ -181,7 +181,7 @@ WHERE {{
   OPTIONAL {{ ?model <{AG}modelTickSeconds> ?tick }}
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
-  OPTIONAL {{ ?subject <{AG}litresPerFraction> ?litres }}
+  OPTIONAL {{ ?subject <{WATER}litresPerFraction> ?litres }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
