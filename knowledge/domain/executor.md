@@ -43,7 +43,7 @@ clearing ─grant─► executor (RPi) ─publish cmd─► MQTT ─► pump-ESP
 Sensing is read-only and low-stakes; actuation *writes to the physical world, irreversibly*.
 So the pump is a **guarded** MQTT subscriber, with four properties the sensor edge never needed:
 
-1. **Authenticated commands** — the pump opens only on the **voucher** (won this round),
+1. **Authenticated commands** — the pump opens only on the **voucher** (won this auction),
    co-signed by **host (`match_sig`) + clearing (`val_sig`)**, and verifies both — plus, for a
    networked pump, the agent's **access grant** (it's *this* agent's valve). *Access grant =
    your valve; voucher = you won this dispense; neither alone opens it.* Implemented (Ed25519):
@@ -70,13 +70,13 @@ So the pump is a **guarded** MQTT subscriber, with four properties the sensor ed
 1. **Validate the grant** — issued by clearing, scope matches the valve, passed the
    [constitution](/domain/constitution.md) check. In v1 the grant is a plaintext typed
    object (in-process); the JWS-signed form is a v2 transport change, not a logic change.
-2. **Enforce single-use** — track `jti` (bounded, per round) and check `round`, or the same
+2. **Enforce single-use** — track `jti` (bounded, per auction) and check `auction_id`, or the same
    win settles twice (double-spend / double-actuation). This matters even without an
    adversary — a retried message shouldn't double-water.
 3. **Actuate** — select the valve by the voucher's **plant ID** (the supplier's genesis-
    configured `{plant_id → valve}` map — see [supplier](/domain/supplier.md)); open it for the
    voucher's litres, then stop. Sequence multiple vouchers safely (one source, many plants).
-4. **Confirm** — report completion so the round can close and the receipt is truthful.
+4. **Confirm** — report completion so the auction can close and the receipt is truthful.
 
 # What it must never do
 

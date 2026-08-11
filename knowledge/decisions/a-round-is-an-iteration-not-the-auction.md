@@ -76,14 +76,48 @@ changes; both were about the auction and said round.
   three words and did not ask what else in the same paragraphs was ambiguous. *Round* was one
   sentence away throughout and went unexamined.
 
+# What the identifier turned out to be on
+
+The seam this record opened said the identifier and the voucher claim were both misnamed. Closing
+it found the surface wider than the seam described: **the identifier is on four payloads, not
+one** — the offer, the bid, the voucher, and the signed command. They rename together or not at
+all, because a bidder echoing a key the host no longer reads is a bid silently dropped, and
+silence is the failure mode this project keeps rediscovering.
+
+**The fourth is why it was worth doing before iteration exists.** `round_id` sits inside
+`signing.canonical(payload)`, so the key name is part of what `match_sig` and `val_sig` cover.
+Renaming it later is a change to a *signed artifact* across signer, validator and redeemer.
+
+Two facts made it cheap today, and neither would have survived:
+
+- **`verify_command` rebuilds the canonical form from whatever keys arrive**, rather than from a
+  fixed list — so a device verifies a renamed payload without knowing anything changed. That is a
+  property of how it was written, not a guarantee anyone stated.
+- **Nothing persists a voucher.** `ActuationModule.settled` and the simulated valve's `spent` are
+  both in-memory sets, so no durable artifact carries the old key across a restart. Vouchers are
+  spot — redeemed on win, `exp` ≈ now.
+
+`run_round` became `run_auction` and `RoundResult` became `AuctionResult` with it: what that
+function does — propose, validate, issue — is the auction's shape, which is precisely what
+[auction](/domain/auction.md) says `agent/auction.py` kept when it lost the allocation.
+
+## One consequence, and one term deliberately left
+
+**A world must be restarted whole.** An old bidder echoing `round_id` to a new host would have its
+bid dropped as belonging to no open auction. Nothing warns, because a bid for an unknown auction
+is exactly what a late bid looks like.
+
+**`market:roundCooldownS` is untouched**, and it is the one name here that is genuinely about
+auctions rather than bidding passes. It stayed because it is a *persisted belief*, stated in each
+supplier's beliefs file and therefore living in a volume — renaming one is the hazard
+[#87](https://github.com/ShishkinDmitriy/agora/issues/87) exists to make safe, and arming that
+trap to fix a name would have been the wrong order. It should be `auctionCooldownS` once a volume
+can survive a rename.
+
 # Seams left open
 
-- **`round_id` names an auction.** It is minted once per auction and a [voucher](/domain/voucher.md)
-  carries `round` as a signed claim, so under this record the identifier and the claim are both
-  misnamed — harmless while there is one round per auction, wrong the moment iteration exists, and
-  a wire-format change once vouchers are in use. Filed as
-  [#74](https://github.com/ShishkinDmitriy/agora/issues/74) rather than left here, because it has a
-  definition of done.
+- ~~**`round_id` names an auction.**~~ **Closed** — see *What the identifier turned out to be on*
+  above. It is `auction_id` now, on all four payloads at once.
 - **Iteration is not designed, only named.** What a bidder sees between rounds, what may be
   re-bid, and what stops the loop other than the wallet are open. `domain/round.md` describes a
   shape; nothing here commits to it.
