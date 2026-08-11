@@ -14,7 +14,7 @@ delivered, how many writes it lost, how long it has been up.
 
 ```bash
 # in that agent's beliefs, and nowhere else
-ag:fern_agent reporting:intervalS 60 .
+ag:fern_agent reporting:metricsIntervalS 60 .
 ```
 
 # Why the agent and not something watching it

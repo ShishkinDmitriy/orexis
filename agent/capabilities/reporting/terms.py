@@ -29,4 +29,4 @@ ANNOUNCING = term("Announcing")  # onto the bus — RESERVED, nothing implements
 
 # How often. An ordinary required parameter of the capability, exactly as review:reviewIntervalS
 # is of reviewing — not a switch, because every agent has this capability.
-INTERVAL_S = term("intervalS")
+INTERVAL_S = term("metricsIntervalS")

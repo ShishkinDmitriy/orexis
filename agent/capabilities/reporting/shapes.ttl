@@ -29,6 +29,6 @@ Targeted through the capability rather than at ag:Agent directly, so the shape s
                 ?cap a <http://example.org/agora/reporting#ReportingCapability> .
             }
         """ ] ;
-    sh:property [ sh:path reporting:intervalS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path reporting:metricsIntervalS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
                   sh:message "an agent must state a reporting interval — one positive whole number of seconds" ] .

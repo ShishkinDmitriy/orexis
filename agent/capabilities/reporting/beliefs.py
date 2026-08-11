@@ -33,5 +33,5 @@ class ReportingBeliefs:
 REPORTING_BLOCK = Block(
     capability=STORING,
     cls=ReportingBeliefs,
-    terms={"interval_s": term("intervalS")},
+    terms={"interval_s": term("metricsIntervalS")},
 )

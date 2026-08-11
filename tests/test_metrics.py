@@ -124,7 +124,7 @@ def test_half_a_block_is_still_an_error(agent):
         other: int
 
     partial = Block(capability=REPORTING_BLOCK.capability, cls=TwoFields,
-                    terms={"interval_s": reporting_term("intervalS"),
+                    terms={"interval_s": reporting_term("metricsIntervalS"),
                            "other": reporting_term("noSuchTerm")})
     with pytest.raises(BeliefError):
         agent.beliefs.read(partial)

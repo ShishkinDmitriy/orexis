@@ -35,6 +35,6 @@ It is the member worth building next, and for a reason particular to telemetry: 
 
 Note what a member is NOT: the ADDRESS of a sink is environment, because a service URL is not a belief anyone holds. A member is a manner of reporting; where that manner points is still INFLUX_URL's neighbour. Conflating the two is what made this look like a function.""" .
 
-reporting:intervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+reporting:metricsIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "reporting interval (s)" ;
     rdfs:comment "How often this agent reports on itself. An ordinary REQUIRED parameter of a capability every agent holds, exactly as review:reviewIntervalS is of reviewing. It was optional once, and its absence meant an agent reporting nothing — a side channel dressed as a decision by omission, and the same pattern self-review-is-a-capability refused for the review interval. Two things were wrong with it: no agent in any world ever omitted it, so the branch was exercised by nothing; and an agent permitted to report nothing produces silence that carries no information, which is the one thing telemetry exists to prevent. A rate belongs in beliefs for the same reason the sensing cadence does — a test world may want it faster than a deployed one." .
