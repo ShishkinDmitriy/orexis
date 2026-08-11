@@ -3,6 +3,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 
@@ -23,9 +24,29 @@ mc:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device , sosa:Platform ;
     rdfs:label "Microcontroller" ;
     rdfs:comment "A board at the edge, carrying peripherals and reachable over a bus. It runs firmware, not agents. Also a sosa:Platform — *an entity that hosts other entities, particularly Sensors, Actuators, Samplers, and other Platforms* — which is what a board is and what nothing here said until issue #79." .
 
-mc:Peripheral a owl:Class ; rdfs:subClassOf ag:Device , sosa:Platform ;
+mc:Peripheral a owl:Class ; rdfs:subClassOf ag:Device , ssn:System ;
     rdfs:label "Peripheral" ;
-    rdfs:comment "Something wired to a board's pins. A sensor is one; so is an indicator. A Platform too, and not vacuously: a KY-015 is one part reporting temperature AND humidity, so it hosts two sensors of its own. SOSA is explicit that a Platform may host other Platforms, which is what makes the board-carries-part-carries-channel chain expressible without inventing anything. A peripheral hosting nothing — an indicator — is a Platform with nothing on it, which the class permits." .
+    rdfs:comment """Something wired to a board's pins. A sensor is one; so is an indicator.
+
+An `ssn:System` — *a unit of abstraction for pieces of infrastructure that implement Procedures* — and not a `sosa:Platform`, which is what #79 first made it.
+
+The W3C's own deployment example of a DHT22 shows all three cases in one chain, and they are ORTHOGONAL rather than alternatives:
+
+| | relation |
+|---|---|
+| wall → board | `sosa:hosts` only — placed, not a component |
+| board → part | BOTH, *when the mounting is permanent* |
+| part → channel | `ssn:hasSubSystem` only — never placed at all |
+
+Their comment licenses the middle row explicitly: *PCB Board 1 hosts DHT22 #4578 permanently, one can say it has it as one of its subsystems*. Permanence is what earns the second relation.
+
+**Here the board states `sosa:hosts` alone, deliberately.** Ours are plausibly soldered — the wiring's own prose says so — but nothing in the graph records whether a mounting is permanent or socketed, and that distinction has become load-bearing. Asserting `hasSubSystem` would be inferring permanence from the absence of a socket. `mc:Wire` is where it would go if stated, since a mounting is closer to a wire than to a part; that is a change of its own.
+
+Both of SSN's restrictions agree with that reading. `sosa:Platform` carries `hosts allValuesFrom ssn:System`, so a board's hostee must be a System; and `ssn:System` carries `hasSubSystem allValuesFrom ssn:System`, so a part with channels must be one too. A peripheral is hosted and has sub-systems, which makes it a System twice over and a Platform for no reason — nothing is MOUNTED on a KY-015.
+
+The distinction is a trace of an act against a fact about constitution. A board mounts this part and could mount it elsewhere; the part's temperature element was never deployed anywhere, it is what the part IS. Note this is semantic and not axiomatic: nothing forbids a System being hosted by two Platforms and nothing makes sub-systems exclusive, so no shape should be expected to enforce either.
+
+Platform and System are NOT disjoint — SSN declares no disjointness anywhere — so a thing may be both. The ESP32 arguably is: it carries peripherals and its firmware implements the publishing procedure. Typing it as a Platform alone is our simplification, not a rule the vocabulary imposes.""" .
 
 mc:modelName a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model name" ;
     rdfs:comment """The catalogue name of a part, stated on its CLASS — what a person orders, and what an authoring tool will have written down. mc:model is the same string on an INSTANCE; this is the one every instance of that class shares.
@@ -43,16 +64,22 @@ mc:firmware a owl:DatatypeProperty ; rdfs:domain mc:Microcontroller ; rdfs:range
     rdfs:comment "Which project under firmware/ this board runs. Stated rather than derived from what it carries: two boards with the same peripherals may run different code, and guessing would be wrong exactly when it mattered." .
 
 
-mc:carries a owl:ObjectProperty ; rdfs:subPropertyOf sosa:hosts ;
-    rdfs:domain mc:Microcontroller ; rdfs:range mc:Peripheral ;
-    rdfs:label "carries" ;
-    rdfs:comment """A peripheral is mounted on this board. Which LEG goes where is said by the wires, not by this — carrying something is not the same as being wired to it, and a peripheral that is carried but unwired is a real state that a shape should be able to catch.
-
-**This was `sosa:hosts` all along**, and saying so is most of issue #79. `sosa:hosts` is *the relation between a Platform and a Sensor, Actuator, Sampler, or Platform, hosted or mounted on it* — the same fact, already standardised, in a vocabulary this project already speaks for `sosa:observes`. Declaring the subproperty rather than renaming keeps the hardware layer reading in its own terms while making the fact legible to anything that speaks SOSA.
-
-It is also the FIRST `rdfs:subPropertyOf` axiom here, which `agent/inference.py` rule 4 was written for and had nothing to exercise. Stating `mc:carries` now entails `sosa:hosts` into the world's entailed graph — for the SOVEREIGN, who loads `hardware.ttl`. An agent is never given that file, so the society states its hosting directly; `tests/test_layout.py` holds the two to agreeing.
-
-Note the domain is narrower than the superproperty's: `mc:carries` is a BOARD carrying a PART, so it cannot say that a KY-015 hosts its two channels. `sosa:hosts` can, which is why the society uses the general relation and the hardware layer keeps the specific one.""" .
+#  `mc:carries` was here, and it was `sosa:hosts` all along.
+#
+#  #79 declared it `rdfs:subPropertyOf sosa:hosts` — the honest move at the time, because it let
+#  the hardware layer keep reading in its own terms while making the fact legible to anything
+#  speaking SOSA. What that left was two words for one relation, and a subproperty axiom is a
+#  claim that the narrower one MEANS something more. Here it did not: `rdfs:domain
+#  mc:Microcontroller` and `rdfs:range mc:Peripheral` are not in `agent/inference.py`'s closure
+#  and no shape read them, so board-to-part was a comment. A distinction nothing can check is
+#  not a distinction.
+#
+#  The narrowing survives, and is enforced for the first time, as `ag:ABoardCarriesPartsShape`
+#  in shapes.ttl. SHACL scoped by class says what `rdfs:domain` only claimed — and says it where
+#  the claim belongs, since `mc:Microcontroller` exists only when the wiring is loaded, so the
+#  rule holds the SOVEREIGN and never reaches an agent that was never given a board.
+#
+#  See knowledge/decisions/one-word-for-one-relation.md.
 
 #################  Pins and wires  #################
 #

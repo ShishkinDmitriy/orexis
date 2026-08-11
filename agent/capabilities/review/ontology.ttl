@@ -137,7 +137,19 @@ review:RevisionsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Revis
     rdfs:comment "What ONE agent has decided about itself. Append-only, and apart from the beliefs graph so that the beliefs graph still holds exactly one value per term — which is what every capability's shapes are written against. Deliberately NOT validated: it is the record of a decision, not a belief anyone acts on." .
 
 review:Revision a owl:Class ; rdfs:label "Revision" ;
-    rdfs:comment "One settled second thought, INCLUDING one settled as 'change nothing'. Recording a decline is what separates reflection from a twitch: without it an agent re-argues the same question at every arising and can never notice that it has declined eleven times and the problem is elsewhere." .
+    rdfs:comment """One settled second thought, INCLUDING one settled as 'change nothing'. Recording a decline is what separates reflection from a twitch: without it an agent re-argues the same question at every arising and can never notice that it has declined eleven times and the problem is elsewhere.
+
+**Examined against `prov:wasRevisionOf` and deliberately NOT aligned.** PROV is already spoken here — `agent/provenance.py` uses it for who put a fact in which graph — so the overlap is worth settling rather than leaving for someone to 'tidy' later.
+
+PROV's revision is a DERIVATION BETWEEN TWO ARTEFACTS. `prov:wasRevisionOf` has `rdfs:domain prov:Entity` and `rdfs:range prov:Entity`, and `prov:Revision` is defined as *a derivation for which the resulting entity is a revised version of some original… the resulting entity contains substantial content from the original*. Its own example is `:draft_2 prov:wasRevisionOf :draft_1`.
+
+Three things make that the wrong shape here, and the first alone settles it:
+
+* **A decline produces no `:draft_2`.** Half of what this class exists to record is a decision to change nothing, which PROV cannot express: there is no newer entity to hang the relation from. An agent's eleven declines are the signal that the problem is elsewhere, and they would be unsayable.
+* **A belief value is a literal, not an entity.** `review:fromValue 900` is a number. PROV would need a node per belief-version, and the beliefs graph deliberately holds exactly ONE value per term — see review:RevisionsGraph — because every capability's shapes are written against that.
+* **Most of this class is not derivation at all.** `review:dueAt` is a schedule, `review:becauseOf` is the argument in words, `review:outcome` distinguishes declined from refused. Those describe a DELIBERATION, and PROV describes what happened to a thing.
+
+The same finding as review:Commitment against vf:Commitment: a near-homonym, not an alignment. A reader who knows PROV would be WRONG about this data, which is the test.""" .
 
 review:revisedTerm a owl:ObjectProperty ; rdfs:domain review:Revision ; rdfs:label "revised term" .
 review:fromValue a owl:DatatypeProperty ; rdfs:domain review:Revision ; rdfs:label "from value" .

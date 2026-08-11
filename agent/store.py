@@ -80,6 +80,13 @@ _EXTERNAL = {
     # `unit:` could silently redirect every unit in the society. Borrowed and not imported — the
     # IRIs are referenced, nothing of QUDT is loaded, and `agent/inference.py` gains no axioms.
     "unit": "http://qudt.org/vocab/unit/",
+    # How a figure states its number and its unit. schema.org's `value`/`unitCode` pair is
+    # what the W3C's own worked DHT22 example uses to say a Frequency is two seconds, and it
+    # completes an idiom half-adopted already: #77 put `unit:` IRIs on sensors and then wrote
+    # the number beside them in a term of ours. External, so it belongs here rather than in a
+    # package — one that could rebind `schema:` could redefine every figure in the society.
+    "schema": "https://schema.org/",
+
     # What a device can honour, rather than what it is being asked for. SSN's System
     # capabilities module, borrowed on the same terms as everything else here: the IRIs are
     # referenced and none of SSN is loaded.

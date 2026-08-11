@@ -1,4 +1,6 @@
 @prefix mqtt: <http://example.org/agora/mqtt#> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -47,4 +49,4 @@ dht11:Dht11 ssn-system:hasSystemCapability [
     # that could be read faster on mains than on a battery states two of these rather than one
     # number with a caveat. Nothing here is battery-powered yet — see issue #78.
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
-    ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 2 ] ] .
+    ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .

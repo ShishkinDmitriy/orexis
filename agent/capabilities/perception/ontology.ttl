@@ -40,8 +40,33 @@ perception:Listening a perception:PerceptionCapability ; rdfs:label "Listening" 
 
 #################  Sensors  #################
 
-perception:Sensor a owl:Class ; rdfs:subClassOf ag:Device , sosa:Sensor ; rdfs:label "Sensor" ;
-    rdfs:comment "Reads a property of a subject. Emits numbers; never judgments." .
+#  `perception:Sensor` was here, and it was `sosa:Sensor` wearing our name.
+#
+#  It was an intersection, not a synonym — `ag:Device ∧ sosa:Sensor` — and that is why the earlier
+#  audits kept it. But a named class is not the only way to state an intersection: an instance
+#  can carry both types, and the two constraints can sit side by side in the one shape that
+#  enforced the conjunction. What the name bought was saying it once; what it cost was a reader
+#  having to learn that our word for a sensor is not the standard one.
+#
+#  `ag:Device` STAYS, and why is the principle this whole audit turns on.
+#
+#  SOSA's axis is FUNCTIONAL: `sosa:Platform` asks *where is it mounted* — its own examples are
+#  a post, a buoy, a ship, a cell-phone, a human — and `ssn:System` asks *what implements the
+#  procedure*. Neither is about what a thing is made of, and the spec is explicit that all its
+#  major classes may be virtual, a correction it made deliberately.
+#
+#  `ag:Device`'s axis is SUBSTRATE: a physical edge node with legs, interchangeable with a
+#  stand-in. That is a different question, so a term answering it necessarily cuts ACROSS their
+#  classes rather than duplicating one — `mc:Microcontroller` and `mc:Peripheral` are Platforms,
+#  sensors and actuators are Systems, and `mc:hasPin`, `mc:logicVolts` and `ag:simulatedBy` all
+#  take `ag:Device` as their domain. Boards have pins.
+#
+#  So the test for keeping one of ours is not whether a standard has a similar word. It is
+#  whether the standard is answering the same QUESTION. Here it is not, which is why
+#  `perception:Sensor` goes and `ag:Device` stays.
+#
+#  See knowledge/decisions/one-word-for-one-relation.md.
+
 
 # BORROWED, AND RESTATED — the one axiom this project holds about somebody else's class.
 #
@@ -61,11 +86,11 @@ perception:Sensor a owl:Class ; rdfs:subClassOf ag:Device , sosa:Sensor ; rdfs:l
 # behalf of a package that may not be installed.
 sosa:Sensor rdfs:subClassOf ssn:System .
 
-perception:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range perception:Sensor ;
+perception:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
     rdfs:label "polls" ;
     rdfs:comment "The agent may read this sensor. This IS the access grant — expressed as topology rather than as a separate permission system, so isolation is visible in the wiring." .
 
-perception:monitors a owl:ObjectProperty ; rdfs:domain perception:Sensor ;
+perception:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
     rdfs:label "monitors" ;
     rdfs:comment "The subject this sensor reads. Pairs with sosa:observes, which says WHICH property." .
 
@@ -74,18 +99,34 @@ perception:monitors a owl:ObjectProperty ; rdfs:domain perception:Sensor ;
 # One sense mode per capability, and the pairing is the whole derivation: what an agent can
 # decide about looking follows from what its hardware can be told.
 
-perception:SenseMode a owl:Class ; rdfs:label "Sense mode" .
+# A sense mode IS a `sosa:Procedure` — SOSA's definition is *a workflow, protocol, plan,
+# algorithm, or computational method specifying how to make an Observation*, and who holds the
+# clock is exactly that. So the three below are typed as Procedures as well, which makes them
+# legible to anything speaking SSN.
+#
+# The RELATION stays ours, and that is the part worth explaining. `ssn:implements` is what SSN
+# uses, and it is wider: a System may implement several Procedures. `perception:senseMode`
+# carries `sh:maxCount 1`, because a sensor has exactly one answer to *who holds the clock* and
+# the derivation is guarded on it — `perception:Subscribing` from Scheduled, `Listening` from
+# Push. Swapping the predicate would either lose that count or, keeping it, forbid a sensor ever
+# implementing a second procedure of any kind. Neither is worth the tidiness.
+#
+# So: the VALUES defer to the standard, the RELATION does not, and the reason is a cardinality
+# ours checks and theirs cannot.
 
-perception:Pull a perception:SenseMode ; rdfs:label "Pull" ;
+perception:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
+    rdfs:comment "The class exists for the count: `perception:SensorShape` asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .
+
+perception:Pull a perception:SenseMode , sosa:Procedure ; rdfs:label "Pull" ;
     rdfs:comment "Always reachable, and answers each request: ask, and it reads and replies. Gives perception:Polling. A board that deep-sleeps is NOT this, however it is asked — it cannot hear the request. RESERVED alongside perception:Polling: no rule maps it yet." .
 
-perception:Scheduled a perception:SenseMode ; rdfs:label "Scheduled" ;
+perception:Scheduled a perception:SenseMode , sosa:Procedure ; rdfs:label "Scheduled" ;
     rdfs:comment "Takes an interval and keeps to it, sleeping in between: it accepts instruction about WHEN, then clocks itself. Gives perception:Subscribing. This is what a deep-sleeping battery board is, and the reason the middle capability exists at all." .
 
-perception:Push a perception:SenseMode ; rdfs:label "Push" ;
+perception:Push a perception:SenseMode , sosa:Procedure ; rdfs:label "Push" ;
     rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives perception:Listening. The edge holds the policy, and no agent can take it back." .
 
-perception:senseMode a owl:ObjectProperty ; rdfs:domain perception:Sensor ; rdfs:range perception:SenseMode ;
+perception:senseMode a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range perception:SenseMode ;
     rdfs:label "sense mode" .
 
 #################  Attention — the agent's private policy  #################
@@ -140,9 +181,26 @@ perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 9
 # What this package adds is the VALUE, because SSN deliberately leaves values to other
 # vocabularies. The class carries the meaning; this carries the number.
 
-perception:seconds a owl:DatatypeProperty ; rdfs:domain ssn-system:Frequency ; rdfs:range xsd:integer ;
-    rdfs:label "seconds" ;
-    rdfs:comment "How many seconds the Frequency it hangs off is. Named for the unit and not for what it bounds, because ssn-system:Frequency already says which end it is: the SMALLEST possible gap, so a floor. A device that can be read no faster than every thirty seconds states 30 here, and an agent may not commit to less." .
+#  `perception:seconds` was here, and schema.org already had the idiom.
+#
+#  SSN leaves values to other vocabularies, and the W3C's own worked example of this very part
+#  — `ssn/integrated/examples/dht22.ttl`, the DHT11's sibling, written by the people who wrote
+#  the vocabulary — says it like this:
+#
+#      <DHT22/4578#TemperatureSensorFrequency> a ssn:Property , ssn-system:Frequency ,
+#          schema:PropertyValue ; schema:value 2 ; schema:unitCode qudt-unit-1-1:Second .
+#
+#  A number and its unit, rather than a property named for the unit. Their example predates
+#  current QUDT, so the idiom is theirs and the IRI is ours: `unit:SEC`, the prefix #77 already
+#  declared. That is the half-adopted idiom completed — #77 put unit IRIs on sensors and then
+#  wrote the figure beside them in a term of our own.
+#
+#  Their datasheet figure is 2 seconds, which is what the KY-015 declares here. Independent
+#  corroboration of a number nobody here measured.
+#
+#  The `rdfs:range xsd:integer` this term carried was never enforced — `rdfs:range` is not in
+#  `agent/inference.py`'s closure, the same way `mc:carries`'s domain was not. It is a shape
+#  now (`perception:StatedFrequencyShape`), so the swap gains a check rather than losing one.
 
 #################  Re-picking the comfortable cadence  #################
 # ONE triple makes a belief revisable, and it names the two figures already stated above. The

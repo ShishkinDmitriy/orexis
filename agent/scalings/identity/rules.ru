@@ -17,6 +17,7 @@
 # and only the world can say which this one is.
 
 PREFIX perception: <http://example.org/agora/perception#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX ag:          <http://example.org/agora#>
 PREFIX scaling: <http://example.org/agora/scaling#>
 
@@ -24,11 +25,11 @@ PREFIX scaling: <http://example.org/agora/scaling#>
 INSERT { GRAPH $derived {
     ?sensor scaling:scaledBy ?curve } }
 $given
-WHERE  { ?sensor a perception:Sensor ; scaling:curve ?curve .
+WHERE  { ?sensor a sosa:Sensor ; scaling:curve ?curve .
          ?curve a scaling:Scaling } ;
 
 #  States no curve -> identity, because the board already scaled.
 INSERT { GRAPH $derived {
     ?sensor scaling:scaledBy scaling:Identity } }
 $given
-WHERE  { ?sensor a perception:Sensor . FILTER NOT EXISTS { ?sensor scaling:curve ?stated } }
+WHERE  { ?sensor a sosa:Sensor . FILTER NOT EXISTS { ?sensor scaling:curve ?stated } }

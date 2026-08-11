@@ -30,7 +30,7 @@ from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from agent.ontology import (AG, DHT11, ESP32, I2C, MC, ONEWIRE, ONTOLOGY_GRAPH,
-                            PROBE, RGBLED, WORLD_GRAPH)
+                            PROBE, RGBLED, SOSA, WORLD_GRAPH)
 
 log = logging.getLogger("wireviz")
 
@@ -270,6 +270,7 @@ def draft(world: str, harness: Path) -> str:
            f"@prefix rgbled:  <{RGBLED}> .",
            f"@prefix probe:   <{PROBE}> .",
            f"@prefix esp32:   <{ESP32}> .",
+           f"@prefix sosa:    <{SOSA}> .",
            ""]
 
     pin_id: dict[tuple[str, int], str] = {}
@@ -292,11 +293,11 @@ def draft(world: str, harness: Path) -> str:
             # What the board CARRIES, derived from what is wired to it. Not the same statement
             # as a wire — carrying is mounting, and a peripheral can be carried and unwired —
             # but a harness only knows connections, and every generator that walks a board
-            # starts from mc:carries. Leaving it out drafted a stand nothing downstream could
+            # starts from sosa:hosts. Leaving it out drafted a stand nothing downstream could
             # find its parts in.
             carried = sorted(n for n in conns if n != board)
             if carried:
-                out.append("    mc:carries " + " , ".join(f"ag:{c}" for c in carried) + " ;")
+                out.append("    sosa:hosts " + " , ".join(f"ag:{c}" for c in carried) + " ;")
         out.append("    mc:hasPin " + " , ".join(f"ag:{name}_{i+1}"
                                                  for i in range(len(labels))) + " .")
         out.append("")

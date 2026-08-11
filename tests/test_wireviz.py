@@ -124,9 +124,9 @@ def test_the_board_is_identified_rather_than_guessed(drafted):
 
 def test_the_board_declares_what_it_carries(drafted):
     """Not the same statement as a wire — carrying is mounting, and a part can be carried and
-    unwired — but every generator that walks a board starts from mc:carries. Leaving it out
+    unwired — but every generator that walks a board starts from sosa:hosts. Leaving it out
     drafted a stand nothing downstream could find its parts in."""
-    assert "mc:carries ag:air_sensor_fern , ag:moisture_sensor_fern , ag:status_led_fern" in drafted
+    assert "sosa:hosts ag:air_sensor_fern , ag:moisture_sensor_fern , ag:status_led_fern" in drafted
 
 
 def test_only_what_belongs_to_the_board_MODEL_is_left_over(drafted):

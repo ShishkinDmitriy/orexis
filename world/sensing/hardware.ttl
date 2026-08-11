@@ -8,6 +8,7 @@
 @prefix probe: <http://example.org/agora/moisture-probe#> .
 @prefix rgbled: <http://example.org/agora/rgb-led#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix esp32: <http://example.org/agora/esp32#> .
 @prefix wokwi: <http://example.org/agora/wokwi#> .
 
@@ -52,7 +53,7 @@ ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     mc:model "ESP32-WROOM-32D" ;
     mqtt:onBus ag:local_bus ;
     mc:firmware "moisture-sensor" ;
-    mc:carries ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
+    sosa:hosts ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is perception:Subscribing: the board keeps the interval and cannot be reached in between." .
 
 ##########  The board's own legs  ##########

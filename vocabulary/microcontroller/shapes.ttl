@@ -4,6 +4,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 
 # The ESP32's rules, not RDF's. Every one of these is a mistake that costs an afternoon: a board
 # that will not boot, an ADC that returns plausible rubbish, a colour that never lights, a leg
@@ -125,6 +126,16 @@ ag:MicrocontrollerShape a sh:NodeShape ;
     sh:property [ sh:path mc:model ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
                   sh:message "a board must state its model" ] .
 
+ag:ABoardCarriesPartsShape a sh:NodeShape ;
+    rdfs:comment """A board hosts PARTS. `sosa:hosts` is general on purpose — SOSA lets a Platform host Sensors, Actuators, Samplers and other Platforms, which is what makes the board-hosts-part-hosts-channel chain expressible — but a BOARD hosting something that is not a peripheral is a wiring nobody could build.
+
+This is the narrowing `mc:carries` used to claim with `rdfs:domain` and `rdfs:range`, and never enforced: neither is in `agent/inference.py`'s closure and no shape read them. Stated here it is checked, which is the whole trade — a term was given up and a rule was gained.
+
+Targeted at mc:Microcontroller rather than at sosa:Platform deliberately. A KY-015 is a Platform too and hosts its own two channels, which are perception:Sensors and not peripherals; scoping to the board says what is true of boards without forbidding what parts legitimately do. It also means this holds the SOVEREIGN alone: only the wiring types anything mc:Microcontroller, so an agent — never given a board — is never targeted.""" ;
+    sh:targetClass mc:Microcontroller ;
+    sh:property [ sh:path sosa:hosts ; sh:class mc:Peripheral ;
+                  sh:message "a board hosts peripherals — this one hosts something that is not one" ] .
+
 ag:CarriedPeripheralShape a sh:NodeShape ;
     rdfs:comment "A peripheral with legs that no board mounts. It is what a mistyped identifier LOOKS like: the world calls a sensor one thing and the stand calls it another, so instead of one device described twice there are two devices each described once — a sensor nothing is wired to, and a part nothing polls. Both halves validate on their own, which is why this is worth a rule. It matters more now that a stand can be authored elsewhere and imported, because the identifiers then come from a second file and agreeing is no longer automatic." ;
     sh:targetClass mc:Peripheral ;
@@ -134,6 +145,6 @@ ag:CarriedPeripheralShape a sh:NodeShape ;
             SELECT $this WHERE {
                 $this <http://example.org/agora/microcontroller#hasPin> ?pin .
                 FILTER NOT EXISTS {
-                    ?board <http://example.org/agora/microcontroller#carries> $this
+                    ?board <http://www.w3.org/ns/sosa/hosts> $this
                 }
             }""" ] .

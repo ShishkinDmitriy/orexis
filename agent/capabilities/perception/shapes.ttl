@@ -1,5 +1,8 @@
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -19,7 +22,7 @@ perception:PerceivingAgentShape a sh:NodeShape ;
                 ?cap a <http://example.org/agora/perception#PerceptionCapability> .
             }
         """ ] ;
-    sh:property [ sh:path perception:polls ; sh:minCount 1 ; sh:class perception:Sensor ;
+    sh:property [ sh:path perception:polls ; sh:minCount 1 ; sh:class sosa:Sensor , ag:Device ;
                   sh:message "an agent that perceives must be wired to at least one sensor" ] ;
     sh:property [ sh:path perception:readingGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
@@ -27,7 +30,7 @@ perception:PerceivingAgentShape a sh:NodeShape ;
 
 perception:SensorShape a sh:NodeShape ;
     rdfs:comment "A sensor reads exactly one subject, says which property it observes, and states how it is driven — because its agent's capability is derived from that." ;
-    sh:targetClass perception:Sensor ;
+    sh:targetClass sosa:Sensor ;
     sh:property [ sh:path perception:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path perception:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class perception:SenseMode ;
@@ -35,7 +38,7 @@ perception:SensorShape a sh:NodeShape ;
 
 perception:DoubleCoveredPropertyShape a sh:NodeShape ;
     rdfs:comment "Two sensors reading the SAME property of the SAME subject. A Warning and not a Violation, because it is a legitimate rig — two probes at opposite ends of one pot are one feature of interest measured twice — and the behaviour is defined: they share one observation node and the last writer wins. It is flagged because the other reading of it is a modelling slip: strictly, two probes in different soil observe different features of interest, and saying so gives each its own record instead of a value that flickers between them. Different properties of one subject are ordinary and silent; that is the case this shape must not catch, and why it tests the property and not just the subject." ;
-    sh:targetClass perception:Sensor ;
+    sh:targetClass sosa:Sensor ;
     sh:severity sh:Warning ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "another sensor already reads this property of this subject — they will share one observation and the last writer wins. If they are really measuring different soil, model them as two subjects." ;
@@ -43,7 +46,7 @@ perception:DoubleCoveredPropertyShape a sh:NodeShape ;
             SELECT $this WHERE {
                 $this <http://example.org/agora/perception#monitors> ?subject ;
                       <http://www.w3.org/ns/sosa/observes> ?property .
-                ?other a <http://example.org/agora/perception#Sensor> ;
+                ?other a <http://www.w3.org/ns/sosa/Sensor> ;
                        <http://example.org/agora/perception#monitors> ?subject ;
                        <http://www.w3.org/ns/sosa/observes> ?property .
                 FILTER (?other != $this)
@@ -92,3 +95,18 @@ perception:ListeningAgentShape a sh:NodeShape ;
     sh:property [ sh:path perception:fastSleepS ; sh:maxCount 0 ;
                   sh:message "a listening agent states no interval — its device does not take one" ] ;
     sh:property [ sh:path perception:slowSleepS ; sh:maxCount 0 ] .
+
+perception:StatedFrequencyShape a sh:NodeShape ;
+    rdfs:comment """A stated Frequency must say a number AND which unit it is in.
+
+`perception:seconds` said the unit in its name and its range said `xsd:integer`, and neither was
+checked: `rdfs:range` is not in the closure. Saying it as `schema:value` + `schema:unitCode` is
+the idiom the W3C's own DHT22 example uses, and it makes the unit a fact rather than a spelling —
+which is worth having, because the derivation reads that number as SECONDS. A Frequency stated in
+milliseconds would otherwise raise an agent's floor by a factor of a thousand, silently, and be a
+perfectly well-formed graph.""" ;
+    sh:targetClass ssn-system:Frequency ;
+    sh:property [ sh:path schema:value ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ;
+                  sh:message "a stated frequency must carry one whole number" ] ;
+    sh:property [ sh:path schema:unitCode ; sh:minCount 1 ; sh:maxCount 1 ; sh:hasValue unit:SEC ;
+                  sh:message "a stated frequency must be in seconds — the derivation reads it as seconds" ] .

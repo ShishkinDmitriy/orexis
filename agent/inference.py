@@ -94,9 +94,12 @@ CLOSURE = (
                   ?class rdfs:subClassOf ?super FILTER(?class != ?super) }}""",
 
     # 4. And what a world statement implies under a subproperty. There are no `rdfs:subPropertyOf`
-    #    axioms today — the simulated-device work removed the last one, `ag:models` under
-    #    `perception:polls`, which is the very fault that opened issue #27. This is here so that
-    #    reintroducing one is a vocabulary edit and not a debugging session.
+    #    axioms today, again: the simulated-device work removed `ag:models` under
+    #    `perception:polls` — the very fault that opened issue #27 — then #79 added `mc:carries`
+    #    under `sosa:hosts`, and dropping that term for the standard one removed it again. Both
+    #    removals were right and neither touched this rule, which is the point: it is here so
+    #    that reintroducing one is a vocabulary edit and not a debugging session, and it has now
+    #    survived a full cycle of one appearing and going away.
     f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?x ?super ?y }} }}
         {_T_BOX}
         USING NAMED <{WORLD_GRAPH}>

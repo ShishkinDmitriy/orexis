@@ -39,7 +39,7 @@ from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from agent.ontology import (AG, DHT11, MC, MQTT, ONEWIRE, ONTOLOGY_GRAPH, PERCEPTION,
-                            PROBE, RGBLED, WORLD_GRAPH)
+                            PROBE, RGBLED, SOSA, WORLD_GRAPH)
 
 log = logging.getLogger("firmware")
 
@@ -53,7 +53,7 @@ SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio 
        ?ledRed ?ledGreen ?ledBlue ?airPin
 WHERE {{ 
   ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{MC}firmware> ?firmware ;
-         <{MC}carries> ?sensor .
+         <{SOSA}hosts> ?sensor .
   ?sensor a <{PROBE}CapacitiveMoistureProbe> ; <{AG}localId> ?sensorId ;
           <{MQTT}readingTopic> ?readTopic ;
           <{PROBE}rawDry> ?rawDry ; <{PROBE}rawWet> ?rawWet .
@@ -72,7 +72,7 @@ WHERE {{
   # All OPTIONAL and all separate, because a board without a status LED is an ordinary board
   # and must still generate — the alternative is a query that silently returns no rows and a
   # generator that reports the world states no boards at all.
-  OPTIONAL {{ ?board <{MC}carries> ?led . ?led a <{RGBLED}RgbLed> ;
+  OPTIONAL {{ ?board <{SOSA}hosts> ?led . ?led a <{RGBLED}RgbLed> ;
                 <{MC}hasPin> ?rLeg, ?gLeg, ?bLeg .
              ?rLeg <{MC}pinRole> <{RGBLED}RedPinRole>   . ?rw <{MC}joins> ?rLeg, ?rPin . ?rPin <{MC}gpio> ?ledRed .
              ?gLeg <{MC}pinRole> <{RGBLED}GreenPinRole> . ?gw <{MC}joins> ?gLeg, ?gPin . ?gPin <{MC}gpio> ?ledGreen .
@@ -83,7 +83,7 @@ WHERE {{
   # is what the firmware actually needs to know anyway: this is the pin it must bit-bang,
   # whatever part is on the end of it. Matching the class would be asking a question whose
   # answer it would then have to translate.
-  OPTIONAL {{ ?board <{MC}carries> ?air .
+  OPTIONAL {{ ?board <{SOSA}hosts> ?air .
              ?air <{MC}hasPin> ?airLeg .
              ?airLeg <{MC}pinRole> <{ONEWIRE}DataPinRole> .
              ?aw <{MC}joins> ?airLeg, ?airPinNode . ?airPinNode <{MC}gpio> ?airPin }}

@@ -133,30 +133,38 @@ def test_an_agent_is_given_the_society_and_not_the_hardware():
 
 
 def test_the_society_hosting_agrees_with_the_wiring():
-    """One fact said twice, in two vocabularies, to two audiences — held to agreeing.
+    """One fact said twice, in two FILES, to two audiences — held to agreeing.
 
-    A board hosting its sensors is stated in `hardware.ttl` as `mc:carries` and in the society
-    as `sosa:hosts`, because an agent is never handed the wiring and `mc:` is exactly what the
-    test above forbids it. `mc:carries rdfs:subPropertyOf sosa:hosts` makes them one fact for
-    anyone who loads both — but only the SOVEREIGN loads both, so nothing in the running system
-    would ever notice them diverging. That is what this is for.
+    It used to be said in two vocabularies as well: `mc:carries` in the wiring, `sosa:hosts` in
+    the society, held together by a subproperty axiom. `mc:carries` is gone and both files say
+    `sosa:hosts`, which removes the vocabulary half of the problem and leaves the half that was
+    always the real one — the society restates the hosting because an agent is never handed the
+    wiring, and only the SOVEREIGN loads both, so nothing in the running system would notice
+    them diverging.
 
     Checked in the direction drift actually goes. Rewiring a probe onto a different board edits
-    `hardware.ttl`; the society keeps the old answer and every gate stays green, because the
-    society is internally consistent and the wiring is internally consistent and no query spans
-    them. So: wherever the wiring hosts something the society also names, the society must say
-    the same — and nothing in the society may claim a host the wiring contradicts.
+    `hardware.ttl`; the society keeps the old answer and every gate stays green, because each
+    file is internally consistent and no query spans them. So: wherever the wiring hosts
+    something the society also names, the society must say the same — and nothing in the society
+    may claim a host the wiring contradicts.
 
-    NOT symmetric, deliberately. `ag:status_led_fern` is carried by the board and absent from
-    the society, which is correct: an agent polls sensors and has no business knowing about an
-    indicator it can never observe. Demanding the society mirror the wiring would force
-    hardware-only parts into it, which is the leak the test above exists to prevent.
+    NOT symmetric, and sharing a word does not change that — the reason is stronger than
+    `silence is not contradiction`. **The society legitimately hosts things the wiring does
+    not.** `ag:air_sensor_fern sosa:hosts` its two channels and the wiring names neither of
+    them; a simulated device has no wiring at all. So a society-side pair with no counterpart
+    cannot be an error, and unwiring — deleting a part from `hardware.ttl` while the society
+    still hosts it — is still not caught. Closing that needs a rule that can tell a board's
+    hosting from a part's, which nothing here can: the society does not type the board as a
+    `mc:Microcontroller`, because `mc:` is exactly what the test above forbids it.
+
+    The other direction is likewise deliberate. `ag:status_led_fern` is hosted by the board and
+    absent from the society, which is correct: an agent polls sensors and has no business
+    knowing about an indicator it can never observe.
     """
     import rdflib
 
     from agent import genesis
 
-    MC = rdflib.Namespace("http://example.org/agora/microcontroller#")
     SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
 
     for world in genesis.worlds():
@@ -170,7 +178,7 @@ def test_the_society_hosting_agrees_with_the_wiring():
         if not wiring:
             continue  # a world with no stated hardware has nothing to disagree with
 
-        carried = set(wiring.subject_objects(MC.carries))
+        carried = set(wiring.subject_objects(SOSA.hosts))
         hosted = set(society.subject_objects(SOSA.hosts))
         named = {s for s, _, _ in society} | {o for _, _, o in society}
 
@@ -179,10 +187,13 @@ def test_the_society_hosting_agrees_with_the_wiring():
             f"{world}: the wiring carries {sorted(str(t) for _, t in missing)} and the society "
             f"does not host it — an agent would not know which board its sensor is on")
 
-        # And nothing may claim a host the wiring puts elsewhere. Only pairs the wiring can
-        # speak about are checked: `mc:carries` has mc:Microcontroller for its domain, so it
-        # cannot express a KY-015 hosting its own two channels, and the society states that
-        # chain alone rather than in contradiction to anything.
+        # And nothing may claim a host the wiring puts elsewhere. Only pairs the wiring
+        # actually states are checked — it names no channel of the KY-015, so the society states
+        # that chain alone rather than in contradiction to anything. That used to be guaranteed
+        # by `mc:carries` having mc:Microcontroller for its domain; it is now a fact about what
+        # the wiring says rather than about what it could say, which is weaker as a guarantee
+        # and identical in effect, because a domain axiom nothing materialises guaranteed
+        # nothing either.
         carriers = {t: h for h, t in carried}
         contradicted = {(h, t) for h, t in hosted if t in carriers and carriers[t] != h}
         assert not contradicted, (
