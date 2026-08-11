@@ -1,4 +1,5 @@
 @prefix actuation: <http://example.org/agora/actuation#> .
+@prefix reporting: <http://example.org/agora/reporting#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
 
@@ -22,7 +23,7 @@ ag:supplier actuation:doseGraceS 10 .
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
-ag:supplier ag:metricsIntervalS 60 .
+ag:supplier reporting:intervalS 60 .
 
 ##  No self-review. The world gives this agent no mandate — it holds no revisable
 #   setting to be given room on — so it derives no review capability and needs no

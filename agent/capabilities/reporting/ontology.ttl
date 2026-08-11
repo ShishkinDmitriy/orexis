@@ -1,0 +1,40 @@
+@prefix reporting: <http://example.org/agora/reporting#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/reporting> a owl:Ontology ;
+    rdfs:label "Agora self-reporting" ;
+    rdfs:comment """What an agent says about itself, and where it says it. The figures are each ones only the agent can state — nothing else can count the triples in a belief base it cannot reach, and nothing else knows how long a reading has been late, because a gap is only visible from the end that was waiting. See knowledge/domain/agent-metrics.md.""" .
+
+#################  The capability  #################
+#  MANDATORY, which is not the same as UNIFORM, and conflating the two is what kept this in the
+#  kernel. Rule 2 asks whether the HOW could differ — not whether every agent has it. Every agent
+#  has this one and a shape refuses an agent without it; what makes it a capability rather than a
+#  function is that where the account goes is genuinely replaceable.
+#
+#      reporting:Storing     into its own series bucket — implemented
+#      reporting:Announcing  onto the bus — declared, nothing behind it
+#
+#  What must never happen is granting it CONDITIONALLY. Health telemetry is what tells a silent
+#  agent from a dead one, and an agent that could lose the ability to say it is unwell is the one
+#  you most need to hear from. See knowledge/decisions/telemetry-is-a-mandatory-capability.md.
+
+reporting:ReportingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+    rdfs:label "Reporting capability" ;
+    rdfs:comment "The family. Rules true of reporting however it is done target this class, so nothing is restated per member, and a caller may ask for 'whoever reports' without knowing where it puts the figures." .
+
+reporting:Storing a reporting:ReportingCapability ; rdfs:label "Storing" ;
+    rdfs:comment "Writes the account into this agent's own series bucket, on its own clock. The implemented member and the one every world derives. Its credential opens exactly one bucket, so what an agent can report about is what it can report on — see series-and-bus-isolation." .
+
+reporting:Announcing a reporting:ReportingCapability ; rdfs:label "Announcing" ;
+    rdfs:comment """Publishes the account on the bus instead. RESERVED: declared so the vocabulary is honest that the sink is the replaceable part, but no rule grants it and no module implements it.
+
+It is the member worth building next, and for a reason particular to telemetry: the two FAIL INDEPENDENTLY. An agent whose series credential is wrong or whose bucket is gone can still announce; the converse holds too, and each covers the other's blind spot. That is also its limit, and it should be said out loud — a member reporting over the bus cannot report having lost the bus, which is exactly the fault #53 is about. Redundancy here is a second path, not a complete one.
+
+Note what a member is NOT: the ADDRESS of a sink is environment, because a service URL is not a belief anyone holds. A member is a manner of reporting; where that manner points is still INFLUX_URL's neighbour. Conflating the two is what made this look like a function.""" .
+
+reporting:intervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "reporting interval (s)" ;
+    rdfs:comment "How often this agent reports on itself. An ordinary REQUIRED parameter of a capability every agent holds, exactly as review:reviewIntervalS is of reviewing. It was optional once, and its absence meant an agent reporting nothing — a side channel dressed as a decision by omission, and the same pattern self-review-is-a-capability refused for the review interval. Two things were wrong with it: no agent in any world ever omitted it, so the branch was exercised by nothing; and an agent permitted to report nothing produces silence that carries no information, which is the one thing telemetry exists to prevent. A rate belongs in beliefs for the same reason the sensing cadence does — a test world may want it faster than a deployed one." .

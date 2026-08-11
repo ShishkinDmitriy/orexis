@@ -19,14 +19,20 @@ def agent(monkeypatch):
 # --- it loads the modules its hardware implies, and no others --------------
 
 def test_plant_agent_runs_perception_and_bidding(agent):
-    assert {m.name for m in agent("fern").modules} == {"subscribing", "bidding", "review"}
+    """`reporting` is in every one of these sets, because every agent is granted it."""
+    assert {m.name for m in agent("fern").modules} == {
+        "subscribing", "bidding", "review", "reporting"}
 
 
 def test_supplier_runs_hosting_actuation_and_matching(agent):
-    """Three modules, three abilities: it runs the protocol, it opens valves, and it knows one
-    way of turning bids into an allocation. Hosting reaches the third through `agent.provider`,
-    so the market package never learns that pay-as-bid is implemented in Python."""
-    assert {m.name for m in agent("supplier").modules} == {"hosting", "actuation", "pay-as-bid"}
+    """Three abilities of its own: it runs the protocol, it opens valves, and it knows one way of
+    turning bids into an allocation. Hosting reaches the third through `agent.provider`, so the
+    market package never learns that pay-as-bid is implemented in Python.
+
+    And `reporting`, which it did not earn — every agent is granted that one.
+    """
+    assert {m.name for m in agent("supplier").modules} == {
+        "hosting", "actuation", "pay-as-bid", "reporting"}
 
 
 def test_the_supplier_has_no_perception(agent):

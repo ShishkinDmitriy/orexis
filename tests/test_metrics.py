@@ -2,9 +2,13 @@
 
 The interesting cases are the absences. A sensor that has never delivered must not report an age,
 because zero would be a claim that a reading had just arrived and seconds-since-boot would be a
-claim about the wrong thing. An agent that states no interval must not report at all. Both are
-the difference between "I do not know" and "the answer is nothing", which is the distinction the
-whole design keeps making.
+claim about the wrong thing — the difference between "I do not know" and "the answer is nothing",
+which is the distinction the whole design keeps making.
+
+An agent's own silence is NOT one of those cases, and used to be. A missing interval meant an
+agent reporting nothing, and that is gone: reporting is a mandatory capability now, so a missing
+interval refuses at boot like any other missing belief. An agent permitted to be silent is one
+that cannot be told from a dead one.
 """
 
 from __future__ import annotations
@@ -13,7 +17,9 @@ import pytest
 from agent.ontology import term
 
 from agent.beliefs import BeliefError, Block
-from agent.metrics import SELF_REPORTING_BLOCK, Metrics, SelfReportingBeliefs, tree_bytes
+from agent.capabilities.reporting.beliefs import REPORTING_BLOCK, ReportingBeliefs
+from agent.capabilities.reporting.terms import term as reporting_term
+from agent.metrics import Metrics, tree_bytes
 
 from conftest import build_agent
 
@@ -69,9 +75,15 @@ def test_it_reports_the_world_version_it_is_running(agent):
 
 
 def test_reporting_without_a_writer_is_silent(agent):
-    """A test agent never called run(), so nothing was started — and report() must not reach for
-    a network on the strength of being called."""
-    agent.metrics.report()  # no writer, no raise, no I/O
+    """A test agent never called run(), so no module started — and report() must not reach for
+    a network on the strength of being called.
+
+    Asked of the MODULE now rather than of `Metrics`: counting stayed in the kernel and the sink
+    moved to `capabilities/reporting/`, which is the split that makes reporting a capability at
+    all. `Metrics` no longer has a `report()` to call.
+    """
+    reporting = next(m for m in agent.modules if m.name == "reporting")
+    reporting.report()  # no writer, no raise, no I/O
 
 
 def test_an_in_memory_store_has_no_size_on_disk():
@@ -79,25 +91,31 @@ def test_an_in_memory_store_has_no_size_on_disk():
     assert tree_bytes("/nonexistent/belief/base") is None
 
 
-# --- the belief, whose absence is a decision -------------------------------------------------
+# --- the belief, which is required ------------------------------------------------------------
 
-def test_an_agent_that_states_no_interval_reports_nothing(agent):
-    """`read_optional` returns None for a wholly absent block, and run() then starts nothing.
-    Refusing to boot over instrumentation would be disproportionate."""
-    absent = Block(capability=SELF_REPORTING_BLOCK.capability,
-                   cls=SelfReportingBeliefs,
-                   terms={"interval_s": term("NoSuchTermAnyoneAuthored")})
-    assert agent.beliefs.read_optional(absent) is None
+def test_an_agent_that_states_no_interval_refuses(agent):
+    """It used to report nothing and carry on. That was the defect, not the design.
+
+    An agent permitted to fall silent is indistinguishable from a dead one, and #53 — a broker
+    session lost for days with nothing saying so — is unfixable for exactly the agents that
+    cannot speak for themselves. So a missing interval is now an ordinary missing belief and
+    refuses at boot, the same way one of a bidder's would.
+    """
+    absent = Block(capability=REPORTING_BLOCK.capability,
+                   cls=ReportingBeliefs,
+                   terms={"interval_s": reporting_term("NoSuchTermAnyoneAuthored")})
+    with pytest.raises(BeliefError):
+        agent.beliefs.read(absent)
 
 
 def test_a_stated_interval_is_read(agent):
-    """Every world's agents now state one, so this is the live path rather than a fixture."""
-    held = agent.beliefs.read_optional(SELF_REPORTING_BLOCK)
-    assert held is not None and held.interval_s > 0
+    """Every world's agents state one, so this is the live path rather than a fixture."""
+    held = agent.beliefs.read(REPORTING_BLOCK)
+    assert held.interval_s > 0
 
 
 def test_half_a_block_is_still_an_error(agent):
-    """Absence is a decision; a partial answer is an authoring slip, and must still refuse."""
+    """A partial answer was always an authoring slip, and still refuses."""
     from dataclasses import dataclass
 
     @dataclass(frozen=True)
@@ -105,10 +123,11 @@ def test_half_a_block_is_still_an_error(agent):
         interval_s: int
         other: int
 
-    partial = Block(capability=SELF_REPORTING_BLOCK.capability, cls=TwoFields,
-                    terms={"interval_s": term("metricsIntervalS"), "other": term("noSuchTerm")})
+    partial = Block(capability=REPORTING_BLOCK.capability, cls=TwoFields,
+                    terms={"interval_s": reporting_term("intervalS"),
+                           "other": reporting_term("noSuchTerm")})
     with pytest.raises(BeliefError):
-        agent.beliefs.read_optional(partial)
+        agent.beliefs.read(partial)
 
 
 @pytest.fixture

@@ -7,12 +7,16 @@ waiting. Both were computed by hand during bring-up — the freshness one by pul
 reading and differencing timestamps — which is the tell that the agent should have been saying it
 all along.
 
-**In the kernel, not a capability.** Every agent has a belief base, a connection and an uptime,
-whatever it composed, and the value is in *all* of them reporting rather than whichever opted in.
-The same argument that put `observation.py` here: a thing every agent does is not one capability's
-business. It is also not derivable from wiring, and capabilities are derived from wiring — so
-making it one would have meant inventing a rule that fires for everybody, which is the kernel
-wearing a disguise.
+**Counting is in the kernel; REPORTING is a capability.** Every agent counts the same figures,
+and `Observations` counts into them before any module exists — so the account itself is the
+kernel's, on the same argument that put `observation.py` here. Where the account GOES is
+`capabilities/reporting/`, because that part could differ: a series bucket today, the bus
+tomorrow, and the two fail independently.
+
+That capability is MANDATORY — its rule's premise is being an agent, and a shape refuses an agent
+without it. Mandatory is not the same as uniform, and treating them as one question is what kept
+the whole of this in the kernel: rule 2 asks whether the HOW could differ, not whether every
+agent has it. See knowledge/decisions/telemetry-is-a-mandatory-capability.md.
 
 **Counters live here; the events live where they happen.** `Observations` already caught the two
 write failures and only logged them — silent data loss that nothing surfaced. It now also tells
@@ -20,9 +24,10 @@ this object, which is why the counters hang off the agent rather than off `Obser
 can hold more than one of those (perception and simulated-sensing each build their own), and two
 sets of counters would report half the truth each.
 
-**Reporting is separate from counting.** Counting costs nothing and always happens. Reporting
-needs a writer, a timer and a credential, so it starts in `run()` and stops with the agent — which
-means a test that builds an agent without running it makes no network calls at all.
+**Reporting is separate from counting**, and it is now separate in the file layout too. Counting
+costs nothing and always happens. Reporting needs a writer, a timer and a credential, so it lives
+in a module that starts with the others — which means a test that builds an agent without running
+it makes no network calls at all.
 
 See knowledge/domain/agent-metrics.md.
 """
@@ -31,37 +36,10 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass
 from pathlib import Path
 
-from . import config
-from .beliefs import Block
-from .module import Timer
-from .ontology import term
 
 log = logging.getLogger("metrics")
-
-# How often an agent says how it is. A belief rather than a constant, because it is a rate this
-# agent keeps and a test world may want it faster than a deployed one — the same argument that
-# put the sensing cadence in beliefs.
-#
-# Its ABSENCE is meaningful: an agent that states no interval reports nothing. That is a decision
-# stated by omission, like a beliefs file with no bidding block, and it is why this is read with
-# `read_optional`. Refusing to start over instrumentation would be disproportionate — an agent
-# that cannot report is still an agent.
-METRICS = term("SelfReporting")
-
-
-@dataclass(frozen=True)
-class SelfReportingBeliefs:
-    interval_s: int
-
-
-SELF_REPORTING_BLOCK = Block(
-    capability=METRICS,
-    cls=SelfReportingBeliefs,
-    terms={"interval_s": term("metricsIntervalS")},
-)
 
 def tree_bytes(path: str | Path | None) -> int | None:
     """Bytes on disk under the belief base, or None if it has none (an in-memory store).
@@ -85,7 +63,12 @@ def tree_bytes(path: str | Path | None) -> int | None:
 
 
 class Metrics:
-    """One agent's account of itself. Always present; reports only when told to start."""
+    """One agent's account of itself. Always present, and it only ever counts.
+
+    Where the account goes is `capabilities/reporting/`, which reads `agent_fields()` off this
+    object on its own clock. The split is the one rule 2 draws: counting could not be done
+    differently, and a sink could.
+    """
 
     def __init__(self, agent):
         self.agent = agent
@@ -97,8 +80,6 @@ class Metrics:
         self.sensed_failures = 0
         self.mqtt_reconnects = -1  # the first connect is not a RE-connect; see connected()
         self.mqtt_connected = False
-        self._timer: Timer | None = None
-        self._writer = None
 
     # --- what the rest of the agent tells it ---
 
@@ -181,36 +162,6 @@ class Metrics:
                 log.error("%s: %s could not report on itself: %s", self.agent.id, module.name, exc)
         return out
 
-    # --- reporting ---
-
-    def start(self, interval_s: int) -> None:
-        """Begin reporting. Called from run(), after the signal mask is in place."""
-        bucket, token = config.env("INFLUX_BUCKET"), config.env("INFLUX_TOKEN")
-        if not bucket or not token:
-            # Unlike a reading, a missing metric is not lost evidence about the world — so this
-            # says so and carries on rather than refusing to run. An agent that cannot report is
-            # still an agent; one that cannot record is not.
-            log.warning("%s: no series credential, so nothing will be reported about this agent",
-                        self.agent.id)
-            return
-        from .influx_writer import InfluxWriter  # deferred: nothing is built for a test agent
-
-        self._writer = InfluxWriter(
-            config.env("INFLUX_URL", "http://localhost:8086"), token,
-            config.env("INFLUX_ORG", "agora"), bucket)
-        self._timer = Timer(interval_s, self.report)
-        self._timer.start()
-        log.info("%s: reporting on itself every %ss", self.agent.id, interval_s)
-
-    def stop(self) -> None:
-        if self._timer:
-            self._timer.stop()
-        if self._writer:
-            try:
-                self._writer.close()
-            except Exception:  # shutting down; a failed close must not mask the real exit
-                pass
-
     def sensors_seen(self) -> set[str]:
         """Every sensor worth a line: the ones wired to me, and the ones that have delivered.
 
@@ -224,19 +175,3 @@ class Metrics:
         simulated agent, which is exactly the world one tests instrumentation in.
         """
         return {s.local_id for s in self.agent.me.sensors} | set(self.readings)
-
-    def report(self) -> None:
-        """Write one round. Never raises: instrumentation must not take an agent down."""
-        if self._writer is None:
-            return
-        try:
-            self._writer.write_agent_health(
-                self.agent.id, self.agent_fields(),
-                {local_id: (self.readings.get(local_id, 0), self.reading_age_s(local_id))
-                 for local_id in sorted(self.sensors_seen())},
-                belief_bytes=tree_bytes(getattr(self.agent.store, "path", None)),
-            )
-        except Exception as exc:
-            # Counted nowhere, deliberately: a failure to report the failure count is not worth
-            # a second counter, and the gap in the series says it.
-            log.warning("%s: could not report metrics: %s", self.agent.id, exc)

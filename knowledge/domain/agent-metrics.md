@@ -1,8 +1,8 @@
 ---
 type: Domain Concept
 title: What an agent says about itself
-description: The figures an agent is uniquely placed to report — belief base size, reading freshness, and the write failures that were previously only logged — why they live in the kernel rather than a capability, and why the interval's absence is a decision rather than a default.
-tags: [metrics, observability, kernel, beliefs, dashboards]
+description: The figures an agent is uniquely placed to report — belief base size, reading freshness, and the write failures that were previously only logged. Counting is the kernel's because it could not be done differently; where the account GOES is a mandatory capability, granted to every agent and insisted on by a shape. The interval is required, because an agent permitted to be silent cannot be told from a dead one.
+tags: [metrics, observability, kernel, capabilities, beliefs, dashboards]
 timestamp: 2026-08-06T00:00:00Z
 ---
 
@@ -14,7 +14,7 @@ delivered, how many writes it lost, how long it has been up.
 
 ```bash
 # in that agent's beliefs, and nowhere else
-ag:fern_agent ag:metricsIntervalS 60 .
+ag:fern_agent reporting:intervalS 60 .
 ```
 
 # Why the agent and not something watching it
@@ -54,32 +54,53 @@ looked exactly like one that was working. They are still caught — a reading mu
 because the history could not be kept — but they are now counted, and a dashboard flat at zero is
 the evidence that nothing is going missing.
 
-# Kernel, not a capability
+# Counting is the kernel's; reporting is a capability
 
-Every agent has a belief base, a connection and an uptime, whatever it composed, and the value is
-in *all* of them reporting rather than whichever opted in. The same argument that put
-[observation](/decisions/capability-packages.md) in the kernel: a thing every agent does is not
-one capability's business.
+The two halves answer different questions, and treating them as one kept the whole of this in the
+kernel for longer than it belonged there.
 
-It is also not derivable from wiring, and **capabilities are derived from wiring** — so making
-this one would have required inventing a rule that fires for everybody, which is the kernel
-wearing a disguise.
+**Counting could not be done differently.** Every agent counts the same figures, and
+`Observations` counts into them before any module exists — so the account itself is the kernel's,
+on the same argument that put [observation](/decisions/capability-packages.md) there.
 
-# The interval is a belief, and its absence is a decision
+**Where the account goes could differ**, so that is `capabilities/reporting/`: a credential, a
+writer, a clock and one write per tick. `reporting:Storing` puts it in this agent's own series
+bucket; `reporting:Announcing` — declared, unimplemented — would put it on the bus, and the two
+fail independently, which for telemetry is the point rather than a nicety.
+
+**Mandatory is not the same as uniform.** Every agent is granted this by a rule whose premise is
+being an agent, and a shape refuses an agent without it. [AGENTS.md](../../AGENTS.md) rule 2 asks
+whether the *how* could differ, not whether everyone has it — so a capability everybody holds is
+still a capability, and what it is not is optional. See
+[telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md).
+
+This page used to argue it the other way round — *"not derivable from wiring, and capabilities are
+derived from wiring"* — which reached the right conclusion by a reason that has since been
+superseded twice: [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) grants
+one by latitude, and [the wire's record](/decisions/the-wire-is-ours-and-it-has-two-levels.md)
+grants others by what a device speaks.
+
+# The interval is a belief, and it is required
 
 A rate belongs in beliefs for the same reason the sensing cadence does: a test world may want it
 faster than a deployed one, and that is the agent's own parameter rather than the world's
 topology.
 
-An agent that states **no** interval reports nothing. That is not a silent default — it is a
-decision stated by omission, in the same idiom as a beliefs file with no bidding block saying
-this agent holds no stake. It is read with `read_optional`, which returns nothing for a wholly
-absent block and still refuses for a *partially* present one, because half an answer is an
-authoring slip rather than a choice.
+It used to be optional, and an agent that stated **no** interval reported nothing. That is gone,
+for two reasons that only look like one:
 
-Refusing to boot over instrumentation would be disproportionate. An agent that cannot report is
-still an agent; one that cannot record is not — which is why a missing series credential is fatal
-in `observation.py` and merely loud here.
+- **No world ever used it.** All nine agents across all three worlds state an interval, so the
+  branch that made this look like a choice was exercised by nobody — *"a side channel dressed as
+  a decision by omission"*, which is
+  [self-review-is-a-capability](/decisions/self-review-is-a-capability.md)'s phrase for the same
+  pattern, refused there for `review:reviewIntervalS`.
+- **An agent reporting nothing produces silence that says nothing.** The value of health telemetry
+  is that quiet means something; an agent permitted to be silent is indistinguishable from a dead
+  one, and that is the case you most need to tell apart.
+
+So a missing interval refuses at boot like any other missing belief. A missing series *credential*
+still does not, and the difference is deliberate: an operator can fix an environment variable
+without re-ratifying a world, so that stays a loud warning.
 
 # The dashboard
 

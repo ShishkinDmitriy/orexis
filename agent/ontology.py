@@ -5,12 +5,15 @@ lives in. A term that belongs to one capability — `perception:Subscribing`, `m
 named by that capability's own package, so this file never grows when one is added. That is the
 whole reason it is this short.
 
-**Eleven terms in `vocabulary/agora` still make that claim false, and they are named rather than
+**Ten terms in `vocabulary/agora` still make that claim false, and they are named rather than
 implied**: the seven of the simulated device model, which only `world/simulation` uses and which
-want a simulation package that does not exist; `ag:ComputeHost`, `ag:runsOn` and `ag:lanAddress`,
-which only `world/sensing` states; and `ag:SelfReporting`, which is declared a capability, has a
-shape, and appears in no world at all. See
+want a simulation package that does not exist; and `ag:ComputeHost`, `ag:runsOn` and
+`ag:lanAddress`, which only `world/sensing` states. See
 knowledge/decisions/every-term-in-its-own-house.md.
+
+`ag:SelfReporting` was an eleventh and has left, to `capabilities/reporting/`. It was declared a
+capability and granted by nothing; it is granted by a rule now, insisted on by a shape, and named
+in its own namespace. See knowledge/decisions/telemetry-is-a-mandatory-capability.md.
 
 Everything here is a **T-Box term**: a class or a property. Those are public and well-known,
 and code is written against them exactly as it is written against a function signature. What

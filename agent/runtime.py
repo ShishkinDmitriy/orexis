@@ -35,7 +35,7 @@ import paho.mqtt.client as mqtt
 
 from . import config, genesis, loader
 from .beliefs import Beliefs
-from .metrics import SELF_REPORTING_BLOCK, Metrics
+from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
 from .validate import validate_agent
@@ -290,12 +290,11 @@ class Agent:
         self.mqtt.loop_start()
         # After the mask, so the timer thread inherits it and this thread stays the one that
         # wakes on a signal. Its thread is a daemon, so it cannot hold the process open either.
-        if (reporting := self.beliefs.read_optional(SELF_REPORTING_BLOCK)) is not None:
-            self.metrics.start(reporting.interval_s)
-        # Upkeep runs for everyone, on its own clock. Started here rather than at construction
-        # for the same reason reporting is — building an agent must start no threads, so a test
-        # can hold one without it acting. Whether it also REVIEWS itself is a capability, and
-        # its module starts below with the rest.
+        # Upkeep runs for everyone, on its own clock, and is NOT a capability: nothing about
+        # reclaiming your own disk could be done differently. Started here rather than at
+        # construction so that building an agent starts no threads and a test can hold one
+        # without it acting. Reporting used to start here too and is a module now — mandatory,
+        # granted to every agent, and started below with the rest.
         self.upkeep.start()
         for module in self.modules:
             module.start()
@@ -309,7 +308,6 @@ class Agent:
             for module in self.modules:
                 module.stop()
             self.upkeep.stop()
-            self.metrics.stop()
             self.mqtt.loop_stop()
             self.mqtt.disconnect()
 
