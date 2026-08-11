@@ -3,6 +3,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 
@@ -23,9 +24,17 @@ mc:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device , sosa:Platform ;
     rdfs:label "Microcontroller" ;
     rdfs:comment "A board at the edge, carrying peripherals and reachable over a bus. It runs firmware, not agents. Also a sosa:Platform — *an entity that hosts other entities, particularly Sensors, Actuators, Samplers, and other Platforms* — which is what a board is and what nothing here said until issue #79." .
 
-mc:Peripheral a owl:Class ; rdfs:subClassOf ag:Device , sosa:Platform ;
+mc:Peripheral a owl:Class ; rdfs:subClassOf ag:Device , ssn:System ;
     rdfs:label "Peripheral" ;
-    rdfs:comment "Something wired to a board's pins. A sensor is one; so is an indicator. A Platform too, and not vacuously: a KY-015 is one part reporting temperature AND humidity, so it hosts two sensors of its own. SOSA is explicit that a Platform may host other Platforms, which is what makes the board-carries-part-carries-channel chain expressible without inventing anything. A peripheral hosting nothing — an indicator — is a Platform with nothing on it, which the class permits." .
+    rdfs:comment """Something wired to a board's pins. A sensor is one; so is an indicator.
+
+An `ssn:System` — *a unit of abstraction for pieces of infrastructure that implement Procedures* — and not a `sosa:Platform`, which is what #79 first made it. The W3C's own worked example of a DHT22 settles it: the part is a System with `ssn:hasSubSystem`, and hosting is left for mounting.
+
+Both of SSN's restrictions agree with that reading. `sosa:Platform` carries `hosts allValuesFrom ssn:System`, so a board's hostee must be a System; and `ssn:System` carries `hasSubSystem allValuesFrom ssn:System`, so a part with channels must be one too. A peripheral is hosted and has sub-systems, which makes it a System twice over and a Platform for no reason — nothing is MOUNTED on a KY-015.
+
+The distinction is a trace of an act against a fact about constitution. A board mounts this part and could mount it elsewhere; the part's temperature element was never deployed anywhere, it is what the part IS. Note this is semantic and not axiomatic: nothing forbids a System being hosted by two Platforms and nothing makes sub-systems exclusive, so no shape should be expected to enforce either.
+
+Platform and System are NOT disjoint — SSN declares no disjointness anywhere — so a thing may be both. The ESP32 arguably is: it carries peripherals and its firmware implements the publishing procedure. Typing it as a Platform alone is our simplification, not a rule the vocabulary imposes.""" .
 
 mc:modelName a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "model name" ;
     rdfs:comment """The catalogue name of a part, stated on its CLASS — what a person orders, and what an authoring tool will have written down. mc:model is the same string on an INSTANCE; this is the one every instance of that class shares.

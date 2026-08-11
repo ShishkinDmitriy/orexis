@@ -182,7 +182,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     # part goes too — a KY-015 hosting two channels this world no longer has would be a
     # platform pointing at nothing.
     for block in ("ag:air_temp_fern a sosa:Sensor , ag:Device ;", "ag:air_humidity_fern a sosa:Sensor , ag:Device ;",
-                  "ag:air_sensor_fern a sosa:Platform ;"):
+                  "ag:air_sensor_fern a ssn:System ;"):
         start = s.index(block)
         s = s[:start] + s[s.index(" .\n", start) + 3:]
     s = s.replace("    sosa:hosts ag:moisture_sensor_fern , ag:air_sensor_fern ;",
