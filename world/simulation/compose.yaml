@@ -56,8 +56,8 @@ services:
     environment:
       SIM_SENSOR_ID: "sensor_fern"
       SIM_READING_TOPIC: "sim/sensors/sensor_fern/reading"
-      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
-      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"
@@ -84,8 +84,8 @@ services:
     environment:
       SIM_SENSOR_ID: "sensor_succulent"
       SIM_READING_TOPIC: "sim/sensors/sensor_succulent/reading"
-      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
-      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"
@@ -112,8 +112,8 @@ services:
     environment:
       SIM_SENSOR_ID: "sensor_tomato"
       SIM_READING_TOPIC: "sim/sensors/sensor_tomato/reading"
-      # ag:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
-      # ag:Push keeps its own clock and takes no orders. The agent derives its capability
+      # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
+      # perception:Push keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "scheduled"
       MQTT_HOST: "localhost"

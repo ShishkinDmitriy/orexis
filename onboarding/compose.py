@@ -49,7 +49,11 @@ SELECT ?id ?cap WHERE {{
   OPTIONAL {{ ?a <{AG}hasCapability> ?cap }}
  }}"""
 
-ACTUATION = AG + "Actuation"
+# The CAPABILITY, not the namespace `ACTUATION` imported above. Naming both the same thing
+# shadowed the namespace and turned every `<{ACTUATION}actuates>` into nonsense — which cost
+# nothing visible, because those patterns sit in OPTIONAL clauses that match nothing when the
+# IRI is garbage. The supplier quietly stopped being mounted its signing keys.
+ACTUATES = ACTUATION + "Actuation"
 
 _BUS_PORTS_Q = f"""
 SELECT ?port ?tlsPort WHERE {{ 
@@ -107,7 +111,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
     # world/<name>/ wholesale would hand every agent the signing keys and every other agent's
     # opening beliefs, neither of which it has any business reading.
     signing = ""
-    if ACTUATION in caps:
+    if ACTUATES in caps:
         signing = ("\n      # it actuates, so it co-signs — these two keys and nothing else\n"
                    "      - ./secrets/host.key:/app/world/secrets/host.key:ro\n"
                    "      - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro")
