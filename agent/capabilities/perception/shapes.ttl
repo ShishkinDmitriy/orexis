@@ -2,6 +2,10 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
+# QUDT 1.1, which the W3C's own SSN examples were written against and which is a different
+# namespace rather than an older spelling of this one. Declared here alone: nothing in this
+# project EMITS it, and only this shape has to recognise it.
+@prefix qudt11-unit: <http://qudt.org/1.1/vocab/unit#> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -104,9 +108,17 @@ checked: `rdfs:range` is not in the closure. Saying it as `schema:value` + `sche
 the idiom the W3C's own DHT22 example uses, and it makes the unit a fact rather than a spelling —
 which is worth having, because the derivation reads that number as SECONDS. A Frequency stated in
 milliseconds would otherwise raise an agent's floor by a factor of a thousand, silently, and be a
-perfectly well-formed graph.""" ;
+perfectly well-formed graph.
+
+TWO IRIs for seconds, because the W3C's own SSN examples were written against QUDT 1.1 and that
+is a different namespace rather than an older spelling of the current one. Both denote the same
+unit, so `sh:in` says which spellings this project can READ; `vocabulary/dht11/` shows the one it
+writes. Accepting theirs costs nothing — a figure is still refused unless it says seconds — and
+refusing it would have made a datasheet from the vocabulary's own authors unreadable over a
+namespace version.""" ;
     sh:targetClass ssn-system:Frequency ;
     sh:property [ sh:path schema:value ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ;
                   sh:message "a stated frequency must carry one whole number" ] ;
-    sh:property [ sh:path schema:unitCode ; sh:minCount 1 ; sh:maxCount 1 ; sh:hasValue unit:SEC ;
+    sh:property [ sh:path schema:unitCode ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:in ( unit:SEC qudt11-unit:Second ) ;
                   sh:message "a stated frequency must be in seconds — the derivation reads it as seconds" ] .
