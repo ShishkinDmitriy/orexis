@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Bytes become a quantity in stages, and each stage is borne by the binding
-description: The codec and the calibration become package trees beside transports, each a family whose serving member is DERIVED onto the sensor at genesis rather than searched for at boot. The pointer stays a function, because RFC 6901 works over any tree. The trees are one mechanism split by bearer, not by importance — a capability is derived onto an agent, these onto a binding. Calibration is also where a number acquires a unit, so the three sensors now state QUDT IRIs, borrowed and not imported. Identity stays identity and no number moved.
+description: The codec and the scaling become package trees beside transports, each a family whose serving member is DERIVED onto the sensor at genesis rather than searched for at boot. The pointer stays a function, because RFC 6901 works over any tree. The trees are one mechanism split by bearer, not by importance — a capability is derived onto an agent, these onto a binding. Named scaling and not calibration, because calibration is the procedure that finds the numbers a scaling applies. Scaling is also where a number acquires a unit, so three sensors state QUDT IRIs, borrowed and not imported. Identity stays identity and no number moved.
 status: accepted
 stage: v1
 tags: [sensing, codecs, calibration, units, capabilities, packages]
@@ -182,6 +182,40 @@ into a conversion between *stated* units rather than a guess.
   moment #26 moves it, a curve stops being a compiled constant and becomes a **belief** — one an
   agent may hold within stated bounds and re-pick as a probe drifts, which is worth more than the
   arithmetic suggests.
+
+# The codec is on the wrong bearer, and the right one has no name
+
+Stated here rather than left for a reader to find, because this record's own bearer table is too
+coarse. The three stages do **not** share a bearer:
+
+| stage | bears on | why |
+|---|---|---|
+| codec | the **board** | one byte stream has one encoding |
+| pointer | the sensor | which value in the document is mine |
+| scaling, unit | the sensor | its own curve, its own dimension |
+
+`codec:decodedBy` is derived onto each sensor, so three sensors sharing one reading topic carry
+three copies of one fact — and nothing stops them disagreeing. **Measured:** giving two sensors on
+one topic two different codecs is accepted by `agora-validate` today. The per-sensor shape asks
+for exactly one codec per sensor; nothing can ask for one per stream, because the stream is not a
+thing in the model.
+
+The missing entity is not new and it is not ours to invent. **`sosa:Platform`** — *"an entity that
+hosts other entities, particularly Sensors, Actuators, Samplers, and other Platforms"* — is the
+standard term, `sosa:hosts` is the relation, and the SSN specification names exactly this case:
+physical hosting, as against `ssn:hasSubSystem`, which is logical composition. SOSA is already in
+use here for `sosa:observes`.
+
+Once it exists, four facts currently expressed as string equality between sensors become
+properties of one node: the codec, the wake interval
+([#78](https://github.com/ShishkinDmitriy/agora/issues/78)), the broker credential that
+`ag:onBus` puts on one peripheral standing in for its board, and the single outbound command
+message that carries several values. That last one is also where the unused `encode()` gets a
+caller, since actuation is this pipeline reversed.
+
+Filed as [#79](https://github.com/ShishkinDmitriy/agora/issues/79). It is left out of this change
+deliberately: introducing a platform touches every world's topology, and doing it inside a change
+about package layout would make neither reviewable.
 
 # Seams left open
 
