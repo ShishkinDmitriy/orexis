@@ -351,7 +351,7 @@ def _sensing_with(update: str = ""):
 
 _ONE = """  ag:{sensor} ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
-      ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds {seconds} ] ] ."""
+      ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value {seconds} ; schema:unitCode unit:SEC ] ] ."""
 
 
 def _states(**floors: int) -> str:

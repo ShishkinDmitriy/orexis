@@ -2,6 +2,7 @@
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
+@prefix schema: <https://schema.org/> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -136,7 +137,7 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ssn-system:hasSystemCapability [
         a ssn-system:SystemCapability ;
         ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
-        ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 2 ] ] .
+        ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
 
 ag:air_humidity_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_humidity_fern" ;
@@ -153,7 +154,7 @@ ag:air_humidity_fern a sosa:Sensor , ag:Device ;
     ssn-system:hasSystemCapability [
         a ssn-system:SystemCapability ;
         ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
-        ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 2 ] ] .
+        ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
 
 ##########  The agent  ##########
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.

@@ -18,6 +18,8 @@
 # question for that transport's shapes, not for this rule.
 
 PREFIX perception: <http://example.org/agora/perception#>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+PREFIX schema: <https://schema.org/>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX review: <http://example.org/agora/review#>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
@@ -70,6 +72,6 @@ WHERE  {
         ?agent perception:polls ?sensor .
         ?sensor ssn-system:hasSystemCapability ?cap .
         ?cap ssn-system:hasSystemProperty ?freq .
-        ?freq a ssn-system:Frequency ; perception:seconds ?s .
+        ?freq a ssn-system:Frequency ; schema:value ?s ; schema:unitCode unit:SEC .
       } GROUP BY ?agent }
 }

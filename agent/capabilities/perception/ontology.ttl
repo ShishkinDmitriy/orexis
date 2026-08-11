@@ -165,9 +165,26 @@ perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 9
 # What this package adds is the VALUE, because SSN deliberately leaves values to other
 # vocabularies. The class carries the meaning; this carries the number.
 
-perception:seconds a owl:DatatypeProperty ; rdfs:domain ssn-system:Frequency ; rdfs:range xsd:integer ;
-    rdfs:label "seconds" ;
-    rdfs:comment "How many seconds the Frequency it hangs off is. Named for the unit and not for what it bounds, because ssn-system:Frequency already says which end it is: the SMALLEST possible gap, so a floor. A device that can be read no faster than every thirty seconds states 30 here, and an agent may not commit to less." .
+#  `perception:seconds` was here, and schema.org already had the idiom.
+#
+#  SSN leaves values to other vocabularies, and the W3C's own worked example of this very part
+#  — `ssn/integrated/examples/dht22.ttl`, the DHT11's sibling, written by the people who wrote
+#  the vocabulary — says it like this:
+#
+#      <DHT22/4578#TemperatureSensorFrequency> a ssn:Property , ssn-system:Frequency ,
+#          schema:PropertyValue ; schema:value 2 ; schema:unitCode qudt-unit-1-1:Second .
+#
+#  A number and its unit, rather than a property named for the unit. Their example predates
+#  current QUDT, so the idiom is theirs and the IRI is ours: `unit:SEC`, the prefix #77 already
+#  declared. That is the half-adopted idiom completed — #77 put unit IRIs on sensors and then
+#  wrote the figure beside them in a term of our own.
+#
+#  Their datasheet figure is 2 seconds, which is what the KY-015 declares here. Independent
+#  corroboration of a number nobody here measured.
+#
+#  The `rdfs:range xsd:integer` this term carried was never enforced — `rdfs:range` is not in
+#  `agent/inference.py`'s closure, the same way `mc:carries`'s domain was not. It is a shape
+#  now (`perception:StatedFrequencyShape`), so the swap gains a check rather than losing one.
 
 #################  Re-picking the comfortable cadence  #################
 # ONE triple makes a belief revisable, and it names the two figures already stated above. The

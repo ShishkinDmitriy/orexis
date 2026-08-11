@@ -296,6 +296,8 @@ def test_market_must_state_all_three_channels():
 # never lights.
 
 _WIRING_PREAMBLE = """
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix ag:      <http://example.org/agora#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 @prefix onewire: <http://example.org/agora/onewire#> .
@@ -602,7 +604,7 @@ PREFIX perception: <http://example.org/agora/perception#>
 INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
   ag:moisture_sensor_fern ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
-      ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 700 ] ] } }"""))
+      ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 700 ; schema:unitCode unit:SEC ] ] } }"""))
     assert "Conforms: False" in report
     assert "equipment can honour" in report
 
@@ -618,4 +620,4 @@ PREFIX perception: <http://example.org/agora/perception#>
 INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
   ag:moisture_sensor_fern ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
-      ssn-system:hasSystemProperty [ a ssn-system:Frequency ; perception:seconds 1 ] ] } }"""))
+      ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] } }"""))
