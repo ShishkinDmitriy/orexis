@@ -303,6 +303,7 @@ _WIRING_PREAMBLE = """
 @prefix dht11:   <http://example.org/agora/dht11#> .
 @prefix rgbled:  <http://example.org/agora/rgb-led#> .
 @prefix probe:   <http://example.org/agora/moisture-probe#> .
+@prefix sosa:    <http://www.w3.org/ns/sosa/> .
 ag:test_board a mc:Microcontroller ; ag:localId "test_board" ; mc:model "ESP32-WROOM-32D" ;
     mc:logicVolts 3.3 ; mc:hasPin ag:t_3v3 , ag:t_gnd ;
 """
@@ -365,7 +366,7 @@ def _wiring(body: str) -> rdflib.Graph:
 def test_the_real_wiring_is_accepted():
     """The guard against a shape so strict that nothing passes it."""
     assert _conforms(_wiring("""
-    mc:carries ag:probe , ag:led .
+    sosa:hosts ag:probe , ag:led .
 ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 ag:led a rgbled:RgbLed ; ag:localId "led" .
 """ + _leg("probe", "p", "mc:AnalogInPinRole", 34)
@@ -379,7 +380,7 @@ def test_a_flash_pin_is_refused(gpio):
     """6-11 are wired to the SPI flash. A board driving one does not boot at all, which reads
     as a dead board rather than as a wiring mistake."""
     assert not _conforms(_wiring("""
-    mc:carries ag:probe .
+    sosa:hosts ag:probe .
 ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 """ + _leg("probe", "p", "mc:DigitalOutPinRole", gpio)))
 
@@ -389,7 +390,7 @@ def test_an_analog_input_on_adc2_is_refused(gpio):
     """The sharpest of these: ADC2 is unusable while WiFi is up, and it fails by returning
     numbers that look like readings. Nothing downstream can tell they are rubbish."""
     assert not _conforms(_wiring("""
-    mc:carries ag:probe .
+    sosa:hosts ag:probe .
 ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 """ + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
 
@@ -398,7 +399,7 @@ ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 320
 def test_an_analog_input_on_adc1_is_accepted(gpio):
     """The other half of the same rule: ADC1 is exactly what an analog input should use."""
     assert _conforms(_wiring("""
-    mc:carries ag:probe .
+    sosa:hosts ag:probe .
 ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 """ + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
 
@@ -407,7 +408,7 @@ ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 320
 def test_driving_an_input_only_pin_is_refused(gpio):
     """34-39 can be read and never driven. An LED wired there simply never lights."""
     assert not _conforms(_wiring("""
-    mc:carries ag:led .
+    sosa:hosts ag:led .
 ag:led a rgbled:RgbLed ; ag:localId "led" .
 """ + _leg("led", "r", "rgbled:RedPinRole", gpio)
    + _leg("led", "g", "rgbled:GreenPinRole", 26, powered=False)
@@ -424,7 +425,7 @@ def test_a_bidirectional_line_on_an_input_only_pin_is_refused(role, gpio):
     anything. Wired there, a DHT returns nothing but a timeout and an SDA hangs the bus.
     """
     assert not _conforms(_wiring("""
-    mc:carries ag:air .
+    sosa:hosts ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" .
 """ + _leg("air", "d", role, gpio)))
 
@@ -434,7 +435,7 @@ def test_a_bidirectional_line_on_a_drivable_pin_is_accepted(gpio):
     """The other half: any pin that can be driven will do, ADC membership included — a
     one-wire line is digital, so ADC2 costs it nothing."""
     assert _conforms(_wiring("""
-    mc:carries ag:air .
+    sosa:hosts ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" .
 """ + _leg("air", "d", "onewire:DataPinRole", gpio)))
 
@@ -442,7 +443,7 @@ ag:air a mc:Peripheral ; ag:localId "air" .
 @pytest.mark.parametrize("gpio", [-1, 40, 99])
 def test_a_gpio_off_the_board_is_refused(gpio):
     assert not _conforms(_wiring("""
-    mc:carries ag:probe .
+    sosa:hosts ag:probe .
 ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; probe:rawDry 3200 ; probe:rawWet 1300 .
 """ + _leg("probe", "p", "mc:AnalogInPinRole", gpio)))
 
@@ -454,7 +455,7 @@ def test_a_leg_that_no_wire_reaches_is_refused():
     unconnected leg was invisible rather than wrong. A floating ground is the commonest reason
     a three-legged sensor answers with silence, and it looks exactly like a dead part."""
     assert not _conforms(_wiring("""
-    mc:carries ag:air .
+    sosa:hosts ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_float .
 ag:air_float a mc:Pin ; mc:pinRole mc:GroundPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
@@ -465,7 +466,7 @@ def test_a_leg_the_PART_never_connects_is_accepted():
     four positions and the die uses three — and that is true of every DHT ever made. Intrinsic,
     so it is a role."""
     assert _conforms(_wiring("""
-    mc:carries ag:air .
+    sosa:hosts ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_nc .
 ag:air_nc a mc:Pin ; mc:pinRole mc:NotConnectedPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
@@ -479,7 +480,7 @@ def test_a_leg_THIS_BUILD_leaves_unwired_is_accepted():
     about one breadboard inside the description of a component.
     """
     assert _conforms(_wiring("""
-    mc:carries ag:air .
+    sosa:hosts ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
 ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole ; mc:unused true .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
@@ -490,7 +491,7 @@ def test_a_leg_that_is_merely_forgotten_is_still_refused():
     this leg' — a floating ground is the commonest reason a three-legged part answers with
     silence, and it looks exactly like a dead part."""
     assert not _conforms(_wiring("""
-    mc:carries ag:air .
+    sosa:hosts ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_spare .
 ag:air_spare a mc:Pin ; mc:pinRole mc:DigitalOutPinRole .
 """ + _leg("air", "d", "onewire:DataPinRole", 32)))
@@ -505,7 +506,7 @@ def test_a_five_volt_rail_into_a_three_volt_input_is_refused():
     the old model to say which rail a device was on, so there was nothing to check.
     """
     assert not _conforms(_wiring("""
-    mc:carries ag:air .
+    sosa:hosts ag:air .
 ag:air a mc:Peripheral ; ag:localId "air" ; mc:hasPin ag:air_vcc , ag:air_gnd .
 ag:air_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
 ag:air_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
@@ -520,7 +521,7 @@ def test_a_dht_must_name_all_three_of_its_legs():
     """Its data line alone was the old model's best effort — there was nowhere to put the
     other two — and it is precisely the missing ones that go wrong."""
     assert not _conforms(_wiring("""
-    mc:carries ag:air .
+    sosa:hosts ag:air .
 ag:air a dht11:Dht11 ; ag:localId "air" .
 """ + _leg("air", "d", "onewire:DataPinRole", 32, powered=False)))
 
@@ -528,7 +529,7 @@ ag:air a dht11:Dht11 ; ag:localId "air" .
 def test_two_peripherals_on_one_gpio_are_refused():
     """The mistake made months later, when a device is added and nobody re-reads the file."""
     assert not _conforms(_wiring("""
-    mc:carries ag:probe , ag:led .
+    sosa:hosts ag:probe , ag:led .
 ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ] .
 ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin [ mc:pinRole rgbled:RedPinRole ; mc:gpio 34 ] ,
                             [ mc:pinRole rgbled:GreenPinRole ; mc:gpio 26 ] ,
@@ -539,7 +540,7 @@ ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin [ mc:pinRole rgbled:RedPinRol
 def test_one_device_using_a_gpio_twice_is_refused():
     """Same rule, inside a single device: an RGB LED with two legs on one line."""
     assert not _conforms(_wiring("""
-    mc:carries ag:led .
+    sosa:hosts ag:led .
 ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin [ mc:pinRole rgbled:RedPinRole ; mc:gpio 25 ] ,
                             [ mc:pinRole rgbled:GreenPinRole ; mc:gpio 25 ] ,
                             [ mc:pinRole rgbled:BluePinRole ; mc:gpio 27 ] .
@@ -553,7 +554,7 @@ def test_an_rgb_led_missing_a_colour_is_refused(missing):
     del legs[missing]
     pins = " ,\n           ".join(f"[ mc:pinRole ag:{c} ; {g} ]" for c, g in legs.items())
     assert not _conforms(_wiring(f"""
-    mc:carries ag:led .
+    sosa:hosts ag:led .
 ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin {pins} .
 """))
 
@@ -561,7 +562,7 @@ ag:led a rgbled:RgbLed ; ag:localId "led" ; ag:pin {pins} .
 def test_a_pin_without_a_role_is_refused():
     """A number with no role cannot be checked for direction, so it cannot be checked at all."""
     assert not _conforms(_wiring("""
-    mc:carries ag:probe .
+    sosa:hosts ag:probe .
 ag:probe a probe:CapacitiveMoistureProbe ; ag:localId "probe" ; ag:pin [ mc:gpio 34 ] .
 """))
 
