@@ -4,6 +4,10 @@ Dosing is not configured here: it comes from the valve's own calibration in the 
 these tests build a device and check the module obeys it.
 """
 
+import json
+import logging
+import time
+
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -17,19 +21,32 @@ from agent.world import Actuator, Self
 class FakeAgent:
     """The smallest thing an actuation module needs: an identity and somewhere to publish."""
 
-    def __init__(self, ml_per_second=10.0, max_dose_ml=1000.0):
+    def __init__(self, ml_per_second=10.0, max_dose_ml=1000.0,
+                 status_topic="actuators/fern/valve/status", dose_grace_s=10):
         valve = Actuator(
             uri="ag:valve_fern", local_id="valve_fern", subject="ag:fern", subject_id="fern",
             command_topic="actuators/fern/valve",
             ml_per_second=ml_per_second, max_dose_ml=max_dose_ml,
+            status_topic=status_topic,
         )
         self.id = "supplier"
         self.me = Self(uri="ag:supplier", agent_id="supplier", capabilities=frozenset(),
                        actuators=(valve,))
         self.sent = []
+        self.beliefs = _Beliefs(dose_grace_s)
 
     def publish(self, topic, payload, retain=False):
         self.sent.append((topic, payload))
+
+
+class _Beliefs:
+    """Just enough belief base to hand back this capability's one figure."""
+
+    def __init__(self, dose_grace_s):
+        self._grace = dose_grace_s
+
+    def read(self, block):
+        return block.cls(dose_grace_s=self._grace)
 
 
 def module(agent=None):
@@ -136,3 +153,76 @@ def test_a_redeemed_voucher_cannot_fire_twice():
     m.redeem(voucher(jti="dup"))
     with pytest.raises(ValueError, match="replay"):
         m.redeem(voucher(jti="dup"))
+
+
+# --- commanded is not delivered (#36) --------------------------------------
+
+def test_it_listens_on_its_own_valves_status_and_no_wildcard():
+    """The grant has existed since PR #34 and nothing consumed it. Now something does."""
+    m, _ = module()
+    assert m.subscriptions() == ["actuators/fern/valve/status"]
+    assert not any("+" in t or "#" in t for t in m.subscriptions())
+
+
+def test_a_valve_that_reports_confirms_the_dose():
+    m, _ = module()
+    m.redeem(voucher(jti="j-ok"))
+    assert "j-ok" in m.pending, "a commanded dose is outstanding until the device reports"
+    m.handle("actuators/fern/valve/status",
+             json.dumps({"valve": "valve_fern", "jti": "j-ok", "ml": 640.0, "ok": True}).encode())
+    assert m.pending == {} and m.confirmed == 1 and m.unconfirmed == 0
+
+
+def test_silence_past_the_deadline_is_noticed_and_counted(caplog):
+    """The failure this whole change exists for: a valve that never heard, or refused.
+
+    `firmware/simulated-valve` publishes on the status topic after dispensing and stays SILENT
+    when it refuses — signature, replay, nothing to dispense. So silence IS the refusal, and
+    before this it was indistinguishable from a dose that went perfectly.
+    """
+    m, _ = module(FakeAgent(ml_per_second=100000.0, dose_grace_s=0))
+    m.redeem(voucher(jti="j-lost"))
+    time.sleep(0.05)
+    with caplog.at_level(logging.WARNING):
+        m._expire()
+    assert m.unconfirmed == 1 and m.confirmed == 0
+    assert "no confirmation" in caplog.text and "j-lost" in caplog.text
+
+
+def test_an_unconfirmed_dose_stays_spent():
+    """Deliberate, and the opposite of what #36 proposed.
+
+    The device keeps its own spent set, so a re-sent command is refused rather than poured —
+    un-spending buys nothing. And the failures are not symmetric: a lost report plus a re-send
+    risks watering twice, while an unopened valve costs one round the plant bids again for.
+    """
+    m, _ = module(FakeAgent(ml_per_second=100000.0, dose_grace_s=0))
+    m.redeem(voucher(jti="j-lost"))
+    time.sleep(0.05)
+    m._expire()
+    assert m.unconfirmed == 1
+    with pytest.raises(ValueError, match="replay"):
+        m.redeem(voucher(jti="j-lost"))
+
+
+def test_a_valve_with_no_status_channel_is_never_waited_on():
+    """A world may wire a valve it cannot hear back from — a deployment, not an error. Nothing
+    goes pending, and the zeroes in `reports()` are themselves the reading."""
+    m, _ = module(FakeAgent(status_topic=None))
+    m.redeem(voucher(jti="j-deaf"))
+    assert m.subscriptions() == [] and m.pending == {}
+    m._expire()
+    assert m.unconfirmed == 0
+
+
+def test_a_report_for_a_dose_it_forgot_is_not_an_error():
+    """A restarted agent has forgotten what it commanded; the device is right to report."""
+    m, _ = module()
+    assert m.handle("actuators/fern/valve/status",
+                    json.dumps({"jti": "from-before-the-restart"}).encode()) is True
+    assert m.unconfirmed == 0 and m.confirmed == 0
+
+
+def test_the_counts_reach_the_agents_own_series():
+    m, _ = module()
+    assert m.reports() == {"doses_confirmed": 0, "doses_unconfirmed": 0}

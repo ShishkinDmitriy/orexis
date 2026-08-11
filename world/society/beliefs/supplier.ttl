@@ -14,6 +14,12 @@ ag:supplier
     market:bidWindowS 3 ;            # how long it waits for bids before matching
     market:roundCooldownS 30 .       # it will not open rounds faster than this
 
+##  actuation:Actuation — how long it waits for a valve to say it dispensed
+#   Added to the open-seconds it computed for that dose, never used alone: a ninety-second
+#   pour is not late at thirty. Silence past the deadline is reported and counted, never acted
+#   on — the water may well have flowed and only the report been lost.
+ag:supplier actuation:doseGraceS 10 .
+
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
 ag:supplier ag:metricsIntervalS 60 .

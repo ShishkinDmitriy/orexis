@@ -39,7 +39,13 @@ class Module:
         return []
 
     def handle(self, topic: str, payload: bytes) -> bool:
-        """Return True if this module owns the message, so no other module sees it."""
+        """Return True if this module took the message. Others are offered it regardless.
+
+        It used to say "so no other module sees it", which was true and was the defect: the
+        runtime returned on the first module that claimed a topic, and a second module
+        subscribed to the same one never saw the message. Returning True is a report, not a
+        claim — what it decides is whether the runtime warns that nobody wanted this.
+        """
         return False
 
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
