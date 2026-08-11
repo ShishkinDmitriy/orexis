@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from agent.transports.mqtt.driver import DEFAULT_POINTER, PointerError, resolve
+from agent.pointer import DEFAULT_POINTER, PointerError, resolve
 from agent.world import Sensor, load_self
 
 from conftest import build_agent, genesis_store, query_fn

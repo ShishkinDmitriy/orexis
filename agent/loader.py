@@ -7,12 +7,24 @@ A **package** is one self-contained thing the society is made of, and it is a di
                              At the repo ROOT, because onboarding validates and derives from it
                              too: it is the one tree both sides genuinely share.
     agent/capabilities/<n>/  what an agent can DO. The extendable axis.
-    agent/transports/<n>/    how a device is REACHED. Not a capability, deliberately — a
-                             protocol changes nothing an agent must decide.
+    agent/transports/<n>/    how a device is REACHED.
+    agent/codecs/<n>/        how its bytes become a DOCUMENT.
+    agent/scalings/<n>/  how a raw value becomes a QUANTITY, with a unit.
 
-The last two live INSIDE `agent/` because only an agent runtime loads their Python. Onboarding
-reads their `ontology.ttl`, `shapes.ttl` and `rules.ru` — which it finds here, wherever they
-sit — and never imports a module from either.
+All four of those live INSIDE `agent/` because only an agent runtime loads their Python.
+Onboarding reads their `ontology.ttl`, `shapes.ttl` and `rules.ru` — which it finds here,
+wherever they sit — and never imports a module from any of them.
+
+**The trees are one mechanism split by BEARER, not by importance.** Every one of them is a
+family with interchangeable members registered by `PROVIDES`, which is what rule 2 calls a
+capability. What differs is what carries the conclusion: `ag:hasCapability` on an AGENT for the
+first, a predicate on the SENSOR for the rest. Both are derived at genesis from a premise the
+world states, because both are known before anything runs — a board's protocol and its wire
+format are hardware, not discoveries.
+
+`transports/` is the exception and is known to be one: `MqttDriver.claims()` still re-decides at
+every boot what genesis could have written down. See the seams in
+knowledge/decisions/bytes-become-a-quantity-in-stages.md.
 
 Inside a package, the same four names mean the same four things every time:
 
@@ -54,6 +66,15 @@ AGENT_ROOT = Path(__file__).resolve().parent
 VOCABULARY = "vocabulary"
 CAPABILITIES = "capabilities"
 TRANSPORTS = "transports"
+CODECS = "codecs"
+CALIBRATIONS = "scalings"
+
+# The trees whose members are borne by a BINDING rather than by an agent. Everything else is the
+# same: the world states a premise, that package's `rules.ru` derives which member serves the
+# SENSOR, and the runtime looks the term up against `PROVIDES`. What differs from a capability is
+# the bearer and the predicate — `codec:decodedBy` on a sensor rather than `ag:hasCapability` on
+# an agent — and not when it is decided, which is genesis either way.
+BOUND_KINDS = (TRANSPORTS, CODECS, CALIBRATIONS)
 
 # The base vocabulary, merged before anything else.
 BASE = "agora"
@@ -63,7 +84,7 @@ BASE = "agora"
 # every other package layers on those terms, and reading a merge that puts them last is reading
 # it backwards. `vocabulary/agora` is sorted to the front explicitly rather than by luck of the
 # alphabet — `agora` happens to sort before `water`, and that is not a thing to rely on.
-KINDS = (VOCABULARY, CAPABILITIES, TRANSPORTS)
+KINDS = (VOCABULARY, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
 
 ONTOLOGY = "ontology.ttl"
 SHAPES = "shapes.ttl"
@@ -134,7 +155,7 @@ def packages() -> tuple[Package, ...]:
             found.append(Package(kind=VOCABULARY, name=name, path=tree / name))
 
     # the agent's own trees: Python only it loads
-    for kind in (CAPABILITIES, TRANSPORTS):
+    for kind in (CAPABILITIES, *BOUND_KINDS):
         tree = AGENT_ROOT / kind
         if not tree.is_dir():
             continue
@@ -201,6 +222,49 @@ def drivers() -> tuple[type, ...]:
     """Every transport's driver. Which one speaks to a given sensor is the driver's own
     answer — see `agent.driver.driver_for`."""
     return tuple(cls for p in of_kind(TRANSPORTS) for cls in p.provides())
+
+
+def _members(kind: str) -> dict[str, type]:
+    """term -> the class implementing it, for one binding-borne family.
+
+    The same shape as `registry()` and for the same reason: a derived fact names a TERM, and
+    something has to map that back to code. Which member serves a sensor is decided by that
+    package's `rules.ru` at genesis and read off the graph — nothing here searches, and there is
+    no default to apply, because a default that lived in Python would be a fact nothing could
+    query.
+
+    One term implemented twice is refused rather than resolved. It would otherwise be settled by
+    whichever package the filesystem yielded first, which is a coin flip dressed as a choice,
+    and it produces not an error but a build that reads its devices through the wrong member.
+    """
+    out: dict[str, type] = {}
+    for package in of_kind(kind):
+        for cls in package.provides():
+            term = getattr(cls, "TERM", "")
+            if not term:
+                raise RuntimeError(
+                    f"{package.import_name} provides {cls.__name__}, which names no TERM — "
+                    f"a member must say which term a derivation uses to reach it"
+                )
+            if term in out:
+                raise RuntimeError(
+                    f"{term} is implemented twice: {out[term].__name__} and "
+                    f"{cls.__name__}. One term, one member."
+                )
+            out[term] = cls
+    return out
+
+
+@lru_cache(maxsize=1)
+def codecs() -> dict[str, type]:
+    """codec term -> the class that decodes it — see `agent.codec.codec_for`."""
+    return _members(CODECS)
+
+
+@lru_cache(maxsize=1)
+def scalings() -> dict[str, type]:
+    """scaling term -> the class that applies it — see `agent.scaling.scaling_for`."""
+    return _members(CALIBRATIONS)
 
 
 def describe() -> str:

@@ -1,0 +1,19 @@
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix ag:    <http://example.org/agora#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix codec: <http://example.org/agora/codec#> .
+
+codec:SensorIsDecodedByExactlyOneShape a sh:NodeShape ;
+    rdfs:comment "Every sensor's bytes are decoded by exactly one codec, and this is checked on the DERIVED fact rather than on what the world stated — so it holds a world to the outcome of its own derivation instead of to its wording. Two ways it can fail and both used to be invisible. A sensor with NONE would be read by nothing, and before the derivation existed that could not even be expressed: the default lived on a Python class, so the answer was always yes and never inspectable. A sensor with TWO is what a second codec package declaring itself the default would produce, and the old Python took whichever `PROVIDES` yielded first — a coin flip that would decode an entire fleet through the wrong format without raising anything. Checked here rather than at boot because a world is validated before a society starts, and the alternative is finding out from a log line after every bidder is already waiting." ;
+    sh:targetClass ag:Sensor ;
+    sh:property [ sh:path codec:decodedBy ;
+                  sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:class codec:Encoding ;
+                  sh:message "a sensor must be decoded by exactly one codec — this is derived from codec:encoding, or from its absence, so two means two packages both claim the default and none means the derivation did not run" ] .
+
+codec:OnlyAnEncodingIsStatedShape a sh:NodeShape ;
+    rdfs:comment "The mirror, on the premise rather than the conclusion: what a world STATES must be a member of the family. A typo or an invented IRI would otherwise derive itself faithfully into the world and fail much later, when a sensor turns out to be served by a codec no package has ever heard of. Note what this deliberately does NOT refuse: a member that is declared but unimplemented, `codec:Cbor` today. That is the same position `ag:Polling` and `ag:Consulting` hold — the vocabulary says the seam exists, the build reports at startup that it cannot fill it, and refusing the world instead would make declaring a seam impossible." ;
+    sh:targetSubjectsOf codec:encoding ;
+    sh:property [ sh:path codec:encoding ;
+                  sh:maxCount 1 ; sh:class codec:Encoding ;
+                  sh:message "a device sends one format — codec:encoding takes one member of codec:Encoding" ] .

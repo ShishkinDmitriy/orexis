@@ -68,6 +68,26 @@ is absent is recorded by nobody rather than defaulted to zero. See
 A cadence goes the other way and is the **board's**, not a property's: one device sleeps once,
 so the sensors sharing a command topic are aimed together and the tightest interval any of
 them asks for wins.
+
+**A reading becomes a number in three stages**, and each is a fact about the binding rather than
+about the agent watching it:
+
+```
+bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[calibration]──▶ quantity
+```
+
+The pointer above is the middle one. The outer two are families with interchangeable members —
+`agent/codecs/` and `agent/scalings/` — and which member serves a sensor is **derived at
+genesis onto that sensor**, from what its world states or from its silence, exactly as
+`ag:Subscribing` is derived onto an agent from `ag:senseMode`. Every sensor here gets `codec:Json`
+and `scaling:Identity`, and neither is a placeholder: the boards send JSON, and they scale
+their counts before publishing, so the calibration that remains genuinely is the identity
+function.
+
+The calibration is also where a number acquires a **unit**. Soil moisture `0.183` and air
+humidity `0.46` are both dimensionless fractions and look identical; air temperature `21.4` is
+degrees Celsius. `scaling:quantityUnit` states which, as a QUDT IRI. See
+[bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md).
 ingest path and nothing downstream can tell them apart.
 
 Note what goes out on the event topic: the agent's **own verdict**, not its raw state. That is
