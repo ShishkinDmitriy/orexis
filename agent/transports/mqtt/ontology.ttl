@@ -51,3 +51,29 @@ ag:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
 #  the perception module talks to it through. An agent may hold sensors on different
 #  bindings at once and still have ONE attention policy, which is the point of keeping
 #  protocol out of the capability.
+
+#################  A channel is a thing, not a string  #################
+#
+# `ag:readingTopic` and the two beside it are LITERALS, and until now the stream each one named
+# had no node. That is why nothing could say *this stream is JSON* — the thing the fact is about
+# was never declared — and why `_aimed_with` recovers a group by comparing strings. It is the
+# same defect the board had before it was a `sosa:Platform`, one level down.
+#
+# So a channel is DERIVED, never written: the topics are the premise and `rules.ru` mints one
+# node per distinct topic. Two sensors naming the same string land on the same node, which is
+# the whole point — sharing a stream is a fact about the world, not a coincidence of authoring.
+
+ag:Channel a owl:Class ; rdfs:label "Channel" ;
+    rdfs:comment "One named stream on a bus. Derived from the topics devices state, one node per distinct topic, so it is discovered rather than authored — a world that names a topic twice has one channel and knows it. What it bears is the ENCODING: one stream, one format, which is the claim worth refusing to break and which no sensor-borne fact could make, because a command channel has no sensor at all. Not a member of anything: there is one way to be a stream. Named here rather than in the kernel because its premise is this transport's — a REST binding would derive its own from URLs, and the day that exists is the day this is worth hoisting." .
+
+ag:channelTopic a owl:DatatypeProperty ; rdfs:domain ag:Channel ; rdfs:range xsd:string ;
+    rdfs:label "channel topic" ;
+    rdfs:comment "The string this channel is named by, carried so that anything holding the node can address it without walking back to whichever device stated it. The node's own IRI is minted from this and is stable because of it: two rules in two packages compute the same IRI from the same topic without either reading the other's conclusions, which is what makes a derived node usable as a join key at all." .
+
+ag:publishesOn a owl:ObjectProperty ; rdfs:range ag:Channel ;
+    rdfs:label "publishes on" ;
+    rdfs:comment "This device SENDS on that channel — derived from ag:readingTopic or ag:statusTopic. The direction lives on the relation rather than on the channel, because a stream is one thing however many parties read it: putting read/write in the channel's identity would split one topic into two nodes the moment a device both sent and listened on it." .
+
+ag:listensOn a owl:ObjectProperty ; rdfs:range ag:Channel ;
+    rdfs:label "listens on" ;
+    rdfs:comment "This device RECEIVES on that channel — derived from ag:commandTopic. The mirror of ag:publishesOn, and together they are the direction a principal's grants already carry: `Principal.grants` has been a set of (read|write, topic) pairs since series-and-bus-isolation, which is a set of directed channels written in the form mosquitto wants." .

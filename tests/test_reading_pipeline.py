@@ -55,9 +55,13 @@ def test_the_conclusions_land_in_the_derived_graph_not_the_world():
           {{ ?s codec:decodedBy ?a }} UNION {{ ?s scaling:scaledBy ?b }} }} }}"""))
     assert asserted == [], "a conclusion was stated in the world rather than derived"
 
+    # Two, not three: `sensing` has three sensors and TWO streams — one reading topic the
+    # board publishes on and one command topic it listens to. That the count fell is the
+    # change: an encoding used to be copied onto every sensor and is now stated once per
+    # stream, which is the only place it was ever a fact about.
     derived = bindings(store.query(PREFIXES + f"""
         SELECT ?s WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{ ?s codec:decodedBy ?c }} }}"""))
-    assert len(derived) == 3
+    assert len(derived) == 2
 
 
 def test_the_other_worlds_get_them_too():
@@ -69,8 +73,19 @@ def test_the_other_worlds_get_them_too():
 
 # --- an explicit statement beats the default, and the rule decides it ------
 
-def _world_stating(premise: str, obj: str):
-    """The sensing world with one premise added to the moisture probe, re-derived.
+AIR = ("ag:air_temp_fern", "ag:air_humidity_fern")
+BOARD = ("ag:moisture_sensor_fern",) + AIR
+
+
+def _world_stating(premise: str, obj: str, subjects=("ag:moisture_sensor_fern",)):
+    """The sensing world with one premise added to some devices, re-derived.
+
+    `subjects` exists because the two families have different bearers. A curve is the SENSOR's,
+    so stating it on one probe is a complete world. An encoding is the STREAM's, and those three
+    devices share one — so stating it on one of them is a world where two devices disagree about
+    one topic, which is exactly what the shape now refuses. Agreement has to be stated by
+    everyone on the stream, and that is the model being honest rather than the test being
+    awkward.
 
     Only the RATIFIED half is edited — the premise — and then the conclusions are cleared and
     recomputed, exactly as `refresh_public` does. Skipping the clear would leave the previous
@@ -78,8 +93,9 @@ def _world_stating(premise: str, obj: str):
     nothing.
     """
     store = genesis_store(world="sensing")
+    triples = " . ".join(f"{s} {premise} {obj}" for s in subjects)
     store.update(PREFIXES + f"""
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern {premise} {obj} }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ {triples} }} }}
         WHERE {{}}""")
     store.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
@@ -90,14 +106,34 @@ def _world_stating(premise: str, obj: str):
 def test_stating_an_encoding_beats_the_default():
     """The trap this replaces was a Python one — a default class claiming anything nobody else
     wanted, resolved by `PROVIDES` iteration order, which guarantees nothing. The two rules are
-    disjoint by `FILTER NOT EXISTS`, so there is no order left to get wrong."""
-    me = load_self(query_fn(_world_stating("codec:encoding", "codec:Cbor")), "fern")
-    probe = {s.local_id: s for s in me.sensors}["moisture_sensor_fern"]
-    assert probe.decoded_by == CBOR, "the default overruled a world that named a member"
+    disjoint by `FILTER NOT EXISTS`, so there is no order left to get wrong.
 
-    # and its neighbours on the same board are untouched
-    others = {s.decoded_by for s in me.sensors if s.local_id != "moisture_sensor_fern"}
-    assert others == {JSON}
+    Stated by every device on the stream, because the conclusion is the stream's. All three
+    sensors then read through the same channel and all three see CBOR — which is the point: an
+    encoding is not something one sensor can have and its neighbour not, when the bytes are the
+    same bytes.
+    """
+    store = _world_stating("codec:encoding", "codec:Cbor", subjects=BOARD)
+    me = load_self(query_fn(store), "fern")
+    assert {s.decoded_by for s in me.sensors} == {CBOR}, \
+        "the default overruled a world that named a member"
+
+
+def test_one_device_disagreeing_about_a_shared_stream_is_refused():
+    """The hole this move exists to close.
+
+    Three sensors publish on one topic. Give ONE of them an encoding and the other two are not
+    silent — silence is a claim of JSON — so the stream carries two conclusions. While the fact
+    sat on each sensor there was nothing to compare and this validated clean; the disagreement
+    would have surfaced as a board's readings decoding through the wrong format at the first
+    message.
+    """
+    store = _world_stating("codec:encoding", "codec:Cbor")  # the probe alone
+    rows = bindings(store.query(PREFIXES + f"""
+        SELECT ?c WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
+          ?ch a ag:Channel ; ag:channelTopic "sensors/moisture_sensor_fern/reading" ;
+              codec:decodedBy ?c }} }}"""))
+    assert len(rows) == 2, "a stream with two claims on it must show both, for the shape to see"
 
 
 def test_stating_a_curve_beats_the_default():
@@ -109,10 +145,11 @@ def test_stating_a_curve_beats_the_default():
 def test_a_stated_premise_produces_exactly_one_conclusion():
     """Both rules firing for one sensor is what a second package claiming the default would
     look like, and it is what the shape refuses. Here it must not happen at all."""
-    store = _world_stating("codec:encoding", "codec:Cbor")
+    store = _world_stating("codec:encoding", "codec:Cbor", subjects=BOARD)
     rows = bindings(store.query(PREFIXES + f"""
         SELECT ?c WHERE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-          ag:moisture_sensor_fern codec:decodedBy ?c }} }}"""))
+          ?ch a ag:Channel ; ag:channelTopic "sensors/moisture_sensor_fern/reading" ;
+              codec:decodedBy ?c }} }}"""))
     assert len(rows) == 1
 
 

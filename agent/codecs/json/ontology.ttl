@@ -5,7 +5,7 @@
 
 <http://example.org/agora/codec> a owl:Ontology ;
     rdfs:label "Agora codecs" ;
-    rdfs:comment """How bytes become a DOCUMENT — the first of the three stages a reading passes through, the others being the pointer that says which value in that document is a given sensor's and the calibration that turns a raw number into a quantity. A family with interchangeable members, borne by a BINDING rather than by an agent: which format a device speaks is something only the device can say, so it is stated on the sensor and the member serving it is DERIVED at genesis onto that sensor rather than onto anyone's capabilities. Same mechanism as a capability and the same premise-then-conclusion discipline; what differs is the bearer and the predicate, not when it is decided. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.""" .
+    rdfs:comment """How bytes become a DOCUMENT — the first of the three stages a reading passes through, the others being the pointer that says which value in that document is a given sensor's and the calibration that turns a raw number into a quantity. A family with interchangeable members, borne by a BINDING rather than by an agent: which format a device speaks is something only the device can say, so it is stated on the device and the member serving it is DERIVED at genesis onto the CHANNEL that device sends on, rather than onto anyone's capabilities. The stream and not the sensor, because three sensors sharing one topic would otherwise carry three copies of one fact with nothing comparing them, and because a command channel has no sensor at all. Same mechanism as a capability and the same premise-then-conclusion discipline; what differs is the bearer and the predicate, not when it is decided. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.""" .
 
 #################  The family  #################
 
@@ -18,7 +18,7 @@ codec:encoding a owl:ObjectProperty ; rdfs:range codec:Encoding ;
 
 codec:decodedBy a owl:ObjectProperty ; rdfs:range codec:Encoding ;
     rdfs:label "decoded by" ;
-    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which codec actually serves this sensor. Two predicates rather than one because a world states what is TRUE of a device and genesis writes down what SERVES it — collapsing them would let a world state its own conclusion. Deriving it also puts the DEFAULT in the graph: before this, every sensor in every world was decoded as JSON by a flag on a Python class, which was true, load-bearing and unreadable by anything. A sensor's pipeline is now something you can query rather than something you infer from which classes a build imported." .
+    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which codec actually serves this CHANNEL. Two predicates rather than one because a world states what is TRUE of a device and genesis writes down what SERVES it — collapsing them would let a world state its own conclusion. Deriving it also puts the DEFAULT in the graph: before this, every sensor in every world was decoded as JSON by a flag on a Python class, which was true, load-bearing and unreadable by anything. A sensor's pipeline is now something you can query rather than something you infer from which classes a build imported — read through ag:publishesOn, since the fact belongs to the stream." .
 
 #################  The members  #################
 
