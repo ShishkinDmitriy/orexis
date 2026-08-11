@@ -14,6 +14,7 @@ from agent.world import WorldError, load_self, load_world
 from agent.capabilities.actuation import ACTUATION
 from agent.capabilities.market import BIDDING, HOSTING, PAY_AS_BID
 from agent.capabilities.perception import LISTENING, SUBSCRIBING
+from agent.capabilities.reporting import STORING
 from agent.capabilities.review import RECKONING
 
 from conftest import genesis_store, query_fn
@@ -33,7 +34,7 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
     capabilities, none of them written down: two follow from what it is wired to and the third
     from what its world allows it.
     """
-    assert me("fern").capabilities == {SUBSCRIBING, BIDDING, RECKONING}
+    assert me("fern").capabilities == {SUBSCRIBING, BIDDING, RECKONING, STORING}
 
 
 def test_a_mandate_whose_ends_meet_grants_nothing(me):
@@ -50,7 +51,11 @@ def test_a_mandate_whose_ends_meet_grants_nothing(me):
     """
     succulent = me("succulent")
     assert RECKONING not in succulent.capabilities
-    assert succulent.capabilities == {SUBSCRIBING, BIDDING}
+    # STORING is there and RECKONING is not, in one agent — which is the whole distinction
+    # between a MANDATORY capability and a granted one. Reporting is not conditional on
+    # latitude, because an agent permitted to fall silent cannot be told from a dead one; the
+    # ability to re-pick is, because with nowhere to go there is nothing to re-pick.
+    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING}
 
 
 def test_supplier_gets_hosting_actuation_and_matching(me):
@@ -61,7 +66,7 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     prices, is a separate ability, because there is more than one defensible answer and which
     one is in force changes what a rational bidder should offer.
     """
-    assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID}
+    assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING}
 
 
 def test_only_a_host_matches(me):
@@ -135,7 +140,7 @@ def test_the_smallest_world_yields_perception_and_nothing_else():
     stand alone, which is the whole claim of deriving them.
     """
     me = load_self(query_fn(genesis_store(world="sensing")), "fern")
-    assert me.capabilities == {SUBSCRIBING, RECKONING}
+    assert me.capabilities == {SUBSCRIBING, RECKONING, STORING}
     assert not me.can(BIDDING) and not me.can(ACTUATION)
     assert me.markets == () and me.actuators == ()
     assert me.acts_for is None  # it advances nobody's interest; it only records

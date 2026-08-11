@@ -66,14 +66,18 @@ def test_a_shipped_world_is_current_by_construction(world):
 
 
 def test_a_kernel_term_that_still_exists_is_not_a_rename():
-    """`ag:metricsIntervalS` did not move, so no rename may claim it did.
+    """`ag:localId` did not move, so no rename may claim it did.
 
     The map is built by local name, so a term the kernel still declares has to be excluded
-    explicitly — otherwise a package that later declared its own `metricsIntervalS` would
-    silently capture the kernel's.
+    explicitly — otherwise a package that later declared its own `localId` would silently
+    capture the kernel's.
+
+    This was written about `ag:metricsIntervalS`, which then genuinely moved into
+    `capabilities/reporting/`. The subject had to change; the assertion did not. Any term the
+    kernel still declares serves, and `ag:localId` is the one least likely to move next.
     """
     settled, _ = vocabulary.renames(genesis_store(world="society"))
-    assert AG + "metricsIntervalS" not in settled
+    assert AG + "localId" not in settled
 
 
 def test_a_name_two_packages_share_is_contested_rather_than_guessed():

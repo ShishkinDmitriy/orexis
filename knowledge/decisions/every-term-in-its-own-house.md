@@ -125,14 +125,15 @@ and **eleven are not true of every agent**:
 - **Deployment — three terms.** `ag:ComputeHost`, `ag:runsOn`, `ag:lanAddress`, used by
   `world/sensing` alone. Every agent runs somewhere, so these are closer to universal; what is
   not universal is stating *where*.
-- **`ag:SelfReporting`** is declared `rdfs:subClassOf ag:Capability`, has a shape, and appears
-  in **no world at all**. If every agent reports — which
-  [self-review-is-a-capability](self-review-is-a-capability.md) decided when compaction stayed
-  in the kernel — then it is not a capability, because a capability is what only some agents
-  have.
+- ~~**`ag:SelfReporting`**~~ — **settled, and the question turned out to be malformed.** It was
+  declared `rdfs:subClassOf ag:Capability`, had a shape, and appeared in no world. The reasoning
+  above assumed *a capability is what only some agents have*, which conflates two questions:
+  rule 2 asks whether the HOW could differ, not who holds it. It is a package now,
+  `capabilities/reporting/`, granted to every agent by a rule and insisted on by a shape. See
+  [telemetry-is-a-mandatory-capability](telemetry-is-a-mandatory-capability.md).
 
-Moving them was out of scope: the first needs a package to exist, and the third needs the
-question *is self-reporting a capability* answered rather than assumed.
+Moving the remaining ten was out of scope: the seven need a package to exist, and the deployment
+three need someone to decide whether stating *where* an agent runs belongs in a world at all.
 
 # Consequences
 
