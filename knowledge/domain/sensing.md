@@ -69,11 +69,23 @@ A cadence goes the other way and is the **board's**, not a property's: one devic
 so the sensors sharing a command topic are aimed together and the tightest interval any of
 them asks for wins.
 
+**The board is a `sosa:Platform`**, hosting its parts, and a part hosting its own channels —
+SOSA permits a Platform to host Platforms, which is what a KY-015 reporting two properties on
+one ESP32 needs. That is what ties `air_temp_fern` and `air_humidity_fern` to the part they
+read, and what makes "what else is on this board" a query rather than a comparison of topic
+strings. The wiring says the same thing as `mc:carries`, which is a subproperty of
+`sosa:hosts`; the society states it in SOSA's terms because an agent is never handed the
+wiring. See [a-board-is-a-platform](/decisions/a-board-is-a-platform.md).
+
+Being on one board is what *permits* one message — not what causes it. SSN says nothing about
+how observations are transmitted, so the topics decide that and the hosting only tells you what
+could have shared one.
+
 **A reading becomes a number in three stages**, and each is a fact about the binding rather than
 about the agent watching it:
 
 ```
-bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[calibration]──▶ quantity
+bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[scaling]──▶ quantity
 ```
 
 The pointer above is the middle one. The outer two are families with interchangeable members —
