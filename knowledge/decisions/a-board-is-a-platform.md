@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: A board is a sosa:Platform, and mc:carries was sosa:hosts all along
-description: The board that three sensors share was not a thing in the model, so every fact about it was repeated per sensor or recovered by comparing topic strings. It is a sosa:Platform now, hosting its parts and they their channels. mc:carries is declared a subproperty of sosa:hosts — the first subPropertyOf axiom here, which the closure was already built for. The society states its own hosting because an agent is never given the wiring, and a test holds the two to agreeing. The codec did not move: two worlds have nine sensors and no platform.
+description: The board that three sensors share was not a thing in the model, so every fact about it was repeated per sensor or recovered by comparing topic strings. It is a sosa:Platform now, hosting its parts and they their channels. mc:carries is declared a subproperty of sosa:hosts — the first subPropertyOf axiom here, which the closure was already built for. The society states its own hosting because an agent is never given the wiring, and a test holds the two to agreeing. The codec did not move, and the reason was a category error rather than a missing entity — see the-wire-is-a-third-axis.
 status: accepted
 stage: v1
 tags: [hardware, sensing, vocabulary, reuse, sosa]
@@ -140,25 +140,24 @@ about boards.
 
 # Seams left open
 
-- **The codec did not move onto the platform, and the reason is the finding.** `society` and
-  `simulation` have **nine sensors and no platform between them**: neither states any wiring, so
-  there is nothing to project a board from. Deriving the codec onto a platform would leave every
-  one of those sensors with none, which `codec:SensorIsDecodedByExactlyOneShape` correctly
-  refuses. So the measured hole — two sensors on one stream with two encodings validates clean —
-  is still open, and its cause is now precise: not a missing entity, but an unanswered question
-  about what a platform *is* in a world with no stated hardware. A simulated device is a
-  container; whether that is physical hosting in SOSA's sense has to be decided before the codec
-  can move. [#79](https://github.com/ShishkinDmitriy/agora/issues/79) stays open for it.
-- **`ag:onBus` did not move either**, for the same reason, and it is the sharper case: it mints
-  the broker credential, the firmware's `MQTT_USER` is `moisture_sensor_fern`, and moving it
-  renames a principal. Worth knowing meanwhile — **`ag:esp32_fern` already mints a credential with
-  no grants at all**, because `hardware.ttl` states `ag:onBus` on it and onboarding reads the
-  whole world. One board, two principals: one real and mislabelled as a peripheral, one empty and
-  correctly named.
+- **The codec did not move onto the platform, and the reason turned out to be a category error
+  — mine, not the model's.** `society` and `simulation` state no wiring, so they have six sensors
+  and no platform between them, and deriving the codec onto a platform would leave every one of
+  them without one. That was recorded here as an unanswered question — *what is a platform in a
+  world with no stated hardware?* — and it is not one. A codec is a fact about a **connection**,
+  and it was being hung on a node that exists for a different reason. See
+  [the-wire-is-a-third-axis](the-wire-is-a-third-axis.md): the bearer is the principal, every
+  world already has principals, and **a simulated world correctly has no platforms at all.** The
+  measured hole is still open; what was blocking it is not.
+- **`ag:onBus` did not move either**, and it is the sharper case: it mints the broker credential,
+  the firmware's `MQTT_USER` is `moisture_sensor_fern`, and moving it renames a principal. Worth
+  knowing meanwhile — **`ag:esp32_fern` already mints a credential with no grants at all**,
+  because `hardware.ttl` states `ag:onBus` on it and onboarding reads the whole world. One board,
+  two principals: one real and mislabelled as a peripheral, one empty and correctly named. Filed
+  as [#81](https://github.com/ShishkinDmitriy/agora/issues/81).
 - **The wake interval still groups by comparing command-topic strings.**
-  [#78](https://github.com/ShishkinDmitriy/agora/issues/78) is now cheap for the fern —
-  `_aimed_with` could ask the platform — and not cheap anywhere else, for the same nine-sensors
-  reason.
+  [#78](https://github.com/ShishkinDmitriy/agora/issues/78) now has a bearer in every world rather
+  than only the wired one: a wake is one connection waking, so the question is the principal's.
 - **Hosting is stated, not enforced by a shape.** A test holds the society and the wiring
   together; nothing refuses a *world* whose sensor is hosted by nothing. That would be a shape,
   and it cannot be written until every world has platforms.
