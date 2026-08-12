@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: What is true of a part is true of every one of them, and OWL already says so
-description: A datasheet fact was written on dht11:Dht11 and entailed nothing about any DHT11, because a class-level triple is punning. It is an owl:hasValue restriction now and the closure materialises it, so the sovereign observes the capability on the device the wiring declares without anyone writing it there. ISO 15926's classes-of-classes was the idea and plain OWL was enough for it — the metamodel is for saying things ABOUT a classification, and this says something about members. What does not change is the boundary: an agent is never given `a dht11:Dht11`, so the entailment stops at the sovereign, and an agent may know a part's properties and not its identity.
+description: A datasheet fact was written on dht11:Dht11 and entailed nothing about any DHT11, because a class-level triple is punning. It is an owl:hasValue restriction now and the closure materialises it, so the sovereign observes the capability on the device the wiring declares without anyone writing it there. Describing at class level was the idea and plain OWL was enough for it — a metamodel is for saying things ABOUT a classification, and this says something about members. What does not change is the boundary: an agent is never given `a dht11:Dht11`, so the entailment stops at the sovereign, and an agent may know a part's properties and not its identity.
 status: accepted
 stage: v1
 tags: [vocabulary, inference, hardware, reuse, owl, boundary]
@@ -26,18 +26,17 @@ had to hold the two to agreeing because nothing else could. That is
 [#59](https://github.com/ShishkinDmitriy/agora/issues/59), and it was recorded as *"said twice, and
 held to agreeing"* — accurate, and one level short of the cause.
 
-# The idea came from ISO 15926, and plain OWL was enough for it
+# The idea was to describe at class level, and plain OWL was enough for it
 
-15926 part 2 frames this with **classes of classes** and **classes of properties**: a class `DHT11`
-is related to a *class of procedures* "temperature reading", and an instance of `DHT11` is
-understood to have an instance of that procedure class, with nobody declaring it. Part 14 exists in
-large measure to make that reachable from OWL.
+The framing that produced this: describe everything **on the class**, taking it that every instance
+has what the class has — we simply never declared it by hand. A class `DHT11` is related to a
+*kind* of procedure, "temperature reading", and an instance of `DHT11` is understood to have one,
+with nobody writing it down.
 
-The question worth asking was not *"should we adopt 15926"* but *"what does the framing need that
-we do not already have"*. It needs a metamodel when you want to say things **about the
-classification itself** — that this relationship between two classes is of such-and-such a kind,
-that it holds with a quantification you can reason over, that a class is a member of a class of
-classes. **We want none of that.** We want one thing:
+Reaching for a metamodel to express that is the move worth resisting. A metamodel earns its keep
+when you want to say things **about the classification itself** — that this relationship between
+two classes is of such-and-such a kind, that it holds with a quantification you can reason over,
+that a class is a member of a class of classes. **We want none of that.** We want one thing:
 
 > every instance of this class has this property with this value.
 
