@@ -181,10 +181,27 @@ more than before.
 - **A second capability under a second condition is sayable and unused.** The humidity span
   differs across revisions of this part, which is why `ssn-system:inCondition` is there rather
   than a number with a caveat. Nothing depends on it yet; battery operation is [#78].
-- **Observations do not cite the sub-sensor's procedure.** `sosa:usedProcedure` records the sense
-  mode; now that each sub-sensor implements a named read, a temperature observation could cite
-  `dht11:TemperatureRead` instead. Deliberately not done here — it changes what is written to
-  `:sensed`, and this change writes nothing.
+- **Observations cannot cite the sub-sensor's procedure, and this is structural rather than a
+  choice.** This seam first read "deliberately not done"; measured, it is not available to be
+  done. An agent's container is mounted the society alone, and `dht11:` is in
+  `HARDWARE_NAMESPACES` — `tests/test_layout.py` fails if a society names it. Building a belief
+  base from exactly what a container gets:
+
+  ```
+  part type known?          Device, sosa:Sensor, ssn:System     (no dht11:TemperatureSensor)
+  read procedure reachable? NOTHING
+  sense mode?               perception:ScheduledProcedure
+  ```
+
+  So the read procedure is unreachable from where the observation is written, and projecting it
+  into the society the way the sampling floor is projected is barred by that same invariant.
+
+  Underneath it is a question this record does not settle: an observation in `:sensed` says
+  `sosa:madeBySensor <sensor>` and `sosa:usedProcedure <the agent's sense mode>`, attributing the
+  act to the sensor and the method to the agent's clock. Either the observation is the sensor's
+  act — and then the procedure should be the read, which the agent cannot name — or it is the
+  agent's act of recording, and `madeBySensor` is provenance of the value rather than of the act.
+  W3C's example takes the first reading. Ours has never said which it takes.
 - **No other part has been converted.** The moisture probe and the RGB LED still describe
   themselves the old way, and neither is wrong: a single-property probe IS its sensor, so it has
   no sub-sensors to name. The template is for parts that have parts.
