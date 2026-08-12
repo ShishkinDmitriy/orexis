@@ -129,10 +129,49 @@ is the hardware fact that makes polling and subscribing genuinely different thin
 
 # What is still open
 
-- **Nothing prevents declaring `perception:PolledProcedure` on a board that sleeps.** The shapes require an
-  instructable sensor to state a command channel, but nothing checks that a device claiming to
-  be always-reachable actually is. Today it is harmless — no rule reads `perception:PolledProcedure` — and it
-  becomes a real check the moment polling is built.
+- **Nothing prevents declaring `perception:PolledProcedure` on a board that sleeps.** Nothing
+  checks that a device claiming to be always-reachable actually is. Today it is harmless — no
+  rule reads `perception:PolledProcedure` — and it becomes a real check the moment polling is
+  built.
 - **A device could support both.** Mains-powered hardware could answer requests *and* keep an
   interval; the world states one `perception:senseMode`, so it would have to choose. Whether that
   should become a set is unanswered.
+
+# A defect, not a seam: the command-channel guard is on the wrong premise
+
+This record used to claim, in the bullet above, that *"the shapes require an instructable sensor
+to state a command channel."* **They do not, and the sentence has been removed rather than
+softened.** It is a debt with a definition of done, so it belongs in an issue; it is recorded
+here only because this record asserted the opposite and a stale claim is worse than none.
+
+Measured on `world/sensing`, removing one `mqtt:commandTopic` at a time:
+
+| sensor | `mqtt:onBus` | world still conforms |
+|---|---|---|
+| `ag:moisture_sensor_fern` | yes | **no** — refused |
+| `ag:air_temp_fern` | no | yes |
+| `ag:air_humidity_fern` | no | yes |
+
+The guard lives in `agent/transports/mqtt/shapes.ttl` and is conditioned on a sensor being **on a
+bus**. The two DHT channels are `sosa:Sensor` and deliberately not devices — they ride the board's
+topic and have no `mqtt:onBus` of their own — so the shape never targets them. Each is
+`perception:ScheduledProcedure`, each derives `perception:Subscribing`, and each can lose the
+channel an interval would arrive on without anything objecting.
+
+**The premise is wrong, not the shape.** It asks *does this thing speak MQTT* when the question
+is *does this thing claim to accept instruction* — which is a fact about the sense mode and holds
+whatever the transport. That is why the hole is invisible from the transport package: the mode
+that creates the obligation is not something a transport shape has any business reading.
+
+What makes it live rather than theoretical is what happens next, and every step of it is in the
+code today. `_aimed_with` returns *"a group of one — nothing is sent for it"*. The driver still
+claims the sensor, because `MqttDriver.claims` is satisfied by `mqtt:readingTopic` alone. Its
+`set_cadence` opens with `if sensor.command_topic:` and so returns having published nothing —
+**silently, because there is nothing anomalous about it from where the driver stands**. Control
+returns to `PerceptionModule.set_cadence`, which then unconditionally records `self.sent[key]`
+and `self.sent_cadence[...]` and logs `cadence now Ns`.
+
+So the agent ends up holding, and stating, that it set an interval the board never heard. The
+board keeps its flashed default forever, readings keep arriving on it, and every signal an
+operator has says healthy. The silence is correct in each of the three places it occurs and wrong
+in composition, which is why no single shape or function looks buggy on inspection.
