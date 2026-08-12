@@ -73,17 +73,26 @@ A cadence goes the other way and is the **board's**, not a property's: one devic
 so the sensors sharing a command topic are aimed together and the tightest interval any of
 them asks for wins.
 
-**The board is a `sosa:Platform`**, hosting its parts, and a part hosting its own channels —
-SOSA permits a Platform to host Platforms, which is what a KY-015 reporting two properties on
-one ESP32 needs. That is what ties `air_temp_fern` and `air_humidity_fern` to the part they
-read, and what makes "what else is on this board" a query rather than a comparison of topic
-strings. The wiring says the same thing as `mc:carries`, which is a subproperty of
-`sosa:hosts`; the society states it in SOSA's terms because an agent is never handed the
-wiring. See [a-board-is-a-platform](/decisions/a-board-is-a-platform.md).
+**The board is a `sosa:Platform` and an `ssn:System`**, and the two say different things about
+it. As a Platform it *hosts* its parts; as a System it *does* things — it holds the credential
+and publishes, and it keeps the clock. A part is the other way round: an `ssn:System` with its
+channels as `ssn:hasSubSystem`, and not a Platform, because nothing is mounted on a KY-015. That
+chain is what ties `air_temp_fern` and `air_humidity_fern` to the part they read, and what makes
+"what else is on this board" a query rather than a comparison of topic strings. The wiring says
+the same thing as `mc:carries`, which is a subproperty of `sosa:hosts`; the society states it in
+SOSA's terms because an agent is never handed the wiring. See
+[a-board-is-a-platform](/decisions/a-board-is-a-platform.md) and
+[a-procedure-belongs-to-whatever-performs-it](/decisions/a-procedure-belongs-to-whatever-performs-it.md).
 
 Being on one board is what *permits* one message — not what causes it. SSN says nothing about
 how observations are transmitted, so the topics decide that and the hosting only tells you what
 could have shared one.
+
+**What causes it, for a DHT11, is the part.** It answers one request with one frame carrying
+both values, produced by the same sampling, and cannot be asked for temperature alone — so those
+two are simultaneous by construction and the message is a single measurement rather than a
+convenient batch. The distinction has teeth: read as a batch, each value was stamped as it was
+written and one physical read left three instants in the record.
 
 **A world that runs does this now**, rather than a world that is described doing it.
 `world/simulation` states a stand-in reporting soil moisture and air temperature down one wire,

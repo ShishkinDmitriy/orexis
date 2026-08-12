@@ -93,10 +93,11 @@ a host the wiring contradicts*.
 ## Which closes what #51 left open
 
 Splitting the KY-015 into two channels gave `ag:air_temp_fern` and `ag:air_humidity_fern` no link
-to the part they read — the society did not name that part at all. It does now, as a Platform
-hosting both. **That is the reason SOSA permits a Platform to host Platforms**, and the reason the
-DHT11 is one rather than a Sensor: a sensor here observes one property, and this observes none
-itself.
+to the part they read — the society did not name that part at all. It does now, and the reason it
+is not a Sensor stands: a sensor here observes one property, and this observes none itself. What
+it is was corrected shortly after this record — an `ssn:System` with the two channels as
+sub-systems, not a Platform, because it is hosted and mounts nothing. The board above it is both,
+which is what SOSA permitting a Platform to host Platforms was doing the work of.
 
 # Three axes, and only two of them are standard
 
@@ -116,18 +117,25 @@ The relation between them is **constraint, not determination**: physical hosting
 still publish on three topics — nothing physical forbids it. That is precisely why #51's answer
 was not derivable from the wiring and had to be measured against the credential model instead.
 
-## SSN's procedural axis is not adopted
+## SSN's procedural axis was not adopted here, and both deferrals have since been taken
 
-Nothing in the code cares that a KY-015 implements two sensing procedures rather than being two
-things mounted together, so by [AGENTS.md](../../AGENTS.md) rule 2 it is not worth modelling: where
-nothing could differ, there is nothing to choose.
+Recorded at the time as not worth modelling, on the grounds that nothing in the code cared that a
+KY-015 implements two sensing procedures rather than being two things mounted together. Both parts
+of that turned out to be worth taking, and neither by the trigger named:
 
-One alignment is worth recording as available and cheap, and is **not taken here**:
-`perception:senseMode`'s values are `sosa:Procedure`s by definition — *"a workflow, protocol, plan,
-algorithm, or computational method specifying how to make an Observation"* is exactly what
-Scheduled, Push and Pull each are. That would be alignment triples and no rename, and it belongs
-with whatever next touches [who-holds-the-clock](who-holds-the-clock.md) rather than with a change
-about boards.
+- the cheap alignment — `perception:senseMode`'s values ARE `sosa:Procedure`s by definition — was
+  taken in [an-observation-says-how-it-was-made](an-observation-says-how-it-was-made.md), which
+  did indeed arrive by way of [who-holds-the-clock](who-holds-the-clock.md);
+- the procedural axis itself was taken in
+  [a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md),
+  and what made it worth modelling was not code caring but the ABSENCE of it hiding a defect. A
+  DHT11's single message was being explained by the credential model rather than by the part, and
+  the reading path was written to match — stamping each value separately, so one physical read
+  left three instants in the record. Naming what the part does is what made that visible.
+
+The reasoning stands as a test of rule 2 and shows where it is easy to misapply. *Where nothing
+could differ, there is nothing to choose* is about implementations of a CAPABILITY. A procedure is
+a fact about equipment, and a fact can be worth stating for what it rules out.
 
 # Consequences
 

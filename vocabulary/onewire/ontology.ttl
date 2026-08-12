@@ -3,6 +3,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix onewire: <http://example.org/agora/onewire#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 
 <http://example.org/agora/onewire> a owl:Ontology ;
     rdfs:label "One-wire" ;
@@ -12,3 +13,16 @@ Deliberately NOT under agent/transports/. Those are how an AGENT reaches a devic
 
 onewire:DataPinRole a mc:BidirectionalRole ; rdfs:label "one-wire data" ;
     rdfs:comment "The board pulls the line low to open a conversation, then releases it and listens. It looks like an input because almost all the traffic is inbound, which is the trap: it is DRIVEN, so it cannot sit on a pin that can only be read." .
+
+#################  What speaking it consists of  #################
+#
+# `sosa:Procedure` is *a workflow, protocol, plan, algorithm, or computational method specifying
+# how to make an Observation* — and a bus protocol is the second word of that list, exactly.
+# Naming it is what lets a part say `ssn:implements` rather than having its protocol inferred
+# from the shape of its pins.
+#
+# It belongs HERE, beside the pin role, for the same reason the package exists: a DS18B20 speaks
+# one-wire and a DHT does, and neither should import the other to say so.
+
+onewire:Transaction a sosa:Procedure ; rdfs:label "One-wire transaction" ;
+    rdfs:comment "One conversation on one line: the initiator pulls it low, releases, and reads back a frame the part clocks out in a single burst. The consequence worth writing down is that the frame is ATOMIC — everything in it was produced by the same sampling, so a part cannot be asked for half of what it sends. That is why a DHT11's temperature and humidity are simultaneous by construction rather than by luck of timing, and it is the physical fact the reading path had been contradicting by stamping each value as it wrote it. See knowledge/decisions/a-procedure-belongs-to-whatever-performs-it.md." .

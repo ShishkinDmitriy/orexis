@@ -106,7 +106,7 @@ ag:esp32_fern a sosa:Platform ;
 ag:air_sensor_fern a ssn:System ;
     ag:localId "air_sensor_fern" ;
     ssn:hasSubSystem ag:air_temp_fern , ag:air_humidity_fern ;
-    rdfs:comment "One part reporting two properties. A Platform rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it hosts the two that do." .
+    rdfs:comment "One part reporting two properties. A System rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it has the two that do as sub-systems. Not a Platform either: it is hosted and has sub-systems, and nothing is MOUNTED on a KY-015. What the part itself does is produce both values in one frame, which is why they share an instant." .
 
 ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;

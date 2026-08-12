@@ -11,6 +11,8 @@
 @prefix mc: <http://example.org/agora/microcontroller#> .
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 
 <http://example.org/agora/dht11> a owl:Ontology ;
     rdfs:label "DHT11 temperature and humidity sensor" ;
@@ -18,7 +20,11 @@
 
 dht11:TempHumiditySensor a owl:Class ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "Temperature and humidity sensor" ;
-    rdfs:comment "The family. One device reporting TWO properties down one line, which is what made it awkward: a sensor observes one property, so a device like this is TWO sensors sharing one reading topic, and each says which value in the message is its own with mqtt:readingPointer. The board publishes once because it is one MQTT client with one credential. Closed #51; see knowledge/decisions/a-reading-is-one-value-so-it-is-pointed-at.md." .
+    rdfs:comment """The family. One device reporting TWO properties down one line, which is what made it awkward: a sensor observes one property, so a device like this is TWO sensors sharing one reading topic, and each says which value in the message is its own with mqtt:readingPointer. Closed #51; see knowledge/decisions/a-reading-is-one-value-so-it-is-pointed-at.md.
+
+**One message, because one measurement.** This used to be explained as a transport economy — *the board publishes once because it is one MQTT client with one credential* — and that is true and is not the reason. It would justify batching two unrelated readings into one message, which is exactly what the values in here are NOT. The part answers a single request with a single frame containing both values, produced by the same sampling; it cannot be asked for temperature alone. So the reading arrives together because it was TAKEN together, and the credential merely means nothing has to undo that.
+
+The difference is not academic — it is what the reading path got wrong. Believing the transport reason, each value was stamped as it was written, seconds of code apart, and the series store recorded a 25 ms difference between two halves of one physical read. Believing the physical one, a message is a measurement and carries one instant.""" .
 
 dht11:Dht11 a owl:Class ;
     mc:modelName "KY-015 (DHT11)" ; rdfs:subClassOf dht11:TempHumiditySensor ; rdfs:label "DHT11" ;
@@ -27,6 +33,25 @@ dht11:Dht11 a owl:Class ;
               [ mc:pinRole mc:PowerPinRole     ; wokwi:name "VCC" ] ,
               [ mc:pinRole mc:GroundPinRole    ; wokwi:name "GND" ] ;
     rdfs:comment "Three legs and a pull-up to its own VCC, which is the fact worth writing down: the data line idles at whatever the part is powered from, so the rail choice IS the logic level. On a KY-015 breakout the pull-up is on the board. Rated 3-5V, and that range is a trap next to a 3.3V microcontroller — it will run perfectly happily on 5V and present 5V to an input that is not 5V tolerant." .
+
+#################  What it does  #################
+#
+# Two procedures, and they are at different levels of the same part — which is the whole reason
+# to state them rather than leave them implied by the wiring.
+#
+# `onewire:Transaction` is HOW it is talked to and belongs to the protocol package, so this is a
+# reference and not a copy. `dht11:CombinedRead` is what the part does when talked to, and there
+# is no standard term for it because it is a fact about this family of parts.
+#
+# Neither is a sense mode. `perception:senseMode` answers *who holds the clock* and carries
+# `sh:maxCount 1`; these answer *what happens when the moment arrives*, and a system may
+# implement as many as it can perform. That is why `ssn:implements` is the right predicate here
+# and the wrong one there — see the note in perception's ontology.
+
+dht11:CombinedRead a sosa:Procedure ; rdfs:label "Combined temperature and humidity read" ;
+    rdfs:comment "One request, two values, one instant. The part samples both and clocks them out in a single 40-bit frame — humidity, temperature, checksum — so neither can be obtained without the other and the two are simultaneous BY CONSTRUCTION. Belongs to the whole part and not to either channel, which is the shape of the claim: the sub-systems each observe one property, and what the part adds is that it produces them together. The library our firmware uses makes the same statement in code — a second call inside the part's stated Frequency is served from the buffer the first filled, never from the wire — so the firmware's two calls have always been one conversation, whatever the reading path did with them afterwards." .
+
+dht11:Dht11 ssn:implements dht11:CombinedRead , onewire:Transaction .
 
 #################  What it can honour  #################
 #

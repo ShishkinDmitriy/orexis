@@ -15,6 +15,8 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from . import config
 from .influx_writer import InfluxWriter
 from .sensed_writer import SensedWriter
@@ -53,12 +55,18 @@ class Observations:
     def close(self) -> None:
         self.influx.close()
 
-    def record(self, log, sensor, value: float) -> None:
+    def record(self, log, sensor, value: float, at: datetime | None = None) -> None:
         """Keep it, assert it, announce it, and notice it.
 
         `log` belongs to the calling module so a failure is attributed to the capability that
         was observing, not to this helper.
+
+        `at` is when the measurement arrived. It is resolved once here and given to BOTH
+        stores, so a value's instant is the same in the belief base and in the series — they
+        used to be stamped independently, seconds of code apart, and a query joining them
+        compared two clocks that were only accidentally close.
         """
+        at = at or datetime.now(timezone.utc)
         # A reading is the agent's whole reason to be running, and until now taking one logged
         # NOTHING on the happy path — only a cadence CHANGE said anything, and only when it
         # changed. So an agent receiving a reading every ten seconds and an agent whose board
@@ -74,7 +82,7 @@ class Observations:
 
         try:
             self.influx.write_reading(sensor.subject_id, sensor.local_id, value,
-                                      _short(sensor.observes))
+                                      _short(sensor.observes), at)
         except Exception as exc:  # history is best-effort; never drop the reading over it
             # Logged AND counted. Logging alone made this invisible: nothing reads a container's
             # log until something is already known to be wrong, so a store that had quietly
@@ -90,6 +98,7 @@ class Observations:
                 # with no sense mode never reaches here — the world is refused first.
                 used_procedure=sensor.sense_mode,
                 world_version=self.agent.world.version,
+                ts=at.isoformat(),
             )
         except Exception as exc:
             log.error("sensed write failed: %s", exc)

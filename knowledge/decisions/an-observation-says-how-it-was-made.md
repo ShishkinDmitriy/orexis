@@ -102,6 +102,13 @@ complete method, so a partial answer is a legitimate one — but it is partial, 
 if the whole pipeline is ever modelled as a Procedure, this predicate gets **re-pointed** rather
 than a second one added beside it.
 
+Some of the rest of the method is now named — a one-wire transaction, a combined read, an MQTT
+publish — and named on the systems that perform them rather than on the observation. Nothing
+re-points yet, because an observation citing a procedure is a claim about *this reading* and
+`ssn:implements` is a claim about the equipment; joining the two is what
+[a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md)
+leaves open.
+
 # The rename crossed seven spellings, and one left the process
 
 [every-term-in-its-own-house](every-term-in-its-own-house.md) recorded that a term is named seven
@@ -199,8 +206,12 @@ and then `"pushprocedure"`, breaking a device twice more in the same silent way.
   [#96](https://github.com/ShishkinDmitriy/agora/issues/96); when the mode moves to the board, an
   observation will cite the board's procedure, which is more accurate still, since the firmware
   holds the clock and the sensing element does not.
-- **`ssn:implements` is the standard relation and we do not use it.** The reasoning is unchanged
-  from the record above: it is wider than `senseMode`, which carries `sh:maxCount 1` and guards a
-  derivation.
+- ~~**`ssn:implements` is the standard relation and we do not use it.**~~ **Half-closed, and the
+  half matters.** It is in use — a DHT11 states two procedures with it — and it is still not the
+  relation between a sensor and its sense mode, for the reason given above: it is wider than
+  `senseMode`, which carries `sh:maxCount 1` and guards a derivation. What changed is that the
+  two predicates now visibly answer different questions rather than one appearing to be a
+  home-made stand-in for the other. See
+  [a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md).
 - **`perception:PolledProcedure` is still reserved.** No rule maps it, so no observation can cite
   it, and the shape would accept one that did.

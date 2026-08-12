@@ -205,3 +205,83 @@ def test_the_legacy_schema_org_spelling_is_what_their_frequency_uses(tmp_path):
     src = (FIXTURES / "dht22.ttl").read_text()
     assert "@prefix schema: <http://schema.org/>" in src
     assert "https://schema.org/" not in src
+
+
+# --- what the standard says a part DOES, and where we put it -----------------------------------
+#
+# The W3C's DHT22 states `ssn:implements` on both channels, pointing each at one shared
+# `<DHT22#Procedure>`. That is the relation this project used only for sense modes until
+# a-procedure-belongs-to-whatever-performs-it, and their file is the evidence that it is the
+# ordinary way to say what a system does.
+#
+# We put the combined read on the WHOLE PART rather than on each channel, and the difference is
+# not cosmetic — see the record. These tests pin both halves: theirs, so a change upstream is
+# noticed, and ours, so a declaration nobody queries cannot quietly disappear.
+
+_SSN = rdflib.Namespace("http://www.w3.org/ns/ssn/")
+_SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
+_DHT11 = rdflib.Namespace("http://example.org/agora/dht11#")
+_ONEWIRE = rdflib.Namespace("http://example.org/agora/onewire#")
+_MQTT = rdflib.Namespace("http://example.org/agora/mqtt#")
+_MC = rdflib.Namespace("http://example.org/agora/microcontroller#")
+
+
+def test_their_channels_implement_a_procedure_and_ours_is_on_the_part(tmp_path):
+    """One 40-bit frame is a fact about the DEVICE, so it is stated once and not twice.
+
+    Their two channels each cite the same `<DHT22#Procedure>`, which says what a channel does.
+    That leaves the thing this part's single message actually turns on — that neither value can
+    be had without the other — expressible only by two nodes happening to name one procedure,
+    and nothing makes them.
+
+    So `dht11:CombinedRead` sits on `dht11:Dht11`. The channels keep their own sense mode, which
+    is a different question with a different predicate and a cardinality of one.
+    """
+    theirs = rdflib.Graph().parse(data=_repaired("dht22.ttl"), format="turtle")
+    channels = set(theirs.subjects(_SSN.implements, None))
+    assert len(channels) == 2, f"upstream moved its implements: {channels}"
+
+    ours = _world_with(tmp_path)
+    assert set(ours.objects(_DHT11.Dht11, _SSN.implements)) == {
+        _DHT11.CombinedRead, _ONEWIRE.Transaction}
+    assert not set(ours.subjects(_SSN.implements, _DHT11.CombinedRead)) - {_DHT11.Dht11}, (
+        "the combined read leaked onto a channel — it is what the PART does, and putting it on "
+        "a channel says a channel could be read alone, which is the thing it denies")
+
+
+def test_every_declared_procedure_is_one(tmp_path):
+    """A `sosa:Procedure` that was never typed is a dangling IRI no query will ever match.
+
+    Cheap and worth having: the failure mode of a hand-written alignment triple is a typo that
+    validates perfectly, because an unrecognised object is not an error in RDF.
+    """
+    ours = _world_with(tmp_path)
+    declared = {_DHT11.CombinedRead, _ONEWIRE.Transaction, _MQTT.Publishing}
+    untyped = {p for p in declared if (p, rdflib.RDF.type, _SOSA.Procedure) not in ours}
+    assert not untyped, f"declared but never typed a sosa:Procedure: {untyped}"
+
+
+def test_a_board_is_both_a_platform_and_a_system(tmp_path):
+    """It carries things AND it does things, and one class cannot say both.
+
+    `ssn:implements` has `ssn:System` as its domain, so a board typed only `sosa:Platform` can
+    be said to publish nowhere. SSN declares no disjointness, and the W3C's own boards are typed
+    both — asserted here against their file so this stops being true if they change it.
+
+    Only SOME of their Platforms are Systems, and that is the finding rather than a wrinkle in
+    the test: a wall is a Platform and does nothing, a board is a Platform and does plenty. The
+    two classes answer different questions, so which nodes carry both is a real distinction and
+    a blanket assertion would have hidden it.
+    """
+    theirs = rdflib.Graph().parse(
+        data=(FIXTURES / "dht22-deployment.ttl").read_text(), format="turtle")
+    platforms = set(theirs.subjects(rdflib.RDF.type, _SOSA.Platform))
+    assert platforms, "upstream has no Platform to compare against"
+    both = {p for p in platforms if (p, rdflib.RDF.type, _SSN.System) in theirs}
+    assert both and both < platforms, (
+        f"upstream no longer shows the split this rests on — {len(both)} of {len(platforms)} "
+        f"Platforms are Systems, and the point is that it is some rather than all or none")
+
+    ours = _world_with(tmp_path)
+    supers = set(ours.objects(_MC.Microcontroller, rdflib.RDFS.subClassOf))
+    assert {_SOSA.Platform, _SSN.System} <= supers, f"a board is only {supers}"
