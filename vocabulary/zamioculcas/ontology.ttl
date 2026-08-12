@@ -69,7 +69,9 @@ zz:IndoorOperatingRange a ssn-system:OperatingRange ;
         [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;
           schema:minValue 18.0 ; schema:maxValue 26.0 ; schema:unitCode unit:DEG_C ] ,
         [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirHumidity ;
-          schema:minValue 0.40 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] .
+          schema:minValue 0.40 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:Illuminance ;
+          schema:minValue 1000.0 ; schema:maxValue 10000.0 ; schema:unitCode unit:LUX ] .
 
 zz:IndoorSurvivalRange a ssn-system:SurvivalRange ;
     rdfs:label "Zamioculcas indoors, what it will tolerate" ;
@@ -80,7 +82,9 @@ zz:IndoorSurvivalRange a ssn-system:SurvivalRange ;
         [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;
           schema:minValue 12.0 ; schema:maxValue 35.0 ; schema:unitCode unit:DEG_C ] ,
         [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirHumidity ;
-          schema:minValue 0.20 ; schema:maxValue 0.90 ; schema:unitCode unit:UNITLESS ] .
+          schema:minValue 0.20 ; schema:maxValue 0.90 ; schema:unitCode unit:UNITLESS ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:Illuminance ;
+          schema:minValue 100.0 ; schema:maxValue 20000.0 ; schema:unitCode unit:LUX ] .
 
 # Every figure is written with a decimal point, including the whole ones. `18` is an xsd:integer
 # in Turtle and `18.0` is an xsd:decimal, and the plant shapes ask for decimal — so a temperature
@@ -100,8 +104,24 @@ zz:IndoorSurvivalRange a ssn-system:SurvivalRange ;
 # ceiling is a cliff rather than a preference. The exact numbers are a calibration and belong to
 # whoever measures a real pot with a real probe.
 #
-# WHAT IS ABSENT for want of a property, not for want of a fact: light. This plant's other headline
-# is that it tolerates deep shade and burns in direct sun, and there is no `sosa:ObservableProperty`
-# for illuminance anywhere in this repository — nothing senses it, nothing could want it. Inventing
-# `zz:Illuminance` would be a package naming a term that is not its own, so the fact stays prose
-# until something measures light. The same goes for the sap being an irritant.
+# LIGHT is now stated rather than described, and it needed a term first. `water:Illuminance` went
+# into the DOMAIN and not into this package: light is nobody's species in particular, and
+# `zz:Illuminance` would have made every other plant borrow it from the Zamioculcas.
+#
+# Its provenance differs from the other three and is the part most likely to be over-trusted.
+# The LUX BANDS are a convention rather than a measurement — "low light", "bright indirect" and
+# "direct sun" are the categories every houseplant source is written in, and the conventional
+# ranges for them are roughly 250-1000, 2500-10000 and 10000+ lux. What is guidance about THIS
+# plant is where it sits in those bands: it does well from medium to bright indirect, tolerates
+# low light better than almost any houseplant sold, and scorches in direct sun. The numbers here
+# are that placement read off the convention, so the bands are the claim and the endpoints are a
+# reading of them.
+#
+# Note what is now true and was not: nothing in this repository measures light. That is fine and
+# is why it was worth stating anyway — a range for an unmeasured property is a checkable fact
+# waiting for an instrument, where a sentence in a comment is not. It becomes live the day a
+# light sensor appears, with no edit here.
+#
+# STILL ABSENT, and for a reason no term would fix: the sap is a calcium-oxalate irritant. There
+# is nothing in this system that fact could inform, so it stays in the class comment where a
+# person will read it.

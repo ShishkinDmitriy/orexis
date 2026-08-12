@@ -47,8 +47,8 @@ ag:pot_by_the_window a zz:ZamioculcasZamiifolia ;
     ag:localId "zz" ; water:servedBy ag:tap ; water:litresPerFraction 2.0 .
 ```
 
-That is the whole of it. Six conditions — two ranges across three properties — arrive from the
-package. Nothing about how to look after a Zamioculcas is written in a world, and a second one is
+That is the whole of it. Eight conditions — two ranges across four properties, one of which
+nothing measures — arrive from the package. Nothing about how to look after a Zamioculcas is written in a world, and a second one is
 one triple.
 
 **What stays per-pot is what is about the pot**: `water:dryRatePerTick` is how fast *this* pot
@@ -85,6 +85,32 @@ Nothing about the agent changed. The plant did. That is
 with a species behind the range, and it is the reason to describe a species at all rather than
 writing 0.20 into a beliefs file and hoping.
 
+# Light, and a range for a property nothing measures
+
+Light was left out of the first version on the grounds that no `sosa:ObservableProperty` for it
+existed and nothing senses it. The first half was a reason to **add the term**, not to stay silent;
+the second half turned out not to be a reason at all.
+
+`water:Illuminance` went into the **domain** package rather than this one, and that placement is
+the general rule: light is nobody's species in particular, so `zz:Illuminance` would have made
+every other plant borrow a term from the Zamioculcas. It sits beside `water:AirTemperature` and
+`water:AirHumidity`, which are no more "water" than it is — a property earns its place in that
+module by being something a plant cares about. The module's own header said *"soil moisture and
+water"* and had been wrong since the temperature sensor landed; it says what it holds now.
+
+**A range for an unmeasured property is worth stating.** Nothing in this repository reports lux,
+and the range is still a checkable fact about the plant rather than a sentence in a comment — it
+becomes live the day a light sensor appears, with no edit to this package. `water:RangesAgreeShape`
+already covers it, because that rule is per-property: raising the operating ceiling to direct
+sunlight is refused with no shape change at all.
+
+The provenance differs from the other three and is the part most likely to be over-trusted. The
+**lux bands are a convention**, not a measurement — "low light", "bright indirect" and "direct sun"
+are the categories houseplant sources are written in, at roughly 250-1000, 2500-10000 and 10000+
+lux. What is guidance about *this* plant is where it sits in them: medium to bright indirect,
+tolerant of low light beyond almost anything else sold, scorched by direct sun. **The bands are the
+claim; the endpoints are a reading of them.**
+
 # Where the figures come from, and where they do not
 
 Stated in the ontology and repeated here because it is the part most likely to be trusted too far.
@@ -98,12 +124,9 @@ real probe.
 
 # Seams left open
 
-- **Light is absent for want of a property, not for want of a fact.** Tolerating deep shade and
-  burning in direct sun is this plant's other headline, and there is no `sosa:ObservableProperty`
-  for illuminance anywhere here — nothing senses it, nothing could want it. `zz:Illuminance` would
-  be a package naming a term that is not its own, so the fact stays prose.
-- **Toxicity likewise.** The sap is a calcium-oxalate irritant. It is a fact someone caring for one
-  should meet and there is nothing in this system it could inform.
+- **Toxicity.** The sap is a calcium-oxalate irritant. It is a fact someone caring for one should
+  meet and there is nothing in this system it could inform, so it stays in the class comment where
+  a person will read it. No term would fix that — unlike light, below.
 - **Winter is the regime this plant most obviously needs**, and it is still unsayable for the
   reason recorded on the previous decision: `ssn-system:inCondition` cannot mark which of its
   conditions is the qualifier. A ZZ genuinely wants *less water* in winter rather than the same

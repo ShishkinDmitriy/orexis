@@ -64,7 +64,7 @@ def _store(world):
 
 
 def test_one_triple_plants_it_and_the_species_supplies_the_rest():
-    """The world says what KIND of plant it is. Both ranges, all three properties and every
+    """The world says what KIND of plant it is. Both ranges, all four properties and every
     number arrive from the package by `owl:hasValue`."""
     with tempfile.TemporaryDirectory() as d:
         w = pathlib.Path(d) / "zz"
@@ -80,11 +80,12 @@ def test_one_triple_plants_it_and_the_species_supplies_the_rest():
               ?c ssn:forProperty ?property ; schema:minValue ?min ; schema:maxValue ?max }"""))
 
         got = {(r["kind"].rsplit("/", 1)[-1], r["property"].rsplit("#", 1)[-1]) for r in rows}
-        assert got == {
-            ("OperatingRange", p) for p in ("SoilMoisture", "AirTemperature", "AirHumidity")
-        } | {
-            ("SurvivalRange", p) for p in ("SoilMoisture", "AirTemperature", "AirHumidity")
-        }, f"the species did not reach the pot: {sorted(got)}"
+        # Illuminance among them although nothing measures light: a range is a fact about the
+        # plant, and it does not wait for an instrument to be true or to be carried.
+        properties = ("SoilMoisture", "AirTemperature", "AirHumidity", "Illuminance")
+        assert got == {("OperatingRange", p) for p in properties} \
+                    | {("SurvivalRange", p) for p in properties}, \
+            f"the species did not reach the pot: {sorted(got)}"
 
 
 def test_a_ferns_desire_will_not_do_for_a_zamioculcas(zz_world):
