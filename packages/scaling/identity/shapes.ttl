@@ -21,7 +21,11 @@ scaling:OnlyACurveIsStatedShape a sh:NodeShape ;
                   sh:message "a device follows one curve — scaling:curve takes one member of scaling:Scaling" ] .
 
 scaling:AUnitIsAUnitShape a sh:NodeShape ;
-    rdfs:comment "At most one unit per sensor. NOT minCount 1, which is a deliberate gap and not an oversight: only world/sensing states units so far, and requiring them would refuse the other two worlds for a fact this change did not set out to backfill. What it does refuse is a sensor claiming to be in two units at once, which is the shape of a bad merge rather than of a bad world." ;
-    sh:targetSubjectsOf scaling:quantityUnit ;
-    sh:property [ sh:path scaling:quantityUnit ; sh:maxCount 1 ;
-                  sh:message "a quantity is in one unit" ] .
+    rdfs:comment """EXACTLY one unit per sensor. This used to be `maxCount` alone, on the subjects that already stated one, with a comment explaining the gap: only world/sensing stated units, and requiring them would have refused the others for a fact that change did not set out to backfill.
+
+The gap has been paid for since. A dashboard panel needs the unit to know what it is drawing, and a sensor without one fell back to a default — so a soil moisture in one world was rendered correctly and the same reading in another was rendered as a bare number, because nothing said what it was. Both worlds state units now, so the reason for the gap is gone and the requirement can stand.
+
+Targeted at the SENSOR rather than at whatever happens to state the property, which is the other half: a shape hung on `sh:targetSubjectsOf` can only ever check the ones that already comply.""" ;
+    sh:targetClass sosa:Sensor ;
+    sh:property [ sh:path scaling:quantityUnit ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a sensor reads in exactly one unit — state scaling:quantityUnit, or nothing downstream can tell a temperature from a fraction" ] .

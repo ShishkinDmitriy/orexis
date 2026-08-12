@@ -33,7 +33,12 @@ import logging
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import worlds
-from agent.ontology import AG, WORLD_GRAPH
+from agent.ontology import AG, PERCEPTION, SOSA, WORLD_GRAPH
+
+SSN_SYSTEM = "http://www.w3.org/ns/ssn/systems/"
+SSN = "http://www.w3.org/ns/ssn/"
+SCHEMA = "https://schema.org/"
+SCALING = "http://example.org/agora/scaling#"
 
 from .influx import bucket_name
 
@@ -43,13 +48,27 @@ DASHBOARD_ROOT = REPO_ROOT / "infra" / "grafana" / "dashboards"
 
 # Whatever an agent observes, with the subject it observes it for. The agent is what owns a
 # bucket, so it is what a panel is keyed on; the subject is what a person reading it cares about.
-_WATCHERS_Q = f"""
-SELECT DISTINCT ?agentId ?subjectId WHERE {{ 
-  ?agent a <{AG}Agent> ; <{AG}localId> ?agentId .
-  {{ ?agent <{PERCEPTION}polls> ?sensor . ?sensor <{PERCEPTION}monitors> ?subject }}
-  UNION
-  {{ ?agent <{AG}actsFor> ?subject }}
+_SENSORS_Q = f"""
+SELECT DISTINCT ?agentId ?sensorId ?subjectId ?property ?unit WHERE {{
+  ?agent a <{AG}Agent> ; <{AG}localId> ?agentId ; <{PERCEPTION}polls> ?sensor .
+  ?sensor <{AG}localId> ?sensorId ; <{PERCEPTION}monitors> ?subject ;
+          <{SOSA}observes> ?property .
   ?subject <{AG}localId> ?subjectId .
+  OPTIONAL {{ ?sensor <{SCALING}quantityUnit> ?unit }}
+ }}"""
+
+# What the SUBJECT can stand, per property, from whichever ranges it states. Two predicates and
+# one shape, because a range is a range: `ssn-system:OperatingRange` is where a plant does well
+# and `hasSurvivalRange` is where it does not die, and a panel wants both — green inside the
+# first, amber between them, red outside the second. A world that states neither gets neither,
+# and the panel falls back to no opinion rather than to a moisture-shaped guess.
+_RANGES_Q = f"""
+SELECT DISTINCT ?subjectId ?kind ?property ?lo ?hi WHERE {{
+  VALUES ?rel {{ <{SSN_SYSTEM}hasOperatingRange> <{SSN_SYSTEM}hasSurvivalRange> }}
+  ?subject <{AG}localId> ?subjectId ; ?rel ?range .
+  ?range a ?kind ; <{SSN_SYSTEM}inCondition> ?condition .
+  ?condition <{SSN}forProperty> ?property ;
+             <{SCHEMA}minValue> ?lo ; <{SCHEMA}maxValue> ?hi .
  }}"""
 
 # Written by agent.influx_writer — named here so a change there fails visibly rather than
@@ -67,49 +86,110 @@ SELECT DISTINCT ?agentId WHERE {{
  }}"""
 
 
-def _flux(bucket: str) -> str:
-    """Every property this bucket holds, as its own series.
+# QUDT unit IRI -> what Grafana calls it. Only what this project actually states; an unknown
+# unit gets "none" rather than a guess, because guessing is how a temperature came to be drawn
+# as 2390%.
+#
+# UNITLESS maps to `percentunit` — a 0-1 fraction rendered as a percentage — and that is a fact
+# about THIS project rather than about the unit: soil moisture is a fraction of saturation and
+# relative humidity is a fraction of one, and both are stored 0-1. A unitless quantity that was
+# not a fraction would want "none", and would need saying here.
+_GRAFANA_UNIT = {
+    "DEG_C": "celsius",
+    "UNITLESS": "percentunit",
+    "PERCENT": "percent",
+    "LUX": "lux",
+}
 
-    Split by the `property` tag rather than filtered to one. A board reporting soil moisture and
-    air humidity sends two fractions in the same 0-1 range and nothing in either says which it
-    is — so a panel that does not separate them plots an air temperature of 21.4 as a moisture,
-    which is the hazard `agent/influx_writer` added the tag to prevent. Grouping rather than
-    filtering also means a world that starts observing a new property gets it on the dashboard
-    without this file learning the property's name.
+
+def _unit_of(unit_iri: str | None) -> str:
+    if not unit_iri:
+        return "none"
+    return _GRAFANA_UNIT.get(unit_iri.rsplit("/", 1)[-1], "none")
+
+
+def _flux(bucket: str, sensor_id: str) -> str:
+    """One sensor's series, and nothing else in the bucket.
+
+    Filtered on the `sensor` tag rather than grouped by it. A bucket holds every property its
+    agent records — a board sending soil moisture and air humidity sends two fractions in the
+    same 0-1 range and nothing in either says which it is — so one panel per sensor is what lets
+    a panel carry that sensor's UNIT and that subject's range. Grouping them into one panel is
+    what made a temperature share a moisture's axis.
     """
     return (f'from(bucket: "{bucket}")\n'
             "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
             f'  |> filter(fn: (r) => r._measurement == "{MEASUREMENT}")\n'
             f'  |> filter(fn: (r) => r._field == "{FIELD}")\n'
-            '  |> group(columns: ["property", "sensor"])\n'
+            f'  |> filter(fn: (r) => r.sensor == "{sensor_id}")\n'
             "  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)")
 
 
-def _panel(title: str, bucket: str, kind: str, x: int, y: int, w: int, h: int, panel_id: int):
+def _steps(ranges: dict) -> list[dict]:
+    """Colour by what the SUBJECT can stand, or say nothing.
+
+    Ascending, the way Grafana reads them: red below survival, amber between survival and
+    operating, green inside operating, and back out again. Both ranges earn their place — amber
+    is precisely "alive but not well", which is the state worth seeing before it is red.
+
+    A subject stating no range gets a single neutral step. The old panel hardcoded 0.25/0.4,
+    which is a soil-moisture opinion applied to every property including temperature.
+    """
+    operating, survival = ranges.get("OperatingRange"), ranges.get("SurvivalRange")
+    if not operating and not survival:
+        return [{"color": "text", "value": None}]
+
+    outer = survival or operating
+    inner = operating or survival
+    steps = [{"color": "red", "value": None}]
+    if survival and operating:
+        steps.append({"color": "orange", "value": outer[0]})
+    steps.append({"color": "green", "value": inner[0]})
+    if survival and operating:
+        steps.append({"color": "orange", "value": inner[1]})
+        steps.append({"color": "red", "value": outer[1]})
+    else:
+        steps.append({"color": "red", "value": inner[1]})
+    return steps
+
+
+def _sensor_panel(title: str, bucket: str, sensor_id: str, unit: str, ranges: dict,
+                  kind: str, x: int, y: int, w: int, h: int, panel_id: int, desc: str = ""):
+    survival = ranges.get("SurvivalRange")
+    defaults = {
+        "unit": unit,
+        "color": {"mode": "thresholds"},
+        "thresholds": {"mode": "absolute", "steps": _steps(ranges)},
+    }
+    # The axis is the survival range where one is stated — what the subject can stand is the
+    # interesting window, and a curve pinned to 0-1 hides a temperature entirely. Widened a
+    # little so a value AT the limit is still drawn rather than clipped to the frame.
+    if survival:
+        span = survival[1] - survival[0]
+        defaults["min"] = survival[0] - span * 0.1
+        defaults["max"] = survival[1] + span * 0.1
+
+    options = {}
+    if kind == "timeseries":
+        options = {"legend": {"displayMode": "list", "placement": "bottom"}}
+        # Draw the bands rather than only colouring the line: the question a history panel
+        # answers is "was it ever outside", and a line that merely changes colour answers it
+        # only where someone happens to look.
+        defaults["custom"] = {"thresholdsStyle": {"mode": "area"}, "fillOpacity": 8}
+    else:
+        options = {"colorMode": "value", "graphMode": "area", "textMode": "auto",
+                   "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}}
+
     return {
         "id": panel_id,
         "type": kind,
         "title": title,
+        "description": desc,
         "datasource": {"type": "influxdb", "uid": "influxdb"},
         "gridPos": {"h": h, "w": w, "x": x, "y": y},
-        "targets": [{"refId": "A", "query": _flux(bucket)}],
-        "fieldConfig": {
-            "defaults": {
-                "unit": "percentunit",
-                # The band is the agent's belief, not the dashboard's, so nothing is asserted
-                # here beyond dry-at-the-bottom. Colour is a hint for a human, not a threshold.
-                "min": 0, "max": 1,
-                "color": {"mode": "thresholds"},
-                "thresholds": {"mode": "absolute", "steps": [
-                    {"color": "red", "value": None},
-                    {"color": "orange", "value": 0.25},
-                    {"color": "green", "value": 0.4},
-                ]},
-            },
-            "overrides": [],
-        },
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
-        if kind == "timeseries" else {},
+        "targets": [{"refId": "A", "query": _flux(bucket, sensor_id)}],
+        "fieldConfig": {"defaults": defaults, "overrides": []},
+        "options": options,
     }
 
 
@@ -207,25 +287,52 @@ def render_health(world: str) -> dict:
     }
 
 
+def _ranges_by_subject(ds) -> dict:
+    """{(subjectId, propertyIri): {"OperatingRange": (lo, hi), ...}} — empty when none stated."""
+    out: dict = {}
+    for r in ratified.rows(ds, _RANGES_Q):
+        kind = r["kind"].rsplit("/", 1)[-1].rsplit("#", 1)[-1]
+        if kind not in ("OperatingRange", "SurvivalRange"):
+            continue
+        out.setdefault((r["subjectId"], r["property"]), {})[kind] = (float(r["lo"]),
+                                                                     float(r["hi"]))
+    return out
+
+
 def render(world: str) -> dict:
-    rows = ratified.rows(ratified.dataset(world), _WATCHERS_Q)
-    watchers = sorted({(r["agentId"], r["subjectId"]) for r in rows})
-    if not watchers:
+    """One ROW per sensor: its history, and what it reads right now.
+
+    Per sensor rather than per agent, which is the whole of the fix. An agent's bucket holds
+    every property it records, so one panel per agent drew a temperature and two fractions on
+    one axis under one unit — a 23.9 degree reading rendered as 2390%. A sensor observes ONE
+    property, states ONE unit, and its subject states the range that property should sit in, so
+    a panel keyed on the sensor can be right about all three.
+    """
+    ds = ratified.dataset(world)
+    sensors = ratified.rows(ds, _SENSORS_Q)
+    if not sensors:
         raise SystemExit(f"agora-dashboards: nothing in world {world!r} observes anything")
+    ranges = _ranges_by_subject(ds)
 
     panels, y, pid = [], 0, 1
-    # A row of current values across the top, then one history panel per watcher beneath.
-    for i, (agent_id, subject_id) in enumerate(watchers):
-        panels.append(_panel(subject_id, bucket_name(world, agent_id), "stat",
-                             x=(i * 4) % 24, y=0, w=4, h=4, panel_id=pid))
-        pid += 1
-    y = 4
-    for agent_id, subject_id in watchers:
-        panels.append(_panel(f"{subject_id} — as {agent_id} sees it",
-                             bucket_name(world, agent_id), "timeseries",
-                             x=0, y=y, w=24, h=7, panel_id=pid))
-        pid += 1
-        y += 7
+    for row in sorted(sensors, key=lambda r: (r["subjectId"], r["sensorId"])):
+        bucket = bucket_name(world, row["agentId"])
+        unit = _unit_of(row.get("unit"))
+        prop = row["property"].rsplit("/", 1)[-1].rsplit("#", 1)[-1]
+        stated = ranges.get((row["subjectId"], row["property"]), {})
+        told = ", ".join(f"{k.replace('Range', '').lower()} {v[0]:g}-{v[1]:g}"
+                         for k, v in sorted(stated.items())) or "no range stated"
+        desc = (f"{row['sensorId']} observes {prop} of {row['subjectId']}, in {unit}. "
+                f"Bands: {told}. Both come from the world, never from this file.")
+
+        panels.append(_sensor_panel(f"{row['subjectId']} — {prop}", bucket, row["sensorId"],
+                                    unit, stated, "timeseries",
+                                    x=0, y=y, w=16, h=8, panel_id=pid, desc=desc))
+        panels.append(_sensor_panel(f"{prop} now", bucket, row["sensorId"],
+                                    unit, stated, "stat",
+                                    x=16, y=y, w=8, h=8, panel_id=pid + 1, desc=desc))
+        pid += 2
+        y += 8
 
     return {
         "uid": f"agora-{world}"[:40],
