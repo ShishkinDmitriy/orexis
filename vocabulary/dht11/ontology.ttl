@@ -144,6 +144,11 @@ dht11:HumiditySensor rdfs:subClassOf
 # Nothing in SOSA, SSN or ssn-system says this. All 44 of their object properties were checked:
 # the nearest is `ssn:hasSubSystem`, which relates a System to a System, and the procedures
 # distribute down the hosting chain in parallel with it rather than through it.
+#
+# P-Plan does have the term — `p-plan:isSubPlanOfPlan` — and is rejected on meaning, not for
+# want of looking: it models a plan as ordered steps, and a sub-plan is executed as part of
+# executing the larger one. `dcterms:hasPart` is right BECAUSE it is weaker. It says inclusion
+# and stops, where every plan vocabulary says inclusion and execution.
 
 dht11:CombinedRead dcterms:hasPart dht11:TemperatureRead , dht11:HumidityRead .
 

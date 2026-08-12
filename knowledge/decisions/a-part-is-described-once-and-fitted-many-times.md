@@ -113,6 +113,18 @@ either physically or logically in the described resource"*, and logically is the
 dht11:CombinedRead dcterms:hasPart dht11:TemperatureRead , dht11:HumidityRead .
 ```
 
+**P-Plan was the alternative, and it was rejected on semantics rather than for want of a term.**
+It has the properties SOSA lacks — `p-plan:isSubPlanOfPlan` (Plan to Plan),
+`p-plan:isDecomposedAsPlan`, `p-plan:isStepOfPlan` — so "nothing anywhere relates one procedure
+to another" would be wrong. What rules it out is what those properties MEAN: P-Plan models a plan
+as ordered steps, `p-plan:isPrecededBy` among them, and a sub-plan is something executed as part
+of executing the larger one. Adopting it would also mean typing every `sosa:Procedure` here as a
+`p-plan:Plan`, and so a `prov:Plan`, importing a plan-execution metamodel to state one part-whole
+fact.
+
+`dcterms:hasPart` is the right choice *because* it is semantically weaker. It says inclusion and
+stops, where every plan vocabulary says inclusion **and** execution.
+
 **Deliberately not a step, a call or an invocation**, and this is the part worth carrying to the
 next composite part. Performing the combined read *constitutes* performing both halves; neither
 can be performed alone, because there is one 40-bit frame and no way to ask for a piece of it. A
