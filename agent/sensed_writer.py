@@ -15,8 +15,8 @@ that a market will act on without hesitating.
 It also says HOW it was made. `sosa:usedProcedure` carries the sensor's sense mode, which is a
 `sosa:Procedure`, and the difference it records is not recoverable from the number: *"0.183 at
 13:22, on the interval the agent asked for"* and *"0.183 at 13:22, because the board chose that
-moment"* are different claims. Under `ScheduledSensing` a reading that does not arrive means the
-board is late; under `PushSensing` it may mean nothing happened worth reporting. Until now that
+moment"* are different claims. Under `ScheduledProcedure` a reading that does not arrive means the
+board is late; under `PushProcedure` it may mean nothing happened worth reporting. Until now that
 was knowable only by joining back to the sensor, which is the shape of fact this project keeps
 finding out about the hard way.
 

@@ -194,9 +194,9 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
 # The env word is the simulator's contract and the IRI is the society's vocabulary. They are
 # allowed to differ, and saying so once is what stops a rename reaching across the boundary.
 _SIM_MODE = {
-    PERCEPTION + "ScheduledSensing": "scheduled",
-    PERCEPTION + "PushSensing": "push",
-    PERCEPTION + "PolledSensing": "pull",
+    PERCEPTION + "ScheduledProcedure": "scheduled",
+    PERCEPTION + "PushProcedure": "push",
+    PERCEPTION + "PolledProcedure": "pull",
 }
 
 # `?litres` is joined through the PROPERTY the domain's valuation is denominated in rather than
@@ -279,8 +279,8 @@ def _simulator(world: str, rows: list[dict]) -> str:
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
       SIM_VALUES: '{_values(rows)}'
-      # perception:ScheduledSensing keeps the interval its agent gives it, like a deep-sleeping board;
-      # perception:PushSensing keeps its own clock and takes no orders. The agent derives its capability
+      # perception:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
+      # perception:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "{mode}"
       MQTT_HOST: "localhost"

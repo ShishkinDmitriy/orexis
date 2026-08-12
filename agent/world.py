@@ -55,7 +55,7 @@ class Sensor:
     subject: str  # URI of what it monitors
     subject_id: str
     observes: str  # URI of the property it reads
-    # WHO HOLDS THE CLOCK — perception:ScheduledSensing keeps an interval it is given, perception:PushSensing keeps its own.
+    # WHO HOLDS THE CLOCK — perception:ScheduledProcedure keeps an interval it is given, perception:PushProcedure keeps its own.
     # The derivation already reads this to decide whether the agent gains perception:Subscribing or
     # perception:Listening; carrying it here is what lets the runtime partition what the derivation
     # separated. Without it an agent holding one of each gave both to both modules, and the

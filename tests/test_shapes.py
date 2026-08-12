@@ -205,10 +205,10 @@ def test_an_agent_that_only_listens_must_not_hold_a_cadence():
     legitimately. Stating the premise properly is what makes the conclusion follow.
     """
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:ScheduledSensing }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:PushSensing }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:ScheduledProcedure }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:PushProcedure }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent perception:polls ?s .
-                                           ?s perception:senseMode perception:ScheduledSensing }} }} ;
+                                           ?s perception:senseMode perception:ScheduledProcedure }} }} ;
         DELETE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
             ag:fern_agent ag:hasCapability perception:Subscribing }} }}
         WHERE  {{}}"""))
@@ -224,7 +224,7 @@ def test_an_agent_may_hold_both_modes_at_once():
     assert _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:chatter_fern a sosa:Sensor , ag:Device ; ag:localId "chatter_fern" ; mqtt:onBus ag:local_bus ;
-                perception:senseMode perception:PushSensing ; perception:monitors ag:fern ; sosa:observes water:SoilMoisture ;
+                perception:senseMode perception:PushProcedure ; perception:monitors ag:fern ; sosa:observes water:SoilMoisture ;
                 mqtt:readingTopic "sensors/chatter_fern/reading" .
             ag:fern_agent perception:polls ag:chatter_fern .
         }} }} WHERE {{}} ;
@@ -236,7 +236,7 @@ def _duplicate_probe(observes: str) -> rdflib.Graph:
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
-                mqtt:onBus ag:local_bus ; perception:senseMode perception:ScheduledSensing ; perception:monitors ag:fern ;
+                mqtt:onBus ag:local_bus ; perception:senseMode perception:ScheduledProcedure ; perception:monitors ag:fern ;
                 sosa:observes {observes} ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .

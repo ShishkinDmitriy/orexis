@@ -23,7 +23,7 @@ from conftest import build_agent, genesis_store, query_fn
 AIR_TEMP = "http://example.org/agora/water#AirTemperature"
 AIR_HUMIDITY = "http://example.org/agora/water#AirHumidity"
 # The mode every shipped board states: it keeps an interval its agent gives it.
-SCHEDULED = "http://example.org/agora/perception#ScheduledSensing"
+SCHEDULED = "http://example.org/agora/perception#ScheduledProcedure"
 MOISTURE = "http://example.org/agora/water#SoilMoisture"
 
 
@@ -227,8 +227,8 @@ def test_an_observation_says_which_procedure_made_it(monkeypatch):
     """A reading records HOW it was taken, not only what and when.
 
     `sosa:usedProcedure` carries the sensor's sense mode, and the distinction it preserves is
-    not recoverable from the number: under `ScheduledSensing` a reading that fails to arrive
-    means the board is late, under `PushSensing` it may mean nothing happened worth
+    not recoverable from the number: under `ScheduledProcedure` a reading that fails to arrive
+    means the board is late, under `PushProcedure` it may mean nothing happened worth
     reporting. Before this the answer existed only by joining back to the sensor, which is one
     join away from nobody making it.
 

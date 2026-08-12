@@ -1,6 +1,6 @@
 # Moisture sensor (ESP32) — scheduled
 
-A stake-free sensor node. It declares itself `perception:ScheduledSensing` in the world, which gives its
+A stake-free sensor node. It declares itself `perception:ScheduledProcedure` in the world, which gives its
 agent **`ag:Subscribing`**: the *agent* states the interval (how often to look), and this
 board **keeps to it** — reads a capacitive soil-moisture sensor, publishes a 0..1 value,
 briefly listens for a new interval, then **deep-sleeps**. Big battery savings, and the agent

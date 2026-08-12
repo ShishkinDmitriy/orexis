@@ -23,7 +23,7 @@
 # where `perception:Sensor` did not.
 dht22:TemperatureSensor a ag:Device ;
     ag:localId "vendor_air_temp" ;
-    perception:senseMode perception:ScheduledSensing ;
+    perception:senseMode perception:ScheduledProcedure ;
     perception:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;
@@ -33,7 +33,7 @@ dht22:TemperatureSensor a ag:Device ;
 
 dht22:HumiditySensor a ag:Device ;
     ag:localId "vendor_air_humidity" ;
-    perception:senseMode perception:ScheduledSensing ;
+    perception:senseMode perception:ScheduledProcedure ;
     perception:monitors ag:fern ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;

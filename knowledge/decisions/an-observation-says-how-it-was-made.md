@@ -28,17 +28,20 @@ Observation."*
 
 | was | is | agent capability |
 |---|---|---|
-| `perception:Pull` | `perception:PolledSensing` | `perception:Polling` |
-| `perception:Scheduled` | `perception:ScheduledSensing` | `perception:Subscribing` |
-| `perception:Push` | `perception:PushSensing` | `perception:Listening` |
+| `perception:Pull` | `perception:PolledProcedure` | `perception:Polling` |
+| `perception:Scheduled` | `perception:ScheduledProcedure` | `perception:Subscribing` |
+| `perception:Push` | `perception:PushProcedure` | `perception:Listening` |
 
 Each keeps its mode word. That was the constraint, not decoration: the pairing in
 [who-holds-the-clock](who-holds-the-clock.md) is what the whole family is about, and a name that
 lost the tie to its capability would have cost more than the elliptical reading did.
 
-**`Sensing` is SOSA's own word for it**, and free: it appears in `sosa.ttl` only inside the
-definition of Sensor — *"involved in, or implementing, a (Sensing) Procedure"* — and nothing in
-our namespaces uses it.
+This record shipped them as `…Sensing` — SOSA's own word, free, and used by nothing else here.
+That spelling has since been superseded by `…Procedure`, for a reason this record could not have
+seen: it did not yet have a use site where the name is read aloud. See
+[a-sensor-implements-its-procedure](a-sensor-implements-its-procedure.md), and the amendment
+table in [who-holds-the-clock](who-holds-the-clock.md), which is where these spellings are
+tracked. The table above shows today's names against the ones this record replaced.
 
 ## The first names were wrong, and the reason generalises
 
@@ -77,7 +80,7 @@ ag:obs_fern_SoilMoisture a sosa:Observation ;
     sosa:hasSimpleResult "0.183"^^xsd:decimal ;
     sosa:resultTime "…"^^xsd:dateTime ;
     sosa:madeBySensor ag:moisture_sensor_fern ;
-    sosa:usedProcedure perception:ScheduledSensing ;
+    sosa:usedProcedure perception:ScheduledProcedure ;
     ag:underWorldVersion 1 ;
     prov:wasGeneratedBy ag:fern_agent .
 ```
@@ -166,15 +169,16 @@ now `perception:Scheduled`"*. Renaming mechanically turned that into *"`PolledSa
 the spelling it means, and the record carries an amendment table.
 
 A find-and-replace over a document that is *about* naming will falsify it. Worth knowing before
-the next one — which arrived immediately: the second rename had to **add a column** to that table
-rather than rewrite it, and the sentence recounting the first change went from *"two renames"* to
-*"three spellings"* by hand.
+the next one — which arrived immediately, and then a third time. Each rename has had to **add a
+column** to that table rather than rewrite it, and to walk the sentence recounting the first
+change forward by hand: *"two renames"*, then *"three spellings"*, now *"four"*. The third pass
+falsified this very paragraph, which had recorded the second one in the past tense.
 
-**The second rename is also what proved the `_SIM_MODE` fix.** Renaming `PushReporting` to
-`PushSensing` changed the dict's keys and left its values — `"push"`, `"scheduled"`, `"pull"` —
-untouched, because the simulator's contract is not the society's vocabulary. Under the old
-derivation that same rename would have sent `"pushsensing"` and broken a device a second time, in
-the same silent way, three commits later.
+**The later renames are also what proved the `_SIM_MODE` fix.** Renaming `PushReporting` to
+`PushSensing`, and then to `PushProcedure`, changed the dict's keys twice and left its values —
+`"push"`, `"scheduled"`, `"pull"` — untouched both times, because the simulator's contract is not
+the society's vocabulary. Under the old derivation each of those would have sent `"pushsensing"`
+and then `"pushprocedure"`, breaking a device twice more in the same silent way.
 
 # Consequences
 
@@ -198,5 +202,5 @@ the same silent way, three commits later.
 - **`ssn:implements` is the standard relation and we do not use it.** The reasoning is unchanged
   from the record above: it is wider than `senseMode`, which carries `sh:maxCount 1` and guards a
   derivation.
-- **`perception:PolledSensing` is still reserved.** No rule maps it, so no observation can cite
+- **`perception:PolledProcedure` is still reserved.** No rule maps it, so no observation can cite
   it, and the shape would accept one that did.
