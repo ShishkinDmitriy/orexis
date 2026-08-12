@@ -125,6 +125,12 @@ The other five: prefixed TTL and SPARQL, a `term()` builder, a Python constant, 
 a `sh:sparql` `VALUES` clause in `transports/mqtt/shapes.ttl` — the form `tests/test_store.py`'s
 scan cannot see — and prose still spelling them `ag:` from before the namespace sweep.
 
+One of those prose copies is in `onboarding/compose.py`, four lines above the `_SIM_MODE` lookup,
+and it is **emitted into every generated `compose.yaml`**. So the rename changes a generated
+grant: `world/simulation/compose.yaml` differs from `main` in three identical comments and in
+nothing else — no value moved, `SIM_SENSE_MODE` included. A comment is the safest thing that
+could have differed there, and it is worth knowing that anything in that file can.
+
 ## The seventh arrived after the sweep, from another branch
 
 The enumeration above was complete when it was made, and was **stale by the time it merged**.
