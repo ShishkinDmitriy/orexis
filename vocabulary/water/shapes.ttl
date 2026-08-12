@@ -86,6 +86,34 @@ water:PlantShape a sh:NodeShape ;
                       sh:property [ sh:path <https://schema.org/maxValue> ; sh:minCount 1 ; sh:maxCount 1 ;
                                     sh:datatype xsd:decimal ] ] ] .
 
+# Two ranges are only meaningful together, so this is what makes the pair coherent: a plant
+# cannot thrive somewhere it would not survive. General to plants rather than stated per species,
+# because it is arithmetic and not horticulture — a species package states two ranges and this
+# refuses the pair if one has been fat-fingered.
+#
+# Per PROPERTY, matched through ssn:forProperty, for the same reason the target check is: a
+# moisture operating range must sit inside the moisture survival range and has nothing to say
+# about the temperature one.
+water:RangesAgreeShape a sh:NodeShape ;
+    rdfs:comment "An operating range that leaves the survival range is a contradiction in the species description, and the direction it usually goes is the dangerous one: a ceiling raised in the operating range without raising the one that says where rot starts. Both come from the same package, so nothing external can cause this — which is exactly why it is worth a cheap check rather than a careful reader." ;
+    sh:targetClass water:Plant ;
+    sh:sparql [
+        sh:message "an operating range for a property lies outside the survival range for that same property — a plant cannot thrive where it would not survive" ;
+        sh:select """
+            SELECT $this ?low ?high WHERE {
+                $this <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?operating ;
+                      <http://www.w3.org/ns/ssn/systems/hasSurvivalRange>  ?survival .
+                ?operating <http://www.w3.org/ns/ssn/systems/inCondition> ?wants .
+                ?survival  <http://www.w3.org/ns/ssn/systems/inCondition> ?tolerates .
+                ?wants     <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                           <https://schema.org/minValue> ?low ;
+                           <https://schema.org/maxValue> ?high .
+                ?tolerates <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                           <https://schema.org/minValue> ?floor ;
+                           <https://schema.org/maxValue> ?ceiling .
+                FILTER(?low < ?floor || ?high > ?ceiling)
+            }""" ] .
+
 water:WaterSourceShape a sh:NodeShape ;
     rdfs:comment "Every source has a supplier and a physical ceiling — the constitution's allocation limit." ;
     sh:targetClass water:WaterSource ;
