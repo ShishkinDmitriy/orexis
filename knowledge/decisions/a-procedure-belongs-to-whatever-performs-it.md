@@ -30,7 +30,7 @@ talked to over a single line, nor that the part produces both its values at once
 is a fact about a specific thing in that chain, and each was living somewhere else — in prose,
 in firmware, or in an assumption in the reading path.
 
-The last of them had gone wrong. `dht11:TempHumiditySensor` explained its single message as a
+The last of them had gone wrong. `dht11:TempHumidityPeripheral` explained its single message as a
 transport economy: *the board publishes once because it is one MQTT client with one credential.*
 True, and not the reason. That explanation would equally justify batching two unrelated readings
 into one message, and the reading path had been written as though it did.
@@ -122,7 +122,7 @@ belief compares one instant with itself rather than two clocks that were acciden
 that synthesises a reading — has nothing better than now to offer, and saying so in a default is
 better than making every caller invent one.
 
-The corrected explanation is in the vocabulary, not only here. `dht11:TempHumiditySensor` now
+The corrected explanation is in the vocabulary, not only here. `dht11:TempHumidityPeripheral` now
 says the values arrive together because they were *taken* together, and that the credential
 merely means nothing has to undo that. A part's comment is where someone adding the next part
 will look.

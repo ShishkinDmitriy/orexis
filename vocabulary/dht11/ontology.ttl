@@ -18,7 +18,7 @@
     rdfs:label "DHT11 temperature and humidity sensor" ;
     rdfs:comment """One part, its own package, layered on the microcontroller vocabulary and on one-wire. This is the shape every concrete peripheral should take: what it IS, how many legs it has and what they are for, and the shapes that refuse it wired wrong. Adding a part is adding a directory.""" .
 
-dht11:TempHumiditySensor a owl:Class ; rdfs:subClassOf mc:Peripheral ;
+dht11:TempHumidityPeripheral a owl:Class ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "Temperature and humidity sensor" ;
     rdfs:comment """The family. One device reporting TWO properties down one line, which is what made it awkward: a sensor observes one property, so a device like this is TWO sensors sharing one reading topic, and each says which value in the message is its own with mqtt:readingPointer. Closed #51; see knowledge/decisions/a-reading-is-one-value-so-it-is-pointed-at.md.
 
@@ -27,7 +27,7 @@ dht11:TempHumiditySensor a owl:Class ; rdfs:subClassOf mc:Peripheral ;
 The difference is not academic — it is what the reading path got wrong. Believing the transport reason, each value was stamped as it was written, seconds of code apart, and the series store recorded a 25 ms difference between two halves of one physical read. Believing the physical one, a message is a measurement and carries one instant.""" .
 
 dht11:Dht11 a owl:Class ;
-    mc:modelName "KY-015 (DHT11)" ; rdfs:subClassOf dht11:TempHumiditySensor ; rdfs:label "DHT11" ;
+    mc:modelName "KY-015 (DHT11)" ; rdfs:subClassOf dht11:TempHumidityPeripheral ; rdfs:label "DHT11" ;
     wokwi:part "wokwi-dht22" ;
     wokwi:pin [ mc:pinRole onewire:DataPinRole ; wokwi:name "SDA" ] ,
               [ mc:pinRole mc:PowerPinRole     ; wokwi:name "VCC" ] ,
@@ -50,31 +50,47 @@ dht11:Dht11 a owl:Class ;
 # `owl:Restriction` is for and what a bare class-level triple never does. See
 # knowledge/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md.
 #
-# TWO channels, because a `sosa:Sensor` observes ONE property and this part reports two. They are
+# TWO SENSORS, because a `sosa:Sensor` observes ONE property and this part reports two. They are
 # `ssn:hasSubSystem` of the part and not two loose sensors on the board, which is the fact that
 # makes the shared reading topic and the shared instant follow rather than need explaining twice.
 
-dht11:TemperatureChannel a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
-    rdfs:label "DHT11 temperature channel" ;
+# NAMED FOR WHAT THEY ARE. These were `dht11:TemperatureChannel` and `dht11:HumidityChannel`
+# for exactly as long as it took someone to ask why, given the class is `rdfs:subClassOf
+# sosa:Sensor`. Two reasons the standard word wins, and they are the general rule for this
+# repository rather than a fact about DHTs:
+#
+#   - W3C's own description of this device family calls them `#TemperatureSensor` and
+#     `#HumiditySensor`. Where the standard has a word, use it.
+#   - "channel" was already taken. The README uses it for an MQTT topic, and the RGB LED has
+#     three of them meaning colours. A word doing three jobs in one repository does none.
+#
+# It leaves `dht11:TempHumidityPeripheral` — which is `rdfs:subClassOf mc:Peripheral` and was
+# called `…Sensor` — as the same mistake in the other direction: the one thing here that is NOT
+# a `sosa:Sensor` was the one wearing the name. Its `rdfs:label` is still "Temperature and
+# humidity sensor", because that is what it is called on the shelf. A label may be colloquial;
+# an IRI is what a query has to be right about.
+
+dht11:TemperatureSensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
+    rdfs:label "DHT11 temperature sensor" ;
     rdfs:comment "The thermistor half. A sensor rather than a part: it has no legs of its own, cannot be bought, and cannot be read on its own — it is one of the two things the frame carries. What it OBSERVES is deliberately not stated here; see the note below on why a part vocabulary does not name a domain property." .
 
-dht11:HumidityChannel a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
-    rdfs:label "DHT11 humidity channel" ;
-    rdfs:comment "The capacitive half, and the reason the part drifts: the humidity element ages and is the first thing to go out of calibration, while the thermistor stays honest. Worth separating for that alone — a recalibration applies to one channel and not to the part." .
+dht11:HumiditySensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
+    rdfs:label "DHT11 humidity sensor" ;
+    rdfs:comment "The capacitive half, and the reason the part drifts: the humidity element ages and is the first thing to go out of calibration, while the thermistor stays honest. Worth separating for that alone — a recalibration applies to one of the two and not to the part." .
 
 # `owl:someValuesFrom` and NOT `owl:hasValue`, and the difference is not stylistic. A capability
 # is ONE individual every DHT11 shares — the datasheet's number is the same number — so
-# `hasValue` names it and rule 5 materialises it. A channel is NOT shared: this DHT11's
+# `hasValue` names it and rule 5 materialises it. A sub-sensor is NOT shared: this DHT11's
 # thermistor is not that one's, so what the class can say is that every unit has SOME
-# temperature channel, and the individual is minted by whoever names the unit.
+# temperature sensor, and the individual is minted by whoever names the unit.
 #
-# That is why nothing here entails a channel into being, and it is not a gap. An existential
+# That is why nothing here entails a sub-sensor into being, and it is not a gap. An existential
 # would need a fresh individual per unit — skolemisation, which `agent/inference.py`
-# deliberately does not do. The world names the channels; this says what they must be, and
+# deliberately does not do. The world names the two; this says what they must be, and
 # `shapes.ttl` is what refuses a unit that lacks one.
 dht11:Dht11 rdfs:subClassOf
-    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom dht11:TemperatureChannel ] ,
-    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom dht11:HumidityChannel ] .
+    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom dht11:TemperatureSensor ] ,
+    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom dht11:HumiditySensor ] .
 
 #################  What it does  #################
 #
@@ -83,7 +99,7 @@ dht11:Dht11 rdfs:subClassOf
 #
 #   onewire:Transaction   HOW it is talked to        — the protocol package's, referenced not copied
 #   dht11:CombinedRead    what the PART does         — one frame, both values, one instant
-#   dht11:TemperatureRead what a CHANNEL contributes — the half of the frame that is its own
+#   dht11:TemperatureRead what a SUB-SENSOR contributes — the half of the frame that is its own
 #
 # None is a sense mode. `perception:senseMode` answers *who holds the clock* and carries
 # `sh:maxCount 1`; these answer *what happens when the moment arrives*, and a system may
@@ -91,13 +107,13 @@ dht11:Dht11 rdfs:subClassOf
 # and the wrong one there — see the note in perception's ontology.
 
 dht11:CombinedRead a sosa:Procedure ; rdfs:label "Combined temperature and humidity read" ;
-    rdfs:comment "One request, two values, one instant. The part samples both and clocks them out in a single 40-bit frame — humidity, temperature, checksum — so neither can be obtained without the other and the two are simultaneous BY CONSTRUCTION. Belongs to the whole part and not to either channel, which is the shape of the claim: the sub-systems each observe one property, and what the part adds is that it produces them together. The library our firmware uses makes the same statement in code — a second call inside the part's stated Frequency is served from the buffer the first filled, never from the wire — so the firmware's two calls have always been one conversation, whatever the reading path did with them afterwards." .
+    rdfs:comment "One request, two values, one instant. The part samples both and clocks them out in a single 40-bit frame — humidity, temperature, checksum — so neither can be obtained without the other and the two are simultaneous BY CONSTRUCTION. Belongs to the whole part and not to either sensor, which is the shape of the claim: the sub-systems each observe one property, and what the part adds is that it produces them together. The library our firmware uses makes the same statement in code — a second call inside the part's stated Frequency is served from the buffer the first filled, never from the wire — so the firmware's two calls have always been one conversation, whatever the reading path did with them afterwards." .
 
 dht11:TemperatureRead a sosa:Procedure ; rdfs:label "DHT11 temperature read" ;
-    rdfs:comment "Bytes 2 and 3 of the frame. Named separately from the combined read because an Observation is made BY a sensor and a channel is the sensor — so `sosa:usedProcedure` on a temperature reading should name what produced that value, not the conversation it arrived in. It cannot be performed alone: obtaining it IS performing dht11:CombinedRead, and this names the part of that which is this channel's." .
+    rdfs:comment "Bytes 2 and 3 of the frame. Named separately from the combined read because an Observation is made BY a sensor and each half IS one — so `sosa:usedProcedure` on a temperature reading should name what produced that value, not the conversation it arrived in. It cannot be performed alone: obtaining it IS performing dht11:CombinedRead, and this names the part of that which is this sensor's." .
 
 dht11:HumidityRead a sosa:Procedure ; rdfs:label "DHT11 humidity read" ;
-    rdfs:comment "Bytes 0 and 1 of the frame, and the same standing as the temperature read: a name for one channel's share of one conversation, not a second conversation." .
+    rdfs:comment "Bytes 0 and 1 of the frame, and the same standing as the temperature read: a name for one sensor's share of one conversation, not a second conversation." .
 
 # Restrictions rather than the bare triples this replaced. `dht11:Dht11 ssn:implements
 # dht11:CombinedRead` is punning — it says the CLASS implements it, and entailed nothing about
@@ -108,10 +124,10 @@ dht11:Dht11 rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue dht11:CombinedRead ] ,
     [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue onewire:Transaction ] .
 
-dht11:TemperatureChannel rdfs:subClassOf
+dht11:TemperatureSensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue dht11:TemperatureRead ] .
 
-dht11:HumidityChannel rdfs:subClassOf
+dht11:HumiditySensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue dht11:HumidityRead ] .
 
 #################  What it can honour  #################
@@ -154,13 +170,13 @@ dht11:ContinuousOperationCapability a ssn-system:SystemCapability ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
     ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] .
 
-#################  What each channel measures, and what it will not say  #################
+#################  What each sensor measures, and what it will not say  #################
 #
-# Accuracy, resolution and range are per CHANNEL, while the sampling floor above is the PART's,
+# Accuracy, resolution and range are per SENSOR, while the sampling floor above is the PART's,
 # and that split is physical rather than tidy-minded: the floor is a property of the frame, which
 # is one conversation carrying both values, whereas how finely the thermistor resolves has nothing
-# to do with the humidity element. It is also why a world projects the floor onto both channels
-# and does not project these — an agent is handed channels, and the floor is the one fact of the
+# to do with the humidity element. It is also why a world projects the floor onto both sensors
+# and does not project these — an agent is handed the two sensors, and the floor is the one fact of the
 # part's it must honour.
 #
 # `rdfs:seeAlso` carries the datasheet exactly as W3C's example does for the DHT22. Figures are
@@ -171,12 +187,12 @@ dht11:ContinuousOperationCapability a ssn-system:SystemCapability ;
 
 dht11:Dht11 rdfs:seeAlso <https://www.mouser.com/datasheet/2/758/DHT11-Technical-Data-Sheet-Translated-Version-1143054.pdf> .
 
-dht11:TemperatureChannel rdfs:subClassOf
+dht11:TemperatureSensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn-system:hasSystemCapability ;
-      owl:hasValue dht11:TemperatureChannelCapability ] .
+      owl:hasValue dht11:TemperatureSensorCapability ] .
 
-dht11:TemperatureChannelCapability a ssn-system:SystemCapability ;
-    rdfs:label "DHT11 temperature channel capability" ;
+dht11:TemperatureSensorCapability a ssn-system:SystemCapability ;
+    rdfs:label "DHT11 temperature sensor capability" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
     ssn-system:hasSystemProperty
         [ a ssn-system:MeasurementRange , schema:PropertyValue ;
@@ -186,12 +202,12 @@ dht11:TemperatureChannelCapability a ssn-system:SystemCapability ;
         [ a ssn-system:Resolution , schema:PropertyValue ;
           schema:value 1 ; schema:unitCode unit:DEG_C ] .
 
-dht11:HumidityChannel rdfs:subClassOf
+dht11:HumiditySensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn-system:hasSystemCapability ;
-      owl:hasValue dht11:HumidityChannelCapability ] .
+      owl:hasValue dht11:HumiditySensorCapability ] .
 
-dht11:HumidityChannelCapability a ssn-system:SystemCapability ;
-    rdfs:label "DHT11 humidity channel capability" ;
+dht11:HumiditySensorCapability a ssn-system:SystemCapability ;
+    rdfs:label "DHT11 humidity sensor capability" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
     ssn-system:hasSystemProperty
         [ a ssn-system:MeasurementRange , schema:PropertyValue ;
@@ -201,9 +217,9 @@ dht11:HumidityChannelCapability a ssn-system:SystemCapability ;
         [ a ssn-system:Resolution , schema:PropertyValue ;
           schema:value 1 ; schema:unitCode unit:PERCENT ] .
 
-# WHAT IS ABSENT, deliberately: neither channel states `sosa:observes`.
+# WHAT IS ABSENT, deliberately: neither sensor states `sosa:observes`.
 #
-# It is tempting — "the temperature channel observes air temperature" reads like a datasheet fact,
+# It is tempting — "the temperature sensor observes air temperature" reads like a datasheet fact,
 # and W3C's example is free to say it because it describes an installed unit. Ours cannot. The
 # property individual would be `water:AirTemperature`, and `water:` is the DOMAIN vocabulary: v1
 # is plant watering, and AGENTS.md is explicit that the domain is a plug-in and the plant/water
@@ -211,7 +227,7 @@ dht11:HumidityChannelCapability a ssn-system:SystemCapability ;
 # this thermistor unusable in a world that is not about plants, which is precisely backwards — the
 # part is the domain-neutral thing here.
 #
-# So the world says what a channel observes, and this says what a channel IS. The line is not
+# So the world says what a sensor observes, and this says what one IS. The line is not
 # "instance versus class"; it is "the part's own facts versus the installation's". A DHT11
 # resolves to 1 degree in every world that will ever use one. What that degree is a temperature OF
 # is not the part's business.

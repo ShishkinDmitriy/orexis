@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: A part is described once and fitted many times, so the description belongs to the model
-description: W3C's SSN example describes one serial-numbered DHT22, and every fact in it is a fact about that unit. We ship a package for a model, so the DHT11's channels, procedures and datasheet figures are stated on classes and reach devices by entailment. Building it found that ssn:implements had been punned since it was introduced — the only subject with that predicate anywhere was the class itself, so no device in any world had ever been said to do anything. A capability is one shared individual and takes owl:hasValue; a channel is per-unit and takes owl:someValuesFrom, which entails nothing and is enforced by a shape instead.
+description: W3C's SSN example describes one serial-numbered DHT22, and every fact in it is a fact about that unit. We ship a package for a model, so the DHT11's two sub-sensors, its procedures and its datasheet figures are stated on classes and reach devices by entailment. Building it found that ssn:implements had been punned since it was introduced — the only subject with that predicate anywhere was the class itself, so no device in any world had ever been said to do anything. A capability is one shared individual and takes owl:hasValue; a sub-sensor is per-unit and takes owl:someValuesFrom, which entails nothing and is enforced by a shape instead.
 status: accepted
 stage: v1
 tags: [vocabulary, sosa, ssn, hardware, inference, owl, reuse]
@@ -24,7 +24,7 @@ Reading theirs beside ours, the structural difference is the whole design questi
 <DHT22/4578#TemperatureSensor> a sosa:Sensor ; ssn-system:hasSystemCapability <…#Capability> .
 
 # OURS — a model
-dht11:Dht11 rdfs:subClassOf [ owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom dht11:TemperatureChannel ] .
+dht11:Dht11 rdfs:subClassOf [ owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom dht11:TemperatureSensor ] .
 ```
 
 Theirs is right for what it is: a data set describing a device someone owns. It is wrong for a
@@ -37,15 +37,15 @@ The part is described on the class, once, and reaches devices by entailment — 
 [what-is-true-of-a-part-is-true-of-every-one-of-them](/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md).
 Concretely, `dht11:Dht11` now has:
 
-- **two channel classes.** `dht11:TemperatureChannel` and `dht11:HumidityChannel`, each a
+- **two sub-sensor classes.** `dht11:TemperatureSensor` and `dht11:HumiditySensor`, each a
   `sosa:Sensor` and an `ssn:System`. A sensor observes ONE property and this part reports two,
   so the two halves were always there; they had simply never been named as anything but two
   loose sensors in a world.
 - **procedures at three levels**, which is the reason to state them rather than let the wiring
   imply them: `onewire:Transaction` is how it is talked to (the protocol package's, referenced),
   `dht11:CombinedRead` is what the whole part does, and `dht11:TemperatureRead` /
-  `dht11:HumidityRead` are what each channel contributes to the one frame.
-- **datasheet figures per channel** — measurement range, accuracy, resolution — while the
+  `dht11:HumidityRead` are what each sub-sensor contributes to the one frame.
+- **datasheet figures per sub-sensor** — measurement range, accuracy, resolution — while the
   sampling floor stays on the part. That split is physical: the floor is a property of the
   frame, which carries both values, whereas how finely the thermistor resolves has nothing to do
   with the humidity element.
@@ -83,20 +83,20 @@ wrong is the likeliest way to misuse this as a template:
 | | the fact | construct | what happens |
 |---|---|---|---|
 | capability | every DHT11 shares ONE capability individual — the datasheet's number is the same number | `owl:hasValue` | rule 5 materialises it onto every device |
-| channel | this unit's thermistor is **not** that unit's | `owl:someValuesFrom` | nothing is materialised |
+| sub-sensor | this unit's thermistor is **not** that unit's | `owl:someValuesFrom` | nothing is materialised |
 
 An existential would have to invent an individual per unit — skolemisation, which
 `agent/inference.py` deliberately does not do. So the class says every DHT11 has *some*
-temperature channel, the world names which sensor it is, and **`shapes.ttl` is what refuses a
+temperature sensor, the world names which one it is, and **`shapes.ttl` is what refuses a
 unit that lacks one**. Without the shape the `someValuesFrom` would be a claim no gate tests:
 exactly the entails-nothing-fails-nothing shape this repository keeps finding.
 
-The wiring states the channel type — two triples in `world/sensing/hardware.ttl` — and
+The wiring states which half is which — two triples in `world/sensing/hardware.ttl` — and
 everything else follows from the package.
 
 # What is deliberately absent: sosa:observes
 
-Neither channel states what it observes, and the omission is load-bearing. The property
+Neither sub-sensor states what it observes, and the omission is load-bearing. The property
 individual would be `water:AirTemperature`, and `water:` is the **domain** vocabulary — v1 is
 plant watering, and `AGENTS.md` is explicit that the domain is a plug-in and the plant/water
 language is the example rather than the architecture. A part package importing it would make
@@ -110,7 +110,7 @@ degree is a temperature *of* is not the part's business.
 # The boundary is unchanged
 
 `society_files` still excludes `hardware.ttl`, so no agent is told `a dht11:Dht11` or
-`a dht11:TemperatureChannel`, and none of this reaches an agent's belief base. The entailment
+`a dht11:TemperatureSensor`, and none of this reaches an agent's belief base. The entailment
 fires in the sovereign, where the vocabulary and the wiring are both loaded. **An agent may know
 a part's properties and not its identity** — and now knows more of them without being told any
 more than before.
@@ -124,10 +124,10 @@ more than before.
 - **A second capability under a second condition is sayable and unused.** The humidity span
   differs across revisions of this part, which is why `ssn-system:inCondition` is there rather
   than a number with a caveat. Nothing depends on it yet; battery operation is [#78].
-- **Observations do not cite the channel procedure.** `sosa:usedProcedure` records the sense
-  mode; now that each channel implements a named read, a temperature observation could cite
+- **Observations do not cite the sub-sensor's procedure.** `sosa:usedProcedure` records the sense
+  mode; now that each sub-sensor implements a named read, a temperature observation could cite
   `dht11:TemperatureRead` instead. Deliberately not done here — it changes what is written to
   `:sensed`, and this change writes nothing.
 - **No other part has been converted.** The moisture probe and the RGB LED still describe
   themselves the old way, and neither is wrong: a single-property probe IS its sensor, so it has
-  no channels to name. The template is for parts that have parts.
+  no sub-sensors to name. The template is for parts that have parts.

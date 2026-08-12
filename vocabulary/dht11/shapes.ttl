@@ -29,15 +29,15 @@ ag:Dht11Shape a sh:NodeShape ;
 #
 # `sh:qualifiedValueShape` rather than `sh:class` on the path, because the requirement is ONE OF
 # EACH and not two of something: a part with two thermistors and no humidity element would satisfy
-# a plain `sh:class dht11:TemperatureChannel ; sh:minCount 2`.
+# a plain `sh:class dht11:TemperatureSensor ; sh:minCount 2`.
 ag:Dht11StructureShape a sh:NodeShape ;
     rdfs:comment "A DHT11 is two sensors in one package, and a world that names one owes both. The reason to refuse the omission rather than tolerate it: the channel type is what carries the accuracy, the resolution and the procedure each half implements, so a channel left untyped is a device the vocabulary describes and the graph does not — the exact shape of gap that entails nothing and fails nothing. See knowledge/decisions/a-part-is-described-once-and-fitted-many-times.md." ;
     sh:targetClass dht11:Dht11 ;
     sh:property [ sh:path ssn:hasSubSystem ;
-                  sh:qualifiedValueShape [ sh:class dht11:TemperatureChannel ] ;
+                  sh:qualifiedValueShape [ sh:class dht11:TemperatureSensor ] ;
                   sh:qualifiedMinCount 1 ;
-                  sh:message "a DHT11 has a temperature channel — say which of its sensors it is, with dht11:TemperatureChannel" ] ;
+                  sh:message "a DHT11 has a temperature channel — say which of its sensors it is, with dht11:TemperatureSensor" ] ;
     sh:property [ sh:path ssn:hasSubSystem ;
-                  sh:qualifiedValueShape [ sh:class dht11:HumidityChannel ] ;
+                  sh:qualifiedValueShape [ sh:class dht11:HumiditySensor ] ;
                   sh:qualifiedMinCount 1 ;
-                  sh:message "a DHT11 has a humidity channel — say which of its sensors it is, with dht11:HumidityChannel" ] .
+                  sh:message "a DHT11 has a humidity channel — say which of its sensors it is, with dht11:HumiditySensor" ] .

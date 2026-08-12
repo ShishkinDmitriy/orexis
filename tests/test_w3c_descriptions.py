@@ -261,10 +261,10 @@ def test_their_channels_implement_a_procedure_and_ours_is_on_the_part(tmp_path):
         return found
 
     assert implemented_by(_DHT11.Dht11) == {_DHT11.CombinedRead, _ONEWIRE.Transaction}
-    assert implemented_by(_DHT11.TemperatureChannel) == {_DHT11.TemperatureRead}
-    assert implemented_by(_DHT11.HumidityChannel) == {_DHT11.HumidityRead}
+    assert implemented_by(_DHT11.TemperatureSensor) == {_DHT11.TemperatureRead}
+    assert implemented_by(_DHT11.HumiditySensor) == {_DHT11.HumidityRead}
 
-    for channel in (_DHT11.TemperatureChannel, _DHT11.HumidityChannel):
+    for channel in (_DHT11.TemperatureSensor, _DHT11.HumiditySensor):
         assert _DHT11.CombinedRead not in implemented_by(channel), (
             "the combined read leaked onto a channel — it is what the PART does, and putting it "
             "on a channel says a channel could be read alone, which is the thing it denies")

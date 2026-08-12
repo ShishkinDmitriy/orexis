@@ -82,7 +82,7 @@ def test_a_world_instance_gets_what_its_class_fixes_for_every_member():
 def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
     """The DHT11 package is the worked example for describing a part, and this is what makes it
     a description rather than documentation: nothing in `world/sensing/` states a procedure or a
-    per-channel capability, and every one of them is observable on a device.
+    per-sensor capability, and every one of them is observable on a device.
 
     It counts, and refuses zero. That is not ceremony — the guard on the capability floor
     asserted nothing for four PRs after a rename moved a term out from under its query, and
@@ -95,7 +95,7 @@ def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
             f"SELECT ?s ?p WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?s ssn:implements ?p }} }}")):
         reached.setdefault(row["s"], set()).add(row["p"])
 
-    # The part performs the conversation; each channel performs its half of the frame. Both
+    # The part performs the conversation; each sub-sensor performs its half of the frame. Both
     # levels, because stating only one of them was what made the old class-level triples look
     # sufficient — `dht11:Dht11 ssn:implements dht11:CombinedRead` reads as though a device does
     # something, and the only subject it ever gave that predicate was the class itself.
@@ -103,13 +103,13 @@ def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
     assert reached.get(AG + "air_temp_fern") == {DHT11 + "TemperatureRead"}
     assert reached.get(AG + "air_humidity_fern") == {DHT11 + "HumidityRead"}
 
-    # And the datasheet figures the channel types carry, which no world repeats.
-    for device, capability in ((AG + "air_temp_fern", DHT11 + "TemperatureChannelCapability"),
-                               (AG + "air_humidity_fern", DHT11 + "HumidityChannelCapability")):
+    # And the datasheet figures the sub-sensor types carry, which no world repeats.
+    for device, capability in ((AG + "air_temp_fern", DHT11 + "TemperatureSensorCapability"),
+                               (AG + "air_humidity_fern", DHT11 + "HumiditySensorCapability")):
         caps = {r["c"] for r in bindings(st.query(
             f"SELECT ?c WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{"
             f" <{device}> ssn-system:hasSystemCapability ?c }} }}"))}
-        assert capability in caps, f"<{device}> was not reached by its channel's capability"
+        assert capability in caps, f"<{device}> was not reached by its sub-sensor's capability"
 
     assert len(reached) == 3, f"walked the vocabulary and reached {len(reached)} devices"
 
