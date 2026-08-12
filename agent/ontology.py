@@ -8,7 +8,7 @@ whole reason it is this short.
 **Ten terms in `packages/core/agora` still make that claim false, and they are named rather than
 implied**: the seven of the simulated device model, which only `world/simulation` uses and which
 want a simulation package that does not exist; and `ag:ComputeHost`, `ag:runsOn` and
-`ag:lanAddress`, which only `world/sensing` states. See
+`ag:lanHost`, which only `world/sensing` states. See
 knowledge/decisions/every-term-in-its-own-house.md.
 
 `ag:SelfReporting` was an eleventh and has left, to `capabilities/reporting/`. It was declared a

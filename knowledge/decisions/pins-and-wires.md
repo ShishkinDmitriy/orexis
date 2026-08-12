@@ -59,7 +59,7 @@ spell IRIs in full anyway. Three files, none of them the runtime.
 The society kernel, the capabilities and the domain stay in `ag:`. Two conventions in one
 bundle is a cost, and the line between them is exactly the line the code already draws.
 
-`ComputeHost`, `lanAddress` and `runsOn` went back to the kernel while this was being done.
+`ComputeHost`, `lanHost` and `runsOn` went back to the kernel while this was being done.
 They describe where agents execute; they are not electronics and never had pins.
 
 # A pin assignment was one node doing two objects' work

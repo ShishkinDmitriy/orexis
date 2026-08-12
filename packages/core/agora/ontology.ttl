@@ -71,9 +71,15 @@ ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:r
 ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;
     rdfs:comment "A machine that runs agent processes. Named so the world can say where its society actually executes." .
 
-ag:lanAddress a owl:DatatypeProperty ; rdfs:domain ag:ComputeHost ; rdfs:range xsd:string ;
-    rdfs:label "LAN address" ;
-    rdfs:comment "Where this host answers for things NOT on it. A co-located agent reaches the broker at mqtt:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs the address of whichever host runs the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society. It is also a DHCP lease unless the router is told otherwise, which makes it a fact with an expiry date." .
+ag:lanHost a owl:DatatypeProperty ; rdfs:domain ag:ComputeHost ; rdfs:range xsd:string ;
+    rdfs:label "LAN host" ;
+    rdfs:comment """How this host is reached by things NOT on it. A co-located agent reaches the broker at mqtt:brokerHost, which is loopback and must be, because host-networked agents have to agree on one name. A board on the wifi cannot use that name, so it needs a way to the machine running the broker. Two routes to one broker, and only the second is a fact about the network rather than about the society.
+
+**A NAME, and that is the whole of why this is not `lanHost` any more.** An address here was a DHCP lease, and the old comment admitted it: "a fact with an expiry date". It expired three times — .126, then .130, then .133 — and the third cost a day, because a board went on dialling .130 and simply fell silent. Nothing in a world can be true about an address a router is free to reassign.
+
+A hostname does not expire. `raspberry.local` is answered by the avahi already running on that host, and ESP32's lwIP resolves `.local` because `CONFIG_LWIP_DNS_SUPPORT_MDNS_QUERIES` is set in the framework this project builds against — so nothing in the firmware changes: `mqtt.setServer` has always taken a name. A router's own domain (`raspberry.speedport.ip` here) works equally well over ordinary DNS and is the fallback if multicast is ever blocked; it is not the default because it couples a world to a brand of router.
+
+An address is still a legal value — some networks have no name service — and stating one is choosing to own the consequence.""" .
 
 ag:runsOn a owl:ObjectProperty ; rdfs:range ag:ComputeHost ; rdfs:label "runs on" ;
     rdfs:comment "Which host executes this agent. Documents why the bus is where it is." .

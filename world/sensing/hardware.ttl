@@ -29,14 +29,19 @@
 ag:raspberry a ag:ComputeHost ;
     ag:localId "raspberry" ;
     mc:model "Raspberry Pi 5" ;
-    # DHCP, and therefore a fact with an expiry date. It was .126 when this was written and the
-    # lease has since moved to .130, which cost an evening: the board opened TCP to an address
-    # that is not this Pi, so it failed with a bare "connection failed" and the broker logged
-    # nothing at all — because nothing arrived. Every other participant was unaffected, since
-    # agents reach the broker on loopback via mqtt:brokerHost and only a board off-host uses this.
+    # A NAME, because the address was a fact with an expiry date and it expired three times.
+    # .126, then .130, then .133 — and the third cost a day: the board went on opening TCP to
+    # .130, failed with a bare "connection failed", and the broker logged nothing at all because
+    # nothing arrived. Every other participant was unaffected, since agents reach the broker on
+    # loopback via mqtt:brokerHost and only a board off-host uses this.
     #
-    # The durable fix is a DHCP reservation on the router, so this line stops being a guess.
-    ag:lanAddress "192.168.2.130" ;
+    # Answered by the avahi already running on this Pi, and resolvable from the board because
+    # ESP32's lwIP is built with CONFIG_LWIP_DNS_SUPPORT_MDNS_QUERIES. `raspberry.speedport.ip`
+    # is the same machine over the router's own DNS and is the fallback if multicast is blocked.
+    #
+    # A DHCP reservation is still worth having. It makes the lease stop moving; this makes the
+    # world stop caring whether it does.
+    ag:lanHost "raspberry.local" ;
     rdfs:comment "Runs the agent containers, the broker for this world, and the shared store." .
 
 ag:fern_agent ag:runsOn ag:raspberry .
