@@ -32,7 +32,11 @@ _KEYWORDS = ("SELECT ", "INSERT ", "DELETE ", "CONSTRUCT ", "ASK ")
 _GROUPS = {
     # agent/ is recursive: it carries capabilities/ and transports/ as subpackages now, so
     # their queries are swept up with it rather than needing globs of their own.
+    # `packages/` as its own group. The kernel's rglob used to reach capability Python because
+    # capabilities were subpackages of `agent`; after the move it still matched plenty of files,
+    # so the non-empty guard stayed green while every capability's SPARQL silently left the scan.
     "agent": sorted((Path(store.__file__).parent).rglob("*.py")),
+    "packages": sorted(loader.PACKAGES_ROOT.rglob("*.py")),
     # the operator's half — `compose` and `mqtt` both carry SPARQL
     "onboarding": sorted(loader.REPO_ROOT.glob("onboarding/*.py")),
 }
@@ -200,19 +204,19 @@ _QUOTES_THE_OLD_SPELLINGS = {
 
 
 def _kernel_terms() -> set[str]:
-    """What `vocabulary/agora` actually declares, read rather than listed."""
-    text = (loader.REPO_ROOT / "vocabulary/agora/ontology.ttl").read_text()
+    """What `packages/core/agora` actually declares, read rather than listed."""
+    text = (loader.REPO_ROOT / "packages/core/agora/ontology.ttl").read_text()
     return set(re.findall(r"^ag:([A-Za-z][A-Za-z0-9]*)\b", text, re.M))
 
 
 def test_the_kernel_vocabulary_is_still_found():
     """The guard on the guard, again: an empty set would make the scan below vacuous."""
-    assert len(_kernel_terms()) > 20, "vocabulary/agora declares almost nothing — has it moved?"
+    assert len(_kernel_terms()) > 20, "packages/core/agora declares almost nothing — has it moved?"
 
 
 @pytest.mark.parametrize("path", _ALL_TREES, ids=lambda p: p.name)
 def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
-    """A full IRI in `ag:` must name something `vocabulary/agora` declares.
+    """A full IRI in `ag:` must name something `packages/core/agora` declares.
 
     Instances are exempt and are the reason this is a name check rather than a ban: a world's
     `ag:moisture_sensor_fern` is a thing, not a term, and lives in `ag:` correctly. So the rule
@@ -239,6 +243,6 @@ def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
         offenders.append(name)
     assert not offenders, (
         f"{path.name} names {sorted(offenders)} in the kernel namespace, and "
-        "vocabulary/agora declares no such term — whichever package owns it has a namespace "
+        "packages/core/agora declares no such term — whichever package owns it has a namespace "
         "of its own, and this pattern will match nothing rather than fail"
     )

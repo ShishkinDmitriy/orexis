@@ -8,7 +8,7 @@ timestamp: 2026-08-07T00:00:00Z
 
 # Two subjects were sharing a file
 
-`vocabulary/agora/ontology.ttl` had grown to 205 lines holding agents, capabilities, the world
+`packages/core/agora/ontology.ttl` had grown to 205 lines holding agents, capabilities, the world
 and its versions, named graphs, simulated devices, boards, pins, pin roles, and the three
 peripherals that happen to be on this bench. Two of those are the same subject and the rest are
 not: **what a society IS** and **what is screwed to the windowsill** change for different
@@ -20,21 +20,21 @@ It now splits along the seam the loader already provided — a directory under `
 package, found by looking and never listed, exactly like a capability:
 
 ```
-vocabulary/agora/            agents, capabilities, world, hosts, naming, graphs   (205 -> ~115)
-vocabulary/microcontroller/  boards, peripherals, pins, wires, roles       mc:
-vocabulary/onewire/          a protocol                                    onewire:
-vocabulary/i2c/              a protocol                                    i2c:
-vocabulary/dht11/            a part, and the shapes that refuse it wired wrong   dht11:
-vocabulary/rgb-led/          a part                                        rgbled:
-vocabulary/moisture-probe/   a part                                        probe:
-vocabulary/water/            the domain, unchanged
+packages/core/agora/            agents, capabilities, world, hosts, naming, graphs   (205 -> ~115)
+packages/part/microcontroller/  boards, peripherals, pins, wires, roles       mc:
+packages/bus/onewire/          a protocol                                    onewire:
+packages/bus/i2c/              a protocol                                    i2c:
+packages/part/dht11/            a part, and the shapes that refuse it wired wrong   dht11:
+packages/part/rgb_led/          a part                                        rgbled:
+packages/part/moisture_probe/   a part                                        probe:
+packages/plant/water/            the domain, unchanged
 ```
 
 **Adding a part is adding a directory.** Nothing registers it; nothing imports it.
 
 ## Why one-wire is not a transport
 
-`agent/transports/` looked like the obvious home and is the wrong one. Those describe how an
+`packages/transport/` looked like the obvious home and is the wrong one. Those describe how an
 **agent** reaches a device, and each has Python behind it. Nothing in this repository speaks
 one-wire — the *board* does, in firmware, and the agent never sees it. A transport package with
 no driver would be a promise the runtime cannot keep.
@@ -124,7 +124,7 @@ One consequence of dropping simulation: the chip a custom board delegates to onl
 pin NAMES for `target` to map onto. So `wokwi-dht22` standing in for a DHT11 costs nothing here,
 and would cost everything the day anything runs — see boards/README.md.
 
-**A part says how it draws in its own package.** `vocabulary/dht11/` already states what a DHT11
+**A part says how it draws in its own package.** `packages/part/dht11/` already states what a DHT11
 is and what legs it has; that it draws as `wokwi-dht22` with SDA/VCC/GND is the same kind of
 fact. Adding a part stays "adding a directory". A part that says nothing about Wokwi is reported
 and omitted rather than guessed at.
@@ -205,7 +205,7 @@ the only reason it was cheap.
   of this is exercised by one world and the test stand.
 - **`mc:gpio` still implies the ESP32.** The ranges 0-39, 6-11 and 34-39 are that family's,
   written as literals into the shapes rather than described per board model. The next step is a
-  `vocabulary/esp32/` package where each position is a class — `esp32:Gpio34Pin` carrying
+  `packages/part/esp32/` package where each position is a class — `esp32:Gpio34Pin` carrying
   `mc:gpio 34`, its silkscreen notation and whether it can be driven — so the rules read the
   board's own description and stop knowing any numbers. That is also how a world says a board has
   ONLY those pins: every position subclasses `esp32:Pin`, and one SHACL constraint refuses

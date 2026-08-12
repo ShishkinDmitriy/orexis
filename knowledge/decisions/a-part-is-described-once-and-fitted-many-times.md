@@ -10,7 +10,7 @@ timestamp: 2026-08-12T00:00:00Z
 
 # Context
 
-`vocabulary/dht11/` was asked to become the reference for describing a part — the directory
+`packages/part/dht11/` was asked to become the reference for describing a part — the directory
 someone copies when adding a peripheral — starting from the DHT22 description in W3C's SSN
 documentation, which we already hold byte-identical as a fixture
 (`tests/fixtures/w3c-ssn/dht22.ttl`; see
@@ -214,7 +214,7 @@ more than before.
   act — and then the procedure should be the read, which the agent cannot name — or it is the
   agent's act of recording, and `madeBySensor` is provenance of the value rather than of the act.
   W3C's example takes the first reading. Ours has never said which it takes.
-- **The plant side now has a counterpart.** `vocabulary/zamioculcas/` describes a species the
+- **The plant side now has a counterpart.** `packages/plant/zamioculcas/` describes a species the
   same way for the same reason — see
   [a-species-is-described-once-and-planted-many-times](/decisions/a-species-is-described-once-and-planted-many-times.md).
 - **No other part has been converted.** The moisture probe and the RGB LED still describe

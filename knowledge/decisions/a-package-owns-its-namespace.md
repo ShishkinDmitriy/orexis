@@ -53,7 +53,7 @@ before any capability's Python.
 are standardised and stable, and a package that could rebind `rdfs:` could make `rdfs:subClassOf`
 mean what it liked — the walk [one-graph-both-engines-read](one-graph-both-engines-read.md)
 materialises and every shape leans on. `ag:` is *not* in that list: it arrives from
-`vocabulary/agora/ontology.ttl` like any other package's, because the base vocabulary is a package
+`packages/core/agora/ontology.ttl` like any other package's, because the base vocabulary is a package
 and hard-coding it would have made it an exception for no reason but habit.
 
 **A label bound to two namespaces is refused.** It is the quietest bug available — both spellings
@@ -93,7 +93,7 @@ Nineteen terms and five shapes. The line is **who declares the term**:
 | stays `ag:` | why |
 |---|---|
 | `ag:Agent`, `ag:Capability`, `ag:hasCapability`, `ag:localId` | the kernel's — true of every agent |
-| `water:hasTarget`, `water:bandLow`, `water:maxValuePerL` | `vocabulary/water`'s — what a bid is *worth* here |
+| `water:hasTarget`, `water:bandLow`, `water:maxValuePerL` | `packages/plant/water`'s — what a bid is *worth* here |
 | `mqtt:eventTopic`, `mqtt:readingTopic` | the mqtt transport's |
 
 A bidder's belief block now reads from two namespaces at once, and that is the split stated rather

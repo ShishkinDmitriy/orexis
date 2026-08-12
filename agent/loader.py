@@ -6,10 +6,10 @@ A **package** is one self-contained thing the society is made of, and it is a di
                              base everything layers on, `water` is what this society is about.
                              At the repo ROOT, because onboarding validates and derives from it
                              too: it is the one tree both sides genuinely share.
-    agent/capabilities/<n>/  what an agent can DO. The extendable axis.
-    agent/transports/<n>/    how a device is REACHED.
-    agent/codecs/<n>/        how its bytes become a DOCUMENT.
-    agent/scalings/<n>/  how a raw value becomes a QUANTITY, with a unit.
+    packages/capability/<n>/  what an agent can DO. The extendable axis.
+    packages/transport/<n>/    how a device is REACHED.
+    packages/codec/<n>/        how its bytes become a DOCUMENT.
+    packages/scaling/<n>/  how a raw value becomes a QUANTITY, with a unit.
 
 All four of those live INSIDE `agent/` because only an agent runtime loads their Python.
 Onboarding reads their `ontology.ttl`, `shapes.ttl` and `rules.ru` — which it finds here,
@@ -58,19 +58,28 @@ from .config import REPO_ROOT
 
 log = logging.getLogger("loader")
 
-# This package's own directory. Capabilities and transports live under it, so they are found
-# relative to the code that loads them rather than to a repo root that may be a mount point.
+# This package's own directory, and the one tree every package lives in. `packages/` sits beside
+# `agent/` rather than under it: a package is not the runtime's, it is the project's, and
+# onboarding reads the TTL of every one without importing a line of Python from any.
 AGENT_ROOT = Path(__file__).resolve().parent
+PACKAGES = "packages"
+PACKAGES_ROOT = REPO_ROOT / PACKAGES
 
+# The families. NOT a registry — `packages()` finds whatever directories are there, and this
+# tuple only fixes the order they merge in. A family invented tomorrow is picked up without
+# editing anything; it merely sorts after these.
+CORE = "core"
+BUS = "bus"
+PART = "part"
+PLANT = "plant"
+TOOL = "tool"
+CAPABILITIES = "capability"
+TRANSPORTS = "transport"
+CODECS = "codec"
+CALIBRATIONS = "scaling"
 
-VOCABULARY = "vocabulary"
-CAPABILITIES = "capabilities"
-TRANSPORTS = "transports"
-CODECS = "codecs"
-CALIBRATIONS = "scalings"
-
-# The trees whose members are borne by a BINDING rather than by an agent. Everything else is the
-# same: the world states a premise, that package's `rules.ru` derives which member serves the
+# The families whose members are borne by a BINDING rather than by an agent. Everything else is
+# the same: the world states a premise, that package's `rules.ru` derives which member serves the
 # SENSOR, and the runtime looks the term up against `PROVIDES`. What differs from a capability is
 # the bearer and the predicate — `codec:decodedBy` on a sensor rather than `ag:hasCapability` on
 # an agent — and not when it is decided, which is genesis either way.
@@ -82,9 +91,9 @@ BASE = "agora"
 # The order the T-Box is merged in. RDF is order-independent, so this buys determinism in logs
 # and diffs, not correctness. What it must NOT lose is that the base vocabulary comes first:
 # every other package layers on those terms, and reading a merge that puts them last is reading
-# it backwards. `vocabulary/agora` is sorted to the front explicitly rather than by luck of the
-# alphabet — `agora` happens to sort before `water`, and that is not a thing to rely on.
-KINDS = (VOCABULARY, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
+# it backwards. `core/agora` is sorted to the front explicitly rather than by luck of the
+# alphabet — it happens to sort before `plant/water`, and that is not a thing to rely on.
+KINDS = (CORE, BUS, PART, PLANT, TOOL, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
 
 ONTOLOGY = "ontology.ttl"
 SHAPES = "shapes.ttl"
@@ -106,10 +115,11 @@ class Package:
     def import_name(self) -> str:
         """Where its Python lives, for the packages that have any.
 
-        Capabilities and transports are subpackages of `agent`; vocabulary has no Python at
-        all, so this is never asked of one.
+        Every package is `packages.<family>.<name>`, whether or not there is anything there to
+        import — `provides()` checks for an `__init__.py` before asking, so a knowledge-only
+        package is never imported rather than being a special case here.
         """
-        return f"agent.{self.kind}.{self.name}"
+        return f"{PACKAGES}.{self.kind}.{self.name}"
 
     def file(self, filename: str) -> Path | None:
         candidate = self.path / filename
@@ -128,7 +138,7 @@ class Package:
 
 def _put_repo_root_on_path() -> None:
     """Make the repo root importable — done on import, so a checkout that has not been pip
-    installed still resolves `agent.capabilities.market` and the world trees beside it.
+    installed still resolves `packages.capability.market` and the world trees beside it.
 
     Appended rather than prepended: an installed distribution must always win over a stray
     directory at the repo root, so a new tree can never shadow a real dependency.
@@ -143,25 +153,30 @@ _put_repo_root_on_path()
 
 @lru_cache(maxsize=1)
 def packages() -> tuple[Package, ...]:
-    """Every package there is, found by looking. Nothing is named."""
+    """Every package there is, found by looking. Nothing is named.
+
+    Two levels — `packages/<family>/<name>/` — and the family is read off the path rather than
+    declared. That is the whole of what made this uniform: a plant and a part were once both
+    `kind="vocabulary"`, which could not tell them apart, and a capability was a different tree
+    entirely because its Python needed a home. One tree now, and `kind` means something.
+
+    Families sort by KINDS and then alphabetically, so the base vocabulary is merged first and
+    everything else is deterministic. A family nobody thought of is still found: it sorts after
+    the known ones instead of being ignored, which is the behaviour a registry could not give.
+    """
+    if not PACKAGES_ROOT.is_dir():
+        return ()
+
+    def visible(path):
+        return sorted(p for p in path.iterdir()
+                      if p.is_dir() and not p.name.startswith((".", "_")))
+
+    order = {family: i for i, family in enumerate(KINDS)}
     found: list[Package] = []
-
-    # vocabulary/ is at the repo root and shared with onboarding; the base goes first.
-    tree = REPO_ROOT / VOCABULARY
-    if tree.is_dir():
-        names = sorted(p.name for p in tree.iterdir()
-                       if p.is_dir() and not p.name.startswith((".", "_")))
-        for name in sorted(names, key=lambda n: (n != BASE, n)):
-            found.append(Package(kind=VOCABULARY, name=name, path=tree / name))
-
-    # the agent's own trees: Python only it loads
-    for kind in (CAPABILITIES, *BOUND_KINDS):
-        tree = AGENT_ROOT / kind
-        if not tree.is_dir():
-            continue
-        for path in sorted(tree.iterdir()):
-            if path.is_dir() and not path.name.startswith((".", "_")):
-                found.append(Package(kind=kind, name=path.name, path=path))
+    for family in sorted(visible(PACKAGES_ROOT),
+                         key=lambda p: (order.get(p.name, len(order)), p.name)):
+        for path in sorted(visible(family), key=lambda p: (p.name != BASE, p.name)):
+            found.append(Package(kind=family.name, name=path.name, path=path))
     return tuple(found)
 
 

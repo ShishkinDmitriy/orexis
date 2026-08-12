@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from agent import genesis, ratified
+from agent import genesis, loader, ratified
 from agent.ontology import (AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                             WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
                             WORLD_GRAPH)
@@ -355,7 +355,11 @@ def test_both_engines_derive_the_same_world(world):
 # --- nobody should narrow a query back to one graph --------------------------------------------
 
 _SOURCES = {
+    # `packages/` as its own group. The kernel's rglob used to reach capability Python because
+    # capabilities were subpackages of `agent`; after the move it still matched plenty of files,
+    # so the non-empty guard stayed green while every capability's SPARQL silently left the scan.
     "agent": sorted(p for p in Path(genesis.__file__).parent.rglob("*.py")),
+    "packages": sorted(loader.PACKAGES_ROOT.rglob("*.py")),
     "onboarding": sorted(Path(genesis.__file__).parent.parent.glob("onboarding/*.py")),
 }
 

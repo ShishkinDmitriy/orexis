@@ -50,7 +50,7 @@ each is for, are unchanged.)*
 Adding a capability — forecasting, say — touches none of the existing ones, and no agent has
 it until genesis derives it.
 
-A **transport** is a smaller thing, deliberately: a `Driver` under `agent/transports/` plus its
+A **transport** is a smaller thing, deliberately: a `Driver` under `packages/transport/` plus its
 terms and completeness rules. No capability, no module, no belief changes — because how a
 device is reached is not something an agent decides. That line is the subject of
 [the perception/binding split](/domain/sensing.md): a capability distinguishes what an agent

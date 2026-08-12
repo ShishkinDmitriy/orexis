@@ -11,7 +11,7 @@
     rdfs:label "Agora core" ;
     rdfs:comment """The society kernel: agents, the capabilities they compose, and the versioned world they share. Everything else is a MODULE layered on this — the microcontrollers it runs on, the protocols their parts speak, the parts themselves, the capabilities, and the domain. Code may reference the terms defined here; it may never reference an instance.
 
-What is NOT here any more is everything physical. `vocabulary/microcontroller` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
+What is NOT here any more is everything physical. `packages/part/microcontroller` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
 
 #################  Agents and capabilities (composition, not hierarchy)  #################
 

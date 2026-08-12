@@ -34,7 +34,7 @@ unrecorded one.** That is the trigger this record acted on.
 
 # Decision — two families, one function, and a package tree each
 
-`agent/codecs/json/` and `agent/scalings/identity/`, beside `agent/transports/`. Each declares
+`packages/codec/json/` and `packages/scaling/identity/`, beside `packages/transport/`. Each declares
 its family and three members, of which one is implemented:
 
 | | family | implemented | declared |
@@ -152,7 +152,7 @@ The half that is not arithmetic, and the one that bites first.
 A raw value is a bare number; a **quantity** is a number with a unit. Since
 [#51](https://github.com/ShishkinDmitriy/agora/issues/51) one store holds soil moisture `0.183`,
 air humidity `0.46` and air temperature `21.4` — three numbers in two dimensions, two of which look
-identical. The convention lived in prose, in `vocabulary/water`: *"the whole private valuation is
+identical. The convention lived in prose, in `packages/plant/water`: *"the whole private valuation is
 denominated in soil moisture."*
 
 `scaling:quantityUnit` states it instead, with **QUDT** IRIs as objects — `unit:UNITLESS` for

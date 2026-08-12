@@ -57,10 +57,11 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-# Flat: the packages sit at the repo root beside the trees they discover, which is how
-# `agent.capabilities.*` was already being imported before it was installable.
+# Three roots at the repo top: the kernel, the packages it loads, and the operator's tools.
+# `packages*` is what makes `packages.capability.market` installable rather than merely importable
+# from a checkout — the trees moved out of `agent/`, so they are no longer carried along by it.
 where = ["."]
-include = ["agent*", "onboarding*"]
+include = ["agent*", "packages*", "onboarding*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -74,7 +75,7 @@ testpaths = ["tests"]
 #
 #   .venv/bin/lint-imports
 [tool.importlinter]
-root_packages = ["agent", "onboarding"]
+root_packages = ["agent", "packages", "onboarding"]
 
 [[tool.importlinter.contracts]]
 name = "The agent never reaches for the operator's tools"
@@ -85,14 +86,9 @@ forbidden_modules = ["onboarding"]
 [[tool.importlinter.contracts]]
 # A capability that imported onboarding would put credential-minting code on the far side of a
 # boundary the image is built to keep it out of.
-name = "No capability or transport reaches for them either"
+name = "No package reaches for them either"
 type = "forbidden"
-source_modules = [
-    "agent.capabilities",
-    "agent.transports",
-    "agent.codecs",
-    "agent.scalings",
-]
+source_modules = ["packages"]
 forbidden_modules = ["onboarding"]
 
 [[tool.importlinter.contracts]]
@@ -100,8 +96,8 @@ forbidden_modules = ["onboarding"]
 name = "Capability packages do not import each other"
 type = "independence"
 modules = [
-    "agent.capabilities.actuation",
-    "agent.capabilities.market",
-    "agent.capabilities.perception",
-    "agent.capabilities.review",
+    "packages.capability.actuation",
+    "packages.capability.market",
+    "packages.capability.perception",
+    "packages.capability.review",
 ]

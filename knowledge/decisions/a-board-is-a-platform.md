@@ -44,7 +44,7 @@ Platform(esp32_fern)
 
 ## `mc:carries` was `sosa:hosts` all along
 
-The physical decomposition was never missing — `vocabulary/microcontroller/` has had
+The physical decomposition was never missing — `packages/part/microcontroller/` has had
 `mc:carries` (domain Microcontroller, range Peripheral) since boards were modelled at all. It is
 the same relation SOSA standardises, so it is **declared a subproperty** rather than renamed:
 

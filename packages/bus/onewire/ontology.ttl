@@ -9,7 +9,7 @@
     rdfs:label "One-wire" ;
     rdfs:comment """A protocol, not a device: one line carrying both directions in turn. Its own package because several unrelated parts speak it and none of them owns it — a DHT does, a DS18B20 does, and neither should have to import the other to say so.
 
-Deliberately NOT under agent/transports/. Those are how an AGENT reaches a device, and each has Python behind it. Nothing in this repository speaks one-wire: the BOARD does, in firmware, and the agent never sees it. A transport package with no driver would be a promise the runtime cannot keep.""" .
+Deliberately NOT under packages/transport/. Those are how an AGENT reaches a device, and each has Python behind it. Nothing in this repository speaks one-wire: the BOARD does, in firmware, and the agent never sees it. A transport package with no driver would be a promise the runtime cannot keep.""" .
 
 onewire:DataPinRole a mc:BidirectionalRole ; rdfs:label "one-wire data" ;
     rdfs:comment "The board pulls the line low to open a conversation, then releases it and listens. It looks like an input because almost all the traffic is inbound, which is the trap: it is DRIVEN, so it cannot sit on a pin that can only be read." .

@@ -137,7 +137,7 @@ else — is declared and reserved, with no member behind it.
 
 An unimplemented member is deliberate, and it is the whole reason for splitting: it fixes the
 family's name and the shape of the seam *before* the second implementation exists, so building
-the model-backed one is adding `agent/capabilities/review/` a sibling and a `PROVIDES` line
+the model-backed one is adding `packages/capability/review/` a sibling and a `PROVIDES` line
 rather than re-deciding what a review is. The vocabulary that a model implementation would need —
 summaries, evidence, ranges, revisions — is in the family's `ontology.ttl` and shared by both.
 

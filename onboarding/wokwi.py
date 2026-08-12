@@ -14,7 +14,7 @@ thing than a diagram: the LED logic, the cadence handling and the calibration ar
 exercised against a board that does not exist, which is the same trick `world/simulation` plays
 one layer up with containers speaking the real protocol.
 
-**A part says how it draws in its OWN package.** `vocabulary/dht11/` already states what a DHT11
+**A part says how it draws in its OWN package.** `packages/part/dht11/` already states what a DHT11
 is and what legs it has; that it draws as `wokwi-dht22` with SDA/VCC/GND is the same kind of
 fact. Adding a part stays "adding a directory", and the directory now knows how to draw itself.
 A part that says nothing about Wokwi simply does not appear — and says so on the way past,

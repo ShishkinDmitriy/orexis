@@ -54,7 +54,7 @@ from agent import ratified
 from . import certs
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
-from agent.capabilities.market.terms import NS as MARKET
+from packages.capability.market.terms import NS as MARKET
 from agent.ontology import ACTUATION, AG, MQTT, PERCEPTION, WORLD_GRAPH
 
 log = logging.getLogger("mqtt")

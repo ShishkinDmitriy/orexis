@@ -9,7 +9,7 @@ is true of every member, and it now takes the matcher rather than importing one.
 import pytest
 
 from agent.auction import run_auction
-from agent.capabilities.market.matching import PayAsBidModule, UniformPriceModule
+from packages.capability.market.matching import PayAsBidModule, UniformPriceModule
 from agent.market import Bid, Limits, MarketState, Offer
 
 # The matching under test. It is static because a lot and a set of bids fully determine the

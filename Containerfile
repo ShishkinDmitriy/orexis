@@ -24,17 +24,22 @@ RUN pip install -e .
 
 # Everything an agent runs, and nothing else.
 #
-# `agent/` now carries capabilities and transports with it — they are its subpackages, loaded
-# only by a runtime — so the list that used to name five trees names two.
+# Two trees: the KERNEL that loads packages, and the packages. `packages/` holds both what an
+# agent imports and what it merely reads — a capability's Python and a part's ontology sit in one
+# tree now — and it is copied whole because onboarding derives capabilities from the same terms
+# and neither side owns it.
 #
-# `vocabulary/` stays out of it because it is genuinely shared: onboarding validates worlds and
-# derives capabilities from the same terms, so it belongs to neither side.
+# WHAT KEEPS ONBOARDING OUT IS THIS FILE NOT NAMING IT, and that is the only thing that does.
+# It used to be reinforced by a directory: capability Python lived under `agent/`, so the tree
+# showed which of it a runtime loads. It does not show that any more, which makes this line and
+# the import contracts in pyproject.toml the whole of the boundary rather than a reminder of it.
+# tests/test_layout.py fails if a `COPY onboarding/` ever appears.
 #
 # Note what is NOT here: world/. A world is MOUNTED, one per container, so the image is
 # world-agnostic — the same image is every agent of every world, and which one it is comes from
 # AGORA_AGENT_ID and the world mounted beside it.
-COPY agent/      agent/
-COPY vocabulary/ vocabulary/
+COPY agent/    agent/
+COPY packages/ packages/
 
 # An agent runs as nobody in particular. Its belief base is a file in its own volume, which
 # nothing outside this container can name — that is the isolation, and it needs no credential

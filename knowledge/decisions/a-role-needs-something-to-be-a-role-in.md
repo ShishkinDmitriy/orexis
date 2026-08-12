@@ -46,7 +46,7 @@ This is the whole argument, and it is not an analogy — it is the same fact twi
 
 **A pin's role.** `mc:PinRole` is first-class: `mc:pinRole` has `mc:Pin` for its domain, and a pin
 is an object with a GPIO number and a rail voltage. [pins-and-wires](pins-and-wires.md) made it
-first-class for a stated reason, in `vocabulary/microcontroller/ontology.ttl`:
+first-class for a stated reason, in `packages/part/microcontroller/ontology.ttl`:
 
 > `ag:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ]` used to say in one node, and the length
 > is the point: **the old form fused two facts about two different objects.**

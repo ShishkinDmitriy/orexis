@@ -30,7 +30,7 @@ mandates that only an agent with room to move holds. This is the other half of t
 three worlds, compose and firmware regenerate unchanged**, and the six comment lines that do
 move are the compose generator naming the sense modes in its own output.
 
-`vocabulary/water` is the one that matters beyond tidiness. AGENTS.md opens by saying the v1
+`packages/plant/water` is the one that matters beyond tidiness. AGENTS.md opens by saying the v1
 domain is plant watering and that the domain is a plug-in — *"plant/water language is the
 example, not the architecture"* — and its terms were `ag:SoilMoisture`, `ag:bandLow`,
 `ag:hasTarget`, indistinguishable by inspection from what every agent has. Swapping the domain
@@ -72,7 +72,7 @@ protected, not that both kinds were.
 ## So there is a test for it now
 
 `tests/test_store.py::test_no_source_names_a_moved_term_in_the_kernel_namespace` scans every
-source tree for a full IRI in `ag:` whose local name `vocabulary/agora` does not declare. It is
+source tree for a full IRI in `ag:` whose local name `packages/core/agora` does not declare. It is
 the same shape as the prefix scan beside it, and for the same reason: the harness was more
 forgiving than the store, so the class could not be caught by testing behaviour.
 
@@ -114,7 +114,7 @@ the next person does not re-derive it:
 
 # What is still in the kernel and should not be
 
-Answering the question this sweep was supposed to answer. `vocabulary/agora` declares 34 terms
+Answering the question this sweep was supposed to answer. `packages/core/agora` declares 34 terms
 and **eleven are not true of every agent**:
 
 - **The simulated device model — seven terms.** `ag:DeviceModel`, `ag:simulatedBy`,

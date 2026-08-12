@@ -5,7 +5,7 @@ lives in. A term that belongs to one capability — `perception:Subscribing`, `m
 named by that capability's own package, so this file never grows when one is added. That is the
 whole reason it is this short.
 
-**Ten terms in `vocabulary/agora` still make that claim false, and they are named rather than
+**Ten terms in `packages/core/agora` still make that claim false, and they are named rather than
 implied**: the seven of the simulated device model, which only `world/simulation` uses and which
 want a simulation package that does not exist; and `ag:ComputeHost`, `ag:runsOn` and
 `ag:lanAddress`, which only `world/sensing` states. See
@@ -23,7 +23,7 @@ identifier a process is given: its own agent id.
 
 **Graph IRIs used to be listed here as though they were terms, and they are not.**
 `ag:WorldGraph` is the term; `…/graph/world` is a particular graph, no more a term than
-`ag:fern_agent` is. The instances now live in `vocabulary/agora/ontology.ttl`, typed by class,
+`ag:fern_agent` is. The instances now live in `packages/core/agora/ontology.ttl`, typed by class,
 and `store.public_graphs()` asks the store which ones they are — so a query means "public
 knowledge" without any Python knowing what that consists of, and a sixth public graph is a
 vocabulary edit that touches no code.

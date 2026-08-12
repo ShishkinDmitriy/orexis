@@ -36,7 +36,7 @@ QueryFn = Callable[[str], dict]
 
 # Which graphs are public — ASKED, not listed. A graph IRI is an instance, and code that named
 # five of them was doing what rule 1 forbids everywhere else; `ag:PublicGraph` is the term, the
-# instances are declared in `vocabulary/agora/ontology.ttl`, and adding one is a vocabulary edit
+# instances are declared in `packages/core/agora/ontology.ttl`, and adding one is a vocabulary edit
 # that touches no Python.
 #
 # `rdfs:subClassOf*` rather than a bare type, because this runs BEFORE the closure — it is what
@@ -56,7 +56,7 @@ SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
 # kernel's: stable, standardised, and not a package's to redefine. Everything under this
 # project's own base is ASSEMBLED — `agent.loader` reads it off the ontologies that declare the
 # terms, so a package with a namespace of its own is nameable in SPARQL without anything here
-# learning it exists. `ag:` arrives that way too, from `vocabulary/agora/ontology.ttl`: the base
+# learning it exists. `ag:` arrives that way too, from `packages/core/agora/ontology.ttl`: the base
 # vocabulary is a package like any other, and hard-coding it here would have made it the one
 # exception for no reason but habit.
 #

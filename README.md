@@ -10,8 +10,8 @@ plant watering** (agents bid for water). Architecture and rationale live in
 base — what it is wired to, what it can therefore do, and what it privately wants:
 
 ```
-  agent asks its board      -> ag:commandTopic   {"sense":true} | {"sleep_s":N} retained
-  board answers             -> ag:readingTopic   {"value":0.183,...}
+  agent asks its board      -> mqtt:commandTopic   {"sense":true} | {"sleep_s":N} retained
+  board answers             -> mqtt:readingTopic   {"value":0.183,...}
   agent records + announces -> :sensed + Influx, then ag:eventTopic {"band":"LOW"}
   host opens a round        -> ag:offerTopic     quantity, reserve, deadline
   each bidder answers       -> ag:bidTopic/<id>  a number only it can compute
@@ -37,11 +37,15 @@ look, and bids only on a fresh reading. See
 ## Layout
 
 ```
-vocabulary/    what terms MEAN — `agora` is the base everything layers on, `water` is
-               what this society is about. At the ROOT because onboarding reads it too
-agent/         everything an agent runs, and nothing else
-  capabilities/  what an agent can DO — perception, market, actuation. The extendable axis
-  transports/    how a device is REACHED — mqtt. Deliberately not a capability
+packages/      EVERY package there is, one mechanic: packages/<family>/<name>/
+  core/          the base vocabulary everything layers on
+  bus/  part/    protocols, and the physical things — dht11, esp32, the probe
+  plant/         what this society is about: the domain, and a species
+  tool/          vocabularies a generator reads, not the society
+  capability/    what an agent can DO — perception, market, actuation. The extendable axis
+  transport/     how a device is REACHED — mqtt. Deliberately not a capability
+  codec/  scaling/   how bytes become a document, and a document a quantity
+agent/         the KERNEL that loads packages: store, genesis, runtime, inference, validate
 onboarding/    the sovereign's tools: what turns a ratified world into a running society
 tests/         the two gates, plus the layering the image depends on
 world/         ratified worlds — one directory each: topology, beliefs, and its compose file
@@ -50,11 +54,13 @@ infra/         how it runs: the infra compose, grafana and mosquitto configs
 knowledge/     OKF knowledge bundle (architecture decisions + domain model)
 ```
 
-**A capability is a directory**, and inside it the same names mean the same things every
-time:
+**A directory is a PACKAGE** — not a capability. The two are not the same axis, and saying it
+the other way hid that: `packages/capability/market/` provides three capabilities, and
+`packages/part/esp32/` provides none. What isolates a capability is `PROVIDES` and its term.
+Inside a package the same names mean the same things every time:
 
 ```
-capabilities/perception/
+packages/capability/perception/
   ontology.ttl   the vocabulary — what its terms mean
   shapes.ttl     the rules — what an agent must believe to hold it
   rules.ru       the derivation — what wiring GIVES an agent it
@@ -64,12 +70,13 @@ capabilities/perception/
   __init__.py    the manifest: PROVIDES = (PollingModule, ListeningModule)
 ```
 
-Every one of them is optional, and an omission is a statement: `vocabulary/water/` has no code,
-`agent/transports/mqtt/` has no `rules.ru` because a transport grants no capability, and
-`agent/capabilities/actuation/` has no `beliefs.py` because it decides nothing.
+Every one of them is optional, and an omission is a statement: `packages/plant/water/` has no code,
+`packages/transport/mqtt/` has no `rules.ru` because a transport grants no capability, and
+`packages/capability/actuation/` has no `beliefs.py` because it decides nothing.
 
-Nothing lists these — `agora.loader` finds them by looking. So **adding a capability is
-adding a directory**: drop in `agent/capabilities/forecast/`, and agents load its vocabulary, run its
+Nothing lists these — `agent.loader` finds them by looking, two levels down, and the
+FAMILY is the parent directory rather than anything declared. So **adding a capability is
+adding a directory**: drop in `packages/capability/forecast/`, and agents load its vocabulary, run its
 derivation, and boot with it if the wiring qualifies them. No registry line, no
 term constant, no edit to any existing file — and deleting the directory removes it just as
 completely, because capabilities reach each other through T-Box terms and never through
@@ -190,7 +197,7 @@ that variable.
 **One container per agent, and that is the point.** On one filesystem every agent could read
 every other agent's beliefs. Now each agent's belief base is a file in its own volume, locked
 by its owner and unopenable by anything else — including you. Only the agent that derived
-`ag:Actuation` is given the signing keys. See
+`actuation:Actuation` is given the signing keys. See
 [`domain/world`](knowledge/domain/world.md) §Deployment.
 
 Note what is *not* born this way: firmware. A board is hardware and is flashed by hand. What
@@ -204,7 +211,7 @@ its own verdict, the host offers, bidders answer with numbers only they can comp
 validates, vouchers come back. Deterministic, no LLM. (For a closed loop where wins actually
 
 A bidder **looks before it bids** and sits out the round if its sensor does not answer in
-time, or if the newest reading is older than its own `ag:maxReadingAgeS`. Owning the cadence
+time, or if the newest reading is older than its own `perception:maxReadingAgeS`. Owning the cadence
 must not mean bidding on a stale, comfortable number — and the limit is each agent's own
 belief, so a slow-living succulent may accept older data than a fern.
 
@@ -251,7 +258,7 @@ society needs real boards. See [`domain/world`](knowledge/domain/world.md) §Sim
 ## Bringing a real board up
 
 Seed the **smallest world** instead of the society. `world/sensing` has one subject, one
-board and one agent, plumbed into no market — so derivation gives that agent `ag:Subscribing`
+board and one agent, plumbed into no market — so derivation gives that agent `perception:Subscribing`
 and nothing else. It reads, records, and stops. Nothing in that world declares it sensor-only;
 there is simply no market for a market capability to come from.
 
@@ -274,26 +281,26 @@ best-effort and lands only if the board happens to be awake.
 A real ESP32 speaks the same protocol as a virtual plant — an agent can't tell them apart, so
 you can mix them freely:
 
-- publishes on its `ag:readingTopic` — `{"value": 0.18, "sensor": "moisture_sensor_fern"}`
-- subscribes to its `ag:commandTopic` — `{"sleep_s": 300}` (retained) and/or `{"sense": true}`
+- publishes on its `mqtt:readingTopic` — `{"value": 0.18, "sensor": "moisture_sensor_fern"}`
+- subscribes to its `mqtt:commandTopic` — `{"sleep_s": 300}` (retained) and/or `{"sense": true}`
 
 Both topics are whatever `world/<name>/world.ttl` says they are; nothing is derived from the id.
 
-Declare the board's nature with `ag:senseMode`, and the capability follows from it — the axis
+Declare the board's nature with `perception:senseMode`, and the capability follows from it — the axis
 is **who holds the clock**:
 
-| `ag:senseMode` | capability | who runs the timer |
+| `perception:senseMode` | capability | who runs the timer |
 |---|---|---|
-| `perception:PolledProcedure` | `ag:Polling` — *reserved, not built* | the agent asks for each reading |
-| `perception:ScheduledProcedure` | `ag:Subscribing` | the agent sets an interval, the board keeps it |
-| `perception:PushProcedure` | `ag:Listening` | the board, alone |
+| `perception:PolledProcedure` | `perception:Polling` — *reserved, not built* | the agent asks for each reading |
+| `perception:ScheduledProcedure` | `perception:Subscribing` | the agent sets an interval, the board keeps it |
+| `perception:PushProcedure` | `perception:Listening` | the board, alone |
 
-`ag:Polling` is the simplest exchange and what the word ought to mean, but it needs a board
+`perception:Polling` is the simplest exchange and what the word ought to mean, but it needs a board
 reachable at any moment — one that deep-sleeps cannot hear the request. So it is declared in
 the vocabulary with no rule granting it and no module providing it. The room is kept on
 purpose; adding it is a class and one line of `PROVIDES`.
 
-The ESP32 firmware is `perception:ScheduledProcedure`. Change the firmware, edit `ag:senseMode`, restart the
+The ESP32 firmware is `perception:ScheduledProcedure`. Change the firmware, edit `perception:senseMode`, restart the
 agent, and the capability changes with it — the agent is never edited.
 
 The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
