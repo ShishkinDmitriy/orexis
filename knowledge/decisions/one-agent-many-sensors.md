@@ -10,7 +10,7 @@ timestamp: 2026-08-07T00:00:00Z
 
 An agent's sensors are per-sensor throughout: topics hang off the sensor (`mqtt:readingTopic`), a
 driver is chosen per sensor, and cadence is tracked per sensor. So the obvious worry — that two
-sensors share machinery — is unfounded. Driven through the real module with two `perception:Scheduled`
+sensors share machinery — is unfounded. Driven through the real module with two `perception:ScheduledProcedure`
 sensors on one agent:
 
 ```
@@ -136,7 +136,7 @@ whether a world holds is one too many, and the one that ships is the one to test
 
 # Mixed sense modes: the capabilities split, the sensors do not
 
-An agent with one `perception:Scheduled` and one `perception:Push` sensor derives both `perception:Subscribing` and
+An agent with one `perception:ScheduledProcedure` and one `perception:PushProcedure` sensor derives both `perception:Subscribing` and
 `perception:Listening`. Both modules then take **every** sensor the agent has:
 
 ```python

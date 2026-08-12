@@ -152,7 +152,7 @@ ag:succulent_agent review:commits [ review:onTerm perception:slowSleepS ; review
 #  Each states what any board states: the bus it is on, the subject it monitors, the property it
 #  observes, its topics, and who holds the clock. An agent reads these and cannot tell.
 #
-#  perception:senseMode perception:Scheduled means the stand-in keeps the interval its agent gives it, exactly
+#  perception:senseMode perception:ScheduledProcedure means the stand-in keeps the interval its agent gives it, exactly
 #  as a deep-sleeping board does — so this world exercises the retained-cadence mechanism, which
 #  the old simulation never touched at all.
 
@@ -168,7 +168,7 @@ ag:succulent_agent review:commits [ review:onTerm perception:slowSleepS ; review
 ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
-    perception:senseMode perception:Scheduled ;
+    perception:senseMode perception:ScheduledProcedure ;
     perception:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
@@ -186,7 +186,7 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
 #  ag:DeviceModelShape had to stop making.
 ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
-    perception:senseMode perception:Scheduled ;
+    perception:senseMode perception:ScheduledProcedure ;
     perception:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
@@ -204,7 +204,7 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
 ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_tomato" ;
     mqtt:onBus ag:local_bus ;
-    perception:senseMode perception:Scheduled ;
+    perception:senseMode perception:ScheduledProcedure ;
     perception:monitors ag:tomato ;
     sosa:observes water:SoilMoisture ;
     mqtt:readingTopic "sensors/moisture_sensor_tomato/reading" ;
@@ -217,7 +217,7 @@ ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
 ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_succulent" ;
     mqtt:onBus ag:local_bus ;
-    perception:senseMode perception:Scheduled ;
+    perception:senseMode perception:ScheduledProcedure ;
     perception:monitors ag:succulent ;
     sosa:observes water:SoilMoisture ;
     mqtt:readingTopic "sensors/moisture_sensor_succulent/reading" ;

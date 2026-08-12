@@ -69,7 +69,7 @@ ag:fern a sosa:FeatureOfInterest ;
 #  says which value in it is its own. That is what mqtt:readingPointer is for; the probe states
 #  none because `/value` is the default and is what every single-property board already sends.
 #
-#  All three are perception:Scheduled and share ONE command topic, because there is one board and it
+#  All three are perception:ScheduledProcedure and share ONE command topic, because there is one board and it
 #  sleeps once: a cadence is a property of the board, not of a property being measured. The
 #  agent aims that channel once, at the tightest cadence any sensor on it asks for.
 #
@@ -111,7 +111,7 @@ ag:air_sensor_fern a ssn:System ;
 ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
-    perception:senseMode perception:Scheduled ;     # keeps a given interval -> its agent gains perception:Subscribing
+    perception:senseMode perception:ScheduledProcedure ;     # keeps a given interval -> its agent gains perception:Subscribing
     perception:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
@@ -125,7 +125,7 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
 
 ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
-    perception:senseMode perception:Scheduled ;
+    perception:senseMode perception:ScheduledProcedure ;
     perception:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
@@ -142,7 +142,7 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
 
 ag:air_humidity_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_humidity_fern" ;
-    perception:senseMode perception:Scheduled ;
+    perception:senseMode perception:ScheduledProcedure ;
     perception:monitors ag:fern ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1

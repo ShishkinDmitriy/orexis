@@ -21,9 +21,9 @@ clock**, and it is the axis because it is what changes what the agent must belie
 
 | capability | device (`perception:senseMode`) | who runs the timer | the agent states |
 |---|---|---|---|
-| **`perception:Polling`** | `perception:Pull` | the **agent** — it asks for each reading | an interval, its own |
-| **`perception:Subscribing`** | `perception:Scheduled` | **shared** — the agent sets it, the device keeps it | an interval, the device's |
-| **`perception:Listening`** | `perception:Push` | the **device** | nothing |
+| **`perception:Polling`** | `perception:PolledProcedure` | the **agent** — it asks for each reading | an interval, its own |
+| **`perception:Subscribing`** | `perception:ScheduledProcedure` | **shared** — the agent sets it, the device keeps it | an interval, the device's |
+| **`perception:Listening`** | `perception:PushProcedure` | the **device** | nothing |
 
 Strictly decreasing agent control, and each asks the agent for strictly less.
 
@@ -232,6 +232,14 @@ The perception module writes each reading to Influx (history) and `:sensed` (cur
 as the **agent's own** assertion — `prov:wasGeneratedBy` the agent, no witness — per
 [trusted-agent-mode](/decisions/trusted-agent-mode.md), then announces its verdict on its
 event topic.
+
+The observation also says **how it was made**: `sosa:usedProcedure` carries the sensor's sense
+mode, which is a `sosa:Procedure`. That is not recoverable from the number, and it changes what
+a *missing* reading means — under `perception:ScheduledProcedure` the board is late, under
+`perception:PushProcedure` there may simply have been nothing to say. It is the clock part of
+how, not the whole method: the codec, the pointer and the scaling are also how that number came
+to be. See
+[an-observation-says-how-it-was-made](/decisions/an-observation-says-how-it-was-made.md).
 
 Which sensors it listens to is not configured: it reads `perception:polls` from the
 [world](/decisions/world-graph.md) and subscribes exactly those topics, never a wildcard.

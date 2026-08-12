@@ -12,6 +12,19 @@ the loss was the substitution — a lookup by subject returned whichever had wri
 caller asking for moisture could be handed a temperature, a plausible number in the wrong unit
 that a market will act on without hesitating.
 
+It also says HOW it was made. `sosa:usedProcedure` carries the sensor's sense mode, which is a
+`sosa:Procedure`, and the difference it records is not recoverable from the number: *"0.183 at
+13:22, on the interval the agent asked for"* and *"0.183 at 13:22, because the board chose that
+moment"* are different claims. Under `ScheduledProcedure` a reading that does not arrive means the
+board is late; under `PushProcedure` it may mean nothing happened worth reporting. Until now that
+was knowable only by joining back to the sensor, which is the shape of fact this project keeps
+finding out about the hard way.
+
+It is the CLOCK part of how, and not the whole method — the codec, the pointer and the scaling
+are also how that number came to be. SOSA asks for "a relation to link to *a* re-usable
+Procedure", so a partial answer is a legitimate one; if the whole pipeline is ever modelled as a
+Procedure this predicate gets re-pointed rather than a second one added.
+
 The observation's own IRI is minted from the subject id and the property's local name, and
 nothing ever looks it up by that name: readers match on `sosa:hasFeatureOfInterest` and
 `sosa:observedProperty`. The IRI only has to be stable and distinct, which is why sanitising
@@ -51,6 +64,7 @@ class SensedWriter:
         sensor_uri: str,
         observed_property: str,
         author_uri: str,
+        used_procedure: str,
         world_version: int | None = None,
         ts: str | None = None,
     ) -> None:
@@ -68,6 +82,7 @@ INSERT DATA {{ GRAPH <{SENSED_GRAPH}> {{
     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
     sosa:resultTime "{ts}"^^xsd:dateTime ;
     sosa:madeBySensor <{sensor_uri}> ;
+    sosa:usedProcedure <{used_procedure}> ;
 {wv}    prov:wasGeneratedBy <{author_uri}> .
 }} }}
 """)

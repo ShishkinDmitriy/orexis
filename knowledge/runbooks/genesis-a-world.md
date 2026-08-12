@@ -34,8 +34,8 @@ reality, a derivation cannot.
 
 | you state | genesis derives |
 |---|---|
-| `perception:polls` a sensor with `perception:senseMode perception:Scheduled` | `perception:Subscribing` |
-| `perception:polls` a sensor with `perception:senseMode perception:Push` | `perception:Listening` |
+| `perception:polls` a sensor with `perception:senseMode perception:ScheduledProcedure` | `perception:Subscribing` |
+| `perception:polls` a sensor with `perception:senseMode perception:PushProcedure` | `perception:Listening` |
 | `market:bidsIn` a market | `market:Bidding` |
 | `market:hosts` a market | `market:Hosting` |
 | `actuation:hasActuator` a kind of `actuation:Actuator` | `actuation:Actuation` |

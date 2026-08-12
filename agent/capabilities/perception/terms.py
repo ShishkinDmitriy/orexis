@@ -29,6 +29,6 @@ LISTENING = term("Listening")  # the device announces on its own clock; the agen
 # A module names the mode it serves so it can take only the sensors it is actually for — the
 # pairing is stated in rules.ru as well, and the alternative is introspecting a SPARQL update to
 # recover it, which is worse. Both are T-Box terms, which the first rule permits in code.
-PULL = term("Pull")            # answers when asked — the unbuilt perception:Polling would serve it
-SCHEDULED = term("Scheduled")  # keeps an interval it is given -> perception:Subscribing
-PUSH = term("Push")            # keeps its own clock, takes no orders -> perception:Listening
+PULL = term("PolledProcedure")           # answers when asked — the unbuilt perception:Polling would serve it
+SCHEDULED = term("ScheduledProcedure")   # keeps an interval it is given -> perception:Subscribing
+PUSH = term("PushProcedure")            # keeps its own clock, takes no orders -> perception:Listening
