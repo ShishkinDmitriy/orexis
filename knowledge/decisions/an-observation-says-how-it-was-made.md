@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: An observation says how it was made, and a procedure is named for what it does
-description: A reading now carries sosa:usedProcedure — the sensor's sense mode — because whether a missing reading means a late board or a quiet one was recoverable only by joining back to the sensor. The three modes are renamed to read as procedures rather than states, since #95 made them sosa:Procedure instances and a Procedure is a plan. The rename crossed six spellings, one of which left the process and would have silently changed a simulated device's behaviour.
+description: A reading now carries sosa:usedProcedure — the sensor's sense mode — because whether a missing reading means a late board or a quiet one was recoverable only by joining back to the sensor. The three modes are renamed to read as procedures rather than states, since #95 made them sosa:Procedure instances and a Procedure is a plan. The rename crossed seven spellings, one of which left the process and would have silently changed a simulated device's behaviour, and one of which arrived on another branch after the sweep was complete.
 status: accepted
 stage: v1
 tags: [sensing, ontology, naming, provenance, reuse]
@@ -99,7 +99,7 @@ complete method, so a partial answer is a legitimate one — but it is partial, 
 if the whole pipeline is ever modelled as a Procedure, this predicate gets **re-pointed** rather
 than a second one added beside it.
 
-# The rename crossed six spellings, and one left the process
+# The rename crossed seven spellings, and one left the process
 
 [every-term-in-its-own-house](every-term-in-its-own-house.md) recorded that a term is named seven
 ways here and that six of them fail silently. This is the second live case, and it is the first
@@ -124,6 +124,33 @@ reach across the boundary. Saying it once, in one dict, is what stops the next o
 The other five: prefixed TTL and SPARQL, a `term()` builder, a Python constant, a full IRI inside
 a `sh:sparql` `VALUES` clause in `transports/mqtt/shapes.ttl` — the form `tests/test_store.py`'s
 scan cannot see — and prose still spelling them `ag:` from before the namespace sweep.
+
+## The seventh arrived after the sweep, from another branch
+
+The enumeration above was complete when it was made, and was **stale by the time it merged**.
+[their-descriptions-are-our-fixtures](their-descriptions-are-our-fixtures.md) landed on `main`
+while this branch was in flight, bringing `tests/fixtures/w3c-ssn/deploy-dht22.ttl` — the
+deployment half this project writes to sit beside a vendor's part description, and it names a
+sense mode twice. Rebasing produced no conflict in that file, because nothing on this branch had
+ever touched it; it simply began failing.
+
+**A rename is not a closed set of files, it is a claim about a whole tree at one instant.** No
+sweep can cover a file that does not exist yet, so the guard cannot be diligence — it is that a
+stale spelling is *refused*. It was, and by the two tests that had most recently been written
+about something else entirely.
+
+## Their reading cites a procedure, and is still refused
+
+`<observation/1087>` is the one node in the fixture set that answers `sosa:usedProcedure` —
+`<DHT22#Procedure>`, their own. Our shape rejects it anyway, on `sh:class` rather than
+`sh:minCount`: it is a `sosa:Procedure` and not one of the three `perception:SenseMode`
+instances.
+
+That is the constrained-subset argument above, arriving from outside as evidence rather than as
+reasoning. Had `senseMode`'s range been `sosa:Procedure`, a vendor's illustrative procedure would
+have satisfied a shape whose entire purpose is to guard a derivation keyed on three specific
+instances — and it would have derived nothing, silently. The residue is unchanged because that
+node was already refused for six other reasons; no expectation moved.
 
 ## A record about a rename had to be repaired by hand
 
