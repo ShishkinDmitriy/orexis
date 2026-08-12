@@ -50,6 +50,12 @@ ag:local_bus a mqtt:MessageBus ;
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
 ag:world a ag:World ; ag:currentVersion ag:version_1 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
+#  WHAT A VERSION IS FOR. It is the initial state these files describe, and every observation
+#  records the one in force when it was made (`ag:underWorldVersion`). Bump it when the world or
+#  a vocabulary gains a term an agent must hold: beliefs are AUTHORED from this graph, so a term
+#  no belief base has is a new world rather than an event inside the running one. Renames are
+#  migrated in place; additions are not, and agents are re-authored against the new version.
+#  See knowledge/decisions/a-volume-can-be-older-than-the-vocabulary.md.
 ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 

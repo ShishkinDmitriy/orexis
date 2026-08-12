@@ -111,6 +111,35 @@ not take is worse than one that never ran.
 every start, so they are current by construction — a stale term in one would mean the files
 themselves are wrong, and rewriting it here would hide that.
 
+# The boundary: renames are migrated, additions are not
+
+This record argues for migrating a **rename**, and that stands — `rebirth` would cost an agent its
+second thoughts, and a rename should not. It says nothing about a term the belief base never had,
+and the omission surfaced the first time a world gained one.
+
+An agent born on 7 August was restarted after `review:reviewIntervalS` had been added to its
+world. Migration rewrote the five renamed terms and then stopped, correctly: there was nothing to
+rename. The agent would not start, because the capability its world derives needs a belief nobody
+had written.
+
+**Additions are not migrated, and building that is declined.** The position, stated so it is not
+re-litigated:
+
+- **The world graph is the initial state.** A belief base is authored from it and is not a second
+  source of truth. What an agent revised for itself is worth preserving where it can be — that is
+  what migration is for — and it is not worth a mechanism that guesses at values no one authored.
+- **Every vocabulary is known before a world runs.** Packages are loaded whole at boot and
+  `agora-validate` holds a world to all of them; a term arriving later is a new world, not an
+  event inside the running one.
+- **A new term means a new world version.** `ag:versionNumber` already exists, is stated in
+  `world.ttl`, is stamped on every observation as `ag:underWorldVersion`, and is reported in
+  metrics — so history stays interpretable across the change. The remedy is to bump it and let
+  agents be re-authored against it.
+
+The cost is accepted rather than hidden: rebirth discards revisions, so an agent with latitude
+loses its second thoughts when a world gains a term. That is a real loss and the alternative —
+inventing a value for a belief the sovereign never wrote — is worse.
+
 # Consequences
 
 - **The test that would have caught #85 exists.** `tests/test_vocabulary.py` authors a belief
