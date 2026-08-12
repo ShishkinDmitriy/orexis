@@ -224,6 +224,7 @@ _DHT11 = rdflib.Namespace("http://example.org/agora/dht11#")
 _ONEWIRE = rdflib.Namespace("http://example.org/agora/onewire#")
 _MQTT = rdflib.Namespace("http://example.org/agora/mqtt#")
 _MC = rdflib.Namespace("http://example.org/agora/microcontroller#")
+_OWL = rdflib.Namespace("http://www.w3.org/2002/07/owl#")
 
 
 def test_their_channels_implement_a_procedure_and_ours_is_on_the_part(tmp_path):
@@ -236,17 +237,37 @@ def test_their_channels_implement_a_procedure_and_ours_is_on_the_part(tmp_path):
 
     So `dht11:CombinedRead` sits on `dht11:Dht11`. The channels keep their own sense mode, which
     is a different question with a different predicate and a cardinality of one.
+
+    Our channels DO implement something now — each its own half of the frame — which does not
+    weaken the claim: what may not move onto a channel is the COMBINED read, because putting it
+    there says a channel could be read alone. That is what is asserted below.
+
+    Read through the restriction rather than off a bare triple. `dht11:Dht11 ssn:implements …`
+    was punning and entailed nothing about any device; see
+    knowledge/decisions/a-part-is-described-once-and-fitted-many-times.md.
     """
     theirs = rdflib.Graph().parse(data=_repaired("dht22.ttl"), format="turtle")
     channels = set(theirs.subjects(_SSN.implements, None))
     assert len(channels) == 2, f"upstream moved its implements: {channels}"
 
     ours = _world_with(tmp_path)
-    assert set(ours.objects(_DHT11.Dht11, _SSN.implements)) == {
-        _DHT11.CombinedRead, _ONEWIRE.Transaction}
-    assert not set(ours.subjects(_SSN.implements, _DHT11.CombinedRead)) - {_DHT11.Dht11}, (
-        "the combined read leaked onto a channel — it is what the PART does, and putting it on "
-        "a channel says a channel could be read alone, which is the thing it denies")
+
+    def implemented_by(cls):
+        """What every instance of `cls` implements, per its owl:hasValue restrictions."""
+        found = set()
+        for restriction in ours.objects(cls, rdflib.RDFS.subClassOf):
+            if (restriction, _OWL.onProperty, _SSN.implements) in ours:
+                found |= set(ours.objects(restriction, _OWL.hasValue))
+        return found
+
+    assert implemented_by(_DHT11.Dht11) == {_DHT11.CombinedRead, _ONEWIRE.Transaction}
+    assert implemented_by(_DHT11.TemperatureChannel) == {_DHT11.TemperatureRead}
+    assert implemented_by(_DHT11.HumidityChannel) == {_DHT11.HumidityRead}
+
+    for channel in (_DHT11.TemperatureChannel, _DHT11.HumidityChannel):
+        assert _DHT11.CombinedRead not in implemented_by(channel), (
+            "the combined read leaked onto a channel — it is what the PART does, and putting it "
+            "on a channel says a channel could be read alone, which is the thing it denies")
 
 
 def test_every_declared_procedure_is_one(tmp_path):
@@ -256,7 +277,8 @@ def test_every_declared_procedure_is_one(tmp_path):
     validates perfectly, because an unrecognised object is not an error in RDF.
     """
     ours = _world_with(tmp_path)
-    declared = {_DHT11.CombinedRead, _ONEWIRE.Transaction, _MQTT.Publishing}
+    declared = {_DHT11.CombinedRead, _DHT11.TemperatureRead, _DHT11.HumidityRead,
+                _ONEWIRE.Transaction, _MQTT.Publishing}
     untyped = {p for p in declared if (p, rdflib.RDF.type, _SOSA.Procedure) not in ours}
     assert not untyped, f"declared but never typed a sosa:Procedure: {untyped}"
 

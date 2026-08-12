@@ -138,6 +138,17 @@ ag:air_data a mc:Pin ; mc:pinRole onewire:DataPinRole .
 ag:air_vcc  a mc:Pin ; mc:pinRole mc:PowerPinRole .
 ag:air_gnd  a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
+# WHICH channel each of the society's two air sensors is. The society already declares them and
+# says what they observe and where they publish; what it cannot say is that this one is the
+# thermistor, because that is a fact about the part and the society is never given the part.
+#
+# Stating it here is what makes the vocabulary's description of a DHT11 reach these two devices:
+# `dht11:TemperatureChannel` carries the accuracy, the resolution and the procedure it
+# implements, and rule 5 lands them on `ag:air_temp_fern` without any of it being written twice.
+# The type is the only new fact — everything that follows from it is already in the package.
+ag:air_temp_fern     a dht11:TemperatureChannel .
+ag:air_humidity_fern a dht11:HumidityChannel .
+
 ##########  The wires  ##########
 #
 # What someone can point at on the breadboard, and what they get wrong. Every rule about this

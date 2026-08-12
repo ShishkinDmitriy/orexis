@@ -48,6 +48,14 @@ which they distribute.** Each system implements what it can actually do, and no 
 | the board | the clock | `capabilities/perception` — **already there**, as the sense modes | no: `perception:senseMode`, and deliberately |
 | a channel | — | `world.ttl` says what it observes and nothing about how | — |
 
+**Both "yes" rows were written on the class, and that entailed nothing about any device.** The
+triples above are `dht11:Dht11 ssn:implements …`, which says the *class* implements the procedure
+— punning, the same defect the capability had, and it meant the only subject of `ssn:implements`
+anywhere was `dht11:Dht11` itself. No sensor in any world had been said to do anything. They are
+`owl:hasValue` restrictions now, and the last row is filled in: each channel implements its share
+of the frame. See
+[a-part-is-described-once-and-fitted-many-times](/decisions/a-part-is-described-once-and-fitted-many-times.md).
+
 The last column is the honest part. Two of the five are asserted, one is named without an
 implementer because the graph cannot yet say who publishes, and one deliberately keeps a
 different predicate. Naming a procedure and linking it are separate acts, and conflating them is
