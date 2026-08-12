@@ -109,11 +109,11 @@ def _world_with_push_sensor():
     """
     st = genesis_store()
     st.update(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:ScheduledSampling }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:PushReporting }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:ScheduledSensing }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:PushSensing }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
                  ag:fern_agent perception:polls ?s .
-                 ?s perception:senseMode perception:ScheduledSampling }} }}
+                 ?s perception:senseMode perception:ScheduledSensing }} }}
     """)
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():

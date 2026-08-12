@@ -3,15 +3,15 @@
 Which one an agent gets is decided by its **hardware**, and derived at genesis from the
 device's own nature:
 
-- **perception:Polling** (`perception:PolledSampling` device) — the agent's own timer; it asks for each reading and the
+- **perception:Polling** (`perception:PolledSensing` device) — the agent's own timer; it asks for each reading and the
   device replies. The simplest exchange and the most agent control, but it needs a device that
   is reachable at any moment. **Not implemented**: no rule grants it and no class here
   provides it, because a board that deep-sleeps cannot hear the request. The room is kept
   deliberately — see ontology.ttl.
-- **perception:Subscribing** (`perception:ScheduledSampling` device) — the agent states an interval and the device
+- **perception:Subscribing** (`perception:ScheduledSensing` device) — the agent states an interval and the device
   keeps to it. The agent still decides how often to look; what it delegates is the
   timekeeping, which is exactly what lets the device sleep in between.
-- **perception:Listening** (`perception:PushReporting` device) — the device announces on its own clock and takes no
+- **perception:Listening** (`perception:PushSensing` device) — the device announces on its own clock and takes no
   orders. The agent records what arrives, and that is all it can do.
 
 What survives the whole range is the **freshness judgment**: however the reading arrived, the

@@ -7,7 +7,7 @@
 # gains an interval to state with no edit to the agent, because there is nothing about it to
 # edit.
 #
-# perception:PolledSampling -> perception:Polling is deliberately ABSENT. The vocabulary declares both, because there
+# perception:PolledSensing -> perception:Polling is deliberately ABSENT. The vocabulary declares both, because there
 # are three ways to hold a clock and the T-Box should say so; but no board here is always
 # reachable, and granting a capability no module implements would only produce a startup
 # warning. The rule is the last piece to add, not the first.
@@ -40,13 +40,13 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability perception:Subscribing } }
 $given
-WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:senseMode perception:ScheduledSampling } ;
+WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:senseMode perception:ScheduledSensing } ;
 
 #  Announces on its own clock -> the agent can only RECEIVE, and is never asked for a cadence.
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability perception:Listening } }
 $given
-WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:senseMode perception:PushReporting } ;
+WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:senseMode perception:PushSensing } ;
 
 #  What the EQUIPMENT allows, carried from the sensor to the agent that polls it.
 #

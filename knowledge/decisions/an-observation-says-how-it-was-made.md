@@ -28,13 +28,40 @@ Observation."*
 
 | was | is | agent capability |
 |---|---|---|
-| `perception:Pull` | `perception:PolledSampling` | `perception:Polling` |
-| `perception:Scheduled` | `perception:ScheduledSampling` | `perception:Subscribing` |
-| `perception:Push` | `perception:PushReporting` | `perception:Listening` |
+| `perception:Pull` | `perception:PolledSensing` | `perception:Polling` |
+| `perception:Scheduled` | `perception:ScheduledSensing` | `perception:Subscribing` |
+| `perception:Push` | `perception:PushSensing` | `perception:Listening` |
 
 Each keeps its mode word. That was the constraint, not decoration: the pairing in
 [who-holds-the-clock](who-holds-the-clock.md) is what the whole family is about, and a name that
 lost the tie to its capability would have cost more than the elliptical reading did.
+
+**`Sensing` is SOSA's own word for it**, and free: it appears in `sosa.ttl` only inside the
+definition of Sensor — *"involved in, or implementing, a (Sensing) Procedure"* — and nothing in
+our namespaces uses it.
+
+## The first names were wrong, and the reason generalises
+
+They were `ScheduledSampling`, `PushReporting` and `PolledSampling`, and both compounds were
+taken:
+
+- **`Sampling` is `sosa:Sampling`** — *"an act of Sampling carries out a sampling Procedure to
+  create or transform one or more samples."* It produces a `sosa:Sample`: a specimen removed and
+  examined. Our probes sit in the soil and remove nothing, so the name imported a concept we
+  deliberately do not model — and one that is the subject of an open issue.
+- **`Reporting` is ours.** `capabilities/reporting/` was created eight commits earlier for
+  telemetry an agent emits *about itself* — `reporting:Storing`, `reporting:Announcing`. A
+  perception procedure called `PushReporting` is a second sense of that word, in one codebase,
+  introduced the same day.
+
+**The root word was checked and the compound was not.** *Procedure*, *sensing* and *mode* were all
+weighed against SOSA and against our namespaces; `Sampling` and `Reporting` arrived as suffixes
+and were never asked the same question. That is the third time this project has been caught by a
+name that read cleanly in isolation — after `matching` against `provider(family)` and
+`calibration` against the procedure that produces one — and the first where the collision was with
+a term this repository had itself created that week.
+
+A compound is a new name. Check it whole.
 
 **`perception:SenseMode` stays, and it is not a synonym for `sosa:Procedure`.** It is the
 constrained subset. `perception:senseMode`'s range being `SenseMode` is what stops a sensor
@@ -50,7 +77,7 @@ ag:obs_fern_SoilMoisture a sosa:Observation ;
     sosa:hasSimpleResult "0.183"^^xsd:decimal ;
     sosa:resultTime "…"^^xsd:dateTime ;
     sosa:madeBySensor ag:moisture_sensor_fern ;
-    sosa:usedProcedure perception:ScheduledSampling ;
+    sosa:usedProcedure perception:ScheduledSensing ;
     ag:underWorldVersion 1 ;
     prov:wasGeneratedBy ag:fern_agent .
 ```
@@ -106,7 +133,15 @@ now `perception:Scheduled`"*. Renaming mechanically turned that into *"`PolledSa
 the spelling it means, and the record carries an amendment table.
 
 A find-and-replace over a document that is *about* naming will falsify it. Worth knowing before
-the next one.
+the next one — which arrived immediately: the second rename had to **add a column** to that table
+rather than rewrite it, and the sentence recounting the first change went from *"two renames"* to
+*"three spellings"* by hand.
+
+**The second rename is also what proved the `_SIM_MODE` fix.** Renaming `PushReporting` to
+`PushSensing` changed the dict's keys and left its values — `"push"`, `"scheduled"`, `"pull"` —
+untouched, because the simulator's contract is not the society's vocabulary. Under the old
+derivation that same rename would have sent `"pushsensing"` and broken a device a second time, in
+the same silent way, three commits later.
 
 # Consequences
 
@@ -130,5 +165,5 @@ the next one.
 - **`ssn:implements` is the standard relation and we do not use it.** The reasoning is unchanged
   from the record above: it is wider than `senseMode`, which carries `sh:maxCount 1` and guards a
   derivation.
-- **`perception:PolledSampling` is still reserved.** No rule maps it, so no observation can cite
+- **`perception:PolledSensing` is still reserved.** No rule maps it, so no observation can cite
   it, and the shape would accept one that did.
