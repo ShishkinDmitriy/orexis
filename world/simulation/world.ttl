@@ -9,6 +9,9 @@
 @prefix market: <http://example.org/agora/market#> .
 @prefix scaling: <http://example.org/agora/scaling#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix schema: <https://schema.org/> .
 
 #  A ratified world, v1 — the society, with nothing physical in it.
 #
@@ -93,17 +96,36 @@ ag:supplier a ag:Agent ;
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
 
+# WHAT EACH PLANT NEEDS, which is not the same as what its agent wants. This is the RANGE; the
+# target in `beliefs/<plant>.ttl` is a PICK inside it. Public and in the world because it is a
+# fact about the plant that anyone may check, where the target is private and the agent's to
+# move — see knowledge/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md.
+#
+# Illustrative figures for a synthetic world, not measured here: what matters is that a succulent
+# and a fern want different things and that each agent's target has something to answer to.
 ag:fern a water:Plant ;
     ag:localId "fern" ; water:servedBy ag:barrel1 ;
-    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 .
+    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
+    ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.45 ; schema:maxValue 0.65 ; schema:unitCode unit:UNITLESS ] ] .
 
 ag:tomato a water:Plant ;
     ag:localId "tomato" ; water:servedBy ag:barrel1 ;
-    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 .
+    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
+    ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.40 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] ] .
 
 ag:succulent a water:Plant ;
     ag:localId "succulent" ; water:servedBy ag:barrel1 ;
-    water:dryRatePerTick 0.008 ; water:litresPerFraction 2.0 .
+    water:dryRatePerTick 0.008 ; water:litresPerFraction 2.0 ;
+    ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.15 ; schema:maxValue 0.30 ; schema:unitCode unit:UNITLESS ] ] .
 
 ##########  Plant agents — each wired to its own sensor and into the market  ##########
 #  perception:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.

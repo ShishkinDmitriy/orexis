@@ -29,7 +29,38 @@ water:WaterBidderShape a sh:NodeShape ;
                   sh:lessThan water:bandHigh ;
                   sh:message "the low band must sit below the high one" ] ;
     sh:property [ sh:path water:bandHigh ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ] .
+                  sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ] ;
+
+    # The desire has to answer to the plant. A target is a PICK, and this is what it picks
+    # inside: the plant's own operating range, stated in the world where anyone may read it.
+    #
+    # Only the target. The bands are alarm thresholds and legitimately sit OUTSIDE the range —
+    # a fern's `bandLow` of 0.35 is below its ideal floor of 0.45 precisely because that is
+    # when it should start complaining. Constraining those too would be confusing a comfort
+    # limit with a requirement.
+    #
+    # Matched on the PROPERTY the desire is about, not on the first condition found. A plant
+    # that later states a humidity range must not have its moisture target checked against it —
+    # the same mistake `_is_mine` exists to prevent in the bidder, arriving here by another door.
+    #
+    # This spans the public world and a private belief base, and that is the point: it can only
+    # run where both are visible, which is inside the agent at boot. `validate_agent` flattens
+    # exactly those graphs. Nothing outside the agent ever sees the target.
+    sh:sparql [
+        sh:message "the target sits outside the operating range the plant states for that property — a desire is a pick within a range, not a number of its own" ;
+        sh:select """
+            SELECT $this ?target WHERE {
+                $this <http://example.org/agora/water#hasTarget> ?target .
+                $this <http://example.org/agora#actsFor> ?plant .
+                <http://example.org/agora/water#hasTarget>
+                      <http://example.org/agora/market#aboutProperty> ?property .
+                ?plant <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
+                ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
+                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                           <https://schema.org/minValue> ?low ;
+                           <https://schema.org/maxValue> ?high .
+                FILTER(?target < ?low || ?target > ?high)
+            }""" ] .
 
 water:PlantShape a sh:NodeShape ;
     rdfs:comment "A plant is drawn from a source and states its physics. It holds no desire — that belongs to its agent." ;
@@ -39,7 +70,21 @@ water:PlantShape a sh:NodeShape ;
     sh:property [ sh:path water:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
     sh:property [ sh:path water:hasTarget ; sh:maxCount 0 ;
-                  sh:message "a plant holds no desire — the target belongs to its agent's beliefs" ] .
+                  sh:message "a plant holds no desire — the target belongs to its agent's beliefs" ] ;
+
+    # What it MAY state is the range it needs, which is not a desire but a fact about the plant.
+    # Optional, because a world may run without one; structured, because a range nobody can read
+    # is worse than none. Each condition says which property it is about and both its ends.
+    sh:property [ sh:path ( <http://www.w3.org/ns/ssn/systems/hasOperatingRange>
+                            <http://www.w3.org/ns/ssn/systems/inCondition> ) ;
+                  sh:node [ a sh:NodeShape ;
+                      sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
+                                    sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                                    sh:message "a condition must say which property it is a range OF" ] ;
+                      sh:property [ sh:path <https://schema.org/minValue> ; sh:minCount 1 ; sh:maxCount 1 ;
+                                    sh:datatype xsd:decimal ] ;
+                      sh:property [ sh:path <https://schema.org/maxValue> ; sh:minCount 1 ; sh:maxCount 1 ;
+                                    sh:datatype xsd:decimal ] ] ] .
 
 water:WaterSourceShape a sh:NodeShape ;
     rdfs:comment "Every source has a supplier and a physical ceiling — the constitution's allocation limit." ;

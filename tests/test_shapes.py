@@ -621,3 +621,57 @@ INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
   ag:moisture_sensor_fern ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
       ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] } }"""))
+
+
+# --- the desire answers to the plant -------------------------------------------------------
+#
+# The split these check: a plant states the range it needs, publicly in the world; its agent
+# picks a target inside that range, privately in its own beliefs. See
+# knowledge/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md.
+
+def test_a_target_outside_the_plants_range_is_refused():
+    """A desire is a pick WITHIN a range. Moved outside it, the agent will not start.
+
+    Worth stating why this can be checked at all: the range is public and the target is private,
+    and they meet in exactly one place — inside the agent, whose store holds the world it booted
+    with and its own beliefs. Nothing outside the agent ever sees the number.
+    """
+    data = _mutate("""
+        DELETE { GRAPH ?g { ag:fern_agent <http://example.org/agora/water#hasTarget> ?t } }
+        INSERT { GRAPH ?g { ag:fern_agent <http://example.org/agora/water#hasTarget> 0.90 } }
+        WHERE  { GRAPH ?g { ag:fern_agent <http://example.org/agora/water#hasTarget> ?t } }""")
+    assert not _conforms(data)
+    assert "pick within a range" in _report(data)
+
+
+def test_a_range_for_another_property_does_not_judge_the_moisture_target():
+    """A plant that also states a humidity range must not have its MOISTURE target checked
+    against it. The constraint matches on `market:aboutProperty`, which is what the desire term
+    itself declares — the same reason `_is_mine` compares the property in the bidder.
+
+    Without the property match this passes vacuously, so it is written as a range the target
+    would certainly violate: 0.55 is nowhere near 0.60-0.80.
+    """
+    data = _mutate("""
+        INSERT { GRAPH <http://example.org/agora/graph/world> {
+            ag:fern <http://www.w3.org/ns/ssn/systems/hasOperatingRange> [
+                a <http://www.w3.org/ns/ssn/systems/OperatingRange> ;
+                <http://www.w3.org/ns/ssn/systems/inCondition> [
+                    a <http://www.w3.org/ns/ssn/systems/Condition> ;
+                    <http://www.w3.org/ns/ssn/forProperty>
+                        <http://example.org/agora/water#AirHumidity> ;
+                    <https://schema.org/minValue> 0.60 ;
+                    <https://schema.org/maxValue> 0.80 ] ] } }
+        WHERE {}""")
+    assert _conforms(data), _report(data)
+
+
+def test_a_plant_still_holds_no_desire_of_its_own():
+    """The range is not a target wearing a different name. The older rule stands: a plant may
+    say what it needs and may not say what it wants."""
+    data = _mutate("""
+        INSERT { GRAPH <http://example.org/agora/graph/world> {
+            ag:fern <http://example.org/agora/water#hasTarget> 0.55 } }
+        WHERE {}""")
+    assert not _conforms(data)
+    assert "a plant holds no desire" in _report(data)
