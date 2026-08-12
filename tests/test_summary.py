@@ -12,10 +12,10 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis
-from agent.capabilities.review.graphs import summaries_graph
+from packages.capability.review.graphs import summaries_graph
 from agent.ontology import SENSED_GRAPH, term
 from agent.store import Store
-from agent.capabilities.review.summary import RING, Summaries
+from packages.capability.review.summary import RING, Summaries
 
 from conftest import MOISTURE, WORLDS_ROOT, build_agent
 

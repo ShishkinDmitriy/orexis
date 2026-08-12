@@ -4,7 +4,7 @@ A reading arrives as bytes and becomes a quantity in three steps:
 
     bytes ─[codec]→ document ─[pointer]→ raw value ─[scaling]→ quantity
 
-The outer two are families: `agent/codecs/` and `agent/scalings/`, each a tree of packages
+The outer two are families: `packages/codec/` and `packages/scaling/`, each a tree of packages
 whose members are interchangeable. This one is not, and that is a claim worth defending rather
 than an omission. **RFC 6901 works over any tree**, so a pointer written against JSON keeps
 meaning the same thing over CBOR, over MessagePack, and over a struct a binary parser produced —

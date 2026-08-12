@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from agent import loader, signing  # noqa: F401  (loader puts the package trees on sys.path)
 from agent.clearing import Voucher
 from agent.signing import verify_command
-from agent.capabilities.actuation import ActuationModule
+from packages.capability.actuation import ActuationModule
 from agent.world import Actuator, Self
 
 

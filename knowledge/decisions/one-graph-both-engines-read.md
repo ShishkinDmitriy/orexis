@@ -22,7 +22,7 @@ inference"*, and that framing is not quite right. Counted before changing anythi
 
 - **six** queries carried `rdfs:subClassOf*` property paths by hand — `runtime.py`'s `_family_q`,
   and three capabilities' `rules.ru`
-- **twenty-five** subclass axioms were declared across `vocabulary/` and `agent/capabilities/`
+- **twenty-five** subclass axioms were declared across `vocabulary/` and `packages/capability/`
 
 So the runtime *did* infer. It inferred **by hand, inconsistently** — an axiom meant something
 only where whoever wrote the query happened to remember to walk it, and the other nineteen had no

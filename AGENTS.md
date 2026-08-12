@@ -52,16 +52,29 @@ record is worse than none, because it is still cited.
    is FOUND and how one is deleted. See
    [a-package-owns-its-namespace](knowledge/decisions/a-package-owns-its-namespace.md).
 
-   `agent/capabilities/<name>/` holds its own `ontology.ttl`, `shapes.ttl`, `rules.ru`,
-   `terms.py`, `beliefs.py` and code — **and its own namespace**, if it wants one, declared in
-   its `ontology.ttl` and mirrored in `terms.py`. `agent.loader` reads every project namespace
-   off the ontology that declares it, so `market:` reaches a query without `store.PREFIXES`
-   learning the package exists. Nothing lists them — `agent.loader` finds them, and `PROVIDES`
-   in `__init__.py` is how an implementation registers. Adding one is adding a directory; no
-   registry to edit. Capability packages never import each other's Python: ask
-   `agent.provider(family)` or contribute via `annotate`/`urgency`. They live *inside* `agent/`
-   because only a runtime loads their Python; onboarding reads their TTL through the loader and
-   never imports a module from one.
+   **There is ONE package tree and one mechanic.** `packages/<family>/<name>/` holds whichever
+   of `ontology.ttl`, `shapes.ttl`, `rules.ru`, `review.rq` and Python it wants — every one
+   optional, and an omission is a statement. `packages/part/esp32/` is an ontology and nothing
+   else because a board has no behaviour a runtime could load; `packages/capability/market/` has
+   all of it. Neither is more of a package than the other, and that is the point: a plant, a
+   part and a capability are the same kind of thing to the loader.
+
+   A package may declare **its own namespace**, in its `ontology.ttl` and mirrored in
+   `terms.py`. `agent.loader` reads every project namespace off the ontology that declares it,
+   so `market:` reaches a query without `store.PREFIXES` learning the package exists. Nothing
+   lists them — `agent.loader` finds them two levels down, and the FAMILY is the parent
+   directory rather than anything declared, so `kind` distinguishes a plant from a part without
+   a registry. `PROVIDES` in `__init__.py` is how an implementation registers, and its absence
+   is what makes a package knowledge-only. Adding one is adding a directory. Packages never
+   import each other's Python: ask `agent.provider(family)` or contribute via
+   `annotate`/`urgency`.
+
+   **`agent/` is the kernel that loads them, not their home.** Capability Python used to live
+   under it, so the tree itself showed which of it a runtime loads — it does not show that now.
+   `packages/capability/market/` and `packages/part/dht11/` look identical, so the CONTRACTS
+   carry the boundary alone: `lint-imports` holds `packages` away from `onboarding`, and the
+   `Containerfile` decides what reaches an image by naming two trees and not a third. Both were
+   always the real enforcement; the layout was a reminder, and the reminder is gone.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
 installation: the broker image, the installation CA, Grafana's material, the admin token. A
 world's broker config, its ACL, its certificates and its device credentials live with the world.

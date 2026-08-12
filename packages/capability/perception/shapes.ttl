@@ -115,7 +115,7 @@ perfectly well-formed graph.
 
 TWO IRIs for seconds, because the W3C's own SSN examples were written against QUDT 1.1 and that
 is a different namespace rather than an older spelling of the current one. Both denote the same
-unit, so `sh:in` says which spellings this project can READ; `vocabulary/dht11/` shows the one it
+unit, so `sh:in` says which spellings this project can READ; `packages/part/dht11/` shows the one it
 writes. Accepting theirs costs nothing — a figure is still refused unless it says seconds — and
 refusing it would have made a datasheet from the vocabulary's own authors unreadable over a
 namespace version.""" ;

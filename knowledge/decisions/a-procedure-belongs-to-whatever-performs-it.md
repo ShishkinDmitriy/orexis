@@ -42,8 +42,8 @@ which they distribute.** Each system implements what it can actually do, and no 
 
 | thing | procedure | where it lives | linked by `ssn:implements`? |
 |---|---|---|---|
-| the part | `onewire:Transaction` — one line, both directions in turn | `vocabulary/onewire` | **yes**, on `dht11:Dht11` |
-| the part | `dht11:CombinedRead` — one request, two values, one instant | `vocabulary/dht11` | **yes**, on `dht11:Dht11` |
+| the part | `onewire:Transaction` — one line, both directions in turn | `packages/bus/onewire` | **yes**, on `dht11:Dht11` |
+| the part | `dht11:CombinedRead` — one request, two values, one instant | `packages/part/dht11` | **yes**, on `dht11:Dht11` |
 | the board | `mqtt:Publishing` — connect as a principal, send on a channel | `transports/mqtt` | **named, not yet linked** — see the seam |
 | the board | the clock | `capabilities/perception` — **already there**, as the sense modes | no: `perception:senseMode`, and deliberately |
 | a channel | — | `world.ttl` says what it observes and nothing about how | — |

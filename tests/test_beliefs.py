@@ -11,8 +11,8 @@ import pytest
 from agent import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
 from agent.beliefs import BeliefError, Beliefs, Reading
-from agent.capabilities.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
-from agent.capabilities.perception.beliefs import SUBSCRIBING_BLOCK
+from packages.capability.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
+from packages.capability.perception.beliefs import SUBSCRIBING_BLOCK
 
 from conftest import MOISTURE, TEMPERATURE
 

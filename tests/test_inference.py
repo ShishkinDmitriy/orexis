@@ -209,9 +209,18 @@ def test_pyshacl_agrees_with_the_materialised_closure(world):
 # --- nobody should need to infer by hand again -----------------------------------------------
 
 _QUERY_SOURCES = {
+    # The KERNEL's Python and every PACKAGE's, as two groups. One `rglob` over `agent/` used to
+    # reach both, because capabilities were subpackages of it. After they moved, that glob still
+    # matched plenty of files — so the non-empty guard below stayed green while 143 parametrised
+    # cases quietly stopped running, every one of them a capability's SPARQL. Non-empty is not
+    # the same as complete, and this is what that looks like.
     "agent": sorted(Path(genesis.__file__).parent.rglob("*.py")),
-    "rules": sorted(Path(genesis.__file__).parent.rglob("*.ru")),
-    "review": sorted(Path(genesis.__file__).parent.rglob("*.rq")),
+    "packages": sorted(loader.PACKAGES_ROOT.rglob("*.py")),
+    # Under packages/ and not under agent/. Every `.ru` and `.rq` belongs to a PACKAGE, and
+    # packages left the kernel's tree — which is exactly the move that has twice emptied a glob
+    # here and taken cases off this scan without failing anything. It failed loudly this time.
+    "rules": sorted(loader.PACKAGES_ROOT.rglob("*.ru")),
+    "review": sorted(loader.PACKAGES_ROOT.rglob("*.rq")),
     "onboarding": sorted(loader.REPO_ROOT.glob("onboarding/*.py")),
 }
 

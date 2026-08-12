@@ -72,7 +72,7 @@ def test_the_offer_announces_the_rule_bidders_are_bidding_under(host):
     Read off the provider rather than a belief, so what is announced is necessarily what runs —
     a host cannot advertise one rule and apply another.
     """
-    from agent.capabilities.market import PAY_AS_BID
+    from packages.capability.market import PAY_AS_BID
 
     host.deliver("readings/fern", low_event())
     assert offer_from(host)["matches_by"] == PAY_AS_BID
@@ -166,7 +166,7 @@ def test_sitting_out_says_which_of_three_things_happened(make):
     Not a test of wording — of the distinction. If these three collapse to one string again, a
     quiet sensor becomes indistinguishable from a board sleeping exactly as instructed.
     """
-    from agent.capabilities.market.terms import BIDDING
+    from packages.capability.market.terms import BIDDING
 
     def why(agent):
         bidding = next(m for m in agent.modules if m.CAPABILITY == BIDDING)
@@ -196,7 +196,7 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
     wrong unit, which is exactly what the market cannot detect, because a bid is private and
     this one is perfectly well-formed.
     """
-    from agent.capabilities.market.terms import BIDDING
+    from packages.capability.market.terms import BIDDING
 
     fern = make("fern")  # nothing in hand, so it waits
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
@@ -414,7 +414,7 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
     from onboarding.keygen import create_keypair
 
     from agent import genesis
-    from agent.capabilities.market import UNIFORM_PRICE
+    from packages.capability.market import UNIFORM_PRICE
     from agent.genesis import agent_id_of
     from agent.store import Store
 

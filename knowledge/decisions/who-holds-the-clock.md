@@ -152,7 +152,7 @@ Measured on `world/sensing`, removing one `mqtt:commandTopic` at a time:
 | `ag:air_temp_fern` | no | yes |
 | `ag:air_humidity_fern` | no | yes |
 
-The guard lives in `agent/transports/mqtt/shapes.ttl` and is conditioned on a sensor being **on a
+The guard lives in `packages/transport/mqtt/shapes.ttl` and is conditioned on a sensor being **on a
 bus**. The two DHT channels are `sosa:Sensor` and deliberately not devices — they ride the board's
 topic and have no `mqtt:onBus` of their own — so the shape never targets them. Each is
 `perception:ScheduledProcedure`, each derives `perception:Subscribing`, and each can lose the

@@ -11,11 +11,11 @@ import rdflib
 from agent import genesis, loader
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_self, load_world
-from agent.capabilities.actuation import ACTUATION
-from agent.capabilities.market import BIDDING, HOSTING, PAY_AS_BID
-from agent.capabilities.perception import LISTENING, SUBSCRIBING
-from agent.capabilities.reporting import STORING
-from agent.capabilities.review import RECKONING
+from packages.capability.actuation import ACTUATION
+from packages.capability.market import BIDDING, HOSTING, PAY_AS_BID
+from packages.capability.perception import LISTENING, SUBSCRIBING
+from packages.capability.reporting import STORING
+from packages.capability.review import RECKONING
 
 from conftest import genesis_store, query_fn
 

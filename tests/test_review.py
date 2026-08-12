@@ -10,12 +10,12 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis
-from agent.capabilities.review.graphs import evidence_graph, revisions_graph
+from packages.capability.review.graphs import evidence_graph, revisions_graph
 from agent.ontology import PERCEPTION, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph, term
-from agent.capabilities.review import RECKONING, REVIEW
-from agent.capabilities.review.module import Range, world_ranges
+from packages.capability.review import RECKONING, REVIEW
+from packages.capability.review.module import Range, world_ranges
 from agent.store import bindings
-from agent.capabilities.review.summary import RING, Summaries
+from packages.capability.review.summary import RING, Summaries
 
 from conftest import WORLDS_ROOT, build_agent, genesis_store
 

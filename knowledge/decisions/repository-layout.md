@@ -11,13 +11,13 @@ timestamp: 2026-08-07T00:00:00Z
 ```
 pyproject.toml   Containerfile
 agent/                       the runtime, and the model it reads
-agent/capabilities/<name>/   what an agent can DO — discovered
-agent/transports/<name>/     how a device is REACHED — discovered
+packages/capability/<name>/   what an agent can DO — discovered
+packages/transport/<name>/     how a device is REACHED — discovered
 onboarding/                  the sovereign's tools
-vocabulary/agora/            the society kernel everything layers on
-vocabulary/microcontroller/  boards, peripherals, pins, wires
+packages/core/agora/            the society kernel everything layers on
+packages/part/microcontroller/  boards, peripherals, pins, wires
 vocabulary/<part>/           one concrete part, or one protocol — dht11, onewire, rgb-led
-vocabulary/water/            what this society is about
+packages/plant/water/            what this society is about
 tests/  firmware/  infra/  world/  knowledge/
 ```
 
@@ -57,26 +57,28 @@ So the split went, and the intent became two things that fail when violated:
 `import onboarding.mqtt` to `agent/runtime.py` turns the contract BROKEN, and adding
 `COPY onboarding/` fails two tests. A guard never seen to fail is a guard nobody has tested.
 
-The image is now two directories — `agent/` and `vocabulary/` — and neither is onboarding. Measured
-on the built image: `/app/onboarding` does not exist and `import onboarding` raises
-`ModuleNotFoundError`.
+The image is two directories and neither is onboarding. Measured on the built image at the time:
+`/app/onboarding` does not exist and `import onboarding` raises `ModuleNotFoundError`. They were
+`agent/` and `vocabulary/` then and are `agent/` and `packages/` now — the count is what the
+boundary test asserts, not the names.
 
-# Why capabilities live inside the agent and the vocabulary does not
+# Why capabilities lived inside the agent and the vocabulary did not — AMENDED
 
-The line is whether **Python** is shared.
+**The arrangement this section argues for is gone.** It is kept because the reasoning is still
+the reason the boundary exists, and because a record that quietly agrees with whatever is current
+teaches nobody why.
 
-A capability's code is loaded only by an agent runtime. Onboarding reads its `ontology.ttl`,
-`shapes.ttl` and `rules.ru` — to validate a world and to derive what an agent can do — but never
-imports its Python. So the tree belongs to the thing that runs it, and `agent/capabilities/` says
-so. Transports are the same kind of thing and moved for the same reason; nothing outside `agent/`
-imports either tree's code.
+The line was whether **Python** is shared. A capability's code is loaded only by an agent runtime;
+onboarding reads its `ontology.ttl`, `shapes.ttl` and `rules.ru` — to validate a world and derive
+what an agent can do — but never imports its Python. So the tree belonged to the thing that ran
+it, and vocabulary, genuinely shared, stayed at the root where neither half owned it.
 
-The vocabulary is genuinely shared: onboarding validates worlds against it and derives from it. It
-stays at the root.
-
-A pleasant consequence: because capabilities and transports travel inside `agent/`, the image's
-copy list collapsed to two directories, which is what made the boundary test almost trivial to
-write.
+What changed is not that fact but what expresses it. There is ONE tree now,
+`packages/<family>/<name>/`, so the layout no longer *shows* which Python a runtime loads — and
+the import contracts and the `Containerfile` carry the boundary alone. The pleasant consequence
+noted below survived: the image's copy list is still two directories, which is still what makes
+the boundary test trivial. See
+[one-tree-and-one-mechanic](/decisions/one-tree-and-one-mechanic.md).
 
 # Why there is no `agent/kernel/`
 
@@ -88,7 +90,7 @@ them as peers would suggest the trunk is replaceable.
 
 It would also have cost every capability, every transport and all of onboarding an extra level —
 `from agent.kernel.ontology import term` against `from agent.ontology import term` — and
-reintroduced the word `kernel` with a new meaning days after `vocabulary/agora` freed it, making
+reintroduced the word `kernel` with a new meaning days after `packages/core/agora` freed it, making
 every older reference ambiguous about which kernel it meant.
 
 # Naming
@@ -102,7 +104,7 @@ is the same redundancy as `onboarding/src/onboarding`. The known cost is that on
 correct. The import contract states the rule explicitly, so the name surprises and the contract
 does not.
 
-`vocabulary/agora` and `vocabulary/water` rather than `kernel/` and `domain/water/`: those two were
+`packages/core/agora` and `packages/plant/water` rather than `kernel/` and `domain/water/`: those two were
 the only trees with no Python at all, which is exactly what they have in common. There are now
 more of them than two — the stand, a package per protocol, a package per part — and that is the
 same rule applied further: see [pins-and-wires](/decisions/pins-and-wires.md).

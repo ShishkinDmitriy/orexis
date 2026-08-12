@@ -2,7 +2,7 @@
 
 These are not our files. `tests/fixtures/w3c-ssn/` holds two documents from `w3c/sdw` — the
 repository behind the 2017 SSN Recommendation — describing a DHT22, which is the KY-015's
-sibling and the part `vocabulary/dht11/` was modelled against. They are byte-identical to
+sibling and the part `packages/part/dht11/` was modelled against. They are byte-identical to
 upstream; see the README beside them.
 
 They are here to answer one question that reasoning could not: **can a description written by

@@ -11,14 +11,14 @@ timestamp: 2026-08-12T00:00:00Z
 # The structural question first, because it dissolved
 
 The request came with a preference: *one feature has all it needs — ontology, scripts* — and a
-suggestion that `vocabulary/dht11/` should be restructured to match a capability.
+suggestion that `packages/part/dht11/` should be restructured to match a capability.
 
 **It already is, and nothing needed moving.** Measured rather than assumed:
 
 | | capability | vocabulary package |
 |---|---|---|
 | how it is found | `loader.packages()` — "found by looking. Nothing is named" | the same call, same rule |
-| `ontology.ttl`, `shapes.ttl`, `rules.ru`, `review.rq` | any subset | the same subset — `vocabulary/agora/` carries a `rules.ru` |
+| `ontology.ttl`, `shapes.ttl`, `rules.ru`, `review.rq` | any subset | the same subset — `packages/core/agora/` carries a `rules.ru` |
 | its own namespace | declared in its ontology | the same, and `loader.prefixes()` picked up `zz:` with no registry edit |
 | Python | `__init__.py` with `PROVIDES` | **none** |
 
@@ -33,7 +33,7 @@ the *plant* side of the domain, and that is what this record is about.
 
 # A species is a model, and a pot is a unit
 
-`vocabulary/zamioculcas/` is deliberately the same shape as `vocabulary/dht11/`, because the
+`packages/plant/zamioculcas/` is deliberately the same shape as `packages/part/dht11/`, because the
 underlying situation is the same one:
 [a part is described once and fitted many times](/decisions/a-part-is-described-once-and-fitted-many-times.md).
 A datasheet describes a model and a world names the soldered units; care guidance describes a

@@ -110,7 +110,7 @@ bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[
 ```
 
 The pointer above is the middle one. The outer two are families with interchangeable members —
-`agent/codecs/` and `agent/scalings/` — and which member serves a reading is **derived at
+`packages/codec/` and `packages/scaling/` — and which member serves a reading is **derived at
 genesis**, from what a world states or from its silence, exactly as `perception:Subscribing` is derived
 onto an agent from `perception:senseMode`. They land on different bearers, because they are facts about
 different things: the **scaling** is the sensor's, since a curve is a property of the probe, and

@@ -24,9 +24,14 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTAINERFILE = REPO_ROOT / "Containerfile"
 
-# What an agent legitimately runs. `agent/` carries capabilities and transports as subpackages;
-# `vocabulary/` is the shared T-Box, which onboarding reads too and neither side owns.
-ALLOWED_TREES = {"agent", "vocabulary"}
+# What an agent legitimately runs: the KERNEL that loads packages, and the packages. `packages/`
+# holds a capability's Python and a part's ontology in one tree, and onboarding reads the same
+# terms without importing any of it, so neither side owns it.
+#
+# This list carries more weight than it used to. Capability Python lived under `agent/` before,
+# so the tree itself showed which of it a runtime loads; it does not show that now, and this
+# file plus the import contracts are the whole of the boundary.
+ALLOWED_TREES = {"agent", "packages"}
 
 # Never in an agent image. `agora-influx` reads the admin token, which opens every bucket in the
 # store and which no agent may ever hold; the surest guarantee is that the code using it is
@@ -361,3 +366,45 @@ def test_a_packages_python_namespace_is_the_one_its_ontology_declares():
         )
         checked.append(package.name)
     assert checked, "no package declares a namespace of its own — this guard is checking nothing"
+
+
+# --- the prose is checkable too ---------------------------------------------------------------
+
+# Instances that AGENTS.md names on purpose, as the thing rule 1 forbids. They are not terms and
+# must never be declared — naming them here is what keeps the check below from being weakened to
+# "any word with a colon in it".
+_COUNTER_EXAMPLES = {"ag:fern_agent", "ag:world"}
+
+
+@pytest.mark.parametrize("doc", ["README.md", "AGENTS.md"])
+def test_the_docs_only_name_terms_that_exist(doc):
+    """Every `prefix:Term` in the two entry documents is declared by some package.
+
+    Written after finding EIGHT in README.md that no vocabulary had declared since the namespace
+    split — `ag:senseMode`, `ag:Subscribing`, `ag:readingTopic` and five more. Every one had a
+    live successor in another namespace, so the prose was not vague, it was wrong, and nothing
+    failed: a renamed term leaves no dangling reference for a reader to trip over.
+
+    Prose is where this project keeps its reasoning, so prose going stale is not cosmetic. The
+    same rename swept the code, the shapes and the worlds, and stopped at the door of the file
+    people read first.
+    """
+    import re
+    from agent import loader
+
+    declared = set()
+    for path in loader.ontology_files():
+        declared |= set(re.findall(r"\b[a-z][a-z0-9-]*:[A-Za-z][A-Za-z0-9_]*\b",
+                                   Path(path).read_text()))
+    known = set(loader.prefixes()) | {"ag"}
+
+    named = {t for t in re.findall(r"`([a-z][a-z0-9-]*:[A-Za-z][A-Za-z0-9_]*)`",
+                                   (REPO_ROOT / doc).read_text())
+             if t.split(":")[0] in known}
+    assert named, f"{doc} names no project terms at all — this guard checks nothing"
+
+    missing = sorted(named - declared - _COUNTER_EXAMPLES)
+    assert not missing, (
+        f"{doc} names {missing}, which no package declares. A renamed term leaves the prose "
+        f"wrong rather than broken, so nothing else will tell you."
+    )
