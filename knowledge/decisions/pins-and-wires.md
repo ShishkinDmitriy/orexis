@@ -122,7 +122,7 @@ argument that no longer applies.
 
 One consequence of dropping simulation: the chip a custom board delegates to only has to supply
 pin NAMES for `target` to map onto. So `wokwi-dht22` standing in for a DHT11 costs nothing here,
-and would cost everything the day anything runs — see boards/README.md.
+and would cost everything the day anything runs — see `packages/part/dht11/wokwi/README.md`.
 
 **A part says how it draws in its own package.** `packages/part/dht11/` already states what a DHT11
 is and what legs it has; that it draws as `wokwi-dht22` with SDA/VCC/GND is the same kind of
