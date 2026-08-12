@@ -154,12 +154,23 @@ def _steps(ranges: dict) -> list[dict]:
 
 
 def _sensor_panel(title: str, bucket: str, sensor_id: str, unit: str, ranges: dict,
-                  kind: str, x: int, y: int, w: int, h: int, panel_id: int, desc: str = ""):
+                  y: int, h: int, panel_id: int, desc: str = ""):
+    """One panel per sensor: the history, with the latest value in its legend.
+
+    There is no second panel showing the current value. A stat beside the curve repeats what the
+    curve's right-hand edge already says, and costs half the width that the history — the thing
+    a range is interesting against — could have used. Grafana's table legend carries
+    `lastNotNull`, so the number is still on screen and is still the last reading.
+    """
     survival = ranges.get("SurvivalRange")
     defaults = {
         "unit": unit,
         "color": {"mode": "thresholds"},
         "thresholds": {"mode": "absolute", "steps": _steps(ranges)},
+        # Draw the bands rather than only colouring the line: the question a history panel
+        # answers is "was it ever outside", and a line that merely changes colour answers it
+        # only where someone happens to be looking.
+        "custom": {"thresholdsStyle": {"mode": "area"}, "fillOpacity": 8},
     }
     # The axis is the survival range where one is stated — what the subject can stand is the
     # interesting window, and a curve pinned to 0-1 hides a temperature entirely. Widened a
@@ -169,27 +180,20 @@ def _sensor_panel(title: str, bucket: str, sensor_id: str, unit: str, ranges: di
         defaults["min"] = survival[0] - span * 0.1
         defaults["max"] = survival[1] + span * 0.1
 
-    options = {}
-    if kind == "timeseries":
-        options = {"legend": {"displayMode": "list", "placement": "bottom"}}
-        # Draw the bands rather than only colouring the line: the question a history panel
-        # answers is "was it ever outside", and a line that merely changes colour answers it
-        # only where someone happens to look.
-        defaults["custom"] = {"thresholdsStyle": {"mode": "area"}, "fillOpacity": 8}
-    else:
-        options = {"colorMode": "value", "graphMode": "area", "textMode": "auto",
-                   "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}}
-
     return {
         "id": panel_id,
-        "type": kind,
+        "type": "timeseries",
         "title": title,
         "description": desc,
         "datasource": {"type": "influxdb", "uid": "influxdb"},
-        "gridPos": {"h": h, "w": w, "x": x, "y": y},
+        "gridPos": {"h": h, "w": 24, "x": 0, "y": y},
         "targets": [{"refId": "A", "query": _flux(bucket, sensor_id)}],
         "fieldConfig": {"defaults": defaults, "overrides": []},
-        "options": options,
+        "options": {
+            "legend": {"showLegend": True, "displayMode": "table", "placement": "bottom",
+                       "calcs": ["lastNotNull"]},
+            "tooltip": {"mode": "single", "sort": "none"},
+        },
     }
 
 
@@ -300,7 +304,7 @@ def _ranges_by_subject(ds) -> dict:
 
 
 def render(world: str) -> dict:
-    """One ROW per sensor: its history, and what it reads right now.
+    """One panel per sensor: its history, with the latest reading in the legend.
 
     Per sensor rather than per agent, which is the whole of the fix. An agent's bucket holds
     every property it records, so one panel per agent drew a temperature and two fractions on
@@ -326,12 +330,8 @@ def render(world: str) -> dict:
                 f"Bands: {told}. Both come from the world, never from this file.")
 
         panels.append(_sensor_panel(f"{row['subjectId']} — {prop}", bucket, row["sensorId"],
-                                    unit, stated, "timeseries",
-                                    x=0, y=y, w=16, h=8, panel_id=pid, desc=desc))
-        panels.append(_sensor_panel(f"{prop} now", bucket, row["sensorId"],
-                                    unit, stated, "stat",
-                                    x=16, y=y, w=8, h=8, panel_id=pid + 1, desc=desc))
-        pid += 2
+                                    unit, stated, y=y, h=8, panel_id=pid, desc=desc))
+        pid += 1
         y += 8
 
     return {

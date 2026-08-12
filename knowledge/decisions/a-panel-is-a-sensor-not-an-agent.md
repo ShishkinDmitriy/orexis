@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: A panel is a sensor, not an agent, and it draws what the world says
-description: One panel per agent put every property that agent records on one axis under one unit, so a 23.9 degree reading was drawn as 2390% and thresholds meant for soil moisture coloured a temperature. A panel is keyed on the sensor now — one row each, history beside current value — because a sensor observes one property, states one unit, and its subject states the range that property belongs in. Nothing about units or bands is written in the generator; all three come from the world.
+description: One panel per agent put every property that agent records on one axis under one unit, so a 23.9 degree reading was drawn as 2390% and thresholds meant for soil moisture coloured a temperature. A panel is keyed on the sensor now — one full-width history each, with the latest reading in its legend — because a sensor observes one property, states one unit, and its subject states the range that property belongs in. Nothing about units or bands is written in the generator; all three come from the world.
 status: accepted
 stage: v1
 tags: [grafana, onboarding, units, ssn, observability]
@@ -29,7 +29,12 @@ had carefully separated onto one axis with one unit.
 
 # A panel is a sensor
 
-One **row per sensor**: history at 16 columns, current value at 8. Rows are the number of sensors.
+**One panel per sensor**, full width, and the number of panels is the number of sensors.
+
+There is no second panel showing the current value. A stat beside the curve repeats what the
+curve's right-hand edge already says, and costs half the width that the history — the thing a
+range is interesting *against* — could have used. Grafana's table legend carries `lastNotNull`,
+so the number is still on screen and is still the last reading.
 
 A sensor is the right key because it is the thing that has the facts a panel needs:
 `sosa:observes` one property, `scaling:quantityUnit` one unit, and `perception:monitors` a subject
