@@ -122,7 +122,7 @@ and **eleven are not true of every agent**:
   `ag:modelTickSeconds`. Used by `world/simulation` and no other world. They want a simulation
   package that does not exist — and `modelDryRate` is water-domain besides, since only a plant
   dries.
-- **Deployment — three terms.** `ag:ComputeHost`, `ag:runsOn`, `ag:lanAddress`, used by
+- **Deployment — three terms.** `ag:ComputeHost`, `ag:runsOn`, `ag:lanHost`, used by
   `world/sensing` alone. Every agent runs somewhere, so these are closer to universal; what is
   not universal is stating *where*.
 - ~~**`ag:SelfReporting`**~~ — **settled, and the question turned out to be malformed.** It was
