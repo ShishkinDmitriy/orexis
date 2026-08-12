@@ -86,6 +86,9 @@ class Observations:
                 subject_uri=sensor.subject, subject_id=sensor.subject_id,
                 value=round(value, 3), sensor_uri=sensor.uri,
                 observed_property=sensor.observes, author_uri=self.me.uri,
+                # How it was made, in the sensor's own words. A shape requires it, so a sensor
+                # with no sense mode never reaches here — the world is refused first.
+                used_procedure=sensor.sense_mode,
                 world_version=self.agent.world.version,
             )
         except Exception as exc:

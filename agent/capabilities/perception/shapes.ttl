@@ -58,13 +58,16 @@ perception:DoubleCoveredPropertyShape a sh:NodeShape ;
         """ ] .
 
 perception:ObservationShape a sh:NodeShape ;
-    rdfs:comment "Every observation is a complete, authored, versioned MEASUREMENT, carrying the time it was taken — which is what the freshness rule checks. No band: the verdict is each agent's own and is never recorded." ;
+    rdfs:comment "Every observation is a complete, authored, versioned MEASUREMENT, carrying the time it was taken — which is what the freshness rule checks, and the procedure it was taken by, which says whether a reading that failed to arrive means a late board or a quiet one. No band: the verdict is each agent's own and is never recorded." ;
     sh:targetClass sosa:Observation ;
     sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:observedProperty ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:hasSimpleResult ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path sosa:resultTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
     sh:property [ sh:path sosa:madeBySensor ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sosa:usedProcedure ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:class perception:SenseMode ;
+                  sh:message "an observation says how it was made — one of the three sense modes, which is what its sensor already states" ] ;
     sh:property [ sh:path ag:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;
     sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "every reading carries an author" ] .

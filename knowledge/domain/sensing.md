@@ -233,6 +233,14 @@ as the **agent's own** assertion — `prov:wasGeneratedBy` the agent, no witness
 [trusted-agent-mode](/decisions/trusted-agent-mode.md), then announces its verdict on its
 event topic.
 
+The observation also says **how it was made**: `sosa:usedProcedure` carries the sensor's sense
+mode, which is a `sosa:Procedure`. That is not recoverable from the number, and it changes what
+a *missing* reading means — under `perception:ScheduledSampling` the board is late, under
+`perception:PushReporting` there may simply have been nothing to say. It is the clock part of
+how, not the whole method: the codec, the pointer and the scaling are also how that number came
+to be. See
+[an-observation-says-how-it-was-made](/decisions/an-observation-says-how-it-was-made.md).
+
 Which sensors it listens to is not configured: it reads `perception:polls` from the
 [world](/decisions/world-graph.md) and subscribes exactly those topics, never a wildcard.
 That is the sensor access grant made concrete — fern's agent is wired to fern's sensor and

@@ -13,13 +13,17 @@ import json
 
 import pytest
 
+from agent.ontology import SENSED_GRAPH
 from agent.pointer import DEFAULT_POINTER, PointerError, resolve
+from agent.store import bindings
 from agent.world import Sensor, load_self
 
 from conftest import build_agent, genesis_store, query_fn
 
 AIR_TEMP = "http://example.org/agora/water#AirTemperature"
 AIR_HUMIDITY = "http://example.org/agora/water#AirHumidity"
+# The mode every shipped board states: it keeps an interval its agent gives it.
+SCHEDULED = "http://example.org/agora/perception#ScheduledSampling"
 MOISTURE = "http://example.org/agora/water#SoilMoisture"
 
 
@@ -217,3 +221,37 @@ def test_a_sensor_with_no_command_channel_is_aimed_alone(monkeypatch):
     loose = Sensor(uri="urn:loose", local_id="loose", subject="urn:fern", subject_id="fern",
                    observes=AIR_TEMP)
     assert subscribing._aimed_with(loose) == (loose,)
+
+
+def test_an_observation_says_which_procedure_made_it(monkeypatch):
+    """A reading records HOW it was taken, not only what and when.
+
+    `sosa:usedProcedure` carries the sensor's sense mode, and the distinction it preserves is
+    not recoverable from the number: under `ScheduledSampling` a reading that fails to arrive
+    means the board is late, under `PushReporting` it may mean nothing happened worth
+    reporting. Before this the answer existed only by joining back to the sensor, which is one
+    join away from nobody making it.
+
+    Driven through the real message path rather than the writer, because the value comes off
+    `Sensor.sense_mode` — calling the writer directly would prove only that its own argument
+    arrives where it was put.
+    """
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    agent.deliver("sensors/moisture_sensor_fern/reading",
+                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
+
+    # `:sensed` is the agent's own graph and not one of the public five, so it is NAMED here.
+    # The rule against wrapping a SELECT in a GRAPH clause is about the public graphs, where
+    # narrowing silently drops facts that live in a sibling; this one has to be asked for.
+    rows = bindings(agent.store.query(f"""
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        SELECT ?proc WHERE {{ GRAPH <{SENSED_GRAPH}> {{
+          ?obs a sosa:Observation ; sosa:usedProcedure ?proc }} }}"""))
+    assert rows, "no observation cited a procedure"
+    cited = {r["proc"] for r in rows}
+
+    # Every sensor on this board keeps the interval it is given, so all three cite one mode —
+    # and the assertion is against what the SENSORS say rather than a constant, so a world that
+    # rewires its board moves both sides together.
+    assert cited == {s.sense_mode for s in agent.me.sensors}
+    assert cited == {SCHEDULED}, "the shipped board keeps an interval it is given"
