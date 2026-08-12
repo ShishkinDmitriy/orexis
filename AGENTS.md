@@ -190,12 +190,14 @@ agora-keygen <world>        # once per world, before it is onboarded
 agora-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent
 podman build -t agora:local .                 # only when a dependency changes
-pytest tests -q        # 261 tests, no infra needed
+pytest -q              # BOTH roots: tests/ and any a package carries. No infra needed.
+                       # NOT `pytest tests` — a package's own tests are invisible to that,
+                       # and to a bare `pytest` if testpaths does not name packages.
 pytest infra -q        # 8 more, against the RUNNING broker and store — see below
 lint-imports           # the layering: onboarding may import agent, never the reverse
 ```
 
-`agora-validate` and `pytest tests` are the two gates. `pytest infra` is a third thing, run
+`agora-validate` and `pytest` are the two gates. `pytest infra` is a third thing, run
 deliberately, and it is not part of them.
 
 **`infra/tests/` is a contract with the infrastructure, not with the code.** It holds mosquitto
@@ -231,7 +233,7 @@ generated and mosquitto now refuses anonymous clients. It then **reloads** the b
 (SIGHUP, not a restart — connected agents keep their sessions), so adding an agent or a world
 still interrupts nothing.
 
-`agora-validate` and `pytest tests` are the two gates. Both must pass before a change is done.
+`agora-validate` and `pytest` are the two gates. Both must pass before a change is done.
 
 Beliefs are the agent's: **authored** once at birth, never touched by start or stop. Anything
 that would reset them on a restart is a bug, not a convenience.

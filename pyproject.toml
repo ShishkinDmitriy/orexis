@@ -64,7 +64,16 @@ where = ["."]
 include = ["agent*", "packages*", "onboarding*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# BOTH roots. `tests/` is the integration suite — most of what this project asserts is about the
+# merged graph, and a shape or a rules.ru cannot be exercised without every package's T-Box. A
+# package may also carry its OWN tests, as plain `test_*.py` files beside the code they cover,
+# for the rare thing that means something alone: `packages/capability/market/test_auction.py`
+# is pay-as-bid and uniform-price arithmetic, and needs no world at all.
+#
+# `packages` must be named here or those files are invisible. Measured: with `testpaths =
+# ["tests"]`, neither `pytest tests` NOR a bare `pytest` collects a test file inside a package —
+# it runs only when named by path, so the suite would have gone green while skipping it.
+testpaths = ["tests", "packages"]
 
 # ---------------------------------------------------------------------------------------------
 # The layering, stated and checked rather than implied by a directory.

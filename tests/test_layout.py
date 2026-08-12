@@ -408,3 +408,31 @@ def test_the_docs_only_name_terms_that_exist(doc):
         f"{doc} names {missing}, which no package declares. A renamed term leaves the prose "
         f"wrong rather than broken, so nothing else will tell you."
     )
+
+
+def test_a_packages_own_tests_are_actually_collected():
+    """A package may carry its own tests. Nothing would notice if they stopped running.
+
+    Measured before this was allowed: with `testpaths = ["tests"]`, a `test_*.py` inside a
+    package is collected by NEITHER `pytest tests` NOR a bare `pytest`. It runs only when named
+    by path — so the suite goes green having skipped it, and the count moves by an amount nobody
+    is watching. That is exactly how the layout move lost 143 cases (see
+    knowledge/decisions/one-tree-and-one-mechanic.md) and it is issue #106's shape.
+
+    So this asserts the link between the two facts rather than either alone: if any package
+    carries a test, `testpaths` must name the tree it lives in.
+    """
+    import tomllib
+
+    packages = REPO_ROOT / "packages"
+    carried = sorted(p.relative_to(REPO_ROOT) for p in packages.rglob("test_*.py"))
+    if not carried:
+        pytest.skip("no package carries its own tests yet")
+
+    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
+    testpaths = config["tool"]["pytest"]["ini_options"]["testpaths"]
+    assert "packages" in testpaths, (
+        f"{[str(p) for p in carried]} live inside packages/, and testpaths is {testpaths}. "
+        f"They are collected by neither `pytest tests` nor a bare `pytest` — the suite would "
+        f"pass without ever running them."
+    )
