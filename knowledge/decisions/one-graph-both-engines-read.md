@@ -45,7 +45,15 @@ each package's `rules.ru`, so a derivation rule may ask what a thing **is** rath
 out how to find out.
 
 What is computed is deliberately narrow: transitivity of `rdfs:subClassOf` and
-`rdfs:subPropertyOf`, and the type and property entailments that follow. Nothing else.
+`rdfs:subPropertyOf`, the type and property entailments that follow, and — since
+[what-is-true-of-a-part-is-true-of-every-one-of-them](what-is-true-of-a-part-is-true-of-every-one-of-them.md)
+— `owl:hasValue`, the one OWL class expression that produces ground triples rather than
+constraining them. Nothing else.
+
+**Widening it is the sanctioned move**, and that record is the worked example of what a widening
+costs: a fifth rule, and `isIRI(?super)` on two existing ones, because a superclass could now be an
+anonymous class expression and `?x a _:restriction` is true, unaskable, and exactly the kind of
+triple this closure exists to leave out.
 
 Full RDFS entailment was refused rather than deferred. It would assert that every resource is an
 `rdfs:Resource` and every property an `rdf:Property` — true, useless, and it would multiply the
