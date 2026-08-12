@@ -1,0 +1,107 @@
+@prefix zz:   <http://example.org/agora/zamioculcas#> .
+@prefix water: <http://example.org/agora/water#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+
+<http://example.org/agora/zamioculcas> a owl:Ontology ;
+    rdfs:label "Zamioculcas zamiifolia" ;
+    rdfs:comment """One species, its own package, layered on the water domain. The shape a plant
+should take, and it is deliberately the same shape a PART takes: a species is a model and the pots
+are the units, exactly as a DHT11 is a model and the soldered ones are units. So what the species
+knows is stated ONCE on the class and reaches every pot by entailment, and a world that acquires a
+second ZZ writes one triple. See knowledge/decisions/a-part-is-described-once-and-fitted-many-times.md.
+
+Depends on `water:` — unlike a part package, which must not. A thermistor resolves to 1 degree in
+any world that will ever use one, so binding it to a domain would be backwards; a plant species IS
+the domain, and the properties it cares about are the domain's to name.""" .
+
+zz:ZamioculcasZamiifolia a owl:Class ; rdfs:subClassOf water:Plant ;
+    rdfs:label "Zamioculcas zamiifolia" ;
+    schema:alternateName "ZZ plant" , "Zanzibar gem" , "emerald palm" ;
+    rdfs:seeAlso <https://powo.science.kew.org/taxon/urn:lsid:ipni.org:names:88189-1> ;
+    rdfs:comment """An aroid from the dry grassland and forest floor of eastern Africa — Zanzibar
+south to South Africa — and everything below follows from where it is from. It stores water in
+RHIZOMES, thick underground stems, which is why it survives being forgotten and why it is killed by
+attention: the failure mode is not drought but rot, and the plant looks well right up until the
+rhizome has gone.
+
+Slow-growing and famously tolerant of low light. Sap contains calcium oxalate crystals and is a
+skin and mucous-membrane irritant, so it is a poor choice within reach of a cat or a toddler —
+recorded here because it is a fact about the species someone caring for one should meet, even
+though nothing in this repository can act on it.""" .
+
+#################  What it needs, and what it will merely survive  #################
+#
+# TWO ranges, and SSN has both words. `ssn-system:OperatingRange` is where the plant does well;
+# `ssn-system:hasSurvivalRange` is where it does not die. For most things that distinction is
+# decoration. For this one it is the entire care instruction, because the gap is asymmetric: the
+# dry end of survival is enormous and the wet end is a cliff.
+#
+# The codebase already gestured at exactly this split without a term for it — `water:bandLow` is
+# documented as "a comfort limit, desire-relative — not the rot limit, which is physical". The rot
+# limit is the survival range's ceiling, and it is a property of the SPECIES rather than of anyone's
+# desire, so it belongs here.
+#
+# Stated on the class as `owl:hasValue`, so the ranges are ONE pair of individuals every ZZ shares
+# — which is what a species fact is. A per-pot fact (how fast THIS pot dries) is not here; that is
+# `water:dryRatePerTick`, stated per plant in a world, because it is about the pot and not the
+# species.
+
+zz:ZamioculcasZamiifolia rdfs:subClassOf
+    [ a owl:Restriction ; owl:onProperty ssn-system:hasOperatingRange ;
+      owl:hasValue zz:IndoorOperatingRange ] ,
+    [ a owl:Restriction ; owl:onProperty ssn-system:hasSurvivalRange ;
+      owl:hasValue zz:IndoorSurvivalRange ] .
+
+zz:IndoorOperatingRange a ssn-system:OperatingRange ;
+    rdfs:label "Zamioculcas indoors, growing season" ;
+    rdfs:comment "Where it grows rather than merely persists. Named for the regime it assumes, because a second one is the obvious extension and would need telling apart from this: in winter this plant genuinely wants less water, not the same water less often. What stops that being written today is recorded in knowledge/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md — ssn-system:inCondition cannot say which of its conditions is the qualifier and which the requirement, and nothing here could select a regime anyway." ;
+    ssn-system:inCondition
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:SoilMoisture ;
+          schema:minValue 0.10 ; schema:maxValue 0.30 ; schema:unitCode unit:UNITLESS ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;
+          schema:minValue 18.0 ; schema:maxValue 26.0 ; schema:unitCode unit:DEG_C ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirHumidity ;
+          schema:minValue 0.40 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] .
+
+zz:IndoorSurvivalRange a ssn-system:SurvivalRange ;
+    rdfs:label "Zamioculcas indoors, what it will tolerate" ;
+    rdfs:comment "Wider at both ends and NOT symmetric, which is the fact worth having in a machine-readable form. It will come back from bone dry; it does not come back from a rotted rhizome, so the ceiling is the number that matters and the floor is nearly free. The temperature floor is where leaf damage starts rather than where it dies, and it is not frost hardy at any point." ;
+    ssn-system:inCondition
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:SoilMoisture ;
+          schema:minValue 0.02 ; schema:maxValue 0.45 ; schema:unitCode unit:UNITLESS ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;
+          schema:minValue 12.0 ; schema:maxValue 35.0 ; schema:unitCode unit:DEG_C ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirHumidity ;
+          schema:minValue 0.20 ; schema:maxValue 0.90 ; schema:unitCode unit:UNITLESS ] .
+
+# Every figure is written with a decimal point, including the whole ones. `18` is an xsd:integer
+# in Turtle and `18.0` is an xsd:decimal, and the plant shapes ask for decimal — so a temperature
+# written the natural way fails validation for a reason that has nothing to do with temperature.
+# Caught by tests/test_species.py and not by any world, because no world had planted one yet.
+
+#################  Where these figures come from, and where they do not  #################
+#
+# The TEMPERATURE and HUMIDITY figures are ordinary published care guidance for this species and
+# are in the units the guidance itself uses.
+#
+# The SOIL MOISTURE figures are not, and the difference should be visible rather than buried. No
+# horticultural source states a volumetric fraction for a houseplant — care guidance says "let it
+# dry out almost completely", and this is that sentence put on the 0-1 scale of saturation that
+# `water:SoilMoisture` is denominated in. The ORDERING is the durable claim and is what a reader
+# should trust: a ZZ wants to sit drier than a succulent does, far drier than a fern, and its
+# ceiling is a cliff rather than a preference. The exact numbers are a calibration and belong to
+# whoever measures a real pot with a real probe.
+#
+# WHAT IS ABSENT for want of a property, not for want of a fact: light. This plant's other headline
+# is that it tolerates deep shade and burns in direct sun, and there is no `sosa:ObservableProperty`
+# for illuminance anywhere in this repository — nothing senses it, nothing could want it. Inventing
+# `zz:Illuminance` would be a package naming a term that is not its own, so the fact stays prose
+# until something measures light. The same goes for the sap being an irritant.

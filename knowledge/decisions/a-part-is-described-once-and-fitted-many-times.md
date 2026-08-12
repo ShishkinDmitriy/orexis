@@ -214,6 +214,9 @@ more than before.
   act — and then the procedure should be the read, which the agent cannot name — or it is the
   agent's act of recording, and `madeBySensor` is provenance of the value rather than of the act.
   W3C's example takes the first reading. Ours has never said which it takes.
+- **The plant side now has a counterpart.** `vocabulary/zamioculcas/` describes a species the
+  same way for the same reason — see
+  [a-species-is-described-once-and-planted-many-times](/decisions/a-species-is-described-once-and-planted-many-times.md).
 - **No other part has been converted.** The moisture probe and the RGB LED still describe
   themselves the old way, and neither is wrong: a single-property probe IS its sensor, so it has
   no sub-sensors to name. The template is for parts that have parts.

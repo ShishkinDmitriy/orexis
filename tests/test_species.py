@@ -1,0 +1,148 @@
+"""A species is described once and planted many times.
+
+`vocabulary/zamioculcas/` is the plant-side counterpart of `vocabulary/dht11/`, and deliberately
+the same shape: a species is a model, the pots are the units, and what the species knows is stated
+on the class and reaches each pot by entailment. These check that the mechanism actually carries —
+that typing a pot is the ONLY thing a world writes, and that everything else follows.
+
+See knowledge/decisions/a-species-is-described-once-and-planted-many-times.md.
+"""
+
+from __future__ import annotations
+
+import pathlib
+import shutil
+import tempfile
+
+import pytest
+import rdflib
+
+from agent import genesis, inference
+from agent.ontology import beliefs_graph
+from agent.store import Store, bindings
+from agent.store import PREFIXES
+from agent.validate import conforms
+
+ZZ = "http://example.org/agora/zamioculcas#ZamioculcasZamiifolia"
+
+# The fern's block exactly as world/simulation/world.ttl states it. Matched in full and asserted
+# present, so that editing that world fails this loudly instead of silently testing nothing —
+# a substitution that quietly matches nothing is the failure mode issue #106 exists for.
+_FERN = """ag:fern a water:Plant ;
+    ag:localId "fern" ; water:servedBy ag:barrel1 ;
+    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
+    ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.45 ; schema:maxValue 0.65 ; schema:unitCode unit:UNITLESS ] ] ."""
+
+# What a world says when the pot holds a ZZ: its type, and nothing else. No range, no conditions,
+# no numbers — that is the whole point of the package.
+_ZZ = f"""ag:fern a <{ZZ}> ;
+    ag:localId "fern" ; water:servedBy ag:barrel1 ;
+    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ."""
+
+
+@pytest.fixture(scope="module")
+def zz_world():
+    """`world/simulation` with the fern's pot replanted as a Zamioculcas."""
+    with tempfile.TemporaryDirectory() as d:
+        w = pathlib.Path(d) / "zz"
+        shutil.copytree(genesis.world_dir("simulation"), w)
+        path = w / "world.ttl"
+        text = path.read_text()
+        assert _FERN in text, "world/simulation/world.ttl changed — update _FERN"
+        path.write_text(text.replace(_FERN, _ZZ, 1))
+        yield w
+
+
+def _store(world):
+    st = Store()
+    genesis.refresh_public(st, world)
+    inference.materialise(st)
+    return st
+
+
+def test_one_triple_plants_it_and_the_species_supplies_the_rest():
+    """The world says what KIND of plant it is. Both ranges, all three properties and every
+    number arrive from the package by `owl:hasValue`."""
+    with tempfile.TemporaryDirectory() as d:
+        w = pathlib.Path(d) / "zz"
+        shutil.copytree(genesis.world_dir("simulation"), w)
+        path = w / "world.ttl"
+        path.write_text(path.read_text().replace(_FERN, _ZZ, 1))
+
+        rows = bindings(_store(w).query(PREFIXES + """
+            SELECT ?kind ?property ?min ?max WHERE {
+              <http://example.org/agora#fern> ?rel ?range .
+              VALUES ?rel { ssn-system:hasOperatingRange ssn-system:hasSurvivalRange }
+              ?range a ?kind ; ssn-system:inCondition ?c .
+              ?c ssn:forProperty ?property ; schema:minValue ?min ; schema:maxValue ?max }"""))
+
+        got = {(r["kind"].rsplit("/", 1)[-1], r["property"].rsplit("#", 1)[-1]) for r in rows}
+        assert got == {
+            ("OperatingRange", p) for p in ("SoilMoisture", "AirTemperature", "AirHumidity")
+        } | {
+            ("SurvivalRange", p) for p in ("SoilMoisture", "AirTemperature", "AirHumidity")
+        }, f"the species did not reach the pot: {sorted(got)}"
+
+
+def test_a_ferns_desire_will_not_do_for_a_zamioculcas(zz_world):
+    """The payoff, and the reason the range is worth stating at all.
+
+    That world's agent still wants 0.55 — right for a fern, and a rotted rhizome for a ZZ. Nothing
+    about the agent changed; the plant did, and the agent will no longer start. This is the whole
+    of "the range is the plant's and the pick is the agent's" with a species behind the range.
+    """
+    st = _store(zz_world)
+    genesis.birth(st, zz_world, "fern")
+    data = rdflib.Graph()
+    for iri in list(st.public_graphs()) + [beliefs_graph("fern")]:
+        ttl = st.get_graph(iri)
+        if ttl.strip():
+            data.parse(data=ttl, format="turtle")
+
+    ok, report = conforms(data)
+    assert not ok
+    assert "pick within a range" in report
+
+
+def test_it_cannot_thrive_where_it_would_not_survive():
+    """Two ranges only mean something together. Raising the operating ceiling above the rot limit
+    is the mistake that matters — and it is the direction a well-meaning edit goes."""
+    ontology = pathlib.Path("vocabulary/zamioculcas/ontology.ttl").read_text()
+    data = rdflib.Graph().parse(data=ontology, format="turtle")
+    data.parse(data=pathlib.Path("vocabulary/water/ontology.ttl").read_text(), format="turtle")
+
+    # a pot of it, and the operating ceiling pushed past the survival ceiling
+    data.parse(format="turtle", data="""
+        @prefix ag: <http://example.org/agora#> .
+        @prefix water: <http://example.org/agora/water#> .
+        @prefix zz: <http://example.org/agora/zamioculcas#> .
+        @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+        ag:pot a water:Plant ;
+            ag:localId "pot" ; water:litresPerFraction 2.0 ;
+            water:servedBy ag:tap ;
+            ssn-system:hasOperatingRange zz:IndoorOperatingRange ;
+            ssn-system:hasSurvivalRange  zz:IndoorSurvivalRange .
+        ag:tap a water:WaterSource ; water:capacityL 10.0 .""")
+
+    # About the POT alone. A hand-built graph is not a world, and validating it whole would ask
+    # after a supplier's capabilities and a market — none of which this is about. `conforms` takes
+    # a focus for exactly this reason; see agent/validate.py.
+    pot = "http://example.org/agora#pot"
+    assert conforms(data, focus=pot)[0], conforms(data, focus=pot)[1]
+
+    # push the moisture operating ceiling to 0.60, above the 0.45 where rot starts
+    for condition in data.objects(
+            rdflib.URIRef("http://example.org/agora/zamioculcas#IndoorOperatingRange"),
+            rdflib.URIRef("http://www.w3.org/ns/ssn/systems/inCondition")):
+        prop = data.value(condition, rdflib.URIRef("http://www.w3.org/ns/ssn/forProperty"))
+        if str(prop).endswith("SoilMoisture"):
+            maxv = rdflib.URIRef("https://schema.org/maxValue")
+            data.remove((condition, maxv, None))
+            data.add((condition, maxv, rdflib.Literal("0.60", datatype=rdflib.XSD.decimal)))
+
+    ok, report = conforms(data, focus=pot)
+    assert not ok
+    assert "would not survive" in report
