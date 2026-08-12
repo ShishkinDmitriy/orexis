@@ -94,6 +94,33 @@ exactly the entails-nothing-fails-nothing shape this repository keeps finding.
 The wiring states which half is which — two triples in `world/sensing/hardware.ttl` — and
 everything else follows from the package.
 
+# Do the restriction and the shape work together?
+
+In one direction only, and it is worth knowing which. `agent/validate.py` calls pyshacl with
+`inference="none"` on the flattened public graphs — so **SHACL understands no OWL whatever**. What
+reaches it is whatever the closure already materialised, as ordinary triples it cannot tell from
+asserted ones.
+
+Measured on `world/sensing`, with a probe shape requiring `ssn:implements` — a property no world
+asserts, so entailment is its only possible source:
+
+| the vocabulary says | what SHACL sees |
+|---|---|
+| `owl:hasValue` restriction | **the fact** — rule 5 materialised it; conforms |
+| the same fact as a class-level pun | **nothing** — probe fails, "SHACL cannot see it" |
+| `owl:someValuesFrom` restriction | **nothing** — and a DHT11 with no temperature sensor at all conforms |
+
+So the two are complementary rather than overlapping, and the bridge between them is exactly one
+construct wide: **`owl:hasValue` is the only OWL a shape can act on here**, because it is the only
+one the closure turns into ground triples. Everything else in OWL is documentation as far as
+validation is concerned.
+
+That is the whole reason `ag:Dht11StructureShape` exists and is not redundant with the
+`someValuesFrom` above it. The OWL states the structure for a reader and for any reasoner someone
+later points at these files; the shape is what makes a world that omits it fail. Deleting either
+leaves something true and unenforced — which, on the last line of that table, is a DHT11 with no
+sensors passing every gate.
+
 # What is deliberately absent: sosa:observes
 
 Neither sub-sensor states what it observes, and the omission is load-bearing. The property
