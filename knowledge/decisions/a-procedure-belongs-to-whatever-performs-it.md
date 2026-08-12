@@ -30,7 +30,7 @@ talked to over a single line, nor that the part produces both its values at once
 is a fact about a specific thing in that chain, and each was living somewhere else — in prose,
 in firmware, or in an assumption in the reading path.
 
-The last of them had gone wrong. `dht11:TempHumiditySensor` explained its single message as a
+The last of them had gone wrong. `dht11:TempHumidityPeripheral` explained its single message as a
 transport economy: *the board publishes once because it is one MQTT client with one credential.*
 True, and not the reason. That explanation would equally justify batching two unrelated readings
 into one message, and the reading path had been written as though it did.
@@ -47,6 +47,14 @@ which they distribute.** Each system implements what it can actually do, and no 
 | the board | `mqtt:Publishing` — connect as a principal, send on a channel | `transports/mqtt` | **named, not yet linked** — see the seam |
 | the board | the clock | `capabilities/perception` — **already there**, as the sense modes | no: `perception:senseMode`, and deliberately |
 | a channel | — | `world.ttl` says what it observes and nothing about how | — |
+
+**Both "yes" rows were written on the class, and that entailed nothing about any device.** The
+triples above are `dht11:Dht11 ssn:implements …`, which says the *class* implements the procedure
+— punning, the same defect the capability had, and it meant the only subject of `ssn:implements`
+anywhere was `dht11:Dht11` itself. No sensor in any world had been said to do anything. They are
+`owl:hasValue` restrictions now, and the last row is filled in: each channel implements its share
+of the frame. See
+[a-part-is-described-once-and-fitted-many-times](/decisions/a-part-is-described-once-and-fitted-many-times.md).
 
 The last column is the honest part. Two of the five are asserted, one is named without an
 implementer because the graph cannot yet say who publishes, and one deliberately keeps a
@@ -114,7 +122,7 @@ belief compares one instant with itself rather than two clocks that were acciden
 that synthesises a reading — has nothing better than now to offer, and saying so in a default is
 better than making every caller invent one.
 
-The corrected explanation is in the vocabulary, not only here. `dht11:TempHumiditySensor` now
+The corrected explanation is in the vocabulary, not only here. `dht11:TempHumidityPeripheral` now
 says the values arrive together because they were *taken* together, and that the credential
 merely means nothing has to undo that. A part's comment is where someone adding the next part
 will look.

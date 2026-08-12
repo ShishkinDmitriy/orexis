@@ -224,6 +224,8 @@ _DHT11 = rdflib.Namespace("http://example.org/agora/dht11#")
 _ONEWIRE = rdflib.Namespace("http://example.org/agora/onewire#")
 _MQTT = rdflib.Namespace("http://example.org/agora/mqtt#")
 _MC = rdflib.Namespace("http://example.org/agora/microcontroller#")
+_OWL = rdflib.Namespace("http://www.w3.org/2002/07/owl#")
+_DCTERMS = rdflib.Namespace("http://purl.org/dc/terms/")
 
 
 def test_their_channels_implement_a_procedure_and_ours_is_on_the_part(tmp_path):
@@ -236,17 +238,61 @@ def test_their_channels_implement_a_procedure_and_ours_is_on_the_part(tmp_path):
 
     So `dht11:CombinedRead` sits on `dht11:Dht11`. The channels keep their own sense mode, which
     is a different question with a different predicate and a cardinality of one.
+
+    Our channels DO implement something now — each its own half of the frame — which does not
+    weaken the claim: what may not move onto a channel is the COMBINED read, because putting it
+    there says a channel could be read alone. That is what is asserted below.
+
+    Read through the restriction rather than off a bare triple. `dht11:Dht11 ssn:implements …`
+    was punning and entailed nothing about any device; see
+    knowledge/decisions/a-part-is-described-once-and-fitted-many-times.md.
     """
     theirs = rdflib.Graph().parse(data=_repaired("dht22.ttl"), format="turtle")
     channels = set(theirs.subjects(_SSN.implements, None))
     assert len(channels) == 2, f"upstream moved its implements: {channels}"
 
     ours = _world_with(tmp_path)
-    assert set(ours.objects(_DHT11.Dht11, _SSN.implements)) == {
-        _DHT11.CombinedRead, _ONEWIRE.Transaction}
-    assert not set(ours.subjects(_SSN.implements, _DHT11.CombinedRead)) - {_DHT11.Dht11}, (
-        "the combined read leaked onto a channel — it is what the PART does, and putting it on "
-        "a channel says a channel could be read alone, which is the thing it denies")
+
+    def implemented_by(cls):
+        """What every instance of `cls` implements, per its owl:hasValue restrictions."""
+        found = set()
+        for restriction in ours.objects(cls, rdflib.RDFS.subClassOf):
+            if (restriction, _OWL.onProperty, _SSN.implements) in ours:
+                found |= set(ours.objects(restriction, _OWL.hasValue))
+        return found
+
+    assert implemented_by(_DHT11.Dht11) == {_DHT11.CombinedRead, _ONEWIRE.Transaction}
+    assert implemented_by(_DHT11.TemperatureSensor) == {_DHT11.TemperatureRead}
+    assert implemented_by(_DHT11.HumiditySensor) == {_DHT11.HumidityRead}
+
+    for channel in (_DHT11.TemperatureSensor, _DHT11.HumiditySensor):
+        assert _DHT11.CombinedRead not in implemented_by(channel), (
+            "the combined read leaked onto a channel — it is what the PART does, and putting it "
+            "on a channel says a channel could be read alone, which is the thing it denies")
+
+
+def test_the_combined_read_has_the_two_halves_as_parts(tmp_path):
+    """SOSA and SSN relate a Procedure to nothing. All 44 of their object properties were checked
+    when this was written: the nearest is `ssn:hasSubSystem`, which is System to System.
+
+    So the link is `dcterms:hasPart` — standard generic mereology, no domain, no range, defined as
+    "included either physically or logically in the described resource". Deliberately NOT a step
+    or an invocation: performing the combined read CONSTITUTES performing both halves, and neither
+    can be performed alone, because there is one 40-bit frame and no way to ask for a piece of it.
+
+    Asserted here rather than left to prose because the direction is the whole of it. Reversed, it
+    would say the two reads each contain the conversation.
+    """
+    ours = _world_with(tmp_path)
+    assert set(ours.objects(_DHT11.CombinedRead, _DCTERMS.hasPart)) == {
+        _DHT11.TemperatureRead, _DHT11.HumidityRead}
+
+    for half in (_DHT11.TemperatureRead, _DHT11.HumidityRead):
+        assert not set(ours.objects(half, _DCTERMS.hasPart)), (
+            f"<{half}> was given parts — it names one sensor's share of a single frame, "
+            "and nothing is inside it")
+        assert set(ours.subjects(_DCTERMS.hasPart, half)) == {_DHT11.CombinedRead}, (
+            "a half belongs to exactly one conversation")
 
 
 def test_every_declared_procedure_is_one(tmp_path):
@@ -256,7 +302,8 @@ def test_every_declared_procedure_is_one(tmp_path):
     validates perfectly, because an unrecognised object is not an error in RDF.
     """
     ours = _world_with(tmp_path)
-    declared = {_DHT11.CombinedRead, _ONEWIRE.Transaction, _MQTT.Publishing}
+    declared = {_DHT11.CombinedRead, _DHT11.TemperatureRead, _DHT11.HumidityRead,
+                _ONEWIRE.Transaction, _MQTT.Publishing}
     untyped = {p for p in declared if (p, rdflib.RDF.type, _SOSA.Procedure) not in ours}
     assert not untyped, f"declared but never typed a sosa:Procedure: {untyped}"
 
