@@ -138,6 +138,12 @@ without being made a principal. The ACL is byte-identical across all three world
   bands agents hold. Nothing in the number says which it is; only the property does. That hazard
   was named when observations were re-keyed and is now live.
 - **The payload grew and the channel did not.** No new topic, no new credential, no new grant.
+- **One message turned out to be one measurement, and the code did not treat it as one.** The
+  three values were pointed at correctly and then stamped one at a time as each was written, so
+  a single physical read left three different instants in the record. Why they are simultaneous
+  is a fact about the part rather than about the transport, which is what
+  [a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md)
+  set out to state and found by stating.
 
 # Seams left open
 
@@ -154,6 +160,7 @@ without being made a principal. The ACL is byte-identical across all three world
   A world nobody brings up is still unguarded.
 - **The tightest cadence wins, and nothing says a sensor may be exempt.** A board carrying one
   urgent property and five indifferent ones reads all six at the urgent rate.
-- **`world/society` still reads only moisture** from the same board. The extra fields are ignored
-  rather than refused, which is what lets one flashed board serve either world — but it means the
-  society's fern is blind to air it is being told about.
+- ~~**`world/society` still reads only moisture** from the same board.~~ **Moot**: `world/society`
+  was a near-duplicate of `world/simulation` and has been removed. The property it illustrated
+  survives — extra fields in a payload are ignored rather than refused, which is what lets one
+  flashed board serve a world that reads three values and a world that reads one.

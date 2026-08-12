@@ -113,6 +113,34 @@ def test_one_message_produces_an_observation_for_every_sensor_on_the_channel(mon
     assert agent.beliefs.current_reading(fern, AIR_HUMIDITY).value == pytest.approx(0.46)
 
 
+def test_values_from_one_read_carry_one_instant(monkeypatch):
+    """A DHT11 cannot be asked for temperature alone, so its two values are one measurement.
+
+    The part returns a single 40-bit frame — humidity in `data[0..1]`, temperature in
+    `data[2..3]`, checksum in `data[4]` — filled by one transaction. The firmware's two calls
+    are one conversation: the Adafruit driver serves the second from the buffer the first
+    filled, and refuses to go back to the wire inside `MIN_INTERVAL`, which is the same two
+    seconds `dht11:Dht11` states as its `ssn-system:Frequency`.
+
+    So the values are simultaneous BY CONSTRUCTION, and stamping them separately records a
+    difference that did not happen. It is not a rounding matter: `handle` loops the sensors and
+    each write called `datetime.now()` for itself, so the gap was however long the loop took —
+    #88's end-to-end run put two points 25ms apart in the series store, from one physical read.
+
+    The message is the measurement. One arrival, one instant, however many values it carried.
+    """
+    agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    fern = next(s.subject for s in agent.me.sensors)
+
+    agent.deliver("sensors/moisture_sensor_fern/reading",
+                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46,
+                   "sensor": "moisture_sensor_fern"})
+
+    stamps = {agent.beliefs.current_reading(fern, p).result_time
+              for p in (MOISTURE, AIR_TEMP, AIR_HUMIDITY)}
+    assert len(stamps) == 1, f"one read, {len(stamps)} instants: {sorted(map(str, stamps))}"
+
+
 def test_a_sensor_whose_field_is_missing_records_nothing_and_says_so(monkeypatch, caplog):
     """One sensor missing its field while its neighbours read fine is the failure a shared
     payload makes possible, so the warning has to name WHICH sensor found nothing."""
@@ -191,8 +219,8 @@ def test_the_series_store_is_told_which_property_each_reading_is(monkeypatch):
         def __init__(self, *a, **k):
             pass
 
-        def write_reading(self, plant_id, sensor, value, observed_property):
-            written.append((sensor, value, observed_property))
+        def write_reading(self, plant_id, sensor, value, observed_property, at=None):
+            written.append((sensor, value, observed_property, at))
 
         def write_agent_health(self, *a, **k):
             pass
@@ -207,10 +235,16 @@ def test_the_series_store_is_told_which_property_each_reading_is(monkeypatch):
     agent.deliver("sensors/moisture_sensor_fern/reading",
                   {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
 
-    by_property = {p: v for _, v, p in written}
+    by_property = {p: v for _, v, p, _ in written}
     assert by_property == {"SoilMoisture": pytest.approx(0.183),
                            "AirTemperature": pytest.approx(21.4),
                            "AirHumidity": pytest.approx(0.46)}
+
+    # And the instant travels with them. Left to the store, a point is stamped on RECEIPT, so
+    # one message became three times here and a fourth in the belief base. The series is the
+    # record a person actually looks at, so it is the one that must not invent a difference.
+    stamps = {at for _, _, _, at in written}
+    assert len(stamps) == 1 and None not in stamps, f"one read, series stamps: {stamps}"
 
 
 def test_a_sensor_with_no_command_channel_is_aimed_alone(monkeypatch):

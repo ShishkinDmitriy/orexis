@@ -3,6 +3,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 
 <http://example.org/agora/mqtt> a owl:Ontology ;
     rdfs:label "Agora MQTT binding" ;
@@ -70,6 +71,19 @@ mqtt:Channel a owl:Class ; rdfs:label "Channel" ;
 mqtt:channelTopic a owl:DatatypeProperty ; rdfs:domain mqtt:Channel ; rdfs:range xsd:string ;
     rdfs:label "channel topic" ;
     rdfs:comment "The string this channel is named by, carried so that anything holding the node can address it without walking back to whichever device stated it. The node's own IRI is minted from this and is stable because of it: two rules in two packages compute the same IRI from the same topic without either reading the other's conclusions, which is what makes a derived node usable as a join key at all." .
+
+#################  Carrying it — a procedure, and whose it is  #################
+#
+# A protocol is a `sosa:Procedure` in SOSA's own list of what one may be, so naming it costs
+# nothing and buys a place to hang the thing that was previously only implied: SOMEONE turns a
+# reading into a message, and it is not the part that produced the reading.
+
+mqtt:Publishing a sosa:Procedure ; rdfs:label "MQTT publishing" ;
+    rdfs:comment """Connecting to a broker as an authenticated principal and sending on a named channel. Implemented by whatever holds the credential — the BOARD, in every world here, which is why `mc:Microcontroller` is an `ssn:System` and not only a `sosa:Platform`. A KY-015 has never published anything; it clocks out a frame on a wire and the board does the rest.
+
+**The world does not yet say this, and the reason is worth knowing.** `mqtt:readingTopic` sits on the sensors, so `mqtt:publishesOn` derives onto them and the graph reads as though three channels each published for themselves. It is harmless while a board carries one credential and every sensor on it shares one topic — the strings agree because the board is the thing they describe — and it stops being harmless the moment anything asks WHO sent a message. Moving the topic to the board it belongs to is issue #103's neighbourhood; stating the procedure first is what makes the mismatch nameable at all.
+
+Note what is NOT claimed: that publishing is a capability. Which protocol a device speaks changes nothing an agent must decide, and that reasoning is unaltered by giving the protocol a name.""" .
 
 mqtt:publishesOn a owl:ObjectProperty ; rdfs:range mqtt:Channel ;
     rdfs:label "publishes on" ;

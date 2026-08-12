@@ -68,6 +68,10 @@ class SensedWriter:
         world_version: int | None = None,
         ts: str | None = None,
     ) -> None:
+        # The caller's instant, and it is always given now: `Observations.record` resolves one
+        # per MESSAGE and hands the same string to every value that message carried, so two
+        # readings from one 40-bit frame share a `sosa:resultTime` instead of differing by
+        # however long the loop took. The fallback is for a caller with no message in hand.
         ts = ts or datetime.now(timezone.utc).isoformat()
         obs = observation_uri(subject_id, observed_property)
         wv = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""

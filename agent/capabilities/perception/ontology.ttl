@@ -114,6 +114,15 @@ perception:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
 #
 # So: the VALUES defer to the standard, the RELATION does not, and the reason is a cardinality
 # ours checks and theirs cannot.
+#
+# **The clock procedure is already here — do not add a second one.** Once parts began declaring
+# `ssn:implements` it looked as though something was missing: a board keeps time, and nothing
+# said so. It does say so. These three ARE the clock, differing only in who sets it, and the
+# statement is `perception:senseMode` on a sensor. What is genuinely missing is that the clock
+# is the BOARD's and the fact sits on each sensor it carries, which is issues #96 and #103 and
+# is deliberately untouched here: hoisting it changes what grants perception's capability, and
+# a change to that must be made on its own. See
+# knowledge/decisions/a-procedure-belongs-to-whatever-performs-it.md.
 
 perception:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
     rdfs:comment "The class exists for the count: `perception:SensorShape` asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .

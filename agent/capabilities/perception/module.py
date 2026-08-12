@@ -40,6 +40,8 @@ Derivation: capabilities/perception/rules.ru. See knowledge/domain/sensing.md.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from agent.scaling import scaling_for
 from agent.driver import driver_for
 from agent.module import Module
@@ -128,8 +130,17 @@ class PerceptionModule(Module):
         The return value still means *this channel was mine*, which is true the moment any
         sensor owns it — including when the payload turned out to be unreadable. That is a
         statement about addressing, not about success.
+
+        **One message is one instant.** The values in it were produced together — a DHT11
+        answers with a single 40-bit frame and cannot be asked for temperature alone — so the
+        arrival is stamped ONCE here and carried down, rather than each write asking the clock
+        for itself. Stamping per write recorded a difference that never happened: the gap was
+        however long this loop took, which #88's live run put at 25ms between two halves of one
+        physical read. Arrival is the honest instant available to us; the moment a device
+        timestamps its own readings, that is better and is `sosa:phenomenonTime` (#101).
         """
         mine = False
+        at = datetime.now(timezone.utc)
         for sensor in self.sensors:
             driver = self.drivers[sensor.uri]
             if driver is None or not driver.owns(sensor, topic):
@@ -149,12 +160,17 @@ class PerceptionModule(Module):
                 self.log.warning("%s: nothing at %s in the payload on %s", sensor.local_id,
                                  sensor.reading_pointer or "/value", topic)
             else:
-                self.ingest(sensor, value)
+                self.ingest(sensor, value, at)
         return mine
 
-    def ingest(self, sensor, value: float) -> None:
-        """Record what the sensor read, then re-aim if this capability can."""
-        self.observations.record(self.log, sensor, value)
+    def ingest(self, sensor, value: float, at: datetime | None = None) -> None:
+        """Record what the sensor read, then re-aim if this capability can.
+
+        `at` is when the message carrying this value arrived, so that every value out of one
+        message shares one instant. Optional because a caller with no message in hand — a test,
+        or a future path that synthesises a reading — has nothing better than now to offer.
+        """
+        self.observations.record(self.log, sensor, value, at)
         self.on_reading(sensor, value)
 
     def on_reading(self, sensor, value: float) -> None:

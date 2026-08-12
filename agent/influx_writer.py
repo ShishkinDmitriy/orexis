@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
@@ -20,7 +22,8 @@ class InfluxWriter:
         self.bucket = bucket
 
     def write_reading(self, plant_id: str, sensor: str, value: float,
-                      observed_property: str) -> None:  # a term's LOCAL name, from the caller
+                      observed_property: str,  # a term's LOCAL name, from the caller
+                      at: datetime | None = None) -> None:
         """One reading, tagged with WHICH property it is.
 
         The property is not optional and not derivable from the number. A board reporting soil
@@ -35,6 +38,12 @@ class InfluxWriter:
         The measurement name is unchanged, because it is what the readings dashboards already
         filter on and what `infra/tests` asserts against. The tag is what separates them, and a
         query that does not filter on it now gets a series it can at least SEE is mixed.
+
+        `at` is the caller's instant, and stating it matters more than it looks. Left unset, a
+        point is stamped by InfluxDB on RECEIPT, so two values out of one message landed at two
+        times and a third time appeared in the belief base — three clocks for one measurement.
+        Passing it also means the series agrees with `sosa:resultTime`, which is what makes a
+        dashboard and a query about the same reading comparable at all.
         """
         point = (
             Point("soil_moisture")
@@ -43,6 +52,8 @@ class InfluxWriter:
             .tag("property", observed_property)
             .field("value", float(value))
         )
+        if at is not None:
+            point.time(at)
         self.write_api.write(bucket=self.bucket, record=point)
 
     def write_agent_health(self, agent_id: str, fields: dict,
