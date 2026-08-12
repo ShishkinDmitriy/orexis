@@ -8,10 +8,28 @@ tags: [sensing, capabilities, firmware, ontology, naming]
 timestamp: 2026-08-03T18:00:00Z
 ---
 
+# Amended: the three modes are named as procedures
+
+Since [an-observation-says-how-it-was-made](an-observation-says-how-it-was-made.md) they are
+spelled for what they *do*, because they are `sosa:Procedure` instances and a procedure is a
+**plan** — *"a workflow, protocol, plan, algorithm, or computational method specifying how to
+make an Observation."* `sosa:usedProcedure perception:Scheduled` read as a state; it now reads as
+a method.
+
+| was | is | agent capability |
+|---|---|---|
+| `perception:Pull` | `perception:PolledSampling` | `perception:Polling` |
+| `perception:Scheduled` | `perception:ScheduledSampling` | `perception:Subscribing` |
+| `perception:Push` | `perception:PushReporting` | `perception:Listening` |
+
+Each keeps its mode word, so the pairing this record is *about* still reads at a glance. Nothing
+below changed meaning; the rest of this record uses the current spelling except where it is
+explicitly recounting the earlier rename.
+
 # Context
 
 Perception had two capabilities, `perception:Polling` and `perception:Listening`, derived from a device being
-`perception:Pull` or `perception:Push`. The names described the *device*, and one of them was wrong about it.
+`perception:PolledSampling` or `perception:PushReporting`. The names described the *device*, and one of them was wrong about it.
 
 `perception:Polling` did not poll. A polling agent set a retained `{"sleep_s":N}` on the device's
 command topic and the device woke itself on that schedule. The agent never asked for a
@@ -29,12 +47,16 @@ which is the standing test for whether something deserves to be a capability.
 
 | capability | `perception:senseMode` | who runs the timer | the agent states |
 |---|---|---|---|
-| `perception:Polling` | `perception:Pull` | the **agent** — it asks for each reading | an interval, its own |
-| `perception:Subscribing` | `perception:Scheduled` | **shared** — agent sets, device keeps | an interval, the device's |
-| `perception:Listening` | `perception:Push` | the **device** | nothing |
+| `perception:Polling` | `perception:PolledSampling` | the **agent** — it asks for each reading | an interval, its own |
+| `perception:Subscribing` | `perception:ScheduledSampling` | **shared** — agent sets, device keeps | an interval, the device's |
+| `perception:Listening` | `perception:PushReporting` | the **device** | nothing |
 
 Strictly decreasing agent control, and each asks the agent for strictly less. What was
-`perception:Polling` is now `perception:Subscribing`, and `perception:Pull` is now `perception:Scheduled`.
+`perception:Polling` is now `perception:Subscribing`, and the mode then spelled `Pull` is now
+`perception:ScheduledSampling` — **two renames, not one**, and the sentence is about the first.
+This record moved that mode's *referent* from the middle row to the top; the later rename
+described below changed only how all three are spelled. Read `Pull` here as the name of the
+time, not as today's `perception:PolledSampling`, which is the reserved third mode.
 
 **"Agent sets, device keeps" was unqualified for as long as this record existed**, and a device
 that cannot keep what it is given is the whole of
@@ -55,7 +77,7 @@ It cannot be had from the hardware in this world. A board that deep-sleeps betwe
 not reachable, so "ask and it replies" is not available at any price short of keeping it awake
 — which costs the battery life the whole design is built around.
 
-So the T-Box declares `perception:Polling` and `perception:Pull`, **no derivation rule maps one to the other**,
+So the T-Box declares `perception:Polling` and `perception:PolledSampling`, **no derivation rule maps one to the other**,
 and no module provides it. Nothing can acquire it, and the vocabulary is honest about the
 three rather than pretending there are two. Adding it later is a class and one line of
 `PROVIDES` — no other package moves, because
@@ -86,9 +108,9 @@ is the hardware fact that makes polling and subscribing genuinely different thin
 
 # What is still open
 
-- **Nothing prevents declaring `perception:Pull` on a board that sleeps.** The shapes require an
+- **Nothing prevents declaring `perception:PolledSampling` on a board that sleeps.** The shapes require an
   instructable sensor to state a command channel, but nothing checks that a device claiming to
-  be always-reachable actually is. Today it is harmless — no rule reads `perception:Pull` — and it
+  be always-reachable actually is. Today it is harmless — no rule reads `perception:PolledSampling` — and it
   becomes a real check the moment polling is built.
 - **A device could support both.** Mains-powered hardware could answer requests *and* keep an
   interval; the world states one `perception:senseMode`, so it would have to choose. Whether that

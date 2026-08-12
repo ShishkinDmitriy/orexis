@@ -1,4 +1,4 @@
-// Agora — ESP32 soil-moisture sensor node (ag:Scheduled -> the agent holds ag:Subscribing).
+// Agora — ESP32 soil-moisture sensor node (perception:ScheduledSampling -> the agent holds ag:Subscribing).
 //
 // Inverted from a fixed-interval pusher: the *agent* owns the interval (policy), the board
 // keeps to it (mechanism: sense + sleep). Each wake it reads, publishes, briefly listens for a

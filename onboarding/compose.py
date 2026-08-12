@@ -182,6 +182,23 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
 # shape `world/sensing` already states for a real KY-015: one peripheral owns the connection and
 # its neighbours share the wire without minting a principal that never connects.
 #
+# What the simulator is told to be, keyed by the mode the world states.
+#
+# STATED, not derived from the IRI. This used to be `senseMode.rsplit("#")[-1].lower()`, which
+# tied a container's environment to how a term happens to be spelled — so renaming the modes to
+# read as procedures would have sent `SIM_SENSE_MODE: "pushreporting"` to a simulator that
+# compares against `"push"`, and a self-clocked stand-in would have quietly kept an interval
+# instead. Nothing would have failed: the world validates, the container starts, and the only
+# symptom is a device behaving like the other kind.
+#
+# The env word is the simulator's contract and the IRI is the society's vocabulary. They are
+# allowed to differ, and saying so once is what stops a rename reaching across the boundary.
+_SIM_MODE = {
+    PERCEPTION + "ScheduledSampling": "scheduled",
+    PERCEPTION + "PushReporting": "push",
+    PERCEPTION + "PolledSampling": "pull",
+}
+
 # `?litres` is joined through the PROPERTY the domain's valuation is denominated in rather than
 # through the subject alone. Three sensors on one board can monitor one plant, so the subject
 # cannot say which reading a litre of water moves — `water:hasTarget market:aboutProperty` can,
@@ -242,7 +259,7 @@ def _simulator(world: str, rows: list[dict]) -> str:
     """
     row = rows[0]
     sim_id = row["id"]
-    mode = (row.get("senseMode") or "").rsplit("#", 1)[-1].lower() or "scheduled"
+    mode = _SIM_MODE.get(row.get("senseMode") or "", "scheduled")
     optional = "".join(
         f'\n      {k}: "{v}"' for k, v in (
             ("SIM_COMMAND_TOPIC", row.get("commandTopic")),
@@ -262,8 +279,8 @@ def _simulator(world: str, rows: list[dict]) -> str:
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
       SIM_VALUES: '{_values(rows)}'
-      # perception:Scheduled keeps the interval its agent gives it, like a deep-sleeping board;
-      # perception:Push keeps its own clock and takes no orders. The agent derives its capability
+      # perception:ScheduledSampling keeps the interval its agent gives it, like a deep-sleeping board;
+      # perception:PushReporting keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "{mode}"
       MQTT_HOST: "localhost"

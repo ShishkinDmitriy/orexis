@@ -78,8 +78,8 @@ that wants both simply asks, because every public graph is the default graph of 
 
 | you state | genesis derives |
 |---|---|
-| `perception:polls` a sensor whose `perception:senseMode` is `perception:Scheduled` | `perception:Subscribing` |
-| `perception:polls` a sensor whose `perception:senseMode` is `perception:Push` | `perception:Listening` |
+| `perception:polls` a sensor whose `perception:senseMode` is `perception:ScheduledSampling` | `perception:Subscribing` |
+| `perception:polls` a sensor whose `perception:senseMode` is `perception:PushReporting` | `perception:Listening` |
 | `market:bidsIn` a market | `market:Bidding` |
 | `market:hosts` a market | `market:Hosting` |
 | `actuation:hasActuator` anything that is a kind of `actuation:Actuator` | `actuation:Actuation` |
@@ -321,9 +321,9 @@ the valve *reported having dispensed*. The old arrangement read the valve's comm
 meant a command a real valve would refuse still watered the plant. Now a refusal publishes
 nothing and the soil stays dry — which is the behaviour worth having a test for, and there is one.
 
-**Sense mode is honoured rather than bypassed.** `perception:Scheduled` means the stand-in keeps the
+**Sense mode is honoured rather than bypassed.** `perception:ScheduledSampling` means the stand-in keeps the
 interval its agent gives it over the retained command, exactly as a deep-sleeping board does;
-`perception:Push` means it keeps its own clock and takes no orders. So the simulation exercises the
+`perception:PushReporting` means it keeps its own clock and takes no orders. So the simulation exercises the
 retained-cadence mechanism, which the old one never touched at all.
 
 Before it: a separate `agora-sim` process told by an environment variable which subjects to

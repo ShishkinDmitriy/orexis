@@ -21,9 +21,9 @@ clock**, and it is the axis because it is what changes what the agent must belie
 
 | capability | device (`perception:senseMode`) | who runs the timer | the agent states |
 |---|---|---|---|
-| **`perception:Polling`** | `perception:Pull` | the **agent** — it asks for each reading | an interval, its own |
-| **`perception:Subscribing`** | `perception:Scheduled` | **shared** — the agent sets it, the device keeps it | an interval, the device's |
-| **`perception:Listening`** | `perception:Push` | the **device** | nothing |
+| **`perception:Polling`** | `perception:PolledSampling` | the **agent** — it asks for each reading | an interval, its own |
+| **`perception:Subscribing`** | `perception:ScheduledSampling` | **shared** — the agent sets it, the device keeps it | an interval, the device's |
+| **`perception:Listening`** | `perception:PushReporting` | the **device** | nothing |
 
 Strictly decreasing agent control, and each asks the agent for strictly less.
 

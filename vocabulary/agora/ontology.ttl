@@ -65,7 +65,7 @@ ag:modelDryRate a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range
 
 ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:integer ;
     rdfs:label "model tick seconds" ;
-    rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a perception:Push device, which keeps its own clock; a perception:Scheduled one keeps the interval its agent gives it, exactly as a board does." .
+    rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a perception:PushReporting device, which keeps its own clock; a perception:ScheduledSampling one keeps the interval its agent gives it, exactly as a board does." .
 
 #################  Where a society executes  #################
 ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;

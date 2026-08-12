@@ -196,7 +196,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
         'ag:chatter_fern a sosa:Sensor , ag:Device ;\n'
         '    ag:localId "chatter_fern" ;\n'
         '    mqtt:onBus ag:local_bus ;\n'
-        '    perception:senseMode perception:Push ;\n'          # keeps its own clock, takes no orders
+        '    perception:senseMode perception:PushReporting ;\n'          # keeps its own clock, takes no orders
         "    perception:monitors ag:fern ;\n"
         f"    sosa:observes {observes} ;\n"
         '    mqtt:readingTopic "sensors/chatter_fern/reading" .\n\n'

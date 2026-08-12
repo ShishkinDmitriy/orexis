@@ -284,16 +284,16 @@ is **who holds the clock**:
 
 | `ag:senseMode` | capability | who runs the timer |
 |---|---|---|
-| `ag:Pull` | `ag:Polling` — *reserved, not built* | the agent asks for each reading |
-| `ag:Scheduled` | `ag:Subscribing` | the agent sets an interval, the board keeps it |
-| `ag:Push` | `ag:Listening` | the board, alone |
+| `perception:PolledSampling` | `ag:Polling` — *reserved, not built* | the agent asks for each reading |
+| `perception:ScheduledSampling` | `ag:Subscribing` | the agent sets an interval, the board keeps it |
+| `perception:PushReporting` | `ag:Listening` | the board, alone |
 
 `ag:Polling` is the simplest exchange and what the word ought to mean, but it needs a board
 reachable at any moment — one that deep-sleeps cannot hear the request. So it is declared in
 the vocabulary with no rule granting it and no module providing it. The room is kept on
 purpose; adding it is a class and one line of `PROVIDES`.
 
-The ESP32 firmware is `ag:Scheduled`. Change the firmware, edit `ag:senseMode`, restart the
+The ESP32 firmware is `perception:ScheduledSampling`. Change the firmware, edit `ag:senseMode`, restart the
 agent, and the capability changes with it — the agent is never edited.
 
 The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
