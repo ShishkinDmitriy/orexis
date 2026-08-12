@@ -13,6 +13,7 @@
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
 
 <http://example.org/agora/dht11> a owl:Ontology ;
     rdfs:label "DHT11 temperature and humidity sensor" ;
@@ -129,6 +130,22 @@ dht11:TemperatureSensor rdfs:subClassOf
 
 dht11:HumiditySensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue dht11:HumidityRead ] .
+
+# The three are related, and saying so is not decoration: `dht11:TemperatureRead` on its own
+# looks like a procedure someone could ask the part to perform.
+#
+# `dcterms:hasPart` and NOT a step, a call or an invocation, which is the distinction this part
+# makes load-bearing. Its definition — "included either physically or logically in the described
+# resource" — is exactly right and stops exactly where it should: performing the combined read
+# CONSTITUTES performing both halves, and neither half can be performed on its own, because
+# there is one 40-bit frame and no way to ask for a piece of it. A step relation would say the
+# opposite, and it is the same error as explaining the shared message by transport economy.
+#
+# Nothing in SOSA, SSN or ssn-system says this. All 44 of their object properties were checked:
+# the nearest is `ssn:hasSubSystem`, which relates a System to a System, and the procedures
+# distribute down the hosting chain in parallel with it rather than through it.
+
+dht11:CombinedRead dcterms:hasPart dht11:TemperatureRead , dht11:HumidityRead .
 
 #################  What it can honour  #################
 #

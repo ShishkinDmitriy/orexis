@@ -44,7 +44,8 @@ Concretely, `dht11:Dht11` now has:
 - **procedures at three levels**, which is the reason to state them rather than let the wiring
   imply them: `onewire:Transaction` is how it is talked to (the protocol package's, referenced),
   `dht11:CombinedRead` is what the whole part does, and `dht11:TemperatureRead` /
-  `dht11:HumidityRead` are what each sub-sensor contributes to the one frame.
+  `dht11:HumidityRead` are what each sub-sensor contributes to the one frame, linked to it by
+  `dcterms:hasPart` — see below.
 - **datasheet figures per sub-sensor** — measurement range, accuracy, resolution — while the
   sampling floor stays on the part. That split is physical: the floor is a property of the
   frame, which carries both values, whereas how finely the thermistor resolves has nothing to do
@@ -93,6 +94,35 @@ exactly the entails-nothing-fails-nothing shape this repository keeps finding.
 
 The wiring states which half is which — two triples in `world/sensing/hardware.ttl` — and
 everything else follows from the package.
+
+# Linking the three procedures, and the word that would have been wrong
+
+Named separately, `dht11:TemperatureRead` reads like a procedure someone could ask the part to
+perform. It is not, and the relation between the three had to say so.
+
+**SOSA and SSN relate a Procedure to nothing.** All 44 object properties across `sosa:`, `ssn:`
+and `ssn-system:` were enumerated before reaching outside them; the nearest is
+`ssn:hasSubSystem`, which is System to System. So this link comes from outside those
+vocabularies whatever it is.
+
+`dcterms:hasPart`, then — standard generic mereology, declaring **no domain and no range**, so
+applying it to procedures borrows nothing and constrains nothing. Its definition is *"included
+either physically or logically in the described resource"*, and logically is the case here.
+
+```turtle
+dht11:CombinedRead dcterms:hasPart dht11:TemperatureRead , dht11:HumidityRead .
+```
+
+**Deliberately not a step, a call or an invocation**, and this is the part worth carrying to the
+next composite part. Performing the combined read *constitutes* performing both halves; neither
+can be performed alone, because there is one 40-bit frame and no way to ask for a piece of it. A
+step relation asserts separability — which is the same error as explaining the shared message by
+transport economy, corrected in
+[a-procedure-belongs-to-whatever-performs-it](/decisions/a-procedure-belongs-to-whatever-performs-it.md),
+arriving by a different route. Part-whole is true; invocation is not.
+
+The payoff is a query that joins the two axes: a device `ssn:implements` the whole conversation
+by entailment, and `dcterms:hasPart` reaches what that conversation produced.
 
 # Do the restriction and the shape work together?
 

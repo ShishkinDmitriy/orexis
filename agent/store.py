@@ -80,6 +80,19 @@ _EXTERNAL = {
     # `unit:` could silently redirect every unit in the society. Borrowed and not imported — the
     # IRIs are referenced, nothing of QUDT is loaded, and `agent/inference.py` gains no axioms.
     "unit": "http://qudt.org/vocab/unit/",
+    # Part-whole, for the one relation SOSA and SSN do not have. Their combined 44 object
+    # properties contain nothing linking a Procedure to a Procedure — `ssn:hasSubSystem` is
+    # System to System — and a composite part needs to say that one procedure's product is
+    # included in another's. Measured across all three published vocabularies before reaching
+    # outside them.
+    #
+    # dcterms because it is the standard generic mereology and declares NO domain and NO range,
+    # so applying it to procedures borrows nothing and constrains nothing; its definition is
+    # "included either physically or logically in the described resource", and logically is the
+    # case here. Deliberately not a step or invocation relation — see dht11's ontology for why
+    # this part makes that distinction load-bearing.
+    "dcterms": "http://purl.org/dc/terms/",
+
     # How a figure states its number and its unit. schema.org's `value`/`unitCode` pair is
     # what the W3C's own worked DHT22 example uses to say a Frequency is two seconds, and it
     # completes an idiom half-adopted already: #77 put `unit:` IRIs on sensors and then wrote

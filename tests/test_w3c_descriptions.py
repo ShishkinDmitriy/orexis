@@ -225,6 +225,7 @@ _ONEWIRE = rdflib.Namespace("http://example.org/agora/onewire#")
 _MQTT = rdflib.Namespace("http://example.org/agora/mqtt#")
 _MC = rdflib.Namespace("http://example.org/agora/microcontroller#")
 _OWL = rdflib.Namespace("http://www.w3.org/2002/07/owl#")
+_DCTERMS = rdflib.Namespace("http://purl.org/dc/terms/")
 
 
 def test_their_channels_implement_a_procedure_and_ours_is_on_the_part(tmp_path):
@@ -268,6 +269,30 @@ def test_their_channels_implement_a_procedure_and_ours_is_on_the_part(tmp_path):
         assert _DHT11.CombinedRead not in implemented_by(channel), (
             "the combined read leaked onto a channel — it is what the PART does, and putting it "
             "on a channel says a channel could be read alone, which is the thing it denies")
+
+
+def test_the_combined_read_has_the_two_halves_as_parts(tmp_path):
+    """SOSA and SSN relate a Procedure to nothing. All 44 of their object properties were checked
+    when this was written: the nearest is `ssn:hasSubSystem`, which is System to System.
+
+    So the link is `dcterms:hasPart` — standard generic mereology, no domain, no range, defined as
+    "included either physically or logically in the described resource". Deliberately NOT a step
+    or an invocation: performing the combined read CONSTITUTES performing both halves, and neither
+    can be performed alone, because there is one 40-bit frame and no way to ask for a piece of it.
+
+    Asserted here rather than left to prose because the direction is the whole of it. Reversed, it
+    would say the two reads each contain the conversation.
+    """
+    ours = _world_with(tmp_path)
+    assert set(ours.objects(_DHT11.CombinedRead, _DCTERMS.hasPart)) == {
+        _DHT11.TemperatureRead, _DHT11.HumidityRead}
+
+    for half in (_DHT11.TemperatureRead, _DHT11.HumidityRead):
+        assert not set(ours.objects(half, _DCTERMS.hasPart)), (
+            f"<{half}> was given parts — it names one sensor's share of a single frame, "
+            "and nothing is inside it")
+        assert set(ours.subjects(_DCTERMS.hasPart, half)) == {_DHT11.CombinedRead}, (
+            "a half belongs to exactly one conversation")
 
 
 def test_every_declared_procedure_is_one(tmp_path):
