@@ -30,6 +30,11 @@ Both are an agent holding evidence about its own settings with no way to use it.
 
 # Decision — the belief is the pick, the constraints are the bound
 
+The *first* pick answered to nothing when this was written, which is the half it did not cover:
+genesis wrote a target and no range bounded it. A plant states the range it needs now, and the
+agent's target is a pick inside that — the same shape one level out. See
+[the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md).
+
 **A belief is not a constant. It is a point chosen inside a range.** A computer needs one value
 to act on, so genesis picks one and the agent lives with it. What genesis wrote is therefore the
 *first pick* and nothing more.
