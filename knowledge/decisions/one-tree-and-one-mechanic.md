@@ -105,12 +105,10 @@ nothing missing — which is a check nothing performs automatically. See
   `plant/aroid/zamioculcas/` would not be found. Making it recursive is small — a directory is a
   package if it directly holds one of the four files or Python beyond `__init__.py` — and
   nothing needs a third level yet.
-- **Tests did not move.** A package could carry its own, and 29 of 459 test functions exercise
-  exactly one package (market 17, reporting 12) while 389 build a world and are integration by
-  construction. The ratio is architectural rather than stylistic: in this system the unit of
-  behaviour is usually the merged graph, and a `rules.ru` cannot be exercised without every
-  other package's T-Box. If they ever move, `pytest tests -q` — the documented gate, in
-  `AGENTS.md` and in CI — stops running them and stays green, which is the same failure as
-  above.
+- **Tests did not move here; they did in the record that follows.** See
+  [a-package-may-test-itself](/decisions/a-package-may-test-itself.md), which also corrects the
+  count stated here — it was 17, not 29. The reporting half was misclassified: eleven of its
+  twelve take a fixture built by `conftest.build_agent`, which is *"a real Agent — real world,
+  real beliefs, real modules"*, and the marker list used to measure it did not name that helper.
 - **The image has not been rebuilt** since the move. The `Containerfile` and `.containerignore`
   are updated and the layout tests pass on both, but only a `podman build` proves it.

@@ -316,7 +316,7 @@ The market layer (`clearing`, `auction`) is pure (no infra, no LLM), so it's ful
 
 ```bash
 pip install -e ".[dev]"
-pytest tests -q
+pytest -q
 ```
 
 Validate the live belief base against every package's `shapes.ttl`. The checks

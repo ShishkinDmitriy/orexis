@@ -60,7 +60,10 @@ jobs:
           done
 
       - name: pytest
-        run: pytest tests -q
+        # Bare, not `pytest tests`: a package may carry its own tests as plain files beside
+        # its code, and naming a path here would silently stop running them. testpaths in
+        # pyproject.toml is what decides the roots, so this command cannot drift from them.
+        run: pytest -q
 
       # The layering the flat layout gave up a packaging split to assert: onboarding may import
       # agent, agent may never import onboarding, and no capability or transport may touch

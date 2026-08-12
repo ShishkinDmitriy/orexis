@@ -26,6 +26,9 @@ world/*/secrets
 keys
 
 # not needed at runtime
+# A package may carry its own tests as plain files beside its code, so this is per-FILE rather
+# than a directory: `COPY packages/` would otherwise put pytest cases in the agent image.
+**/test_*.py
 knowledge
 infra/grafana
 infra/mosquitto
