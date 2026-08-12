@@ -7,6 +7,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema: <https://schema.org/> .
 
 <http://example.org/agora/perception> a owl:Ontology ;
     rdfs:label "Agora perception" ;
@@ -201,6 +202,29 @@ perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 9
 #  The `rdfs:range xsd:integer` this term carried was never enforced — `rdfs:range` is not in
 #  `agent/inference.py`'s closure, the same way `mc:carries`'s domain was not. It is a shape
 #  now (`perception:StatedFrequencyShape`), so the swap gains a check rather than losing one.
+
+# BORROWED, AND BRIDGED — the legacy spelling of somebody else's namespace.
+#
+# schema.org migrated to `https:` and calls that its preferred form, while `http:` "will remain
+# widely understood for the foreseeable future and there should be no urgency about migrating
+# existing data". Both are in the wild, and RDF does not care what a registry prefers: they are
+# two IRIs. `<http://schema.org/value>` does not satisfy a shape written against
+# `<https://schema.org/value>`, and nothing says so — the property is simply absent.
+#
+# The idiom above was copied FROM the W3C's DHT22 example, and that example is written in the
+# legacy form. So a description straight from the people who wrote the vocabulary states its
+# frequency in a property our shape cannot see. Measured, before this bridge existed: all three
+# violations that example raised about its frequency were this, and not the QUDT version they
+# look like — two `minCount` misses reported as "must be in seconds" and "must carry one whole
+# number", for a node that states both, correctly, in the other scheme.
+#
+# One direction only, and deliberately. Legacy ENTAILS canonical, so a vendor's file satisfies
+# our shapes; nothing here ever emits the legacy form, and a bridge the other way would invite
+# it. `agent/inference.py` rule 4 carries this into the world's entailed graph — the rule
+# written for exactly this shape of fact, whose own comment records that it had nothing left to
+# exercise after `mc:carries` went.
+<http://schema.org/value>    rdfs:subPropertyOf schema:value .
+<http://schema.org/unitCode> rdfs:subPropertyOf schema:unitCode .
 
 #################  Re-picking the comfortable cadence  #################
 # ONE triple makes a belief revisable, and it names the two figures already stated above. The
