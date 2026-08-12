@@ -29,6 +29,7 @@ from agent.store import Store, bindings
 
 MC = "http://example.org/agora/microcontroller#"
 ONEWIRE = "http://example.org/agora/onewire#"
+DHT11 = "http://example.org/agora/dht11#"
 AG = "http://example.org/agora#"
 
 
@@ -60,6 +61,34 @@ def test_a_world_instance_is_typed_by_what_its_class_is_under():
     joining the ontology to walk a subclass path."""
     types = _types_of(_public(), WORLD_ENTAILED_GRAPH, AG + "moisture_sensor_fern")
     assert MC + "Peripheral" in types
+
+
+def test_a_world_instance_gets_what_its_class_fixes_for_every_member():
+    """The one OWL construct the closure honours. `dht11:Dht11` is put under an `owl:hasValue`
+    restriction, so every DHT11 has that capability — including the one bolted to the fern's
+    board, which the wiring declares a `dht11:Dht11` and which nobody hands a capability to.
+
+    Worth its own test because the guard in test_layout.py cannot cover it. Revert the restriction
+    to the punned `dht11:Dht11 ssn-system:hasSystemCapability …` and the vocabulary still says the
+    same thing to a reader, still parses, still validates — and entails nothing, so the wiring
+    side of that guard goes empty and it passes by having nothing to check. Measured, not assumed.
+    """
+    caps = {r["c"] for r in bindings(_public().query(
+        f"SELECT ?c WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{"
+        f" <{AG}air_sensor_fern> ssn-system:hasSystemCapability ?c }} }}"))}
+    assert caps == {DHT11 + "ContinuousOperationCapability"}
+
+
+def test_an_anonymous_class_expression_never_becomes_a_type():
+    """A restriction is a class, so `?x a _:restriction` follows and is perfectly true. It is also
+    unaskable — a blank node has no name to put in a query — and it inflates a triple count
+    agent-metrics reports as flat. `isIRI(?super)` in rules 2 and 3 leaves it out, and it had to
+    be added the moment the first class expression entered the vocabulary."""
+    st = _public()
+    for graph in (ONTOLOGY_ENTAILED_GRAPH, WORLD_ENTAILED_GRAPH):
+        anonymous = bindings(st.query(
+            f"SELECT ?s ?t WHERE {{ GRAPH <{graph}> {{ ?s a ?t FILTER(!isIRI(?t)) }} }}"))
+        assert not anonymous, f"{graph} types something by an unaskable class expression"
 
 
 def test_an_entailment_never_lands_in_the_graph_it_was_computed_from():

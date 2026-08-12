@@ -67,11 +67,28 @@ dht11:Dht11 ssn:implements dht11:CombinedRead , onewire:Transaction .
 # previous reading if asked sooner. Below the society's own floor of ten, so it constrains
 # nothing here today, and that is worth stating rather than hiding: the mechanism binds when a
 # device is slower than the constitution, and none of the hardware in this repository is.
-dht11:Dht11 ssn-system:hasSystemCapability [
-    a ssn-system:SystemCapability ;
-    # One condition, because there is only one way this board is run. The qualifier is not
-    # decoration: SSN puts "under the defined Conditions" in the definition itself, so a part
-    # that could be read faster on mains than on a battery states two of these rather than one
-    # number with a caveat. Nothing here is battery-powered yet — see issue #78.
+# Stated ONCE, and reaching instances by entailment rather than by repetition. The capability is
+# named, because `owl:hasValue` takes an individual and a blank node is not one; and the class is
+# put UNDER a restriction rather than being handed the property itself. The difference is the
+# whole of this: `dht11:Dht11 ssn-system:hasSystemCapability …` is punning — legal RDF, and it
+# says the CLASS has the capability, which entails nothing whatever about a DHT11 you can hold.
+# The restriction says every instance does, which is what a datasheet means.
+#
+# `agent/inference.py` materialises it (rule 5), so the sovereign — which alone loads both the
+# vocabulary and the wiring — observes `ag:air_sensor_fern ssn-system:hasSystemCapability
+# dht11:ContinuousOperationCapability` without anyone having written it down. See
+# knowledge/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md.
+dht11:Dht11 rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty ssn-system:hasSystemCapability ;
+    owl:hasValue  dht11:ContinuousOperationCapability ] .
+
+# Named for its CONDITION and not for the part, because the condition is the axis a second one
+# would differ along. SSN puts "under the defined Conditions" in the definition of Frequency
+# itself, so a part that could be read faster on mains than on a battery states two of these
+# rather than one number with a caveat — and the two would then need telling apart by name.
+# Nothing here is battery-powered yet; see issue #78.
+dht11:ContinuousOperationCapability a ssn-system:SystemCapability ;
+    rdfs:label "DHT11 sampling capability, in continuous operation" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
-    ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
+    ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] .

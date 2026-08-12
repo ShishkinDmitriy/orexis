@@ -69,9 +69,16 @@ CLOSURE = (
     # 2. What a T-Box individual is. This is the one the shapes were quietly relying on:
     #    `onewire:DataPinRole a mc:BidirectionalRole` becomes `a mc:OutputRole` and `a mc:PinRole`,
     #    which is what the rule keeping a driven line off an input-only pin asks about.
+    #
+    #    `isIRI(?super)` because a superclass may now be an anonymous CLASS EXPRESSION rather than
+    #    a class name — rule 5 introduced the first `rdfs:subClassOf [ a owl:Restriction … ]` into
+    #    the vocabulary. `?x a _:restriction` is perfectly true and no reader can ask for it: a
+    #    blank node has no name to put in a query. True and useless is the category this closure
+    #    exists to leave out.
     f"""INSERT {{ GRAPH <{ONTOLOGY_ENTAILED_GRAPH}> {{ ?x a ?super }} }}
         {_T_BOX}
-        WHERE  {{ ?x a ?class . ?class rdfs:subClassOf ?super FILTER(?class != ?super) }}""",
+        WHERE  {{ ?x a ?class . ?class rdfs:subClassOf ?super
+                  FILTER(?class != ?super && isIRI(?super)) }}""",
 
     # 3. What a WORLD instance is, given classes the ontology declares. The join spans the world
     #    and the vocabulary — and the world side is NAMED rather than merged, which is the whole
@@ -91,7 +98,8 @@ CLOSURE = (
         {_T_BOX}
         USING NAMED <{WORLD_GRAPH}>
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?x a ?class }}
-                  ?class rdfs:subClassOf ?super FILTER(?class != ?super) }}""",
+                  ?class rdfs:subClassOf ?super
+                  FILTER(?class != ?super && isIRI(?super)) }}""",
 
     # 4. And what a world statement implies under a subproperty. There are no `rdfs:subPropertyOf`
     #    axioms today, again: the simulated-device work removed `ag:models` under
@@ -105,6 +113,31 @@ CLOSURE = (
         USING NAMED <{WORLD_GRAPH}>
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?x ?p ?y }}
                   ?p rdfs:subPropertyOf ?super FILTER(?p != ?super) }}""",
+
+    # 5. And what a world instance HAS, given a value its class fixes for every member. The one
+    #    OWL construct here, and it earns its place: `owl:hasValue` is how a vocabulary says "every
+    #    instance of this class has this property value" — a datasheet fact, stated once on the
+    #    part and reaching each device built from it.
+    #
+    #    Without it a class-level statement is PUNNING: `dht11:Dht11 ssn-system:hasSystemCapability
+    #    …` is legal RDF and entails nothing about instances, so the fact had to be written a
+    #    second time onto each sensor in the world — which is #59, and which a test had to guard
+    #    because nothing else could.
+    #
+    #    Rule 1 has already run, so a restriction on a SUPERCLASS is reached too: `?class
+    #    rdfs:subClassOf ?restriction` reads the transitive closure and not one step.
+    #
+    #    Deliberately just this one. `owl:someValuesFrom` says a value exists without naming it,
+    #    which materialises nothing; `owl:allValuesFrom` constrains values rather than asserting
+    #    them; cardinality is a shape's job here and pyshacl already does it. `hasValue` is the
+    #    only OWL class expression that turns into ground triples, which is why it is the only one
+    #    a materialising closure can honour at all.
+    f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?x ?p ?v }} }}
+        {_T_BOX}
+        USING NAMED <{WORLD_GRAPH}>
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?x a ?class }}
+                  ?class rdfs:subClassOf ?restriction .
+                  ?restriction a owl:Restriction ; owl:onProperty ?p ; owl:hasValue ?v }}""",
 )
 
 # Emptied before recomputing, because they are a function of the files and not an accumulation.

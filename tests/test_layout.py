@@ -201,10 +201,32 @@ def test_the_society_hosting_agrees_with_the_wiring():
             f"but the wiring mounts it elsewhere")
 
 
+# Everything a subject can honour, in seconds. One pattern, and the SAME one for both sides of
+# the guard below — which is the whole of what the `owl:hasValue` restriction bought. The wiring
+# side used to need a hand-walk the society side did not: part, its `rdf:type`, that CLASS's
+# capability, that capability's frequency, across two graphs. `agent/inference.py` rule 5 does the
+# class hop now, so both sides are read by asking what the subject HAS.
+_WHAT_IT_CAN_HONOUR = """SELECT ?subject ?seconds WHERE {
+    ?subject ssn-system:hasSystemCapability ?capability .
+    ?capability ssn-system:hasSystemProperty ?frequency .
+    ?frequency a ssn-system:Frequency ; schema:value ?seconds ; schema:unitCode unit:SEC }"""
+
+
 def test_the_society_repeats_every_limit_the_wiring_states():
     """A device's floor is stated on the PART and needed by the AGENT, which is never given the
-    part. So it is said twice — `ssn-system:Frequency` on `dht11:Dht11` in the vocabulary, and
-    again on each sensor that part hosts in the society — and only the sovereign loads both.
+    part. So it is said twice — once on `dht11:Dht11` in the vocabulary, and again on each sensor
+    that part hosts in the society — and only the sovereign loads both.
+
+    The vocabulary states it ONCE and reaches instances by entailment: `dht11:Dht11` is put under
+    an `owl:hasValue` restriction, so a sovereign that loads the wiring observes the capability on
+    `ag:air_sensor_fern` with nobody having written it there. What that does NOT cross is the
+    boundary — an agent is given no `a dht11:Dht11`, so nothing entails anything for it, and the
+    society must still repeat the number. An agent may know a part's properties and not its
+    identity. See knowledge/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md.
+
+    So this guard survives the entailment; what it stops doing is walking the class hop by hand.
+    Each side is built as its own world, put through the same closure the sovereign runs, and
+    asked the same question.
 
     Checked in the direction drift goes. A part gaining a limit, or having it changed, is an edit
     to the vocabulary; the society keeps the old answer and every gate stays green, because each
@@ -217,55 +239,78 @@ def test_the_society_repeats_every_limit_the_wiring_states():
     that knows its board wakes slowly on battery is stating something true that no class
     declares. Extra is allowed; missing and contradicting are not.
     """
-    import rdflib
+    from agent import genesis, inference, loader
+    from agent.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
+    from agent.store import Store, bindings
 
-    from agent import genesis
+    t_box = "\n".join(path.read_text() for path in loader.ontology_files())
 
-    SSNS = rdflib.Namespace("http://www.w3.org/ns/ssn/systems/")
-    SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
-    PERC = rdflib.Namespace("http://example.org/agora/perception#")
+    def built(paths):
+        """The world those files describe, entailments and all — as the sovereign would build it,
+        except that it is handed one SIDE rather than the whole. That is deliberate: merge the two
+        and the question "does the society repeat this?" stops having an answer."""
+        st = Store()
+        st.put_graph(ONTOLOGY_GRAPH, t_box)
+        st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in paths), dataset=True)
+        inference.materialise(st)
+        return st
 
-    def floors(g, subject):
-        """Every Frequency, in seconds, that this node states — through the two hops SSN puts
-        between a system and a number."""
-        out = set()
-        for cap in g.objects(subject, SSNS.hasSystemCapability):
-            for prop in g.objects(cap, SSNS.hasSystemProperty):
-                if (prop, rdflib.RDF.type, SSNS.Frequency) in g:
-                    out |= {int(s) for s in g.objects(prop, PERC.seconds)}
+    def floors(st):
+        out = {}
+        for row in bindings(st.query(_WHAT_IT_CAN_HONOUR)):
+            out.setdefault(row["subject"], set()).add(int(row["seconds"]))
         return out
 
-    vocabulary = rdflib.Graph()
-    for path in sorted(genesis.REPO_ROOT.glob("vocabulary/*/ontology.ttl")):
-        vocabulary.parse(path, format="turtle")
+    compared = 0  # see the assertion at the end, which is the point of counting
 
     for world in genesis.worlds():
         world_path = genesis.world_dir(world)
-        society, wiring = rdflib.Graph(), rdflib.Graph()
-        for path in genesis.society_files(world_path):
-            society.parse(path, format="turtle")
-        for name in genesis.HARDWARE_FILES:
-            if (world_path / name).exists():
-                wiring.parse(world_path / name, format="turtle")
-        if not wiring:
+        hardware = [world_path / name for name in genesis.HARDWARE_FILES
+                    if (world_path / name).exists()]
+        if not hardware:
             continue  # no parts, so nothing the society could be failing to repeat
 
-        for part in set(wiring.subjects()):
-            stated = {f for cls in wiring.objects(part, rdflib.RDF.type) for f in floors(vocabulary, cls)}
-            stated |= floors(wiring, part)
-            if not stated:
-                continue
-            # Whatever that part hosts, or the part itself where it hosts nothing — a
-            # single-property probe IS its sensor and carries the limit directly, while a KY-015
-            # is a platform whose two channels carry it and which states none of its own.
-            hosted = set(society.objects(part, SOSA.hosts))
-            for sensor in hosted or {part}:
-                if (sensor, None, None) not in society:
-                    continue
-                assert floors(society, sensor) >= stated, (
+        society = built(genesis.society_files(world_path))
+        said = floors(society)
+        # Whatever a part is composed of, or the part itself where it is composed of nothing — a
+        # single-property probe IS its sensor and carries the limit directly, while a KY-015 is a
+        # system whose two channels carry it and which states none of its own.
+        #
+        # BOTH relations, because the society uses both and means the same thing by them here: a
+        # board `sosa:hosts` the parts bolted to it, and a part `ssn:hasSubSystem` the channels it
+        # is read through. A floor is a property of the physical device, so it reaches either way
+        # — the KY-015's two channels come out of one 40-bit frame and neither can be had faster
+        # than the frame. Following only `sosa:hosts` was the second thing wrong with this guard:
+        # the same PR that killed the query above also made the KY-015's channels its
+        # `ssn:hasSubSystem`, so even a live version would have compared the wrong subject — and
+        # the first break hid the second.
+        composed = {}
+        for row in bindings(society.query(
+                "SELECT ?part ?sensor WHERE { ?part sosa:hosts|ssn:hasSubSystem ?sensor }")):
+            composed.setdefault(row["part"], set()).add(row["sensor"])
+
+        for part, stated in floors(built(hardware)).items():
+            for sensor in composed.get(part) or {part}:
+                if not bindings(society.query(f"SELECT ?p WHERE {{ <{sensor}> ?p ?o }} LIMIT 1")):
+                    continue  # the society does not mention it, so it repeats nothing
+                compared += 1
+                assert said.get(sensor, set()) >= stated, (
                     f"{world}: the wiring says {sorted(stated)}s for <{sensor}> and the society "
-                    f"says {sorted(floors(society, sensor))}s — an agent would commit to a "
+                    f"says {sorted(said.get(sensor, set()))}s — an agent would commit to a "
                     f"cadence its board will not keep")
+
+    # The guard on the guard, and it is here because this test WAS dead. PR #95 renamed
+    # `perception:seconds` to schema.org's `value`/`unitCode` pair; the walk above still asked for
+    # the old term, found nothing anywhere, and passed every run since by having nothing to
+    # compare. Measured on the commit before this one: zero parts reached an assertion.
+    #
+    # Every "if not, continue" in a guard is a way for it to pass by doing nothing, and each one
+    # here is legitimate — a world with no wiring, a part with no datasheet floor, a part the
+    # society never names. The cost of legitimate skips is that total silence looks identical to
+    # total success. So count, and refuse the count of zero. Same move as test_store.py asserting
+    # its globs are non-empty, for the same failure arriving by a different route.
+    assert compared, ("this guard compared nothing at all. Either no world states a hardware "
+                      "floor any more, or the query above has drifted off the vocabulary again")
 
 
 def test_the_compose_file_does_not_mount_hardware_at_an_agent():

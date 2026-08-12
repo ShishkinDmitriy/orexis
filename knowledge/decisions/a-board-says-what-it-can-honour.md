@@ -45,9 +45,12 @@ content-negotiated Turtle at `http://www.w3.org/ns/ssn/systems/`, which is the g
 
 ## What this project adds is the number
 
-SSN deliberately leaves values to other vocabularies, so `perception:seconds` carries it. The
-class says which end it is; the property says how far. A device that can be read no faster than
-every thirty seconds states `[ a ssn-system:Frequency ; perception:seconds 30 ]`.
+SSN deliberately leaves values to other vocabularies, so schema.org's `value`/`unitCode` pair
+carries it — the idiom the W3C's own worked example uses, adopted in place of a term of ours by
+[one-word-for-one-relation](one-word-for-one-relation.md). The class says which end it is; the
+properties say how far and in what. A device that can be read no faster than every thirty seconds
+states `[ a ssn-system:Frequency , schema:PropertyValue ; schema:value 30 ; schema:unitCode
+unit:SEC ]`.
 
 # Borrowed, not imported — and this one cost an axiom
 
@@ -98,6 +101,16 @@ things and lose which of the two refused a revision.
 A part's floor is a datasheet fact, so it lives on the **class** in the vocabulary — every DHT11
 has it, unlike `probe:rawDry`, which is measured per probe in the pot it sits in. An agent is never
 given the wiring, so the society restates it on each sensor that part hosts.
+
+**How the class states it was wrong here, and is fixed.** This record wrote it as
+`dht11:Dht11 ssn-system:hasSystemCapability […]` — punning, which says the class has a capability
+and entails nothing about any DHT11 in the world. It is an `owl:hasValue` restriction now, and
+`agent/inference.py` materialises it onto the device the wiring declares. The society's copy is
+therefore a projection of something entailed rather than a second hand-written assertion, and the
+repetition survives for a reason this record only half stated: not "an agent is never given the
+wiring" as a matter of file layout, but **an agent may know a part's properties and not its
+identity**. See
+[what-is-true-of-a-part-is-true-of-every-one-of-them](what-is-true-of-a-part-is-true-of-every-one-of-them.md).
 
 `test_the_society_repeats_every_limit_the_wiring_states` holds the two together, following
 [a-board-is-a-platform](a-board-is-a-platform.md)'s guard. **Not symmetric, and for a different
