@@ -280,6 +280,13 @@ fails if pyshacl ever entails something the closure does not. See
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each
   source tree is still *found*, because moving files has twice emptied one of its globs and taken
   cases off the guard without failing anything.
+- - **A test that asserts inside a loop can assert nothing.** An empty result set is not an error,
+  so the body never runs and the test is green. The repo-root `conftest.py` traces the at-risk
+  tests — an `assert` inside a loop over something that could be empty — and fails the run if a
+  test function executed no assertion in any of its cases. It does NOT catch a parametrisation
+  that generated zero cases, nor a glob that still matches but no longer covers what it is named
+  for; both have happened, and both are still found by hand. See
+  [a-test-that-asserted-nothing](knowledge/decisions/a-test-that-asserted-nothing.md).
 - **Stray host processes are the usual cause of doubled data.** A leaked publisher from an
   earlier run keeps writing to the same topic, and both readings get ingested. `podman compose
   down` removes a society deterministically, which is half of why deployment is containers.
