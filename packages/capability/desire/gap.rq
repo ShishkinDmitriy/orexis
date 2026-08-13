@@ -26,8 +26,14 @@
 # A property with no observation yet produces NO row rather than a zero — at birth every desire
 # is unmeasured, and "unmeasured" must not read as "satisfied". The first intention is always
 # to look; see knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
+#
+# ?at is WHEN the sensed side was measured, carried so a reader can refuse a stale row. The
+# refusing itself is deliberately not here: how old is too old is the agent's own freshness
+# rule — the cadence it commanded plus its grace, per sensor, per property — and a shipped
+# query cannot know a policy that moves with the cadence. The query answers what the diff IS
+# and when each side was true; whoever consumes it judges. See issue #124.
 
-SELECT ?property ?value ?low ?high ?gap WHERE {
+SELECT ?property ?value ?low ?high ?gap ?at WHERE {
   $me desire:desires ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property ;
           schema:minValue ?low ;
@@ -38,6 +44,7 @@ SELECT ?property ?value ?low ?high ?gap WHERE {
     ?obs sosa:hasFeatureOfInterest ?subject ;
          sosa:observedProperty ?property ;
          sosa:hasSimpleResult ?value .
+    OPTIONAL { ?obs sosa:resultTime ?at }
   }
   BIND((?low + ?high) / 2 AS ?centre)
   BIND(IF(?value < ?centre, COALESCE(?floor, ?low), COALESCE(?ceiling, ?high)) AS ?outer)

@@ -68,11 +68,22 @@ satisfied, and the first intention is always to look. That boot-order fact is wh
 [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md)
 builds the rest of BDI on.
 
-Three consumers today: `reports()` discloses `worst_gap` into the health series (absent until
-something is observed, and the absence is itself a reading); `desire:BeyondSurvivalShape` turns
-|gap| = 1 into a **warning** at boot — never a refusal, because an agent past its envelope must
-be allowed to start precisely so it can do something about it; and whoever holds
-`provider(DESIRE)` may call `gaps()` for the rows themselves.
+**Three states of measurement, told apart** (#124). A row carries `at` — when the sensed side
+was true — and does not judge its own freshness, because how old is too old is the agent's own
+rule (the cadence it commanded plus its grace, perception's to answer). `gaps()` returns
+everything, stale included, since "last I looked I was dry and I cannot see any more" is
+information; `current()` is the same diff with the agent's rule applied, and is what the report
+is computed over — so a dead sensor's upserted last reading makes `worst_gap` **disappear
+rather than reassure**, and `reading_age_s` on the same dashboard says why. The blind case — a
+desire in a property the agent polls no sensor for — warns at the gate
+(`desire:UnwatchedDesireShape`, the mirror of #111) and shows at runtime as `desires` and
+`desires_measured` diverging.
+
+Consumers today: `reports()` discloses `desires`, `desires_measured` and `worst_gap` into the
+health series; `desire:BeyondSurvivalShape` turns |gap| = 1 into a **warning** at boot — never
+a refusal, because an agent past its envelope must be allowed to start precisely so it can do
+something about it; and whoever holds `provider(DESIRE)` may call `gaps()` or `current()` for
+the rows themselves.
 
 # What it is not
 
