@@ -30,6 +30,29 @@ market:aboutProperty a owl:ObjectProperty ; rdfs:range sosa:ObservableProperty ;
     rdfs:label "about property" ;
     rdfs:comment "Which observable property a bidder's DESIRE is expressed in — stated by the domain on the desire term itself, never on a market. A market is a lot: 1L of water is 1L of water whether or not anyone's soil is dry, and a market for a thing no instrument measures (a time slot, a right of way) must remain expressible. What is genuinely property-shaped is the stake: a target of 0.55 is 0.55 OF something, and until this term existed that number was dimensionless. A bidder holding readings of several properties of one subject needs to know which one its valuation is about; it follows this link from the term it already names." .
 
+#################  Which way the lot moves what it is priced in  #################
+#
+#  The other half of the claim `market:aboutProperty` makes, and the half that was written
+#  NOWHERE: "buy water to raise moisture" was spread across the graph except for RAISE. The
+#  reflex knew it only because `deficit = aim - value` hardcodes the sign — harmless with one
+#  lever, and unwritable the moment anything needs a menu that says what each act DOES. A model
+#  told only "there is a market for water" cannot know whether bidding helps a dry pot or a
+#  soaked one. See knowledge/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md.
+#
+#  Stated by the DOMAIN, on the same term that carries the denomination, because they are two
+#  halves of one sentence: bids here are priced in this property, and winning moves it this
+#  way. Deliberately just direction — cost-shape, magnitude and side-effects are speculation
+#  until a second lever exists, and magnitude is already the denomination term's own value.
+
+market:Direction a owl:Class ; rdfs:label "Direction" ;
+    rdfs:comment "Which way applying a market's lot moves the property its bids are priced in. Two individuals and no third: a lot whose effect depends on circumstances is a lot whose domain should model the circumstances, not a shrug in the vocabulary." .
+market:Raises a market:Direction ; rdfs:label "raises" .
+market:Lowers a market:Direction ; rdfs:label "lowers" .
+
+market:direction a owl:ObjectProperty ; rdfs:range market:Direction ;
+    rdfs:label "direction" ;
+    rdfs:comment "Applying this valuation's lot moves the priced property this way. What the reflex steers by instead of a hardcoded sign: gap below the aim and a lever that Raises — or above it and one that Lowers — is the move. A heater against a cold snap is the same rule with no code change, which is the whole point of stating it." .
+
 market:hosts a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range market:Market ;
     rdfs:label "hosts" .
 market:bidsIn a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range market:Market ;

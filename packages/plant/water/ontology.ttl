@@ -51,7 +51,8 @@ water:dryRatePerTick a owl:DatatypeProperty ; rdfs:domain water:Plant ; rdfs:ran
 water:litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "litres per fraction" ;
     market:aboutProperty water:SoilMoisture ;
-    rdfs:comment "Litres needed to raise moisture by 1.0 — converts a deficit into a demand. What it is a fraction OF is stated here rather than left to the reader: the whole valuation (this, maxValuePerL, and the aim asked of desire) is denominated in soil moisture, and an agent holding readings of several properties must not price a humidity. This statement hung on water:hasTarget while that term existed; the denomination outlived the point." .
+    market:direction market:Raises ;
+    rdfs:comment "Litres needed to raise moisture by 1.0 — converts a deficit into a demand. What it is a fraction OF is stated here rather than left to the reader: the whole valuation (this, maxValuePerL, and the aim asked of desire) is denominated in soil moisture, and an agent holding readings of several properties must not price a humidity. This statement hung on water:hasTarget while that term existed; the denomination outlived the point. The DIRECTION is stated beside it now — water raises moisture — which reads as too obvious to write until you notice nothing else says it: the reflex steered by a hardcoded sign, and a menu of what acts DO could not be derived at all." .
 
 #################  What a bid means here — the bidder's private valuation  #################
 #
