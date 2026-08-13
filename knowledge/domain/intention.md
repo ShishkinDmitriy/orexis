@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Intention
-description: BDI's third letter — a commitment to reduce a named gap by a named means, persisting until satisfied, dropped or outwaited rather than being re-decided on every perception. Kept in a private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat impulses is each agent's own belief. Reifies what already existed as module state — a pending look, a bid awaiting its voucher — and never decides: the whether lives in deliberation, which reads the ledger and is read by nothing else here.
+description: BDI's third letter — a commitment to reduce a named gap by a named means, persisting until satisfied, dropped or outwaited rather than being re-decided on every perception. Kept in a private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat impulses is each agent's own belief. Since #131 the MEANS and the END are judged apart: an acquire's voucher opens a watch — baseline copied into the row, promised direction from the domain, deadline from the patience — and the verdict lands beside the outcome, so satisfied-and-unmet is recordable, the false-knowledge signature. An open watch is maximum urgency, so the cadence tightens until the world answers; an affordance unmet suspectAfter times running is flagged, never auto-retracted.
 tags: [intention, bdi, capability, market, perception, beliefs]
 timestamp: 2026-08-13T00:00:00Z
 ---
@@ -35,13 +35,45 @@ sensed graph, so the first intention is always to look — see
 [desire](/domain/desire.md) §the gap.
 
 `Acquire` is committed to the **gap, not the round**: adopted with the first bid, absorbed for
-every further bid while it stands, satisfied by the voucher. One commitment spanning several
-auctions is one intention.
+every further bid while it stands, satisfied by the voucher — **and satisfied is only the
+MEANS**. The voucher opens a *watch* on the end (below).
 
 `Apply` is declared and unimplemented, honestly: in the spot market a [voucher](/domain/voucher.md)
 is redeemed the moment it is issued, so no held claim exists for the commitment to be about. The
 roadmap's **futures market** is where it becomes real — holding a voucher redeemable until `exp`
 *is* this intention.
+
+# The expectation — the end, judged apart from the means
+
+Before #131, an Acquire resolved when the voucher arrived and nothing ever checked whether the
+gap moved: an agent whose water never reached the pot bought, recorded satisfied, and bought
+again forever — transaction confirmed, outcome never audited. Now resolving the means opens a
+**watch**: the row gains the *baseline* (value and instant, copied into the ledger because the
+sensed graph keeps only the current witness — the ledger is what remembers), the *promised
+direction* (the domain's own `market:direction`, #127, copied so the row stays judgeable), and a
+*deadline* (the patience, until something derives a better horizon from the dose and the
+physics — a recorded seam).
+
+Every reading is a chance to judge: past the baseline in the promised direction — **met**, early
+is fine, that is the dose landing. Deadline passed without it — **unmet**. Movement the wrong
+way *before* the deadline proves nothing, since a dose may land late. The verdict is a separate
+fact beside the outcome, and **satisfied-and-unmet is the false-knowledge signature**: the graph
+claims a movement the world keeps refusing.
+
+Two consequences ride on the watch:
+
+- **it is maximum urgency.** Evaporation is fractions per day; a dose lands in seconds — and
+  urgency-by-state relaxes attention exactly when the dose needs watching, because the value
+  improves. So the keeper answers perception's ordinary `urgency` ask with 1.0 while a watch is
+  open (bounded by its deadline), and the cadence round-trips by itself: tight on adoption,
+  released on verdict. Opening the watch also asks for one look (`sense_now`), so the freshest
+  before is on record.
+- **enough unmet makes an affordance SUSPECT.** `suspectAfter` consecutive unmet ends for one
+  (means, property) pair — consecutive, so one success resets: mostly-paying is noisy, not
+  false — raises a warning and a health-series flag (`affordances_suspect`). Flagged, never
+  auto-retracted: what to do about a belief that is not paying is a decision, and deleting
+  knowledge would be reaching down a level
+  ([control-the-derivative](/decisions/control-the-derivative-not-the-value.md)).
 
 # The patience
 

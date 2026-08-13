@@ -66,6 +66,43 @@ intention:becauseOf a owl:DatatypeProperty ; rdfs:domain intention:Intention ; r
     rdfs:label "because of" ;
     rdfs:comment "Why it was adopted, and — appended on resolution — why it ended. Prose for the operator reading a ledger, never parsed." .
 
+#################  The expectation — the END, judged apart from the means  #################
+#
+#  `outcome` above says whether the MEANS succeeded: the voucher arrived, the look came back.
+#  It says nothing about the END — the commitment was to reduce a gap, and an agent whose water
+#  never reaches the pot buys, records "satisfied", and buys again forever: transaction
+#  confirmed, outcome never audited. Confidently dumb, structurally. Issue #131.
+#
+#  So an intention whose act should MOVE something carries an expectation: the value it left
+#  from (the baseline, copied here at adoption because the sensed graph keeps only the current
+#  witness — the ledger is what remembers), which way it should move (the same direction the
+#  domain states on its valuation, #127), and by when. The verdict lands beside the outcome as
+#  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
+#  said this lever moves this property, and the world kept disagreeing.
+
+intention:expectsValueTo a owl:ObjectProperty ; rdfs:domain intention:Intention ;
+    rdfs:label "expects value to" ;
+    rdfs:comment "Which way the property should move if the act did what the graph claims — a market:Direction individual, copied from the lever's own statement at expectation time so the row is judgeable without a join to a vocabulary that may since have been amended." .
+intention:baselineValue a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:decimal ;
+    rdfs:label "baseline value" ;
+    rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
+intention:baselineAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "baseline at" .
+intention:deadlineAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "deadline at" ;
+    rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
+intention:endMet a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:boolean ;
+    rdfs:label "end met" ;
+    rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline (true), or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
+intention:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "end verified at" .
+
+intention:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "suspect after" ;
+    rdfs:comment "How many consecutive unmet expectations for one (means, property) pair make the affordance suspect. On the family, like the patience bounds: a fact about what this society tolerates before it stops trusting a claim, not about how the code is written." .
+
+intention:IntentionCapability intention:suspectAfter 3 .
+
 #################  The commitment policy — a belief, bounded here  #################
 #
 #  How stubborn to be is an OPINION, so it is each agent's belief and review may move it. The

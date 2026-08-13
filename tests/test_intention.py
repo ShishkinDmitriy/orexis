@@ -158,7 +158,12 @@ def test_intentions_are_nobody_elses_to_read(make):
 def test_the_agent_reports_what_stands_and_how_old(make):
     fern = make("fern", _reading(0.10))
     keeper = keeper_of(fern)
-    assert keeper.reports() == {"intentions_standing": 0}
+    fresh = keeper.reports()
+    assert fresh["intentions_standing"] == 0
+    assert "oldest_intention_s" not in fresh
+    # the end-verdict counters ride along since #131 — all quiet on a fresh agent
+    assert (fresh["expectations_open"], fresh["expectations_met"],
+            fresh["expectations_unmet"], fresh["affordances_suspect"]) == (0, 0, 0, 0)
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     reported = keeper.reports()
     assert reported["intentions_standing"] == 1

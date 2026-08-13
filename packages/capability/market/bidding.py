@@ -334,6 +334,15 @@ class BiddingModule(Module):
         self.balance -= debit
         self.won_l += amount
         if keeper := self._keeper():
-            keeper.satisfy(ACQUIRE, self.about,
-                           f"voucher for {amount}L at a debit of {debit}")
+            # The MEANS succeeded — and that is all a voucher proves. The END is the gap the
+            # whole commitment served, so resolving the acquire is where the watch on it opens:
+            # the keeper records where the property stood and which way the domain promises it
+            # will move, and judges the claim against what the sensor reports next (#131). Paid
+            # water that never reaches the pot then reads satisfied-and-UNMET, which is the
+            # false-knowledge signature — instead of reading like success forever.
+            for uri in keeper.satisfy(ACQUIRE, self.about,
+                                      f"voucher for {amount}L at a debit of {debit}"):
+                keeper.expect(uri, self.about,
+                              f"paid {debit} for {amount}L — the graph says this raises "
+                              f"what I am short of, so show me")
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, self.balance)

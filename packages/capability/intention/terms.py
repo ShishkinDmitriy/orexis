@@ -42,3 +42,12 @@ APPLY = term("Apply")      # spend: redeem a held claim against the world — RE
 
 # The commitment policy — the belief, not the mechanism.
 PATIENCE_S = term("patienceS")
+
+# The expectation — the END, judged apart from the means. See ontology.ttl's own section.
+EXPECTS_VALUE_TO = term("expectsValueTo")
+BASELINE_VALUE = term("baselineValue")
+BASELINE_AT = term("baselineAt")
+DEADLINE_AT = term("deadlineAt")
+END_MET = term("endMet")
+END_VERIFIED_AT = term("endVerifiedAt")
+SUSPECT_AFTER = term("suspectAfter")
