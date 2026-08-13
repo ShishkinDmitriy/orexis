@@ -138,6 +138,30 @@ so this is that decision growing teeth rather than changing course.
   own spend is not a `sosa:ObservableProperty` of its plant, so this needs either the agent as
   a feature of interest of its own metering or a second denomination for desire — a modelling
   decision, not an edit.
+
+  **The third arrival, and the strongest evidence yet.** The sovereign has now reached this
+  seam three times from three directions — the energy budget above, the two-forces framing
+  that became #137, and, after #135, the observation that the cadence loop has quietly become
+  a complete BDI miniature about the agent itself. The isomorphism is exact and nobody
+  designed it:
+
+  | desire (about the plant) | cadence (about the board) |
+  |---|---|
+  | region — deduced from the plant's stated ranges | the constitution's `minSleepS`/`maxSleepS`, plus the board's own `ssn-system:Frequency` |
+  | aim — the pick inside, private | the commanded cadence — the agent's pick inside the bounds |
+  | observation — what the sensor reports | the ack — what the board says it actually runs (#135) |
+  | gap — observed against aim | the mismatch — acked against commanded |
+  | unmet after the deadline | disputed after two consecutive mismatches |
+  | the act toward the gap — a bid | the re-send of the command |
+  | mandate bounds the re-pick | the same mandate, on `slowSleepS` — already there |
+
+  Every row exists in shipped code; only the vocabulary is missing. The ack even behaves as an
+  observation in everything but form — testimony, arrival-stamped, judged against intent — and
+  is kept out of `:sensed` for exactly this seam's reason: its feature of interest would be the
+  board, and the agent does not act for its board. A pattern that reassembles itself
+  unprompted, three times, in a subsystem nobody was thinking about desire in, is a pattern
+  asking to be named. When someone opens the second-denomination conversation, this table is
+  where it starts.
 - **No composite distance.** The gap is per property; `max()` of normalised gaps ranks troubles,
   and the envelope already carries the weighting a `desire:weight` triple would duplicate. A
   scalar "wellness" number tells nobody which lever to pull, so it waits for a consumer.
