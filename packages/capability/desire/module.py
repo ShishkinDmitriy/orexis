@@ -286,10 +286,20 @@ class DesireModule(Module):
             return {}
         return {"band": self.regions[observed_property].band(value)}
 
-    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
-        """How close this puts me to trouble. Perception turns it into a cadence."""
+    def urgency(self, subject_uri: str, observed_property: str,
+                value: float | None) -> float | None:
+        """How close this puts me to trouble. Perception turns it into a cadence.
+
+        Asked with None, the question is the urgency of NOT KNOWING (#137), and the answer is
+        maximal: not knowing whether the pot is dying is at least as urgent as knowing it is
+        uncomfortable, and the region cannot say otherwise without a number to judge. The first
+        current reading ends this answer — ignorance decays into whatever the gap then says —
+        which is "the first intention is always Observe" in its cadence-shaped form.
+        """
         if not self._is_mine(subject_uri, observed_property):
             return None
+        if value is None:
+            return 1.0
         return self.regions[observed_property].urgency(value)
 
     # --- the diff, asked of me rather than recomputed by whoever wants it ---

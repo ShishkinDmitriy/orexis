@@ -100,12 +100,18 @@ class Module:
         """
         return {}
 
-    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
+    def urgency(self, subject_uri: str, observed_property: str,
+                value: float | None) -> float | None:
         """How close this reading puts me to my own trouble: 0.0 (fine) to 1.0 (trouble).
 
         None means I have no stake in this subject and this property, and therefore no
         opinion. Perception uses it to decide how closely to watch — attention follows need,
         and need is not perception's to define.
+
+        `value` may itself be None, and the question changes with it: not "how bad is this
+        number" but "how urgent is it that I have no current number at all". Ignorance is a
+        need like any other (#137) — a module with a stake in the property answers it, one
+        with none stays silent, and the same max-of-answers resolves the choir either way.
         """
         return None
 

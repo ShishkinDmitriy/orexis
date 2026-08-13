@@ -42,7 +42,7 @@ every module has (`agent/module.py`) or through `agent.provider(DESIRE)`.
 | question | who asks | what it does with it |
 |---|---|---|
 | `band(property, value)` — LOW / OK / HIGH | [sensing](/domain/sensing.md), for the announcement | a host hears that a participant is in trouble, never how wet it is |
-| `urgency(property, value)` — 0.0 to 1.0 | perception, for the cadence | attention follows need: the closer to trouble, the closer it watches |
+| `urgency(property, value)` — 0.0 to 1.0 | perception, for the cadence | attention follows need: the closer to trouble, the closer it watches — and asked with NO value, the answer is maximal: ignorance in a wanted property is a need too (#137) |
 | `region(property)` | anything that needs the range itself | the numbers |
 | `aim(property)` — the pick inside the region | a bidder, at bid time, for the point a deficit is priced against | None is an answer: with no aim there is no deficit, and the bidder cedes rather than inventing one |
 

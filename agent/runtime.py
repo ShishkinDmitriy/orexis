@@ -138,8 +138,12 @@ class Agent:
                 log.error("%s: %s could not annotate a reading: %s", self.id, module.name, exc)
         return out
 
-    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
-        """How close this reading puts me to trouble — the sharpest opinion any of me holds."""
+    def urgency(self, subject_uri: str, observed_property: str,
+                value: float | None) -> float | None:
+        """How close this reading puts me to trouble — the sharpest opinion any of me holds.
+
+        `value` None asks a different question of the same choir: how urgent is not knowing.
+        """
         opinions = []
         for module in self.modules:
             try:
