@@ -52,6 +52,27 @@ asymmetric per subject for free, because the room on each side is whatever that 
 ranges leave. See
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 
+# The gap — the diff between desired and sensed
+
+The package ships the question it exists to make askable, as SPARQL: `gap.rq` joins the public
+regions against the agent's own sensed graph and yields, per property, a **signed** distance
+normalised by the survival room on the side the value sits on — 0 at the region's point, the
+sign saying which way out, |gap| = 1 at the edge of what the subject survives. |gap| *is*
+`urgency`, by construction; the package's tests hold the query and the module to one definition.
+
+A gap is a **verdict**: computed on every asking, stored nowhere — the same number is a crisis
+for one agent and nothing for another. And a property with no observation yet produces **no row
+rather than a zero**: at birth every desire is unmeasured, unmeasured must not read as
+satisfied, and the first intention is always to look. That boot-order fact is what
+[an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md)
+builds the rest of BDI on.
+
+Three consumers today: `reports()` discloses `worst_gap` into the health series (absent until
+something is observed, and the absence is itself a reading); `desire:BeyondSurvivalShape` turns
+|gap| = 1 into a **warning** at boot — never a refusal, because an agent past its envelope must
+be allowed to start precisely so it can do something about it; and whoever holds
+`provider(DESIRE)` may call `gaps()` for the rows themselves.
+
 # What it is not
 
 - **Not a target.** A region is a range and a target is a point inside it. The target stays a

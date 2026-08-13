@@ -63,6 +63,50 @@ desire:DesireShape a sh:NodeShape ;
                        || (BOUND(?ceiling) && ?high > ?ceiling))
             }""" ] .
 
+# The first consumer of the gap, and deliberately a WARNING. An observation outside the
+# survival envelope is not an invalid belief — it is an emergency, and an agent must be allowed
+# to start precisely so it can do something about it; a violation here would keep a thirsty
+# agent from ever bidding for water. `agent.validate.conforms` decides the verdict on
+# violations alone and prints everything else, which is exactly the channel "legal but worth a
+# second look" needs. The world gate sees no observations (a fresh world has none), so this
+# speaks only where it can be true: at an agent's own boot, over its own sensed graph.
+#
+# Only the envelope, not the region. Outside the region is the ORDINARY working state of this
+# whole society — being dry is why markets exist — and warning on it would teach everyone to
+# ignore the channel. Outside what the subject SURVIVES is rare, actionable, and exactly what a
+# person glancing at a boot log should see.
+desire:BeyondSurvivalShape a sh:NodeShape ;
+    rdfs:comment "The last reading of a property this agent has a desire in lies outside what its subject survives. Not a refusal: the agent starts, and the report says why it had better hurry. |gap| = 1 in the package's gap.rq is this same fact as a number." ;
+    sh:severity sh:Warning ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/agora#hasCapability>
+                      <http://example.org/agora/desire#Deducing> .
+            }
+        """ ] ;
+    sh:sparql [
+        sh:severity sh:Warning ;
+        sh:message "a reading sits outside the survival envelope for a property this agent wants held — the subject is past tolerating, not merely uncomfortable" ;
+        sh:select """
+            SELECT $this ?property ?value WHERE {
+                $this <http://example.org/agora#actsFor> ?subject ;
+                      <http://example.org/agora/desire#desires> ?region .
+                ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                ?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ?subject ;
+                     <http://www.w3.org/ns/sosa/observedProperty> ?property ;
+                     <http://www.w3.org/ns/sosa/hasSimpleResult> ?value .
+                OPTIONAL { ?region <http://example.org/agora/desire#toleratedMin> ?floor }
+                OPTIONAL { ?region <http://example.org/agora/desire#toleratedMax> ?ceiling }
+                # One group, not a UNION of two: a FILTER sees only its own group's bindings,
+                # so `FILTER(?value < ?floor)` inside a UNION branch reads ?value as unbound,
+                # errors, and silently empties the branch — a shape that never fires, which is
+                # this project's least favourite failure. BOUND guards for the same reason as
+                # in DesireShape: an unbound comparison is an error `||` propagates.
+                FILTER(   (BOUND(?floor)   && ?value < ?floor)
+                       || (BOUND(?ceiling) && ?value > ?ceiling))
+            }""" ] .
+
 # What is NOT here: a shape refusing a hand-authored desire. It was written and removed, because
 # it would have been decoration — the derivation mints blank nodes and so could a sovereign, so
 # nothing about the triple distinguishes the two, and a shape cannot see which graph a fact came

@@ -8,10 +8,10 @@ capability no module provides only produces a startup warning. Adding it is a cl
 of `PROVIDES`; no other package moves.
 """
 
-from .module import DesireModule, Region, regions_of
+from .module import DesireModule, Gap, Region, gaps_of, regions_of
 from .terms import CONSULTING, DEDUCING, DESIRE
 
 PROVIDES = (DesireModule,)
 
-__all__ = ["PROVIDES", "DesireModule", "Region", "regions_of",
+__all__ = ["PROVIDES", "DesireModule", "Gap", "Region", "gaps_of", "regions_of",
            "DESIRE", "DEDUCING", "CONSULTING"]

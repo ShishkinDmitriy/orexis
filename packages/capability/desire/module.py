@@ -29,11 +29,18 @@ rules.ru. See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-st
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from agent.module import Module
+from agent.ontology import SENSED_GRAPH
 from agent.store import bindings
 
 from .terms import DEDUCING
+
+# The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
+# file's own header. Read once at import: a malformed query is then an error the moment the
+# package loads rather than the first time somebody asks.
+GAP_QUERY = (Path(__file__).parent / "gap.rq").read_text()
 
 # My own regions, read once at construction. The only instance identifier named is my own URI,
 # which is the single one a process is handed — everything else is a term.
@@ -117,6 +124,43 @@ class Region:
         return min(1.0, abs(value - centre) / room)
 
 
+@dataclass(frozen=True)
+class Gap:
+    """One row of the diff: where a property is against where it should be.
+
+    `gap` is signed — negative below the region's point, positive above — and |gap| is the
+    module's `urgency`, normalised by the survival room on that side. See gap.rq, which is the
+    definition; this is only its Python shape.
+    """
+
+    observed_property: str
+    value: float
+    low: float
+    high: float
+    gap: float
+
+
+def gaps_of(query, agent_uri: str) -> dict[str, Gap]:
+    """The desired/sensed diff for one agent, property -> gap. Computed, never stored.
+
+    A gap is a VERDICT — the same number is a crisis for one agent and nothing for another — so
+    like a band it is recomputed on every asking and no graph holds it. What may be persisted is
+    a summary of its history, which is review's pattern and not this function's business.
+
+    A property with no observation yet is absent rather than zero: at birth every desire is
+    unmeasured, and unmeasured must not read as satisfied.
+    """
+    substituted = (GAP_QUERY
+                   .replace("$me", f"<{agent_uri}>")
+                   .replace("$sensed", f"<{SENSED_GRAPH}>"))
+    return {row["property"]: Gap(
+        observed_property=row["property"],
+        value=float(row["value"]),
+        low=float(row["low"]), high=float(row["high"]),
+        gap=float(row["gap"]),
+    ) for row in bindings(query(substituted))}
+
+
 def regions_of(query, agent_uri: str) -> dict[str, Region]:
     """Every region one agent holds, property -> region. Read, never computed here.
 
@@ -190,8 +234,24 @@ class DesireModule(Module):
             return None
         return self.regions[observed_property].urgency(value)
 
+    # --- the diff, asked of me rather than recomputed by whoever wants it ---
+
+    def gaps(self) -> dict[str, Gap]:
+        """Where every property I want stands against where I want it. Fresh on every call."""
+        return gaps_of(self.agent.store.query, self.me.uri)
+
     def reports(self) -> dict:
-        """How many things this agent wants. One number, and it belongs in its health series:
-        an agent whose regions silently went to zero — a world amended, a range withdrawn — is
-        running and doing nothing, which is the failure that looks most like working."""
-        return {"desires": len(self.regions)}
+        """How many things this agent wants, and how far it sits from the worst of them.
+
+        `desires` belongs in the health series because an agent whose regions silently went to
+        zero — a world amended, a range withdrawn — is running and doing nothing, which is the
+        failure that looks most like working. `worst_gap` is the same diff every other consumer
+        reads, disclosed as |gap| so the series is comparable across agents whose properties are
+        in different units. Absent while nothing has been observed, and the absence is itself a
+        reading: this agent wants things it has not yet seen.
+        """
+        out: dict = {"desires": len(self.regions)}
+        gaps = self.gaps()
+        if gaps:
+            out["worst_gap"] = round(max(abs(g.gap) for g in gaps.values()), 3)
+        return out

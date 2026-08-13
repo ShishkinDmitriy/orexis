@@ -1,0 +1,50 @@
+# How far this agent sits from what it wants — the diff between the desired and the sensed
+# state, one row per property it holds a region in AND has an observation of.
+#
+# This is the question the whole capability exists to make askable, so it is SPARQL the package
+# ships rather than arithmetic inside the module: metrics reports it, a review may cite it, and
+# a reader with nothing but a SPARQL client can ask it of any store. The module's own `urgency`
+# is held to agreeing with it by the package's tests — one definition, two readers.
+#
+# `$me` and `$sensed` are the two things a shipped query cannot know and are substituted before
+# it runs, exactly as a `review.rq`'s placeholders are: the one instance identifier a process is
+# given, and the graph its own observations land in. Everything else is discovered, and the
+# region patterns are deliberately UNQUALIFIED — desire is a class of graph so a second source
+# must be readable, and the trap AGENTS.md names (a GRAPH clause silently matching nothing) is
+# exactly what an unqualified pattern avoids.
+#
+# THE NUMBER: signed, and normalised by the survival room on the side the value sits on.
+#
+#     gap = (value - centre) / |outer(side) - centre|,   clamped to [-1, 1]
+#
+# where `outer` is the survival bound on that side when the world states one and the region's
+# own edge when it does not. So 0 is the point of the region, the sign says which way out
+# (negative = below, toward LOW), and |gap| = 1 means the edge of what the subject survives —
+# |gap| is the module's `urgency`, by construction rather than by coincidence. A region with no
+# width and no envelope is all-or-nothing: 0 at its point, ±1 anywhere else.
+#
+# A property with no observation yet produces NO row rather than a zero — at birth every desire
+# is unmeasured, and "unmeasured" must not read as "satisfied". The first intention is always
+# to look; see knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
+
+SELECT ?property ?value ?low ?high ?gap WHERE {
+  $me desire:desires ?region ; ag:actsFor ?subject .
+  ?region ssn:forProperty ?property ;
+          schema:minValue ?low ;
+          schema:maxValue ?high .
+  OPTIONAL { ?region desire:toleratedMin ?floor }
+  OPTIONAL { ?region desire:toleratedMax ?ceiling }
+  GRAPH $sensed {
+    ?obs sosa:hasFeatureOfInterest ?subject ;
+         sosa:observedProperty ?property ;
+         sosa:hasSimpleResult ?value .
+  }
+  BIND((?low + ?high) / 2 AS ?centre)
+  BIND(IF(?value < ?centre, COALESCE(?floor, ?low), COALESCE(?ceiling, ?high)) AS ?outer)
+  BIND(IF(?outer > ?centre, ?outer - ?centre, ?centre - ?outer) AS ?room)
+  BIND(IF(?room = 0,
+          IF(?value = ?centre, 0.0, IF(?value > ?centre, 1.0, -1.0)),
+          (?value - ?centre) / ?room) AS ?raw)
+  BIND(IF(?raw > 1, 1.0, IF(?raw < -1, -1.0, ?raw)) AS ?gap)
+}
+ORDER BY ?property
