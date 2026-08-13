@@ -13,6 +13,7 @@ from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_self, load_world
 from packages.capability.actuation import ACTUATION
 from packages.capability.desire import DEDUCING
+from packages.capability.intention import KEEPING
 from packages.capability.market import BIDDING, HOSTING, PAY_AS_BID
 from packages.capability.perception import LISTENING, SUBSCRIBING
 from packages.capability.reporting import STORING
@@ -32,11 +33,13 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
     """Wired to a scheduled sensor and into a market — so it perceives and it buys.
 
     And given room to move on its cadence, so it may also re-pick it. And acting for a plant
-    that states what it needs, so it wants something. FOUR premises, four capabilities, none of
-    them written down: two follow from what it is wired to, one from what its world allows it,
-    and one from having a stake at all.
+    that states what it needs, so it wants something — and, wanting with levers to act, it may
+    commit. FIVE premises, five capabilities, none of them written down: two follow from what it
+    is wired to, one from what its world allows it, one from having a stake at all, and one from
+    the stake meeting the wiring.
     """
-    assert me("fern").capabilities == {SUBSCRIBING, BIDDING, RECKONING, STORING, DEDUCING}
+    assert me("fern").capabilities == {
+        SUBSCRIBING, BIDDING, RECKONING, STORING, DEDUCING, KEEPING}
 
 
 def test_a_mandate_whose_ends_meet_grants_nothing(me):
@@ -57,7 +60,7 @@ def test_a_mandate_whose_ends_meet_grants_nothing(me):
     # between a MANDATORY capability and a granted one. Reporting is not conditional on
     # latitude, because an agent permitted to fall silent cannot be told from a dead one; the
     # ability to re-pick is, because with nowhere to go there is nothing to re-pick.
-    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING, DEDUCING}
+    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING, DEDUCING, KEEPING}
 
 
 def test_supplier_gets_hosting_actuation_and_matching(me):

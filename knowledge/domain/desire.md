@@ -86,9 +86,10 @@ be allowed to start precisely so it can do something about it; and whoever holds
   having an opinion about your own state conditional on having somewhere to bid. An agent acting
   for a plant in a world with no economy still knows when that plant is in trouble; it simply has
   nobody to ask for help.
-- **Not an intention.** Nothing here plans. A [bid](/domain/auction.md) and a
-  [voucher](/domain/voucher.md) remain the closest things this society has to BDI's third letter,
-  and whether that is a gap is still not settled.
+- **Not an intention.** Nothing here plans or commits. The third letter has its own concept
+  now — [intention](/domain/intention.md), a commitment to reduce a gap this capability names —
+  and the split is deliberate: desire says where the world should be, intention says what I am
+  already doing about it.
 - **Not universal.** An agent that acts for nothing derives no desire capability at all — no
   module, no region, no band. `world/sensing`'s agent is exactly that: three sensors, no stake,
   and it records.

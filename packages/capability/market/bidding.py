@@ -36,7 +36,7 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from .beliefs import BIDDING_BLOCK
-from .terms import BIDDING, DESIRE, PERCEPTION
+from .terms import ACQUIRE, BIDDING, DESIRE, INTENTION, OBSERVE, PERCEPTION
 
 # The term whose meaning this asks after is the one this package already names for its own
 # beliefs, so nothing here is written twice and nothing here is a domain property. A block's
@@ -115,6 +115,18 @@ class BiddingModule(Module):
                 f"state market:aboutProperty on <{_DENOMINATED}> in the domain ontology")
         return rows[0]["property"]
 
+    def _keeper(self):
+        """Whoever keeps my commitments, or None — and None is a complete answer.
+
+        Everything below that touches the ledger is guarded by it: an agent granted no keeper
+        behaves exactly as before there was one, because in phase 3 the ledger RECORDS what this
+        module does and never gates it. What a standing intention absorbs is re-ADOPTION — one
+        commitment spanning several rounds — not the acts themselves; whether to act stays with
+        the reflexes here until deliberation is its own capability. See
+        knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
+        """
+        return self.agent.provider(INTENTION)
+
     def _my_aim(self) -> float | None:
         """The point I am steering the priced property toward — desire's, asked for at bid time.
 
@@ -187,6 +199,12 @@ class BiddingModule(Module):
             self.submit(reading.value)
             return
 
+        # Waiting on the sensor is a commitment — the state `pending` has always carried,
+        # recorded now so it can outlive this process's memory of it.
+        if keeper := self._keeper():
+            keeper.adopt(OBSERVE, self.about,
+                         f"auction {auction_id} needs a reading I do not have fresh")
+
         # Give up when the auction closes — a bid nobody can count is not a bid.
         window = float(offer.get("closes_in_s") or 0) or 1.0
         self._deadline = Timer(window, self.give_up)
@@ -202,14 +220,18 @@ class BiddingModule(Module):
             return
         if observed_property != self.about:
             return
+        if keeper := self._keeper():
+            keeper.satisfy(OBSERVE, self.about, "the look I asked for came back")
         self.submit(value)
 
     def give_up(self) -> None:
         if self._deadline:
             self._deadline.stop()
         if self.pending:
-            self.log.info("auction %s: sitting out — %s",
-                          self.pending["auction_id"], self._why_blind())
+            why = self._why_blind()
+            self.log.info("auction %s: sitting out — %s", self.pending["auction_id"], why)
+            if keeper := self._keeper():
+                keeper.drop(OBSERVE, self.about, f"the auction closed first: {why}")
             self.pending = None
 
     def _why_blind(self) -> str:
@@ -253,6 +275,14 @@ class BiddingModule(Module):
                           auction_id, moisture, aim)
             return
 
+        # The commitment is to the GAP, not to the round: adopted with the first bid, absorbed
+        # for every further bid while it stands (that is the keeper's patience at work — one
+        # commitment spanning several rounds is one intention), resolved by the voucher.
+        if keeper := self._keeper():
+            keeper.adopt(ACQUIRE, self.about,
+                         f"bid {bid.max_qty_l}L @ {bid.max_price_per_l}/L in auction "
+                         f"{auction_id} to close my deficit below {aim}")
+
         self.log.info("auction %s: moisture %.3f -> bid %.3f L @ €%.3f",
                       auction_id, moisture, bid.max_qty_l, bid.max_price_per_l)
         self.publish(f"{market.bid_topic}/{self.me.agent_id}", {
@@ -270,4 +300,7 @@ class BiddingModule(Module):
         debit = float(voucher.get("debit", 0.0))
         self.balance -= debit
         self.won_l += amount
+        if keeper := self._keeper():
+            keeper.satisfy(ACQUIRE, self.about,
+                           f"voucher for {amount}L at a debit of {debit}")
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, self.balance)

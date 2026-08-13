@@ -59,3 +59,9 @@ PERCEPTION = ontology.PERCEPTION + "PerceptionCapability"  # whoever can look, h
 ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if this agent can at all
 DESIRE_NS = "http://example.org/agora/desire#"
 DESIRE = DESIRE_NS + "DesireCapability"  # whoever holds the ends — the aim a bid prices toward
+INTENTION_NS = "http://example.org/agora/intention#"
+INTENTION = INTENTION_NS + "IntentionCapability"  # whoever keeps commitments, if anything does
+# The two means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
+# when the keeper records it, so they are the intention package's individuals referenced by IRI.
+OBSERVE = INTENTION_NS + "Observe"
+ACQUIRE = INTENTION_NS + "Acquire"

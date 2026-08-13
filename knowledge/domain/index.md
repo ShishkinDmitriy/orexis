@@ -24,6 +24,8 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [desire](/domain/desire.md) - What an agent is trying to bring about: one region per property its subject states a need in, plus the envelope outside which that subject ends. Deduced by intersecting every operating range that applies, never authored, and held in a graph found by type so a second source needs no code. The band and the urgency every other capability reads come from here — which is why an agent with no stake has neither.
 
+* [intention](/domain/intention.md) - BDI's third letter: a commitment to reduce a named gap by a named means, kept in a private ledger with an adoption, a resolution and a reason. Reifies what was module state — a pending look, a bid awaiting its voucher — and the patience that absorbs repeat impulses is each agent's own belief. Granted by a stake AND a lever; gates nothing until deliberation is its own capability.
+
 # Perception
 
 * [sensing](/domain/sensing.md) - Perception split by WHO HOLDS THE CLOCK: Polling (the agent asks each time — reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). Either way the agent owns the freshness rule, and a bid must cite a reading it trusts.
