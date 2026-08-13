@@ -46,7 +46,7 @@ This is the sensing face of
 
 ```
 agent -> board   mqtt:commandTopic   {"sleep_s":N,"band":"LOW"} (retained) | {"sense":true}
-board -> agent   mqtt:readingTopic   {"value":0.183,"sensor":"...",
+board -> agent   mqtt:readingTopic   {"value":0.183,"sensor":"...","sleep_s":600,
                                     "temperature":21.4,"humidity":0.463}
 agent -> peers   mqtt:eventTopic     {"agent":...,"property":...,"value":...,"band":"LOW"}
 ```

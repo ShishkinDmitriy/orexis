@@ -70,13 +70,18 @@ class InfluxWriter:
             agent_point.field("belief_bytes", int(belief_bytes))
 
         points = [agent_point]
-        for sensor, (total, age_s) in per_sensor.items():
+        for sensor, (total, age_s, acked_s) in per_sensor.items():
             p = Point(SENSOR_MEASUREMENT).tag("agent", agent_id).tag("sensor", sensor)
             p.field("readings_total", int(total))
             # Omitted until the sensor has delivered once. A missing field is a gap in the
             # series; a zero would be a claim that a reading had just arrived.
             if age_s is not None:
                 p.field("reading_age_s", round(float(age_s), 1))
+            # The board's own account of its rhythm (#135). Beside the commanded cadence this
+            # is the #37 detector in series form: the two diverging IS the cleared or clamped
+            # command, visible instead of silent. Absent for old firmware, which stays legal.
+            if acked_s is not None:
+                p.field("cadence_acked_s", int(acked_s))
             points.append(p)
         self.write_api.write(bucket=self.bucket, record=points)
 

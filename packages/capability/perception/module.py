@@ -141,10 +141,16 @@ class PerceptionModule(Module):
         """
         mine = False
         at = datetime.now(timezone.utc)
+        acknowledged = None  # message-level, like the instant: one board, one rhythm
+        doc = self.parse(payload)
+        if doc is not None and isinstance(doc.get("sleep_s"), (int, float)):
+            acknowledged = int(doc["sleep_s"])
         for sensor in self.sensors:
             driver = self.drivers[sensor.uri]
             if driver is None or not driver.owns(sensor, topic):
                 continue
+            if not mine and acknowledged is not None:
+                self.on_cadence_ack(sensor, acknowledged)
             mine = True
             raw = driver.parse(sensor, payload)
             # The last stage: a raw value is what the device sent, a quantity is what it means.
@@ -179,6 +185,11 @@ class PerceptionModule(Module):
         `at` is the reading's instant, threaded through because a TREND is two readings and the
         time between them — and the store upserts observations, so the previous one survives
         nowhere but here."""
+
+    def on_cadence_ack(self, sensor, acknowledged_s: int) -> None:
+        """The board said which cadence this message was taken under (#135). Subscribing keeps
+        it — the freshness rule follows the cadence IN FORCE, not the one requested — and
+        listening ignores it, since a device that takes no orders has nothing to receipt."""
 
     def sense_now(self) -> None:
         """Ask for a reading now, if my hardware allows it. Listening cannot.
@@ -235,6 +246,12 @@ class SubscribingModule(PerceptionModule):
         # rebuild it, and until then there is simply no trend bound (#133).
         self._last_seen: dict[tuple[str, str], tuple[float, datetime]] = {}
         self._trend: dict[tuple[str, str], float] = {}
+        # What the board SAID it is running, per channel (#135) — testimony, against
+        # `sent_cadence`'s intent. The freshness rule prefers it, and the pair disagreeing on
+        # two consecutive readings is the detector #37 never had: a cleared retained command
+        # arrives here as a board acking its compile-time default.
+        self.acked_cadence: dict[str, int] = {}
+        self._ack_disputed: dict[str, tuple[int | None, int]] = {}
 
     def stale_after_s(self, subject_uri: str, observed_property: str) -> int:
         """The interval I asked for, plus slack. NOT an absolute.
@@ -248,7 +265,16 @@ class SubscribingModule(PerceptionModule):
         would report a healthy board as quiet.
         """
         sensor = self.sensor_for(subject_uri, observed_property)
-        cadence = self.sent_cadence.get(sensor.local_id) if sensor else None
+        cadence = None
+        if sensor is not None:
+            key = sensor.command_topic or sensor.local_id
+            # The board's own testimony beats my intent (#135): freshness follows the cadence
+            # IN FORCE, and what is in force is what the board says it is running — a command
+            # it never received, or clamped to its own floor, must not make its honest rhythm
+            # read as gone-quiet, nor a stale reading as current.
+            cadence = self.acked_cadence.get(key)
+            if cadence is None:
+                cadence = self.sent_cadence.get(sensor.local_id)
         if cadence is None:
             # Not aimed yet. Assume the slowest I would ask for, so a first reading is not
             # rejected for arriving on a schedule I have not set.
@@ -302,6 +328,33 @@ class SubscribingModule(PerceptionModule):
         self.set_cadence(sensor,
                          self.cadence_for(sensor.subject, sensor.observes, value),
                          self.agent.annotations(sensor.subject, sensor.observes, value))
+
+    def on_cadence_ack(self, sensor, acknowledged_s: int) -> None:
+        """Keep the board's testimony, and dispute it when it contradicts my intent.
+
+        One mismatched ack is expected noise: my live response to the PREVIOUS reading lands in
+        the board's post-publish window, so the wake after a re-aim acks the old value once. Two
+        consecutive identical mismatches is the real thing — a command the board never received
+        (#37's cleared-retained case) or one its firmware clamped — so that is when it is said
+        out loud, and the dedup memory for the channel is dropped so the very next reading
+        re-sends the command instead of assuming the board already knows it.
+        """
+        key = sensor.command_topic or sensor.local_id
+        self.acked_cadence[key] = int(acknowledged_s)
+        for peer in self._aimed_with(sensor):
+            self.agent.metrics.cadence_acked(peer.local_id, int(acknowledged_s))
+        commanded = self.sent_cadence.get(sensor.local_id)
+        if commanded is not None and int(acknowledged_s) != int(commanded):
+            dispute = (commanded, int(acknowledged_s))
+            if self._ack_disputed.get(key) == dispute:
+                self.log.warning(
+                    "%s acknowledges %ss where %ss was commanded, twice running — the retained "
+                    "command was cleared or clamped; re-sending on the next reading",
+                    sensor.local_id, acknowledged_s, commanded)
+                self.sent.pop(key, None)  # let set_cadence speak again
+            self._ack_disputed[key] = dispute
+        else:
+            self._ack_disputed.pop(key, None)
 
     def _note_trend(self, subject_uri: str, observed_property: str,
                     value: float, at) -> None:

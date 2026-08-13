@@ -73,6 +73,7 @@ class Metrics:
     def __init__(self, agent):
         self.agent = agent
         self.started_at = time.monotonic()
+        self.acked_cadence: dict[str, int] = {}
         # Per sensor, keyed by local id — the same key the ACL and the topics use.
         self.readings: dict[str, int] = {}
         self.last_reading_at: dict[str, float] = {}
@@ -105,6 +106,15 @@ class Metrics:
 
     def uptime_s(self) -> float:
         return time.monotonic() - self.started_at
+
+    def cadence_acked(self, local_id: str, acknowledged_s: int) -> None:
+        """The board's own statement of its rhythm (#135), kept for the health series."""
+        self.acked_cadence[local_id] = int(acknowledged_s)
+
+    def cadence_acked_s(self, local_id: str) -> int | None:
+        """None until the board has ever said — old firmware stays legal, and absence is the
+        pre-ack world rather than an error."""
+        return self.acked_cadence.get(local_id)
 
     def reading_age_s(self, local_id: str) -> float | None:
         """Seconds since this sensor last delivered. None until it has delivered once.

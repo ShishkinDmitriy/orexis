@@ -575,3 +575,65 @@ def test_an_agent_with_no_stake_opens_at_its_own_pace(monkeypatch):
     p = recorder.subscribing()
     p.start()
     assert cadences(recorder)[-1] == p.beliefs.slow_sleep_s
+
+
+# --- the reading says which cadence it was taken under (#135) ---------------
+
+def test_freshness_follows_the_acknowledged_cadence(fern):
+    """The board's testimony beats the agent's intent: a reading that says it was taken under
+    900s must be held to 900s plus grace, whatever the agent believes it commanded — a command
+    the board never received must not make its honest rhythm read as gone-quiet."""
+    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.2, "sleep_s": 900})
+    p = fern.subscribing()
+    assert p.stale_after_s(fern.me.acts_for, MOISTURE) == 900 + p.beliefs.grace_s
+
+
+def test_without_an_ack_the_commanded_cadence_still_rules(fern):
+    """Old firmware stays legal: absence of the field is the pre-ack world, not an error."""
+    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.2})
+    p = fern.subscribing()
+    commanded = p.sent_cadence[moisture_sensor(fern).local_id]
+    assert p.stale_after_s(fern.me.acts_for, MOISTURE) == commanded + p.beliefs.grace_s
+
+
+def test_one_mismatched_ack_is_noise_and_two_are_the_detector(fern, caplog):
+    """The agent's live response to a reading lands in the board's post-publish window, so the
+    wake after every re-aim acks the OLD value once — expected, silent. The same mismatch twice
+    running is the real thing: a cleared retained command (#37) or a firmware clamp, said out
+    loud, and the dedup memory dropped so the next reading re-sends the command instead of
+    assuming the board already knows it."""
+    import logging
+
+    s = moisture_sensor(fern)
+    fern.deliver(s.reading_topic, {"value": 0.2})            # command 30 goes out
+    with caplog.at_level(logging.WARNING):
+        fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": 600})   # first mismatch: noise
+        assert "twice running" not in caplog.text
+        sent_before = len(cadences(fern))
+        fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": 600})   # second: the detector
+    assert "twice running" in caplog.text
+    assert len(cadences(fern)) > sent_before, \
+        "the dispute must re-send the command, not keep assuming the board knows it"
+
+
+def test_an_agreeing_ack_clears_the_dispute(fern):
+    """One success resets, exactly as the affordance suspicion does: a board that took the
+    command is a board in agreement, whatever the previous wake said."""
+    s = moisture_sensor(fern)
+    fern.deliver(s.reading_topic, {"value": 0.2})
+    fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": 600})       # mismatch once
+    commanded = fern.subscribing().sent_cadence[s.local_id]
+    fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": commanded})  # agreement
+    key = s.command_topic or s.local_id
+    assert key not in fern.subscribing()._ack_disputed
+
+
+def test_the_ack_reaches_the_health_series(fern):
+    """Beside the commanded cadence, the ack in series form IS the #37 detector on a dashboard:
+    the two diverging is a cleared or clamped command, visible instead of silent."""
+    s = moisture_sensor(fern)
+    fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": 600})
+    assert fern.metrics.cadence_acked_s(s.local_id) == 600
+    # every sensor sharing the board's channel carries the board's rhythm
+    for peer in fern.subscribing()._aimed_with(s):
+        assert fern.metrics.cadence_acked_s(peer.local_id) == 600
