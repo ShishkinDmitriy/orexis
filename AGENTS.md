@@ -93,6 +93,13 @@ Also: **no `.env` at the repo root, because nothing there is true of every world
    service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
+**One principle explains most of the shapes above: control the derivative, not the value.**
+Nothing here controls a step — a cadence not a reading, a region not an aim, a mandate not a
+belief, an affordance not an action. When a change you are making reaches DOWN a level (a
+deliberator setting a price, a world file pinning an aim, a model emitting an action), stop:
+that is the one move this architecture refuses everywhere. See
+[control-the-derivative-not-the-value](knowledge/decisions/control-the-derivative-not-the-value.md).
+
 And two that catch people out. **There is no default world** — every command takes one as a
 required argument and `current_world()` refuses rather than guessing, because a fallback puts a
 misconfigured agent on the same topics as the real one. Also: **capabilities are worked out at
