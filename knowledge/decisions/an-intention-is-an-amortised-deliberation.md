@@ -126,6 +126,18 @@ so this is that decision growing teeth rather than changing course.
 - **Goals stay unnamed.** BDI distinguishes desires (all wants) from goals (the consistent
   subset pursued now). Here the worst gap wins attention and that is the whole selection.
   Naming goals earns its place when two desires genuinely conflict — nothing yet does.
+- **Desire is denominated in observable properties of the subject, and only those.** An agent
+  cannot want anything about *itself* — "keep my balance above 20", "spend less electricity
+  looking" — because `ssn:forProperty` points at what its subject exhibits, not at what the
+  agent's own operation costs. The concrete trigger for revisiting: an energy budget. Every
+  sensor wake is paid for, and today the paying is spread across three mechanisms with no
+  region to answer to — urgency interpolates the cadence, review re-picks `slowSleepS` when the
+  instrument is quiet, and the metabolic cost debits the wallet. A self-directed desire with a
+  stated range (a spend the agent tries to keep inside) would give those three one thing to
+  answer to, the same move that gave the target a region. What blocks it is honest: the agent's
+  own spend is not a `sosa:ObservableProperty` of its plant, so this needs either the agent as
+  a feature of interest of its own metering or a second denomination for desire — a modelling
+  decision, not an edit.
 - **No composite distance.** The gap is per property; `max()` of normalised gaps ranks troubles,
   and the envelope already carries the weighting a `desire:weight` triple would duplicate. A
   scalar "wellness" number tells nobody which lever to pull, so it waits for a consumer.
