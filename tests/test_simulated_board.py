@@ -195,3 +195,27 @@ def test_two_properties_at_one_pointer_are_refused():
     depend on list order — which is not a fact about anything."""
     with pytest.raises(SystemExit, match="repeats a pointer"):
         _device([MOISTURE, dict(TEMPERATURE, pointer="/value")])
+
+
+def test_a_reading_is_never_retained():
+    """A reading is TESTIMONY, and testimony is only true at its instant.
+
+    The board has no clock, so a reading's timestamp is stamped by the agent at ARRIVAL — which
+    is honest under exactly one assumption: delivery is immediate. A retained reading breaks it
+    silently and catastrophically: an agent restarting hours later receives the broker's kept
+    copy, stamps it "now", and every freshness defence — the stale detection, the ignorance
+    burst, the gap — is blinded by one flag flipped in the name of reliability. Losing the
+    readings published while nobody listened is a FEATURE: the burst re-fetches reality in
+    minutes, where the "saved" data would be a well-preserved lie.
+
+    Contrast the cadence command, which IS retained, correctly: a command is policy — "sleep
+    30s from now on" is still true whenever the board wakes — where a reading is an event.
+    Retained is right for state and wrong for testimony, and this pins the testimony half the
+    way test_a_sense_request_is_never_retained pins its cousin.
+    """
+    device, _ = _device([MOISTURE])
+    calls: list[dict] = []
+    device.client.publish = lambda topic, payload, qos=0, retain=False, **kw: calls.append(
+        {"topic": topic, "retain": retain})
+    device._publish()
+    assert calls and all(not c["retain"] for c in calls)

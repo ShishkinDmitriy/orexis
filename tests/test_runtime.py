@@ -152,3 +152,33 @@ def test_a_module_raising_does_not_kill_the_agent(agent, monkeypatch):
     monkeypatch.setattr(fern.modules[0], "handle",
                         lambda t, p: (_ for _ in ()).throw(RuntimeError("boom")))
     fern.deliver(fern.me.sensors[0].reading_topic, {"value": 0.2})  # must not raise
+
+
+def test_the_agent_holds_a_clean_session():
+    """Arrival-stamped freshness is sound only while delivery is immediate.
+
+    The boards have no clocks, so a reading's instant is stamped when it ARRIVES — and a
+    persistent MQTT session breaks that silently: the broker queues everything missed during
+    downtime and replays it on reconnect, each stale reading stamped fresh at arrival, the
+    ignorance burst suppressed because the agent "already knows", and the trend computed from
+    replay intervals rather than real ones. "Don't lose readings while the agent is down"
+    sounds like reliability and converts an honest blindness into a confident lie — so the
+    clean session is an invariant, not a default someone forgot to change.
+
+    Guarded at the source in two halves, because `build_agent` stubs the client and the flag
+    is unobservable through it: the runtime must not ask for a persistent session, and paho's
+    default — which the runtime therefore inherits — must still be clean. If paho ever flips
+    its default, the second half fails and forces the look this comment exists for.
+    """
+    import inspect
+
+    import paho.mqtt.client as paho
+
+    from agent import runtime
+
+    source = inspect.getsource(runtime)
+    assert "clean_session" not in source, \
+        "runtime.py mentions clean_session — if it sets False, every freshness judgment lies"
+    real = paho.Client(paho.CallbackAPIVersion.VERSION2)
+    assert getattr(real, "_clean_session", None) is True, \
+        "paho's default session is no longer clean — the runtime must now say so explicitly"

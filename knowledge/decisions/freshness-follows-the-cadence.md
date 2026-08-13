@@ -81,6 +81,28 @@ Worth knowing before renaming a belief in a world that matters. It is cheap here
 yet revises its own beliefs at runtime; the day something does, this becomes a real loss and a
 migration story has to exist.
 
+# The invariant underneath: a reading's instant is stamped at arrival
+
+The boards have no clocks — no RTC, deep sleep between wakes — so a reading cannot carry its
+own instant. The agent stamps it at **arrival**, and every judgment above rests on that stamp.
+It is honest under exactly one assumption: **delivery is immediate**. Two natural-sounding
+"reliability" changes break it silently:
+
+- **retained readings** — an agent restarting hours later receives the broker's kept copy and
+  stamps it *now*: the stale detection, the ignorance burst and the gap are all blinded at
+  once, and the agent opens *calm* instead of curious, bidding on the past;
+- **persistent sessions** — the broker replays the missed backlog on reconnect, each old
+  reading stamped fresh at arrival, and the trend computed from replay intervals rather than
+  real ones.
+
+Losing the readings published while nobody listened is therefore a **feature**: the ignorance
+burst re-fetches reality within one board-wake (bounded by the constitutional `maxSleepS`),
+where the "saved" data would be a well-preserved lie. The asymmetry with the cadence command —
+which IS retained, correctly — is the rule to remember: **retained is right for policy and
+wrong for testimony.** A command is still true whenever the board wakes to read it; a reading
+without its instant is not a fact at all. Guarded by
+`test_the_agent_holds_a_clean_session` and `test_a_reading_is_never_retained`.
+
 # Seams left open
 
 - **Nothing nudges a returning sensor.** A device that reconnects gets its retained cadence at once
