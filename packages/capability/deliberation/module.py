@@ -21,9 +21,17 @@ bring its own block. See knowledge/decisions/an-intention-is-an-amortised-delibe
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from pathlib import Path
+
 from agent.module import Module
+from agent.store import bindings
 
 from .terms import REFLEX
+
+# The affordance menu, shipped as SPARQL — see the file's own header. Read at import, so a
+# malformed query fails when the package loads rather than when a model first asks.
+MENU_QUERY = (Path(__file__).parent / "menu.rq").read_text()
 
 # What this package asks OF others, by family — their namespaces, never their Python.
 _DESIRE = "http://example.org/agora/desire#DesireCapability"
@@ -34,6 +42,39 @@ _DESIRE = "http://example.org/agora/desire#DesireCapability"
 _INTENTION_NS = "http://example.org/agora/intention#"
 OBSERVE = _INTENTION_NS + "Observe"
 ACQUIRE = _INTENTION_NS + "Acquire"
+
+# Which way the lot moves what it is priced in — the market vocabulary's terms, read off the
+# T-Box rather than known. Issue #127: the sign used to be hardcoded here as `value < aim`,
+# which was the one piece of "buy water to raise moisture" written nowhere in any graph.
+_RAISES = "http://example.org/agora/market#Raises"
+_LOWERS = "http://example.org/agora/market#Lowers"
+_DIRECTION_Q = """
+SELECT ?direction WHERE {
+  ?term market:aboutProperty <%s> ; market:direction ?direction
+} LIMIT 1"""
+
+
+@dataclass(frozen=True)
+class Affordance:
+    """One row of the menu: a means, the property it is about, the lever, and — for a means
+    that moves anything — which way it moves it."""
+
+    means: str
+    observed_property: str
+    via: str
+    direction: str | None = None
+
+
+def menu_of(query, agent_uri: str) -> list[Affordance]:
+    """What one agent could do, about what, through which lever — derived, never written.
+
+    The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
+    row here is a move nothing should propose. Free function for the same reason `gaps_of` is —
+    a test about what a world implies should not have to build an agent to ask.
+    """
+    return [Affordance(means=r["means"], observed_property=r["property"], via=r["via"],
+                       direction=r.get("direction"))
+            for r in bindings(query(MENU_QUERY.replace("$me", f"<{agent_uri}>")))]
 
 
 class ReflexModule(Module):
@@ -55,10 +96,18 @@ class ReflexModule(Module):
         permanently short of where it decided to sit. Asked of desire at every call rather
         than cached: the aim is a belief, and a review may move it under a running agent.
 
-        None twice over is deliberate: no aim means nothing to pursue toward (an agent that
-        picked no point has decided not to steer this property), and at-or-above the aim means
-        no need. Both are the reflex saying *do nothing*, which an actor must treat exactly as
-        it treats its own cooldowns — a decision, not an absence of one.
+        WHICH sign means pursue is read off the T-Box, not known (#127): the domain states that
+        applying the lot raises or lowers the property its bids are priced in, and the reflex
+        steers by that — below the aim with a lever that Raises, or above it with one that
+        Lowers, is the move. `value < aim` used to be hardcoded here, which was the one piece
+        of "buy water to raise moisture" written nowhere in any graph; a heater against a cold
+        snap is now the same rule with no code change, which is what stating it bought.
+
+        None three times over, and each is a decision: no aim means nothing to pursue toward
+        (an agent that picked no point has decided not to steer this property); a gap on the
+        side no lever moves means no move helps; and no stated direction means the reflex
+        cannot know which way — refusing is honest where guessing would be the hardcoded sign
+        sneaking back in as a default.
         """
         if value is None:
             return OBSERVE
@@ -66,6 +115,20 @@ class ReflexModule(Module):
         if desire is None:
             return None
         aim = desire.aim(observed_property)
-        if aim is None or value >= aim:
+        if aim is None:
             return None
-        return ACQUIRE
+        direction = self._direction_of(observed_property)
+        if direction == _RAISES and value < aim:
+            return ACQUIRE
+        if direction == _LOWERS and value > aim:
+            return ACQUIRE
+        return None
+
+    def _direction_of(self, observed_property: str) -> str | None:
+        """Which way the lever I could pull moves this property — the domain's statement.
+
+        Per call rather than cached, like the aim: the T-Box is replaced on restart, not under
+        a running agent, but a query this small is not worth a second copy of the truth.
+        """
+        rows = bindings(self.agent.store.query(_DIRECTION_Q % observed_property))
+        return rows[0]["direction"] if rows else None

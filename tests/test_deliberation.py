@@ -13,6 +13,7 @@ from __future__ import annotations
 import pytest
 
 from agent.world import load_self
+from packages.capability.deliberation import menu_of
 from packages.capability.deliberation.module import ACQUIRE, OBSERVE
 from packages.capability.deliberation.terms import REFLEX
 
@@ -109,3 +110,71 @@ def test_with_the_reflex_in_place_the_round_runs_exactly_as_before(make):
     sated = make("fern", genesis_store({"fern": 0.80}))
     sated.deliver(market_of(sated).offer_topic, {"auction_id": "r2", "closes_in_s": 3})
     assert sated.sent.to(f"{market_of(sated).bid_topic}/fern") == []
+
+
+# --- the direction is the graph's, not the code's (#127) --------------------
+
+def test_the_sign_is_read_off_the_domain_not_hardcoded(make):
+    """Flip the domain's statement — say water LOWERS moisture — and the reflex pursues on the
+    other side of the aim, with no code change. This is the whole of what stating the direction
+    bought: a heater against a cold snap is the same rule, and the old `value < aim` was the
+    one piece of "buy water to raise moisture" written nowhere in any graph."""
+    from agent.ontology import ONTOLOGY_GRAPH
+
+    ds = genesis_store()
+    ds.update(f"""
+        PREFIX market: <http://example.org/agora/market#>
+        DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Raises }} }}
+        INSERT {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Lowers }} }}
+        WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Raises }} }}""")
+    decider = decider_of(build_agent_quiet(make, ds))
+    assert decider.propose(MOISTURE, 0.10) is None      # below the aim helps nothing now
+    assert decider.propose(MOISTURE, 0.80) == ACQUIRE   # above it is what the lot relieves
+
+
+def test_no_stated_direction_means_no_pursuit(make):
+    """Refusing is honest where guessing would be the hardcoded sign sneaking back in as a
+    default. The shape refuses such a domain at the gate anyway; this is the runtime honouring
+    the same fact if it ever meets it."""
+    from agent.ontology import ONTOLOGY_GRAPH
+
+    ds = genesis_store()
+    ds.update(f"""
+        PREFIX market: <http://example.org/agora/market#>
+        DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction ?d }} }}
+        WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction ?d }} }}""")
+    decider = decider_of(build_agent_quiet(make, ds))
+    assert decider.propose(MOISTURE, 0.10) is None
+
+
+def build_agent_quiet(make, ds):
+    return make("fern", ds)
+
+
+# --- the menu: what I could do, derived -------------------------------------
+
+def test_the_menu_is_derived_from_the_graph(make):
+    """The Consulting member's prompt substrate, checkable before that member exists: for this
+    agent — these properties, these levers, these directions. Nothing here was written as a
+    menu; every row is a join over facts that exist for their own reasons."""
+    rows = menu_of(genesis_store().query, FERN)
+    as_tuples = {(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
+                  r.direction.rsplit("#", 1)[-1] if r.direction else None) for r in rows}
+    assert as_tuples == {
+        ("Observe", "SoilMoisture", None),       # look through the probe
+        ("Observe", "AirTemperature", None),     # look through the thermometer
+        ("Acquire", "SoilMoisture", "Raises"),   # raise it through the market
+    }
+    # and the row that is NOT there is the finding: fern wants a temperature it can see and
+    # cannot move — a want with no lever, which is legitimate and now legible.
+    assert not any(r.means.endswith("Acquire") and "Temperature" in r.observed_property
+                   for r in rows)
+
+
+def test_an_agent_with_no_desires_has_an_empty_menu(make):
+    """The supplier holds levers everywhere and wants nothing — no rows, because an affordance
+    is a move toward an end, not a list of what the wiring physically allows."""
+    assert menu_of(genesis_store().query, "http://example.org/agora#supplier") == []
+
+
+FERN = "http://example.org/agora#fern_agent"

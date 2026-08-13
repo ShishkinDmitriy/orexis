@@ -693,6 +693,27 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
     assert _conforms(data), _report(data)
 
 
+def test_a_denomination_without_a_direction_is_refused():
+    """Half the claim is not a smaller claim (#127). A valuation that says what bids are priced
+    in must say which way winning moves it — a reflex handed the denomination alone falls back
+    to a hardcoded sign, and a model handed it cannot act at all. Targeted at the T-Box, so it
+    fires on whoever ratifies a domain, not on any agent's beliefs.
+
+    A SYNTHETIC term rather than water's with its direction deleted, because `conforms` re-adds
+    the ontology from the files — a mutation of the store's copy is quietly healed on the way
+    in, and the first draft of this test passed vacuously exactly that way.
+    """
+    data = _flatten(genesis_store())
+    data.parse(data="""
+        @prefix market: <http://example.org/agora/market#> .
+        @prefix water: <http://example.org/agora/water#> .
+        <http://example.org/agora/heat#wattsPerDegree>
+            market:aboutProperty water:AirTemperature .
+    """, format="turtle")
+    assert not _conforms(data)
+    assert "state its direction" in _report(data)
+
+
 def test_a_plant_still_holds_no_desire_of_its_own():
     """The range is not an aim wearing a different name. The older rule stands: a plant may
     say what it needs and may not say what it wants."""

@@ -58,3 +58,10 @@ market:OnlyAHostMatchesShape a sh:NodeShape ;
     sh:targetSubjectsOf market:matchesBy ;
     sh:property [ sh:path market:hosts ; sh:minCount 1 ; sh:class market:Market ;
                   sh:message "only a host states how it matches — this agent hosts no market" ] .
+
+market:DenominationSaysItsDirectionShape a sh:NodeShape ;
+    rdfs:comment "A valuation term that says WHAT bids are priced in must also say WHICH WAY winning moves it. Half the claim is not a smaller claim — a reflex handed the denomination alone falls back to a hardcoded sign, and a model handed it cannot act at all: 'there is a market for water' does not say whether bidding helps a dry pot or a soaked one. Only where a denomination exists: a market for something no instrument measures stays expressible, exactly as market:aboutProperty's own comment promises. This targets the T-BOX — the domain package's own statement — so it fires at the world gate for whoever ratifies a domain, not against any agent's beliefs." ;
+    sh:targetSubjectsOf market:aboutProperty ;
+    sh:property [ sh:path market:direction ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:class market:Direction ;
+                  sh:message "a denominated valuation must state its direction — which way applying the lot moves the property its bids are priced in" ] .

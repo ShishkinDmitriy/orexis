@@ -1,0 +1,45 @@
+# The affordance menu: what THIS agent could do, about what, and which way it moves things —
+# one row per (means, property, lever), derived from the graph and nothing else.
+#
+# This is the Consulting member's prompt substrate, shipped before that member exists so the
+# claim "the menu is derived, not written into a prompt" is checkable now (#127). It is also
+# the reflex's worldview stated as data: every move the reflex can propose is a row here, and a
+# move with no row is a move nothing should propose. A model handed these rows knows what a
+# human authoring the world knew — you can look at moisture through this probe, you can raise
+# it through this market — without a line of prose being maintained anywhere.
+#
+# `$me` is the one thing a shipped query cannot know, substituted as everywhere else. The
+# patterns are unqualified on purpose: regions are public, wiring is public, and the T-Box's
+# denomination and direction are public, so the menu spans them all through the default graph.
+#
+# What each branch asserts:
+#   Observe — a sensor I poll, watching my subject, reporting this property. The lever is the
+#             board; the direction column is empty because looking moves nothing.
+#   Acquire — a market I bid in, whose domain denominates its valuation in this property and
+#             states which way the lot moves it. One domain means one denomination today, so
+#             the market is a lever for exactly that property; a second domain would carry its
+#             own valuation term and its own row.
+#   Apply   — deliberately absent, like everything about it: no held claim exists in a spot
+#             market, so there is nothing to apply. The row arrives with the futures seam.
+#
+# A desire with NO row in this menu is the blind-or-helpless case: wanted, and either unseeable
+# (desire:UnwatchedDesireShape warns at the gate) or unmovable (nothing warns yet — a want with
+# no lever is legitimate, the temperature desire is exactly that, and the reflex simply never
+# proposes for it).
+
+SELECT ?means ?property ?via ?direction WHERE {
+  $me desire:desires ?region ; ag:actsFor ?subject .
+  ?region ssn:forProperty ?property .
+  {
+    $me perception:polls ?via .
+    ?via perception:monitors ?subject ;
+         sosa:observes ?property .
+    BIND(intention:Observe AS ?means)
+  } UNION {
+    $me market:bidsIn ?via .
+    ?valuation market:aboutProperty ?property ;
+               market:direction ?direction .
+    BIND(intention:Acquire AS ?means)
+  }
+}
+ORDER BY ?property ?means

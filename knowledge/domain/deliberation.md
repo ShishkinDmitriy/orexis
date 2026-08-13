@@ -18,10 +18,12 @@ one**: the actors treat it exactly as they treat their own cooldowns.
 
 # The two members
 
-- **`deliberation:Reflex`** — the old chain, verbatim: cannot see → look; below the aim →
-  pursue; otherwise nothing. Deterministic, free, always a valid fallback, and extracted
-  *unchanged* so the seam provably carries the existing behaviour — every round test that held
-  before the extraction holds after it.
+- **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;
+  a gap on the side a lever moves → pursue; otherwise nothing. WHICH side is read off the
+  T-Box, not known (#127): the domain states `market:direction` beside the denomination —
+  water Raises moisture — so a heater against a cold snap is the same rule with no code
+  change, and a missing direction means the reflex refuses rather than letting the old
+  hardcoded sign sneak back as a default. Still deterministic, still free.
 - **`deliberation:Consulting`** — RESERVED. One model call over the beliefs, the T-Box, the gap
   and what already stands, emitting a move **from this vocabulary's menu, never free
   text-to-action**. Its constraints are fixed before it exists: the bid *number* stays
@@ -39,6 +41,16 @@ one**: the actors treat it exactly as they treat their own cooldowns.
 - **The host's trigger.** A host has no gap — its "whether to sell" is a stake in the *market*,
   the [strategic-supplier](/decisions/strategic-supplier.md) seam, and putting it here would
   hand a subject-shaped answer to a venue-shaped question.
+
+# The menu — what I could do, derived
+
+The package ships `menu.rq`: one row per (means, property, lever, direction), joined from facts
+that exist for their own reasons — regions, wiring, denominations. For fern: *look at moisture
+through the probe; look at temperature through the thermometer; raise moisture through the
+market.* The row that is **absent** is a finding too: fern wants a temperature it can see and
+cannot move — a want with no lever, legitimate and now legible. This is the Consulting member's
+prompt substrate, shipped before that member exists so "the menu is derived, not written into a
+prompt" is checkable now.
 
 # The proof the seam is load-bearing
 
