@@ -29,6 +29,7 @@ rules.ru. See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-st
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 from agent.module import Module
@@ -36,6 +37,11 @@ from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from .terms import DEDUCING
+
+# What this package asks OF others, by family — their namespaces, never their Python. The
+# freshness rule lives with whoever holds the clock, and this module asks it exactly as
+# bidding does.
+_PERCEPTION = "http://example.org/agora/perception#PerceptionCapability"
 
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
 # file's own header. Read once at import: a malformed query is then an error the moment the
@@ -136,11 +142,17 @@ class Region:
 
 @dataclass(frozen=True)
 class Gap:
-    """One row of the diff: where a property is against where it should be.
+    """One row of the diff: where a property is against where it should be — and WHEN it was.
 
     `gap` is signed — negative below the region's point, positive above — and |gap| is the
     module's `urgency`, normalised by the survival room on that side. See gap.rq, which is the
     definition; this is only its Python shape.
+
+    `at` is when the sensed side was measured. The row does not judge its own freshness,
+    because how old is too old is the agent's rule — the cadence it commanded plus its grace —
+    and a diff that quietly hid stale rows would hide exactly the case worth seeing: "last I
+    looked I was dry, and I cannot see any more" is information, not noise. `age_s` is given so
+    the judging is one comparison for whoever holds the policy.
     """
 
     observed_property: str
@@ -148,6 +160,13 @@ class Gap:
     low: float
     high: float
     gap: float
+    at: datetime | None = None
+
+    def age_s(self, now: datetime | None = None) -> float | None:
+        """Seconds since the sensed side was true, or None for a reading with no timestamp."""
+        if self.at is None:
+            return None
+        return ((now or datetime.now(timezone.utc)) - self.at).total_seconds()
 
 
 def gaps_of(query, agent_uri: str) -> dict[str, Gap]:
@@ -168,6 +187,7 @@ def gaps_of(query, agent_uri: str) -> dict[str, Gap]:
         value=float(row["value"]),
         low=float(row["low"]), high=float(row["high"]),
         gap=float(row["gap"]),
+        at=datetime.fromisoformat(row["at"]) if row.get("at") else None,
     ) for row in bindings(query(substituted))}
 
 
@@ -275,21 +295,51 @@ class DesireModule(Module):
     # --- the diff, asked of me rather than recomputed by whoever wants it ---
 
     def gaps(self) -> dict[str, Gap]:
-        """Where every property I want stands against where I want it. Fresh on every call."""
+        """Where every property I want stands against where I want it — stale rows included.
+
+        Included on purpose: a stale row is "last I looked I was dry, and I cannot see any
+        more", which a deliberator needs precisely because nothing else will mention it. Rows
+        carry `at`, and `current()` is the same diff with my own freshness rule applied.
+        """
         return gaps_of(self.agent.store.query, self.me.uri)
 
+    def current(self) -> dict[str, Gap]:
+        """The diff I would act on: every row still inside my own freshness rule.
+
+        The rule is perception's — the cadence I commanded plus my grace, per property — asked
+        through the provider exactly as bidding asks it, because a reading past what I allow
+        for the rhythm I myself set is a sensor gone quiet, not a measurement. Issue #124's
+        case in one sentence: a dead probe's last observation is upserted, never expires, and
+        without this filter kept presenting a comfortable pot for however long the probe stayed
+        dead. With no perception at all nothing wrote these observations either, so every row
+        passes vacuously and honestly.
+        """
+        perception = self.agent.provider(_PERCEPTION)
+        if perception is None:
+            return self.gaps()
+        out = {}
+        for prop, gap in self.gaps().items():
+            age = gap.age_s()
+            if age is not None and age > perception.stale_after_s(self.me.acts_for, prop):
+                continue
+            out[prop] = gap
+        return out
+
     def reports(self) -> dict:
-        """How many things this agent wants, and how far it sits from the worst of them.
+        """What this agent wants, how much of that it can currently see, and the worst of it.
 
         `desires` belongs in the health series because an agent whose regions silently went to
         zero — a world amended, a range withdrawn — is running and doing nothing, which is the
-        failure that looks most like working. `worst_gap` is the same diff every other consumer
-        reads, disclosed as |gap| so the series is comparable across agents whose properties are
-        in different units. Absent while nothing has been observed, and the absence is itself a
-        reading: this agent wants things it has not yet seen.
+        failure that looks most like working. `desires_measured` counts the regions with a
+        CURRENT reading behind them, so blind and gone-quiet finally have a line: the two
+        numbers diverging is a desire this agent cannot see, whether because no instrument
+        exists or because one died. `worst_gap` is computed over the current rows only — a
+        frozen last reading must not present as a live verdict — so on a dead sensor it
+        disappears rather than reassures, and `reading_age_s` on the same dashboard says why.
         """
         out: dict = {"desires": len(self.regions)}
-        gaps = self.gaps()
-        if gaps:
-            out["worst_gap"] = round(max(abs(g.gap) for g in gaps.values()), 3)
+        current = self.current()
+        out["desires_measured"] = len(current)
+        if current:
+            out["worst_gap"] = round(max(abs(g.gap) for g in current.values()), 3)
         return out

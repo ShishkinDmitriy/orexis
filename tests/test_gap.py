@@ -74,6 +74,7 @@ def test_the_agent_reports_its_worst_gap(monkeypatch, query_with_readings):
     desire = next(m for m in fern.modules if m.name == "desire")
     reported = desire.reports()
     assert reported["desires"] == 2
+    assert reported["desires_measured"] == 2
     # temperature is the worse of the two: 33 against 18-24 with survival to 35
     assert reported["worst_gap"] == round(abs(desire.gaps()[TEMPERATURE].gap), 3)
 
@@ -81,6 +82,76 @@ def test_the_agent_reports_its_worst_gap(monkeypatch, query_with_readings):
     fresh = next(m for m in unmeasured.modules if m.name == "desire")
     assert "worst_gap" not in fresh.reports()
     assert fresh.reports()["desires"] == 2
+    assert fresh.reports()["desires_measured"] == 0
+
+
+# --- issue #124: current, stale, unmeasurable — three states, told apart ----
+
+def test_a_dead_sensors_last_reading_does_not_present_as_a_current_gap(monkeypatch):
+    """The defect: observations are upserted and never expire, so a dead probe's last value
+    kept producing a comfortable-looking worst_gap for however long the probe stayed dead.
+    A reading past the agent's OWN freshness rule — the cadence it commanded plus its grace —
+    now drops out of `current()` and out of the report: worst_gap disappears rather than
+    reassures, desires_measured says how many eyes are actually open, and reading_age_s on the
+    same dashboard says why."""
+    from datetime import datetime, timedelta, timezone
+
+    long_dead = datetime.now(timezone.utc) - timedelta(seconds=6_000)  # slow 600 + grace 45
+    fern = build_agent("fern", genesis_store(
+        {("fern", MOISTURE): 0.05}, result_time=long_dead), monkeypatch)
+    desire = next(m for m in fern.modules if m.name == "desire")
+
+    # the diff still SAYS it: last I looked I was parched, and I cannot see any more
+    assert desire.gaps()[MOISTURE].gap == -1.0
+    assert desire.gaps()[MOISTURE].age_s() > 5_000
+
+    # but nothing presents it as live
+    assert MOISTURE not in desire.current()
+    reported = desire.reports()
+    assert "worst_gap" not in reported
+    assert reported["desires_measured"] == 0
+
+
+def test_a_fresh_reading_is_current_by_the_same_rule(monkeypatch):
+    fern = build_agent("fern", genesis_store({("fern", MOISTURE): 0.30}), monkeypatch)
+    desire = next(m for m in fern.modules if m.name == "desire")
+    assert MOISTURE in desire.current()
+    assert desire.reports()["desires_measured"] == 1   # temperature stays unmeasured
+    assert desire.reports()["desires"] == 2
+
+
+def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
+    """The blind case, said where the sovereign who could add the instrument is reading.
+
+    Unwire fern's thermometer and its temperature desire still derives — a range is a fact
+    about the plant that does not wait for an instrument — but the agent will never see a
+    reading to hold it to, and nothing else would ever mention that. A WARNING, not a refusal:
+    the wiring is legitimate, the sentence in the boot log was the missing part. The shipped
+    world stays clean, which is the negative half that keeps the channel worth reading.
+    """
+    from agent import genesis, loader
+    from agent.ontology import WORLD_GRAPH, beliefs_graph
+    from agent.validate import conforms, graph_from
+
+    st = genesis_store()
+    genesis.birth(st, genesis.world_dir("simulation"), "fern")
+    data = graph_from(st, *st.public_graphs(), beliefs_graph("fern"))
+    ok, report = conforms(data, focus=FERN)
+    assert ok and "polls no sensor" not in report, "the shipped world must warn nothing"
+
+    unwired = genesis_store()
+    unwired.update(f"""
+        PREFIX ag: <http://example.org/agora#>
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent
+            <http://example.org/agora/perception#polls> ag:air_temp_fern }} }}
+        WHERE {{}}""")
+    for rule in loader.rule_files():
+        unwired.update(genesis.substitute(rule.read_text(), unwired))
+    genesis.birth(unwired, genesis.world_dir("simulation"), "fern")
+    data = graph_from(unwired, *unwired.public_graphs(), beliefs_graph("fern"))
+    ok, report = conforms(data, focus=FERN)
+    assert ok, "blind is legal — the region is real and the agent must start"
+    assert "polls no sensor" in report
 
 
 def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):

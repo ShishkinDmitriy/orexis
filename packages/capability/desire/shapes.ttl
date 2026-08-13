@@ -159,6 +159,40 @@ desire:BeyondSurvivalShape a sh:NodeShape ;
                        || (BOUND(?ceiling) && ?value > ?ceiling))
             }""" ] .
 
+# The blind case, said out loud at the gate. A region is deduced from what the subject states —
+# deliberately without asking whether anything can measure it, because a range is a fact about
+# the plant that does not wait for an instrument (the Zamioculcas states an Illuminance range
+# nothing here measures, and that is the honest state). But an agent holding a desire it can
+# never see has no gap row, no band, no urgency and no worst_gap for that property, and NOTHING
+# else will ever mention it — which is exactly the shape of silence this project keeps paying
+# for. A WARNING, not a refusal: the wiring is legitimate, the sentence in the boot log is what
+# was missing. The mirror of issue #111 — that one asks whether the instrument covers the
+# conditions; this one asks whether there is an instrument at all.
+desire:UnwatchedDesireShape a sh:NodeShape ;
+    rdfs:comment "A desire in a property this agent polls no sensor for. desires and desires_measured diverging on the dashboard is this same fact at runtime; this is it at the gate, where the sovereign who could add the instrument is the one reading." ;
+    sh:severity sh:Warning ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/agora#hasCapability>
+                      <http://example.org/agora/desire#Deducing> .
+            }
+        """ ] ;
+    sh:sparql [
+        sh:severity sh:Warning ;
+        sh:message "a desire in a property this agent polls no sensor for — the region is real, and the agent will never see a reading to hold it to" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/agora#actsFor> ?subject ;
+                      <http://example.org/agora/desire#desires> ?region .
+                ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER NOT EXISTS {
+                    $this <http://example.org/agora/perception#polls> ?sensor .
+                    ?sensor <http://example.org/agora/perception#monitors> ?subject ;
+                            <http://www.w3.org/ns/sosa/observes> ?property .
+                }
+            }""" ] .
+
 # What is NOT here: a shape refusing a hand-authored desire. It was written and removed, because
 # it would have been decoration — the derivation mints blank nodes and so could a sovereign, so
 # nothing about the triple distinguishes the two, and a shape cannot see which graph a fact came
