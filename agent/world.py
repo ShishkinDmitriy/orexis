@@ -108,6 +108,7 @@ class Market:
     offer_topic: str
     bid_topic: str
     voucher_topic: str
+    redeem_topic: str | None = None  # absent in a world authored before #132 — paper, unspendable
     capacity_l: float = 0.0  # physical ceiling of the resource — the allocation limit
 
 
@@ -197,11 +198,12 @@ WHERE {{
 
 def _markets_q(agent_uri: str, relation: str) -> str:
     return f"""
-SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?voucherTopic ?capacity
+SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?voucherTopic ?redeemTopic ?capacity
 WHERE {{ 
   <{agent_uri}> market:{relation} ?market .
   ?market ag:localId ?localId ; market:marketFor ?resource ;
           market:offerTopic ?offerTopic ; market:bidTopic ?bidTopic ; market:voucherTopic ?voucherTopic .
+  OPTIONAL {{ ?market market:redeemTopic ?redeemTopic }}
   OPTIONAL {{ ?resource water:capacityL ?capacity }}
  }}"""
 
@@ -225,7 +227,7 @@ def _market_from(row: dict) -> Market:
     return Market(
         uri=row["market"], local_id=row["localId"], resource=row["resource"],
         offer_topic=row["offerTopic"], bid_topic=row["bidTopic"],
-        voucher_topic=row["voucherTopic"],
+        voucher_topic=row["voucherTopic"], redeem_topic=row.get("redeemTopic"),
         capacity_l=float(row["capacity"]) if row.get("capacity") else 0.0,
     )
 

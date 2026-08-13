@@ -163,3 +163,66 @@ def test_one_success_resets_the_suspicion(monkeypatch):
 
     assert keeper.reports()["expectations_unmet"] == 2
     assert keeper.reports()["affordances_suspect"] == 0
+
+
+# --- the voucher waits for the watch (#132) -----------------------------------
+
+def test_a_claim_is_held_until_the_watch_is_live(thirsty):
+    """Never spend a dose you cannot watch land. The voucher adopts an Apply — a held claim —
+    and nothing is presented while readings arrive without the #135 stamp; the first reading
+    acknowledged at the fast cadence is proof the board heard the tightening, and THAT is when
+    the claim goes out, the Apply resolves, and the expectation opens with a baseline the hold
+    did not age."""
+    from packages.capability.intention.terms import APPLY
+
+    market = market_of(thirsty)
+    keeper = keeper_of(thirsty)
+    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    thirsty.deliver(f"{market.voucher_topic}/fern",
+                    {"jti": "v1", "amount_l": 0.5, "debit": 0.2})
+
+    assert thirsty.sent.to(f"{market.redeem_topic}/fern") == [], \
+        "winning must present nothing — the watch is not live"
+    assert len(keeper.standing(means=APPLY)) == 1
+    assert keeper.open_expectations() == []          # the dose is not imminent yet
+
+    # a reading arrives WITHOUT the ack — the board has not heard the tightening
+    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"value": 0.29})
+    assert thirsty.sent.to(f"{market.redeem_topic}/fern") == []
+
+    # and one acknowledged at the fast cadence — the watch is provably live
+    fast = thirsty.subscribing().beliefs.fast_sleep_s
+    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"value": 0.29, "sleep_s": fast})
+    presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
+    assert presented and presented[-1]["jti"] == "v1"
+    assert keeper.standing(means=APPLY) == []
+    watches = keeper.open_expectations(MOISTURE)
+    assert len(watches) == 1 and watches[0].baseline == 0.29
+
+
+def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
+    """Old firmware that never acks, a board mid-sleep on a long cadence — a watch that cannot
+    be confirmed within one full cycle is not going to be, and a dose delayed forever is worse
+    than a dose unobserved. The deadline presents the claim and says it ran blind."""
+    market = market_of(thirsty)
+    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    thirsty.deliver(f"{market.voucher_topic}/fern",
+                    {"jti": "v2", "amount_l": 0.5, "debit": 0.2})
+    assert thirsty.sent.to(f"{market.redeem_topic}/fern") == []
+
+    thirsty.bidding()._present_blind()
+    presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
+    assert presented and presented[-1]["jti"] == "v2"
+
+
+def test_a_held_claim_is_maximum_urgency(thirsty):
+    """The hold is the watch one step earlier: the dose is coming the moment the watch is live,
+    and the watch becomes live by exactly this urgency reaching the board. Voucher → tight;
+    presentation → the expectation takes over the same answer without a gap."""
+    market = market_of(thirsty)
+    p = thirsty.subscribing()
+    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    thirsty.deliver(f"{market.voucher_topic}/fern",
+                    {"jti": "v3", "amount_l": 0.5, "debit": 0.2})
+    assert keeper_of(thirsty).urgency(thirsty.me.acts_for, MOISTURE, 0.55) == 1.0
+    assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s

@@ -63,7 +63,8 @@ INTENTION_NS = "http://example.org/agora/intention#"
 INTENTION = INTENTION_NS + "IntentionCapability"  # whoever keeps commitments, if anything does
 DELIBERATION_NS = "http://example.org/agora/deliberation#"
 DELIBERATION = DELIBERATION_NS + "DeliberationCapability"  # whoever decides the whether
-# The two means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
+# The three means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
 # when the keeper records it, so they are the intention package's individuals referenced by IRI.
 OBSERVE = INTENTION_NS + "Observe"
 ACQUIRE = INTENTION_NS + "Acquire"
+APPLY = INTENTION_NS + "Apply"      # real since #132: holding a claim until the watch is live

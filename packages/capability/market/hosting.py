@@ -8,7 +8,8 @@ auction is a conversation rather than a calculation:
         -> host announces an offer with a deadline          [market:offerTopic]
         -> each bidder answers with a number only it can compute   [market:bidTopic/<agent>]
         -> host matches, clearing validates, vouchers go back  [market:voucherTopic/<agent>]
-        -> actuation redeems them against the hardware
+        -> each HOLDER presents its claim when its watch is live [market:redeemTopic/<agent>]
+        -> actuation redeems the presented claim against the hardware
 
 The host proposes; clearing disposes. `auction.py`, `clearing.py` and `market.py` are pure —
 this module is only the choreography around them. **How bids become an allocation is not part
@@ -85,11 +86,19 @@ class HostingModule(Module):
         self.open_auction: dict | None = None
         self.last_auction_at = 0.0
         self._timer: Timer | None = None
+        # Issued and not yet presented, by jti (#132). Winning stopped implying actuation: the
+        # holder redeems when its watch is live, so the host keeps the claim until it is
+        # presented — single-use, popped on redemption. In-memory, like the round itself: a
+        # host that restarts forgets unpresented claims, which is the voucher-ledger seam the
+        # roadmap already records, not a new one.
+        self.held: dict[str, object] = {}
 
     def subscriptions(self) -> list[str]:
         topics = list(self.event_topics)
         for market in self.markets:
             topics.append(f"{market.bid_topic}/+")
+            if market.redeem_topic:
+                topics.append(f"{market.redeem_topic}/+")
         return topics
 
     def stop(self) -> None:
@@ -106,6 +115,9 @@ class HostingModule(Module):
         for m in self.markets:
             if topic.startswith(m.bid_topic + "/"):
                 self.on_bid(m, self.parse(payload) or {})
+                return True
+            if m.redeem_topic and topic.startswith(m.redeem_topic + "/"):
+                self.on_redeem(topic.rsplit("/", 1)[-1], self.parse(payload) or {})
                 return True
         return False
 
@@ -235,7 +247,42 @@ class HostingModule(Module):
                 "auction_id": auction_id, "jti": voucher.jti, "sub": voucher.sub,
                 "scope": voucher.scope, "amount_l": voucher.amount_l, "debit": voucher.debit,
             })
-        self.redeem(result.vouchers)
+        # Issued is not actuated (#132). The host used to redeem every voucher itself, here,
+        # the moment it published them — which spent the dose before the winner's sensor could
+        # possibly be watching it land. The claims are HELD now, and the holder presents each
+        # when its watch is live; a market authored without a redeem channel keeps the old
+        # reflex, so a pre-#132 world behaves exactly as it always did.
+        if market.redeem_topic:
+            for voucher in result.vouchers:
+                self.held[voucher.jti] = voucher
+        else:
+            self.redeem(result.vouchers)
+
+    def on_redeem(self, presenter: str, claim: dict) -> None:
+        """A holder presented its claim: verify it is theirs, then actuate. Single-use.
+
+        Three refusals, each logged with its reason, none answered on the wire — a redeem
+        channel is not a conversation, and a forged claim deserves a log line for the operator,
+        not an error message for the forger: an unknown or already-spent jti, a claim presented
+        by someone other than the winner it was issued to, and a payload with no jti at all.
+        """
+        jti = claim.get("jti")
+        if not jti:
+            self.log.warning("redeem from %s carries no jti — ignored", presenter)
+            return
+        voucher = self.held.get(jti)
+        if voucher is None:
+            self.log.warning("redeem from %s for unknown or already-spent jti %s — ignored",
+                             presenter, jti)
+            return
+        if voucher.sub != presenter:
+            self.log.warning("%s presented %s's voucher %s — ignored",
+                             presenter, voucher.sub, jti)
+            return
+        del self.held[jti]
+        self.log.info("%s presented voucher %s — redeeming %.3f L", presenter, jti,
+                      voucher.amount_l)
+        self.redeem([voucher])
 
     def redeem(self, vouchers) -> None:
         """Hand the vouchers to whichever of my capabilities can touch the hardware.

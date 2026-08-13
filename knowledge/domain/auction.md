@@ -50,7 +50,8 @@ which they take turns.
 4. **It matches.** At the deadline the host asks whichever of its capabilities can match, and
    gets a proposed trade. See [bid matching](/domain/bid-matching.md).
 5. **It is validated and settled.** [Clearing](/domain/clearing.md) checks the proposed trade and
-   co-signs [vouchers](/domain/voucher.md); the [executor](/domain/executor.md) redeems them
+   co-signs [vouchers](/domain/voucher.md); each winner presents its claim when its watch is
+live (#132), and the [executor](/domain/executor.md) redeems the presented ones
    against the hardware.
 6. **It dissolves.** The host's open-auction state is dropped, the cluster that crystallized
    around it disperses, and the market is exactly as it was.

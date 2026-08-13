@@ -73,7 +73,8 @@ ag:barrel1_market a market:Market ;
     market:marketFor ag:barrel1 ;
     market:offerTopic   "market/barrel1/offer" ;
     market:bidTopic     "market/barrel1/bid" ;
-    market:voucherTopic "market/barrel1/voucher" .
+    market:voucherTopic "market/barrel1/voucher" ;
+    market:redeemTopic "market/barrel1/redeem" .
 
 ag:barrel1 a water:WaterSource ;
     ag:localId "barrel1" ;

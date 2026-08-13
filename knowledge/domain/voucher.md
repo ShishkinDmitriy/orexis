@@ -28,15 +28,23 @@ names a valve. See [supplier](/domain/supplier.md) and [executor](/domain/execut
 
 # Redemption — spot vs futures
 
-- **Spot (v1):** redeemed on win — win → actuate now. Transient authorization; `exp` ≈ now.
-- **Futures (v2):** **held and spent later**, any time until `exp` — win and actuate
-  *decoupled*, the timing the agent's. Enables temporal strategy (water at night, wait for
-  rain, hedge a forecast). See the futures item in [roadmap](/decisions/roadmap.md).
+- **Spot (v1, since #132):** **held briefly, then presented** — win → hold until the winner's
+  sensor is provably watching (the #135 cadence ack, or a bounded wait) → the holder presents
+  the claim on the market's `redeemTopic` → actuate. Win and actuate decoupled already, not for
+  temporal strategy but for **observability**: never spend a dose you cannot watch land. Before
+  #132 the host redeemed on issue, which spent the dose before the winner could see it arrive.
+- **Futures (v2):** the same held claim, held *longer* — any time until `exp`, the timing the
+  agent's. Enables temporal strategy (water at night, wait for rain, hedge a forecast). The
+  wire and the holding mechanism exist since #132; what futures adds is the horizon. See the
+  futures item in [roadmap](/decisions/roadmap.md).
 
 # Single-use
 
-`jti` makes it single-use: the pump (and, in the futures model, the supplier's redemption
-ledger) tracks spent vouchers so one win can't settle twice (double-spend / double-actuation).
+`jti` makes it single-use: the host holds issued claims by `jti` and pops each on
+presentation, so one win cannot settle twice and only the winner it was issued to may present
+it (the presenter is read off the topic segment the ACL lets it write). The held set is
+in-process — a host that restarts forgets unpresented claims, which is the voucher-ledger seam
+the roadmap records.
 
 # Why it exists even for immediate watering
 

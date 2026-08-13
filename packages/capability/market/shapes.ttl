@@ -44,7 +44,9 @@ market:MarketShape a sh:NodeShape ;
     sh:property [ sh:path market:marketFor ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path market:offerTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path market:bidTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
-    sh:property [ sh:path market:voucherTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+    sh:property [ sh:path market:voucherTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path market:redeemTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                  sh:message "a market states where a holder presents its claim — without it a voucher is paper nobody can spend" ] .
 
 market:HostStatesHowItMatchesShape a sh:NodeShape ;
     rdfs:comment "A host must say how it matches. Without it no matching capability is derived, `agent.provider` finds nobody, and the failure arrives at the END of a round — bids collected, deadline passed, nothing to allocate them with, and every bidder waiting on a voucher that will not come. That is expensive and silent, and it is exactly what a world can be held to before anything starts. Targeted at whoever hosts rather than at ag:Agent, because an agent that hosts nothing has no auction to state terms for." ;
