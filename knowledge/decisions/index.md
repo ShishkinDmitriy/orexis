@@ -11,6 +11,7 @@ change something, to check you're not welding shut a planned extension.
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation; the formal layer becomes load-bearing, not optional.
 * [deterministic-bid](/decisions/deterministic-bid.md) - The bid number is code; the LLM only produces the justification. Rhetoric can't move the number.
 * [english-vs-formal](/decisions/english-vs-formal.md) - English for what's contested, formal (RDF/SHACL) for what's trusted.
+* [control-the-derivative-not-the-value](/decisions/control-the-derivative-not-the-value.md) - The design principle the project kept applying without naming, stated once in the sovereign's analogy: walking controls distance, driving controls acceleration — and nothing here controls a step. A cadence not a reading, a region not an aim, a mandate not a belief, a patience not an act, an affordance not an action; the rows compose into a tower where each layer's authority is the next layer's parameter space. It is why the sovereign can leave the room at start — control exercised entirely through rules needs exercising once — and it is predictive: any change reaching down a level is grabbing the walking-controls from the driver's seat, refused on sight.
 * [agent-centric-epistemics](/decisions/agent-centric-epistemics.md) - Judgment, private data, and perception belong to the agent; infra is thin honest mechanism; author by stake; disclose need-to-know; observe via sovereign.
 
 # Identity & authorization
