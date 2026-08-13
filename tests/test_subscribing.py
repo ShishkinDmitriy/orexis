@@ -148,8 +148,16 @@ def test_an_unchanged_cadence_is_not_republished(fern):
 
 
 def test_a_changed_cadence_is_republished(fern):
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.2})    # at the survival floor
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.55})   # the point of its region
+    """Ingested with explicit instants, not delivered back-to-back: two deliveries in the same
+    millisecond make a slope of 0.35-per-instant, and the trend bound (#133) then correctly
+    refuses to relax for a pot it predicts will be soaked before the next look. A sane
+    timeline — recovering gently over ten minutes — is what "the cadence relaxes" is about."""
+    from datetime import datetime, timedelta, timezone
+
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    now = datetime.now(timezone.utc)
+    p.ingest(s, 0.2, now - timedelta(seconds=6_000))  # at the survival floor
+    p.ingest(s, 0.55, now)                            # the point of its region, reached calmly
     assert len(cadences(fern)) == 2
     assert cadences(fern)[0] < cadences(fern)[1]
 
@@ -444,3 +452,71 @@ def test_the_announcement_says_which_property_it_is_about(monkeypatch, tmp_path)
 
     said = {e["property"]: e["value"] for e in agent.sent.to(agent.me.event_topic)}
     assert said == {MOISTURE: 0.05, TEMPERATURE: 21.0}
+
+
+# --- the trend bound: sleep no longer than the trend allows (#133) ----------
+
+def moisture_sensor(agent):
+    """The probe, by what it observes — never sensors[0], which on this board is whichever
+    sorted first, and a 0.5 ingested into the THERMOMETER is a frozen greenhouse at maximum
+    urgency. The first draft of these tests did exactly that and asserted on the wrong panic."""
+    return next(s for s in agent.me.sensors if s.observes == MOISTURE)
+
+
+def _ingest_pair(fern, first, second, seconds_apart=600):
+    """Two readings a stated interval apart, so the slope is a fact and not an accident of
+    how fast the test runs. `ingest` exists for exactly this caller — one with no message."""
+    from datetime import datetime, timedelta, timezone
+
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    now = datetime.now(timezone.utc)
+    p.ingest(s, first, now - timedelta(seconds=seconds_apart))
+    p.ingest(s, second, now)
+    return p
+
+
+def test_a_fast_drying_pot_is_not_granted_a_long_sleep(fern):
+    """The failure #133 names: comfortable now, drying fast, and a sleep granted on the
+    current gap alone would end deep in trouble. The trend bound evaluates urgency at the
+    PREDICTED end-of-sleep value and grants what that answer earns — so the sawtooth flattens
+    BEFORE the band is crossed, not after.
+
+    0.60 to 0.50 in ten minutes: still OK (fern's region floor is 0.45), but at that rate a
+    ~500s sleep ends near 0.42 — below the region. The granted sleep must shorten now.
+    """
+    p = _ingest_pair(fern, 0.60, 0.50)
+    with_trend = cadences(fern)[-1]
+
+    calm = _ingest_pair(fern, 0.50, 0.50)  # same state, no movement
+    without = cadences(fern)[-1]
+    assert with_trend < without, \
+        "the same reading earned the same sleep whether or not trouble was approaching"
+
+
+def test_a_favourable_trend_relaxes_nothing(fern):
+    """Tighten-only. A pot recovering toward the aim is predicted to be MORE comfortable at
+    wake, and the bound must not turn that prediction into a longer sleep: reading too often
+    costs a reading, reading too rarely costs a plant, and a prediction is trusted only in
+    the direction where being wrong is cheap."""
+    rising = _ingest_pair(fern, 0.46, 0.48)      # below centre, recovering
+    with_trend = cadences(fern)[-1]
+
+    still = _ingest_pair(fern, 0.48, 0.48)
+    without = cadences(fern)[-1]
+    assert with_trend == without
+
+
+def test_no_slope_means_no_bound(fern):
+    """One reading is a position, not a velocity. Before two readings exist — and after every
+    restart, since the trend is module memory and the store upserts history away — the cadence
+    is exactly the pre-#133 one, honestly reached."""
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    p.ingest(s, 0.50, None)
+    assert cadences(fern)[-1] == cadence_for(fern, 0.50)
+
+
+def test_the_bound_respects_the_constitutional_floor(fern):
+    """A trend however catastrophic tightens to fastSleepS and the constitutional floor,
+    never past them — the clamps hold whoever computes the number."""
+    p = _ingest_pair(fern, 0.60, 0.30, seconds_apart=60)  # collapsing
+    assert cadences(fern)[-1] >= fern.subscribing().min_sleep_s

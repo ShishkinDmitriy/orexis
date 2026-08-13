@@ -171,10 +171,14 @@ class PerceptionModule(Module):
         or a future path that synthesises a reading — has nothing better than now to offer.
         """
         self.observations.record(self.log, sensor, value, at)
-        self.on_reading(sensor, value)
+        self.on_reading(sensor, value, at)
 
-    def on_reading(self, sensor, value: float) -> None:
-        """What this capability does after recording. Subscribing re-aims; listening does not."""
+    def on_reading(self, sensor, value: float, at=None) -> None:
+        """What this capability does after recording. Subscribing re-aims; listening does not.
+
+        `at` is the reading's instant, threaded through because a TREND is two readings and the
+        time between them — and the store upserts observations, so the previous one survives
+        nowhere but here."""
 
     def sense_now(self) -> None:
         """Ask for a reading now, if my hardware allows it. Listening cannot.
@@ -225,6 +229,12 @@ class SubscribingModule(PerceptionModule):
         # questions: "how long may this board sleep" and "does it already know all this".
         self.sent_cadence: dict[str, int] = {}
         self.sent: dict[str, tuple] = {}
+        # The trend: last reading seen and the slope it made with the one before, per
+        # (subject, property). Module memory and nowhere else — the store upserts observations,
+        # so history for a slope survives only here. Dies with the process; two readings
+        # rebuild it, and until then there is simply no trend bound (#133).
+        self._last_seen: dict[tuple[str, str], tuple[float, datetime]] = {}
+        self._trend: dict[tuple[str, str], float] = {}
 
     def stale_after_s(self, subject_uri: str, observed_property: str) -> int:
         """The interval I asked for, plus slack. NOT an absolute.
@@ -254,7 +264,14 @@ class SubscribingModule(PerceptionModule):
     def start(self) -> None:
         self.sense_now()
 
-    def on_reading(self, sensor, value: float) -> None:
+    def on_reading(self, sensor, value: float, at=None) -> None:
+        # The trend first, so the cadence computed below already knows it. Kept in module
+        # memory and nowhere else: the store upserts observations (one per subject-property),
+        # so the previous reading this slope needs would otherwise be gone — and a slope is a
+        # verdict-adjacent quantity anyway, derived from my own readings, recomputed freely,
+        # stored never. Dies with the process, rebuilt after two readings; the fallback while
+        # it is unknown is simply no trend bound, which is the pre-#133 behaviour.
+        self._note_trend(sensor.subject, sensor.observes, value, at)
         # The verdict travels with the cadence because it is the same message and the same
         # audience. Collected the way every cross-capability opinion is collected — whoever
         # holds a stake contributes, perception passes it on without reading it. An agent with
@@ -263,20 +280,61 @@ class SubscribingModule(PerceptionModule):
                          self.cadence_for(sensor.subject, sensor.observes, value),
                          self.agent.annotations(sensor.subject, sensor.observes, value))
 
+    def _note_trend(self, subject_uri: str, observed_property: str,
+                    value: float, at) -> None:
+        """Two readings and the time between them: the slope, in units per second."""
+        at = at or datetime.now(timezone.utc)
+        key = (subject_uri, observed_property)
+        previous = self._last_seen.get(key)
+        if previous is not None:
+            prev_value, prev_at = previous
+            dt = (at - prev_at).total_seconds()
+            if dt > 0:
+                self._trend[key] = (value - prev_value) / dt
+        self._last_seen[key] = (value, at)
+
     def cadence_for(self, subject_uri: str, observed_property: str, value: float) -> int:
-        """How long the board may sleep: the closer to my own trouble, the closer I watch.
+        """How long the board may sleep: the closer to my own trouble, the closer I watch —
+        and no longer than the trend allows.
 
         Trouble is not perception's to define, so it is asked for. An agent with no stake in
         the subject — or none in *this property* of it — gets no answer and watches at its slow
         cadence, which is the honest reading of "nothing here is urgent to me". That second
         case is why the property is passed: a thermometer on a pot the agent bids water for
         must not have its cadence driven by how dry the soil is.
+
+        THE TREND BOUND (#133). Urgency answers where the state IS; a sleep granted on that
+        alone can begin moments before the trend crosses into trouble, and nobody hears for
+        the whole window. So the candidate sleep is checked against where the state is
+        HEADING: predict the value at the end of the sleep from the measured slope, ask the
+        same stakeholder how urgent THAT would be, and if the answer is worse, grant the
+        cadence that answer earns instead. One step of lookahead, tighten-only — a favourable
+        trend relaxes nothing, because reading more often than needed costs a reading and is
+        the only safe direction to be wrong in, and a relaxation earned by a trend would be a
+        prediction trusted further than any prediction here deserves. The safety margin is
+        implicit: urgency is evaluated at the END of the sleep, so the granted window always
+        ends at or before the predicted trouble, never astride it.
+
+        No slope yet — fewer than two readings, or a fresh restart — means no bound, which is
+        the pre-#133 behaviour, honestly reached. The declared `dryRatePerTick` is deliberately
+        NOT the fallback the issue suggested: it is a domain term perception may not name, and
+        its tick is undefined for a real pot. Evidence or nothing.
         """
         b = self.beliefs
         urgency = self.agent.urgency(subject_uri, observed_property, value)
         if urgency is None:
             return min(self.max_sleep_s, max(self.min_sleep_s, b.slow_sleep_s))
-        sleep_s = b.slow_sleep_s + (b.fast_sleep_s - b.slow_sleep_s) * urgency
+
+        def granted(u: float) -> float:
+            return b.slow_sleep_s + (b.fast_sleep_s - b.slow_sleep_s) * u
+
+        sleep_s = granted(urgency)
+        slope = self._trend.get((subject_uri, observed_property))
+        if slope:
+            predicted = value + slope * sleep_s
+            ahead = self.agent.urgency(subject_uri, observed_property, predicted)
+            if ahead is not None and ahead > urgency:
+                sleep_s = granted(ahead)
         return int(round(min(self.max_sleep_s, max(self.min_sleep_s, sleep_s))))
 
     def _aimed_with(self, sensor):
