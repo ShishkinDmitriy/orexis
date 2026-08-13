@@ -22,33 +22,21 @@ BANDS = ("LOW", "OK", "HIGH")
 
 @dataclass(frozen=True)
 class BiddingBeliefs:
-    """market:Bidding — its wallet, its desire, its limits, and its private value curve."""
+    """market:Bidding — its wallet, the point it is aiming at, and its private value curve.
+
+    **The band is not here any more, and its absence is the point.** A bidder used to hold
+    `water:bandLow` and `water:bandHigh` and to be the only thing in an agent that could say what
+    a reading MEANT — which made having an opinion about your own state conditional on being a
+    market participant, and limited it to the one property a bid is priced in. Judging a reading
+    is desire's, in `packages/capability/desire/`, where it is per property and deduced from what
+    the world states rather than picked. What is left here is what a BID needs and nothing else:
+    a wallet, a point to aim at, and what a litre is worth on the way to it.
+    """
 
     endowment: float
     target: float
-    low: float
-    high: float
     litres_per_fraction: float
     max_value_per_l: float
-
-    def band(self, value: float) -> str:
-        """A reading judged against MY limits. Never stored — always recomputed."""
-        if value < self.low:
-            return "LOW"
-        if value > self.high:
-            return "HIGH"
-        return "OK"
-
-    def urgency(self, value: float) -> float:
-        """How close this reading puts me to trouble: 0.0 at my ceiling, 1.0 at my floor.
-
-        This is what an agent means by "watch me more closely" — so it is what perception is
-        given when it asks. A band with no span is all-or-nothing trouble.
-        """
-        span = self.high - self.low
-        if span <= 0:
-            return 1.0
-        return min(1.0, max(0.0, (self.high - value) / span))
 
 
 @dataclass(frozen=True)
@@ -72,8 +60,6 @@ BIDDING_BLOCK = Block(
         # which is what AGENTS.md means by the domain being a plug-in.
         "endowment": term("hasEndowment"),
         "target": ontology.WATER + "hasTarget",
-        "low": ontology.WATER + "bandLow",
-        "high": ontology.WATER + "bandHigh",
         "litres_per_fraction": ontology.WATER + "litresPerFraction",
         "max_value_per_l": ontology.WATER + "maxValuePerL",
     },

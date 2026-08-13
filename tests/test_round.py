@@ -48,9 +48,17 @@ def offer_from(host):
     return host.sent.to(market_of(host).offer_topic)[-1]
 
 
-def low_event(agent_id="fern", value=0.05):
+def low_event(agent_id="fern", value=0.05, observed_property=MOISTURE):
+    """What a participant actually publishes when it is in trouble.
+
+    The property is not decoration and is not optional: an agent may hold a desire in several
+    properties now, so it announces several verdicts, and a host that took any LOW band it was
+    sent would open a water auction because somebody's greenhouse got cold. `agent/observation.py`
+    has named the property since a subject with two sensors started announcing two values on one
+    topic; the host reads it.
+    """
     return {"agent": agent_id, "subject": f"http://example.org/agora#{agent_id}",
-            "value": value, "band": "LOW"}
+            "property": observed_property, "value": value, "band": "LOW"}
 
 
 # --- opening ---------------------------------------------------------------
@@ -85,8 +93,13 @@ def test_a_comfortable_participant_opens_nothing(host):
 
 
 def test_the_host_hears_a_verdict_not_a_moisture_reading(host):
-    """It acts on the agent's own judgment; it never needs the raw number."""
-    host.deliver("readings/fern", {"agent": "fern", "band": "LOW"})  # no value at all
+    """It acts on the agent's own judgment; it never needs the raw number.
+
+    The property stays — that is not the number, it is which scale the verdict is on, and a host
+    that cannot tell moisture from humidity would open a round on either.
+    """
+    host.deliver("readings/fern",
+                 {"agent": "fern", "property": MOISTURE, "band": "LOW"})  # no value at all
     assert offer_from(host)["auction_id"]
 
 
@@ -97,6 +110,24 @@ def test_a_flapping_participant_cannot_spam_the_market(host):
     host.deliver("readings/tomato", low_event("tomato"))
     assert len(host.sent.to(market_of(host).offer_topic)) == 1, "cooldown should suppress it"
     assert first["auction_id"]
+
+
+def test_trouble_in_a_property_this_market_cannot_relieve_opens_nothing(host):
+    """A defect that became reachable the moment an agent could want more than one thing.
+
+    Nothing relieves a cold night by dispensing water, so a round opened on that band would spend
+    a real allocation on a reading it cannot act on — and it would have, because the host took
+    any `band == "LOW"` it was sent. It had never been wrong before only because exactly one
+    module annotated exactly one property.
+
+    The filter asks the DOMAIN what a bid is priced in, never the market: a market is a lot, and
+    `market:aboutProperty` refuses to hang a property off one.
+    """
+    host.deliver("readings/fern", low_event(observed_property=HUMIDITY))
+    assert not host.sent.to(market_of(host).offer_topic)
+
+    host.deliver("readings/fern", low_event())
+    assert len(host.sent.to(market_of(host).offer_topic)) == 1
 
 
 def test_no_second_round_while_one_is_open(host):

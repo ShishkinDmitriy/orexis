@@ -8,7 +8,7 @@
 # must hold a coherent valuation. Swap the domain module and these go with it.
 
 water:WaterBidderShape a sh:NodeShape ;
-    rdfs:comment "A bidder for water values it by its deficit below a target, so it needs a target, a pot size, and a ceiling price — plus a comfort band that is actually a band." ;
+    rdfs:comment "A bidder for water values it by its deficit below a target, so it needs a target, a pot size, and a ceiling price. It no longer needs a band: judging a reading is desire's, deduced from the range the plant states, and a bidder restating those edges privately was keeping a second copy of a public fact." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
@@ -23,42 +23,34 @@ water:WaterBidderShape a sh:NodeShape ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
     sh:property [ sh:path water:maxValuePerL ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
-    # a "band" whose floor is above its ceiling is not a band
-    sh:property [ sh:path water:bandLow ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ;
-                  sh:lessThan water:bandHigh ;
-                  sh:message "the low band must sit below the high one" ] ;
-    sh:property [ sh:path water:bandHigh ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ] ;
-
-    # The desire has to answer to the plant. A target is a PICK, and this is what it picks
-    # inside: the plant's own operating range, stated in the world where anyone may read it.
+    # The target has to answer to the agent's own region. A target is a PICK, and this is what
+    # it picks inside.
     #
-    # Only the target. The bands are alarm thresholds and legitimately sit OUTSIDE the range —
-    # a fern's `bandLow` of 0.35 is below its ideal floor of 0.45 precisely because that is
-    # when it should start complaining. Constraining those too would be confusing a comfort
-    # limit with a requirement.
+    # It used to read the plant's operating range directly and re-do the join every time. It now
+    # asks the ONE region the agent actually holds, which is that range intersected with every
+    # other that applies — so a rig whose instrument narrows what can be witnessed narrows what
+    # may be aimed at, with nothing here changing. That is the point of the deduction being
+    # materialised rather than recomputed by each reader: the shape and the module now agree by
+    # construction instead of by two authors remembering the same join.
     #
-    # Matched on the PROPERTY the desire is about, not on the first condition found. A plant
-    # that later states a humidity range must not have its moisture target checked against it —
-    # the same mistake `_is_mine` exists to prevent in the bidder, arriving here by another door.
+    # Matched on the PROPERTY the desire is about, not on the first region found. An agent that
+    # holds a temperature region as well must not have its moisture target checked against it —
+    # the same mistake `_is_mine` exists to prevent in the module, arriving here by another door.
     #
-    # This spans the public world and a private belief base, and that is the point: it can only
-    # run where both are visible, which is inside the agent at boot. `validate_agent` flattens
-    # exactly those graphs. Nothing outside the agent ever sees the target.
+    # This spans the PUBLIC region and a PRIVATE target, and that is the point: it can only run
+    # where both are visible, which is inside the agent at boot. `validate_agent` flattens every
+    # public graph plus this agent's beliefs. Nothing outside the agent ever sees the target.
     sh:sparql [
-        sh:message "the target sits outside the operating range the plant states for that property — a desire is a pick within a range, not a number of its own" ;
+        sh:message "the target sits outside the region this agent deduced for that property — a desire is a pick within a range, not a number of its own" ;
         sh:select """
             SELECT $this ?target WHERE {
                 $this <http://example.org/agora/water#hasTarget> ?target .
-                $this <http://example.org/agora#actsFor> ?plant .
                 <http://example.org/agora/water#hasTarget>
                       <http://example.org/agora/market#aboutProperty> ?property .
-                ?plant <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
-                ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
-                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
-                           <https://schema.org/minValue> ?low ;
-                           <https://schema.org/maxValue> ?high .
+                $this <http://example.org/agora/desire#desires> ?region .
+                ?region <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                        <https://schema.org/minValue> ?low ;
+                        <https://schema.org/maxValue> ?high .
                 FILTER(?target < ?low || ?target > ?high)
             }""" ] .
 

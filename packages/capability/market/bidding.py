@@ -19,9 +19,10 @@ Two reasons it stays silent, and both are deliberate:
 The bid *number* is deterministic code (see decisions/deterministic-bid.md); an LLM would
 later produce the justification, never the number.
 
-This is also the capability that holds a **band**, so it is the one that answers when the
-agent is asked what it makes of a reading — see `annotate` and `urgency` below. Perception
-supplies numbers; a stake supplies verdicts.
+It is no longer the capability that holds a **band**. That moved to `desire`, where it is
+deduced per property from what the world states rather than picked as two decimals — and where
+an agent that bids in nothing at all can still have one. Perception supplies numbers, desire
+supplies verdicts, and this supplies a price.
 
 Vocabulary: capabilities/market/ontology.ttl (protocol) + domain/water/ontology.ttl (what a
 bid means here). Rules: capabilities/market/shapes.ttl, domain/water/shapes.ttl.
@@ -131,31 +132,19 @@ class BiddingModule(Module):
                 return True
         return False
 
-    # --- what I make of a reading: the part only a stakeholder can supply ---
-
-    def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
-        """My stake is in one property of one subject. Both have to match.
-
-        The property test is the new half. My band is a band of the thing my desire is
-        denominated in; handed a reading of anything else about the same subject I hold no
-        opinion, and saying so is the difference between silence and a confident wrong verdict.
-        """
-        return subject_uri == self.me.acts_for and observed_property == self.about
-
-    def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
-        """My verdict on my own subject, for my agent's public announcement.
-
-        A band and never a number: the host learns that I am in trouble, not how wet I am.
-        """
-        if not self._is_mine(subject_uri, observed_property):
-            return {}
-        return {"band": self.beliefs.band(value)}
-
-    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
-        """How close this puts me to my floor. Perception uses it to set its cadence."""
-        if not self._is_mine(subject_uri, observed_property):
-            return None
-        return self.beliefs.urgency(value)
+    # --- what I no longer make of a reading ---
+    #
+    # `annotate` and `urgency` used to be implemented here, and they have gone to
+    # `packages/capability/desire/`. The reason is not tidiness: holding an opinion about your own
+    # state was conditional on being a market participant, and an agent acting for a plant in a
+    # world with no economy at all still knows when that plant is in trouble — it simply has
+    # nobody to ask for help. A band is a fact about a STAKE and a bid is a fact about a market,
+    # and one of those is a special case of having the other.
+    #
+    # Nothing here calls the desire module. It contributes through the same `annotate`/`urgency`
+    # hooks this class used, so the announcement and the cadence are unchanged in shape — see
+    # `agent/module.py`. What did change is that they now answer for every property the agent has
+    # a region in, rather than for the one a bid happens to be priced in.
 
     # --- answering an offer ---
 

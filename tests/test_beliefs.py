@@ -11,10 +11,16 @@ import pytest
 from agent import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
 from agent.beliefs import BeliefError, Beliefs, Reading
+from packages.capability.desire import regions_of
 from packages.capability.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
 from packages.capability.perception.beliefs import SUBSCRIBING_BLOCK
 
 from conftest import MOISTURE, TEMPERATURE
+
+
+def regions(query, agent_uri):
+    """What one agent wants, as its own module reads it — deduced, not believed."""
+    return regions_of(query, agent_uri)
 
 FERN = "http://example.org/agora#fern_agent"
 FERN_URI = "http://example.org/agora#fern"  # the plant, not the agent that acts for it
@@ -35,10 +41,16 @@ def test_subscribing_block(fern):
 
 
 def test_bidding_block(fern):
+    """A wallet, a point to aim at and a value curve — and no band.
+
+    The band edges used to be read here too. They were the plant's own limits restated
+    privately, so they left with the desire capability: an agent judges a reading against the
+    region deduced from what its plant states, not against two decimals it was handed.
+    """
     b = fern.read(BIDDING_BLOCK)
     assert b.target == 0.55
-    assert (b.low, b.high) == (0.35, 0.65)
     assert b.max_value_per_l == 0.80
+    assert not hasattr(b, "low") and not hasattr(b, "high")
 
 
 def test_hosting_block(query):
@@ -52,7 +64,7 @@ def test_agents_hold_different_opinions(query):
     succ = Beliefs(query, "succulent", SUCCULENT).read(BIDDING_BLOCK)
     # same world, same ontology, different mind — and neither is wrong
     assert succ.target < fern.target
-    assert succ.low < fern.low
+    assert succ.max_value_per_l == fern.max_value_per_l  # and they agree about what it is worth
 
 
 def test_slower_agent_tolerates_older_data(query):
@@ -63,29 +75,33 @@ def test_slower_agent_tolerates_older_data(query):
 
 
 # --- what a stake makes of a reading ---------------------------------------
-# The band belongs to the agent that holds a target, never to the sensor: the same number is
-# trouble for a fern and comfort for a succulent.
-
-def test_it_judges_a_reading_against_its_own_limits(fern):
-    b = fern.read(BIDDING_BLOCK)
-    assert b.band(0.20) == "LOW"
-    assert b.band(0.50) == "OK"
-    assert b.band(0.80) == "HIGH"
-
+# The verdict belongs to the agent that holds a stake, never to the sensor: the same number is
+# trouble for a fern and comfort for a succulent. It is no longer a BELIEF, though, which is why
+# these read from the world through the desire capability rather than from a beliefs file — the
+# region is deduced from what each plant states it needs, and neither agent could have picked it.
 
 def test_the_same_reading_is_trouble_for_one_and_not_the_other(query):
-    fern = Beliefs(query, "fern", FERN).read(BIDDING_BLOCK)
-    succ = Beliefs(query, "succulent", SUCCULENT).read(BIDDING_BLOCK)
+    fern = regions(query, FERN)[MOISTURE]
+    succ = regions(query, SUCCULENT)[MOISTURE]
     assert fern.band(0.30) == "LOW"
     assert succ.band(0.30) != "LOW"
+    assert succ.low < fern.low        # a succulent sits drier, and its plant says so publicly
 
 
-def test_urgency_runs_from_its_ceiling_to_its_floor(fern):
-    b = fern.read(BIDDING_BLOCK)
-    assert b.urgency(b.high) == 0.0
-    assert b.urgency(b.low) == 1.0
-    assert b.urgency(0.0) == 1.0  # below the floor is not MORE than trouble
-    assert 0.0 < b.urgency((b.low + b.high) / 2) < 1.0
+def test_a_region_is_the_two_ranges_its_plant_states(query):
+    """Nothing in a beliefs file could have produced these numbers: world.ttl says fern grows in
+    0.45-0.65 and survives 0.20-0.85, and the region is that pair intersected with every other
+    range that applies — which today is none, so it is that pair exactly."""
+    moisture = regions(query, FERN)[MOISTURE]
+    assert (moisture.low, moisture.high) == (0.45, 0.65)
+    assert (moisture.floor, moisture.ceiling) == (0.20, 0.85)
+
+
+def test_an_agent_wants_one_thing_per_property_its_plant_states(query):
+    """`market:aboutProperty` occurring once used to mean an agent could want exactly one thing.
+    Fern's plant states two ranges, so fern holds two regions, in two different units."""
+    assert set(regions(query, FERN)) == {MOISTURE, TEMPERATURE}
+    assert set(regions(query, SUCCULENT)) == {MOISTURE}
 
 
 # --- isolation and failure -------------------------------------------------

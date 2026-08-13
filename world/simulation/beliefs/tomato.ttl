@@ -17,8 +17,6 @@ ag:tomato_agent
 ag:tomato_agent
     market:hasEndowment 100.0 ;
     water:hasTarget 0.50 ;
-    water:bandLow 0.30 ;
-    water:bandHigh 0.60 ;
     water:litresPerFraction 2.0 ;
     water:maxValuePerL 0.80 .
 

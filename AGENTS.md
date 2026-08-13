@@ -112,9 +112,12 @@ premise lives in the capability's `rules.ru`, and there is no pattern to fit a n
 are granted by wiring — `actuation:hasActuator`, `market:bidsIn`/`market:hosts`, `perception:polls` and a sense mode —
 because they are about equipment or a position in a market. `review:Reckoning` is granted by
 **latitude**: revising your own settings means nothing without settings you are permitted to move,
-so an `review:commits` mandate whose ends differ is its premise. When you add one, ask what makes
-*yours* meaningful rather than which of these it resembles. See
-[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md).
+so an `review:commits` mandate whose ends differ is its premise. `desire:Deducing` is granted by
+a **stake**: `ag:actsFor` a subject that states what it needs — an agent advancing nobody's
+interest wants nothing, which is why `world/sensing`'s agent has three sensors and records. When
+you add one, ask what makes *yours* meaningful rather than which of these it resembles. See
+[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md) and
+[desire-is-deduced-from-the-ranges-the-world-states](knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 
 **What the prohibition is actually against** is a capability nobody is answerable for. That was
 unenforceable while a declared one and a derived one looked identical in the graph — which is why
@@ -262,13 +265,15 @@ working around it — `tests/test_inference.py` refuses a seventh hand-rolled wa
 fails if pyshacl ever entails something the closure does not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
-- **Never wrap `GRAPH <…>` around a SELECT.** Public knowledge is five graphs — asserted,
-  derived and entailed, for the vocabulary and for the world — and `store.query` merges them as
-  the default graph, so an ordinary pattern reads all of them. A basic graph pattern inside one
-  `GRAPH` clause must match entirely *within* that graph, so narrowing it returns **nothing** the
-  moment a fact you wanted lives elsewhere, silently, because an empty result is not an error.
-  Updates are the exception and must name their target; a `rules.ru` writes `$given` and
-  `$derived` and the loader substitutes, so **no rule names a graph**.
+- **Never wrap `GRAPH <…>` around a SELECT.** Public knowledge is SEVERAL graphs — asserted,
+  derived and entailed, for the vocabulary and for the world, plus whichever a package owns —
+  and `store.query` merges them as the default graph, so an ordinary pattern reads all of them.
+  Never count them: `ag:PublicGraph` is a class and `store.public_graphs()` asks. A basic graph
+  pattern inside one `GRAPH` clause must match entirely *within* that graph, so narrowing it
+  returns **nothing** the moment a fact you wanted lives elsewhere, silently, because an empty
+  result is not an error. Updates are the exception and must name their target; a `rules.ru`
+  writes `$given` and `$derived`, or `$into(pkg:SomeGraphClass)` when its package owns a graph —
+  a graph *class* is a T-Box term and genesis resolves it, so **no rule names a graph**.
   `tests/test_provenance.py` refuses a narrowed SELECT. See
   [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
 - **A graph IRI is an instance, so rule 1 applies to it.** `ag:WorldGraph` is the term code may

@@ -19,8 +19,6 @@ ag:succulent_agent
 ag:succulent_agent
     market:hasEndowment 100.0 ;
     water:hasTarget 0.22 ;
-    water:bandLow 0.12 ;
-    water:bandHigh 0.30 ;
     water:litresPerFraction 2.0 ;
     water:maxValuePerL 0.80 .
 

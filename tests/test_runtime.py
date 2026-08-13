@@ -19,9 +19,14 @@ def agent(monkeypatch):
 # --- it loads the modules its hardware implies, and no others --------------
 
 def test_plant_agent_runs_perception_and_bidding(agent):
-    """`reporting` is in every one of these sets, because every agent is granted it."""
+    """`reporting` is in every one of these sets, because every agent is granted it.
+
+    `desire` is in this one because fern acts for a plant that states what it needs — a stake,
+    not a wire and not a market position. The supplier below has none and runs no desire module,
+    which is the same distinction from the other side.
+    """
     assert {m.name for m in agent("fern").modules} == {
-        "subscribing", "bidding", "review", "reporting"}
+        "subscribing", "bidding", "desire", "review", "reporting"}
 
 
 def test_supplier_runs_hosting_actuation_and_matching(agent):

@@ -103,13 +103,36 @@ ag:supplier a ag:Agent ;
 #
 # Illustrative figures for a synthetic world, not measured here: what matters is that a succulent
 # and a fern want different things and that each agent's target has something to answer to.
+#  TWO ranges each, and the second one is what makes urgency mean anything. `hasOperatingRange`
+#  is where the plant does well; `hasSurvivalRange` is where it does not die, and the agent's
+#  desire is deduced from the pair — the region to hold, and how much room there is outside it
+#  before the question stops being comfort. How bad it is to sit 0.05 below the region depends
+#  entirely on how far below the region the floor is, and that is asymmetric per plant: the
+#  succulent's dry side is nearly free and its wet side is a cliff, which its two ranges say and
+#  no code here knows. See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.
+#
+#  The fern states TWO properties, and that is deliberate: it is the one agent here wired to a
+#  thermometer as well as a probe, so it is the one that can demonstrate an agent wanting more
+#  than one thing. Nothing bids on air temperature — no market relieves it — and it still changes
+#  how closely the board is watched, which is the whole of what issue #110 asked for.
+
 ag:fern a water:Plant ;
     ag:localId "fern" ; water:servedBy ag:barrel1 ;
     water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
-            schema:minValue 0.45 ; schema:maxValue 0.65 ; schema:unitCode unit:UNITLESS ] ] .
+            schema:minValue 0.45 ; schema:maxValue 0.65 ; schema:unitCode unit:UNITLESS ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:AirTemperature ;
+            schema:minValue 18.0 ; schema:maxValue 24.0 ; schema:unitCode unit:DEG_C ] ] ;
+    ssn-system:hasSurvivalRange [ a ssn-system:SurvivalRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.20 ; schema:maxValue 0.85 ; schema:unitCode unit:UNITLESS ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:AirTemperature ;
+            schema:minValue 5.0 ; schema:maxValue 35.0 ; schema:unitCode unit:DEG_C ] ] .
 
 ag:tomato a water:Plant ;
     ag:localId "tomato" ; water:servedBy ag:barrel1 ;
@@ -117,7 +140,11 @@ ag:tomato a water:Plant ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
-            schema:minValue 0.40 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] ] .
+            schema:minValue 0.40 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] ] ;
+    ssn-system:hasSurvivalRange [ a ssn-system:SurvivalRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.18 ; schema:maxValue 0.80 ; schema:unitCode unit:UNITLESS ] ] .
 
 ag:succulent a water:Plant ;
     ag:localId "succulent" ; water:servedBy ag:barrel1 ;
@@ -125,7 +152,13 @@ ag:succulent a water:Plant ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
-            schema:minValue 0.15 ; schema:maxValue 0.30 ; schema:unitCode unit:UNITLESS ] ] .
+            schema:minValue 0.15 ; schema:maxValue 0.30 ; schema:unitCode unit:UNITLESS ] ] ;
+    #  Bone dry is survivable and soaked is not — the same shape the Zamioculcas package
+    #  documents, and the reason the envelope is carried per side rather than as one width.
+    ssn-system:hasSurvivalRange [ a ssn-system:SurvivalRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.02 ; schema:maxValue 0.45 ; schema:unitCode unit:UNITLESS ] ] .
 
 ##########  Plant agents — each wired to its own sensor and into the market  ##########
 #  perception:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.

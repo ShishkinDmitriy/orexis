@@ -24,6 +24,12 @@ from conftest import WORLDS_ROOT, genesis_store
 # What `world/society/beliefs/fern.ttl` said before the sweep: every belief in the kernel
 # namespace. Written out rather than generated, because a fixture that derived it from the
 # current vocabulary would move whenever the vocabulary did and stop being the old world.
+#
+# `ag:bandLow` and `ag:bandHigh` were here and had to go, which is the one edit that principle
+# does not cover: the terms they were renamed TO have since been DELETED, so a store holding
+# them is now correctly unmigratable rather than merely old, and every migration test would fail
+# on a term that is not what any of them is about. What that case looks like is tested directly,
+# on a synthetic term, by `test_a_term_with_no_successor_is_refused_rather_than_dropped`.
 BEFORE_THE_SWEEP = f"""
 @prefix ag: <{AG}> .
 
@@ -33,8 +39,6 @@ ag:fern_agent
     ag:readingGraceS 45 ;
     ag:hasEndowment 100.0 ;
     ag:hasTarget 0.55 ;
-    ag:bandLow 0.35 ;
-    ag:bandHigh 0.65 ;
     ag:litresPerFraction 2.0 ;
     ag:maxValuePerL 0.80 ;
     ag:metricsIntervalS 60 ;
@@ -151,7 +155,7 @@ def test_migration_moves_every_belief_not_only_the_one_looked_at():
     st = _aged_store()
     vocabulary.check(st, migrating=True)
     for query in ("perception:slowSleepS 600", "market:hasEndowment 100",
-                  "review:reviewIntervalS 300", "water:bandLow 0.35"):
+                  "review:reviewIntervalS 300", "water:hasTarget 0.55"):
         predicate, value = query.split()
         rows = bindings(st.query(
             "SELECT ?v WHERE { GRAPH <%s> { ?a %s ?v } }" % (beliefs_graph("fern"), predicate)))

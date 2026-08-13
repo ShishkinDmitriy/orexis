@@ -308,25 +308,36 @@ class SubscribingModule(PerceptionModule):
 
         So the TIGHTEST wins: if anything on this board is urgent, the board watches closely,
         and the properties that are not urgent are read more often than they need to be — which
-        costs a reading and is the only safe direction to be wrong in. Verdicts merge, because
-        they are about different properties and the device shows all of them.
+        costs a reading and is the only safe direction to be wrong in.
+
+        **The verdict travels with it, from the same sensor.** Verdicts used to be MERGED, on the
+        reasoning that they are about different properties and the device shows all of them. That
+        was true while exactly one module annotated exactly one property: every band that could
+        arrive was a moisture band, and `dict.update` never collided with anything. It stopped
+        being true when an agent could want more than one thing — two sensors on one board now
+        both produce a `band`, the merge keeps whichever was computed last, and the board would
+        display the comfort of one property while the other was the reason it is being read every
+        thirty seconds. Taking the verdict of whichever sensor set the cadence makes the message
+        internally consistent: one interval, and the reason for it.
         """
         group = self._aimed_with(sensor)
         if len(group) > 1:
             # Recompute the others from the last reading each of them has, so the answer does
             # not depend on which sensor happened to trigger this. A sensor that has not read
             # yet contributes nothing rather than a guess.
-            merged = dict(verdict or {})
-            intervals = [int(sleep_s)]
+            claims = [(int(sleep_s), dict(verdict or {}))]
             for peer in group:
                 if peer.local_id == sensor.local_id:
                     continue
                 reading = self.agent.beliefs.current_reading(peer.subject, peer.observes)
                 if reading is None:
                     continue
-                intervals.append(self.cadence_for(peer.subject, peer.observes, reading.value))
-                merged.update(self.agent.annotations(peer.subject, peer.observes, reading.value))
-            sleep_s, verdict = min(intervals), merged
+                claims.append((
+                    self.cadence_for(peer.subject, peer.observes, reading.value),
+                    self.agent.annotations(peer.subject, peer.observes, reading.value)))
+            # Keyed on the interval alone: `min` over the pairs would compare the dicts on a tie
+            # and raise. Ties go to the earliest claim, which is the triggering sensor's.
+            sleep_s, verdict = min(claims, key=lambda claim: claim[0])
 
         key = sensor.command_topic or sensor.local_id
         message = (int(sleep_s), tuple(sorted((verdict or {}).items())))

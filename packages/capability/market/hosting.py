@@ -40,8 +40,23 @@ from .terms import ACTUATION, HOSTING, BID_MATCHING
 def _event_topics_q(market_uri: str) -> str:
     """Where my participants announce what they notice. Public, like the rest of the wiring."""
     return f"""
-SELECT ?agentId ?eventTopic WHERE {{ 
+SELECT ?agentId ?eventTopic WHERE {{
   ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ; mqtt:eventTopic ?eventTopic  }}"""
+
+
+# Which property being in trouble is a reason to open a round HERE. Asked of the DOMAIN, not of
+# the market: a market is a lot — 1L of water is 1L of water whether or not anyone's soil is dry
+# — and `market:aboutProperty`'s own comment refuses to hang a property off one. What the domain
+# says is what a bid is priced in, and a host convening a round to relieve scarcity in that
+# resource wants the announcements about the same thing.
+#
+# This became load-bearing the moment an agent could want more than one thing. Before desire, one
+# module annotated one property, so every band that ever crossed the wire was a moisture band and
+# the host could take any of them. Now a fern announces a temperature band too, and nothing
+# relieves a hot afternoon by dispensing water — an auction opened on one would spend a real
+# allocation on a reading it cannot act on.
+_ABOUT_Q = """
+SELECT ?property WHERE { ?term market:aboutProperty ?property } LIMIT 1"""
 
 
 class HostingModule(Module):
@@ -59,6 +74,13 @@ class HostingModule(Module):
         for market in self.markets:
             for row in bindings(agent.store.query(_event_topics_q(market.uri))):
                 self.event_topics[row["eventTopic"]] = market
+
+        # None when the domain names no property at all — a market in something no instrument
+        # measures, which `market:aboutProperty` exists to keep expressible. Such a host takes
+        # any band it is sent, which is the behaviour every host had before there was more than
+        # one kind of band to send.
+        rows = bindings(agent.store.query(_ABOUT_Q))
+        self.about = rows[0]["property"] if rows else None
 
         self.open_auction: dict | None = None
         self.last_auction_at = 0.0
@@ -88,8 +110,15 @@ class HostingModule(Module):
         return False
 
     def on_participant_event(self, market, event: dict) -> None:
-        """A participant said it is in trouble. Scarcity is what condenses an auction."""
+        """A participant said it is in trouble. Scarcity is what condenses an auction.
+
+        In trouble ABOUT THE RIGHT THING. An announcement names the property it is about — it has
+        since a subject with two sensors started announcing two values on one topic — and a
+        participant that is too cold is not a participant this market can help.
+        """
         if event.get("band") != "LOW":
+            return
+        if self.about is not None and event.get("property") != self.about:
             return
         now = time.monotonic()
         if now - self.last_auction_at < self.beliefs.cooldown_s:

@@ -116,16 +116,26 @@ from two facts it already holds. That check does not exist yet and is worth more
 
 # Seams left open
 
-- **An agent can hold exactly one desire.** `market:aboutProperty` occurs once in the whole
-  repository — `water:hasTarget → water:SoilMoisture` — so a desire is a single scalar denominated
-  in soil moisture. Hand a bidder a humidity reading and `annotate` returns `{}` and `urgency`
-  returns `None`. The temperature and humidity this society now senses therefore feed **nothing
-  that can want anything**, which `water:AirTemperature`'s own comment concedes: *"allocated to
-  nobody — no market relieves it, so no agent bids on it."* Making desire per-property is what
-  turns the sensing work into something an agent can act on.
-- **Nothing yet justifies a target against the range.** The range makes a re-pick *checkable*;
-  `capabilities/review/` could now be asked to explain a move within it rather than merely stay
-  inside it.
+- ~~**An agent can hold exactly one desire.**~~ **CLOSED** by
+  [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md),
+  which found the seam was two. A desire is per property now, and it is **deduced** rather than
+  picked: `desire:Deducing` intersects every operating range that applies to the subject and
+  carries the survival ranges as the envelope that scales urgency.
+- **Two things above did not survive that**, and are corrected here rather than edited away,
+  because both were argued for at the time and the arguments are worth being able to find.
+  - **The bands are gone.** The section *"Only the target answers to it"* defended
+    `water:bandLow` sitting outside the operating range on the grounds that an alarm threshold
+    legitimately does. That was right about alarms and wrong about ownership: a comfort limit is
+    the operating range's edge and a rot limit is the survival range's, both are the *plant's*,
+    and an agent restating them privately kept a second copy of a public fact that it was free to
+    get wrong. `water:bandLow` and `water:bandHigh` no longer exist.
+  - **The band was never the bidder's.** The link traced under *"low moisture to auction"* still
+    runs, but its first two steps moved: `annotate` and `urgency` are desire's, so an agent with
+    a stake and no market still knows it is in trouble.
+- **Nothing yet justifies a target against the range.** Still open, and sharper now that the
+  range is derived: a region can move under a target that stays merely *legal* rather than still
+  sensible. `capabilities/review/` could be asked to explain a pick within it rather than only to
+  stay inside it.
 - **Intention is still unnamed.** A bid and a voucher are the closest things to one, and neither
   is described in those terms. Whether that is a gap or a happy absence is not settled here —
   naming BDI's third letter for its own sake would add a word and no capability.

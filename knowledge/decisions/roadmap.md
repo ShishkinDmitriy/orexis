@@ -57,6 +57,12 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   society adversarial — a signing sensor stops an agent authoring its own readings, isolation
   stops it reading others' minds, and encryption stops it listening.
 
+- **BDI completed: the gap, the aim, the intention, the deliberator** — the four phases of
+  [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md),
+  tracked as #119 → #120 → #121 → #122. Reflex deliberation ships before any LLM member, so the
+  model drops into a seam that provably exists. This is the path to the "only LLM part" v1
+  promises, made affordable by intentions persisting between calls.
+
 # Working principle
 
 Extract-from-concrete. Build watering concretely; keep the four seams visible (value model,

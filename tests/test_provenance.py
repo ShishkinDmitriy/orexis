@@ -1,8 +1,9 @@
 """Who put the fact there — and the guard that the two engines still agree about it.
 
-Public knowledge is five graphs: what a package asserted, what the sovereign ratified, what
-RDFS entailed of each, and what the rules derived. The split exists so that "who put this here"
-is answerable by looking rather than by knowing, and these hold it to that.
+Public knowledge is several graphs: what a package asserted, what the sovereign ratified, what
+RDFS entailed of each, what the rules derived, and whatever a package owns of its own. The split
+exists so that "who put this here" is answerable by looking rather than by knowing, and these
+hold it to that. Nothing here counts them — `ag:PublicGraph` is a class and the set is data.
 
 The test that matters most is the last one, and it is not about graphs at all. Two engines
 compute a world — pyoxigraph for an agent, rdflib for the operator's tools — and the whole
@@ -15,6 +16,7 @@ See knowledge/decisions/who-put-the-fact-there.md.
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
 import pytest
@@ -209,6 +211,50 @@ def test_a_sixth_public_graph_needs_no_python():
     # And an unqualified pattern reads it, which is the whole point: a reader asks what the
     # society knows and never learns which graph the answer came from.
     assert bindings(st.query('SELECT ?v WHERE { ag:fern_agent ag:somethingNew ?v }'))
+
+
+def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
+    """The write side of the same discipline, and the reason a package may own a graph.
+
+    A rule could once write only to `$derived`, so a package with conclusions of its own had
+    nowhere to put them except the world's derived graph. `$into(pkg:SomeGraphClass)` names a
+    T-Box TERM — rule 1 holds — and genesis resolves it against the vocabulary. Everything that
+    follows from being a write target then follows automatically, which is the part that used to
+    be true of one graph only because there was one: excluded from what derivations READ,
+    cleared before each recompute, and accounted for in the meta-graph.
+    """
+    st = _public("simulation")
+    targets = set(genesis.write_targets(st))
+    assert WORLD_DERIVED_GRAPH in targets
+    assert len(targets) > 1, "no package owns a graph — this test is asserting nothing"
+
+    # A derivation reads facts, never conclusions. Every write target is kept out of `$given`,
+    # so the answer cannot depend on which package's rule happened to run first.
+    given = genesis.substitute("$given", st)
+    for target in targets:
+        assert f"USING <{target}>" not in given
+    for public in set(st.public_graphs()) - targets:
+        assert f"USING <{public}>" in given
+
+    # And no rule names a graph, which is what the placeholder exists to make possible. What is
+    # checked is a `GRAPH <…>` clause with a literal IRI in it, not the mere appearance of the
+    # graph namespace: `packages/core/agora/rules.ru` MINTS a beliefs graph IRI by CONCAT from an
+    # agent's own localId, which is the one identifier the rules allow a process to build from,
+    # and forbidding that would forbid the roster.
+    for path in loader.rule_files():
+        assert not re.search(r"GRAPH\s+<", path.read_text()), path
+
+
+def test_every_write_target_is_recomputed_rather_than_appended_to():
+    """`_sizes` walks the public set, so this already covers a graph a package owns — but only
+    while that graph is public. Asked directly here too, because the day one is private the
+    coverage would vanish silently and a rule that appended would grow it by restart count."""
+    st = _public("simulation")
+    sizes = {g: n for g, n in _sizes(st).items() if g in set(genesis.write_targets(st))}
+    assert sizes, "no write target is public — this test is asserting nothing"
+    genesis.refresh_public(st, genesis.world_dir("simulation"))
+    for graph, before in sizes.items():
+        assert _sizes(st)[graph] == before, graph
 
 
 def test_a_graph_typed_privately_stays_out_of_the_default_graph():

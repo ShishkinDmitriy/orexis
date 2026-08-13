@@ -19,12 +19,18 @@ ag:fern_agent
     perception:slowSleepS 600 ;         # comfortable: let the board sleep, save energy
     perception:readingGraceS 45 .     # slack past the cadence it asked for, before it calls the sensor quiet
 
-##  market:Bidding — what it wants and what it will pay
+##  market:Bidding — what it aims at and what it will pay
+#
+#  The bands that used to sit here are gone. Where a fern is parched and where it is soaked are
+#  facts about the FERN, stated in world.ttl as an operating range and a survival range, and
+#  `desire:Deducing` intersects them into the region this agent holds. Restating them privately
+#  meant keeping a second copy of a public fact and being free to keep a wrong one.
+#
+#  The target stays, because it is a PICK and not a range: the one point inside the region this
+#  agent aims for, which the shapes now check against the region rather than against the plant.
 ag:fern_agent
     market:hasEndowment 100.0 ;
-    water:hasTarget 0.55 ;         # the desire
-    water:bandLow 0.35 ;           # a fern is parched where a succulent shrugs
-    water:bandHigh 0.65 ;
+    water:hasTarget 0.55 ;         # a pick inside 0.45-0.65, which the world states
     water:litresPerFraction 2.0 ;  # what it BELIEVES its pot takes (the world knows the truth)
     water:maxValuePerL 0.80 .      # willingness to pay at peak urgency — never disclosed
 

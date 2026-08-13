@@ -20,6 +20,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [voucher](/domain/voucher.md) - What you win: a co-signed, single-use claim on the supplier for N litres, redeemed to actuate (spot now, futures later).
 * [executor](/domain/executor.md) - The supplier's actuation arm: verifies the voucher and drives its own valve, bounded by clearing + the device fail-safe.
 
+# Ends
+
+* [desire](/domain/desire.md) - What an agent is trying to bring about: one region per property its subject states a need in, plus the envelope outside which that subject ends. Deduced by intersecting every operating range that applies, never authored, and held in a graph found by type so a second source needs no code. The band and the urgency every other capability reads come from here — which is why an agent with no stake has neither.
+
 # Perception
 
 * [sensing](/domain/sensing.md) - Perception split by WHO HOLDS THE CLOCK: Polling (the agent asks each time — reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). Either way the agent owns the freshness rule, and a bid must cite a reading it trusts.

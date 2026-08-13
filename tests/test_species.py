@@ -34,7 +34,17 @@ _FERN = """ag:fern a water:Plant ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
-            schema:minValue 0.45 ; schema:maxValue 0.65 ; schema:unitCode unit:UNITLESS ] ] ."""
+            schema:minValue 0.45 ; schema:maxValue 0.65 ; schema:unitCode unit:UNITLESS ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:AirTemperature ;
+            schema:minValue 18.0 ; schema:maxValue 24.0 ; schema:unitCode unit:DEG_C ] ] ;
+    ssn-system:hasSurvivalRange [ a ssn-system:SurvivalRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:SoilMoisture ;
+            schema:minValue 0.20 ; schema:maxValue 0.85 ; schema:unitCode unit:UNITLESS ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:AirTemperature ;
+            schema:minValue 5.0 ; schema:maxValue 35.0 ; schema:unitCode unit:DEG_C ] ] ."""
 
 # What a world says when the pot holds a ZZ: its type, and nothing else. No range, no conditions,
 # no numbers — that is the whole point of the package.

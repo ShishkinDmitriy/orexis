@@ -65,13 +65,21 @@ water:maxValuePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xs
 #################  Judgment — desire-relative, never recorded as fact  #################
 
 water:Band a owl:Class ; rdfs:label "Moisture band" ;
-    rdfs:comment "A verdict, not testimony. Computed by each agent from a reading against ITS OWN limits, and stored nowhere: the same 0.18 is LOW for a fern and OK for a succulent." .
+    rdfs:comment "A verdict, not testimony. Computed by each agent from a reading against ITS OWN region, and stored nowhere: the same 0.18 is LOW for a fern and OK for a succulent." .
 water:LOW  a water:Band ; rdfs:label "LOW" .
 water:OK   a water:Band ; rdfs:label "OK" .
 water:HIGH a water:Band ; rdfs:label "HIGH" .
 
-water:bandLow a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
-    rdfs:label "band low" ;
-    rdfs:comment "Below this the agent judges ITSELF low. A comfort limit, desire-relative — not the rot limit, which is physical and the constitution's." .
-water:bandHigh a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
-    rdfs:label "band high" .
+#  `water:bandLow` and `water:bandHigh` were here and are GONE, in favour of the region
+#  `packages/capability/desire/` deduces from what a plant states it needs.
+#
+#  They were two decimals in a private file with nothing to answer to, and the gap showed most
+#  clearly in the comment the low one carried for months: *"a comfort limit, desire-relative —
+#  not the rot limit, which is physical and the constitution's"*. The rot limit is the survival
+#  range's ceiling, the comfort limit is the operating range's, and both are the PLANT's — so an
+#  agent restating them privately, in numbers only it could see, was keeping a second copy of a
+#  public fact and was free to keep a wrong one.
+#
+#  The three words survive above, because the verdict is still the agent's to compute and still
+#  never recorded. What is gone is the idea that the agent gets to pick where the edges are.
+#  See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.

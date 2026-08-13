@@ -1,0 +1,72 @@
+@prefix desire: <http://example.org/agora/desire#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Rules for desire. Unusually, these police a DERIVED graph rather than an authored one — there
+# is nothing here for a sovereign to get wrong by typing, because nothing here is typed. What
+# they catch is a world whose stated ranges do not survive being intersected, which is a fault in
+# the AUTHORED facts showing up in the computed ones.
+
+desire:DesirerShape a sh:NodeShape ;
+    rdfs:comment """An agent granted the capability must end up with at least one region. The two are derived from very nearly the same premise and can still come apart: the grant asks only that the subject state a range, and the deduction additionally asks that every range applying to a property AGREE. A plant whose pot says 0.45-0.65 in a world whose instrument says 0.10-0.30 produces an empty intersection, no region, and — without this shape — an agent that starts, holds the capability, and quietly has no opinion about anything.
+
+That failure is the one this whole design is most exposed to, because its symptom is silence: no band on any announcement, the slow cadence forever, and a market that never hears that anyone is in trouble. Refusing to start is loud, and the report names the agent.""" ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/agora#hasCapability>
+                      <http://example.org/agora/desire#Deducing> .
+            }
+        """ ] ;
+    sh:property [ sh:path desire:desires ; sh:minCount 1 ;
+                  sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
+
+desire:DesireShape a sh:NodeShape ;
+    rdfs:comment "What a region must be to be readable. Every figure here was computed, so this is arithmetic rather than authorship — but a shape over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width." ;
+    sh:targetClass desire:Desire ;
+    sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
+                  sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a region must say which property it is a region OF" ] ;
+    sh:property [ sh:path <https://schema.org/minValue> ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path <https://schema.org/maxValue> ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path desire:toleratedMin ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path desire:toleratedMax ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+
+    # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales
+    # urgency by it produces a negative denominator and an agent that is most relaxed exactly
+    # where it is closest to dying. Nothing authored can cause this directly — both figures are
+    # intersections — but a world whose survival range is narrower than its operating range can,
+    # and `water:RangesAgreeShape` only checks that pairing per plant. This checks it after
+    # everything that applies has been folded together, which is where a rig assembled from two
+    # correct halves can still be wrong.
+    #
+    # Every optional bound is guarded with BOUND rather than compared directly, and it is not
+    # defensive typing. `?low < ?floor` on an unbound `?floor` is an ERROR, and SPARQL's `||`
+    # propagates an error unless some other operand is true — so a region with no envelope made
+    # the whole filter error, the row vanish, and the `?low > ?high` case it was also supposed to
+    # catch go unreported. The shape would have been green on exactly the world it was written
+    # for.
+    sh:sparql [
+        sh:message "a region lies outside the envelope it is supposed to sit inside — the survival range stated for this property is narrower than the operating range, once every source is intersected" ;
+        sh:select """
+            SELECT $this ?low ?high WHERE {
+                $this <https://schema.org/minValue> ?low ;
+                      <https://schema.org/maxValue> ?high .
+                OPTIONAL { $this <http://example.org/agora/desire#toleratedMin> ?floor }
+                OPTIONAL { $this <http://example.org/agora/desire#toleratedMax> ?ceiling }
+                FILTER(   ?low > ?high
+                       || (BOUND(?floor)   && ?low  < ?floor)
+                       || (BOUND(?ceiling) && ?high > ?ceiling))
+            }""" ] .
+
+# What is NOT here: a shape refusing a hand-authored desire. It was written and removed, because
+# it would have been decoration — the derivation mints blank nodes and so could a sovereign, so
+# nothing about the triple distinguishes the two, and a shape cannot see which graph a fact came
+# from (validation runs over a flattened union). The prohibition is real and enforced elsewhere:
+# `refresh_public` clears every write target before the rules run, so a region written into a
+# world file is discarded on the next start rather than merely disapproved of. A rule that
+# enforces nothing is worse than an absence, because it is still cited.

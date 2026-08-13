@@ -41,8 +41,9 @@ thought about, and the questions only surface once something concrete is on the 
 - "they share the barrel" → *who owns it?* — because owning the venue is what derives
   `market:Hosting`, and owning the valves is what derives `actuation:Actuation`. A barrel with no owner
   produces a market nobody hosts.
-- "the fern is thirstier than the succulent" → *thirstier at what number?* — a band is the
-  agent's own opinion and nothing can infer it.
+- "the fern is thirstier than the succulent" → *what range does each need, and what will each
+  merely survive?* — those are facts about the plants and go in `world.ttl`; what stays the
+  agent's own opinion, and is inferable from nothing, is where inside its region it aims.
 
 The drafter's job is to keep asking until every derivation has an answer, then propose Turtle.
 The sovereign's job is to ratify or correct it. The LLM is a **drafting assistant, not an
@@ -108,10 +109,16 @@ So there are two families, and they behave differently:
   to watch, how stale is too stale. These track the *world's kind*: bench, staging, production.
   A sensible default could be supplied per kind, and hand-authoring near-identical numbers into
   every world is duplication waiting to drift.
-- **Stake beliefs** — `water:hasTarget`, `water:bandLow`/`water:bandHigh`, `market:hasEndowment`,
-  `water:maxValuePerL`. What this agent wants and what it will pay. **Not derivable from anything**
-  — "this is a test world" tells you nothing about whether a fern is parched at 0.35. These are
-  the agent's own and must be elicited.
+- **Stake beliefs** — `water:hasTarget`, `market:hasEndowment`, `water:maxValuePerL`. What this
+  agent aims at and what it will pay. **Not derivable from anything** — "this is a test world"
+  tells you nothing about what a fern is worth to whoever planted it. These are the agent's own
+  and must be elicited.
+
+  The bands used to be in this list and are **not elicited any more**: where a plant is parched
+  and where it is soaked are facts about the *plant*, so they are its two SSN ranges in
+  `world.ttl` and the agent's region is deduced from them. What is still elicited is the *pick*
+  inside that region. See
+  [desire](/domain/desire.md).
 
 Usefully, the split falls exactly on the capability packages: the operational family is
 perception's block, the stake family is the market's.
