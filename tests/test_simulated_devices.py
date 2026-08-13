@@ -72,7 +72,7 @@ def test_the_simulated_world_derives_what_a_wired_one_does():
     assert wired <= simulated, (
         f"the wired fern derives {wired - simulated} that the simulated one does not — "
         f"the simulation has stopped standing in for hardware")
-    assert simulated - wired == {"Bidding", "Deducing", "Keeping"}, \
+    assert simulated - wired == {"Bidding", "Deducing", "Keeping", "Reflex"}, \
         "the simulated world differs by something other than its fern having a stake"
 
 

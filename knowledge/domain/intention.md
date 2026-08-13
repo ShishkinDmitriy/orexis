@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Intention
-description: BDI's third letter — a commitment to reduce a named gap by a named means, persisting until satisfied, dropped or outwaited rather than being re-decided on every perception. Kept in a private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat impulses is each agent's own belief. Reifies what already existed as module state — a pending look, a bid awaiting its voucher — and gates nothing yet: deciding stays with the reflexes until deliberation is its own capability.
+description: BDI's third letter — a commitment to reduce a named gap by a named means, persisting until satisfied, dropped or outwaited rather than being re-decided on every perception. Kept in a private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat impulses is each agent's own belief. Reifies what already existed as module state — a pending look, a bid awaiting its voucher — and never decides: the whether lives in deliberation, which reads the ledger and is read by nothing else here.
 tags: [intention, bdi, capability, market, perception, beliefs]
 timestamp: 2026-08-13T00:00:00Z
 ---
@@ -64,14 +64,16 @@ records.
 # What it is not
 
 - **Not a decider.** Nothing here chooses what to commit to; whoever acts calls `adopt` when it
-  acts. Extracting the *whether* into a deliberation family — Reflex first, an LLM member after —
-  is phase 4, and the keeping/deciding seam is the whole reason they are two capabilities.
+  acts, and the *whether* lives in [deliberation](/domain/deliberation.md) — Reflex today, a
+  model member later. Keeping and deciding share a granting premise and stay two capabilities
+  because their replaceable parts differ.
 - **Not public.** The ledger is a graph of the agent's own, like its beliefs and its revisions:
   an intention disclosed is strategy leaked, and the **bid is the public face** of an intention
   to acquire. The market sees what you do, never what you are trying to bring about.
-- **Not a gate — yet.** In this phase the ledger records what the reflexes do and never blocks
-  them; what a standing intention absorbs is re-adoption, not the acts. When a deliberator asks
-  "what already stands?" before deciding, the ledger becomes load-bearing; today its consumers
-  are the health series (`intentions_standing`, `oldest_intention_s` — a commitment growing old
-  is an agent whose world stopped answering, invisible in every other series precisely because
-  nothing is happening) and the operator reading why an agent did what it did.
+- **Not a gate on the actors.** The ledger records what is done and never blocks it; what a
+  standing intention absorbs is re-adoption, not the acts. Its consumers are the health series
+  (`intentions_standing`, `oldest_intention_s` — a commitment growing old is an agent whose
+  world stopped answering, invisible in every other series precisely because nothing is
+  happening), the operator reading why an agent did what it did, and — the one it was built
+  for — a [deliberator](/domain/deliberation.md) asking what already stands before deciding.
+  Reflex does not ask yet; the member that will is the one that pays per decision.

@@ -36,7 +36,8 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from .beliefs import BIDDING_BLOCK
-from .terms import ACQUIRE, BIDDING, DESIRE, INTENTION, OBSERVE, PERCEPTION
+from .terms import (ACQUIRE, BIDDING, DELIBERATION, DESIRE, INTENTION, OBSERVE,
+                    PERCEPTION)
 
 # The term whose meaning this asks after is the one this package already names for its own
 # beliefs, so nothing here is written twice and nothing here is a domain property. A block's
@@ -114,6 +115,20 @@ class BiddingModule(Module):
                 f"{self.agent.id} bids, but the domain does not say what a bid is priced IN — "
                 f"state market:aboutProperty on <{_DENOMINATED}> in the domain ontology")
         return rows[0]["property"]
+
+    def _next_move(self, value: float | None) -> str | None:
+        """The WHETHER, asked of whoever deliberates — this module only carries moves out.
+
+        The deciding used to be welded in here: an offer meant look-then-bid, and value_bid's
+        cede was the whole of choosing. It is a family now, so a model can replace the reflex
+        without touching this module — see packages/capability/deliberation/. An agent granted
+        no deliberator keeps the old welded behaviour, which is what None falls through to at
+        each call site: the seam must not change what an agent WITHOUT it does.
+        """
+        deliberator = self.agent.provider(DELIBERATION)
+        if deliberator is None:
+            return None
+        return deliberator.propose(self.about, value)
 
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None is a complete answer.
@@ -199,6 +214,15 @@ class BiddingModule(Module):
             self.submit(reading.value)
             return
 
+        # No reading it trusts — so ask whoever deliberates what to do about not seeing. The
+        # reflex says look, which is what this module always did; the point of asking anyway is
+        # that a member with more context could say otherwise, without this line changing.
+        if self.agent.provider(DELIBERATION) is not None                 and self._next_move(None) != OBSERVE:
+            self.log.info("auction %s: deliberation chose not to look — sitting out",
+                          auction_id)
+            self.pending = None
+            return
+
         # Waiting on the sensor is a commitment — the state `pending` has always carried,
         # recorded now so it can outlive this process's memory of it.
         if keeper := self._keeper():
@@ -262,6 +286,15 @@ class BiddingModule(Module):
         if rnd is None:
             return
         auction_id, market = rnd["auction_id"], rnd["market"]
+
+        # The WHETHER is the deliberator's. The reflex member reproduces exactly the cede this
+        # module used to compute for itself — below the aim, pursue; otherwise nothing — so the
+        # behaviour is unchanged and the DECIDER is replaceable. An agent with no deliberator
+        # falls through to the old welded logic: value_bid still cedes at-or-above the aim.
+        if self.agent.provider(DELIBERATION) is not None                 and self._next_move(moisture) != ACQUIRE:
+            self.log.info("auction %s: moisture %.3f — deliberation chose not to pursue",
+                          auction_id, moisture)
+            return
 
         aim = self._my_aim()
         if aim is None:

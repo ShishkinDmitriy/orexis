@@ -59,9 +59,10 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
 
 - **BDI completed: the gap, the aim, the intention, the deliberator** — the four phases of
   [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md),
-  tracked as #119 → #120 → #121 → #122. Reflex deliberation ships before any LLM member, so the
-  model drops into a seam that provably exists. This is the path to the "only LLM part" v1
-  promises, made affordable by intentions persisting between calls.
+  tracked as #119 → #120 → #121 → #122 — **DONE**, all four. What remains open is exactly the
+  seam the phases were run to create: `deliberation:Consulting`, the LLM member, declared and
+  unimplemented, its constraints already fixed in the vocabulary. That member is the "only LLM
+  part" v1 promises, made affordable by intentions persisting between calls.
 
 # Working principle
 

@@ -26,7 +26,7 @@ def test_plant_agent_runs_perception_and_bidding(agent):
     which is the same distinction from the other side.
     """
     assert {m.name for m in agent("fern").modules} == {
-        "subscribing", "bidding", "desire", "intention", "review", "reporting"}
+        "subscribing", "bidding", "desire", "intention", "deliberation", "review", "reporting"}
 
 
 def test_supplier_runs_hosting_actuation_and_matching(agent):

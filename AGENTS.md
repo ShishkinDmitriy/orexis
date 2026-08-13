@@ -114,10 +114,15 @@ because they are about equipment or a position in a market. `review:Reckoning` i
 **latitude**: revising your own settings means nothing without settings you are permitted to move,
 so an `review:commits` mandate whose ends differ is its premise. `desire:Deducing` is granted by
 a **stake**: `ag:actsFor` a subject that states what it needs — an agent advancing nobody's
-interest wants nothing, which is why `world/sensing`'s agent has three sensors and records. When
-you add one, ask what makes *yours* meaningful rather than which of these it resembles. See
-[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md) and
-[desire-is-deduced-from-the-ranges-the-world-states](knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
+interest wants nothing, which is why `world/sensing`'s agent has three sensors and records.
+`intention:Keeping` and `deliberation:Reflex` are granted by a **stake AND a lever** — wanting
+without means is a wish, means without wants have nothing to decide — and they share that premise
+while staying two capabilities, because how commitments are kept and how decisions are reached
+are separately replaceable. When you add one, ask what makes *yours* meaningful rather than which
+of these it resembles. See
+[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md),
+[desire-is-deduced-from-the-ranges-the-world-states](knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
+and [an-intention-is-an-amortised-deliberation](knowledge/decisions/an-intention-is-an-amortised-deliberation.md).
 
 **What the prohibition is actually against** is a capability nobody is answerable for. That was
 unenforceable while a declared one and a derived one looked identical in the graph — which is why
