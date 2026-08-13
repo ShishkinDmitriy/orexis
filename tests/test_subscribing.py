@@ -520,3 +520,58 @@ def test_the_bound_respects_the_constitutional_floor(fern):
     never past them — the clamps hold whoever computes the number."""
     p = _ingest_pair(fern, 0.60, 0.30, seconds_apart=60)  # collapsing
     assert cadences(fern)[-1] >= fern.subscribing().min_sleep_s
+
+
+# --- ignorance is urgent: the opening burst (#137) --------------------------
+
+def test_not_knowing_a_desired_property_is_maximum_urgency(fern):
+    """Asked with None, the choir answers the OTHER question — how urgent is not knowing —
+    and for a property the agent wants held, the answer is maximal: not knowing whether the
+    pot is dying is at least as urgent as knowing it is uncomfortable. A property with no
+    region stays silent, exactly as it does for any reading of it."""
+    assert fern.urgency(fern.me.acts_for, MOISTURE, None) == 1.0
+    assert fern.urgency(fern.me.acts_for, HUMIDITY, None) is None
+
+
+def test_the_opening_burst_commands_fast_before_any_reading_exists(fern):
+    """At birth there is a desired state and an empty sensed graph — the moment of maximum
+    uncertainty — and the cadence used to be computed only when a reading arrived, so maximum
+    ignorance got no attention policy at all. start() now aims every sensor at once, and
+    ignorance earns the fast end: poll often first, to have actual data and a trend to reason
+    from."""
+    p = fern.subscribing()
+    p.start()
+    assert cadences(fern)[-1] == p.beliefs.fast_sleep_s
+
+
+def test_the_burst_relaxes_once_the_property_is_measured(fern):
+    """The two forces find their equilibrium: ignorance pressed the cadence to the fast end,
+    the first current reading replaces its answer with the gap's, and a comfortable pot earns
+    the slow end again — through the same recomputation every reading triggers, no special
+    release path."""
+    p = fern.subscribing()
+    p.start()
+    assert cadences(fern)[-1] == p.beliefs.fast_sleep_s
+    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.55})
+    assert cadences(fern)[-1] == p.beliefs.slow_sleep_s
+
+
+def test_an_agent_that_already_knows_opens_calm(monkeypatch):
+    """A fresh reading on record at boot earns the gap's ordinary answer, not the burst:
+    ignorance is a state, not a ritual — an agent restarting into knowledge it already holds
+    has nothing to be ignorant about."""
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    p = fern.subscribing()
+    p.start()
+    assert cadences(fern)[-1] == p.beliefs.slow_sleep_s
+
+
+def test_an_agent_with_no_stake_opens_at_its_own_pace(monkeypatch):
+    """The recording agent wants nothing, so not knowing is not urgent for it — the burst is
+    desire's answer, not a boot ritual for everyone. It still states its policy at start,
+    which it never did before: a board is aimed from the first moment rather than running its
+    default until a reading happens by."""
+    recorder = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
+    p = recorder.subscribing()
+    p.start()
+    assert cadences(recorder)[-1] == p.beliefs.slow_sleep_s

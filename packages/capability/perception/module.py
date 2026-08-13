@@ -262,7 +262,30 @@ class SubscribingModule(PerceptionModule):
         return int(rows[0]["min"]), int(rows[0]["max"])
 
     def start(self) -> None:
+        """Ask for a look, and command an OPENING cadence instead of waiting to be told one.
+
+        The cadence used to be computed only when a reading arrived, so at birth — a desired
+        state, an empty sensed graph, the moment of maximum uncertainty — the board ran its own
+        default until the first reading happened by. Now each sensor is aimed at once, from
+        what the agent already holds: a fresh reading earns the gap's ordinary answer, and
+        nothing (or something stale) asks the choir the OTHER question — how urgent is not
+        knowing — which desire answers with the maximum for a property it wants held (#137).
+        The burst relaxes by itself: the first current reading replaces ignorance's answer with
+        the gap's, through the same recomputation every reading triggers.
+
+        Scope, honestly: the ignorance ask happens here and not in the per-reading group
+        recompute, because a real board reports every pointer in one message — its properties
+        become measured together — and the one case that differs (a peer whose pointer never
+        yields) is a broken payload, already visible as desires_measured diverging (#124).
+        """
         self.sense_now()
+        for sensor in self.sensors:
+            reading = self.fresh_reading(sensor.subject, sensor.observes)
+            value = reading.value if reading is not None else None
+            self.set_cadence(sensor,
+                             self.cadence_for(sensor.subject, sensor.observes, value),
+                             self.agent.annotations(sensor.subject, sensor.observes,
+                                                    value) if value is not None else None)
 
     def on_reading(self, sensor, value: float, at=None) -> None:
         # The trend first, so the cadence computed below already knows it. Kept in module
@@ -293,7 +316,8 @@ class SubscribingModule(PerceptionModule):
                 self._trend[key] = (value - prev_value) / dt
         self._last_seen[key] = (value, at)
 
-    def cadence_for(self, subject_uri: str, observed_property: str, value: float) -> int:
+    def cadence_for(self, subject_uri: str, observed_property: str,
+                    value: float | None) -> int:
         """How long the board may sleep: the closer to my own trouble, the closer I watch —
         and no longer than the trend allows.
 
@@ -330,7 +354,7 @@ class SubscribingModule(PerceptionModule):
 
         sleep_s = granted(urgency)
         slope = self._trend.get((subject_uri, observed_property))
-        if slope:
+        if slope and value is not None:
             predicted = value + slope * sleep_s
             ahead = self.agent.urgency(subject_uri, observed_property, predicted)
             if ahead is not None and ahead > urgency:

@@ -204,6 +204,17 @@ lives with the agent (`cadence_for`), never on the board — same reason the ban
 polling agent would read the same two figures: they describe an interval either way, and only
 whose timer runs it changes.
 
+**Ignorance is urgent** (#137). The choir answering `urgency` can be asked a second question
+— pass no value, and the question becomes *how urgent is not knowing* — and desire answers it
+with the maximum for any property it wants held: not knowing whether the pot is dying is at
+least as urgent as knowing it is uncomfortable. So `start()` aims every sensor at once instead
+of waiting for a first reading to trigger the computation: at birth — a desired state, an empty
+sensed graph, maximum uncertainty — the board opens at the fast end, gathers the readings that
+end the ignorance and establish a trend, and relaxes through the same recomputation every
+reading triggers. Two forces, finding their equilibrium: the need to know presses toward the
+fast end, the cost of looking holds the slow end, and the cadence is where they meet. An agent
+with no stake opens at its own slow pace — the burst is desire's answer, not a boot ritual.
+
 **And no longer than the trend allows** (#133). Urgency answers where the state *is*; a sleep
 granted on that alone can begin moments before the trend crosses into trouble, and nobody hears
 for the whole window. So the candidate sleep is checked against where the state is *heading*:
