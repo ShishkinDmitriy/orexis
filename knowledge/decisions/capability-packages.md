@@ -116,11 +116,18 @@ a T-Box term is public and a Python class is not.
 
 **Judging moved out of perception.** A band is a fact about a *stake*, not about a sensor:
 the same reading is trouble for a fern and comfort for a succulent. So `band()` and
-`urgency()` are methods on `BiddingBeliefs`, and perception — which owns the number and the
-freshness rule and nothing else — asks. An agent with no stake in a subject gets no answer
-and watches at its slow cadence, which is the honest reading of "nothing here is urgent to
-me". A perceiving agent that holds no band is now a coherent thing to be, rather than a
-`try/except`.
+`urgency()` left perception, and perception — which owns the number and the freshness rule and
+nothing else — asks. An agent with no stake in a subject gets no answer and watches at its slow
+cadence, which is the honest reading of "nothing here is urgent to me". A perceiving agent that
+holds no band is now a coherent thing to be, rather than a `try/except`.
+
+They landed on `BiddingBeliefs` and have since moved again, to `capabilities/desire/`, which is
+where they should have gone the first time: putting them on a bidder made *having an opinion
+about your own state* conditional on being a market participant, and limited it to the one
+property a bid is priced in. The seam this section is about is unchanged and is why the second
+move cost nothing — perception still asks whoever will answer, and never learned either address.
+See
+[desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 
 **Belief blocks moved to their capabilities.** `agora.beliefs` keeps the *reader* — the block
 query, the no-defaults error, the freshness rule — because that is identical for every

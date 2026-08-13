@@ -21,7 +21,8 @@ only once something concrete is on the table:
 
 - *is that board reachable at any moment, or does it sleep?* → decides the perception capability
 - *who owns the barrel?* → owning the venue derives `market:Hosting`, owning valves `actuation:Actuation`
-- *thirsty at what number?* → a band is opinion; nothing can infer it
+- *what range does that plant need, and what will it merely survive?* → the two ranges are the
+  plant's, and the agent's region is deduced from them; the *target* inside it is still opinion
 
 # 2. Write `world/<name>/world.ttl`
 
@@ -50,9 +51,14 @@ output.
 
 Two families, and they behave differently ([genesis-process](/domain/genesis-process.md)):
 **operational** (`perception:fastSleepS`, `perception:slowSleepS`, `perception:maxReadingAgeS`) follows the *kind* of
-world — a bench rig wants 10s, a garden wants 600s; **stake** (`water:hasTarget`, `water:bandLow`,
-`water:bandHigh`, `market:hasEndowment`, `water:maxValuePerL`) is the agent's own and derivable from
-nothing.
+world — a bench rig wants 10s, a garden wants 600s; **stake** (`desire:aims`,
+`market:hasEndowment`, `water:maxValuePerL`) is the agent's own and derivable from nothing.
+
+There is no band to author. Where a plant is parched and where it is soaked belong to the
+**plant**, as `ssn-system:hasOperatingRange` and `ssn-system:hasSurvivalRange` in `world.ttl`,
+and the agent's region is deduced from them — so the only stake number about moisture you are
+asked for is the *target*, and it must sit inside that region or the agent will not start. See
+[desire](/domain/desire.md).
 
 Register each in the catalog inside `world.ttl`:
 
@@ -83,8 +89,9 @@ start.
 
 Capability-aware: a shape applies to an agent only if that agent derived the capability it
 belongs to. It catches a subscribing agent with no interval, an interval outside the
-constitutional bounds, a listening agent that stated one anyway, a band whose floor is above
-its ceiling, a device on a bus with no channel, and an agent with no capability at all.
+constitutional bounds, a listening agent that stated one anyway, a target outside the region its
+plant's ranges imply, an agent whose ranges intersect to nothing at all, a device on a bus with
+no channel, and an agent with no capability at all.
 
 # 5. Deploy
 

@@ -1,0 +1,121 @@
+@prefix desire: <http://example.org/agora/desire#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/desire> a owl:Ontology ;
+    rdfs:label "Agora desire" ;
+    rdfs:comment """What an agent is trying to bring about: for each property it has a stake in, the **region** it will try to keep that property inside, and how far outside is fatal rather than merely wrong.
+
+This is BDI's middle letter, and it was the letter this project had least of. Belief had a whole store; desire was three decimals in a beliefs file — a target and two band edges — denominated in soil moisture and in nothing else, so an agent could want exactly one thing and the temperature and humidity it sensed fed nothing that could want anything.
+
+**Nothing here is authored.** A region is DEDUCED from ranges the world already states: a plant says where it grows and where it merely survives, an instrument says where it works, and the region an agent will hold is what those agree on. That is why this is a capability and not a belief block — the agent's job is to arrive at the region, and there is more than one way to do it.
+
+**One package, one namespace, and the terms below are all it declares.** A region reads exactly like an operating range on purpose: `ssn:forProperty` says which property, `schema:minValue`/`schema:maxValue` say where. The two are the same kind of statement about the same scale, and a reader that can read one can read the other — which is the whole reason the deduction is arithmetic rather than translation.
+
+See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.""" .
+
+#################  The capability  #################
+#
+#  A FAMILY, and the test rule 2 sets is met: the how could differ. `desire:Deducing` takes the
+#  strict intersection of every range that applies and has no latitude at all — two agents
+#  running it over the same world reach the same region. Asking a model where inside the
+#  operating band to aim, in a world whose ranges are wide and whose plant is fussy, is a
+#  different answer to the same question. Where nothing could differ there is a function; here
+#  two things genuinely could.
+
+desire:DesireCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+    rdfs:label "Desire capability" ;
+    rdfs:comment "The family. Anything that can say where a property should be held for the subject an agent acts for is one of these, so perception may ask 'how urgent is this' and a market may ask 'what am I trying to reach' without either learning which member answered." .
+
+desire:Deducing a desire:DesireCapability ; rdfs:label "Deducing" ;
+    rdfs:comment "Works the region out from what the world already states: intersect every operating range that applies to the subject, and take the survival ranges as the envelope outside it. No judgement and no latitude — the answer is a function of the ratified files, so every agent computes the same one and a derivation needs no authority to have performed it." .
+
+desire:Consulting a desire:DesireCapability ; rdfs:label "Consulting" ;
+    rdfs:comment "The agent asks something else where inside the stated ranges to aim — a language model, an oracle, a person. RESERVED: declared so the vocabulary is honest that the judgement is the replaceable part, but no rule grants it and no module implements it. Whatever answered would still be held to the same shapes, so it could be wrong and not unsafe. Adding it is a directory." .
+
+#################  Where a desire is kept  #################
+#
+#  A GRAPH CLASS, and that is the point of it. `desire:DesireGraph` is the term; which graphs
+#  happen to be instances of it is data, asked for and never listed — the same arrangement
+#  `ag:PublicGraph` has, for the same reason. A reader unions whatever is of this class, so a
+#  SECOND source of desire is a vocabulary edit and touches no Python: an operator's override,
+#  a regime selected for the season, a region an agent narrowed for itself.
+#
+#  Public, because every figure in a region came from a public range and the arithmetic is
+#  deterministic. What stays private is the PICK inside it — `water:hasTarget`, in the agent's
+#  own beliefs. Range public, value private, exactly as before; this only moves the range from
+#  something a reader had to assemble to something the store states.
+
+desire:DesireGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph ;
+    rdfs:label "Desire graph" ;
+    rdfs:comment "Holds what agents are trying to bring about. A class rather than one graph, because desire may have more than one source and a reader must not have to know how many: `agent.genesis` resolves a rule's write target from this term, and `store.query` merges every instance into the default graph like any other public knowledge." .
+
+<http://example.org/agora/graph/desire> a desire:DesireGraph ;
+    rdfs:label "deduced desire" ;
+    rdfs:comment "The one instance today: what `rules.ru` computed from the ranges the world states. Cleared and recomputed on every start, because it is a function of the ratified files rather than an accumulation — a plant whose range is amended must not leave an agent holding the old region." .
+
+#################  What a desire IS  #################
+
+desire:Desire a owl:Class ; rdfs:label "Desire" ;
+    rdfs:comment """One property, the region to hold it in, and the envelope outside which the subject does not merely suffer but ends. A desire is per PROPERTY and an agent holds as many as its subject states ranges for — which is the whole of what makes a humidity reading actionable where it was previously a number with nowhere to go.
+
+Not a point. A target is a point and remains one, privately, in the agent's beliefs; this is what that point must answer to.""" .
+
+desire:desires a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range desire:Desire ;
+    rdfs:label "desires" ;
+    rdfs:comment "Reads as what this agent is trying to bring about. Derived, never written by hand — a world stating one would be authoring an agent's ends instead of the facts they follow from, and the shapes refuse it." .
+
+#  The region itself is stated in schema.org's terms and not in ours, and the reuse is
+#  load-bearing rather than thrifty: an operating range's condition says `schema:minValue` /
+#  `schema:maxValue` about a property, and so does this. One vocabulary for one kind of claim
+#  means the deduction is MAX and MIN over comparable numbers, with nothing to translate — and
+#  a reader who knows how to read a plant's range can already read an agent's.
+#
+#  `ssn:forProperty` for the same reason. It is what a condition uses to say which property it
+#  is a range of, and `sosa:ObservableProperty rdfs:subClassOf ssn:Property` makes it well-typed
+#  here too.
+
+desire:toleratedMin a owl:DatatypeProperty ; rdfs:domain desire:Desire ; rdfs:range xsd:decimal ;
+    rdfs:label "tolerated minimum" ;
+    rdfs:comment """The floor of the survival envelope for this property, when the world states one. Below it the subject does not merely sit outside where it does well — it ends.
+
+Here rather than left in the plant's own range because it is what makes URGENCY meaningful and unit-free. How bad it is to be 0.05 below the region depends entirely on how much room there is below the region, and that figure is asymmetric in exactly the cases that matter: a Zamioculcas comes back from bone dry and does not come back from a rotted rhizome, so the same distance out reads as far more urgent on the wet side. That falls out of the two numbers rather than out of any code, which is why it is worth carrying them here instead of hard-coding a curve.
+
+Optional, and its absence is not a defect. A world that states no survival range simply has an agent whose urgency is scaled by the width of the region instead — a cruder answer, honestly reached.""" .
+
+desire:toleratedMax a owl:DatatypeProperty ; rdfs:domain desire:Desire ; rdfs:range xsd:decimal ;
+    rdfs:label "tolerated maximum" .
+
+#################  The aim — the pick inside a region  #################
+#
+#  PRIVATE, and the one part of desire that is. A region is deduced and public; the AIM is the
+#  point inside it this agent is currently steering for, and it is the last thing left that an
+#  agent decides about its own ends — which is exactly why it is a belief in the agent's own
+#  graph, why review may move it, and why nothing may default it. "No preference inside my
+#  region" is not a stance this vocabulary can express, deliberately: a consumer that needs a
+#  point needs the agent to have picked one, and a missing belief is an error rather than a
+#  default everywhere in this project.
+#
+#  This replaces `water:hasTarget`, which fused two things: the point an agent aims at
+#  (desire's) and the input a litre-deficit is priced from (the market's). The domain keeps the
+#  pricing — `water:litresPerFraction`, `water:maxValuePerL`, and the statement of which
+#  property a bid is denominated in — and asks the aim of whoever provides the desire family.
+#
+#  NOTE ON MIGRATION: this is a structural move, not a rename, so the vocabulary successor
+#  mechanism cannot carry a store across it — `water:hasTarget 0.55` has no single term it
+#  became. A volume holding the old term is refused loudly at boot with the term named, which
+#  is `agent/vocabulary.py`'s designed behaviour for a deletion: deciding what a dead structure
+#  meant is authorship, not computation.
+
+desire:Aim a owl:Class ; rdfs:label "Aim" ;
+    rdfs:comment "One property and the value this agent is holding it toward: the pick inside the region. Shaped to lie inside the region for that same property, and meaningless — refused — for a property the agent holds no region in." .
+
+desire:aims a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range desire:Aim ;
+    rdfs:label "aims" ;
+    rdfs:comment "Reads as the point this agent is steering one property toward. In the agent's own beliefs graph, never the world: the region answers to the sovereign's facts, the pick inside it answers to nobody — which is what makes it the agent's. Stated with ssn:forProperty and schema:value, the same two terms a region and a condition already use, so a reader that can read either can read this." .

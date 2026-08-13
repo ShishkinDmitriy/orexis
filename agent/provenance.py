@@ -94,7 +94,8 @@ SELECT ?user ?role WHERE {
 } LIMIT 1"""
 
 
-def _turtle(world: Path, attribution: tuple[str, str] | None = None) -> str:
+def _turtle(world: Path, attribution: tuple[str, str] | None = None,
+            derived_graphs: tuple[str, ...] = (WORLD_DERIVED_GRAPH,)) -> str:
     """The description, as Turtle. One `prov:Entity` per public graph, each accounting for
     itself — see `ag:PublicGraphShape`, which refuses one that does not."""
     ontology_files = " , ".join(f"<{file_iri(p)}>" for p in loader.ontology_files())
@@ -130,10 +131,17 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None) -> str:
         # shape would then refuse it — which is the correct outcome and worth reaching honestly.
         lines.append(f"<{WORLD_GRAPH}> a prov:Entity .")
 
+    # Every graph a rule writes into, not just the world's. A package may own one — desire does —
+    # and a public graph that could not account for itself would be exactly the silence
+    # `ag:PublicGraphShape` and `tests/test_provenance.py` exist to refuse. Which graphs those
+    # are is asked of the rules (see `genesis.write_targets`) rather than listed here, so the
+    # kernel still names no package.
     lines += [
         "",
         "# --- derived: a rule computed it, and the rules are the software agents that did ---",
-        f"<{WORLD_DERIVED_GRAPH}> a prov:Entity ; prov:wasGeneratedBy <{DERIVATION}> .",
+    ] + [
+        f"<{g}> a prov:Entity ; prov:wasGeneratedBy <{DERIVATION}> ." for g in derived_graphs
+    ] + [
         f"<{DERIVATION}> a prov:Activity ;",
         "    prov:used <%s> , <%s> , <%s> , <%s> ;" % (
             ONTOLOGY_GRAPH, ONTOLOGY_ENTAILED_GRAPH, WORLD_GRAPH, WORLD_ENTAILED_GRAPH),
@@ -170,11 +178,15 @@ def attribution_of(st) -> tuple[str, str] | None:
     return (rows[0]["user"], rows[0]["role"]) if rows else None
 
 
-def describe(st, world: Path) -> None:
+def describe(st, world: Path, derived_graphs: tuple[str, ...] = (WORLD_DERIVED_GRAPH,)) -> None:
     """Replace the meta-graph with an account of what was just loaded.
 
     Runs last in `refresh_public`, because it describes the result. Replaced rather than added
     to, for the same reason the closure is recomputed: it is a function of the files, and a
     description that accumulated would soon be describing a world that no longer exists.
+
+    `derived_graphs` is passed in rather than worked out here: the caller has already resolved
+    which graphs the rules write into, and asking twice would mean two places that could
+    disagree about what a derivation produced.
     """
-    st.put_graph(PROVENANCE_GRAPH, _turtle(world, attribution_of(st)))
+    st.put_graph(PROVENANCE_GRAPH, _turtle(world, attribution_of(st), derived_graphs))

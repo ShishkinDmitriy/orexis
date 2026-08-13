@@ -1,0 +1,168 @@
+@prefix desire: <http://example.org/agora/desire#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Rules for desire. Unusually, these police a DERIVED graph rather than an authored one — there
+# is nothing here for a sovereign to get wrong by typing, because nothing here is typed. What
+# they catch is a world whose stated ranges do not survive being intersected, which is a fault in
+# the AUTHORED facts showing up in the computed ones.
+
+desire:DesirerShape a sh:NodeShape ;
+    rdfs:comment """An agent granted the capability must end up with at least one region. The two are derived from very nearly the same premise and can still come apart: the grant asks only that the subject state a range, and the deduction additionally asks that every range applying to a property AGREE. A plant whose pot says 0.45-0.65 in a world whose instrument says 0.10-0.30 produces an empty intersection, no region, and — without this shape — an agent that starts, holds the capability, and quietly has no opinion about anything.
+
+That failure is the one this whole design is most exposed to, because its symptom is silence: no band on any announcement, the slow cadence forever, and a market that never hears that anyone is in trouble. Refusing to start is loud, and the report names the agent.""" ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/agora#hasCapability>
+                      <http://example.org/agora/desire#Deducing> .
+            }
+        """ ] ;
+    sh:property [ sh:path desire:desires ; sh:minCount 1 ;
+                  sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
+
+desire:DesireShape a sh:NodeShape ;
+    rdfs:comment "What a region must be to be readable. Every figure here was computed, so this is arithmetic rather than authorship — but a shape over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width." ;
+    sh:targetClass desire:Desire ;
+    sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
+                  sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a region must say which property it is a region OF" ] ;
+    sh:property [ sh:path <https://schema.org/minValue> ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path <https://schema.org/maxValue> ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path desire:toleratedMin ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path desire:toleratedMax ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+
+    # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales
+    # urgency by it produces a negative denominator and an agent that is most relaxed exactly
+    # where it is closest to dying. Nothing authored can cause this directly — both figures are
+    # intersections — but a world whose survival range is narrower than its operating range can,
+    # and `water:RangesAgreeShape` only checks that pairing per plant. This checks it after
+    # everything that applies has been folded together, which is where a rig assembled from two
+    # correct halves can still be wrong.
+    #
+    # Every optional bound is guarded with BOUND rather than compared directly, and it is not
+    # defensive typing. `?low < ?floor` on an unbound `?floor` is an ERROR, and SPARQL's `||`
+    # propagates an error unless some other operand is true — so a region with no envelope made
+    # the whole filter error, the row vanish, and the `?low > ?high` case it was also supposed to
+    # catch go unreported. The shape would have been green on exactly the world it was written
+    # for.
+    sh:sparql [
+        sh:message "a region lies outside the envelope it is supposed to sit inside — the survival range stated for this property is narrower than the operating range, once every source is intersected" ;
+        sh:select """
+            SELECT $this ?low ?high WHERE {
+                $this <https://schema.org/minValue> ?low ;
+                      <https://schema.org/maxValue> ?high .
+                OPTIONAL { $this <http://example.org/agora/desire#toleratedMin> ?floor }
+                OPTIONAL { $this <http://example.org/agora/desire#toleratedMax> ?ceiling }
+                FILTER(   ?low > ?high
+                       || (BOUND(?floor)   && ?low  < ?floor)
+                       || (BOUND(?ceiling) && ?high > ?ceiling))
+            }""" ] .
+
+# The aim answers to the region, and both halves of that sentence are checked here rather than
+# in any domain: which properties may be aimed at and where the aim may sit are desire's
+# arithmetic, true of a thermostat exactly as of a pot. What a DOMAIN checks is different in
+# kind — that a bidder holds an aim in the property its bids are priced in — and stays in the
+# domain's shapes, because only the domain knows a bid exists.
+#
+# Targeted through what POINTS at an aim, not by class: an aim is written inline as
+# `desire:aims [ ... ]` and nobody types `a desire:Aim` on a node they are already describing —
+# the same lesson review's mandate shape records.
+desire:AimShape a sh:NodeShape ;
+    rdfs:comment "An aim is one property and one value, and the value sits inside the agent's own region for that property. The checks span a PUBLIC region and a PRIVATE aim, which meet only inside the agent at boot — nothing outside it ever sees the number." ;
+    sh:targetSubjectsOf desire:aims ;
+    sh:property [ sh:path ( desire:aims <http://www.w3.org/ns/ssn/forProperty> ) ;
+                  sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "an aim must say which property it is a pick FOR" ] ;
+    sh:property [ sh:path ( desire:aims <https://schema.org/value> ) ;
+                  sh:minCount 1 ; sh:datatype xsd:decimal ;
+                  sh:message "an aim must carry one decimal value" ] ;
+    sh:sparql [
+        sh:message "an aim names a property this agent holds no region in — a pick with nothing to pick inside is a number with nothing behind it" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/agora/desire#aims> ?aim .
+                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER NOT EXISTS {
+                    $this <http://example.org/agora/desire#desires> ?region .
+                    ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                }
+            }""" ] ;
+    sh:sparql [
+        sh:message "the aim sits outside the region this agent deduced for that property — a desire is a pick within a range, not a number of its own" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/agora/desire#aims> ?aim .
+                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                     <https://schema.org/value> ?value .
+                $this <http://example.org/agora/desire#desires> ?region .
+                ?region <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                        <https://schema.org/minValue> ?low ;
+                        <https://schema.org/maxValue> ?high .
+                FILTER(?value < ?low || ?value > ?high)
+            }""" ] ;
+    sh:sparql [
+        sh:message "two aims for one property — an agent steering one property toward two points is not steering" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/agora/desire#aims> ?one , ?other .
+                ?one   <http://www.w3.org/ns/ssn/forProperty> ?property .
+                ?other <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER(?one != ?other)
+            }""" ] .
+
+# The first consumer of the gap, and deliberately a WARNING. An observation outside the
+# survival envelope is not an invalid belief — it is an emergency, and an agent must be allowed
+# to start precisely so it can do something about it; a violation here would keep a thirsty
+# agent from ever bidding for water. `agent.validate.conforms` decides the verdict on
+# violations alone and prints everything else, which is exactly the channel "legal but worth a
+# second look" needs. The world gate sees no observations (a fresh world has none), so this
+# speaks only where it can be true: at an agent's own boot, over its own sensed graph.
+#
+# Only the envelope, not the region. Outside the region is the ORDINARY working state of this
+# whole society — being dry is why markets exist — and warning on it would teach everyone to
+# ignore the channel. Outside what the subject SURVIVES is rare, actionable, and exactly what a
+# person glancing at a boot log should see.
+desire:BeyondSurvivalShape a sh:NodeShape ;
+    rdfs:comment "The last reading of a property this agent has a desire in lies outside what its subject survives. Not a refusal: the agent starts, and the report says why it had better hurry. |gap| = 1 in the package's gap.rq is this same fact as a number." ;
+    sh:severity sh:Warning ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/agora#hasCapability>
+                      <http://example.org/agora/desire#Deducing> .
+            }
+        """ ] ;
+    sh:sparql [
+        sh:severity sh:Warning ;
+        sh:message "a reading sits outside the survival envelope for a property this agent wants held — the subject is past tolerating, not merely uncomfortable" ;
+        sh:select """
+            SELECT $this ?property ?value WHERE {
+                $this <http://example.org/agora#actsFor> ?subject ;
+                      <http://example.org/agora/desire#desires> ?region .
+                ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                ?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ?subject ;
+                     <http://www.w3.org/ns/sosa/observedProperty> ?property ;
+                     <http://www.w3.org/ns/sosa/hasSimpleResult> ?value .
+                OPTIONAL { ?region <http://example.org/agora/desire#toleratedMin> ?floor }
+                OPTIONAL { ?region <http://example.org/agora/desire#toleratedMax> ?ceiling }
+                # One group, not a UNION of two: a FILTER sees only its own group's bindings,
+                # so `FILTER(?value < ?floor)` inside a UNION branch reads ?value as unbound,
+                # errors, and silently empties the branch — a shape that never fires, which is
+                # this project's least favourite failure. BOUND guards for the same reason as
+                # in DesireShape: an unbound comparison is an error `||` propagates.
+                FILTER(   (BOUND(?floor)   && ?value < ?floor)
+                       || (BOUND(?ceiling) && ?value > ?ceiling))
+            }""" ] .
+
+# What is NOT here: a shape refusing a hand-authored desire. It was written and removed, because
+# it would have been decoration — the derivation mints blank nodes and so could a sovereign, so
+# nothing about the triple distinguishes the two, and a shape cannot see which graph a fact came
+# from (validation runs over a flattened union). The prohibition is real and enforced elsewhere:
+# `refresh_public` clears every write target before the rules run, so a region written into a
+# world file is discarded on the next start rather than merely disapproved of. A rule that
+# enforces nothing is worse than an absence, because it is still cited.

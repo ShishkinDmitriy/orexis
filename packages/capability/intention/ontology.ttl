@@ -1,0 +1,85 @@
+@prefix intention: <http://example.org/agora/intention#> .
+@prefix desire: <http://example.org/agora/desire#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agora/intention> a owl:Ontology ;
+    rdfs:label "Agora intention" ;
+    rdfs:comment """BDI's third letter: a commitment to reduce a named gap by a named means, which persists until it is resolved rather than being re-decided on every perception.
+
+**An intention is an amortised deliberation.** The sharpest lesson in the BDI literature is that intentions exist to SAVE deliberation — an agent that re-decides on every reading is a reflex machine wearing a planner's name — and here that is a cost model rather than philosophy: deliberation is about to include an LLM call, and the commitment is what makes one affordable. This package is the substrate that makes that persistence a FACT with a lifecycle instead of a scatter of module state: `bidding.pending`, a held voucher and a commanded cadence were all intentions before this package named them.
+
+**Nothing here decides.** Deciding what to commit to is deliberation's — the welded reflex chain today, a family with an LLM member later. This package only KEEPS: it records an adoption, resolves it as satisfied or dropped with the reason, refuses to re-adopt what is already standing, and answers what stands. The seam between keeping and deciding is the whole reason they are two capabilities.
+
+See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.""" .
+
+#################  The capability  #################
+
+intention:IntentionCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+    rdfs:label "Intention capability" ;
+    rdfs:comment "The family. Anything that keeps this agent's commitments is one of these, so a sibling may say 'commit to this' and ask what stands without knowing how commitments are kept." .
+
+intention:Keeping a intention:IntentionCapability ; rdfs:label "Keeping" ;
+    rdfs:comment "Keeps commitments by rule: a standing intention blocks re-adoption of the same one until it resolves or outlives the agent's patience. Granted by a STAKE AND A LEVER — acting for a subject that states needs, plus at least one way to act on them — because wanting without means and means without wants both leave nothing to commit to." .
+
+#################  Where intentions are kept  #################
+#
+#  A graph of the agent's own, like its beliefs and its revisions, and NOT public: an intention
+#  disclosed is strategy leaked. The BID is the public face of an intention to acquire — the
+#  market sees what you do, never what you are trying to bring about. The graph is named from
+#  the one identifier a process is given; see graphs.py.
+
+#################  What an intention IS  #################
+
+intention:Intention a owl:Class ; rdfs:label "Intention" ;
+    rdfs:comment """One commitment: reduce the gap in one property, by one means, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
+
+The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason. A dropped intention keeps its `becauseOf`, because a commitment abandoned without a reason is indistinguishable from one forgotten.""" .
+
+intention:by a owl:ObjectProperty ; rdfs:domain intention:Intention ; rdfs:range intention:Means ;
+    rdfs:label "by" ;
+    rdfs:comment "The kind of act committed to. A MEANS, not a plan: the how stays with whichever capability executes it." .
+
+intention:Means a owl:Class ; rdfs:label "Means" .
+
+intention:Observe a intention:Means ; rdfs:label "Observe" ;
+    rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .
+
+intention:Acquire a intention:Means ; rdfs:label "Acquire" ;
+    rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the voucher, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
+
+intention:Apply a intention:Means ; rdfs:label "Apply" ;
+    rdfs:comment "Spend a held claim against the world. RESERVED: declared because the vocabulary should be honest that winning and applying are different commitments, and unimplemented because in the spot market nothing stands between them — a voucher is redeemed the moment it is issued, so there is no held claim for a commitment to be about. The futures market is where this becomes real: win a voucher redeemable until exp, and HOLDING it is this intention. See the roadmap's futures seam." .
+
+intention:adoptedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "adopted at" .
+intention:resolvedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "resolved at" ;
+    rdfs:comment "Absent while the intention stands. Its absence IS the standing state — no flag to keep in step." .
+intention:outcome a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:string ;
+    rdfs:label "outcome" ;
+    rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
+intention:becauseOf a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:string ;
+    rdfs:label "because of" ;
+    rdfs:comment "Why it was adopted, and — appended on resolution — why it ended. Prose for the operator reading a ledger, never parsed." .
+
+#################  The commitment policy — a belief, bounded here  #################
+#
+#  How stubborn to be is an OPINION, so it is each agent's belief and review may move it. The
+#  BOUNDS are constitutional and live on the family, exactly as perception's cadence bounds do:
+#  an agent that re-decides every second has retired the whole point of committing, and one that
+#  never reconsiders will honour a dead commitment forever.
+
+intention:patienceS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "patience seconds" ;
+    rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second impulse to do the same thing is ABSORBED — that is the amortisation, and with an LLM deliberator it is the cost model. Past it, a new adoption supersedes the old, which is recorded as dropped with the reason." .
+
+intention:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "minimum patience" .
+intention:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "maximum patience" .
+
+intention:IntentionCapability intention:minPatienceS 10 ; intention:maxPatienceS 86400 .

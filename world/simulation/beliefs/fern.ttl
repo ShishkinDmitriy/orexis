@@ -1,3 +1,7 @@
+@prefix intention: <http://example.org/agora/intention#> .
+@prefix desire: <http://example.org/agora/desire#> .
+@prefix schema: <https://schema.org/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix review: <http://example.org/agora/review#> .
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix water: <http://example.org/agora/water#> .
@@ -19,12 +23,18 @@ ag:fern_agent
     perception:slowSleepS 600 ;         # comfortable: let the board sleep, save energy
     perception:readingGraceS 45 .     # slack past the cadence it asked for, before it calls the sensor quiet
 
-##  market:Bidding — what it wants and what it will pay
+##  market:Bidding — what it aims at and what it will pay
+#
+#  The bands that used to sit here are gone. Where a fern is parched and where it is soaked are
+#  facts about the FERN, stated in world.ttl as an operating range and a survival range, and
+#  `desire:Deducing` intersects them into the region this agent holds. Restating them privately
+#  meant keeping a second copy of a public fact and being free to keep a wrong one.
+#
+#  The target is gone too — it became the AIM, under desire at the end of this file, because
+#  the point an agent steers for is a fact about its ends and not about a market. What is left
+#  here is what only a BID needs: the wallet and the value curve.
 ag:fern_agent
     market:hasEndowment 100.0 ;
-    water:hasTarget 0.55 ;         # the desire
-    water:bandLow 0.35 ;           # a fern is parched where a succulent shrugs
-    water:bandHigh 0.65 ;
     water:litresPerFraction 2.0 ;  # what it BELIEVES its pot takes (the world knows the truth)
     water:maxValuePerL 0.80 .      # willingness to pay at peak urgency — never disclosed
 
@@ -38,3 +48,18 @@ ag:fern_agent reporting:metricsIntervalS 60 .
 #   schedule — a decision plans its own next arising from when its effect could show.
 #   See knowledge/decisions/self-review-is-a-capability.md.
 ag:fern_agent review:reviewIntervalS 300 .
+
+##  desire — the pick inside the region
+#   The point this agent steers its moisture toward. PRIVATE where the region is public: the
+#   region is deduced from what the plant states and answers to the sovereign; the aim answers
+#   to the region (desire:AimShape) and to nobody else, which is what makes it this agent's.
+#   It used to be water:hasTarget — one number that was also the market's pricing input. The
+#   market now asks desire for it, so an agent in a world with no market could still hold one.
+ag:fern_agent desire:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.55 ] .
+
+##  intention — the commitment policy
+#   How long a standing commitment absorbs a second impulse to do the same thing before a new
+#   adoption may supersede it. The ledger records what this agent does either way; the patience
+#   is what makes "already doing something about it" a fact with teeth. Two minutes: several
+#   auction rounds, and far past any one bid window.
+ag:fern_agent intention:patienceS 120 .

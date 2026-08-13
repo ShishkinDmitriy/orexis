@@ -11,7 +11,7 @@ from dataclasses import replace
 
 import pytest
 
-from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store
+from conftest import HUMIDITY, MOISTURE, TEMPERATURE, build_agent, genesis_store
 
 
 @pytest.fixture
@@ -41,9 +41,26 @@ def cadences(agent):
 
 # --- the policy ------------------------------------------------------------
 
-def test_it_watches_closely_when_thirsty(fern):
-    assert cadence_for(fern, 0.35) == 30  # at its own low band -> its fastest
-    assert cadence_for(fern, 0.65) == 600  # at its high band -> its slowest
+def test_it_watches_closely_at_the_edge_of_what_its_plant_survives(fern):
+    """Its fastest at the survival floor, its slowest at the point of its region.
+
+    Both ends moved when desire started deducing the region, and the move is the policy rather
+    than a rescaling. The scale used to run from the agent's own low band to its own high band,
+    so *soaked* was the most comfortable reading there is; it now runs from the middle of where
+    the plant does well out to where the plant dies, on each side separately. Fern's world says
+    0.45-0.65 with survival 0.20-0.85.
+    """
+    assert cadence_for(fern, 0.20) == 30    # the survival floor -> its fastest
+    assert cadence_for(fern, 0.55) == 600   # the point of its region -> its slowest
+
+
+def test_too_wet_is_trouble_too(fern):
+    """The old scale had nothing above the high band, so a drowning plant read as the most
+    comfortable plant there is. Attention now rises on both sides, at the rate each side's own
+    survival room implies — which for this fern is gentler upward than downward, because it has
+    0.20 of room above its region and 0.25 below its centre."""
+    assert cadence_for(fern, 0.85) == 30     # the survival ceiling -> its fastest
+    assert cadence_for(fern, 0.70) < 600     # past the region and already worth a look
 
 
 def test_attention_scales_with_trouble(fern):
@@ -59,19 +76,37 @@ def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
 
 
 def test_a_property_it_has_no_stake_in_gets_no_verdict(fern):
-    """Its own pot, its own sensor — but a temperature, and its band is a band of moisture.
+    """Its own pot — but a humidity, and this fern's plant states no humidity range.
 
     The distinction that matters is *no opinion* versus *an opinion of zero*, which is why this
-    tests for None rather than for a cadence. 21.0 read as a moisture fraction lands far above
-    target and so scores as perfectly comfortable: the wrong answer and the right number, which
-    is the worst way for a bug to present. An assertion about the resulting cadence passes
-    whether or not the property is checked, and one about urgency does not.
+    tests for None rather than for a cadence. 0.46 read as a moisture fraction lands just inside
+    the region and so scores as almost perfectly comfortable: the wrong answer and a plausible
+    number, which is the worst way for a bug to present. An assertion about the resulting cadence
+    passes whether or not the property is checked, and one about urgency does not.
+
+    It used to be asked about a TEMPERATURE, which fern does poll and now genuinely wants — its
+    plant states an air-temperature range as well as a moisture one, which is the whole of what
+    "an agent may want more than one thing" bought. Humidity is the property nothing in this
+    world has an opinion about.
     """
-    assert fern.urgency(fern.me.acts_for, TEMPERATURE, 21.0) is None
-    assert fern.annotations(fern.me.acts_for, TEMPERATURE, 21.0) == {}
+    assert fern.urgency(fern.me.acts_for, HUMIDITY, 0.46) is None
+    assert fern.annotations(fern.me.acts_for, HUMIDITY, 0.46) == {}
 
     assert fern.urgency(fern.me.acts_for, MOISTURE, 0.10) is not None
     assert fern.annotations(fern.me.acts_for, MOISTURE, 0.10) == {"band": "LOW"}
+
+
+def test_it_holds_an_opinion_about_every_property_its_plant_states_a_range_for(fern):
+    """The seam #110 recorded, closed and visible: two desires, in two units, one agent.
+
+    Nothing bids on air temperature — no market relieves it — and a cold snap still makes this
+    agent watch its board more closely. That is the cheapest slice the issue asked for, and it
+    needed no market to exist.
+    """
+    assert fern.annotations(fern.me.acts_for, TEMPERATURE, 21.0) == {"band": "OK"}
+    assert fern.annotations(fern.me.acts_for, TEMPERATURE, 6.0) == {"band": "LOW"}
+    assert fern.urgency(fern.me.acts_for, TEMPERATURE, 5.0) == 1.0
+    assert fern.urgency(fern.me.acts_for, TEMPERATURE, 21.0) == 0.0
 
 
 def test_the_bounds_come_from_the_ontology_not_the_code(fern):
@@ -85,7 +120,10 @@ def test_no_agent_can_exceed_the_constitutional_ceiling(fern):
     too, so this is the second of three independent guards (the third is the firmware)."""
     p = fern.subscribing()
     p.beliefs = replace(p.beliefs, slow_sleep_s=99_999)
-    assert cadence_for(fern, 0.99) == p.max_sleep_s
+    # The point of its region, which is the only reading that asks for the slow cadence in full.
+    # It used to be 0.99 — a number chosen when anything above the high band scored as perfectly
+    # comfortable, and which now correctly asks for the fastest cadence there is.
+    assert cadence_for(fern, 0.55) == p.max_sleep_s
 
 
 def test_no_agent_can_hammer_its_sensor_flat(fern):
@@ -110,8 +148,8 @@ def test_an_unchanged_cadence_is_not_republished(fern):
 
 
 def test_a_changed_cadence_is_republished(fern):
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.2})   # thirsty
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.9})   # comfortable
+    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.2})    # at the survival floor
+    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.55})   # the point of its region
     assert len(cadences(fern)) == 2
     assert cadences(fern)[0] < cadences(fern)[1]
 

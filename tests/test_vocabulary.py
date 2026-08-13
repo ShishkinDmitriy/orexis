@@ -24,6 +24,14 @@ from conftest import WORLDS_ROOT, genesis_store
 # What `world/society/beliefs/fern.ttl` said before the sweep: every belief in the kernel
 # namespace. Written out rather than generated, because a fixture that derived it from the
 # current vocabulary would move whenever the vocabulary did and stop being the old world.
+#
+# `ag:bandLow`, `ag:bandHigh` and `ag:hasTarget` were here and had to go, which is the one edit
+# that principle does not cover: the terms they were renamed TO have since been DELETED — the
+# bands in favour of the deduced region, the target in favour of `desire:aims`, which is a
+# STRUCTURE and so not a rename at all — and a store holding them is now correctly unmigratable
+# rather than merely old. Every migration test would fail on a term that is not what any of them
+# is about. What that case looks like is tested directly, on a synthetic term, by
+# `test_a_term_with_no_successor_is_refused_rather_than_dropped`.
 BEFORE_THE_SWEEP = f"""
 @prefix ag: <{AG}> .
 
@@ -32,9 +40,6 @@ ag:fern_agent
     ag:slowSleepS 600 ;
     ag:readingGraceS 45 ;
     ag:hasEndowment 100.0 ;
-    ag:hasTarget 0.55 ;
-    ag:bandLow 0.35 ;
-    ag:bandHigh 0.65 ;
     ag:litresPerFraction 2.0 ;
     ag:maxValuePerL 0.80 ;
     ag:metricsIntervalS 60 ;
@@ -102,20 +107,20 @@ def test_beliefs_a_vocabulary_behind_are_seen():
     found = vocabulary.stale(st)
     assert beliefs_graph("fern") in found, "a volume behind the vocabulary looked current"
     behind = found[beliefs_graph("fern")]
-    assert AG + "hasTarget" in behind
-    assert behind[AG + "hasTarget"].endswith("water#hasTarget")
+    assert AG + "slowSleepS" in behind
+    assert behind[AG + "slowSleepS"].endswith("perception#slowSleepS")
 
 
 def test_what_the_agent_would_have_read_instead_is_nothing():
     """Why it has to be refused rather than warned about.
 
-    Not an error anywhere — an empty result. The agent starts, finds no target, and bids on a
-    desire it cannot see. Asserted here so the refusal has a measured reason rather than a
+    Not an error anywhere — an empty result. The agent starts, finds no cadence, and watches on
+    a rhythm it cannot see. Asserted here so the refusal has a measured reason rather than a
     plausible one.
     """
     st = _aged_store()
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a water:hasTarget ?v } }" % beliefs_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a perception:slowSleepS ?v } }" % beliefs_graph("fern")))
     assert rows == [], "this test's premise is gone — the old spelling now answers"
 
 
@@ -126,14 +131,14 @@ def test_boot_refuses_and_says_which_terms():
     with pytest.raises(SystemExit) as exc:
         vocabulary.check(st)
     message = str(exc.value)
-    assert "hasTarget" in message and "water#hasTarget" in message
+    assert "slowSleepS" in message and "perception#slowSleepS" in message
     assert "AGORA_MIGRATE_BELIEFS" in message
 
 
 # --- and the way forward --------------------------------------------------------------------
 
 def test_migration_keeps_the_value_and_changes_only_the_spelling():
-    """The point of not using `rebirth`: 0.55 was this agent's, and it stays 0.55.
+    """The point of not using `rebirth`: 600 was this agent's, and it stays 600.
 
     `rebirth` would return it to what the sovereign authored, which for an agent that had
     revised itself is the history worth keeping.
@@ -141,8 +146,8 @@ def test_migration_keeps_the_value_and_changes_only_the_spelling():
     st = _aged_store()
     vocabulary.check(st, migrating=True)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a water:hasTarget ?v } }" % beliefs_graph("fern")))
-    assert [r["v"] for r in rows] == ["0.55"]
+        "SELECT ?v WHERE { GRAPH <%s> { ?a perception:slowSleepS ?v } }" % beliefs_graph("fern")))
+    assert [r["v"] for r in rows] == ["600"]
     assert vocabulary.stale(st) == {}
 
 
@@ -151,7 +156,7 @@ def test_migration_moves_every_belief_not_only_the_one_looked_at():
     st = _aged_store()
     vocabulary.check(st, migrating=True)
     for query in ("perception:slowSleepS 600", "market:hasEndowment 100",
-                  "review:reviewIntervalS 300", "water:bandLow 0.35"):
+                  "review:reviewIntervalS 300", "water:litresPerFraction 2.0"):
         predicate, value = query.split()
         rows = bindings(st.query(
             "SELECT ?v WHERE { GRAPH <%s> { ?a %s ?v } }" % (beliefs_graph("fern"), predicate)))
@@ -195,7 +200,7 @@ def test_an_aged_volume_refuses_to_open(tmp_path, monkeypatch):
     aged.put_graph(beliefs_graph("fern"), BEFORE_THE_SWEEP)  # and then the code moved on
     del aged
 
-    with pytest.raises(SystemExit, match="hasTarget"):
+    with pytest.raises(SystemExit, match="slowSleepS"):
         genesis.open_belief_base(world, "fern", path)
 
 
@@ -211,5 +216,5 @@ def test_and_opens_when_asked_to_migrate(tmp_path, monkeypatch):
     monkeypatch.setenv("AGORA_MIGRATE_BELIEFS", "1")
     st = genesis.open_belief_base(world, "fern", path)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a water:hasTarget ?v } }" % beliefs_graph("fern")))
-    assert [r["v"] for r in rows] == ["0.55"]
+        "SELECT ?v WHERE { GRAPH <%s> { ?a perception:slowSleepS ?v } }" % beliefs_graph("fern")))
+    assert [r["v"] for r in rows] == ["600"]

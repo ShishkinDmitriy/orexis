@@ -12,16 +12,17 @@ the reading does not arrive before the auction closes, the agent simply misses i
 is the honest outcome.
 
 Two reasons it stays silent, and both are deliberate:
-  - it is at or above its target (a reflex — no need, no bid);
+  - it is at or above its aim (a reflex — no need, no bid);
   - its newest reading is staler than it is willing to trust. Owning the cadence must not
     mean bidding on a comfortable old number.
 
 The bid *number* is deterministic code (see decisions/deterministic-bid.md); an LLM would
 later produce the justification, never the number.
 
-This is also the capability that holds a **band**, so it is the one that answers when the
-agent is asked what it makes of a reading — see `annotate` and `urgency` below. Perception
-supplies numbers; a stake supplies verdicts.
+It is no longer the capability that holds a **band**. That moved to `desire`, where it is
+deduced per property from what the world states rather than picked as two decimals — and where
+an agent that bids in nothing at all can still have one. Perception supplies numbers, desire
+supplies verdicts, and this supplies a price.
 
 Vocabulary: capabilities/market/ontology.ttl (protocol) + domain/water/ontology.ttl (what a
 bid means here). Rules: capabilities/market/shapes.ttl, domain/water/shapes.ttl.
@@ -35,35 +36,40 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from .beliefs import BIDDING_BLOCK
-from .terms import BIDDING, PERCEPTION
+from .terms import (ACQUIRE, BIDDING, DELIBERATION, DESIRE, INTENTION, OBSERVE,
+                    PERCEPTION)
 
 # The term whose meaning this asks after is the one this package already names for its own
 # beliefs, so nothing here is written twice and nothing here is a domain property. A block's
 # terms are full IRIs, so this is written `<...>` rather than under an assumed prefix — which
-# is what lets the target live in the domain's namespace and `market:aboutProperty` in this
-# package's, without either being spelled twice.
-_TARGET = BIDDING_BLOCK.terms["target"]
+# is what lets the denomination live in the domain's namespace and `market:aboutProperty` in
+# this package's, without either being spelled twice. It hung on the target while the bidder
+# held one; the denomination outlived the point, so it hangs on the deficit-to-litres term now.
+_DENOMINATED = BIDDING_BLOCK.terms["litres_per_fraction"]
 _ABOUT_Q = f"""
 SELECT ?property WHERE {{
-  <{_TARGET}> market:aboutProperty ?property  }} LIMIT 1"""
+  <{_DENOMINATED}> market:aboutProperty ?property  }} LIMIT 1"""
 
 
-def value_bid(moisture: float, b, balance: float, allocated_l: float = 0.0) -> Bid | None:
+def value_bid(moisture: float, aim: float, b, balance: float,
+              allocated_l: float = 0.0) -> Bid | None:
     """Deterministic willingness-to-pay from a deficit. None means cede.
 
-    - the deficit below target drives both the litres wanted and the urgency (price);
+    - the deficit below the AIM drives both the litres wanted and the urgency (price). The aim
+      arrives as an argument because it is not a market belief: it is desire's — the pick
+      inside the region — and the caller asked whoever provides that family;
     - the bid is for *unmet* demand — what is already allocated is subtracted;
     - quantity is capped by what the wallet can actually pay for, so a bid is always solvent.
     """
-    deficit = b.target - moisture
+    deficit = aim - moisture
     if deficit <= 0:
-        return None  # at or above target — cede
+        return None  # at or above the aim — cede
 
     unmet_l = deficit * b.litres_per_fraction - allocated_l
     if unmet_l <= EPS:
         return None  # a prior allocation already covers it
 
-    urgency = min(1.0, deficit / b.target)
+    urgency = min(1.0, deficit / aim)
     price = b.max_value_per_l * urgency
     if price <= EPS or balance <= EPS:
         return None  # broke, or the water is worth nothing to me right now
@@ -106,9 +112,48 @@ class BiddingModule(Module):
         rows = bindings(self.agent.store.query(_ABOUT_Q))
         if not rows:
             raise RuntimeError(
-                f"{self.agent.id} holds <{_TARGET}> but the domain does not say what it is a "
-                f"target OF — state market:aboutProperty on it in the domain ontology")
+                f"{self.agent.id} bids, but the domain does not say what a bid is priced IN — "
+                f"state market:aboutProperty on <{_DENOMINATED}> in the domain ontology")
         return rows[0]["property"]
+
+    def _next_move(self, value: float | None) -> str | None:
+        """The WHETHER, asked of whoever deliberates — this module only carries moves out.
+
+        The deciding used to be welded in here: an offer meant look-then-bid, and value_bid's
+        cede was the whole of choosing. It is a family now, so a model can replace the reflex
+        without touching this module — see packages/capability/deliberation/. An agent granted
+        no deliberator keeps the old welded behaviour, which is what None falls through to at
+        each call site: the seam must not change what an agent WITHOUT it does.
+        """
+        deliberator = self.agent.provider(DELIBERATION)
+        if deliberator is None:
+            return None
+        return deliberator.propose(self.about, value)
+
+    def _keeper(self):
+        """Whoever keeps my commitments, or None — and None is a complete answer.
+
+        Everything below that touches the ledger is guarded by it: an agent granted no keeper
+        behaves exactly as before there was one, because in phase 3 the ledger RECORDS what this
+        module does and never gates it. What a standing intention absorbs is re-ADOPTION — one
+        commitment spanning several rounds — not the acts themselves; whether to act stays with
+        the reflexes here until deliberation is its own capability. See
+        knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
+        """
+        return self.agent.provider(INTENTION)
+
+    def _my_aim(self) -> float | None:
+        """The point I am steering the priced property toward — desire's, asked for at bid time.
+
+        Through `agent.provider`, so this package never imports desire's Python. None when
+        nothing here holds desires or no aim was picked, and the caller cedes: a bid prices the
+        deficit below an aim, and with no aim there is no deficit — only a number somebody would
+        have had to invent.
+        """
+        desire = self.agent.provider(DESIRE)
+        if desire is None:
+            return None
+        return desire.aim(self.about)
 
     def stop(self) -> None:
         if self._deadline:
@@ -131,31 +176,19 @@ class BiddingModule(Module):
                 return True
         return False
 
-    # --- what I make of a reading: the part only a stakeholder can supply ---
-
-    def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
-        """My stake is in one property of one subject. Both have to match.
-
-        The property test is the new half. My band is a band of the thing my desire is
-        denominated in; handed a reading of anything else about the same subject I hold no
-        opinion, and saying so is the difference between silence and a confident wrong verdict.
-        """
-        return subject_uri == self.me.acts_for and observed_property == self.about
-
-    def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
-        """My verdict on my own subject, for my agent's public announcement.
-
-        A band and never a number: the host learns that I am in trouble, not how wet I am.
-        """
-        if not self._is_mine(subject_uri, observed_property):
-            return {}
-        return {"band": self.beliefs.band(value)}
-
-    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
-        """How close this puts me to my floor. Perception uses it to set its cadence."""
-        if not self._is_mine(subject_uri, observed_property):
-            return None
-        return self.beliefs.urgency(value)
+    # --- what I no longer make of a reading ---
+    #
+    # `annotate` and `urgency` used to be implemented here, and they have gone to
+    # `packages/capability/desire/`. The reason is not tidiness: holding an opinion about your own
+    # state was conditional on being a market participant, and an agent acting for a plant in a
+    # world with no economy at all still knows when that plant is in trouble — it simply has
+    # nobody to ask for help. A band is a fact about a STAKE and a bid is a fact about a market,
+    # and one of those is a special case of having the other.
+    #
+    # Nothing here calls the desire module. It contributes through the same `annotate`/`urgency`
+    # hooks this class used, so the announcement and the cadence are unchanged in shape — see
+    # `agent/module.py`. What did change is that they now answer for every property the agent has
+    # a region in, rather than for the one a bid happens to be priced in.
 
     # --- answering an offer ---
 
@@ -181,6 +214,21 @@ class BiddingModule(Module):
             self.submit(reading.value)
             return
 
+        # No reading it trusts — so ask whoever deliberates what to do about not seeing. The
+        # reflex says look, which is what this module always did; the point of asking anyway is
+        # that a member with more context could say otherwise, without this line changing.
+        if self.agent.provider(DELIBERATION) is not None                 and self._next_move(None) != OBSERVE:
+            self.log.info("auction %s: deliberation chose not to look — sitting out",
+                          auction_id)
+            self.pending = None
+            return
+
+        # Waiting on the sensor is a commitment — the state `pending` has always carried,
+        # recorded now so it can outlive this process's memory of it.
+        if keeper := self._keeper():
+            keeper.adopt(OBSERVE, self.about,
+                         f"auction {auction_id} needs a reading I do not have fresh")
+
         # Give up when the auction closes — a bid nobody can count is not a bid.
         window = float(offer.get("closes_in_s") or 0) or 1.0
         self._deadline = Timer(window, self.give_up)
@@ -196,14 +244,18 @@ class BiddingModule(Module):
             return
         if observed_property != self.about:
             return
+        if keeper := self._keeper():
+            keeper.satisfy(OBSERVE, self.about, "the look I asked for came back")
         self.submit(value)
 
     def give_up(self) -> None:
         if self._deadline:
             self._deadline.stop()
         if self.pending:
-            self.log.info("auction %s: sitting out — %s",
-                          self.pending["auction_id"], self._why_blind())
+            why = self._why_blind()
+            self.log.info("auction %s: sitting out — %s", self.pending["auction_id"], why)
+            if keeper := self._keeper():
+                keeper.drop(OBSERVE, self.about, f"the auction closed first: {why}")
             self.pending = None
 
     def _why_blind(self) -> str:
@@ -235,11 +287,34 @@ class BiddingModule(Module):
             return
         auction_id, market = rnd["auction_id"], rnd["market"]
 
-        bid = value_bid(moisture, self.beliefs, self.balance)
-        if bid is None:
-            self.log.info("auction %s: moisture %.3f, target %.2f — cede",
-                          auction_id, moisture, self.beliefs.target)
+        # The WHETHER is the deliberator's. The reflex member reproduces exactly the cede this
+        # module used to compute for itself — below the aim, pursue; otherwise nothing — so the
+        # behaviour is unchanged and the DECIDER is replaceable. An agent with no deliberator
+        # falls through to the old welded logic: value_bid still cedes at-or-above the aim.
+        if self.agent.provider(DELIBERATION) is not None                 and self._next_move(moisture) != ACQUIRE:
+            self.log.info("auction %s: moisture %.3f — deliberation chose not to pursue",
+                          auction_id, moisture)
             return
+
+        aim = self._my_aim()
+        if aim is None:
+            self.log.info("auction %s: I hold no aim in %s — sitting out",
+                          auction_id, self.about)
+            return
+
+        bid = value_bid(moisture, aim, self.beliefs, self.balance)
+        if bid is None:
+            self.log.info("auction %s: moisture %.3f, aim %.2f — cede",
+                          auction_id, moisture, aim)
+            return
+
+        # The commitment is to the GAP, not to the round: adopted with the first bid, absorbed
+        # for every further bid while it stands (that is the keeper's patience at work — one
+        # commitment spanning several rounds is one intention), resolved by the voucher.
+        if keeper := self._keeper():
+            keeper.adopt(ACQUIRE, self.about,
+                         f"bid {bid.max_qty_l}L @ {bid.max_price_per_l}/L in auction "
+                         f"{auction_id} to close my deficit below {aim}")
 
         self.log.info("auction %s: moisture %.3f -> bid %.3f L @ €%.3f",
                       auction_id, moisture, bid.max_qty_l, bid.max_price_per_l)
@@ -258,4 +333,7 @@ class BiddingModule(Module):
         debit = float(voucher.get("debit", 0.0))
         self.balance -= debit
         self.won_l += amount
+        if keeper := self._keeper():
+            keeper.satisfy(ACQUIRE, self.about,
+                           f"voucher for {amount}L at a debit of {debit}")
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, self.balance)

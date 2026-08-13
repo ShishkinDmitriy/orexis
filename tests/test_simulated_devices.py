@@ -62,17 +62,18 @@ def test_the_simulated_world_derives_what_a_wired_one_does():
     different world.
 
     What survives is sharper. Everything `sensing`'s fern derives, `simulation`'s fern derives
-    too, and the only thing the market world adds is the market capability. Pinning the
-    difference rather than asserting sameness is what still catches the failure this was written
-    for: if a simulated probe ever stopped deriving `Subscribing` the way a real one does, it
-    would fall out of the subset.
+    too, and what the market world adds follows from its fern having a STAKE: `ag:actsFor` a
+    plant that states what it needs buys both the desire and the standing to bid for it, and
+    neither is a fact about the hardware. Pinning the difference rather than asserting sameness
+    is what still catches the failure this was written for: if a simulated probe ever stopped
+    deriving `Subscribing` the way a real one does, it would fall out of the subset.
     """
     wired, simulated = _caps("sensing")["fern"], _caps("simulation")["fern"]
     assert wired <= simulated, (
         f"the wired fern derives {wired - simulated} that the simulated one does not — "
         f"the simulation has stopped standing in for hardware")
-    assert simulated - wired == {"Bidding"}, \
-        "the simulated world differs by something other than having a market"
+    assert simulated - wired == {"Bidding", "Deducing", "Keeping", "Reflex"}, \
+        "the simulated world differs by something other than its fern having a stake"
 
 
 # --- the shapes, each proved to reject something ----------------------------

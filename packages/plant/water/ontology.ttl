@@ -50,14 +50,19 @@ water:dryRatePerTick a owl:DatatypeProperty ; rdfs:domain water:Plant ; rdfs:ran
 # would revise its own copy, and being wrong about it would cost it money.
 water:litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "litres per fraction" ;
-    rdfs:comment "Litres needed to raise moisture by 1.0 — converts a deficit into a demand." .
+    market:aboutProperty water:SoilMoisture ;
+    rdfs:comment "Litres needed to raise moisture by 1.0 — converts a deficit into a demand. What it is a fraction OF is stated here rather than left to the reader: the whole valuation (this, maxValuePerL, and the aim asked of desire) is denominated in soil moisture, and an agent holding readings of several properties must not price a humidity. This statement hung on water:hasTarget while that term existed; the denomination outlived the point." .
 
 #################  What a bid means here — the bidder's private valuation  #################
+#
+#  `water:hasTarget` was here and is GONE, to `desire:aims`. It fused two things: the point an
+#  agent steers its moisture toward (desire's — any agent with a stake holds one, market or no
+#  market) and the input a litre-deficit is priced from (this domain's). What this domain keeps
+#  is the pricing: how a deficit becomes litres, what a litre is worth, and the statement of
+#  WHICH property the whole valuation is denominated in — which now hangs on litresPerFraction,
+#  the term that is most literally "per fraction OF something". A bidder asks whoever provides
+#  the desire family for the aim in that property; it holds no point of its own.
 
-water:hasTarget a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
-    rdfs:label "has target" ;
-    market:aboutProperty water:SoilMoisture ;
-    rdfs:comment "Desire: the moisture fraction this agent is trying to hold. The deficit below it drives both how much it wants and how badly. What it is a fraction OF is stated here rather than left to the reader — the whole private valuation (this, the bands, litresPerFraction) is denominated in soil moisture, and an agent that now holds readings of several properties must not judge a humidity against it." .
 water:maxValuePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "max value per litre" ;
     rdfs:comment "Willingness to pay at peak urgency — the private value curve. The market sees the bid, never this." .
@@ -65,13 +70,21 @@ water:maxValuePerL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xs
 #################  Judgment — desire-relative, never recorded as fact  #################
 
 water:Band a owl:Class ; rdfs:label "Moisture band" ;
-    rdfs:comment "A verdict, not testimony. Computed by each agent from a reading against ITS OWN limits, and stored nowhere: the same 0.18 is LOW for a fern and OK for a succulent." .
+    rdfs:comment "A verdict, not testimony. Computed by each agent from a reading against ITS OWN region, and stored nowhere: the same 0.18 is LOW for a fern and OK for a succulent." .
 water:LOW  a water:Band ; rdfs:label "LOW" .
 water:OK   a water:Band ; rdfs:label "OK" .
 water:HIGH a water:Band ; rdfs:label "HIGH" .
 
-water:bandLow a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
-    rdfs:label "band low" ;
-    rdfs:comment "Below this the agent judges ITSELF low. A comfort limit, desire-relative — not the rot limit, which is physical and the constitution's." .
-water:bandHigh a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
-    rdfs:label "band high" .
+#  `water:bandLow` and `water:bandHigh` were here and are GONE, in favour of the region
+#  `packages/capability/desire/` deduces from what a plant states it needs.
+#
+#  They were two decimals in a private file with nothing to answer to, and the gap showed most
+#  clearly in the comment the low one carried for months: *"a comfort limit, desire-relative —
+#  not the rot limit, which is physical and the constitution's"*. The rot limit is the survival
+#  range's ceiling, the comfort limit is the operating range's, and both are the PLANT's — so an
+#  agent restating them privately, in numbers only it could see, was keeping a second copy of a
+#  public fact and was free to keep a wrong one.
+#
+#  The three words survive above, because the verdict is still the agent's to compute and still
+#  never recorded. What is gone is the idea that the agent gets to pick where the edges are.
+#  See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.

@@ -269,6 +269,26 @@ def render_health(world: str) -> dict:
         ("Readings heard", SENSOR_MEASUREMENT, "readings_total", "stat", "short", 12, 5,
          "Since boot, per sensor. Zero on a sensing agent means its board has never once been "
          "heard from — a different fault from one that went quiet."),
+        # The BDI series. Contributed by the desire and intention modules through `reports()`,
+        # so an agent without those capabilities simply has no line here — the supplier's
+        # absence from these panels is itself a reading, not a gap in the dashboard.
+        ("Worst gap", AGENT_MEASUREMENT, "worst_gap", "timeseries", "short", 24, 8,
+         "|gap| over every property the agent wants held: 0 at the point of its region, 1 at "
+         "the edge of what its subject survives. THE line to watch — a society doing its job "
+         "keeps everyone's low, and one agent's climb is the story of a round before it opens. "
+         "Absent until that agent's sensors have delivered once: unmeasured is not zero."),
+        ("Standing intentions", AGENT_MEASUREMENT, "intentions_standing", "timeseries", "short", 12, 7,
+         "Commitments adopted and not yet resolved. Saw-toothing with rounds is health; a "
+         "plateau above zero is an agent waiting on a world that has stopped answering."),
+        ("Oldest standing intention", AGENT_MEASUREMENT, "oldest_intention_s", "timeseries", "s", 12, 7,
+         "How long the oldest open commitment has stood. The failure this catches is invisible "
+         "everywhere else precisely because nothing is happening: a bid whose round vanished, a "
+         "look whose board went quiet. Compare intention:patienceS — past it, the next adoption "
+         "supersedes."),
+        ("Desires held", AGENT_MEASUREMENT, "desires", "stat", "short", 12, 5,
+         "How many properties this agent wants held — deduced from what its subject states, so "
+         "a change here means the WORLD changed, not the agent. Zero on an agent that should "
+         "want things means its plant's ranges stopped deriving."),
     ]
 
     panels, y, pid = [], 0, 1

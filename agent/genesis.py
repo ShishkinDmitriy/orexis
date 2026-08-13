@@ -26,13 +26,14 @@ See knowledge/decisions/where-the-belief-base-lives.md, knowledge/domain/world.m
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 from . import config, inference, loader, provenance, vocabulary
 from .config import REPO_ROOT
 from .ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
-from .store import Store, bindings
+from .store import NAMESPACES, Store, bindings
 
 # Everything public that is computed rather than read from a file. Emptied before each recompute
 # so the answer is the files' and not last boot's — a fact that stops being entailed, or a rule
@@ -155,8 +156,69 @@ WHERE {{
  }} GROUP BY ?agentId ORDER BY ?agentId"""
 
 
+# A rule that owns a graph of its own names its CLASS, never the graph. `$into(pkg:SomeGraph)`
+# is resolved against the vocabulary here, which is the same discipline `store.public_graphs()`
+# follows for reads — a graph IRI is an instance, and rule 1 applies to it as much as it applies
+# to `ag:fern_agent`.
+#
+# Generic on purpose. The kernel learns no package's name: a package declares a graph class, types
+# one graph as an instance of it, and its rule writes there. `$derived` remains the default and
+# means what it always meant, so no existing rule changed.
+_INTO = re.compile(r"\$into\(([^)]+)\)")
+
+_GRAPH_OF_CLASS = "SELECT ?g WHERE {{ ?g a <{cls}> }}"
+
+
+def _expand(prefixed: str) -> str:
+    """`desire:DesireGraph` -> its full IRI, using the namespaces every rule already has.
+
+    The same table `store.PREFIXES` is built from, so a rule may name a class exactly as it
+    names one in its own WHERE clause and there is no second spelling to keep in step.
+    """
+    label, _, local = prefixed.strip().partition(":")
+    namespace = NAMESPACES.get(label)
+    if namespace is None or not local:
+        raise RuntimeError(
+            f"$into({prefixed}) names no known namespace — a rule may use only the prefixes "
+            f"`store.PREFIXES` declares, and a package's own arrives from its ontology.ttl")
+    return namespace + local
+
+
+def graph_of_class(st: Store, class_iri: str) -> str:
+    """The one graph the vocabulary types as this class. Refused if there is not exactly one.
+
+    Not defaulted and not resolved by picking the first. Two graphs of one class is a legitimate
+    thing to READ — that is the whole reason desire is a class rather than a graph — but a write
+    has to land somewhere definite, and choosing for the author would put facts in a graph
+    nobody named. Zero is the likelier mistake: a package that declared a class and forgot to
+    type an instance would otherwise write into a graph called `None`.
+    """
+    graphs = sorted({r["g"] for r in bindings(st.query(_GRAPH_OF_CLASS.format(cls=class_iri)))})
+    if len(graphs) != 1:
+        raise RuntimeError(
+            f"<{class_iri}> types {len(graphs)} graphs ({', '.join(graphs) or 'none'}) — a rule "
+            f"writing into one needs exactly one. Type an instance of it in the ontology that "
+            f"declares the class.")
+    return graphs[0]
+
+
+def write_targets(st: Store) -> tuple[str, ...]:
+    """Every graph any rule may write into: the world's derived graph, plus each `$into`.
+
+    Asked of the rules rather than listed, so a package that starts owning a graph is
+    automatically excluded from what derivations READ, cleared before each recompute, and
+    described in the provenance graph. All three follow from being a write target, and all three
+    used to be true of exactly one graph because there was exactly one.
+    """
+    named = {WORLD_DERIVED_GRAPH}
+    for path in loader.rule_files():
+        for prefixed in _INTO.findall(path.read_text()):
+            named.add(graph_of_class(st, _expand(prefixed)))
+    return tuple(sorted(named))
+
+
 def substitute(rule: str, st: Store) -> str:
-    """Fill a derivation rule's placeholders in: `$given` and `$derived`.
+    """Fill a derivation rule's placeholders in: `$given`, `$derived` and `$into(…)`.
 
     A rule says what it concludes; where the facts it reads are kept, and where its conclusions
     go, are not its business. Both used to be typed out — four `USING` lines and an `INSERT
@@ -166,21 +228,25 @@ def substitute(rule: str, st: Store) -> str:
     Same idiom as `capabilities/*/review.rq`, whose `$me` and `$evidence` are substituted for
     exactly the same reason: a shipped rule cannot know an instance.
 
-    **`$given` is public MINUS the graph rules write to.** A derivation reads facts, never
+    **`$given` is public MINUS every graph rules write to.** A derivation reads facts, never
     conclusions — otherwise a rule could see what another rule derived and the answer would
-    depend on which package happened to load first. Excluding it here rather than trusting each
-    rule to leave it out is the difference between an invariant and a convention.
+    depend on which package happened to load first. Excluding them here rather than trusting each
+    rule to leave them out is the difference between an invariant and a convention. It used to be
+    one graph and is now however many `write_targets` finds, which is the same invariant asked
+    of the rules instead of remembered.
 
     Comment lines are left alone. They talk *about* the placeholders, and substituting into
     prose spliced a five-line `USING` block into the middle of a sentence — which SPARQL then
     reported as a syntax error twenty lines from anything a reader had written.
     """
-    given = "\n".join(f"USING <{g}>" for g in st.public_graphs()
-                      if g != WORLD_DERIVED_GRAPH)
+    targets = write_targets(st)
+    given = "\n".join(f"USING <{g}>" for g in st.public_graphs() if g not in targets)
     out = []
     for line in rule.splitlines():
         if not line.lstrip().startswith("#"):
             line = line.replace("$given", given).replace("$derived", f"<{WORLD_DERIVED_GRAPH}>")
+            line = _INTO.sub(
+                lambda m: f"<{graph_of_class(st, _expand(m.group(1)))}>", line)
         out.append(line)
     return "\n".join(out)
 
@@ -212,14 +278,19 @@ def refresh_public(st: Store, world: Path) -> None:
     st.put_graph(ONTOLOGY_GRAPH, t_box)
     st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in world_files(world)),
                  dataset=True)
-    for graph in COMPUTED_GRAPHS:
+    # The T-Box is in, so a rule's `$into` can be resolved: a write target is discovered from
+    # the vocabulary, and everything below treats all of them alike. Computed before the clear
+    # rather than after, because a graph cleared is a graph whose class assertion still stands —
+    # that lives in the ontology, not in the graph itself.
+    targets = write_targets(st)
+    for graph in set(COMPUTED_GRAPHS) | set(targets):
         st.clear_graph(graph)
     inference.materialise(st)
     for rule in loader.rule_files():
         st.update(substitute(rule.read_text(), st))
     # Last, because it describes the result: which graph holds what, in PROV-O, so the
     # store answers that rather than this file's comments. See agora/provenance.py.
-    provenance.describe(st, world)
+    provenance.describe(st, world, targets)
 
 
 def derived(st: Store) -> list[tuple[str, str]]:
