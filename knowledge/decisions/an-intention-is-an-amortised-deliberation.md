@@ -144,6 +144,9 @@ so this is that decision growing teeth rather than changing course.
 - **Regimes still unexpressed.** A second `desire:DesireGraph` is where a seasonal regime would
   land; the selection mechanism is still missing, unchanged from
   [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md).
-- **Which model, and what context window** — the LLM member's mechanics (endpoint as
-  environment, per the no-config rule; prompt as affordance menu) are deliberately not designed
-  here. The family seam is what this record buys; the member is a directory when it comes.
+- ~~**Which model, and what context window**~~ — the *when* and the *what-becomes-of-the-answer*
+  are now settled by
+  [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md):
+  consulted at the edge of knowledge, answer written down as affordance facts, approval split by
+  time because the interface is genesis-only. What stays open there is the residue that was open
+  here — endpoint as environment, the prompt as a menu derived per #127.
