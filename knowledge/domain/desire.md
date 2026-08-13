@@ -36,14 +36,15 @@ files: a plant whose range is amended must not leave an agent holding the old re
 
 # What the rest of the society asks it
 
-Three questions, and none of the askers imports this package — they arrive through the hooks
+Four questions, and none of the askers imports this package — they arrive through the hooks
 every module has (`agent/module.py`) or through `agent.provider(DESIRE)`.
 
 | question | who asks | what it does with it |
 |---|---|---|
 | `band(property, value)` — LOW / OK / HIGH | [sensing](/domain/sensing.md), for the announcement | a host hears that a participant is in trouble, never how wet it is |
 | `urgency(property, value)` — 0.0 to 1.0 | perception, for the cadence | attention follows need: the closer to trouble, the closer it watches |
-| `region(property)` | anything that needs to aim rather than judge | the numbers themselves |
+| `region(property)` | anything that needs the range itself | the numbers |
+| `aim(property)` — the pick inside the region | a bidder, at bid time, for the point a deficit is priced against | None is an answer: with no aim there is no deficit, and the bidder cedes rather than inventing one |
 
 **The band is the region; urgency is measured from its centre toward the survival bound on that
 side.** So urgency rises *inside* the region rather than waiting for the edge — an agent at the
@@ -75,8 +76,9 @@ be allowed to start precisely so it can do something about it; and whoever holds
 
 # What it is not
 
-- **Not a target.** A region is a range and a target is a point inside it. The target stays a
-  private belief in `beliefs/<id>.ttl`, is the agent's to move within its
+- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`desire:aims`,
+  which replaced `water:hasTarget`) stays a private belief in `beliefs/<id>.ttl`, is the agent's
+  to move within its
   [mandate](/decisions/self-review-is-a-capability.md), and is checked against the region at boot.
   Range public, pick private — see
   [a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md).

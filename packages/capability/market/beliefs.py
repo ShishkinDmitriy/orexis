@@ -24,17 +24,16 @@ BANDS = ("LOW", "OK", "HIGH")
 class BiddingBeliefs:
     """market:Bidding — its wallet, the point it is aiming at, and its private value curve.
 
-    **The band is not here any more, and its absence is the point.** A bidder used to hold
-    `water:bandLow` and `water:bandHigh` and to be the only thing in an agent that could say what
-    a reading MEANT — which made having an opinion about your own state conditional on being a
-    market participant, and limited it to the one property a bid is priced in. Judging a reading
-    is desire's, in `packages/capability/desire/`, where it is per property and deduced from what
-    the world states rather than picked. What is left here is what a BID needs and nothing else:
-    a wallet, a point to aim at, and what a litre is worth on the way to it.
+    **Neither the band nor the aim is here any more, and the absences are the point.** A bidder
+    used to hold `water:bandLow`/`water:bandHigh` and `water:hasTarget`, making it the only
+    thing in an agent that could say what a reading MEANT or what state it was steering for —
+    which made both conditional on being a market participant. Judging is desire's; so is the
+    aim, which any agent with a stake holds whether or not a market exists. What is left here is
+    what only a BID needs: a wallet, how a deficit becomes litres, and what a litre is worth.
+    The aim is asked of whoever provides the desire family, at bid time.
     """
 
     endowment: float
-    target: float
     litres_per_fraction: float
     max_value_per_l: float
 
@@ -59,7 +58,6 @@ BIDDING_BLOCK = Block(
         # answer differently. That split is visible now: swapping the domain swaps a namespace,
         # which is what AGENTS.md means by the domain being a plug-in.
         "endowment": term("hasEndowment"),
-        "target": ontology.WATER + "hasTarget",
         "litres_per_fraction": ontology.WATER + "litresPerFraction",
         "max_value_per_l": ontology.WATER + "maxValuePerL",
     },

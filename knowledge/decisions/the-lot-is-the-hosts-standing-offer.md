@@ -118,10 +118,13 @@ Three costs, and the third is the one that matters:
 - **The lot is one number for every round.** It does not vary with the season, the tank level,
   or how many agents are plumbed in. `water:capacityL` is the physical ceiling and is checked by
   clearing, but nothing connects it to what is offered.
-- **Nothing ties `bandLow` to `hasTarget`.** A beliefs file can state a `bandLow` above its
-  target, which would make an agent announce trouble it will not bid on. No shape forbids it,
-  because it is not obviously wrong — an agent may want to be told about a state it does not
-  intend to act on.
+- ~~**Nothing ties `bandLow` to `hasTarget`.**~~ **DISSOLVED** rather than closed: both terms
+  are gone. The band is now the deduced region and the target is `desire:aims`, a pick shaped to
+  sit inside that same region — so "announce trouble it will not bid on" can no longer be
+  authored by drifting two decimals apart. What survives of the observation is the two-threshold
+  DESIGN above (trouble opens a round, the aim prices the bid), which is now carried by the
+  region's edge and the aim rather than by two unanchored numbers. See
+  [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 - **The host has no stake in when to open.** It reacts to other agents' verdicts and holds no
   view of its own about whether now is a good time to sell, which
   [strategic-supplier](/decisions/strategic-supplier.md) says it otherwise is.

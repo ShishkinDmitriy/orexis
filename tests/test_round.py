@@ -240,12 +240,13 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
     assert fern.sent.under("market/") != [], "the reading it was actually waiting for"
 
 
-def test_a_bidder_whose_desire_names_no_property_refuses_to_start(make):
-    """The link is asked of the DESIRE, not of the market, so this is what its absence breaks.
+def test_a_bidder_whose_domain_prices_no_property_refuses_to_start(make):
+    """The link is asked of the DOMAIN's valuation term, not of the market, so this is what its
+    absence breaks.
 
     A market is a lot — 1L of water is 1L of water whether or not anyone's soil is dry, and a
-    market for something no instrument measures must stay expressible. The stake is the
-    property-shaped thing: a target of 0.55 is 0.55 *of* something. With that unsaid the only
+    market for something no instrument measures must stay expressible. The valuation is the
+    property-shaped thing: litres per fraction OF something. With that unsaid the only
     remaining rule is "judge whichever reading arrived last", which is the defect, so the agent
     declines to run instead.
     """
@@ -253,7 +254,7 @@ def test_a_bidder_whose_desire_names_no_property_refuses_to_start(make):
 
     ds = genesis_store()
     ds.update(f"""DELETE WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-        <http://example.org/agora/water#hasTarget>
+        <http://example.org/agora/water#litresPerFraction>
         <http://example.org/agora/market#aboutProperty> ?p }} }}""")
 
     with pytest.raises(RuntimeError, match="aboutProperty"):

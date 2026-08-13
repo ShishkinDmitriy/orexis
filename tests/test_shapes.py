@@ -128,19 +128,27 @@ def test_nobody_may_sleep_past_the_constitutional_ceiling():
         WHERE  {{}}"""))
 
 
-def test_a_target_outside_the_region_is_refused():
-    """The check that replaced the band shapes, and it asks a stronger question.
-
-    A band was two decimals held to being the right way round and to nothing else — 0.35 and 0.90
-    were as defensible as any other pair. A target is a PICK, and this is what it picks inside:
-    the region the agent DEDUCED from what its plant states, which no belief file can move. Fern
-    grows in 0.45-0.65, so 0.90 is not a bold opinion about water — it is a number with nothing
-    behind it, and the agent refuses to start.
-    """
+def test_a_bidder_with_no_aim_in_the_priced_property_is_refused():
+    """The domain's own half of the split: WHERE an aim may sit is desire's arithmetic, but that
+    a BID needs one is a fact only the domain knows — a bidder with no aim in the property its
+    bids are priced in has no deficit to value. Deleting fern's whole aim leaves a bidder that
+    could only invent a number, and it must not start instead."""
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent water:hasTarget 0.55 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent water:hasTarget 0.90 }} }}
-        WHERE  {{}}"""))
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{
+                 ag:fern_agent desire:aims ?aim . ?aim ?p ?o }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
+                 ag:fern_agent desire:aims ?aim . ?aim ?p ?o }} }}"""))
+
+
+def test_an_aim_in_a_property_with_no_region_is_refused():
+    """A pick with nothing to pick inside. Fern holds no humidity region — its plant states no
+    humidity range — so an aim there is a number with nothing behind it, whatever its value."""
+    assert not _conforms(_mutate(f"""
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{
+            ag:fern_agent desire:aims [
+                ssn:forProperty <http://example.org/agora/water#AirHumidity> ;
+                schema:value 0.5 ] }} }}
+        WHERE {{}}"""))
 
 
 def test_bidder_must_have_a_valuation():
@@ -287,9 +295,11 @@ def test_valve_must_carry_its_calibration():
 
 
 def test_a_plant_may_not_hold_a_desire():
-    """The target belongs to an agent's beliefs; a plant that held one would be a category error."""
+    """The aim belongs to an agent's beliefs; a plant that held one would be a category error."""
     assert not _conforms(_mutate(f"""
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern water:hasTarget 0.55 }} }} WHERE {{}}"""))
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern <http://example.org/agora/desire#aims> [
+            <http://www.w3.org/ns/ssn/forProperty> <http://example.org/agora/water#SoilMoisture> ;
+            <https://schema.org/value> 0.55 ] }} }} WHERE {{}}"""))
 
 
 def test_market_must_state_all_three_channels():
@@ -640,17 +650,19 @@ INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
 # privately in its own beliefs. See
 # knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.
 
-def test_a_target_outside_the_agents_region_is_refused():
+def test_an_aim_outside_the_agents_region_is_refused():
     """A desire is a pick WITHIN a range. Moved outside it, the agent will not start.
 
-    Worth stating why this can be checked at all: the region is public and the target is private,
-    and they meet in exactly one place — inside the agent, whose store holds the world it booted
-    with and its own beliefs. Nothing outside the agent ever sees the number.
+    Fern grows in 0.45-0.65, so 0.90 is not a bold opinion about water — it is a number with
+    nothing behind it. Worth stating why this can be checked at all: the region is public and
+    the aim is private, and they meet in exactly one place — inside the agent, whose store holds
+    the world it booted with and its own beliefs. Nothing outside the agent ever sees the number.
     """
-    data = _mutate("""
-        DELETE { GRAPH ?g { ag:fern_agent <http://example.org/agora/water#hasTarget> ?t } }
-        INSERT { GRAPH ?g { ag:fern_agent <http://example.org/agora/water#hasTarget> 0.90 } }
-        WHERE  { GRAPH ?g { ag:fern_agent <http://example.org/agora/water#hasTarget> ?t } }""")
+    data = _mutate(f"""
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.55 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.90 }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
+                 ag:fern_agent desire:aims ?aim . ?aim schema:value 0.55 }} }}""")
     assert not _conforms(data)
     assert "pick within a range" in _report(data)
 
@@ -682,11 +694,13 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
 
 
 def test_a_plant_still_holds_no_desire_of_its_own():
-    """The range is not a target wearing a different name. The older rule stands: a plant may
+    """The range is not an aim wearing a different name. The older rule stands: a plant may
     say what it needs and may not say what it wants."""
     data = _mutate("""
         INSERT { GRAPH <http://example.org/agora/graph/world> {
-            ag:fern <http://example.org/agora/water#hasTarget> 0.55 } }
+            ag:fern <http://example.org/agora/desire#aims> [
+                <http://www.w3.org/ns/ssn/forProperty> <http://example.org/agora/water#SoilMoisture> ;
+                <https://schema.org/value> 0.55 ] } }
         WHERE {}""")
     assert not _conforms(data)
     assert "a plant holds no desire" in _report(data)

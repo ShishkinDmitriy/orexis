@@ -11,7 +11,7 @@ import pytest
 from agent import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
 from agent.beliefs import BeliefError, Beliefs, Reading
-from packages.capability.desire import regions_of
+from packages.capability.desire import aims_of, regions_of
 from packages.capability.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
 from packages.capability.perception.beliefs import SUBSCRIBING_BLOCK
 
@@ -41,16 +41,18 @@ def test_subscribing_block(fern):
 
 
 def test_bidding_block(fern):
-    """A wallet, a point to aim at and a value curve — and no band.
+    """A wallet and a value curve — no band and no target.
 
-    The band edges used to be read here too. They were the plant's own limits restated
-    privately, so they left with the desire capability: an agent judges a reading against the
-    region deduced from what its plant states, not against two decimals it was handed.
+    The band edges left first: they were the plant's own limits restated privately. The target
+    followed, as `desire:aims` — the point an agent steers for is a fact about its ends, not
+    about a market, and the bidder now asks whoever provides the desire family for it at bid
+    time. What is left is what only a BID needs.
     """
     b = fern.read(BIDDING_BLOCK)
-    assert b.target == 0.55
     assert b.max_value_per_l == 0.80
-    assert not hasattr(b, "low") and not hasattr(b, "high")
+    assert b.litres_per_fraction == 2.0
+    for gone in ("target", "low", "high"):
+        assert not hasattr(b, gone), gone
 
 
 def test_hosting_block(query):
@@ -60,11 +62,12 @@ def test_hosting_block(query):
 
 
 def test_agents_hold_different_opinions(query):
-    fern = Beliefs(query, "fern", FERN).read(BIDDING_BLOCK)
-    succ = Beliefs(query, "succulent", SUCCULENT).read(BIDDING_BLOCK)
-    # same world, same ontology, different mind — and neither is wrong
-    assert succ.target < fern.target
-    assert succ.max_value_per_l == fern.max_value_per_l  # and they agree about what it is worth
+    # same world, same ontology, different mind — and neither is wrong. The differing opinion
+    # is the AIM now, read the way the desire module reads it: privately, from each agent's own
+    # graph, which is why the id travels with the URI.
+    fern_aims = aims_of(query, "fern", FERN)
+    succ_aims = aims_of(query, "succulent", SUCCULENT)
+    assert succ_aims[MOISTURE] < fern_aims[MOISTURE]
 
 
 def test_slower_agent_tolerates_older_data(query):
@@ -113,17 +116,17 @@ def test_one_agent_cannot_read_anothers_beliefs(query):
 
 
 def test_a_missing_belief_is_an_error_not_a_default(query):
-    """The supplier holds no bidding terms — it must fail, never silently invent a target."""
+    """The supplier holds no bidding terms — it must fail, never silently invent a valuation."""
     with pytest.raises(BeliefError) as exc:
         Beliefs(query, "supplier", SUPPLIER).read(BIDDING_BLOCK)
-    # The FULL IRI, not `water:hasTarget`. Belief terms come from whichever package
+    # The FULL IRI, not `water:litresPerFraction`. Belief terms come from whichever package
     # declares them and packages own their namespaces, so a prefix here would be a
     # guess — and a wrong one for anything market: owns.
     #
     # Built from WATER and not from the kernel's `term()`, which is the whole point of the
-    # sweep: what a bidder wants held is the water domain's to name, and this assertion said
+    # sweep: what a pot takes is the water domain's to name, and this assertion said
     # `ag:` for as long as nobody had asked whose term it was.
-    assert ontology.WATER + "hasTarget" in str(exc.value)
+    assert ontology.WATER + "litresPerFraction" in str(exc.value)
     assert "supplier" in str(exc.value)
 
 

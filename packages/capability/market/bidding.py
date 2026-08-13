@@ -12,7 +12,7 @@ the reading does not arrive before the auction closes, the agent simply misses i
 is the honest outcome.
 
 Two reasons it stays silent, and both are deliberate:
-  - it is at or above its target (a reflex — no need, no bid);
+  - it is at or above its aim (a reflex — no need, no bid);
   - its newest reading is staler than it is willing to trust. Owning the cadence must not
     mean bidding on a comfortable old number.
 
@@ -36,35 +36,39 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from .beliefs import BIDDING_BLOCK
-from .terms import BIDDING, PERCEPTION
+from .terms import BIDDING, DESIRE, PERCEPTION
 
 # The term whose meaning this asks after is the one this package already names for its own
 # beliefs, so nothing here is written twice and nothing here is a domain property. A block's
 # terms are full IRIs, so this is written `<...>` rather than under an assumed prefix — which
-# is what lets the target live in the domain's namespace and `market:aboutProperty` in this
-# package's, without either being spelled twice.
-_TARGET = BIDDING_BLOCK.terms["target"]
+# is what lets the denomination live in the domain's namespace and `market:aboutProperty` in
+# this package's, without either being spelled twice. It hung on the target while the bidder
+# held one; the denomination outlived the point, so it hangs on the deficit-to-litres term now.
+_DENOMINATED = BIDDING_BLOCK.terms["litres_per_fraction"]
 _ABOUT_Q = f"""
 SELECT ?property WHERE {{
-  <{_TARGET}> market:aboutProperty ?property  }} LIMIT 1"""
+  <{_DENOMINATED}> market:aboutProperty ?property  }} LIMIT 1"""
 
 
-def value_bid(moisture: float, b, balance: float, allocated_l: float = 0.0) -> Bid | None:
+def value_bid(moisture: float, aim: float, b, balance: float,
+              allocated_l: float = 0.0) -> Bid | None:
     """Deterministic willingness-to-pay from a deficit. None means cede.
 
-    - the deficit below target drives both the litres wanted and the urgency (price);
+    - the deficit below the AIM drives both the litres wanted and the urgency (price). The aim
+      arrives as an argument because it is not a market belief: it is desire's — the pick
+      inside the region — and the caller asked whoever provides that family;
     - the bid is for *unmet* demand — what is already allocated is subtracted;
     - quantity is capped by what the wallet can actually pay for, so a bid is always solvent.
     """
-    deficit = b.target - moisture
+    deficit = aim - moisture
     if deficit <= 0:
-        return None  # at or above target — cede
+        return None  # at or above the aim — cede
 
     unmet_l = deficit * b.litres_per_fraction - allocated_l
     if unmet_l <= EPS:
         return None  # a prior allocation already covers it
 
-    urgency = min(1.0, deficit / b.target)
+    urgency = min(1.0, deficit / aim)
     price = b.max_value_per_l * urgency
     if price <= EPS or balance <= EPS:
         return None  # broke, or the water is worth nothing to me right now
@@ -107,9 +111,22 @@ class BiddingModule(Module):
         rows = bindings(self.agent.store.query(_ABOUT_Q))
         if not rows:
             raise RuntimeError(
-                f"{self.agent.id} holds <{_TARGET}> but the domain does not say what it is a "
-                f"target OF — state market:aboutProperty on it in the domain ontology")
+                f"{self.agent.id} bids, but the domain does not say what a bid is priced IN — "
+                f"state market:aboutProperty on <{_DENOMINATED}> in the domain ontology")
         return rows[0]["property"]
+
+    def _my_aim(self) -> float | None:
+        """The point I am steering the priced property toward — desire's, asked for at bid time.
+
+        Through `agent.provider`, so this package never imports desire's Python. None when
+        nothing here holds desires or no aim was picked, and the caller cedes: a bid prices the
+        deficit below an aim, and with no aim there is no deficit — only a number somebody would
+        have had to invent.
+        """
+        desire = self.agent.provider(DESIRE)
+        if desire is None:
+            return None
+        return desire.aim(self.about)
 
     def stop(self) -> None:
         if self._deadline:
@@ -224,10 +241,16 @@ class BiddingModule(Module):
             return
         auction_id, market = rnd["auction_id"], rnd["market"]
 
-        bid = value_bid(moisture, self.beliefs, self.balance)
+        aim = self._my_aim()
+        if aim is None:
+            self.log.info("auction %s: I hold no aim in %s — sitting out",
+                          auction_id, self.about)
+            return
+
+        bid = value_bid(moisture, aim, self.beliefs, self.balance)
         if bid is None:
-            self.log.info("auction %s: moisture %.3f, target %.2f — cede",
-                          auction_id, moisture, self.beliefs.target)
+            self.log.info("auction %s: moisture %.3f, aim %.2f — cede",
+                          auction_id, moisture, aim)
             return
 
         self.log.info("auction %s: moisture %.3f -> bid %.3f L @ €%.3f",

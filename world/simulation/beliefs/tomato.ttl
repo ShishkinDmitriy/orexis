@@ -1,3 +1,6 @@
+@prefix schema: <https://schema.org/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix desire: <http://example.org/agora/desire#> .
 @prefix review: <http://example.org/agora/review#> .
 @prefix perception: <http://example.org/agora/perception#> .
 @prefix water: <http://example.org/agora/water#> .
@@ -16,7 +19,6 @@ ag:tomato_agent
 ##  market:Bidding
 ag:tomato_agent
     market:hasEndowment 100.0 ;
-    water:hasTarget 0.50 ;
     water:litresPerFraction 2.0 ;
     water:maxValuePerL 0.80 .
 
@@ -30,3 +32,11 @@ ag:tomato_agent reporting:metricsIntervalS 60 .
 #   schedule — a decision plans its own next arising from when its effect could show.
 #   See knowledge/decisions/self-review-is-a-capability.md.
 ag:tomato_agent review:reviewIntervalS 300 .
+
+##  desire — the pick inside the region
+#   The point this agent steers its moisture toward. PRIVATE where the region is public: the
+#   region is deduced from what the plant states and answers to the sovereign; the aim answers
+#   to the region (desire:AimShape) and to nobody else, which is what makes it this agent's.
+#   It used to be water:hasTarget — one number that was also the market's pricing input. The
+#   market now asks desire for it, so an agent in a world with no market could still hold one.
+ag:tomato_agent desire:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.50 ] .

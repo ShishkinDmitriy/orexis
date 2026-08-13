@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from agent.module import Module
-from agent.ontology import SENSED_GRAPH
+from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from .terms import DEDUCING
@@ -41,6 +41,16 @@ from .terms import DEDUCING
 # file's own header. Read once at import: a malformed query is then an error the moment the
 # package loads rather than the first time somebody asks.
 GAP_QUERY = (Path(__file__).parent / "gap.rq").read_text()
+
+# My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
+# graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
+# never arrive that way.
+_AIMS_Q = """
+SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
+  <{me}> desire:aims ?aim .
+  ?aim ssn:forProperty ?property ;
+       schema:value ?value .
+}} }}"""
 
 # My own regions, read once at construction. The only instance identifier named is my own URI,
 # which is the single one a process is handed — everything else is a term.
@@ -161,6 +171,17 @@ def gaps_of(query, agent_uri: str) -> dict[str, Gap]:
     ) for row in bindings(query(substituted))}
 
 
+def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
+    """One agent's aims, property -> value. Private, so the beliefs graph is named.
+
+    Takes the id as well as the URI because the graph is named from the one and the subject from
+    the other — the same two facts the module itself is handed at construction.
+    """
+    return {row["property"]: float(row["value"])
+            for row in bindings(query(_AIMS_Q.format(
+                beliefs=beliefs_graph(agent_id), me=agent_uri)))}
+
+
 def regions_of(query, agent_uri: str) -> dict[str, Region]:
     """Every region one agent holds, property -> region. Read, never computed here.
 
@@ -189,6 +210,7 @@ class DesireModule(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.regions = regions_of(agent.store.query, self.me.uri)
+        self._aims = aims_of(agent.store.query, agent.id, self.me.uri)
         self.log.info("wants %s", ", ".join(
             f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
             for p, r in sorted(self.regions.items())) or "nothing")
@@ -203,6 +225,22 @@ class DesireModule(Module):
         computed against my ends without anything importing this package.
         """
         return self.regions.get(observed_property)
+
+    def aim(self, observed_property: str) -> float | None:
+        """The point I am steering this property toward, or None if I picked none.
+
+        The pick inside the region — private, mine, and the value `water:hasTarget` used to be.
+        A consumer that requires one (a bidder pricing a deficit) treats None as its own
+        refusal; nothing here defaults to the region's centre, because a fabricated preference
+        is still a fabricated belief.
+        """
+        return self._aims.get(observed_property)
+
+    def on_belief_revised(self, belief_term: str, value) -> None:
+        """An aim is a belief, so a review may move it — within the region, which is the same
+        check boot makes. Re-read rather than patched, because the revision names a term and an
+        aim is a structure: simplest correct answer is to ask the graph again."""
+        self._aims = aims_of(self.agent.store.query, self.agent.id, self.me.uri)
 
     # --- what I contribute to my siblings, through the contract every module has ---
 

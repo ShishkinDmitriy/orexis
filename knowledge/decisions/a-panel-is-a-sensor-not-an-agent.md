@@ -81,9 +81,11 @@ sensor without a unit is a reading nothing downstream can draw.
   is a bare `sosa:FeatureOfInterest`, and typing it `water:Plant` would require a
   `water:servedBy` the bench does not have. Ranges hang off any subject — `ssn-system:` declares
   no domain — so stating them there needs no plumbing, only a decision about what that pot is.
-- **The agent's own desired range is not drawn**, because there is no such term. `water:hasTarget`
-  is a point, and `water:bandLow`/`bandHigh` are a band the market's bidder holds — soil-moisture
-  only, and absent from an agent that merely records. A range an agent picks *within* the
-  subject's, per property, is the missing thing; see [#110](https://github.com/ShishkinDmitriy/agora/issues/110).
+- **The agent's own desired range is not drawn**, because there was no such term when this was
+  written. There is now: #110 closed, and `desire:desires` is a PUBLIC, per-property region in a
+  graph of its own — so a panel could draw an agent's region beside its subject's ranges with no
+  privacy question at all. The aim inside it stays private and stays undrawn. A dashboard pass
+  picking this up is real, unclaimed work; see
+  [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 - **Health dashboards were not touched.** They are per agent, which is correct — a bucket going
   quiet is an agent's property, not a sensor's.

@@ -63,6 +63,58 @@ desire:DesireShape a sh:NodeShape ;
                        || (BOUND(?ceiling) && ?high > ?ceiling))
             }""" ] .
 
+# The aim answers to the region, and both halves of that sentence are checked here rather than
+# in any domain: which properties may be aimed at and where the aim may sit are desire's
+# arithmetic, true of a thermostat exactly as of a pot. What a DOMAIN checks is different in
+# kind — that a bidder holds an aim in the property its bids are priced in — and stays in the
+# domain's shapes, because only the domain knows a bid exists.
+#
+# Targeted through what POINTS at an aim, not by class: an aim is written inline as
+# `desire:aims [ ... ]` and nobody types `a desire:Aim` on a node they are already describing —
+# the same lesson review's mandate shape records.
+desire:AimShape a sh:NodeShape ;
+    rdfs:comment "An aim is one property and one value, and the value sits inside the agent's own region for that property. The checks span a PUBLIC region and a PRIVATE aim, which meet only inside the agent at boot — nothing outside it ever sees the number." ;
+    sh:targetSubjectsOf desire:aims ;
+    sh:property [ sh:path ( desire:aims <http://www.w3.org/ns/ssn/forProperty> ) ;
+                  sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "an aim must say which property it is a pick FOR" ] ;
+    sh:property [ sh:path ( desire:aims <https://schema.org/value> ) ;
+                  sh:minCount 1 ; sh:datatype xsd:decimal ;
+                  sh:message "an aim must carry one decimal value" ] ;
+    sh:sparql [
+        sh:message "an aim names a property this agent holds no region in — a pick with nothing to pick inside is a number with nothing behind it" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/agora/desire#aims> ?aim .
+                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER NOT EXISTS {
+                    $this <http://example.org/agora/desire#desires> ?region .
+                    ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                }
+            }""" ] ;
+    sh:sparql [
+        sh:message "the aim sits outside the region this agent deduced for that property — a desire is a pick within a range, not a number of its own" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/agora/desire#aims> ?aim .
+                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                     <https://schema.org/value> ?value .
+                $this <http://example.org/agora/desire#desires> ?region .
+                ?region <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                        <https://schema.org/minValue> ?low ;
+                        <https://schema.org/maxValue> ?high .
+                FILTER(?value < ?low || ?value > ?high)
+            }""" ] ;
+    sh:sparql [
+        sh:message "two aims for one property — an agent steering one property toward two points is not steering" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/agora/desire#aims> ?one , ?other .
+                ?one   <http://www.w3.org/ns/ssn/forProperty> ?property .
+                ?other <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER(?one != ?other)
+            }""" ] .
+
 # The first consumer of the gap, and deliberately a WARNING. An observation outside the
 # survival envelope is not an invalid belief — it is an emergency, and an agent must be allowed
 # to start precisely so it can do something about it; a violation here would keep a thirsty
