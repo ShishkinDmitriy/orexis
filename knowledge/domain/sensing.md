@@ -204,6 +204,18 @@ lives with the agent (`cadence_for`), never on the board — same reason the ban
 polling agent would read the same two figures: they describe an interval either way, and only
 whose timer runs it changes.
 
+**And no longer than the trend allows** (#133). Urgency answers where the state *is*; a sleep
+granted on that alone can begin moments before the trend crosses into trouble, and nobody hears
+for the whole window. So the candidate sleep is checked against where the state is *heading*:
+the slope over the last two readings predicts the value at the end of the sleep, the same
+stakeholder is asked how urgent *that* would be, and a worse answer earns its own, shorter
+cadence. Tighten-only — a favourable trend relaxes nothing, because a prediction is trusted
+only in the direction where being wrong costs a reading rather than a plant. The slope is
+module memory (the store upserts observations, so history for it survives nowhere else), dies
+with the process, and is rebuilt from the next two readings; until then the bound simply is
+not there. Attention follows not just where you are but where you are going — the
+[derivative principle](/decisions/control-the-derivative-not-the-value.md), one level down.
+
 **The comfortable end is a pick, not a constant.** `perception:slowSleepS` is what its author chose
 before the agent had seen a reading; an agent that watches a probe report the same value for a
 window may re-pick it, inside the room its world's `review:commits` leaves it — and must come back the
