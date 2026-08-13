@@ -217,6 +217,12 @@ class SimulatedSensor:
         this necessary — several sensors taking their own number out of one payload.
         """
         doc: dict = {"sensor": self.sensor_id}
+        # The reading says which cadence it was taken under (#135) — scheduled mode only,
+        # because a push device keeps its own clock and has no commanded cadence to receipt.
+        # The real board reports the same field for the same reason: its RAM is cleared by
+        # deep sleep, so the ack is its only testimony about the rhythm actually in force.
+        if self.mode == "scheduled":
+            doc["sleep_s"] = int(self.sleep_s)
         for v in self.values:
             place(doc, v.pointer, round(v.value, 3))
         self.client.publish(self.reading_topic, json.dumps(doc), qos=1)

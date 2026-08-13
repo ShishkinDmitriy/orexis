@@ -107,14 +107,16 @@ def test_one_message_carries_every_property_the_board_reports():
     assert len(published) == 1, "a board sends one message, however many things it read"
     topic, payload = published[0]
     assert topic == "sensors/board_x/reading"
-    assert json.loads(payload) == {"sensor": "board_x", "value": 0.45, "temperature": 21.0}
+    assert json.loads(payload) == {"sensor": "board_x", "sleep_s": 60,
+                                   "value": 0.45, "temperature": 21.0}
 
 
 def test_a_single_property_board_sends_exactly_what_it_always_did():
-    """The shape a probe has always published. A list of one is not a special case."""
+    """The shape a probe has always published — plus, since #135, the cadence it was taken
+    under. A list of one is not a special case."""
     device, published = _device([MOISTURE])
     device._publish()
-    assert json.loads(published[0][1]) == {"sensor": "board_x", "value": 0.45}
+    assert json.loads(published[0][1]) == {"sensor": "board_x", "sleep_s": 60, "value": 0.45}
 
 
 def test_each_value_drifts_in_its_own_direction_and_range():
@@ -219,3 +221,21 @@ def test_a_reading_is_never_retained():
         {"topic": topic, "retain": retain})
     device._publish()
     assert calls and all(not c["retain"] for c in calls)
+
+
+def test_a_scheduled_stand_in_acks_the_cadence_it_runs(monkeypatch):
+    """The reading says which cadence it was taken under (#135) — the receipt for the retained
+    command, and the real board's only testimony about its rhythm, since deep sleep clears its
+    RAM and the retained message IS its memory."""
+    device, published = _device([MOISTURE])
+    device._publish()
+    assert json.loads(published[-1][1])["sleep_s"] == int(device.sleep_s)
+
+
+def test_a_push_stand_in_acks_nothing(monkeypatch):
+    """A push device keeps its own clock and takes no orders — there is no commanded cadence to
+    receipt, and a field here would invite an agent to hold a freshness rule the vocabulary
+    says it may not have."""
+    device, published = _device([MOISTURE], SIM_SENSE_MODE="push")
+    device._publish()
+    assert "sleep_s" not in json.loads(published[-1][1])

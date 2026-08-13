@@ -10,7 +10,7 @@
 // cadence command is what makes that reliable; `sense` is best-effort and lands only inside
 // the CMD_WAIT_MS window. See knowledge/domain/sensing.md.
 //
-//   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>",
+//   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>","sleep_s":600,
 //                               "temperature":21.4,"humidity":0.463}
 //              one message for the whole board — one client, one credential, one
 //              channel. Each sensor in the world picks its own value out with an
@@ -54,11 +54,15 @@ PubSubClient mqtt(wifi);
 #ifndef CMD_WAIT_MS
 #define CMD_WAIT_MS 1500        // listen window after publishing, to catch a retained cadence
 #endif
+#ifndef RETAINED_WAIT_MS
+#define RETAINED_WAIT_MS 700    // pre-publish drain: the retained command, so the ack is true
+#endif
 #ifndef WIFI_TIMEOUT_MS
 #define WIFI_TIMEOUT_MS 20000   // stop holding the radio up for a network that is not there
 #endif
 
 uint32_t sleep_s = DEFAULT_SLEEP_S;
+static bool got_cmd = false;    // a command arrived this wake — ends the pre-publish drain
 
 static float lastRaw = 0.0f; // kept for the serial line: calibration needs the RAW number
 
@@ -275,9 +279,14 @@ static void senseMoisture() {
 // world; a field that is absent is simply not read, and its agent says so rather than
 // recording a zero.
 static void publishReading() {
-  char payload[160];
-  int n = snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"",
-                   lastFrac, SENSOR_ID);
+  // The reading says which cadence it was taken under (#135). RAM is cleared by deep sleep, so
+  // sleep_s here is whatever the retained command said during the pre-publish drain — or the
+  // default, when no command was retained, which is exactly the case the agent needs to SEE:
+  // a cleared retained cadence (#37) used to be invisible, and now arrives as an ack that
+  // disagrees with what the agent believes it commanded.
+  char payload[176];
+  int n = snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\",\"sleep_s\":%u",
+                   lastFrac, SENSOR_ID, sleep_s);
   if (airValid && n > 0 && n < (int)sizeof(payload)) {
     n += snprintf(payload + n, sizeof(payload) - n, ",\"temperature\":%.1f,\"humidity\":%.3f",
                   airC, airRh);
@@ -292,6 +301,7 @@ static void publishReading() {
 
 // The agent sets the cadence (sleep_s) and can ask for an extra reading while we're awake.
 static void onCmd(char *topic, byte *payload, unsigned int len) {
+  got_cmd = true;  // ends the pre-publish drain, whatever the command carries
   JsonDocument doc;
   if (deserializeJson(doc, payload, len)) return;
   if (doc["sleep_s"].is<uint32_t>()) {
@@ -437,9 +447,18 @@ void setup() {
   }
 
   if (broker) {
+    // FIRST drain the retained command, so the reading can say which cadence it was taken
+    // under (#135): deep sleep clears RAM, so the retained message IS this board's memory of
+    // its own cadence, and publishing before reading it would ack the compile-time default
+    // every wake. Bounded and usually instant — a retained message arrives right behind the
+    // SUBACK — and a wake with nothing retained pays RETAINED_WAIT_MS once and acks the
+    // default, which is precisely the divergence the agent needs to see (#37's detector).
+    unsigned long drainUntil = millis() + RETAINED_WAIT_MS;
+    while (millis() < drainUntil && !got_cmd) mqtt.loop();
     // The same numbers already printed above, not a second look.
     publishReading();
-    // Then listen briefly: a retained cadence and verdict arrive the moment we subscribe.
+    // Then keep listening: the agent's LIVE response to this very reading — a re-aimed
+    // cadence, a verdict, a sense nudge — lands in this window and takes effect this wake.
     unsigned long until = millis() + CMD_WAIT_MS;
     while (millis() < until) mqtt.loop();
   }

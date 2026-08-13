@@ -77,7 +77,9 @@ class StoringModule(Module):
         try:
             self._writer.write_agent_health(
                 self.agent.id, metrics.agent_fields(),
-                {local_id: (metrics.readings.get(local_id, 0), metrics.reading_age_s(local_id))
+                {local_id: (metrics.readings.get(local_id, 0),
+                            metrics.reading_age_s(local_id),
+                            metrics.cadence_acked_s(local_id))
                  for local_id in sorted(metrics.sensors_seen())},
                 belief_bytes=tree_bytes(getattr(self.agent.store, "path", None)),
             )

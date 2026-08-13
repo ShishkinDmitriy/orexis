@@ -81,6 +81,20 @@ Worth knowing before renaming a belief in a world that matters. It is cheap here
 yet revises its own beliefs at runtime; the day something does, this becomes a real loss and a
 migration story has to exist.
 
+# The title is literally true now: the cadence IN FORCE, acknowledged
+
+The rule above judged freshness against the cadence the agent *commanded* — its intent, which
+the board can silently fail to share: a retained command cleared from the broker (#37) leaves
+the board on its compile-time default, and a firmware clamp leaves it on its own floor, while
+the agent holds readings to a rhythm nobody is keeping. Since #135 the reading itself says
+which cadence it was taken under — deep sleep clears the board's RAM, so the retained message
+is its only memory and the ack is its only testimony — and the freshness rule prefers that
+testimony over the intent. One mismatched ack is expected noise (the agent's live response to
+a reading lands in the board's post-publish window, so the wake after every re-aim acks the
+old value once); the same mismatch twice running is the detector #37 never had, said in the
+log, drawn in the health series as `cadence_acked_s` diverging from the commanded line, and
+answered by re-sending the command on the next reading.
+
 # The invariant underneath: a reading's instant is stamped at arrival
 
 The boards have no clocks — no RTC, deep sleep between wakes — so a reading cannot carry its
