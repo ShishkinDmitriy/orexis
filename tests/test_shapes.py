@@ -225,6 +225,7 @@ def test_an_agent_may_hold_both_modes_at_once():
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:chatter_fern a sosa:Sensor , ag:Device ; ag:localId "chatter_fern" ; mqtt:onBus ag:local_bus ;
                 perception:senseMode perception:PushProcedure ; perception:monitors ag:fern ; sosa:observes water:SoilMoisture ;
+                scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/chatter_fern/reading" .
             ag:fern_agent perception:polls ag:chatter_fern .
         }} }} WHERE {{}} ;
@@ -238,6 +239,7 @@ def _duplicate_probe(observes: str) -> rdflib.Graph:
             ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
                 mqtt:onBus ag:local_bus ; perception:senseMode perception:ScheduledProcedure ; perception:monitors ag:fern ;
                 sosa:observes {observes} ;
+                scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .
             ag:fern_agent perception:polls ag:second_probe_fern .
