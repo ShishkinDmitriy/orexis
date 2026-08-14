@@ -23,10 +23,23 @@ its document each one goes, and a device that reports one thing is simply a list
 claim above went quietly false when the real firmware learned to send three values and this still
 sent one; nothing noticed, because no world had asked it for more.
 
-**A temperature is not a fraction.** Each value drifts inside its own range, from its own start,
-by its own step — because 0..1 was never a fact about sensing, only about soil moisture. Water
+**A temperature is not a fraction.** Each value lives inside its own range, from its own start,
+at its own rates — because 0..1 was never a fact about sensing, only about soil moisture. Water
 moves the one value whose property the domain's valuation is denominated in; the rest are
 untouched by a dose, which is what makes a thermometer on a watered pot behave like a thermometer.
+
+**The physics run on the clock, at the world's pace.** Drying is stated per simulated day and
+integrated over real time times `SIM_TIMESCALE` (ag:timeScale), so a pot loses what the day
+costs it however often anyone looks — the per-reading drift this replaces made a closely-watched
+pot dry faster, which is backwards. A daily sine (`swing`) gives a room its afternoons. And the
+instrument is imperfect on purpose: Gaussian grain on every reading and the occasional outright
+spike, applied at report time and never fed back — an agent reared on a world that never
+glitches would trust its first real probe too much.
+
+**Rain is somebody else's container.** The meddler (see `firmware/simulated-meddler/`) waters
+pots on its own schedule over `SIM_RAIN_TOPIC`; the soil here takes its millilitres exactly as
+it takes a valve's, because soil cannot tell a bought litre from a kind stranger's — and that
+indistinguishability is precisely what the society's sampling has to cope with (#151).
 
 **Sense mode is honoured rather than assumed.** `scheduled` obeys the cadence command like a
 sleeping board; `push` publishes on its own clock and ignores commands, so its agent derives
@@ -46,6 +59,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import random
 import signal
@@ -96,32 +110,64 @@ def place(doc: dict, pointer: str, value: float) -> None:
 class Value:
     """One property this device reports: where it goes in the message, and how it moves.
 
-    Its own range and its own step, because a range was never a fact about sensing. A moisture
+    Its own range and its own rates, because a range was never a fact about sensing. A moisture
     fraction happens to run 0..1 and a temperature in degrees does not, and a board that reported
     both would be describing two different kinds of number down one wire — which is exactly what
     a KY-015 does.
+
+    **The physics run on the clock, not on the readings.** `dries` is units per SIMULATED DAY,
+    integrated over real elapsed time times the world's timescale — the old per-tick drift made
+    a closely-watched pot dry faster than an ignored one, which is backwards, and became
+    unmissable once the agents started varying how closely they watch. `swing` is the amplitude
+    of a daily sine around the value, for properties with a diurnal cycle: a room's temperature
+    has one, soil moisture does not.
     """
 
-    def __init__(self, spec: dict) -> None:
+    def __init__(self, spec: dict, timescale: float = 1.0) -> None:
         self.pointer = str(spec.get("pointer") or "/value")
         self.min = float(spec.get("min", 0.0))
         self.max = float(spec.get("max", 1.0))
         self.initial = float(spec.get("initial", self.min))
-        self.drift = float(spec.get("drift", 0.0))
+        self.dries_per_day = float(spec.get("dries", 0.0))
+        self.daily_swing = float(spec.get("swing", 0.0))
         # Only the value the domain's valuation is denominated in moves when water arrives. A
         # thermometer on a watered pot reads the same before and after, which is the whole
         # difference between modelling a property and modelling a number.
         self.litres_per_fraction = float(spec.get("litres", 0.0) or 0.0)
-        self._drift_at_boot = self.drift
+        self.timescale = timescale
+        # `trend_per_s` steering: an operator-set drift, in units per real second, REPLACING
+        # the modelled drying while set — a positive trend is rain, which is a different world
+        # rather than a wetter one.
+        self.forced_drift_per_s: float | None = None
         self.value = self.clamp(self.initial)
 
     def clamp(self, v: float) -> float:
         return max(self.min, min(self.max, v))
 
+    def advance(self, dt_real_s: float) -> None:
+        """Age this value by real elapsed seconds: the day's drying, at the world's pace."""
+        if self.forced_drift_per_s is not None:
+            self.value = self.clamp(self.value + self.forced_drift_per_s * dt_real_s)
+            return
+        sim_days = dt_real_s * self.timescale / 86400.0
+        self.value = self.clamp(self.value - self.dries_per_day * sim_days)
+
+    def read(self, sim_time_s: float) -> float:
+        """What the world holds at this instant: the base plus where the day's cycle sits.
+
+        The swing is applied at read time rather than integrated, because a cycle is a position
+        in the day and not an accumulation — integrate it and a value read only at noon would
+        ratchet upward forever.
+        """
+        if not self.daily_swing:
+            return self.value
+        phase = (sim_time_s % 86400.0) / 86400.0
+        return self.clamp(self.value + self.daily_swing * math.sin(2 * math.pi * phase))
+
     def reset(self) -> None:
-        """Back to how it booted — the value AND the trend, because a trend someone set is part
-        of the scenario they set up, not a property of the device."""
-        self.value, self.drift = self.clamp(self.initial), self._drift_at_boot
+        """Back to how it booted — the value AND any forced trend, because a trend someone set
+        is part of the scenario they set up, not a property of the device."""
+        self.value, self.forced_drift_per_s = self.clamp(self.initial), None
 
 
 class SimulatedSensor:
@@ -132,15 +178,23 @@ class SimulatedSensor:
         self.reading_topic = _env("SIM_READING_TOPIC")
         self.command_topic = os.environ.get("SIM_COMMAND_TOPIC") or ""
         self.dose_topic = os.environ.get("SIM_DOSE_TOPIC") or ""
+        # Water from OUTSIDE the society — the meddler's channel (ag:rainTopic). Arrives at the
+        # soil exactly as a dose does, which is the point: the pot cannot tell a bought litre
+        # from a kind stranger's, and neither can the agent except by not having decided it.
+        self.rain_topic = os.environ.get("SIM_RAIN_TOPIC") or ""
         # `scheduled` keeps the interval it is given; `push` keeps its own. The agent's
         # capability follows from this, and neither branch knows that.
         self.mode = _env("SIM_SENSE_MODE", "scheduled").lower()
+
+        # The world's clock (ag:timeScale): simulated seconds per real second. Physics integrate
+        # real elapsed time times this, so one bench hour can hold one simulated day.
+        self.timescale = _float("SIM_TIMESCALE", 1.0)
 
         # What this device reports, and where each one goes in its message. One entry for a
         # single-property board, several for a part that reports several down one line. Required
         # rather than defaulted: a board that reports nothing is not a board, and guessing a
         # range is how a thermometer ends up clamped to a fraction.
-        self.values = [Value(spec) for spec in json.loads(_env("SIM_VALUES"))]
+        self.values = [Value(spec, self.timescale) for spec in json.loads(_env("SIM_VALUES"))]
         if not self.values:
             raise SystemExit("SIM_VALUES is empty — a device that reports nothing is not one")
         seen = [v.pointer for v in self.values]
@@ -157,6 +211,18 @@ class SimulatedSensor:
         # giving up on the agent for this wake — the stand-in for RELEASE_WAIT_MS.
         self.release_wait_s = _float("SIM_RELEASE_WAIT_S", 5)
         self._released = threading.Event()
+
+        # Measurement error — a property of this firmware's fidelity, like LED_BRIGHTNESS on
+        # the real board: not generated from the world, env-overridable, stated as fractions of
+        # each value's span so one pair of knobs is honest about a fraction and a temperature
+        # alike. Gaussian grain on every reading, and the occasional outright lie: a capacitive
+        # probe with a marginal wire does both, and an agent trained on a world that never
+        # glitches would trust its first real board too much.
+        self.noise_span = _float("SIM_NOISE_SPAN", 0.004)
+        self.spike_chance = _float("SIM_SPIKE_CHANCE", 0.01)
+        self.spike_span = _float("SIM_SPIKE_SPAN", 0.25)
+        self.rng = random.Random()
+        self._advanced_at = time.monotonic()
 
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,
                                   client_id=f"agora-sim-{self.sensor_id}-{random.randint(0, 1 << 24):06x}")
@@ -181,6 +247,8 @@ class SimulatedSensor:
             client.subscribe(self.command_topic)
         if self.dose_topic:
             client.subscribe(self.dose_topic)
+        if self.rain_topic:
+            client.subscribe(self.rain_topic)
         log.info("%s up — publishing %s every %ss (%s)", self.sensor_id, self.reading_topic,
                  self.sleep_s, self.mode)
 
@@ -191,7 +259,7 @@ class SimulatedSensor:
             log.warning("%s: unreadable payload on %s", self.sensor_id, msg.topic)
             return
 
-        if msg.topic == self.dose_topic:
+        if msg.topic in (self.dose_topic, self.rain_topic) and msg.topic:
             self._receive(float(doc.get("ml") or 0.0))
             return
 
@@ -230,8 +298,19 @@ class SimulatedSensor:
         # deep sleep, so the ack is its only testimony about the rhythm actually in force.
         if self.mode == "scheduled":
             doc["sleep_s"] = int(self.sleep_s)
+        # What the world holds is one thing; what the instrument says is another. The grain and
+        # the occasional spike are applied at REPORT time and never fed back into the value —
+        # measurement error is about the reading, and physics that inherited it would drift.
+        sim_time = time.time() * self.timescale
         for v in self.values:
-            place(doc, v.pointer, round(v.value, 3))
+            true = v.read(sim_time)
+            span = v.max - v.min
+            reported = true + self.rng.gauss(0.0, self.noise_span * span)
+            if self.rng.random() < self.spike_chance:
+                reported += self.rng.choice((-1.0, 1.0)) * self.spike_span * span
+                log.info("%s: glitch on %s — reporting %.3f while the world holds %.3f",
+                         self.sensor_id, v.pointer, v.clamp(reported), true)
+            place(doc, v.pointer, round(v.clamp(reported), 3))
         self.client.publish(self.reading_topic, json.dumps(doc), qos=1)
 
     def _at(self, doc: dict) -> Value | None:
@@ -268,12 +347,15 @@ class SimulatedSensor:
             if (v := self._at(doc)) is not None:
                 v.value = v.clamp(float(doc["value"]))
                 log.info("%s: %s set to %.3f", self.sensor_id, v.pointer, v.value)
-        if isinstance(doc.get("trend_per_tick"), (int, float)):
-            # Signed, and it REPLACES the drift rather than adding to it: a positive trend is
-            # a pot being rained on, which is a different world, not a wetter one.
+        if isinstance(doc.get("trend_per_s"), (int, float)):
+            # Signed, in units per REAL second, and it REPLACES the modelled drying rather than
+            # adding to it: a positive trend is a pot being rained on, which is a different
+            # world, not a wetter one. Per second because the tick left the physics — this verb
+            # was trend_per_tick when the tick paced them.
             if (v := self._at(doc)) is not None:
-                v.drift = -float(doc["trend_per_tick"])
-                log.info("%s: %s trend now %+.4f per tick", self.sensor_id, v.pointer, -v.drift)
+                v.forced_drift_per_s = float(doc["trend_per_s"])
+                log.info("%s: %s trend now %+.5f per second", self.sensor_id, v.pointer,
+                         v.forced_drift_per_s)
         if doc.get("reset"):
             # Everything, not just what `at` names: a reset puts the device back, and a board
             # half-reset is a scenario nobody meant to set up.
@@ -301,9 +383,19 @@ class SimulatedSensor:
                 v.value = v.clamp(v.value + (ml / 1000.0) / v.litres_per_fraction)
                 log.info("%s: received %.0f ml -> %s=%.3f", self.sensor_id, ml, v.pointer, v.value)
 
-    def _dry(self) -> None:
+    def _advance(self) -> None:
+        """Move the physics by however much real time has passed, at the world's pace.
+
+        Called once per wake, BEFORE publishing — so the drying that happened while the board
+        slept is in the soil by the time the soil is read, exactly as it would be for hardware.
+        The old `_dry` moved one step per call, which made the physics an artifact of attention:
+        a closely-watched pot dried faster than an ignored one.
+        """
+        now = time.monotonic()
+        dt = now - self._advanced_at
+        self._advanced_at = now
         for v in self.values:
-            v.value = v.clamp(v.value - v.drift)
+            v.advance(dt)
 
     # --- the loop ---
 
@@ -326,7 +418,7 @@ class SimulatedSensor:
 
     def _loop(self) -> None:
         while not self._stop.is_set():
-            self._dry()
+            self._advance()
             if self.mode == "push":
                 # A push device keeps its own tick and waits for nobody.
                 self._publish()

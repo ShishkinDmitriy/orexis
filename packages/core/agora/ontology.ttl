@@ -59,13 +59,29 @@ ag:modelInitialValue a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:
     rdfs:label "model initial value" ;
     rdfs:comment "What it reads before anything has happened to it." .
 
-ag:modelDryRate a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
-    rdfs:label "model dry rate" ;
-    rdfs:comment "How much of the observed property is lost per tick. Named apart from domain/water's water:dryRatePerTick, which carries rdfs:domain water:Plant — reusing it would make every model infer as a plant and inherit a plant's obligations." .
+ag:modelDriesPerDay a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
+    rdfs:label "model dries per day" ;
+    rdfs:comment "How much of the observed property is lost per SIMULATED DAY. This was ag:modelDryRate, per tick, and the tick made the physics an artifact of attention: the pot dried one step per reading, so a closely-watched plant dried faster than an ignored one — backwards, and visibly so once the cadence machinery started varying how closely anyone watched. Time-based now, scaled by the world's ag:timeScale, so the pot loses what the day costs it however often it is read. Named apart from domain/water's water:dryRatePerTick, which carries rdfs:domain water:Plant — reusing it would make every model infer as a plant and inherit a plant's obligations." .
+
+ag:modelDailySwing a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
+    rdfs:label "model daily swing" ;
+    rdfs:comment "The amplitude of a daily sine around the value — for properties with a diurnal cycle, which soil moisture does not have and air temperature does. One simulated day per period, so under ag:timeScale 24 a bench hour draws a whole day's curve. Absent means flat, which is what the old ever-falling drift pretended not to be." .
 
 ag:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:integer ;
     rdfs:label "model tick seconds" ;
-    rdfs:comment "Wall-clock seconds per tick — how fast this modelled world runs. Used as the publish interval only by a sensing:PushProcedure device, which keeps its own clock; a sensing:ScheduledProcedure one keeps the interval its agent gives it, exactly as a board does." .
+    rdfs:comment "Wall-clock seconds per tick — the PUBLISH interval of a sensing:PushProcedure device, which keeps its own clock; a sensing:ScheduledProcedure one keeps the interval its agent gives it, exactly as a board does. This used to also pace the physics, which is the artifact ag:modelDriesPerDay records; physics run on the clock now, and the tick is only a rhythm of speech." .
+
+ag:timeScale a owl:DatatypeProperty ; rdfs:domain ag:World ; rdfs:range xsd:decimal ;
+    rdfs:label "time scale" ;
+    rdfs:comment "Simulated seconds per wall-clock second — 24 makes one bench hour a simulated day. A fact about the WORLD, not any device: every stand-in in a world must age at the same rate or their physics stop composing (a dose sized for a day's drying must land against a day's drying). The agents are deliberately not told: they act in real time against a world that happens to live fast, which changes nothing about how they decide and everything about how much of their behaviour a bench hour shows." .
+
+ag:strayDoseMeanDays a owl:DatatypeProperty ; rdfs:domain ag:World ; rdfs:range xsd:decimal ;
+    rdfs:label "stray dose mean days" ;
+    rdfs:comment "The mean interval, in simulated days, between waterings NOBODY in the society decided — a human with a watering can, rain through a window. Exponentially distributed, per subject that states an ag:rainTopic. Absent means nobody meddles. Stating it gives the world ONE meddler: a container of its own (firmware/simulated-meddler) with a credential of its own, granted WRITE on each rain topic and nothing else — a pot must not water itself, and rain must never ride the valve's status topic, which is the valve's testimony. This is the third-party impulse of #151 made routine: the signal changes without any agent's doing, and the society's only defence is how it samples." .
+
+ag:rainTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "rain topic" ;
+    rdfs:comment "Where water from OUTSIDE the society arrives for this subject — the meddler writes it, the subject's simulated sensor reads it, and nothing else may touch it. On the SUBJECT, because rain falls on a pot and not on an instrument; a simulated world without one for a subject keeps that subject dry except by the market. The payload is the dose report's shape ({\"ml\": N}) because millilitres are millilitres to soil — the indistinguishability is the point, not an economy." .
 
 #################  Where a society executes  #################
 ag:ComputeHost a owl:Class ; rdfs:subClassOf ag:Device ; rdfs:label "Compute host" ;

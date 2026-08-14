@@ -1,0 +1,24 @@
+# A stand-in for a passer-by with a watering can, and nothing else.
+#
+# Its own image for the simulator's reasons, doubled: the agent image must not carry scenario
+# actors, and the SENSOR image must not either — a meddler hidden inside a sensor is a pot that
+# waters itself, which is exactly the confusion this container exists to rule out. What it may
+# do is one WRITE grant per rain topic; what it holds is paho and this file.
+#
+#   podman build -t agora-meddler:local firmware/simulated-meddler
+
+FROM docker.io/library/python:3.12-alpine
+
+# Pinned like the simulator's: an upgrade is a decision, not a rebuild side effect.
+ARG PAHO_VERSION=2.1.0
+RUN pip install --no-cache-dir "paho-mqtt==${PAHO_VERSION}"
+
+RUN adduser -D -u 10002 meddler
+USER meddler
+
+WORKDIR /app
+COPY meddler.py /app/meddler.py
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "/app/meddler.py"]

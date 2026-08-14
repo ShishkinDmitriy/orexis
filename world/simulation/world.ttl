@@ -62,6 +62,13 @@ ag:local_bus a mqtt:MessageBus ;
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
 ag:world a ag:World ; ag:currentVersion ag:version_1 ;
+    #  One bench hour is one simulated day, so a day of drying, deciding and dosing is
+    #  watchable in Grafana without waiting a day — and every stand-in ages at this one
+    #  rate, or a dose sized for a day's drying would land against an hour's.
+    ag:timeScale 24 ;
+    #  And someone with a watering can wanders through about every other simulated day,
+    #  per pot: the third-party impulse of #151, made routine rather than hypothetical.
+    ag:strayDoseMeanDays 2 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
@@ -119,6 +126,7 @@ ag:supplier a ag:Agent ;
 
 ag:fern a water:Plant ;
     ag:localId "fern" ; water:servedBy ag:barrel1 ;
+    ag:rainTopic "rain/fern" ;
     water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
@@ -137,6 +145,7 @@ ag:fern a water:Plant ;
 
 ag:tomato a water:Plant ;
     ag:localId "tomato" ; water:servedBy ag:barrel1 ;
+    ag:rainTopic "rain/tomato" ;
     water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
@@ -149,6 +158,7 @@ ag:tomato a water:Plant ;
 
 ag:succulent a water:Plant ;
     ag:localId "succulent" ; water:servedBy ag:barrel1 ;
+    ag:rainTopic "rain/succulent" ;
     water:dryRatePerTick 0.008 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
@@ -233,7 +243,9 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
         ag:modelInitialValue 0.45 ;
-        ag:modelDryRate 0.02 ;
+        #  A real fern pot: roughly an eighth of saturation per day, watering every two-ish
+        #  days. Under timeScale 24 that is a round every couple of bench hours.
+        ag:modelDriesPerDay 0.12 ;
         ag:modelTickSeconds 3 ] .
 
 #  The second property on that same wire. No bus, no command topic of its own, no principal —
@@ -252,9 +264,10 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelMinValue -10.0 ; ag:modelMaxValue 45.0 ;
         ag:modelInitialValue 21.0 ;
-        # Negative, so the room warms rather than dries: the term is named for the first thing
-        # this project modelled and means "how far it moves per tick" for everything since.
-        ag:modelDryRate -0.05 ;
+        #  A room, not a trend: 21 at the shoulders, ~25 mid-afternoon, ~17 before dawn. The
+        #  old model warmed forever, one step per reading — the artifact modelDriesPerDay's
+        #  comment records, wearing a minus sign.
+        ag:modelDailySwing 4.0 ;
         ag:modelTickSeconds 3 ] .
 
 ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
@@ -268,7 +281,9 @@ ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
     mqtt:commandTopic "sensors/moisture_sensor_tomato/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
-        ag:modelDryRate 0.02 ;
+        #  The thirsty one: a fifth of saturation per day, which is why it is also the anxious
+        #  one — its cadence beliefs and its physics agree about how fast trouble arrives.
+        ag:modelDriesPerDay 0.20 ;
         ag:modelTickSeconds 3 ] .
 
 ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
@@ -282,7 +297,8 @@ ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
     mqtt:commandTopic "sensors/moisture_sensor_succulent/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
-        ag:modelDryRate 0.015 ;
+        #  A succulent barely drinks: a watering every week or two, real and simulated.
+        ag:modelDriesPerDay 0.04 ;
         ag:modelTickSeconds 3 ] .
 
 ##########  The supplier's valves — real valves, stood in for  ##########

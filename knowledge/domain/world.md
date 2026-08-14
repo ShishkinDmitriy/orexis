@@ -24,7 +24,7 @@ agora-validate sensing     # one subject, one real board, one agent
 
 | | holds | derivation produces |
 |---|---|---|
-| `simulation/` | 3 plants + agents, a supplier, a barrel market, 3 valves — every device stood in for | `Subscribing` + `Bidding` per plant agent; `Hosting` + `Actuation` for the supplier |
+| `simulation/` | 3 plants + agents, a supplier, a barrel market, 3 valves, a meddler who waters pots unasked — every device stood in for, on a 24× clock (`ag:timeScale`: one bench hour is one simulated day) | `Subscribing` + `Bidding` per plant agent; `Hosting` + `Actuation` for the supplier |
 | `sensing/` | one subject, one real board, one agent | `Subscribing`, and nothing else |
 
 There were three. `society/` held what `simulation/` holds and expected real devices for it, and

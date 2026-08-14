@@ -229,7 +229,7 @@ _SIM_MODE = {
 # lesson is not "name the right term" but "name no term", which this now does.
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?port
-       ?pointer ?initial ?dryRate ?litres ?minValue ?maxValue
+       ?pointer ?initial ?dries ?swing ?litres ?minValue ?maxValue ?scale ?rainTopic
 WHERE {{
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
      <{MQTT}onBus> ?onBus .
@@ -240,13 +240,16 @@ WHERE {{
   OPTIONAL {{ ?deviceModel <{AG}modelTickSeconds> ?tick }}
   OPTIONAL {{ ?s <{MQTT}readingPointer> ?pointer }}
   OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
-  OPTIONAL {{ ?model <{AG}modelDryRate> ?dryRate }}
+  OPTIONAL {{ ?model <{AG}modelDriesPerDay> ?dries }}
+  OPTIONAL {{ ?model <{AG}modelDailySwing> ?swing }}
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
   OPTIONAL {{ ?s <{SOSA}observes> ?wetProperty .
              ?conversion <{MARKET}aboutProperty> ?wetProperty .
              ?subject ?conversion ?litres }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
+  OPTIONAL {{ ?w a <{AG}World> ; <{AG}timeScale> ?scale }}
+  OPTIONAL {{ ?subject <{AG}rainTopic> ?rainTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
@@ -262,11 +265,51 @@ def _values(rows: list[dict]) -> str:
     for row in sorted(rows, key=lambda r: r.get("pointer") or "/value"):
         spec = {"pointer": row.get("pointer") or "/value"}
         for key, field in (("min", "minValue"), ("max", "maxValue"),
-                           ("initial", "initial"), ("drift", "dryRate"), ("litres", "litres")):
+                           ("initial", "initial"), ("dries", "dries"), ("swing", "swing"),
+                           ("litres", "litres")):
             if row.get(field) not in (None, ""):
                 spec[key] = float(row[field])
         specs.append(spec)
     return json.dumps(specs, separators=(",", ":"))
+
+
+# The world's one meddler, and only if the world states ag:strayDoseMeanDays: which pots can be
+# rained on, how often on average, and at what pace the world runs.
+_MEDDLER_Q = f"""
+SELECT DISTINCT ?rainTopic ?strayDays ?scale ?port WHERE {{
+  ?w a <{AG}World> ; <{AG}strayDoseMeanDays> ?strayDays .
+  ?subject <{AG}rainTopic> ?rainTopic .
+  OPTIONAL {{ ?w <{AG}timeScale> ?scale }}
+  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
+ }}"""
+
+
+def _meddler(world: str, rows: list[dict]) -> str:
+    """Somebody who waters the pots and never asks — its own image, its own credential.
+
+    NOT part of the sensor image, deliberately: a pot must not water itself, and a stand-in
+    that secretly did could never be told from one whose physics were broken. The ACL grants
+    this principal WRITE on each rain topic and nothing else, so the worst a compromised
+    meddler can do is be over-generous with water.
+    """
+    row = rows[0]
+    topics = json.dumps(sorted({r["rainTopic"] for r in rows}), separators=(",", ":"))
+    scale = f'\n      MEDDLER_TIMESCALE: "{row["scale"]}"' if row.get("scale") else ""
+    return f"""
+  sim-meddler:
+    build:
+      context: ../../firmware/simulated-meddler
+    image: agora-meddler:local
+    environment:
+      MEDDLER_TOPICS: '{topics}'
+      MEDDLER_MEAN_DAYS: "{row["strayDays"]}"{scale}
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "{int(row["port"])}"
+    env_file:
+      - ./secrets/mqtt-meddler.env
+    network_mode: host
+    restart: unless-stopped
+"""
 
 
 def _simulator(world: str, rows: list[dict]) -> str:
@@ -289,6 +332,11 @@ def _simulator(world: str, rows: list[dict]) -> str:
             ("SIM_COMMAND_TOPIC", row.get("commandTopic")),
             ("SIM_DOSE_TOPIC", row.get("doseTopic")),
             ("SIM_TICK_SECONDS", row.get("tick")),
+            # The world's clock (ag:timeScale), handed to every stand-in alike, because
+            # physics that age at different rates stop composing. And the rain channel
+            # (ag:rainTopic) — where the meddler's water arrives, if this world has one.
+            ("SIM_TIMESCALE", row.get("scale")),
+            ("SIM_RAIN_TOPIC", row.get("rainTopic")),
         ) if v not in (None, ""))
     return f"""
   sim-{sim_id}:
@@ -418,9 +466,11 @@ def render(world: str) -> str:
     for row in ratified.rows(ratified.dataset(world), _SIMULATED_Q):
         simulated.setdefault(row["id"], []).append(row)
     valves = ratified.rows(ratified.dataset(world), _SIM_VALVES_Q)
+    meddler = ratified.rows(ratified.dataset(world), _MEDDLER_Q)
     services = _broker(world, plain, tls) + "".join(
         _simulator(world, simulated[sim_id]) for sim_id in sorted(simulated)) + "".join(
-        _valve(world, row) for row in sorted(valves, key=lambda r: r["id"])) + "".join(
+        _valve(world, row) for row in sorted(valves, key=lambda r: r["id"])) + (
+        _meddler(world, meddler) if meddler else "") + "".join(
         _service(a, caps, world) for a, caps in who.items())
     volumes = f"  agora-{world}-mosquitto:\n" + "".join(
         f"  agora-{world}-{a}:\n" for a in who)

@@ -155,6 +155,24 @@ _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
   ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
  }}""")
 
+# And the rain, by the same guard: a simulated sensor whose subject can be rained on hears it
+# arrive on the subject's ag:rainTopic. Its own channel rather than the valve's status topic,
+# because the status topic is the VALVE's testimony and rain is nobody's — the soil cannot tell
+# the two waters apart, but the record must never say a valve dispensed what a stranger poured.
+_SIM_RAIN_Q = _q(f"""?id ?rainTopic WHERE {{
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
+     <{MQTT}onBus> ?bus .
+  ?subject <{AG}rainTopic> ?rainTopic .
+ }}""")
+
+# The meddler itself: ONE principal per world that states ag:strayDoseMeanDays, granted WRITE on
+# every rain topic and nothing else. The worst a compromised meddler can do is be over-generous
+# with water — it cannot hear a reading, see an offer, or speak for a valve.
+_MEDDLER_Q = _q(f"""?rainTopic WHERE {{
+  ?w a <{AG}World> ; <{AG}strayDoseMeanDays> ?mean .
+  ?subject <{AG}rainTopic> ?rainTopic .
+ }}""")
+
 # Any valve that reports, stood in for or not. This used to require ag:simulatedBy, which meant
 # a REAL valve could not publish the status its own firmware sends — "so the executor knows water
 # actually flowed" — and the broker dropped it silently, because MQTT never refuses a publish out
@@ -259,6 +277,12 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
 
     for row in ratified.rows(ds, _SIM_DOSE_Q):
         devices.setdefault(row["id"], Principal(row["id"])).may(READ, row["statusTopic"])
+
+    for row in ratified.rows(ds, _SIM_RAIN_Q):
+        devices.setdefault(row["id"], Principal(row["id"])).may(READ, row["rainTopic"])
+
+    for row in ratified.rows(ds, _MEDDLER_Q):
+        devices.setdefault("meddler", Principal("meddler")).may(WRITE, row["rainTopic"])
 
     for row in ratified.rows(ds, _VALVE_STATUS_Q):
         # it already reads its command topic as any device does; this is the other direction
