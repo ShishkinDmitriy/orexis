@@ -112,8 +112,18 @@ mosquitto_sub -h localhost -t 'sensors/+/cmd' -v -W 2 --retained-only 2>/dev/nul
   | xargs -r -I{} mosquitto_pub -h localhost -r -n -t {}
 ```
 
-Do **not** do this while a world is running: you would delete the cadence its agents just set,
-and every board would fall back to its firmware default until the next reading round-trips.
+Avoid doing this while a world is running: you would delete the cadence its agents just set,
+and every board falls back to its firmware default until the next reading round-trips.
+
+That last clause was **false for months and is now true**, which is #37's whole history. The
+agent used to deduplicate on what it remembered sending, so the round-trip changed nothing —
+the number had not moved, nothing was re-sent, and this document promised a recovery that never
+happened. Two changes closed it: the reading acks the cadence it was taken under (#135), so a
+board running its compile-time default is *visible* — the dispute says so in the log and
+`cadence_acked_s` diverges from the commanded line on the health dashboard — and the reply to
+every acked reading is the board's release (#152), so the very next reading re-writes the
+retained command as a side effect of the ordinary handshake. One reading's worth of default
+cadence is the whole cost, self-healing, per board as each next wakes.
 
 # Remove a belief base
 
