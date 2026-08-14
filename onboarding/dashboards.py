@@ -240,17 +240,20 @@ def _events_flux(bucket: str, agent_id: str) -> str:
 
     The caption is assembled in Flux rather than stored assembled, because the pieces are tags
     a future query may want to filter on separately — `kind` alone says adopted/satisfied/
-    dropped/end-met/end-unmet, and `means` alone says Observe/Acquire/Apply. The `exists`
-    guards keep one unshaped event from erroring the whole stream: a marker with a hole beats
-    no markers at all.
+    dropped/end-met/end-unmet or belief-taken/belief-refused, and `means` alone says
+    Observe/Acquire/Apply. The `exists` guards make each tag OPTIONAL rather than defaulted:
+    an intention event carries means and property, a belief event carries term, and the caption
+    shows what a kind actually has instead of a placeholder for what it does not.
     """
     return (f'from(bucket: "{bucket}")\n'
             "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
             f'  |> filter(fn: (r) => r._measurement == "{EVENT_MEASUREMENT}")\n'
             '  |> filter(fn: (r) => r._field == "text")\n'
-            f'  |> map(fn: (r) => ({{r with text: "{agent_id} " + r.kind + " "\n'
-            '      + (if exists r.means then r.means else "?") + " ("\n'
-            '      + (if exists r.property then r.property else "?") + "): " + r._value,\n'
+            f'  |> map(fn: (r) => ({{r with text: "{agent_id} " + r.kind\n'
+            '      + (if exists r.means then " " + r.means else "")\n'
+            '      + (if exists r.property then " (" + r.property + ")" else "")\n'
+            '      + (if exists r.term then " " + r.term else "")\n'
+            '      + ": " + r._value,\n'
             '      tags: r.kind}))\n'
             '  |> keep(columns: ["_time", "text", "tags"])')
 

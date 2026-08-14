@@ -152,7 +152,13 @@ latitude has **re-picked** something, and that value exists nowhere but inside i
 outside, and granted by exactly the premise `review:Reckoning` is granted by.
 
 That is [#61](https://github.com/ShishkinDmitriy/agora/issues/61) — *nothing outside an agent can
-see which value it settled on*.
+see which value it settled on*. *(Closed since, and the split above is exactly how: the
+`picked_<package>_<term>` fields are contributed by the REVIEW module through `reports()` — the
+latitude-granted module, so the fields exist on exactly the agents whose values could be
+elsewhere than authored — and they ride the mandatory reporting sink into the agent's own
+bucket, where the operator's read token sees them and a rival's cannot. A taken or refused
+revision is also a marker over the series, through the same event channel the intention story
+rides; declines stay a count, being the routine outcome of most arisings.)*
 
 | | what it reports | granted by |
 |---|---|---|
