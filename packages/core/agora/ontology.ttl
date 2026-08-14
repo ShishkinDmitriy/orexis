@@ -106,6 +106,26 @@ ag:maxBytesPerTriple a owl:DatatypeProperty ; rdfs:range xsd:integer ;
 
 ag:BeliefBase ag:maxBytesPerTriple 800 .
 
+#################  Identity keys — published, because a verifier cannot read secrets  #########
+#
+#  The public halves of each agent's keypairs (#144, #145), written by `agora-keygen` into a
+#  generated `keys.ttl` beside the world's ratified files. Public by nature and in the world
+#  because the world is the one place every member already reads: the host verifying a
+#  presentation cannot read the presenter's secrets — that is the isolation — so the roster is
+#  how identities are attested. Base64 of the raw 32 bytes, no PEM ceremony.
+#
+#  TWO keys because the operations differ and conflating them is the classic mistake: Ed25519
+#  SIGNS (a presentation under the winner's own hand, #144) and X25519 SEALS (a voucher only
+#  its winner can open, #145). Absence is the pre-key era and stays legal — a world onboarded
+#  before keygen learned agents behaves exactly as it always did.
+
+ag:signingKey a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:string ;
+    rdfs:label "signing key" ;
+    rdfs:comment "Ed25519 public key, base64 raw. What a presentation is verified against: the durable identity exercising an ephemeral grant, per knowledge/decisions/authn-authz-capabilities.md." .
+ag:sealingKey a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:string ;
+    rdfs:label "sealing key" ;
+    rdfs:comment "X25519 public key, base64 raw. What a voucher is sealed to, so the bus carries an envelope only the winner can open — the ACL keeps agents out, the seal keeps the bus out." .
+
 #################  Who did it, and in what capacity  #################
 #  A ROLE, not an identity, and the distinction is the whole point. There is no `ag:Sovereign`
 #  agent and there must not be: an installation has several users — one authors a world, another

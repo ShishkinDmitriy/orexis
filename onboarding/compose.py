@@ -116,6 +116,16 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
         signing = ("\n      # it actuates, so it co-signs — these two keys and nothing else\n"
                    "      - ./secrets/host.key:/app/world/secrets/host.key:ro\n"
                    "      - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro")
+    # Its OWN identity (#144 signing, #145 sealing) — mounted only where keygen minted it, so
+    # a world onboarded before keygen learned agents composes exactly as it always did. File
+    # by file like everything here: the directory would hand it every other agent's keys.
+    from agent.genesis import secrets_dir, world_dir
+
+    own = secrets_dir(world_dir(world))
+    for suffix in (".key", ".seal.key"):
+        if (own / f"{agent_id}{suffix}").exists():
+            signing += (f"\n      - ./secrets/{agent_id}{suffix}"
+                        f":/app/world/secrets/{agent_id}{suffix}:ro")
     world_files = _world_files(world)
     return f"""
   agent-{agent_id}:

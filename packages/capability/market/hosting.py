@@ -27,6 +27,9 @@ from __future__ import annotations
 import time
 import uuid
 
+import json
+
+from agent import signing
 from agent.auction import run_auction
 from agent.market import Bid, Limits, MarketState, Offer
 from agent.module import Module, Timer
@@ -58,6 +61,12 @@ SELECT ?agentId ?eventTopic WHERE {{
 # allocation on a reading it cannot act on.
 _ABOUT_Q = """
 SELECT ?property WHERE { ?term market:aboutProperty ?property } LIMIT 1"""
+
+# The attested roster (#144, #145): each agent's published public keys, from keys.ttl swept
+# into the world graph. Absence is the pre-key era and stays legal — a world onboarded before
+# keygen learned agents has no rows here and behaves exactly as it always did.
+_KEY_Q = """
+SELECT ?key WHERE { ?a ag:localId "%s" ; ag:%s ?key } LIMIT 1"""
 
 
 class HostingModule(Module):
@@ -243,10 +252,7 @@ class HostingModule(Module):
         self.log.info("auction %s GREEN — %.3f L allocated to %d",
                       auction_id, result.trade.total_qty_l, len(result.vouchers))
         for voucher in result.vouchers:
-            self.publish(f"{market.voucher_topic}/{voucher.sub}", {
-                "auction_id": auction_id, "jti": voucher.jti, "sub": voucher.sub,
-                "scope": voucher.scope, "amount_l": voucher.amount_l, "debit": voucher.debit,
-            })
+            self._issue(market, auction_id, voucher)
         # Issued is not actuated (#132). The host used to redeem every voucher itself, here,
         # the moment it published them — which spent the dose before the winner's sensor could
         # possibly be watching it land. The claims are HELD now, and the holder presents each
@@ -270,6 +276,20 @@ class HostingModule(Module):
         if not jti:
             self.log.warning("redeem from %s carries no jti — ignored", presenter)
             return
+        # The winner's own hand (#144). Where the roster publishes a signing key for the
+        # presenter, the presentation must carry a signature over its canonical form and the
+        # signature must verify — the durable identity exercising the ephemeral grant, which
+        # takes the BROKER out of the trust boundary: the ACL becomes defence in depth, not
+        # the proof. No published key means the pre-#144 era, and the ACL stands alone as it
+        # always did.
+        rows = bindings(self.agent.store.query(_KEY_Q % (presenter, "signingKey")))
+        if rows:
+            sig = claim.get("sig", "")
+            payload = {k: v for k, v in claim.items() if k != "sig"}
+            pub = signing.signing_public_from_b64(rows[0]["key"])
+            if not sig or not signing.verify(pub, signing.canonical(payload), sig):
+                self.log.warning("redeem from %s fails its own signature — ignored", presenter)
+                return
         voucher = self.held.get(jti)
         if voucher is None:
             self.log.warning("redeem from %s for unknown or already-spent jti %s — ignored",
@@ -283,6 +303,25 @@ class HostingModule(Module):
         self.log.info("%s presented voucher %s — redeeming %.3f L", presenter, jti,
                       voucher.amount_l)
         self.redeem([voucher])
+
+    def _issue(self, market, auction_id: str, voucher) -> None:
+        """Publish one winner's voucher — sealed to it, where the roster says it can open one.
+
+        The seal (#145) is what takes the BUS out of the confidentiality boundary: the ACL
+        already keeps other agents off this topic, but the broker, a port mirror or an operator
+        on the wire read every payload — and this one has money in it. Sealed, they carry an
+        envelope only the winner can open. A winner with no published sealing key receives
+        plaintext: the pre-#145 era, legal, exactly as the missing signing key is for #144.
+        """
+        payload = {"auction_id": auction_id, "jti": voucher.jti, "sub": voucher.sub,
+                   "scope": voucher.scope, "amount_l": voucher.amount_l,
+                   "debit": voucher.debit}
+        rows = bindings(self.agent.store.query(_KEY_Q % (voucher.sub, "sealingKey")))
+        if rows:
+            sealed = signing.seal(signing.sealing_public_from_b64(rows[0]["key"]),
+                                  signing.canonical(payload))
+            payload = {"sealed": sealed}
+        self.publish(f"{market.voucher_topic}/{voucher.sub}", payload)
 
     def redeem(self, vouchers) -> None:
         """Hand the vouchers to whichever of my capabilities can touch the hardware.
