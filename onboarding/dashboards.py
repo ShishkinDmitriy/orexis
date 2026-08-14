@@ -77,6 +77,7 @@ MEASUREMENT = "soil_moisture"
 FIELD = "value"
 AGENT_MEASUREMENT = "agent_health"
 SENSOR_MEASUREMENT = "agent_sensor_health"
+EVENT_MEASUREMENT = "agent_events"
 
 # Every agent, not only the ones that observe: a market host owns a belief base and a connection
 # and can go quiet exactly as loudly as a sensing agent can.
@@ -234,6 +235,31 @@ def _health_panel(title: str, buckets: dict, measurement: str, field: str, kind:
     }
 
 
+def _events_flux(bucket: str, agent_id: str) -> str:
+    """One agent's story, shaped for Grafana's annotation reader: `_time`, `text`, `tags`.
+
+    The caption is assembled in Flux rather than stored assembled, because the pieces are tags
+    a future query may want to filter on separately — `kind` alone says adopted/satisfied/
+    dropped/end-met/end-unmet, and `means` alone says Observe/Acquire/Apply. The `exists`
+    guards keep one unshaped event from erroring the whole stream: a marker with a hole beats
+    no markers at all.
+    """
+    return (f'from(bucket: "{bucket}")\n'
+            "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
+            f'  |> filter(fn: (r) => r._measurement == "{EVENT_MEASUREMENT}")\n'
+            '  |> filter(fn: (r) => r._field == "text")\n'
+            f'  |> map(fn: (r) => ({{r with text: "{agent_id} " + r.kind + " "\n'
+            '      + (if exists r.means then r.means else "?") + " ("\n'
+            '      + (if exists r.property then r.property else "?") + "): " + r._value,\n'
+            '      tags: r.kind}))\n'
+            '  |> keep(columns: ["_time", "text", "tags"])')
+
+
+# Annotations are per agent, so each stream can be toggled alone when one agent's story is the
+# question — and each gets a colour, cycled, so markers say whose they are before they are read.
+_ANNOTATION_COLOURS = ("orange", "purple", "blue", "green", "red", "yellow")
+
+
 def render_health(world: str) -> dict:
     """How the agents of this world are, as opposed to what they measured.
 
@@ -304,6 +330,21 @@ def render_health(world: str) -> dict:
         pid += 1
         y += h if w == 24 else (h if pid % 2 else 0)
 
+    # The story over the series (#125): each agent's intention transitions, drawn as
+    # annotations across every panel — `worst_gap` climbing with an `adopted Acquire` marker
+    # at the knee is the debugging view the ledger exists to make possible. The prose is the
+    # `becauseOf` text, projected into the agent's own bucket by its reporting capability, so
+    # this grants nothing: Grafana's read token could already see it.
+    annotations = [
+        {"name": f"{agent} — intentions",
+         "datasource": {"type": "influxdb", "uid": "influxdb"},
+         "enable": True,
+         "hide": False,
+         "iconColor": _ANNOTATION_COLOURS[i % len(_ANNOTATION_COLOURS)],
+         "target": {"refId": "A", "query": _events_flux(bucket, agent)}}
+        for i, (agent, bucket) in enumerate(sorted(buckets.items()))
+    ]
+
     return {
         "uid": f"agora-{world}-health"[:40],
         "title": f"Agora — {world} health",
@@ -312,6 +353,7 @@ def render_health(world: str) -> dict:
         "schemaVersion": 39,
         "refresh": "1m",
         "time": {"from": "now-6h", "to": "now"},
+        "annotations": {"list": annotations},
         "panels": panels,
     }
 

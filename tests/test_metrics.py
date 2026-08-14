@@ -91,6 +91,67 @@ def test_an_in_memory_store_has_no_size_on_disk():
     assert tree_bytes("/nonexistent/belief/base") is None
 
 
+# --- the story beside the figures (#125) -------------------------------------------------------
+
+def test_an_event_is_buffered_with_its_instant_and_drained_once(agent):
+    """Counting is the kernel's, so the buffer is too: whoever the transition happens to tells
+    this object, and the reporting capability drains it on its own tick."""
+    m = agent.metrics
+    m.event("adopted", "bid 0.4L to close my deficit", means="Acquire", property="SoilMoisture")
+    events = m.take_events()
+    assert len(events) == 1
+    at, kind, text, tags = events[0]
+    assert kind == "adopted" and text == "bid 0.4L to close my deficit"
+    assert tags == {"means": "Acquire", "property": "SoilMoisture"}
+    assert at is not None
+    assert m.take_events() == []
+
+
+def test_events_a_reporter_could_not_write_go_back_in_order(agent):
+    """A figure missed is superseded by the next tick's; a transition missed is gone — so a
+    failed write hands the drained events back, ahead of anything newer."""
+    m = agent.metrics
+    m.event("adopted", "one")
+    m.event("satisfied", "two")
+    taken = m.take_events()
+    m.event("dropped", "three")
+    m.requeue_events(taken)
+    assert [text for _, _, text, _ in m.take_events()] == ["one", "two", "three"]
+
+
+def test_the_reporter_writes_the_story_through_the_same_writer(agent):
+    """Same tick, same token, same bucket — nothing new is granted for the events to land."""
+    reporting = next(m for m in agent.modules if m.name == "reporting")
+    written = []
+
+    class _Writer:
+        def write_agent_health(self, *a, **k): pass
+        def write_events(self, agent_id, events): written.append((agent_id, events))
+
+    reporting._writer = _Writer()
+    agent.metrics.event("adopted", "why", means="Observe", property="SoilMoisture")
+    reporting.report()
+    assert len(written) == 1
+    assert written[0][0] == agent.id
+    assert [text for _, _, text, _ in written[0][1]] == ["why"]
+    assert agent.metrics.take_events() == [], "written events must leave the buffer"
+
+
+def test_a_failed_report_keeps_the_story_for_the_next_tick(agent):
+    reporting = next(m for m in agent.modules if m.name == "reporting")
+
+    class _Writer:
+        def write_agent_health(self, *a, **k):
+            raise RuntimeError("sink down")
+        def write_events(self, *a, **k):
+            raise AssertionError("must not be reached when health already failed")
+
+    reporting._writer = _Writer()
+    agent.metrics.event("adopted", "kept safe")
+    reporting.report()  # must not raise — instrumentation never takes an agent down
+    assert [text for _, _, text, _ in agent.metrics.take_events()] == ["kept safe"]
+
+
 # --- the belief, which is required ------------------------------------------------------------
 
 def test_an_agent_that_states_no_interval_refuses(agent):

@@ -113,6 +113,24 @@ union to be had: an agent's token opens only its own, and the only client that c
 them at once is Grafana, holding the read-only token minted for exactly that. See
 [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 
+# The story beside the figures
+
+The counters say *that* something happened; since #125 the kernel also buffers **events** —
+point-in-time transitions with their prose. The [intention](/domain/intention.md) ledger tells
+`Metrics.event()` at every adoption, resolution and end-verdict, carrying the `becauseOf` text;
+the reporting capability drains the buffer on its ordinary tick, through the same writer, token
+and bucket, into a third measurement (`agent_events`, each point stamped with the transition's
+own instant); and the health dashboard draws each agent's stream as **annotations** over every
+panel — `worst_gap` climbing with an `adopted Acquire: "bid 0.4L …"` marker at the knee is the
+view the ledger was built to make possible.
+
+Three properties keep it honest: the buffer is **bounded** (the graph is the record, this is a
+projection for eyes, so under a long outage the oldest markers are the right casualty); a
+failed write hands the drained events **back** (a figure missed is superseded by the next
+tick's, a transition missed is gone); and the text is **prose that must never be parsed** — the
+same contract as `intention:becauseOf`, whose projection it is. An agent without the intention
+capability tells no events and writes none; nothing new is granted anywhere.
+
 # Seams left open
 
 - **Counters reset on restart.** `readings_total` and the failure counts are since boot, so a
