@@ -38,6 +38,7 @@ from .beliefs import Beliefs
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
+from .watchdog import BusWatchdog
 from .validate import validate_agent
 from .world import MessageBus, Self, World, load_bus, load_self, load_world
 
@@ -111,6 +112,10 @@ class Agent:
         # given no room to review itself must still compact. Nothing here starts a thread.
         self.upkeep = BeliefBaseUpkeep(self)
 
+        # And noticing I am cut off (#53) — kernel for the same reason, on a clock of its own
+        # because paho's network thread is one of the things it watches. Nothing starts here.
+        self.watchdog = BusWatchdog(self)
+
     # --- how one capability reaches another, without knowing its name ---
 
     def provider(self, family: str):
@@ -163,21 +168,30 @@ class Agent:
         self.mqtt.publish(topic, json.dumps(payload), qos=1, retain=retain)
 
     def _on_connect(self, client, userdata, flags, reason_code, properties) -> None:
-        self.metrics.connected()
-        topics = []
-        for module in self.modules:
-            for topic in module.subscriptions():
-                client.subscribe(topic)
-                topics.append(topic)
-        log.info("%s up — world v%s, running %s", self.id, self.world.version,
-                 ", ".join(m.name for m in self.modules) or "nothing")
-        # The topics, spelled out. An agent that is subscribed to the wrong thing looks exactly
-        # like a device that never speaks, and this is the one line that tells them apart —
-        # it can be read against the ACL and against the board's own config without guessing.
-        for topic in topics:
-            log.info("%s: listening on %s", self.id, topic)
-        if not topics:
-            log.warning("%s: subscribed to NOTHING — it will never hear anything", self.id)
+        # Wrapped whole, like _on_message's per-module dispatch: an exception escaping any
+        # callback kills paho's network thread, and a dead network thread is the one failure
+        # that silences every future callback including the disconnect that would report it
+        # (#53). The watchdog checks for that corpse anyway — this makes it a check that
+        # should never fire, which is what a watchdog's checks should be.
+        try:
+            self.metrics.connected()
+            topics = []
+            for module in self.modules:
+                for topic in module.subscriptions():
+                    client.subscribe(topic)
+                    topics.append(topic)
+            log.info("%s up — world v%s, running %s", self.id, self.world.version,
+                     ", ".join(m.name for m in self.modules) or "nothing")
+            # The topics, spelled out. An agent subscribed to the wrong thing looks exactly
+            # like a device that never speaks, and this is the one line that tells them apart —
+            # it can be read against the ACL and against the board's own config without
+            # guessing.
+            for topic in topics:
+                log.info("%s: listening on %s", self.id, topic)
+            if not topics:
+                log.warning("%s: subscribed to NOTHING — it will never hear anything", self.id)
+        except Exception as exc:
+            log.error("%s: failed while taking up a connection: %s", self.id, exc)
 
     def _on_disconnect(self, client, userdata, flags, reason_code, properties) -> None:
         self.metrics.disconnected()
@@ -300,6 +314,12 @@ class Agent:
         # without it acting. Reporting used to start here too and is a module now — mandatory,
         # granted to every agent, and started below with the rest.
         self.upkeep.start()
+        # The watchdog last, after the connect above has had its chance: its disconnection
+        # clock started at construction, so an agent that never gets its CONNACK is already
+        # being timed. When it resigns it sends SIGTERM to this process — blocked, pending,
+        # and received by the sigwait below exactly as `podman stop`'s would be, so a
+        # resignation IS a clean shutdown and the container's restart policy is the recovery.
+        self.watchdog.start()
         for module in self.modules:
             module.start()
 
@@ -311,6 +331,7 @@ class Agent:
             log.info("%s shutting down", self.id)
             for module in self.modules:
                 module.stop()
+            self.watchdog.stop()
             self.upkeep.stop()
             self.mqtt.loop_stop()
             self.mqtt.disconnect()

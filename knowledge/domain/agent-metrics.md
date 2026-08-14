@@ -137,7 +137,10 @@ capability tells no events and writes none; nothing new is granted anywhere.
   crash loop looks like a series of small numbers rather than one large one. `uptime_s` is what
   disambiguates it, and nothing joins them for you.
 - **Nothing alerts.** These are series on a dashboard; a write failure climbing at 3am is visible
-  and unannounced.
+  and unannounced. One figure now *acts* instead of waiting to be read: the disconnection clock,
+  which the kernel watchdog turns into a resignation past `ag:resignAfterS` — see
+  [a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md).
+  Everything else still only shows.
 - **A report that fails is not counted.** The gap in the series says it, and a counter of
   failures-to-report-failures earns less than it costs.
 - **The sensor set is the union of wired and delivered**, which is right but means a sensor

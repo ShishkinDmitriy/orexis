@@ -106,6 +106,12 @@ ag:maxBytesPerTriple a owl:DatatypeProperty ; rdfs:range xsd:integer ;
 
 ag:BeliefBase ag:maxBytesPerTriple 800 .
 
+ag:resignAfterS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "resign after seconds" ;
+    rdfs:comment "How long an agent endures a dead bus before it resigns and lets its container bring it back fresh (#53). The fault this bounds is the one that cost two days: a session that ends and never returns, inside a container that looks perfectly healthy, on a bus whose broker never restarted. Ten minutes is far past any reconnect paho would ever achieve — a link that flaps recovers in seconds and never meets this — and far under the hours a quiet failure used to cost. Stated here rather than compiled in, like the compaction ratio above: it is what this society tolerates, not how the code happens to be written." .
+
+ag:Agent ag:resignAfterS 600 .
+
 #################  Identity keys — published, because a verifier cannot read secrets  #########
 #
 #  The public halves of each agent's keypairs (#144, #145), written by `agora-keygen` into a
