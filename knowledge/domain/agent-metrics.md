@@ -113,6 +113,17 @@ union to be had: an agent's token opens only its own, and the only client that c
 them at once is Grafana, holding the read-only token minted for exactly that. See
 [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 
+# The picks beside the counts
+
+`belief_revisions` says *that* an agent changed its mind; since #61 the review module also
+contributes `picked_<package>_<term>` — the current value of every revisable term the agent
+holds. Contributed by the latitude-granted module, not by reporting itself, so the fields exist
+on exactly the agents whose values could be elsewhere than authored; an agent with no mandate
+is silent on them, and that silence is the reading. The governance surface this opens: a whole
+society relaxing the same figure to its ceiling is the strongest evidence a range was
+mis-authored that this design can produce, and an author who cannot see how latitude is used
+grants narrow ranges — which is the same as granting none.
+
 # The story beside the figures
 
 The counters say *that* something happened; since #125 the kernel also buffers **events** —

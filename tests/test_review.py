@@ -414,3 +414,45 @@ def test_the_floor_is_the_equipments_and_the_mandate_cannot_lower_it(monkeypatch
     st = _sensing_with(_states(air_temp_fern=120))
     room = build_agent("fern", st=st, monkeypatch=monkeypatch).reviewing().ranges()[SLOW]
     assert room.floor == 120.0, "sensing's fern commits notBelow 10, and the board says 120"
+
+
+# --- the picks are visible outside the container (#61) ------------------------------------------
+
+def test_the_report_says_toward_what_not_merely_that(fern):
+    """belief_revisions said an agent changed its mind; this says where the belief now sits.
+    One field per revisable term it holds, into its own bucket — the range is the governance
+    surface, and the only evidence a range was mis-authored is what agents do inside it."""
+    reviewing = fern.reviewing()
+    assert reviewing.reports()["picked_perception_slowSleepS"] == AUTHORED
+    feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
+    reviewing.review()
+    assert reviewing.reports()["picked_perception_slowSleepS"] == CEILING
+
+
+def test_a_taken_revision_is_a_marker_over_the_series(fern):
+    """The picked_* fields show WHERE a belief sits; the event shows the MOMENT it moved and
+    why, beside the intention story (#125)."""
+    fern.metrics.take_events()
+    feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
+    fern.reviewing().review()
+    events = fern.metrics.take_events()
+    assert [(kind, tags) for _, kind, _, tags in events] == [
+        ("belief-taken", {"term": "slowSleepS"})]
+    assert "600" in events[0][2] and "900" in events[0][2]
+
+
+def test_a_decline_is_counted_but_never_a_marker(fern):
+    """Declining is the routine outcome of most arisings — a marker per arising would bury
+    the markers that mean something, and the count is the right voice for the routine."""
+    fern.metrics.take_events()
+    feed(fern, [0.412] * (window(fern) + 2))
+    fern.reviewing().review()
+    assert fern.reviewing().declined == 1
+    assert fern.metrics.take_events() == []
+
+
+def test_a_refusal_is_a_marker_because_it_is_a_bug_signal(fern):
+    fern.metrics.take_events()
+    room = fern.reviewing().ranges()[SLOW]
+    assert not fern.reviewing().settle(room, 2000.0)
+    assert [kind for _, kind, _, _ in fern.metrics.take_events()] == ["belief-refused"]

@@ -174,7 +174,7 @@ class ReviewModule(Module):
         be installed, and an agent with no mandate should be silent on these rather than report
         three zeroes it could never move.
         """
-        return {
+        out = {
             "belief_revisions": self.revisions,
             # Decisions to change nothing. A conscience that only reported the changes it made
             # would look identical whether it was thinking hard and concluding no, or not
@@ -185,6 +185,19 @@ class ReviewModule(Module):
             # the shapes, which is a bug in the rule and not a misbehaving agent.
             "belief_revisions_refused": self.refused,
         }
+        # TOWARD WHAT, not merely that (#61). The counts say an agent changed its mind and how
+        # often, and the range is the whole governance surface: the only evidence a range was
+        # mis-authored is what agents do inside it, and every agent relaxing the same figure to
+        # its ceiling is the strongest signal this design can produce — unobservable while the
+        # picks lived in a private graph in a private container. One field per revisable term
+        # the agent holds, into its OWN bucket, so the operator sees it and rivals do not: the
+        # channel is the same one every figure above already rides. An author who cannot see
+        # how latitude is used grants narrow ranges, which is the same as granting none.
+        for term in sorted(self.ranges()):
+            value = self.current(term)
+            if value is not None:
+                out[_field_name(term)] = value
+        return out
 
     # --- the room a term has -------------------------------------------------------------
 
@@ -396,6 +409,14 @@ INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
      review:dueAt "{due.isoformat()}"^^xsd:dateTime ;
      review:becauseOf {_string(why)} .
 }} }}""")
+        # A change of mind is a marker over the series (#125), beside the intention story: the
+        # picked_* fields show WHERE a belief sits, this shows the MOMENT it moved and why.
+        # Taken and refused only — a decline is the routine outcome of most arisings, and its
+        # count above is the right voice for something that happens on schedule.
+        if outcome != "declined":
+            local = belief_term.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+            self.agent.metrics.event(f"belief-{outcome}",
+                                     f"{local}: {was} -> {now} — {why}", term=local)
 
     def _due(self) -> set[str]:
         """Terms whose last decision is not yet worth revisiting."""
@@ -452,6 +473,19 @@ SELECT (MIN(?due) AS ?soonest) WHERE {{ GRAPH <{revisions_graph(self.agent.id)}>
         self._stopped = True
         if self._timer:
             self._timer.cancel()
+
+
+def _field_name(term: str) -> str:
+    """`picked_perception_slowSleepS` from a term IRI — a series field, filtered by a person.
+
+    The namespace's tail is kept, not stripped: two packages may each declare a `slowSleepS`
+    in their own namespace, and the stripped form cannot tell them apart — the exact latent
+    collision `on_belief_revised`'s comment records one level down.
+    """
+    ns, _, local = term.rpartition("#")
+    if not ns:
+        ns, _, local = term.rpartition("/")
+    return f"picked_{ns.rstrip('/').rsplit('/', 1)[-1]}_{local}"
 
 
 def _literal(value) -> str:
