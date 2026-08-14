@@ -43,9 +43,14 @@ event, *excess demand crosses above zero*, moved by one of four shocks:
 **What is built** is the demand shock and nothing else, and it is a weaker trigger than the
 above describes. A round opens when one agent announces `LOW` — a **band**, not a quantity —
 and the host cannot compare demand to supply at that moment because demand is private until
-bids are in. So "excess demand crosses above zero" is not what fires, and there is no dispense
-path: every round competes on price, including the ones where nothing turned out to be scarce.
-Why the host is deliberately blind to quantity beforehand, and what the gap costs, is in
+bids are in. So "excess demand crosses above zero" is not what fires: a round still opens for
+demand that turns out to fit the lot. What closed #50 is that such a round no longer *prices*
+as if contested — at `close()`, the one moment the numbers exist, a round whose eligible demand
+fits inside the lot fills everyone in full **at the reserve**. That is the dispense path, moved
+to the only place it could be computed: the design's "no scarcity, no auction" holds for the
+bill, while the round as a *ceremony* still runs, because the host cannot know it was
+unnecessary until it is over. Why the host is deliberately blind to quantity beforehand, and
+what the gap costs, is in
 [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md).
 
 # A market is a lot, not a property
