@@ -28,7 +28,7 @@ standing intention is what makes one affordable: committed means not re-consulte
 |---|---|---|---|
 | `intention:Observe` | get a reading where the gap is unmeasured or stale | the bidder starts waiting on its sensor | the look comes back (satisfied) or the auction closes first (dropped, with why) |
 | `intention:Acquire` | bid for what would reduce a gap | the first bid flies | the voucher arrives |
-| `intention:Apply` | spend a held claim against the world | **RESERVED** — see below | |
+| `intention:Apply` | spend a held claim against the world | the voucher arrives — holding IS the intention | the claim is presented on the redeem channel (watch live, or the bounded wait) |
 
 `Observe` is first for a structural reason: at birth there is a desired state and an empty
 sensed graph, so the first intention is always to look — see
@@ -38,10 +38,15 @@ sensed graph, so the first intention is always to look — see
 every further bid while it stands, satisfied by the voucher — **and satisfied is only the
 MEANS**. The voucher opens a *watch* on the end (below).
 
-`Apply` is declared and unimplemented, honestly: in the spot market a [voucher](/domain/voucher.md)
-is redeemed the moment it is issued, so no held claim exists for the commitment to be about. The
-roadmap's **futures market** is where it becomes real — holding a voucher redeemable until `exp`
-*is* this intention.
+`Apply` is **real since #132**, and earlier than the futures market it was reserved for: the
+reason to hold a claim turned out to be *observability* before it was temporal strategy — never
+spend a dose you cannot watch land. Adopted when the [voucher](/domain/voucher.md) arrives,
+standing while the holder waits for its watch to be provably live (the #135 ack at the fast
+cadence, or a bounded wait that redeems blind rather than never), satisfied when the claim is
+presented. A held claim answers maximum urgency exactly as an open expectation does — the hold
+is the watch one step earlier — and the expectation itself opens at presentation, when the dose
+becomes imminent, so the baseline is not aged by the hold. Futures now merely extends the
+holding period this gave a mechanism to.
 
 # The expectation — the end, judged apart from the means
 

@@ -29,7 +29,7 @@ from agent.module import Module
 from agent.store import bindings
 
 from .graphs import intentions_graph
-from .terms import (BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEADLINE_AT, END_MET,
+from .terms import (APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEADLINE_AT, END_MET,
                     END_VERIFIED_AT, EXPECTS_VALUE_TO, KEEPING, NS, PATIENCE_S, term)
 
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
@@ -323,6 +323,13 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
             return None
         now = datetime.now(timezone.utc)
         if any(now < w.deadline for w in self.open_expectations(observed_property)):
+            return 1.0
+        # A HELD claim is the same need one step earlier (#132): the dose is coming the moment
+        # the watch is live, and the watch becomes live by exactly this urgency reaching the
+        # board. Bounded by the patience like everything the keeper answers, so a claim the
+        # bound will redeem blind anyway cannot hold the fast cadence forever.
+        if any(s.age_s(now) <= self.beliefs.patience_s
+               for s in self.standing(means=APPLY, observed_property=observed_property)):
             return 1.0
         return None
 

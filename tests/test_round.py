@@ -390,12 +390,49 @@ def _win_for_fern(host):
     return host.me.actuator_for("fern")
 
 
-def test_winning_opens_the_valve(host):
+def test_winning_issues_paper_and_only_presenting_opens_the_valve(host):
+    """Winning is not actuating (#132). The host used to redeem every voucher itself the moment
+    it issued them — spending the dose before the winner's sensor could possibly be watching it
+    land. The claim is HELD now: no valve moves at the win, and the holder presenting it on the
+    redeem channel is what actuates, co-signed exactly as before."""
     valve = _win_for_fern(host)
+    assert host.sent.to(valve.command_topic) == [], \
+        "the win itself must move no water — the holder has not presented"
+
+    market = market_of(host)
+    voucher = host.sent.to(f"{market.voucher_topic}/fern")[-1]
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": voucher["jti"], "sub": "fern"})
     command = host.sent.to(valve.command_topic)[-1]
     assert command["ml"] > 0 and command["seconds"] > 0
     assert command["plant"] == "fern"
     assert command["match_sig"] and command["val_sig"]  # co-signed, or the device refuses
+
+
+def test_a_claim_is_single_use(host):
+    """Presented twice, honoured once — jti is the anti-replay id doing its job."""
+    valve = _win_for_fern(host)
+    market = market_of(host)
+    voucher = host.sent.to(f"{market.voucher_topic}/fern")[-1]
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": voucher["jti"], "sub": "fern"})
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": voucher["jti"], "sub": "fern"})
+    assert len(host.sent.to(valve.command_topic)) == 1
+
+
+def test_nobody_spends_another_agents_claim(host):
+    """The presenter is read off the topic the ACL lets it write — tomato cannot present
+    fern's jti from its own segment, and a forged claim earns a log line, not water."""
+    valve = _win_for_fern(host)
+    market = market_of(host)
+    voucher = host.sent.to(f"{market.voucher_topic}/fern")[-1]
+    host.deliver(f"{market.redeem_topic}/tomato", {"jti": voucher["jti"], "sub": "tomato"})
+    assert host.sent.to(valve.command_topic) == []
+
+
+def test_an_unknown_claim_moves_nothing(host):
+    valve = _win_for_fern(host)
+    market = market_of(host)
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": "forged", "sub": "fern"})
+    assert host.sent.to(valve.command_topic) == []
 
 
 # --- what comes back -------------------------------------------------------

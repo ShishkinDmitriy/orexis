@@ -36,7 +36,7 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from .beliefs import BIDDING_BLOCK
-from .terms import (ACQUIRE, BIDDING, DELIBERATION, DESIRE, INTENTION, OBSERVE,
+from .terms import (ACQUIRE, APPLY, BIDDING, DELIBERATION, DESIRE, INTENTION, OBSERVE,
                     PERCEPTION)
 
 # The term whose meaning this asks after is the one this package already names for its own
@@ -91,6 +91,12 @@ class BiddingModule(Module):
         self.won_l = 0.0
         self.pending: dict | None = None  # an auction I have been asked to answer
         self._deadline: Timer | None = None
+        # A claim won and not yet presented (#132): the voucher, held until my watch is live.
+        # One at a time, like the pending auction — the keeper's patience absorbs a second
+        # acquisition while one stands, so a second unpresented claim cannot normally arise;
+        # if the market misbehaves and one does, the newer claim replaces the older, logged.
+        self.holding: dict | None = None
+        self._present_deadline: Timer | None = None
         self.about = self._what_my_desire_is_about()
 
     def _what_my_desire_is_about(self) -> str:
@@ -158,6 +164,8 @@ class BiddingModule(Module):
     def stop(self) -> None:
         if self._deadline:
             self._deadline.stop()
+        if self._present_deadline:
+            self._present_deadline.stop()
 
     def subscriptions(self) -> list[str]:
         topics = []
@@ -172,7 +180,7 @@ class BiddingModule(Module):
                 self.on_offer(market, self.parse(payload) or {})
                 return True
             if topic == f"{market.voucher_topic}/{self.me.agent_id}":
-                self.on_voucher(self.parse(payload) or {})
+                self.on_voucher(market, self.parse(payload) or {})
                 return True
         return False
 
@@ -240,6 +248,8 @@ class BiddingModule(Module):
         Matching on the subject alone meant that on a pot with two sensors, whichever reported
         first won the race, and a temperature could be submitted as a bid on soil moisture.
         """
+        if subject_uri == self.me.acts_for and observed_property == self.about:
+            self._maybe_present()  # a held claim checks its watch on every look (#132)
         if not self.pending or subject_uri != self.me.acts_for:
             return
         if observed_property != self.about:
@@ -328,21 +338,87 @@ class BiddingModule(Module):
 
     # --- what came back ---
 
-    def on_voucher(self, voucher: dict) -> None:
+    def on_voucher(self, market, voucher: dict) -> None:
         amount = float(voucher.get("amount_l", 0.0))
         debit = float(voucher.get("debit", 0.0))
         self.balance -= debit
         self.won_l += amount
-        if keeper := self._keeper():
-            # The MEANS succeeded — and that is all a voucher proves. The END is the gap the
-            # whole commitment served, so resolving the acquire is where the watch on it opens:
-            # the keeper records where the property stood and which way the domain promises it
-            # will move, and judges the claim against what the sensor reports next (#131). Paid
-            # water that never reaches the pot then reads satisfied-and-UNMET, which is the
-            # false-knowledge signature — instead of reading like success forever.
-            for uri in keeper.satisfy(ACQUIRE, self.about,
-                                      f"voucher for {amount}L at a debit of {debit}"):
-                keeper.expect(uri, self.about,
-                              f"paid {debit} for {amount}L — the graph says this raises "
-                              f"what I am short of, so show me")
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, self.balance)
+
+        keeper = self._keeper()
+        acquire_uris = (keeper.satisfy(ACQUIRE, self.about,
+                                       f"voucher for {amount}L at a debit of {debit}")
+                        if keeper is not None else [])
+
+        # A market authored without a redeem channel keeps the old arrangement — the host
+        # redeemed on issue, the dose is already flying — so the expectation opens NOW, on the
+        # acquire's row, exactly as before #132.
+        if not market.redeem_topic or not voucher.get("jti"):
+            for uri in acquire_uris:
+                keeper.expect(uri, self.about,
+                              f"paid {debit} for {amount}L on a market with no redeem channel "
+                              f"— the host has already redeemed, so show me")
+            return
+
+        # HOLD (#132): winning is not actuating. The claim stands until my watch is live —
+        # a reading acknowledged at my fast cadence (#135), proof the board heard the
+        # tightening — or until the bounded wait says redeem blind rather than never. The
+        # keeper's standing Apply is what tightens the cadence: a held claim IS urgency.
+        if self.holding is not None:
+            self.log.warning("a second claim arrived while %s was held — presenting the newer",
+                             self.holding.get("jti"))
+        self.holding = {"jti": voucher["jti"], "market": market,
+                        "amount_l": amount, "debit": debit}
+        if keeper is not None:
+            keeper.adopt(APPLY, self.about,
+                         f"holding voucher {voucher['jti']} ({amount}L) until my watch is "
+                         f"live — never spend a dose you cannot watch land")
+        if (perception := self.agent.provider(PERCEPTION)) is not None:
+            perception.sense_now()
+            bound = perception.stale_after_s(self.me.acts_for, self.about)
+        else:
+            bound = 60.0
+        # The bound: one full cycle of the rhythm currently in force, after which a watch that
+        # could not be confirmed is not going to be — old firmware that never acks, a listening
+        # rig, a board mid-sleep on a long cadence. Redeem blind and say so, because a dose
+        # delayed forever is worse than a dose unobserved.
+        self._present_deadline = Timer(float(bound), self._present_blind)
+        self._present_deadline.start()
+        self._maybe_present()
+
+    def _maybe_present(self) -> None:
+        """Present the held claim if the watch is live. Called on every reading of my property."""
+        if self.holding is None:
+            return
+        perception = self.agent.provider(PERCEPTION)
+        if perception is None or not perception.watch_is_live(self.me.acts_for, self.about):
+            return
+        self._present("my watch is live — a reading arrived acknowledged at my fast cadence")
+
+    def _present_blind(self) -> None:
+        if self.holding is None:
+            return
+        self._present("the wait is over and the watch never confirmed live — redeeming blind, "
+                      "because a dose delayed forever is worse than a dose unobserved")
+
+    def _present(self, why: str) -> None:
+        held, self.holding = self.holding, None
+        if self._present_deadline:
+            self._present_deadline.stop()
+        if held is None:
+            return
+        market = held["market"]
+        self.log.info("presenting voucher %s: %s", held["jti"], why)
+        self.publish(f"{market.redeem_topic}/{self.me.agent_id}",
+                     {"jti": held["jti"], "sub": self.me.agent_id})
+        if keeper := self._keeper():
+            # The dose is imminent NOW — this is when the end becomes expectable, not at the
+            # voucher: a baseline taken at the win would have aged the whole hold, and the
+            # sense_now inside expect() lands on a board that is provably (or at least
+            # plausibly) awake and fast. The watch hangs on the Apply row, because applying is
+            # the act whose end the movement is.
+            for uri in keeper.satisfy(APPLY, self.about,
+                                      f"claim {held['jti']} presented: {why}"):
+                keeper.expect(uri, self.about,
+                              f"presented {held['jti']} for {held['amount_l']}L — the graph "
+                              f"says this raises what I am short of, so show me")

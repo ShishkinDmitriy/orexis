@@ -191,6 +191,17 @@ class PerceptionModule(Module):
         it — the freshness rule follows the cadence IN FORCE, not the one requested — and
         listening ignores it, since a device that takes no orders has nothing to receipt."""
 
+    def watch_is_live(self, subject_uri: str, observed_property: str) -> bool:
+        """Whether a dose landing NOW would be seen at the fast cadence.
+
+        The #132 question, answered where the clamps live. The base answer is True: a
+        listening device pushes on its own clock and its watch is always as live as it gets —
+        holding a claim for a rhythm nobody can tighten would hold it forever. Subscribing
+        overrides with the #135 stamp: live means the board has ACKNOWLEDGED a cadence at or
+        under my fast end, which is proof it heard the tightening rather than hope that it did.
+        """
+        return True
+
     def sense_now(self) -> None:
         """Ask for a reading now, if my hardware allows it. Listening cannot.
 
@@ -328,6 +339,13 @@ class SubscribingModule(PerceptionModule):
         self.set_cadence(sensor,
                          self.cadence_for(sensor.subject, sensor.observes, value),
                          self.agent.annotations(sensor.subject, sensor.observes, value))
+
+    def watch_is_live(self, subject_uri: str, observed_property: str) -> bool:
+        sensor = self.sensor_for(subject_uri, observed_property)
+        if sensor is None:
+            return False
+        acked = self.acked_cadence.get(sensor.command_topic or sensor.local_id)
+        return acked is not None and acked <= self.beliefs.fast_sleep_s
 
     def on_cadence_ack(self, sensor, acknowledged_s: int) -> None:
         """Keep the board's testimony, and dispute it when it contradicts my intent.

@@ -17,7 +17,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [round](/domain/round.md) - One pass of bidding inside an auction, not the auction itself — the standard meaning from multiple-round designs. Exactly one is built, so today an auction has a single round and the two coincide; the iterative flow described is designed and unbuilt.
 * [bid matching](/domain/bid-matching.md) - Turning a lot and a set of bids into a proposed allocation with prices — an allocation rule and a payment rule together. The host declares how it matches and every offer announces it; pay-as-bid rewards shading, uniform price rewards demand reduction. Deliberately narrower than an auction format, which also fixes how bidding proceeds; qualified because bare matching collides with matching a capability to a provider.
 * [clearing](/domain/clearing.md) - Thin stake-free validator / public function (a notary): checks a proposed trade and co-signs the voucher. The host computes the match, not clearing.
-* [voucher](/domain/voucher.md) - What you win: a co-signed, single-use claim on the supplier for N litres, redeemed to actuate (spot now, futures later).
+* [voucher](/domain/voucher.md) - What you win: a co-signed, single-use claim on the supplier for N litres, HELD until the winner's watch is provably live and then presented on the market's redeem channel (#132) — win and actuate decoupled for observability now, for temporal strategy when futures arrive.
 * [executor](/domain/executor.md) - The supplier's actuation arm: verifies the voucher and drives its own valve, bounded by clearing + the device fail-safe.
 
 # Ends

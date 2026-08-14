@@ -68,6 +68,9 @@ market:bidTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range 
 market:voucherTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
     rdfs:label "voucher topic" ;
     rdfs:comment "Where the host returns what was won. A prefix, one segment per winner." .
+market:redeemTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
+    rdfs:label "redeem topic" ;
+    rdfs:comment "Where a HOLDER presents its claim. A prefix, one segment per holder — the mirror of voucherTopic, and the channel that makes winning and actuating separate acts (#132): the host used to redeem every voucher itself the moment it issued them, which spent the dose before the winner's sensor could possibly be watching it land. The holder now presents when its watch is live, and a spot market grew the futures market's wire a venue at a time." .
 
 #################  The host's own terms (private belief)  #################
 

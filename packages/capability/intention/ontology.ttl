@@ -52,7 +52,7 @@ intention:Acquire a intention:Means ; rdfs:label "Acquire" ;
     rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the voucher, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
 
 intention:Apply a intention:Means ; rdfs:label "Apply" ;
-    rdfs:comment "Spend a held claim against the world. RESERVED: declared because the vocabulary should be honest that winning and applying are different commitments, and unimplemented because in the spot market nothing stands between them — a voucher is redeemed the moment it is issued, so there is no held claim for a commitment to be about. The futures market is where this becomes real: win a voucher redeemable until exp, and HOLDING it is this intention. See the roadmap's futures seam." .
+    rdfs:comment "Spend a held claim against the world. REAL since #132, and earlier than the futures market this was reserved for — because the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy: never spend a dose you cannot watch land. Adopted when the voucher arrives, standing while the holder waits for its watch to be live (the #135 ack at the fast cadence, or the bounded wait), satisfied when the claim is presented on the market's redeem channel. The expectation on the end opens HERE rather than at the voucher, because this is when the dose becomes imminent. The futures seam now merely extends the holding period this gave a mechanism to." .
 
 intention:adoptedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "adopted at" .
