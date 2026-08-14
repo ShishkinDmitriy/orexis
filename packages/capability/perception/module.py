@@ -352,16 +352,24 @@ class SubscribingModule(PerceptionModule):
         return acked is not None and acked <= self.beliefs.fast_sleep_s
 
     def on_cadence_ack(self, sensor, acknowledged_s: int) -> None:
-        """Keep the board's testimony, and dispute it when it contradicts my intent.
+        """Keep the board's testimony, answer it, and dispute it when it contradicts my intent.
 
-        One mismatched ack is expected noise: my live response to the PREVIOUS reading lands in
-        the board's post-publish window, so the wake after a re-aim acks the old value once. Two
+        **An acked reading is a board waiting to be released (#152).** The board's post-publish
+        wait now ends when my answer arrives, not when a timer expires — so silence is no longer
+        an option, and the memory of what the channel was last told stops excusing one. Clearing
+        it here means the set_cadence this reading is about to trigger always speaks, even when
+        nothing changed: the reply IS the release. A reading without the field — old firmware,
+        a test ingesting directly — keeps the old economy, because nobody is waiting for it.
+
+        One mismatched ack is expected noise from pre-release firmware: the live response to the
+        PREVIOUS reading lands in its fixed window, so the wake after a re-aim acks the old value
+        once. (A releasing board sleeps exactly what it was answered, so its acks agree.) Two
         consecutive identical mismatches is the real thing — a command the board never received
         (#37's cleared-retained case) or one its firmware clamped — so that is when it is said
-        out loud, and the dedup memory for the channel is dropped so the very next reading
-        re-sends the command instead of assuming the board already knows it.
+        out loud; the re-send it used to have to arrange happens by itself now.
         """
         key = sensor.command_topic or sensor.local_id
+        self.sent.pop(key, None)
         self.acked_cadence[key] = int(acknowledged_s)
         for peer in self._aimed_with(sensor):
             self.agent.metrics.cadence_acked(peer.local_id, int(acknowledged_s))
@@ -371,9 +379,8 @@ class SubscribingModule(PerceptionModule):
             if self._ack_disputed.get(key) == dispute:
                 self.log.warning(
                     "%s acknowledges %ss where %ss was commanded, twice running — the retained "
-                    "command was cleared or clamped; re-sending on the next reading",
+                    "command was cleared or clamped",
                     sensor.local_id, acknowledged_s, commanded)
-                self.sent.pop(key, None)  # let set_cadence speak again
             self._ack_disputed[key] = dispute
         else:
             self._ack_disputed.pop(key, None)
@@ -457,6 +464,15 @@ class SubscribingModule(PerceptionModule):
         have kept the old verdict on its device indefinitely, because the only thing being
         compared had not moved.
 
+        **What the memory means changed with #152.** It used to ask "does the board already
+        know all this", across readings — the right economy while the board's post-publish wait
+        was a fixed window that expired on its own. A board that waits to be RELEASED must be
+        answered every time, so an acked reading clears the channel's memory before this runs
+        (see on_cadence_ack) and the question left for `self.sent` is "have I answered THIS
+        arrival yet": one board carrying several sensors triggers this once per sensor per
+        message, the group recompute gives every call the same answer, and one release goes out
+        instead of three copies of it.
+
         Keyed on the command topic, because one board carrying several peripherals has several
         sensors and ONE place to be instructed. Keyed per sensor, each would compute its own
         interval from its own urgency and publish it retained to the same topic — soil moisture
@@ -513,11 +529,15 @@ class SubscribingModule(PerceptionModule):
         if driver is None:
             return
         driver.set_cadence(sensor, sleep_s, verdict)
+        # A release that repeats the standing answer is the ordinary heartbeat now, not news —
+        # info only when something moved, or the log would restate the cadence every reading.
+        changed = self.sent_cadence.get(sensor.local_id) != sleep_s
         self.sent[key] = message
         for aimed in group:
             self.sent_cadence[aimed.local_id] = sleep_s
-        self.log.info("%s: cadence now %ss%s", sensor.local_id, sleep_s,
-                      f", showing {verdict}" if verdict else "")
+        (self.log.info if changed else self.log.debug)(
+            "%s: cadence now %ss%s", sensor.local_id, sleep_s,
+            f", showing {verdict}" if verdict else "")
 
     def sense_now(self) -> None:
         """Best-effort nudge — lands only if the device is awake to hear it."""

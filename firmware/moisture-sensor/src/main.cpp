@@ -7,8 +7,13 @@
 //
 // This is deliberately NOT ag:Polling. Between wakes the board is unreachable, so it cannot be
 // asked for a reading — it can only be told, in advance, how often to take one. The retained
-// cadence command is what makes that reliable; `sense` is best-effort and lands only inside
-// the CMD_WAIT_MS window. See knowledge/domain/sensing.md.
+// cadence command is what makes that reliable; `sense` is best-effort and lands only while the
+// board happens to be awake. See knowledge/domain/sensing.md.
+//
+// The post-publish wait is a HANDSHAKE, not a window (#152): the board waits to be RELEASED —
+// the agent answers every reading, and the answer carries the cadence to sleep on — and only
+// falls back to a timeout when nobody answers. The wake ends when the conversation does, which
+// is usually tens of milliseconds after the publish rather than a fixed allowance later.
 //
 //   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>","sleep_s":600,
 //                               "temperature":21.4,"humidity":0.463}
@@ -51,9 +56,9 @@ PubSubClient mqtt(wifi);
 #ifndef MQTT_TRIES
 #define MQTT_TRIES 10           // give up and sleep rather than hold the battery open
 #endif
-#ifndef CMD_WAIT_MS
-#define CMD_WAIT_MS 1500        // listen window after publishing, to catch a retained cadence
-#endif
+#ifndef RELEASE_WAIT_MS
+#define RELEASE_WAIT_MS 4500    // post-publish: how long to wait to be RELEASED before giving
+#endif                          // up on the agent for this wake and sleeping on what is known
 #ifndef RETAINED_WAIT_MS
 #define RETAINED_WAIT_MS 700    // pre-publish drain: the retained command, so the ack is true
 #endif
@@ -63,6 +68,12 @@ PubSubClient mqtt(wifi);
 
 uint32_t sleep_s = DEFAULT_SLEEP_S;
 static bool got_cmd = false;    // a command arrived this wake — ends the pre-publish drain
+static bool released = false;   // a command CARRYING A CADENCE arrived — the agent's release.
+                                // Two flags because the drain and the release ask different
+                                // questions: any retained leftovers end the drain, but only an
+                                // answer with a cadence in it is permission to sleep — a sense
+                                // nudge mid-wait republishes and keeps waiting for the answer
+                                // to THAT reading instead.
 
 static float lastRaw = 0.0f; // kept for the serial line: calibration needs the RAW number
 
@@ -309,6 +320,7 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
     if (s < MIN_SLEEP_S) s = MIN_SLEEP_S;
     if (s > MAX_SLEEP_S) s = MAX_SLEEP_S; // constitutional cadence floor
     sleep_s = s;
+    released = true;  // an answer with a cadence in it is the release (#152)
     Serial.printf("cadence set: sleep %us\n", sleep_s);
   }
   // The agent's verdict, riding the same retained message as the cadence rather than a topic
@@ -455,12 +467,20 @@ void setup() {
     // default, which is precisely the divergence the agent needs to see (#37's detector).
     unsigned long drainUntil = millis() + RETAINED_WAIT_MS;
     while (millis() < drainUntil && !got_cmd) mqtt.loop();
+    // The drained retained command is the MEMORY of the last release, not this wake's — a
+    // board must sleep on the answer to the reading it is about to give, so the flag is
+    // lowered before the publish and only the agent's live reply can raise it again.
+    released = false;
     // The same numbers already printed above, not a second look.
     publishReading();
-    // Then keep listening: the agent's LIVE response to this very reading — a re-aimed
-    // cadence, a verdict, a sense nudge — lands in this window and takes effect this wake.
-    unsigned long until = millis() + CMD_WAIT_MS;
-    while (millis() < until) mqtt.loop();
+    // Then wait to be RELEASED (#152): the agent answers every reading, the answer carries the
+    // cadence to sleep on, and the wake ends when it lands — usually tens of milliseconds —
+    // instead of idling out a fixed window. The deadline is the dead-agent case: nobody
+    // answered, so sleep on what the drain recovered and say so.
+    unsigned long releaseUntil = millis() + RELEASE_WAIT_MS;
+    while (millis() < releaseUntil && !released) mqtt.loop();
+    if (!released) Serial.printf("no release after %ums — the agent is not answering\n",
+                                 RELEASE_WAIT_MS);
   }
 
   // 3. say how it went, once. Everything before this point is silent: a lamp that narrates the

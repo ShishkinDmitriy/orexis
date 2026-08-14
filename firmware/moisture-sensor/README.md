@@ -30,9 +30,15 @@ Publish a **retained** command to `sensors/<subject>/cmd` — the board reads it
 
 - `{"sleep_s": 300}` — sense every 5 min (clamped to `[MIN_SLEEP_S, MAX_SLEEP_S]`).
 - `{"sense": true}` — take an extra reading while the board is briefly awake. **Best-effort**:
-  the waking window is `CMD_WAIT_MS` (1.5s by default), so a nudge sent at any other moment is
-  simply lost, and it is never retained (a retained `sense` would re-fire on every wake,
-  forever). This is the seed of `ag:Polling`, not a substitute for it.
+  the board is only awake between publishing a reading and being released, so a nudge sent at
+  any other moment is simply lost, and it is never retained (a retained `sense` would re-fire
+  on every wake, forever). This is the seed of `ag:Polling`, not a substitute for it.
+
+After publishing, the board **waits to be released** rather than idling out a fixed window
+(#152): the agent answers every reading, the answer carries `sleep_s`, and the board sleeps on
+it the moment it lands — usually tens of milliseconds. `RELEASE_WAIT_MS` (4.5s by default) is
+the fallback for an agent that is down: the board says so on the serial line and sleeps on the
+retained command it drained before publishing.
 
 `MAX_SLEEP_S` is the **constitutional cadence floor**: the board never sleeps longer than
 that, so a plant can't go blind through a drought however lazy its agent gets.

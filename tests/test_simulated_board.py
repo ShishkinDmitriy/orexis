@@ -239,3 +239,43 @@ def test_a_push_stand_in_acks_nothing(monkeypatch):
     device, published = _device([MOISTURE], SIM_SENSE_MODE="push")
     device._publish()
     assert "sleep_s" not in json.loads(published[-1][1])
+
+
+# --- the release (#152): the wake ends when the answer lands ------------------
+
+def _command(device, doc: dict) -> None:
+    """A message arriving on the device's command topic, as paho would deliver it."""
+    from types import SimpleNamespace
+
+    device._on_message(None, None, SimpleNamespace(topic=device.command_topic,
+                                                   payload=json.dumps(doc).encode()))
+
+
+def test_an_answer_carrying_a_cadence_releases_the_board():
+    """A scheduled device publishes and then waits; the agent's reply carries `sleep_s` and IS
+    the release — the sleep that follows runs on what the answer said."""
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    device._released.clear()
+    _command(device, {"sleep_s": 120})
+    assert device._released.is_set()
+    assert device.sleep_s == 120
+
+
+def test_a_sense_nudge_is_not_a_release():
+    """Exactly as on the board: a nudge republishes, and what releases the wake is the answer
+    to THAT reading — permission to sleep is a cadence, never a request for more."""
+    device, published = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    device._released.clear()
+    _command(device, {"sense": True})
+    assert published, "the nudge must still republish"
+    assert not device._released.is_set()
+
+
+def test_a_push_device_takes_no_release_because_it_never_waits():
+    """The command is discarded before the cadence branch, so nothing raises the flag — the
+    same asymmetry as the ack: a device that keeps its own clock has no handshake to keep."""
+    device, _ = _device([MOISTURE], SIM_SENSE_MODE="push",
+                        SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    device._released.clear()
+    _command(device, {"sleep_s": 120})
+    assert not device._released.is_set()

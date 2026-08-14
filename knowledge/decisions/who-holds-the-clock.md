@@ -55,9 +55,10 @@ Perception had two capabilities, `perception:Polling` and `perception:Listening`
 `perception:Polling` did not poll. A polling agent set a retained `{"sleep_s":N}` on the device's
 command topic and the device woke itself on that schedule. The agent never asked for a
 reading; it stated an interval and delegated the timekeeping. `sense_now()` existed and looked
-like the missing half, but its own docstring called it best-effort — the ESP32 is awake for
-`CMD_WAIT_MS` (1.5s) per cycle and deep-asleep the rest of the time, so a request lands on
-nothing unless it is extraordinarily lucky.
+like the missing half, but its own docstring called it best-effort — the ESP32 is awake for a
+couple of seconds per cycle (then a fixed `CMD_WAIT_MS` window; since #152, from publish to
+release) and deep-asleep the rest of the time, so a request lands on nothing unless it is
+extraordinarily lucky.
 
 So the vocabulary named an exchange the system does not perform, and hid the one it does.
 
@@ -115,8 +116,9 @@ precisely what buys the device its sleep.
 
 The two levers make the same point from the other side. The interval is **retained**, so a
 sleeping board receives it the instant it wakes; `sense` is **never retained** and lands only
-inside the waking window. That inequality is not an implementation weakness to be fixed — it
-is the hardware fact that makes polling and subscribing genuinely different things to hold.
+while the board is awake between publishing and its release (#152). That inequality is not an
+implementation weakness to be fixed — it is the hardware fact that makes polling and
+subscribing genuinely different things to hold.
 
 # Consequences
 
