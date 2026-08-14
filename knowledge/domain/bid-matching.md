@@ -147,27 +147,25 @@ none. Neither is strategy-proof, and no member here is: the mechanism that would
 Vickrey-Clarke-Groves, pricing each winner at the externality it imposes — fits the same
 signature and is not attempted.
 
-# What closing #50 would take
+# How #50 closed
 
-[#50](https://github.com/ShishkinDmitriy/agora/issues/50) is the open defect that an
-**uncontested** round is still priced as if contested: under pay-as-bid, a bidder with no rival
-for anything still pays what it offered, charged for urgency that moved no allocation.
+[#50](https://github.com/ShishkinDmitriy/agora/issues/50) recorded that an **uncontested**
+round was priced as if contested: under pay-as-bid, a bidder with no rival for anything still
+paid what it offered, charged for urgency that moved no allocation. It was a defect *in
+pay-as-bid*, not in the auction, and there were two ways to close it — branch inside pay-as-bid,
+or switch the world's `market:matchesBy` to `market:UniformPrice`, where there is nothing to
+detect because the clearing price *starts* at the reserve.
 
-It is a defect *in pay-as-bid*, not in the auction. Two ways to close it, and choosing between
-them is a governance call rather than a bug fix:
-
-- **Branch inside pay-as-bid** — what the issue proposes: at `close()` the bids are in hand, so
-  detect `sum(max_qty_l) <= quantity_l` and allocate everyone their full request at the reserve.
-  A second code path, which has to be tested and must not become a way to pay less by bidding in
-  a quiet round.
-- **Switch the world to `market:UniformPrice`** — one edit, `market:matchesBy` on the supplier. There is
-  then nothing to detect: the clearing price *starts* at the reserve and rises only if the walk
-  exhausts the lot, so a round whose demand never reaches the lot clears at the reserve because
-  nothing else could have happened.
-
-**No world has switched.** All three still state `market:matchesBy market:PayAsBid`, deliberately —
-changing it alters what every participant pays and how each should bid. See
-[uniform-price-dissolves-the-uncontested-round](/decisions/uniform-price-dissolves-the-uncontested-round.md).
+**The sovereign chose the branch and kept pay-as-bid.** `PayAsBidModule.propose_match` now
+measures contest over the *eligible* bids — below-reserve demand neither quiets a round nor
+profits from one — and when everything asked for fits inside the lot, fills everyone in full at
+the reserve. The issue's warning that this must not become a way to pay less by bidding in a
+quiet round is held by test: the contested path is unchanged, and the two members still
+disagree exactly there, which is their reason to be two. Switching a world to uniform price
+remains one edit, weighed by
+[uniform-price-dissolves-the-uncontested-round](/decisions/uniform-price-dissolves-the-uncontested-round.md) —
+whose dissolution argument stands; what changed is that staying on pay-as-bid no longer costs
+the quiet-round overcharge.
 
 # Where it lives
 

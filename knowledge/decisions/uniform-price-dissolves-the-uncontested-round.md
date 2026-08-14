@@ -105,10 +105,14 @@ where one is much thirstier than the others, demand reduction is the live risk.
 clears exactly as it did — `test_round.py` and the existing `test_auction.py` cases pass untouched,
 which is the evidence that this added a member rather than changed one.
 
-**#50 stays open**, deliberately. Whether a world should run uniform price is the sovereign's call,
-not this change's: it alters what every participant pays and how they should bid, which is a
-governance decision rather than a bug fix. Closing it takes one edit — `market:matchesBy` on the
-supplier — and the argument above is what that edit should be weighed against.
+**#50 stayed open past this change**, deliberately: whether a world should run uniform price is
+the sovereign's call, not this change's, since it alters what every participant pays and how
+they should bid. *(Amended when #50 closed.)* The sovereign kept pay-as-bid and took the other
+route — the explicit branch inside `PayAsBidModule.propose_match`, everyone filled at the
+reserve when eligible demand fits the lot. The dissolution argument above is untouched: uniform
+price still needs no such branch, and the branch pay-as-bid now carries is exactly the second
+code path this record said it would be, held honest by the contested-path-unchanged test. The
+two members now agree on the uncontested bill and differ on the contested one.
 
 # Seams left open
 

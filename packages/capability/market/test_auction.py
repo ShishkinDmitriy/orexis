@@ -45,11 +45,51 @@ def test_no_bids_is_no_sale():
     assert propose_match(offer(), []).lines == ()
 
 
-def test_pays_own_bid_price():
-    trade = propose_match(offer(), [Bid("fern", 2.0, 0.45)])
+def test_pays_own_bid_price_under_contest():
+    """Pay-as-bid means your bid, WHERE your bid moved something: fern's 2 L against a 1.5 L
+    lot is a contested round, and it pays what it offered for the share it won."""
+    trade = propose_match(offer(quantity_l=1.5), [Bid("fern", 2.0, 0.45)])
     assert len(trade.lines) == 1
     assert trade.lines[0].price_per_l == 0.45
+    assert trade.lines[0].qty_l == 1.5
+
+
+def test_an_uncontested_bidder_pays_the_reserve_not_its_own_urgency():
+    """#50. The same 2 L ask against an ample lot is no contest at all — the bid moved no
+    allocation, so it sets no bill. This is the simulation's everyday round: one thirsty
+    tomato, alone, and until this branch it was charged its own panic for water nobody else
+    wanted."""
+    trade = propose_match(offer(quantity_l=5.0, reserve=0.20), [Bid("fern", 2.0, 0.45)])
+    assert len(trade.lines) == 1
     assert trade.lines[0].qty_l == 2.0
+    assert trade.lines[0].price_per_l == 0.20
+
+
+def test_two_bidders_who_both_fit_are_both_filled_at_the_reserve():
+    """The issue's own case: combined demand inside the lot, everyone full, everyone at the
+    host's standing terms."""
+    bids = [Bid("fern", 2.0, 0.40), Bid("tomato", 1.0, 0.50)]
+    trade = propose_match(offer(quantity_l=10.0, reserve=0.20), bids)
+    assert {(l.agent, l.qty_l, l.price_per_l) for l in trade.lines} == {
+        ("fern", 2.0, 0.20), ("tomato", 1.0, 0.20)}
+
+
+def test_a_below_reserve_bid_cannot_quiet_a_round_nor_profit_from_one():
+    """Contest is measured over demand that could actually buy: the ineligible bid neither
+    counts toward scarcity nor rides the reserve price home."""
+    bids = [Bid("fern", 4.0, 0.40), Bid("tomato", 4.0, 0.10)]  # tomato below reserve 0.20
+    trade = propose_match(offer(quantity_l=5.0, reserve=0.20), bids)
+    assert [(l.agent, l.qty_l, l.price_per_l) for l in trade.lines] == [("fern", 4.0, 0.20)]
+
+
+def test_a_lot_consumed_exactly_is_still_uncontested():
+    """`<=`, deliberately: everyone got their full ask and nobody displaced anybody, so
+    nobody's price moved anything. (Uniform price answers this edge at the marginal bid —
+    mechanisms may disagree, and the family's tests only hold them to the same ALLOCATION.)"""
+    bids = [Bid("fern", 2.0, 0.40), Bid("tomato", 3.0, 0.55)]
+    trade = propose_match(offer(quantity_l=5.0, reserve=0.20), bids)
+    assert trade.total_qty_l == 5.0
+    assert {l.price_per_l for l in trade.lines} == {0.20}
 
 
 def test_highest_price_filled_first_under_scarcity():
@@ -155,8 +195,9 @@ def test_an_uncontested_round_clears_at_the_reserve():
     trade = uniform_price(offer(quantity_l=10.0, reserve=0.20), bids)
     assert trade.total_qty_l == 3.0                       # everyone filled
     assert {l.price_per_l for l in trade.lines} == {0.20}  # everyone pays the reserve
-    # Under pay-as-bid the same round charges each its own urgency — the defect #50 records.
-    assert {l.price_per_l for l in propose_match(offer(quantity_l=10.0), bids).lines} == {0.40, 0.50}
+    # Pay-as-bid reaches the same bill by its explicit branch — dissolved here, detected there,
+    # agreeing since #50 closed. Where they still differ is the price of a CONTESTED round.
+    assert {l.price_per_l for l in propose_match(offer(quantity_l=10.0), bids).lines} == {0.20}
 
 
 def test_a_contested_round_does_not_fall_to_the_reserve():

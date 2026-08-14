@@ -16,12 +16,15 @@ never whether it is permitted. Solvency, the constitution and identity are `clea
 `auction.run_auction` is the path between them — the same whichever member runs, which is why it
 did not move.
 
-**Both walk the same demand curve and disagree only about the bill.** That is a fact about these
+**Both allocate identically and disagree only about the bill.** That is a fact about these
 two members and not about the family, so the walk is written out twice rather than shared. A
 third need not allocate highest-first at all — pro-rata across everyone who cleared the reserve
 is an ordinary answer — and a helper factored out today would encode an invariant the family
 does not have. Ten duplicated lines are cheaper than a false abstraction, and the tests hold
-both to the same allocation where they should agree.
+both to the same allocation where they should agree. Since #50 they also agree that an
+uncontested round bills the reserve — pay-as-bid by an explicit branch, uniform price because
+its walk never leaves the floor — and disagree about the price of a contested one, which is
+their entire reason to be two.
 
 **It shares a package with the protocol and is still a separate family.** A directory is a
 package, not a capability: `capabilities/market/` already held two — a bidder answers, a host
@@ -65,18 +68,37 @@ class PayAsBidModule(Module):
         paying its own bid price — which is ≥ reserve. No sale when nothing clears the reserve.
         Deterministic; no LLM.
 
+        **Except when nothing was contested (#50).** When everything asked for fits inside the
+        lot, nobody's price moved any allocation — every eligible bid is filled in full whatever
+        it offered — so nobody's price sets a bill: everyone pays the reserve, the host's own
+        standing terms. Charging each its own bid there was charging an agent for its urgency in
+        a round its urgency changed nothing, which market.md always called wrong ("no scarcity,
+        no auction — the supplier just dispenses"). Detectable only here, after the bids are in:
+        demand is private until then and the host is deliberately blind to it, which is why the
+        doc's opens-only-on-scarcity framing was unimplementable as written. This is dispensing,
+        arrived at the only place the numbers exist.
+
+        The eligibility gate runs FIRST, so a below-reserve bid neither wins in a quiet round
+        nor turns a quiet round loud: contest is measured over the demand that could actually
+        buy. And "no contest" is `<=` — a lot consumed exactly is still a round where everyone
+        got their full ask and nobody displaced anybody. (Uniform price answers that edge
+        differently, at the marginal bid; two mechanisms may disagree, and that they price a
+        CONTESTED round differently is their entire reason to be two.)
+
         The host respects its *own* terms here (supply and reserve). The hard constraints are
         clearing's to enforce; this only proposes.
-
-        Unchanged from the function it replaces, deliberately: #66 is about there being
-        somewhere to put a second way of matching, not about this one being wrong. The
-        uncontested-round defect in it is #50 and is still open.
         """
         eligible = sorted(
             (b for b in bids
              if b.max_qty_l > EPS and b.max_price_per_l >= offer.reserve_price_per_l - EPS),
             key=lambda b: (-b.max_price_per_l, b.agent),
         )
+
+        if sum(b.max_qty_l for b in eligible) <= offer.quantity_l + EPS:
+            return Trade(offer=offer, lines=tuple(
+                TradeLine(agent=b.agent, qty_l=b.max_qty_l,
+                          price_per_l=offer.reserve_price_per_l)
+                for b in eligible))
 
         remaining = offer.quantity_l
         lines: list[TradeLine] = []
