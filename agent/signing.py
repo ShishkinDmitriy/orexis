@@ -151,7 +151,7 @@ _SEAL_INFO = b"agora-seal-v1"
 def seal(recipient: X25519PublicKey, plaintext: bytes) -> str:
     """Seal bytes to one recipient: base64(ephemeral_pub || nonce || ciphertext).
 
-    A fresh ephemeral key per message, so two vouchers to one winner share nothing, and the
+    A fresh ephemeral key per message, so two claims to one winner share nothing, and the
     sender needs no key of its own — sealing is addressed, not signed. Authenticity is the
     signature chain's business, deliberately apart.
     """

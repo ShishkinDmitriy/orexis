@@ -2,7 +2,7 @@
 
 Phase 3 of knowledge/decisions/an-intention-is-an-amortised-deliberation.md. Nothing here tests
 new behaviour, because there is none — the point of the phase is that `bidding.pending` and a
-bid awaiting its voucher were already intentions, and are now rows with an adoption, a
+bid awaiting its claim were already intentions, and are now rows with an adoption, a
 resolution and a reason. What IS new, and is tested hardest, is the patience: within it a second
 impulse to do the same thing is absorbed rather than re-decided, which is the amortisation the
 whole roadmap is named for.
@@ -87,14 +87,14 @@ def test_a_wait_the_auction_outlives_is_dropped_with_the_reason(make):
     assert any("auction closed first" in r["why"] for r in rows)
 
 
-def test_a_voucher_satisfies_the_acquisition(make):
+def test_a_claim_satisfies_the_acquisition(make):
     fern = make("fern", _reading(0.10))
     market = market_of(fern)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     keeper = keeper_of(fern)
     assert len(keeper.standing(means=ACQUIRE)) == 1
 
-    fern.deliver(f"{market.voucher_topic}/fern", {"amount_l": 0.5, "debit": 0.2})
+    fern.deliver(f"{market.claim_topic}/fern", {"amount_l": 0.5, "debit": 0.2})
     assert keeper.standing(means=ACQUIRE) == []
 
 
@@ -180,13 +180,13 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
     keeper = keeper_of(fern)
     fern.metrics.take_events()
     uri = keeper.adopt(ACQUIRE, MOISTURE, "bid 0.4L to close my deficit")
-    keeper.satisfy(ACQUIRE, MOISTURE, "voucher for 0.4L at a debit of 0.29")
+    keeper.satisfy(ACQUIRE, MOISTURE, "claim for 0.4L at a debit of 0.29")
     events = fern.metrics.take_events()
     assert [(kind, tags) for _, kind, _, tags in events] == [
         ("adopted", {"means": "Acquire", "property": "SoilMoisture"}),
         ("satisfied", {"means": "Acquire", "property": "SoilMoisture"})]
     assert [text for _, _, text, _ in events] == [
-        "bid 0.4L to close my deficit", "voucher for 0.4L at a debit of 0.29"]
+        "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
     # and the end's verdict, which is the payoff line of the whole arc (#131)
     assert keeper.expect(uri, MOISTURE, "the dose owes a rise")

@@ -54,14 +54,14 @@ sees:
 **Six of them fail silently.** An IRI no ontology declares is not an error in SPARQL — it is a
 pattern that matches nothing, and a query returns fewer rows rather than raising. Four bit
 during this sweep: `agora-firmware` stopped finding a board, a simulated actuator stopped being
-asked for its status topic, a won voucher stopped opening a valve, and the supplier stopped
+asked for its status topic, a won claim stopped opening a valve, and the supplier stopped
 being mounted its signing keys.
 
 ## One had been failing since PR #72
 
-`tests/test_isolation.py` built `bidsIn` and `voucherTopic` from the kernel namespace. Market
+`tests/test_isolation.py` built `bidsIn` and `claimTopic` from the kernel namespace. Market
 took `market:` four merged PRs ago, so that query has matched **nothing** ever since, and the
-voucher half of a privacy test asserted nothing while passing. Measured: three rows now, zero
+claim half of a privacy test asserted nothing while passing. Measured: three rows now, zero
 before.
 
 Its own subject guard — `assert private, "…the test proves nothing"` — did not fire, because a

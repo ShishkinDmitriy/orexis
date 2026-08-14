@@ -261,7 +261,7 @@ premise-then-conclusion discipline, and the pointer staying a function.
   changed the shape of that data once already, and doing it twice in consecutive changes would be
   two migrations where one would do.
 - **The codec is only on the READ path.** `agent/runtime.py` serialises every outbound message
-  with `json.dumps` — a cadence, an offer, a voucher — so `encode()` is implemented, tested and
+  with `json.dumps` — a cadence, an offer, a claim — so `encode()` is implemented, tested and
   unreached. A society whose boards spoke CBOR would need that path routed through a codec too,
   and it is a wider change than this one because the same publish serves the market. The
   asymmetry is worth naming: a codec that only decodes is half a codec.

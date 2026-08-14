@@ -105,7 +105,7 @@ class SimulatedValve:
             log.warning("%s: missing a public key — every command will be refused, which is the "
                         "safe direction but probably not what you meant", self.valve_id)
 
-        # Single-use, by jti, as the real path enforces it. A replayed voucher opens nothing.
+        # Single-use, by jti, as the real path enforces it. A replayed claim opens nothing.
         self.spent: set[str] = set()
 
         self.client = mqtt.Client(

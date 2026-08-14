@@ -170,7 +170,7 @@ def test_an_external_vocabulary_is_not_a_packages_to_move(monkeypatch):
 #
 # Every one compiles. Every one names something no ontology declares once the term moves, and a
 # pattern with an unknown IRI does not raise — it matches nothing. `tests/test_isolation.py`
-# built `bidsIn` this way from the moment market took `market:`, so the voucher half of a
+# built `bidsIn` this way from the moment market took `market:`, so the claim half of a
 # privacy test asserted nothing for four merged PRs while passing, and its own `assert private`
 # guard did not fire because a second query kept the dict non-empty.
 # The three forms that spell the kernel namespace outright, whatever the file.

@@ -3,7 +3,7 @@
 The pair completes the boundary work #132 started: the ACL keeps other agents out (broker-
 enforced), the signature takes the broker out of the AUTHENTICITY boundary (a forged
 presentation needs fern's private key, not fern's topic), and the seal takes it out of the
-CONFIDENTIALITY one (a port mirror carries an envelope, not a voucher). Both interoperate with
+CONFIDENTIALITY one (a port mirror carries an envelope, not a claim). Both interoperate with
 the pre-key era by the roster: no published key, no demand — a world onboarded before keygen
 learned agents behaves exactly as it always did, which the rest of the suite proves by running
 keyless.
@@ -72,17 +72,17 @@ def _open_and_win(host):
 
 # --- the seal (#145) ---------------------------------------------------------
 
-def test_a_voucher_travels_sealed_and_only_its_winner_opens_it(keyed, make):
+def test_a_claim_travels_sealed_and_only_its_winner_opens_it(keyed, make):
     """The wire carries an envelope: no jti, no amount, no debit in the clear — the bus is out
     of the confidentiality boundary. And the winner's ordinary flow opens it: the claim is
-    held, the Apply stands, exactly as a plaintext voucher would have arrived."""
+    held, the Apply stands, exactly as a plaintext claim would have arrived."""
     host = make("supplier", keyed)
     _open_and_win(host)
-    on_wire = host.sent.to(f"{market_of(host).voucher_topic}/fern")[-1]
-    assert set(on_wire) == {"sealed"}, "a sealed voucher must expose nothing else"
+    on_wire = host.sent.to(f"{market_of(host).claim_topic}/fern")[-1]
+    assert set(on_wire) == {"sealed"}, "a sealed claim must expose nothing else"
 
     fern = make("fern", keyed)
-    fern.deliver(f"{market_of(fern).voucher_topic}/fern", on_wire)
+    fern.deliver(f"{market_of(fern).claim_topic}/fern", on_wire)
     assert fern.bidding().holding is not None
     assert fern.bidding().holding["jti"]     # the sealed content reached the holder intact
 
@@ -95,7 +95,7 @@ def test_a_winner_without_a_published_sealing_key_gets_plaintext(make, monkeypat
         create_keypair(name)
     host = make("supplier", genesis_store({"fern": 0.30}))
     _open_and_win(host)
-    on_wire = host.sent.to(f"{market_of(host).voucher_topic}/fern")[-1]
+    on_wire = host.sent.to(f"{market_of(host).claim_topic}/fern")[-1]
     assert "sealed" not in on_wire and on_wire["jti"]
 
 
@@ -105,7 +105,7 @@ def test_a_presentation_carries_the_winners_own_signature(keyed, make):
     fern = make("fern", keyed)
     market = market_of(fern)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
-    fern.deliver(f"{market.voucher_topic}/fern", {"jti": "v1", "amount_l": 0.5, "debit": 0.2})
+    fern.deliver(f"{market.claim_topic}/fern", {"jti": "v1", "amount_l": 0.5, "debit": 0.2})
     fern.bidding()._present_blind()
     presented = fern.sent.to(f"{market.redeem_topic}/fern")[-1]
     assert presented["sig"]
@@ -120,7 +120,7 @@ def test_the_host_refuses_a_presentation_that_fails_the_published_key(keyed, mak
     entry says it signs, moves no water and earns a log line."""
     host = make("supplier", keyed)
     _open_and_win(host)
-    sealed = host.sent.to(f"{market_of(host).voucher_topic}/fern")[-1]
+    sealed = host.sent.to(f"{market_of(host).claim_topic}/fern")[-1]
     jti = json.loads(signing.unseal(signing.load_sealing_private("fern"),
                                     sealed["sealed"]))["jti"]
     valve = host.me.actuator_for("fern")

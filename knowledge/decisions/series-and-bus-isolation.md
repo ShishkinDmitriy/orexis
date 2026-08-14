@@ -21,7 +21,7 @@ in `infra/.env`, which the generated compose files hand to every agent container
 `env_file`; any scoped token added beside it would have been theatre.
 
 **The bus.** `allow_anonymous true`, no ACL file, one open listener. Any process on the LAN
-could subscribe `#` and watch every reading, every bid and every voucher, or publish a forged
+could subscribe `#` and watch every reading, every bid and every claim, or publish a forged
 offer as the supplier. The [capability-modules](/decisions/capability-modules.md) note admitting
 this was accurate: *"the bus has no ACLs at all."*
 
@@ -44,8 +44,8 @@ topics that capability needs:
 |---|---|
 | `sensing:polls S` | read S's `readingTopic`, write S's `commandTopic` |
 | `ag:simulatedBy` on a device | that DEVICE reads the `commandTopic` of whatever actuates its subject |
-| `market:bidsIn M` | read M's `offerTopic` and `voucherTopic/<me>`, write `bidTopic/<me>` |
-| `market:hosts M` | write `offerTopic` and `voucherTopic/+`, read `bidTopic/+` and each bidder's `eventTopic` |
+| `market:bidsIn M` | read M's `offerTopic` and `claimTopic/<me>`, write `bidTopic/<me>` |
+| `market:hosts M` | write `offerTopic` and `claimTopic/+`, read `bidTopic/+` and each bidder's `eventTopic` |
 | `actuation:hasActuator V` | write V's `commandTopic` |
 | `mqtt:eventTopic E` | write E |
 

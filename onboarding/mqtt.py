@@ -3,7 +3,7 @@
   agora-mqtt society     -> credentials for its agents, and a rebuilt broker ACL
 
 The bus had no ACLs at all: `allow_anonymous true`, so any process on the LAN could subscribe
-`#` and watch every reading, every bid and every voucher. That is the same hole the series
+`#` and watch every reading, every bid and every claim. That is the same hole the series
 store had, and it gets the same answer — except that here the answer is *derivable*, because
 the world already states every channel and who is wired to it.
 
@@ -11,9 +11,9 @@ the world already states every channel and who is wired to it.
 capability give it exactly the topics that capability needs:
 
     sensing:polls S          read S's readingTopic, write S's commandTopic
-    market:bidsIn M         read M's offerTopic and M's voucherTopic/<me>, write M's bidTopic/<me>
+    market:bidsIn M         read M's offerTopic and M's claimTopic/<me>, write M's bidTopic/<me>
                             and M's redeemTopic/<me> — the holder presents its own claim (#132)
-    market:hosts M          write M's offerTopic and voucherTopic/<bidder>, read bidTopic/+ and
+    market:hosts M          write M's offerTopic and claimTopic/<bidder>, read bidTopic/+ and
                             redeemTopic/+
                         and each bidder's eventTopic
     actuation:hasActuator V    write V's commandTopic
@@ -122,18 +122,18 @@ _POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{
   OPTIONAL {{ ?s <{MQTT}commandTopic> ?commandTopic }}
  }}""")
 
-_BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?voucherTopic ?redeemTopic WHERE {{ 
+_BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?claimTopic ?redeemTopic WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}bidsIn> ?m .
   ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
-     <{MARKET}voucherTopic> ?voucherTopic .
+     <{MARKET}claimTopic> ?claimTopic .
   OPTIONAL {{ ?m <{MARKET}redeemTopic> ?redeemTopic }}
  }}""")
 
-_HOSTS_Q = _q(f"""?id ?offerTopic ?bidTopic ?voucherTopic ?redeemTopic ?bidderEvent
+_HOSTS_Q = _q(f"""?id ?offerTopic ?bidTopic ?claimTopic ?redeemTopic ?bidderEvent
 WHERE {{ 
   ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}hosts> ?m .
   ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
-     <{MARKET}voucherTopic> ?voucherTopic .
+     <{MARKET}claimTopic> ?claimTopic .
   OPTIONAL {{ ?m <{MARKET}redeemTopic> ?redeemTopic }}
   OPTIONAL {{ ?b <{MARKET}bidsIn> ?m ; <{MQTT}eventTopic> ?bidderEvent }}
  }}""")
@@ -233,7 +233,7 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
     for row in ratified.rows(ds, _BIDS_Q):
         me, who = agent(row["id"]), row["id"]
         me.may(READ, row["offerTopic"])
-        me.may(READ, f"{row['voucherTopic']}/{who}")  # its own voucher, and nobody else's
+        me.may(READ, f"{row['claimTopic']}/{who}")  # its own claim, and nobody else's
         if row.get("redeemTopic"):
             me.may(WRITE, f"{row['redeemTopic']}/{who}")  # presents its OWN claim (#132)
         me.may(WRITE, f"{row['bidTopic']}/{who}")
@@ -241,7 +241,7 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
     for row in ratified.rows(ds, _HOSTS_Q):
         me = agent(row["id"])
         me.may(WRITE, row["offerTopic"])
-        me.may(WRITE, f"{row['voucherTopic']}/+")  # it addresses each winner in turn
+        me.may(WRITE, f"{row['claimTopic']}/+")  # it addresses each winner in turn
         if row.get("redeemTopic"):
             me.may(READ, f"{row['redeemTopic']}/+")  # and hears every holder's claim (#132)
         me.may(READ, f"{row['bidTopic']}/+")

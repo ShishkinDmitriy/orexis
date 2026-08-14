@@ -92,7 +92,7 @@ class BiddingModule(Module):
         self.won_l = 0.0
         self.pending: dict | None = None  # an auction I have been asked to answer
         self._deadline: Timer | None = None
-        # A claim won and not yet presented (#132): the voucher, held until my watch is live.
+        # A claim won and not yet presented (#132): the claim, held until my watch is live.
         # One at a time, like the pending auction — the keeper's patience absorbs a second
         # acquisition while one stands, so a second unpresented claim cannot normally arise;
         # if the market misbehaves and one does, the newer claim replaces the older, logged.
@@ -138,11 +138,11 @@ class BiddingModule(Module):
         return deliberator.propose(self.about, value)
 
     def _unseal(self, doc: dict) -> dict:
-        """Open a sealed voucher (#145), or pass a plaintext one through untouched.
+        """Open a sealed claim (#145), or pass a plaintext one through untouched.
 
         Sealed means the host found my published sealing key, which means keygen minted my
         pair, which means the private half is mounted beside my other credentials — so a seal
-        I cannot open is an operator error worth a loud log, not a silent shrug: the voucher
+        I cannot open is an operator error worth a loud log, not a silent shrug: the claim
         is real, the water is mine, and I cannot read my own winnings.
         """
         if "sealed" not in doc:
@@ -153,7 +153,7 @@ class BiddingModule(Module):
         except FileNotFoundError:
             opened = None
         if opened is None:
-            self.log.error("a sealed voucher arrived that I cannot open — my sealing key is "
+            self.log.error("a sealed claim arrived that I cannot open — my sealing key is "
                            "published but its private half is not mounted, or the payload was "
                            "tampered with. The claim is lost to me either way.")
             return {}
@@ -209,7 +209,7 @@ class BiddingModule(Module):
         topics = []
         for market in self.me.markets:
             topics.append(market.offer_topic)
-            topics.append(f"{market.voucher_topic}/{self.me.agent_id}")
+            topics.append(f"{market.claim_topic}/{self.me.agent_id}")
         return topics
 
     def handle(self, topic: str, payload: bytes) -> bool:
@@ -217,8 +217,8 @@ class BiddingModule(Module):
             if topic == market.offer_topic:
                 self.on_offer(market, self.parse(payload) or {})
                 return True
-            if topic == f"{market.voucher_topic}/{self.me.agent_id}":
-                self.on_voucher(market, self._unseal(self.parse(payload) or {}))
+            if topic == f"{market.claim_topic}/{self.me.agent_id}":
+                self.on_claim(market, self._unseal(self.parse(payload) or {}))
                 return True
         return False
 
@@ -358,7 +358,7 @@ class BiddingModule(Module):
 
         # The commitment is to the GAP, not to the round: adopted with the first bid, absorbed
         # for every further bid while it stands (that is the keeper's patience at work — one
-        # commitment spanning several rounds is one intention), resolved by the voucher.
+        # commitment spanning several rounds is one intention), resolved by the claim.
         if keeper := self._keeper():
             keeper.adopt(ACQUIRE, self.about,
                          f"bid {bid.max_qty_l}L @ {bid.max_price_per_l}/L in auction "
@@ -376,22 +376,22 @@ class BiddingModule(Module):
 
     # --- what came back ---
 
-    def on_voucher(self, market, voucher: dict) -> None:
-        amount = float(voucher.get("amount_l", 0.0))
-        debit = float(voucher.get("debit", 0.0))
+    def on_claim(self, market, claim: dict) -> None:
+        amount = float(claim.get("amount_l", 0.0))
+        debit = float(claim.get("debit", 0.0))
         self.balance -= debit
         self.won_l += amount
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, self.balance)
 
         keeper = self._keeper()
         acquire_uris = (keeper.satisfy(ACQUIRE, self.about,
-                                       f"voucher for {amount}L at a debit of {debit}")
+                                       f"claim for {amount}L at a debit of {debit}")
                         if keeper is not None else [])
 
         # A market authored without a redeem channel keeps the old arrangement — the host
         # redeemed on issue, the dose is already flying — so the expectation opens NOW, on the
         # acquire's row, exactly as before #132.
-        if not market.redeem_topic or not voucher.get("jti"):
+        if not market.redeem_topic or not claim.get("jti"):
             for uri in acquire_uris:
                 keeper.expect(uri, self.about,
                               f"paid {debit} for {amount}L on a market with no redeem channel "
@@ -405,11 +405,11 @@ class BiddingModule(Module):
         if self.holding is not None:
             self.log.warning("a second claim arrived while %s was held — presenting the newer",
                              self.holding.get("jti"))
-        self.holding = {"jti": voucher["jti"], "market": market,
+        self.holding = {"jti": claim["jti"], "market": market,
                         "amount_l": amount, "debit": debit}
         if keeper is not None:
             keeper.adopt(APPLY, self.about,
-                         f"holding voucher {voucher['jti']} ({amount}L) until my watch is "
+                         f"holding claim {claim['jti']} ({amount}L) until my watch is "
                          f"live — never spend a dose you cannot watch land")
         if (sensing := self.agent.provider(SENSING)) is not None:
             sensing.sense_now()
@@ -446,12 +446,12 @@ class BiddingModule(Module):
         if held is None:
             return
         market = held["market"]
-        self.log.info("presenting voucher %s: %s", held["jti"], why)
+        self.log.info("presenting claim %s: %s", held["jti"], why)
         self.publish(f"{market.redeem_topic}/{self.me.agent_id}",
                      self._signed({"jti": held["jti"], "sub": self.me.agent_id}))
         if keeper := self._keeper():
             # The dose is imminent NOW — this is when the end becomes expectable, not at the
-            # voucher: a baseline taken at the win would have aged the whole hold, and the
+            # claim: a baseline taken at the win would have aged the whole hold, and the
             # sense_now inside expect() lands on a board that is provably (or at least
             # plausibly) awake and fast. The watch hangs on the Apply row, because applying is
             # the act whose end the movement is.

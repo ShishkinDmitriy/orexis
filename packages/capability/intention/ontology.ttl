@@ -10,7 +10,7 @@
     rdfs:label "Agora intention" ;
     rdfs:comment """BDI's third letter: a commitment to reduce a named gap by a named means, which persists until it is resolved rather than being re-decided on every sensing.
 
-**An intention is an amortised deliberation.** The sharpest lesson in the BDI literature is that intentions exist to SAVE deliberation — an agent that re-decides on every reading is a reflex machine wearing a planner's name — and here that is a cost model rather than philosophy: deliberation is about to include an LLM call, and the commitment is what makes one affordable. This package is the substrate that makes that persistence a FACT with a lifecycle instead of a scatter of module state: `bidding.pending`, a held voucher and a commanded cadence were all intentions before this package named them.
+**An intention is an amortised deliberation.** The sharpest lesson in the BDI literature is that intentions exist to SAVE deliberation — an agent that re-decides on every reading is a reflex machine wearing a planner's name — and here that is a cost model rather than philosophy: deliberation is about to include an LLM call, and the commitment is what makes one affordable. This package is the substrate that makes that persistence a FACT with a lifecycle instead of a scatter of module state: `bidding.pending`, a held claim and a commanded cadence were all intentions before this package named them.
 
 **Nothing here decides.** Deciding what to commit to is deliberation's — the welded reflex chain today, a family with an LLM member later. This package only KEEPS: it records an adoption, resolves it as satisfied or dropped with the reason, refuses to re-adopt what is already standing, and answers what stands. The seam between keeping and deciding is the whole reason they are two capabilities.
 
@@ -49,10 +49,10 @@ intention:Observe a intention:Means ; rdfs:label "Observe" ;
     rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .
 
 intention:Acquire a intention:Means ; rdfs:label "Acquire" ;
-    rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the voucher, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
+    rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the claim, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
 
 intention:Apply a intention:Means ; rdfs:label "Apply" ;
-    rdfs:comment "Spend a held claim against the world. REAL since #132, and earlier than the futures market this was reserved for — because the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy: never spend a dose you cannot watch land. Adopted when the voucher arrives, standing while the holder waits for its watch to be live (the #135 ack at the fast cadence, or the bounded wait), satisfied when the claim is presented on the market's redeem channel. The expectation on the end opens HERE rather than at the voucher, because this is when the dose becomes imminent. The futures seam now merely extends the holding period this gave a mechanism to." .
+    rdfs:comment "Spend a held claim against the world. REAL since #132, and earlier than the futures market this was reserved for — because the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy: never spend a dose you cannot watch land. Adopted when the claim arrives, standing while the holder waits for its watch to be live (the #135 ack at the fast cadence, or the bounded wait), satisfied when the claim is presented on the market's redeem channel. The expectation on the end opens HERE rather than at the claim, because this is when the dose becomes imminent. The futures seam now merely extends the holding period this gave a mechanism to." .
 
 intention:adoptedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "adopted at" .
@@ -68,7 +68,7 @@ intention:becauseOf a owl:DatatypeProperty ; rdfs:domain intention:Intention ; r
 
 #################  The expectation — the END, judged apart from the means  #################
 #
-#  `outcome` above says whether the MEANS succeeded: the voucher arrived, the look came back.
+#  `outcome` above says whether the MEANS succeeded: the claim arrived, the look came back.
 #  It says nothing about the END — the commitment was to reduce a gap, and an agent whose water
 #  never reaches the pot buys, records "satisfied", and buys again forever: transaction
 #  confirmed, outcome never audited. Confidently dumb, structurally. Issue #131.

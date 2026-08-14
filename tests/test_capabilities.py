@@ -207,7 +207,7 @@ def test_world_is_found_by_type_not_by_name(query):
 
 def test_market_channels_are_stated(me):
     market = me("fern").markets[0]
-    assert market.offer_topic and market.bid_topic and market.voucher_topic
+    assert market.offer_topic and market.bid_topic and market.claim_topic
     assert market.capacity_l == 5.0  # the allocation ceiling, from the source
 
 

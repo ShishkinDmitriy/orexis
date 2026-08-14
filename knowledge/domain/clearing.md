@@ -40,9 +40,9 @@ Pure checks on the proposed trade against the participants' **signed orders** (b
    [constitution](/domain/constitution.md).
 5. **Order-consistency** — the trade never exceeds any party's signed order.
 
-Pass → clearing **co-signs** the [voucher](/domain/voucher.md) (`val_sig`) and hands it to the
+Pass → clearing **co-signs** the [claim](/domain/claim.md) (`val_sig`) and hands it to the
 executor arm (the [supplier](/domain/supplier.md), which actuates only a fully-signed
-voucher). See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md). At
+claim). See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md). At
 settlement, clearing also meters and debits wallets (water won + metabolic cost of
 deliberation — see [wallet](/domain/wallet.md)); mint/debit authority lives here, never in
 the host.
@@ -53,5 +53,5 @@ Deterministic and injection-proof: agent messages are data, never instructions. 
 predicate** (really a [public function](/decisions/thin-trusted-infra.md) — recomputable),
 fully unit-testable in isolation — scripted trade in, valid/invalid out, no model in the
 loop. **Mint** stays in infrastructure (the currency ledger); **actuate** is the resource
-owner's, bounded by the cleared voucher + the device fail-safe. See
+owner's, bounded by the cleared claim + the device fail-safe. See
 [trust-boundary](/decisions/trust-boundary.md) and [thin-trusted-infra](/decisions/thin-trusted-infra.md).

@@ -1,4 +1,4 @@
-"""The auction: the path from bids to vouchers, however they were matched.
+"""The auction: the path from bids to claims, however they were matched.
 
 An auction is a **process** — it condenses when a resource becomes contested, allocates, and
 dissolves. The market is the standing structure it happens inside; see knowledge/domain/market.md,
@@ -24,7 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Iterable
 
-from .clearing import Validation, Voucher, issue_vouchers, validate
+from .clearing import Validation, Claim, issue_claims, validate
 from .market import Bid, MarketState, Offer, Trade
 
 # What a matching capability offers: a lot and the bids for it, in — a proposed allocation out.
@@ -38,13 +38,13 @@ class AuctionResult:
 
     trade: Trade
     validation: Validation
-    vouchers: list[Voucher]  # empty unless the trade validated
+    claims: list[Claim]  # empty unless the trade validated
 
 
 def run_auction(offer: Offer, bids: Iterable[Bid], state: MarketState, auction_id: str,
               match: Match) -> AuctionResult:
-    """Host proposes the match; clearing validates; vouchers issue only on a green light."""
+    """Host proposes the match; clearing validates; claims issue only on a green light."""
     trade = match(offer, bids)
     result = validate(trade, state)
-    vouchers = issue_vouchers(trade, auction_id) if result.ok else []
-    return AuctionResult(trade=trade, validation=result, vouchers=vouchers)
+    claims = issue_claims(trade, auction_id) if result.ok else []
+    return AuctionResult(trade=trade, validation=result, claims=claims)

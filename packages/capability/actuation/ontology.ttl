@@ -7,10 +7,10 @@
 
 <http://example.org/agora/actuation> a owl:Ontology ;
     rdfs:label "Agora actuation" ;
-    rdfs:comment """Touching the physical world. Held by the RESOURCE OWNER, not by the agent that won — a voucher is a claim on the owner, redeemed by it. Dosing is a fact about the hardware and is stated on the device, so recalibrating is a genesis edit rather than a code change.""" .
+    rdfs:comment """Touching the physical world. Held by the RESOURCE OWNER, not by the agent that won — a claim is a claim on the owner, redeemed by it. Dosing is a fact about the hardware and is stated on the device, so recalibrating is a genesis edit rather than a code change.""" .
 
 actuation:Actuation a ag:Capability ; rdfs:label "Actuation" ;
-    rdfs:comment "The agent may drive actuators it owns, bounded by a validated voucher and by the device's own cap. No plant agent has this: winning water is not the same as being able to open a valve." .
+    rdfs:comment "The agent may drive actuators it owns, bounded by a validated claim and by the device's own cap. No plant agent has this: winning water is not the same as being able to open a valve." .
 
 #  `actuation:Actuator` was here, and it was `sosa:Actuator` wearing our name.
 #
@@ -46,7 +46,7 @@ actuation:hasActuator a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range s
     rdfs:label "has actuator" .
 actuation:actuates a owl:ObjectProperty ; rdfs:domain sosa:Actuator ;
     rdfs:label "actuates" ;
-    rdfs:comment "The subject this device delivers to — the map from a won voucher to real hardware." .
+    rdfs:comment "The subject this device delivers to — the map from a won claim to real hardware." .
 actuation:drawsFrom a owl:ObjectProperty ; rdfs:domain sosa:Actuator ;
     rdfs:label "draws from" .
 

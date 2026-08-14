@@ -20,7 +20,7 @@ what genuinely can't move.
 - **Attest → dropped.** Each agent self-asserts its own state as opinion (`:sensed` /
   `:opinion`). Not infra. See [trusted-agent-mode](/decisions/trusted-agent-mode.md).
 - **Actuate → the resource owner.** The **supplier** drives its own valves — it *executes*
-  a voucher (how much) + topology (which valve), it does not *decide*. Safe because the amount
+  a claim (how much) + topology (which valve), it does not *decide*. Safe because the amount
   is bounded by two independent checks it doesn't control: **clearing** (a valid, cleared
   amount) upstream, and the **device fail-safe cap** downstream. The standalone executor
   dissolves into the supplier's actuation arm. See [executor](/domain/executor.md),
@@ -50,7 +50,7 @@ operators. That is the real cost of going open, and it is deliberately parked. S
 - **Public functions** (anyone runs + verifies): clearing / validation, the value model, the
   band judgment.
 - **Signed artifacts** (self-verifying, no service): [cert, access grant,
-  voucher](/decisions/authn-authz-capabilities.md), bids, payments.
+  claim](/decisions/authn-authz-capabilities.md), bids, payments.
 - **Bounded devices** (physical, capped): sensors (self-assert), actuators (resource owner +
   fail-safe cap).
 - **One thin trusted store**: the currency ledger (double-spend). Consensus only in the open
@@ -62,5 +62,5 @@ operators. That is the real cost of going open, and it is deliberately parked. S
   device cap + a challenge path. (Trusted mode: fine.)
 - Recompute-and-challenge needs someone watching → optimistic-verification machinery (v2).
 
-The co-signed voucher we build in v1 is the **adversarial-safe fallback** for these; the pure
+The co-signed claim we build in v1 is the **adversarial-safe fallback** for these; the pure
 public-function path is the thin default under the trusted-agent assumption.

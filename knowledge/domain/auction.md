@@ -32,7 +32,7 @@ vocabulary before it could say anything else.
 The line that holds them apart is **the host proposes, clearing disposes**. Matching decides
 *who gets what and at what price*; clearing decides *whether that is permitted* — conservation,
 solvency, identity, the [constitution](/domain/constitution.md) — and co-signs the
-[voucher](/domain/voucher.md). Neither does the other's job, and an auction is the sequence in
+[claim](/domain/claim.md). Neither does the other's job, and an auction is the sequence in
 which they take turns.
 
 # Its life
@@ -50,7 +50,7 @@ which they take turns.
 4. **It matches.** At the deadline the host asks whichever of its capabilities can match, and
    gets a proposed trade. See [bid matching](/domain/bid-matching.md).
 5. **It is validated and settled.** [Clearing](/domain/clearing.md) checks the proposed trade and
-   co-signs [vouchers](/domain/voucher.md); each winner presents its claim when its watch is
+   co-signs [claims](/domain/claim.md); each winner presents its claim when its watch is
 live (#132), and the [executor](/domain/executor.md) redeems the presented ones
    against the hardware.
 6. **It dissolves.** The host's open-auction state is dropped, the cluster that crystallized

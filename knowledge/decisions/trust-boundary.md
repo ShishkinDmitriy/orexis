@@ -31,7 +31,7 @@ infrastructure and are never granted to an agent:
    mode, consensus only if opened.)*
 3. **Actuating hardware** — *(Scoped:* [thin-trusted-infra](/decisions/thin-trusted-infra.md)
    *moves this to the **resource owner** — the supplier drives its own valves, executing a
-   cleared voucher, bounded by clearing upstream and the device fail-safe cap downstream. The
+   cleared claim, bounded by clearing upstream and the device fail-safe cap downstream. The
    standalone executor dissolves.)* The [constitution](/domain/constitution.md) still bounds
    the amount; the actuator never decides how much.
 

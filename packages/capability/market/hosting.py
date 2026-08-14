@@ -7,7 +7,7 @@ auction is a conversation rather than a calculation:
     participant announces it is in trouble (its own judgment, voluntarily disclosed)
         -> host announces an offer with a deadline          [market:offerTopic]
         -> each bidder answers with a number only it can compute   [market:bidTopic/<agent>]
-        -> host matches, clearing validates, vouchers go back  [market:voucherTopic/<agent>]
+        -> host matches, clearing validates, claims go back  [market:claimTopic/<agent>]
         -> each HOLDER presents its claim when its watch is live [market:redeemTopic/<agent>]
         -> actuation redeems the presented claim against the hardware
 
@@ -98,7 +98,7 @@ class HostingModule(Module):
         # Issued and not yet presented, by jti (#132). Winning stopped implying actuation: the
         # holder redeems when its watch is live, so the host keeps the claim until it is
         # presented — single-use, popped on redemption. In-memory, like the round itself: a
-        # host that restarts forgets unpresented claims, which is the voucher-ledger seam the
+        # host that restarts forgets unpresented claims, which is the claim-ledger seam the
         # roadmap already records, not a new one.
         self.held: dict[str, object] = {}
 
@@ -235,7 +235,7 @@ class HostingModule(Module):
         if matcher is None:
             # Nothing to allocate the bids with. Checked here as well as by the shape, because a
             # world can be amended between validation and an auction, and losing its bids in
-            # silence is worse than saying so — every bidder is waiting on a voucher.
+            # silence is worse than saying so — every bidder is waiting on a claim.
             self.log.error("auction %s cannot be matched — this host has no matching capability, "
                            "so the bids are discarded. Check its market:matchesBy.", auction_id)
             return
@@ -245,24 +245,24 @@ class HostingModule(Module):
             self.log.warning("auction %s RED — clearing rejected: %s",
                              auction_id, result.validation.violations)
             return
-        if not result.vouchers:
+        if not result.claims:
             self.log.info("auction %s closed — nothing cleared the reserve", auction_id)
             return
 
         self.log.info("auction %s GREEN — %.3f L allocated to %d",
-                      auction_id, result.trade.total_qty_l, len(result.vouchers))
-        for voucher in result.vouchers:
-            self._issue(market, auction_id, voucher)
-        # Issued is not actuated (#132). The host used to redeem every voucher itself, here,
+                      auction_id, result.trade.total_qty_l, len(result.claims))
+        for claim in result.claims:
+            self._issue(market, auction_id, claim)
+        # Issued is not actuated (#132). The host used to redeem every claim itself, here,
         # the moment it published them — which spent the dose before the winner's sensor could
         # possibly be watching it land. The claims are HELD now, and the holder presents each
         # when its watch is live; a market authored without a redeem channel keeps the old
         # reflex, so a pre-#132 world behaves exactly as it always did.
         if market.redeem_topic:
-            for voucher in result.vouchers:
-                self.held[voucher.jti] = voucher
+            for claim in result.claims:
+                self.held[claim.jti] = claim
         else:
-            self.redeem(result.vouchers)
+            self.redeem(result.claims)
 
     def on_redeem(self, presenter: str, claim: dict) -> None:
         """A holder presented its claim: verify it is theirs, then actuate. Single-use.
@@ -290,22 +290,22 @@ class HostingModule(Module):
             if not sig or not signing.verify(pub, signing.canonical(payload), sig):
                 self.log.warning("redeem from %s fails its own signature — ignored", presenter)
                 return
-        voucher = self.held.get(jti)
-        if voucher is None:
+        claim = self.held.get(jti)
+        if claim is None:
             self.log.warning("redeem from %s for unknown or already-spent jti %s — ignored",
                              presenter, jti)
             return
-        if voucher.sub != presenter:
-            self.log.warning("%s presented %s's voucher %s — ignored",
-                             presenter, voucher.sub, jti)
+        if claim.sub != presenter:
+            self.log.warning("%s presented %s's claim %s — ignored",
+                             presenter, claim.sub, jti)
             return
         del self.held[jti]
-        self.log.info("%s presented voucher %s — redeeming %.3f L", presenter, jti,
-                      voucher.amount_l)
-        self.redeem([voucher])
+        self.log.info("%s presented claim %s — redeeming %.3f L", presenter, jti,
+                      claim.amount_l)
+        self.redeem([claim])
 
-    def _issue(self, market, auction_id: str, voucher) -> None:
-        """Publish one winner's voucher — sealed to it, where the roster says it can open one.
+    def _issue(self, market, auction_id: str, claim) -> None:
+        """Publish one winner's claim — sealed to it, where the roster says it can open one.
 
         The seal (#145) is what takes the BUS out of the confidentiality boundary: the ACL
         already keeps other agents off this topic, but the broker, a port mirror or an operator
@@ -313,18 +313,18 @@ class HostingModule(Module):
         envelope only the winner can open. A winner with no published sealing key receives
         plaintext: the pre-#145 era, legal, exactly as the missing signing key is for #144.
         """
-        payload = {"auction_id": auction_id, "jti": voucher.jti, "sub": voucher.sub,
-                   "scope": voucher.scope, "amount_l": voucher.amount_l,
-                   "debit": voucher.debit}
-        rows = bindings(self.agent.store.query(_KEY_Q % (voucher.sub, "sealingKey")))
+        payload = {"auction_id": auction_id, "jti": claim.jti, "sub": claim.sub,
+                   "scope": claim.scope, "amount_l": claim.amount_l,
+                   "debit": claim.debit}
+        rows = bindings(self.agent.store.query(_KEY_Q % (claim.sub, "sealingKey")))
         if rows:
             sealed = signing.seal(signing.sealing_public_from_b64(rows[0]["key"]),
                                   signing.canonical(payload))
             payload = {"sealed": sealed}
-        self.publish(f"{market.voucher_topic}/{voucher.sub}", payload)
+        self.publish(f"{market.claim_topic}/{claim.sub}", payload)
 
-    def redeem(self, vouchers) -> None:
-        """Hand the vouchers to whichever of my capabilities can touch the hardware.
+    def redeem(self, claims) -> None:
+        """Hand the claims to whichever of my capabilities can touch the hardware.
 
         Winning is not the same as being able to open a valve: the resource owner redeems.
         Asked for by term, so this package does not know that actuation is implemented in
@@ -332,6 +332,6 @@ class HostingModule(Module):
         """
         actuation = self.agent.provider(ACTUATION)
         if actuation is None:
-            self.log.info("no actuation capability — vouchers issued but not redeemed")
+            self.log.info("no actuation capability — claims issued but not redeemed")
             return
-        actuation.redeem_all(vouchers)
+        actuation.redeem_all(claims)

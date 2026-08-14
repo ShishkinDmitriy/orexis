@@ -11,13 +11,13 @@ timestamp: 2026-08-01T00:00:00Z
 > **Reframed ([thin-trusted-infra](/decisions/thin-trusted-infra.md)):** actuation is *not*
 > separate stake-free infra — the **resource owner (the [supplier](/domain/supplier.md))**
 > drives its own valves. The "executor" is the supplier's **actuation arm**, not a distinct
-> component. It *executes* a voucher (how much) + topology (which valve); it does not decide.
+> component. It *executes* a claim (how much) + topology (which valve); it does not decide.
 > Safe not because the actuator is neutral, but because the amount is bounded *above* by
-> clearing (a valid, cleared voucher it can't forge) and *below* by the device fail-safe cap.
+> clearing (a valid, cleared claim it can't forge) and *below* by the device fail-safe cap.
 > The description below still holds as the **resource server** role — it's just hosted by the
 > supplier now, not a standalone trusted party.
 
-Consumes a validated **voucher** and performs the water leg of the trade — the one act that is
+Consumes a validated **claim** and performs the water leg of the trade — the one act that is
 physically irreversible (you can't un-flood a root-rotted plant). It **decides nothing**:
 reactive, no desires, no LLM. See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
 
@@ -43,11 +43,11 @@ clearing ─grant─► executor (RPi) ─publish cmd─► MQTT ─► pump-ESP
 Sensing is read-only and low-stakes; actuation *writes to the physical world, irreversibly*.
 So the pump is a **guarded** MQTT subscriber, with four properties the sensor edge never needed:
 
-1. **Authenticated commands** — the pump opens only on the **voucher** (won this auction),
+1. **Authenticated commands** — the pump opens only on the **claim** (won this auction),
    co-signed by **host (`match_sig`) + clearing (`val_sig`)**, and verifies both — plus, for a
    networked pump, the agent's **access grant** (it's *this* agent's valve). *Access grant =
-   your valve; voucher = you won this dispense; neither alone opens it.* Implemented (Ed25519):
-   the executor co-signs the voucher; the pump rejects anything unsigned or tampered — a forged
+   your valve; claim = you won this dispense; neither alone opens it.* Implemented (Ed25519):
+   the executor co-signs the claim; the pump rejects anything unsigned or tampered — a forged
    `actuators/fern/valve` message does nothing. The principle is **crypto proportional to
    irreversibility**: the reversible sensor path is trusted in
    [trusted-agent-mode](/decisions/trusted-agent-mode.md), but the irreversible valve is
@@ -85,9 +85,9 @@ So the pump is a **guarded** MQTT subscriber, with four properties the sensor ed
 2. **Enforce single-use** — track `jti` (bounded, per auction) and check `auction_id`, or the same
    win settles twice (double-spend / double-actuation). This matters even without an
    adversary — a retried message shouldn't double-water.
-3. **Actuate** — select the valve by the voucher's **plant ID** (the supplier's genesis-
+3. **Actuate** — select the valve by the claim's **plant ID** (the supplier's genesis-
    configured `{plant_id → valve}` map — see [supplier](/domain/supplier.md)); open it for the
-   voucher's litres, then stop. Sequence multiple vouchers safely (one source, many plants).
+   claim's litres, then stop. Sequence multiple claims safely (one source, many plants).
 4. **Confirm** — report completion so the auction can close and the receipt is truthful.
 
 # What it must never do

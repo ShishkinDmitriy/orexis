@@ -82,7 +82,7 @@ Recorded here because it was hard to find and is now easy to describe:
 reading → _is_mine(subject, property) → annotate() → band → the agent's announcement
        → hosting.on_participant_event(band == "LOW") → announce() → offer
        → value_bid(): deficit → litres, deficit/target → urgency → price
-       → match → voucher → actuate
+       → match → claim → actuate
 ```
 
 The trigger is `hosting.py:on_participant_event`, whose own comment is *"A participant said it is
@@ -136,7 +136,7 @@ from two facts it already holds. That check does not exist yet and is worth more
   range is derived: a region can move under a target that stays merely *legal* rather than still
   sensible. `capabilities/review/` could be asked to explain a pick within it rather than only to
   stay inside it.
-- **Intention is still unnamed.** A bid and a voucher are the closest things to one, and neither
+- **Intention is still unnamed.** A bid and a claim are the closest things to one, and neither
   is described in those terms. Whether that is a gap or a happy absence is not settled here —
   naming BDI's third letter for its own sake would add a word and no capability.
 - **The ranges shipped are illustrative.** A synthetic world's figures, chosen so a succulent and

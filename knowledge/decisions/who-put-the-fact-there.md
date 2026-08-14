@@ -247,7 +247,7 @@ That was not tidiness. The two had already diverged: after the closure was mater
 rdflib side had none of its own, so a device typed as a *kind* of actuator was not observably an
 actuator there. `roster()` stopped deriving `actuation:Actuation` for the supplier, and the next
 `agora-compose` would have written a compose file with the signing keys silently unmounted — the
-supplier unable to co-sign a dose, and every voucher redemption failing. Nothing noticed, because
+supplier unable to co-sign a dose, and every claim redemption failing. Nothing noticed, because
 `compose.yaml` is committed and regenerating it is not a gate.
 
 `test_provenance.py::test_both_engines_derive_the_same_world` is what would have caught it.

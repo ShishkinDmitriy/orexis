@@ -8,7 +8,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [agent](/domain/agent.md) - The general principal: certified identity, wallet, stake. Plant agent and supplier specialize it.
 * [plant-agent](/domain/plant-agent.md) - A self-interested plant: desire, wallet, event-driven state machine, one LLM call for its stance; judges its own band, asserts its own `:sensed` data.
-* [supplier](/domain/supplier.md) - Strategic seller that hosts the auction, and (as resource owner) actuates its own valves to fulfil vouchers. Cannot mint. In v2 buys upstream.
+* [supplier](/domain/supplier.md) - Strategic seller that hosts the auction, and (as resource owner) actuates its own valves to fulfil claims. Cannot mint. In v2 buys upstream.
 
 # Market
 
@@ -16,15 +16,15 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [auction](/domain/auction.md) - The process, not a place: it condenses out of scarcity, announces its terms, collects bids, matches, is co-signed by clearing, and dissolves. What it is made of (market, round, matching, clearing) and what it is not. Who convenes it is stated in v1 — the short-side principle is documented and unimplemented.
 * [round](/domain/round.md) - One pass of bidding inside an auction, not the auction itself — the standard meaning from multiple-round designs. Exactly one is built, so today an auction has a single round and the two coincide; the iterative flow described is designed and unbuilt.
 * [bid matching](/domain/bid-matching.md) - Turning a lot and a set of bids into a proposed allocation with prices — an allocation rule and a payment rule together. The host declares how it matches and every offer announces it; pay-as-bid rewards shading, uniform price rewards demand reduction. Deliberately narrower than an auction format, which also fixes how bidding proceeds; qualified because bare matching collides with matching a capability to a provider.
-* [clearing](/domain/clearing.md) - Thin stake-free validator / public function (a notary): checks a proposed trade and co-signs the voucher. The host computes the match, not clearing.
-* [voucher](/domain/voucher.md) - What you win: a co-signed, single-use claim on the supplier for N litres, HELD until the winner's watch is provably live and then presented on the market's redeem channel (#132) — win and actuate decoupled for observability now, for temporal strategy when futures arrive.
-* [executor](/domain/executor.md) - The supplier's actuation arm: verifies the voucher and drives its own valve, bounded by clearing + the device fail-safe.
+* [clearing](/domain/clearing.md) - Thin stake-free validator / public function (a notary): checks a proposed trade and co-signs the claim. The host computes the match, not clearing.
+* [claim](/domain/claim.md) - What you win: a co-signed, single-use claim on the supplier for N litres, HELD until the winner's watch is provably live and then presented on the market's redeem channel (#132) — win and actuate decoupled for observability now, for temporal strategy when futures arrive.
+* [executor](/domain/executor.md) - The supplier's actuation arm: verifies the claim and drives its own valve, bounded by clearing + the device fail-safe.
 
 # Ends
 
 * [desire](/domain/desire.md) - What an agent is trying to bring about: one region per property its subject states a need in, plus the envelope outside which that subject ends. Deduced by intersecting every operating range that applies, never authored, and held in a graph found by type so a second source needs no code. The band and the urgency every other capability reads come from here — which is why an agent with no stake has neither.
 
-* [intention](/domain/intention.md) - BDI's third letter: a commitment to reduce a named gap by a named means, kept in a private ledger with an adoption, a resolution and a reason. Reifies what was module state — a pending look, a bid awaiting its voucher — and the patience that absorbs repeat impulses is each agent's own belief. Granted by a stake AND a lever; gates nothing until deliberation is its own capability.
+* [intention](/domain/intention.md) - BDI's third letter: a commitment to reduce a named gap by a named means, kept in a private ledger with an adoption, a resolution and a reason. Reifies what was module state — a pending look, a bid awaiting its claim — and the patience that absorbs repeat impulses is each agent's own belief. Granted by a stake AND a lever; gates nothing until deliberation is its own capability.
 
 * [deliberation](/domain/deliberation.md) - The whether, extracted: given the gap and what already stands, name the next move; the actors carry it out. Reflex is the welded chain as the first member; Consulting is the declared, unimplemented seat for a model, constrained before it exists. The host's trigger stays out — a host has no gap.
 

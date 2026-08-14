@@ -340,7 +340,7 @@ def test_bids_are_collected_until_the_window_closes(host):
 def test_a_round_with_no_bids_issues_nothing(host):
     open_auction(host)
     host.hosting().close()
-    assert host.sent.under(market_of(host).voucher_topic) == []
+    assert host.sent.under(market_of(host).claim_topic) == []
 
 
 def test_nothing_below_the_reserve_clears(host):
@@ -348,17 +348,17 @@ def test_nothing_below_the_reserve_clears(host):
     market = market_of(host)
     host.deliver(f"{market.bid_topic}/fern", a_bid("fern", rid, price=0.01))  # reserve is 0.20
     host.hosting().close()
-    assert host.sent.under(market.voucher_topic) == []
+    assert host.sent.under(market.claim_topic) == []
 
 
-def test_the_winner_gets_a_voucher_on_its_own_channel(host):
+def test_the_winner_gets_a_claim_on_its_own_channel(host):
     rid = open_auction(host)
     market = market_of(host)
     host.deliver(f"{market.bid_topic}/fern", a_bid("fern", rid, qty=0.5, price=0.6))
     host.hosting().close()
-    voucher = host.sent.to(f"{market.voucher_topic}/fern")[-1]
-    assert voucher["sub"] == "fern" and voucher["amount_l"] > 0
-    assert voucher["jti"] and voucher["auction_id"] == rid
+    claim = host.sent.to(f"{market.claim_topic}/fern")[-1]
+    assert claim["sub"] == "fern" and claim["amount_l"] > 0
+    assert claim["jti"] and claim["auction_id"] == rid
 
 
 def test_the_higher_bid_is_served_first(host):
@@ -368,8 +368,8 @@ def test_the_higher_bid_is_served_first(host):
     host.deliver(f"{market.bid_topic}/tomato", a_bid("tomato", rid, qty=2.0, price=0.3))
     host.deliver(f"{market.bid_topic}/fern", a_bid("fern", rid, qty=2.0, price=0.9))
     host.hosting().close()
-    assert host.sent.to(f"{market.voucher_topic}/fern")[-1]["amount_l"] == 2.0
-    assert host.sent.to(f"{market.voucher_topic}/tomato") == []
+    assert host.sent.to(f"{market.claim_topic}/fern")[-1]["amount_l"] == 2.0
+    assert host.sent.to(f"{market.claim_topic}/tomato") == []
 
 
 def test_the_supply_is_never_oversold(host):
@@ -378,7 +378,7 @@ def test_the_supply_is_never_oversold(host):
     for who in ("fern", "tomato", "succulent"):
         host.deliver(f"{market.bid_topic}/{who}", a_bid(who, rid, qty=5.0, price=0.9))
     host.hosting().close()
-    total = sum(v["amount_l"] for v in host.sent.under(market.voucher_topic))
+    total = sum(v["amount_l"] for v in host.sent.under(market.claim_topic))
     assert total <= 2.0 + 1e-9
 
 
@@ -391,7 +391,7 @@ def _win_for_fern(host):
 
 
 def test_winning_issues_paper_and_only_presenting_opens_the_valve(host):
-    """Winning is not actuating (#132). The host used to redeem every voucher itself the moment
+    """Winning is not actuating (#132). The host used to redeem every claim itself the moment
     it issued them — spending the dose before the winner's sensor could possibly be watching it
     land. The claim is HELD now: no valve moves at the win, and the holder presenting it on the
     redeem channel is what actuates, co-signed exactly as before."""
@@ -400,8 +400,8 @@ def test_winning_issues_paper_and_only_presenting_opens_the_valve(host):
         "the win itself must move no water — the holder has not presented"
 
     market = market_of(host)
-    voucher = host.sent.to(f"{market.voucher_topic}/fern")[-1]
-    host.deliver(f"{market.redeem_topic}/fern", {"jti": voucher["jti"], "sub": "fern"})
+    claim = host.sent.to(f"{market.claim_topic}/fern")[-1]
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": claim["jti"], "sub": "fern"})
     command = host.sent.to(valve.command_topic)[-1]
     assert command["ml"] > 0 and command["seconds"] > 0
     assert command["plant"] == "fern"
@@ -412,9 +412,9 @@ def test_a_claim_is_single_use(host):
     """Presented twice, honoured once — jti is the anti-replay id doing its job."""
     valve = _win_for_fern(host)
     market = market_of(host)
-    voucher = host.sent.to(f"{market.voucher_topic}/fern")[-1]
-    host.deliver(f"{market.redeem_topic}/fern", {"jti": voucher["jti"], "sub": "fern"})
-    host.deliver(f"{market.redeem_topic}/fern", {"jti": voucher["jti"], "sub": "fern"})
+    claim = host.sent.to(f"{market.claim_topic}/fern")[-1]
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": claim["jti"], "sub": "fern"})
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": claim["jti"], "sub": "fern"})
     assert len(host.sent.to(valve.command_topic)) == 1
 
 
@@ -423,8 +423,8 @@ def test_nobody_spends_another_agents_claim(host):
     fern's jti from its own segment, and a forged claim earns a log line, not water."""
     valve = _win_for_fern(host)
     market = market_of(host)
-    voucher = host.sent.to(f"{market.voucher_topic}/fern")[-1]
-    host.deliver(f"{market.redeem_topic}/tomato", {"jti": voucher["jti"], "sub": "tomato"})
+    claim = host.sent.to(f"{market.claim_topic}/fern")[-1]
+    host.deliver(f"{market.redeem_topic}/tomato", {"jti": claim["jti"], "sub": "tomato"})
     assert host.sent.to(valve.command_topic) == []
 
 
@@ -441,7 +441,7 @@ def test_the_winner_debits_its_own_wallet(make):
     fern = make("fern", _with_reading(0.10))
     market = market_of(fern)
     before = fern.bidding().balance
-    fern.deliver(f"{market.voucher_topic}/fern",
+    fern.deliver(f"{market.claim_topic}/fern",
                  {"auction_id": "r1", "amount_l": 0.5, "debit": 0.30})
     assert fern.bidding().balance == pytest.approx(before - 0.30)
     assert fern.bidding().won_l == 0.5

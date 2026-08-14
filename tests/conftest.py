@@ -48,7 +48,7 @@ def name_the_world(monkeypatch):
     monkeypatch.setenv("AGORA_WORLD", GENESIS_DIR.name)
     # And run KEYLESS, whatever this machine's worlds carry. `agora-keygen` writes a real
     # keys.ttl into the repo's world directories (gitignored, present wherever an operator has
-    # onboarded), and `world_files` sweeps every .ttl — so on an operator's machine vouchers
+    # onboarded), and `world_files` sweeps every .ttl — so on an operator's machine claims
     # seal, presentations demand signatures, and any test reading a plaintext payload fails
     # HERE while passing in CI. A test that needs keys injects roster triples explicitly
     # (test_signed_and_sealed does); everything else must see the world as the files in git

@@ -186,7 +186,7 @@ def test_an_unsigned_command_leaves_the_soil_dry(monkeypatch, keys):
     assert valve.client.published == []
 
 
-def test_a_replayed_voucher_dispenses_once(monkeypatch, keys):
+def test_a_replayed_claim_dispenses_once(monkeypatch, keys):
     """Single-use by jti, as the real path enforces it."""
     host, clearing, _, _ = keys
     valve = _valve_under_test(monkeypatch, keys)
