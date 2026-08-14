@@ -122,7 +122,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
     from agent.genesis import secrets_dir, world_dir
 
     own = secrets_dir(world_dir(world))
-    for suffix in (".key", ".seal.key"):
+    for suffix in (".sign.key", ".seal.key"):
         if (own / f"{agent_id}{suffix}").exists():
             signing += (f"\n      - ./secrets/{agent_id}{suffix}"
                         f":/app/world/secrets/{agent_id}{suffix}:ro")
@@ -211,8 +211,16 @@ _SIM_MODE = {
 
 # `?litres` is joined through the PROPERTY the domain's valuation is denominated in rather than
 # through the subject alone. Three sensors on one board can monitor one plant, so the subject
-# cannot say which reading a litre of water moves — `water:hasTarget market:aboutProperty` can,
-# and it says soil moisture. Without that join a dose would warm the thermometer.
+# cannot say which reading a litre of water moves — `market:aboutProperty` can, and it says
+# soil moisture. Without that join a dose would warm the thermometer.
+#
+# The anchor is `water:litresPerFraction`, where #120 moved the denomination when it deleted
+# `water:hasTarget` — and this query went on naming the dead term, matching nothing, for two
+# days: every generated SIM_VALUES lost its "litres", every dose moved nothing, and the first
+# live run of the verification arc flagged the world for false knowledge. Which is the
+# interpolated-IRI failure mode agent/ontology.py warns about, caught by exactly the detector
+# built to catch it — the graph said water raises moisture, and the world (this generator)
+# kept refusing.
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?port
        ?pointer ?initial ?dryRate ?litres ?minValue ?maxValue
@@ -230,7 +238,7 @@ WHERE {{
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
   OPTIONAL {{ ?s <{SOSA}observes> ?wetProperty .
-             <{WATER}hasTarget> <{MARKET}aboutProperty> ?wetProperty .
+             <{WATER}litresPerFraction> <{MARKET}aboutProperty> ?wetProperty .
              ?subject <{WATER}litresPerFraction> ?litres }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .

@@ -17,7 +17,8 @@ import pytest
 
 from agent import signing
 from agent.ontology import WORLD_GRAPH
-from onboarding.keygen import create_keypair, create_sealing_keypair
+from onboarding.keygen import (create_agent_signing_keypair, create_keypair,
+                               create_sealing_keypair)
 
 from conftest import build_agent, genesis_store
 
@@ -35,12 +36,13 @@ def keyed(tmp_path, monkeypatch):
     """
     monkeypatch.setenv("AGORA_WORLD_DIR", str(tmp_path))
     (tmp_path / "secrets").mkdir()
-    for name in ("host", "clearing", "fern"):
+    for name in ("host", "clearing"):
         create_keypair(name)
+    create_agent_signing_keypair("fern")
     create_sealing_keypair("fern")
 
     st = genesis_store({"fern": 0.30})
-    sign_b64 = signing.raw_public_b64(signing.load_private("fern").public_key())
+    sign_b64 = signing.raw_public_b64(signing.load_signing_private("fern").public_key())
     seal_b64 = signing.raw_public_b64(signing.load_sealing_private("fern").public_key())
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
         <{FERN}> ag:signingKey "{sign_b64}" ; ag:sealingKey "{seal_b64}" . }} }}""")
@@ -108,7 +110,7 @@ def test_a_presentation_carries_the_winners_own_signature(keyed, make):
     presented = fern.sent.to(f"{market.redeem_topic}/fern")[-1]
     assert presented["sig"]
     payload = {k: v for k, v in presented.items() if k != "sig"}
-    pub = signing.load_private("fern").public_key()
+    pub = signing.load_signing_private("fern").public_key()
     assert signing.verify(pub, signing.canonical(payload), presented["sig"])
 
 
@@ -127,7 +129,7 @@ def test_the_host_refuses_a_presentation_that_fails_the_published_key(keyed, mak
     assert host.sent.to(valve.command_topic) == [], "unsigned must be refused — the key is published"
 
     good = {"jti": jti, "sub": "fern"}
-    sig = signing.sign(signing.load_private("fern"), signing.canonical(good))
+    sig = signing.sign(signing.load_signing_private("fern"), signing.canonical(good))
     host.deliver(f"{market_of(host).redeem_topic}/fern", {**good, "sig": sig[:-4] + "AAAA"})
     assert host.sent.to(valve.command_topic) == [], "a tampered signature must be refused"
 
@@ -158,7 +160,7 @@ def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeyp
     assert ("http://example.org/agora#fern_agent", "fern") in ids
 
     for _, agent_id in ids:
-        create_keypair(agent_id)
+        create_agent_signing_keypair(agent_id)
         create_sealing_keypair(agent_id)
     publish_roster("sim2", ids)
 
