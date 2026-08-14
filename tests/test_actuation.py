@@ -1,4 +1,4 @@
-"""actuation:Actuation — voucher to bounded, co-signed command. The actuate boundary.
+"""actuation:Actuation — claim to bounded, co-signed command. The actuate boundary.
 
 Dosing is not configured here: it comes from the valve's own calibration in the world, so
 these tests build a device and check the module obeys it.
@@ -12,7 +12,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from agent import loader, signing  # noqa: F401  (loader puts the package trees on sys.path)
-from agent.clearing import Voucher
+from agent.clearing import Claim
 from agent.signing import verify_command
 from packages.capability.actuation import ActuationModule
 from agent.world import Actuator, Self
@@ -57,8 +57,8 @@ def module(agent=None):
     return m, agent
 
 
-def voucher(jti="j1", sub="fern", amount_l=0.64):
-    return Voucher(sub=sub, scope=f"actuate:valve/{sub}", amount_l=amount_l,
+def claim(jti="j1", sub="fern", amount_l=0.64):
+    return Claim(sub=sub, scope=f"actuate:valve/{sub}", amount_l=amount_l,
                    debit=0.3, auction_id="R-1", jti=jti)
 
 
@@ -66,40 +66,40 @@ def voucher(jti="j1", sub="fern", amount_l=0.64):
 
 def test_litres_become_open_seconds():
     m, _ = module()
-    cmd, _ = m.command_for(voucher(amount_l=0.64))  # 640 ml
+    cmd, _ = m.command_for(claim(amount_l=0.64))  # 640 ml
     assert cmd.ml == 640.0 and cmd.seconds == 64.0
 
 
 def test_a_faster_valve_opens_for_less_time():
     m, _ = module(FakeAgent(ml_per_second=40.0))
-    cmd, _ = m.command_for(voucher(amount_l=0.64))
+    cmd, _ = m.command_for(claim(amount_l=0.64))
     assert cmd.seconds == 16.0  # same litres, different hardware
 
 
 def test_the_device_caps_its_own_dose():
     m, _ = module(FakeAgent(max_dose_ml=500.0))
-    cmd, _ = m.command_for(voucher(amount_l=5.0))  # 5000 ml cleared
-    assert cmd.ml == 500.0  # defence in depth, whatever the voucher said
+    cmd, _ = m.command_for(claim(amount_l=5.0))  # 5000 ml cleared
+    assert cmd.ml == 500.0  # defence in depth, whatever the claim said
 
 
-def test_a_voucher_for_hardware_i_do_not_own_is_refused():
+def test_a_claim_for_hardware_i_do_not_own_is_refused():
     m, _ = module()
     with pytest.raises(ValueError, match="no actuator"):
-        m.redeem(voucher(sub="orchid"))
+        m.redeem(claim(sub="orchid"))
 
 
 # --- the actuate boundary --------------------------------------------------
 
 def test_command_goes_to_the_devices_own_topic():
     m, agent = module()
-    m.redeem(voucher())
+    m.redeem(claim())
     topic, _ = agent.sent[0]
     assert topic == "actuators/fern/valve"  # stated by the world, not built from the id
 
 
 def test_settled_command_is_co_signed_and_verifies():
     m, agent = module()
-    m.redeem(voucher())
+    m.redeem(claim())
     _, payload = agent.sent[0]
     assert verify_command(payload, m.host_key.public_key(), m.clearing_key.public_key())
 
@@ -107,7 +107,7 @@ def test_settled_command_is_co_signed_and_verifies():
 def test_unsigned_command_is_rejected():
     m, agent = module()
     m.host_key = m.clearing_key = None  # no keys -> no signatures
-    m.redeem(voucher())
+    m.redeem(claim())
     _, payload = agent.sent[0]
     other = Ed25519PrivateKey.generate().public_key()
     assert not verify_command(payload, other, other)
@@ -115,7 +115,7 @@ def test_unsigned_command_is_rejected():
 
 def test_tampered_dose_is_rejected():
     m, agent = module()
-    m.redeem(voucher())
+    m.redeem(claim())
     _, payload = agent.sent[0]
     payload["ml"] = 9999.0  # someone tries to enlarge the dose in flight
     assert not verify_command(payload, m.host_key.public_key(), m.clearing_key.public_key())
@@ -123,7 +123,7 @@ def test_tampered_dose_is_rejected():
 
 def test_a_wrong_signer_is_rejected():
     m, agent = module()
-    m.redeem(voucher())
+    m.redeem(claim())
     _, payload = agent.sent[0]
     impostor = Ed25519PrivateKey.generate().public_key()
     assert not verify_command(payload, impostor, m.clearing_key.public_key())
@@ -133,26 +133,26 @@ def test_a_wrong_signer_is_rejected():
 
 def test_replay_is_refused():
     m, agent = module()
-    m.redeem(voucher(jti="dup"))
+    m.redeem(claim(jti="dup"))
     with pytest.raises(ValueError, match="replay"):
-        m.redeem(voucher(jti="dup"))
+        m.redeem(claim(jti="dup"))
     assert len(agent.sent) == 1  # the second never reached the wire
 
 
-def test_redeem_all_is_one_command_per_voucher():
+def test_redeem_all_is_one_command_per_claim():
     m, agent = module()
-    m.redeem_all([voucher(jti="a", sub="fern"), voucher(jti="b", sub="fern")])
+    m.redeem_all([claim(jti="a", sub="fern"), claim(jti="b", sub="fern")])
     assert len(agent.sent) == 2
 
 
 # --- single use ------------------------------------------------------------
 
-def test_a_redeemed_voucher_cannot_fire_twice():
-    """A jti is spent on redemption, so a replayed voucher opens nothing."""
+def test_a_redeemed_claim_cannot_fire_twice():
+    """A jti is spent on redemption, so a replayed claim opens nothing."""
     m, _ = module()
-    m.redeem(voucher(jti="dup"))
+    m.redeem(claim(jti="dup"))
     with pytest.raises(ValueError, match="replay"):
-        m.redeem(voucher(jti="dup"))
+        m.redeem(claim(jti="dup"))
 
 
 # --- commanded is not delivered (#36) --------------------------------------
@@ -166,7 +166,7 @@ def test_it_listens_on_its_own_valves_status_and_no_wildcard():
 
 def test_a_valve_that_reports_confirms_the_dose():
     m, _ = module()
-    m.redeem(voucher(jti="j-ok"))
+    m.redeem(claim(jti="j-ok"))
     assert "j-ok" in m.pending, "a commanded dose is outstanding until the device reports"
     m.handle("actuators/fern/valve/status",
              json.dumps({"valve": "valve_fern", "jti": "j-ok", "ml": 640.0, "ok": True}).encode())
@@ -181,7 +181,7 @@ def test_silence_past_the_deadline_is_noticed_and_counted(caplog):
     before this it was indistinguishable from a dose that went perfectly.
     """
     m, _ = module(FakeAgent(ml_per_second=100000.0, dose_grace_s=0))
-    m.redeem(voucher(jti="j-lost"))
+    m.redeem(claim(jti="j-lost"))
     time.sleep(0.05)
     with caplog.at_level(logging.WARNING):
         m._expire()
@@ -197,19 +197,19 @@ def test_an_unconfirmed_dose_stays_spent():
     risks watering twice, while an unopened valve costs one round the plant bids again for.
     """
     m, _ = module(FakeAgent(ml_per_second=100000.0, dose_grace_s=0))
-    m.redeem(voucher(jti="j-lost"))
+    m.redeem(claim(jti="j-lost"))
     time.sleep(0.05)
     m._expire()
     assert m.unconfirmed == 1
     with pytest.raises(ValueError, match="replay"):
-        m.redeem(voucher(jti="j-lost"))
+        m.redeem(claim(jti="j-lost"))
 
 
 def test_a_valve_with_no_status_channel_is_never_waited_on():
     """A world may wire a valve it cannot hear back from — a deployment, not an error. Nothing
     goes pending, and the zeroes in `reports()` are themselves the reading."""
     m, _ = module(FakeAgent(status_topic=None))
-    m.redeem(voucher(jti="j-deaf"))
+    m.redeem(claim(jti="j-deaf"))
     assert m.subscriptions() == [] and m.pending == {}
     m._expire()
     assert m.unconfirmed == 0

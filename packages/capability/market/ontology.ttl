@@ -7,7 +7,7 @@
 
 <http://example.org/agora/market> a owl:Ontology ;
     rdfs:label "Agora market" ;
-    rdfs:comment """The auction: a venue, a host that announces offers, bidders that answer, vouchers that come back, and the matching that turns the bids into an allocation with prices. What a bid is WORTH is domain-specific and lives in the domain module; how a round is conducted is here. THREE capabilities compose independently — an agent may bid, host, or do both, and a host also has whichever matching its world put in force. Matching is a family with interchangeable members where bidding and hosting are single abilities; it shares this package because a directory is a package and not a capability, and the seam it needs is `PROVIDES` and a term, not a directory boundary.""" .
+    rdfs:comment """The auction: a venue, a host that announces offers, bidders that answer, claims that come back, and the matching that turns the bids into an allocation with prices. What a bid is WORTH is domain-specific and lives in the domain module; how a round is conducted is here. THREE capabilities compose independently — an agent may bid, host, or do both, and a host also has whichever matching its world put in force. Matching is a family with interchangeable members where bidding and hosting are single abilities; it shares this package because a directory is a package and not a capability, and the seam it needs is `PROVIDES` and a term, not a directory boundary.""" .
 
 #################  Capabilities  #################
 
@@ -15,7 +15,7 @@ market:Bidding a ag:Capability ; rdfs:label "Bidding" ;
     rdfs:comment "The agent answers offers in a market it participates in, with a bid computed from its own private valuation. Nobody else can compute that bid; that is the point of one process per agent." .
 
 market:Hosting a ag:Capability ; rdfs:label "Hosting" ;
-    rdfs:comment "The agent runs rounds in a market: announces the offer, collects bids until the deadline, matches, has the trade validated, and issues vouchers. The scarce side hosts." .
+    rdfs:comment "The agent runs rounds in a market: announces the offer, collects bids until the deadline, matches, has the trade validated, and issues claims. The scarce side hosts." .
 
 #################  The venue  #################
 
@@ -65,12 +65,12 @@ market:offerTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:rang
 market:bidTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
     rdfs:label "bid topic" ;
     rdfs:comment "Where bidders answer. A prefix: each bidder publishes under its own localId." .
-market:voucherTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
-    rdfs:label "voucher topic" ;
+market:claimTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
+    rdfs:label "claim topic" ;
     rdfs:comment "Where the host returns what was won. A prefix, one segment per winner." .
 market:redeemTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:range xsd:string ;
     rdfs:label "redeem topic" ;
-    rdfs:comment "Where a HOLDER presents its claim. A prefix, one segment per holder — the mirror of voucherTopic, and the channel that makes winning and actuating separate acts (#132): the host used to redeem every voucher itself the moment it issued them, which spent the dose before the winner's sensor could possibly be watching it land. The holder now presents when its watch is live, and a spot market grew the futures market's wire a venue at a time." .
+    rdfs:comment "Where a HOLDER presents its claim. A prefix, one segment per holder — the mirror of claimTopic, and the channel that makes winning and actuating separate acts (#132): the host used to redeem every claim itself the moment it issued them, which spent the dose before the winner's sensor could possibly be watching it land. The holder now presents when its watch is live, and a spot market grew the futures market's wire a venue at a time." .
 
 market:lotCapacity a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "lot capacity" ;

@@ -2,7 +2,7 @@
 makes a commitment mean something.
 
 **This existed before it had a name, as module state.** `bidding.pending` was an intention to
-observe; a bid awaiting its voucher was an intention to acquire; both lived in Python attributes
+observe; a bid awaiting its claim was an intention to acquire; both lived in Python attributes
 that died with the process and answered to nothing. They are rows in a graph now, with an
 adoption time, a resolution, and a reason — so an operator can ask what an agent thought it was
 doing, and phase 4's deliberator can ask what already stands before deciding anything.

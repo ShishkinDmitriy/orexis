@@ -67,9 +67,9 @@ and every shipped world states `market:hosts` on the supplier (see
    [bid matching](/domain/bid-matching.md) it announced when the auction opened.
 6. **Validate and settle** — [clearing](/domain/clearing.md) checks the proposed trade
    (conservation, solvency, identity, [constitution](/domain/constitution.md),
-   order-consistency) and **co-signs** the [voucher](/domain/voucher.md); then wallets are debited
+   order-consistency) and **co-signs** the [claim](/domain/claim.md); then wallets are debited
    (water and metabolic cost) and the [supplier](/domain/supplier.md)'s
-   [executor](/domain/executor.md) arm actuates the fully-signed voucher, sequencing the pump.
+   [executor](/domain/executor.md) arm actuates the fully-signed claim, sequencing the pump.
    See [clearing-as-validator](/decisions/clearing-as-validator.md).
 
 Steps 5 and 6 belong to the auction rather than to any one round: the match is made once, over the
@@ -90,8 +90,8 @@ Tomato's afternoon need"). A single optimizer can't hand you that sentence — a
 # Nothing calls a round an auction any more
 
 `auction_id` is minted once per auction and travels on all four payloads — the offer, the bid, the
-[voucher](/domain/voucher.md) and the signed command. It names the auction, which is what it always
-was, and the [voucher](/domain/voucher.md)'s replay check is keyed on it because a voucher is won
+[claim](/domain/claim.md) and the signed command. It names the auction, which is what it always
+was, and the [claim](/domain/claim.md)'s replay check is keyed on it because a claim is won
 once per auction rather than once per bidding pass.
 
 The one name still spelled the old way is `market:roundCooldownS`, deliberately: it is a persisted

@@ -90,7 +90,7 @@ valuation is private and lives in another process — so a round is a conversati
 participant announces its own verdict (voluntary disclosure, not its raw state)
     -> host announces an offer with a deadline        [market:offerTopic]
     -> each bidder looks at its own sensor and answers  [market:bidTopic/<agent>]
-    -> host matches, clearing validates, vouchers return [market:voucherTopic/<agent>]
+    -> host matches, clearing validates, claims return [market:claimTopic/<agent>]
     -> the owner redeems them against its own hardware
 ```
 

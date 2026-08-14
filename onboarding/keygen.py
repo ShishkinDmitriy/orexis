@@ -6,14 +6,14 @@
 to a world rather than to the installation: `world/<name>/secrets/`, never committed.
 
 Since #144/#145 that is more than host and clearing: every agent gets an Ed25519 pair (its own
-hand, for presenting claims) and an X25519 pair (its own ear, for vouchers sealed to it), and
+hand, for presenting claims) and an X25519 pair (its own ear, for claims sealed to it), and
 the PUBLIC halves are published into `world/<name>/keys.ttl` — generated, gitignored, swept
 into the world graph with the ratified files, because a verifier cannot read another agent's
 secrets and the world is the one place every member reads.
 
 This is here and not in the runtime for the same reason `agora-influx` is. An agent that could
 *mint* a society's keys could sign for that society — it could authorise a match it never won and
-validate its own voucher. An actuator holds the two keys it is given, mounted into its container
+validate its own claim. An actuator holds the two keys it is given, mounted into its container
 alone, and can do nothing else with them; `agent.signing` therefore keeps `load_private`, `sign`
 and `verify`, and creating a keypair happens here.
 
@@ -42,7 +42,7 @@ def create_keypair(name: str) -> None:
     contract between the two halves and is not this tool's to choose alone.
 
     Note it OVERWRITES. Regenerating a world's keys invalidates every signature made with the old
-    pair, including any voucher a device still holds. That is a seam, not a feature.
+    pair, including any claim a device still holds. That is a seam, not a feature.
     """
     signing.KEYS_DIR().mkdir(parents=True, exist_ok=True)
     key = Ed25519PrivateKey.generate()
@@ -83,7 +83,7 @@ def create_agent_signing_keypair(name: str) -> None:
 def create_sealing_keypair(name: str) -> None:
     """The X25519 pair beside the Ed25519 one: same PEM contract, different operation.
 
-    Ed25519 signs and does not encrypt — sealing a voucher to its winner (#145) needs its own
+    Ed25519 signs and does not encrypt — sealing a claim to its winner (#145) needs its own
     curve operation, so an agent's identity is TWO pairs, minted together.
     """
     signing.KEYS_DIR().mkdir(parents=True, exist_ok=True)

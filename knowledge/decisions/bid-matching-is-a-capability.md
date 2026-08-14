@@ -106,7 +106,7 @@ announced is necessarily what will run — a host cannot advertise one and apply
 - **A host that says nothing about matching is refused before it runs.**
   `market:HostStatesHowItMatchesShape` catches it at validation; `close()` also refuses loudly,
   because a world can be amended after validation and losing a round's bids in silence is worse
-  than saying so — every bidder is waiting on a voucher.
+  than saying so — every bidder is waiting on a claim.
 - **A world may state `market:UniformPrice` today** and derive a capability nothing provides. The agent
   reports it at startup, which is the honest failure and the same one `sensing:Polling` produces.
 - **#50 is unaffected and still open.** The uncontested-round defect is *in* pay-as-bid; this

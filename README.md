@@ -15,7 +15,7 @@ base — what it is wired to, what it can therefore do, and what it privately wa
   agent records + announces -> :sensed + Influx, then ag:eventTopic {"band":"LOW"}
   host opens a round        -> ag:offerTopic     quantity, reserve, deadline
   each bidder answers       -> ag:bidTopic/<id>  a number only it can compute
-  host clears, vouchers go  -> ag:voucherTopic/<id>  -> owner opens its own valve
+  host clears, claims go  -> ag:claimTopic/<id>  -> owner opens its own valve
 ```
 
 Nothing above is a name in the code. Every channel, every device, every limit is read from
@@ -208,7 +208,7 @@ Each agent boots from its id alone: it reads the world (*what am I wired to, and
 that let me do?*), then its own beliefs (*what do I want, how closely should I watch?*), and
 runs exactly the modules its capabilities name. A round is a conversation — a plant announces
 its own verdict, the host offers, bidders answer with numbers only they can compute, clearing
-validates, vouchers come back. Deterministic, no LLM. (For a closed loop where wins actually
+validates, claims come back. Deterministic, no LLM. (For a closed loop where wins actually
 
 A bidder **looks before it bids** and sits out the round if its sensor does not answer in
 time, or if the newest reading is older than its own `sensing:maxReadingAgeS`. Owning the cadence

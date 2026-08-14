@@ -23,7 +23,7 @@ topic after dispensing and stays **silent** when it refuses — signature, repla
 dispense — so silence is its refusal, deliberately. The only thing missing was a listener.
 
 **[settlement-speaks-rea](settlement-speaks-rea.md) had already named the gap without anyone
-noticing it was open.** A voucher is a `vf:Commitment`; the valve opening is the
+noticing it was open.** A claim is a `vf:Commitment`; the valve opening is the
 `vf:EconomicEvent` that fulfils it; and REA defines an economic event as an **observed** flow.
 Nothing here observed anything. We marked a commitment fulfilled on the strength of having
 asked.
@@ -68,7 +68,7 @@ distinction being drawn.
 # It stays spent, which is the opposite of what the issue proposed
 
 [#36](https://github.com/ShishkinDmitriy/agora/issues/36) asked for *"at minimum log it; better,
-do not treat the voucher as spent."* The better option is the wrong one, for two reasons.
+do not treat the claim as spent."* The better option is the wrong one, for two reasons.
 
 **The device refuses replays itself.** `firmware/simulated-valve` keeps its own spent set and
 `_refuse("replay", …)` is one of the paths it stays silent on. A re-sent command is therefore

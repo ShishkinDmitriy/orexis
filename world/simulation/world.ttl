@@ -25,7 +25,7 @@
 #  simulation exercised a parallel code path, and could pass while the real one was broken —
 #  the weakest possible form of simulation. Now the only untested thing is the hardware.
 #
-#  The market is identical, deliberately. Bidding, hosting, clearing and the vouchers do not
+#  The market is identical, deliberately. Bidding, hosting, clearing and the claims do not
 #  know that anything here is simulated — a bidder asks for "whoever perceives" and a host asks
 #  for "something that can redeem", and both are answered.
 #
@@ -73,7 +73,7 @@ ag:barrel1_market a market:Market ;
     market:marketFor ag:barrel1 ;
     market:offerTopic   "market/barrel1/offer" ;
     market:bidTopic     "market/barrel1/bid" ;
-    market:voucherTopic "market/barrel1/voucher" ;
+    market:claimTopic "market/barrel1/claim" ;
     market:redeemTopic "market/barrel1/redeem" .
 
 ag:barrel1 a water:WaterSource ;

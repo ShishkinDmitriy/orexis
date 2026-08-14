@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: An intention is an amortised deliberation, and the gap is what deliberation is about
-description: BDI's three letters, mapped honestly — beliefs are the store, desire is the region-plus-aim, and intention was proto only, existing as a pending bid, a held voucher and a commanded cadence with no name, no lifecycle and no way to be queried. The plan in four phases — make the desired/sensed gap a query, move the aim into desire, reify the intention, then extract the welded reflex chain into a deliberation capability whose second member is an LLM. The ordering is the argument: intentions exist to SAVE deliberation, so for an LLM planner they are the cost model — an intention is an amortised LLM call, and the commitment policy is what keeps the planner affordable. Reflex ships first, so the LLM drops into a seam that provably exists.
+description: BDI's three letters, mapped honestly — beliefs are the store, desire is the region-plus-aim, and intention was proto only, existing as a pending bid, a held claim and a commanded cadence with no name, no lifecycle and no way to be queried. The plan in four phases — make the desired/sensed gap a query, move the aim into desire, reify the intention, then extract the welded reflex chain into a deliberation capability whose second member is an LLM. The ordering is the argument: intentions exist to SAVE deliberation, so for an LLM planner they are the cost model — an intention is an amortised LLM call, and the commitment policy is what keeps the planner affordable. Reflex ships first, so the LLM drops into a seam that provably exists.
 status: accepted
 stage: v1
 tags: [bdi, desire, intention, deliberation, llm, planning, capability, roadmap]
@@ -25,8 +25,8 @@ a happy absence. It is a gap, and this record says why and what to do about it.
 | **Beliefs** | the store: public graphs, private beliefs, `:sensed` | done |
 | **Desires** | `desire:Desire` regions, plus the aim inside one | region done; aim still `water:hasTarget` |
 | **Goals** | implicit — the worst gap wins attention | unnamed, deliberately |
-| **Intentions** | **proto only**: a pending bid, a held voucher, a commanded cadence | no name, no lifecycle |
-| **Interpreter** | hardwired: reading → band → LOW → announce → bid → voucher → actuate | welded; it IS the planner |
+| **Intentions** | **proto only**: a pending bid, a held claim, a commanded cadence | no name, no lifecycle |
+| **Interpreter** | hardwired: reading → band → LOW → announce → bid → claim → actuate | welded; it IS the planner |
 
 Two observations drive everything below.
 
@@ -81,7 +81,7 @@ default; this repo refuses fabricated beliefs everywhere else and an aim is not 
 
 No new behaviour. The three proto-intentions get one name and one lifecycle:
 `intention:Intention` is a commitment to reduce a named gap by a named means — *observe* (a
-cadence command), *acquire* (a bid, satisfied by a voucher), *apply* (a redemption) — with
+cadence command), *acquire* (a bid, satisfied by a claim), *apply* (a redemption) — with
 states adopted → active → satisfied | dropped and a `becauseOf`, the same PROV-flavoured shape
 `review:Revision` already has.
 

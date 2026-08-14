@@ -190,7 +190,7 @@ Not by file, because three modules serve both sides. By **who calls it**:
 
 The last row is the sharpest. An actuator **loads** the two keys mounted into its container and
 can do nothing else with them; an agent that could *mint* a society's keys could sign for that
-society — authorise a match it never won, and validate its own voucher. Same argument as the
+society — authorise a match it never won, and validate its own claim. Same argument as the
 admin token, one level down.
 
 `conforms` and `graph_from` are public in `agora.validate` because both checks run the same

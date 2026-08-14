@@ -26,16 +26,16 @@ static device binding and a per-round entitlement differ on every axis.
 - **Access grant = *which devices are yours*.** Static, **granted** by the sovereign at
   [genesis](/decisions/genesis.md); binds an agent ↔ a device (its sensor / its valve).
   Long-lived. "Is this Fern's valve/sensor?"
-- **Voucher = *what you may do right now*.** Dynamic, **won** in the auction — issued per
+- **Claim = *what you may do right now*.** Dynamic, **won** in the auction — issued per
   round by the host + [clearing](/domain/clearing.md) after the
   [constitution](/domain/constitution.md) check, co-signed, single-use (`jti`), expiring.
   "Did Fern win *this* 2 L dispense?"
 
 The distinction that matters: an **access grant is *granted*** (standing, who your devices
-are); a **voucher is *won*** (ephemeral, what you earned this round). The two never merge.
+are); a **claim is *won*** (ephemeral, what you earned this round). The two never merge.
 
 Verifier by edge: a **sensor** checks cert + **access grant** (reading isn't won — you read
-your own sensor whenever). An **actuator** checks cert + **access grant** *and* **voucher**
+your own sensor whenever). An **actuator** checks cert + **access grant** *and* **claim**
 (it's your valve *and* you won this dispense) — neither alone opens it.
 
 All three are checked *locally* by any verifier holding the issuer's public key — no hot-path
@@ -73,9 +73,9 @@ registry; the artifact carries its own proof.
   grant "revocation" is free. Only the durable cert needs an explicit, published, signed
   **revocation list**.
 
-# The voucher (auction result) — won, not granted
+# The claim (auction result) — won, not granted
 
-The output of the auction is the **voucher**: what you *won* the right to do this round
+The output of the auction is the **claim**: what you *won* the right to do this round
 (distinct from the *access grant* that statically binds you to the device). Modeled as a
 signed capability — concretely a **JWT (JWS)**:
 
@@ -125,7 +125,7 @@ actuators**:
 - **Networked** — a remote device over MQTT: the channel is shared and spoofable, so the
   endpoint **verifies a capability**. A sensor checks the **access grant** (isolation — only
   the linked agent reads it, granted at [genesis](/decisions/genesis.md)); an actuator checks
-  the **access grant** *and* the co-signed **voucher** (only the auction winner, and only its
+  the **access grant** *and* the co-signed **claim** (only the auction winner, and only its
   own valve, opens it).
 
 It grades with the threat: direct → nothing; networked + trusted LAN → a token for

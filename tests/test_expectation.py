@@ -1,9 +1,9 @@
 """The end, judged apart from the means — issue #131's spine, driven through real agents.
 
-The defect these exist to keep closed: an Acquire used to resolve when the VOUCHER arrived, and
+The defect these exist to keep closed: an Acquire used to resolve when the CLAIM arrived, and
 nothing ever checked whether the gap moved. An agent whose water never reached the pot bought,
 recorded satisfied, and bought again forever — transaction confirmed, outcome never audited.
-Confidently dumb, structurally. Now the voucher opens a WATCH: baseline copied into the ledger
+Confidently dumb, structurally. Now the claim opens a WATCH: baseline copied into the ledger
 (the sensed graph keeps only the current witness), the promised direction copied from the
 domain's own statement (#127), and the verdict lands beside the outcome as a separate fact.
 """
@@ -35,15 +35,15 @@ def market_of(agent):
 
 
 def win(agent, auction="r1", amount=0.5, debit=0.2):
-    """One full acquire: offer in, bid out, voucher back."""
+    """One full acquire: offer in, bid out, claim back."""
     market = market_of(agent)
     agent.deliver(market.offer_topic, {"auction_id": auction, "closes_in_s": 3})
-    agent.deliver(f"{market.voucher_topic}/fern", {"amount_l": amount, "debit": debit})
+    agent.deliver(f"{market.claim_topic}/fern", {"amount_l": amount, "debit": debit})
 
 
 # --- the watch opens where the means resolves --------------------------------
 
-def test_a_voucher_opens_a_watch_with_the_baseline_in_the_row(thirsty):
+def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     """Satisfied is the MEANS; the end gets its own record: where the property stood, which way
     the domain promises it moves, and by when. The baseline is copied into the ledger because
     the sensed graph upserts — the before of any before/after survives nowhere else."""
@@ -70,7 +70,7 @@ def test_opening_the_watch_asks_for_a_look(thirsty):
 def test_the_dose_landing_meets_the_end(thirsty):
     """Movement past the baseline in the promised direction, before the deadline — met, early
     is fine, that is the dose landing. The watch closes and the row now carries BOTH facts:
-    outcome satisfied (the voucher) and endMet true (the world answered)."""
+    outcome satisfied (the claim) and endMet true (the world answered)."""
     win(thirsty)
     thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"value": 0.42})
     keeper = keeper_of(thirsty)
@@ -126,7 +126,7 @@ def test_an_open_watch_is_maximum_urgency_and_a_verdict_releases_it(thirsty):
 # --- the flag: suspicious after N, never auto-retracted -----------------------
 
 def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
-    """Three acquisitions, three honoured vouchers, three deadlines passed with the pot still
+    """Three acquisitions, three honoured claims, three deadlines passed with the pot still
     drying: the pair (Acquire, SoilMoisture) is flagged — a warning in the log, a line in the
     health series — and nothing is retracted, because what to do about a belief that is not
     paying is a decision, not a reflex. The agent must end up FLAGGED, not looping unmarked."""
@@ -165,10 +165,10 @@ def test_one_success_resets_the_suspicion(monkeypatch):
     assert keeper.reports()["affordances_suspect"] == 0
 
 
-# --- the voucher waits for the watch (#132) -----------------------------------
+# --- the claim waits for the watch (#132) -----------------------------------
 
 def test_a_claim_is_held_until_the_watch_is_live(thirsty):
-    """Never spend a dose you cannot watch land. The voucher adopts an Apply — a held claim —
+    """Never spend a dose you cannot watch land. The claim adopts an Apply — a held claim —
     and nothing is presented while readings arrive without the #135 stamp; the first reading
     acknowledged at the fast cadence is proof the board heard the tightening, and THAT is when
     the claim goes out, the Apply resolves, and the expectation opens with a baseline the hold
@@ -178,7 +178,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     market = market_of(thirsty)
     keeper = keeper_of(thirsty)
     thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
-    thirsty.deliver(f"{market.voucher_topic}/fern",
+    thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v1", "amount_l": 0.5, "debit": 0.2})
 
     assert thirsty.sent.to(f"{market.redeem_topic}/fern") == [], \
@@ -206,7 +206,7 @@ def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
     than a dose unobserved. The deadline presents the claim and says it ran blind."""
     market = market_of(thirsty)
     thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
-    thirsty.deliver(f"{market.voucher_topic}/fern",
+    thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v2", "amount_l": 0.5, "debit": 0.2})
     assert thirsty.sent.to(f"{market.redeem_topic}/fern") == []
 
@@ -217,12 +217,12 @@ def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
 
 def test_a_held_claim_is_maximum_urgency(thirsty):
     """The hold is the watch one step earlier: the dose is coming the moment the watch is live,
-    and the watch becomes live by exactly this urgency reaching the board. Voucher → tight;
+    and the watch becomes live by exactly this urgency reaching the board. Claim → tight;
     presentation → the expectation takes over the same answer without a gap."""
     market = market_of(thirsty)
     p = thirsty.subscribing()
     thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
-    thirsty.deliver(f"{market.voucher_topic}/fern",
+    thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v3", "amount_l": 0.5, "debit": 0.2})
     assert keeper_of(thirsty).urgency(thirsty.me.acts_for, MOISTURE, 0.55) == 1.0
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s

@@ -1,10 +1,10 @@
 ---
 type: Decision
-title: A voucher is a commitment, not a claim, and REA already had both words
-description: The settlement half is aligned to the REA accounting ontology through its RDF form, ValueFlows — offer and bid are intents, the trade is an agreement, the voucher is a commitment and actuation is the event that fulfils it. The words are borrowed and the IRIs are not, because a hand-materialised RDFS closure has to cover every axiom it imports. Naming the one REA term we have no use for says something true about the design.
+title: A claim is a commitment, not a claim, and REA already had both words
+description: The settlement half is aligned to the REA accounting ontology through its RDF form, ValueFlows — offer and bid are intents, the trade is an agreement, the claim is a commitment and actuation is the event that fulfils it. The words are borrowed and the IRIs are not, because a hand-materialised RDFS closure has to cover every axiom it imports. Naming the one REA term we have no use for says something true about the design.
 status: accepted
 stage: v1
-tags: [settlement, voucher, vocabulary, reuse, ubiquitous-language]
+tags: [settlement, claim, vocabulary, reuse, ubiquitous-language]
 timestamp: 2026-08-10T00:00:00Z
 ---
 
@@ -22,7 +22,7 @@ or PROV owns provenance. What exists is four adjacent families: e-commerce offer
 accounting (REA). None of them models matching or clearing, which is the part it would be most
 useful to borrow.
 
-But the **settlement half** — offer, bid, trade, voucher, actuation, debit — is ordinary economic
+But the **settlement half** — offer, bid, trade, claim, actuation, debit — is ordinary economic
 exchange, and that is exactly what REA has modelled since McCarthy's work and what
 **ISO/IEC 15944-4:2015** standardised as the Open-edi accounting and economic ontology. Its
 modern RDF form is **ValueFlows** (`vf:`, `https://w3id.org/valueflows/ont/vf#`).
@@ -50,19 +50,19 @@ checked against a standard and the deviations are stated.
 | the host's offer — lot, reserve, deadline | `vf:Intent` | *"a desired or proposed or planned economic flow, usually with only one agent associated"* — which is the offer exactly: proposed, and promised to nobody yet |
 | a bid | `vf:Intent` | the other side. Two intents meeting is what an auction resolves |
 | the trade — every line of it | `vf:Agreement` | *"a set of reciprocal commitments among economic agents"* |
-| a voucher | `vf:Commitment` | *"a planned economic flow that has been scheduled or promised by one agent to another agent"* |
+| a claim | `vf:Commitment` | *"a planned economic flow that has been scheduled or promised by one agent to another agent"* |
 | the valve opening | `vf:EconomicEvent` | *"an observed economic flow"*, and `vf:fulfills` is the link back to the commitment |
 | the wallet debit | the reciprocal `vf:EconomicEvent` | the other half of the duality |
 | **nothing** | `vf:Claim` | see below |
 
-## Which corrects us: a voucher is a commitment
+## Which corrects us: a claim is a commitment
 
-`domain/voucher.md` has always called a voucher *"a co-signed, single-use **claim** on the
+`domain/claim.md` has always called a claim *"a co-signed, single-use **claim** on the
 supplier for N litres"*. That is the loose English word, and REA has a precise one that means
 something else.
 
 A **claim** in REA is what exists when a flow has happened and its reciprocal has not — someone
-delivered, someone owes. A **commitment** is a promised future flow. A voucher is issued *before
+delivered, someone owes. A **commitment** is a promised future flow. A claim is issued *before
 anything moves*: it carries `amount_l` and `debit` together, both legs, neither performed. So it
 is a commitment, and the reciprocal commitment is in the same token.
 
@@ -72,7 +72,7 @@ and payment has not, so the concept that would cover it has nothing to cover. Th
 property of the design — it says settlement is atomic — and it was invisible while the word *claim*
 was being used loosely for something else.
 
-The *contrast* `voucher.md` was drawing with that word is untouched and still right: a voucher is
+The *contrast* `claim.md` was drawing with that word is untouched and still right: a claim is
 against the **supplier**, not a command naming a valve. Only the noun changes.
 
 ## What was checked and rejected
@@ -93,9 +93,9 @@ against the **supplier**, not a command naming a valve. Only the noun changes.
 
 # Consequences
 
-- **`domain/voucher.md` says commitment** and explains why the REA claim is a different thing we
+- **`domain/claim.md` says commitment** and explains why the REA claim is a different thing we
   do not have.
-- **The absence of `vf:Claim` is documented rather than incidental.** If futures land — a voucher
+- **The absence of `vf:Claim` is documented rather than incidental.** If futures land — a claim
   held and spent later, which [roadmap](roadmap.md) has — delivery and payment come apart in time
   and a claim may become real. That is the trigger for revisiting.
 - **A standard vocabulary is a check, not just a source.** The value here was not a term we lacked;

@@ -37,7 +37,7 @@ file to every agent container. The admin token opens every bucket and lives apar
 by the infra containers and the two provisioning tools and by nothing else.
 
 Keys are **per world**, in `world/<name>/secrets/` and gitignored. Two worlds are two
-societies: the host that runs a market and the clearing authority that co-signs its vouchers
+societies: the host that runs a market and the clearing authority that co-signs its claims
 belong to that society, and must not be able to sign for another.
 
 The MQTT broker is part of `infra/compose.yaml`, built from `infra/mosquitto/Containerfile`

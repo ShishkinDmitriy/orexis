@@ -29,7 +29,7 @@ def covers(pattern: str, topic: str) -> bool:
     """MQTT matching, as the broker does it — so a grant of `x/+` covers `x/y`.
 
     A subscription that is itself wildcarded is only covered by a grant at least as wide: an
-    agent granted `market/b/voucher/fern` has NOT been allowed to subscribe `market/b/voucher/+`.
+    agent granted `market/b/claim/fern` has NOT been allowed to subscribe `market/b/claim/+`.
     """
     p, t = pattern.split("/"), topic.split("/")
     for i, seg in enumerate(p):
@@ -72,7 +72,7 @@ def test_every_subscription_a_module_makes_is_granted(world, monkeypatch):
 
 @pytest.mark.parametrize("world", WORLDS)
 def test_no_agent_may_hear_a_neighbours_private_channel(world):
-    """A voucher is addressed to one agent, and a reading is testimony about one subject.
+    """A claim is addressed to one agent, and a reading is testimony about one subject.
 
     Expectations are read from the world here rather than from the tool, so this is a check and
     not an echo of the same query.
@@ -81,11 +81,11 @@ def test_no_agent_may_hear_a_neighbours_private_channel(world):
     ds = ratified.dataset(world)
 
     private = {}  # agent id -> the topics that are its alone
-    for row in ratified.rows(ds, f"""SELECT ?id ?voucherTopic WHERE {{
+    for row in ratified.rows(ds, f"""SELECT ?id ?claimTopic WHERE {{
         
           ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{MARKET}bidsIn> ?m .
-          ?m <{MARKET}voucherTopic> ?voucherTopic .  }}"""):
-        private.setdefault(row["id"], set()).add(f"{row['voucherTopic']}/{row['id']}")
+          ?m <{MARKET}claimTopic> ?claimTopic .  }}"""):
+        private.setdefault(row["id"], set()).add(f"{row['claimTopic']}/{row['id']}")
     for row in ratified.rows(ds, f"""SELECT ?id ?readingTopic WHERE {{
         
           ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{SENSING}polls> ?s .
