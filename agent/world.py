@@ -137,7 +137,6 @@ class Self:
 @dataclass
 class World:
     version: int
-    subject_physics: dict[str, dict] = field(default_factory=dict)  # subject id -> facts
 
 
 _BUS_Q = f"""
@@ -204,17 +203,9 @@ WHERE {{
   ?market ag:localId ?localId ; market:marketFor ?resource ;
           market:offerTopic ?offerTopic ; market:bidTopic ?bidTopic ; market:voucherTopic ?voucherTopic .
   OPTIONAL {{ ?market market:redeemTopic ?redeemTopic }}
-  OPTIONAL {{ ?resource water:capacityL ?capacity }}
+  OPTIONAL {{ ?resource market:lotCapacity ?capacity }}
  }}"""
 
-
-# Physical facts about the subjects — public, because it is how the world behaves.
-_PHYSICS_Q = f"""
-SELECT ?subject ?subjectId ?dryRate ?litresPerFraction WHERE {{ 
-  ?subject ag:localId ?subjectId .
-  OPTIONAL {{ ?subject water:dryRatePerTick ?dryRate }}
-  OPTIONAL {{ ?subject water:litresPerFraction ?litresPerFraction }}
- }}"""
 
 # Everyone entitled to bid here — the host needs this to know who may answer an offer.
 def _participants_q(market_uri: str) -> str:
@@ -233,20 +224,19 @@ def _market_from(row: dict) -> Market:
 
 
 def load_world(query: QueryFn) -> World:
-    """The shared, public part: the version and the physics of the subjects."""
+    """The shared, public part: the version.
+
+    A `subject_physics` dict used to be loaded here too — every plant's dry rate and
+    litres-per-fraction, read through the WATER DOMAIN'S OWN TERMS from the kernel, and
+    consumed by nothing at all: the simulator gets its physics through the generated model,
+    and a bidder's conversion is its own belief. Dead code and a domain leak in one, which is
+    the usual pairing (#148) — a fact nobody reads is a fact nobody notices the kernel had no
+    business naming.
+    """
     rows = bindings(query(_VERSION_Q))
     if not rows:
         raise WorldError("no ag:World with a current version — has the world been seeded?")
-    world = World(version=int(rows[0]["v"]))
-    for row in bindings(query(_PHYSICS_Q)):
-        world.subject_physics[row["subjectId"]] = {
-            "uri": row["subject"],
-            "dry_rate": float(row["dryRate"]) if row.get("dryRate") else None,
-            "litres_per_fraction": (
-                float(row["litresPerFraction"]) if row.get("litresPerFraction") else None
-            ),
-        }
-    return world
+    return World(version=int(rows[0]["v"]))
 
 
 def load_self(query: QueryFn, agent_id: str) -> Self:

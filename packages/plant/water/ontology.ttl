@@ -35,8 +35,9 @@ water:servedBy a owl:ObjectProperty ; rdfs:domain water:Plant ; rdfs:range water
 water:suppliedBy a owl:ObjectProperty ; rdfs:domain water:WaterSource ; rdfs:range ag:Agent ;
     rdfs:label "supplied by" .
 water:capacityL a owl:DatatypeProperty ; rdfs:domain water:WaterSource ; rdfs:range xsd:decimal ;
+    rdfs:subPropertyOf market:lotCapacity ;
     rdfs:label "capacity litres" ;
-    rdfs:comment "Physical ceiling on what this source can dispense — the constitution's total-allocation limit." .
+    rdfs:comment "Physical ceiling on what this source can dispense — the constitution's total-allocation limit. A subproperty of market:lotCapacity, which is the word the KERNEL reads (#148): the world states litres, the closure entails the market's term, and the loader that hands clearing its limit names no domain." .
 
 #################  Physics of a pot (public: it is how the world behaves)  #################
 

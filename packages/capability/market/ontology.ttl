@@ -72,6 +72,10 @@ market:redeemTopic a owl:DatatypeProperty ; rdfs:domain market:Market ; rdfs:ran
     rdfs:label "redeem topic" ;
     rdfs:comment "Where a HOLDER presents its claim. A prefix, one segment per holder — the mirror of voucherTopic, and the channel that makes winning and actuating separate acts (#132): the host used to redeem every voucher itself the moment it issued them, which spent the dose before the winner's sensor could possibly be watching it land. The holder now presents when its watch is live, and a spot market grew the futures market's wire a venue at a time." .
 
+market:lotCapacity a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "lot capacity" ;
+    rdfs:comment "The physical ceiling of what a market's resource can supply — the constitution's total-allocation limit, read by clearing. Deliberately the MARKET's word (#148): the kernel loads a market's capacity and must name no domain, so a domain states its own term as a subproperty (water:capacityL does) and the closure entails this one — the same move mc:carries makes under sosa:hosts." .
+
 #################  The host's own terms (private belief)  #################
 
 market:offerQuantityL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;

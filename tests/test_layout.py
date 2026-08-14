@@ -453,3 +453,19 @@ def test_onboarding_names_no_domain():
     for path in sorted(Path("onboarding").glob("*.py")):
         assert "example.org/agora/water" not in path.read_text(), \
             f"{path} names the water domain — a generator must survive the domain swap"
+
+
+def test_the_kernel_names_no_domain():
+    """The sibling of the onboarding guard, one level down (#148). `agent/` is the kernel:
+    it loads worlds, stores, capabilities — and for a long time it also loaded every plant's
+    physics through the water domain's own terms, into a dict nothing read. Dead code and a
+    domain leak are the usual pairing: a fact nobody consumes is a fact nobody notices the
+    kernel had no business naming. Prose may say water (docstrings narrate history); no IRI
+    may."""
+    from pathlib import Path
+
+    for path in sorted(Path("agent").glob("*.py")):
+        for n, line in enumerate(path.read_text().splitlines(), 1):
+            code = line.split("#")[0]
+            assert "example.org/agora/water" not in code, \
+                f"{path}:{n} names the water domain — the kernel must survive the domain swap"
