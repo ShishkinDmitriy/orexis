@@ -117,11 +117,14 @@ the next person does not re-derive it:
 Answering the question this sweep was supposed to answer. `packages/core/agora` declares 34 terms
 and **eleven are not true of every agent**:
 
-- **The simulated device model — seven terms.** `ag:DeviceModel`, `ag:simulatedBy`,
-  `ag:modelDryRate`, `ag:modelInitialValue`, `ag:modelMaxValue`, `ag:modelMinValue`,
-  `ag:modelTickSeconds`. Used by `world/simulation` and no other world. They want a simulation
-  package that does not exist — and `modelDryRate` is water-domain besides, since only a plant
-  dries.
+- **The simulated device model — seven terms** *(eleven since the scenario grew: the physics
+  went time-based and the weather arrived)*. `ag:DeviceModel`, `ag:simulatedBy`,
+  `ag:modelDriesPerDay` (was `modelDryRate`, per tick — the tick made drying an artifact of how
+  often anyone looked), `ag:modelDailySwing`, `ag:modelInitialValue`, `ag:modelMaxValue`,
+  `ag:modelMinValue`, `ag:modelTickSeconds`, plus the world-scenario three: `ag:timeScale`,
+  `ag:strayDoseMeanDays`, `ag:rainTopic`. Used by `world/simulation` and no other world. They
+  want a simulation package that does not exist — and the drying term is water-domain besides,
+  since only a plant dries. The case for that package strengthens as this list grows.
 - **Deployment — three terms.** `ag:ComputeHost`, `ag:runsOn`, `ag:lanHost`, used by
   `world/sensing` alone. Every agent runs somewhere, so these are closer to universal; what is
   not universal is stating *where*.

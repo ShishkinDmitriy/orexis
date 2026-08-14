@@ -196,3 +196,57 @@ def test_a_generated_stand_in_knows_what_a_litre_is_worth():
     moisture = next(v for v in values if v["pointer"] == "/value")
     assert moisture.get("litres") == 2.0, \
         "the litres join is dead — a dose will move nothing and every end will be UNMET"
+
+
+# --- the world's clock, its weather, and its meddler ------------------------------------------
+
+
+def test_a_generated_stand_in_runs_at_the_worlds_pace():
+    """ag:timeScale rides into every stand-in's environment, and the physics arrive per
+    simulated day — the per-tick drift is gone from the spec entirely."""
+    import json
+
+    from agent import ratified
+    from onboarding.compose import _SIMULATED_Q, _values
+
+    rows = ratified.rows(ratified.dataset("simulation"), _SIMULATED_Q)
+    fern_rows = [r for r in rows if r["id"] == "moisture_sensor_fern"]
+    assert fern_rows and fern_rows[0]["scale"] == "24"
+    values = json.loads(_values(fern_rows))
+    moisture = next(v for v in values if v["pointer"] == "/value")
+    assert moisture.get("dries") == 0.12
+    assert "drift" not in moisture
+    temperature = next(v for v in values if v["pointer"] == "/temperature")
+    assert temperature.get("swing") == 4.0
+
+
+def test_the_meddler_is_its_own_service_with_its_own_credential():
+    """A pot must not water itself: the rain comes from a separate container on a separate
+    image, listed in compose only because the world states ag:strayDoseMeanDays."""
+    from onboarding.compose import render
+
+    compose = render("simulation")
+    assert "sim-meddler:" in compose
+    assert "agora-meddler:local" in compose
+    assert '"rain/fern"' in compose and '"rain/tomato"' in compose
+    assert 'MEDDLER_MEAN_DAYS: "2"' in compose
+    assert "mqtt-meddler.env" in compose
+
+
+def test_the_meddler_may_write_rain_and_nothing_else():
+    """The worst a compromised meddler can do is be over-generous with water."""
+    from onboarding import mqtt as mqtt_admin
+
+    _, devices = mqtt_admin.grants("simulation")
+    meddler = devices["meddler"]
+    assert all(access == "write" and topic.startswith("rain/")
+               for access, topic in meddler.grants), meddler.grants
+    assert len(meddler.grants) == 3  # one pot, one channel, no wildcards
+
+
+def test_a_rained_on_subjects_sensor_may_hear_the_rain():
+    from onboarding import mqtt as mqtt_admin
+
+    _, devices = mqtt_admin.grants("simulation")
+    assert ("read", "rain/fern") in devices["moisture_sensor_fern"].grants
+    assert ("read", "rain/tomato") in devices["moisture_sensor_tomato"].grants

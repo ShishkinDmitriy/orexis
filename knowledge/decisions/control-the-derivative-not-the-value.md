@@ -33,8 +33,9 @@ attention), review moves the cadence *setting* (the rate of change), the mandate
 (the sovereign controlling how fast an agent may change how fast it changes). Each layer's whole
 authority is the next layer's parameter space.
 
-The domain even echoes it physically: a pot is a first-order system — `water:dryRatePerTick` is
-a velocity, moisture drains on its own — and watering is an impulse against that velocity. The
+The domain even echoes it physically: a pot is a first-order system — it dries at a stated
+velocity (`ag:modelDriesPerDay` in the stand-ins, per simulated day since the physics went
+time-based), moisture drains on its own — and watering is an impulse against that velocity. The
 agent perceives position and only ever touches higher derivatives, which is cybernetics' old
 slogan (*you control your perceptions, not your actions*) arrived at from the other end.
 

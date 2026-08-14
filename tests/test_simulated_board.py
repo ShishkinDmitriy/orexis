@@ -82,6 +82,9 @@ def _device(values, **env):
                "SIM_READING_TOPIC": "sensors/board_x/reading",
                "SIM_VALUES": json.dumps(values),
                "MQTT_USERNAME": "u", "MQTT_PASSWORD": "p",
+               # A perfect instrument unless a test says otherwise: the grain and the spikes
+               # are real defaults, and exact-value assertions must not chase them.
+               "SIM_NOISE_SPAN": "0", "SIM_SPIKE_CHANCE": "0",
                **env}
     published: list[tuple[str, str]] = []
     with pytest.MonkeyPatch.context() as mp:
@@ -93,9 +96,11 @@ def _device(values, **env):
 
 
 MOISTURE = {"pointer": "/value", "min": 0.0, "max": 1.0, "initial": 0.45,
-            "drift": 0.02, "litres": 2.0}
-TEMPERATURE = {"pointer": "/temperature", "min": -10.0, "max": 45.0,
-               "initial": 21.0, "drift": -0.05}
+            "dries": 0.12, "litres": 2.0}
+# Deliberately swing-less: a swing makes a reading depend on the wall clock, and the shared
+# fixture must publish the same bytes at noon and at midnight. The diurnal cycle has its own
+# test, on its own Value.
+TEMPERATURE = {"pointer": "/temperature", "min": -10.0, "max": 45.0, "initial": 21.0}
 
 
 def test_one_message_carries_every_property_the_board_reports():
@@ -119,15 +124,53 @@ def test_a_single_property_board_sends_exactly_what_it_always_did():
     assert json.loads(published[0][1]) == {"sensor": "board_x", "sleep_s": 60, "value": 0.45}
 
 
-def test_each_value_drifts_in_its_own_direction_and_range():
-    """0..1 was never a fact about sensing, only about soil moisture. A room warms while a pot
-    dries, and both are clamped by what their own model says they can report."""
-    device, _ = _device([MOISTURE, TEMPERATURE])
-    for _ in range(3):
-        device._dry()
-    by_pointer = {v.pointer: v.value for v in device.values}
-    assert by_pointer["/value"] == pytest.approx(0.45 - 3 * 0.02)
-    assert by_pointer["/temperature"] == pytest.approx(21.0 + 3 * 0.05)
+def test_the_physics_run_on_the_clock_not_on_the_readings():
+    """A pot loses what the day costs it however often anyone looks. The old per-call drift
+    made a closely-watched pot dry faster than an ignored one — backwards, and unmissable once
+    the agents started varying how closely they watch."""
+    device, _ = _device([MOISTURE], SIM_TIMESCALE="24")
+    pot = device.values[0]
+    pot.advance(3600.0)  # one real hour = one simulated day at timescale 24
+    assert pot.value == pytest.approx(0.45 - 0.12)
+    # and a hundred small steps cost exactly what one big one does
+    other = sim.Value(dict(MOISTURE), timescale=24.0)
+    for _ in range(100):
+        other.advance(36.0)
+    assert other.value == pytest.approx(pot.value)
+
+
+def test_a_temperature_has_afternoons_not_a_trend():
+    """The swing is a position in the day, not an accumulation: read at two ends of the cycle
+    it differs, integrated over any whole day it cancels."""
+    room = sim.Value(dict(TEMPERATURE, swing=4.0), timescale=24.0)
+    morning = room.read(0.0)             # sim midnight: base
+    afternoon = room.read(86400 * 0.25)  # a quarter-day in: the peak of the sine
+    assert morning == pytest.approx(21.0)
+    assert afternoon == pytest.approx(25.0)
+    room.advance(86400.0)  # a whole simulated day of physics moves a swung value not at all
+    assert room.value == pytest.approx(21.0)
+
+
+def test_the_instrument_grain_touches_the_report_and_never_the_world():
+    """Measurement error is about the reading: the spike is on the wire, and the value the
+    physics hold is untouched — error that fed back would be drift wearing a disguise."""
+    device, published = _device([MOISTURE], SIM_SPIKE_CHANCE="1", SIM_SPIKE_SPAN="0.25")
+    device.rng = __import__("random").Random(7)
+    device._publish()
+    reported = json.loads(published[0][1])["value"]
+    assert abs(reported - 0.45) > 0.2, "a certain spike must actually spike"
+    assert device.values[0].value == pytest.approx(0.45), "the world must hold its value"
+
+
+def test_rain_arrives_exactly_as_a_dose_does():
+    """The meddler's channel: the soil cannot tell a bought litre from a kind stranger's, and
+    the sensor takes both through the same receive path — 300 ml against 2 L/fraction."""
+    from types import SimpleNamespace
+
+    device, _ = _device([MOISTURE], SIM_RAIN_TOPIC="rain/board_x")
+    device._on_message(None, None, SimpleNamespace(topic="rain/board_x",
+                                                   payload=json.dumps({"ml": 300}).encode()))
+    assert device.values[0].value == pytest.approx(0.45 + 0.3 / 2.0)
 
 
 def test_a_value_is_clamped_by_its_own_range_not_by_a_fraction():
