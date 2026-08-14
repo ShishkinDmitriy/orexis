@@ -123,10 +123,9 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
     # declares them and packages own their namespaces, so a prefix here would be a
     # guess — and a wrong one for anything market: owns.
     #
-    # Built from WATER and not from the kernel's `term()`, which is the whole point of the
-    # sweep: what a pot takes is the water domain's to name, and this assertion said
-    # `ag:` for as long as nobody had asked whose term it was.
-    assert ontology.WATER + "litresPerFraction" in str(exc.value)
+    # A literal, not a kernel constant: `ontology.WATER` left with #148 — the kernel names no
+    # domain — so the test names the domain the way the one deliberately-coupled block does.
+    assert "http://example.org/agora/water#litresPerFraction" in str(exc.value)
     assert "supplier" in str(exc.value)
 
 

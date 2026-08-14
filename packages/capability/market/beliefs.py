@@ -12,12 +12,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent import ontology
 from agent.beliefs import Block
 
 from .terms import BIDDING, HOSTING, term
 
 BANDS = ("LOW", "OK", "HIGH")
+
+# See the note inside BIDDING_BLOCK: the domain coupling is this package's, stated here.
+_WATER = "http://example.org/agora/water#"
 
 
 @dataclass(frozen=True)
@@ -58,8 +60,12 @@ BIDDING_BLOCK = Block(
         # answer differently. That split is visible now: swapping the domain swaps a namespace,
         # which is what AGENTS.md means by the domain being a plug-in.
         "endowment": term("hasEndowment"),
-        "litres_per_fraction": ontology.WATER + "litresPerFraction",
-        "max_value_per_l": ontology.WATER + "maxValuePerL",
+        # The one deliberately domain-coupled corner of this package: what a bid is WORTH is
+        # the domain's to say, and the coupling is a literal here rather than a kernel
+        # constant (#148) — the kernel names no domain, and a cross-package reference is an
+        # IRI, exactly as terms.py already does for perception and actuation.
+        "litres_per_fraction": _WATER + "litresPerFraction",
+        "max_value_per_l": _WATER + "maxValuePerL",
     },
 )
 

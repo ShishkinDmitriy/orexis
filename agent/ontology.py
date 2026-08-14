@@ -82,7 +82,9 @@ MQTT = "http://example.org/agora/mqtt#"
 PERCEPTION = "http://example.org/agora/perception#"
 ACTUATION = "http://example.org/agora/actuation#"
 REVIEW = "http://example.org/agora/review#"
-WATER = "http://example.org/agora/water#"
+# WATER left this list with #148: the kernel now names no domain — the one capability block
+# that is deliberately domain-coupled (market's bidding beliefs) carries the literal itself,
+# the way every cross-package reference already does.
 
 SOSA = "http://www.w3.org/ns/sosa/"
 PROV = "http://www.w3.org/ns/prov#"

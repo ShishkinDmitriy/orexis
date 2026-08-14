@@ -250,6 +250,7 @@ services:
       # the ratified world, at a fixed path — so the agent is told only its own id and never
       # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
       # agent has no business reading what anyone else was authored to want.
+      - ./keys.ttl:/app/world/keys.ttl:ro
       - ./world.ttl:/app/world/world.ttl:ro
       - ./beliefs/fern.ttl:/app/world/beliefs/fern.ttl:ro
       # Its own certificate and nothing else — the same rule as the beliefs above. The private
@@ -259,6 +260,8 @@ services:
       - ./secrets/fern.crt:/app/world/secrets/agent.crt:ro
       - ./secrets/fern.key:/app/world/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro
+      - ./secrets/fern.sign.key:/app/world/secrets/fern.sign.key:ro
+      - ./secrets/fern.seal.key:/app/world/secrets/fern.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
       # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
       # ride along with it. Their old root paths survived as empty husks — git does not track
@@ -301,6 +304,7 @@ services:
       # the ratified world, at a fixed path — so the agent is told only its own id and never
       # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
       # agent has no business reading what anyone else was authored to want.
+      - ./keys.ttl:/app/world/keys.ttl:ro
       - ./world.ttl:/app/world/world.ttl:ro
       - ./beliefs/succulent.ttl:/app/world/beliefs/succulent.ttl:ro
       # Its own certificate and nothing else — the same rule as the beliefs above. The private
@@ -310,6 +314,8 @@ services:
       - ./secrets/succulent.crt:/app/world/secrets/agent.crt:ro
       - ./secrets/succulent.key:/app/world/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro
+      - ./secrets/succulent.sign.key:/app/world/secrets/succulent.sign.key:ro
+      - ./secrets/succulent.seal.key:/app/world/secrets/succulent.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
       # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
       # ride along with it. Their old root paths survived as empty husks — git does not track
@@ -352,6 +358,7 @@ services:
       # the ratified world, at a fixed path — so the agent is told only its own id and never
       # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
       # agent has no business reading what anyone else was authored to want.
+      - ./keys.ttl:/app/world/keys.ttl:ro
       - ./world.ttl:/app/world/world.ttl:ro
       - ./beliefs/supplier.ttl:/app/world/beliefs/supplier.ttl:ro
       # Its own certificate and nothing else — the same rule as the beliefs above. The private
@@ -364,6 +371,8 @@ services:
       # it actuates, so it co-signs — these two keys and nothing else
       - ./secrets/host.key:/app/world/secrets/host.key:ro
       - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro
+      - ./secrets/supplier.sign.key:/app/world/secrets/supplier.sign.key:ro
+      - ./secrets/supplier.seal.key:/app/world/secrets/supplier.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
       # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
       # ride along with it. Their old root paths survived as empty husks — git does not track
@@ -406,6 +415,7 @@ services:
       # the ratified world, at a fixed path — so the agent is told only its own id and never
       # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
       # agent has no business reading what anyone else was authored to want.
+      - ./keys.ttl:/app/world/keys.ttl:ro
       - ./world.ttl:/app/world/world.ttl:ro
       - ./beliefs/tomato.ttl:/app/world/beliefs/tomato.ttl:ro
       # Its own certificate and nothing else — the same rule as the beliefs above. The private
@@ -415,6 +425,8 @@ services:
       - ./secrets/tomato.crt:/app/world/secrets/agent.crt:ro
       - ./secrets/tomato.key:/app/world/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro
+      - ./secrets/tomato.sign.key:/app/world/secrets/tomato.sign.key:ro
+      - ./secrets/tomato.seal.key:/app/world/secrets/tomato.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
       # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
       # ride along with it. Their old root paths survived as empty husks — git does not track
