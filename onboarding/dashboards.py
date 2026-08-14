@@ -278,6 +278,12 @@ def render_health(world: str) -> dict:
          "The gap this world's agents are actually seeing. A sawtooth is the cadence; a plateau "
          "is a board that stopped talking. Nothing appears here until a sensor has delivered "
          "once — a flat-zero readings_total below is what says it never has."),
+        ("Cadence in force", SENSOR_MEASUREMENT, "cadence_acked_s", "timeseries", "s", 24, 8,
+         "The board's own receipt of its rhythm (#135) — what it is actually sleeping, not what "
+         "was asked. Cliffs downward are urgency (a scare or an open watch tightens in ONE "
+         "step); the geometric staircase upward is the release (#139), confidence earned one "
+         "comfortable reading at a time. This line diverging from what the agent believes it "
+         "commanded is the #37 detector: a cleared or clamped retained command, visible."),
         ("Write failures", AGENT_MEASUREMENT, "influx_write_failures", "timeseries", "short", 12, 7,
          "Counts since boot of series writes that were caught and logged and otherwise invisible. "
          "Flat at zero is the point; any slope means readings are being lost quietly."),
