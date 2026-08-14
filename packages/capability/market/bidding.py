@@ -21,7 +21,7 @@ later produce the justification, never the number.
 
 It is no longer the capability that holds a **band**. That moved to `desire`, where it is
 deduced per property from what the world states rather than picked as two decimals — and where
-an agent that bids in nothing at all can still have one. Perception supplies numbers, desire
+an agent that bids in nothing at all can still have one. Sensing supplies numbers, desire
 supplies verdicts, and this supplies a price.
 
 Vocabulary: capabilities/market/ontology.ttl (protocol) + domain/water/ontology.ttl (what a
@@ -38,7 +38,7 @@ from agent.store import bindings
 
 from .beliefs import BIDDING_BLOCK
 from .terms import (ACQUIRE, APPLY, BIDDING, DELIBERATION, DESIRE, INTENTION, OBSERVE,
-                    PERCEPTION)
+                    SENSING)
 
 # The term whose meaning this asks after is the one this package already names for its own
 # beliefs, so nothing here is written twice and nothing here is a domain property. A block's
@@ -245,17 +245,17 @@ class BiddingModule(Module):
             return
 
         self.pending = {"auction_id": auction_id, "market": market}
-        perception = self.agent.provider(PERCEPTION)
-        if perception is None:
+        sensing = self.agent.provider(SENSING)
+        if sensing is None:
             # bidding while perceiving nothing leaves no reading to cite, so no honest bid
             self.log.info("auction %s: I perceive nothing — sitting out", auction_id)
             self.pending = None
             return
 
-        perception.sense_now()  # a listening agent cannot, and simply does not
+        sensing.sense_now()  # a listening agent cannot, and simply does not
 
         # If something current is already in hand, answer now; otherwise wait for the sensor.
-        reading = perception.fresh_reading(self.me.acts_for, self.about)
+        reading = sensing.fresh_reading(self.me.acts_for, self.about)
         if reading is not None:
             self.submit(reading.value)
             return
@@ -314,13 +314,13 @@ class BiddingModule(Module):
         failure then reads exactly like the ordinary case, which is how a real failure gets
         ignored.
         """
-        perception = self.agent.provider(PERCEPTION)
+        sensing = self.agent.provider(SENSING)
         reading = self.agent.beliefs.current_reading(self.me.acts_for, self.about)
         if reading is None:
             return "no reading yet from my sensor"
-        if perception is None:
+        if sensing is None:
             return "nothing here perceives"
-        overdue_after = perception.stale_after_s(self.me.acts_for, self.about)
+        overdue_after = sensing.stale_after_s(self.me.acts_for, self.about)
         if reading.is_fresh(overdue_after):
             return (f"my sensor is asleep and answered {reading.age_s():.0f}s ago; "
                     f"it is not due for {overdue_after}s")
@@ -411,9 +411,9 @@ class BiddingModule(Module):
             keeper.adopt(APPLY, self.about,
                          f"holding voucher {voucher['jti']} ({amount}L) until my watch is "
                          f"live — never spend a dose you cannot watch land")
-        if (perception := self.agent.provider(PERCEPTION)) is not None:
-            perception.sense_now()
-            bound = perception.stale_after_s(self.me.acts_for, self.about)
+        if (sensing := self.agent.provider(SENSING)) is not None:
+            sensing.sense_now()
+            bound = sensing.stale_after_s(self.me.acts_for, self.about)
         else:
             bound = 60.0
         # The bound: one full cycle of the rhythm currently in force, after which a watch that
@@ -428,8 +428,8 @@ class BiddingModule(Module):
         """Present the held claim if the watch is live. Called on every reading of my property."""
         if self.holding is None:
             return
-        perception = self.agent.provider(PERCEPTION)
-        if perception is None or not perception.watch_is_live(self.me.acts_for, self.about):
+        sensing = self.agent.provider(SENSING)
+        if sensing is None or not sensing.watch_is_live(self.me.acts_for, self.about):
             return
         self._present("my watch is live — a reading arrived acknowledged at my fast cadence")
 

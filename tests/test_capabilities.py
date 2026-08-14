@@ -16,7 +16,7 @@ from packages.capability.desire import DEDUCING
 from packages.capability.deliberation import REFLEX
 from packages.capability.intention import KEEPING
 from packages.capability.market import BIDDING, HOSTING, PAY_AS_BID
-from packages.capability.perception import LISTENING, SUBSCRIBING
+from packages.capability.sensing import LISTENING, SUBSCRIBING
 from packages.capability.reporting import STORING
 from packages.capability.review import RECKONING
 
@@ -94,7 +94,7 @@ def test_plant_agent_cannot_actuate(me):
     assert fern.actuators == ()
 
 
-# --- the hardware decides which perception you get -------------------------
+# --- the hardware decides which sensing you get -------------------------
 
 def _world_with_push_sensor():
     """Swap fern's board for one that pushes on its own clock, and re-derive.
@@ -116,11 +116,11 @@ def _world_with_push_sensor():
     """
     st = genesis_store()
     st.update(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:ScheduledProcedure }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s perception:senseMode perception:PushProcedure }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s sensing:senseMode sensing:ScheduledProcedure }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s sensing:senseMode sensing:PushProcedure }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:fern_agent perception:polls ?s .
-                 ?s perception:senseMode perception:ScheduledProcedure }} }}
+                 ag:fern_agent sensing:polls ?s .
+                 ?s sensing:senseMode sensing:ScheduledProcedure }} }}
     """)
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
@@ -146,7 +146,7 @@ def test_swapping_the_board_does_not_touch_the_agent():
 
 # --- the same hardware, a different world ----------------------------------
 
-def test_the_smallest_world_yields_perception_and_nothing_else():
+def test_the_smallest_world_yields_sensing_and_nothing_else():
     """world/sensing: the same agent id, the same board, plumbed into no market.
 
     Nothing in that world declares the agent sensor-only — it is the same derivation the

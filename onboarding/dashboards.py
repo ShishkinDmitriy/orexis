@@ -18,7 +18,7 @@ So the generated files are published into the shared service's directory, gitign
 subdirectory per world. With `foldersFromFilesStructure`, Grafana shows a folder per world, and a
 world removed from disk simply stops having one.
 
-Vocabulary: nothing new. The panels are built from `perception:monitors`/`perception:polls`, and the bucket name
+Vocabulary: nothing new. The panels are built from `sensing:monitors`/`sensing:polls`, and the bucket name
 comes from `onboarding.influx`, so the dashboard cannot disagree with what the agent writes to.
 
 See knowledge/domain/onboarding.md.
@@ -33,7 +33,7 @@ import logging
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import worlds
-from agent.ontology import AG, PERCEPTION, SOSA, WORLD_GRAPH
+from agent.ontology import AG, SENSING, SOSA, WORLD_GRAPH
 
 SSN_SYSTEM = "http://www.w3.org/ns/ssn/systems/"
 SSN = "http://www.w3.org/ns/ssn/"
@@ -50,8 +50,8 @@ DASHBOARD_ROOT = REPO_ROOT / "infra" / "grafana" / "dashboards"
 # bucket, so it is what a panel is keyed on; the subject is what a person reading it cares about.
 _SENSORS_Q = f"""
 SELECT DISTINCT ?agentId ?sensorId ?subjectId ?property ?unit WHERE {{
-  ?agent a <{AG}Agent> ; <{AG}localId> ?agentId ; <{PERCEPTION}polls> ?sensor .
-  ?sensor <{AG}localId> ?sensorId ; <{PERCEPTION}monitors> ?subject ;
+  ?agent a <{AG}Agent> ; <{AG}localId> ?agentId ; <{SENSING}polls> ?sensor .
+  ?sensor <{AG}localId> ?sensorId ; <{SENSING}monitors> ?subject ;
           <{SOSA}observes> ?property .
   ?subject <{AG}localId> ?subjectId .
   OPTIONAL {{ ?sensor <{SCALING}quantityUnit> ?unit }}

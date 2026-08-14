@@ -1,6 +1,6 @@
 # Moisture sensor (ESP32) — scheduled
 
-A stake-free sensor node. It declares itself `perception:ScheduledProcedure` in the world, which gives its
+A stake-free sensor node. It declares itself `sensing:ScheduledProcedure` in the world, which gives its
 agent **`ag:Subscribing`**: the *agent* states the interval (how often to look), and this
 board **keeps to it** — reads a capacitive soil-moisture sensor, publishes a 0..1 value,
 briefly listens for a new interval, then **deep-sleeps**. Big battery savings, and the agent
@@ -92,7 +92,7 @@ From the Pi, without the market or any other agent running:
 
 ```bash
 mosquitto_sub -h localhost -t 'sensors/fern/#' -v    # is it publishing at all?
-agora-compose sensing                                # one agent, perception only
+agora-compose sensing                                # one agent, sensing only
 cd ../../world/sensing && podman compose up -d
 ```
 
@@ -107,8 +107,8 @@ Seed `society` instead and the same board, unchanged, joins a market.
 ## Where the readings go
 
 There is **no gateway** in v1 (trusted-agent mode) — each agent asserts its own `:sensed`
-data. The agent-side half of this board is the **perception capability**
-(`capabilities/perception/`): it sets the cadence, takes the published reading, writes the
+data. The agent-side half of this board is the **sensing capability**
+(`capabilities/sensing/`): it sets the cadence, takes the published reading, writes the
 series to Influx and asserts the observation to `:sensed` under its own authorship, with the
 `ag:polls` grant that entitles it to this sensor (see
 [connection determines authorization](../../knowledge/decisions/authn-authz-capabilities.md)).

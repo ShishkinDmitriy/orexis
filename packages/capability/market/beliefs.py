@@ -1,6 +1,6 @@
 """What a bidder and a host must believe — and, for the bidder, what it makes of a reading.
 
-The judgment lives here rather than in perception on purpose: a band is a fact about a
+The judgment lives here rather than in sensing on purpose: a band is a fact about a
 *stake*, not about a sensor. The same number is trouble for a fern and comfort for a
 succulent, so the agent that holds the target is the only one entitled to say which.
 
@@ -63,7 +63,7 @@ BIDDING_BLOCK = Block(
         # The one deliberately domain-coupled corner of this package: what a bid is WORTH is
         # the domain's to say, and the coupling is a literal here rather than a kernel
         # constant (#148) — the kernel names no domain, and a cross-package reference is an
-        # IRI, exactly as terms.py already does for perception and actuation.
+        # IRI, exactly as terms.py already does for sensing and actuation.
         "litres_per_fraction": _WATER + "litresPerFraction",
         "max_value_per_l": _WATER + "maxValuePerL",
     },

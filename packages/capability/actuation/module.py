@@ -95,7 +95,7 @@ class ActuationModule(Module):
         self.settled.add(voucher.jti)  # single-use either way: a dry run still spends the jti
         # Commanded is not delivered. The deadline is THIS dose's own duration — which this
         # agent computed, from the device's own calibration — plus the slack it believes the
-        # bus needs. Relative and not absolute, for the reason `perception:readingGraceS` is:
+        # bus needs. Relative and not absolute, for the reason `sensing:readingGraceS` is:
         # an agent cannot ask a valve for a ninety-second pour and then call it late at thirty.
         if device.status_topic:
             self.pending[cmd.jti] = (time.monotonic() + cmd.seconds + self.grace_s,

@@ -55,7 +55,7 @@ MATCHES_BY = term("matchesBy")
 # exactly that when actuation took a namespace of its own.
 ACTUATION_NS = "http://example.org/agora/actuation#"
 
-PERCEPTION = ontology.PERCEPTION + "PerceptionCapability"  # whoever can look, however it looks
+SENSING = ontology.SENSING + "SensingCapability"  # whoever can look, however it looks
 ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if this agent can at all
 DESIRE_NS = "http://example.org/agora/desire#"
 DESIRE = DESIRE_NS + "DesireCapability"  # whoever holds the ends — the aim a bid prices toward

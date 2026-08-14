@@ -9,7 +9,7 @@ device happens to run is not the interesting part.
 **The whole claim is that nothing downstream can tell.** So this publishes what the real board
 publishes, byte for byte — obeys the same retained `{"sleep_s": N}`, answers the same
 `{"sense": true}`, and holds the same constitutional floor and ceiling on its cadence. An agent
-wired to one of these derives `ag:Subscribing` and runs the ordinary perception module, because
+wired to one of these derives `ag:Subscribing` and runs the ordinary sensing module, because
 from where it stands there is nothing else it could be.
 
 That is the point of the exercise. The simulation world used to exercise a parallel

@@ -37,7 +37,7 @@ polling) as a special case; making the gap first-class makes it the general one.
 
 **An intention is an amortised deliberation.** The sharpest lesson in the BDI literature
 (Bratman; Kinny & Georgeff on reconsideration) is that intentions exist to *save* deliberation:
-an agent that re-decides on every perception is a reflex machine wearing a planner's name. Here
+an agent that re-decides on every sensing is a reflex machine wearing a planner's name. Here
 that is not philosophy but a cost model — an LLM call is expensive, so an intention is an
 amortised LLM call, and the commitment policy (when to reconsider) is exactly what keeps an LLM
 planner affordable. This is why intention is reified BEFORE any LLM is consulted: without a

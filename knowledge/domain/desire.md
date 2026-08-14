@@ -2,7 +2,7 @@
 type: Domain Concept
 title: Desire
 description: What an agent is trying to bring about — for each property its subject states a need in, the region to hold that property inside and the envelope outside which the subject ends. Deduced at genesis by intersecting every operating range that applies, never authored; the band and the urgency every other capability reads come from here.
-tags: [desire, bdi, ssn, capability, beliefs, perception, market]
+tags: [desire, bdi, ssn, capability, beliefs, sensing, market]
 timestamp: 2026-08-13T00:00:00Z
 ---
 
@@ -22,7 +22,7 @@ Nothing writes a desire. `packages/capability/desire/rules.ru` computes one at g
 **intersecting every operating range that applies** to the subject — the highest floor anyone
 states, the lowest ceiling — and gathers the survival ranges the same way as the envelope. Two
 bearers contribute: the subject itself (its own range, or its species' through the closure), and
-any instrument that `perception:monitors` it. A region an agent cannot witness itself inside is
+any instrument that `sensing:monitors` it. A region an agent cannot witness itself inside is
 not one it can hold.
 
 The property is bound from the **subject's** conditions. An instrument may narrow a desire and
@@ -42,7 +42,7 @@ every module has (`agent/module.py`) or through `agent.provider(DESIRE)`.
 | question | who asks | what it does with it |
 |---|---|---|
 | `band(property, value)` — LOW / OK / HIGH | [sensing](/domain/sensing.md), for the announcement | a host hears that a participant is in trouble, never how wet it is |
-| `urgency(property, value)` — 0.0 to 1.0 | perception, for the cadence | attention follows need: the closer to trouble, the closer it watches — and asked with NO value, the answer is maximal: ignorance in a wanted property is a need too (#137) |
+| `urgency(property, value)` — 0.0 to 1.0 | sensing, for the cadence | attention follows need: the closer to trouble, the closer it watches — and asked with NO value, the answer is maximal: ignorance in a wanted property is a need too (#137) |
 | `region(property)` | anything that needs the range itself | the numbers |
 | `aim(property)` — the pick inside the region | a bidder, at bid time, for the point a deficit is priced against | None is an answer: with no aim there is no deficit, and the bidder cedes rather than inventing one |
 
@@ -70,7 +70,7 @@ builds the rest of BDI on.
 
 **Three states of measurement, told apart** (#124). A row carries `at` — when the sensed side
 was true — and does not judge its own freshness, because how old is too old is the agent's own
-rule (the cadence it commanded plus its grace, perception's to answer). `gaps()` returns
+rule (the cadence it commanded plus its grace, sensing's to answer). `gaps()` returns
 everything, stale included, since "last I looked I was dry and I cannot see any more" is
 information; `current()` is the same diff with the agent's rule applied, and is what the report
 is computed over — so a dead sensor's upserted last reading makes `worst_gap` **disappear

@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: One word for one relation, and a term of ours earns its place by answering a different question
-description: A subclass axiom is a claim that our term means something more, so where it does not, ours is a synonym with an unenforced comment. mc:carries, perception:Sensor, actuation:Actuator and perception:seconds went; ag:Device, perception:senseMode and review:Revision stayed, and the reasons are the deliverable. The test that emerged is not whether a standard has a similar word but whether it is answering the same question — SOSA's axis is functional, ours is substrate, and terms on different axes cut across each other rather than duplicating.
+description: A subclass axiom is a claim that our term means something more, so where it does not, ours is a synonym with an unenforced comment. mc:carries, sensing:Sensor, actuation:Actuator and sensing:seconds went; ag:Device, sensing:senseMode and review:Revision stayed, and the reasons are the deliverable. The test that emerged is not whether a standard has a similar word but whether it is answering the same question — SOSA's axis is functional, ours is substrate, and terms on different axes cut across each other rather than duplicating.
 status: accepted
 stage: v1
 tags: [vocabulary, reuse, ubiquitous-language, sosa, ssn, prov]
@@ -45,14 +45,14 @@ board-to-part was a comment. **The narrowing survives as `ag:ABoardCarriesPartsS
 checked for the first time**: a board hosting a non-peripheral is refused now and was accepted
 before. A term was given up and a rule was gained.
 
-**`perception:Sensor` and `actuation:Actuator` → `sosa:Sensor`, `sosa:Actuator`.** These were
+**`sensing:Sensor` and `actuation:Actuator` → `sosa:Sensor`, `sosa:Actuator`.** These were
 intersections — `ag:Device ∧ sosa:X` — which is why earlier audits kept them. True, and beside
 the point: a named class is not the only way to state an intersection. An instance carries both
 types, and the one shape that enforced the conjunction states it as two `sh:class` values.
 `actuation:Valve` survives as a genuine narrowing and took `ag:Device` with it, so valve instances
 did not change at all.
 
-**`perception:seconds` → `schema:value` + `schema:unitCode`.** The W3C's own worked example of
+**`sensing:seconds` → `schema:value` + `schema:unitCode`.** The W3C's own worked example of
 the DHT22 — the KY-015's sibling, written by the people who wrote SSN — says a frequency as a
 number and a unit. Its `rdfs:range xsd:integer` was never enforced either; there is a shape now,
 and it checks something the old spelling **could not express**: that the figure is in seconds. A
@@ -92,10 +92,10 @@ rather than guessed.
 | term | why it stays |
 |---|---|
 | `ag:Device` | different **axis** — substrate, where SOSA's is functional |
-| `perception:senseMode` | different **cardinality** — `sh:maxCount 1`, which `ssn:implements` cannot say |
+| `sensing:senseMode` | different **cardinality** — `sh:maxCount 1`, which `ssn:implements` cannot say |
 | `review:Revision` | different **kind** — a deliberation, where PROV's is a derivation |
 | `actuation:Actuation` | different **kind** — a capability, where SOSA's is an event |
-| `perception:polls`, `monitors` | no equivalent — SOSA puts feature-of-interest on the Observation |
+| `sensing:polls`, `monitors` | no equivalent — SOSA puts feature-of-interest on the Observation |
 | `actuation:mlPerSecond` | no equivalent — a calibration constant, not a range of results |
 
 The two marked *different kind* are the ones worth dwelling on, because both are **homonyms** and
@@ -114,13 +114,13 @@ the state of the world using an Actuator*, sibling to `sosa:Observation`, its ex
 activity of closing a window. An act and a permission share a word and nothing else.
 
 The general shape, stated once: **SOSA models the instrument and the observation; we model the
-agent's dealings with them.** Of 27 terms across `perception` and `actuation`, three defer.
+agent's dealings with them.** Of 27 terms across `sensing` and `actuation`, three defer.
 
 # Consequences
 
 - **A subclass axiom is now something to justify, not something to add.** Declaring one says the
   narrower term means more; if nothing checks the difference, it means the same and costs a word.
-- **Instances assert what they used to entail.** `a perception:Sensor` entailed both halves; a
+- **Instances assert what they used to entail.** `a sensing:Sensor` entailed both halves; a
   sensor now states both. Two tests were about that entailment and had to find another —
   `test_provenance`'s spanning pattern is `ssn:System`, which is entailed through the axiom
   [#94](a-board-says-what-it-can-honour.md) restated, so it now exercises the borrowed-axiom

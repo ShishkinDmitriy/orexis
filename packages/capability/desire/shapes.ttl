@@ -187,8 +187,8 @@ desire:UnwatchedDesireShape a sh:NodeShape ;
                       <http://example.org/agora/desire#desires> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora/perception#polls> ?sensor .
-                    ?sensor <http://example.org/agora/perception#monitors> ?subject ;
+                    $this <http://example.org/agora/sensing#polls> ?sensor .
+                    ?sensor <http://example.org/agora/sensing#monitors> ?subject ;
                             <http://www.w3.org/ns/sosa/observes> ?property .
                 }
             }""" ] .

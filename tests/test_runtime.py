@@ -18,7 +18,7 @@ def agent(monkeypatch):
 
 # --- it loads the modules its hardware implies, and no others --------------
 
-def test_plant_agent_runs_perception_and_bidding(agent):
+def test_plant_agent_runs_sensing_and_bidding(agent):
     """`reporting` is in every one of these sets, because every agent is granted it.
 
     `desire` is in this one because fern acts for a plant that states what it needs — a stake,
@@ -40,7 +40,7 @@ def test_supplier_runs_hosting_actuation_and_matching(agent):
         "hosting", "actuation", "pay-as-bid", "reporting"}
 
 
-def test_the_supplier_has_no_perception(agent):
+def test_the_supplier_has_no_sensing(agent):
     """It is wired to no sensor, so it neither polls nor listens — and is never asked to."""
     supplier = agent("supplier")
     assert not any(m.name in ("subscribing", "listening") for m in supplier.modules)
@@ -90,7 +90,7 @@ def test_a_message_is_offered_to_every_module(agent, monkeypatch):
     contract. `_on_message` returned as soon as a module's `handle` came back true, so a
     second module subscribed to the same topic never saw the message at all.
 
-    Exactly the defect #51 fixed one level down, where `PerceptionModule.handle` returned
+    Exactly the defect #51 fixed one level down, where `SensingModule.handle` returned
     after the first SENSOR owning a topic and a board's second channel went unread. The
     module-level version stayed because nothing yet wanted one topic twice. #36 wants it:
     actuation subscribes to its valves' status, and a supplier runs actuation beside hosting.

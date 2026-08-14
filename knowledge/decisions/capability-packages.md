@@ -15,8 +15,8 @@ a vocabulary, its rules, its derivation, and the code that reads them — derive
 rather than declared. That decision stands. What it got wrong was where those four things
 live.
 
-They were split across four top-level trees by **file type**: `ontology/perception.ttl`,
-`shapes/perception.ttl`, `rules/perception.ru`, `modules/perception.py`. Nothing held them
+They were split across four top-level trees by **file type**: `ontology/sensing.ttl`,
+`shapes/sensing.ttl`, `rules/sensing.ru`, `modules/sensing.py`. Nothing held them
 together but a shared filename. Three consequences, all of them felt:
 
 1. **A capability could not be read in one place.** Four directories to open, and no
@@ -26,14 +26,14 @@ together but a shared filename. Three consequences, all of them felt:
    `REGISTRY`), and `beliefs.py` (a dataclass, a term map, an accessor, a cast table). The
    extendable axis was the one place you had to touch everything.
 3. **One flat list conflated four different kinds of thing.** `MODULE_FILES` named the kernel
-   (`core`), capabilities (`perception`, `market`, `actuation`), a *transport* (`mqtt` —
+   (`core`), capabilities (`sensing`, `market`, `actuation`), a *transport* (`mqtt` —
    explicitly not a capability by that same decision), and the plug-in *domain* (`water`,
    vocabulary with no code). The claim "a capability is four files with the same name" was
    already false: `market.ttl` served two modules, `mqtt.ttl` served a driver, `water.ttl`
    served none.
 
 There was a fourth problem the layout was hiding. Modules reached for each other by class:
-`bidding` imported `PerceptionModule`, `hosting` imported `ActuationModule`, and perception
+`bidding` imported `SensingModule`, `hosting` imported `ActuationModule`, and sensing
 read the *bidding* capability's private beliefs inside a bare `except` to get a band. Any of
 those imports made one capability impossible to remove without breaking another.
 
@@ -101,22 +101,22 @@ in the repo touched. Deleting the directory removed it just as completely.
 when packages import each other. So they do not:
 
 - **`agent.provider(family)`** — a module asks its agent for whoever provides a *capability
-  family*, resolved through the T-Box. `bidding` asks for `perception:PerceptionCapability` and gets
+  family*, resolved through the T-Box. `bidding` asks for `sensing:SensingCapability` and gets
   polling or listening without knowing there are two ways to perceive. `hosting` asks for
   `actuation:Actuation` and issues paper vouchers if the answer is None.
 - **`annotate` / `urgency`** — where a capability needs a *judgment* it does not hold, it
   asks every sibling and takes what it gets. This replaced the worst coupling in the old
-  layout: perception reading bidding's band through a swallowed exception.
+  layout: sensing reading bidding's band through a swallowed exception.
 
-The term is the interface. A package names another's family with `term("PerceptionCapability")`
+The term is the interface. A package names another's family with `term("SensingCapability")`
 — building the IRI from the kernel prefix, exactly as the constitution already permits, since
 a T-Box term is public and a Python class is not.
 
 # What moved, and why it belongs where it landed
 
-**Judging moved out of perception.** A band is a fact about a *stake*, not about a sensor:
+**Judging moved out of sensing.** A band is a fact about a *stake*, not about a sensor:
 the same reading is trouble for a fern and comfort for a succulent. So `band()` and
-`urgency()` left perception, and perception — which owns the number and the freshness rule and
+`urgency()` left sensing, and sensing — which owns the number and the freshness rule and
 nothing else — asks. An agent with no stake in a subject gets no answer and watches at its slow
 cadence, which is the honest reading of "nothing here is urgent to me". A perceiving agent that
 holds no band is now a coherent thing to be, rather than a `try/except`.
@@ -125,7 +125,7 @@ They landed on `BiddingBeliefs` and have since moved again, to `capabilities/des
 where they should have gone the first time: putting them on a bidder made *having an opinion
 about your own state* conditional on being a market participant, and limited it to the one
 property a bid is priced in. The seam this section is about is unchanged and is why the second
-move cost nothing — perception still asks whoever will answer, and never learned either address.
+move cost nothing — sensing still asks whoever will answer, and never learned either address.
 See
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 

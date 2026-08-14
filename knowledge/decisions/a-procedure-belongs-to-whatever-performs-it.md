@@ -13,7 +13,7 @@ timestamp: 2026-08-12T00:00:00Z
 Aligning with SOSA/SSN brought one procedure term into the vocabulary and stopped there. A
 sense mode became a `sosa:Procedure` — correctly, since *who holds the clock* is a workflow
 specifying how to make an Observation — and the three members were typed as Procedures beside
-`perception:SenseMode`. Nothing else in the graph was said to have a procedure.
+`sensing:SenseMode`. Nothing else in the graph was said to have a procedure.
 
 That left a chain of hardware in which only the last link could do anything. A world says a
 board hosts a part, and the part has two channels:
@@ -45,7 +45,7 @@ which they distribute.** Each system implements what it can actually do, and no 
 | the part | `onewire:Transaction` — one line, both directions in turn | `packages/bus/onewire` | **yes**, on `dht11:Dht11` |
 | the part | `dht11:CombinedRead` — one request, two values, one instant | `packages/part/dht11` | **yes**, on `dht11:Dht11` |
 | the board | `mqtt:Publishing` — connect as a principal, send on a channel | `transports/mqtt` | **named, not yet linked** — see the seam |
-| the board | the clock | `capabilities/perception` — **already there**, as the sense modes | no: `perception:senseMode`, and deliberately |
+| the board | the clock | `capabilities/sensing` — **already there**, as the sense modes | no: `sensing:senseMode`, and deliberately |
 | a channel | — | `world.ttl` says what it observes and nothing about how | — |
 
 **Both "yes" rows were written on the class, and that entailed nothing about any device.** The
@@ -71,14 +71,14 @@ vocabulary had already recorded typing it as a Platform alone as *our simplifica
 the vocabulary imposes*. This is where the simplification stopped being free.
 
 **The clock procedure already existed and a second was not added.** It looked missing — a board
-keeps time and nothing said so — but `perception:ScheduledProcedure` and its two siblings *are*
+keeps time and nothing said so — but `sensing:ScheduledProcedure` and its two siblings *are*
 the clock, differing only in who sets it. What is genuinely wrong is that the clock is the
 board's while the fact sits on each sensor the board carries, which is [#96] and [#103], and is
 deliberately untouched here.
 
 **`ssn:implements` is the right predicate there and the wrong one for a sense mode.** SSN's is
 wider: a system may implement as many procedures as it can perform, and a DHT11 implements two.
-`perception:senseMode` carries `sh:maxCount 1`, because a sensor has exactly one answer to *who
+`sensing:senseMode` carries `sh:maxCount 1`, because a sensor has exactly one answer to *who
 holds the clock* and the capability derivation is guarded on that count. Both predicates stay.
 
 # What it predicted, and was right about
@@ -135,7 +135,7 @@ sensor on it shares one topic — the strings agree precisely because the board 
 describe — and wrong the moment anything asks who sent a message. Naming `mqtt:Publishing`
 without moving the topic is deliberate: it makes the mismatch nameable, and moving it is the
 same edit as [#96] and [#103], which must be made on its own because it changes what grants
-perception's capability.
+sensing's capability.
 
 **Nothing enforces that a declared procedure is implementable.** A part could claim
 `onewire:Transaction` with no one-wire pin and no shape would object. A shape could check it,

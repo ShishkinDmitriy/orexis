@@ -5,7 +5,7 @@ much water flows is on the device — its flow rate, its own hard cap — becaus
 about hardware and belong in the world. What is left for the agent to believe is how long it
 will wait for that hardware to say it did the thing.
 
-The same shape as `perception:readingGraceS`, deliberately. There the agent chooses the
+The same shape as `sensing:readingGraceS`, deliberately. There the agent chooses the
 interval, so staleness is that interval plus slack; here the agent computes the open-seconds
 from the device's own calibration, so lateness is that duration plus slack. In both cases an
 absolute deadline would contradict the agent's own instruction.

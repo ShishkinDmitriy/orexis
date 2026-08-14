@@ -1,4 +1,4 @@
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix ag:          <http://example.org/agora#> .
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:         <http://www.w3.org/2002/07/owl#> .
@@ -19,7 +19,7 @@ scaling:curve a owl:ObjectProperty ; rdfs:range scaling:Scaling ;
 
 scaling:scaledBy a owl:ObjectProperty ; rdfs:range scaling:Scaling ;
     rdfs:label "scaled by" ;
-    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which scaling actually serves this sensor. A world states the curve a probe follows; genesis writes down what serves it. The same premise-and-conclusion discipline as perception:senseMode and ag:hasCapability, applied to a fact borne by a binding rather than by an agent." .
+    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which scaling actually serves this sensor. A world states the curve a probe follows; genesis writes down what serves it. The same premise-and-conclusion discipline as sensing:senseMode and ag:hasCapability, applied to a fact borne by a binding rather than by an agent." .
 
 #################  The unit  #################
 

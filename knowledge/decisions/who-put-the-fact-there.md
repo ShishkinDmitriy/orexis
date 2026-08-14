@@ -39,9 +39,9 @@ Public knowledge is **five named graphs**, and the axis is who put the fact ther
 Both are computed, and it would have been cheaper to have one graph for "not asserted". The
 difference is **authorship**:
 
-- an **entailment has no author**. `?x a perception:Sensor` follows from RDFS semantics; nobody could
+- an **entailment has no author**. `?x a sensing:Sensor` follows from RDFS semantics; nobody could
   have decided otherwise and still be doing RDFS, and any engine agrees.
-- a **rule-derivation is authored**. *"A scheduled sensor gives its agent `perception:Subscribing`"* is a
+- a **rule-derivation is authored**. *"A scheduled sensor gives its agent `sensing:Subscribing`"* is a
   design decision living in a `rules.ru` that could have said something else. The fact has no
   latitude once the rule exists — but the rule had latitude when it was written.
 
@@ -207,16 +207,16 @@ so it is not given it and nothing pretends otherwise.
 whatever the society knows, and a reader never learns which graph holds its fact:
 
 ```sparql
-SELECT ?agent WHERE { ?agent perception:polls ?s . ?s a perception:Sensor }
+SELECT ?agent WHERE { ?agent sensing:polls ?s . ?s a sensing:Sensor }
 ```
 
-`perception:polls` is the sovereign's and `a perception:Sensor` may be entailed. Naming a graph still reads
+`sensing:polls` is the sovereign's and `a sensing:Sensor` may be entailed. Naming a graph still reads
 exactly that one, which is what keeps a review's write boundary checkable.
 
 # The trap this would otherwise have set
 
 **A basic graph pattern inside one `GRAPH` clause must match entirely within that graph.** So
-the query above, written as `GRAPH <…/world> { ?agent perception:polls ?s . ?s a perception:Sensor }`, returns
+the query above, written as `GRAPH <…/world> { ?agent sensing:polls ?s . ?s a sensing:Sensor }`, returns
 **nothing** the moment those two facts land in different graphs — silently, because an empty
 result is not an error.
 
@@ -287,7 +287,7 @@ treatment if that ever changes.
   at all; it is now structural and covered for every world.
 - **Re-running the rules without clearing leaves stale conclusions.** `refresh_public` clears the
   computed graphs first, so production is fine — but anything re-deriving by hand must too. One
-  test was silently passing on a stale `perception:Subscribing` until this landed.
+  test was silently passing on a stale `sensing:Subscribing` until this landed.
 - **Decimal literals reach the operator's tools canonicalised.** `agent/ratified.py` now hands
   rdflib what the store computed, so a value written `2.0` in a world file arrives as `2` —
   oxigraph's fixed-point decimal canonicalises it. The value is identical and every consumer

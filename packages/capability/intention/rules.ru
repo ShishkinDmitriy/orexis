@@ -15,7 +15,7 @@
 # clock and offers nothing to commit to).
 
 PREFIX intention: <http://example.org/agora/intention#>
-PREFIX perception: <http://example.org/agora/perception#>
+PREFIX sensing: <http://example.org/agora/sensing#>
 PREFIX actuation: <http://example.org/agora/actuation#>
 PREFIX market: <http://example.org/agora/market#>
 PREFIX ag:   <http://example.org/agora#>
@@ -36,6 +36,6 @@ WHERE  {
     UNION
     { ?agent actuation:hasActuator ?actuator }
     UNION
-    { ?agent perception:polls ?sensor .
-      ?sensor perception:senseMode perception:ScheduledProcedure }
+    { ?agent sensing:polls ?sensor .
+      ?sensor sensing:senseMode sensing:ScheduledProcedure }
 }

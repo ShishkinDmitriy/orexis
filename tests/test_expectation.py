@@ -106,7 +106,7 @@ def test_the_deadline_passing_unmet_is_the_false_knowledge_datum(monkeypatch):
 def test_an_open_watch_is_maximum_urgency_and_a_verdict_releases_it(thirsty):
     """The two processes run at different speeds: evaporation is fractions per day, a dose
     lands in seconds — and the naive loop relaxes attention exactly when the dose needs
-    watching, because the value improves. An open expectation IS urgency; perception's
+    watching, because the value improves. An open expectation IS urgency; sensing's
     ordinary max-of-answers does the rest, and the cadence round-trips: tight while the watch
     is on, back to the gap's own answer the moment it resolves."""
     keeper = keeper_of(thirsty)

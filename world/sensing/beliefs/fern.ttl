@@ -1,5 +1,5 @@
 @prefix review: <http://example.org/agora/review#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix reporting: <http://example.org/agora/reporting#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
@@ -12,16 +12,16 @@
 #  records the number and announces it. Compare world/society/beliefs-fern.ttl, which is the
 #  same agent in a world that gives it something to want.
 
-##  perception:Subscribing — the interval it asks its board to keep
+##  sensing:Subscribing — the interval it asks its board to keep
 #
-#  Both figures sit on the constitutional floor (perception:minSleepS 10, in
-#  capabilities/perception/ontology.ttl), because a board being brought up should be seen
+#  Both figures sit on the constitutional floor (sensing:minSleepS 10, in
+#  capabilities/sensing/ontology.ttl), because a board being brought up should be seen
 #  often. They are EQUAL, and honestly so: with no stake there is no trouble to watch harder
 #  for, so there is one rate. A plant agent's two differ because it has a band to be near.
 ag:fern_agent
-    perception:fastSleepS 10 ;
-    perception:slowSleepS 10 ;
-    perception:readingGraceS 45 .     # it still decides what is too old to be current
+    sensing:fastSleepS 10 ;
+    sensing:slowSleepS 10 ;
+    sensing:readingGraceS 45 .     # it still decides what is too old to be current
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.

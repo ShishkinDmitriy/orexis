@@ -38,8 +38,8 @@ agent's beliefs — that is its whole job. It is deliberately thin:
 
 ```turtle
 ag:fern_agent a ag:Agent ; ag:localId "fern" ;
-    ag:actsFor ag:fern ; perception:polls ag:moisture_sensor_fern ; market:bidsIn ag:barrel1_market .
-ag:moisture_sensor_fern a perception:Sensor ; perception:monitors ag:fern ; perception:senseMode perception:PolledProcedure .
+    ag:actsFor ag:fern ; sensing:polls ag:moisture_sensor_fern ; market:bidsIn ag:barrel1_market .
+ag:moisture_sensor_fern a sensing:Sensor ; sensing:monitors ag:fern ; sensing:senseMode sensing:PolledProcedure .
 ag:valve_fern a actuation:Valve ; actuation:actuates ag:fern ; actuation:mlPerSecond 10.0 .
 ag:supplier a ag:Agent ; actuation:hasActuator ag:valve_fern , … .
 ```
@@ -48,13 +48,13 @@ and each agent's own graph carries what it thinks:
 
 ```turtle
 ag:fern_agent desire:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.55 ] ;
-    perception:fastSleepS 30 ; perception:slowSleepS 600 ; perception:readingGraceS 45 ;
+    sensing:fastSleepS 30 ; sensing:slowSleepS 600 ; sensing:readingGraceS 45 ;
     water:litresPerFraction 2.0 ; water:maxValuePerL 0.80 .
 ```
 
 # Agent, Sensor, Actuator become first-class
 
-The T-Box gains `ag:Agent`, `perception:Sensor` (`sosa:Sensor`), `actuation:Actuator`/`actuation:Valve`
+The T-Box gains `ag:Agent`, `sensing:Sensor` (`sosa:Sensor`), `actuation:Actuator`/`actuation:Valve`
 (`sosa:Actuator`), and the connection properties `actsFor` / `polls` / `hasActuator` /
 `monitors` / `actuates`. (These were first drafted as `agentFor`/`hasSensor`; the later split
 into capability modules renamed them to the transport-neutral forms used above. See

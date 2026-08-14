@@ -1,5 +1,5 @@
 @prefix review: <http://example.org/agora/review#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix actuation: <http://example.org/agora/actuation#> .
@@ -16,8 +16,8 @@
 #  A ratified world, v1 — the society, with nothing physical in it.
 #
 #  Not society with a flag, and no longer society with its own capabilities either. Every agent
-#  here is ORDINARY: it polls a sensor with perception:polls, derives perception:Subscribing, and runs the same
-#  perception module a world with real boards runs. What differs is one fact about the DEVICES —
+#  here is ORDINARY: it polls a sensor with sensing:polls, derives sensing:Subscribing, and runs the same
+#  sensing module a world with real boards runs. What differs is one fact about the DEVICES —
 #  ag:simulatedBy — which says a process stands in for hardware that does not exist.
 #
 #  That is the point. This world used to be wired with ag:models to ag:ModelledSubject, and the
@@ -162,27 +162,27 @@ ag:succulent a water:Plant ;
             schema:minValue 0.02 ; schema:maxValue 0.45 ; schema:unitCode unit:UNITLESS ] ] .
 
 ##########  Plant agents — each wired to its own sensor and into the market  ##########
-#  perception:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
+#  sensing:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
 #  From these two connections, derivation gives each of them Subscribing + Bidding.
 
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
     ag:actsFor ag:fern ;
-    perception:polls ag:moisture_sensor_fern , ag:air_temp_fern ;
+    sensing:polls ag:moisture_sensor_fern , ag:air_temp_fern ;
     market:bidsIn ag:barrel1_market ;
     mqtt:eventTopic "readings/fern" .
 
 ag:tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
     ag:actsFor ag:tomato ;
-    perception:polls ag:moisture_sensor_tomato ;
+    sensing:polls ag:moisture_sensor_tomato ;
     market:bidsIn ag:barrel1_market ;
     mqtt:eventTopic "readings/tomato" .
 
 ag:succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
     ag:actsFor ag:succulent ;
-    perception:polls ag:moisture_sensor_succulent ;
+    sensing:polls ag:moisture_sensor_succulent ;
     market:bidsIn ag:barrel1_market ;
     mqtt:eventTopic "readings/succulent" .
 
@@ -200,15 +200,15 @@ ag:succulent_agent a ag:Agent ;
 #
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
-ag:fern_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
-ag:tomato_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
-ag:succulent_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 900 ; review:notAbove 900 ] .
+ag:fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
+ag:tomato_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
+ag:succulent_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 900 ; review:notAbove 900 ] .
 
 ##########  Sensors — ordinary in every respect but one: nothing is there  ##########
 #  Each states what any board states: the bus it is on, the subject it monitors, the property it
 #  observes, its topics, and who holds the clock. An agent reads these and cannot tell.
 #
-#  perception:senseMode perception:ScheduledProcedure means the stand-in keeps the interval its agent gives it, exactly
+#  sensing:senseMode sensing:ScheduledProcedure means the stand-in keeps the interval its agent gives it, exactly
 #  as a deep-sleeping board does — so this world exercises the retained-cadence mechanism, which
 #  the old simulation never touched at all.
 
@@ -224,8 +224,8 @@ ag:succulent_agent review:commits [ review:onTerm perception:slowSleepS ; review
 ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
-    perception:senseMode perception:ScheduledProcedure ;
-    perception:monitors ag:fern ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -242,8 +242,8 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
 #  ag:DeviceModelShape had to stop making.
 ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
-    perception:senseMode perception:ScheduledProcedure ;
-    perception:monitors ag:fern ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -260,8 +260,8 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
 ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_tomato" ;
     mqtt:onBus ag:local_bus ;
-    perception:senseMode perception:ScheduledProcedure ;
-    perception:monitors ag:tomato ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors ag:tomato ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
     mqtt:readingTopic "sensors/moisture_sensor_tomato/reading" ;
@@ -274,8 +274,8 @@ ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
 ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_succulent" ;
     mqtt:onBus ag:local_bus ;
-    perception:senseMode perception:ScheduledProcedure ;
-    perception:monitors ag:succulent ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors ag:succulent ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
     mqtt:readingTopic "sensors/moisture_sensor_succulent/reading" ;

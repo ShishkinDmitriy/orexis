@@ -31,8 +31,8 @@ SELECT ?means ?property ?via ?direction WHERE {
   $me desire:desires ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property .
   {
-    $me perception:polls ?via .
-    ?via perception:monitors ?subject ;
+    $me sensing:polls ?via .
+    ?via sensing:monitors ?subject ;
          sosa:observes ?property .
     BIND(intention:Observe AS ?means)
   } UNION {

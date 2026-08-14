@@ -55,9 +55,9 @@ class Sensor:
     subject: str  # URI of what it monitors
     subject_id: str
     observes: str  # URI of the property it reads
-    # WHO HOLDS THE CLOCK — perception:ScheduledProcedure keeps an interval it is given, perception:PushProcedure keeps its own.
-    # The derivation already reads this to decide whether the agent gains perception:Subscribing or
-    # perception:Listening; carrying it here is what lets the runtime partition what the derivation
+    # WHO HOLDS THE CLOCK — sensing:ScheduledProcedure keeps an interval it is given, sensing:PushProcedure keeps its own.
+    # The derivation already reads this to decide whether the agent gains sensing:Subscribing or
+    # sensing:Listening; carrying it here is what lets the runtime partition what the derivation
     # separated. Without it an agent holding one of each gave both to both modules, and the
     # scheduled sensor's cadence was silently never re-aimed.
     sense_mode: str | None = None
@@ -166,9 +166,9 @@ def _sensors_q(agent_uri: str) -> str:
 SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic
        ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit
 WHERE {{
-  <{agent_uri}> perception:polls ?sensor .
-  ?sensor ag:localId ?localId ; perception:monitors ?subject ; sosa:observes ?observes .
-  OPTIONAL {{ ?sensor perception:senseMode ?senseMode }}
+  <{agent_uri}> sensing:polls ?sensor .
+  ?sensor ag:localId ?localId ; sensing:monitors ?subject ; sosa:observes ?observes .
+  OPTIONAL {{ ?sensor sensing:senseMode ?senseMode }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
   OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
   OPTIONAL {{ ?sensor mqtt:readingTopic ?readingTopic }}

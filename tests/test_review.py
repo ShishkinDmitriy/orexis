@@ -1,7 +1,7 @@
 """An agent re-picking a belief — the room it has, the guards, and what it remembers.
 
 Nothing is mocked. The store is a real belief base, the shapes are the real shapes, the rule is
-the SPARQL the perception package ships, and the path is the one a deployed agent runs when it
+the SPARQL the sensing package ships, and the path is the one a deployed agent runs when it
 arises. See knowledge/decisions/a-belief-is-a-pick-within-a-range.md.
 """
 
@@ -11,7 +11,7 @@ import pytest
 
 from agent import genesis
 from packages.capability.review.graphs import evidence_graph, revisions_graph
-from agent.ontology import PERCEPTION, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph, term
+from agent.ontology import SENSING, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph, term
 from packages.capability.review import RECKONING, REVIEW
 from packages.capability.review.module import Range, world_ranges
 from agent.store import bindings
@@ -19,9 +19,9 @@ from packages.capability.review.summary import RING, Summaries
 
 from conftest import WORLDS_ROOT, build_agent, genesis_store
 
-# Perception's term, built from perception's namespace. The kernel `term()` is still
+# Sensing's term, built from sensing's namespace. The kernel `term()` is still
 # imported for review's own, which is the distinction this sweep exists to make visible.
-SLOW = PERCEPTION + "slowSleepS"
+SLOW = SENSING + "slowSleepS"
 AUTHORED = 600.0   # fern's first pick
 COMMITTED = 600.0  # and the floor it commits to
 CEILING = 900.0    # the constitutional ceiling it may relax to
@@ -44,7 +44,7 @@ def feed(agent, values, sensor=None):
 
 def window(agent) -> int:
     rows = bindings(agent.store.query(
-        "SELECT ?n WHERE { GRAPH ?g { perception:PerceptionCapability perception:reviewWindow ?n } }"))
+        "SELECT ?n WHERE { GRAPH ?g { sensing:SensingCapability sensing:reviewWindow ?n } }"))
     return int(rows[0]["n"])
 
 
@@ -334,7 +334,7 @@ def _sensing_with(update: str = ""):
     """The sensing world, optionally mutated, re-derived exactly as genesis derives it.
 
     Cleared before re-running: a rule's conclusion is not idempotent when its premise changed,
-    and leaving the old one beside the new is how `test_capabilities` once read BOTH perception
+    and leaving the old one beside the new is how `test_capabilities` once read BOTH sensing
     capabilities and called it a pass.
     """
     from agent import loader
@@ -361,7 +361,7 @@ def _states(**floors: int) -> str:
     return f"""
 PREFIX ag: <http://example.org/agora#>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
-PREFIX perception: <http://example.org/agora/perception#>
+PREFIX sensing: <http://example.org/agora/sensing#>
 INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
 {body}
 }} }}"""
@@ -375,7 +375,7 @@ SELECT ?floor WHERE { ?a review:limitedTo ?l . ?l review:onTerm ?t ; review:notB
 
 def test_what_a_board_can_honour_reaches_the_agent_that_polls_it():
     """The limit is stated on the DEVICE and needed by the AGENT, and only the agent holds a
-    belief to narrow. So the derivation carries it across `perception:polls` — which is why this
+    belief to narrow. So the derivation carries it across `sensing:polls` — which is why this
     is a rule at genesis and not a query at review time: an agent is never given the wiring."""
     assert _limit(_sensing_with()) == [2.0]   # the KY-015's datasheet sampling period
 
@@ -423,10 +423,10 @@ def test_the_report_says_toward_what_not_merely_that(fern):
     One field per revisable term it holds, into its own bucket — the range is the governance
     surface, and the only evidence a range was mis-authored is what agents do inside it."""
     reviewing = fern.reviewing()
-    assert reviewing.reports()["picked_perception_slowSleepS"] == AUTHORED
+    assert reviewing.reports()["picked_sensing_slowSleepS"] == AUTHORED
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     reviewing.review()
-    assert reviewing.reports()["picked_perception_slowSleepS"] == CEILING
+    assert reviewing.reports()["picked_sensing_slowSleepS"] == CEILING
 
 
 def test_a_taken_revision_is_a_marker_over_the_series(fern):

@@ -141,7 +141,7 @@ sensor with none, and a stated encoding that is not a member of the family are e
 their own message, **before a society starts** rather than at the first message.
 
 What the shapes deliberately do **not** refuse is a member that is declared and unimplemented.
-`codec:Cbor` holds exactly the position `perception:Polling` and `review:Consulting` do: the vocabulary says the
+`codec:Cbor` holds exactly the position `sensing:Polling` and `review:Consulting` do: the vocabulary says the
 seam exists, the build reports at startup that it cannot fill it, and refusing the world instead
 would make declaring a seam impossible.
 

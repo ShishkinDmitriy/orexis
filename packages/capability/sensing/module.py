@@ -1,17 +1,17 @@
-"""Perception — capabilities over one shared ingest path, split by WHO HOLDS THE CLOCK.
+"""Sensing — capabilities over one shared ingest path, split by WHO HOLDS THE CLOCK.
 
 Which one an agent gets is decided by its **hardware**, and derived at genesis from the
 device's own nature:
 
-- **perception:Polling** (`perception:PolledProcedure` device) — the agent's own timer; it asks for each reading and the
+- **sensing:Polling** (`sensing:PolledProcedure` device) — the agent's own timer; it asks for each reading and the
   device replies. The simplest exchange and the most agent control, but it needs a device that
   is reachable at any moment. **Not implemented**: no rule grants it and no class here
   provides it, because a board that deep-sleeps cannot hear the request. The room is kept
   deliberately — see ontology.ttl.
-- **perception:Subscribing** (`perception:ScheduledProcedure` device) — the agent states an interval and the device
+- **sensing:Subscribing** (`sensing:ScheduledProcedure` device) — the agent states an interval and the device
   keeps to it. The agent still decides how often to look; what it delegates is the
   timekeeping, which is exactly what lets the device sleep in between.
-- **perception:Listening** (`perception:PushProcedure` device) — the device announces on its own clock and takes no
+- **sensing:Listening** (`sensing:PushProcedure` device) — the device announces on its own clock and takes no
   orders. The agent records what arrives, and that is all it can do.
 
 What survives the whole range is the **freshness judgment**: however the reading arrived, the
@@ -25,17 +25,17 @@ Two things deliberately do NOT appear here:
 - **A protocol.** How a device is spoken to is a driver's business (`transports/`), chosen per
   sensor from what the world says about it — so an agent may hold one sensor on a bus and
   another on a wire under a single attention policy.
-- **What counts as trouble.** Perception knows how to look and how fresh a number is; it has
+- **What counts as trouble.** Sensing knows how to look and how fresh a number is; it has
   no band and no target, because those belong to whoever holds a stake in the subject. So it
   *asks* — `agent.urgency` for how closely to watch, `agent.annotations` for what to say
   publicly — and an agent with no stake simply gets no answer and watches at its slow cadence.
   That is why nothing here imports another capability.
 
-Everything touched is discovered: which sensors (`perception:polls`), what property they read
-(`sosa:observes`), and where to announce a perception (`mqtt:eventTopic`).
+Everything touched is discovered: which sensors (`sensing:polls`), what property they read
+(`sosa:observes`), and where to announce a sensing (`mqtt:eventTopic`).
 
-Vocabulary: capabilities/perception/ontology.ttl. Rules: capabilities/perception/shapes.ttl.
-Derivation: capabilities/perception/rules.ru. See knowledge/domain/sensing.md.
+Vocabulary: capabilities/sensing/ontology.ttl. Rules: capabilities/sensing/shapes.ttl.
+Derivation: capabilities/sensing/rules.ru. See knowledge/domain/sensing.md.
 """
 
 from __future__ import annotations
@@ -52,22 +52,22 @@ from .beliefs import LISTENING_BLOCK, SUBSCRIBING_BLOCK
 from .terms import LISTENING, PUSH, SCHEDULED, SUBSCRIBING
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
-# off the capability FAMILY, so every transport and every future perception inherits them.
+# off the capability FAMILY, so every transport and every future sensing inherits them.
 _BOUNDS_Q = """
 SELECT ?min ?max ?relax WHERE {
-  GRAPH ?g { perception:PerceptionCapability perception:minSleepS ?min ; perception:maxSleepS ?max .
-             OPTIONAL { perception:PerceptionCapability perception:relaxFactor ?relax } }
+  GRAPH ?g { sensing:SensingCapability sensing:minSleepS ?min ; sensing:maxSleepS ?max .
+             OPTIONAL { sensing:SensingCapability sensing:relaxFactor ?relax } }
 } LIMIT 1"""
 
 
-class PerceptionModule(Module):
+class SensingModule(Module):
     """Shared ingest: record what a sensor read, announce it, keep a freshness rule.
 
     Identical whether the reading was asked for or simply arrived.
     """
 
     # Which kind of device this module is for. The derivation grants the capability from the
-    # sensor's perception:senseMode; this is the same pairing, read from the other side.
+    # sensor's sensing:senseMode; this is the same pairing, read from the other side.
     SENSE_MODE: str | None = None
 
     def __init__(self, agent):
@@ -99,7 +99,7 @@ class PerceptionModule(Module):
                 self.log.warning("%s names a scaling this build does not carry — it will "
                                  "never be read", sensor.local_id)
 
-        # Recording is not perception's to define — see agent/observation.py.
+        # Recording is not sensing's to define — see agent/observation.py.
         self.observations = Observations(agent)
 
     def stale_after_s(self, subject_uri: str) -> int:
@@ -228,7 +228,7 @@ class PerceptionModule(Module):
 
         Best-effort even where it is allowed: a device that sleeps between readings only hears
         this if the nudge happens to land inside its waking window. It is the seed of
-        perception:Polling, not a substitute for it — a real polling module would need a device that
+        sensing:Polling, not a substitute for it — a real polling module would need a device that
         is always listening, and would then drive every reading this way.
         """
 
@@ -251,8 +251,8 @@ class PerceptionModule(Module):
                      if s.subject == subject_uri and s.observes == observed_property), None)
 
 
-class SubscribingModule(PerceptionModule):
-    """perception:Subscribing — derived from being wired to a device that keeps to a given interval.
+class SubscribingModule(SensingModule):
+    """sensing:Subscribing — derived from being wired to a device that keeps to a given interval.
 
     The standing request is the whole mechanism: the interval is published *retained*, so a
     device that is asleep now receives it the instant it wakes and subscribes. That is why
@@ -358,7 +358,7 @@ class SubscribingModule(PerceptionModule):
         self._note_trend(sensor.subject, sensor.observes, value, at)
         # The verdict travels with the cadence because it is the same message and the same
         # audience. Collected the way every cross-capability opinion is collected — whoever
-        # holds a stake contributes, perception passes it on without reading it. An agent with
+        # holds a stake contributes, sensing passes it on without reading it. An agent with
         # no stake in this property contributes nothing and the device is told only a cadence.
         self.set_cadence(sensor,
                          self.cadence_for(sensor.subject, sensor.observes, value),
@@ -423,7 +423,7 @@ class SubscribingModule(PerceptionModule):
         """How long the board may sleep: the closer to my own trouble, the closer I watch —
         and no longer than the trend allows.
 
-        Trouble is not perception's to define, so it is asked for. An agent with no stake in
+        Trouble is not sensing's to define, so it is asked for. An agent with no stake in
         the subject — or none in *this property* of it — gets no answer and watches at its slow
         cadence, which is the honest reading of "nothing here is urgent to me". That second
         case is why the property is passed: a thermometer on a pot the agent bids water for
@@ -443,7 +443,7 @@ class SubscribingModule(PerceptionModule):
 
         No slope yet — fewer than two readings, or a fresh restart — means no bound, which is
         the pre-#133 behaviour, honestly reached. The declared `dryRatePerTick` is deliberately
-        NOT the fallback the issue suggested: it is a domain term perception may not name, and
+        NOT the fallback the issue suggested: it is a domain term sensing may not name, and
         its tick is undefined for a real pot. Evidence or nothing.
         """
         b = self.beliefs
@@ -590,8 +590,8 @@ class SubscribingModule(PerceptionModule):
                     self.agent.annotations(sensor.subject, sensor.observes, reading.value))
 
 
-class ListeningModule(PerceptionModule):
-    """perception:Listening — derived from being wired to a push-mode sensor.
+class ListeningModule(SensingModule):
+    """sensing:Listening — derived from being wired to a push-mode sensor.
 
     No interval, because the device would not take one. The agent keeps its freshness rule,
     which now works as a *detector* rather than a control: if the board goes quiet, readings

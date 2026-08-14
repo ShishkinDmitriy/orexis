@@ -202,7 +202,7 @@ more than before.
   ```
   part type known?          Device, sosa:Sensor, ssn:System     (no dht11:TemperatureSensor)
   read procedure reachable? NOTHING
-  sense mode?               perception:ScheduledProcedure
+  sense mode?               sensing:ScheduledProcedure
   ```
 
   So the read procedure is unreachable from where the observation is written, and projecting it

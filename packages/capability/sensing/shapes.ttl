@@ -1,4 +1,4 @@
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
@@ -13,34 +13,34 @@
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-# Rules that hold for perception however it is done. They target the capability FAMILY, so a
-# new transport inherits them by declaring its capabilities as perception:PerceptionCapability rather
+# Rules that hold for sensing however it is done. They target the capability FAMILY, so a
+# new transport inherits them by declaring its capabilities as sensing:SensingCapability rather
 # than by restating any of this.
 
-perception:PerceivingAgentShape a sh:NodeShape ;
+sensing:PerceivingAgentShape a sh:NodeShape ;
     rdfs:comment "Anything that perceives must be wired to something to perceive with, and must say how stale a reading may be before it stops trusting it. That judgment is about belief, not control, so it is required of every perceiver — including one that cannot drive its device at all." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://example.org/agora#hasCapability> ?cap .
-                ?cap a <http://example.org/agora/perception#PerceptionCapability> .
+                ?cap a <http://example.org/agora/sensing#SensingCapability> .
             }
         """ ] ;
-    sh:property [ sh:path perception:polls ; sh:minCount 1 ; sh:class sosa:Sensor , ag:Device ;
+    sh:property [ sh:path sensing:polls ; sh:minCount 1 ; sh:class sosa:Sensor , ag:Device ;
                   sh:message "an agent that perceives must be wired to at least one sensor" ] ;
-    sh:property [ sh:path perception:readingGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path sensing:readingGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;
                   sh:message "a perceiving agent must say how stale a reading may be before it stops trusting it" ] .
 
-perception:SensorShape a sh:NodeShape ;
+sensing:SensorShape a sh:NodeShape ;
     rdfs:comment "A sensor reads exactly one subject, says which property it observes, and states how it is driven — because its agent's capability is derived from that." ;
     sh:targetClass sosa:Sensor ;
-    sh:property [ sh:path perception:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path sensing:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
-    sh:property [ sh:path perception:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class perception:SenseMode ;
+    sh:property [ sh:path sensing:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class sensing:SenseMode ;
                   sh:message "a sensor must say how it is driven — its agent's capability follows from it" ] .
 
-perception:DoubleCoveredPropertyShape a sh:NodeShape ;
+sensing:DoubleCoveredPropertyShape a sh:NodeShape ;
     rdfs:comment "Two sensors reading the SAME property of the SAME subject. A Warning and not a Violation, because it is a legitimate rig — two probes at opposite ends of one pot are one feature of interest measured twice — and the behaviour is defined: they share one observation node and the last writer wins. It is flagged because the other reading of it is a modelling slip: strictly, two probes in different soil observe different features of interest, and saying so gives each its own record instead of a value that flickers between them. Different properties of one subject are ordinary and silent; that is the case this shape must not catch, and why it tests the property and not just the subject." ;
     sh:targetClass sosa:Sensor ;
     sh:severity sh:Warning ;
@@ -48,16 +48,16 @@ perception:DoubleCoveredPropertyShape a sh:NodeShape ;
         sh:message "another sensor already reads this property of this subject — they will share one observation and the last writer wins. If they are really measuring different soil, model them as two subjects." ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/agora/perception#monitors> ?subject ;
+                $this <http://example.org/agora/sensing#monitors> ?subject ;
                       <http://www.w3.org/ns/sosa/observes> ?property .
                 ?other a <http://www.w3.org/ns/sosa/Sensor> ;
-                       <http://example.org/agora/perception#monitors> ?subject ;
+                       <http://example.org/agora/sensing#monitors> ?subject ;
                        <http://www.w3.org/ns/sosa/observes> ?property .
                 FILTER (?other != $this)
             }
         """ ] .
 
-perception:ObservationShape a sh:NodeShape ;
+sensing:ObservationShape a sh:NodeShape ;
     rdfs:comment "Every observation is a complete, authored, versioned MEASUREMENT, carrying the time it was taken — which is what the freshness rule checks, and the procedure it was taken by, which says whether a reading that failed to arrive means a late board or a quiet one. No band: the verdict is each agent's own and is never recorded." ;
     sh:targetClass sosa:Observation ;
     sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
@@ -66,47 +66,47 @@ perception:ObservationShape a sh:NodeShape ;
     sh:property [ sh:path sosa:resultTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
     sh:property [ sh:path sosa:madeBySensor ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:usedProcedure ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:class perception:SenseMode ;
+                  sh:class sensing:SenseMode ;
                   sh:message "an observation says how it was made — one of the three sense modes, which is what its sensor already states" ] ;
     sh:property [ sh:path ag:underWorldVersion ; sh:minCount 1 ; sh:datatype xsd:integer ] ;
     sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "every reading carries an author" ] .
 
 
-perception:SubscribingAgentShape a sh:NodeShape ;
+sensing:SubscribingAgentShape a sh:NodeShape ;
     rdfs:comment "Stating an interval is what makes these figures meaningful, so only this capability demands them. It must watch more closely when in trouble than when comfortable, and neither figure may leave the constitutional bounds — which are stated in this package's ontology.ttl, clamped again by the agent, and clamped a third time by the firmware. A polling agent would need the same two, since they are its own timer rather than the device's; a listening one can hold neither." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
-                                       <http://example.org/agora/perception#Subscribing> }
+                                       <http://example.org/agora/sensing#Subscribing> }
         """ ] ;
-    sh:property [ sh:path perception:fastSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path sensing:fastSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
-                  sh:lessThanOrEquals perception:slowSleepS ;
+                  sh:lessThanOrEquals sensing:slowSleepS ;
                   sh:message "the fast interval must be within the constitutional bounds and no slower than the slow one" ] ;
-    sh:property [ sh:path perception:slowSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path sensing:slowSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
                   sh:message "no agent may sleep past the constitutional ceiling — autonomy over attention, never the freedom to sleep through a drought" ] .
 
-perception:ListeningAgentShape a sh:NodeShape ;
+sensing:ListeningAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that ONLY listens must not hold an interval: requiring a policy it cannot enforce would be theatre, and stating one would misdescribe the hardware. The exclusion matters — an agent may hold a scheduled sensor and a push one, and then it needs both blocks. Written as 'listens and does not subscribe' rather than 'listens', because the earlier form made the two shapes contradict each other on such an agent: one demanded an interval and the other forbade it, so a perfectly ordinary rig — a plant with a scheduled moisture probe and a push thermometer — could not be validated at all." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://example.org/agora#hasCapability>
-                      <http://example.org/agora/perception#Listening> .
+                      <http://example.org/agora/sensing#Listening> .
                 FILTER NOT EXISTS { ?this <http://example.org/agora#hasCapability>
-                                          <http://example.org/agora/perception#Subscribing> }
+                                          <http://example.org/agora/sensing#Subscribing> }
             }
         """ ] ;
-    sh:property [ sh:path perception:fastSleepS ; sh:maxCount 0 ;
+    sh:property [ sh:path sensing:fastSleepS ; sh:maxCount 0 ;
                   sh:message "a listening agent states no interval — its device does not take one" ] ;
-    sh:property [ sh:path perception:slowSleepS ; sh:maxCount 0 ] .
+    sh:property [ sh:path sensing:slowSleepS ; sh:maxCount 0 ] .
 
-perception:StatedFrequencyShape a sh:NodeShape ;
+sensing:StatedFrequencyShape a sh:NodeShape ;
     rdfs:comment """A stated Frequency must say a number AND which unit it is in.
 
-`perception:seconds` said the unit in its name and its range said `xsd:integer`, and neither was
+`sensing:seconds` said the unit in its name and its range said `xsd:integer`, and neither was
 checked: `rdfs:range` is not in the closure. Saying it as `schema:value` + `schema:unitCode` is
 the idiom the W3C's own DHT22 example uses, and it makes the unit a fact rather than a spelling —
 which is worth having, because the derivation reads that number as SECONDS. A Frequency stated in

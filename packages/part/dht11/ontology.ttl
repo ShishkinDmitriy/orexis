@@ -9,7 +9,7 @@
 @prefix wokwi: <http://example.org/agora/wokwi#> .
 @prefix onewire: <http://example.org/agora/onewire#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -102,10 +102,10 @@ dht11:Dht11 rdfs:subClassOf
 #   dht11:CombinedRead    what the PART does         — one frame, both values, one instant
 #   dht11:TemperatureRead what a SUB-SENSOR contributes — the half of the frame that is its own
 #
-# None is a sense mode. `perception:senseMode` answers *who holds the clock* and carries
+# None is a sense mode. `sensing:senseMode` answers *who holds the clock* and carries
 # `sh:maxCount 1`; these answer *what happens when the moment arrives*, and a system may
 # implement as many as it can perform. That is why `ssn:implements` is the right predicate here
-# and the wrong one there — see the note in perception's ontology.
+# and the wrong one there — see the note in sensing's ontology.
 
 dht11:CombinedRead a sosa:Procedure ; rdfs:label "Combined temperature and humidity read" ;
     rdfs:comment "One request, two values, one instant. The part samples both and clocks them out in a single 40-bit frame — humidity, temperature, checksum — so neither can be obtained without the other and the two are simultaneous BY CONSTRUCTION. Belongs to the whole part and not to either sensor, which is the shape of the claim: the sub-systems each observe one property, and what the part adds is that it produces them together. The library our firmware uses makes the same statement in code — a second call inside the part's stated Frequency is served from the buffer the first filled, never from the wire — so the firmware's two calls have always been one conversation, whatever the reading path did with them afterwards." .

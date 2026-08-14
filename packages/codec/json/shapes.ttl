@@ -1,5 +1,5 @@
 @prefix review: <http://example.org/agora/review#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix sh:    <http://www.w3.org/ns/shacl#> .
 @prefix ag:    <http://example.org/agora#> .
@@ -15,7 +15,7 @@ codec:ChannelIsDecodedByExactlyOneShape a sh:NodeShape ;
                   sh:message "a stream must be decoded by exactly one codec — two means the devices on this topic disagree about its format, and a device that states nothing is stating JSON" ] .
 
 codec:OnlyAnEncodingIsStatedShape a sh:NodeShape ;
-    rdfs:comment "The mirror, on the premise rather than the conclusion: what a world STATES must be a member of the family. A typo or an invented IRI would otherwise derive itself faithfully into the world and fail much later, when a sensor turns out to be served by a codec no package has ever heard of. Note what this deliberately does NOT refuse: a member that is declared but unimplemented, `codec:Cbor` today. That is the same position `perception:Polling` and `review:Consulting` hold — the vocabulary says the seam exists, the build reports at startup that it cannot fill it, and refusing the world instead would make declaring a seam impossible." ;
+    rdfs:comment "The mirror, on the premise rather than the conclusion: what a world STATES must be a member of the family. A typo or an invented IRI would otherwise derive itself faithfully into the world and fail much later, when a sensor turns out to be served by a codec no package has ever heard of. Note what this deliberately does NOT refuse: a member that is declared but unimplemented, `codec:Cbor` today. That is the same position `sensing:Polling` and `review:Consulting` hold — the vocabulary says the seam exists, the build reports at startup that it cannot fill it, and refusing the world instead would make declaring a seam impossible." ;
     sh:targetSubjectsOf codec:encoding ;
     sh:property [ sh:path codec:encoding ;
                   sh:maxCount 1 ; sh:class codec:Encoding ;

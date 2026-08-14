@@ -1,7 +1,7 @@
 """Beliefs are read per capability, from the agent's own graph, with no defaults.
 
 The reader is kernel; the blocks belong to the capability packages, so a test reaches for
-`SUBSCRIBING_BLOCK` from `capabilities.perception` exactly as the module that runs does.
+`SUBSCRIBING_BLOCK` from `capabilities.sensing` exactly as the module that runs does.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -13,7 +13,7 @@ from agent import ontology
 from agent.beliefs import BeliefError, Beliefs, Reading
 from packages.capability.desire import aims_of, regions_of
 from packages.capability.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
-from packages.capability.perception.beliefs import SUBSCRIBING_BLOCK
+from packages.capability.sensing.beliefs import SUBSCRIBING_BLOCK
 
 from conftest import MOISTURE, TEMPERATURE
 
@@ -132,8 +132,8 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
 def test_the_error_names_every_missing_term(query):
     with pytest.raises(BeliefError) as exc:
         Beliefs(query, "supplier", SUPPLIER).read(SUBSCRIBING_BLOCK)
-    for term in (ontology.PERCEPTION + "fastSleepS", ontology.PERCEPTION + "slowSleepS",
-                 ontology.PERCEPTION + "readingGraceS"):
+    for term in (ontology.SENSING + "fastSleepS", ontology.SENSING + "slowSleepS",
+                 ontology.SENSING + "readingGraceS"):
         assert term in str(exc.value)
 
 

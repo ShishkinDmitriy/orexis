@@ -108,7 +108,7 @@ def test_beliefs_a_vocabulary_behind_are_seen():
     assert beliefs_graph("fern") in found, "a volume behind the vocabulary looked current"
     behind = found[beliefs_graph("fern")]
     assert AG + "slowSleepS" in behind
-    assert behind[AG + "slowSleepS"].endswith("perception#slowSleepS")
+    assert behind[AG + "slowSleepS"].endswith("sensing#slowSleepS")
 
 
 def test_what_the_agent_would_have_read_instead_is_nothing():
@@ -120,7 +120,7 @@ def test_what_the_agent_would_have_read_instead_is_nothing():
     """
     st = _aged_store()
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a perception:slowSleepS ?v } }" % beliefs_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
     assert rows == [], "this test's premise is gone — the old spelling now answers"
 
 
@@ -131,7 +131,7 @@ def test_boot_refuses_and_says_which_terms():
     with pytest.raises(SystemExit) as exc:
         vocabulary.check(st)
     message = str(exc.value)
-    assert "slowSleepS" in message and "perception#slowSleepS" in message
+    assert "slowSleepS" in message and "sensing#slowSleepS" in message
     assert "AGORA_MIGRATE_BELIEFS" in message
 
 
@@ -146,7 +146,7 @@ def test_migration_keeps_the_value_and_changes_only_the_spelling():
     st = _aged_store()
     vocabulary.check(st, migrating=True)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a perception:slowSleepS ?v } }" % beliefs_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
     assert [r["v"] for r in rows] == ["600"]
     assert vocabulary.stale(st) == {}
 
@@ -155,7 +155,7 @@ def test_migration_moves_every_belief_not_only_the_one_looked_at():
     """A store half in one vocabulary is worse than one honestly stuck."""
     st = _aged_store()
     vocabulary.check(st, migrating=True)
-    for query in ("perception:slowSleepS 600", "market:hasEndowment 100",
+    for query in ("sensing:slowSleepS 600", "market:hasEndowment 100",
                   "review:reviewIntervalS 300", "water:litresPerFraction 2.0"):
         predicate, value = query.split()
         rows = bindings(st.query(
@@ -216,5 +216,26 @@ def test_and_opens_when_asked_to_migrate(tmp_path, monkeypatch):
     monkeypatch.setenv("AGORA_MIGRATE_BELIEFS", "1")
     st = genesis.open_belief_base(world, "fern", path)
     rows = bindings(st.query(
-        "SELECT ?v WHERE { GRAPH <%s> { ?a perception:slowSleepS ?v } }" % beliefs_graph("fern")))
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
     assert [r["v"] for r in rows] == ["600"]
+
+
+def test_a_package_to_package_move_is_migrated_by_the_same_lookup():
+    """The sensing rename is the case the kernel-only map could not see: every volume authored
+    AFTER the great sweep holds `perception:slowSleepS` — an old spelling that never was a
+    kernel one. The successor is found by local name whatever namespace the old spelling wore,
+    so a term may move house twice and a volume from either era still follows."""
+    st = genesis_store(world="simulation")
+    st.put_graph(beliefs_graph("fern"), f"""
+@prefix old: <http://example.org/agora/perception#> .
+@prefix ag: <{AG}> .
+
+ag:fern_agent old:fastSleepS 30 ; old:slowSleepS 600 ; old:readingGraceS 45 .
+""")
+    found = vocabulary.stale(st)
+    assert beliefs_graph("fern") in found, "a post-sweep volume looked current"
+    vocabulary.check(st, migrating=True)
+    rows = bindings(st.query(
+        "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
+    assert [r["v"] for r in rows] == ["600"]
+    assert vocabulary.stale(st) == {}

@@ -64,7 +64,7 @@ actuation:maxDoseMl a owl:DatatypeProperty ; rdfs:domain sosa:Actuator ; rdfs:ra
 #  is the second, and stating it as slack rather than as an absolute is what keeps a slow valve
 #  and a silent one apart.
 #
-#  The same shape as `perception:readingGraceS`, and for the same reason: there too the agent
+#  The same shape as `sensing:readingGraceS`, and for the same reason: there too the agent
 #  chooses the interval and can only be relative to it. An absolute deadline would contradict
 #  the agent's own instruction — it cannot both ask a valve for a ninety-second pour and call
 #  the valve late after thirty.

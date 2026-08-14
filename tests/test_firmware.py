@@ -17,7 +17,7 @@ import pytest
 import rdflib
 
 from agent import ratified
-from agent.ontology import PERCEPTION, WORLD_GRAPH
+from agent.ontology import SENSING, WORLD_GRAPH
 from onboarding.firmware import _BOARDS_Q, _optional_pins
 
 

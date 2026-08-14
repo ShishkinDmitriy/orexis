@@ -37,7 +37,7 @@ Three checks, ordered by how wrong things are:
   construction (an agent whose CONNACK is refused in a loop is exactly as cut off as one whose
   session died), reset by one successful reconnect (a flapping link never accumulates its way
   to a resignation; `mqtt_reconnects` is flapping's counter). Past `ag:resignAfterS`, resign.
-- **something expected has gone silent.** Each module's `quiet()` — perception answers with
+- **something expected has gone silent.** Each module's `quiet()` — sensing answers with
   every sensor that delivered once and then went silent past the same `stale_after_s` its
   freshness rule uses, so the log and the refusal cannot disagree. Said once on entry and once
   on recovery, never per tick. This check only speaks; the first two act.

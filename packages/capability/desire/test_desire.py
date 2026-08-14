@@ -40,10 +40,10 @@ def test_urgency_is_nothing_at_the_point_and_everything_at_the_envelope():
 def test_it_rises_inside_the_region_rather_than_waiting_for_the_edge():
     """The band says whether I am in trouble; urgency says how close I am getting.
 
-    A step function would tell perception to relax completely anywhere inside the region and
+    A step function would tell sensing to relax completely anywhere inside the region and
     then panic on the way out. An agent at the very edge of comfortable is already worth
     watching more closely than one sitting in the middle, and the whole point of handing
-    perception a number rather than a verdict is that it can act on the difference.
+    sensing a number rather than a verdict is that it can act on the difference.
     """
     assert 0.0 < ZZ.urgency(0.15) < ZZ.urgency(0.11) < ZZ.urgency(0.05)
     assert ZZ.band(0.15) == ZZ.band(0.11) == "OK"

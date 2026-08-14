@@ -49,7 +49,7 @@ keep, and could not express two hosts running different auctions in one market.
 # Decision — matching is a capability, and the host states how it matches
 
 `market:BidMatchingCapability` is the family. `market:PayAsBid` is implemented; `market:UniformPrice` is declared
-beside it with no `PROVIDES` behind it, exactly as `perception:Polling` and `review:Consulting` are.
+beside it with no `PROVIDES` behind it, exactly as `sensing:Polling` and `review:Consulting` are.
 
 This is a capability by [AGENTS.md rule 2](../../AGENTS.md)'s test — the *how* could differ, and
 visibly: under pay-as-bid a winner pays what it offered, so the honest strategy is to shade; under
@@ -108,7 +108,7 @@ announced is necessarily what will run — a host cannot advertise one and apply
   because a world can be amended after validation and losing a round's bids in silence is worse
   than saying so — every bidder is waiting on a voucher.
 - **A world may state `market:UniformPrice` today** and derive a capability nothing provides. The agent
-  reports it at startup, which is the honest failure and the same one `perception:Polling` produces.
+  reports it at startup, which is the honest failure and the same one `sensing:Polling` produces.
 - **#50 is unaffected and still open.** The uncontested-round defect is *in* pay-as-bid; this
   change gives it somewhere to be argued against, and deliberately did not touch the allocation.
 

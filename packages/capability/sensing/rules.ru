@@ -1,4 +1,4 @@
-# Derivation: which perception capability an agent gets, from the DEVICE'S NATURE.
+# Derivation: which sensing capability an agent gets, from the DEVICE'S NATURE.
 #
 # One fact decides it — WHO HOLDS THE CLOCK. Can the device be asked at any moment, does it
 # take an interval and keep to it, or does it announce on its own? That is a property of the
@@ -7,7 +7,7 @@
 # gains an interval to state with no edit to the agent, because there is nothing about it to
 # edit.
 #
-# perception:PolledProcedure -> perception:Polling is deliberately ABSENT. The vocabulary declares both, because there
+# sensing:PolledProcedure -> sensing:Polling is deliberately ABSENT. The vocabulary declares both, because there
 # are three ways to hold a clock and the T-Box should say so; but no board here is always
 # reachable, and granting a capability no module implements would only produce a startup
 # warning. The rule is the last piece to add, not the first.
@@ -17,7 +17,7 @@
 # Whether a given binding is COMPLETE (a pull sensor on a bus needs a command channel) is a
 # question for that transport's shapes, not for this rule.
 
-PREFIX perception: <http://example.org/agora/perception#>
+PREFIX sensing: <http://example.org/agora/sensing#>
 PREFIX unit: <http://qudt.org/vocab/unit/>
 PREFIX schema: <https://schema.org/>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
@@ -28,7 +28,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 #  Both rules ask what a thing IS, literally — no `rdfs:subClassOf*` walk, because the
 #  vocabulary's entailments are asserted before any rule runs (agora/inference.py). What they
-#  cannot do is name one graph: `perception:polls` is the sovereign's and `a perception:Sensor` may be entailed,
+#  cannot do is name one graph: `sensing:polls` is the sovereign's and `a sensing:Sensor` may be entailed,
 #  so the two facts live apart and a single `GRAPH` clause would match neither pair. `$given`
 #  becomes the `USING` clauses that merge what is GIVEN — asserted and entailed — and
 #  deliberately not what another rule derived. `$derived` is where conclusions land. Both are
@@ -38,15 +38,15 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 #  Keeps to an interval it is given -> the agent STATES that interval.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability perception:Subscribing } }
+    ?agent ag:hasCapability sensing:Subscribing } }
 $given
-WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:senseMode perception:ScheduledProcedure } ;
+WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; sensing:senseMode sensing:ScheduledProcedure } ;
 
 #  Announces on its own clock -> the agent can only RECEIVE, and is never asked for a cadence.
 INSERT { GRAPH $derived {
-    ?agent ag:hasCapability perception:Listening } }
+    ?agent ag:hasCapability sensing:Listening } }
 $given
-WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:senseMode perception:PushProcedure } ;
+WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; sensing:senseMode sensing:PushProcedure } ;
 
 #  What the EQUIPMENT allows, carried from the sensor to the agent that polls it.
 #
@@ -65,11 +65,11 @@ WHERE  { ?agent perception:polls ?sensor . ?sensor a sosa:Sensor ; perception:se
 #  review:commits: one is what a board can do and the other what a sovereign allowed, and a
 #  refused revision should say which of the two refused it.
 INSERT { GRAPH $derived {
-    ?agent review:limitedTo [ review:onTerm perception:slowSleepS ; review:notBelow ?floor ] } }
+    ?agent review:limitedTo [ review:onTerm sensing:slowSleepS ; review:notBelow ?floor ] } }
 $given
 WHERE  {
     { SELECT ?agent (MAX(?s) AS ?floor) WHERE {
-        ?agent perception:polls ?sensor .
+        ?agent sensing:polls ?sensor .
         ?sensor ssn-system:hasSystemCapability ?cap .
         ?cap ssn-system:hasSystemProperty ?freq .
         ?freq a ssn-system:Frequency ; schema:value ?s ; schema:unitCode unit:SEC .

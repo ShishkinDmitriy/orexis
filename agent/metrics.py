@@ -21,7 +21,7 @@ agent has it. See knowledge/decisions/telemetry-is-a-mandatory-capability.md.
 **Counters live here; the events live where they happen.** `Observations` already caught the two
 write failures and only logged them — silent data loss that nothing surfaced. It now also tells
 this object, which is why the counters hang off the agent rather than off `Observations`: an agent
-can hold more than one of those (perception and simulated-sensing each build their own), and two
+can hold more than one of those (sensing and simulated-sensing each build their own), and two
 sets of counters would report half the truth each.
 
 **Reporting is separate from counting**, and it is now separate in the file layout too. Counting
@@ -229,7 +229,7 @@ class Metrics:
         never delivered belongs here so it can report zero — that is the whole "the board has
         never been heard from" signal. And a sensor that HAS delivered belongs here even when it
         is not in `me.sensors`, which is not a hypothetical: a simulated sensor is wired with
-        `ag:models`, a sub-property of `perception:polls`, and SPARQL does not follow sub-properties
+        `ag:models`, a sub-property of `sensing:polls`, and SPARQL does not follow sub-properties
         without inference — so a simulated agent's wired set is empty while it is recording
         readings every few seconds. Reporting only the wired set silently omitted every
         simulated agent, which is exactly the world one tests instrumentation in.

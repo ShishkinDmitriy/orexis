@@ -9,7 +9,7 @@ never the right place for it. `tests/test_layout.py` holds `NS` and the `@prefix
 
 from __future__ import annotations
 
-NS = "http://example.org/agora/perception#"
+NS = "http://example.org/agora/sensing#"
 
 
 def term(name: str) -> str:
@@ -18,7 +18,7 @@ def term(name: str) -> str:
 
 # The family. Anything that perceives is one of these — which is what lets another capability
 # ask for "whoever perceives" without knowing which way it does it.
-PERCEPTION = term("PerceptionCapability")
+SENSING = term("SensingCapability")
 
 # The axis is who holds the clock, and these are in decreasing order of agent control.
 POLLING = term("Polling")  # the agent asks, each time — RESERVED, nothing implements it yet
@@ -29,6 +29,6 @@ LISTENING = term("Listening")  # the device announces on its own clock; the agen
 # A module names the mode it serves so it can take only the sensors it is actually for — the
 # pairing is stated in rules.ru as well, and the alternative is introspecting a SPARQL update to
 # recover it, which is worse. Both are T-Box terms, which the first rule permits in code.
-PULL = term("PolledProcedure")           # answers when asked — the unbuilt perception:Polling would serve it
-SCHEDULED = term("ScheduledProcedure")   # keeps an interval it is given -> perception:Subscribing
-PUSH = term("PushProcedure")            # keeps its own clock, takes no orders -> perception:Listening
+PULL = term("PolledProcedure")           # answers when asked — the unbuilt sensing:Polling would serve it
+SCHEDULED = term("ScheduledProcedure")   # keeps an interval it is given -> sensing:Subscribing
+PUSH = term("PushProcedure")            # keeps its own clock, takes no orders -> sensing:Listening

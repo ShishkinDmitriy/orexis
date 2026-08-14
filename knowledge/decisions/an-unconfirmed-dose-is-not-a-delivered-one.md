@@ -33,7 +33,7 @@ asked.
 `_on_message` returned as soon as a module's `handle` came back true. That read as an
 optimisation and was a defect — a second module subscribed to the same topic never saw the
 message at all — and it is exactly what [#51](https://github.com/ShishkinDmitriy/agora/issues/51)
-fixed one level down, where `PerceptionModule.handle` returned after the first *sensor* owning a
+fixed one level down, where `SensingModule.handle` returned after the first *sensor* owning a
 topic and a board's second channel went unread.
 
 The module-level version survived because nothing yet wanted one topic twice. This change wants
@@ -56,7 +56,7 @@ from the device's own `actuation:mlPerSecond`. So the only thing left to state i
 
 `actuation:doseGraceS` is that slack, and the deadline is `this dose's seconds + the grace`.
 
-This is the same shape as `perception:readingGraceS`, and for the same stated reason. There the
+This is the same shape as `sensing:readingGraceS`, and for the same stated reason. There the
 agent chooses the interval, so staleness has to be relative to it — *"it cannot both decide that
 600s between looks is acceptable and refuse a 120s-old number."* Here the agent chooses the dose,
 so lateness has to be relative to that: it cannot ask a valve for a ninety-second pour and then

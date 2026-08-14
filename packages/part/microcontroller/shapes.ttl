@@ -131,7 +131,7 @@ ag:ABoardCarriesPartsShape a sh:NodeShape ;
 
 This is the narrowing `mc:carries` used to claim with `rdfs:domain` and `rdfs:range`, and never enforced: neither is in `agent/inference.py`'s closure and no shape read them. Stated here it is checked, which is the whole trade — a term was given up and a rule was gained.
 
-Targeted at mc:Microcontroller rather than at sosa:Platform deliberately. A KY-015 is a Platform too and hosts its own two channels, which are perception:Sensors and not peripherals; scoping to the board says what is true of boards without forbidding what parts legitimately do. It also means this holds the SOVEREIGN alone: only the wiring types anything mc:Microcontroller, so an agent — never given a board — is never targeted.""" ;
+Targeted at mc:Microcontroller rather than at sosa:Platform deliberately. A KY-015 is a Platform too and hosts its own two channels, which are sensing:Sensors and not peripherals; scoping to the board says what is true of boards without forbidding what parts legitimately do. It also means this holds the SOVEREIGN alone: only the wiring types anything mc:Microcontroller, so an agent — never given a board — is never targeted.""" ;
     sh:targetClass mc:Microcontroller ;
     sh:property [ sh:path sosa:hosts ; sh:class mc:Peripheral ;
                   sh:message "a board hosts peripherals — this one hosts something that is not one" ] .

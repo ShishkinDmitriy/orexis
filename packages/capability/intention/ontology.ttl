@@ -8,7 +8,7 @@
 
 <http://example.org/agora/intention> a owl:Ontology ;
     rdfs:label "Agora intention" ;
-    rdfs:comment """BDI's third letter: a commitment to reduce a named gap by a named means, which persists until it is resolved rather than being re-decided on every perception.
+    rdfs:comment """BDI's third letter: a commitment to reduce a named gap by a named means, which persists until it is resolved rather than being re-decided on every sensing.
 
 **An intention is an amortised deliberation.** The sharpest lesson in the BDI literature is that intentions exist to SAVE deliberation — an agent that re-decides on every reading is a reflex machine wearing a planner's name — and here that is a cost model rather than philosophy: deliberation is about to include an LLM call, and the commitment is what makes one affordable. This package is the substrate that makes that persistence a FACT with a lifecycle instead of a scatter of module state: `bidding.pending`, a held voucher and a commanded cadence were all intentions before this package named them.
 
@@ -106,7 +106,7 @@ intention:IntentionCapability intention:suspectAfter 3 .
 #################  The commitment policy — a belief, bounded here  #################
 #
 #  How stubborn to be is an OPINION, so it is each agent's belief and review may move it. The
-#  BOUNDS are constitutional and live on the family, exactly as perception's cadence bounds do:
+#  BOUNDS are constitutional and live on the family, exactly as sensing's cadence bounds do:
 #  an agent that re-decides every second has retired the whole point of committing, and one that
 #  never reconsiders will honour a dead commitment forever.
 

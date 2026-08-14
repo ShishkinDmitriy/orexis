@@ -70,7 +70,7 @@ This is the same shape the W3C's own worked DHT22 example takes, which names
 [their-descriptions-are-our-fixtures](their-descriptions-are-our-fixtures.md).
 
 **The punned triple is gone, not kept alongside.** Two statements of one fact is what this reduces,
-and nothing read the pun: the derivation in `capabilities/perception/rules.ru` asks about *sensors*
+and nothing read the pun: the derivation in `capabilities/sensing/rules.ru` asks about *sensors*
 in the world, never about the class, and the one reader that did walk from the class was the guard
 test, which now reads the entailment instead.
 
@@ -138,7 +138,7 @@ The others are not the same kind of fact, which is the bound worth stating rathe
 |---|---|---|
 | what every instance can honour | `dht11:Dht11` | this one — the reader needs it on an instance |
 | `mc:modelName`, `wokwi:part`, `wokwi:pin` | `dht11:Dht11`, `esp32:DevKitC`, `probe:CapacitiveMoistureProbe`, `rgbled:RgbLed` | read *as* class facts. `agora-wokwi` and `agora-firmware` hold the class in hand and want the part's drawing, not each instance's copy of it |
-| a family's parameter | `perception:PerceptionCapability` (`minSleepS`, `maxSleepS`, `reviewWindow`), `ag:BeliefBase` (`maxBytesPerTriple`) | not "true of every instance" — a default the vocabulary states once and readers ask the *family* for |
+| a family's parameter | `sensing:SensingCapability` (`minSleepS`, `maxSleepS`, `reviewWindow`), `ag:BeliefBase` (`maxBytesPerTriple`) | not "true of every instance" — a default the vocabulary states once and readers ask the *family* for |
 
 So the mechanism generalises to every future part with a datasheet, and to nothing else currently
 in the tree. That is a small return today and the right one: the alternative was inventing
@@ -147,7 +147,7 @@ class-level facts to justify it.
 # It found a dead guard, which is the more useful finding
 
 `test_the_society_repeats_every_limit_the_wiring_states` **had asserted nothing since
-[PR #95](https://github.com/ShishkinDmitriy/agora/pull/95)**, which renamed `perception:seconds` to
+[PR #95](https://github.com/ShishkinDmitriy/agora/pull/95)**, which renamed `sensing:seconds` to
 schema.org's `value`/`unitCode` pair ([one-word-for-one-relation](one-word-for-one-relation.md)).
 The guard still asked for the old term, found it nowhere, and passed every run since by having
 nothing to compare. Measured on the commit before this one: **zero parts reached an assertion.**

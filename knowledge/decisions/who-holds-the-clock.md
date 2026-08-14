@@ -1,7 +1,7 @@
 ---
 type: Decision
-title: Perception splits by who holds the clock — Polling, Subscribing, Listening
-description: The perception family is three capabilities on one axis: the agent asks for each reading (Polling, reserved), the agent states an interval the device keeps (Subscribing, implemented), or the device announces on its own (Listening). What was called Polling was Subscribing all along.
+title: Sensing splits by who holds the clock — Polling, Subscribing, Listening
+description: The sensing family is three capabilities on one axis: the agent asks for each reading (Polling, reserved), the agent states an interval the device keeps (Subscribing, implemented), or the device announces on its own (Listening). What was called Polling was Subscribing all along.
 status: accepted
 stage: v1
 tags: [sensing, capabilities, firmware, ontology, naming]
@@ -13,14 +13,14 @@ timestamp: 2026-08-03T18:00:00Z
 Since [an-observation-says-how-it-was-made](an-observation-says-how-it-was-made.md) they are
 spelled for what they *do*, because they are `sosa:Procedure` instances and a procedure is a
 **plan** — *"a workflow, protocol, plan, algorithm, or computational method specifying how to
-make an Observation."* `sosa:usedProcedure perception:Scheduled` read as a state; it now reads as
+make an Observation."* `sosa:usedProcedure sensing:Scheduled` read as a state; it now reads as
 a method.
 
 | originally | briefly | then | now | agent capability |
 |---|---|---|---|---|
-| `perception:Pull` | `PolledSampling` | `PolledSensing` | `perception:PolledProcedure` | `perception:Polling` |
-| `perception:Scheduled` | `ScheduledSampling` | `ScheduledSensing` | `perception:ScheduledProcedure` | `perception:Subscribing` |
-| `perception:Push` | `PushReporting` | `PushSensing` | `perception:PushProcedure` | `perception:Listening` |
+| `sensing:Pull` | `PolledSampling` | `PolledSensing` | `sensing:PolledProcedure` | `sensing:Polling` |
+| `sensing:Scheduled` | `ScheduledSampling` | `ScheduledSensing` | `sensing:ScheduledProcedure` | `sensing:Subscribing` |
+| `sensing:Push` | `PushReporting` | `PushSensing` | `sensing:PushProcedure` | `sensing:Listening` |
 
 Each keeps its mode word, so the pairing this record is *about* still reads at a glance. Nothing
 below changed meaning; the rest of this record uses the current spelling except where it is
@@ -34,7 +34,7 @@ project created eight commits earlier for telemetry an agent emits about itself.
 **`Sensing` shipped and was superseded for a different kind of reason.** It collided with
 nothing; it was SOSA's own word for what a sensor does. It went because
 [a-sensor-implements-its-procedure](a-sensor-implements-its-procedure.md) gave these instances a
-use site where they are read aloud — `?sensor ssn:implements perception:ScheduledProcedure` — and
+use site where they are read aloud — `?sensor ssn:implements sensing:ScheduledProcedure` — and
 there *"the sensor implements the scheduled sensing"* is a sentence about an activity, while
 *"implements the scheduled procedure"* is a sentence about a plan. `ssn:implements` relates a
 system to a **Procedure**, so the noun in the object position should be the one the predicate
@@ -44,15 +44,15 @@ expects. A name can be free and still be the wrong part of speech for where it e
 name no longer says *which kind* of procedure it is — a sampling procedure or a calibration
 procedure would also end in `…Procedure`, and nothing in the name would separate them. That is
 real, and it costs nothing here, because the kind is carried by the qualifier class rather than
-by the spelling: these three are `perception:SenseMode` and a future calibration procedure would
+by the spelling: these three are `sensing:SenseMode` and a future calibration procedure would
 not be. The shape asks for the class, never for a name that looks a certain way.
 
 # Context
 
-Perception had two capabilities, `perception:Polling` and `perception:Listening`, derived from a device being
-`perception:PolledProcedure` or `perception:PushProcedure`. The names described the *device*, and one of them was wrong about it.
+Sensing had two capabilities, `sensing:Polling` and `sensing:Listening`, derived from a device being
+`sensing:PolledProcedure` or `sensing:PushProcedure`. The names described the *device*, and one of them was wrong about it.
 
-`perception:Polling` did not poll. A polling agent set a retained `{"sleep_s":N}` on the device's
+`sensing:Polling` did not poll. A polling agent set a retained `{"sleep_s":N}` on the device's
 command topic and the device woke itself on that schedule. The agent never asked for a
 reading; it stated an interval and delegated the timekeeping. `sense_now()` existed and looked
 like the missing half, but its own docstring called it best-effort — the ESP32 is awake for a
@@ -67,18 +67,18 @@ So the vocabulary named an exchange the system does not perform, and hid the one
 **Who holds the clock** is the axis, because it is what changes what the agent must believe —
 which is the standing test for whether something deserves to be a capability.
 
-| capability | `perception:senseMode` | who runs the timer | the agent states |
+| capability | `sensing:senseMode` | who runs the timer | the agent states |
 |---|---|---|---|
-| `perception:Polling` | `perception:PolledProcedure` | the **agent** — it asks for each reading | an interval, its own |
-| `perception:Subscribing` | `perception:ScheduledProcedure` | **shared** — agent sets, device keeps | an interval, the device's |
-| `perception:Listening` | `perception:PushProcedure` | the **device** | nothing |
+| `sensing:Polling` | `sensing:PolledProcedure` | the **agent** — it asks for each reading | an interval, its own |
+| `sensing:Subscribing` | `sensing:ScheduledProcedure` | **shared** — agent sets, device keeps | an interval, the device's |
+| `sensing:Listening` | `sensing:PushProcedure` | the **device** | nothing |
 
 Strictly decreasing agent control, and each asks the agent for strictly less. What was
-`perception:Polling` is now `perception:Subscribing`, and the mode then spelled `Pull` is now
-`perception:ScheduledProcedure` — **four spellings, and this sentence is about the first change**.
+`sensing:Polling` is now `sensing:Subscribing`, and the mode then spelled `Pull` is now
+`sensing:ScheduledProcedure` — **four spellings, and this sentence is about the first change**.
 This record moved that mode's *referent* from the middle row to the top; the three renames in the
 table above changed only how all three are spelled. Read `Pull` here as the name of the time, not
-as today's `perception:PolledProcedure`, which is the reserved third mode.
+as today's `sensing:PolledProcedure`, which is the reserved third mode.
 
 **"Agent sets, device keeps" was unqualified for as long as this record existed**, and a device
 that cannot keep what it is given is the whole of
@@ -90,7 +90,7 @@ only the first decides the family.
 
 # Polling is declared and not built, on purpose
 
-`perception:Polling` is the simplest exchange there is — one request, one response, nothing retained
+`sensing:Polling` is the simplest exchange there is — one request, one response, nothing retained
 on a broker, no standing state anywhere — and it is what the word ought to mean. It is also
 the one with the most agent control: the agent may look at a moment of its own choosing rather
 than at the next moment the device happens to offer.
@@ -99,7 +99,7 @@ It cannot be had from the hardware in this world. A board that deep-sleeps betwe
 not reachable, so "ask and it replies" is not available at any price short of keeping it awake
 — which costs the battery life the whole design is built around.
 
-So the T-Box declares `perception:Polling` and `perception:PolledProcedure`, **no derivation rule maps one to the other**,
+So the T-Box declares `sensing:Polling` and `sensing:PolledProcedure`, **no derivation rule maps one to the other**,
 and no module provides it. Nothing can acquire it, and the vocabulary is honest about the
 three rather than pretending there are two. Adding it later is a class and one line of
 `PROVIDES` — no other package moves, because
@@ -107,9 +107,9 @@ three rather than pretending there are two. Adding it later is a class and one l
 
 # Why the middle one is not a compromise
 
-It would be easy to read `perception:Subscribing` as a degraded `perception:Polling`. It is not, and the
+It would be easy to read `sensing:Subscribing` as a degraded `sensing:Polling`. It is not, and the
 distinction is load-bearing: **the agent has not given up deciding how often to look.** The
-interval is its own belief (`perception:fastSleepS` / `perception:slowSleepS`), it still moves with urgency,
+interval is its own belief (`sensing:fastSleepS` / `sensing:slowSleepS`), it still moves with urgency,
 and it is still clamped by the constitution in three places. What is delegated is only the
 *timekeeping* — a standing request instead of a repeated one — and that delegation is
 precisely what buys the device its sleep.
@@ -124,19 +124,19 @@ subscribing genuinely different things to hold.
 
 - **A misnamed capability stopped lying.** The firmware always implemented Subscribing; only
   the vocabulary said otherwise.
-- **The reserved seam is legible.** `perception:Polling` in the T-Box with no rule and no module is a
+- **The reserved seam is legible.** `sensing:Polling` in the T-Box with no rule and no module is a
   statement about what this world's hardware can do, readable without reading the code.
 - **The sense modes now pair one-to-one with the capabilities,** so the derivation is a lookup
   rather than a judgement, and a fourth mode would be a fourth row.
 
 # What is still open
 
-- **Nothing prevents declaring `perception:PolledProcedure` on a board that sleeps.** Nothing
+- **Nothing prevents declaring `sensing:PolledProcedure` on a board that sleeps.** Nothing
   checks that a device claiming to be always-reachable actually is. Today it is harmless — no
-  rule reads `perception:PolledProcedure` — and it becomes a real check the moment polling is
+  rule reads `sensing:PolledProcedure` — and it becomes a real check the moment polling is
   built.
 - **A device could support both.** Mains-powered hardware could answer requests *and* keep an
-  interval; the world states one `perception:senseMode`, so it would have to choose. Whether that
+  interval; the world states one `sensing:senseMode`, so it would have to choose. Whether that
   should become a set is unanswered.
 
 # A defect, not a seam: the command-channel guard is on the wrong premise
@@ -157,7 +157,7 @@ Measured on `world/sensing`, removing one `mqtt:commandTopic` at a time:
 The guard lives in `packages/transport/mqtt/shapes.ttl` and is conditioned on a sensor being **on a
 bus**. The two DHT channels are `sosa:Sensor` and deliberately not devices — they ride the board's
 topic and have no `mqtt:onBus` of their own — so the shape never targets them. Each is
-`perception:ScheduledProcedure`, each derives `perception:Subscribing`, and each can lose the
+`sensing:ScheduledProcedure`, each derives `sensing:Subscribing`, and each can lose the
 channel an interval would arrive on without anything objecting.
 
 **The premise is wrong, not the shape.** It asks *does this thing speak MQTT* when the question
@@ -170,7 +170,7 @@ code today. `_aimed_with` returns *"a group of one — nothing is sent for it"*.
 claims the sensor, because `MqttDriver.claims` is satisfied by `mqtt:readingTopic` alone. Its
 `set_cadence` opens with `if sensor.command_topic:` and so returns having published nothing —
 **silently, because there is nothing anomalous about it from where the driver stands**. Control
-returns to `PerceptionModule.set_cadence`, which then unconditionally records `self.sent[key]`
+returns to `SensingModule.set_cadence`, which then unconditionally records `self.sent[key]`
 and `self.sent_cadence[...]` and logs `cadence now Ns`.
 
 So the agent ends up holding, and stating, that it set an interval the board never heard. The

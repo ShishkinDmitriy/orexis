@@ -2,7 +2,7 @@
 
 One of the two ways of reporting. `reporting:Announcing` — putting the account on the bus rather
 than in a series bucket — is declared in `ontology.ttl` and deliberately absent here, exactly as
-`review:Consulting` and `perception:Polling` are: the vocabulary should be honest that the sink is
+`review:Consulting` and `sensing:Polling` are: the vocabulary should be honest that the sink is
 the replaceable part, but nothing implements this one yet. Adding it is a class and one line of
 `PROVIDES`; no other package moves.
 

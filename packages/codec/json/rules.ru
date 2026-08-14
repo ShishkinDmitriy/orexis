@@ -1,7 +1,7 @@
 # Derivation: which codec serves each CHANNEL, from what the devices on it send.
 #
 # The premise is `codec:encoding` — a fact about a board's firmware, the same kind of fact as
-# `perception:senseMode`. The conclusion moved: it used to land on the sensor and now lands on the
+# `sensing:senseMode`. The conclusion moved: it used to land on the sensor and now lands on the
 # stream, because an encoding is a property of a stream and never was one of a sensor. Three
 # sensors sharing one topic are three copies of one fact the moment it sits on them, and nothing
 # stops the copies disagreeing — which is exactly what validated clean before this.
@@ -22,7 +22,7 @@
 # world. That is the intended reading: two devices disagreeing about the format of one stream is
 # the error, however quietly one of them disagrees.
 
-PREFIX perception: <http://example.org/agora/perception#>
+PREFIX sensing: <http://example.org/agora/sensing#>
 PREFIX mqtt: <http://example.org/agora/mqtt#>
 PREFIX ag:    <http://example.org/agora#>
 PREFIX codec: <http://example.org/agora/codec#>

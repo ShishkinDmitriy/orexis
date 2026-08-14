@@ -38,7 +38,7 @@ share no premise:
 |---|---|
 | `actuation:Actuation` | `actuation:hasActuator` — it is wired to a valve |
 | `market:Bidding`, `market:Hosting` | `market:bidsIn`, `market:hosts` — its position in a market |
-| `perception:Subscribing`, `perception:Listening` | `perception:polls` a sensor, and that sensor's mode |
+| `sensing:Subscribing`, `sensing:Listening` | `sensing:polls` a sensor, and that sensor's mode |
 | `review:Reckoning` | `review:commits` — room to move |
 
 The general rule is that **a capability is granted by whatever fact makes it meaningful**, and what
@@ -65,7 +65,7 @@ disagree with the mandate. An agent with a mandate reviews; an agent with none h
 module at all, keeps no summaries, and never arises. The two facts cannot drift apart because
 there is only one fact.
 
-This follows the shape perception already had — a capability that is a strict function of
+This follows the shape sensing already had — a capability that is a strict function of
 something already stated, so it is `derived` and not `deduced`, and it lands in
 `graph/world/derived` like every other conclusion. See
 [who-put-the-fact-there](who-put-the-fact-there.md).
@@ -103,7 +103,7 @@ Two things fell out of that which were not available before:
 `review:reviewIntervalS` was optional, and its absence meant "never review". That was a side channel
 dressed as a decision by omission: nothing could check it, and it put the question *does this
 agent reflect* in a private file where no shape and no peer could read the answer. It is now an
-ordinary required parameter of the capability, exactly as `perception:fastSleepS` is for one that
+ordinary required parameter of the capability, exactly as `sensing:fastSleepS` is for one that
 subscribes — `sh:minCount 1`, floor 60 seconds, because an arising re-validates the whole agent
 against every shape and is not free.
 
@@ -166,7 +166,7 @@ latitude, rather than having had no second thoughts.
   nothing. There is no third state where a mandate and a switch disagree.
 - The kernel ontology is back to what every agent has. ~20 terms moved to the family.
 - A review rule still belongs to the package owning the term it re-picks — `review.rq` for the
-  sensing cadence stays in `capabilities/perception/`. The review capability owns *reviewing*; it
+  sensing cadence stays in `capabilities/sensing/`. The review capability owns *reviewing*; it
   does not own what may be reviewed.
 - The old kernel `ag:CommitmentShape` used `sh:targetClass review:Commitment` and matched nothing for
   as long as it existed: a mandate is written inline as `review:commits [ ... ]`, and nobody types a
@@ -176,7 +176,7 @@ latitude, rather than having had no second thoughts.
 # Seams left open
 
 - **Nothing chooses between members.** With one implementation the derivation names `review:Reckoning`
-  directly. When `review:Consulting` exists, something has to select — and unlike perception, no
+  directly. When `review:Consulting` exists, something has to select — and unlike sensing, no
   hardware fact forces the answer, so it will be a `deduced` judgement at genesis rather than a
   `derived` one. The rule will need a second premise; what that premise is, is not decided.
 - **A mandate covers one term, and an agent may hold several.** They are independent ranges with

@@ -305,7 +305,7 @@ def test_the_society_repeats_every_limit_the_wiring_states():
                     f"cadence its board will not keep")
 
     # The guard on the guard, and it is here because this test WAS dead. PR #95 renamed
-    # `perception:seconds` to schema.org's `value`/`unitCode` pair; the walk above still asked for
+    # `sensing:seconds` to schema.org's `value`/`unitCode` pair; the walk above still asked for
     # the old term, found nothing anywhere, and passed every run since by having nothing to
     # compare. Measured on the commit before this one: zero parts reached an assertion.
     #

@@ -19,7 +19,7 @@ Background, if the *why* matters: [world](/domain/world.md) for what a world is 
 Not ceremony. The questions it forces are the ones the Turtle has to answer, and they surface
 only once something concrete is on the table:
 
-- *is that board reachable at any moment, or does it sleep?* → decides the perception capability
+- *is that board reachable at any moment, or does it sleep?* → decides the sensing capability
 - *who owns the barrel?* → owning the venue derives `market:Hosting`, owning valves `actuation:Actuation`
 - *what range does that plant need, and what will it merely survive?* → the two ranges are the
   plant's, and the agent's region is deduced from them; the *target* inside it is still opinion
@@ -35,8 +35,8 @@ reality, a derivation cannot.
 
 | you state | genesis derives |
 |---|---|
-| `perception:polls` a sensor with `perception:senseMode perception:ScheduledProcedure` | `perception:Subscribing` |
-| `perception:polls` a sensor with `perception:senseMode perception:PushProcedure` | `perception:Listening` |
+| `sensing:polls` a sensor with `sensing:senseMode sensing:ScheduledProcedure` | `sensing:Subscribing` |
+| `sensing:polls` a sensor with `sensing:senseMode sensing:PushProcedure` | `sensing:Listening` |
 | `market:bidsIn` a market | `market:Bidding` |
 | `market:hosts` a market | `market:Hosting` |
 | `actuation:hasActuator` a kind of `actuation:Actuator` | `actuation:Actuation` |
@@ -50,7 +50,7 @@ Only the blocks for capabilities the wiring will give it. Unsure which? Do step 
 output.
 
 Two families, and they behave differently ([genesis-process](/domain/genesis-process.md)):
-**operational** (`perception:fastSleepS`, `perception:slowSleepS`, `perception:maxReadingAgeS`) follows the *kind* of
+**operational** (`sensing:fastSleepS`, `sensing:slowSleepS`, `sensing:maxReadingAgeS`) follows the *kind* of
 world — a bench rig wants 10s, a garden wants 600s; **stake** (`desire:aims`,
 `market:hasEndowment`, `water:maxValuePerL`) is the agent's own and derivable from nothing.
 
@@ -83,7 +83,7 @@ Conforms: True
 
 **Read the derived line for each agent.** It is the cheapest place a misunderstanding surfaces.
 An agent that derived nothing has wiring implying no ability — almost always a missing
-`perception:senseMode`, or a device that is not a kind of anything the rules recognise. An agent marked
+`sensing:senseMode`, or a device that is not a kind of anything the rules recognise. An agent marked
 *(no opening beliefs authored)* is declared but has no `beliefs-<id>.ttl`, and will refuse to
 start.
 
@@ -117,7 +117,7 @@ Then [run-a-world](/runbooks/run-a-world.md).
 
 | symptom | cause |
 |---|---|
-| `derived <agent> -> ` nothing | wiring implies no ability; check `perception:senseMode` and that devices are typed |
+| `derived <agent> -> ` nothing | wiring implies no ability; check `sensing:senseMode` and that devices are typed |
 | `agora-validate` fails on a missing belief | the wiring derived a capability whose block you did not write |
 | agent refuses to start, `BeliefsInvalid` | the same thing, caught at startup by the agent itself |
 | agent boots, no readings | the board's `PLANT_ID` and the world's `mqtt:readingTopic` disagree |

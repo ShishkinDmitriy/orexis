@@ -10,7 +10,7 @@
 # operating range and the sub-system structure all come from them, untouched.
 
 @prefix ag:         <http://example.org/agora#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix mqtt:       <http://example.org/agora/mqtt#> .
 @prefix scaling:    <http://example.org/agora/scaling#> .
 @prefix water:      <http://example.org/agora/water#> .
@@ -19,12 +19,12 @@
 @prefix dht22:      <http://example.org/data/DHT22/4578#> .
 
 # Their two channels, deployed. `ag:Device` is ours and is the conjunct that carries a name on
-# our wire — see the audit in capabilities/perception/ontology.ttl for why that class survives
-# where `perception:Sensor` did not.
+# our wire — see the audit in capabilities/sensing/ontology.ttl for why that class survives
+# where `sensing:Sensor` did not.
 dht22:TemperatureSensor a ag:Device ;
     ag:localId "vendor_air_temp" ;
-    perception:senseMode perception:ScheduledProcedure ;
-    perception:monitors ag:fern ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -33,8 +33,8 @@ dht22:TemperatureSensor a ag:Device ;
 
 dht22:HumiditySensor a ag:Device ;
     ag:localId "vendor_air_humidity" ;
-    perception:senseMode perception:ScheduledProcedure ;
-    perception:monitors ag:fern ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors ag:fern ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;

@@ -21,7 +21,7 @@ correct. Rising bytes are alarming only if you already know the triples are flat
 is the signal, and the metrics added in #21 had been computing both halves every minute without
 anyone drawing the conclusion.
 
-The second is that `perception:slowSleepS` is a guess. An author writes "look every ten minutes when
+The second is that `sensing:slowSleepS` is a guess. An author writes "look every ten minutes when
 comfortable" before the agent has seen a single reading. Six hours later the agent knows something
 the author could not: whether looking that often is telling it anything. Nothing let it act on
 that, and the only route to a better number was a human editing a Turtle file.
@@ -49,7 +49,7 @@ So the room comes from constraints, and there are three sources:
 
 | | what it says | where it lives |
 |---|---|---|
-| **constitution** | what the society allows *any* agent | figures on the capability family, e.g. `perception:minSleepS` / `perception:maxSleepS` |
+| **constitution** | what the society allows *any* agent | figures on the capability family, e.g. `sensing:minSleepS` / `sensing:maxSleepS` |
 | **hardware** | what the equipment can do | on a device, as an `ssn-system:Frequency` — borrowed from SSN rather than invented, and carried to the agent at genesis. See [a-board-says-what-it-can-honour](a-board-says-what-it-can-honour.md) |
 | **mandate** | what **this** agent's world allows it | `review:commits`, in `world.ttl` |
 
@@ -76,7 +76,7 @@ said by leaving nowhere to go**, not by a flag somewhere that says not to look.
 One triple, in the `ontology.ttl` of the package that owns the term:
 
 ```turtle
-perception:slowSleepS a review:RevisableBelief ; review:revisableToward perception:minSleepS , perception:maxSleepS .
+sensing:slowSleepS a review:RevisableBelief ; review:revisableToward sensing:minSleepS , sensing:maxSleepS .
 ```
 
 The reviewer finds it by asking the merged T-Box. Nothing lists it, no Python knows its name, and
@@ -175,13 +175,13 @@ in perfect equilibrium, and relaxing attention on a broken instrument is precise
 is the moment the freshness rule most needs to fire.
 
 So **frozen argues for tightening, alongside moving**; only *steady* — ranging, but by less than
-`perception:steadyFraction` of its own mean — argues for relaxing. Two asymmetries follow:
+`sensing:steadyFraction` of its own mean — argues for relaxing. Two asymmetries follow:
 
 - **Relaxing needs unanimity; tightening needs one dissenter.** One agent holds one
-  `perception:slowSleepS` covering every sensor it has, so a single moving or frozen instrument pulls the
+  `sensing:slowSleepS` covering every sensor it has, so a single moving or frozen instrument pulls the
   whole agent back. The cost of watching a still pot too closely is some battery; the cost of the
   reverse is a dead plant.
-- **`perception:reviewWindow` readings before any conclusion.** Two identical readings are a coincidence,
+- **`sensing:reviewWindow` readings before any conclusion.** Two identical readings are a coincidence,
   and an agent that relaxed on the strength of them would be reasoning from noise.
 
 Both figures are constitutional rather than private. Left to each agent they are the two numbers a
@@ -189,9 +189,9 @@ lazy one tunes until it is entitled to stop looking.
 
 # Attention still follows need
 
-`cadence_for` interpolates from `perception:slowSleepS` toward `perception:fastSleepS` by urgency, and **only the
+`cadence_for` interpolates from `sensing:slowSleepS` toward `sensing:fastSleepS` by urgency, and **only the
 comfortable end is revisable**. At urgency 1.0 an agent watches at its fastest whatever a review
-concluded. The existing claim — *attention follows need, and need is not perception's to define* —
+concluded. The existing claim — *attention follows need, and need is not sensing's to define* —
 stands unamended; what is added is that attention **also** follows whether looking is telling the
 agent anything, and the second may only act inside the room the first leaves.
 
@@ -234,7 +234,7 @@ choice.
 
 - **No device states a sensor constraint.** The third source of room is declared and intersected
   and nothing uses it. It is real the moment a board says what interval it can honour.
-- **Only `perception:slowSleepS` is reviewable.** Instruments only, deliberately. An agent revising what
+- **Only `sensing:slowSleepS` is reviewable.** Instruments only, deliberately. An agent revising what
   it *wants* — a target, a band, a price — is a much larger claim than one revising how often it
   looks: it could satisfy itself by wanting less, which is the failure the band exists to make
   visible. In BDI terms this is just another desire and could be specified properly; it has not

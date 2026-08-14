@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: Agent-centric epistemics — judgment, data, and initiative belong to the agent
-description: Push interpretation, private data, and perception to the agent; keep infra thin and honest; author by stake; disclose need-to-know; observe via sovereign god-view.
+description: Push interpretation, private data, and sensing to the agent; keep infra thin and honest; author by stake; disclose need-to-know; observe via sovereign god-view.
 status: accepted
 stage: v1
 tags: [epistemics, privacy, trust, sensing, metabolic-cost, observability]
@@ -45,7 +45,7 @@ The leash flips from mandatory to **voluntary disclosure**: an agent *chooses* t
 attested fact in its justification to be believed (witness-signed, so credible). Persuasion
 with receipts, on its own terms.
 
-# 3. Agent-driven sensing — pull, not push; perception is a priced action
+# 3. Agent-driven sensing — pull, not push; sensing is a priced action
 
 The sensor should not push on its own cadence (that is the edge "acting"). Invert it: the
 **agent initiates sensing and decides how often**; the firmware is a thin reactive service
@@ -55,7 +55,7 @@ it reads, and a bid must cite a **fresh-enough** attested reading (so stale, fav
 can't back a bid, and an agent can't stay willfully ignorant to bid high).
 
 The payoff: sensing costs energy (battery + budget), so **how much to observe becomes an
-economic decision** — bounded rationality extended from cognition to *perception*
+economic decision** — bounded rationality extended from cognition to *sensing*
 (see [single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md)). Guard: a
 **constitutional cadence floor** — autonomy over attention, but never the freedom to sleep
 through a drought and rot.
@@ -113,7 +113,7 @@ from its own urgency and nudges for a reading before it bids. The guard that pul
 came with it: a bid must cite a **fresh-enough** reading or the agent sits the round out, and
 the cadence floor is clamped on both sides of the wire. See [sensing](/domain/sensing.md).
 
-**Not yet.** Perception is *initiated* by the agent but not **priced** — no wallet debit per
+**Not yet.** Sensing is *initiated* by the agent but not **priced** — no wallet debit per
 `sense`, so "how much to observe" is not yet the economic decision §3 promises; that waits on
 [single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md). Disclosure (§2) is
 still coarse: one shared `:sensed` graph rather than per-plant private scopes — nothing yet
