@@ -151,7 +151,12 @@ def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeyp
 
     worlds = tmp_path / "worlds"
     shutil.copytree(genesis.world_dir("simulation"), worlds / "sim2")
+    (worlds / "sim2" / "keys.ttl").unlink(missing_ok=True)  # this machine's, not this test's
     monkeypatch.setattr(genesis, "WORLDS_ROOT", worlds)
+    # conftest filters keys.ttl out of every sweep so tests stay hermetic against whatever this
+    # machine last deployed — this test GENERATES one and needs it swept, so the real glob
+    # comes back for its duration.
+    monkeypatch.setattr(genesis, "world_files", lambda w: sorted(w.glob("*.ttl")))
     monkeypatch.setenv("AGORA_WORLD", "sim2")
     monkeypatch.delenv("AGORA_WORLD_DIR", raising=False)
 
