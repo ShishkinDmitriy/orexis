@@ -143,8 +143,17 @@ moisture.
   may rest, and the device honours exactly that. Anything tighter than the wake cost is
   mostly wake cost, which is why the constitutional floor sits where it does.
 - **Sense** (`sense:true`) is a *best-effort nudge* — it lands only if the board happens to be
-  awake in its listen window, and is **never retained** (a retained `sense` would re-fire on
-  every wake, forever).
+  awake between publishing and being released, and is **never retained** (a retained `sense`
+  would re-fire on every wake, forever).
+
+**The wake ends with a release, not a timer (#152).** After publishing, the board waits for
+the agent's answer to *that reading* — the agent answers every one, and the answer carries the
+cadence — and sleeps the moment it lands, usually tens of milliseconds later. A fixed listen
+window used to be idled out in full every wake; now the timeout is only the fallback for an
+agent that is down, in which case the board says so and sleeps on the retained command it
+drained before publishing. The reply being guaranteed is also what makes the ack exact: a
+releasing board sleeps precisely what it was answered, so its next reading receipts the
+cadence actually kept.
 
 # The band rides the same message, and gets the retention for free
 

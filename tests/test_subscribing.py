@@ -141,10 +141,22 @@ def test_cadence_is_retained_so_a_sleeping_board_gets_it(fern):
     assert retained and all(retained)
 
 
-def test_an_unchanged_cadence_is_not_republished(fern):
+def test_an_unchanged_cadence_is_not_republished_to_a_board_that_is_not_waiting(fern):
+    """A reading WITHOUT an ack is pre-release firmware or a test's direct ingest: nobody is
+    waiting for an answer, so the old economy holds and an unchanged message is not re-sent."""
     for _ in range(3):
         fern.deliver(sensor_of(fern).reading_topic, {"value": 0.2})
     assert len(cadences(fern)) == 1
+
+
+def test_an_acked_reading_is_always_answered(fern):
+    """The release (#152). A board that acks its cadence is a board that publishes and then
+    WAITS for the answer — the reply carries the cadence to sleep on, and the wake ends when it
+    lands. So an acked reading must be answered even when nothing changed: the memory of what
+    the channel was last told excuses silence only to a board that is not listening for it."""
+    for _ in range(3):
+        fern.deliver(sensor_of(fern).reading_topic, {"value": 0.2, "sleep_s": 30})
+    assert len(cadences(fern)) == 3
 
 
 def test_a_changed_cadence_is_republished(fern):
@@ -629,11 +641,11 @@ def test_without_an_ack_the_commanded_cadence_still_rules(fern):
 
 
 def test_one_mismatched_ack_is_noise_and_two_are_the_detector(fern, caplog):
-    """The agent's live response to a reading lands in the board's post-publish window, so the
-    wake after every re-aim acks the OLD value once — expected, silent. The same mismatch twice
-    running is the real thing: a cleared retained command (#37) or a firmware clamp, said out
-    loud, and the dedup memory dropped so the next reading re-sends the command instead of
-    assuming the board already knows it."""
+    """Pre-release firmware acks the OLD value once after every re-aim (its live response
+    landed in a fixed window) — expected, silent. The same mismatch twice running is the real
+    thing: a cleared retained command (#37) or a firmware clamp, said out loud. The re-send no
+    longer needs arranging: every acked reading is answered, because the answer is the release
+    (#152)."""
     import logging
 
     s = moisture_sensor(fern)

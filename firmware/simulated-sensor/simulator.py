@@ -153,6 +153,10 @@ class SimulatedSensor:
         self.max_sleep_s = _float("SIM_MAX_SLEEP_S", 900)
         # Until an agent says otherwise — the same fallback a board carries.
         self.sleep_s = _float("SIM_DEFAULT_SLEEP_S", 60)
+        # How long a scheduled device waits to be RELEASED after publishing (#152), before
+        # giving up on the agent for this wake — the stand-in for RELEASE_WAIT_MS.
+        self.release_wait_s = _float("SIM_RELEASE_WAIT_S", 5)
+        self._released = threading.Event()
 
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,
                                   client_id=f"agora-sim-{self.sensor_id}-{random.randint(0, 1 << 24):06x}")
@@ -204,6 +208,9 @@ class SimulatedSensor:
         if isinstance(doc.get("sleep_s"), (int, float)):
             asked = float(doc["sleep_s"])
             self.sleep_s = max(self.min_sleep_s, min(self.max_sleep_s, asked))
+            # An answer carrying a cadence is the release (#152) — a sense nudge is not, exactly
+            # as on the board: a nudge republishes, and the answer to THAT reading releases.
+            self._released.set()
             log.info("%s: cadence now %ss", self.sensor_id, self.sleep_s)
         if doc.get("sense"):
             self._publish()
@@ -320,10 +327,23 @@ class SimulatedSensor:
     def _loop(self) -> None:
         while not self._stop.is_set():
             self._dry()
+            if self.mode == "push":
+                # A push device keeps its own tick and waits for nobody.
+                self._publish()
+                self._stop.wait(self.tick_s)
+                continue
+            # A scheduled device publishes and then WAITS TO BE RELEASED (#152): the agent
+            # answers every reading, the answer carries the cadence, and the sleep below runs
+            # on what the release said rather than on what was known before the publish. The
+            # timeout is the dead-agent case, exactly as on the board. The flag is lowered
+            # first because the release must answer THIS reading — a leftover from the last
+            # wake is memory, not permission.
+            self._released.clear()
             self._publish()
-            # A scheduled device sleeps for what it was told; a push one keeps its own tick.
-            # Neither can be instructed to breach the constitutional bounds.
-            self._stop.wait(self.sleep_s if self.mode != "push" else self.tick_s)
+            if not self._released.wait(self.release_wait_s):
+                log.warning("%s: no release after %ss — the agent is not answering",
+                            self.sensor_id, self.release_wait_s)
+            self._stop.wait(self.sleep_s)
 
 
 def main() -> None:
