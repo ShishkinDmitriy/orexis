@@ -83,6 +83,10 @@ class Metrics:
         self.sensed_failures = 0
         self.mqtt_reconnects = -1  # the first connect is not a RE-connect; see connected()
         self.mqtt_connected = False
+        # Born disconnected, and the clock starts NOW, deliberately: an agent whose first
+        # connect never completes — a broker refusing its CONNACK in a loop — is exactly as
+        # cut off as one whose session died, and must meet the same bound (#53).
+        self.disconnected_at: float | None = time.monotonic()
         # The STORY, beside the figures (#125): point-in-time transitions with their prose —
         # an intention adopted, a commitment resolved, an end judged. Bounded, so a deployment
         # with no working reporter cannot grow a leak: the series is a projection for the
@@ -130,9 +134,23 @@ class Metrics:
     def connected(self) -> None:
         self.mqtt_connected = True
         self.mqtt_reconnects += 1
+        self.disconnected_at = None
 
     def disconnected(self) -> None:
         self.mqtt_connected = False
+        # Only the FIRST notice starts the clock: paho may report one dead session more than
+        # once, and each repeat is the same outage, not a fresh one.
+        if self.disconnected_at is None:
+            self.disconnected_at = time.monotonic()
+
+    def disconnected_for_s(self) -> float | None:
+        """How long this agent has been cut off from its bus, or None while it is on it.
+
+        The number the watchdog acts on (#53). Continuous, not cumulative: one successful
+        reconnect resets it, so a flapping link never accumulates its way to a resignation —
+        flapping is a different fault, and `mqtt_reconnects` is its counter.
+        """
+        return None if self.disconnected_at is None else time.monotonic() - self.disconnected_at
 
     # --- what it says about itself ---
 

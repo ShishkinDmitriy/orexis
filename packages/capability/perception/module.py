@@ -203,6 +203,26 @@ class PerceptionModule(Module):
         """
         return True
 
+    def quiet(self) -> list[str]:
+        """Every sensor of mine that has delivered once and then gone silent past my rule.
+
+        Answered by the base class for BOTH clocks: subscribing's limit is relative to the
+        cadence in force and listening's is absolute, but `stale_after_s` already dispatches
+        that, so the question is one question. A sensor that has NEVER delivered is deliberately
+        not here — that is a different fault, said by `readings_total` sitting at zero — and the
+        age comes off the metrics clock, which counts arrivals wherever they entered.
+        """
+        out = []
+        for sensor in self.sensors:
+            age = self.agent.metrics.reading_age_s(sensor.local_id)
+            if age is None:
+                continue
+            limit = self.stale_after_s(sensor.subject, sensor.observes)
+            if age > limit:
+                out.append(f"{sensor.local_id}: nothing for {age:.0f}s, past the "
+                           f"{limit}s I allow")
+        return out
+
     def sense_now(self) -> None:
         """Ask for a reading now, if my hardware allows it. Listening cannot.
 

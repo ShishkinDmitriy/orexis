@@ -100,6 +100,17 @@ class Module:
         """
         return {}
 
+    def quiet(self) -> list[str]:
+        """What this module has stopped hearing that it expected to hear — one line each.
+
+        The self-liveness half of #53: the freshness rule already refuses a stale reading
+        whenever something ASKS, but a fault that stops the asking is invisible to it. The
+        watchdog asks this on its own clock, so the agent says "nothing from X for Ys, past
+        what I allow" instead of waiting to be queried. Most modules expect nothing on a
+        schedule and answer nothing; the strings are prose for a log, never parsed.
+        """
+        return []
+
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
         """How close this reading puts me to my own trouble: 0.0 (fine) to 1.0 (trouble).
