@@ -1,4 +1,4 @@
-"""actuation:Actuation — redeem a voucher against real hardware.
+"""actuation:Actuation — redeem a claim against real hardware.
 
 There is no "armed" flag and no dry-run mode. This capability actuates; that is what it is
 for. An installation that must NOT move water does not disarm the module — it declares
@@ -6,8 +6,8 @@ devices that do not move water, and derivation gives its agent a different capab
 thing does belongs in the model, not in an environment variable that can disagree with it.
 
 
-Held by the resource owner, never by the winner: a voucher is a *claim on the owner*, and the
-owner is the one with the valves. This module decides nothing. It maps a voucher's subject to
+Held by the resource owner, never by the winner: a claim is a *claim on the owner*, and the
+owner is the one with the valves. This module decides nothing. It maps a claim's subject to
 the device that serves it (`actuation:actuates`), converts litres into open-seconds with that
 device's own calibration (`actuation:mlPerSecond`), caps the dose at the device's own limit
 (`actuation:maxDoseMl`) regardless of what cleared, co-signs, and publishes to the device's own
@@ -71,28 +71,28 @@ class ActuationModule(Module):
         except Exception:
             self.log.warning("no signing keys (run agora-keygen) — devices will reject commands")
 
-    def command_for(self, voucher) -> tuple[Command, object]:
-        device = self.me.actuator_for(voucher.sub)
+    def command_for(self, claim) -> tuple[Command, object]:
+        device = self.me.actuator_for(claim.sub)
         if device is None:
-            raise ValueError(f"I own no actuator that serves {voucher.sub!r}")
-        ml = min(voucher.amount_l * 1000.0, device.max_dose_ml)  # the device's own cap
+            raise ValueError(f"I own no actuator that serves {claim.sub!r}")
+        ml = min(claim.amount_l * 1000.0, device.max_dose_ml)  # the device's own cap
         return Command(
-            jti=voucher.jti, plant=voucher.sub, scope=voucher.scope,
+            jti=claim.jti, plant=claim.sub, scope=claim.scope,
             ml=round(ml, 1), seconds=round(ml / device.ml_per_second, 2),
-            auction_id=voucher.auction_id,
+            auction_id=claim.auction_id,
         ), device
 
-    def redeem(self, voucher) -> Command:
-        if voucher.jti in self.settled:
-            raise ValueError(f"replay: jti {voucher.jti} already redeemed")
-        cmd, device = self.command_for(voucher)
+    def redeem(self, claim) -> Command:
+        if claim.jti in self.settled:
+            raise ValueError(f"replay: jti {claim.jti} already redeemed")
+        cmd, device = self.command_for(claim)
         payload = asdict(cmd)
         if self.host_key is not None and self.clearing_key is not None:
             data = signing.canonical(payload)
             payload["match_sig"] = signing.sign(self.host_key, data)  # the seller authorises
             payload["val_sig"] = signing.sign(self.clearing_key, data)  # clearing validated
         self.publish(device.command_topic, payload)
-        self.settled.add(voucher.jti)  # single-use either way: a dry run still spends the jti
+        self.settled.add(claim.jti)  # single-use either way: a dry run still spends the jti
         # Commanded is not delivered. The deadline is THIS dose's own duration — which this
         # agent computed, from the device's own calibration — plus the slack it believes the
         # bus needs. Relative and not absolute, for the reason `sensing:readingGraceS` is:
@@ -148,7 +148,7 @@ class ActuationModule(Module):
     def _expire(self) -> None:
         """Doses nobody confirmed. Reported and counted — never re-sent, and never un-spent.
 
-        The issue that asked for this suggested not treating an unconfirmed voucher as spent.
+        The issue that asked for this suggested not treating an unconfirmed claim as spent.
         That is the wrong way round, for two reasons:
 
         - **The device refuses replays itself.** `firmware/simulated-valve` keeps its own spent
@@ -167,7 +167,7 @@ class ActuationModule(Module):
             _, plant, ml = self.pending.pop(jti)
             self.unconfirmed += 1
             self.log.warning(
-                "%s: no confirmation that %.0f ml flowed (jti %s) — the voucher stays spent, "
+                "%s: no confirmation that %.0f ml flowed (jti %s) — the claim stays spent, "
                 "because a lost report and an unopened valve look identical from here",
                 plant, ml, jti)
 
@@ -180,11 +180,11 @@ class ActuationModule(Module):
         """
         return {"doses_confirmed": self.confirmed, "doses_unconfirmed": self.unconfirmed}
 
-    def redeem_all(self, vouchers) -> list[Command]:
+    def redeem_all(self, claims) -> list[Command]:
         out = []
-        for voucher in vouchers:
+        for claim in claims:
             try:
-                out.append(self.redeem(voucher))
+                out.append(self.redeem(claim))
             except ValueError as exc:
-                self.log.error("cannot redeem for %s: %s", voucher.sub, exc)
+                self.log.error("cannot redeem for %s: %s", claim.sub, exc)
         return out

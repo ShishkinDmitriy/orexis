@@ -180,7 +180,7 @@ def test_sensor_must_state_how_it_is_driven():
 def test_a_host_must_say_how_it_matches():
     """Without it no matching capability is derived and the failure arrives at the END of a
     round: bids collected, deadline passed, nothing to allocate them with, every bidder waiting
-    on a voucher that will not come. Refusing the world costs nothing by comparison."""
+    on a claim that will not come. Refusing the world costs nothing by comparison."""
     assert not _conforms(_mutate(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier market:matchesBy ?f }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier market:matchesBy ?f }} }}"""))
@@ -304,8 +304,8 @@ def test_a_plant_may_not_hold_a_desire():
 
 def test_market_must_state_all_three_channels():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market market:voucherTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market market:voucherTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market market:claimTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market market:claimTopic ?t }} }}"""))
 
 
 # --- the mc: wiring that cannot work must be refused --------------------------------------

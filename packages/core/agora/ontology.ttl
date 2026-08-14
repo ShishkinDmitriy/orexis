@@ -121,7 +121,7 @@ ag:Agent ag:resignAfterS 600 .
 #  how identities are attested. Base64 of the raw 32 bytes, no PEM ceremony.
 #
 #  TWO keys because the operations differ and conflating them is the classic mistake: Ed25519
-#  SIGNS (a presentation under the winner's own hand, #144) and X25519 SEALS (a voucher only
+#  SIGNS (a presentation under the winner's own hand, #144) and X25519 SEALS (a claim only
 #  its winner can open, #145). Absence is the pre-key era and stays legal — a world onboarded
 #  before keygen learned agents behaves exactly as it always did.
 
@@ -130,7 +130,7 @@ ag:signingKey a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:str
     rdfs:comment "Ed25519 public key, base64 raw. What a presentation is verified against: the durable identity exercising an ephemeral grant, per knowledge/decisions/authn-authz-capabilities.md." .
 ag:sealingKey a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:string ;
     rdfs:label "sealing key" ;
-    rdfs:comment "X25519 public key, base64 raw. What a voucher is sealed to, so the bus carries an envelope only the winner can open — the ACL keeps agents out, the seal keeps the bus out." .
+    rdfs:comment "X25519 public key, base64 raw. What a claim is sealed to, so the bus carries an envelope only the winner can open — the ACL keeps agents out, the seal keeps the bus out." .
 
 #################  Who did it, and in what capacity  #################
 #  A ROLE, not an identity, and the distinction is the whole point. There is no `ag:Sovereign`

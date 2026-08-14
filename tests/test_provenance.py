@@ -377,7 +377,7 @@ def test_both_engines_derive_the_same_world(world):
     a KIND of actuator was not observably an actuator there. `roster()` therefore stopped
     deriving `actuation:Actuation` for the supplier, and `agora-compose` would have written a compose
     file with the signing keys silently unmounted: the supplier could no longer co-sign a dose,
-    and every voucher redemption would have failed. Nothing noticed, because compose.yaml is
+    and every claim redemption would have failed. Nothing noticed, because compose.yaml is
     committed and regenerating it is not a gate.
 
     The fix was to stop deriving twice — rdflib now reads what the store computed. This test is

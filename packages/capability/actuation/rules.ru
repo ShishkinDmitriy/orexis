@@ -1,7 +1,7 @@
 # Derivation: you can actuate exactly what you own.
 #
 # Actuation is the power to touch the physical world, so it is never declared — it falls out
-# of holding the hardware. A plant agent wins vouchers and still cannot open a valve, because
+# of holding the hardware. A plant agent wins claims and still cannot open a valve, because
 # it owns none.
 
 PREFIX actuation: <http://example.org/agora/actuation#>

@@ -38,11 +38,11 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
 - **World genesis tool** (sovereign narrates → LLM drafts topology + charters → ratify →
   infra writes; versioned, amendable migrations) — unlocked by [genesis](/decisions/genesis.md);
   v1 hand-authors the ratified config. (v2/v3)
-- **Futures market** (a distinct venue from the v1 **spot** auction): win **held vouchers**,
+- **Futures market** (a distinct venue from the v1 **spot** auction): win **held claims**,
   redeemable until `exp`; the agent **spends** them to actuate on its own schedule — win and
   actuate *decoupled*. Enables temporal strategy (water at night, wait for rain, hedge a
-  forecast). Adds a voucher inventory, a supplier redemption ledger, and forward-vs-option
-  reservation. Unlocked by the voucher's `exp` seam
+  forecast). Adds a claim inventory, a supplier redemption ledger, and forward-vs-option
+  reservation. Unlocked by the claim's `exp` seam
   ([authn-authz-capabilities](/decisions/authn-authz-capabilities.md)). (v2/v3)
 - **Domain-as-plugin** (swap ontology → electricity instead of plants) — unlocked by
   [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) (agents read the T-Box

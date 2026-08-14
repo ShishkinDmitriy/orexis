@@ -60,7 +60,7 @@ def test_subscribes_its_own_sensor_and_market_channels(agent):
     assert set(fern.subscribed) == {
         fern.me.sensors[0].reading_topic,
         market.offer_topic,
-        f"{market.voucher_topic}/fern",
+        f"{market.claim_topic}/fern",
     }
 
 

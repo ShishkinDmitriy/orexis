@@ -125,9 +125,9 @@ def test_round_happy_path_issues_grants():
     st = state(bids={b.agent: b for b in bids})
     result = run_auction(offer(quantity_l=5.0), bids, st, auction_id="R-1", match=propose_match)
     assert result.validation.ok, result.validation.violations
-    assert {g.sub for g in result.vouchers} == {"tomato", "fern"}
+    assert {g.sub for g in result.claims} == {"tomato", "fern"}
     assert result.trade.total_qty_l == 5.0
-    tomato = next(g for g in result.vouchers if g.sub == "tomato")
+    tomato = next(g for g in result.claims if g.sub == "tomato")
     assert tomato.debit == pytest.approx(4.0 * 0.55)
 
 
@@ -140,7 +140,7 @@ def test_round_red_light_on_constitution():
     )
     result = run_auction(offer(quantity_l=5.0), bids, st, auction_id="R-1", match=propose_match)
     assert not result.validation.ok
-    assert result.vouchers == []
+    assert result.claims == []
     assert any("rot headroom" in v for v in result.validation.violations)
 
 
@@ -149,7 +149,7 @@ def test_round_red_light_on_insolvency():
     st = state(bids={b.agent: b for b in bids}, wallets={"fern": 0.50})  # cost 1.50 > 0.50
     result = run_auction(offer(quantity_l=5.0), bids, st, auction_id="R-1", match=propose_match)
     assert not result.validation.ok
-    assert result.vouchers == []
+    assert result.claims == []
     assert any("exceeds wallet" in v for v in result.validation.violations)
 
 
@@ -234,5 +234,5 @@ def test_a_round_run_under_uniform_price_clears_and_issues():
     st = state(bids={b.agent: b for b in bids})
     result = run_auction(offer(quantity_l=5.0), bids, st, auction_id="R-1", match=uniform_price)
     assert result.validation.ok, result.validation.violations
-    tomato = next(g for g in result.vouchers if g.sub == "tomato")
+    tomato = next(g for g in result.claims if g.sub == "tomato")
     assert tomato.debit == pytest.approx(4.0 * 0.40)  # billed at the clearing price, not its bid

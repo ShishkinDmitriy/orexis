@@ -78,9 +78,9 @@ changes; both were about the auction and said round.
 
 # What the identifier turned out to be on
 
-The seam this record opened said the identifier and the voucher claim were both misnamed. Closing
+The seam this record opened said the identifier and the claim claim were both misnamed. Closing
 it found the surface wider than the seam described: **the identifier is on four payloads, not
-one** — the offer, the bid, the voucher, and the signed command. They rename together or not at
+one** — the offer, the bid, the claim, and the signed command. They rename together or not at
 all, because a bidder echoing a key the host no longer reads is a bid silently dropped, and
 silence is the failure mode this project keeps rediscovering.
 
@@ -93,8 +93,8 @@ Two facts made it cheap today, and neither would have survived:
 - **`verify_command` rebuilds the canonical form from whatever keys arrive**, rather than from a
   fixed list — so a device verifies a renamed payload without knowing anything changed. That is a
   property of how it was written, not a guarantee anyone stated.
-- **Nothing persists a voucher.** `ActuationModule.settled` and the simulated valve's `spent` are
-  both in-memory sets, so no durable artifact carries the old key across a restart. Vouchers are
+- **Nothing persists a claim.** `ActuationModule.settled` and the simulated valve's `spent` are
+  both in-memory sets, so no durable artifact carries the old key across a restart. Claims are
   spot — redeemed on win, `exp` ≈ now.
 
 `run_round` became `run_auction` and `RoundResult` became `AuctionResult` with it: what that

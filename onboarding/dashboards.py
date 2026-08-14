@@ -322,7 +322,7 @@ def render_health(world: str) -> dict:
          "supersedes."),
         ("Affordances not paying", AGENT_MEASUREMENT, "affordances_suspect", "stat", "short", 12, 5,
          "Above zero, an agent's graph claims a movement the world keeps refusing: its acts "
-         "succeed (vouchers arrive) and the property never moves as promised, suspectAfter "
+         "succeed (claims arrive) and the property never moves as promised, suspectAfter "
          "times running. The false-knowledge flag — see #131. What to do about it is a "
          "decision, which is why this flags and nothing auto-retracts."),
         ("Desires held", AGENT_MEASUREMENT, "desires", "stat", "short", 12, 5,
