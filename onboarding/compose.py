@@ -36,7 +36,7 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import ACTUATION, AG, MARKET, MQTT, PERCEPTION, SOSA, WATER, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MARKET, MQTT, PERCEPTION, SOSA, WORLD_GRAPH
 from agent import genesis
 from agent.genesis import world_dir, worlds
 
@@ -214,13 +214,19 @@ _SIM_MODE = {
 # cannot say which reading a litre of water moves — `market:aboutProperty` can, and it says
 # soil moisture. Without that join a dose would warm the thermometer.
 #
-# The anchor is `water:litresPerFraction`, where #120 moved the denomination when it deleted
-# `water:hasTarget` — and this query went on naming the dead term, matching nothing, for two
-# days: every generated SIM_VALUES lost its "litres", every dose moved nothing, and the first
-# live run of the verification arc flagged the world for false knowledge. Which is the
-# interpolated-IRI failure mode agent/ontology.py warns about, caught by exactly the detector
-# built to catch it — the graph said water raises moisture, and the world (this generator)
-# kept refusing.
+# NO DOMAIN TERM IS NAMED, and that is the contract rather than a nicety. The term that
+# carries `market:aboutProperty` IS the lot-per-property conversion — the domain states it on
+# each subject as the physics (`ag:fern water:litresPerFraction 2.0`) — so the query binds
+# ?conversion from the denomination and uses it as the predicate. Swap the domain and its own
+# valuation term (watts per degree, litres per fraction) joins here with this file unchanged,
+# which is what "the domain is a plug-in" demands of a generator.
+#
+# It was `water:hasTarget` interpolated by name, then `water:litresPerFraction` after #120
+# deleted the first — and the dead-name interval matched nothing silently: every generated
+# SIM_VALUES lost its "litres", every dose moved nothing, and the first live run of the
+# verification arc flagged the world for false knowledge. The interpolated-IRI failure mode
+# agent/ontology.py warns about, caught by exactly the detector built to catch it — and the
+# lesson is not "name the right term" but "name no term", which this now does.
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?port
        ?pointer ?initial ?dryRate ?litres ?minValue ?maxValue
@@ -238,8 +244,8 @@ WHERE {{
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
   OPTIONAL {{ ?s <{SOSA}observes> ?wetProperty .
-             <{WATER}litresPerFraction> <{MARKET}aboutProperty> ?wetProperty .
-             ?subject <{WATER}litresPerFraction> ?litres }}
+             ?conversion <{MARKET}aboutProperty> ?wetProperty .
+             ?subject ?conversion ?litres }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""

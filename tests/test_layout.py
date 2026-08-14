@@ -436,3 +436,20 @@ def test_a_packages_own_tests_are_actually_collected():
         f"They are collected by neither `pytest tests` nor a bare `pytest` — the suite would "
         f"pass without ever running them."
     )
+
+
+def test_onboarding_names_no_domain():
+    """The domain is a plug-in, and onboarding is what must survive the swap.
+
+    A generator that names `water:` anything works for exactly one domain and fails the next
+    one silently — the sim-compose dose join did precisely that, twice: interpolated
+    `water:hasTarget` outlived the term's deletion (#120) and matched nothing until the first
+    live run's UNMET flag exposed it. The cure is not the right domain term but NO domain
+    term: the market vocabulary's `aboutProperty` contract carries everything a generator
+    needs. Held here as text, because SPARQL interpolation is invisible to lint-imports.
+    """
+    from pathlib import Path
+
+    for path in sorted(Path("onboarding").glob("*.py")):
+        assert "example.org/agora/water" not in path.read_text(), \
+            f"{path} names the water domain — a generator must survive the domain swap"
