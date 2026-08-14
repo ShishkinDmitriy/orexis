@@ -167,7 +167,12 @@ perception:minSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:r
 perception:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
     rdfs:label "maximum sleep seconds" .
 
-perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 900 .
+perception:relaxFactor a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+    rdfs:label "relax factor" ;
+    rdfs:comment "Fast attack, slow release (#139). Tightening is INSTANTANEOUS — any voice in the urgency choir earns its cadence at once, because hesitating in that direction costs a plant — but relaxing is bounded per commanded step: the next sleep may exceed the last by at most this factor, so one comfortable reading cannot cliff a burst-tight cadence straight to the slow end. The release then runs geometrically (30, 45, 68, 101...), a few minutes of dense sampling during which the trend establishes and the #133 bound takes over — confidence is EARNED per reading, not assumed from one. On the family like the bounds, because how fast a society lets its members stop looking is the society's figure, not a compile-time constant." .
+
+perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 900 ;
+    perception:relaxFactor 1.5 .
 
 #################  What the DEVICE can honour, which is a different question  #################
 #

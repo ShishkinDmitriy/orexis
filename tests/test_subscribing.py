@@ -545,22 +545,54 @@ def test_the_opening_burst_commands_fast_before_any_reading_exists(fern):
 
 
 def test_the_burst_relaxes_once_the_property_is_measured(fern):
-    """The two forces find their equilibrium: ignorance pressed the cadence to the fast end,
-    the first current reading replaces its answer with the gap's, and a comfortable pot earns
-    the slow end again — through the same recomputation every reading triggers, no special
-    release path."""
+    """The two forces find their equilibrium — GRADUALLY (#139). Ignorance pressed the cadence
+    to the fast end; the first comfortable reading starts the release, bounded per step by the
+    family's relaxFactor rather than cliffing straight to the slow end: one reading is a
+    point, not a picture, and the trend bound is blind until the second. Fast attack, slow
+    release — a few dense readings, geometrically apart, and the slow end is earned."""
     p = fern.subscribing()
     p.start()
-    assert cadences(fern)[-1] == p.beliefs.fast_sleep_s
+    fast = p.beliefs.fast_sleep_s
+    assert cadences(fern)[-1] == fast
+
     fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.55})
-    assert cadences(fern)[-1] == p.beliefs.slow_sleep_s
+    first_release = cadences(fern)[-1]
+    assert first_release == int(fast * p.relax_factor), \
+        "one comfortable reading must earn one step of release, not the whole cliff"
+
+    granted = first_release
+    for _ in range(12):
+        fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.55})
+        latest = cadences(fern)[-1]
+        assert latest <= int(granted * p.relax_factor) or latest == granted
+        granted = latest
+        if granted == p.beliefs.slow_sleep_s:
+            break
+    assert granted == p.beliefs.slow_sleep_s, "the release must still REACH the slow end"
+
+
+def test_tightening_is_never_slewed(fern):
+    """The asymmetry is the whole point: a comfortable pot that suddenly reads parched earns
+    the fast cadence in ONE step, whatever the release schedule was doing — hesitating in that
+    direction costs a plant, and the slew must never be a reason to look away from trouble."""
+    p = fern.subscribing()
+    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.55})   # calm-ish
+    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.20})   # survival floor
+    assert cadences(fern)[-1] == p.beliefs.fast_sleep_s
 
 
 def test_an_agent_that_already_knows_opens_calm(monkeypatch):
-    """A fresh reading on record at boot earns the gap's ordinary answer, not the burst:
-    ignorance is a state, not a ritual — an agent restarting into knowledge it already holds
-    has nothing to be ignorant about."""
-    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    """Fresh readings on record at boot — BOTH properties, because fern desires two — earn the
+    gap's ordinary answer, not the burst: ignorance is a state, not a ritual, and an agent
+    restarting into knowledge it already holds has nothing to be ignorant about.
+
+    Both matter, and the first draft seeded only moisture: the thermometer's ignorance then
+    correctly keeps the shared board fast, and before #139 the per-sensor command loop let the
+    moisture sensor's calm answer overwrite it — last writer winning over a still-ignorant
+    peer. The slew now preserves the tightness, which exposed the test's incomplete premise
+    rather than a defect."""
+    fern = build_agent("fern", genesis_store(
+        {("fern", MOISTURE): 0.55, ("fern", TEMPERATURE): 21.0}), monkeypatch)
     p = fern.subscribing()
     p.start()
     assert cadences(fern)[-1] == p.beliefs.slow_sleep_s
