@@ -2,7 +2,7 @@
 
 The constitution is "checked by code, not persuasion", and the checks are **capability-aware**:
 a shape applies to an agent only if that agent derived the capability it belongs to. An agent
-that holds perception:Subscribing with no sensor or no interval fails — before it fails at 3am.
+that holds sensing:Subscribing with no sensor or no interval fails — before it fails at 3am.
 
 Where each check lives follows from who owns the data:
 

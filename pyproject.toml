@@ -107,6 +107,6 @@ type = "independence"
 modules = [
     "packages.capability.actuation",
     "packages.capability.market",
-    "packages.capability.perception",
+    "packages.capability.sensing",
     "packages.capability.review",
 ]

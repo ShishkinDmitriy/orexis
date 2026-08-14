@@ -31,7 +31,7 @@ See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.""
 
 desire:DesireCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
     rdfs:label "Desire capability" ;
-    rdfs:comment "The family. Anything that can say where a property should be held for the subject an agent acts for is one of these, so perception may ask 'how urgent is this' and a market may ask 'what am I trying to reach' without either learning which member answered." .
+    rdfs:comment "The family. Anything that can say where a property should be held for the subject an agent acts for is one of these, so sensing may ask 'how urgent is this' and a market may ask 'what am I trying to reach' without either learning which member answered." .
 
 desire:Deducing a desire:DesireCapability ; rdfs:label "Deducing" ;
     rdfs:comment "Works the region out from what the world already states: intersect every operating range that applies to the subject, and take the survival ranges as the envelope outside it. No judgement and no latitude — the answer is a function of the ratified files, so every agent computes the same one and a derivation needs no authority to have performed it." .

@@ -4,7 +4,7 @@ title: A board says what it can honour, in SSN's words rather than ours
 description: The third source `ranges()` has always named — constitution, mandate, hardware — existed only in a docstring, so an agent could commit to a cadence its board would never keep and a healthy board would read as a quiet one. A device now states an ssn-system:Frequency, qualified by a Condition because SSN puts "under the defined Conditions" in the definition itself. Borrowed and not imported, which cost one axiom: SSN's own sosa:Sensor rdfs:subClassOf ssn:System, restated here because borrowing an IRI brings its definition and none of the axioms other documents state about it.
 status: accepted
 stage: v1
-tags: [perception, review, hardware, reuse, vocabulary, ssn]
+tags: [sensing, review, hardware, reuse, vocabulary, ssn]
 timestamp: 2026-08-11T00:00:00Z
 ---
 
@@ -16,7 +16,7 @@ constitution, narrowed by this agent's mandate. Hardware limits when any exist."
 [self-review-is-a-capability](self-review-is-a-capability.md) tabulates them, and for both the
 hardware row was aspiration.
 
-The world says how a device is **driven** — `perception:senseMode`, from which its agent's
+The world says how a device is **driven** — `sensing:senseMode`, from which its agent's
 capability is derived — and never what it can **do**. So an agent could be committed to a
 ten-second cadence a board would not keep, `stale_after_s` would compute freshness from the
 interval it *asked* for, and every reading would arrive later than expected: **a healthy board
@@ -74,15 +74,15 @@ So:
 `mc:carries rdfs:subPropertyOf sosa:hosts` was the same move from the other direction, and this is
 the second instance — enough to call it the shape rather than the exception.
 
-It is restated in `capabilities/perception/ontology.ttl`, not in `packages/core/agora/`, though the
+It is restated in `capabilities/sensing/ontology.ttl`, not in `packages/core/agora/`, though the
 subject is a class this package does not own. The axiom is load-bearing only because sensors have
-capabilities, and perception is where a sensor is; the kernel would be asserting it on behalf of a
+capabilities, and sensing is where a sensor is; the kernel would be asserting it on behalf of a
 package that may not be installed.
 
 # How the limit reaches the agent
 
 A limit is stated on a **device** and needed by an **agent**, because `ranges()` narrows a belief
-and a belief is the agent's. So a rule carries it across `perception:polls` at genesis, into
+and a belief is the agent's. So a rule carries it across `sensing:polls` at genesis, into
 `review:limitedTo` on the agent — derived, never typed, landing in `graph/world/derived` like
 every other conclusion.
 

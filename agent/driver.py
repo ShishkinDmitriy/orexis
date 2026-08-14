@@ -1,6 +1,6 @@
 """How a device is actually spoken to — the part that varies per binding.
 
-A perception module decides *when* to look and *what to make of it*; a driver knows only how
+A sensing module decides *when* to look and *what to make of it*; a driver knows only how
 to reach one kind of device. That line is deliberate: protocol changes nothing an agent must
 decide, so it has no business appearing in a capability, a belief, or a policy. It is why
 `transports/` is a separate tree from `capabilities/` and grants nothing.
@@ -20,7 +20,7 @@ from . import loader
 
 
 class Driver:
-    """What perception needs of any binding."""
+    """What sensing needs of any binding."""
 
     @classmethod
     def claims(cls, sensor) -> bool:

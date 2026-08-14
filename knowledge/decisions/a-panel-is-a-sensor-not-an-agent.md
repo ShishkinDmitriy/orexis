@@ -37,7 +37,7 @@ range is interesting *against* — could have used. Grafana's table legend carri
 so the number is still on screen and is still the last reading.
 
 A sensor is the right key because it is the thing that has the facts a panel needs:
-`sosa:observes` one property, `scaling:quantityUnit` one unit, and `perception:monitors` a subject
+`sosa:observes` one property, `scaling:quantityUnit` one unit, and `sensing:monitors` a subject
 whose ranges say what the property should sit in. An agent has none of those — it has a bucket.
 
 **Units come from the world.** `unit:DEG_C` → `celsius`, `unit:UNITLESS` → `percentunit`,

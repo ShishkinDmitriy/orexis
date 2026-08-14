@@ -123,23 +123,36 @@ def stale(st) -> dict[str, dict[str, str | list[str] | None]]:
     two packages contest the name, and `None` where nothing of that name remains — deleted rather
     than moved. All three are refusals; only the first can be migrated.
 
+    The successor is found by LOCAL NAME among what the vocabulary declares, whatever namespace
+    the old spelling wore. The map used to know only kernel spellings — `ag:X` became `pkg:X`,
+    the shape of the great sweep — and that quietly assumed a term moves namespace at most once.
+    The sensing rename broke the assumption: a volume authored after the sweep holds
+    `perception:slowSleepS`, an old spelling that never was a kernel one, and mapping it needs
+    nothing more than the same lookup unanchored from `ag:`. `renames()` keeps the kernel view,
+    which is that lookup's oldest special case.
+
     Public graphs are excluded because they are not the agent's: `refresh_public` replaces them
     from the ratified files on every start, so they are current by construction and a stale term
     in one would mean the files themselves are wrong.
     """
     public = set(st.public_graphs())
-    settled, contested = renames(st)
     known = declared(st)
+    by_local: dict[str, list[str]] = {}
+    for term in sorted(known):
+        by_local.setdefault(_local(term), []).append(term)
     out: dict[str, dict[str, str | list[str] | None]] = {}
     for row in bindings(st.query(_USED)):
         graph, term, position = row["g"], row["t"], row["position"]
         if graph in public or term in known:
             continue
-        if position != "predicate" and term not in settled and term not in contested:
-            # An instance and a term are the same shape of IRI, so only a known rename makes an
-            # object or a subject worth flagging. `ag:fern_agent` lives here and is not a term.
+        candidates = by_local.get(_local(term), [])
+        if position != "predicate" and not candidates:
+            # An instance and a term are the same shape of IRI, so only a recognisable rename
+            # makes an object or a subject worth flagging. `ag:fern_agent` lives here and is
+            # not a term — no declared term shares its name, so it is left alone.
             continue
-        out.setdefault(graph, {})[term] = settled.get(term) or contested.get(term)
+        out.setdefault(graph, {})[term] = (
+            candidates[0] if len(candidates) == 1 else (candidates or None))
     return out
 
 

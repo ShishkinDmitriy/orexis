@@ -1,7 +1,7 @@
 ---
 type: Domain
-title: Sensing — perception as the agent's initiative
-description: Perception splits by who holds the clock — Polling (the agent asks each time, reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). The agent owns when it looks, the board owns what it reads.
+title: Sensing — sensing as the agent's initiative
+description: Sensing splits by who holds the clock — Polling (the agent asks each time, reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). The agent owns when it looks, the board owns what it reads.
 status: accepted
 stage: v1
 tags: [sensing, epistemics, firmware, cadence, freshness]
@@ -15,29 +15,29 @@ un-aimed. Both are triggered by giving a subject a second kind of sensor — see
 
 # What it is
 
-Perception, in **capabilities decided by the hardware** and derived at genesis (see
+Sensing, in **capabilities decided by the hardware** and derived at genesis (see
 [capability-packages](/decisions/capability-packages.md)). The axis is **who holds the
 clock**, and it is the axis because it is what changes what the agent must believe:
 
-| capability | device (`perception:senseMode`) | who runs the timer | the agent states |
+| capability | device (`sensing:senseMode`) | who runs the timer | the agent states |
 |---|---|---|---|
-| **`perception:Polling`** | `perception:PolledProcedure` | the **agent** — it asks for each reading | an interval, its own |
-| **`perception:Subscribing`** | `perception:ScheduledProcedure` | **shared** — the agent sets it, the device keeps it | an interval, the device's |
-| **`perception:Listening`** | `perception:PushProcedure` | the **device** | nothing |
+| **`sensing:Polling`** | `sensing:PolledProcedure` | the **agent** — it asks for each reading | an interval, its own |
+| **`sensing:Subscribing`** | `sensing:ScheduledProcedure` | **shared** — the agent sets it, the device keeps it | an interval, the device's |
+| **`sensing:Listening`** | `sensing:PushProcedure` | the **device** | nothing |
 
 Strictly decreasing agent control, and each asks the agent for strictly less.
 
-**`perception:Polling` is reserved, not built.** It is the simplest exchange — one request, one
+**`sensing:Polling` is reserved, not built.** It is the simplest exchange — one request, one
 response, nothing retained anywhere — and it is what "polling" ought to mean. It needs a
 device that is reachable at any moment, and a board that deep-sleeps between readings is not
 that: the request lands on nothing. So the vocabulary declares it, no derivation rule grants
 it, and no module provides it. Adding it is a class and one line of `PROVIDES`.
 
-**`perception:Subscribing` is what the ESP32 firmware does today**, and the distinction is worth
+**`sensing:Subscribing` is what the ESP32 firmware does today**, and the distinction is worth
 keeping sharp: the agent has not given up deciding *how often* to look — only the
 timekeeping. A standing request instead of a repeated one is what buys the device its sleep.
 
-Which one an agent gets is not an opinion anyone holds: it follows from `perception:senseMode` on the
+Which one an agent gets is not an opinion anyone holds: it follows from `sensing:senseMode` on the
 device it is wired to. Reflash the board, re-run genesis, and the capability changes with it.
 This is the sensing face of
 [agent-centric-epistemics](/decisions/agent-centric-epistemics.md).
@@ -111,8 +111,8 @@ bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[
 
 The pointer above is the middle one. The outer two are families with interchangeable members —
 `packages/codec/` and `packages/scaling/` — and which member serves a reading is **derived at
-genesis**, from what a world states or from its silence, exactly as `perception:Subscribing` is derived
-onto an agent from `perception:senseMode`. They land on different bearers, because they are facts about
+genesis**, from what a world states or from its silence, exactly as `sensing:Subscribing` is derived
+onto an agent from `sensing:senseMode`. They land on different bearers, because they are facts about
 different things: the **scaling** is the sensor's, since a curve is a property of the probe, and
 the **codec** is the **stream's**, since one topic carries one format however many sensors read
 out of it. A sensor reaches its codec through the channel it publishes on. Every sensor here gets `codec:Json`
@@ -175,12 +175,12 @@ which is correct for an interval and wrong once anything travels with it: a pot 
 to LOW *inside one cadence band* would have kept the old colour indefinitely — the state most
 worth seeing, displayed as the state before it. The comparison is now the whole message.
 
-The verdict is collected the way every cross-capability opinion is: perception asks, whoever
-holds a stake answers, and perception passes the answer on without reading it. An agent with no
+The verdict is collected the way every cross-capability opinion is: sensing asks, whoever
+holds a stake answers, and sensing passes the answer on without reading it. An agent with no
 stake in the property contributes nothing and its device is told only a cadence. The transport
 driver never learns what a band is.
 
-The unequal pair is the whole reason `perception:Polling` is a separate capability rather than a mode
+The unequal pair is the whole reason `sensing:Polling` is a separate capability rather than a mode
 of this one. `sense` is what polling would be built on, and its unreliability here is not an
 implementation weakness — it is the hardware fact that makes the two genuinely different
 things to hold.
@@ -207,7 +207,7 @@ new capability, no belief changes.
 
 Attention scales with how close the plant is to its own `LOW`: thirsty plants watch closely,
 comfortable ones let the board sleep. The numbers are **the agent's own belief**
-(`perception:fastSleepS` / `perception:slowSleepS` in `:beliefs/<agent>`), read at startup — a succulent can
+(`sensing:fastSleepS` / `sensing:slowSleepS` in `:beliefs/<agent>`), read at startup — a succulent can
 reasonably watch less often than a fern, and does. The policy that turns them into an interval
 lives with the agent (`cadence_for`), never on the board — same reason the band does. A
 polling agent would read the same two figures: they describe an interval either way, and only
@@ -236,11 +236,11 @@ with the process, and is rebuilt from the next two readings; until then the boun
 not there. Attention follows not just where you are but where you are going — the
 [derivative principle](/decisions/control-the-derivative-not-the-value.md), one level down.
 
-**The comfortable end is a pick, not a constant.** `perception:slowSleepS` is what its author chose
+**The comfortable end is a pick, not a constant.** `sensing:slowSleepS` is what its author chose
 before the agent had seen a reading; an agent that watches a probe report the same value for a
 window may re-pick it, inside the room its world's `review:commits` leaves it — and must come back the
 moment the readings move again. Only the comfortable end, so a thirsty plant is still watched at
-`perception:fastSleepS` whatever a review concluded: desire-relative is the first thing and this is the
+`sensing:fastSleepS` whatever a review concluded: desire-relative is the first thing and this is the
 second. A reading that never changes **at all** argues for *tightening*, because an instrument
 that has not moved to the last bit is likelier broken than the world it measures is perfectly
 still. See [a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md).
@@ -255,7 +255,7 @@ Handing the agent the timing does **not** hand it the number. It chooses *when* 
 sensor still authors *what* it reads. Two guards close the gap that agent-chosen timing
 opens, and they apply equally to polling and subscribing:
 
-- **Freshness** — a bid must cite a reading no older than the agent's own `perception:maxReadingAgeS`;
+- **Freshness** — a bid must cite a reading no older than the agent's own `sensing:maxReadingAgeS`;
   a stale reading means the agent **sits the round out** rather than bidding on a comfortable
   old number. Without this, "I choose when to look" becomes "I choose which number to
   believe." The limit is per-agent, so a slow-living succulent may accept older data than a
@@ -269,20 +269,20 @@ noticing that it survives losing the cadence — because it was always about bel
 
 # Ingest — the plant asserts its own reading
 
-The perception module writes each reading to Influx (history) and `:sensed` (current state)
+The sensing module writes each reading to Influx (history) and `:sensed` (current state)
 as the **agent's own** assertion — `prov:wasGeneratedBy` the agent, no witness — per
 [trusted-agent-mode](/decisions/trusted-agent-mode.md), then announces its verdict on its
 event topic.
 
 The observation also says **how it was made**: `sosa:usedProcedure` carries the sensor's sense
 mode, which is a `sosa:Procedure`. That is not recoverable from the number, and it changes what
-a *missing* reading means — under `perception:ScheduledProcedure` the board is late, under
-`perception:PushProcedure` there may simply have been nothing to say. It is the clock part of
+a *missing* reading means — under `sensing:ScheduledProcedure` the board is late, under
+`sensing:PushProcedure` there may simply have been nothing to say. It is the clock part of
 how, not the whole method: the codec, the pointer and the scaling are also how that number came
 to be. See
 [an-observation-says-how-it-was-made](/decisions/an-observation-says-how-it-was-made.md).
 
-Which sensors it listens to is not configured: it reads `perception:polls` from the
+Which sensors it listens to is not configured: it reads `sensing:polls` from the
 [world](/decisions/world-graph.md) and subscribes exactly those topics, never a wildcard.
 That is the sensor access grant made concrete — fern's agent is wired to fern's sensor and
 cannot touch tomato's, because the wiring says so and the code follows it. Since each agent
@@ -290,7 +290,7 @@ is its own process, it could not reach another's sensor even if it tried.
 
 # Seams left open
 
-- **Perception is not yet priced.** The payoff of agent-owned attention is that looking costs
+- **Sensing is not yet priced.** The payoff of agent-owned attention is that looking costs
   energy, making observation an economic decision
   ([single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md)). v1 sets
   cadence from urgency alone; no wallet debit per `sense`. The lever exists, the price does not.

@@ -17,7 +17,7 @@ a sensor observes one, and the runtime took one reading per message.
 
 Two things assumed one property per device, and both were small:
 
-- `PerceptionModule.handle` returned after the **first** sensor whose driver owned the topic, so a
+- `SensingModule.handle` returned after the **first** sensor whose driver owned the topic, so a
   second sensor on that channel never saw a message — silently, because the topic *had* been
   handled and nothing upstream complained;
 - `MqttDriver.parse` hardcoded `doc["value"]` and took no sensor, so there was nothing to

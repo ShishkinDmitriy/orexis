@@ -14,7 +14,7 @@ validated exactly as well, and the region is what a pick like that answers to.
 **Three questions this module answers for its siblings, and none of them imports it.**
 
     band(property, value)     LOW / OK / HIGH — the verdict that travels in an announcement
-    urgency(property, value)  0.0 to 1.0 — what perception turns into a cadence
+    urgency(property, value)  0.0 to 1.0 — what sensing turns into a cadence
     region(property)          the numbers themselves, for whoever needs to aim rather than judge
 
 They used to come from `market:Bidding`, which meant an agent had to be a BIDDER to have an
@@ -41,7 +41,7 @@ from .terms import DEDUCING
 # What this package asks OF others, by family — their namespaces, never their Python. The
 # freshness rule lives with whoever holds the clock, and this module asks it exactly as
 # bidding does.
-_PERCEPTION = "http://example.org/agora/perception#PerceptionCapability"
+_SENSING = "http://example.org/agora/sensing#SensingCapability"
 
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
 # file's own header. Read once at import: a malformed query is then an error the moment the
@@ -110,7 +110,7 @@ class Region:
         the edge of what my subject survives.
 
         **Measured from the CENTRE and not from the edge**, which is a deliberate difference from
-        the band. A step function would tell perception to relax completely anywhere inside the
+        the band. A step function would tell sensing to relax completely anywhere inside the
         region and then panic on the way out, and attention should rise as the edge approaches —
         an agent at the very edge of comfortable is already worth watching more closely than one
         sitting in the middle. So the band answers *am I in trouble* and this answers *how close
@@ -288,7 +288,7 @@ class DesireModule(Module):
 
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
-        """How close this puts me to trouble. Perception turns it into a cadence.
+        """How close this puts me to trouble. Sensing turns it into a cadence.
 
         Asked with None, the question is the urgency of NOT KNOWING (#137), and the answer is
         maximal: not knowing whether the pot is dying is at least as urgent as knowing it is
@@ -316,21 +316,21 @@ class DesireModule(Module):
     def current(self) -> dict[str, Gap]:
         """The diff I would act on: every row still inside my own freshness rule.
 
-        The rule is perception's — the cadence I commanded plus my grace, per property — asked
+        The rule is sensing's — the cadence I commanded plus my grace, per property — asked
         through the provider exactly as bidding asks it, because a reading past what I allow
         for the rhythm I myself set is a sensor gone quiet, not a measurement. Issue #124's
         case in one sentence: a dead probe's last observation is upserted, never expires, and
         without this filter kept presenting a comfortable pot for however long the probe stayed
-        dead. With no perception at all nothing wrote these observations either, so every row
+        dead. With no sensing at all nothing wrote these observations either, so every row
         passes vacuously and honestly.
         """
-        perception = self.agent.provider(_PERCEPTION)
-        if perception is None:
+        sensing = self.agent.provider(_SENSING)
+        if sensing is None:
             return self.gaps()
         out = {}
         for prop, gap in self.gaps().items():
             age = gap.age_s()
-            if age is not None and age > perception.stale_after_s(self.me.acts_for, prop):
+            if age is not None and age > sensing.stale_after_s(self.me.acts_for, prop):
                 continue
             out[prop] = gap
         return out

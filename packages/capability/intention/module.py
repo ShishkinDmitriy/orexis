@@ -34,8 +34,8 @@ from .terms import (APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEADLINE_AT,
 
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
-# perception is asked to look once so the baseline is the freshest thing on record.
-_PERCEPTION = "http://example.org/agora/perception#PerceptionCapability"
+# sensing is asked to look once so the baseline is the freshest thing on record.
+_SENSING = "http://example.org/agora/sensing#SensingCapability"
 _RAISES = "http://example.org/agora/market#Raises"
 _LOWERS = "http://example.org/agora/market#Lowers"
 _DIRECTION_Q = """
@@ -187,7 +187,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         so the before of any before/after survives nowhere but the ledger. The DIRECTION comes
         from the domain's own statement on its valuation (#127), copied so the row stays
         judgeable even if the vocabulary is later amended. The DEADLINE is the patience — a
-        recorded seam; the dose and the physics could derive a better one. And perception is
+        recorded seam; the dose and the physics could derive a better one. And sensing is
         asked to look once, so the freshest possible before is on record and the first after
         arrives sooner.
 
@@ -223,8 +223,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                       observed_property.rsplit("#", 1)[-1],
                       direction.rsplit("#", 1)[-1], reading.value,
                       self.beliefs.patience_s, because)
-        if (perception := self.agent.provider(_PERCEPTION)) is not None:
-            perception.sense_now()
+        if (sensing := self.agent.provider(_SENSING)) is not None:
+            sensing.sense_now()
         return True
 
     def open_expectations(self, observed_property: str | None = None) -> list[OpenExpectation]:
@@ -322,7 +322,7 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
 }} }}"""))}
         return sorted(p for p in pairs if self._is_suspect(*p))
 
-    # --- what perception asks me: the verification watch ----------------------------------
+    # --- what sensing asks me: the verification watch ----------------------------------
 
     def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
         """Maximum, while a watch is on and its deadline has not passed.
@@ -330,7 +330,7 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
         The two processes run at different speeds — evaporation is fractions per day, a dose
         lands in seconds — and the one place urgency-by-state gets it wrong is right after
         acting: the value improves, attention would relax, and the dose would land unobserved.
-        So an open expectation IS urgency, and perception's ordinary max-of-answers does the
+        So an open expectation IS urgency, and sensing's ordinary max-of-answers does the
         rest: cadence tightens the moment the watch opens and relaxes the moment it resolves.
         Bounded by the deadline so a dead sensor cannot hold the fast cadence forever.
         """

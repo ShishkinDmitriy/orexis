@@ -3,7 +3,7 @@
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix desire: <http://example.org/agora/desire#> .
 @prefix review: <http://example.org/agora/review#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix reporting: <http://example.org/agora/reporting#> .
 @prefix ag: <http://example.org/agora#> .
@@ -13,11 +13,11 @@
 #  fifth of the moisture, shrugs at readings that would have fern bidding hard, and is
 #  content to look rarely and to trust older data. Same world, same ontology, different mind.
 
-##  perception:Subscribing
+##  sensing:Subscribing
 ag:succulent_agent
-    perception:fastSleepS 60 ;
-    perception:slowSleepS 900 ;
-    perception:readingGraceS 45 .
+    sensing:fastSleepS 60 ;
+    sensing:slowSleepS 900 ;
+    sensing:readingGraceS 45 .
 
 ##  market:Bidding
 ag:succulent_agent

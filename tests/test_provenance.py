@@ -95,18 +95,18 @@ def _sizes(st: Store) -> dict[str, int]:
 def test_an_ordinary_pattern_spans_every_public_graph(world):
     """A reader asks what the society knows and gets one answer, whichever graph holds it.
 
-    `?agent perception:polls ?s . ?s a ssn:System` is the case in miniature: the first is the sovereign's
+    `?agent sensing:polls ?s . ?s a ssn:System` is the case in miniature: the first is the sovereign's
     and the second may be entailed, so the two live apart. Written inside a single `GRAPH` clause
     this returns NOTHING — silently, because an empty result is not an error. That is the trap
     the default graph exists to close, and it is why queries here name no graph at all.
     """
     st = _public(world)
     spanning = bindings(st.query(
-        "SELECT ?agent WHERE { ?agent perception:polls ?s . ?s a ssn:System ; perception:senseMode ?m }"))
+        "SELECT ?agent WHERE { ?agent sensing:polls ?s . ?s a ssn:System ; sensing:senseMode ?m }"))
     assert spanning, "a pattern spanning the asserted/entailed split found nothing"
 
     narrowed = _in_graph(st, WORLD_GRAPH,
-                         "?agent perception:polls ?s . ?s a perception:Sensor ; perception:senseMode ?m")
+                         "?agent sensing:polls ?s . ?s a sensing:Sensor ; sensing:senseMode ?m")
     assert len(narrowed) <= len(spanning)
 
 
@@ -117,8 +117,8 @@ def test_private_graphs_are_not_in_the_default_graph():
 
     st = _public("simulation")
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
-    assert _in_graph(st, beliefs_graph("fern"), "?a perception:slowSleepS ?v")
-    assert not bindings(st.query("SELECT * WHERE { ?a perception:slowSleepS ?v }"))
+    assert _in_graph(st, beliefs_graph("fern"), "?a sensing:slowSleepS ?v")
+    assert not bindings(st.query("SELECT * WHERE { ?a sensing:slowSleepS ?v }"))
 
 
 # --- the store says what each graph is, not just what it is called -----------------------------

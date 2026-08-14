@@ -20,7 +20,7 @@ Four instances, all found by hand:
 | | |
 |---|---|
 | the privacy query, dead four PRs | [#79](https://github.com/ShishkinDmitriy/agora/issues/79) |
-| the cadence guard, dead four PRs | a rename moved `perception:seconds` out from under its query |
+| the cadence guard, dead four PRs | a rename moved `sensing:seconds` out from under its query |
 | a glob emptied twice by moving files | fixed locally in `test_store.py` |
 | 143 cases lost in the layout move | the glob did not empty, it stopped covering what it was named for |
 

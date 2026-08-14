@@ -10,7 +10,7 @@ the world already states every channel and who is wired to it.
 **The ACL is the wiring.** Nothing is listed by hand. The same connections that give an agent a
 capability give it exactly the topics that capability needs:
 
-    perception:polls S          read S's readingTopic, write S's commandTopic
+    sensing:polls S          read S's readingTopic, write S's commandTopic
     market:bidsIn M         read M's offerTopic and M's voucherTopic/<me>, write M's bidTopic/<me>
                             and M's redeemTopic/<me> — the holder presents its own claim (#132)
     market:hosts M          write M's offerTopic and voucherTopic/<bidder>, read bidTopic/+ and
@@ -57,7 +57,7 @@ from . import certs
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from packages.capability.market.terms import NS as MARKET
-from agent.ontology import ACTUATION, AG, MQTT, PERCEPTION, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MQTT, SENSING, WORLD_GRAPH
 
 log = logging.getLogger("mqtt")
 
@@ -117,7 +117,7 @@ _AGENTS_Q = _q(f"""?id ?eventTopic WHERE {{
  }}""")
 
 _POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
-  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{PERCEPTION}polls> ?s .
+  ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{SENSING}polls> ?s .
   ?s <{MQTT}readingTopic> ?readingTopic .
   OPTIONAL {{ ?s <{MQTT}commandTopic> ?commandTopic }}
  }}""")
@@ -150,7 +150,7 @@ WHERE {{
 # of its own holding a single dose grant, for a client that never connects — the same defect
 # #81 names one level up, where a board authenticates as one of its own peripherals.
 _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
-  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{PERCEPTION}monitors> ?subject ;
+  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
      <{MQTT}onBus> ?bus .
   ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
  }}""")

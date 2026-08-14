@@ -1,4 +1,4 @@
-"""perception:Subscribing — attention as the agent's own decision, bounded by the constitution.
+"""sensing:Subscribing — attention as the agent's own decision, bounded by the constitution.
 
 The agent states an interval and the device keeps to it. What is the agent's here is the
 *policy* — how often to look, and how that moves with trouble; what it delegates is only the
@@ -26,7 +26,7 @@ def sensor_of(agent):
 def cadence_for(agent, value, observed_property=MOISTURE):
     """The cadence the agent would choose for a reading of its own subject.
 
-    Three arguments now, and deliberately: perception asks about a *property of* a subject,
+    Three arguments now, and deliberately: sensing asks about a *property of* a subject,
     because whether a number is trouble is the stakeholder's answer, and a stake is held in
     one property. A thermometer's reading of the same pot is not the bidder's business.
     """
@@ -110,7 +110,7 @@ def test_it_holds_an_opinion_about_every_property_its_plant_states_a_range_for(f
 
 
 def test_the_bounds_come_from_the_ontology_not_the_code(fern):
-    """MIN/MAX are stated in capabilities/perception/ontology.ttl and read at startup."""
+    """MIN/MAX are stated in capabilities/sensing/ontology.ttl and read at startup."""
     p = fern.subscribing()
     assert (p.min_sleep_s, p.max_sleep_s) == (10, 900)
 
@@ -183,8 +183,8 @@ def test_a_sense_request_is_never_retained(fern):
 # --- judgment and disclosure ----------------------------------------------
 
 def test_it_announces_its_verdict_not_just_a_number(fern):
-    """Perception supplies the number; the band is contributed by the capability that holds a
-    stake. The announcement is the agent's, not perception's — which is why it carries both."""
+    """Sensing supplies the number; the band is contributed by the capability that holds a
+    stake. The announcement is the agent's, not sensing's — which is why it carries both."""
     fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
     event = fern.sent.to(fern.me.event_topic)[-1]
     assert event["band"] == "LOW" and event["agent"] == "fern"
@@ -246,31 +246,31 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     s = s.replace("    sosa:hosts ag:moisture_sensor_fern , ag:air_sensor_fern ;",
                   "    sosa:hosts ag:moisture_sensor_fern ;")
     s = s.replace(
-        "perception:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;",
-        "perception:polls ag:moisture_sensor_fern ;")
+        "sensing:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;",
+        "sensing:polls ag:moisture_sensor_fern ;")
 
     s = s.replace(
         "ag:fern_agent a ag:Agent ;",
         'ag:chatter_fern a sosa:Sensor , ag:Device ;\n'
         '    ag:localId "chatter_fern" ;\n'
         '    mqtt:onBus ag:local_bus ;\n'
-        '    perception:senseMode perception:PushProcedure ;\n'          # keeps its own clock, takes no orders
-        "    perception:monitors ag:fern ;\n"
+        '    sensing:senseMode sensing:PushProcedure ;\n'          # keeps its own clock, takes no orders
+        "    sensing:monitors ag:fern ;\n"
         f"    sosa:observes {observes} ;\n"
         '    mqtt:readingTopic "sensors/chatter_fern/reading" .\n\n'
         "ag:fern_agent a ag:Agent ;",
     )
-    s = s.replace("perception:polls ag:moisture_sensor_fern ;",
-                  "perception:polls ag:moisture_sensor_fern , ag:chatter_fern ;")
+    s = s.replace("sensing:polls ag:moisture_sensor_fern ;",
+                  "sensing:polls ag:moisture_sensor_fern , ag:chatter_fern ;")
     w.write_text(s)
     (dst / "hardware.ttl").unlink(missing_ok=True)   # the stand describes one board, not this
 
-    # Gaining a push sensor means gaining perception:Listening, and that capability asks for a belief the
+    # Gaining a push sensor means gaining sensing:Listening, and that capability asks for a belief the
     # agent did not need before. The refusal to start without it is the self-check working, so
     # the world has to author it — exactly as a sovereign would when adding such a device.
     b = dst / "beliefs" / "fern.ttl"
     b.write_text(b.read_text().replace(
-        "perception:readingGraceS", "perception:maxReadingAgeS 300 ;\n    perception:readingGraceS", 1))
+        "sensing:readingGraceS", "sensing:maxReadingAgeS 300 ;\n    sensing:readingGraceS", 1))
     return dst
 
 
@@ -289,7 +289,7 @@ def test_each_module_takes_only_the_sensors_it_is_for(monkeypatch, tmp_path):
     """The derivation splits the capabilities; the runtime must split the sensors the same way.
 
     It did not. Both modules took every sensor, and since modules are ordered by
-    sorted(capabilities), perception:Listening claimed the scheduled board too — and listening never
+    sorted(capabilities), sensing:Listening claimed the scheduled board too — and listening never
     re-aims, so its cadence was silently never set again.
     """
     agent = _agent_on(_two_sensor_world(tmp_path), monkeypatch)

@@ -47,7 +47,7 @@ This matters more than convenience. A world is the *entire* model of a system, s
 is not a variant of the first: it is a different society. `world/society` has a market;
 `world/sensing` has one subject, one board and one agent and no market at all — which makes
 it the smallest genesis output that still produces a working agent, and the proof that a
-capability can stand alone. If `market:Bidding` could only exist alongside perception, "capability"
+capability can stand alone. If `market:Bidding` could only exist alongside sensing, "capability"
 would be a word for a bundle.
 
 The two ship with **identical device ids and channels**, so one flashed board runs in either.

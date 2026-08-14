@@ -50,7 +50,7 @@ def _family_q(family: str) -> str:
     for "whoever perceives" without knowing that polling and listening are the two ways.
 
     Two branches, and the second is not the tidy-up it looks like. A caller may name a family
-    (`perception:PerceptionCapability`, whose members are `perception:Subscribing` and `perception:Listening`) or it may
+    (`sensing:SensingCapability`, whose members are `sensing:Subscribing` and `sensing:Listening`) or it may
     name a capability that is its own family of one — `agent.provider(ACTUATION)` does exactly
     that, and there is no term anywhere declared `a actuation:Actuation`. That used to work by accident:
     the branch said `rdfs:subClassOf*`, and a zero-length path matches reflexively, so the family
@@ -132,7 +132,7 @@ class Agent:
     def annotations(self, subject_uri: str, observed_property: str, value: float) -> dict:
         """Everything my modules want to say about a reading of mine, merged.
 
-        This is what makes my announcement *mine* rather than perception's: whoever holds an
+        This is what makes my announcement *mine* rather than sensing's: whoever holds an
         opinion contributes it, and a module with no stake contributes nothing.
         """
         out: dict = {}
@@ -209,7 +209,7 @@ class Agent:
         log.warning("%s: disconnected from the bus (%s) — paho will retry", self.id, reason_code)
 
     def reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
-        """Perception tells the rest of me that something new is known.
+        """Sensing tells the rest of me that something new is known.
 
         The agent's own modules are the only audience: this is me noticing, not me telling
         anyone. It is what lets a bid wait for the reading it asked for instead of using
@@ -228,7 +228,7 @@ class Agent:
         It used to `return` on the first module whose `handle` came back true, which read as an
         optimisation and was a defect: a second module subscribed to the same topic never saw
         the message, and nothing anywhere said so. Exactly what #51 fixed one level down, where
-        `PerceptionModule.handle` returned after the first SENSOR owning a topic and a board's
+        `SensingModule.handle` returned after the first SENSOR owning a topic and a board's
         second channel went unread.
 
         It stayed here because nothing wanted one topic twice. Actuation reading its valves'

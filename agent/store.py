@@ -108,7 +108,7 @@ _EXTERNAL = {
     # hangs off an `ssn:System`, and what makes that reach a sensor is `sosa:Sensor
     # rdfs:subClassOf ssn:System` — asserted in the SSN document, which is neither SOSA nor this
     # module, and which nothing here loads. Borrowing an IRI brings its DEFINITION and not the
-    # axioms other documents state ABOUT it; `capabilities/perception/ontology.ttl` restates that
+    # axioms other documents state ABOUT it; `capabilities/sensing/ontology.ttl` restates that
     # one so the module reaches what it is supposed to reach.
     "ssn": "http://www.w3.org/ns/ssn/",
     "ssn-system": "http://www.w3.org/ns/ssn/systems/",

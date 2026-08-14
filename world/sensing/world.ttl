@@ -1,5 +1,5 @@
 @prefix review: <http://example.org/agora/review#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix schema: <https://schema.org/> .
@@ -22,7 +22,7 @@
 #  What it is FOR: bringing a real board up, and integration tests that have no business
 #  starting a market. It is also the clearest demonstration of the central claim — nothing
 #  here says what the agent can DO. It is wired to a sensor and to nothing else, and
-#  derivation gives it perception:Subscribing and nothing else. Seed world/society instead, without
+#  derivation gives it sensing:Subscribing and nothing else. Seed world/society instead, without
 #  touching the board or the agent, and the very same hardware joins a market.
 #
 #  The device ids and channels are deliberately IDENTICAL to world/society, so one flashed
@@ -69,7 +69,7 @@ ag:fern a sosa:FeatureOfInterest ;
 #  says which value in it is its own. That is what mqtt:readingPointer is for; the probe states
 #  none because `/value` is the default and is what every single-property board already sends.
 #
-#  All three are perception:ScheduledProcedure and share ONE command topic, because there is one board and it
+#  All three are sensing:ScheduledProcedure and share ONE command topic, because there is one board and it
 #  sleeps once: a cadence is a property of the board, not of a property being measured. The
 #  agent aims that channel once, at the tightest cadence any sensor on it asks for.
 #
@@ -111,22 +111,22 @@ ag:air_sensor_fern a ssn:System ;
 ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
-    perception:senseMode perception:ScheduledProcedure ;     # keeps a given interval -> its agent gains perception:Subscribing
-    perception:monitors ag:fern ;
+    sensing:senseMode sensing:ScheduledProcedure ;     # keeps a given interval -> its agent gains sensing:Subscribing
+    sensing:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
-#  The KY-015's two channels. They are perception:Sensor and NOT devices: they have no mqtt:onBus of
+#  The KY-015's two channels. They are sensing:Sensor and NOT devices: they have no mqtt:onBus of
 #  their own and mint no credential, because the thing that connects to the broker is the
 #  board, which already has one. `ag:air_sensor_fern` in hardware.ttl is the peripheral they
 #  read — its pins, its model and its wires are stated there and nothing here repeats them.
 
 ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
-    perception:senseMode perception:ScheduledProcedure ;
-    perception:monitors ag:fern ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -142,8 +142,8 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
 
 ag:air_humidity_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_humidity_fern" ;
-    perception:senseMode perception:ScheduledProcedure ;
-    perception:monitors ag:fern ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors ag:fern ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -163,7 +163,7 @@ ag:air_humidity_fern a sosa:Sensor , ag:Device ;
 
 ag:fern_agent a ag:Agent ;
     ag:localId "fern" ;
-    perception:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;
+    sensing:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;
     mqtt:eventTopic "readings/fern" .
 
 ##########  What each agent may re-pick, and how far  ##########
@@ -180,4 +180,4 @@ ag:fern_agent a ag:Agent ;
 #
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
-ag:fern_agent review:commits [ review:onTerm perception:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .
+ag:fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .

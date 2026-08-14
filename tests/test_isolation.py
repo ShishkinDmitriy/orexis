@@ -18,7 +18,7 @@ import pytest
 
 from agent import ratified
 from onboarding import influx as influx_admin, mqtt as mqtt_admin
-from agent.ontology import AG, MARKET, MQTT, PERCEPTION, WORLD_GRAPH
+from agent.ontology import AG, MARKET, MQTT, SENSING, WORLD_GRAPH
 
 from conftest import build_agent, genesis_store
 
@@ -88,7 +88,7 @@ def test_no_agent_may_hear_a_neighbours_private_channel(world):
         private.setdefault(row["id"], set()).add(f"{row['voucherTopic']}/{row['id']}")
     for row in ratified.rows(ds, f"""SELECT ?id ?readingTopic WHERE {{
         
-          ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{PERCEPTION}polls> ?s .
+          ?a a <{AG}Agent> ; <{AG}localId> ?id ; <{SENSING}polls> ?s .
           ?s <{MQTT}readingTopic> ?readingTopic .  }}"""):
         private.setdefault(row["id"], set()).add(row["readingTopic"])
 

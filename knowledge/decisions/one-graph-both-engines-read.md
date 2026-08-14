@@ -29,7 +29,7 @@ only where whoever wrote the query happened to remember to walk it, and the othe
 reader at all. That is the sharper defect, and it is the one that scales badly: every new
 capability inherits the obligation to remember.
 
-The trap had already caught the code twice. `ag:models rdfs:subPropertyOf perception:polls` made shapes
+The trap had already caught the code twice. `ag:models rdfs:subPropertyOf sensing:polls` made shapes
 see simulated sensors as polled while the runtime did not, and the workarounds are still legible
 — `onboarding/mqtt.py` asks a second time, `dashboards.py` survives on a `UNION`. And it had just
 caught it a third time: `review.py`'s `_REVISABLE_Q`, shipped in

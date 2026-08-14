@@ -78,8 +78,8 @@ that wants both simply asks, because every public graph is the default graph of 
 
 | you state | genesis derives |
 |---|---|
-| `perception:polls` a sensor whose `perception:senseMode` is `perception:ScheduledProcedure` | `perception:Subscribing` |
-| `perception:polls` a sensor whose `perception:senseMode` is `perception:PushProcedure` | `perception:Listening` |
+| `sensing:polls` a sensor whose `sensing:senseMode` is `sensing:ScheduledProcedure` | `sensing:Subscribing` |
+| `sensing:polls` a sensor whose `sensing:senseMode` is `sensing:PushProcedure` | `sensing:Listening` |
 | `market:bidsIn` a market | `market:Bidding` |
 | `market:hosts` a market | `market:Hosting` |
 | `actuation:hasActuator` anything that is a kind of `actuation:Actuator` | `actuation:Actuation` |
@@ -89,7 +89,7 @@ with no edit to the agent, because there is nothing about the agent to edit. See
 [who-holds-the-clock](/decisions/who-holds-the-clock.md) for what those three sense modes mean.
 
 The market rows are the **weakest** of these, and worth naming as such: `market:bidsIn` says "is a
-bidder" in other words, where `perception:senseMode` states a physical fact about hardware. Deriving
+bidder" in other words, where `sensing:senseMode` states a physical fact about hardware. Deriving
 market roles from declared *goals* instead is an open seam — see below.
 
 ## 2. Every wire name is stated
@@ -117,7 +117,7 @@ thinks, and no other agent can read it — enforced, not polite
 If two agents could reasonably disagree about it, it is a belief.
 
 Beliefs then divide again, and the two shipped worlds show it: the same agent has
-`perception:slowSleepS` 600 in `simulation` and 10 in `sensing`, because the **circumstance** differs, not
+`sensing:slowSleepS` 600 in `simulation` and 10 in `sensing`, because the **circumstance** differs, not
 because it wants anything different. Operational beliefs (cadence, freshness) track the kind of
 world; stake beliefs (target, band, endowment, price) are the agent's own and derivable from
 nothing. See [genesis-process](/domain/genesis-process.md) §"Where opening beliefs come from".
@@ -138,7 +138,7 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
    `<.../graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .`
 5. **Validate, and read what it derived.** `agora-validate orchard` builds the world from the
    files and prints `tree_north  Subscribing`. An agent that derived nothing has wiring
-   implying no ability — usually a missing `perception:senseMode`, or a device that is not a kind of
+   implying no ability — usually a missing `sensing:senseMode`, or a device that is not a kind of
    anything the rules recognise.
 6. **Validate.** `agora-validate` is capability-aware: a shape applies to an agent only if that
    agent derived the capability it belongs to. It catches a subscribing agent with no interval,
@@ -155,7 +155,7 @@ hold every world they find to the same constitution, with no test edit.
 
 `sensing/` exists because "capabilities are derived, not declared" is worth nothing unless a
 capability can actually run alone. It has no market, so nothing can derive `market:Bidding`, so no
-agent has it — and perception has to stand up by itself or the claim is false.
+agent has it — and sensing has to stand up by itself or the claim is false.
 
 The two ship with **the same device ids and channels on purpose**. One flashed board runs in
 either; which world is in the store decides whether its agent merely watches or also buys. That
@@ -280,8 +280,8 @@ of its own either.
 
 A simulated sensor states everything a board states: the bus it is on, the subject it monitors,
 the property it observes, its topics, and who holds the clock. One extra fact, `ag:simulatedBy`,
-says a process stands in for it. An agent wired to one with `perception:polls` derives `perception:Subscribing`
-and runs the **ordinary perception module**, because from where the agent stands there is
+says a process stands in for it. An agent wired to one with `sensing:polls` derives `sensing:Subscribing`
+and runs the **ordinary sensing module**, because from where the agent stands there is
 nothing else it could be.
 
 The marker is on the device and never on the agent, and that is the whole design.
@@ -293,7 +293,7 @@ implementation* — it could pass while the real path was broken, which is the w
 form of simulation. It also cost five smaller things: agent metrics silently omitted every
 simulated agent, the ACL generator needed a second query, the readings dashboard caught them
 only by accident, `sense_now`/`fresh_reading` had two definitions, and `ag:models` was declared
-`rdfs:subPropertyOf perception:polls` — a promise nothing kept, because shapes ran with RDFS inference
+`rdfs:subPropertyOf sensing:polls` — a promise nothing kept, because shapes ran with RDFS inference
 and the runtime did not. That last one is now a promise the runtime *would* keep: the vocabulary's
 entailments are materialised into the store before anything reads it, so a sub-property declared
 today is followed everywhere rather than wherever someone remembered a property path. See
@@ -321,9 +321,9 @@ the valve *reported having dispensed*. The old arrangement read the valve's comm
 meant a command a real valve would refuse still watered the plant. Now a refusal publishes
 nothing and the soil stays dry — which is the behaviour worth having a test for, and there is one.
 
-**Sense mode is honoured rather than bypassed.** `perception:ScheduledProcedure` means the stand-in keeps the
+**Sense mode is honoured rather than bypassed.** `sensing:ScheduledProcedure` means the stand-in keeps the
 interval its agent gives it over the retained command, exactly as a deep-sleeping board does;
-`perception:PushProcedure` means it keeps its own clock and takes no orders. So the simulation exercises the
+`sensing:PushProcedure` means it keeps its own clock and takes no orders. So the simulation exercises the
 retained-cadence mechanism, which the old one never touched at all.
 
 Before it: a separate `agora-sim` process told by an environment variable which subjects to
@@ -359,7 +359,7 @@ only an explicit re-birth discards them.
 - **Market roles are declared, not derived.** `market:bidsIn` and `market:hosts` are the two weakest
   rows in the derivation table. Stating an agent's *goal* — keep this plant alive, steward this
   source — and deriving both market capabilities from that would make them as honest as
-  perception and actuation already are, and would also yield who the counterparties are without
+  sensing and actuation already are, and would also yield who the counterparties are without
   anyone listing them.
 - **Derivation is materialised, not maintained.** Rules run at seed time and write triples into
   `:world`; removing a wire does not retract the capability until the world is re-seeded.

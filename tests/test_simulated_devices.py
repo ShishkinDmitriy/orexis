@@ -36,14 +36,14 @@ def _caps(world: str) -> dict[str, set[str]]:
 
 def test_a_simulated_sensor_derives_the_ordinary_capability():
     """The point of the exercise. `fern` polls a device that does not exist and still comes out
-    perception:Subscribing — the same capability, running the same module, as a fern on a real board."""
+    sensing:Subscribing — the same capability, running the same module, as a fern on a real board."""
     assert "Subscribing" in _caps("simulation")["fern"]
 
 
-def test_no_agent_derives_a_simulated_perception():
+def test_no_agent_derives_a_simulated_sensing():
     """There is no such capability any more, and nothing may quietly reintroduce one.
 
-    A world that grew a `SimulatedSensing` back would be a second perception implementation,
+    A world that grew a `SimulatedSensing` back would be a second sensing implementation,
     which is exactly the thing that let a broken real path go undetected.
     """
     for world in ("sensing", "simulation"):

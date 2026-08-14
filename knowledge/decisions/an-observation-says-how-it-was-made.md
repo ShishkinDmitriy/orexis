@@ -11,7 +11,7 @@ timestamp: 2026-08-12T00:00:00Z
 # Context
 
 [one-word-for-one-relation](one-word-for-one-relation.md) typed the three sense modes as
-`sosa:Procedure` alongside `perception:SenseMode`, and deliberately kept the *relation* ours.
+`sosa:Procedure` alongside `sensing:SenseMode`, and deliberately kept the *relation* ours.
 It left two things it did not look at.
 
 **Nothing cited a procedure.** `agent/sensed_writer.py` writes a complete `sosa:Observation` —
@@ -19,7 +19,7 @@ feature of interest, observed property, simple result, result time, made-by sens
 version, author — and never said by what method. The W3C's own worked example does, and
 `sosa:usedProcedure` was the one predicate of theirs we had no answer for.
 
-**And the names read as states.** `sosa:usedProcedure perception:Scheduled` says an observation
+**And the names read as states.** `sosa:usedProcedure sensing:Scheduled` says an observation
 used a procedure called *Scheduled*, which is an adjective. A `sosa:Procedure` is a **plan** —
 *"a workflow, protocol, plan, algorithm, or computational method specifying how to make an
 Observation."*
@@ -28,9 +28,9 @@ Observation."*
 
 | was | is | agent capability |
 |---|---|---|
-| `perception:Pull` | `perception:PolledProcedure` | `perception:Polling` |
-| `perception:Scheduled` | `perception:ScheduledProcedure` | `perception:Subscribing` |
-| `perception:Push` | `perception:PushProcedure` | `perception:Listening` |
+| `sensing:Pull` | `sensing:PolledProcedure` | `sensing:Polling` |
+| `sensing:Scheduled` | `sensing:ScheduledProcedure` | `sensing:Subscribing` |
+| `sensing:Push` | `sensing:PushProcedure` | `sensing:Listening` |
 
 Each keeps its mode word. That was the constraint, not decoration: the pairing in
 [who-holds-the-clock](who-holds-the-clock.md) is what the whole family is about, and a name that
@@ -54,7 +54,7 @@ taken:
   deliberately do not model — and one that is the subject of an open issue.
 - **`Reporting` is ours.** `capabilities/reporting/` was created eight commits earlier for
   telemetry an agent emits *about itself* — `reporting:Storing`, `reporting:Announcing`. A
-  perception procedure called `PushReporting` is a second sense of that word, in one codebase,
+  sensing procedure called `PushReporting` is a second sense of that word, in one codebase,
   introduced the same day.
 
 **The root word was checked and the compound was not.** *Procedure*, *sensing* and *mode* were all
@@ -66,8 +66,8 @@ a term this repository had itself created that week.
 
 A compound is a new name. Check it whole.
 
-**`perception:SenseMode` stays, and it is not a synonym for `sosa:Procedure`.** It is the
-constrained subset. `perception:senseMode`'s range being `SenseMode` is what stops a sensor
+**`sensing:SenseMode` stays, and it is not a synonym for `sosa:Procedure`.** It is the
+constrained subset. `sensing:senseMode`'s range being `SenseMode` is what stops a sensor
 naming any procedure at all, and the derivation is guarded on exactly these three; `sosa:Procedure`
 is too wide to say that with. The same reasoning kept the *relation* ours in the record above.
 
@@ -80,7 +80,7 @@ ag:obs_fern_SoilMoisture a sosa:Observation ;
     sosa:hasSimpleResult "0.183"^^xsd:decimal ;
     sosa:resultTime "…"^^xsd:dateTime ;
     sosa:madeBySensor ag:moisture_sensor_fern ;
-    sosa:usedProcedure perception:ScheduledProcedure ;
+    sosa:usedProcedure sensing:ScheduledProcedure ;
     ag:underWorldVersion 1 ;
     prov:wasGeneratedBy ag:fern_agent .
 ```
@@ -159,7 +159,7 @@ about something else entirely.
 
 `<observation/1087>` is the one node in the fixture set that answers `sosa:usedProcedure` —
 `<DHT22#Procedure>`, their own. Our shape rejects it anyway, on `sh:class` rather than
-`sh:minCount`: it is a `sosa:Procedure` and not one of the three `perception:SenseMode`
+`sh:minCount`: it is a `sosa:Procedure` and not one of the three `sensing:SenseMode`
 instances.
 
 That is the constrained-subset argument above, arriving from outside as evidence rather than as
@@ -170,8 +170,8 @@ node was already refused for six other reasons; no expectation moved.
 
 ## A record about a rename had to be repaired by hand
 
-`who-holds-the-clock` recounts an **earlier** rename of these same modes: *"`perception:Pull` is
-now `perception:Scheduled`"*. Renaming mechanically turned that into *"`PolledSampling` is now
+`who-holds-the-clock` recounts an **earlier** rename of these same modes: *"`sensing:Pull` is
+now `sensing:Scheduled`"*. Renaming mechanically turned that into *"`PolledSampling` is now
 `ScheduledSampling`"* — false, since those are two distinct current terms. The sentence now names
 the spelling it means, and the record carries an amendment table.
 
@@ -192,7 +192,7 @@ and then `"pushprocedure"`, breaking a device twice more in the same silent way.
 - **A shape requires the citation**, so a sensor with no sense mode never reaches the writer —
   the world is refused first. Proved by mutation: an observation lacking it is refused, with its
   own message.
-- **The stale spelling is refused rather than ignored.** Putting `perception:Scheduled` back into
+- **The stale spelling is refused rather than ignored.** Putting `sensing:Scheduled` back into
   a world fails validation on `senseMode`'s range, which is the difference between a rename that
   is caught and one that silently derives nothing.
 - **Prose from before the namespace sweep is corrected.** `ag:Scheduled` survived in the README
@@ -213,5 +213,5 @@ and then `"pushprocedure"`, breaking a device twice more in the same silent way.
   two predicates now visibly answer different questions rather than one appearing to be a
   home-made stand-in for the other. See
   [a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md).
-- **`perception:PolledProcedure` is still reserved.** No rule maps it, so no observation can cite
+- **`sensing:PolledProcedure` is still reserved.** No rule maps it, so no observation can cite
   it, and the shape would accept one that did.

@@ -53,7 +53,7 @@ it until genesis derives it.
 A **transport** is a smaller thing, deliberately: a `Driver` under `packages/transport/` plus its
 terms and completeness rules. No capability, no module, no belief changes — because how a
 device is reached is not something an agent decides. That line is the subject of
-[the perception/binding split](/domain/sensing.md): a capability distinguishes what an agent
+[the sensing/binding split](/domain/sensing.md): a capability distinguishes what an agent
 must decide, a binding distinguishes how a device is spoken to.
 
 # Capabilities are derived from hardware, not declared
@@ -61,8 +61,8 @@ must decide, a binding distinguishes how a device is spoken to.
 The sovereign never writes down what an agent can do — only what exists and what is wired to
 what. Each capability's `rules.ru` then computes ability from connection:
 
-- wired to a **scheduled** sensor → `perception:Subscribing`: the agent states the interval;
-- wired to a **push-mode** sensor → `perception:Listening`: it records what arrives, and is never
+- wired to a **scheduled** sensor → `sensing:Subscribing`: the agent states the interval;
+- wired to a **push-mode** sensor → `sensing:Listening`: it records what arrives, and is never
   asked for a cadence, because it has no way to apply one;
 - plumbed into a market → `market:Bidding`; owning the venue → `market:Hosting`;
 - holding actuators → `actuation:Actuation`.

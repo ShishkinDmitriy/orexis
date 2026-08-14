@@ -1,8 +1,8 @@
 ---
 type: Domain Concept
 title: Intention
-description: BDI's third letter — a commitment to reduce a named gap by a named means, persisting until satisfied, dropped or outwaited rather than being re-decided on every perception. Kept in a private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat impulses is each agent's own belief. Since #131 the MEANS and the END are judged apart: an acquire's voucher opens a watch — baseline copied into the row, promised direction from the domain, deadline from the patience — and the verdict lands beside the outcome, so satisfied-and-unmet is recordable, the false-knowledge signature. An open watch is maximum urgency, so the cadence tightens until the world answers; an affordance unmet suspectAfter times running is flagged, never auto-retracted.
-tags: [intention, bdi, capability, market, perception, beliefs]
+description: BDI's third letter — a commitment to reduce a named gap by a named means, persisting until satisfied, dropped or outwaited rather than being re-decided on every sensing. Kept in a private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat impulses is each agent's own belief. Since #131 the MEANS and the END are judged apart: an acquire's voucher opens a watch — baseline copied into the row, promised direction from the domain, deadline from the patience — and the verdict lands beside the outcome, so satisfied-and-unmet is recordable, the false-knowledge signature. An open watch is maximum urgency, so the cadence tightens until the world answers; an affordance unmet suspectAfter times running is flagged, never auto-retracted.
+tags: [intention, bdi, capability, market, sensing, beliefs]
 timestamp: 2026-08-13T00:00:00Z
 ---
 
@@ -69,7 +69,7 @@ Two consequences ride on the watch:
 
 - **it is maximum urgency.** Evaporation is fractions per day; a dose lands in seconds — and
   urgency-by-state relaxes attention exactly when the dose needs watching, because the value
-  improves. So the keeper answers perception's ordinary `urgency` ask with 1.0 while a watch is
+  improves. So the keeper answers sensing's ordinary `urgency` ask with 1.0 while a watch is
   open (bounded by its deadline), and the cadence round-trips by itself: tight on adoption,
   released on verdict. Opening the watch also asks for one look (`sense_now`), so the freshest
   before is on record.

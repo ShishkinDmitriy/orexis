@@ -29,7 +29,7 @@ sensor* and nothing can ask for one *per stream*.
 
 **`sosa:Platform`** — *"an entity that hosts other entities, particularly Sensors, Actuators,
 Samplers, and other Platforms"* — with **`sosa:hosts`**. SOSA is already in use here for
-`sosa:observes` and `perception:Sensor` is already `rdfs:subClassOf sosa:Sensor`, so this is a vocabulary
+`sosa:observes` and `sensing:Sensor` is already `rdfs:subClassOf sosa:Sensor`, so this is a vocabulary
 the project speaks rather than one it is adopting.
 
 The recursion is what makes the shape expressible without inventing anything:
@@ -123,7 +123,7 @@ Recorded at the time as not worth modelling, on the grounds that nothing in the 
 KY-015 implements two sensing procedures rather than being two things mounted together. Both parts
 of that turned out to be worth taking, and neither by the trigger named:
 
-- the cheap alignment — `perception:senseMode`'s values ARE `sosa:Procedure`s by definition — was
+- the cheap alignment — `sensing:senseMode`'s values ARE `sosa:Procedure`s by definition — was
   taken in [an-observation-says-how-it-was-made](an-observation-says-how-it-was-made.md), which
   did indeed arrive by way of [who-holds-the-clock](who-holds-the-clock.md);
 - the procedural axis itself was taken in

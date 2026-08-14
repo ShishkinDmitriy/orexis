@@ -28,9 +28,9 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [deliberation](/domain/deliberation.md) - The whether, extracted: given the gap and what already stands, name the next move; the actors carry it out. Reflex is the welded chain as the first member; Consulting is the declared, unimplemented seat for a model, constrained before it exists. The host's trigger stays out — a host has no gap.
 
-# Perception
+# Sensing
 
-* [sensing](/domain/sensing.md) - Perception split by WHO HOLDS THE CLOCK: Polling (the agent asks each time — reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). Either way the agent owns the freshness rule, and a bid must cite a reading it trusts.
+* [sensing](/domain/sensing.md) - Sensing split by WHO HOLDS THE CLOCK: Polling (the agent asks each time — reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). Either way the agent owns the freshness rule, and a bid must cite a reading it trusts.
 
 # Genesis and structure
 

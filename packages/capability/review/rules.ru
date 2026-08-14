@@ -2,7 +2,7 @@
 #
 # The premise is a MANDATE. An agent the world commits to a range must be able to move within
 # it — room to move and the ability to use it are one decision, said once. So the capability is
-# derived from a fact about the agent, exactly as perception's is derived from a fact about its
+# derived from a fact about the agent, exactly as sensing's is derived from a fact about its
 # hardware, and nothing is declared by hand.
 #
 # An agent with no commitment gets nothing, which is how a deployment that wants no drift says

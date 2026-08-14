@@ -476,7 +476,7 @@ SELECT (MIN(?due) AS ?soonest) WHERE {{ GRAPH <{revisions_graph(self.agent.id)}>
 
 
 def _field_name(term: str) -> str:
-    """`picked_perception_slowSleepS` from a term IRI — a series field, filtered by a person.
+    """`picked_sensing_slowSleepS` from a term IRI — a series field, filtered by a person.
 
     The namespace's tail is kept, not stripped: two packages may each declare a `slowSleepS`
     in their own namespace, and the stripped form cannot tell them apart — the exact latent

@@ -82,7 +82,7 @@ fails and tells us to drop the patch, rather than silently applying a no-op fore
   as-is" is a coherent goal rather than a wish.
 - **They write schema.org in the legacy `http:` form.** Ours is the canonical `https:`, and RDF
   treats the two as different IRIs — so a figure their file plainly states was invisible to a
-  shape written against ours. That is bridged in `capabilities/perception/ontology.ttl`.
+  shape written against ours. That is bridged in `capabilities/sensing/ontology.ttl`.
 - **Their frequency is 2 seconds**, which is the figure the KY-015 declares in
   `packages/part/dht11/`. Independent corroboration of a number nobody here measured.
 - **One in four of the published examples does not parse.** `IBS-TH2-PLUS.ttl` is deliberately

@@ -3,7 +3,7 @@
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix desire: <http://example.org/agora/desire#> .
 @prefix review: <http://example.org/agora/review#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix reporting: <http://example.org/agora/reporting#> .
 @prefix ag: <http://example.org/agora#> .
@@ -11,16 +11,16 @@
 
 #  Tomato's agent's PRIVATE beliefs. See genesis/beliefs-fern.ttl for what each term means.
 
-##  perception:Subscribing
+##  sensing:Subscribing
 #   The anxious one, deliberately: its fast end sits ON the constitutional floor, so after any
 #   scare the release staircase (#139) has the longest climb in the world — 10, 15, 22, 33, 49,
 #   73, 109, 163, 244, 366, 549, 600 — and `cadence_acked_s` draws the whole geometry where the
 #   other agents show only a few treads. A demo belief, and a legal one: how closely to watch
 #   when frightened is exactly the kind of thing agents are allowed to differ on.
 ag:tomato_agent
-    perception:fastSleepS 10 ;
-    perception:slowSleepS 600 ;
-    perception:readingGraceS 45 .
+    sensing:fastSleepS 10 ;
+    sensing:slowSleepS 600 ;
+    sensing:readingGraceS 45 .
 
 ##  market:Bidding
 ag:tomato_agent

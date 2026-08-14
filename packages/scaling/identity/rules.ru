@@ -16,7 +16,7 @@
 # IS, which no derivation could work out — a fraction and a temperature are both bare decimals,
 # and only the world can say which this one is.
 
-PREFIX perception: <http://example.org/agora/perception#>
+PREFIX sensing: <http://example.org/agora/sensing#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX ag:          <http://example.org/agora#>
 PREFIX scaling: <http://example.org/agora/scaling#>

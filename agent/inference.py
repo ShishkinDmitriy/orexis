@@ -103,7 +103,7 @@ CLOSURE = (
 
     # 4. And what a world statement implies under a subproperty. There are no `rdfs:subPropertyOf`
     #    axioms today, again: the simulated-device work removed `ag:models` under
-    #    `perception:polls` — the very fault that opened issue #27 — then #79 added `mc:carries`
+    #    `sensing:polls` — the very fault that opened issue #27 — then #79 added `mc:carries`
     #    under `sosa:hosts`, and dropping that term for the standard one removed it again. Both
     #    removals were right and neither touched this rule, which is the point: it is here so
     #    that reintroducing one is a vocabulary edit and not a debugging session, and it has now
@@ -150,7 +150,7 @@ def materialise(store) -> None:
     """Assert what the vocabulary entails, so that every reader sees one graph.
 
     Run from `genesis.refresh_public` after the files are loaded and BEFORE each package's
-    `rules.ru`, so a derivation rule may ask `?type a perception:Sensor` and mean it — rather than
+    `rules.ru`, so a derivation rule may ask `?type a sensing:Sensor` and mean it — rather than
     spelling out a property path and hoping the next rule's author remembers to.
     """
     before = len(store)

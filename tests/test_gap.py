@@ -143,7 +143,7 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
     unwired.update(f"""
         PREFIX ag: <http://example.org/agora#>
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent
-            <http://example.org/agora/perception#polls> ag:air_temp_fern }} }}
+            <http://example.org/agora/sensing#polls> ag:air_temp_fern }} }}
         WHERE {{}}""")
     for rule in loader.rule_files():
         unwired.update(genesis.substitute(rule.read_text(), unwired))

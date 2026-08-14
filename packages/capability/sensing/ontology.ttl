@@ -1,5 +1,5 @@
 @prefix review: <http://example.org/agora/review#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
@@ -9,9 +9,9 @@
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix schema: <https://schema.org/> .
 
-<http://example.org/agora/perception> a owl:Ontology ;
-    rdfs:label "Agora perception" ;
-    rdfs:comment """Perception: what an agent can KNOW and DECIDE about a subject's state. Split by WHO HOLDS THE CLOCK, and deliberately independent of how a device is reached — a scheduled board on a bus and one on a GPIO pin present the same ability and the same choices, so the capability is the same and only the BINDING differs (see mqtt.ttl). The line: a capability distinguishes what an agent must decide; a binding distinguishes how a device is spoken to.""" .
+<http://example.org/agora/sensing> a owl:Ontology ;
+    rdfs:label "Agora sensing" ;
+    rdfs:comment """Sensing: what an agent can KNOW and DECIDE about a subject's state. Split by WHO HOLDS THE CLOCK, and deliberately independent of how a device is reached — a scheduled board on a bus and one on a GPIO pin present the same ability and the same choices, so the capability is the same and only the BINDING differs (see mqtt.ttl). The line: a capability distinguishes what an agent must decide; a binding distinguishes how a device is spoken to.""" .
 
 #################  The capabilities  #################
 #  Three, and the axis is WHO HOLDS THE CLOCK — because that is what changes what the agent
@@ -19,29 +19,29 @@
 #  Protocol does NOT change it: an agent's attention policy has no business depending on a
 #  wire format.
 #
-#      perception:Polling      the AGENT's clock   — it asks, each time
-#      perception:Subscribing  a SHARED clock      — the agent states an interval, the device keeps it
-#      perception:Listening    the DEVICE's clock  — it announces, and takes no orders
+#      sensing:Polling      the AGENT's clock   — it asks, each time
+#      sensing:Subscribing  a SHARED clock      — the agent states an interval, the device keeps it
+#      sensing:Listening    the DEVICE's clock  — it announces, and takes no orders
 #
 #  They are strictly decreasing in agent control, and each one asks the agent for strictly
-#  less. Only the middle one is implemented today; see the note on perception:Polling.
+#  less. Only the middle one is implemented today; see the note on sensing:Polling.
 
-perception:PerceptionCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
-    rdfs:label "Perception capability" ;
-    rdfs:comment "The family. Rules true of perception however it is done target this class, so nothing is restated per transport, and one capability may ask for 'whoever perceives' without knowing which of the three answered." .
+sensing:SensingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+    rdfs:label "Sensing capability" ;
+    rdfs:comment "The family. Rules true of sensing however it is done target this class, so nothing is restated per transport, and one capability may ask for 'whoever perceives' without knowing which of the three answered." .
 
-perception:Polling a perception:PerceptionCapability ; rdfs:label "Polling" ;
+sensing:Polling a sensing:SensingCapability ; rdfs:label "Polling" ;
     rdfs:comment "The agent holds the clock and ASKS for each reading: one request, one response. The simplest possible exchange, and the one with the most agent control — but it requires a device that is reachable at any moment, so it cannot be had from a board that deep-sleeps between readings. RESERVED: declared so the vocabulary is honest about the three, but no derivation rule grants it and no module implements it, so no agent can hold it yet." .
 
-perception:Subscribing a perception:PerceptionCapability ; rdfs:label "Subscribing" ;
+sensing:Subscribing a sensing:SensingCapability ; rdfs:label "Subscribing" ;
     rdfs:comment "The agent states an INTERVAL and the device keeps to it: a standing request rather than a repeated one. The agent still owns the policy — how often to look is entirely its choice — but it delegates the timekeeping, which is what lets the device sleep between readings and is why a battery board can be perceived at all. What it gives up is asking at a moment of its choosing." .
 
-perception:Listening a perception:PerceptionCapability ; rdfs:label "Listening" ;
+sensing:Listening a sensing:SensingCapability ; rdfs:label "Listening" ;
     rdfs:comment "The agent RECEIVES readings on the device's own schedule and states no interval at all. It keeps its freshness rule — which becomes a liveness detector rather than a control — but is never asked for a cadence it could not apply." .
 
 #################  Sensors  #################
 
-#  `perception:Sensor` was here, and it was `sosa:Sensor` wearing our name.
+#  `sensing:Sensor` was here, and it was `sosa:Sensor` wearing our name.
 #
 #  It was an intersection, not a synonym — `ag:Device ∧ sosa:Sensor` — and that is why the earlier
 #  audits kept it. But a named class is not the only way to state an intersection: an instance
@@ -64,7 +64,7 @@ perception:Listening a perception:PerceptionCapability ; rdfs:label "Listening" 
 #
 #  So the test for keeping one of ours is not whether a standard has a similar word. It is
 #  whether the standard is answering the same QUESTION. Here it is not, which is why
-#  `perception:Sensor` goes and `ag:Device` stays.
+#  `sensing:Sensor` goes and `ag:Device` stays.
 #
 #  See knowledge/decisions/one-word-for-one-relation.md.
 
@@ -82,16 +82,16 @@ perception:Listening a perception:PerceptionCapability ; rdfs:label "Listening" 
 # rdfs:subPropertyOf sosa:hosts` is the same move from the other direction.
 #
 # HERE rather than in `packages/core/agora/`, though the subject is a class this package does not
-# own: the axiom is only load-bearing because sensors have capabilities, and perception is where
+# own: the axiom is only load-bearing because sensors have capabilities, and sensing is where
 # a sensor is. A package restates what it needs to be true; the kernel would be asserting it on
 # behalf of a package that may not be installed.
 sosa:Sensor rdfs:subClassOf ssn:System .
 
-perception:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
+sensing:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
     rdfs:label "polls" ;
     rdfs:comment "The agent may read this sensor. This IS the access grant — expressed as topology rather than as a separate permission system, so isolation is visible in the wiring." .
 
-perception:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
+sensing:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
     rdfs:label "monitors" ;
     rdfs:comment "The subject this sensor reads. Pairs with sosa:observes, which says WHICH property." .
 
@@ -106,9 +106,9 @@ perception:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
 # legible to anything speaking SSN.
 #
 # The RELATION stays ours, and that is the part worth explaining. `ssn:implements` is what SSN
-# uses, and it is wider: a System may implement several Procedures. `perception:senseMode`
+# uses, and it is wider: a System may implement several Procedures. `sensing:senseMode`
 # carries `sh:maxCount 1`, because a sensor has exactly one answer to *who holds the clock* and
-# the derivation is guarded on it — `perception:Subscribing` from ScheduledProcedure, `Listening`
+# the derivation is guarded on it — `sensing:Subscribing` from ScheduledProcedure, `Listening`
 # from PushProcedure. Swapping the predicate would either lose that count or, keeping it,
 # forbid a sensor ever implementing a second procedure of any kind. Neither is worth the tidiness.
 #
@@ -118,61 +118,61 @@ perception:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
 # **The clock procedure is already here — do not add a second one.** Once parts began declaring
 # `ssn:implements` it looked as though something was missing: a board keeps time, and nothing
 # said so. It does say so. These three ARE the clock, differing only in who sets it, and the
-# statement is `perception:senseMode` on a sensor. What is genuinely missing is that the clock
+# statement is `sensing:senseMode` on a sensor. What is genuinely missing is that the clock
 # is the BOARD's and the fact sits on each sensor it carries, which is issues #96 and #103 and
-# is deliberately untouched here: hoisting it changes what grants perception's capability, and
+# is deliberately untouched here: hoisting it changes what grants sensing's capability, and
 # a change to that must be made on its own. See
 # knowledge/decisions/a-procedure-belongs-to-whatever-performs-it.md.
 
-perception:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
-    rdfs:comment "The class exists for the count: `perception:SensorShape` asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .
+sensing:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
+    rdfs:comment "The class exists for the count: `sensing:SensorShape` asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .
 
-perception:PolledProcedure a perception:SenseMode , sosa:Procedure ; rdfs:label "Polled procedure" ;
-    rdfs:comment "Always reachable, and answers each request: ask, and it reads and replies. Gives perception:Polling. A board that deep-sleeps is NOT this, however it is asked — it cannot hear the request. RESERVED alongside perception:Polling: no rule maps it yet." .
+sensing:PolledProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Polled procedure" ;
+    rdfs:comment "Always reachable, and answers each request: ask, and it reads and replies. Gives sensing:Polling. A board that deep-sleeps is NOT this, however it is asked — it cannot hear the request. RESERVED alongside sensing:Polling: no rule maps it yet." .
 
-perception:ScheduledProcedure a perception:SenseMode , sosa:Procedure ; rdfs:label "Scheduled procedure" ;
-    rdfs:comment "Takes an interval and keeps to it, sleeping in between: it accepts instruction about WHEN, then clocks itself. Gives perception:Subscribing. This is what a deep-sleeping battery board is, and the reason the middle capability exists at all." .
+sensing:ScheduledProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Scheduled procedure" ;
+    rdfs:comment "Takes an interval and keeps to it, sleeping in between: it accepts instruction about WHEN, then clocks itself. Gives sensing:Subscribing. This is what a deep-sleeping battery board is, and the reason the middle capability exists at all." .
 
-perception:PushProcedure a perception:SenseMode , sosa:Procedure ; rdfs:label "Push procedure" ;
-    rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives perception:Listening. The edge holds the policy, and no agent can take it back." .
+sensing:PushProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Push procedure" ;
+    rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives sensing:Listening. The edge holds the policy, and no agent can take it back." .
 
-perception:senseMode a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range perception:SenseMode ;
+sensing:senseMode a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range sensing:SenseMode ;
     rdfs:label "sense mode" .
 
 #################  Attention — the agent's private policy  #################
 
 # Required only of an agent that can actually act on them: driving a device is what makes a
 # cadence meaningful, so the transport's rules decide whether these are demanded.
-perception:fastSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+sensing:fastSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "fast sleep seconds" ;
     rdfs:comment "Cadence when the agent judges itself in trouble — how closely it watches when worried." .
-perception:slowSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+sensing:slowSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "slow sleep seconds" ;
     rdfs:comment "Cadence when comfortable. Attention costs energy, so looking less is a real choice." .
 
 # Required of EVERY perceiving agent, however it perceives: deciding what is too old to act
 # on is about belief, not control, so it survives losing the ability to drive the device.
-perception:readingGraceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+sensing:readingGraceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "reading grace" ;
     rdfs:comment "How long past the interval it ASKED for a subscribing agent still trusts a reading — a board's wake time and a late wifi association. Relative on purpose: an agent that chose to look every 600s cannot coherently refuse a 120s-old number, and an absolute limit made every comfortable plant look like a failed sensor." .
 
-perception:maxReadingAgeS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+sensing:maxReadingAgeS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "max reading age seconds" ;
     rdfs:comment "How stale a reading may be and still back a decision. Without it, 'I choose when to look' becomes 'I choose which number to believe'." .
 
 #################  The constitutional bounds — stated, not compiled in  #################
 
-perception:minSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+sensing:minSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
     rdfs:label "minimum sleep seconds" .
-perception:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+sensing:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
     rdfs:label "maximum sleep seconds" .
 
-perception:relaxFactor a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+sensing:relaxFactor a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "relax factor" ;
     rdfs:comment "Fast attack, slow release (#139). Tightening is INSTANTANEOUS — any voice in the urgency choir earns its cadence at once, because hesitating in that direction costs a plant — but relaxing is bounded per commanded step: the next sleep may exceed the last by at most this factor, so one comfortable reading cannot cliff a burst-tight cadence straight to the slow end. The release then runs geometrically (30, 45, 68, 101...), a few minutes of dense sampling during which the trend establishes and the #133 bound takes over — confidence is EARNED per reading, not assumed from one. On the family like the bounds, because how fast a society lets its members stop looking is the society's figure, not a compile-time constant." .
 
-perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 900 ;
-    perception:relaxFactor 1.5 .
+sensing:SensingCapability sensing:minSleepS 10 ; sensing:maxSleepS 900 ;
+    sensing:relaxFactor 1.5 .
 
 #################  What the DEVICE can honour, which is a different question  #################
 #
@@ -196,7 +196,7 @@ perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 9
 # What this package adds is the VALUE, because SSN deliberately leaves values to other
 # vocabularies. The class carries the meaning; this carries the number.
 
-#  `perception:seconds` was here, and schema.org already had the idiom.
+#  `sensing:seconds` was here, and schema.org already had the idiom.
 #
 #  SSN leaves values to other vocabularies, and the W3C's own worked example of this very part
 #  — `ssn/integrated/examples/dht22.ttl`, the DHT11's sibling, written by the people who wrote
@@ -215,7 +215,7 @@ perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 9
 #
 #  The `rdfs:range xsd:integer` this term carried was never enforced — `rdfs:range` is not in
 #  `agent/inference.py`'s closure, the same way `mc:carries`'s domain was not. It is a shape
-#  now (`perception:StatedFrequencyShape`), so the swap gains a check rather than losing one.
+#  now (`sensing:StatedFrequencyShape`), so the swap gains a check rather than losing one.
 
 # BORROWED, AND BRIDGED — the legacy spelling of somebody else's namespace.
 #
@@ -245,24 +245,24 @@ perception:PerceptionCapability perception:minSleepS 10 ; perception:maxSleepS 9
 # reviewer finds it by asking the merged T-Box — nothing lists it and no Python knows it, which
 # is what keeps this a fact about the TERM rather than a fact about anyone holding it.
 #
-# Only the comfortable end. `cadence_for` interpolates from it toward perception:fastSleepS by urgency,
+# Only the comfortable end. `cadence_for` interpolates from it toward sensing:fastSleepS by urgency,
 # so a thirsty agent still watches at its fastest whatever a review concluded: attention follows
 # need first, and follows whether looking is telling it anything only inside the room need
 # leaves. That composition is the whole reason it is safe to let an agent slow itself down.
 
-perception:slowSleepS a review:RevisableBelief ;
-    review:revisableToward perception:minSleepS , perception:maxSleepS .
+sensing:slowSleepS a review:RevisableBelief ;
+    review:revisableToward sensing:minSleepS , sensing:maxSleepS .
 
 # How still counts as still, and how much evidence is enough to say so. Constitutional rather
 # than private for the same reason the sleep bounds are: left to each agent, these are the two
 # numbers a lazy one tunes until it is entitled to stop looking.
 
-perception:steadyFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+sensing:steadyFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "steady fraction" ;
     rdfs:comment "How far a reading may range, as a fraction of its own mean, and still count as unchanging. Relative rather than absolute because one agent's property is a fraction and another's is degrees, and a threshold in either unit is nonsense in the other." .
 
-perception:reviewWindow a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+sensing:reviewWindow a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
     rdfs:label "review window" ;
     rdfs:comment "How many readings must have accumulated before an agent may draw a conclusion about them. Guards the failure this mechanism could otherwise cause: two identical readings are a coincidence, and an agent that relaxed its attention on the strength of them would be reasoning from noise." .
 
-perception:PerceptionCapability perception:steadyFraction 0.02 ; perception:reviewWindow 20 .
+sensing:SensingCapability sensing:steadyFraction 0.02 ; sensing:reviewWindow 20 .

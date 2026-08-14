@@ -49,7 +49,7 @@ class Module:
         return False
 
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
-        """This agent's perception recorded something new. Most modules do not care."""
+        """This agent's sensing recorded something new. Most modules do not care."""
 
     def on_belief_revised(self, belief_term: str, value) -> None:
         """One of my agent's beliefs has been re-picked. Take it up, if it is one of mine.
@@ -73,9 +73,9 @@ class Module:
     # --- what I can contribute to my siblings ---
     #
     # These exist so that a capability which HOLDS a judgment need not be imported by one that
-    # merely needs it. Perception knows how to look; it does not know what counts as trouble,
+    # merely needs it. Sensing knows how to look; it does not know what counts as trouble,
     # because trouble is a fact about a stake, and the stake belongs to whoever holds the band.
-    # So perception asks, and whoever can, answers.
+    # So sensing asks, and whoever can, answers.
     #
     # Both are asked about a (subject, property) pair rather than a subject. A stake is held in
     # a property — a band is a band of moisture — so a module handed a temperature must be able
@@ -116,8 +116,8 @@ class Module:
         """How close this reading puts me to my own trouble: 0.0 (fine) to 1.0 (trouble).
 
         None means I have no stake in this subject and this property, and therefore no
-        opinion. Perception uses it to decide how closely to watch — attention follows need,
-        and need is not perception's to define.
+        opinion. Sensing uses it to decide how closely to watch — attention follows need,
+        and need is not sensing's to define.
 
         `value` may itself be None, and the question changes with it: not "how bad is this
         number" but "how urgent is it that I have no current number at all". Ignorance is a

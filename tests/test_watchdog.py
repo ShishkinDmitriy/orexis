@@ -104,7 +104,7 @@ def test_what_went_quiet_is_said_once_and_recovery_is_said_too(fern, caplog):
     assert len(recovered) == 1
 
 
-def test_a_quiet_sensor_is_reported_by_perception(fern):
+def test_a_quiet_sensor_is_reported_by_sensing(fern):
     """The module's own half: delivered once, then silent past the freshness rule. The limit
     is the same `stale_after_s` the rule uses, so the log and the refusal cannot disagree."""
     sensor = next(s for s in fern.me.sensors if s.observes.endswith("SoilMoisture"))

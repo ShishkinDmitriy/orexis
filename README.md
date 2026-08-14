@@ -42,7 +42,7 @@ packages/      EVERY package there is, one mechanic: packages/<family>/<name>/
   bus/  part/    protocols, and the physical things — dht11, esp32, the probe
   plant/         what this society is about: the domain, and a species
   tool/          vocabularies a generator reads, not the society
-  capability/    what an agent can DO — perception, market, actuation. The extendable axis
+  capability/    what an agent can DO — sensing, market, actuation. The extendable axis
   transport/     how a device is REACHED — mqtt. Deliberately not a capability
   codec/  scaling/   how bytes become a document, and a document a quantity
 agent/         the KERNEL that loads packages: store, genesis, runtime, inference, validate
@@ -60,7 +60,7 @@ the other way hid that: `packages/capability/market/` provides three capabilitie
 Inside a package the same names mean the same things every time:
 
 ```
-packages/capability/perception/
+packages/capability/sensing/
   ontology.ttl   the vocabulary — what its terms mean
   shapes.ttl     the rules — what an agent must believe to hold it
   rules.ru       the derivation — what wiring GIVES an agent it
@@ -211,7 +211,7 @@ its own verdict, the host offers, bidders answer with numbers only they can comp
 validates, vouchers come back. Deterministic, no LLM. (For a closed loop where wins actually
 
 A bidder **looks before it bids** and sits out the round if its sensor does not answer in
-time, or if the newest reading is older than its own `perception:maxReadingAgeS`. Owning the cadence
+time, or if the newest reading is older than its own `sensing:maxReadingAgeS`. Owning the cadence
 must not mean bidding on a stale, comfortable number — and the limit is each agent's own
 belief, so a slow-living succulent may accept older data than a fern.
 
@@ -258,12 +258,12 @@ society needs real boards. See [`domain/world`](knowledge/domain/world.md) §Sim
 ## Bringing a real board up
 
 Seed the **smallest world** instead of the society. `world/sensing` has one subject, one
-board and one agent, plumbed into no market — so derivation gives that agent `perception:Subscribing`
+board and one agent, plumbed into no market — so derivation gives that agent `sensing:Subscribing`
 and nothing else. It reads, records, and stops. Nothing in that world declares it sensor-only;
 there is simply no market for a market capability to come from.
 
 ```bash
-agora-onboard sensing                                 # one agent, perception only
+agora-onboard sensing                                 # one agent, sensing only
 cd world/sensing && podman compose up -d
 mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
 ```
@@ -286,21 +286,21 @@ you can mix them freely:
 
 Both topics are whatever `world/<name>/world.ttl` says they are; nothing is derived from the id.
 
-Declare the board's nature with `perception:senseMode`, and the capability follows from it — the axis
+Declare the board's nature with `sensing:senseMode`, and the capability follows from it — the axis
 is **who holds the clock**:
 
-| `perception:senseMode` | capability | who runs the timer |
+| `sensing:senseMode` | capability | who runs the timer |
 |---|---|---|
-| `perception:PolledProcedure` | `perception:Polling` — *reserved, not built* | the agent asks for each reading |
-| `perception:ScheduledProcedure` | `perception:Subscribing` | the agent sets an interval, the board keeps it |
-| `perception:PushProcedure` | `perception:Listening` | the board, alone |
+| `sensing:PolledProcedure` | `sensing:Polling` — *reserved, not built* | the agent asks for each reading |
+| `sensing:ScheduledProcedure` | `sensing:Subscribing` | the agent sets an interval, the board keeps it |
+| `sensing:PushProcedure` | `sensing:Listening` | the board, alone |
 
-`perception:Polling` is the simplest exchange and what the word ought to mean, but it needs a board
+`sensing:Polling` is the simplest exchange and what the word ought to mean, but it needs a board
 reachable at any moment — one that deep-sleeps cannot hear the request. So it is declared in
 the vocabulary with no rule granting it and no module providing it. The room is kept on
 purpose; adding it is a class and one line of `PROVIDES`.
 
-The ESP32 firmware is `perception:ScheduledProcedure`. Change the firmware, edit `perception:senseMode`, restart the
+The ESP32 firmware is `sensing:ScheduledProcedure`. Change the firmware, edit `sensing:senseMode`, restart the
 agent, and the capability changes with it — the agent is never edited.
 
 The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
@@ -342,7 +342,7 @@ per agent ✓, the distributed round ✓, `sensing` ✓
 (moisture sensor, guarded pump/valve). The loop closes: **sensor-in → water-out**.
 
 Next: the **LLM stance** layer (justification/coalition on top of the deterministic number —
-the leash), wallet debiting + metabolic cost — which is also what makes *perception* a priced
+the leash), wallet debiting + metabolic cost — which is also what makes *sensing* a priced
 action, the one part of agent-driven sensing still missing — and the constitution as SHACL
 over the trade.
 See [`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md).

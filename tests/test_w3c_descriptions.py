@@ -153,7 +153,7 @@ def test_the_only_thing_left_refusing_is_their_illustrative_reading(tmp_path):
 
     The warnings are a different matter and are correct: deploying a second DHT22 beside the
     board's own puts two sensors on one property of one subject, which is the legitimate rig
-    `perception:DuplicateSensorShape` warns about rather than forbids.
+    `sensing:DuplicateSensorShape` warns about rather than forbids.
     """
     data = _world_with(tmp_path,
                        a_vendor=_repaired("dht22.ttl"),
@@ -180,13 +180,13 @@ def test_a_vendor_description_alone_is_missing_only_deployment_facts(tmp_path):
     ok, report = conforms(data)
     assert not ok
 
-    for expected in ("perception:monitors", "sosa:observes",
+    for expected in ("sensing:monitors", "sosa:observes",
                      "a sensor must say how it is driven"):
         assert expected in report, f"{expected} stopped being required of a deployed sensor"
 
     #  And NOT for anything about the datasheet. Their frequency is stated in the legacy
     #  schema.org namespace and in QUDT 1.1, and both are understood — see the bridge in
-    #  `capabilities/perception/ontology.ttl` and `sh:in` in its shapes.
+    #  `capabilities/sensing/ontology.ttl` and `sh:in` in its shapes.
     assert "frequency" not in report, (
         "a datasheet figure stopped being readable — the legacy schema.org bridge or the QUDT "
         "1.1 unit is no longer accepted, and a vendor's file now fails for a fact it DOES state"

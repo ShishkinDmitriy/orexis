@@ -23,7 +23,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from agent import genesis, inference, loader
-from agent.ontology import (SOSA, AG, MC, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PERCEPTION,
+from agent.ontology import (SOSA, AG, MC, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, SENSING,
                             WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 from agent.store import Store, bindings
 

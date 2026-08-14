@@ -23,7 +23,7 @@ from conftest import build_agent, genesis_store, query_fn
 AIR_TEMP = "http://example.org/agora/water#AirTemperature"
 AIR_HUMIDITY = "http://example.org/agora/water#AirHumidity"
 # The mode every shipped board states: it keeps an interval its agent gives it.
-SCHEDULED = "http://example.org/agora/perception#ScheduledProcedure"
+SCHEDULED = "http://example.org/agora/sensing#ScheduledProcedure"
 MOISTURE = "http://example.org/agora/water#SoilMoisture"
 
 

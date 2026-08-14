@@ -4,7 +4,7 @@ title: Desire is deduced from the ranges the world states, never picked
 description: An agent's desire was three decimals in a private file — a target and two band edges, in soil moisture and nothing else — so an agent could want exactly one thing and could pick where its own comfort limits lay. Desire is now a capability with its own namespace and its own graph class: for each property its subject states a need in, the agent DEDUCES a region by intersecting every operating range that applies, and carries the survival ranges as the envelope that makes urgency asymmetric and unit-free. The band left market:Bidding with it, so having an opinion about your own state no longer requires being a market participant.
 status: accepted
 stage: v1
-tags: [desire, bdi, beliefs, ssn, capability, market, perception, graphs]
+tags: [desire, bdi, beliefs, ssn, capability, market, sensing, graphs]
 timestamp: 2026-08-13T00:00:00Z
 ---
 
@@ -75,7 +75,7 @@ lowest ceiling. Two sources contribute.
 
 - **the subject** — the plant's own operating range, per pot in the world or per species through
   the `owl:hasValue` closure. This is what it *needs*.
-- **its instruments** — the operating range of anything `perception:monitors` it. This is what
+- **its instruments** — the operating range of anything `sensing:monitors` it. This is what
   can be *witnessed*, and it belongs in the same intersection rather than in a separate check: a
   region an agent cannot see itself inside is not a region it can hold.
 
@@ -105,7 +105,7 @@ urgency(v) = |v − centre| / |survival bound on v's side − centre|,  clamped 
 
 Two properties fall out of that and neither is coded:
 
-- **it rises inside the region.** A step function would tell perception to relax completely
+- **it rises inside the region.** A step function would tell sensing to relax completely
   anywhere inside and then panic on the way out. An agent at the edge of comfortable is already
   worth watching more closely than one in the middle, so the band answers *am I in trouble* and
   urgency answers *how close am I getting*. They are not each other's complement.
@@ -122,7 +122,7 @@ must not be read as knowing there is a lot.
 
 The premise is **a stake**: `ag:actsFor` a subject that states what it needs. AGENTS.md's rule is
 that each capability is granted by whatever fact makes it meaningful and that the fact is its
-own — perception's is equipment, review's is latitude, and this one's is having something to
+own — sensing's is equipment, review's is latitude, and this one's is having something to
 advance for. `world/sensing`'s agent is wired to three sensors and acts for nothing, so it
 derives no desire and records; the supplier holds a market and no stake, so it derives none
 either.
@@ -186,7 +186,7 @@ is more urgent set how closely its board is watched. Nothing bids on air tempera
   which is the requirement, so *"0.30-0.50 when illuminance is low"* is not expressible. What has
   changed is that there is now somewhere for a selected regime to land — a second
   `desire:DesireGraph` — so the missing half is the selection and no longer the representation.
-- **Nothing weighs one desire against another.** Urgency is per property and perception takes the
+- **Nothing weighs one desire against another.** Urgency is per property and sensing takes the
   max. An agent that is both too dry and too cold has no way to say which matters more, and a
   weight would have to come from somewhere no ratified file currently is.
 - **The target is still a separate belief.** A region and a point are different things and the

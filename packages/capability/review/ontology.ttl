@@ -1,5 +1,5 @@
 @prefix review: <http://example.org/agora/review#> .
-@prefix perception: <http://example.org/agora/perception#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -35,7 +35,7 @@ review:Consulting a review:ReviewCapability ; rdfs:label "Consulting" ;
 
 review:reviewIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "review interval (s)" ;
-    rdfs:comment "The FLOOR between two arisings, not the schedule. A review plans its own next one from when its decision could possibly show an effect — checking sooner than a fresh window of readings can accumulate is looking at the same evidence twice. This figure only stops it planning something absurdly soon. Required of an agent that reviews, exactly as perception:fastSleepS is required of one that subscribes; what says whether an agent reviews at all is whether it was given any room to move." .
+    rdfs:comment "The FLOOR between two arisings, not the schedule. A review plans its own next one from when its decision could possibly show an effect — checking sooner than a fresh window of readings can accumulate is looking at the same evidence twice. This figure only stops it planning something absurdly soon. Required of an agent that reviews, exactly as sensing:fastSleepS is required of one that subscribes; what says whether an agent reviews at all is whether it was given any room to move." .
 
 #################  What may be re-picked, and how far  #################
 #  ONE triple per revisable belief, in the ontology of the package that owns the term, naming
@@ -72,7 +72,7 @@ review:limitedTo a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range review
 
 Shaped like a commitment and deliberately not one. Both narrow the same term the same way, so they intersect by the same arithmetic — but a mandate is a governance fact somebody ratified and could have written differently, and this is a fact about a board that nobody chose. Collapsing them would make `review:commits` mean two things and lose which one refused a revision.
 
-DERIVED, never stated. `capabilities/perception/rules.ru` computes it from the sensors an agent polls, so it lands in the derived graph like every other conclusion and a world stating it by hand is stating something it does not know.""" .
+DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sensors an agent polls, so it lands in the derived graph like every other conclusion and a world stating it by hand is stating something it does not know.""" .
 
 review:onTerm a owl:ObjectProperty ; rdfs:domain review:Commitment ; rdfs:label "on term" .
 review:notBelow a owl:DatatypeProperty ; rdfs:label "not below" .
@@ -86,7 +86,7 @@ review:notAbove a owl:DatatypeProperty ; rdfs:label "not above" .
 #  Here rather than in the kernel because summaries exist AS EVIDENCE FOR A REVIEW and for
 #  nothing else — an agent given no room to move has nothing to weigh and keeps none. They are
 #  folded in through `Module.on_reading_recorded`, the hook every module already gets, so the
-#  ingest path knows nothing about them. (Whether they belong to perception instead is issue #65
+#  ingest path knows nothing about them. (Whether they belong to sensing instead is issue #65
 #  and a separate argument.)
 
 review:SummariesGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Summaries graph" ;

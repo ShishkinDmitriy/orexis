@@ -2,7 +2,7 @@
 type: Decision
 title: One agent, many sensors — what collides and what does not
 description: An agent may hold several sensors, and every combination now works. Both failures were triggered by adding a second kind of sensor to a subject; this records what broke, why, what was done, and why the strictest reading is a warning rather than a refusal — which turned out to require changing what conformance means here.
-tags: [perception, sensors, observations, sense-mode, shacl, seams]
+tags: [sensing, sensors, observations, sense-mode, shacl, seams]
 timestamp: 2026-08-07T00:00:00Z
 ---
 
@@ -10,7 +10,7 @@ timestamp: 2026-08-07T00:00:00Z
 
 An agent's sensors are per-sensor throughout: topics hang off the sensor (`mqtt:readingTopic`), a
 driver is chosen per sensor, and cadence is tracked per sensor. So the obvious worry — that two
-sensors share machinery — is unfounded. Driven through the real module with two `perception:ScheduledProcedure`
+sensors share machinery — is unfounded. Driven through the real module with two `sensing:ScheduledProcedure`
 sensors on one agent:
 
 ```
@@ -19,7 +19,7 @@ subscribes to: sensors/basil/moisture, sensors/fern/moisture
   RECORD  moisture_sensor_basil  0.9      PUBLISH sensors/basil/cmd  {'sleep_s': 10}
 ```
 
-One capability — `perception:Subscribing` is derived once, not once per sensor — routing each message to
+One capability — `sensing:Subscribing` is derived once, not once per sensor — routing each message to
 the right sensor and each cadence to its own command topic.
 
 | one agent, two sensors | |
@@ -136,8 +136,8 @@ whether a world holds is one too many, and the one that ships is the one to test
 
 # Mixed sense modes: the capabilities split, the sensors do not
 
-An agent with one `perception:ScheduledProcedure` and one `perception:PushProcedure` sensor derives both `perception:Subscribing` and
-`perception:Listening`. Both modules then take **every** sensor the agent has:
+An agent with one `sensing:ScheduledProcedure` and one `sensing:PushProcedure` sensor derives both `sensing:Subscribing` and
+`sensing:Listening`. Both modules then take **every** sensor the agent has:
 
 ```python
 def handle(self, topic, payload):
@@ -146,13 +146,13 @@ def handle(self, topic, payload):
 
 `Agent._on_message` returns after the first module that handles a message, so nothing is ingested
 twice — an earlier note in this repo claimed double ingest and was wrong. What happens instead is
-quieter. Modules are ordered by `sorted(capabilities)`, `perception:Listening` sorts before
-`perception:Subscribing`, and listening's `on_reading` is a deliberate no-op — so **the scheduled sensor's
+quieter. Modules are ordered by `sorted(capabilities)`, `sensing:Listening` sorts before
+`sensing:Subscribing`, and listening's `on_reading` is a deliberate no-op — so **the scheduled sensor's
 cadence is never re-aimed**. The board keeps whatever interval it last had, indefinitely. In the
 other direction, subscribing publishes `{"sleep_s": N}` at a push device that takes no orders.
 
 The root cause was one line of absence: `Sensor` carried no sense mode. `_sensors_q` never selected
-`perception:senseMode`, so the runtime could not partition what the derivation already separated. It does
+`sensing:senseMode`, so the runtime could not partition what the derivation already separated. It does
 now, and each module declares the mode it serves beside the capability it already declares.
 
 **And the combination was not merely unhandled — it was unvalidatable.** Two shapes, each written

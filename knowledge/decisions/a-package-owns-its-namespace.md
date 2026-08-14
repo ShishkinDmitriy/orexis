@@ -14,7 +14,7 @@ Two things were true at once and should not have been.
 
 **Every package already declared a namespace of its own.** `capabilities/market/ontology.ttl` opens
 `<http://example.org/agora/market> a owl:Ontology`, and so does every other package — review,
-perception, actuation, the mqtt transport. The trees under `vocabulary/` went further and put their
+sensing, actuation, the mqtt transport. The trees under `vocabulary/` went further and put their
 *terms* there too: `mc:`, `onewire:`, `i2c:`, `probe:`, since
 [pins-and-wires](pins-and-wires.md). So the convention existed, was in use, and was documented.
 
@@ -115,7 +115,7 @@ it. So the kernel decided where every capability's beliefs lived, and a package 
 belief of its own at all. Blocks now hold full IRIs, built by each package with its own `term()`,
 and the reader learns nothing about where any of them live.
 
-**Perception matched a revised belief by stripping the namespace off** and comparing local names:
+**Sensing matched a revised belief by stripping the namespace off** and comparing local names:
 `belief_term.rsplit("#", 1)[-1] not in SUBSCRIBING_BLOCK.terms.values()`. Two packages may each
 declare a `slowSleepS`, and the stripped form cannot tell them apart — so a revision of someone
 else's belief would have been taken up as this module's. Compared whole now.

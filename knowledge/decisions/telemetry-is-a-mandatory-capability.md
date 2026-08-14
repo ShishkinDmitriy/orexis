@@ -48,7 +48,7 @@ intact.
 
 `packages/capability/reporting/`, with its own namespace, ontology, shapes, rule, beliefs and
 module. `reporting:Storing` is implemented; `reporting:Announcing` is declared with nothing behind
-it, exactly as `review:Consulting` and `perception:Polling` are.
+it, exactly as `review:Consulting` and `sensing:Polling` are.
 
 **Granted by a rule whose premise is being an agent:**
 
@@ -183,7 +183,7 @@ kept coming back. They are not the same fact, and only the second could ever be 
 
 - **Nothing selects between members.** With one implemented the rule names `reporting:Storing`
   directly, the same way review's names `review:Reckoning`. What would choose once
-  `reporting:Announcing` exists is undecided — and unlike perception, no hardware fact forces the
+  `reporting:Announcing` exists is undecided — and unlike sensing, no hardware fact forces the
   answer.
 - **`Block.capability` is a misnomer for one of its uses no longer**, which is a small gain: the
   block now names a real capability like every other.

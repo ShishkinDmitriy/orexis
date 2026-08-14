@@ -5,10 +5,10 @@ decides how stale a reading may be, because that is about belief; only one that 
 is asked for an interval, because only it could apply one. Nothing central lists these — the
 block travels with the module that reads it.
 
-A future `perception:Polling` module would read the same two figures, since they are an interval
+A future `sensing:Polling` module would read the same two figures, since they are an interval
 either way — the difference is only whose timer runs it.
 
-Vocabulary: capabilities/perception/ontology.ttl. Rules: capabilities/perception/shapes.ttl.
+Vocabulary: capabilities/sensing/ontology.ttl. Rules: capabilities/sensing/shapes.ttl.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ from .terms import LISTENING, SUBSCRIBING, term
 
 @dataclass(frozen=True)
 class SubscribingBeliefs:
-    """perception:Subscribing — how closely this agent watches, and how stale it lets a reading get.
+    """sensing:Subscribing — how closely this agent watches, and how stale it lets a reading get.
 
     The two intervals are the agent's policy; the device merely keeps to whichever is in
     force. They are how long the device may REST, not the period between readings: the
@@ -41,11 +41,11 @@ class SubscribingBeliefs:
 
 @dataclass(frozen=True)
 class ListeningBeliefs:
-    """perception:Listening — only the freshness rule, and here it IS an absolute.
+    """sensing:Listening — only the freshness rule, and here it IS an absolute.
 
     The device keeps its own clock and takes no orders, so there is no interval for the agent to
     be relative to. All it can state is how long it will wait before deciding the thing has gone
-    quiet. That asymmetry with perception:Subscribing is the point: the two capabilities differ in who
+    quiet. That asymmetry with sensing:Subscribing is the point: the two capabilities differ in who
     holds the clock, and the freshness rule differs the same way."""
 
     max_age_s: int

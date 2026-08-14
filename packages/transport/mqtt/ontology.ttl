@@ -7,7 +7,7 @@
 
 <http://example.org/agora/mqtt> a owl:Ontology ;
     rdfs:label "Agora MQTT binding" ;
-    rdfs:comment """One way of reaching things: a broker and named channels on it. Everything here is a VARIANT — a society could speak Modbus to its sensors, or read a GPIO pin with no bus at all, and would swap this module without touching perception, market or actuation. Note what is NOT here: any capability. Which protocol a device speaks changes nothing an agent must decide, so it earns a binding on the device, not a name in the agent's abilities.""" .
+    rdfs:comment """One way of reaching things: a broker and named channels on it. Everything here is a VARIANT — a society could speak Modbus to its sensors, or read a GPIO pin with no bus at all, and would swap this module without touching sensing, market or actuation. Note what is NOT here: any capability. Which protocol a device speaks changes nothing an agent must decide, so it earns a binding on the device, not a name in the agent's abilities.""" .
 
 #################  The bus  #################
 # In the WORLD, not in the environment: a topic means nothing without the broker it is on,
@@ -50,7 +50,7 @@ mqtt:eventTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:comment "Where an agent announces something it noticed. Peers may listen; nobody is obliged to." .
 
 #  A device carrying these properties is reached over MQTT; that is what selects the driver
-#  the perception module talks to it through. An agent may hold sensors on different
+#  the sensing module talks to it through. An agent may hold sensors on different
 #  bindings at once and still have ONE attention policy, which is the point of keeping
 #  protocol out of the capability.
 

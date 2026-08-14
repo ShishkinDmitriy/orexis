@@ -7,7 +7,7 @@
 # other must end up with the capability and no region, so that its own shapes can say so.
 #
 # THE PREMISE IS A STAKE. AGENTS.md: each capability is granted by whatever fact makes it
-# meaningful, and that fact is its own. Perception's is equipment, review's is latitude, and
+# meaningful, and that fact is its own. Sensing's is equipment, review's is latitude, and
 # this one's is having something to advance for — `ag:actsFor`, plus a subject that states what
 # it needs. An agent wired to a sensor and to nothing else records; it wants nothing, and
 # world/sensing says exactly that in a comment already: "with nothing to advance for it, this
@@ -19,7 +19,7 @@
 # startup. What would SELECT between the two once both exist is an open seam.
 
 PREFIX desire: <http://example.org/agora/desire#>
-PREFIX perception: <http://example.org/agora/perception#>
+PREFIX sensing: <http://example.org/agora/sensing#>
 PREFIX ag:   <http://example.org/agora#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
@@ -92,7 +92,7 @@ WHERE  {
         ?need ssn:forProperty ?property .
         { ?subject ssn-system:hasOperatingRange ?range }
         UNION
-        { ?instrument perception:monitors ?subject ; ssn-system:hasOperatingRange ?range }
+        { ?instrument sensing:monitors ?subject ; ssn-system:hasOperatingRange ?range }
         ?range ssn-system:inCondition ?condition .
         ?condition ssn:forProperty ?property ;
                    schema:minValue ?min ;
@@ -105,7 +105,7 @@ WHERE  {
         ?need ssn:forProperty ?property .
         { ?subject ssn-system:hasSurvivalRange ?envelope }
         UNION
-        { ?instrument perception:monitors ?subject ; ssn-system:hasSurvivalRange ?envelope }
+        { ?instrument sensing:monitors ?subject ; ssn-system:hasSurvivalRange ?envelope }
         ?envelope ssn-system:inCondition ?tolerated .
         ?tolerated ssn:forProperty ?property ;
                    schema:minValue ?least ;

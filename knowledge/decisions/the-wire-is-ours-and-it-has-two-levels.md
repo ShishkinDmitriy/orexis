@@ -180,7 +180,7 @@ principal, and its sensors' topics are its grants.
   that [#62](https://github.com/ShishkinDmitriy/agora/pull/62) belongs to — and needs a reflash to
   match.
 - **The procedural axis stays unadopted.** `ssn:System` and `ssn:hasSubSystem` are the right terms
-  the day something needs them, and `perception:senseMode`'s values are `sosa:Procedure`s by definition —
+  the day something needs them, and `sensing:senseMode`'s values are `sosa:Procedure`s by definition —
   a cheap alignment that belongs with whatever next touches
   [who-holds-the-clock](who-holds-the-clock.md).
 - ~~**A channel is not a node yet.**~~ **Built** in

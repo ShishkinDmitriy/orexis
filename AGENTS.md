@@ -37,8 +37,8 @@ record is worse than none, because it is still cited.
    the graph. See [capability-packages](knowledge/decisions/capability-packages.md).
 2. **A capability is a named ability with interchangeable implementations. A DIRECTORY IS A
    PACKAGE, and a package may hold several.** The ability is a **family** — the slot; the
-   implementations are its members. `perception:PerceptionCapability` is a family and `perception:Subscribing`
-   and `perception:Listening` are two ways of having it, chosen by what the hardware can do. That is the
+   implementations are its members. `sensing:SensingCapability` is a family and `sensing:Subscribing`
+   and `sensing:Listening` are two ways of having it, chosen by what the hardware can do. That is the
    shape to reach for: a capability worth naming is one where the *how* could differ. Reviewing
    your own settings by strict rules or by asking a model is one ability with two
    implementations; pay-as-bid and uniform-price are one auction with two. Where nothing could
@@ -105,8 +105,8 @@ required argument and `current_world()` refuses rather than guessing, because a 
 misconfigured agent on the same topics as the real one. Also: **capabilities are worked out at
 genesis, never hand-declared.** `world.ttl` must not contain `ag:hasCapability`.
 
-**Wiring is one input, not the definition.** Perception's are a strict function of the hardware —
-a board that keeps an interval gives its agent `perception:Subscribing`, and nothing could have decided
+**Wiring is one input, not the definition.** Sensing's are a strict function of the hardware —
+a board that keeps an interval gives its agent `sensing:Subscribing`, and nothing could have decided
 otherwise. Others have no wiring to follow and are *deduced*: someone at genesis judged that this
 agent should have them, and could have judged differently. Both end up in the world graph and
 neither is hand-written, but they are not the same kind of fact — the first is `derived`, the
@@ -116,7 +116,7 @@ work for the one family whose hardware forces the answer.
 
 **Each capability is granted by whatever fact makes it meaningful, and that fact is its own.** The
 premise lives in the capability's `rules.ru`, and there is no pattern to fit a new one into. Three
-are granted by wiring — `actuation:hasActuator`, `market:bidsIn`/`market:hosts`, `perception:polls` and a sense mode —
+are granted by wiring — `actuation:hasActuator`, `market:bidsIn`/`market:hosts`, `sensing:polls` and a sense mode —
 because they are about equipment or a position in a market. `review:Reckoning` is granted by
 **latitude**: revising your own settings means nothing without settings you are permitted to move,
 so an `review:commits` mandate whose ends differ is its premise. `desire:Deducing` is granted by
