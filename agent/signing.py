@@ -110,6 +110,26 @@ def sealing_public_from_b64(raw_b64: str) -> X25519PublicKey:
     return X25519PublicKey.from_public_bytes(base64.b64decode(raw_b64))
 
 
+def sign_priv_path(name: str):
+    """An AGENT identity's signing key — suffixed, unlike host/clearing's bare `.key`.
+
+    Not tidiness: `onboarding/certs.py` issues `<agent_id>.crt`/`<agent_id>.key` for TLS, so
+    the bare name IS the TLS namespace for agents, and the first keygen run that minted agent
+    identities into it overwrote every agent's TLS private key with a signing key — the broker
+    refused the lot at next connect. host and clearing keep `.key`: they predate this, hold no
+    TLS certs to collide with, and their filenames are a compose-mount and firmware contract.
+    """
+    return KEYS_DIR() / f"{name}.sign.key"
+
+
+def sign_pub_path(name: str):
+    return KEYS_DIR() / f"{name}.sign.pub"
+
+
+def load_signing_private(name: str) -> Ed25519PrivateKey:
+    return serialization.load_pem_private_key(sign_priv_path(name).read_bytes(), password=None)
+
+
 def seal_priv_path(name: str):
     return KEYS_DIR() / f"{name}.seal.key"
 

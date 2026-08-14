@@ -60,6 +60,26 @@ def create_keypair(name: str) -> None:
     )
 
 
+def create_agent_signing_keypair(name: str) -> None:
+    """Like `create_keypair`, into the SUFFIXED path — `<name>.sign.key` — because the bare
+    `<name>.key` is the TLS namespace for agents (see signing.sign_priv_path, and the clobber
+    that taught us)."""
+    signing.KEYS_DIR().mkdir(parents=True, exist_ok=True)
+    key = Ed25519PrivateKey.generate()
+    signing.sign_priv_path(name).write_bytes(
+        key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+    )
+    signing.sign_pub_path(name).write_bytes(
+        key.public_key().public_bytes(
+            serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+    )
+
+
 def create_sealing_keypair(name: str) -> None:
     """The X25519 pair beside the Ed25519 one: same PEM contract, different operation.
 
@@ -109,7 +129,7 @@ def publish_roster(world: str, ids: list[str]) -> None:
         "# (#144 signing, #145 sealing). Regenerated with the keys; never edited by hand.",
     ]
     for iri, agent_id in ids:
-        sign_b64 = signing.raw_public_b64(signing.load_private(agent_id).public_key())
+        sign_b64 = signing.raw_public_b64(signing.load_signing_private(agent_id).public_key())
         seal_b64 = signing.raw_public_b64(signing.load_sealing_private(agent_id).public_key())
         lines.append(f'<{iri}> ag:signingKey "{sign_b64}" ; ag:sealingKey "{seal_b64}" .')
     (genesis.world_dir(world) / "keys.ttl").write_text("\n".join(lines) + "\n")
@@ -131,7 +151,7 @@ def main() -> None:
     # halves lands in the world, where every member reads it.
     ids = roster(world)
     for _, agent_id in ids:
-        create_keypair(agent_id)
+        create_agent_signing_keypair(agent_id)
         create_sealing_keypair(agent_id)
     publish_roster(world, ids)
     print(f"created {signing.KEYS_DIR()}/[host|clearing|agent].key pairs and keys.ttl "

@@ -174,3 +174,25 @@ def test_a_second_sensor_on_an_existing_topic_mints_no_principal():
     agents, devices = mqtt_admin.grants("simulation")
     assert "moisture_sensor_fern" in devices, "this test has lost its subject"
     assert "air_temp_fern" not in devices and "air_temp_fern" not in agents
+
+
+def test_a_generated_stand_in_knows_what_a_litre_is_worth():
+    """The dose join, held to matching. `_SIMULATED_Q` anchors ?litres on the term the domain
+    denominates its valuation on — and when #120 moved that from water:hasTarget to
+    water:litresPerFraction, the interpolated IRI here went on compiling and matching nothing:
+    every generated SIM_VALUES lost its "litres", every dose moved nothing, and the first live
+    run of the verification arc flagged the world for false knowledge. The detector worked;
+    this makes the generator answerable too, because a stand-in that cannot drink is a world
+    whose water is a lie."""
+    import json
+
+    from onboarding.compose import _SIMULATED_Q, _values
+    from agent import ratified
+
+    rows = ratified.rows(ratified.dataset("simulation"), _SIMULATED_Q)
+    fern_rows = [r for r in rows if r["id"] == "moisture_sensor_fern"]
+    assert fern_rows, "the query stopped matching the simulated world at all"
+    values = json.loads(_values(fern_rows))
+    moisture = next(v for v in values if v["pointer"] == "/value")
+    assert moisture.get("litres") == 2.0, \
+        "the litres join is dead — a dose will move nothing and every end will be UNMET"

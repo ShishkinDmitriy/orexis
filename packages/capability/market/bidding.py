@@ -169,7 +169,7 @@ class BiddingModule(Module):
         interoperate without a flag anywhere.
         """
         try:
-            key = signing.load_private(self.me.agent_id)
+            key = signing.load_signing_private(self.me.agent_id)
         except FileNotFoundError:
             return payload
         return {**payload, "sig": signing.sign(key, signing.canonical(payload))}
