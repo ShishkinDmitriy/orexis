@@ -118,7 +118,7 @@ class IntentionModule(Module):
         for standing in self.standing(means=means, observed_property=observed_property):
             if standing.age_s(now) <= self.beliefs.patience_s:
                 return None
-            self._resolve(standing.uri, "dropped",
+            self._resolve(standing, "dropped",
                           f"outwaited: stood {standing.age_s(now):.0f}s against a patience "
                           f"of {self.beliefs.patience_s}s, superseded by a new adoption")
         uri = f"{NS}intent_{self.agent.id}_{uuid.uuid4().hex[:8]}"
@@ -132,6 +132,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 }} }}""")
         self.log.info("adopted %s(%s): %s",
                       means.rsplit("#", 1)[-1], observed_property.rsplit("#", 1)[-1], because)
+        self._tell("adopted", means, observed_property, because)
         return uri
 
     def satisfy(self, means: str, observed_property: str, because: str) -> list[str]:
@@ -142,7 +143,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         """
         resolved = []
         for standing in self.standing(means=means, observed_property=observed_property):
-            self._resolve(standing.uri, "satisfied", because)
+            self._resolve(standing, "satisfied", because)
             resolved.append(standing.uri)
         return resolved
 
@@ -153,17 +154,29 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         is why the argument is not optional.
         """
         for standing in self.standing(means=means, observed_property=observed_property):
-            self._resolve(standing.uri, "dropped", because)
+            self._resolve(standing, "dropped", because)
 
-    def _resolve(self, uri: str, outcome: str, because: str) -> None:
+    def _resolve(self, standing: Standing, outcome: str, because: str) -> None:
         now = datetime.now(timezone.utc).isoformat()
         self.agent.store.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{uri}> <{term("resolvedAt")}> "{now}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+  <{standing.uri}> <{term("resolvedAt")}> "{now}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
           <{term("outcome")}> {_literal(outcome)} ;
           <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         self.log.info("%s: %s", outcome, because)
+        self._tell(outcome, standing.means, standing.observed_property, because)
+
+    def _tell(self, kind: str, means: str, observed_property: str, because: str) -> None:
+        """One transition into the kernel's event buffer (#125), for the operator's eyes.
+
+        The ledger stays the record; this is a projection — the reporting capability drains it
+        into the agent's own bucket on its own tick, so nothing new is granted and an agent
+        without that sink simply keeps a bounded buffer nobody empties. Local names, because a
+        dashboard tag is for filtering by a person, exactly as the log lines above shorten.
+        """
+        self.agent.metrics.event(kind, because, means=means.rsplit("#", 1)[-1],
+                                 property=observed_property.rsplit("#", 1)[-1])
 
     # --- the expectation: the end, judged apart from the means (#131) ---------------------
 
@@ -270,6 +283,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         (self.log.info if met else self.log.warning)(
             "end %s for %s: %s", "met" if met else "UNMET",
             watch.observed_property.rsplit("#", 1)[-1], because)
+        self._tell("end-met" if met else "end-unmet", watch.means,
+                   watch.observed_property, because)
         if not met and self._is_suspect(watch.means, watch.observed_property):
             self.log.warning(
                 "AFFORDANCE SUSPECT: %s toward %s has not paid %d times running — the graph "

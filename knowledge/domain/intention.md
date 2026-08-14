@@ -111,6 +111,9 @@ records.
   standing intention absorbs is re-adoption, not the acts. Its consumers are the health series
   (`intentions_standing`, `oldest_intention_s` — a commitment growing old is an agent whose
   world stopped answering, invisible in every other series precisely because nothing is
-  happening), the operator reading why an agent did what it did, and — the one it was built
-  for — a [deliberator](/domain/deliberation.md) asking what already stands before deciding.
+  happening), the operator reading why an agent did what it did — since #125 without SPARQL:
+  every transition is projected with its `becauseOf` prose into the agent's own bucket and
+  drawn as a Grafana annotation over the health series, see
+  [agent-metrics](/domain/agent-metrics.md) — and, the one it was built for, a
+  [deliberator](/domain/deliberation.md) asking what already stands before deciding.
   Reflex does not ask yet; the member that will is the one that pays per decision.

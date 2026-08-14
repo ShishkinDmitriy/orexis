@@ -168,3 +168,30 @@ def test_the_agent_reports_what_stands_and_how_old(make):
     reported = keeper.reports()
     assert reported["intentions_standing"] == 1
     assert reported["oldest_intention_s"] >= 0.0
+
+
+# --- the story told to the operator (#125) ----------------------------------
+
+def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
+    """The ledger stays the record; the buffer is the projection the reporting capability
+    drains into the agent's own bucket, where Grafana draws it over the series. Tags carry
+    LOCAL names — a dashboard is filtered by a person, not by a resolver."""
+    fern = make("fern", _reading(0.10))
+    keeper = keeper_of(fern)
+    fern.metrics.take_events()
+    uri = keeper.adopt(ACQUIRE, MOISTURE, "bid 0.4L to close my deficit")
+    keeper.satisfy(ACQUIRE, MOISTURE, "voucher for 0.4L at a debit of 0.29")
+    events = fern.metrics.take_events()
+    assert [(kind, tags) for _, kind, _, tags in events] == [
+        ("adopted", {"means": "Acquire", "property": "SoilMoisture"}),
+        ("satisfied", {"means": "Acquire", "property": "SoilMoisture"})]
+    assert [text for _, _, text, _ in events] == [
+        "bid 0.4L to close my deficit", "voucher for 0.4L at a debit of 0.29"]
+
+    # and the end's verdict, which is the payoff line of the whole arc (#131)
+    assert keeper.expect(uri, MOISTURE, "the dose owes a rise")
+    fern.metrics.take_events()
+    keeper.on_reading_recorded(fern.me.acts_for, MOISTURE, 0.50)
+    verdicts = fern.metrics.take_events()
+    assert [kind for _, kind, _, _ in verdicts] == ["end-met"]
+    assert "moved from" in verdicts[0][2]

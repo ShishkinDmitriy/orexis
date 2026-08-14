@@ -36,6 +36,8 @@ from __future__ import annotations
 
 import logging
 import time
+from collections import deque
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -81,6 +83,11 @@ class Metrics:
         self.sensed_failures = 0
         self.mqtt_reconnects = -1  # the first connect is not a RE-connect; see connected()
         self.mqtt_connected = False
+        # The STORY, beside the figures (#125): point-in-time transitions with their prose —
+        # an intention adopted, a commitment resolved, an end judged. Bounded, so a deployment
+        # with no working reporter cannot grow a leak: the series is a projection for the
+        # operator's eyes, and the record it projects is the graph, which loses nothing here.
+        self._events: deque = deque(maxlen=256)
 
     # --- what the rest of the agent tells it ---
 
@@ -94,6 +101,31 @@ class Metrics:
 
     def sensed_failed(self) -> None:
         self.sensed_failures += 1
+
+    def event(self, kind: str, text: str, **tags: str) -> None:
+        """A transition worth a marker over the series, stamped with the instant it happened.
+
+        Told by whoever the transition happens to, exactly as the counters are — the kernel
+        keeps the account, the reporting capability decides where it goes. The text is prose
+        for a human reading a dashboard and must never be parsed; the same contract as
+        `intention:becauseOf`, whose projection the first caller is.
+        """
+        self._events.append((datetime.now(timezone.utc), kind, text, tags))
+
+    def take_events(self) -> list[tuple]:
+        """Drain the buffer, oldest first. The caller owns what it takes: a reporter whose
+        write fails hands them back through `requeue_events`, so a flaky sink delays the
+        story rather than losing it."""
+        out = []
+        while self._events:
+            out.append(self._events.popleft())
+        return out
+
+    def requeue_events(self, events: list[tuple]) -> None:
+        """Put back what could not be written, in order, ahead of anything newer. The bound
+        still holds — under a long outage the oldest markers fall off, which is the right
+        casualty: the graph keeps the record, this only decorates it."""
+        self._events.extendleft(reversed(events))
 
     def connected(self) -> None:
         self.mqtt_connected = True

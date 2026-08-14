@@ -8,11 +8,13 @@ from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 # Distinct from `soil_moisture` on purpose: the readings dashboards filter on measurement, so an
-# agent's self-reporting must never appear in them. Two measurements rather than one because the
-# per-sensor figures carry a sensor tag and the agent-level ones do not, and a measurement whose
-# tag set varies row to row is one every query has to be careful around.
+# agent's self-reporting must never appear in them. Separate measurements rather than one because
+# each carries a different tag set — per-sensor figures a sensor tag, events a kind and its
+# prose — and a measurement whose tag set varies row to row is one every query has to be careful
+# around.
 AGENT_MEASUREMENT = "agent_health"
 SENSOR_MEASUREMENT = "agent_sensor_health"
+EVENT_MEASUREMENT = "agent_events"
 
 
 class InfluxWriter:
@@ -84,6 +86,24 @@ class InfluxWriter:
                 p.field("cadence_acked_s", int(acked_s))
             points.append(p)
         self.write_api.write(bucket=self.bucket, record=points)
+
+    def write_events(self, agent_id: str, events: list[tuple]) -> None:
+        """The story beside the figures (#125): transitions with their prose, as annotations.
+
+        Each point is stamped with the instant the transition HAPPENED, never the write: events
+        are drained on the reporter's tick, and a marker drawn at the tick would put the knee of
+        a curve in the wrong place. `kind` and the other tags are what an annotation query
+        filters and captions on; `text` is a string field holding prose for humans, under the
+        same never-parse contract as `intention:becauseOf`, whose projection it is.
+        """
+        points = []
+        for at, kind, text, tags in events:
+            p = Point(EVENT_MEASUREMENT).tag("agent", agent_id).tag("kind", kind)
+            for name, value in tags.items():
+                p.tag(name, str(value))
+            points.append(p.field("text", str(text)).time(at))
+        if points:
+            self.write_api.write(bucket=self.bucket, record=points)
 
     def close(self) -> None:
         self.client.close()

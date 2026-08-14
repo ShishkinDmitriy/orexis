@@ -74,6 +74,10 @@ class StoringModule(Module):
         if self._writer is None:
             return
         metrics = self.agent.metrics
+        # The story rides the same tick, writer, token and bucket as the figures (#125) — so
+        # nothing new is granted, and an agent whose modules tell no events writes none. Each
+        # event carries its own instant, so landing on the tick costs nothing but latency.
+        events = metrics.take_events()
         try:
             self._writer.write_agent_health(
                 self.agent.id, metrics.agent_fields(),
@@ -83,7 +87,12 @@ class StoringModule(Module):
                  for local_id in sorted(metrics.sensors_seen())},
                 belief_bytes=tree_bytes(getattr(self.agent.store, "path", None)),
             )
+            if events:
+                self._writer.write_events(self.agent.id, events)
         except Exception as exc:
             # Counted nowhere, deliberately: a failure to report the failure count is not worth
-            # the counter it would need, and the gap in the series says it plainly enough.
+            # the counter it would need, and the gap in the series says it plainly enough. The
+            # EVENTS go back, though — a figure missed is superseded by the next tick's, where
+            # a transition missed is gone, and its whole worth is being rare.
+            metrics.requeue_events(events)
             self.log.error("could not report: %s", exc)
