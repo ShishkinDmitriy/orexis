@@ -54,8 +54,9 @@ from .terms import LISTENING, PUSH, SCHEDULED, SUBSCRIBING
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future perception inherits them.
 _BOUNDS_Q = """
-SELECT ?min ?max WHERE {
-  GRAPH ?g { perception:PerceptionCapability perception:minSleepS ?min ; perception:maxSleepS ?max }
+SELECT ?min ?max ?relax WHERE {
+  GRAPH ?g { perception:PerceptionCapability perception:minSleepS ?min ; perception:maxSleepS ?max .
+             OPTIONAL { perception:PerceptionCapability perception:relaxFactor ?relax } }
 } LIMIT 1"""
 
 
@@ -245,7 +246,7 @@ class SubscribingModule(PerceptionModule):
     def __init__(self, agent):
         self.beliefs = agent.beliefs.read(SUBSCRIBING_BLOCK)
         super().__init__(agent)
-        self.min_sleep_s, self.max_sleep_s = self._bounds()
+        self.min_sleep_s, self.max_sleep_s, self.relax_factor = self._bounds()
         # The interval in force, which the freshness rule reads, and the whole last message,
         # which decides whether to send again. Two dicts because they answer different
         # questions: "how long may this board sleep" and "does it already know all this".
@@ -292,11 +293,14 @@ class SubscribingModule(PerceptionModule):
             cadence = self.beliefs.slow_sleep_s
         return int(cadence) + self.beliefs.grace_s
 
-    def _bounds(self) -> tuple[int, int]:
+    def _bounds(self) -> tuple[int, int, float]:
         rows = bindings(self.agent.store.query(_BOUNDS_Q))
         if not rows:
             raise RuntimeError("the ontology states no cadence bounds — re-run agora-seed")
-        return int(rows[0]["min"]), int(rows[0]["max"])
+        # A relax factor at or below 1 could never release at all, which is a vocabulary slip
+        # and not a policy anyone can mean; treated as "no slew" rather than as a frozen board.
+        relax = float(rows[0].get("relax") or 0.0)
+        return int(rows[0]["min"]), int(rows[0]["max"]), relax if relax > 1.0 else 0.0
 
     def start(self) -> None:
         """Ask for a look, and command an OPENING cadence instead of waiting to be told one.
@@ -493,6 +497,15 @@ class SubscribingModule(PerceptionModule):
             sleep_s, verdict = min(claims, key=lambda claim: claim[0])
 
         key = sensor.command_topic or sensor.local_id
+        # Fast attack, slow release (#139). Tightening goes through untouched — hesitating in
+        # that direction costs a plant — but a RELAXATION is bounded per commanded step: the
+        # next sleep may exceed the last by at most the family's relaxFactor, so one
+        # comfortable reading cannot cliff a burst-tight cadence straight to the slow end. The
+        # release runs geometrically over a few dense readings, exactly the window the trend
+        # needs two of them to establish (#133), and confidence is earned rather than assumed.
+        last = self.sent_cadence.get(sensor.local_id)
+        if self.relax_factor and last is not None and sleep_s > last:
+            sleep_s = min(int(sleep_s), max(int(last) + 1, int(last * self.relax_factor)))
         message = (int(sleep_s), tuple(sorted((verdict or {}).items())))
         if self.sent.get(key) == message:
             return
