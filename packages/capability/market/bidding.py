@@ -30,6 +30,7 @@ bid means here). Rules: capabilities/market/shapes.ttl, domain/water/shapes.ttl.
 
 from __future__ import annotations
 
+from agent import signing
 from agent.market import EPS, Bid
 from agent.module import Module, Timer
 from agent.ontology import ONTOLOGY_GRAPH
@@ -136,6 +137,43 @@ class BiddingModule(Module):
             return None
         return deliberator.propose(self.about, value)
 
+    def _unseal(self, doc: dict) -> dict:
+        """Open a sealed voucher (#145), or pass a plaintext one through untouched.
+
+        Sealed means the host found my published sealing key, which means keygen minted my
+        pair, which means the private half is mounted beside my other credentials — so a seal
+        I cannot open is an operator error worth a loud log, not a silent shrug: the voucher
+        is real, the water is mine, and I cannot read my own winnings.
+        """
+        if "sealed" not in doc:
+            return doc
+        try:
+            opened = signing.unseal(signing.load_sealing_private(self.me.agent_id),
+                                    doc["sealed"])
+        except FileNotFoundError:
+            opened = None
+        if opened is None:
+            self.log.error("a sealed voucher arrived that I cannot open — my sealing key is "
+                           "published but its private half is not mounted, or the payload was "
+                           "tampered with. The claim is lost to me either way.")
+            return {}
+        import json as _json
+
+        return _json.loads(opened)
+
+    def _signed(self, payload: dict) -> dict:
+        """My presentation, under my own hand (#144) — where I hold a key to sign with.
+
+        No key means the pre-#144 era and the payload goes as it always did; the host demands
+        a signature only from agents whose ROSTER entry says they have one, so the two eras
+        interoperate without a flag anywhere.
+        """
+        try:
+            key = signing.load_private(self.me.agent_id)
+        except FileNotFoundError:
+            return payload
+        return {**payload, "sig": signing.sign(key, signing.canonical(payload))}
+
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None is a complete answer.
 
@@ -180,7 +218,7 @@ class BiddingModule(Module):
                 self.on_offer(market, self.parse(payload) or {})
                 return True
             if topic == f"{market.voucher_topic}/{self.me.agent_id}":
-                self.on_voucher(market, self.parse(payload) or {})
+                self.on_voucher(market, self._unseal(self.parse(payload) or {}))
                 return True
         return False
 
@@ -410,7 +448,7 @@ class BiddingModule(Module):
         market = held["market"]
         self.log.info("presenting voucher %s: %s", held["jti"], why)
         self.publish(f"{market.redeem_topic}/{self.me.agent_id}",
-                     {"jti": held["jti"], "sub": self.me.agent_id})
+                     self._signed({"jti": held["jti"], "sub": self.me.agent_id}))
         if keeper := self._keeper():
             # The dose is imminent NOW — this is when the end becomes expectable, not at the
             # voucher: a baseline taken at the win would have aged the whole hold, and the

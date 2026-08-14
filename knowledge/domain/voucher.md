@@ -46,6 +46,24 @@ it (the presenter is read off the topic segment the ACL lets it write). The held
 in-process — a host that restarts forgets unpresented claims, which is the voucher-ledger seam
 the roadmap records.
 
+# The boundary, stated honestly (#144, #145)
+
+Three layers, three adversaries, and the broker is no longer trusted for any of it where the
+roster publishes keys:
+
+- the **ACL** keeps other agents out — tomato cannot subscribe `voucher/fern` or write
+  `redeem/fern`. Defence in depth now, not the proof;
+- the **winner's signature** (#144) keeps a forged presentation out — exercising the claim
+  requires fern's private key, not fern's topic, so a compromised broker or misgenerated ACL
+  moves no water, and every honoured presentation is non-repudiable;
+- the **seal** (#145) keeps the bus itself out — the voucher travels as an envelope only the
+  winner can open, so a port mirror or a curious operator carries ciphertext with the money in
+  it. The co-signature chain stays about the *actuation command*, unchanged.
+
+Both interoperate with the pre-key era through the attested roster (`ag:signingKey` /
+`ag:sealingKey` in the world, written by `agora-keygen`): no published key, no demand — a world
+onboarded before keygen learned agents behaves exactly as it always did.
+
 # Why it exists even for immediate watering
 
 Two roles, only one of which needs a held object:
