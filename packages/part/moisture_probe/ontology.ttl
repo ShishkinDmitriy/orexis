@@ -5,6 +5,8 @@
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix probe: <http://example.org/agora/moisture-probe#> .
 @prefix wokwi: <http://example.org/agora/wokwi#> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix water: <http://example.org/agora/water#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 
 <http://example.org/agora/moisture-probe> a owl:Ontology ;
@@ -32,7 +34,29 @@ Deliberately NOT a subclass of sensing:Sensor, though every probe in this reposi
 
 Welding them would break the case the whole simulation rests on. A simulated sensor is an sensing:Sensor with no peripheral class and no pins at all, and an agent must not be able to tell it from hardware; if being a probe implied being a sensor, the class would stop describing the part and start describing its employment. It would also make a spare probe lying on the bench — real, wired to nothing, polled by nobody — unstateable.""" .
 
+#################  What it detects, and what that stands in for (#100)  #################
+#
+#  SSN's words for the two ends of the conversion this package's calibration numbers serve:
+#  the probe DETECTS capacitance (ssn:Stimulus — what it physically responds to), and
+#  capacitance IS A PROXY FOR soil moisture (what the society actually wants known). The
+#  raw-versus-quantity split that bytes-become-a-quantity-in-stages drew in prose, in terms.
+#
+#  The proxy statement couples this part to the water domain, honestly: a part BUILT to sense
+#  moisture names moisture, the same way market's bidding beliefs carry the one deliberately
+#  domain-coupled literal. What drifts when a probe ages is exactly this relationship — the
+#  capacitance stops standing in for the moisture as well as it did — which is why a
+#  calibration goes stale while neither the property nor the electronics changed.
+#
+#  `ssn:detects` reaches every device through the class, by the closure's hasValue rule: a
+#  datasheet fact, stated once on the part, entailed onto each probe built from it.
+
+probe:capacitance a ssn:Stimulus ; rdfs:label "capacitance of the soil" ;
+    ssn:isProxyFor water:SoilMoisture .
+
+probe:CapacitiveMoistureProbe rdfs:subClassOf [ a owl:Restriction ;
+    owl:onProperty ssn:detects ; owl:hasValue probe:capacitance ] .
+
 probe:rawDry a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when dry" ;
-    rdfs:comment "What this probe reads in air. A fact about THIS probe in THIS pot — two identical probes differ — so it belongs to the instance, not to the firmware, which is per model." .
+    rdfs:comment "What this probe reads in air — a value OF THE STIMULUS (#100): a capacitance count, not a moisture. A fact about THIS probe in THIS pot — two identical probes differ — so it belongs to the instance, not to the firmware, which is per model. The scaling family's TwoPoint member consumes exactly this pair, which is why its parameters are stimulus-side by construction." .
 probe:rawWet a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when wet" ;
-    rdfs:comment "What it reads in saturated soil. Not free water: water is wetter than soil ever gets, so calibrating against it makes the top of the scale unreachable." .
+    rdfs:comment "What it reads in saturated soil — the stimulus end again, never the property. Not free water: water is wetter than soil ever gets, so calibrating against it makes the top of the scale unreachable." .

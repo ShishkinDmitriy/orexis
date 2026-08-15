@@ -45,6 +45,16 @@ def resolve(pointer: str, doc):
     The empty pointer is legal in the RFC and means the whole document. It is refused here
     rather than supported, because a whole document is not a number and letting it through
     would turn a mis-stated world into a parse failure much further away.
+
+    **Number-only is OUR restriction, not RFC 6901's, and it is a decision rather than a gap
+    (#101).** A pointer can address an object perfectly well, and SOSA has the destination for
+    one — a structured `sosa:Result`, which the observation shape now admits as the alternative
+    to the scalar shortcut. This function stays number-only DELIBERATELY until a device that
+    genuinely reports a multi-component reading exists to consume it: lifting the restriction
+    ahead of that would let a mis-aimed pointer hand a whole sub-document to a pipeline whose
+    every later stage — scaling, freshness, the gap — assumes one number, and the failure would
+    surface far from its cause. The day an accelerometer arrives, this line is where its x, y,
+    z come through, and the shape is already holding the door.
     """
     if not pointer.startswith("/"):
         raise PointerError(f"{pointer!r} is not a JSON Pointer — it must start with '/'")

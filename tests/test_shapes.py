@@ -765,3 +765,65 @@ def test_a_patch_of_the_wrong_pot_is_refused():
                 <http://www.w3.org/ns/sosa/isSampleOf> ag:tomato .
             ag:moisture_sensor_fern sensing:samples ag:tomato_patch .
         }} }} WHERE {{}}"""))
+
+
+# --- the two result forms, and what a sensor detects (#100, #101) ------------------------------
+
+
+def _observation(extra: str) -> rdflib.Graph:
+    """A synthetic observation beside the world's own, to hold the shape to its xone."""
+    return _mutate(f"""
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX prov: <http://www.w3.org/ns/prov#>
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+            ag:obs_test a sosa:Observation ;
+                sosa:hasFeatureOfInterest ag:fern ;
+                sosa:observedProperty water:SoilMoisture ;
+                sosa:resultTime "2026-08-15T10:00:00Z"^^xsd:dateTime ;
+                sosa:madeBySensor ag:moisture_sensor_fern ;
+                sosa:usedProcedure sensing:ScheduledProcedure ;
+                ag:underWorldVersion 1 ;
+                prov:wasGeneratedBy ag:fern_agent ;
+                {extra} .
+        }} }} WHERE {{}}""")
+
+
+def test_a_structured_result_is_the_legal_alternative_to_the_scalar():
+    """#101: one of the two forms — the scalar shortcut, or a sosa:Result with parts for the
+    reading that is genuinely multi-component. The accelerometer's door, held open."""
+    assert _conforms(_observation(
+        'sosa:hasResult [ a sosa:Result ; ag:x "0.1"^^xsd:decimal ]'))
+
+
+def test_an_observation_with_neither_result_form_is_refused():
+    """Both-optional would be the silent-emptiness failure: an observation carrying no value at
+    all, recorded and satisfying everything."""
+    assert not _conforms(_observation('rdfs:label "empty"'))
+
+
+def test_an_observation_with_both_result_forms_is_refused():
+    assert not _conforms(_observation(
+        'sosa:hasSimpleResult "0.4"^^xsd:decimal ; sosa:hasResult [ a sosa:Result ]'))
+
+
+def test_what_a_probe_detects_is_entailed_from_its_part():
+    """#100: the datasheet fact reaches every device through the class — the hasValue closure —
+    and the stimulus states what it stands in for."""
+    st = genesis_store(world="sensing")
+    from agent.store import bindings
+
+    rows = bindings(st.query("""
+SELECT ?stimulus ?property WHERE {
+  ?probe a <http://example.org/agora/moisture-probe#CapacitiveMoistureProbe> ;
+         <http://www.w3.org/ns/ssn/detects> ?stimulus .
+  ?stimulus <http://www.w3.org/ns/ssn/isProxyFor> ?property }"""))
+    assert rows, "the probe detects nothing — the hasValue entailment or the proxy is gone"
+    assert all(r["property"].endswith("SoilMoisture") for r in rows)
+
+
+def test_detecting_something_that_is_not_a_stimulus_is_refused():
+    """SSN's own restriction, restated because borrowed IRIs bring no axioms with them."""
+    assert not _conforms(_mutate(f"""
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+            ag:moisture_sensor_fern <http://www.w3.org/ns/ssn/detects> water:SoilMoisture .
+        }} }} WHERE {{}}"""))
