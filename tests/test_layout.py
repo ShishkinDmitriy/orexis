@@ -183,7 +183,15 @@ def test_the_society_hosting_agrees_with_the_wiring():
         if not wiring:
             continue  # a world with no stated hardware has nothing to disagree with
 
+        SSN = rdflib.Namespace("http://www.w3.org/ns/ssn/")
         carried = set(wiring.subject_objects(SOSA.hosts))
+        # Since #99 the wiring's hosting is what its DEPLOYMENT produces, so this check
+        # performs the same two-link entailment the closure does: a platform in a deployment
+        # that deploys a system hosts that system. Asserted hosts stay covered — a wiring may
+        # still say it directly, and a part hosting its channels does.
+        for platform, deployment in wiring.subject_objects(SSN.inDeployment):
+            for system in wiring.objects(deployment, SSN.deployedSystem):
+                carried.add((platform, system))
         hosted = set(society.subject_objects(SOSA.hosts))
         named = {s for s, _, _ in society} | {o for _, _, o in society}
 

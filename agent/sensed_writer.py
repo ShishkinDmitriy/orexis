@@ -47,9 +47,11 @@ def _slug(uri: str) -> str:
     return re.sub(r"[^A-Za-z0-9_]", "_", re.split(r"[#/]", uri.rstrip("#/"))[-1])
 
 
-def observation_uri(subject_id: str, observed_property: str) -> str:
-    """The node one (subject, property) pair owns. Two properties, two nodes."""
-    return f"ag:obs_{_slug(subject_id)}_{_slug(observed_property)}"
+def observation_uri(feature_id: str, observed_property: str) -> str:
+    """The node one (feature, property) pair owns. Two properties, two nodes — and since #98
+    the feature is the SAMPLE where the sensor states one, so two probes in two patches of one
+    pot own two nodes instead of overwriting each other."""
+    return f"ag:obs_{_slug(feature_id)}_{_slug(observed_property)}"
 
 
 class SensedWriter:
@@ -67,13 +69,19 @@ class SensedWriter:
         used_procedure: str,
         world_version: int | None = None,
         ts: str | None = None,
+        sample_uri: str | None = None,
     ) -> None:
         # The caller's instant, and it is always given now: `Observations.record` resolves one
         # per MESSAGE and hands the same string to every value that message carried, so two
         # readings from one 40-bit frame share a `sosa:resultTime` instead of differing by
         # however long the loop took. The fallback is for a caller with no message in hand.
         ts = ts or datetime.now(timezone.utc).isoformat()
-        obs = observation_uri(subject_id, observed_property)
+        # The feature this observation is OF (#98): the patch the probe sits in, where one is
+        # stated — sosa:Sample is the word for a representative piece of something not fully
+        # accessible, and a pot's soil is exactly that — or the subject itself, which is the
+        # ordinary rig and the unchanged default. The reader walks sosa:isSampleOf back up.
+        foi = sample_uri or subject_uri
+        obs = observation_uri(sample_uri or subject_id, observed_property)
         wv = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
 
         self.store.update(f"""
@@ -81,7 +89,7 @@ WITH <{SENSED_GRAPH}>
 DELETE {{ {obs} ?p ?o }} WHERE {{ {obs} ?p ?o }} ;
 INSERT DATA {{ GRAPH <{SENSED_GRAPH}> {{
   {obs} a sosa:Observation ;
-    sosa:hasFeatureOfInterest <{subject_uri}> ;
+    sosa:hasFeatureOfInterest <{foi}> ;
     sosa:observedProperty <{observed_property}> ;
     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
     sosa:resultTime "{ts}"^^xsd:dateTime ;

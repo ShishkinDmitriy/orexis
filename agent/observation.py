@@ -99,6 +99,7 @@ class Observations:
                 used_procedure=sensor.sense_mode,
                 world_version=self.agent.world.version,
                 ts=at.isoformat(),
+                sample_uri=sensor.sample,
             )
         except Exception as exc:
             log.error("sensed write failed: %s", exc)

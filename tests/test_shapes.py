@@ -725,3 +725,43 @@ def test_a_plant_still_holds_no_desire_of_its_own():
         WHERE {}""")
     assert not _conforms(data)
     assert "a plant holds no desire" in _report(data)
+
+
+def _duplicate_probe_in_its_own_patch() -> rdflib.Graph:
+    """The second probe again, but each names its patch — the #98 statement."""
+    return _mutate(f"""
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+            ag:fern_east a <http://www.w3.org/ns/sosa/Sample> ;
+                <http://www.w3.org/ns/sosa/isSampleOf> ag:fern .
+            ag:fern_west a <http://www.w3.org/ns/sosa/Sample> ;
+                <http://www.w3.org/ns/sosa/isSampleOf> ag:fern .
+            ag:moisture_sensor_fern sensing:samples ag:fern_east .
+            ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
+                mqtt:onBus ag:local_bus ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors ag:fern ;
+                sensing:samples ag:fern_west ;
+                sosa:observes water:SoilMoisture ;
+                scaling:quantityUnit unit:UNITLESS ;
+                mqtt:readingTopic "sensors/second_probe_fern/reading" ;
+                mqtt:commandTopic "sensors/second_probe_fern/command" .
+            ag:fern_agent sensing:polls ag:second_probe_fern .
+        }} }} WHERE {{}}""")
+
+
+def test_two_probes_in_two_stated_patches_are_two_honest_records_and_silent():
+    """The warning's cure, one statement away (#98): each probe in its own sosa:Sample of the
+    pot is no longer a collision — two features, two observation nodes, nothing to warn about."""
+    data = _duplicate_probe_in_its_own_patch()
+    assert _conforms(data)
+    assert "another sensor already reads this property" not in _report(data), \
+        "two probes in two stated patches must not be warned about — that IS the cure"
+
+
+def test_a_patch_of_the_wrong_pot_is_refused():
+    """A probe claiming a patch of some other pot would key its readings under a feature
+    nobody walks back to the right plant — recorded faithfully, found by no one."""
+    assert not _conforms(_mutate(f"""
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+            ag:tomato_patch a <http://www.w3.org/ns/sosa/Sample> ;
+                <http://www.w3.org/ns/sosa/isSampleOf> ag:tomato .
+            ag:moisture_sensor_fern sensing:samples ag:tomato_patch .
+        }} }} WHERE {{}}"""))

@@ -39,11 +39,11 @@ sensing:SensorShape a sh:NodeShape ;
     sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .
 
 sensing:DoubleCoveredPropertyShape a sh:NodeShape ;
-    rdfs:comment "Two sensors reading the SAME property of the SAME subject. A Warning and not a Violation, because it is a legitimate rig — two probes at opposite ends of one pot are one feature of interest measured twice — and the behaviour is defined: they share one observation node and the last writer wins. It is flagged because the other reading of it is a modelling slip: strictly, two probes in different soil observe different features of interest, and saying so gives each its own record instead of a value that flickers between them. Different properties of one subject are ordinary and silent; that is the case this shape must not catch, and why it tests the property and not just the subject." ;
+    rdfs:comment "Two sensors reading the SAME property of the SAME FEATURE — the same patch, or the same subject with no patches stated. A Warning and not a Violation, because it is a legitimate rig, one thing measured twice, with defined behaviour: they share one observation node and the last writer wins. Since #98 the cure it hints at is one statement away — sensing:samples, a patch each — and two probes that state two patches are two honest records and SILENT here, which is what made the warning true again in the case it was written for. Different properties of one subject stay ordinary and silent too." ;
     sh:targetClass sosa:Sensor ;
     sh:severity sh:Warning ;
     sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "another sensor already reads this property of this subject — they will share one observation and the last writer wins. If they are really measuring different soil, model them as two subjects." ;
+        sh:message "another sensor already reads this property of this feature — they will share one observation and the last writer wins. If they are really in different soil, say so: a sosa:Sample each (sensing:samples), and each keeps its own record." ;
         sh:select """
             SELECT $this WHERE {
                 $this <http://example.org/agora/sensing#monitors> ?subject ;
@@ -52,6 +52,27 @@ sensing:DoubleCoveredPropertyShape a sh:NodeShape ;
                        <http://example.org/agora/sensing#monitors> ?subject ;
                        <http://www.w3.org/ns/sosa/observes> ?property .
                 FILTER (?other != $this)
+                OPTIONAL { $this <http://example.org/agora/sensing#samples> ?mine }
+                OPTIONAL { ?other <http://example.org/agora/sensing#samples> ?theirs }
+                BIND(COALESCE(?mine, ?subject) AS ?myFeature)
+                BIND(COALESCE(?theirs, ?subject) AS ?theirFeature)
+                FILTER (?myFeature = ?theirFeature)
+            }
+        """ ] .
+
+sensing:SampledPatchShape a sh:NodeShape ;
+    rdfs:comment "A stated patch must be a sosa:Sample OF the subject its sensor monitors. A probe claiming a patch of some other pot would key its observations under a feature nobody walks back to the right plant — readings recorded faithfully and found by no one, the silent-emptiness failure again." ;
+    sh:targetClass sosa:Sensor ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "the patch this sensor claims is not a sample of the subject it monitors — its readings would answer for the wrong pot, or for none" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/agora/sensing#samples> ?patch ;
+                      <http://example.org/agora/sensing#monitors> ?subject .
+                FILTER NOT EXISTS {
+                    ?patch a <http://www.w3.org/ns/sosa/Sample> ;
+                           <http://www.w3.org/ns/sosa/isSampleOf> ?subject .
+                }
             }
         """ ] .
 

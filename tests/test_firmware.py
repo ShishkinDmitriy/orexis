@@ -54,10 +54,19 @@ def test_a_board_with_no_led_still_generates():
     rather than by trusting that OPTIONAL means what it says.
     """
     ds = ratified.dataset("sensing")
+    # Unwiring means editing the DEPLOYMENT since #99 — hosting is entailed from it, so the
+    # premise goes (the deployment stops deploying the LED) and, because the dataset has
+    # already computed its closure, the conclusion is removed where it landed. A real rewiring
+    # edits hardware.ttl and the next genesis entails the smaller hosting by itself.
+    from agent.ontology import WORLD_ENTAILED_GRAPH
     ds.update(f"""
-        DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-            ?board <http://www.w3.org/ns/sosa/hosts> ?led .
-            ?led a <http://example.org/agora/rgb-led#RgbLed> }} }}""")
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?d <http://www.w3.org/ns/ssn/deployedSystem> ?led }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?d <http://www.w3.org/ns/ssn/deployedSystem> ?led .
+                  ?led a <http://example.org/agora/rgb-led#RgbLed> }} }}""")
+    ds.update(f"""
+        DELETE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?b <http://www.w3.org/ns/sosa/hosts> ?led }} }}
+        WHERE  {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?b <http://www.w3.org/ns/sosa/hosts> ?led }}
+                  GRAPH <{WORLD_GRAPH}> {{ ?led a <http://example.org/agora/rgb-led#RgbLed> }} }}""")
 
     rows = ratified.rows(ds, _BOARDS_Q)
     assert len(rows) == 1, "losing the LED must not lose the board"
