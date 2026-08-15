@@ -827,3 +827,22 @@ def test_detecting_something_that_is_not_a_stimulus_is_refused():
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:moisture_sensor_fern <http://www.w3.org/ns/ssn/detects> water:SoilMoisture .
         }} }} WHERE {{}}"""))
+
+
+def test_a_watched_channel_on_a_push_device_is_legal():
+    """The sentinel's wiring (#151): a push device may promise announce-on-crossing — its band
+    is compiled at flash from the world's own range, because a board that takes no orders can
+    still keep a promise the world wrote. What stays refused is the gap between: a scheduled
+    device without the channel its bands would arrive on."""
+    data = _mutate(f"""
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+            ag:sentinel_x a sosa:Sensor , ag:Device ; ag:localId "sentinel_x" ;
+                mqtt:onBus ag:local_bus ;
+                sensing:senseMode sensing:PushProcedure ;
+                <http://www.w3.org/ns/ssn/implements> sensing:CrossingProcedure ;
+                sensing:monitors ag:tomato ;
+                sosa:observes <http://example.org/agora/water#AirHumidity> ;
+                scaling:quantityUnit unit:UNITLESS ;
+                mqtt:readingTopic "sensors/sentinel_x/reading" .
+        }} }} WHERE {{}}""")
+    assert _conforms(data), _report(data)

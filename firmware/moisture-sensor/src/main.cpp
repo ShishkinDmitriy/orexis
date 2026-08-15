@@ -40,100 +40,10 @@
 
 #include "config.h"
 
-// ---------------------------------------------------------------------------------------------
-// Wake on crossing (#151) — compiled in only where the world promises it (WAKE_ON_CROSSING is
-// generated into config.h from ssn:implements sensing:CrossingProcedure).
-//
-// The ULP coprocessor samples the moisture ADC about once a second while the main core and the
-// radio deep-sleep at microamps, compares the count against a band the agent commanded, and
-// wakes the board the moment the value leaves it. Sampling is not reporting: the per-second
-// samples live in a register and die there — no observation, no testimony — and only a CROSSING
-// is promoted to a full wake and an ordinary published reading, marked "wake":"crossing".
-//
-// The thresholds arrive as FRACTIONS beside the cadence ({"wake_below":0.45,"wake_above":0.65})
-// and are converted to raw ADC counts with this probe's own calibration, because the ULP knows
-// counts and nothing else. Note the inversion: a capacitive probe reads HIGH when dry, so the
-// fraction floor becomes the count CEILING and vice versa.
-//
-// Follows the canonical esp-idf ulp_adc example (ULP-FSM macro assembly). GPIO34 is ADC1
-// channel 6, which is RTC-capable — the generator only emits WAKE_ON_CROSSING for a probe leg
-// on an RTC ADC pin's board, and getting this wrong fails at the bench, loudly, which is where
-// ULP code is verified anyway: THIS BLOCK IS COMPILE-UNTESTED HERE, like every firmware change,
-// and the bench has the last word.
-// ---------------------------------------------------------------------------------------------
-#ifdef WAKE_ON_CROSSING
-#include "esp32/ulp.h"
-#include "driver/adc.h"
-#include "soc/rtc_cntl_reg.h"
-#include "soc/sens_reg.h"
-
-// RTC_SLOW_MEM layout: two threshold counts the main core writes and the ULP reads. Everything
-// after slot 8 is the ULP program itself.
-#define ULP_MEM_LOW   0   // the too-wet count (fractions invert into counts; see below)
-#define ULP_MEM_HIGH  1   // the too-dry count
-#define ULP_PROG_START 8
-
-// GPIO34 = ADC1 channel 6. If MOISTURE_PIN moves, this table row is the thing to check first.
-#define ULP_ADC_CHANNEL 6
-
-// The band, as fractions, remembered across deep sleep the way sleep_s is not: RTC memory
-// survives, so a wake that hears no fresh command keeps watching the band it was last told.
-RTC_DATA_ATTR static float rtc_wake_below = -1.0f;
-RTC_DATA_ATTR static float rtc_wake_above = -1.0f;
-
-static uint16_t fracToRaw(float frac) {
-  // The probe reads high when dry: frac = (ADC_DRY - raw) / (ADC_DRY - ADC_WET).
-  float raw = ADC_DRY - frac * (float)(ADC_DRY - ADC_WET);
-  if (raw < 0) raw = 0;
-  if (raw > 4095) raw = 4095;
-  return (uint16_t)raw;
-}
-
-static void armUlpWatch() {
-  if (rtc_wake_below < 0 && rtc_wake_above < 0) return;  // nothing commanded; plain schedule
-  // The fraction band inverts into a count band: below the moisture floor means ABOVE this
-  // count (drier reads higher), above the ceiling means BELOW that one.
-  uint16_t count_when_too_dry = (rtc_wake_below >= 0) ? fracToRaw(rtc_wake_below) : 4095;
-  uint16_t count_when_too_wet = (rtc_wake_above >= 0) ? fracToRaw(rtc_wake_above) : 0;
-  RTC_SLOW_MEM[ULP_MEM_HIGH] = count_when_too_dry;
-  RTC_SLOW_MEM[ULP_MEM_LOW]  = count_when_too_wet;
-
-  // ADC1 in RTC-controlled mode, so the ULP may read it while everything else sleeps.
-  adc1_config_width(ADC_WIDTH_BIT_12);
-  adc1_config_channel_atten((adc1_channel_t)ULP_ADC_CHANNEL, ADC_ATTEN_DB_11);
-  adc1_ulp_enable();
-
-  const ulp_insn_t program[] = {
-      I_ADC(R0, 0, ULP_ADC_CHANNEL),          // R0 = one sample of the soil
-      I_MOVI(R3, 0),
-      I_LD(R1, R3, ULP_MEM_HIGH),             // too-dry count
-      I_SUBR(R2, R1, R0),                     // R2 = high - sample; overflow set if sample > high
-      M_BXF(1),                               // crossed dry-wards -> wake
-      I_LD(R1, R3, ULP_MEM_LOW),              // too-wet count
-      I_SUBR(R2, R0, R1),                     // sample - low; overflow if sample < low
-      M_BXF(1),                               // crossed wet-wards -> wake
-      I_HALT(),                               // in band: sleep until the next watch period
-      M_LABEL(1),
-      I_WAKE(),                               // the world changed; say so
-      I_HALT(),
-  };
-  size_t size = sizeof(program) / sizeof(ulp_insn_t);
-  ulp_process_macros_and_load(ULP_PROG_START, program, &size);
-  ulp_set_wakeup_period(0, 1000 * 1000);      // one look per second, ~microamps
-  ulp_run(ULP_PROG_START);
-  esp_sleep_enable_ulp_wakeup();
-  Serial.printf("watching band %.3f..%.3f (counts %u..%u), one look per second\n",
-                rtc_wake_below, rtc_wake_above,
-                (unsigned)RTC_SLOW_MEM[ULP_MEM_LOW], (unsigned)RTC_SLOW_MEM[ULP_MEM_HIGH]);
-}
-
-static bool wokeByCrossing() {
-  return esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_ULP;
-}
-#else
-static void armUlpWatch() {}
-static bool wokeByCrossing() { return false; }
-#endif
+// Wake on crossing (#151) lives in ulp_watch.cpp — compiled in only where the world promises
+// it (WAKE_ON_CROSSING, generated from ssn:implements sensing:CrossingProcedure), and carrying
+// the derivation of its one-second internal cadence from the worst credible slew.
+#include "ulp_watch.h"
 
 // The topics come from config.h, which `agora-firmware` generates from the world's own
 // ag:readingTopic and ag:commandTopic. They used to be built here as "sensors/" PLANT_ID

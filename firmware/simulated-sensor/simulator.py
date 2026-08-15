@@ -222,6 +222,12 @@ class SimulatedSensor:
         # the vocabulary states per sensor.
         self.watch: dict[str, tuple[float, float]] = {}
         self.watch_period_s = _float("SIM_WATCH_PERIOD_S", 1.0)
+        # A PUSH sentinel's band is baked at "flash" — SIM_WATCH is its config.h, since a
+        # device that takes no orders can still keep a promise the world wrote. A scheduled
+        # device ignores this and is commanded instead.
+        if self.mode == "push" and os.environ.get("SIM_WATCH"):
+            self.watch = {str(ptr): (float(band[0]), float(band[1]))
+                          for ptr, band in json.loads(os.environ["SIM_WATCH"]).items()}
 
         # Measurement error — a property of this firmware's fidelity, like LED_BRIGHTNESS on
         # the real board: not generated from the world, env-overridable, stated as fractions of
@@ -313,9 +319,9 @@ class SimulatedSensor:
         # deep sleep, so the ack is its only testimony about the rhythm actually in force.
         if self.mode == "scheduled":
             doc["sleep_s"] = int(self.sleep_s)
-            if getattr(self, "_woke_by_crossing", False):
-                doc["wake"] = "crossing"   # this reading exists because the value moved
-                self._woke_by_crossing = False
+        if getattr(self, "_woke_by_crossing", False):
+            doc["wake"] = "crossing"   # this reading exists because the value moved
+            self._woke_by_crossing = False
         # What the world holds is one thing; what the instrument says is another. The grain and
         # the occasional spike are applied at REPORT time and never fed back into the value —
         # measurement error is about the reading, and physics that inherited it would drift.
@@ -457,9 +463,21 @@ class SimulatedSensor:
         while not self._stop.is_set():
             self._advance()
             if self.mode == "push":
-                # A push device keeps its own tick and waits for nobody.
+                # A push device keeps its own tick and waits for nobody — but a SENTINEL
+                # watches its baked band between ticks, and a crossing ends the wait early
+                # exactly as it ends a scheduled sleep.
                 self._publish()
-                self._stop.wait(self.tick_s)
+                slept = 0.0
+                while slept < self.tick_s and not self._stop.is_set():
+                    step = min(self.watch_period_s, self.tick_s - slept)
+                    self._stop.wait(step)
+                    slept += step
+                    self._advance()
+                    if self._crossed():
+                        self._woke_by_crossing = True
+                        log.info("%s: crossed the baked band — the sentinel speaks",
+                                 self.sensor_id)
+                        break
                 continue
             # A scheduled device publishes and then WAITS TO BE RELEASED (#152): the agent
             # answers every reading, the answer carries the cadence, and the sleep below runs

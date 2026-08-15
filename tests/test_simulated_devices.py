@@ -293,3 +293,4 @@ def test_a_peripheral_inherits_its_boards_clock():
     fern = load_self(genesis_store(world="simulation").query, "fern")
     air = next(s for s in fern.sensors if s.local_id == "air_temp_fern")
     assert air.sense_mode == SCHEDULED
+

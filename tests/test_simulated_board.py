@@ -380,3 +380,27 @@ def test_the_watch_reads_the_world_not_the_instrument():
                         SIM_SPIKE_CHANCE="1", SIM_SPIKE_SPAN="0.5")
     _command(device, {"watch": {"/value": [0.2, 0.9]}})
     assert not device._crossed(), "spikes are report-side and must not trip the watch"
+
+
+def test_a_push_sentinel_watches_a_band_baked_at_flash():
+    """The second firmware's stand-in: a push device takes no orders, so its band arrives as
+    SIM_WATCH — its config.h — and a crossing makes it speak off its own tick, marked as the
+    news it is. No sleep_s either way: nothing commands this board, so there is nothing to
+    receipt."""
+    device, published = _device([MOISTURE], SIM_SENSE_MODE="push",
+                                SIM_WATCH='{"/value": [0.4, 0.6]}')
+    assert device.watch == {"/value": (0.4, 0.6)}
+    device._receive(600)   # a stranger's watering: 0.45 -> 0.75, past the ceiling
+    assert device._crossed(), "the sentinel must see the water"
+    device._woke_by_crossing = True
+    device._publish()
+    doc = json.loads(published[-1][1])
+    assert doc.get("wake") == "crossing"
+    assert "sleep_s" not in doc
+
+
+def test_a_scheduled_device_ignores_a_baked_band():
+    """SIM_WATCH is the sentinel's config.h; a governed device is COMMANDED its band, and
+    reading both would let the two sources disagree about one watch."""
+    device, _ = _device([MOISTURE], SIM_WATCH='{"/value": [0.4, 0.6]}')
+    assert device.watch == {}
