@@ -68,7 +68,7 @@ services:
       SIM_COMMAND_TOPIC: "sensors/moisture_sensor_fern/command"
       SIM_DOSE_TOPIC: "actuators/valve_fern/status"
       SIM_TICK_SECONDS: "3"
-      SIM_TIMESCALE: "24"
+      SIM_TIMESCALE: "144"
       SIM_RAIN_TOPIC: "rain/fern"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
@@ -98,7 +98,7 @@ services:
       SIM_COMMAND_TOPIC: "sensors/moisture_sensor_succulent/command"
       SIM_DOSE_TOPIC: "actuators/valve_succulent/status"
       SIM_TICK_SECONDS: "3"
-      SIM_TIMESCALE: "24"
+      SIM_TIMESCALE: "144"
       SIM_RAIN_TOPIC: "rain/succulent"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
@@ -128,7 +128,7 @@ services:
       SIM_COMMAND_TOPIC: "sensors/moisture_sensor_tomato/command"
       SIM_DOSE_TOPIC: "actuators/valve_tomato/status"
       SIM_TICK_SECONDS: "3"
-      SIM_TIMESCALE: "24"
+      SIM_TIMESCALE: "144"
       SIM_RAIN_TOPIC: "rain/tomato"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
@@ -228,7 +228,7 @@ services:
     environment:
       MEDDLER_TOPICS: '["rain/fern","rain/succulent","rain/tomato"]'
       MEDDLER_MEAN_DAYS: "2"
-      MEDDLER_TIMESCALE: "24"
+      MEDDLER_TIMESCALE: "144"
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
     env_file:
