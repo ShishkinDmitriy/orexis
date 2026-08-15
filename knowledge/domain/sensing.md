@@ -142,12 +142,15 @@ moisture.
   readings. That gap is not drift to be corrected: the agent is choosing how long the device
   may rest, and the device honours exactly that. Anything tighter than the wake cost is
   mostly wake cost, which is why the constitutional floor sits where it does.
-- **The band** (`wake_below`/`wake_above`) arms a crossing-watcher (#151), where the world
-  states one (`ssn:implements sensing:CrossingProcedure`): the agent's region edges, retained
-  beside the cadence, and the board wakes off-cadence the moment the value leaves them — the
-  reading then says `"wake":"crossing"`, the one arrival that means the world changed rather
-  than the clock ticked. Silence from such a board means "nothing crossed", which is
-  information; a plain scheduled board's silence means only "not due yet".
+- **The bands** (`watch`: a `pointer -> [low, high]` map) arm the crossing-watchers (#151),
+  one per channel the world says is watched (`ssn:implements sensing:CrossingProcedure`, on
+  the SENSOR — per channel, because which values a board can watch is a per-channel hardware
+  fact: an ESP32's ULP reaches the analog probe and never the DHT, where a stand-in may watch
+  everything it has). The bands are the agent's region edges, retained beside the cadence, and
+  the board wakes off-cadence the moment ANY watched value leaves its band — the reading then
+  says `"wake":"crossing"`, the one arrival that means the world changed rather than the clock
+  ticked. Silence from a watched channel means "nothing crossed", which is information; a
+  plain scheduled board's silence means only "not due yet".
 - **Sense** (`sense:true`) is a *best-effort nudge* — it lands only if the board happens to be
   awake between publishing and being released, and is **never retained** (a retained `sense`
   would re-fire on every wake, forever).

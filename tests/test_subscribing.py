@@ -787,10 +787,12 @@ def test_a_crossing_watcher_is_told_the_region_edges(monkeypatch):
     p, s = fern.subscribing(), moisture_sensor(fern)
     assert s.crossing, "the simulation world promises announce-on-crossing for this device"
     p.set_cadence(s, 600, None)
-    sent = [c for c in fern.sent.to(s.command_topic) if "wake_below" in c]
+    sent = [c for c in fern.sent.to(s.command_topic) if "watch" in c]
     assert sent, "a crossing-watcher must be told its band"
-    assert sent[-1]["wake_below"] == pytest.approx(0.45)   # fern's region floor
-    assert sent[-1]["wake_above"] == pytest.approx(0.65)   # and its ceiling
+    watch = sent[-1]["watch"]
+    assert watch["/value"] == [pytest.approx(0.45), pytest.approx(0.65)]  # its moisture region
+    # and the AIR channel's band rides the same map — per channel, one retained breath
+    assert watch["/temperature"] == [pytest.approx(18.0), pytest.approx(24.0)]
 
 
 def test_an_agent_with_no_stake_commands_no_band(monkeypatch, tmp_path):
@@ -800,7 +802,7 @@ def test_an_agent_with_no_stake_commands_no_band(monkeypatch, tmp_path):
     p = agent.subscribing()
     s = p.sensors[0]
     p.set_cadence(s, 600, None)
-    assert all("wake_below" not in c for c in agent.sent.to(s.command_topic))
+    assert all("watch" not in c for c in agent.sent.to(s.command_topic))
 
 
 def test_a_crossing_armed_watch_is_live_whatever_the_heartbeat(monkeypatch):

@@ -416,10 +416,14 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
   JsonDocument doc;
   if (deserializeJson(doc, payload, len)) return;
 #ifdef WAKE_ON_CROSSING
-  // The band, riding the same retained message as the cadence: the agent's region edges, and
-  // the board then literally watches its agent's desire while both of them sleep.
-  if (doc["wake_below"].is<float>()) rtc_wake_below = doc["wake_below"];
-  if (doc["wake_above"].is<float>()) rtc_wake_above = doc["wake_above"];
+  // The bands ride the same retained message as the cadence, one per watched channel:
+  // {"watch":{"/value":[0.45,0.65],...}}. This board takes exactly its MOISTURE channel's —
+  // the one its ULP can physically reach — and ignores the rest: the DHT hangs off a protocol
+  // the ULP cannot speak, which is why the world only states the promise per channel.
+  if (doc["watch"]["/value"].is<JsonArray>() && doc["watch"]["/value"].size() == 2) {
+    rtc_wake_below = doc["watch"]["/value"][0].as<float>();
+    rtc_wake_above = doc["watch"]["/value"][1].as<float>();
+  }
 #endif
   if (doc["sleep_s"].is<uint32_t>()) {
     uint32_t s = doc["sleep_s"];

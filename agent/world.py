@@ -82,8 +82,9 @@ class Sensor:
     # (#98): a sosa:Sample whose isSampleOf is the subject above. Optional, and its absence is
     # the ordinary rig — the subject is the feature, and everything reads as it always did.
     sample: str | None = None
-    # The device announces on crossing too (#151): thresholds are commanded beside the
-    # cadence, and silence between heartbeats means "nothing crossed" — information.
+    # THIS channel is watched for crossings (#151): its band is commanded beside the cadence,
+    # and silence between heartbeats means "nothing crossed" — information. Per sensor, because
+    # which values a board can watch is a per-channel hardware fact.
     crossing: bool = False
 
 
@@ -180,12 +181,10 @@ WHERE {{
   OPTIONAL {{ ?sensor mqtt:readingTopic ?stream .
               ?clockKeeper mqtt:readingTopic ?stream ; mqtt:onBus ?anyBus ;
                            sensing:senseMode ?senseMode }}
-  # Whether the device ALSO announces on crossing (#151) — the same stream join, because the
-  # promise is the board's exactly as the clock is.
-  OPTIONAL {{ ?sensor mqtt:readingTopic ?stream2 .
-              ?watcher mqtt:readingTopic ?stream2 ; mqtt:onBus ?bus2 ;
-                       ssn:implements sensing:CrossingProcedure .
-              BIND(true AS ?crossing) }}
+  # Whether THIS CHANNEL is watched for crossings (#151) — per sensor, not per board,
+  # because which values a board can watch is a hardware fact per channel: a ULP reaches the
+  # analog probe and never the DHT. The board wakes for any watched channel that crosses.
+  OPTIONAL {{ ?sensor ssn:implements sensing:CrossingProcedure . BIND(true AS ?crossing) }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
   OPTIONAL {{ ?sensor sensing:samples ?sample }}
   OPTIONAL {{ ?sensor mqtt:onBus ?bus }}

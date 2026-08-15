@@ -169,7 +169,7 @@ sensing:PushProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Push pr
 #  the cadence, and the natural ones are its region's edges: the board then literally watches
 #  the agent's desire while both of them sleep.
 sensing:CrossingProcedure a sosa:Procedure ; rdfs:label "Announce on crossing" ;
-    rdfs:comment "Watch commanded thresholds while asleep; wake and publish when the value crosses one. Stated on the connecting DEVICE with ssn:implements, beside (never instead of) its sense mode. A shape requires the device to be Scheduled with a command channel, because thresholds arrive the way the cadence does — a push board that watched thresholds would have no way to be told which." .
+    rdfs:comment "Watch commanded thresholds while asleep; wake and publish when the value crosses one. Stated on the SENSOR whose value is watched, with ssn:implements — per channel, because which values a board can watch is a hardware fact per channel: an ESP32's ULP reaches the analog probe and can never speak the DHT's protocol, so a real board promises this for its moisture and stays honest about its air, while a stand-in may promise every channel it has. The board wakes when ANY of its watched channels crosses. A shape requires the implementing sensor to ride a Scheduled device with a command channel, because the bands arrive the way the cadence does — one retained map, a band per watched pointer." .
 
 sensing:senseMode a owl:ObjectProperty ; rdfs:domain <http://example.org/agora#Device> ; rdfs:range sensing:SenseMode ;
     rdfs:label "sense mode" ;

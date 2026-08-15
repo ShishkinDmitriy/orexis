@@ -212,13 +212,15 @@ class SimulatedSensor:
         self.release_wait_s = _float("SIM_RELEASE_WAIT_S", 5)
         self._released = threading.Event()
 
-        # Announce-on-crossing (#151): the agent commands a band beside the cadence, and this
-        # device watches it BETWEEN heartbeats the way a real board's ULP would — checking the
-        # primary value every watch-period and waking early the moment it leaves the band.
-        # None until commanded; a world whose device states no CrossingProcedure never gets
-        # the command, so this stays dormant exactly as unflashed firmware would.
-        self.wake_below: float | None = None
-        self.wake_above: float | None = None
+        # Announce-on-crossing (#151): the agent commands a band PER WATCHED CHANNEL beside
+        # the cadence — {"watch": {"/value": [0.45, 0.65], "/temperature": [18, 24]}} — and
+        # this device checks every banded value between heartbeats the way a real board's ULP
+        # would, waking early the moment ANY of them leaves its band. Empty until commanded; a
+        # world whose channels state no CrossingProcedure never sends one, so this stays
+        # dormant exactly as unflashed firmware would. A stand-in may watch every channel it
+        # has, where real silicon watches only what its ULP can reach — the honest asymmetry
+        # the vocabulary states per sensor.
+        self.watch: dict[str, tuple[float, float]] = {}
         self.watch_period_s = _float("SIM_WATCH_PERIOD_S", 1.0)
 
         # Measurement error — a property of this firmware's fidelity, like LED_BRIGHTNESS on
@@ -282,10 +284,10 @@ class SimulatedSensor:
         # steered would be untestable, and steering is not something the device does.
         if self.mode == "push":
             return
-        if isinstance(doc.get("wake_below"), (int, float)):
-            self.wake_below = float(doc["wake_below"])
-        if isinstance(doc.get("wake_above"), (int, float)):
-            self.wake_above = float(doc["wake_above"])
+        if isinstance(doc.get("watch"), dict):
+            self.watch = {str(pointer): (float(band[0]), float(band[1]))
+                          for pointer, band in doc["watch"].items()
+                          if isinstance(band, (list, tuple)) and len(band) == 2}
         if isinstance(doc.get("sleep_s"), (int, float)):
             asked = float(doc["sleep_s"])
             self.sleep_s = max(self.min_sleep_s, min(self.max_sleep_s, asked))
@@ -414,18 +416,23 @@ class SimulatedSensor:
             v.advance(dt)
 
     def _crossed(self) -> bool:
-        """Whether the primary value sits outside the commanded band right now.
+        """Whether ANY watched value sits outside its commanded band right now.
 
-        The TRUE value, not the reported one: a real ULP compares the ADC, and the grain and
+        The TRUE values, not the reported ones: a real ULP compares the ADC, and the grain and
         the spikes are properties of the REPORT (#163) — a board that woke for its own
         measurement noise would be a boy crying wolf at his own echo.
         """
-        if self.wake_below is None and self.wake_above is None:
+        if not self.watch:
             return False
-        primary = next((v for v in self.values if v.pointer == "/value"), self.values[0])
-        now = primary.read(time.time() * self.timescale)
-        return ((self.wake_below is not None and now < self.wake_below)
-                or (self.wake_above is not None and now > self.wake_above))
+        sim_time = time.time() * self.timescale
+        for value in self.values:
+            band = self.watch.get(value.pointer)
+            if band is None:
+                continue
+            now = value.read(sim_time)
+            if now < band[0] or now > band[1]:
+                return True
+        return False
 
     # --- the loop ---
 

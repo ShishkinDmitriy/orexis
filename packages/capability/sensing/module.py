@@ -551,22 +551,29 @@ class SubscribingModule(SensingModule):
         # comfortable reading cannot cliff a burst-tight cadence straight to the slow end. The
         # release runs geometrically over a few dense readings, exactly the window the trend
         # needs two of them to establish (#133), and confidence is earned rather than assumed.
+        # Every WATCHED channel on this board is told its band (#151), beside the cadence and
+        # in the same retained breath: a map of pointer -> [low, high], the tightest bounds any
+        # module with a stake holds — desire's region edges, ordinarily — so the board watches
+        # everything its agent wants held, per channel, while both of them sleep. A channel
+        # that promised nothing gets no band, a board with no watched channels gets no map,
+        # and old firmware ignores keys it does not know.
+        watch = {}
+        for peer in self._aimed_with(sensor):
+            if not peer.crossing:
+                continue
+            held = self.agent.bounds(peer.subject, peer.observes)
+            if held is not None:
+                watch[peer.reading_pointer or "/value"] = [round(held[0], 3),
+                                                           round(held[1], 3)]
+        if watch:
+            verdict = {**(verdict or {}), "watch": watch}
+
         last = self.sent_cadence.get(sensor.local_id)
         if self.relax_factor and last is not None and sleep_s > last:
             sleep_s = min(int(sleep_s), max(int(last) + 1, int(last * self.relax_factor)))
         message = (int(sleep_s), tuple(sorted((verdict or {}).items())))
         if self.sent.get(key) == message:
             return
-        # A crossing-watcher is told WHICH band to announce on leaving (#151), beside the
-        # cadence and in the same retained breath: the tightest bounds any module with a stake
-        # holds — desire's region edges, ordinarily — so the board literally watches this
-        # agent's desire while both of them sleep. A device that stated no CrossingProcedure
-        # gets no thresholds, and old firmware ignores keys it does not know.
-        if sensor.crossing:
-            held = self.agent.bounds(sensor.subject, sensor.observes)
-            if held is not None:
-                verdict = {**(verdict or {}),
-                           "wake_below": round(held[0], 3), "wake_above": round(held[1], 3)}
         driver = self.drivers[sensor.uri]
         if driver is None:
             return
