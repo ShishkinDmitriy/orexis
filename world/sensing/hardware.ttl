@@ -9,6 +9,9 @@
 @prefix rgbled: <http://example.org/agora/rgb-led#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix esp32: <http://example.org/agora/esp32#> .
 @prefix wokwi: <http://example.org/agora/wokwi#> .
 
@@ -58,8 +61,25 @@ ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     mc:model "ESP32-WROOM-32D" ;
     mqtt:onBus ag:local_bus ;
     mc:firmware "moisture-sensor" ;
-    sosa:hosts ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
+    ssn:inDeployment ag:fern_windowsill_deployment ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is sensing:Subscribing: the board keeps the interval and cannot be reached in between." .
+
+#  The deployment this hosting is PRODUCED by (#99). `sosa:hosts` used to be asserted here — a
+#  conclusion whose premise was nowhere in the graph, since SSN entails hosting from exactly
+#  this: which systems, on which platform, from when, for what. The closure now entails the
+#  hosts, so rewiring means editing THIS block and the hosting follows; the society's copy in
+#  world.ttl stays asserted for its own audience, held to agreeing by test_layout as ever.
+#
+#  What a deployment carries that a wiring could not: the DATE this board went to this window
+#  (a board that used to be somewhere else is a different fact from one that was always here),
+#  and the PURPOSE — which is also where a powering condition belongs the day #59's
+#  conditioned capabilities need resolving: "on battery" is a fact about this deployment, not
+#  about any part's datasheet.
+ag:fern_windowsill_deployment a ssn:Deployment ;
+    ssn:deployedOnPlatform ag:esp32_fern ;
+    ssn:deployedSystem ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
+    prov:startedAtTime "2026-08-05T17:00:00Z"^^xsd:dateTime ;
+    rdfs:comment "The windowsill bench: one fern, watched where it lives, on battery." .
 
 ##########  The board's own legs  ##########
 #

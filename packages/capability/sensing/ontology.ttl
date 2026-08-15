@@ -125,6 +125,19 @@ sensing:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
 # than refused. See knowledge/decisions/a-procedure-belongs-to-whatever-performs-it.md and
 # knowledge/decisions/who-holds-the-clock.md.
 
+#################  Deployment — hosting is what a deployment produces  #################
+#
+#  SSN's own axiom, restated because we borrow IRIs and never import ontologies — the same move
+#  `sosa:Sensor rdfs:subClassOf ssn:System` needed (#94). In SSN, `sosa:hosts` carries this
+#  property chain: a platform in a deployment that deploys a system HOSTS that system. We used
+#  to assert the conclusion with the premise nowhere in the graph (#99); the wiring now states
+#  the deployment — this board, these systems, from this date, for this purpose — and the
+#  closure entails the hosting from it. The society's copy in world.ttl stays ASSERTED,
+#  deliberately: an agent is never handed the wiring, so the society restates what it may know,
+#  and test_layout holds the two to agreeing exactly as before.
+
+sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
+
 sensing:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
     rdfs:comment "The class exists for the count: the speaking-device shape asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .
 
