@@ -216,18 +216,18 @@ class SimulatedSensor:
         # the cadence — {"watch": {"/value": [0.45, 0.65], "/temperature": [18, 24]}} — and
         # this device checks every banded value between heartbeats the way a real board's ULP
         # would, waking early the moment ANY of them leaves its band. Empty until commanded; a
-        # world whose channels state no CrossingProcedure never sends one, so this stays
+        # world whose channels state no AlarmProcedure never sends one, so this stays
         # dormant exactly as unflashed firmware would. A stand-in may watch every channel it
         # has, where real silicon watches only what its ULP can reach — the honest asymmetry
         # the vocabulary states per sensor.
-        self.watch: dict[str, tuple[float, float]] = {}
-        self.watch_period_s = _float("SIM_WATCH_PERIOD_S", 1.0)
-        # A PUSH sentinel's band is baked at "flash" — SIM_WATCH is its config.h, since a
+        self.alarm: dict[str, tuple[float, float]] = {}
+        self.alarm_period_s = _float("SIM_ALARM_PERIOD_S", 1.0)
+        # A PUSH sentinel's band is baked at "flash" — SIM_ALARM is its config.h, since a
         # device that takes no orders can still keep a promise the world wrote. A scheduled
         # device ignores this and is commanded instead.
-        if self.mode == "push" and os.environ.get("SIM_WATCH"):
-            self.watch = {str(ptr): (float(band[0]), float(band[1]))
-                          for ptr, band in json.loads(os.environ["SIM_WATCH"]).items()}
+        if self.mode == "push" and os.environ.get("SIM_ALARM"):
+            self.alarm = {str(ptr): (float(band[0]), float(band[1]))
+                          for ptr, band in json.loads(os.environ["SIM_ALARM"]).items()}
 
         # Measurement error — a property of this firmware's fidelity, like LED_BRIGHTNESS on
         # the real board: not generated from the world, env-overridable, stated as fractions of
@@ -290,9 +290,9 @@ class SimulatedSensor:
         # steered would be untestable, and steering is not something the device does.
         if self.mode == "push":
             return
-        if isinstance(doc.get("watch"), dict):
-            self.watch = {str(pointer): (float(band[0]), float(band[1]))
-                          for pointer, band in doc["watch"].items()
+        if isinstance(doc.get("alarm"), dict):
+            self.alarm = {str(pointer): (float(band[0]), float(band[1]))
+                          for pointer, band in doc["alarm"].items()
                           if isinstance(band, (list, tuple)) and len(band) == 2}
         if isinstance(doc.get("sleep_s"), (int, float)):
             asked = float(doc["sleep_s"])
@@ -319,9 +319,9 @@ class SimulatedSensor:
         # deep sleep, so the ack is its only testimony about the rhythm actually in force.
         if self.mode == "scheduled":
             doc["sleep_s"] = int(self.sleep_s)
-        if getattr(self, "_woke_by_crossing", False):
-            doc["wake"] = "crossing"   # this reading exists because the value moved
-            self._woke_by_crossing = False
+        if getattr(self, "_woke_by_alarm", False):
+            doc["wake"] = "alarm"   # this reading exists because the value moved
+            self._woke_by_alarm = False
         # What the world holds is one thing; what the instrument says is another. The grain and
         # the occasional spike are applied at REPORT time and never fed back into the value —
         # measurement error is about the reading, and physics that inherited it would drift.
@@ -421,18 +421,18 @@ class SimulatedSensor:
         for v in self.values:
             v.advance(dt)
 
-    def _crossed(self) -> bool:
+    def _alarmed(self) -> bool:
         """Whether ANY watched value sits outside its commanded band right now.
 
         The TRUE values, not the reported ones: a real ULP compares the ADC, and the grain and
         the spikes are properties of the REPORT (#163) — a board that woke for its own
         measurement noise would be a boy crying wolf at his own echo.
         """
-        if not self.watch:
+        if not self.alarm:
             return False
         sim_time = time.time() * self.timescale
         for value in self.values:
-            band = self.watch.get(value.pointer)
+            band = self.alarm.get(value.pointer)
             if band is None:
                 continue
             now = value.read(sim_time)
@@ -469,12 +469,12 @@ class SimulatedSensor:
                 self._publish()
                 slept = 0.0
                 while slept < self.tick_s and not self._stop.is_set():
-                    step = min(self.watch_period_s, self.tick_s - slept)
+                    step = min(self.alarm_period_s, self.tick_s - slept)
                     self._stop.wait(step)
                     slept += step
                     self._advance()
-                    if self._crossed():
-                        self._woke_by_crossing = True
+                    if self._alarmed():
+                        self._woke_by_alarm = True
                         log.info("%s: crossed the baked band — the sentinel speaks",
                                  self.sensor_id)
                         break
@@ -495,12 +495,12 @@ class SimulatedSensor:
             # a deep sleep. The next publish then says WHY it happened.
             slept = 0.0
             while slept < self.sleep_s and not self._stop.is_set():
-                step = min(self.watch_period_s, self.sleep_s - slept)
+                step = min(self.alarm_period_s, self.sleep_s - slept)
                 self._stop.wait(step)
                 slept += step
                 self._advance()
-                if self._crossed():
-                    self._woke_by_crossing = True
+                if self._alarmed():
+                    self._woke_by_alarm = True
                     log.info("%s: crossed the commanded band — waking off-cadence, "
                              "the world changed and this board is its messenger",
                              self.sensor_id)

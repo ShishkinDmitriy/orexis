@@ -41,7 +41,7 @@
 #include "config.h"
 
 // Wake on crossing (#151) lives in ulp_watch.cpp — compiled in only where the world promises
-// it (WAKE_ON_CROSSING, generated from ssn:implements sensing:CrossingProcedure), and carrying
+// it (WAKE_ON_ALARM, generated from ssn:implements sensing:AlarmProcedure), and carrying
 // the derivation of its one-second internal cadence from the worst credible slew.
 #include "ulp_watch.h"
 
@@ -303,10 +303,10 @@ static void publishReading() {
   char payload[200];
   int n = snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\",\"sleep_s\":%u",
                    lastFrac, SENSOR_ID, sleep_s);
-  if (wokeByCrossing() && n > 0 && n < (int)sizeof(payload)) {
+  if (wokeByAlarm() && n > 0 && n < (int)sizeof(payload)) {
     // This reading exists because the value moved, not because time passed — the one arrival
     // that means the world changed rather than the clock ticked (#151).
-    n += snprintf(payload + n, sizeof(payload) - n, ",\"wake\":\"crossing\"");
+    n += snprintf(payload + n, sizeof(payload) - n, ",\"wake\":\"alarm\"");
   }
   if (airValid && n > 0 && n < (int)sizeof(payload)) {
     n += snprintf(payload + n, sizeof(payload) - n, ",\"temperature\":%.1f,\"humidity\":%.3f",
@@ -325,14 +325,14 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
   got_cmd = true;  // ends the pre-publish drain, whatever the command carries
   JsonDocument doc;
   if (deserializeJson(doc, payload, len)) return;
-#ifdef WAKE_ON_CROSSING
+#ifdef WAKE_ON_ALARM
   // The bands ride the same retained message as the cadence, one per watched channel:
   // {"watch":{"/value":[0.45,0.65],...}}. This board takes exactly its MOISTURE channel's —
   // the one its ULP can physically reach — and ignores the rest: the DHT hangs off a protocol
   // the ULP cannot speak, which is why the world only states the promise per channel.
-  if (doc["watch"]["/value"].is<JsonArray>() && doc["watch"]["/value"].size() == 2) {
-    rtc_wake_below = doc["watch"]["/value"][0].as<float>();
-    rtc_wake_above = doc["watch"]["/value"][1].as<float>();
+  if (doc["alarm"]["/value"].is<JsonArray>() && doc["alarm"]["/value"].size() == 2) {
+    rtc_wake_below = doc["alarm"]["/value"][0].as<float>();
+    rtc_wake_above = doc["alarm"]["/value"][1].as<float>();
   }
 #endif
   if (doc["sleep_s"].is<uint32_t>()) {

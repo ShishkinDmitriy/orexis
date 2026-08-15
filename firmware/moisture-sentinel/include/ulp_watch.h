@@ -5,4 +5,4 @@
 #pragma once
 
 void armUlpWatch();
-bool wokeByCrossing();
+bool wokeByAlarm();

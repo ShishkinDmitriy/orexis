@@ -4,15 +4,15 @@
 // period is derived from the worst credible slew.
 #pragma once
 
-#ifdef WAKE_ON_CROSSING
+#ifdef WAKE_ON_ALARM
 // The band, as fractions. Set by onCmd from {"watch":{"/value":[lo,hi]}}; negative means
 // "never commanded", and the watch stays unarmed exactly as unflashed firmware would.
 extern float rtc_wake_below;
 extern float rtc_wake_above;
 
 void armUlpWatch();      // load thresholds + program, start the once-a-second look
-bool wokeByCrossing();   // did THIS wake happen because the value moved
+bool wokeByAlarm();   // did THIS wake happen because the value moved
 #else
 inline void armUlpWatch() {}
-inline bool wokeByCrossing() { return false; }
+inline bool wokeByAlarm() { return false; }
 #endif

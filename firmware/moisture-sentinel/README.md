@@ -11,7 +11,7 @@ What it does instead:
 - the **ULP watches a band compiled in at flash time** from the world's own operating range for
   the pot it sits in (`WAKE_BAND_LOW`/`HIGH` in the generated `config.h`) — a board that takes
   no orders can still keep a promise the world wrote;
-- a **crossing wakes the radio** and publishes `{"value":…,"wake":"crossing"}` — the world
+- a **alarm wakes the radio** and publishes `{"value":…,"wake":"alarm"}` — the world
   changed, so the world says so, within about a second;
 - a slow **heartbeat** publishes regardless (`HEARTBEAT_S`, generated to fit under the polling
   agent's `sensing:maxReadingAgeS`), so silence stays distinguishable from death.
@@ -22,7 +22,7 @@ move is water arriving at percolation speed, a crossing persists once it happens
 period therefore bounds detection **latency**, never detection probability.
 
 Declare a board with `mc:firmware "moisture-sentinel"`, mark its channel
-`ssn:implements sensing:CrossingProcedure`, run `agora-firmware <world>`, and flash:
+`ssn:implements sensing:AlarmProcedure`, run `agora-firmware <world>`, and flash:
 
 ```bash
 pio run -t upload      # from this directory

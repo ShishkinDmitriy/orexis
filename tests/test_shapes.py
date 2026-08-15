@@ -839,7 +839,7 @@ def test_a_watched_channel_on_a_push_device_is_legal():
             ag:sentinel_x a sosa:Sensor , ag:Device ; ag:localId "sentinel_x" ;
                 mqtt:onBus ag:local_bus ;
                 sensing:senseMode sensing:PushProcedure ;
-                <http://www.w3.org/ns/ssn/implements> sensing:CrossingProcedure ;
+                <http://www.w3.org/ns/ssn/implements> sensing:AlarmProcedure ;
                 sensing:monitors ag:tomato ;
                 sosa:observes <http://example.org/agora/water#AirHumidity> ;
                 scaling:quantityUnit unit:UNITLESS ;

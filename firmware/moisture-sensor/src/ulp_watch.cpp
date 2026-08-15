@@ -3,7 +3,7 @@
 // The coprocessor samples the moisture ADC while the main core and the radio deep-sleep at
 // microamps, compares the count against the commanded band, and wakes the board the moment the
 // value leaves it. Sampling is not reporting: the per-second looks die in a register, and only
-// a crossing is promoted to a full wake and a published reading marked "wake":"crossing".
+// a crossing is promoted to a full wake and a published reading marked "wake":"alarm".
 //
 // WHY ONE SECOND — the internal cadence, derived rather than guessed. The watch period is
 // bounded by  tolerable_overshoot / worst_credible_slew.  Soil moisture is an integrator:
@@ -21,7 +21,7 @@
 //
 // Follows the canonical esp-idf ulp_adc example (ULP-FSM macro assembly). GPIO34 is ADC1
 // channel 6, RTC-capable. COMPILE-UNTESTED HERE, like all firmware: the bench has the last word.
-#ifdef WAKE_ON_CROSSING
+#ifdef WAKE_ON_ALARM
 
 #include <Arduino.h>
 #include "esp32/ulp.h"
@@ -87,8 +87,8 @@ void armUlpWatch() {
                 (unsigned)RTC_SLOW_MEM[ULP_MEM_LOW], (unsigned)RTC_SLOW_MEM[ULP_MEM_HIGH]);
 }
 
-bool wokeByCrossing() {
+bool wokeByAlarm() {
   return esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_ULP;
 }
 
-#endif  // WAKE_ON_CROSSING
+#endif  // WAKE_ON_ALARM

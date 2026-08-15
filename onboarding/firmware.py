@@ -50,7 +50,7 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 # how to describe. A board carrying something it has no template for is reported, not guessed at.
 _BOARDS_Q = f"""
 SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
-       ?crossing
+       ?alarm
        ?ledRed ?ledGreen ?ledBlue ?airPin
 WHERE {{ 
   ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{MC}firmware> ?firmware ;
@@ -63,8 +63,8 @@ WHERE {{
   # stream-and-bus join every other device fact makes since #96.
   OPTIONAL {{ ?watcher <{MQTT}readingTopic> ?readTopic ; <{MQTT}onBus> ?wBus ;
               <http://www.w3.org/ns/ssn/implements>
-                <http://example.org/agora/sensing#CrossingProcedure> .
-             BIND(true AS ?crossing) }}
+                <http://example.org/agora/sensing#AlarmProcedure> .
+             BIND(true AS ?alarm) }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerHost> ?host ; <{MQTT}brokerPort> ?port .
   OPTIONAL {{ ?pi a <{AG}ComputeHost> ; <{AG}lanHost> ?lan }}
 
@@ -194,11 +194,11 @@ def _crossing(row: dict) -> str:
     footprint, and a board whose world makes no such promise should not carry the means to
     keep it — absence stays a statement, in the firmware exactly as in the graph.
     """
-    if not row.get("crossing"):
+    if not row.get("alarm"):
         return ""
     return ("\n// The world promises this board announces on crossing (#151): the ULP watches\n"
             "// the commanded band between heartbeats and wakes the radio when the value leaves it.\n"
-            "#define WAKE_ON_CROSSING 1\n")
+            "#define WAKE_ON_ALARM 1\n")
 
 
 def _optional_pins(row: dict) -> str:

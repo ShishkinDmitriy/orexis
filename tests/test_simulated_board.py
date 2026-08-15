@@ -326,11 +326,11 @@ def test_a_push_device_takes_no_release_because_it_never_waits():
 
 # --- announce on crossing: the world holds the third clock (#151) -------------
 
-def test_a_commanded_band_arms_the_watch():
+def test_commanded_alarm_limits_arm_the_watch():
     device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
-    _command(device, {"sleep_s": 600, "watch": {"/value": [0.4, 0.6]}})
-    assert device.watch == {"/value": (0.4, 0.6)}
-    assert not device._crossed(), "0.45 sits inside the band"
+    _command(device, {"sleep_s": 600, "alarm": {"/value": [0.4, 0.6]}})
+    assert device.alarm == {"/value": (0.4, 0.6)}
+    assert not device._alarmed(), "0.45 sits inside the band"
 
 
 def test_hand_watering_is_seen_within_the_watch_period_not_the_polling_window():
@@ -338,39 +338,39 @@ def test_hand_watering_is_seen_within_the_watch_period_not_the_polling_window():
     The dose crosses the commanded ceiling, the watch notices, and the next publish says the
     world changed — within the watch period, not an hour later at the heartbeat."""
     device, published = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
-    _command(device, {"sleep_s": 3600, "watch": {"/value": [0.4, 0.6]}})
+    _command(device, {"sleep_s": 3600, "alarm": {"/value": [0.4, 0.6]}})
 
     device._receive(600)   # 600 ml through 2 L/fraction: 0.45 -> 0.75, past the ceiling
-    assert device._crossed(), "the watch must see the stranger's water"
+    assert device._alarmed(), "the watch must see the stranger's water"
 
-    device._woke_by_crossing = True   # what the loop sets when _crossed ends a sleep early
+    device._woke_by_alarm = True   # what the loop sets when _alarmed ends a sleep early
     device._publish()
-    assert json.loads(published[-1][1]).get("wake") == "crossing", \
+    assert json.loads(published[-1][1]).get("wake") == "alarm", \
         "the reading must say it exists because the value moved, not because time passed"
 
 
 def test_drying_out_of_the_band_is_a_crossing_too():
     device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
-    _command(device, {"watch": {"/value": [0.5, 1.0]}})  # 0.45 already breaches the floor
-    assert device._crossed()
+    _command(device, {"alarm": {"/value": [0.5, 1.0]}})  # 0.45 already breaches the floor
+    assert device._alarmed()
 
 
 def test_each_watched_channel_has_its_own_band():
     """Per channel, because which values a board can watch is a per-channel fact — and a
-    temperature crossing wakes the board exactly as a moisture one does."""
+    temperature alarm wakes the board exactly as a moisture one does."""
     device, _ = _device([MOISTURE, TEMPERATURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
-    _command(device, {"watch": {"/value": [0.4, 0.6], "/temperature": [18.0, 24.0]}})
-    assert not device._crossed(), "0.45 and 21.0 both sit inside their bands"
+    _command(device, {"alarm": {"/value": [0.4, 0.6], "/temperature": [18.0, 24.0]}})
+    assert not device._alarmed(), "0.45 and 21.0 both sit inside their bands"
     device._control({"value": 30.0, "at": "/temperature"})  # a heat spike in the room
-    assert device._crossed(), "the air leaving ITS band must wake the board too"
+    assert device._alarmed(), "the air leaving ITS band must wake the board too"
 
 
-def test_a_device_never_commanded_a_band_never_wakes_for_one():
+def test_a_device_never_given_alarm_limits_never_wakes_for_them():
     """Dormant exactly as unflashed firmware would be: no thresholds, no watch — a world whose
-    device states no CrossingProcedure never sends any."""
+    device states no AlarmProcedure never sends any."""
     device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
     device._receive(600)
-    assert not device._crossed()
+    assert not device._alarmed()
 
 
 def test_the_watch_reads_the_world_not_the_instrument():
@@ -378,29 +378,29 @@ def test_the_watch_reads_the_world_not_the_instrument():
     a board that woke for its own measurement noise would cry wolf at its own echo."""
     device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd",
                         SIM_SPIKE_CHANCE="1", SIM_SPIKE_SPAN="0.5")
-    _command(device, {"watch": {"/value": [0.2, 0.9]}})
-    assert not device._crossed(), "spikes are report-side and must not trip the watch"
+    _command(device, {"alarm": {"/value": [0.2, 0.9]}})
+    assert not device._alarmed(), "spikes are report-side and must not trip the watch"
 
 
-def test_a_push_sentinel_watches_a_band_baked_at_flash():
+def test_a_push_sentinel_holds_alarm_limits_baked_at_flash():
     """The second firmware's stand-in: a push device takes no orders, so its band arrives as
-    SIM_WATCH — its config.h — and a crossing makes it speak off its own tick, marked as the
+    SIM_ALARM — its config.h — and a crossing makes it speak off its own tick, marked as the
     news it is. No sleep_s either way: nothing commands this board, so there is nothing to
     receipt."""
     device, published = _device([MOISTURE], SIM_SENSE_MODE="push",
-                                SIM_WATCH='{"/value": [0.4, 0.6]}')
-    assert device.watch == {"/value": (0.4, 0.6)}
+                                SIM_ALARM='{"/value": [0.4, 0.6]}')
+    assert device.alarm == {"/value": (0.4, 0.6)}
     device._receive(600)   # a stranger's watering: 0.45 -> 0.75, past the ceiling
-    assert device._crossed(), "the sentinel must see the water"
-    device._woke_by_crossing = True
+    assert device._alarmed(), "the sentinel must see the water"
+    device._woke_by_alarm = True
     device._publish()
     doc = json.loads(published[-1][1])
-    assert doc.get("wake") == "crossing"
+    assert doc.get("wake") == "alarm"
     assert "sleep_s" not in doc
 
 
-def test_a_scheduled_device_ignores_a_baked_band():
-    """SIM_WATCH is the sentinel's config.h; a governed device is COMMANDED its band, and
+def test_a_scheduled_device_ignores_baked_alarm_limits():
+    """SIM_ALARM is the sentinel's config.h; a governed device is COMMANDED its band, and
     reading both would let the two sources disagree about one watch."""
-    device, _ = _device([MOISTURE], SIM_WATCH='{"/value": [0.4, 0.6]}')
-    assert device.watch == {}
+    device, _ = _device([MOISTURE], SIM_ALARM='{"/value": [0.4, 0.6]}')
+    assert device.alarm == {}

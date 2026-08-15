@@ -197,8 +197,8 @@ while it deep-sleeps (an ESP32's ULP compares the reading every second for micro
 to speak the moment the value crosses one. The device is merely the world's messenger.
 
 Deliberately NOT a fourth `sensing:senseMode`. The mode is who holds the HEARTBEAT, one answer
-per device (#96); the crossing wake is an ADDITIONAL procedure the same device implements —
-`ssn:implements sensing:CrossingProcedure`, the standard relation arriving for exactly the
+per device (#96); the alarm wake is an ADDITIONAL procedure the same device implements —
+`ssn:implements sensing:AlarmProcedure`, the standard relation arriving for exactly the
 reason this record kept `senseMode` ours: `ssn:implements` is wider *because* a system may
 implement several procedures, and here is the second one. Stated PER CHANNEL — on the sensor
 whose value is watched — because which values a board can watch is a per-channel hardware
@@ -210,7 +210,7 @@ per watched pointer.
 
 What the promise buys, mechanically: the thresholds are the agent's region edges (desire's
 `bounds`, collected like urgency), so the board literally watches its agent's desire while both
-sleep; silence between heartbeats means "nothing crossed" — information — and a crossing-armed
+sleep; silence between heartbeats means "nothing crossed" — information — and a alarm-armed
 watch counts as LIVE for #132's held claims, however long the heartbeat. The hand-watering
 scenario that no cadence policy could recover — a third party's impulse inside the sleep
 window — is now seen within the watch period, which was the whole of #151's argument.

@@ -59,6 +59,6 @@ void armUlpWatch() {
                 (unsigned)RTC_SLOW_MEM[ULP_MEM_HIGH]);
 }
 
-bool wokeByCrossing() {
+bool wokeByAlarm() {
   return esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_ULP;
 }

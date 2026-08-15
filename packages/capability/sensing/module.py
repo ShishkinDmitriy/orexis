@@ -146,11 +146,11 @@ class SensingModule(Module):
         doc = self.parse(payload)
         if doc is not None and isinstance(doc.get("sleep_s"), (int, float)):
             acknowledged = int(doc["sleep_s"])
-        if doc is not None and doc.get("wake") == "crossing":
+        if doc is not None and doc.get("wake") == "alarm":
             # The world spoke (#151): this reading exists because the value crossed a
             # commanded threshold, not because the heartbeat came due. Worth a line, because
             # it is the one arrival that means something happened rather than time passed.
-            self.log.info("crossing wake on %s — the world changed and the board said so",
+            self.log.info("alarm wake on %s — the world crossed a commanded limit and said so",
                           topic)
         for sensor in self.sensors:
             driver = self.drivers[sensor.uri]
@@ -374,11 +374,11 @@ class SubscribingModule(SensingModule):
         sensor = self.sensor_for(subject_uri, observed_property)
         if sensor is None:
             return False
-        # A crossing-armed board IS a live watch (#151): a dose landing moves the value across
+        # A alarm-armed board IS a live watch (#151): a dose landing moves the value across
         # the commanded band edge and the board announces within its watching period, however
         # long the heartbeat. The thresholds must actually have gone out — the same dedup
         # memory that proves the channel has been spoken to proves what was said.
-        if sensor.crossing and sensor.local_id in self.sent_cadence:
+        if sensor.alarm and sensor.local_id in self.sent_cadence:
             return True
         acked = self.acked_cadence.get(sensor.command_topic or sensor.local_id)
         return acked is not None and acked <= self.beliefs.fast_sleep_s
@@ -557,16 +557,16 @@ class SubscribingModule(SensingModule):
         # everything its agent wants held, per channel, while both of them sleep. A channel
         # that promised nothing gets no band, a board with no watched channels gets no map,
         # and old firmware ignores keys it does not know.
-        watch = {}
+        alarm = {}
         for peer in self._aimed_with(sensor):
-            if not peer.crossing:
+            if not peer.alarm:
                 continue
             held = self.agent.bounds(peer.subject, peer.observes)
             if held is not None:
-                watch[peer.reading_pointer or "/value"] = [round(held[0], 3),
+                alarm[peer.reading_pointer or "/value"] = [round(held[0], 3),
                                                            round(held[1], 3)]
-        if watch:
-            verdict = {**(verdict or {}), "watch": watch}
+        if alarm:
+            verdict = {**(verdict or {}), "alarm": alarm}
 
         last = self.sent_cadence.get(sensor.local_id)
         if self.relax_factor and last is not None and sleep_s > last:

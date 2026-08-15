@@ -1,4 +1,4 @@
-// Agora — ESP32 soil-moisture SENTINEL (sensing:PushProcedure + sensing:CrossingProcedure).
+// Agora — ESP32 soil-moisture SENTINEL (sensing:PushProcedure + sensing:AlarmProcedure).
 //
 // The second firmware, and the inverse temperament of the first. The moisture-sensor node is
 // governed: the agent commands its cadence and its band, and the board keeps them. A sentinel
@@ -7,7 +7,7 @@
 //
 //   - the ULP watches a band COMPILED IN from the world's own operating range, sampling the
 //     probe about once a second for microamps while everything else deep-sleeps;
-//   - a crossing wakes the radio and publishes, marked "wake":"crossing" — the world changed,
+//   - a alarm wakes the radio and publishes, marked "wake":"alarm" — the world changed,
 //     so the world says so, within a second rather than a polling window;
 //   - a slow HEARTBEAT wake publishes regardless, so silence stays distinguishable from death:
 //     the agent's Listening freshness rule (sensing:maxReadingAgeS) is an absolute, and the
@@ -18,7 +18,7 @@
 //
 //   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>"}          heartbeat
 //              MOISTURE_TOPIC   {"value":0.391,"sensor":"<SENSOR_ID>",
-//                                "wake":"crossing"}                             the news
+//                                "wake":"alarm"}                             the news
 //
 // No sleep_s in the payload, deliberately: the ack is a receipt for a commanded cadence, and
 // nothing commands this board. A push device that acked would invite its agent to hold a
@@ -99,7 +99,7 @@ void setup() {
   delay(200);
   analogReadResolution(12);
 
-  bool crossing = wokeByCrossing();
+  bool crossing = wokeByAlarm();
   lastFrac = readMoisture();
   Serial.printf("\nagora moisture sentinel  %s\nmoisture %.3f  [raw %.0f]  wake: %s\n",
                 SENSOR_ID, lastFrac, lastRaw, crossing ? "crossing" : "heartbeat");
@@ -110,7 +110,7 @@ void setup() {
       char payload[128];
       if (crossing) {
         snprintf(payload, sizeof(payload),
-                 "{\"value\":%.3f,\"sensor\":\"%s\",\"wake\":\"crossing\"}",
+                 "{\"value\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",
                  lastFrac, SENSOR_ID);
       } else {
         snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"}",

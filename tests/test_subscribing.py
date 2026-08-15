@@ -780,22 +780,22 @@ SELECT ?rt ?pt WHERE {{ GRAPH <{SENSED_GRAPH}> {{
 
 # --- the board watches the agent's desire (#151) -----------------------------
 
-def test_a_crossing_watcher_is_told_the_region_edges(monkeypatch):
+def test_an_alarmed_channel_is_told_the_region_edges(monkeypatch):
     """The thresholds ride the retained command beside the cadence, and they are DESIRE's
     region edges — the board literally watches what its agent wants held, while both sleep."""
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
     p, s = fern.subscribing(), moisture_sensor(fern)
-    assert s.crossing, "the simulation world promises announce-on-crossing for this device"
+    assert s.alarm, "the simulation world promises announce-on-crossing for this device"
     p.set_cadence(s, 600, None)
-    sent = [c for c in fern.sent.to(s.command_topic) if "watch" in c]
+    sent = [c for c in fern.sent.to(s.command_topic) if "alarm" in c]
     assert sent, "a crossing-watcher must be told its band"
-    watch = sent[-1]["watch"]
+    watch = sent[-1]["alarm"]
     assert watch["/value"] == [pytest.approx(0.45), pytest.approx(0.65)]  # its moisture region
     # and the AIR channel's band rides the same map — per channel, one retained breath
     assert watch["/temperature"] == [pytest.approx(18.0), pytest.approx(24.0)]
 
 
-def test_an_agent_with_no_stake_commands_no_band(monkeypatch, tmp_path):
+def test_an_agent_with_no_stake_commands_no_alarm(monkeypatch, tmp_path):
     """The recording agent wants nothing, so there are no edges to watch — the choir answers
     None and the command carries no thresholds, whatever the device promises."""
     agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
@@ -805,7 +805,7 @@ def test_an_agent_with_no_stake_commands_no_band(monkeypatch, tmp_path):
     assert all("watch" not in c for c in agent.sent.to(s.command_topic))
 
 
-def test_a_crossing_armed_watch_is_live_whatever_the_heartbeat(monkeypatch):
+def test_an_alarm_armed_watch_is_live_whatever_the_heartbeat(monkeypatch):
     """#151 reaching #132: a dose landing crosses the band and the board announces within its
     watch period, so a held claim need not wait for a fast-acked cadence — the promise IS the
     live watch, once the band has actually been sent."""
