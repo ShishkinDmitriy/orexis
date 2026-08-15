@@ -753,3 +753,26 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
     assert len(rows) == 2, "the old keying overwrote one patch's record with the other's"
     # the pot answers with the newest witness among its patches
     assert fern.beliefs.current_reading(fern.me.acts_for, MOISTURE).value == pytest.approx(0.55)
+
+
+def test_a_device_that_speaks_for_itself_lands_in_phenomenon_time(fern):
+    """#101's plumbing, exercised ahead of the first device that uses it: a reading whose
+    device supplied its own instant carries sosa:phenomenonTime beside the arrival-stamped
+    resultTime — when the result applies to the world, as distinct from when we heard."""
+    from datetime import datetime, timedelta, timezone
+
+    from agent.ontology import SENSED_GRAPH
+    from agent.store import bindings
+
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    arrived = datetime.now(timezone.utc)
+    sensed = arrived - timedelta(seconds=42)
+    p.observations.record(p.log, s, 0.41, at=arrived, phenomenon_at=sensed)
+
+    rows = bindings(fern.store.query(f"""
+SELECT ?rt ?pt WHERE {{ GRAPH <{SENSED_GRAPH}> {{
+  ?obs sosa:observedProperty <{MOISTURE}> ;
+       sosa:resultTime ?rt .
+  OPTIONAL {{ ?obs sosa:phenomenonTime ?pt }} }} }}"""))
+    assert rows and rows[0].get("pt"), "the device's own instant was dropped"
+    assert rows[0]["pt"] != rows[0]["rt"], "phenomenonTime must be the device's, not arrival"

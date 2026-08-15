@@ -81,8 +81,23 @@ sensing:ObservationShape a sh:NodeShape ;
     sh:targetClass sosa:Observation ;
     sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:observedProperty ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
-    sh:property [ sh:path sosa:hasSimpleResult ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    # ONE of the two result forms, never neither and never both (#101): the scalar shortcut for
+    # the ordinary reading, or a structured sosa:Result for the reading that is genuinely
+    # multi-component — an accelerometer's axes, wind as speed and direction. Both optional
+    # would be the silent-emptiness failure; the xone is what "may carry a structured result"
+    # must mean here.
+    sh:xone ( [ sh:property [ sh:path sosa:hasSimpleResult ; sh:minCount 1 ; sh:maxCount 1 ;
+                              sh:datatype xsd:decimal ] ;
+                sh:property [ sh:path sosa:hasResult ; sh:maxCount 0 ] ]
+              [ sh:property [ sh:path sosa:hasResult ; sh:minCount 1 ; sh:maxCount 1 ;
+                              sh:nodeKind sh:BlankNodeOrIRI ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:maxCount 0 ] ] ) ;
     sh:property [ sh:path sosa:resultTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    # The instant the result APPLIES TO, where a device supplies its own — a board that
+    # timestamps its readings, or batches ten and sends one message (#101). resultTime keeps
+    # meaning arrival; the two coincide today because no device here speaks for itself yet,
+    # and the first one that does has somewhere honest to land.
+    sh:property [ sh:path sosa:phenomenonTime ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
     sh:property [ sh:path sosa:madeBySensor ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path sosa:usedProcedure ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:class sensing:SenseMode ;
@@ -144,3 +159,9 @@ namespace version.""" ;
     sh:property [ sh:path schema:unitCode ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:in ( unit:SEC qudt11-unit:Second ) ;
                   sh:message "a stated frequency must be in seconds — the derivation reads it as seconds" ] .
+
+sensing:DetectsOnlyStimuliShape a sh:NodeShape ;
+    rdfs:comment "SSN's own restriction — ssn:detects ONLY ssn:Stimulus — restated as a shape because we borrow IRIs and never import the ontology that constrains them (#100). A sensor detecting something that is not a stimulus is a category slip: what it responds to physically and what the society wants known are different ends of the conversion, and the calibration lives between them." ;
+    sh:targetObjectsOf <http://www.w3.org/ns/ssn/detects> ;
+    sh:class <http://www.w3.org/ns/ssn/Stimulus> ;
+    sh:message "what a sensor detects is a stimulus — the physical thing it responds to, which stands in for the property via ssn:isProxyFor" .

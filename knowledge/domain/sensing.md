@@ -288,6 +288,27 @@ That is the sensor access grant made concrete — fern's agent is wired to fern'
 cannot touch tomato's, because the wiring says so and the code follows it. Since each agent
 is its own process, it could not reach another's sensor even if it tried.
 
+# What a stored figure is, and when
+
+Two questions every recorded number answers since #100 and #101, both previously answerable
+only by knowing the code:
+
+**Which of the two ends is it?** The figure in an observation is the **property's** — a
+moisture fraction, a temperature — never the stimulus's. What the probe physically responds to
+is capacitance (`ssn:detects`, entailed from the part), which *stands in for* moisture
+(`ssn:isProxyFor`, the part's own statement); the calibration pair (`probe:rawDry`,
+`probe:rawWet`) are values **of the stimulus**, and the scaling stage is the crossing between
+the two ends. A calibration drifts because the proxy relationship degrades — the capacitance
+stops standing in for the moisture as well as it did — while neither end changed.
+
+**Which instant is it stamped with?** `sosa:resultTime` means **arrival**, always — the honest
+instant an agent with clockless boards has, and the invariant
+[freshness-follows-the-cadence](/decisions/freshness-follows-the-cadence.md) leans on. The day
+a device speaks for itself — timestamps its readings, or batches ten and sends one message —
+its own instant lands in `sosa:phenomenonTime` beside it: *when the result applies to the
+world*, as distinct from when we heard. The two coincide for every device here today, and the
+writer, the shape and this sentence are ready for the first one where they do not.
+
 # Seams left open
 
 - **Sensing is not yet priced.** The payoff of agent-owned attention is that looking costs
