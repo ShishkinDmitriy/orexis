@@ -681,3 +681,75 @@ def test_the_ack_reaches_the_health_series(fern):
     # every sensor sharing the board's channel carries the board's rhythm
     for peer in fern.subscribing()._aimed_with(s):
         assert fern.metrics.cadence_acked_s(peer.local_id) == 600
+
+
+# --- a cadence that could not be sent is not pretended sent (#103) -----------
+
+def test_nothing_is_recorded_for_a_cadence_that_had_no_channel(fern, caplog):
+    """The composition-of-correct-silences, closed at the last link: the driver used to open
+    `if command_topic:` and return having published nothing, and the module then recorded the
+    cadence as in force and logged it — so the agent believed, reported and freshness-judged a
+    rhythm no board was keeping. The shapes refuse the wiring; this is the runtime half."""
+    from dataclasses import replace
+
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    mute = replace(s, command_topic=None)
+    p.sensors = tuple(mute if x.local_id == s.local_id else x for x in p.sensors)
+    p.drivers[mute.uri] = p.drivers[s.uri]
+    with caplog.at_level(logging.WARNING):
+        p.set_cadence(mute, 60, None)
+    assert "no channel" in caplog.text
+    assert mute.local_id not in p.sent_cadence, \
+        "a cadence that never went out must not be recorded as in force"
+
+
+# --- two probes, two patches, two records (#98) ------------------------------
+
+def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
+    """The flicker, ended: the observation is keyed by the PATCH where one is stated, so the
+    second probe stops overwriting the first — and the pot answers with the newest witness
+    across its patches, which is a choice of witness and deliberately not an aggregation."""
+    from datetime import datetime, timedelta, timezone
+
+    from agent.ontology import SENSED_GRAPH, WORLD_GRAPH
+    from agent.store import bindings
+
+    st = genesis_store()
+    st.update(f"""
+        PREFIX ag: <http://example.org/agora#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX sensing: <http://example.org/agora/sensing#>
+        PREFIX mqtt: <http://example.org/agora/mqtt#>
+        PREFIX scaling: <http://example.org/agora/scaling#>
+        PREFIX water: <http://example.org/agora/water#>
+        PREFIX unit: <http://qudt.org/vocab/unit/>
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+            ag:fern_east a sosa:Sample ; sosa:isSampleOf ag:fern .
+            ag:fern_west a sosa:Sample ; sosa:isSampleOf ag:fern .
+            ag:moisture_sensor_fern sensing:samples ag:fern_east .
+            ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
+                mqtt:onBus ag:local_bus ; sensing:senseMode sensing:ScheduledProcedure ;
+                sensing:monitors ag:fern ; sensing:samples ag:fern_west ;
+                sosa:observes water:SoilMoisture ;
+                scaling:quantityUnit unit:UNITLESS ;
+                mqtt:readingTopic "sensors/second_probe_fern/reading" ;
+                mqtt:commandTopic "sensors/second_probe_fern/command" .
+            ag:fern_agent sensing:polls ag:second_probe_fern .
+        }} }} WHERE {{}}""")
+    fern = build_agent("fern", st, monkeypatch)
+    p = fern.subscribing()
+    east = next(s for s in p.sensors if s.local_id == "moisture_sensor_fern")
+    west = next(s for s in p.sensors if s.local_id == "second_probe_fern")
+    assert east.sample and west.sample and east.sample != west.sample
+
+    now = datetime.now(timezone.utc)
+    p.ingest(east, 0.30, now - timedelta(seconds=60))
+    p.ingest(west, 0.55, now)
+
+    rows = bindings(fern.store.query(
+        "SELECT ?obs WHERE { GRAPH <%s> { ?obs a sosa:Observation ; "
+        "sosa:observedProperty <%s> ; sosa:hasSimpleResult ?v } }"
+        % (SENSED_GRAPH, MOISTURE)))
+    assert len(rows) == 2, "the old keying overwrote one patch's record with the other's"
+    # the pot answers with the newest witness among its patches
+    assert fern.beliefs.current_reading(fern.me.acts_for, MOISTURE).value == pytest.approx(0.55)

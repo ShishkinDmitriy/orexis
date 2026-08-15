@@ -250,3 +250,46 @@ def test_a_rained_on_subjects_sensor_may_hear_the_rain():
     _, devices = mqtt_admin.grants("simulation")
     assert ("read", "rain/fern") in devices["moisture_sensor_fern"].grants
     assert ("read", "rain/tomato") in devices["moisture_sensor_tomato"].grants
+
+
+# --- who holds the clock: the device, and nobody else may claim to (#96, #103) -----------------
+
+
+def test_a_sensing_element_claiming_its_own_clock_is_refused():
+    """The disagreement made unrepresentable: air_temp_fern rides its board's wire and has no
+    clock of its own to state. Before #96 it could claim Push while its board claimed Scheduled
+    — one firmware deriving two contradictory capabilities — with no shape spanning them."""
+    assert not _conforms(_mutate_simulation(f"""
+        PREFIX sensing: <http://example.org/agora/sensing#>
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{
+          ag:air_temp_fern sensing:senseMode sensing:PushProcedure }} }} WHERE {{ }}"""))
+
+
+def test_a_speaking_device_that_states_no_clock_is_refused():
+    """Every capability its agents derive follows from the mode — a device without one leaves
+    them silently capability-less, which is the composition-of-correct-silences #103 mapped."""
+    assert not _conforms(_mutate_simulation(f"""
+        PREFIX sensing: <http://example.org/agora/sensing#>
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern sensing:senseMode ?m }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern sensing:senseMode ?m }} }}"""))
+
+
+def test_a_scheduled_device_without_a_command_channel_is_refused():
+    """The claim needs somewhere to be received: accepting an interval is meaningless without a
+    channel to accept it on. The peripheral that used to escape this check cannot exist now —
+    it cannot bear a mode at all — so the device is the whole of the question."""
+    assert not _conforms(_mutate_simulation(f"""
+        PREFIX mqtt: <http://example.org/agora/mqtt#>
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:commandTopic ?c }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:commandTopic ?c }} }}"""))
+
+
+def test_a_peripheral_inherits_its_boards_clock():
+    """The join the whole move rests on: air_temp_fern states no mode and its agent still
+    derives sensing:Subscribing, because the mode is found through the shared stream."""
+    from agent.world import load_self
+    from packages.capability.sensing.terms import SCHEDULED
+
+    fern = load_self(genesis_store(world="simulation").query, "fern")
+    air = next(s for s in fern.sensors if s.local_id == "air_temp_fern")
+    assert air.sense_mode == SCHEDULED

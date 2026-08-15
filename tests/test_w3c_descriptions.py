@@ -170,19 +170,26 @@ def test_the_only_thing_left_refusing_is_their_illustrative_reading(tmp_path):
 
 
 def test_a_vendor_description_alone_is_missing_only_deployment_facts(tmp_path):
-    """Without our overlay, their sensors fail for four reasons and all four are ours to supply.
+    """Without our overlay, their sensors fail for exactly the facts that are ours to supply.
 
     This is the characterisation: it says what a standard description does NOT contain, so that
-    a future change adding a fifth requirement has to come past this test and say so. Every one
-    of these is a fact about *this* deployment that no vendor could know.
+    a future change adding a requirement has to come past this test and say so. Every one of
+    these is a fact about *this* deployment that no vendor could know.
+
+    The clock left this list with #96, and its absence is the assertion now: who holds the
+    clock is the BOARD's fact, demanded of the connecting device by the speaking-device shape —
+    a vendor's channel is not asked how it is driven, because that was never the part's to say.
     """
     data = _world_with(tmp_path, vendor=_repaired("dht22.ttl"))
     ok, report = conforms(data)
     assert not ok
 
-    for expected in ("sensing:monitors", "sosa:observes",
-                     "a sensor must say how it is driven"):
+    for expected in ("sensing:monitors", "sosa:observes"):
         assert expected in report, f"{expected} stopped being required of a deployed sensor"
+    assert "who holds its clock" not in report and "how it is driven" not in report, (
+        "the clock is being demanded of a vendor channel again — it is the device's fact, "
+        "and #96 moved it there"
+    )
 
     #  And NOT for anything about the datasheet. Their frequency is stated in the legacy
     #  schema.org namespace and in QUDT 1.1, and both are understood — see the bridge in

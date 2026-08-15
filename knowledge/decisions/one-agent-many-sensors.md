@@ -25,7 +25,7 @@ the right sensor and each cadence to its own command topic.
 | one agent, two sensors | |
 |---|---|
 | same mode, different subjects | **works**, as above |
-| same mode, same subject, same property | works; they share one record, last writer wins — now warned about |
+| same mode, same subject, same property | works; they share one record, last writer wins — warned about, and curable by a `sosa:Sample` each (#98) |
 | same mode, same subject, **different property** | **fixed** — see below |
 | **different modes** | **fixed** — see below |
 
@@ -101,12 +101,19 @@ market.
 
 Strictly, this case should not arise. A sensor observes a property *of a feature of interest*,
 and two probes in one pot observe different features — the soil by the left wall and the soil by
-the right. Same property, different subject. Modelling it otherwise is under-modelling.
+the right. Same property, different subject. Modelling it otherwise is under-modelling — and the
+word for the right modelling turned out to be SOSA's own, one step past where this paragraph
+used to stop (#98): each patch is a **`sosa:Sample`** of the pot, *"representative of a
+FeatureOfInterest that is not fully accessible"*, which a pot's soil is exactly. A probe may now
+state its patch (`sensing:samples`), the observation is keyed by the patch, and the two records
+both survive; the pot answers with the newest witness among its patches — a choice of witness,
+deliberately not an aggregation.
 
-For a houseplant that strictness is not worth it, and declaring the pot to be one object is a
-legitimate simplification. Keying by subject and property makes it behave sensibly on its own:
-the two sensors share one record and the last writer wins, which is what "these are one object"
-means.
+For a houseplant that strictness is often not worth it, and declaring the pot to be one object
+stays a legitimate simplification: absent a sample, the subject is the feature, the two sensors
+share one record and the last writer wins, which is what "these are one object" means. Someone
+has to JUDGE that two probes sit in two patches rather than one, and no shape can make that
+judgement — which is why the sample is optional and the default is unchanged.
 
 So `agora-validate` says so at **`sh:Warning`** rather than `sh:Violation` — two sensors
 observing one property of one subject may mean two subjects, and the world still conforms. That

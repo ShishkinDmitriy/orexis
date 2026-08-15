@@ -78,6 +78,10 @@ class Sensor:
     # moisture 0.183 and air humidity 0.46 sends two numbers that look identical, and nothing but
     # this says they are the same dimension while 21.4 degrees is not.
     quantity_unit: str | None = None
+    # The PATCH this probe actually sits in, when someone judged the pot's soil not one thing
+    # (#98): a sosa:Sample whose isSampleOf is the subject above. Optional, and its absence is
+    # the ordinary rig — the subject is the feature, and everything reads as it always did.
+    sample: str | None = None
 
 
 @dataclass(frozen=True)
@@ -164,12 +168,17 @@ def _sensors_q(agent_uri: str) -> str:
     about how to reach it varies by transport, and a driver is picked from what is there."""
     return f"""
 SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic
-       ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit
+       ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit ?sample
 WHERE {{
   <{agent_uri}> sensing:polls ?sensor .
   ?sensor ag:localId ?localId ; sensing:monitors ?subject ; sosa:observes ?observes .
-  OPTIONAL {{ ?sensor sensing:senseMode ?senseMode }}
+  # The mode is the DEVICE's (#96), reached through the stream the sensor shares with it —
+  # a peripheral has no clock of its own, and its board's answer is the only answer there is.
+  OPTIONAL {{ ?sensor mqtt:readingTopic ?stream .
+              ?clockKeeper mqtt:readingTopic ?stream ; mqtt:onBus ?anyBus ;
+                           sensing:senseMode ?senseMode }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
+  OPTIONAL {{ ?sensor sensing:samples ?sample }}
   OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
   OPTIONAL {{ ?sensor mqtt:readingTopic ?readingTopic }}
   OPTIONAL {{ ?sensor mqtt:readingPointer ?readingPointer }}
@@ -191,6 +200,7 @@ WHERE {{
   ?actuator ag:localId ?localId ; actuation:actuates ?subject ; mqtt:commandTopic ?commandTopic ;
             actuation:mlPerSecond ?mlPerSecond ; actuation:maxDoseMl ?maxDoseMl .
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
+  OPTIONAL {{ ?sensor sensing:samples ?sample }}
   OPTIONAL {{ ?actuator mqtt:statusTopic ?statusTopic }}
  }}"""
 
@@ -263,6 +273,7 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
             uri=r["sensor"], local_id=r["localId"], subject=r["subject"],
             subject_id=r.get("subjectId") or "", observes=r["observes"],
             sense_mode=r.get("senseMode"),
+            sample=r.get("sample"),
             bus=r.get("bus"), reading_topic=r.get("readingTopic"),
             reading_pointer=r.get("readingPointer"),
             command_topic=r.get("commandTopic"),

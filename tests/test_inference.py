@@ -288,3 +288,23 @@ def test_no_query_walks_a_subclass_path_by_hand(path):
             f"{path.name} walks {walk} by hand. Entailments are materialised at genesis — ask "
             "what a thing IS. If the closure does not cover your case, widen agora/inference.py "
             "rather than working around it here.")
+
+
+def test_hosting_is_entailed_from_the_deployment():
+    """Rule 6 (#99): the wiring states a deployment — which systems, on which platform, from
+    when, for what — and `sosa:hosts` is what SSN's property chain makes of it. The premise is
+    finally in the graph, and the conclusion is computed rather than asserted beside it."""
+    from conftest import genesis_store
+
+    st = genesis_store(world="sensing")
+    rows = bindings(st.query("""
+SELECT ?hosted WHERE { <http://example.org/agora#esp32_fern>
+  <http://www.w3.org/ns/sosa/hosts> ?hosted }"""))
+    hosted = {r["hosted"].rsplit("#", 1)[-1] for r in rows}
+    assert {"moisture_sensor_fern", "status_led_fern", "air_sensor_fern"} <= hosted
+    # and the conclusion sits in the entailed graph, never the asserted wiring
+    from agent.ontology import WORLD_ENTAILED_GRAPH
+    entailed = bindings(st.query(f"""
+SELECT ?hosted WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{
+  <http://example.org/agora#esp32_fern> <http://www.w3.org/ns/sosa/hosts> ?hosted }} }}"""))
+    assert len(entailed) >= 3, "the chain's conclusion must land in world/entailed"

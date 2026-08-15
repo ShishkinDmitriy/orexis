@@ -52,8 +52,15 @@ class Driver:
         """
         raise NotImplementedError
 
-    def set_cadence(self, sensor, sleep_s: int) -> None:
-        """Standing policy. Only meaningful where the device accepts instruction."""
+    def set_cadence(self, sensor, sleep_s: int) -> bool:
+        """Standing policy. Only meaningful where the device accepts instruction.
+
+        Returns whether anything was actually SENT (#103): the caller records the cadence as
+        in force and logs it, and doing that for a publish that never happened is how an agent
+        came to believe, report and re-derive a rhythm no board was keeping — every link
+        locally correct and only the composition a lie.
+        """
+        return False
 
     def sense_now(self, sensor) -> None:
         """Ask for a reading now, best-effort."""

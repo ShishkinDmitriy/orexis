@@ -138,6 +138,26 @@ CLOSURE = (
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?x a ?class }}
                   ?class rdfs:subClassOf ?restriction .
                   ?restriction a owl:Restriction ; owl:onProperty ?p ; owl:hasValue ?v }}""",
+
+    # 6. What a chain of two world statements concludes, where the vocabulary declares the
+    #    chain. The one consumer today is SSN's own axiom for `sosa:hosts` — a platform in a
+    #    deployment that deploys a system HOSTS that system (#99) — restated in
+    #    capabilities/sensing/ontology.ttl because we borrow IRIs and never import ontologies.
+    #    Hosting is what a deployment produces, and asserting the conclusion beside an absent
+    #    premise is the shape of debt this closure exists to retire.
+    #
+    #    TWO links, deliberately, the way rule 5 honours exactly one OWL construct: every chain
+    #    any ontology here states is two long, an n-link walk is a different piece of machinery,
+    #    and a rule that silently handled only part of a longer chain would be worse than one
+    #    that visibly does not try. Both premises must be WORLD statements — a chain across the
+    #    T-Box is not a fact about anyone's bench.
+    f"""INSERT {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?a ?conclusion ?c }} }}
+        {_T_BOX}
+        USING NAMED <{WORLD_GRAPH}>
+        WHERE  {{ ?conclusion owl:propertyChainAxiom ?chain .
+                  ?chain rdf:first ?first ;
+                         rdf:rest [ rdf:first ?second ; rdf:rest rdf:nil ] .
+                  GRAPH <{WORLD_GRAPH}> {{ ?a ?first ?b . ?b ?second ?c }} }}""",
 )
 
 # Emptied before recomputing, because they are a function of the files and not an accumulation.

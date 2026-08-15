@@ -67,7 +67,7 @@ So the vocabulary named an exchange the system does not perform, and hid the one
 **Who holds the clock** is the axis, because it is what changes what the agent must believe —
 which is the standing test for whether something deserves to be a capability.
 
-| capability | `sensing:senseMode` | who runs the timer | the agent states |
+| capability | `sensing:senseMode` (on the DEVICE, since #96) | who runs the timer | the agent states |
 |---|---|---|---|
 | `sensing:Polling` | `sensing:PolledProcedure` | the **agent** — it asks for each reading | an interval, its own |
 | `sensing:Subscribing` | `sensing:ScheduledProcedure` | **shared** — agent sets, device keeps | an interval, the device's |
@@ -141,6 +141,15 @@ subscribing genuinely different things to hold.
 
 # A defect, not a seam: the command-channel guard is on the wrong premise
 
+*(Closed by #96 and #103, and by the mode changing bearers — the account below is kept as the
+anatomy of a composition failure. The mode is stated ONCE per connecting device now, a bearer
+shape refuses it on anything without a connection, and a peripheral therefore cannot claim to
+accept an interval at all: the escape below is unrepresentable rather than guarded against. The
+device that does bear a Scheduled mode is exactly what the transport shape always targeted, so
+the guard's premise and the claim's bearer finally coincide. And the runtime half is honest:
+`set_cadence` reports whether anything was actually sent, and the module records nothing and
+warns when it was not.)*
+
 This record used to claim, in the bullet above, that *"the shapes require an instructable sensor
 to state a command channel."* **They do not, and the sentence has been removed rather than
 softened.** It is a debt with a definition of done, so it belongs in an issue; it is recorded
@@ -173,7 +182,9 @@ claims the sensor, because `MqttDriver.claims` is satisfied by `mqtt:readingTopi
 returns to `SensingModule.set_cadence`, which then unconditionally records `self.sent[key]`
 and `self.sent_cadence[...]` and logs `cadence now Ns`.
 
-So the agent ends up holding, and stating, that it set an interval the board never heard. The
-board keeps its flashed default forever, readings keep arriving on it, and every signal an
-operator has says healthy. The silence is correct in each of the three places it occurs and wrong
-in composition, which is why no single shape or function looks buggy on inspection.
+So the agent ended up holding, and stating, that it set an interval the board never heard. The
+board kept its flashed default forever, readings kept arriving on it, and every signal an
+operator had said healthy. The silence was correct in each of the three places it occurred and
+wrong in composition, which is why no single shape or function looked buggy on inspection — and
+why the close is one unrepresentability plus one honest return value rather than a fourth
+locally-correct check.
