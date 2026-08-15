@@ -211,7 +211,7 @@ def test_a_generated_stand_in_runs_at_the_worlds_pace():
 
     rows = ratified.rows(ratified.dataset("simulation"), _SIMULATED_Q)
     fern_rows = [r for r in rows if r["id"] == "moisture_sensor_fern"]
-    assert fern_rows and fern_rows[0]["scale"] == "24"
+    assert fern_rows and fern_rows[0]["scale"] == "144"
     values = json.loads(_values(fern_rows))
     moisture = next(v for v in values if v["pointer"] == "/value")
     assert moisture.get("dries") == 0.12

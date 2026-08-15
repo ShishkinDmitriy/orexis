@@ -58,7 +58,7 @@ services:
       SIM_READING_TOPIC: "sensors/moisture_sensor_fern/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
-      SIM_VALUES: '[{"pointer":"/temperature","min":-10.0,"max":45.0,"initial":21.0,"drift":-0.05},{"pointer":"/value","min":0.0,"max":1.0,"initial":0.45,"drift":0.02,"litres":2.0}]'
+      SIM_VALUES: '[{"pointer":"/temperature","min":-10.0,"max":45.0,"initial":21.0,"swing":4.0},{"pointer":"/value","min":0.0,"max":1.0,"initial":0.45,"dries":0.12,"litres":2.0}]'
       # sensing:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
       # sensing:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -68,6 +68,8 @@ services:
       SIM_COMMAND_TOPIC: "sensors/moisture_sensor_fern/command"
       SIM_DOSE_TOPIC: "actuators/valve_fern/status"
       SIM_TICK_SECONDS: "3"
+      SIM_TIMESCALE: "24"
+      SIM_RAIN_TOPIC: "rain/fern"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -86,7 +88,7 @@ services:
       SIM_READING_TOPIC: "sensors/moisture_sensor_succulent/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
-      SIM_VALUES: '[{"pointer":"/value","initial":0.45,"drift":0.015,"litres":2.0}]'
+      SIM_VALUES: '[{"pointer":"/value","initial":0.45,"dries":0.04,"litres":2.0}]'
       # sensing:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
       # sensing:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -96,6 +98,8 @@ services:
       SIM_COMMAND_TOPIC: "sensors/moisture_sensor_succulent/command"
       SIM_DOSE_TOPIC: "actuators/valve_succulent/status"
       SIM_TICK_SECONDS: "3"
+      SIM_TIMESCALE: "24"
+      SIM_RAIN_TOPIC: "rain/succulent"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -114,7 +118,7 @@ services:
       SIM_READING_TOPIC: "sensors/moisture_sensor_tomato/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
-      SIM_VALUES: '[{"pointer":"/value","initial":0.45,"drift":0.02,"litres":2.0}]'
+      SIM_VALUES: '[{"pointer":"/value","initial":0.45,"dries":0.2,"litres":2.0}]'
       # sensing:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
       # sensing:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -124,6 +128,8 @@ services:
       SIM_COMMAND_TOPIC: "sensors/moisture_sensor_tomato/command"
       SIM_DOSE_TOPIC: "actuators/valve_tomato/status"
       SIM_TICK_SECONDS: "3"
+      SIM_TIMESCALE: "24"
+      SIM_RAIN_TOPIC: "rain/tomato"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -214,6 +220,21 @@ services:
       # could sign for the society, and then verifying would be theatre.
       - ./secrets/host.pub:/keys/host.pub:ro
       - ./secrets/clearing.pub:/keys/clearing.pub:ro
+
+  sim-meddler:
+    build:
+      context: ../../firmware/simulated-meddler
+    image: agora-meddler:local
+    environment:
+      MEDDLER_TOPICS: '["rain/fern","rain/succulent","rain/tomato"]'
+      MEDDLER_MEAN_DAYS: "2"
+      MEDDLER_TIMESCALE: "24"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1885"
+    env_file:
+      - ./secrets/mqtt-meddler.env
+    network_mode: host
+    restart: unless-stopped
 
   agent-fern:
     image: agora:local
