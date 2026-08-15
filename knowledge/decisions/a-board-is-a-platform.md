@@ -169,3 +169,20 @@ a fact about equipment, and a fact can be worth stating for what it rules out.
 - **Hosting is stated, not enforced by a shape.** A test holds the society and the wiring
   together; nothing refuses a *world* whose sensor is hosted by nothing. That would be a shape,
   and it cannot be written until every world has platforms.
+
+# Amended: hosting is what a deployment produces (#99)
+
+The wiring no longer asserts the board's `sosa:hosts` at all. SSN entails hosting through a
+property chain — a platform **in a deployment** that **deploys a system** hosts that system —
+and we were stating the conclusion with the premise nowhere in the graph. `hardware.ttl` now
+states the premise: `ssn:Deployment`, with the systems, the platform, `prov:startedAtTime` for
+when this board went to this window, and the purpose in prose. The closure's rule 6 (the axiom
+restated in `capabilities/sensing/ontology.ttl`, since we borrow IRIs and never import
+ontologies) entails the hosting, so rewiring means editing the deployment and the hosts follow.
+
+What survives from this record unchanged: the SOCIETY still asserts its own `sosa:hosts`,
+because an agent is never handed the wiring — and `test_layout` now performs the same two-link
+entailment the closure does before holding the two files to agreeing. The deployment is also
+where a powering condition belongs the day #59's conditioned capabilities need resolving:
+*"ten seconds on mains, fifteen minutes on battery"* are both true of a part, and only the
+deployment knows which one this board is living under.
