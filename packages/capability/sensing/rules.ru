@@ -18,6 +18,7 @@
 # question for that transport's shapes, not for this rule.
 
 PREFIX sensing: <http://example.org/agora/sensing#>
+PREFIX mqtt: <http://example.org/agora/mqtt#>
 PREFIX unit: <http://qudt.org/vocab/unit/>
 PREFIX schema: <https://schema.org/>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
@@ -37,16 +38,26 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 #  The answers go to the DERIVED graph. See knowledge/decisions/who-put-the-fact-there.md.
 
 #  Keeps to an interval it is given -> the agent STATES that interval.
+#
+#  The mode is the DEVICE's (#96) — the thing that connects and keeps the clock — and a sensor
+#  reaches it through the stream they share. A device is its own carrier (it states the topic it
+#  speaks on), so the join covers the board itself and every peripheral riding its wire alike.
+#  mqtt terms in a sensing rule, honestly: today the only carrier IS the bus, and the day a
+#  second transport exists, "shares the device's stream" needs a transport-neutral word here.
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability sensing:Subscribing } }
 $given
-WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; sensing:senseMode sensing:ScheduledProcedure } ;
+WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; mqtt:readingTopic ?stream .
+         ?device mqtt:readingTopic ?stream ; mqtt:onBus ?bus ;
+                 sensing:senseMode sensing:ScheduledProcedure } ;
 
 #  Announces on its own clock -> the agent can only RECEIVE, and is never asked for a cadence.
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability sensing:Listening } }
 $given
-WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; sensing:senseMode sensing:PushProcedure } ;
+WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; mqtt:readingTopic ?stream .
+         ?device mqtt:readingTopic ?stream ; mqtt:onBus ?bus ;
+                 sensing:senseMode sensing:PushProcedure } ;
 
 #  What the EQUIPMENT allows, carried from the sensor to the agent that polls it.
 #

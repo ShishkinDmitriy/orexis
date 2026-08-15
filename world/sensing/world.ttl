@@ -125,7 +125,8 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
 
 ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
-    sensing:senseMode sensing:ScheduledProcedure ;
+    #  no senseMode here since #96: the clock is the BOARD's, stated once where it
+    #  connects — this element rides that wire and shares that answer
     sensing:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
@@ -142,7 +143,8 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
 
 ag:air_humidity_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_humidity_fern" ;
-    sensing:senseMode sensing:ScheduledProcedure ;
+    #  no senseMode here since #96: the clock is the BOARD's, stated once where it
+    #  connects — this element rides that wire and shares that answer
     sensing:monitors ag:fern ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1

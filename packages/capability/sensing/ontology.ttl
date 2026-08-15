@@ -117,15 +117,16 @@ sensing:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
 #
 # **The clock procedure is already here — do not add a second one.** Once parts began declaring
 # `ssn:implements` it looked as though something was missing: a board keeps time, and nothing
-# said so. It does say so. These three ARE the clock, differing only in who sets it, and the
-# statement is `sensing:senseMode` on a sensor. What is genuinely missing is that the clock
-# is the BOARD's and the fact sits on each sensor it carries, which is issues #96 and #103 and
-# is deliberately untouched here: hoisting it changes what grants sensing's capability, and
-# a change to that must be made on its own. See
-# knowledge/decisions/a-procedure-belongs-to-whatever-performs-it.md.
+# said so. It does say so. These three ARE the clock, differing only in who sets it — and the
+# statement sits on the DEVICE that keeps it (#96): the thing that connects and sleeps, never
+# the sensing element, which no more holds a clock than a thermometer holds an alarm. A
+# peripheral's mode is its board's, found through the stream they share, so two sensors on one
+# board CANNOT disagree about who holds its clock — the disagreement is unrepresentable rather
+# than refused. See knowledge/decisions/a-procedure-belongs-to-whatever-performs-it.md and
+# knowledge/decisions/who-holds-the-clock.md.
 
 sensing:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
-    rdfs:comment "The class exists for the count: `sensing:SensorShape` asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .
+    rdfs:comment "The class exists for the count: the speaking-device shape asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .
 
 sensing:PolledProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Polled procedure" ;
     rdfs:comment "Always reachable, and answers each request: ask, and it reads and replies. Gives sensing:Polling. A board that deep-sleeps is NOT this, however it is asked — it cannot hear the request. RESERVED alongside sensing:Polling: no rule maps it yet." .
@@ -136,8 +137,9 @@ sensing:ScheduledProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Sc
 sensing:PushProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Push procedure" ;
     rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives sensing:Listening. The edge holds the policy, and no agent can take it back." .
 
-sensing:senseMode a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range sensing:SenseMode ;
-    rdfs:label "sense mode" .
+sensing:senseMode a owl:ObjectProperty ; rdfs:domain <http://example.org/agora#Device> ; rdfs:range sensing:SenseMode ;
+    rdfs:label "sense mode" ;
+    rdfs:comment "Whose fact this is decided #96: the DEVICE's — the board that sleeps, wakes and keeps the interval — never the sensing element's. Three sensors on one board used to state it three times with no shape spanning them, so one could claim Scheduled while its neighbour claimed Push: a physical impossibility that would have derived both Subscribing and Listening for one agent from one firmware. Stated once on the connecting device now, and a bearer shape (transport/mqtt) refuses it anywhere else." .
 
 #################  Attention — the agent's private policy  #################
 

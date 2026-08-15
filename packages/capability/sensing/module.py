@@ -548,7 +548,15 @@ class SubscribingModule(SensingModule):
         driver = self.drivers[sensor.uri]
         if driver is None:
             return
-        driver.set_cadence(sensor, sleep_s, verdict)
+        if not driver.set_cadence(sensor, sleep_s, verdict):
+            # Nothing went out, so nothing is recorded and nothing is claimed (#103): an agent
+            # that logged "cadence now Ns" over an unsendable instruction believed, reported
+            # and freshness-judged a rhythm no board was keeping — every link locally correct,
+            # only the composition a lie. The shapes refuse the wiring that reaches here; this
+            # is the runtime half, for the world that validated before they did.
+            self.log.warning("%s: keeps a schedule but states no channel to be told one — "
+                             "it runs whatever it was flashed with", sensor.local_id)
+            return
         # A release that repeats the standing answer is the ordinary heartbeat now, not news —
         # info only when something moved, or the log would restate the cadence every reading.
         changed = self.sent_cadence.get(sensor.local_id) != sleep_s

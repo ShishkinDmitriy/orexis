@@ -33,12 +33,10 @@ sensing:PerceivingAgentShape a sh:NodeShape ;
                   sh:message "a perceiving agent must say how stale a reading may be before it stops trusting it" ] .
 
 sensing:SensorShape a sh:NodeShape ;
-    rdfs:comment "A sensor reads exactly one subject, says which property it observes, and states how it is driven — because its agent's capability is derived from that." ;
+    rdfs:comment "A sensor reads exactly one subject and says which property it observes. How it is DRIVEN is no longer its fact to state (#96): the clock is the device's, demanded of every speaking device by the transport's shapes, and a sensor reaches its mode through the stream it shares with its board." ;
     sh:targetClass sosa:Sensor ;
     sh:property [ sh:path sensing:monitors ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
-    sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
-    sh:property [ sh:path sensing:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class sensing:SenseMode ;
-                  sh:message "a sensor must say how it is driven — its agent's capability follows from it" ] .
+    sh:property [ sh:path sosa:observes ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .
 
 sensing:DoubleCoveredPropertyShape a sh:NodeShape ;
     rdfs:comment "Two sensors reading the SAME property of the SAME subject. A Warning and not a Violation, because it is a legitimate rig — two probes at opposite ends of one pot are one feature of interest measured twice — and the behaviour is defined: they share one observation node and the last writer wins. It is flagged because the other reading of it is a modelling slip: strictly, two probes in different soil observe different features of interest, and saying so gives each its own record instead of a value that flickers between them. Different properties of one subject are ordinary and silent; that is the case this shape must not catch, and why it tests the property and not just the subject." ;

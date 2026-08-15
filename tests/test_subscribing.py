@@ -681,3 +681,23 @@ def test_the_ack_reaches_the_health_series(fern):
     # every sensor sharing the board's channel carries the board's rhythm
     for peer in fern.subscribing()._aimed_with(s):
         assert fern.metrics.cadence_acked_s(peer.local_id) == 600
+
+
+# --- a cadence that could not be sent is not pretended sent (#103) -----------
+
+def test_nothing_is_recorded_for_a_cadence_that_had_no_channel(fern, caplog):
+    """The composition-of-correct-silences, closed at the last link: the driver used to open
+    `if command_topic:` and return having published nothing, and the module then recorded the
+    cadence as in force and logged it — so the agent believed, reported and freshness-judged a
+    rhythm no board was keeping. The shapes refuse the wiring; this is the runtime half."""
+    from dataclasses import replace
+
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    mute = replace(s, command_topic=None)
+    p.sensors = tuple(mute if x.local_id == s.local_id else x for x in p.sensors)
+    p.drivers[mute.uri] = p.drivers[s.uri]
+    with caplog.at_level(logging.WARNING):
+        p.set_cadence(mute, 60, None)
+    assert "no channel" in caplog.text
+    assert mute.local_id not in p.sent_cadence, \
+        "a cadence that never went out must not be recorded as in force"

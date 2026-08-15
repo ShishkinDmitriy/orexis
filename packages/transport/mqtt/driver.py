@@ -83,7 +83,7 @@ class MqttDriver(Driver):
         except (PointerError, TypeError, ValueError):
             return None
 
-    def set_cadence(self, sensor, sleep_s: int, verdict: dict | None = None) -> None:
+    def set_cadence(self, sensor, sleep_s: int, verdict: dict | None = None) -> bool:
         """The standing instruction, and whatever the agent wants its device to show.
 
         One retained message rather than two, and the same one that was already being sent —
@@ -95,9 +95,11 @@ class MqttDriver(Driver):
         The verdict is opaque here. Sensing collects it from whichever module holds a stake
         and passes it through; this driver never learns what a band is.
         """
-        if sensor.command_topic:
-            self.publish(sensor.command_topic,
-                         {"sleep_s": int(sleep_s), **(verdict or {})}, True)
+        if not sensor.command_topic:
+            return False  # nothing was sent, and the caller must not pretend otherwise (#103)
+        self.publish(sensor.command_topic,
+                     {"sleep_s": int(sleep_s), **(verdict or {})}, True)
+        return True
 
     def sense_now(self, sensor) -> None:
         if sensor.command_topic:

@@ -257,7 +257,7 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
 #  ag:DeviceModelShape had to stop making.
 ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
-    sensing:senseMode sensing:ScheduledProcedure ;
+    #  no senseMode since #96: the clock is the device's, stated once where it connects
     sensing:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction

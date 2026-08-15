@@ -28,8 +28,26 @@ mqtt:MqttSensorShape a sh:NodeShape ;
         """ ] ;
     sh:property [ sh:path mqtt:readingTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
 
+mqtt:SenseModeBearerShape a sh:NodeShape ;
+    rdfs:comment "A sense mode describes the thing that keeps the clock and connects — a board, never a sensing element (#96). A peripheral stating its own mode was three copies of one fact with no shape spanning them, and two copies that disagreed would have derived two contradictory capabilities from one firmware. Refusing every bearer without a connection makes the disagreement unrepresentable: one device, one mode (the count on the speaking-device shape), and every sensor on its wire shares it." ;
+    sh:targetSubjectsOf sensing:senseMode ;
+    sh:property [ sh:path mqtt:onBus ; sh:minCount 1 ;
+                  sh:message "a sense mode belongs to the device that keeps the clock and connects — a sensing element has no clock to hold" ] .
+
+mqtt:SpeakingDeviceShape a sh:NodeShape ;
+    rdfs:comment "Every device that publishes readings states exactly one sense mode — the capability its agents derive follows from it, and a speaking device with no stated clock leaves them silently capability-less (#103's other half). Targets what connects AND reads; a valve connects and reports status but reads nothing, and correctly states no mode." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/agora/mqtt#onBus> ?bus ;
+                      <http://example.org/agora/mqtt#readingTopic> ?stream .
+            }
+        """ ] ;
+    sh:property [ sh:path sensing:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class sensing:SenseMode ;
+                  sh:message "a device that publishes readings must say who holds its clock — every capability its agents derive follows from it" ] .
+
 mqtt:InstructableSensorShape a sh:NodeShape ;
-    rdfs:comment "Only a device that accepts instruction has a command channel. Stating one for a self-clocked board would be a lie about the hardware — and stating none for a board that DOES take instruction makes it undrivable, so its agent would silently get no capability at all. Both instructable modes are covered: sensing:PolledProcedure takes a request, sensing:ScheduledProcedure takes an interval, and neither can be reached without a channel to say it on." ;
+    rdfs:comment "Only a device that accepts instruction has a command channel. Stating one for a self-clocked board would be a lie about the hardware — and stating none for a board that DOES take instruction makes it undrivable, so its agent would silently get no capability at all. Both instructable modes are covered: sensing:PolledProcedure takes a request, sensing:ScheduledProcedure takes an interval, and neither can be reached without a channel to say it on. Since #96 the mode sits ONLY on connecting devices, so the peripheral that used to escape this check (#103's measured table) cannot exist: a sensing element cannot claim to accept an interval at all, and its board cannot claim one without the channel demanded here." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {

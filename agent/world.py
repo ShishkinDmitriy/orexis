@@ -168,7 +168,11 @@ SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTo
 WHERE {{
   <{agent_uri}> sensing:polls ?sensor .
   ?sensor ag:localId ?localId ; sensing:monitors ?subject ; sosa:observes ?observes .
-  OPTIONAL {{ ?sensor sensing:senseMode ?senseMode }}
+  # The mode is the DEVICE's (#96), reached through the stream the sensor shares with it —
+  # a peripheral has no clock of its own, and its board's answer is the only answer there is.
+  OPTIONAL {{ ?sensor mqtt:readingTopic ?stream .
+              ?clockKeeper mqtt:readingTopic ?stream ; mqtt:onBus ?anyBus ;
+                           sensing:senseMode ?senseMode }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
   OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
   OPTIONAL {{ ?sensor mqtt:readingTopic ?readingTopic }}
