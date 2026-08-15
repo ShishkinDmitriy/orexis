@@ -329,7 +329,7 @@ def test_a_push_device_takes_no_release_because_it_never_waits():
 def test_commanded_alarm_limits_arm_the_watch():
     device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
     _command(device, {"sleep_s": 600, "alarm": {"/value": [0.4, 0.6]}})
-    assert device.alarm == {"/value": (0.4, 0.6)}
+    assert device.alarm == {"/value": (0.4, 0.6, None)}
     assert not device._alarmed(), "0.45 sits inside the band"
 
 
@@ -389,7 +389,7 @@ def test_a_push_sentinel_holds_alarm_limits_baked_at_flash():
     receipt."""
     device, published = _device([MOISTURE], SIM_SENSE_MODE="push",
                                 SIM_ALARM='{"/value": [0.4, 0.6]}')
-    assert device.alarm == {"/value": (0.4, 0.6)}
+    assert device.alarm == {"/value": (0.4, 0.6, None)}
     device._receive(600)   # a stranger's watering: 0.45 -> 0.75, past the ceiling
     assert device._alarmed(), "the sentinel must see the water"
     device._woke_by_alarm = True
@@ -404,3 +404,25 @@ def test_a_scheduled_device_ignores_baked_alarm_limits():
     reading both would let the two sources disagree about one watch."""
     device, _ = _device([MOISTURE], SIM_ALARM='{"/value": [0.4, 0.6]}')
     assert device.alarm == {}
+
+
+def test_a_jolt_inside_the_band_is_an_alarm_too():
+    """The deviation half (#151's 'configurable delta'): a stranger waters a COMFORTABLE pot —
+    0.45 to 0.55 never leaves the band, and the move itself is the news. Process control calls
+    this the deviation alarm, and it rides the same watch as the HI/LO one."""
+    device, published = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"sleep_s": 3600, "alarm": {"/value": [0.2, 0.9, 0.05]}})
+    device._publish()                       # the report the deviation measures from (0.45)
+    assert not device._alarmed(), "nothing has moved yet"
+    device._receive(200)                    # +0.10: well inside the band, twice the delta
+    assert device._alarmed(), "an in-band jolt past the delta must wake the board"
+
+
+def test_slow_drift_inside_the_band_stays_silent():
+    """The other half of the same limit: ordinary drying between heartbeats moves less than
+    the delta, and a deviation alarm that woke for it would just be a second heartbeat."""
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"alarm": {"/value": [0.2, 0.9, 0.05]}})
+    device._publish()
+    device.values[0].value -= 0.02          # a heartbeat's worth of drying
+    assert not device._alarmed()

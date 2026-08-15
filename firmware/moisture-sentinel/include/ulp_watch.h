@@ -6,3 +6,4 @@
 
 void armUlpWatch();
 bool wokeByAlarm();
+void noteReported(float frac);   // the deviation limit drifts from what was last heard

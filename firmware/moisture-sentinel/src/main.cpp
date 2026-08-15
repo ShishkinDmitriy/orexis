@@ -117,6 +117,7 @@ void setup() {
                  lastFrac, SENSOR_ID);
       }
       bool sent = mqtt.publish(MOISTURE_TOPIC, payload);
+      if (sent) noteReported(lastFrac);
       Serial.printf("%s %s   %s\n", MOISTURE_TOPIC, payload, sent ? "sent" : "REFUSED");
       mqtt.disconnect();
     }

@@ -54,9 +54,10 @@ from .terms import LISTENING, PUSH, SCHEDULED, SUBSCRIBING
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future sensing inherits them.
 _BOUNDS_Q = """
-SELECT ?min ?max ?relax WHERE {
+SELECT ?min ?max ?relax ?deltaFrac WHERE {
   GRAPH ?g { sensing:SensingCapability sensing:minSleepS ?min ; sensing:maxSleepS ?max .
-             OPTIONAL { sensing:SensingCapability sensing:relaxFactor ?relax } }
+             OPTIONAL { sensing:SensingCapability sensing:relaxFactor ?relax }
+             OPTIONAL { sensing:SensingCapability sensing:alarmDeltaFraction ?deltaFrac } }
 } LIMIT 1"""
 
 
@@ -326,6 +327,7 @@ class SubscribingModule(SensingModule):
         # A relax factor at or below 1 could never release at all, which is a vocabulary slip
         # and not a policy anyone can mean; treated as "no slew" rather than as a frozen board.
         relax = float(rows[0].get("relax") or 0.0)
+        self.alarm_delta_fraction = float(rows[0].get("deltaFrac") or 0.0)
         return int(rows[0]["min"]), int(rows[0]["max"]), relax if relax > 1.0 else 0.0
 
     def start(self) -> None:
@@ -563,8 +565,14 @@ class SubscribingModule(SensingModule):
                 continue
             held = self.agent.bounds(peer.subject, peer.observes)
             if held is not None:
-                alarm[peer.reading_pointer or "/value"] = [round(held[0], 3),
-                                                           round(held[1], 3)]
+                limits = [round(held[0], 3), round(held[1], 3)]
+                # The DEVIATION half: a move of more than this since the board's last report is
+                # worth waking for even INSIDE the band — the stranger watering a comfortable
+                # pot, the leak still in-range. The board arms the intersection of the band and
+                # last±delta, so this costs it nothing but arithmetic.
+                if self.alarm_delta_fraction > 0:
+                    limits.append(round(self.alarm_delta_fraction * (held[1] - held[0]), 3))
+                alarm[peer.reading_pointer or "/value"] = limits
         if alarm:
             verdict = {**(verdict or {}), "alarm": alarm}
 

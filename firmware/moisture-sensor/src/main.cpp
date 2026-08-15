@@ -316,6 +316,7 @@ static void publishReading() {
     snprintf(payload + n, sizeof(payload) - n, "}");
   }
   published = mqtt.publish(MOISTURE_TOPIC, payload);
+  if (published) noteReported(lastFrac);   // the deviation limit drifts from what was HEARD
   Serial.printf("%s %s   %s\n", MOISTURE_TOPIC, payload,
                 published ? "sent" : "REFUSED by the broker — check the ACL for this topic");
 }
@@ -330,9 +331,14 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
   // {"watch":{"/value":[0.45,0.65],...}}. This board takes exactly its MOISTURE channel's —
   // the one its ULP can physically reach — and ignores the rest: the DHT hangs off a protocol
   // the ULP cannot speak, which is why the world only states the promise per channel.
-  if (doc["alarm"]["/moisture"].is<JsonArray>() && doc["alarm"]["/moisture"].size() == 2) {
+  if (doc["alarm"]["/moisture"].is<JsonArray>() && doc["alarm"]["/moisture"].size() >= 2) {
     rtc_wake_below = doc["alarm"]["/moisture"][0].as<float>();
     rtc_wake_above = doc["alarm"]["/moisture"][1].as<float>();
+    // The optional third element is the DEVIATION limit: wake if the value moves more than
+    // this from the last report, band or no band — the in-band jolt the heartbeat would
+    // otherwise sleep through. Negative means none commanded.
+    rtc_wake_delta = doc["alarm"]["/moisture"].size() > 2
+                         ? doc["alarm"]["/moisture"][2].as<float>() : -1.0f;
   }
 #endif
   if (doc["sleep_s"].is<uint32_t>()) {

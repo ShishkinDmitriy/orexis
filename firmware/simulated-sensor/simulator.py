@@ -226,7 +226,8 @@ class SimulatedSensor:
         # device that takes no orders can still keep a promise the world wrote. A scheduled
         # device ignores this and is commanded instead.
         if self.mode == "push" and os.environ.get("SIM_ALARM"):
-            self.alarm = {str(ptr): (float(band[0]), float(band[1]))
+            self.alarm = {str(ptr): (float(band[0]), float(band[1]),
+                                     float(band[2]) if len(band) > 2 else None)
                           for ptr, band in json.loads(os.environ["SIM_ALARM"]).items()}
 
         # Measurement error — a property of this firmware's fidelity, like LED_BRIGHTNESS on
@@ -291,9 +292,13 @@ class SimulatedSensor:
         if self.mode == "push":
             return
         if isinstance(doc.get("alarm"), dict):
-            self.alarm = {str(pointer): (float(band[0]), float(band[1]))
+            # [low, high] or [low, high, delta] — the optional third element is the DEVIATION
+            # limit: how far the value may drift from the last REPORT before that alone is
+            # worth waking for, band or no band.
+            self.alarm = {str(pointer): (float(band[0]), float(band[1]),
+                                         float(band[2]) if len(band) > 2 else None)
                           for pointer, band in doc["alarm"].items()
-                          if isinstance(band, (list, tuple)) and len(band) == 2}
+                          if isinstance(band, (list, tuple)) and len(band) >= 2}
         if isinstance(doc.get("sleep_s"), (int, float)):
             asked = float(doc["sleep_s"])
             self.sleep_s = max(self.min_sleep_s, min(self.max_sleep_s, asked))
@@ -328,6 +333,7 @@ class SimulatedSensor:
         sim_time = time.time() * self.timescale
         for v in self.values:
             true = v.read(sim_time)
+            v.last_reported = true   # what the deviation limit measures drift FROM
             span = v.max - v.min
             reported = true + self.rng.gauss(0.0, self.noise_span * span)
             if self.rng.random() < self.spike_chance:
@@ -426,11 +432,14 @@ class SimulatedSensor:
             v.advance(dt)
 
     def _alarmed(self) -> bool:
-        """Whether ANY watched value sits outside its commanded band right now.
+        """Whether ANY watched value has left its band OR jolted since its last report.
 
-        The TRUE values, not the reported ones: a real ULP compares the ADC, and the grain and
-        the spikes are properties of the REPORT (#163) — a board that woke for its own
-        measurement noise would be a boy crying wolf at his own echo.
+        Two limits per channel, exactly as a process alarm has always had them: HI/LO (the
+        band) and DEVIATION (more than delta from the last reported value — the stranger
+        watering a comfortable pot, the leak still in-range). The TRUE values, not the
+        reported ones: a real ULP compares the ADC, and the grain and the spikes are
+        properties of the REPORT (#163) — a board that woke for its own measurement noise
+        would be a boy crying wolf at his own echo.
         """
         if not self.alarm:
             return False
@@ -441,6 +450,9 @@ class SimulatedSensor:
                 continue
             now = value.read(sim_time)
             if now < band[0] or now > band[1]:
+                return True
+            last = getattr(value, "last_reported", None)
+            if band[2] is not None and last is not None and abs(now - last) > band[2]:
                 return True
         return False
 

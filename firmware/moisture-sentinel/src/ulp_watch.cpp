@@ -27,9 +27,23 @@ static uint16_t fracToRaw(float frac) {
   return (uint16_t)raw;
 }
 
+RTC_DATA_ATTR static float rtc_last_reported = -1.0f;
+
+void noteReported(float frac) { rtc_last_reported = frac; }
+
 void armUlpWatch() {
-  RTC_SLOW_MEM[ULP_MEM_HIGH] = fracToRaw(WAKE_BAND_LOW);   // drier than the floor
-  RTC_SLOW_MEM[ULP_MEM_LOW]  = fracToRaw(WAKE_BAND_HIGH);  // wetter than the ceiling
+  // Band ∩ last-report±delta: the deviation alarm (in-band jolts — a stranger's water on a
+  // comfortable pot, a leak still in-range) costs the ULP nothing but this arithmetic.
+  float lo = WAKE_BAND_LOW, hi = WAKE_BAND_HIGH;
+#ifdef WAKE_DELTA
+  if (rtc_last_reported >= 0) {
+    float dlo = rtc_last_reported - WAKE_DELTA, dhi = rtc_last_reported + WAKE_DELTA;
+    if (dlo > lo) lo = dlo;
+    if (dhi < hi) hi = dhi;
+  }
+#endif
+  RTC_SLOW_MEM[ULP_MEM_HIGH] = fracToRaw(lo);   // drier than the tightened floor
+  RTC_SLOW_MEM[ULP_MEM_LOW]  = fracToRaw(hi);   // wetter than the tightened ceiling
 
   adc1_config_width(ADC_WIDTH_BIT_12);
   adc1_config_channel_atten((adc1_channel_t)ULP_ADC_CHANNEL, ADC_ATTEN_DB_11);
@@ -54,8 +68,8 @@ void armUlpWatch() {
   ulp_set_wakeup_period(0, 1000 * 1000);   // the derived period: one look per second
   ulp_run(ULP_PROG_START);
   esp_sleep_enable_ulp_wakeup();
-  Serial.printf("watching %0.3f..%0.3f (counts %u..%u)\n", (float)WAKE_BAND_LOW,
-                (float)WAKE_BAND_HIGH, (unsigned)RTC_SLOW_MEM[ULP_MEM_LOW],
+  Serial.printf("watching %0.3f..%0.3f (counts %u..%u)\n", lo, hi,
+                (unsigned)RTC_SLOW_MEM[ULP_MEM_LOW],
                 (unsigned)RTC_SLOW_MEM[ULP_MEM_HIGH]);
 }
 

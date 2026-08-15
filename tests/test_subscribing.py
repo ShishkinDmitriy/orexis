@@ -790,9 +790,13 @@ def test_an_alarmed_channel_is_told_the_region_edges(monkeypatch):
     sent = [c for c in fern.sent.to(s.command_topic) if "alarm" in c]
     assert sent, "a crossing-watcher must be told its band"
     watch = sent[-1]["alarm"]
-    assert watch["/moisture"] == [pytest.approx(0.45), pytest.approx(0.65)]  # its moisture region
-    # and the AIR channel's band rides the same map — per channel, one retained breath
-    assert watch["/temperature"] == [pytest.approx(18.0), pytest.approx(24.0)]
+    # [low, high, delta]: the band is desire's region, the deviation limit a quarter of its
+    # width (sensing:alarmDeltaFraction) — the in-band jolt that is worth waking for.
+    assert watch["/moisture"] == [pytest.approx(0.45), pytest.approx(0.65),
+                                  pytest.approx(0.05)]
+    # and the AIR channel's limits ride the same map — per channel, one retained breath
+    assert watch["/temperature"] == [pytest.approx(18.0), pytest.approx(24.0),
+                                     pytest.approx(1.5)]
 
 
 def test_an_agent_with_no_stake_commands_no_alarm(monkeypatch, tmp_path):

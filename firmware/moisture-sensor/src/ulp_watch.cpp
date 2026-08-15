@@ -41,6 +41,10 @@
 // wake that hears no fresh command keeps watching the band it was last told.
 RTC_DATA_ATTR float rtc_wake_below = -1.0f;
 RTC_DATA_ATTR float rtc_wake_above = -1.0f;
+RTC_DATA_ATTR float rtc_wake_delta = -1.0f;
+RTC_DATA_ATTR static float rtc_last_reported = -1.0f;
+
+void noteReported(float frac) { rtc_last_reported = frac; }
 
 static uint16_t fracToRaw(float frac) {
   // The probe reads high when dry: frac = (ADC_DRY - raw) / (ADC_DRY - ADC_WET), so the
@@ -52,9 +56,21 @@ static uint16_t fracToRaw(float frac) {
 }
 
 void armUlpWatch() {
-  if (rtc_wake_below < 0 && rtc_wake_above < 0) return;  // nothing commanded; plain schedule
-  uint16_t count_when_too_dry = (rtc_wake_below >= 0) ? fracToRaw(rtc_wake_below) : 4095;
-  uint16_t count_when_too_wet = (rtc_wake_above >= 0) ? fracToRaw(rtc_wake_above) : 0;
+  if (rtc_wake_below < 0 && rtc_wake_above < 0 && rtc_wake_delta < 0)
+    return;  // nothing commanded; plain schedule
+  // The armed window is the INTERSECTION of the band and last-report±delta, so the deviation
+  // alarm costs the ULP nothing: one window, tightened here by arithmetic. Leaving the window
+  // means either the band broke or the value jolted — the agent reads which from the value.
+  float lo = (rtc_wake_below >= 0) ? rtc_wake_below : 0.0f;
+  float hi = (rtc_wake_above >= 0) ? rtc_wake_above : 1.0f;
+  if (rtc_wake_delta >= 0 && rtc_last_reported >= 0) {
+    float dlo = rtc_last_reported - rtc_wake_delta;
+    float dhi = rtc_last_reported + rtc_wake_delta;
+    if (dlo > lo) lo = dlo;
+    if (dhi < hi) hi = dhi;
+  }
+  uint16_t count_when_too_dry = fracToRaw(lo);
+  uint16_t count_when_too_wet = fracToRaw(hi);
   RTC_SLOW_MEM[ULP_MEM_HIGH] = count_when_too_dry;
   RTC_SLOW_MEM[ULP_MEM_LOW]  = count_when_too_wet;
 

@@ -9,6 +9,11 @@
 // "never commanded", and the watch stays unarmed exactly as unflashed firmware would.
 extern float rtc_wake_below;
 extern float rtc_wake_above;
+extern float rtc_wake_delta;   // the deviation limit; negative means none commanded
+
+// Called with the value just PUBLISHED, so the deviation limit measures drift from what the
+// agent last heard rather than from what the board last sampled.
+void noteReported(float frac);
 
 void armUlpWatch();      // load thresholds + program, start the once-a-second look
 bool wokeByAlarm();   // did THIS wake happen because the value moved

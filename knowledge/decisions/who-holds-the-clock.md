@@ -208,6 +208,11 @@ every channel it has. A shape requires the implementing sensor to ride a Schedul
 a command channel, since the bands arrive the way the cadence does — one retained map, a band
 per watched pointer.
 
+The alarm carries process control's BOTH classic limits: HI/LO (the band — desire's region
+edges) and DEVIATION (`sensing:alarmDeltaFraction` of the band's width — an in-band move since
+the last report that is itself the news). The board arms their intersection as one window, so
+the second limit is arithmetic, not machinery.
+
 What the promise buys, mechanically: the thresholds are the agent's region edges (desire's
 `bounds`, collected like urgency), so the board literally watches its agent's desire while both
 sleep; silence between heartbeats means "nothing crossed" — information — and a alarm-armed

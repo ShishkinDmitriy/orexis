@@ -214,6 +214,12 @@ sensing:relaxFactor a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:ra
 sensing:SensingCapability sensing:minSleepS 10 ; sensing:maxSleepS 900 ;
     sensing:relaxFactor 1.5 .
 
+sensing:alarmDeltaFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "alarm delta fraction" ;
+    rdfs:comment "The DEVIATION half of the alarm (#151): besides leaving the band, a watched value that moves by more than this fraction of its band's width since the last report is worth waking for — process control's deviation alarm beside its HI/LO one. It catches what the band alone cannot: a stranger watering a COMFORTABLE pot, or a leak draining fast while still in-range — the in-band event whose first sign the heartbeat would otherwise sleep through. On the family, like the cadence bounds: what this society counts as a jolt is its own to state. The board's window is simply the intersection of the band and last-report±delta, so the watching machinery gains nothing new — only the arithmetic that arms it." .
+
+sensing:SensingCapability sensing:alarmDeltaFraction 0.25 .
+
 #################  What the DEVICE can honour, which is a different question  #################
 #
 # The two figures above are what the society ALLOWS. They say nothing about what a particular
