@@ -20,7 +20,8 @@
 ag:tomato_agent
     sensing:fastSleepS 10 ;
     sensing:slowSleepS 600 ;
-    sensing:readingGraceS 45 .
+    sensing:readingGraceS 45 ;
+    sensing:alarmDeltaFraction 0.25 .  # the jolt threshold — a revisable first pick, like fern's
 
 ##  market:Bidding
 ag:tomato_agent

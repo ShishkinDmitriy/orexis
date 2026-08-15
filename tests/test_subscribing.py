@@ -799,6 +799,51 @@ def test_an_alarmed_channel_is_told_the_region_edges(monkeypatch):
                                      pytest.approx(1.5)]
 
 
+def test_a_repicked_jolt_threshold_rearms_the_watch(monkeypatch):
+    """The whole reason the delta is a belief and not a compile-time figure: a review moves it,
+    the module re-aims, and the corrected threshold reaches the board in the next retained
+    command — being wrong about the estimate costs a message, never a reflash."""
+    from agent.ontology import beliefs_graph
+    from packages.capability.sensing.terms import term as sensing_term
+
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    p.observations.record(p.log, s, 0.55)   # the re-aim needs a reading to re-aim from
+    p.set_cadence(s, 600, None)
+    assert fern.sent.to(s.command_topic)[-1]["alarm"]["/moisture"][2] == pytest.approx(0.05)
+
+    delta = sensing_term("alarmDeltaFraction")
+    fern.store.update(f"""
+DELETE {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}
+INSERT {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> 0.5 }} }}
+WHERE  {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}""")
+    p.on_belief_revised(delta, 0.5)
+
+    # half the 0.45..0.65 band's width now, on the same channel, without a reflash
+    assert fern.sent.to(s.command_topic)[-1]["alarm"]["/moisture"][2] == pytest.approx(0.1)
+
+
+def test_an_agent_with_no_pick_commands_band_only_alarms(monkeypatch):
+    """Absence is a statement, not an error: no jolt threshold means the board watches the
+    band's edges and nothing else — and no figure is invented from the family's default,
+    because a pick must be the agent's own to be revisable."""
+    from packages.capability.sensing.beliefs import ALARM_BLOCK
+    from packages.capability.sensing.module import SubscribingModule
+    from packages.capability.sensing.terms import term as sensing_term
+    from agent.ontology import beliefs_graph
+
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    fern.store.update(f"""
+DELETE WHERE {{ GRAPH <{beliefs_graph(fern.id)}> {{
+  ?a <{sensing_term("alarmDeltaFraction")}> ?old }} }}""")
+    assert fern.beliefs.read_optional(ALARM_BLOCK) is None
+    p = SubscribingModule(fern)
+    s = moisture_sensor(fern)
+    p.set_cadence(s, 600, None)
+    watch = fern.sent.to(s.command_topic)[-1]["alarm"]
+    assert watch["/moisture"] == [pytest.approx(0.45), pytest.approx(0.65)]
+
+
 def test_an_agent_with_no_stake_commands_no_alarm(monkeypatch, tmp_path):
     """The recording agent wants nothing, so there are no edges to watch — the choir answers
     None and the command carries no thresholds, whatever the device promises."""

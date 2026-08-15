@@ -91,8 +91,10 @@ terms as the one shipped with it.
 ## A rule is SPARQL, not code
 
 `capabilities/<name>/review.rq`, beside the `rules.ru` that derives the capability itself: one
-revisable term, one `SELECT`, one `?value`. The entire cadence review is eight lines of it, and
-contains no number of its own — thresholds come from the constitution, the range comes from the
+`SELECT`, rows of `?term ?value` — one row per re-pick, so a package revising two settings ships
+one file with a `UNION` rather than two files (sensing does exactly that: the cadence and the
+jolt threshold, read off the same evidence window the opposite way round). The rule contains no
+number of its own — thresholds come from the constitution, the range comes from the
 reviewer, and the evidence is statistics computable without knowing what a property means.
 
 It can read the evidence, the beliefs and the T-Box and do nothing else. A `SELECT` cannot write,
@@ -234,7 +236,8 @@ choice.
 
 - **No device states a sensor constraint.** The third source of room is declared and intersected
   and nothing uses it. It is real the moment a board says what interval it can honour.
-- **Only `sensing:slowSleepS` is reviewable.** Instruments only, deliberately. An agent revising what
+- **Only instrument settings are reviewable** — `sensing:slowSleepS` and, since the jolt threshold
+  became a pick, `sensing:alarmDeltaFraction`. Instruments only, deliberately. An agent revising what
   it *wants* — a target, a band, a price — is a much larger claim than one revising how often it
   looks: it could satisfy itself by wanting less, which is the failure the band exists to make
   visible. In BDI terms this is just another desire and could be specified properly; it has not

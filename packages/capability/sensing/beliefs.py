@@ -51,6 +51,20 @@ class ListeningBeliefs:
     max_age_s: int
 
 
+@dataclass(frozen=True)
+class AlarmBeliefs:
+    """sensing:alarmDeltaFraction — what this agent counts as a jolt.
+
+    A block of its own rather than a fourth field above, because its ABSENCE is meaningful
+    where a missing cadence is an authoring error: an agent that states no pick commands
+    band-only alarms, and `read_optional` is how a decision said by omission is read. The
+    family's figure in ontology.ttl is deliberately NOT a fallback here — a pick must be the
+    agent's own to be revisable, since a revision rewrites the agent's graph and nothing else.
+    """
+
+    delta_fraction: float
+
+
 SUBSCRIBING_BLOCK = Block(
     capability=SUBSCRIBING,
     cls=SubscribingBeliefs,
@@ -59,6 +73,12 @@ SUBSCRIBING_BLOCK = Block(
         "slow_sleep_s": term("slowSleepS"),
         "grace_s": term("readingGraceS"),
     },
+)
+
+ALARM_BLOCK = Block(
+    capability=SUBSCRIBING,
+    cls=AlarmBeliefs,
+    terms={"delta_fraction": term("alarmDeltaFraction")},
 )
 
 LISTENING_BLOCK = Block(

@@ -26,6 +26,15 @@ AUTHORED = 600.0   # fern's first pick
 COMMITTED = 600.0  # and the floor it commits to
 CEILING = 900.0    # the constitutional ceiling it may relax to
 
+# The second revisable term the same package ships: the jolt threshold. The two rules read one
+# window of evidence the opposite way round — a lively world earns a tight cadence and a COARSE
+# delta, a still one a slow cadence and a FINE delta — so most cases below assert both, as a
+# dict because SPARQL promises no row order.
+DELTA = SENSING + "alarmDeltaFraction"
+DELTA_AUTHORED = 0.25  # fern's first pick — the old family constant, now merely its opinion
+DELTA_FINE = 0.1       # its mandate's floor: what a still world lets it call a jolt
+DELTA_COARSE = 0.5     # its mandate's ceiling: what a lively world makes it call one
+
 
 @pytest.fixture
 def fern(monkeypatch):
@@ -59,6 +68,17 @@ def test_a_revisable_term_is_discovered_from_the_t_box_not_from_python(fern):
 def test_the_world_range_comes_from_the_constitution(fern):
     room = world_ranges(fern.store.query)[SLOW]
     assert (room.floor, room.ceiling) == (10.0, 900.0)
+
+
+def test_the_jolt_threshold_is_revisable_on_the_same_terms(fern):
+    """The second term the sensing package declares, covered by the same machinery with no
+    Python knowing its name: constitution from the family's figures, narrowed by the mandate.
+    Revisable because the first 0.25 was an estimate measured on nothing, and correcting an
+    estimate must cost a retained command, never a reflash."""
+    room = world_ranges(fern.store.query)[DELTA]
+    assert (room.floor, room.ceiling) == (0.05, 0.5)
+    narrowed = fern.reviewing().ranges()[DELTA]
+    assert (narrowed.floor, narrowed.ceiling) == (DELTA_FINE, DELTA_COARSE)
 
 
 def test_the_agents_own_commitment_narrows_it(fern):
@@ -140,21 +160,27 @@ def test_a_thin_window_proposes_nothing(fern):
     assert fern.reviewing().proposals() == []
 
 
-def test_a_steady_probe_relaxes_toward_the_ceiling(fern):
+def test_a_steady_probe_relaxes_the_cadence_and_sharpens_the_jolt(fern):
+    """The trade: nothing is happening, so the board may sleep — and precisely because it
+    sleeps, the ULP watch is the only watcher left, and a fine delta there costs nothing."""
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
-    assert fern.reviewing().proposals() == [(SLOW, CEILING)]
+    assert dict(fern.reviewing().proposals()) == {SLOW: CEILING, DELTA: DELTA_FINE}
 
 
 def test_a_frozen_probe_tightens_instead_of_relaxing(fern):
     """The case the obvious rule gets exactly backwards: an instrument that has not moved to the
-    last bit is likelier broken than the world it measures is perfectly still."""
+    last bit is likelier broken than the world it measures is perfectly still. The delta takes
+    the floor with the still case — a flat line fires no delta whatever its size, and if the
+    instrument revives with a jolt, the fine threshold reports it at once."""
     feed(fern, [0.412] * (window(fern) + 2))
-    assert fern.reviewing().proposals() == [(SLOW, COMMITTED)]
+    assert dict(fern.reviewing().proposals()) == {SLOW: COMMITTED, DELTA: DELTA_FINE}
 
 
-def test_a_moving_probe_tightens(fern):
+def test_a_moving_probe_tightens_the_cadence_and_coarsens_the_jolt(fern):
+    """The trade, the other way: the tight cadence already carries the news, so a fine delta
+    would only spend the battery announcing routine liveliness."""
     feed(fern, [0.3, 0.7] * (window(fern) // 2 + 1))
-    assert fern.reviewing().proposals() == [(SLOW, COMMITTED)]
+    assert dict(fern.reviewing().proposals()) == {SLOW: COMMITTED, DELTA: DELTA_COARSE}
 
 
 # --- the asymmetry, tested on the rule's own aggregation ---------------------------------------
@@ -175,19 +201,21 @@ def _evidence(agent, spreads):
 
 def test_relaxing_needs_every_sensor_to_agree(fern):
     _evidence(fern, [0.001, 0.001])
-    assert fern.reviewing().proposals() == [(SLOW, CEILING)]
+    assert dict(fern.reviewing().proposals()) == {SLOW: CEILING, DELTA: DELTA_FINE}
 
 
 def test_one_moving_sensor_is_enough_to_tighten(fern):
     """The cost of watching a still pot too closely is some battery; the cost of the reverse is
-    a dead plant. So relaxing needs unanimity and tightening needs one dissenter."""
+    a dead plant. So relaxing needs unanimity and tightening needs one dissenter — and the SAME
+    dissenter coarsens the jolt threshold, because the delta is the agent's and one twitchy
+    channel wakes the whole board."""
     _evidence(fern, [0.001, 0.9])
-    assert fern.reviewing().proposals() == [(SLOW, COMMITTED)]
+    assert dict(fern.reviewing().proposals()) == {SLOW: COMMITTED, DELTA: DELTA_COARSE}
 
 
 def test_one_frozen_sensor_is_enough_to_tighten(fern):
     _evidence(fern, [0.001, 0.0])
-    assert fern.reviewing().proposals() == [(SLOW, COMMITTED)]
+    assert dict(fern.reviewing().proposals()) == {SLOW: COMMITTED, DELTA: DELTA_FINE}
 
 
 # --- applying, refusing, reverting -------------------------------------------------------------
@@ -195,13 +223,17 @@ def test_one_frozen_sensor_is_enough_to_tighten(fern):
 def test_a_revision_moves_the_belief_and_the_module_takes_it_up(fern):
     subscribing = fern.subscribing()
     assert subscribing.beliefs.slow_sleep_s == AUTHORED
+    assert subscribing.alarm_beliefs.delta_fraction == DELTA_AUTHORED
 
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     fern.reviewing().review()
 
     assert fern.reviewing().current(SLOW) == CEILING
-    # Re-read, not patched: the module holds a frozen dataclass and must have refreshed it.
+    assert fern.reviewing().current(DELTA) == DELTA_FINE
+    # Re-read, not patched: the module holds a frozen dataclass and must have refreshed it —
+    # both of them, since one arising settled both terms.
     assert subscribing.beliefs.slow_sleep_s == CEILING
+    assert subscribing.alarm_beliefs.delta_fraction == DELTA_FINE
 
 
 def test_a_value_outside_the_range_is_refused_not_clamped(fern):
@@ -229,30 +261,32 @@ def test_a_revision_the_shapes_refuse_is_put_back(fern):
 
 def test_a_decision_to_change_nothing_is_recorded(fern):
     """Without it the same question is re-argued at every arising, and the agent can never
-    notice it has declined eleven times and the problem is elsewhere."""
-    feed(fern, [0.412] * (window(fern) + 2))  # frozen -> proposes what it already holds
+    notice it has declined eleven times and the problem is elsewhere. The frozen probe holds
+    the cadence it proposes (declined) while the jolt threshold moves to the floor (taken) —
+    one arising, two terms, two different outcomes on the record."""
+    feed(fern, [0.412] * (window(fern) + 2))  # frozen -> the cadence rule proposes what it holds
     fern.reviewing().review()
     assert fern.reviewing().declined == 1
-    assert [r["outcome"] for r in _decisions(fern)] == ["declined"]
+    assert {r["term"]: r["outcome"] for r in _decisions(fern)} == {
+        SLOW: "declined", DELTA: "taken"}
 
 
 def test_a_settled_term_is_not_re_argued_before_it_is_due(fern):
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     fern.reviewing().review()
     taken = fern.reviewing().revisions
-    assert taken == 1
+    assert taken == 2  # one arising settled both terms
 
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     fern.reviewing().review()
     assert fern.reviewing().revisions == taken  # still due later, so nothing was re-decided
-    assert len(_decisions(fern)) == 1
+    assert len(_decisions(fern)) == 2
 
 
 def test_every_decision_says_why_and_when_to_look_again(fern):
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     fern.reviewing().review()
-    recorded = _decisions(fern)[0]
-    assert recorded["term"] == SLOW
+    recorded = {r["term"]: r for r in _decisions(fern)}[SLOW]
     assert float(recorded["from"]) == AUTHORED and float(recorded["to"]) == CEILING
     assert recorded["why"] and recorded["due"] > recorded["at"]
 
@@ -424,9 +458,11 @@ def test_the_report_says_toward_what_not_merely_that(fern):
     surface, and the only evidence a range was mis-authored is what agents do inside it."""
     reviewing = fern.reviewing()
     assert reviewing.reports()["picked_sensing_slowSleepS"] == AUTHORED
+    assert reviewing.reports()["picked_sensing_alarmDeltaFraction"] == DELTA_AUTHORED
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     reviewing.review()
     assert reviewing.reports()["picked_sensing_slowSleepS"] == CEILING
+    assert reviewing.reports()["picked_sensing_alarmDeltaFraction"] == DELTA_FINE
 
 
 def test_a_taken_revision_is_a_marker_over_the_series(fern):
@@ -436,19 +472,23 @@ def test_a_taken_revision_is_a_marker_over_the_series(fern):
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     fern.reviewing().review()
     events = fern.metrics.take_events()
-    assert [(kind, tags) for _, kind, _, tags in events] == [
-        ("belief-taken", {"term": "slowSleepS"})]
-    assert "600" in events[0][2] and "900" in events[0][2]
+    assert {(kind, tags["term"]) for _, kind, _, tags in events} == {
+        ("belief-taken", "slowSleepS"), ("belief-taken", "alarmDeltaFraction")}
+    slow = next(text for _, _, text, tags in events if tags["term"] == "slowSleepS")
+    assert "600" in slow and "900" in slow
 
 
 def test_a_decline_is_counted_but_never_a_marker(fern):
     """Declining is the routine outcome of most arisings — a marker per arising would bury
-    the markers that mean something, and the count is the right voice for the routine."""
+    the markers that mean something, and the count is the right voice for the routine. The
+    frozen window declines the cadence and takes the jolt threshold, and only the taken one
+    leaves a mark."""
     fern.metrics.take_events()
     feed(fern, [0.412] * (window(fern) + 2))
     fern.reviewing().review()
     assert fern.reviewing().declined == 1
-    assert fern.metrics.take_events() == []
+    assert [(kind, tags) for _, kind, _, tags in fern.metrics.take_events()] == [
+        ("belief-taken", {"term": "alarmDeltaFraction"})]
 
 
 def test_a_refusal_is_a_marker_because_it_is_a_bug_signal(fern):

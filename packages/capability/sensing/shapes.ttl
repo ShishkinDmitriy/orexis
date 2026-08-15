@@ -120,7 +120,10 @@ sensing:SubscribingAgentShape a sh:NodeShape ;
                   sh:message "the fast interval must be within the constitutional bounds and no slower than the slow one" ] ;
     sh:property [ sh:path sensing:slowSleepS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 10 ; sh:maxInclusive 900 ;
-                  sh:message "no agent may sleep past the constitutional ceiling — autonomy over attention, never the freedom to sleep through a drought" ] .
+                  sh:message "no agent may sleep past the constitutional ceiling — autonomy over attention, never the freedom to sleep through a drought" ] ;
+    sh:property [ sh:path sensing:alarmDeltaFraction ; sh:maxCount 1 ;
+                  sh:datatype xsd:decimal ; sh:minInclusive 0.05 ; sh:maxInclusive 0.5 ;
+                  sh:message "a jolt threshold is a pick within the constitutional bounds — below 0.05 sensor noise reads as news, above 0.5 the band edge always fires first. Optional: an agent that states none commands band-only alarms" ] .
 
 sensing:ListeningAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that ONLY listens must not hold an interval: requiring a policy it cannot enforce would be theatre, and stating one would misdescribe the hardware. The exclusion matters — an agent may hold a scheduled sensor and a push one, and then it needs both blocks. Written as 'listens and does not subscribe' rather than 'listens', because the earlier form made the two shapes contradict each other on such an agent: one demanded an interval and the other forbade it, so a perfectly ordinary rig — a plant with a scheduled moisture probe and a push thermometer — could not be validated at all." ;
@@ -135,7 +138,9 @@ sensing:ListeningAgentShape a sh:NodeShape ;
         """ ] ;
     sh:property [ sh:path sensing:fastSleepS ; sh:maxCount 0 ;
                   sh:message "a listening agent states no interval — its device does not take one" ] ;
-    sh:property [ sh:path sensing:slowSleepS ; sh:maxCount 0 ] .
+    sh:property [ sh:path sensing:slowSleepS ; sh:maxCount 0 ] ;
+    sh:property [ sh:path sensing:alarmDeltaFraction ; sh:maxCount 0 ;
+                  sh:message "a listening agent holds no jolt threshold — its device takes no orders, so its delta is baked at flash time from the family's figure and no belief could ever reach it" ] .
 
 sensing:StatedFrequencyShape a sh:NodeShape ;
     rdfs:comment """A stated Frequency must say a number AND which unit it is in.
