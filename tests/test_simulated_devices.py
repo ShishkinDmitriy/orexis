@@ -193,7 +193,7 @@ def test_a_generated_stand_in_knows_what_a_litre_is_worth():
     fern_rows = [r for r in rows if r["id"] == "moisture_sensor_fern"]
     assert fern_rows, "the query stopped matching the simulated world at all"
     values = json.loads(_values(fern_rows))
-    moisture = next(v for v in values if v["pointer"] == "/value")
+    moisture = next(v for v in values if v["pointer"] == "/moisture")
     assert moisture.get("litres") == 2.0, \
         "the litres join is dead — a dose will move nothing and every end will be UNMET"
 
@@ -213,7 +213,7 @@ def test_a_generated_stand_in_runs_at_the_worlds_pace():
     fern_rows = [r for r in rows if r["id"] == "moisture_sensor_fern"]
     assert fern_rows and fern_rows[0]["scale"] == "144"
     values = json.loads(_values(fern_rows))
-    moisture = next(v for v in values if v["pointer"] == "/value")
+    moisture = next(v for v in values if v["pointer"] == "/moisture")
     assert moisture.get("dries") == 0.12
     assert "drift" not in moisture
     temperature = next(v for v in values if v["pointer"] == "/temperature")

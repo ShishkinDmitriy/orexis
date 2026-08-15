@@ -88,10 +88,12 @@ def test_the_shipped_world_reads_three_properties_off_one_board():
     assert len({s.reading_topic for s in me.sensors}) == 1
 
 
-def test_the_probe_states_no_pointer_because_the_default_is_what_it_sends():
-    """The whole point of the default: adding this term changed no existing sensor."""
+def test_the_probe_names_its_field_and_the_default_survives_for_the_unnamed():
+    """The probe states /moisture now — named for what it measures, like /temperature beside
+    it — and the anonymous /value default remains exactly what it always was: the reading of a
+    device that states nothing, unchanged by this term existing."""
     probe = next(s for s in _fern().sensors if s.observes == MOISTURE)
-    assert probe.reading_pointer is None
+    assert probe.reading_pointer == "/moisture"
 
 
 def test_one_message_produces_an_observation_for_every_sensor_on_the_channel(monkeypatch):
@@ -104,7 +106,7 @@ def test_one_message_produces_an_observation_for_every_sensor_on_the_channel(mon
     fern = next(s.subject for s in agent.me.sensors)
 
     agent.deliver("sensors/moisture_sensor_fern/reading",
-                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46,
+                  {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46,
                    "sensor": "moisture_sensor_fern"})
 
     # all three survive AT ONCE — the point of keying an observation by subject AND property
@@ -133,7 +135,7 @@ def test_values_from_one_read_carry_one_instant(monkeypatch):
     fern = next(s.subject for s in agent.me.sensors)
 
     agent.deliver("sensors/moisture_sensor_fern/reading",
-                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46,
+                  {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46,
                    "sensor": "moisture_sensor_fern"})
 
     stamps = {agent.beliefs.current_reading(fern, p).result_time
@@ -148,7 +150,7 @@ def test_a_sensor_whose_field_is_missing_records_nothing_and_says_so(monkeypatch
     fern = next(s.subject for s in agent.me.sensors)
 
     with caplog.at_level("WARNING"):
-        agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.183})
+        agent.deliver("sensors/moisture_sensor_fern/reading", {"moisture": 0.183})
 
     assert agent.beliefs.current_reading(fern, MOISTURE).value == pytest.approx(0.183)
     assert agent.beliefs.current_reading(fern, AIR_TEMP) is None
@@ -176,7 +178,7 @@ def test_one_board_is_aimed_once_however_many_sensors_it_carries(monkeypatch):
     agent.sent.clear()
 
     agent.deliver("sensors/moisture_sensor_fern/reading",
-                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
+                  {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46})
 
     cadences = [m for m in agent.sent if m[0] == "sensors/moisture_sensor_fern/command"]
     assert len(cadences) == 1, f"the board was instructed {len(cadences)} times"
@@ -195,7 +197,7 @@ def test_the_tightest_cadence_on_a_board_wins(monkeypatch):
     slow = subscribing.cadence_for(sensors[AIR_TEMP].subject, AIR_TEMP, 21.4)
     agent.sent.clear()
     agent.deliver("sensors/moisture_sensor_fern/reading",
-                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
+                  {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46})
 
     sent = [m for m in agent.sent if m[0] == "sensors/moisture_sensor_fern/command"]
     assert sent, "the board must be aimed"
@@ -233,7 +235,7 @@ def test_the_series_store_is_told_which_property_each_reading_is(monkeypatch):
     agent.subscribing().observations = observation.Observations(agent)
 
     agent.deliver("sensors/moisture_sensor_fern/reading",
-                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
+                  {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46})
 
     by_property = {p: v for _, v, p, _ in written}
     assert by_property == {"SoilMoisture": pytest.approx(0.183),
@@ -272,7 +274,7 @@ def test_an_observation_says_which_procedure_made_it(monkeypatch):
     """
     agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
     agent.deliver("sensors/moisture_sensor_fern/reading",
-                  {"value": 0.183, "temperature": 21.4, "humidity": 0.46})
+                  {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46})
 
     # `:sensed` is the agent's own graph and not one of the public five, so it is NAMED here.
     # The rule against wrapping a SELECT in a GRAPH clause is about the public graphs, where

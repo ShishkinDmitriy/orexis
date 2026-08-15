@@ -112,6 +112,12 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;     # keeps a given interval -> its agent gains sensing:Subscribing
+    #  Named for what it measures, moving in step with world/simulation because the two worlds
+    #  share this device id ON PURPOSE — one flashed board, either society — and a shared board
+    #  cannot send two message shapes. REFLASH BEFORE THE NEXT RESTART of this world: until
+    #  then the agent will say "nothing at /moisture in the payload" on every reading, which is
+    #  the loud version of this comment.
+    mqtt:readingPointer "/moisture" ;
     #  NOT ssn:implements sensing:AlarmProcedure — yet. The firmware supports wake-on-crossing
     #  (#151) but this board has not been reflashed with it, and stating the promise before the
     #  hardware keeps it would teach the agent that silence means "nothing crossed" about a board

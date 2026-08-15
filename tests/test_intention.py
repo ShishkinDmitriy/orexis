@@ -68,7 +68,7 @@ def test_waiting_on_a_sensor_is_a_recorded_commitment(make):
     standing = keeper.standing(means=OBSERVE)
     assert len(standing) == 1 and standing[0].observed_property == MOISTURE
 
-    fern.deliver(fern.me.sensors[0].reading_topic, {"value": 0.10})
+    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.10})
     assert keeper.standing(means=OBSERVE) == []       # the look came back
     assert len(keeper.standing(means=ACQUIRE)) == 1   # and the bid it fed is now committed
 

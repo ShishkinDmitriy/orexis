@@ -245,6 +245,9 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    #  Named for what it measures, like /temperature beside it — the anonymous /value default
+    #  exists for devices that state nothing, and a moisture reading is not anonymous.
+    mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
@@ -290,6 +293,9 @@ ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
     mqtt:readingTopic "sensors/moisture_sensor_tomato/reading" ;
+    #  Named for what it measures, like /temperature beside it — the anonymous /value default
+    #  exists for devices that state nothing, and a moisture reading is not anonymous.
+    mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_tomato/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
@@ -309,6 +315,9 @@ ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
     mqtt:readingTopic "sensors/moisture_sensor_succulent/reading" ;
+    #  Named for what it measures, like /temperature beside it — the anonymous /value default
+    #  exists for devices that state nothing, and a moisture reading is not anonymous.
+    mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_succulent/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;

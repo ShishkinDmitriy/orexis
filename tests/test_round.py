@@ -280,7 +280,7 @@ def test_the_bidder_asks_its_sensor_and_waits(make):
     assert {"sense": True} in fern.sent.to(sensor.command_topic), "it should nudge its board"
     assert fern.sent.under(market.bid_topic) == [], "and not bid before the answer arrives"
 
-    fern.deliver(sensor.reading_topic, {"value": 0.10})  # the board answers
+    fern.deliver(sensor.reading_topic, {"moisture": 0.10})  # the board answers
     bid = fern.sent.to(f"{market.bid_topic}/fern")[-1]
     assert bid["auction_id"] == "r1"
 
@@ -297,7 +297,7 @@ def test_a_late_reading_does_not_bid_into_a_closed_round(make):
     market = market_of(fern)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     fern.bidding().give_up()
-    fern.deliver(fern.me.sensors[0].reading_topic, {"value": 0.10})
+    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.10})
     assert fern.sent.under(market.bid_topic) == []
 
 

@@ -301,7 +301,7 @@ static void publishReading() {
   // a cleared retained cadence (#37) used to be invisible, and now arrives as an ack that
   // disagrees with what the agent believes it commanded.
   char payload[200];
-  int n = snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\",\"sleep_s\":%u",
+  int n = snprintf(payload, sizeof(payload), "{\"moisture\":%.3f,\"sensor\":\"%s\",\"sleep_s\":%u",
                    lastFrac, SENSOR_ID, sleep_s);
   if (wokeByAlarm() && n > 0 && n < (int)sizeof(payload)) {
     // This reading exists because the value moved, not because time passed — the one arrival
@@ -330,9 +330,9 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
   // {"watch":{"/value":[0.45,0.65],...}}. This board takes exactly its MOISTURE channel's —
   // the one its ULP can physically reach — and ignores the rest: the DHT hangs off a protocol
   // the ULP cannot speak, which is why the world only states the promise per channel.
-  if (doc["alarm"]["/value"].is<JsonArray>() && doc["alarm"]["/value"].size() == 2) {
-    rtc_wake_below = doc["alarm"]["/value"][0].as<float>();
-    rtc_wake_above = doc["alarm"]["/value"][1].as<float>();
+  if (doc["alarm"]["/moisture"].is<JsonArray>() && doc["alarm"]["/moisture"].size() == 2) {
+    rtc_wake_below = doc["alarm"]["/moisture"][0].as<float>();
+    rtc_wake_above = doc["alarm"]["/moisture"][1].as<float>();
   }
 #endif
   if (doc["sleep_s"].is<uint32_t>()) {

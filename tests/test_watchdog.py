@@ -108,7 +108,7 @@ def test_a_quiet_sensor_is_reported_by_sensing(fern):
     """The module's own half: delivered once, then silent past the freshness rule. The limit
     is the same `stale_after_s` the rule uses, so the log and the refusal cannot disagree."""
     sensor = next(s for s in fern.me.sensors if s.observes.endswith("SoilMoisture"))
-    fern.deliver(sensor.reading_topic, {"value": 0.5})
+    fern.deliver(sensor.reading_topic, {"moisture": 0.5})
     p = fern.subscribing()
     assert p.quiet() == []
     fern.metrics.last_reading_at[sensor.local_id] = (

@@ -344,7 +344,11 @@ class SimulatedSensor:
         while `"at"` reaches the others. One extra key rather than a second verb per property:
         the control surface should grow with what a device reports, not with what it might.
         """
-        pointer = doc.get("at") or "/value"
+        # Defaulting to the sole value's own pointer keeps a single-property device steerable
+        # without naming it — and "/value" stays the fallback for the multi-value case, since
+        # guessing among several would aim the operator's hand at random.
+        pointer = doc.get("at") or (self.values[0].pointer if len(self.values) == 1
+                                    else "/value")
         for v in self.values:
             if v.pointer == pointer:
                 return v

@@ -16,8 +16,8 @@
 // Sampling is not reporting: the per-second looks die in a register — no observation, no
 // testimony — and only a crossing or a heartbeat becomes a published reading.
 //
-//   publish:   MOISTURE_TOPIC   {"value":0.183,"sensor":"<SENSOR_ID>"}          heartbeat
-//              MOISTURE_TOPIC   {"value":0.391,"sensor":"<SENSOR_ID>",
+//   publish:   MOISTURE_TOPIC   {"moisture":0.183,"sensor":"<SENSOR_ID>"}          heartbeat
+//              MOISTURE_TOPIC   {"moisture":0.391,"sensor":"<SENSOR_ID>",
 //                                "wake":"alarm"}                             the news
 //
 // No sleep_s in the payload, deliberately: the ack is a receipt for a commanded cadence, and
@@ -110,10 +110,10 @@ void setup() {
       char payload[128];
       if (crossing) {
         snprintf(payload, sizeof(payload),
-                 "{\"value\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",
+                 "{\"moisture\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",
                  lastFrac, SENSOR_ID);
       } else {
-        snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\"}",
+        snprintf(payload, sizeof(payload), "{\"moisture\":%.3f,\"sensor\":\"%s\"}",
                  lastFrac, SENSOR_ID);
       }
       bool sent = mqtt.publish(MOISTURE_TOPIC, payload);

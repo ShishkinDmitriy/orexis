@@ -180,7 +180,7 @@ def test_the_board_did_not_change_only_the_model_did():
     for world in (watching, buying):
         probe = next(s for s in world.sensors if s.local_id == "moisture_sensor_fern")
         assert probe.command_topic == soil["moisture_sensor_fern"].command_topic
-        assert probe.reading_pointer is None  # `/value`, as every single-property board sends
+        assert probe.reading_pointer == "/moisture"  # named for what it measures, both worlds alike
 
     # The same wire, read for more. Strictly more properties here, strictly fewer abilities.
     assert {s.observes for s in buying.sensors} < {s.observes for s in watching.sensors}
