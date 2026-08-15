@@ -218,7 +218,10 @@ governed agent holds it as a belief (`review:commits` grants the room, the sensi
 re-picks it from the same evidence window as the cadence, and the two rules trade the vigil: a
 lively world earns a tight cadence and a coarse delta, a still one the reverse). The family's
 figure remains as the society's default and the **sentinel's bake** — a board that takes no
-orders can only be flashed with the constitution, since no revision could ever reach it.
+orders can only be flashed with the constitution, since no revision could ever reach it. What
+the deviation limit measures FROM, and why slow drift belongs to the cadence rather than to it,
+is its own record:
+[the-alarm-answers-to-the-last-report](/decisions/the-alarm-answers-to-the-last-report.md).
 
 What the promise buys, mechanically: the thresholds are the agent's region edges (desire's
 `bounds`, collected like urgency), so the board literally watches its agent's desire while both
