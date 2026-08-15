@@ -168,10 +168,21 @@ class Beliefs:
         prevent. A caller that does not know which property it means does not know what it is
         asking.
         """
+        # The feature may be the subject itself, or a PATCH of it (#98): an observation of a
+        # sosa:Sample answers for what it samples, newest first. The sample link lives in the
+        # world graph and the observation in :sensed, so the walk sits OUTSIDE the GRAPH
+        # clause — inside it, the pattern would have to match entirely within :sensed and the
+        # patch reading would silently vanish, which is AGENTS.md's narrowed-SELECT trap.
+        # Newest-across-patches is deliberately NOT aggregation: nothing here averages, and
+        # the seam one-agent-many-sensors.md leaves open is still open — this is only which
+        # single witness answers when several patches testify.
         return _parse_reading(self.query(f"""
-SELECT ?value ?ts WHERE {{ GRAPH <{SENSED_GRAPH}> {{
-  ?obs sosa:hasFeatureOfInterest <{subject_uri}> ;
-       sosa:observedProperty <{observed_property}> ;
-       sosa:hasSimpleResult ?value .
-  OPTIONAL {{ ?obs sosa:resultTime ?ts }}
-}} }} ORDER BY DESC(?ts) LIMIT 1"""))
+SELECT ?value ?ts WHERE {{
+  {{ BIND(<{subject_uri}> AS ?foi) }} UNION {{ ?foi sosa:isSampleOf <{subject_uri}> }}
+  GRAPH <{SENSED_GRAPH}> {{
+    ?obs sosa:hasFeatureOfInterest ?foi ;
+         sosa:observedProperty <{observed_property}> ;
+         sosa:hasSimpleResult ?value .
+    OPTIONAL {{ ?obs sosa:resultTime ?ts }}
+  }}
+}} ORDER BY DESC(?ts) LIMIT 1"""))
