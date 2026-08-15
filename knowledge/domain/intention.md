@@ -60,10 +60,15 @@ direction* (the domain's own `market:direction`, #127, copied so the row stays j
 physics — a recorded seam).
 
 Every reading is a chance to judge: past the baseline in the promised direction — **met**, early
-is fine, that is the dose landing. Deadline passed without it — **unmet**. Movement the wrong
-way *before* the deadline proves nothing, since a dose may land late. The verdict is a separate
-fact beside the outcome, and **satisfied-and-unmet is the false-knowledge signature**: the graph
-claims a movement the world keeps refusing.
+is fine, that is the dose landing — and past it by at least `metFraction` of the act's own
+stated size where the act could size itself (`expectsDelta`, #165): a lying instrument can
+breathe past a baseline, and the first noisy world closed a watch on +0.001 two seconds before
+its dose arrived, which then let the same gap be bought twice (#167 — the bidder now declines a
+new acquisition while its own dose is unanswered, bounded by the watch's deadline). Deadline
+passed without it — **unmet**. Movement the wrong way *before* the deadline proves nothing,
+since a dose may land late. The verdict is a separate fact beside the outcome, and
+**satisfied-and-unmet is the false-knowledge signature**: the graph claims a movement the world
+keeps refusing.
 
 Two consequences ride on the watch:
 

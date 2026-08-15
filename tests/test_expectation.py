@@ -226,3 +226,72 @@ def test_a_held_claim_is_maximum_urgency(thirsty):
                     {"jti": "v3", "amount_l": 0.5, "debit": 0.2})
     assert keeper_of(thirsty).urgency(thirsty.me.acts_for, MOISTURE, 0.55) == 1.0
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s
+
+
+# --- the margin: the world answers above the grain (#165) ---------------------
+
+def test_a_breath_of_grain_past_the_baseline_is_not_the_world_answering(thirsty):
+    """The live incident, replayed: a watch was closed by +0.001 of instrument grain two
+    seconds before its dose landed, and the closed watch let the same gap be bought twice
+    (#167). A movement counts only when commensurate with the act: metFraction (0.25) of the
+    expected delta (0.5 L through 2.0 L-per-fraction = 0.25) is 0.0625, and grain clears
+    nothing."""
+    win(thirsty)
+    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"value": 0.301})
+    keeper = keeper_of(thirsty)
+    assert len(keeper.open_expectations()) == 1, "grain must not close a watch"
+    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"value": 0.37})
+    assert keeper.open_expectations() == []
+    assert keeper.reports()["expectations_met"] == 1
+
+
+def test_the_row_carries_how_far_the_act_should_move_it(thirsty):
+    """The act sizes its own effect: 0.5 L through the same conversion the bid was priced
+    with. Copied into the row like the baseline, so the verdict needs no join at reading time."""
+    win(thirsty, amount=0.5)
+    watch = keeper_of(thirsty).open_expectations(MOISTURE)[0]
+    assert watch.expected_delta == pytest.approx(0.25)
+
+
+def test_an_act_that_cannot_size_itself_keeps_the_exact_crossing(thirsty):
+    """No delta stated, no margin demanded — the pre-noise verdict stays legal for whatever
+    cannot say how far it should move the world."""
+    keeper = keeper_of(thirsty)
+    uri = keeper.adopt(ACQUIRE, MOISTURE, "an act of unknowable size")
+    assert keeper.expect(uri, MOISTURE, "no delta stated")
+    keeper.on_reading_recorded(thirsty.me.acts_for, MOISTURE, 0.301)
+    assert keeper.open_expectations() == []
+    assert keeper.reports()["expectations_met"] == 1
+
+
+# --- while my own dose is unanswered, I do not buy again (#167) ---------------
+
+def test_no_new_purchase_while_my_own_dose_is_unanswered(thirsty, caplog):
+    """The double-buy, refused: the dose may have landed inside my sensor's sleep, and even a
+    fresh look can race a valve that dispenses over half a minute. The bid is DECLINED, not
+    gated — a judgment read off the ledger — and the world answering frees the very next round."""
+    market = market_of(thirsty)
+    win(thirsty)                                        # watch open, dose in flight
+    bids = len(thirsty.sent.to(f"{market.bid_topic}/fern"))
+    with caplog.at_level(logging.INFO, logger="fern.bidding"):
+        thirsty.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 3})
+    assert len(thirsty.sent.to(f"{market.bid_topic}/fern")) == bids, \
+        "a phantom deficit was priced while my own dose was unanswered"
+    assert "my own dose has not answered yet" in caplog.text
+
+    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"value": 0.42})   # the world answers
+    thirsty.deliver(market.offer_topic, {"auction_id": "r3", "closes_in_s": 3})
+    assert len(thirsty.sent.to(f"{market.bid_topic}/fern")) == bids + 1
+
+
+def test_a_dose_past_its_deadline_frees_the_bidder(monkeypatch):
+    """Bounded, exactly as the cede's comment promises: an unanswered dose past the watch's
+    own deadline is the false-knowledge case (#131's), and it must not also freeze the wallet."""
+    fern = build_agent("fern", genesis_store({"fern": 0.30}), monkeypatch)
+    keeper = keeper_of(fern)
+    keeper.beliefs = replace(keeper.beliefs, patience_s=0)   # the deadline is now
+    market = market_of(fern)
+    win(fern)
+    bids = len(fern.sent.to(f"{market.bid_topic}/fern"))
+    fern.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 3})
+    assert len(fern.sent.to(f"{market.bid_topic}/fern")) == bids + 1

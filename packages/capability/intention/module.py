@@ -30,7 +30,8 @@ from agent.store import bindings
 
 from .graphs import intentions_graph
 from .terms import (APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEADLINE_AT, END_MET,
-                    END_VERIFIED_AT, EXPECTS_VALUE_TO, KEEPING, NS, PATIENCE_S, term)
+                    END_VERIFIED_AT, EXPECTS_DELTA, EXPECTS_VALUE_TO, KEEPING, NS, PATIENCE_S,
+                    term)
 
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
@@ -48,6 +49,13 @@ SELECT ?direction WHERE {
 _SUSPECT_Q = """
 SELECT ?n WHERE {
   GRAPH ?g { intention:IntentionCapability intention:suspectAfter ?n }
+} LIMIT 1"""
+
+# The fraction of an expected delta that counts as the world answering (#165) — the family's
+# figure, beside suspectAfter, because what a society accepts as evidence is its own to state.
+_MET_FRACTION_Q = """
+SELECT ?f WHERE {
+  GRAPH ?g { intention:IntentionCapability intention:metFraction ?f }
 } LIMIT 1"""
 
 
@@ -89,6 +97,7 @@ class OpenExpectation:
     baseline: float
     baseline_at: datetime
     deadline: datetime
+    expected_delta: float | None = None  # how far the act should move it, when the actor knows
 
 
 class IntentionModule(Module):
@@ -180,11 +189,16 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     # --- the expectation: the end, judged apart from the means (#131) ---------------------
 
-    def expect(self, intention_uri: str, observed_property: str, because: str) -> bool:
+    def expect(self, intention_uri: str, observed_property: str, because: str,
+               expected_delta: float | None = None) -> bool:
         """Open the watch: the act happened, now the world owes a movement.
 
         The BASELINE is copied into the row — the sensed graph keeps only the current witness,
-        so the before of any before/after survives nowhere but the ledger. The DIRECTION comes
+        so the before of any before/after survives nowhere but the ledger. `expected_delta` is
+        how far the act should move the property when the actor can say — a dose of known
+        litres through the domain's conversion — and it is what the met-verdict measures its
+        margin against (#165); an act that cannot size its own effect passes None and keeps
+        the exact-crossing verdict. The DIRECTION comes
         from the domain's own statement on its valuation (#127), copied so the row stays
         judgeable even if the vocabulary is later amended. The DEADLINE is the patience — a
         recorded seam; the dose and the physics could derive a better one. And sensing is
@@ -210,9 +224,12 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         now = datetime.now(timezone.utc)
         deadline = now.timestamp() + self.beliefs.patience_s
         deadline_dt = datetime.fromtimestamp(deadline, tz=timezone.utc)
+        delta = (f"""
+    <{EXPECTS_DELTA}> "{expected_delta}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;"""
+                 if expected_delta else "")
         self.agent.store.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{intention_uri}>
+  <{intention_uri}>{delta}
     <{EXPECTS_VALUE_TO}> <{direction}> ;
     <{BASELINE_VALUE}> "{reading.value}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
     <{BASELINE_AT}> "{reading.result_time.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
@@ -231,7 +248,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         """Every watch still on: expectation adopted, end not yet verified."""
         prop = f"FILTER(?property = <{observed_property}>)" if observed_property else ""
         rows = bindings(self.agent.store.query(f"""
-SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline WHERE {{
+SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline ?delta WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{term("by")}> ?means ;
        <http://www.w3.org/ns/ssn/forProperty> ?property ;
@@ -239,6 +256,7 @@ SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline WHERE {{
        <{BASELINE_VALUE}> ?baseline ;
        <{BASELINE_AT}> ?baselineAt ;
        <{DEADLINE_AT}> ?deadline .
+    OPTIONAL {{ ?i <{EXPECTS_DELTA}> ?delta }}
     FILTER NOT EXISTS {{ ?i <{END_MET}> ?met }}
     {prop}
   }} }}"""))
@@ -246,17 +264,21 @@ SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline WHERE {{
             uri=r["i"], means=r["means"], observed_property=r["property"],
             direction=r["direction"], baseline=float(r["baseline"]),
             baseline_at=datetime.fromisoformat(r["baselineAt"]),
-            deadline=datetime.fromisoformat(r["deadline"])) for r in rows]
+            deadline=datetime.fromisoformat(r["deadline"]),
+            expected_delta=float(r["delta"]) if r.get("delta") else None) for r in rows]
 
     def on_reading_recorded(self, subject_uri: str, observed_property: str,
                             value: float) -> None:
         """Every reading is a chance to judge an open watch.
 
-        Met the moment the value crosses the baseline in the promised direction — early is
-        fine, that is the dose landing. Unmet only at the deadline: movement the wrong way
-        before it proves nothing, since a dose may land late. The verdict is a separate fact
-        from the outcome, written beside it — satisfied-and-unmet is the false-knowledge
-        signature review and the dashboard look for.
+        Met when the value crosses the baseline in the promised direction — early is fine,
+        that is the dose landing — and, where the act sized itself (expectsDelta), crosses by
+        at least metFraction of that size (#165): a lying instrument can breathe past a
+        baseline, and a watch closed by grain is the false-knowledge detector defeated by
+        noise. Unmet only at the deadline: movement the wrong way before it proves nothing,
+        since a dose may land late. The verdict is a separate fact from the outcome, written
+        beside it — satisfied-and-unmet is the false-knowledge signature review and the
+        dashboard look for.
         """
         if subject_uri != self.me.acts_for:
             return
@@ -264,6 +286,14 @@ SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline WHERE {{
         for watch in self.open_expectations(observed_property):
             moved = (value > watch.baseline if watch.direction == _RAISES
                      else value < watch.baseline)
+            if moved and watch.expected_delta:
+                # The margin (#165): a movement is the world answering only when it is
+                # commensurate with the act — metFraction of what the dose should have moved.
+                # A breath of instrument grain past the baseline closed a watch two seconds
+                # before its dose landed, live, and the closed watch then let the same gap be
+                # bought twice (#167). Crossing alone stops counting where the act sized itself.
+                moved = (abs(value - watch.baseline)
+                         >= self._met_fraction() * watch.expected_delta)
             if moved:
                 self._verdict(watch, True, f"moved from {watch.baseline} to {value}")
             elif now >= watch.deadline:
@@ -295,6 +325,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     def _suspect_after(self) -> int:
         rows = bindings(self.agent.store.query(_SUSPECT_Q))
         return int(rows[0]["n"]) if rows else 3
+
+    def _met_fraction(self) -> float:
+        rows = bindings(self.agent.store.query(_MET_FRACTION_Q))
+        return float(rows[0]["f"]) if rows else 0.25
 
     def _is_suspect(self, means: str, observed_property: str) -> bool:
         """The last suspectAfter verdicts for this pair, all unmet, none met among them.

@@ -30,6 +30,8 @@ bid means here). Rules: capabilities/market/shapes.ttl, domain/water/shapes.ttl.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from agent import signing
 from agent.market import EPS, Bid
 from agent.module import Module, Timer
@@ -174,6 +176,13 @@ class BiddingModule(Module):
             return payload
         return {**payload, "sig": signing.sign(key, signing.canonical(payload))}
 
+    def _delta_of(self, amount_l: float) -> float | None:
+        """How far a dose of this many litres should move my property — the act sizing its own
+        effect for the met-verdict's margin (#165), through the same conversion the bid was
+        priced with. None when the belief cannot say, which keeps the exact-crossing verdict."""
+        lpf = self.beliefs.litres_per_fraction
+        return (float(amount_l) / lpf) if lpf > 0 and amount_l else None
+
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None is a complete answer.
 
@@ -251,6 +260,25 @@ class BiddingModule(Module):
             self.log.info("auction %s: I perceive nothing — sitting out", auction_id)
             self.pending = None
             return
+
+        # A dose of my own has not answered yet (#167): while a watch is open and inside its
+        # deadline, no reading I hold can prove the pot was not already watered — the dose may
+        # have landed inside my sensor's sleep, and even a fresh look can race a valve that
+        # dispenses over half a minute. This is the one blindness I have every means to know
+        # about, and pricing a deficit my own water may have closed bought the same gap twice,
+        # live (0.302 on the wire, 0.495 in the pot, 0.396 L re-bought). So the bid is DECLINED,
+        # not gated: a judgment read off the ledger through the ordinary provider route, bounded
+        # by the watch's own deadline — past it, an unanswered dose frees me exactly as before.
+        # A stranger's water stays out of scope: no expectation records it, no clause can read
+        # it, and #151 is the device-side answer to that half.
+        if keeper := self._keeper():
+            now = datetime.now(timezone.utc)
+            if any(now < w.deadline for w in keeper.open_expectations(self.about)):
+                self.log.info("auction %s: my own dose has not answered yet — ceding, and "
+                              "asking for the look that would answer it", auction_id)
+                sensing.sense_now()
+                self.pending = None
+                return
 
         sensing.sense_now()  # a listening agent cannot, and simply does not
 
@@ -395,7 +423,8 @@ class BiddingModule(Module):
             for uri in acquire_uris:
                 keeper.expect(uri, self.about,
                               f"paid {debit} for {amount}L on a market with no redeem channel "
-                              f"— the host has already redeemed, so show me")
+                              f"— the host has already redeemed, so show me",
+                              expected_delta=self._delta_of(amount))
             return
 
         # HOLD (#132): winning is not actuating. The claim stands until my watch is live —
@@ -459,4 +488,5 @@ class BiddingModule(Module):
                                       f"claim {held['jti']} presented: {why}"):
                 keeper.expect(uri, self.about,
                               f"presented {held['jti']} for {held['amount_l']}L — the graph "
-                              f"says this raises what I am short of, so show me")
+                              f"says this raises what I am short of, so show me",
+                              expected_delta=self._delta_of(held["amount_l"]))

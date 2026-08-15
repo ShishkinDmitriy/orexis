@@ -91,9 +91,19 @@ intention:baselineAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; 
 intention:deadlineAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "deadline at" ;
     rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
+intention:expectsDelta a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:decimal ;
+    rdfs:label "expects delta" ;
+    rdfs:comment "How far the act should move the property, when the actor can say — a dose of known litres through the domain's stated conversion. What the met-verdict measures its margin against (#165): a movement is the world answering only when it is commensurate with the act, and a breath of instrument grain past the baseline is not. Optional, because not every act can size its own effect; absent, the verdict falls back to exact crossing, which is the pre-noise behaviour and stays legal." .
+
+intention:metFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "met fraction" ;
+    rdfs:comment "The fraction of an expected delta that counts as the world answering (#165). On the family, like suspectAfter: what this society accepts as evidence, not how the code is written. A quarter — generous to partially-absorbed doses, far above any instrument's grain. Chosen against the OTHER failure too: a margin so strict that honest doses read unmet would feed suspectAfter and mark truthful affordances false." .
+
+intention:IntentionCapability intention:metFraction 0.25 .
+
 intention:endMet a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:boolean ;
     rdfs:label "end met" ;
-    rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline (true), or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
+    rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline — and, where the row states an expectsDelta, past it by at least metFraction of that delta (#165) — or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
 intention:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "end verified at" .
 
