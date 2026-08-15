@@ -101,7 +101,7 @@ def test_a_message_is_offered_to_every_module(agent, monkeypatch):
     seen = []
     for m in fern.modules:
         monkeypatch.setattr(m, "handle", lambda t, p, n=m.name: (seen.append(n), True)[1])
-    fern.deliver(fern.me.sensors[0].reading_topic, {"value": 0.2})
+    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2})
     assert len(seen) == len(fern.modules), f"only {seen} were offered it"
 
 
@@ -151,7 +151,7 @@ def test_a_module_raising_does_not_kill_the_agent(agent, monkeypatch):
     fern = agent("fern")
     monkeypatch.setattr(fern.modules[0], "handle",
                         lambda t, p: (_ for _ in ()).throw(RuntimeError("boom")))
-    fern.deliver(fern.me.sensors[0].reading_topic, {"value": 0.2})  # must not raise
+    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2})  # must not raise
 
 
 def test_the_agent_holds_a_clean_session():

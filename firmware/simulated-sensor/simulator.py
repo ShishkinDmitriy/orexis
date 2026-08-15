@@ -212,6 +212,24 @@ class SimulatedSensor:
         self.release_wait_s = _float("SIM_RELEASE_WAIT_S", 5)
         self._released = threading.Event()
 
+        # Announce-on-crossing (#151): the agent commands a band PER WATCHED CHANNEL beside
+        # the cadence — {"watch": {"/value": [0.45, 0.65], "/temperature": [18, 24]}} — and
+        # this device checks every banded value between heartbeats the way a real board's ULP
+        # would, waking early the moment ANY of them leaves its band. Empty until commanded; a
+        # world whose channels state no AlarmProcedure never sends one, so this stays
+        # dormant exactly as unflashed firmware would. A stand-in may watch every channel it
+        # has, where real silicon watches only what its ULP can reach — the honest asymmetry
+        # the vocabulary states per sensor.
+        self.alarm: dict[str, tuple[float, float]] = {}
+        self.alarm_period_s = _float("SIM_ALARM_PERIOD_S", 1.0)
+        # A PUSH sentinel's band is baked at "flash" — SIM_ALARM is its config.h, since a
+        # device that takes no orders can still keep a promise the world wrote. A scheduled
+        # device ignores this and is commanded instead.
+        if self.mode == "push" and os.environ.get("SIM_ALARM"):
+            self.alarm = {str(ptr): (float(band[0]), float(band[1]),
+                                     float(band[2]) if len(band) > 2 else None)
+                          for ptr, band in json.loads(os.environ["SIM_ALARM"]).items()}
+
         # Measurement error — a property of this firmware's fidelity, like LED_BRIGHTNESS on
         # the real board: not generated from the world, env-overridable, stated as fractions of
         # each value's span so one pair of knobs is honest about a fraction and a temperature
@@ -273,6 +291,14 @@ class SimulatedSensor:
         # steered would be untestable, and steering is not something the device does.
         if self.mode == "push":
             return
+        if isinstance(doc.get("alarm"), dict):
+            # [low, high] or [low, high, delta] — the optional third element is the DEVIATION
+            # limit: how far the value may drift from the last REPORT before that alone is
+            # worth waking for, band or no band.
+            self.alarm = {str(pointer): (float(band[0]), float(band[1]),
+                                         float(band[2]) if len(band) > 2 else None)
+                          for pointer, band in doc["alarm"].items()
+                          if isinstance(band, (list, tuple)) and len(band) >= 2}
         if isinstance(doc.get("sleep_s"), (int, float)):
             asked = float(doc["sleep_s"])
             self.sleep_s = max(self.min_sleep_s, min(self.max_sleep_s, asked))
@@ -298,12 +324,16 @@ class SimulatedSensor:
         # deep sleep, so the ack is its only testimony about the rhythm actually in force.
         if self.mode == "scheduled":
             doc["sleep_s"] = int(self.sleep_s)
+        if getattr(self, "_woke_by_alarm", False):
+            doc["wake"] = "alarm"   # this reading exists because the value moved
+            self._woke_by_alarm = False
         # What the world holds is one thing; what the instrument says is another. The grain and
         # the occasional spike are applied at REPORT time and never fed back into the value —
         # measurement error is about the reading, and physics that inherited it would drift.
         sim_time = time.time() * self.timescale
         for v in self.values:
             true = v.read(sim_time)
+            v.last_reported = true   # what the deviation limit measures drift FROM
             span = v.max - v.min
             reported = true + self.rng.gauss(0.0, self.noise_span * span)
             if self.rng.random() < self.spike_chance:
@@ -320,7 +350,11 @@ class SimulatedSensor:
         while `"at"` reaches the others. One extra key rather than a second verb per property:
         the control surface should grow with what a device reports, not with what it might.
         """
-        pointer = doc.get("at") or "/value"
+        # Defaulting to the sole value's own pointer keeps a single-property device steerable
+        # without naming it — and "/value" stays the fallback for the multi-value case, since
+        # guessing among several would aim the operator's hand at random.
+        pointer = doc.get("at") or (self.values[0].pointer if len(self.values) == 1
+                                    else "/value")
         for v in self.values:
             if v.pointer == pointer:
                 return v
@@ -397,6 +431,31 @@ class SimulatedSensor:
         for v in self.values:
             v.advance(dt)
 
+    def _alarmed(self) -> bool:
+        """Whether ANY watched value has left its band OR jolted since its last report.
+
+        Two limits per channel, exactly as a process alarm has always had them: HI/LO (the
+        band) and DEVIATION (more than delta from the last reported value — the stranger
+        watering a comfortable pot, the leak still in-range). The TRUE values, not the
+        reported ones: a real ULP compares the ADC, and the grain and the spikes are
+        properties of the REPORT (#163) — a board that woke for its own measurement noise
+        would be a boy crying wolf at his own echo.
+        """
+        if not self.alarm:
+            return False
+        sim_time = time.time() * self.timescale
+        for value in self.values:
+            band = self.alarm.get(value.pointer)
+            if band is None:
+                continue
+            now = value.read(sim_time)
+            if now < band[0] or now > band[1]:
+                return True
+            last = getattr(value, "last_reported", None)
+            if band[2] is not None and last is not None and abs(now - last) > band[2]:
+                return True
+        return False
+
     # --- the loop ---
 
     def run(self) -> None:
@@ -420,9 +479,21 @@ class SimulatedSensor:
         while not self._stop.is_set():
             self._advance()
             if self.mode == "push":
-                # A push device keeps its own tick and waits for nobody.
+                # A push device keeps its own tick and waits for nobody — but a SENTINEL
+                # watches its baked band between ticks, and a crossing ends the wait early
+                # exactly as it ends a scheduled sleep.
                 self._publish()
-                self._stop.wait(self.tick_s)
+                slept = 0.0
+                while slept < self.tick_s and not self._stop.is_set():
+                    step = min(self.alarm_period_s, self.tick_s - slept)
+                    self._stop.wait(step)
+                    slept += step
+                    self._advance()
+                    if self._alarmed():
+                        self._woke_by_alarm = True
+                        log.info("%s: crossed the baked band — the sentinel speaks",
+                                 self.sensor_id)
+                        break
                 continue
             # A scheduled device publishes and then WAITS TO BE RELEASED (#152): the agent
             # answers every reading, the answer carries the cadence, and the sleep below runs
@@ -435,7 +506,21 @@ class SimulatedSensor:
             if not self._released.wait(self.release_wait_s):
                 log.warning("%s: no release after %ss — the agent is not answering",
                             self.sensor_id, self.release_wait_s)
-            self._stop.wait(self.sleep_s)
+            # The heartbeat sleep — WATCHED (#151), where a band is commanded: physics advance
+            # each watch-period and a crossing ends the sleep early, exactly as a ULP would end
+            # a deep sleep. The next publish then says WHY it happened.
+            slept = 0.0
+            while slept < self.sleep_s and not self._stop.is_set():
+                step = min(self.alarm_period_s, self.sleep_s - slept)
+                self._stop.wait(step)
+                slept += step
+                self._advance()
+                if self._alarmed():
+                    self._woke_by_alarm = True
+                    log.info("%s: crossed the commanded band — waking off-cadence, "
+                             "the world changed and this board is its messenger",
+                             self.sensor_id)
+                    break
 
 
 def main() -> None:

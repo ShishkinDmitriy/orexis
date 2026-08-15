@@ -54,9 +54,10 @@ from .terms import LISTENING, PUSH, SCHEDULED, SUBSCRIBING
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future sensing inherits them.
 _BOUNDS_Q = """
-SELECT ?min ?max ?relax WHERE {
+SELECT ?min ?max ?relax ?deltaFrac WHERE {
   GRAPH ?g { sensing:SensingCapability sensing:minSleepS ?min ; sensing:maxSleepS ?max .
-             OPTIONAL { sensing:SensingCapability sensing:relaxFactor ?relax } }
+             OPTIONAL { sensing:SensingCapability sensing:relaxFactor ?relax }
+             OPTIONAL { sensing:SensingCapability sensing:alarmDeltaFraction ?deltaFrac } }
 } LIMIT 1"""
 
 
@@ -146,6 +147,12 @@ class SensingModule(Module):
         doc = self.parse(payload)
         if doc is not None and isinstance(doc.get("sleep_s"), (int, float)):
             acknowledged = int(doc["sleep_s"])
+        if doc is not None and doc.get("wake") == "alarm":
+            # The world spoke (#151): this reading exists because the value crossed a
+            # commanded threshold, not because the heartbeat came due. Worth a line, because
+            # it is the one arrival that means something happened rather than time passed.
+            self.log.info("alarm wake on %s — the world crossed a commanded limit and said so",
+                          topic)
         for sensor in self.sensors:
             driver = self.drivers[sensor.uri]
             if driver is None or not driver.owns(sensor, topic):
@@ -320,6 +327,7 @@ class SubscribingModule(SensingModule):
         # A relax factor at or below 1 could never release at all, which is a vocabulary slip
         # and not a policy anyone can mean; treated as "no slew" rather than as a frozen board.
         relax = float(rows[0].get("relax") or 0.0)
+        self.alarm_delta_fraction = float(rows[0].get("deltaFrac") or 0.0)
         return int(rows[0]["min"]), int(rows[0]["max"]), relax if relax > 1.0 else 0.0
 
     def start(self) -> None:
@@ -368,6 +376,12 @@ class SubscribingModule(SensingModule):
         sensor = self.sensor_for(subject_uri, observed_property)
         if sensor is None:
             return False
+        # A alarm-armed board IS a live watch (#151): a dose landing moves the value across
+        # the commanded band edge and the board announces within its watching period, however
+        # long the heartbeat. The thresholds must actually have gone out — the same dedup
+        # memory that proves the channel has been spoken to proves what was said.
+        if sensor.alarm and sensor.local_id in self.sent_cadence:
+            return True
         acked = self.acked_cadence.get(sensor.command_topic or sensor.local_id)
         return acked is not None and acked <= self.beliefs.fast_sleep_s
 
@@ -539,6 +553,29 @@ class SubscribingModule(SensingModule):
         # comfortable reading cannot cliff a burst-tight cadence straight to the slow end. The
         # release runs geometrically over a few dense readings, exactly the window the trend
         # needs two of them to establish (#133), and confidence is earned rather than assumed.
+        # Every WATCHED channel on this board is told its band (#151), beside the cadence and
+        # in the same retained breath: a map of pointer -> [low, high], the tightest bounds any
+        # module with a stake holds — desire's region edges, ordinarily — so the board watches
+        # everything its agent wants held, per channel, while both of them sleep. A channel
+        # that promised nothing gets no band, a board with no watched channels gets no map,
+        # and old firmware ignores keys it does not know.
+        alarm = {}
+        for peer in self._aimed_with(sensor):
+            if not peer.alarm:
+                continue
+            held = self.agent.bounds(peer.subject, peer.observes)
+            if held is not None:
+                limits = [round(held[0], 3), round(held[1], 3)]
+                # The DEVIATION half: a move of more than this since the board's last report is
+                # worth waking for even INSIDE the band — the stranger watering a comfortable
+                # pot, the leak still in-range. The board arms the intersection of the band and
+                # last±delta, so this costs it nothing but arithmetic.
+                if self.alarm_delta_fraction > 0:
+                    limits.append(round(self.alarm_delta_fraction * (held[1] - held[0]), 3))
+                alarm[peer.reading_pointer or "/value"] = limits
+        if alarm:
+            verdict = {**(verdict or {}), "alarm": alarm}
+
         last = self.sent_cadence.get(sensor.local_id)
         if self.relax_factor and last is not None and sleep_s > last:
             sleep_s = min(int(sleep_s), max(int(last) + 1, int(last * self.relax_factor)))

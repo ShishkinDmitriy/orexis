@@ -150,6 +150,27 @@ sensing:ScheduledProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Sc
 sensing:PushProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Push procedure" ;
     rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives sensing:Listening. The edge holds the policy, and no agent can take it back." .
 
+#  The THIRD clock-holder, finally earning its place (#151): not the agent's (Scheduled), not
+#  the device's (Push) — the WORLD's. A device implementing this watches thresholds while it
+#  deep-sleeps (an ESP32's ULP compares the reading every second for microamps) and wakes to
+#  announce the moment the value CROSSES one. The device is merely the world's messenger: the
+#  signal changed, so the signal says so.
+#
+#  Deliberately NOT a fourth SenseMode. The mode is who holds the HEARTBEAT, one answer per
+#  device (#96) — a crossing-watcher still keeps the interval its agent commands, and the
+#  alarm wake is an ADDITIONAL procedure the same device implements. Which is exactly the
+#  case the senseMode comment above always predicted: ssn:implements is wider than our
+#  relation BECAUSE a system may implement several procedures, and here is the second one,
+#  arriving through the standard word rather than by widening ours.
+#
+#  What it PROMISES is the part the agent may lean on: silence from a alarm-armed board
+#  means "nothing crossed" — information — where silence from a plain scheduled board means
+#  only "not due yet". The thresholds themselves are the agent's to command, retained beside
+#  the cadence, and the natural ones are its region's edges: the board then literally watches
+#  the agent's desire while both of them sleep.
+sensing:AlarmProcedure a sosa:Procedure ; rdfs:label "Alarm procedure" ;
+    rdfs:comment "Watch commanded thresholds while asleep; wake and publish when the value crosses one. Stated on the SENSOR whose value is watched, with ssn:implements — per channel, because which values a board can watch is a hardware fact per channel: an ESP32's ULP reaches the analog probe and can never speak the DHT's protocol, so a real board promises this for its moisture and stays honest about its air, while a stand-in may promise every channel it has. The board wakes when ANY of its watched channels crosses. A shape requires the implementing sensor to ride a Scheduled device with a command channel, because the bands arrive the way the cadence does — one retained map, a band per watched pointer." .
+
 sensing:senseMode a owl:ObjectProperty ; rdfs:domain <http://example.org/agora#Device> ; rdfs:range sensing:SenseMode ;
     rdfs:label "sense mode" ;
     rdfs:comment "Whose fact this is decided #96: the DEVICE's — the board that sleeps, wakes and keeps the interval — never the sensing element's. Three sensors on one board used to state it three times with no shape spanning them, so one could claim Scheduled while its neighbour claimed Push: a physical impossibility that would have derived both Subscribing and Listening for one agent from one firmware. Stated once on the connecting device now, and a bearer shape (transport/mqtt) refuses it anywhere else." .
@@ -192,6 +213,12 @@ sensing:relaxFactor a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:ra
 
 sensing:SensingCapability sensing:minSleepS 10 ; sensing:maxSleepS 900 ;
     sensing:relaxFactor 1.5 .
+
+sensing:alarmDeltaFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "alarm delta fraction" ;
+    rdfs:comment "The DEVIATION half of the alarm (#151): besides leaving the band, a watched value that moves by more than this fraction of its band's width since the last report is worth waking for — process control's deviation alarm beside its HI/LO one. It catches what the band alone cannot: a stranger watering a COMFORTABLE pot, or a leak draining fast while still in-range — the in-band event whose first sign the heartbeat would otherwise sleep through. On the family, like the cadence bounds: what this society counts as a jolt is its own to state. The board's window is simply the intersection of the band and last-report±delta, so the watching machinery gains nothing new — only the arithmetic that arms it." .
+
+sensing:SensingCapability sensing:alarmDeltaFraction 0.25 .
 
 #################  What the DEVICE can honour, which is a different question  #################
 #

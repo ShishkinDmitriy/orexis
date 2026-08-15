@@ -70,3 +70,33 @@ mqtt:MqttActuatorShape a sh:NodeShape ;
             }
         """ ] ;
     sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+
+mqtt:AlarmChannelShape a sh:NodeShape ;
+    rdfs:comment "A watched channel (#151) must be one whose band can EXIST: either its sensor rides a Scheduled device with a command channel — the governed node, whose bands arrive retained beside the cadence — or it rides a Push device, the SENTINEL, whose band is compiled in at flash time from the world's own operating range because a board that takes no orders can still keep a promise the world wrote. What is refused is the gap between: a scheduled device without the channel its bands would arrive on." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/ssn/implements>
+                      <http://example.org/agora/sensing#AlarmProcedure> .
+            }
+        """ ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a watched channel must ride either a Scheduled device with the command channel its bands arrive on, or a Push device whose band is compiled in — nothing here is either" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/agora/mqtt#readingTopic> ?stream .
+                FILTER NOT EXISTS {
+                    ?device <http://example.org/agora/mqtt#readingTopic> ?stream ;
+                            <http://example.org/agora/mqtt#onBus> ?bus ;
+                            <http://example.org/agora/sensing#senseMode>
+                              <http://example.org/agora/sensing#ScheduledProcedure> ;
+                            <http://example.org/agora/mqtt#commandTopic> ?cmd .
+                }
+                FILTER NOT EXISTS {
+                    ?pushDevice <http://example.org/agora/mqtt#readingTopic> ?stream ;
+                                <http://example.org/agora/mqtt#onBus> ?pushBus ;
+                                <http://example.org/agora/sensing#senseMode>
+                                  <http://example.org/agora/sensing#PushProcedure> .
+                }
+            }
+        """ ] .

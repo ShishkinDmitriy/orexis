@@ -135,7 +135,7 @@ def test_no_agent_can_hammer_its_sensor_flat(fern):
 # --- the two levers --------------------------------------------------------
 
 def test_cadence_is_retained_so_a_sleeping_board_gets_it(fern):
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.2})
+    fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.2})
     retained = [r for t, p, r in fern.sent
                 if t == sensor_of(fern).command_topic and "sleep_s" in p]
     assert retained and all(retained)
@@ -145,7 +145,7 @@ def test_an_unchanged_cadence_is_not_republished_to_a_board_that_is_not_waiting(
     """A reading WITHOUT an ack is pre-release firmware or a test's direct ingest: nobody is
     waiting for an answer, so the old economy holds and an unchanged message is not re-sent."""
     for _ in range(3):
-        fern.deliver(sensor_of(fern).reading_topic, {"value": 0.2})
+        fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.2})
     assert len(cadences(fern)) == 1
 
 
@@ -155,7 +155,7 @@ def test_an_acked_reading_is_always_answered(fern):
     lands. So an acked reading must be answered even when nothing changed: the memory of what
     the channel was last told excuses silence only to a board that is not listening for it."""
     for _ in range(3):
-        fern.deliver(sensor_of(fern).reading_topic, {"value": 0.2, "sleep_s": 30})
+        fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.2, "sleep_s": 30})
     assert len(cadences(fern)) == 3
 
 
@@ -185,14 +185,14 @@ def test_a_sense_request_is_never_retained(fern):
 def test_it_announces_its_verdict_not_just_a_number(fern):
     """Sensing supplies the number; the band is contributed by the capability that holds a
     stake. The announcement is the agent's, not sensing's — which is why it carries both."""
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
+    fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.10})
     event = fern.sent.to(fern.me.event_topic)[-1]
     assert event["band"] == "LOW" and event["agent"] == "fern"
     assert event["value"] == 0.10
 
 
 def test_the_reading_is_recorded_as_its_own_assertion(fern):
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.123})
+    fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.123})
     reading = fern.beliefs.current_reading(fern.me.acts_for, MOISTURE)
     assert reading.value == pytest.approx(0.123)
     assert reading.is_fresh(120)
@@ -307,7 +307,7 @@ def test_the_scheduled_board_is_still_aimed_when_a_push_sensor_shares_the_agent(
     """The bug, stated as behaviour: a cadence must still reach the board that takes one."""
     agent = _agent_on(_two_sensor_world(tmp_path), monkeypatch)
 
-    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"moisture": 0.05})
 
     commanded = [t for t in agent.sent.topics() if t.endswith("/command")]
     assert commanded == ["sensors/moisture_sensor_fern/command"], (
@@ -327,7 +327,7 @@ def test_a_reading_is_logged(fern, caplog):
     Grafana, which is a poor place to learn that nothing is arriving.
     """
     with caplog.at_level(logging.INFO):
-        fern.deliver(sensor_of(fern).reading_topic, {"value": 0.123})
+        fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.123})
 
     line = next((r.getMessage() for r in caplog.records if "0.123" in r.getMessage()), None)
     assert line, "a reading must appear in the log"
@@ -379,7 +379,7 @@ def test_the_device_is_told_the_verdict_with_the_cadence(fern):
     and would arrive at a different moment from the cadence it belongs with. The board is
     already subscribed here.
     """
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
+    fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.10})
     last = commands(fern)[-1]
     assert last["band"] == "LOW"
     assert last["sleep_s"] > 0
@@ -388,7 +388,7 @@ def test_the_device_is_told_the_verdict_with_the_cadence(fern):
 def test_the_verdict_is_retained_like_the_cadence(fern):
     """The whole point on a board that deep-sleeps: it must learn the current verdict when it
     subscribes, not at the next reading it happens to take."""
-    fern.deliver(sensor_of(fern).reading_topic, {"value": 0.10})
+    fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.10})
     retained = [r for t, p, r in fern.sent
                 if t == sensor_of(fern).command_topic and "band" in p]
     assert retained and all(retained)
@@ -424,7 +424,7 @@ def test_a_device_whose_agent_holds_no_stake_is_told_only_a_cadence(monkeypatch,
     contributes. Nobody does here, and the message must not grow an empty field for it.
     """
     agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
-    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"moisture": 0.05})
 
     sent = [p for t, p, _ in agent.sent if t.endswith("/command")]
     assert sent and all("band" not in p for p in sent)
@@ -442,7 +442,7 @@ def test_two_properties_of_one_pot_do_not_overwrite_each_other(monkeypatch, tmp_
     """
     agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
 
-    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"moisture": 0.05})
     agent.deliver("sensors/chatter_fern/reading", {"value": 21.0})
 
     # The pot, not the agent — this world is sensing-only, so nobody acts for anything here.
@@ -459,7 +459,7 @@ def test_the_announcement_says_which_property_it_is_about(monkeypatch, tmp_path)
     """
     agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
 
-    agent.deliver("sensors/moisture_sensor_fern/reading", {"value": 0.05})
+    agent.deliver("sensors/moisture_sensor_fern/reading", {"moisture": 0.05})
     agent.deliver("sensors/chatter_fern/reading", {"value": 21.0})
 
     said = {e["property"]: e["value"] for e in agent.sent.to(agent.me.event_topic)}
@@ -567,14 +567,14 @@ def test_the_burst_relaxes_once_the_property_is_measured(fern):
     fast = p.beliefs.fast_sleep_s
     assert cadences(fern)[-1] == fast
 
-    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.55})
+    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.55})
     first_release = cadences(fern)[-1]
     assert first_release == int(fast * p.relax_factor), \
         "one comfortable reading must earn one step of release, not the whole cliff"
 
     granted = first_release
     for _ in range(12):
-        fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.55})
+        fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.55})
         latest = cadences(fern)[-1]
         assert latest <= int(granted * p.relax_factor) or latest == granted
         granted = latest
@@ -588,8 +588,8 @@ def test_tightening_is_never_slewed(fern):
     the fast cadence in ONE step, whatever the release schedule was doing — hesitating in that
     direction costs a plant, and the slew must never be a reason to look away from trouble."""
     p = fern.subscribing()
-    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.55})   # calm-ish
-    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.20})   # survival floor
+    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.55})   # calm-ish
+    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.20})   # survival floor
     assert cadences(fern)[-1] == p.beliefs.fast_sleep_s
 
 
@@ -627,14 +627,14 @@ def test_freshness_follows_the_acknowledged_cadence(fern):
     """The board's testimony beats the agent's intent: a reading that says it was taken under
     900s must be held to 900s plus grace, whatever the agent believes it commanded — a command
     the board never received must not make its honest rhythm read as gone-quiet."""
-    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.2, "sleep_s": 900})
+    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.2, "sleep_s": 900})
     p = fern.subscribing()
     assert p.stale_after_s(fern.me.acts_for, MOISTURE) == 900 + p.beliefs.grace_s
 
 
 def test_without_an_ack_the_commanded_cadence_still_rules(fern):
     """Old firmware stays legal: absence of the field is the pre-ack world, not an error."""
-    fern.deliver(moisture_sensor(fern).reading_topic, {"value": 0.2})
+    fern.deliver(moisture_sensor(fern).reading_topic, {"moisture": 0.2})
     p = fern.subscribing()
     commanded = p.sent_cadence[moisture_sensor(fern).local_id]
     assert p.stale_after_s(fern.me.acts_for, MOISTURE) == commanded + p.beliefs.grace_s
@@ -649,12 +649,12 @@ def test_one_mismatched_ack_is_noise_and_two_are_the_detector(fern, caplog):
     import logging
 
     s = moisture_sensor(fern)
-    fern.deliver(s.reading_topic, {"value": 0.2})            # command 30 goes out
+    fern.deliver(s.reading_topic, {"moisture": 0.2})            # command 30 goes out
     with caplog.at_level(logging.WARNING):
-        fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": 600})   # first mismatch: noise
+        fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 600})   # first mismatch: noise
         assert "twice running" not in caplog.text
         sent_before = len(cadences(fern))
-        fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": 600})   # second: the detector
+        fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 600})   # second: the detector
     assert "twice running" in caplog.text
     assert len(cadences(fern)) > sent_before, \
         "the dispute must re-send the command, not keep assuming the board knows it"
@@ -664,10 +664,10 @@ def test_an_agreeing_ack_clears_the_dispute(fern):
     """One success resets, exactly as the affordance suspicion does: a board that took the
     command is a board in agreement, whatever the previous wake said."""
     s = moisture_sensor(fern)
-    fern.deliver(s.reading_topic, {"value": 0.2})
-    fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": 600})       # mismatch once
+    fern.deliver(s.reading_topic, {"moisture": 0.2})
+    fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 600})       # mismatch once
     commanded = fern.subscribing().sent_cadence[s.local_id]
-    fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": commanded})  # agreement
+    fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": commanded})  # agreement
     key = s.command_topic or s.local_id
     assert key not in fern.subscribing()._ack_disputed
 
@@ -676,7 +676,7 @@ def test_the_ack_reaches_the_health_series(fern):
     """Beside the commanded cadence, the ack in series form IS the #37 detector on a dashboard:
     the two diverging is a cleared or clamped command, visible instead of silent."""
     s = moisture_sensor(fern)
-    fern.deliver(s.reading_topic, {"value": 0.2, "sleep_s": 600})
+    fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 600})
     assert fern.metrics.cadence_acked_s(s.local_id) == 600
     # every sensor sharing the board's channel carries the board's rhythm
     for peer in fern.subscribing()._aimed_with(s):
@@ -776,3 +776,46 @@ SELECT ?rt ?pt WHERE {{ GRAPH <{SENSED_GRAPH}> {{
   OPTIONAL {{ ?obs sosa:phenomenonTime ?pt }} }} }}"""))
     assert rows and rows[0].get("pt"), "the device's own instant was dropped"
     assert rows[0]["pt"] != rows[0]["rt"], "phenomenonTime must be the device's, not arrival"
+
+
+# --- the board watches the agent's desire (#151) -----------------------------
+
+def test_an_alarmed_channel_is_told_the_region_edges(monkeypatch):
+    """The thresholds ride the retained command beside the cadence, and they are DESIRE's
+    region edges — the board literally watches what its agent wants held, while both sleep."""
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    assert s.alarm, "the simulation world promises announce-on-crossing for this device"
+    p.set_cadence(s, 600, None)
+    sent = [c for c in fern.sent.to(s.command_topic) if "alarm" in c]
+    assert sent, "a crossing-watcher must be told its band"
+    watch = sent[-1]["alarm"]
+    # [low, high, delta]: the band is desire's region, the deviation limit a quarter of its
+    # width (sensing:alarmDeltaFraction) — the in-band jolt that is worth waking for.
+    assert watch["/moisture"] == [pytest.approx(0.45), pytest.approx(0.65),
+                                  pytest.approx(0.05)]
+    # and the AIR channel's limits ride the same map — per channel, one retained breath
+    assert watch["/temperature"] == [pytest.approx(18.0), pytest.approx(24.0),
+                                     pytest.approx(1.5)]
+
+
+def test_an_agent_with_no_stake_commands_no_alarm(monkeypatch, tmp_path):
+    """The recording agent wants nothing, so there are no edges to watch — the choir answers
+    None and the command carries no thresholds, whatever the device promises."""
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
+    p = agent.subscribing()
+    s = p.sensors[0]
+    p.set_cadence(s, 600, None)
+    assert all("watch" not in c for c in agent.sent.to(s.command_topic))
+
+
+def test_an_alarm_armed_watch_is_live_whatever_the_heartbeat(monkeypatch):
+    """#151 reaching #132: a dose landing crosses the band and the board announces within its
+    watch period, so a held claim need not wait for a fast-acked cadence — the promise IS the
+    live watch, once the band has actually been sent."""
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    assert not p.watch_is_live(fern.me.acts_for, MOISTURE), \
+        "before anything is sent there is no promise to lean on"
+    p.set_cadence(s, 600, None)   # the band goes out with the cadence
+    assert p.watch_is_live(fern.me.acts_for, MOISTURE)

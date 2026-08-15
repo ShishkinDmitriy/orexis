@@ -82,6 +82,10 @@ class Sensor:
     # (#98): a sosa:Sample whose isSampleOf is the subject above. Optional, and its absence is
     # the ordinary rig — the subject is the feature, and everything reads as it always did.
     sample: str | None = None
+    # THIS channel is watched for crossings (#151): its band is commanded beside the cadence,
+    # and silence between heartbeats means "nothing crossed" — information. Per sensor, because
+    # which values a board can watch is a per-channel hardware fact.
+    alarm: bool = False
 
 
 @dataclass(frozen=True)
@@ -168,7 +172,7 @@ def _sensors_q(agent_uri: str) -> str:
     about how to reach it varies by transport, and a driver is picked from what is there."""
     return f"""
 SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic
-       ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit ?sample
+       ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit ?sample ?alarm
 WHERE {{
   <{agent_uri}> sensing:polls ?sensor .
   ?sensor ag:localId ?localId ; sensing:monitors ?subject ; sosa:observes ?observes .
@@ -177,6 +181,10 @@ WHERE {{
   OPTIONAL {{ ?sensor mqtt:readingTopic ?stream .
               ?clockKeeper mqtt:readingTopic ?stream ; mqtt:onBus ?anyBus ;
                            sensing:senseMode ?senseMode }}
+  # Whether THIS CHANNEL is watched for crossings (#151) — per sensor, not per board,
+  # because which values a board can watch is a hardware fact per channel: a ULP reaches the
+  # analog probe and never the DHT. The board wakes for any watched channel that crosses.
+  OPTIONAL {{ ?sensor ssn:implements sensing:AlarmProcedure . BIND(true AS ?alarm) }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
   OPTIONAL {{ ?sensor sensing:samples ?sample }}
   OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
@@ -274,6 +282,7 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
             subject_id=r.get("subjectId") or "", observes=r["observes"],
             sense_mode=r.get("senseMode"),
             sample=r.get("sample"),
+            alarm=bool(r.get("alarm")),
             bus=r.get("bus"), reading_topic=r.get("readingTopic"),
             reading_pointer=r.get("readingPointer"),
             command_topic=r.get("commandTopic"),

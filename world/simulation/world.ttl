@@ -238,10 +238,16 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
+    #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
+    #  beside the cadence, and the stand-in watches them between heartbeats as a ULP would.
+    ssn:implements sensing:AlarmProcedure ;
     sensing:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
+    #  Named for what it measures, like /temperature beside it — the anonymous /value default
+    #  exists for devices that state nothing, and a moisture reading is not anonymous.
+    mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
@@ -257,6 +263,9 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
 #  ag:DeviceModelShape had to stop making.
 ag:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
+    #  Watched too (#151): a stand-in may watch every channel it has, where a real ESP32's ULP
+    #  reaches only the analog probe — the per-channel statement is exactly for that asymmetry.
+    ssn:implements sensing:AlarmProcedure ;
     #  no senseMode since #96: the clock is the device's, stated once where it connects
     sensing:monitors ag:fern ;
     sosa:observes water:AirTemperature ;
@@ -277,10 +286,16 @@ ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_tomato" ;
     mqtt:onBus ag:local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
+    #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
+    #  beside the cadence, and the stand-in watches them between heartbeats as a ULP would.
+    ssn:implements sensing:AlarmProcedure ;
     sensing:monitors ag:tomato ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
     mqtt:readingTopic "sensors/moisture_sensor_tomato/reading" ;
+    #  Named for what it measures, like /temperature beside it — the anonymous /value default
+    #  exists for devices that state nothing, and a moisture reading is not anonymous.
+    mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_tomato/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
@@ -293,10 +308,16 @@ ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_succulent" ;
     mqtt:onBus ag:local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
+    #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
+    #  beside the cadence, and the stand-in watches them between heartbeats as a ULP would.
+    ssn:implements sensing:AlarmProcedure ;
     sensing:monitors ag:succulent ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
     mqtt:readingTopic "sensors/moisture_sensor_succulent/reading" ;
+    #  Named for what it measures, like /temperature beside it — the anonymous /value default
+    #  exists for devices that state nothing, and a moisture reading is not anonymous.
+    mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_succulent/command" ;
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;

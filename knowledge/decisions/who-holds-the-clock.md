@@ -188,3 +188,34 @@ operator had said healthy. The silence was correct in each of the three places i
 wrong in composition, which is why no single shape or function looked buggy on inspection — and
 why the close is one unrepresentability plus one honest return value rather than a fourth
 locally-correct check.
+
+# Amended: the world holds the third clock (#151)
+
+The axis gained the position it always implied. Scheduled is the agent's clock, Push is the
+device's — and announce-on-crossing is the WORLD's: the device watches commanded thresholds
+while it deep-sleeps (an ESP32's ULP compares the reading every second for microamps) and wakes
+to speak the moment the value crosses one. The device is merely the world's messenger.
+
+Deliberately NOT a fourth `sensing:senseMode`. The mode is who holds the HEARTBEAT, one answer
+per device (#96); the alarm wake is an ADDITIONAL procedure the same device implements —
+`ssn:implements sensing:AlarmProcedure`, the standard relation arriving for exactly the
+reason this record kept `senseMode` ours: `ssn:implements` is wider *because* a system may
+implement several procedures, and here is the second one. Stated PER CHANNEL — on the sensor
+whose value is watched — because which values a board can watch is a per-channel hardware
+fact: an ESP32's ULP reaches the analog probe and can never speak the DHT's protocol, so a
+real board promises its moisture and stays honest about its air, while a stand-in may promise
+every channel it has. A shape requires the implementing sensor to ride a Scheduled device with
+a command channel, since the bands arrive the way the cadence does — one retained map, a band
+per watched pointer.
+
+The alarm carries process control's BOTH classic limits: HI/LO (the band — desire's region
+edges) and DEVIATION (`sensing:alarmDeltaFraction` of the band's width — an in-band move since
+the last report that is itself the news). The board arms their intersection as one window, so
+the second limit is arithmetic, not machinery.
+
+What the promise buys, mechanically: the thresholds are the agent's region edges (desire's
+`bounds`, collected like urgency), so the board literally watches its agent's desire while both
+sleep; silence between heartbeats means "nothing crossed" — information — and a alarm-armed
+watch counts as LIVE for #132's held claims, however long the heartbeat. The hand-watering
+scenario that no cadence policy could recover — a third party's impulse inside the sleep
+window — is now seen within the watch period, which was the whole of #151's argument.

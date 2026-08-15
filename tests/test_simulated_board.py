@@ -322,3 +322,107 @@ def test_a_push_device_takes_no_release_because_it_never_waits():
     device._released.clear()
     _command(device, {"sleep_s": 120})
     assert not device._released.is_set()
+
+
+# --- announce on crossing: the world holds the third clock (#151) -------------
+
+def test_commanded_alarm_limits_arm_the_watch():
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"sleep_s": 600, "alarm": {"/value": [0.4, 0.6]}})
+    assert device.alarm == {"/value": (0.4, 0.6, None)}
+    assert not device._alarmed(), "0.45 sits inside the band"
+
+
+def test_hand_watering_is_seen_within_the_watch_period_not_the_polling_window():
+    """THE scenario the issue exists for: someone waters the plant and no agent decided it.
+    The dose crosses the commanded ceiling, the watch notices, and the next publish says the
+    world changed — within the watch period, not an hour later at the heartbeat."""
+    device, published = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"sleep_s": 3600, "alarm": {"/value": [0.4, 0.6]}})
+
+    device._receive(600)   # 600 ml through 2 L/fraction: 0.45 -> 0.75, past the ceiling
+    assert device._alarmed(), "the watch must see the stranger's water"
+
+    device._woke_by_alarm = True   # what the loop sets when _alarmed ends a sleep early
+    device._publish()
+    assert json.loads(published[-1][1]).get("wake") == "alarm", \
+        "the reading must say it exists because the value moved, not because time passed"
+
+
+def test_drying_out_of_the_band_is_a_crossing_too():
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"alarm": {"/value": [0.5, 1.0]}})  # 0.45 already breaches the floor
+    assert device._alarmed()
+
+
+def test_each_watched_channel_has_its_own_band():
+    """Per channel, because which values a board can watch is a per-channel fact — and a
+    temperature alarm wakes the board exactly as a moisture one does."""
+    device, _ = _device([MOISTURE, TEMPERATURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"alarm": {"/value": [0.4, 0.6], "/temperature": [18.0, 24.0]}})
+    assert not device._alarmed(), "0.45 and 21.0 both sit inside their bands"
+    device._control({"value": 30.0, "at": "/temperature"})  # a heat spike in the room
+    assert device._alarmed(), "the air leaving ITS band must wake the board too"
+
+
+def test_a_device_never_given_alarm_limits_never_wakes_for_them():
+    """Dormant exactly as unflashed firmware would be: no thresholds, no watch — a world whose
+    device states no AlarmProcedure never sends any."""
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    device._receive(600)
+    assert not device._alarmed()
+
+
+def test_the_watch_reads_the_world_not_the_instrument():
+    """A real ULP compares the ADC, and the grain and the spikes are properties of the REPORT:
+    a board that woke for its own measurement noise would cry wolf at its own echo."""
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd",
+                        SIM_SPIKE_CHANCE="1", SIM_SPIKE_SPAN="0.5")
+    _command(device, {"alarm": {"/value": [0.2, 0.9]}})
+    assert not device._alarmed(), "spikes are report-side and must not trip the watch"
+
+
+def test_a_push_sentinel_holds_alarm_limits_baked_at_flash():
+    """The second firmware's stand-in: a push device takes no orders, so its band arrives as
+    SIM_ALARM — its config.h — and a crossing makes it speak off its own tick, marked as the
+    news it is. No sleep_s either way: nothing commands this board, so there is nothing to
+    receipt."""
+    device, published = _device([MOISTURE], SIM_SENSE_MODE="push",
+                                SIM_ALARM='{"/value": [0.4, 0.6]}')
+    assert device.alarm == {"/value": (0.4, 0.6, None)}
+    device._receive(600)   # a stranger's watering: 0.45 -> 0.75, past the ceiling
+    assert device._alarmed(), "the sentinel must see the water"
+    device._woke_by_alarm = True
+    device._publish()
+    doc = json.loads(published[-1][1])
+    assert doc.get("wake") == "alarm"
+    assert "sleep_s" not in doc
+
+
+def test_a_scheduled_device_ignores_baked_alarm_limits():
+    """SIM_ALARM is the sentinel's config.h; a governed device is COMMANDED its band, and
+    reading both would let the two sources disagree about one watch."""
+    device, _ = _device([MOISTURE], SIM_ALARM='{"/value": [0.4, 0.6]}')
+    assert device.alarm == {}
+
+
+def test_a_jolt_inside_the_band_is_an_alarm_too():
+    """The deviation half (#151's 'configurable delta'): a stranger waters a COMFORTABLE pot —
+    0.45 to 0.55 never leaves the band, and the move itself is the news. Process control calls
+    this the deviation alarm, and it rides the same watch as the HI/LO one."""
+    device, published = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"sleep_s": 3600, "alarm": {"/value": [0.2, 0.9, 0.05]}})
+    device._publish()                       # the report the deviation measures from (0.45)
+    assert not device._alarmed(), "nothing has moved yet"
+    device._receive(200)                    # +0.10: well inside the band, twice the delta
+    assert device._alarmed(), "an in-band jolt past the delta must wake the board"
+
+
+def test_slow_drift_inside_the_band_stays_silent():
+    """The other half of the same limit: ordinary drying between heartbeats moves less than
+    the delta, and a deviation alarm that woke for it would just be a second heartbeat."""
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"alarm": {"/value": [0.2, 0.9, 0.05]}})
+    device._publish()
+    device.values[0].value -= 0.02          # a heartbeat's worth of drying
+    assert not device._alarmed()

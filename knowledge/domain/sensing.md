@@ -142,6 +142,15 @@ moisture.
   readings. That gap is not drift to be corrected: the agent is choosing how long the device
   may rest, and the device honours exactly that. Anything tighter than the wake cost is
   mostly wake cost, which is why the constitutional floor sits where it does.
+- **The bands** (`watch`: a `pointer -> [low, high]` map) arm the crossing-watchers (#151),
+  one per channel the world says is watched (`ssn:implements sensing:AlarmProcedure`, on
+  the SENSOR — per channel, because which values a board can watch is a per-channel hardware
+  fact: an ESP32's ULP reaches the analog probe and never the DHT, where a stand-in may watch
+  everything it has). The bands are the agent's region edges, retained beside the cadence, and
+  the board wakes off-cadence the moment ANY watched value leaves its band — the reading then
+  says `"wake":"alarm"`, the one arrival that means the world changed rather than the clock
+  ticked. Silence from a watched channel means "nothing crossed", which is information; a
+  plain scheduled board's silence means only "not due yet".
 - **Sense** (`sense:true`) is a *best-effort nudge* — it lands only if the board happens to be
   awake between publishing and being released, and is **never retained** (a retained `sense`
   would re-fire on every wake, forever).
@@ -308,6 +317,25 @@ a device speaks for itself — timestamps its readings, or batches ten and sends
 its own instant lands in `sosa:phenomenonTime` beside it: *when the result applies to the
 world*, as distinct from when we heard. The two coincide for every device here today, and the
 writer, the shape and this sentence are ready for the first one where they do not.
+
+# The price of watching, and who actually spends the battery
+
+Estimated on this bench's numbers (#151): a full radio wake — boot, WiFi, publish, release —
+costs ~0.25 mAh; the ULP vigil ~150 µA, ~3.6 mAh/day. One wake buys about a hundred minutes of
+watching, so the radio is the cost and the vigil is noise until heartbeats stretch past ~4
+hours, where the vigil becomes the dominant term and the energy-budget seam's real question —
+pricing the watching itself — begins.
+
+The finding that outlives the numbers: **the battery is spent by the agent's epistemology, not
+by the firmware.** A sentinel's heartbeat is generated under its polling agent's
+`sensing:maxReadingAgeS`, so the same board is either no better than the governed node (~40
+mAh/day, weeks on a cell) or four times better (~10 mAh/day, months) on nothing but that one
+belief. The crossing promise is what makes a generous freshness rule safe: silence means
+*nothing crossed*, freshness work moves onto the ULP, and the heartbeat only proves liveness.
+A world that deploys a sentinel and keeps a twelve-minute freshness rule has bought the watcher
+and declined the savings. Both firmwares are supported on equal terms — the governed node where
+the agent must steer attention, the sentinel where the world's own events are the story — and
+`agora-firmware` dispatches on `mc:firmware` alone.
 
 # Seams left open
 

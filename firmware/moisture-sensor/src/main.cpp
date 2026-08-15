@@ -40,6 +40,11 @@
 
 #include "config.h"
 
+// Wake on crossing (#151) lives in ulp_watch.cpp — compiled in only where the world promises
+// it (WAKE_ON_ALARM, generated from ssn:implements sensing:AlarmProcedure), and carrying
+// the derivation of its one-second internal cadence from the worst credible slew.
+#include "ulp_watch.h"
+
 // The topics come from config.h, which `agora-firmware` generates from the world's own
 // ag:readingTopic and ag:commandTopic. They used to be built here as "sensors/" PLANT_ID
 // "/moisture" — which assumed a topic SHAPE the world states explicitly, and would have gone
@@ -295,9 +300,14 @@ static void publishReading() {
   // default, when no command was retained, which is exactly the case the agent needs to SEE:
   // a cleared retained cadence (#37) used to be invisible, and now arrives as an ack that
   // disagrees with what the agent believes it commanded.
-  char payload[176];
-  int n = snprintf(payload, sizeof(payload), "{\"value\":%.3f,\"sensor\":\"%s\",\"sleep_s\":%u",
+  char payload[200];
+  int n = snprintf(payload, sizeof(payload), "{\"moisture\":%.3f,\"sensor\":\"%s\",\"sleep_s\":%u",
                    lastFrac, SENSOR_ID, sleep_s);
+  if (wokeByAlarm() && n > 0 && n < (int)sizeof(payload)) {
+    // This reading exists because the value moved, not because time passed — the one arrival
+    // that means the world changed rather than the clock ticked (#151).
+    n += snprintf(payload + n, sizeof(payload) - n, ",\"wake\":\"alarm\"");
+  }
   if (airValid && n > 0 && n < (int)sizeof(payload)) {
     n += snprintf(payload + n, sizeof(payload) - n, ",\"temperature\":%.1f,\"humidity\":%.3f",
                   airC, airRh);
@@ -306,6 +316,7 @@ static void publishReading() {
     snprintf(payload + n, sizeof(payload) - n, "}");
   }
   published = mqtt.publish(MOISTURE_TOPIC, payload);
+  if (published) noteReported(lastFrac);   // the deviation limit drifts from what was HEARD
   Serial.printf("%s %s   %s\n", MOISTURE_TOPIC, payload,
                 published ? "sent" : "REFUSED by the broker — check the ACL for this topic");
 }
@@ -315,6 +326,21 @@ static void onCmd(char *topic, byte *payload, unsigned int len) {
   got_cmd = true;  // ends the pre-publish drain, whatever the command carries
   JsonDocument doc;
   if (deserializeJson(doc, payload, len)) return;
+#ifdef WAKE_ON_ALARM
+  // The bands ride the same retained message as the cadence, one per watched channel:
+  // {"watch":{"/value":[0.45,0.65],...}}. This board takes exactly its MOISTURE channel's —
+  // the one its ULP can physically reach — and ignores the rest: the DHT hangs off a protocol
+  // the ULP cannot speak, which is why the world only states the promise per channel.
+  if (doc["alarm"]["/moisture"].is<JsonArray>() && doc["alarm"]["/moisture"].size() >= 2) {
+    rtc_wake_below = doc["alarm"]["/moisture"][0].as<float>();
+    rtc_wake_above = doc["alarm"]["/moisture"][1].as<float>();
+    // The optional third element is the DEVIATION limit: wake if the value moves more than
+    // this from the last report, band or no band — the in-band jolt the heartbeat would
+    // otherwise sleep through. Negative means none commanded.
+    rtc_wake_delta = doc["alarm"]["/moisture"].size() > 2
+                         ? doc["alarm"]["/moisture"][2].as<float>() : -1.0f;
+  }
+#endif
   if (doc["sleep_s"].is<uint32_t>()) {
     uint32_t s = doc["sleep_s"];
     if (s < MIN_SLEEP_S) s = MIN_SLEEP_S;
@@ -490,10 +516,13 @@ void setup() {
   else                 ledVerdict();       // silent unless the agent had something to add
   ledOff();
 
-  // 4. deep-sleep for the agent-set cadence, then the board wakes and repeats setup()
+  // 4. deep-sleep for the agent-set cadence — and, where the world promises it, arm the ULP
+  //    to watch the commanded band meanwhile (#151): the heartbeat wake stays as scheduled,
+  //    and a crossing simply ends the sleep early with the world's news.
   Serial.printf("sleeping %us\n", sleep_s);
   mqtt.disconnect();
   delay(50);
+  armUlpWatch();
   esp_sleep_enable_timer_wakeup((uint64_t)sleep_s * 1000000ULL);
   esp_deep_sleep_start();
 }
