@@ -82,6 +82,9 @@ class Sensor:
     # (#98): a sosa:Sample whose isSampleOf is the subject above. Optional, and its absence is
     # the ordinary rig — the subject is the feature, and everything reads as it always did.
     sample: str | None = None
+    # The device announces on crossing too (#151): thresholds are commanded beside the
+    # cadence, and silence between heartbeats means "nothing crossed" — information.
+    crossing: bool = False
 
 
 @dataclass(frozen=True)
@@ -168,7 +171,7 @@ def _sensors_q(agent_uri: str) -> str:
     about how to reach it varies by transport, and a driver is picked from what is there."""
     return f"""
 SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic
-       ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit ?sample
+       ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit ?sample ?crossing
 WHERE {{
   <{agent_uri}> sensing:polls ?sensor .
   ?sensor ag:localId ?localId ; sensing:monitors ?subject ; sosa:observes ?observes .
@@ -177,6 +180,12 @@ WHERE {{
   OPTIONAL {{ ?sensor mqtt:readingTopic ?stream .
               ?clockKeeper mqtt:readingTopic ?stream ; mqtt:onBus ?anyBus ;
                            sensing:senseMode ?senseMode }}
+  # Whether the device ALSO announces on crossing (#151) — the same stream join, because the
+  # promise is the board's exactly as the clock is.
+  OPTIONAL {{ ?sensor mqtt:readingTopic ?stream2 .
+              ?watcher mqtt:readingTopic ?stream2 ; mqtt:onBus ?bus2 ;
+                       ssn:implements sensing:CrossingProcedure .
+              BIND(true AS ?crossing) }}
   OPTIONAL {{ ?subject ag:localId ?subjectId }}
   OPTIONAL {{ ?sensor sensing:samples ?sample }}
   OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
@@ -274,6 +283,7 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
             subject_id=r.get("subjectId") or "", observes=r["observes"],
             sense_mode=r.get("senseMode"),
             sample=r.get("sample"),
+            crossing=bool(r.get("crossing")),
             bus=r.get("bus"), reading_topic=r.get("readingTopic"),
             reading_pointer=r.get("readingPointer"),
             command_topic=r.get("commandTopic"),

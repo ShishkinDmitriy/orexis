@@ -50,6 +50,7 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 # how to describe. A board carrying something it has no template for is reported, not guessed at.
 _BOARDS_Q = f"""
 SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
+       ?crossing
        ?ledRed ?ledGreen ?ledBlue ?airPin
 WHERE {{ 
   ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{MC}firmware> ?firmware ;
@@ -58,6 +59,12 @@ WHERE {{
           <{MQTT}readingTopic> ?readTopic ;
           <{PROBE}rawDry> ?rawDry ; <{PROBE}rawWet> ?rawWet .
   OPTIONAL {{ ?sensor <{MQTT}commandTopic> ?cmdTopic }}
+  # Whether the board's connecting device promises announce-on-crossing (#151) — the same
+  # stream-and-bus join every other device fact makes since #96.
+  OPTIONAL {{ ?watcher <{MQTT}readingTopic> ?readTopic ; <{MQTT}onBus> ?wBus ;
+              <http://www.w3.org/ns/ssn/implements>
+                <http://example.org/agora/sensing#CrossingProcedure> .
+             BIND(true AS ?crossing) }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerHost> ?host ; <{MQTT}brokerPort> ?port .
   OPTIONAL {{ ?pi a <{AG}ComputeHost> ; <{AG}lanHost> ?lan }}
 
@@ -177,7 +184,21 @@ def render(world: str, row: dict, bounds: tuple[int, int]) -> str:
 // ask for a cadence outside these, and the board will not honour one.
 #define MIN_SLEEP_S {lo}
 #define MAX_SLEEP_S {hi}
-"""
+{_crossing(row)}"""
+
+
+def _crossing(row: dict) -> str:
+    """The announce-on-crossing promise (#151), compiled in only where the world states it.
+
+    A define rather than a runtime flag because the ULP machinery is real code with a real
+    footprint, and a board whose world makes no such promise should not carry the means to
+    keep it — absence stays a statement, in the firmware exactly as in the graph.
+    """
+    if not row.get("crossing"):
+        return ""
+    return ("\n// The world promises this board announces on crossing (#151): the ULP watches\n"
+            "// the commanded band between heartbeats and wakes the radio when the value leaves it.\n"
+            "#define WAKE_ON_CROSSING 1\n")
 
 
 def _optional_pins(row: dict) -> str:

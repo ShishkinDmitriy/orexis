@@ -188,3 +188,24 @@ operator had said healthy. The silence was correct in each of the three places i
 wrong in composition, which is why no single shape or function looked buggy on inspection — and
 why the close is one unrepresentability plus one honest return value rather than a fourth
 locally-correct check.
+
+# Amended: the world holds the third clock (#151)
+
+The axis gained the position it always implied. Scheduled is the agent's clock, Push is the
+device's — and announce-on-crossing is the WORLD's: the device watches commanded thresholds
+while it deep-sleeps (an ESP32's ULP compares the reading every second for microamps) and wakes
+to speak the moment the value crosses one. The device is merely the world's messenger.
+
+Deliberately NOT a fourth `sensing:senseMode`. The mode is who holds the HEARTBEAT, one answer
+per device (#96); the crossing wake is an ADDITIONAL procedure the same device implements —
+`ssn:implements sensing:CrossingProcedure`, the standard relation arriving for exactly the
+reason this record kept `senseMode` ours: `ssn:implements` is wider *because* a system may
+implement several procedures, and here is the second one. A shape requires the implementer to
+be Scheduled with a command channel, since the thresholds arrive the way the cadence does.
+
+What the promise buys, mechanically: the thresholds are the agent's region edges (desire's
+`bounds`, collected like urgency), so the board literally watches its agent's desire while both
+sleep; silence between heartbeats means "nothing crossed" — information — and a crossing-armed
+watch counts as LIVE for #132's held claims, however long the heartbeat. The hand-watering
+scenario that no cadence policy could recover — a third party's impulse inside the sleep
+window — is now seen within the watch period, which was the whole of #151's argument.

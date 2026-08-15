@@ -150,6 +150,27 @@ sensing:ScheduledProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Sc
 sensing:PushProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Push procedure" ;
     rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives sensing:Listening. The edge holds the policy, and no agent can take it back." .
 
+#  The THIRD clock-holder, finally earning its place (#151): not the agent's (Scheduled), not
+#  the device's (Push) — the WORLD's. A device implementing this watches thresholds while it
+#  deep-sleeps (an ESP32's ULP compares the reading every second for microamps) and wakes to
+#  announce the moment the value CROSSES one. The device is merely the world's messenger: the
+#  signal changed, so the signal says so.
+#
+#  Deliberately NOT a fourth SenseMode. The mode is who holds the HEARTBEAT, one answer per
+#  device (#96) — a crossing-watcher still keeps the interval its agent commands, and the
+#  crossing wake is an ADDITIONAL procedure the same device implements. Which is exactly the
+#  case the senseMode comment above always predicted: ssn:implements is wider than our
+#  relation BECAUSE a system may implement several procedures, and here is the second one,
+#  arriving through the standard word rather than by widening ours.
+#
+#  What it PROMISES is the part the agent may lean on: silence from a crossing-armed board
+#  means "nothing crossed" — information — where silence from a plain scheduled board means
+#  only "not due yet". The thresholds themselves are the agent's to command, retained beside
+#  the cadence, and the natural ones are its region's edges: the board then literally watches
+#  the agent's desire while both of them sleep.
+sensing:CrossingProcedure a sosa:Procedure ; rdfs:label "Announce on crossing" ;
+    rdfs:comment "Watch commanded thresholds while asleep; wake and publish when the value crosses one. Stated on the connecting DEVICE with ssn:implements, beside (never instead of) its sense mode. A shape requires the device to be Scheduled with a command channel, because thresholds arrive the way the cadence does — a push board that watched thresholds would have no way to be told which." .
+
 sensing:senseMode a owl:ObjectProperty ; rdfs:domain <http://example.org/agora#Device> ; rdfs:range sensing:SenseMode ;
     rdfs:label "sense mode" ;
     rdfs:comment "Whose fact this is decided #96: the DEVICE's — the board that sleeps, wakes and keeps the interval — never the sensing element's. Three sensors on one board used to state it three times with no shape spanning them, so one could claim Scheduled while its neighbour claimed Push: a physical impossibility that would have derived both Subscribing and Listening for one agent from one firmware. Stated once on the connecting device now, and a bearer shape (transport/mqtt) refuses it anywhere else." .

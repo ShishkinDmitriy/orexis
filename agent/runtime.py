@@ -143,6 +143,27 @@ class Agent:
                 log.error("%s: %s could not annotate a reading: %s", self.id, module.name, exc)
         return out
 
+    def bounds(self, subject_uri: str, observed_property: str) -> tuple[float, float] | None:
+        """The tightest band any of my modules wants this property held in, or None.
+
+        Collected like urgency — whoever holds a stake contributes, and the intersection is
+        what a crossing-watching board is told to announce on leaving (#151): the highest
+        floor and the lowest ceiling, because a board that woke for the loosest opinion would
+        sleep through the tightest one's trouble.
+        """
+        answers = []
+        for module in self.modules:
+            try:
+                answer = module.bounds(subject_uri, observed_property)
+            except Exception as exc:
+                log.error("%s: %s could not state bounds: %s", self.id, module.name, exc)
+                continue
+            if answer is not None:
+                answers.append(answer)
+        if not answers:
+            return None
+        return max(low for low, _ in answers), min(high for _, high in answers)
+
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
         """How close this reading puts me to trouble — the sharpest opinion any of me holds.

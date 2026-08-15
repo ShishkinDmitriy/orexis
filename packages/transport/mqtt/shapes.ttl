@@ -70,3 +70,17 @@ mqtt:MqttActuatorShape a sh:NodeShape ;
             }
         """ ] ;
     sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+
+mqtt:CrossingWatcherShape a sh:NodeShape ;
+    rdfs:comment "A device that announces on crossing (#151) must be one whose thresholds CAN arrive: Scheduled — the crossing wake rides beside a commanded heartbeat, never instead of one — with the same command channel the cadence uses. A push board claiming it would be promising to watch thresholds nobody can tell it." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/ssn/implements>
+                      <http://example.org/agora/sensing#CrossingProcedure> .
+            }
+        """ ] ;
+    sh:property [ sh:path sensing:senseMode ; sh:minCount 1 ; sh:hasValue sensing:ScheduledProcedure ;
+                  sh:message "announce-on-crossing rides beside a commanded heartbeat — the device must be Scheduled" ] ;
+    sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ;
+                  sh:message "a crossing-watcher must have the channel its thresholds arrive on" ] .

@@ -212,6 +212,15 @@ class SimulatedSensor:
         self.release_wait_s = _float("SIM_RELEASE_WAIT_S", 5)
         self._released = threading.Event()
 
+        # Announce-on-crossing (#151): the agent commands a band beside the cadence, and this
+        # device watches it BETWEEN heartbeats the way a real board's ULP would — checking the
+        # primary value every watch-period and waking early the moment it leaves the band.
+        # None until commanded; a world whose device states no CrossingProcedure never gets
+        # the command, so this stays dormant exactly as unflashed firmware would.
+        self.wake_below: float | None = None
+        self.wake_above: float | None = None
+        self.watch_period_s = _float("SIM_WATCH_PERIOD_S", 1.0)
+
         # Measurement error — a property of this firmware's fidelity, like LED_BRIGHTNESS on
         # the real board: not generated from the world, env-overridable, stated as fractions of
         # each value's span so one pair of knobs is honest about a fraction and a temperature
@@ -273,6 +282,10 @@ class SimulatedSensor:
         # steered would be untestable, and steering is not something the device does.
         if self.mode == "push":
             return
+        if isinstance(doc.get("wake_below"), (int, float)):
+            self.wake_below = float(doc["wake_below"])
+        if isinstance(doc.get("wake_above"), (int, float)):
+            self.wake_above = float(doc["wake_above"])
         if isinstance(doc.get("sleep_s"), (int, float)):
             asked = float(doc["sleep_s"])
             self.sleep_s = max(self.min_sleep_s, min(self.max_sleep_s, asked))
@@ -298,6 +311,9 @@ class SimulatedSensor:
         # deep sleep, so the ack is its only testimony about the rhythm actually in force.
         if self.mode == "scheduled":
             doc["sleep_s"] = int(self.sleep_s)
+            if getattr(self, "_woke_by_crossing", False):
+                doc["wake"] = "crossing"   # this reading exists because the value moved
+                self._woke_by_crossing = False
         # What the world holds is one thing; what the instrument says is another. The grain and
         # the occasional spike are applied at REPORT time and never fed back into the value —
         # measurement error is about the reading, and physics that inherited it would drift.
@@ -397,6 +413,20 @@ class SimulatedSensor:
         for v in self.values:
             v.advance(dt)
 
+    def _crossed(self) -> bool:
+        """Whether the primary value sits outside the commanded band right now.
+
+        The TRUE value, not the reported one: a real ULP compares the ADC, and the grain and
+        the spikes are properties of the REPORT (#163) — a board that woke for its own
+        measurement noise would be a boy crying wolf at his own echo.
+        """
+        if self.wake_below is None and self.wake_above is None:
+            return False
+        primary = next((v for v in self.values if v.pointer == "/value"), self.values[0])
+        now = primary.read(time.time() * self.timescale)
+        return ((self.wake_below is not None and now < self.wake_below)
+                or (self.wake_above is not None and now > self.wake_above))
+
     # --- the loop ---
 
     def run(self) -> None:
@@ -435,7 +465,21 @@ class SimulatedSensor:
             if not self._released.wait(self.release_wait_s):
                 log.warning("%s: no release after %ss — the agent is not answering",
                             self.sensor_id, self.release_wait_s)
-            self._stop.wait(self.sleep_s)
+            # The heartbeat sleep — WATCHED (#151), where a band is commanded: physics advance
+            # each watch-period and a crossing ends the sleep early, exactly as a ULP would end
+            # a deep sleep. The next publish then says WHY it happened.
+            slept = 0.0
+            while slept < self.sleep_s and not self._stop.is_set():
+                step = min(self.watch_period_s, self.sleep_s - slept)
+                self._stop.wait(step)
+                slept += step
+                self._advance()
+                if self._crossed():
+                    self._woke_by_crossing = True
+                    log.info("%s: crossed the commanded band — waking off-cadence, "
+                             "the world changed and this board is its messenger",
+                             self.sensor_id)
+                    break
 
 
 def main() -> None:

@@ -238,6 +238,9 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
+    #  And it ALSO announces on crossing (#151): the agent commands its region's edges beside
+    #  the cadence, and the stand-in watches them between heartbeats as a real ULP would.
+    ssn:implements sensing:CrossingProcedure ;
     sensing:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
@@ -277,6 +280,9 @@ ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_tomato" ;
     mqtt:onBus ag:local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
+    #  And it ALSO announces on crossing (#151): the agent commands its region's edges beside
+    #  the cadence, and the stand-in watches them between heartbeats as a real ULP would.
+    ssn:implements sensing:CrossingProcedure ;
     sensing:monitors ag:tomato ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
@@ -293,6 +299,9 @@ ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_succulent" ;
     mqtt:onBus ag:local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
+    #  And it ALSO announces on crossing (#151): the agent commands its region's edges beside
+    #  the cadence, and the stand-in watches them between heartbeats as a real ULP would.
+    ssn:implements sensing:CrossingProcedure ;
     sensing:monitors ag:succulent ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's

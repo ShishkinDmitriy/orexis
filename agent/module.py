@@ -100,6 +100,14 @@ class Module:
         """
         return {}
 
+    def bounds(self, subject_uri: str, observed_property: str) -> tuple[float, float] | None:
+        """Where this module wants the property HELD — the band a crossing-watching board
+        should announce on leaving (#151). None means no stake and no opinion, like urgency;
+        desire answers with its region's edges, and the board then literally watches the
+        agent's desire while both of them sleep.
+        """
+        return None
+
     def quiet(self) -> list[str]:
         """What this module has stopped hearing that it expected to hear — one line each.
 

@@ -146,6 +146,12 @@ class SensingModule(Module):
         doc = self.parse(payload)
         if doc is not None and isinstance(doc.get("sleep_s"), (int, float)):
             acknowledged = int(doc["sleep_s"])
+        if doc is not None and doc.get("wake") == "crossing":
+            # The world spoke (#151): this reading exists because the value crossed a
+            # commanded threshold, not because the heartbeat came due. Worth a line, because
+            # it is the one arrival that means something happened rather than time passed.
+            self.log.info("crossing wake on %s — the world changed and the board said so",
+                          topic)
         for sensor in self.sensors:
             driver = self.drivers[sensor.uri]
             if driver is None or not driver.owns(sensor, topic):
@@ -368,6 +374,12 @@ class SubscribingModule(SensingModule):
         sensor = self.sensor_for(subject_uri, observed_property)
         if sensor is None:
             return False
+        # A crossing-armed board IS a live watch (#151): a dose landing moves the value across
+        # the commanded band edge and the board announces within its watching period, however
+        # long the heartbeat. The thresholds must actually have gone out — the same dedup
+        # memory that proves the channel has been spoken to proves what was said.
+        if sensor.crossing and sensor.local_id in self.sent_cadence:
+            return True
         acked = self.acked_cadence.get(sensor.command_topic or sensor.local_id)
         return acked is not None and acked <= self.beliefs.fast_sleep_s
 
@@ -545,6 +557,16 @@ class SubscribingModule(SensingModule):
         message = (int(sleep_s), tuple(sorted((verdict or {}).items())))
         if self.sent.get(key) == message:
             return
+        # A crossing-watcher is told WHICH band to announce on leaving (#151), beside the
+        # cadence and in the same retained breath: the tightest bounds any module with a stake
+        # holds — desire's region edges, ordinarily — so the board literally watches this
+        # agent's desire while both of them sleep. A device that stated no CrossingProcedure
+        # gets no thresholds, and old firmware ignores keys it does not know.
+        if sensor.crossing:
+            held = self.agent.bounds(sensor.subject, sensor.observes)
+            if held is not None:
+                verdict = {**(verdict or {}),
+                           "wake_below": round(held[0], 3), "wake_above": round(held[1], 3)}
         driver = self.drivers[sensor.uri]
         if driver is None:
             return

@@ -286,6 +286,17 @@ class DesireModule(Module):
             return {}
         return {"band": self.regions[observed_property].band(value)}
 
+    def bounds(self, subject_uri: str, observed_property: str) -> tuple[float, float] | None:
+        """My region's edges — what a crossing-watching board is told to announce on leaving
+        (#151). The REGION and not the survival envelope, deliberately: waking at the edge of
+        comfort is what makes the announcement early enough to act on, and the envelope is
+        where acting has already half-failed.
+        """
+        if subject_uri != self.me.acts_for:
+            return None
+        region = self.regions.get(observed_property)
+        return (region.low, region.high) if region else None
+
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
         """How close this puts me to trouble. Sensing turns it into a cadence.

@@ -322,3 +322,51 @@ def test_a_push_device_takes_no_release_because_it_never_waits():
     device._released.clear()
     _command(device, {"sleep_s": 120})
     assert not device._released.is_set()
+
+
+# --- announce on crossing: the world holds the third clock (#151) -------------
+
+def test_a_commanded_band_arms_the_watch():
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"sleep_s": 600, "wake_below": 0.4, "wake_above": 0.6})
+    assert (device.wake_below, device.wake_above) == (0.4, 0.6)
+    assert not device._crossed(), "0.45 sits inside the band"
+
+
+def test_hand_watering_is_seen_within_the_watch_period_not_the_polling_window():
+    """THE scenario the issue exists for: someone waters the plant and no agent decided it.
+    The dose crosses the commanded ceiling, the watch notices, and the next publish says the
+    world changed — within the watch period, not an hour later at the heartbeat."""
+    device, published = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"sleep_s": 3600, "wake_below": 0.4, "wake_above": 0.6})
+
+    device._receive(600)   # 600 ml through 2 L/fraction: 0.45 -> 0.75, past the ceiling
+    assert device._crossed(), "the watch must see the stranger's water"
+
+    device._woke_by_crossing = True   # what the loop sets when _crossed ends a sleep early
+    device._publish()
+    assert json.loads(published[-1][1]).get("wake") == "crossing", \
+        "the reading must say it exists because the value moved, not because time passed"
+
+
+def test_drying_out_of_the_band_is_a_crossing_too():
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"wake_below": 0.5})   # the floor alone; 0.45 already breaches it
+    assert device._crossed()
+
+
+def test_a_device_never_commanded_a_band_never_wakes_for_one():
+    """Dormant exactly as unflashed firmware would be: no thresholds, no watch — a world whose
+    device states no CrossingProcedure never sends any."""
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    device._receive(600)
+    assert not device._crossed()
+
+
+def test_the_watch_reads_the_world_not_the_instrument():
+    """A real ULP compares the ADC, and the grain and the spikes are properties of the REPORT:
+    a board that woke for its own measurement noise would cry wolf at its own echo."""
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd",
+                        SIM_SPIKE_CHANCE="1", SIM_SPIKE_SPAN="0.5")
+    _command(device, {"wake_below": 0.2, "wake_above": 0.9})
+    assert not device._crossed(), "spikes are report-side and must not trip the watch"

@@ -776,3 +776,40 @@ SELECT ?rt ?pt WHERE {{ GRAPH <{SENSED_GRAPH}> {{
   OPTIONAL {{ ?obs sosa:phenomenonTime ?pt }} }} }}"""))
     assert rows and rows[0].get("pt"), "the device's own instant was dropped"
     assert rows[0]["pt"] != rows[0]["rt"], "phenomenonTime must be the device's, not arrival"
+
+
+# --- the board watches the agent's desire (#151) -----------------------------
+
+def test_a_crossing_watcher_is_told_the_region_edges(monkeypatch):
+    """The thresholds ride the retained command beside the cadence, and they are DESIRE's
+    region edges — the board literally watches what its agent wants held, while both sleep."""
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    assert s.crossing, "the simulation world promises announce-on-crossing for this device"
+    p.set_cadence(s, 600, None)
+    sent = [c for c in fern.sent.to(s.command_topic) if "wake_below" in c]
+    assert sent, "a crossing-watcher must be told its band"
+    assert sent[-1]["wake_below"] == pytest.approx(0.45)   # fern's region floor
+    assert sent[-1]["wake_above"] == pytest.approx(0.65)   # and its ceiling
+
+
+def test_an_agent_with_no_stake_commands_no_band(monkeypatch, tmp_path):
+    """The recording agent wants nothing, so there are no edges to watch — the choir answers
+    None and the command carries no thresholds, whatever the device promises."""
+    agent = _agent_on(_two_sensor_world(tmp_path, observes="water:AirTemperature"), monkeypatch)
+    p = agent.subscribing()
+    s = p.sensors[0]
+    p.set_cadence(s, 600, None)
+    assert all("wake_below" not in c for c in agent.sent.to(s.command_topic))
+
+
+def test_a_crossing_armed_watch_is_live_whatever_the_heartbeat(monkeypatch):
+    """#151 reaching #132: a dose landing crosses the band and the board announces within its
+    watch period, so a held claim need not wait for a fast-acked cadence — the promise IS the
+    live watch, once the band has actually been sent."""
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    p, s = fern.subscribing(), moisture_sensor(fern)
+    assert not p.watch_is_live(fern.me.acts_for, MOISTURE), \
+        "before anything is sent there is no promise to lean on"
+    p.set_cadence(s, 600, None)   # the band goes out with the cadence
+    assert p.watch_is_live(fern.me.acts_for, MOISTURE)
