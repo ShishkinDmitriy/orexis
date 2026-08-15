@@ -55,7 +55,8 @@ class Observations:
     def close(self) -> None:
         self.influx.close()
 
-    def record(self, log, sensor, value: float, at: datetime | None = None) -> None:
+    def record(self, log, sensor, value: float, at: datetime | None = None,
+               phenomenon_at: datetime | None = None) -> None:
         """Keep it, assert it, announce it, and notice it.
 
         `log` belongs to the calling module so a failure is attributed to the capability that
@@ -100,6 +101,7 @@ class Observations:
                 world_version=self.agent.world.version,
                 ts=at.isoformat(),
                 sample_uri=sensor.sample,
+                phenomenon_ts=phenomenon_at.isoformat() if phenomenon_at else None,
             )
         except Exception as exc:
             log.error("sensed write failed: %s", exc)

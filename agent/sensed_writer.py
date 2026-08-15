@@ -70,6 +70,7 @@ class SensedWriter:
         world_version: int | None = None,
         ts: str | None = None,
         sample_uri: str | None = None,
+        phenomenon_ts: str | None = None,
     ) -> None:
         # The caller's instant, and it is always given now: `Observations.record` resolves one
         # per MESSAGE and hands the same string to every value that message carried, so two
@@ -82,6 +83,12 @@ class SensedWriter:
         # ordinary rig and the unchanged default. The reader walks sosa:isSampleOf back up.
         foi = sample_uri or subject_uri
         obs = observation_uri(sample_uri or subject_id, observed_property)
+        # The instant the result APPLIES TO, where the device said so itself (#101): a board
+        # that timestamps its readings, or batches and sends later. `resultTime` keeps meaning
+        # arrival — the honest instant the agent has — and the two coincide whenever the device
+        # does not speak for itself, which is every device here today.
+        pt = (f'    sosa:phenomenonTime "{phenomenon_ts}"^^xsd:dateTime ;\n'
+              if phenomenon_ts else "")
         wv = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
 
         self.store.update(f"""
@@ -93,6 +100,7 @@ INSERT DATA {{ GRAPH <{SENSED_GRAPH}> {{
     sosa:observedProperty <{observed_property}> ;
     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
     sosa:resultTime "{ts}"^^xsd:dateTime ;
+{pt}
     sosa:madeBySensor <{sensor_uri}> ;
     sosa:usedProcedure <{used_procedure}> ;
 {wv}    prov:wasGeneratedBy <{author_uri}> .
