@@ -28,3 +28,26 @@ Declare a board with `mc:firmware "moisture-sentinel"`, mark its channel
 pio run -t upload      # from this directory
 pio device monitor
 ```
+
+## Which firmware for battery?
+
+Estimated from this bench's own numbers: a full radio wake (boot, WiFi, publish, release) is
+~8–9 s at ~100 mA ≈ **0.25 mAh**; the ULP vigil is ~150 µA ≈ **3.6 mAh/day**. One wake buys
+about a hundred minutes of watching — speaking is the cost, watching is noise.
+
+| configuration | wakes/day | ≈ mAh/day | 2000 mAh cell |
+|---|---|---|---|
+| governed @ slow 600 s + watch | 144 | 40 | ~7 weeks |
+| governed, realistic (bursts, verification) | 180–240 | 50–65 | ~5 weeks |
+| sentinel, heartbeat 600 s | ~146 | 40 | ~7 weeks |
+| **sentinel, heartbeat 1 h** | ~26 | **10** | **~6 months** |
+| sentinel, heartbeat 4 h | ~8 | 6 | ~11 months |
+
+**The battery is spent by the agent's epistemology, not by the firmware.** The sentinel's
+heartbeat is generated under the polling agent's `sensing:maxReadingAgeS`, so the same board is
+either no better than the governed node or four times better depending on that one belief. The
+crossing promise is what makes a generous one safe: silence means *nothing crossed*, freshness
+work moves off the heartbeat onto the ULP, and the heartbeat only proves liveness. A world that
+deploys a sentinel and keeps a twelve-minute freshness rule has bought the watcher and declined
+the savings. Past ~4 h the vigil itself dominates (~3.6 of 6 mAh), which is where the
+energy-budget seam's real question — pricing the watching — begins.
