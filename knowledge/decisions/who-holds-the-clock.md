@@ -211,7 +211,17 @@ per watched pointer.
 The alarm carries process control's BOTH classic limits: HI/LO (the band — desire's region
 edges) and DEVIATION (`sensing:alarmDeltaFraction` of the band's width — an in-band move since
 the last report that is itself the news). The board arms their intersection as one window, so
-the second limit is arithmetic, not machinery.
+the second limit is arithmetic, not machinery. The fraction began as one figure on the
+capability family and became **the agent's own revisable pick**: 0.25 was an estimate measured
+on nothing, and correcting an estimate must cost a retained command, never a reflash — so a
+governed agent holds it as a belief (`review:commits` grants the room, the sensing `review.rq`
+re-picks it from the same evidence window as the cadence, and the two rules trade the vigil: a
+lively world earns a tight cadence and a coarse delta, a still one the reverse). The family's
+figure remains as the society's default and the **sentinel's bake** — a board that takes no
+orders can only be flashed with the constitution, since no revision could ever reach it. What
+the deviation limit measures FROM, and why slow drift belongs to the cadence rather than to it,
+is its own record:
+[the-alarm-answers-to-the-last-report](/decisions/the-alarm-answers-to-the-last-report.md).
 
 What the promise buys, mechanically: the thresholds are the agent's region edges (desire's
 `bounds`, collected like urgency), so the board literally watches its agent's desire while both

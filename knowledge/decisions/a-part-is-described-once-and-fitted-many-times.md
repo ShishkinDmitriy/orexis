@@ -220,3 +220,12 @@ more than before.
 - **No other part has been converted.** The moisture probe and the RGB LED still describe
   themselves the old way, and neither is wrong: a single-property probe IS its sensor, so it has
   no sub-sensors to name. The template is for parts that have parts.
+- **The datasheet figures turned out to be a deployment gate nobody runs.** The day a terrace
+  deployment was proposed, the DHT11's own ontology answered why it could not go: a
+  `MeasurementRange` of 0–50 °C and 20–90 %RH is a part that cannot report a frost or a fog,
+  stated at the class since the package was written. Fitness for a place is therefore already
+  graph-visible — `packages/part/bme280/` was added as the outdoor-worthy counterpart, on this
+  record's template — but nothing CHECKS a part's stated ranges against where its deployment
+  puts it. That check is
+  [#111](https://github.com/ShishkinDmitriy/agora/issues/111), and `ssn:Deployment` arriving
+  with the SOSA arc is what makes it newly writable.

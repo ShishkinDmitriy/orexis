@@ -17,7 +17,10 @@
 ag:succulent_agent
     sensing:fastSleepS 60 ;
     sensing:slowSleepS 900 ;
-    sensing:readingGraceS 45 .
+    sensing:readingGraceS 45 ;
+    sensing:alarmDeltaFraction 0.25 .  # a pick with no room: this world grants the succulent no
+                                       # mandate on it, so the figure holds until the sovereign
+                                       # says otherwise — same delta, different governance
 
 ##  market:Bidding
 ag:succulent_agent

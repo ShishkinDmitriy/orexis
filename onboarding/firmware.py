@@ -269,6 +269,9 @@ def render_sentinel(world: str, row: dict, ds) -> str:
     # world grants no Listening yet: a heartbeat the agent would call stale is a lie on a timer.
     max_age = int(float(found[0]["maxAge"])) if found[0].get("maxAge") else 750
     heartbeat = max(60, int(max_age * 0.8))
+    # The FAMILY's figure, deliberately, where a governed board is told its agent's own pick:
+    # a sentinel takes no orders, so no revision could ever reach it, and baking anything but
+    # the society's default would freeze one agent's passing opinion into a flash image.
     frac = ratified.rows(ds, f"""
 SELECT ?f WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmDeltaFraction> ?f }} LIMIT 1""")
     delta = round((float(frac[0]["f"]) if frac else 0.25) * (hi - lo), 3)

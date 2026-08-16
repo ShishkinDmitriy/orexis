@@ -197,3 +197,4 @@ ag:fern_agent a ag:Agent ;
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
 ag:fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .
+ag:fern_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .

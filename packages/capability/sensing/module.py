@@ -48,16 +48,15 @@ from agent.module import Module
 from agent.observation import Observations
 from agent.store import bindings
 
-from .beliefs import LISTENING_BLOCK, SUBSCRIBING_BLOCK
+from .beliefs import ALARM_BLOCK, LISTENING_BLOCK, SUBSCRIBING_BLOCK
 from .terms import LISTENING, PUSH, SCHEDULED, SUBSCRIBING
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future sensing inherits them.
 _BOUNDS_Q = """
-SELECT ?min ?max ?relax ?deltaFrac WHERE {
+SELECT ?min ?max ?relax WHERE {
   GRAPH ?g { sensing:SensingCapability sensing:minSleepS ?min ; sensing:maxSleepS ?max .
-             OPTIONAL { sensing:SensingCapability sensing:relaxFactor ?relax }
-             OPTIONAL { sensing:SensingCapability sensing:alarmDeltaFraction ?deltaFrac } }
+             OPTIONAL { sensing:SensingCapability sensing:relaxFactor ?relax } }
 } LIMIT 1"""
 
 
@@ -272,6 +271,10 @@ class SubscribingModule(SensingModule):
 
     def __init__(self, agent):
         self.beliefs = agent.beliefs.read(SUBSCRIBING_BLOCK)
+        # The jolt threshold is the agent's own pick, not the family's figure — it has to be,
+        # because a review rewrites the agent's graph and nothing else. Optional, and absence
+        # is a statement: no pick means band-only alarms.
+        self.alarm_beliefs = agent.beliefs.read_optional(ALARM_BLOCK)
         super().__init__(agent)
         self.min_sleep_s, self.max_sleep_s, self.relax_factor = self._bounds()
         # The interval in force, which the freshness rule reads, and the whole last message,
@@ -327,7 +330,6 @@ class SubscribingModule(SensingModule):
         # A relax factor at or below 1 could never release at all, which is a vocabulary slip
         # and not a policy anyone can mean; treated as "no slew" rather than as a frozen board.
         relax = float(rows[0].get("relax") or 0.0)
-        self.alarm_delta_fraction = float(rows[0].get("deltaFrac") or 0.0)
         return int(rows[0]["min"]), int(rows[0]["max"]), relax if relax > 1.0 else 0.0
 
     def start(self) -> None:
@@ -569,9 +571,11 @@ class SubscribingModule(SensingModule):
                 # The DEVIATION half: a move of more than this since the board's last report is
                 # worth waking for even INSIDE the band — the stranger watering a comfortable
                 # pot, the leak still in-range. The board arms the intersection of the band and
-                # last±delta, so this costs it nothing but arithmetic.
-                if self.alarm_delta_fraction > 0:
-                    limits.append(round(self.alarm_delta_fraction * (held[1] - held[0]), 3))
+                # last±delta, so this costs it nothing but arithmetic. The fraction is this
+                # agent's own revisable pick; no pick, band-only alarm.
+                if self.alarm_beliefs is not None and self.alarm_beliefs.delta_fraction > 0:
+                    limits.append(round(
+                        self.alarm_beliefs.delta_fraction * (held[1] - held[0]), 3))
                 alarm[peer.reading_pointer or "/value"] = limits
         if alarm:
             verdict = {**(verdict or {}), "alarm": alarm}
@@ -623,9 +627,16 @@ class SubscribingModule(SensingModule):
         # `slowSleepS` in their own namespace, and the stripped form cannot tell them apart —
         # so a revision of somebody else's belief would have been taken up as this module's.
         # A block's terms are full IRIs, so there is nothing to strip.
-        if belief_term not in SUBSCRIBING_BLOCK.terms.values():
+        if belief_term in ALARM_BLOCK.terms.values():
+            # A re-picked jolt threshold, and the re-aim below re-arms every watched channel
+            # with the new delta — the whole reason the pick is a belief and not a compile-time
+            # figure: correcting the estimate reaches the board on its next wake, not at the
+            # next reflash.
+            self.alarm_beliefs = self.agent.beliefs.read_optional(ALARM_BLOCK)
+        elif belief_term not in SUBSCRIBING_BLOCK.terms.values():
             return
-        self.beliefs = self.agent.beliefs.read(SUBSCRIBING_BLOCK)
+        else:
+            self.beliefs = self.agent.beliefs.read(SUBSCRIBING_BLOCK)
         for sensor in self.sensors:
             reading = self.agent.beliefs.current_reading(sensor.subject, sensor.observes)
             if reading is not None:
