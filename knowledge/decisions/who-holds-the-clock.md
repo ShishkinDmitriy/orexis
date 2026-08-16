@@ -200,13 +200,18 @@ Deliberately NOT a fourth `sensing:senseMode`. The mode is who holds the HEARTBE
 per device (#96); the alarm wake is an ADDITIONAL procedure the same device implements —
 `ssn:implements sensing:AlarmProcedure`, the standard relation arriving for exactly the
 reason this record kept `senseMode` ours: `ssn:implements` is wider *because* a system may
-implement several procedures, and here is the second one. Stated PER CHANNEL — on the sensor
+implement several procedures, and here is the second one. Held PER CHANNEL — on the sensor
 whose value is watched — because which values a board can watch is a per-channel hardware
-fact: an ESP32's ULP reaches the analog probe and can never speak the DHT's protocol, so a
-real board promises its moisture and stays honest about its air, while a stand-in may promise
-every channel it has. A shape requires the implementing sensor to ride a Scheduled device with
-a command channel, since the bands arrive the way the cadence does — one retained map, a band
-per watched pointer.
+fact: an ESP32's ULP reaches the analog probe and can never speak the DHT's protocol. Since
+#181 a real board's promise is ENTAILED rather than authored: the firmware class states it
+(the flashed image watches unconditionally), it lands on the connecting device alone — which
+is the analog channel, the DHT channels being untyped — and the wiring holds it to the
+silicon, because the board's class states which pin roles its sleep-watcher reaches
+(`mc:watcherReachesRole`) and `mc:WatchedChannelWiringShape` refuses a promise wired past
+that reach. A stand-in still promises by hand, every channel it likes: it has no pins and no
+watcher, and reporting what its world says is its constitution. A second shape requires the
+implementing sensor to ride a Scheduled device with a command channel, since the bands arrive
+the way the cadence does — one retained map, a band per watched pointer.
 
 The alarm carries process control's BOTH classic limits: HI/LO (the band — desire's region
 edges) and DEVIATION (`sensing:alarmDeltaFraction` of the band's width — an in-band move since

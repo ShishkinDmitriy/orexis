@@ -70,6 +70,7 @@ services:
       SIM_TICK_SECONDS: "3"
       SIM_TIMESCALE: "144"
       SIM_RAIN_TOPIC: "rain/fern"
+      SIM_ALARM_PERSIST_LOOKS: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -100,6 +101,7 @@ services:
       SIM_TICK_SECONDS: "3"
       SIM_TIMESCALE: "144"
       SIM_RAIN_TOPIC: "rain/succulent"
+      SIM_ALARM_PERSIST_LOOKS: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
@@ -130,6 +132,7 @@ services:
       SIM_TICK_SECONDS: "3"
       SIM_TIMESCALE: "144"
       SIM_RAIN_TOPIC: "rain/tomato"
+      SIM_ALARM_PERSIST_LOOKS: "2"
     env_file:
       # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point

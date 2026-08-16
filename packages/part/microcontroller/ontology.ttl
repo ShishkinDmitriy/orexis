@@ -113,6 +113,10 @@ mc:gpio a owl:DatatypeProperty ; rdfs:domain mc:Pin ; rdfs:range xsd:integer ;
     rdfs:label "gpio" ;
     rdfs:comment "The line number as the board silkscreen and the firmware both name it. A fact about the BOARD's pin — a peripheral's leg does not have one, it is merely wired to one." .
 
+mc:watcherReachesRole a owl:ObjectProperty ; rdfs:range mc:PinRole ;
+    rdfs:label "watcher reaches role" ;
+    rdfs:comment "Which pin roles this board's SLEEP-WATCHER can sample while everything else deep-sleeps (#181) — the hardware premise behind a channel's sensing:AlarmProcedure, stated instead of folklore in a comment. A board kind declares it as an owl:hasValue restriction, one per reachable role, and the closure carries it to every unit; mc:WatchedChannelWiringShape then refuses a watched channel whose signal pin's role no watcher on its board reaches. Declared here rather than in any board's package because every board kind answers the same question — a classic ESP32's FSM coprocessor reaches analog input and nothing else, an ESP32-S3's RISC-V coprocessor would add the I2C roles, and a board with no watcher states nothing and may promise nothing." .
+
 # What is PRINTED next to the leg, which is not the same as its number and is what a person at
 # the bench is actually reading. On a DevKitC, GPIO 36 and 39 are silkscreened VP and VN — the
 # number appears nowhere on the board, so "put it on 36" is an instruction you cannot follow

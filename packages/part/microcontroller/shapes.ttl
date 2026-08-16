@@ -148,3 +148,47 @@ ag:CarriedPeripheralShape a sh:NodeShape ;
                     ?board <http://www.w3.org/ns/sosa/hosts> $this
                 }
             }""" ] .
+
+mc:WatchedChannelWiringShape a sh:NodeShape ;
+    rdfs:comment """The alarm promise held to the silicon (#181). A channel that implements
+sensing:AlarmProcedure claims something watches its value while the board sleeps, and whether
+anything CAN is a wiring fact: the board's class states which pin roles its sleep-watcher
+reaches (mc:watcherReachesRole — one hasValue per role, carried to every unit by the closure),
+and the channel's signal pin must be wired to a board within that reach. A classic ESP32
+reaches analog input and nothing else, so a moisture probe on GPIO 34 passes and a promised
+DHT channel — one-wire, unreachable — refuses, with this message instead of a comment nobody
+re-reads.
+
+A channel's legs may be its own (a single-property probe IS its sensor) or its PART's — a
+DHT channel has no pins, the KY-015 that produces it does, and ^ssn:hasSubSystem is the walk
+between them. Targeted at channels that reach legs either way, which is what scopes it to the
+sovereign: a stand-in has no pins and promises whatever its world says (its constitution), and
+an agent is never given the wiring, so neither is ever targeted. The promise itself may be stated or entailed — a
+governed node's arrives from its firmware class — and the shape reads the conclusion either
+way, because validation runs against the materialised store.""" ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://www.w3.org/ns/ssn/implements>
+                      <http://example.org/agora/sensing#AlarmProcedure> .
+                { ?this <http://example.org/agora/microcontroller#hasPin> ?leg }
+                UNION
+                { ?part <http://www.w3.org/ns/ssn/hasSubSystem> ?this ;
+                        <http://example.org/agora/microcontroller#hasPin> ?leg }
+            }""" ] ;
+    sh:sparql [
+        sh:message "this channel promises announce-on-crossing, but no sleep-watcher on the board it is wired to reaches its signal pin's role — the promise would be kept by nothing" ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER NOT EXISTS {
+                    { $this <http://example.org/agora/microcontroller#hasPin> ?leg }
+                    UNION
+                    { ?part <http://www.w3.org/ns/ssn/hasSubSystem> $this ;
+                            <http://example.org/agora/microcontroller#hasPin> ?leg }
+                    ?leg <http://example.org/agora/microcontroller#pinRole> ?role .
+                    ?wire <http://example.org/agora/microcontroller#joins> ?leg , ?pin .
+                    FILTER(?pin != ?leg)
+                    ?board <http://example.org/agora/microcontroller#hasPin> ?pin ;
+                           <http://example.org/agora/microcontroller#watcherReachesRole> ?role .
+                }
+            }""" ] .
