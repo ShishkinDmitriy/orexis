@@ -12,6 +12,17 @@
 Started here because a picture needs to know which board it is drawing, and that is a fact about the MODEL rather than about the particular board on the windowsill.""" .
 
 esp32:DevKitC a owl:Class ;
-    mc:modelName "ESP32-WROOM-32D" ; rdfs:subClassOf mc:Microcontroller ; rdfs:label "ESP32 DevKitC" ;
+    mc:modelName "ESP32-WROOM-32D" ; rdfs:subClassOf mc:Microcontroller ,
+        #  The sleep-watcher, stated instead of narrated (#181): the classic ESP32 carries a
+        #  ULP-FSM coprocessor — four 16-bit registers, RTC memory, one look per second for
+        #  ~150 µA — that can sample ADC1 while the core and the radio deep-sleep, and can do
+        #  NOTHING else: it cannot speak the DHT's one-wire timing and this silicon's RTC I2C
+        #  is unusable. So one reachable role, and the absence of every other is the honest
+        #  half. A fact about the CHIP, so an ESP32-S3 class (RISC-V ULP, working RTC I2C)
+        #  would state analog AND the I2C roles — which is what would make a BME280 channel
+        #  alarm-watchable on a terrace, and the graph now answers that question by class.
+        [ a owl:Restriction ; owl:onProperty mc:watcherReachesRole ;
+          owl:hasValue mc:AnalogInPinRole ] ;
+    rdfs:label "ESP32 DevKitC" ;
     wokwi:part "board-esp32-devkit-c-v4" ;
     rdfs:comment "The 38-pin development board, the one with 3V3 on the same header as GPIO 34. Its legs carry their own silkscreen notation, which is what a drawing names them by." .

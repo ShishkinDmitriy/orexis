@@ -248,3 +248,16 @@ def test_the_firmware_self_descriptions_are_still_found():
     assert len(found) >= 2, "the firmware ontologies stopped being loaded"
     assert any("moisture-sensor" in f for f in found)
     assert any("moisture-sentinel" in f for f in found)
+
+
+def test_the_alarm_promise_is_entailed_from_the_governed_class():
+    """#181: the sensing world no longer hand-states ssn:implements sensing:AlarmProcedure —
+    the flashed image watches its analog channel unconditionally, so the promise is the
+    firmware class's, arriving through the same hasValue closure as the sense mode. Only the
+    connecting device is typed, so the promise reaches the moisture channel and never the
+    DHT's — per channel by construction, with nobody saying so per world."""
+    me = load_self(query_fn(genesis_store(world="sensing")), "fern")
+    probe = next(s for s in me.sensors if s.local_id == "moisture_sensor_fern")
+    assert probe.alarm, "the promise must flow from governed:Node to the connecting device"
+    air = next(s for s in me.sensors if s.local_id == "air_temp_fern")
+    assert not air.alarm, "an untyped channel promises nothing — honest by absence"

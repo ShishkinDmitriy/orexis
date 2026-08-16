@@ -846,3 +846,36 @@ def test_a_watched_channel_on_a_push_device_is_legal():
                 mqtt:readingTopic "sensors/sentinel_x/reading" .
         }} }} WHERE {{}}""")
     assert _conforms(data), _report(data)
+
+
+# --- the alarm promise held to the silicon (#181) ----------------------------
+
+def test_the_shipped_wiring_keeps_its_alarm_promise():
+    """The moisture channel's promise — entailed from governed:Node — sits on an analog pin
+    wired to a board whose class states its watcher reaches analog. The world above already
+    conformed; this pins WHY, so the shape below is known to be non-vacuous company."""
+    st = genesis_store(world="sensing")
+    rows = st.query("""SELECT ?role WHERE {
+        ?ch <http://www.w3.org/ns/ssn/implements>
+            <http://example.org/agora/sensing#AlarmProcedure> ;
+            <http://example.org/agora/microcontroller#hasPin> ?leg .
+        ?leg <http://example.org/agora/microcontroller#pinRole> ?role .
+        ?wire <http://example.org/agora/microcontroller#joins> ?leg , ?pin .
+        ?board <http://example.org/agora/microcontroller#hasPin> ?pin ;
+               <http://example.org/agora/microcontroller#watcherReachesRole> ?role . }""")
+    from agent.store import bindings
+    assert bindings(rows), (
+        "the sensing world's watched channel must be visibly within its board's reach — if "
+        "this is empty the wiring shape is passing vacuously")
+
+
+def test_a_promise_no_watcher_can_keep_is_refused():
+    """Promise announce-on-crossing on the DHT channel: its data pin is one-wire, which the
+    ESP32's FSM watcher cannot speak — the fact that lived in a comment now refuses a world."""
+    st = genesis_store(world="sensing")
+    st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
+        <http://example.org/agora#air_temp_fern>
+            <http://www.w3.org/ns/ssn/implements>
+            <http://example.org/agora/sensing#AlarmProcedure> }} }}""")
+    assert not _conforms(_flatten(st, WORLDS_ROOT / "sensing")), (
+        "a channel whose signal pin no sleep-watcher reaches must not be allowed to promise")

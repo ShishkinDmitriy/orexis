@@ -111,7 +111,12 @@ def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
             f" <{device}> ssn-system:hasSystemCapability ?c }} }}"))}
         assert capability in caps, f"<{device}> was not reached by its sub-sensor's capability"
 
-    assert len(reached) == 3, f"walked the vocabulary and reached {len(reached)} devices"
+    # The fourth subject is the firmware's doing, not the part's (#181): the moisture channel
+    # is typed governed:Node, and the alarm promise arrives through the same hasValue closure
+    # the datasheet figures ride — one mechanism, two describers.
+    from agent.ontology import SENSING
+    assert reached.get(AG + "moisture_sensor_fern") == {SENSING + "AlarmProcedure"}
+    assert len(reached) == 4, f"walked the vocabulary and reached {len(reached)} devices"
 
 
 def test_an_anonymous_class_expression_never_becomes_a_type():

@@ -39,10 +39,18 @@ instructable shape rightly refuses it — the class describes the SPEAKING role.
 
 - **The deployment half stays the world's**: subject, topics, pins, calibration, bus — the
   boundary `deploy-dht22.ttl` draws for parts, drawn here for code.
-- **The governed node's alarm stays per channel**: `WAKE_ON_ALARM` is generated from the
-  channel's own statement, so the promise is true only of a board flashed with it — the class
-  states what every board of the kind does unconditionally, and nothing else. The sentinel's
-  alarm IS unconditional, so it is on the class.
+- **The governed node's alarm moved onto the class after all** (#181). This bullet used to
+  argue it stayed per channel because the promise was true only of a board flashed with the
+  define — but the generator reads the promise to decide whether to emit the define, so
+  putting the promise on the class makes the claim self-keeping: every image emitted for a
+  `governed:Node` carries the watch, and the entailment lands on the CONNECTING device alone,
+  which IS the per-channel truth — the typed device is the analog channel, and the DHT
+  channels riding the same stream are never typed. What holds the promise to the silicon is
+  no longer authorship but wiring: the board's class states which pin roles its sleep-watcher
+  reaches (`mc:watcherReachesRole`, esp32's ULP → analog only), and
+  `mc:WatchedChannelWiringShape` refuses a watched channel wired past that reach. A stand-in
+  still states its promises by hand — it has no pins and no watcher, and its constitution is
+  that it reports what its world says.
 - **Simulated devices run no firmware and are never typed**: `ag:simulatedBy` is their
   kind-statement, and a stand-in wearing a firmware class it does not run would be a new way
   to lie. The simulation world keeps its direct statements.
