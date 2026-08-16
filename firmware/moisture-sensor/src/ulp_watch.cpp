@@ -21,6 +21,10 @@
 //
 // Follows the canonical esp-idf ulp_adc example (ULP-FSM macro assembly). GPIO34 is ADC1
 // channel 6, RTC-capable. COMPILE-UNTESTED HERE, like all firmware: the bench has the last word.
+// config.h BEFORE the guard, because config.h is where WAKE_ON_ALARM is defined: testing it
+// first compiled this whole file to nothing, and the linker — not any test — was what said so.
+#include "config.h"
+
 #ifdef WAKE_ON_ALARM
 
 #include <Arduino.h>
@@ -29,7 +33,6 @@
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
 
-#include "config.h"
 #include "ulp_watch.h"
 
 #define ULP_MEM_LOW   0    // the too-wet count (fractions invert into counts; see below)

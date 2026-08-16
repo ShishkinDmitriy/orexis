@@ -122,10 +122,14 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device , governed:Node ;
     #  then the agent will say "nothing at /moisture in the payload" on every reading, which is
     #  the loud version of this comment.
     mqtt:readingPointer "/moisture" ;
-    #  NOT ssn:implements sensing:AlarmProcedure — yet. The firmware supports wake-on-crossing
-    #  (#151) but this board has not been reflashed with it, and stating the promise before the
-    #  hardware keeps it would teach the agent that silence means "nothing crossed" about a board
-    #  for which silence still only means "not due yet". Add the line when the board is flashed.
+    #  The alarm promise (#151), stated the day the board was flashed with the firmware that
+    #  keeps it — deliberately not a moment sooner, because promising before the hardware could
+    #  deliver would teach the agent that silence means "nothing crossed" about a board for
+    #  which silence still only meant "not due yet". The moisture channel ONLY: the ULP reaches
+    #  the analog probe and can never speak the DHT's protocol, so the air channels stay honest
+    #  by their absence. (#181 will derive this from the wiring; until then it is the
+    #  sovereign's judgment, hand-stated.)
+    ssn:implements sensing:AlarmProcedure ;
     sensing:monitors ag:fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
