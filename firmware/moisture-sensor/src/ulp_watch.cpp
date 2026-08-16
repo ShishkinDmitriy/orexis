@@ -37,8 +37,13 @@
 
 #define ULP_MEM_LOW   0    // the too-wet count (fractions invert into counts; see below)
 #define ULP_MEM_HIGH  1    // the too-dry count
+#define ULP_MEM_LOOKS 2    // consecutive breaching looks so far (#180)
 #define ULP_PROG_START 8
 #define ULP_ADC_CHANNEL 6  // GPIO34; if MOISTURE_PIN moves, check this row first
+
+#ifndef WAKE_PERSIST_LOOKS
+#define WAKE_PERSIST_LOOKS 2   // the society's figure, generated; this is only the fallback
+#endif
 
 // The band, remembered across deep sleep the way sleep_s is not: RTC memory survives, so a
 // wake that hears no fresh command keeps watching the band it was last told.
@@ -76,24 +81,38 @@ void armUlpWatch() {
   uint16_t count_when_too_wet = fracToRaw(hi);
   RTC_SLOW_MEM[ULP_MEM_HIGH] = count_when_too_dry;
   RTC_SLOW_MEM[ULP_MEM_LOW]  = count_when_too_wet;
+  RTC_SLOW_MEM[ULP_MEM_LOOKS] = 0;   // every arming starts the vigil over
 
   // ADC1 in RTC-controlled mode, so the ULP may read it while everything else sleeps.
   adc1_config_width(ADC_WIDTH_BIT_12);
   adc1_config_channel_atten((adc1_channel_t)ULP_ADC_CHANNEL, ADC_ATTEN_DB_11);
   adc1_ulp_enable();
 
+  // The persistence counter (#180): a breach visible in exactly one look is an ADC glitch,
+  // not physics — the same argument that derived the one-second period. A breaching look
+  // increments a count in RTC memory, an in-window look resets it, and only the Nth
+  // consecutive breach wakes the radio: N-1 seconds of latency, inside the overshoot
+  // allowance the period already carries, for never paying a radio wake on a glitch.
   const ulp_insn_t program[] = {
       I_ADC(R0, 0, ULP_ADC_CHANNEL),          // R0 = one sample of the soil
       I_MOVI(R3, 0),
       I_LD(R1, R3, ULP_MEM_HIGH),             // too-dry count
       I_SUBR(R2, R1, R0),                     // high - sample; overflow set if sample > high
-      M_BXF(1),                               // crossed dry-wards -> wake
+      M_BXF(1),                               // crossed dry-wards -> a breaching look
       I_LD(R1, R3, ULP_MEM_LOW),              // too-wet count
       I_SUBR(R2, R0, R1),                     // sample - low; overflow if sample < low
-      M_BXF(1),                               // crossed wet-wards -> wake
-      I_HALT(),                               // in band: sleep until the next look
-      M_LABEL(1),
-      I_WAKE(),                               // the world changed; say so
+      M_BXF(1),                               // crossed wet-wards -> a breaching look
+      I_MOVI(R1, 0),                          // in window: the vigil starts over
+      I_ST(R1, R3, ULP_MEM_LOOKS),
+      I_HALT(),                               // sleep until the next look
+      M_LABEL(1),                             // breached THIS look — is it news yet?
+      I_LD(R0, R3, ULP_MEM_LOOKS),
+      I_ADDI(R0, R0, 1),
+      I_ST(R0, R3, ULP_MEM_LOOKS),
+      M_BGE(2, WAKE_PERSIST_LOOKS),           // the Nth consecutive breach is the real thing
+      I_HALT(),                               // one look is a glitch; look again first
+      M_LABEL(2),
+      I_WAKE(),                               // the world changed and STAYED changed; say so
       I_HALT(),
   };
   size_t size = sizeof(program) / sizeof(ulp_insn_t);

@@ -17,8 +17,13 @@
 
 #define ULP_MEM_LOW   0    // the too-wet count
 #define ULP_MEM_HIGH  1    // the too-dry count
+#define ULP_MEM_LOOKS 2    // consecutive breaching looks so far (#180)
 #define ULP_PROG_START 8
 #define ULP_ADC_CHANNEL 6  // GPIO34; if MOISTURE_PIN moves, check this row first
+
+#ifndef WAKE_PERSIST_LOOKS
+#define WAKE_PERSIST_LOOKS 2   // the society's figure, generated; this is only the fallback
+#endif
 
 static uint16_t fracToRaw(float frac) {
   float raw = ADC_DRY - frac * (float)(ADC_DRY - ADC_WET);
@@ -44,11 +49,14 @@ void armUlpWatch() {
 #endif
   RTC_SLOW_MEM[ULP_MEM_HIGH] = fracToRaw(lo);   // drier than the tightened floor
   RTC_SLOW_MEM[ULP_MEM_LOW]  = fracToRaw(hi);   // wetter than the tightened ceiling
+  RTC_SLOW_MEM[ULP_MEM_LOOKS] = 0;              // every arming starts the vigil over
 
   adc1_config_width(ADC_WIDTH_BIT_12);
   adc1_config_channel_atten((adc1_channel_t)ULP_ADC_CHANNEL, ADC_ATTEN_DB_11);
   adc1_ulp_enable();
 
+  // The persistence counter (#180), same as the governed node's: one breaching look is an
+  // ADC glitch, N consecutive are the news. Reset on any in-window look.
   const ulp_insn_t program[] = {
       I_ADC(R0, 0, ULP_ADC_CHANNEL),
       I_MOVI(R3, 0),
@@ -58,8 +66,16 @@ void armUlpWatch() {
       I_LD(R1, R3, ULP_MEM_LOW),
       I_SUBR(R2, R0, R1),      // sample - low; overflow set if sample < low (too wet)
       M_BXF(1),
+      I_MOVI(R1, 0),           // in window: the vigil starts over
+      I_ST(R1, R3, ULP_MEM_LOOKS),
       I_HALT(),
-      M_LABEL(1),
+      M_LABEL(1),              // breached this look — news only if it persists
+      I_LD(R0, R3, ULP_MEM_LOOKS),
+      I_ADDI(R0, R0, 1),
+      I_ST(R0, R3, ULP_MEM_LOOKS),
+      M_BGE(2, WAKE_PERSIST_LOOKS),
+      I_HALT(),
+      M_LABEL(2),
       I_WAKE(),
       I_HALT(),
   };

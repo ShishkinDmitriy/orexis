@@ -56,24 +56,28 @@ spent where the information is, which is the alarm's whole economics: a radio wa
 ~0.25 mAh, the ULP vigil ~150 µA, and the agent's epistemology — not the firmware — decides
 how often each is paid.
 
-# Seams left open
+## The spike question, decided (#180)
 
-- **A single-sample spike wakes the radio.** The ULP wakes on the FIRST out-of-window look, so
-  one ADC glitch buys a full ~0.25 mAh publish of a normal-looking value. Three mechanisms
-  exist, priced: a **persistence counter in the ULP** (require N consecutive breaching looks
-  before `I_WAKE`; ~0.0001 mAh and N−1 seconds of latency, well inside the overshoot allowance
-  the 1 s watch period was derived from); a **main-core confirmation without radio** (wake,
-  take the ordinary 16-sample average, compare it to the window already sitting in RTC memory,
-  and sleep again if it holds — ≈0.004 mAh for a 200–400 ms boot that never touches WiFi,
-  sixty times a ULP look and sixty times cheaper than the publish, but it needs hysteresis or
-  a value sitting exactly on the edge chatters); or **today's publish-anyway**, which costs the
-  most and is the only one that lets the agent SEE the noise — and spurious alarm wakes are
-  exactly the evidence the delta review feeds on. Undecided, and deliberately: nothing on the
-  bench has yet shown an alarm wake whose published value sat inside the window. That
-  observation is the trigger for choosing. If N ever becomes configurable it is likelier a
-  constitutional figure beside `sensing:steadyFraction` — what counts as evidence is the
-  society's to say — than a per-agent pick riding the alarm command, though the command has
-  room for it.
+A single-sample spike used to wake the radio: the ULP woke on the FIRST out-of-window look, so
+one ADC glitch bought a full ~0.25 mAh publish of a normal-looking value. Three mechanisms were
+weighed and priced — a **persistence counter in the ULP** (~0.0001 mAh, N−1 seconds of latency
+inside the overshoot allowance the 1 s period was derived from); a **main-core confirmation
+without radio** (≈0.004 mAh per suspect wake, but it needs hysteresis or a value on the edge
+chatters, and suppressing the publish hides from the review exactly the evidence it feeds on);
+and **publish-anyway**, the costliest and the most honest. The sovereign chose without waiting
+for the recorded trigger, and chose the counter — `sensing:alarmPersistenceLooks 2`,
+constitutional beside `steadyFraction` because what counts as evidence of a real event is the
+society's to say, compiled into both firmwares' ULP programs and mirrored by the stand-in's
+watch loop so the bench rehearses the boards. The argument is the watch period's own, extended:
+a breach visible in exactly one look is not physics. The layering that falls out is the
+division of labour again, one level down — **the ULP filters what isn't physics, the main core
+upgrades the testimony (its 16-sample average, never the ULP's raw count), and the agent judges
+what it means**; a wake whose fresh average reads back in-window still publishes, marked
+`"wake":"alarm"`, because the publish is what re-anchors the deviation window (suppressing
+would chatter through the stale anchor) and a jolt that settled is still news the delta review
+feeds on. Nothing above the ULP ever discards an event.
+
+# Seams left open
 - **No second anchor for drift-since-the-last-alarm.** "Wake me when it has moved delta since
   the news last broke, even though ordinary reports re-anchored it" would need an anchor only
   alarm wakes reset. No scenario on this bench wants it; the cadence already carries what it
