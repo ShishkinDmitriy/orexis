@@ -14,8 +14,19 @@ venv
 **/.pytest_cache
 **/*.egg-info
 
-# firmware is flashed to a board, not built into an image
-firmware
+# Firmware CODE is flashed to a board, not built into an image — but since #175 each firmware
+# directory may carry an ontology.ttl, a third T-Box source the loader merges, and an agent
+# whose world types a board by its firmware class derives NOTHING without it (the sensing
+# world's fern subscribed to nothing, silently, which is how this exception was found).
+# Everything else stays out, and one exclusion is load-bearing for secrets: a generated
+# include/config.h carries the wifi and a device credential, and must never reach a layer.
+# One level deep, not `firmware/**`: excluding the per-firmware DIRECTORIES prunes them from
+# the walk entirely, so a `!` exception under them can never fire — measured, not read in a
+# manual. This shape leaves the directories traversable and excludes their contents, and the
+# negation wins on the one file it names.
+firmware/*/*
+firmware/*.md
+!firmware/*/ontology.ttl
 **/.pio
 
 # an agent's belief base is created at birth, never baked in

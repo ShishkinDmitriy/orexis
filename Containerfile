@@ -41,6 +41,13 @@ RUN pip install -e .
 COPY agent/    agent/
 COPY packages/ packages/
 
+# The third T-Box source (#175): a firmware's ontology describes what a board running it IS,
+# and an agent whose world types its board by firmware class derives its sensing capability
+# from exactly this file — absent, the agent boots and subscribes to nothing, silently.
+# `.containerignore` narrows this COPY to the ontologies alone: firmware code is flashed, not
+# shipped, and a generated include/config.h carries credentials that must never reach a layer.
+COPY firmware/ firmware/
+
 # An agent runs as nobody in particular. Its belief base is a file in its own volume, which
 # nothing outside this container can name — that is the isolation, and it needs no credential
 # and no access registry, because there is no shared store to be let into.

@@ -31,7 +31,9 @@ CONTAINERFILE = REPO_ROOT / "Containerfile"
 # This list carries more weight than it used to. Capability Python lived under `agent/` before,
 # so the tree itself showed which of it a runtime loads; it does not show that now, and this
 # file plus the import contracts are the whole of the boundary.
-ALLOWED_TREES = {"agent", "packages"}
+#  firmware/ is admitted for its ontologies alone — the third T-Box source (#175) — and the
+#  .containerignore exception narrows the COPY to them; the test below holds both halves.
+ALLOWED_TREES = {"agent", "packages", "firmware"}
 
 # Never in an agent image. `agora-influx` reads the admin token, which opens every bucket in the
 # store and which no agent may ever hold; the surest guarantee is that the code using it is
@@ -93,6 +95,33 @@ def test_onboarding_is_not_hidden_from_the_build_context():
     assert "onboarding" not in ignored, (
         ".containerignore excludes onboarding/. That works, but it hides the boundary: the "
         "Containerfile should be the one place that says what an agent image contains."
+    )
+
+
+def test_the_firmware_ontologies_reach_the_image_and_nothing_else_of_firmware_does():
+    """The third T-Box source (#175) must actually arrive, and only it.
+
+    Found on the bench, not by a test: the sensing world's agent booted without firmware/ in
+    its image, derived no sensing capability from a board typed by its firmware class, and
+    subscribed to NOTHING — silently, because the loader tolerates the missing tree. The COPY
+    is half the fix; the ignore-file exception is the other half, and it is load-bearing for
+    secrets: a generated include/config.h carries the wifi and a device credential, so the
+    exception must admit the ontologies alone. Asserted textually on both files, the same way
+    the onboarding boundary is.
+    """
+    assert "firmware/" in copied_paths(), (
+        "the Containerfile no longer copies firmware/ — a world that types a board by its "
+        "firmware class will boot an agent that derives no sensing capability at all"
+    )
+    ignored = [
+        line.strip() for line in (REPO_ROOT / ".containerignore").read_text().splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    assert "firmware/*/*" in ignored and "!firmware/*/ontology.ttl" in ignored, (
+        ".containerignore must exclude everything under firmware/ EXCEPT the ontologies: "
+        "wider admission ships credentials (include/config.h), narrower ships a T-Box "
+        "source missing. The exclusion is one level deep (firmware/*/*) deliberately — "
+        "excluding the directories themselves prunes the walk and the ! exception never fires"
     )
 
 
