@@ -56,28 +56,32 @@ void armUlpWatch() {
   adc1_ulp_enable();
 
   // The persistence counter (#180), same as the governed node's: one breaching look is an
-  // ADC glitch, N consecutive are the news. Reset on any in-window look.
+  // ADC glitch, N consecutive are the news. Reset on any in-window look. The governed copy
+  // (firmware/moisture-sensor/src/ulp_watch.cpp) carries the full guide to reading this
+  // machine — four 16-bit registers, RTC_SLOW_MEM as the only durable state, I_SUBR's
+  // borrow flag as the register-vs-register compare and M_BGE/JUMPR as the R0-vs-immediate
+  // one — and it holds here line for line.
   const ulp_insn_t program[] = {
-      I_ADC(R0, 0, ULP_ADC_CHANNEL),
-      I_MOVI(R3, 0),
+      I_ADC(R0, 0, ULP_ADC_CHANNEL),   // R0 = one 12-bit sample
+      I_MOVI(R3, 0),                   // base address for every load/store
       I_LD(R1, R3, ULP_MEM_HIGH),
-      I_SUBR(R2, R1, R0),      // high - sample; overflow set if sample > high (too dry)
+      I_SUBR(R2, R1, R0),              // high - sample; borrow => sample > high (too dry)
       M_BXF(1),
       I_LD(R1, R3, ULP_MEM_LOW),
-      I_SUBR(R2, R0, R1),      // sample - low; overflow set if sample < low (too wet)
+      I_SUBR(R2, R0, R1),              // sample - low; borrow => sample < low (too wet)
       M_BXF(1),
-      I_MOVI(R1, 0),           // in window: the vigil starts over
+      I_MOVI(R1, 0),                   // in window: the vigil starts over
       I_ST(R1, R3, ULP_MEM_LOOKS),
-      I_HALT(),
-      M_LABEL(1),              // breached this look — news only if it persists
-      I_LD(R0, R3, ULP_MEM_LOOKS),
+      I_HALT(),                        // hand back to the timer for the next look
+      M_LABEL(1),                      // breached this look — news only if it persists
+      I_LD(R0, R3, ULP_MEM_LOOKS),     // into R0, because JUMPR can compare only R0
       I_ADDI(R0, R0, 1),
-      I_ST(R0, R3, ULP_MEM_LOOKS),
-      M_BGE(2, WAKE_PERSIST_LOOKS),
+      I_ST(R0, R3, ULP_MEM_LOOKS),     // durable across runs; registers are not
+      M_BGE(2, WAKE_PERSIST_LOOKS),    // R0 >= N: the Nth consecutive breach is real
       I_HALT(),
       M_LABEL(2),
-      I_WAKE(),
-      I_HALT(),
+      I_WAKE(),                        // raise the SoC's wakeup signal
+      I_HALT(),                        // waking the host does not stop the watcher
   };
   size_t size = sizeof(program) / sizeof(ulp_insn_t);
   ulp_process_macros_and_load(ULP_PROG_START, program, &size);
