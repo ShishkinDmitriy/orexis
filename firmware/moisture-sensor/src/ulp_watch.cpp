@@ -37,8 +37,13 @@
 
 #define ULP_MEM_LOW   0    // the too-wet count (fractions invert into counts; see below)
 #define ULP_MEM_HIGH  1    // the too-dry count
+#define ULP_MEM_LOOKS 2    // consecutive breaching looks so far (#180)
 #define ULP_PROG_START 8
 #define ULP_ADC_CHANNEL 6  // GPIO34; if MOISTURE_PIN moves, check this row first
+
+#ifndef WAKE_PERSIST_LOOKS
+#define WAKE_PERSIST_LOOKS 2   // the society's figure, generated; this is only the fallback
+#endif
 
 // The band, remembered across deep sleep the way sleep_s is not: RTC memory survives, so a
 // wake that hears no fresh command keeps watching the band it was last told.
@@ -76,25 +81,60 @@ void armUlpWatch() {
   uint16_t count_when_too_wet = fracToRaw(hi);
   RTC_SLOW_MEM[ULP_MEM_HIGH] = count_when_too_dry;
   RTC_SLOW_MEM[ULP_MEM_LOW]  = count_when_too_wet;
+  RTC_SLOW_MEM[ULP_MEM_LOOKS] = 0;   // every arming starts the vigil over
 
   // ADC1 in RTC-controlled mode, so the ULP may read it while everything else sleeps.
   adc1_config_width(ADC_WIDTH_BIT_12);
   adc1_config_channel_atten((adc1_channel_t)ULP_ADC_CHANNEL, ADC_ATTEN_DB_11);
   adc1_ulp_enable();
 
+  // The persistence counter (#180): a breach visible in exactly one look is an ADC glitch,
+  // not physics — the same argument that derived the one-second period. A breaching look
+  // increments a count in RTC memory, an in-window look resets it, and only the Nth
+  // consecutive breach wakes the radio: N-1 seconds of latency, inside the overshoot
+  // allowance the period already carries, for never paying a radio wake on a glitch.
+  //
+  // HOW TO READ THE MACHINE this program runs on, because it is small enough to hold whole.
+  // The ULP-FSM is a four-register 16-bit accumulator machine: R0-R3, an ALU, no stack, no
+  // interrupts. Its only memory is RTC_SLOW_MEM — 8 KB of 32-bit words that stay powered in
+  // deep sleep, shared between this program (loaded at word ULP_PROG_START) and its data
+  // (words 0..2 here); I_LD/I_ST move the LOW 16 bits of the word at [reg + offset], which is
+  // why R3 is pinned to zero as a base address. The timer runs the program from the top every
+  // wakeup period; nothing survives a run except what was stored to RTC_SLOW_MEM, which is
+  // exactly why the looks-counter lives there and not in a register.
+  //
+  // Two comparison idioms, because the ISA has two:
+  //   - I_SUBR sets the ALU overflow flag on BORROW, so "A - B then M_BXF" reads as
+  //     "branch if B > A" — an unsigned compare of two registers, used for sample-vs-band
+  //     because both sides are runtime values;
+  //   - M_BGE branches when R0 >= an IMMEDIATE (it wraps JUMPR, which can only compare R0),
+  //     used for count-vs-N because N is a compile-time constant — and it is why the count
+  //     is loaded into R0 rather than a scratch register.
+  //   - I_WAKE raises the wakeup signal to the sleeping SoC; I_HALT ends THIS run and hands
+  //     back to the ULP timer for the next look. Every path must end in I_HALT, including
+  //     the one after I_WAKE — waking the host does not stop the coprocessor.
   const ulp_insn_t program[] = {
-      I_ADC(R0, 0, ULP_ADC_CHANNEL),          // R0 = one sample of the soil
-      I_MOVI(R3, 0),
-      I_LD(R1, R3, ULP_MEM_HIGH),             // too-dry count
-      I_SUBR(R2, R1, R0),                     // high - sample; overflow set if sample > high
-      M_BXF(1),                               // crossed dry-wards -> wake
-      I_LD(R1, R3, ULP_MEM_LOW),              // too-wet count
-      I_SUBR(R2, R0, R1),                     // sample - low; overflow if sample < low
-      M_BXF(1),                               // crossed wet-wards -> wake
-      I_HALT(),                               // in band: sleep until the next look
-      M_LABEL(1),
-      I_WAKE(),                               // the world changed; say so
-      I_HALT(),
+      I_ADC(R0, 0, ULP_ADC_CHANNEL),          // R0 = one 12-bit SAR sample of the soil
+      I_MOVI(R3, 0),                          // R3 = 0, the base every load/store hangs off
+      I_LD(R1, R3, ULP_MEM_HIGH),             // R1 = RTC_SLOW_MEM[1]: the too-dry count
+      I_SUBR(R2, R1, R0),                     // R2 = high - sample; borrow => sample > high
+      M_BXF(1),                               // borrowed: crossed dry-wards -> a breaching look
+      I_LD(R1, R3, ULP_MEM_LOW),              // R1 = RTC_SLOW_MEM[0]: the too-wet count
+      I_SUBR(R2, R0, R1),                     // R2 = sample - low; borrow => sample < low
+      M_BXF(1),                               // borrowed: crossed wet-wards -> a breaching look
+      I_MOVI(R1, 0),                          // in window: the vigil starts over
+      I_ST(R1, R3, ULP_MEM_LOOKS),            // RTC_SLOW_MEM[2] = 0
+      I_HALT(),                               // this run is over; timer looks again in a second
+      M_LABEL(1),                             // breached THIS look — is it news yet?
+      I_LD(R0, R3, ULP_MEM_LOOKS),            // R0 = looks so far (R0, because JUMPR reads R0)
+      I_ADDI(R0, R0, 1),                      // one more consecutive breaching look
+      I_ST(R0, R3, ULP_MEM_LOOKS),            // remembered across runs, or a glitchy pair of
+                                              // looks a minute apart would count as two
+      M_BGE(2, WAKE_PERSIST_LOOKS),           // R0 >= N: the Nth consecutive breach is real
+      I_HALT(),                               // one look is a glitch; look again first
+      M_LABEL(2),
+      I_WAKE(),                               // the world changed and STAYED changed; say so
+      I_HALT(),                               // waking the host does not stop the watcher
   };
   size_t size = sizeof(program) / sizeof(ulp_insn_t);
   ulp_process_macros_and_load(ULP_PROG_START, program, &size);

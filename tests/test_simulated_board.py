@@ -426,3 +426,35 @@ def test_slow_drift_inside_the_band_stays_silent():
     device._publish()
     device.values[0].value -= 0.02          # a heartbeat's worth of drying
     assert not device._alarmed()
+
+
+# --- the news must survive two looks (#180) -----------------------------------
+
+def test_one_breaching_look_is_a_glitch_not_news():
+    """The persistence counter, mirrored from the boards' ULP: a breach visible in exactly
+    one look never wakes the radio — the same argument that derived the watch period, one
+    step further. The stand-in has no ADC to glitch, so for it this is pure rehearsed
+    latency; the rehearsal is the point."""
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"sleep_s": 3600, "alarm": {"/value": [0.4, 0.6]}})
+    device._receive(600)   # 0.45 -> 0.75, past the ceiling — and it stays there
+    assert not device._news(), "the first breaching look is not yet news"
+    assert device._news(), "the second consecutive look is — the world stayed changed"
+    assert not device._news(), "and the count starts over once the news is out"
+
+
+def test_an_in_window_look_resets_the_vigil():
+    device, _ = _device([MOISTURE], SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    _command(device, {"sleep_s": 3600, "alarm": {"/value": [0.4, 0.6]}})
+    device._receive(600)                      # breach: 0.75
+    assert not device._news()                 # one look so far
+    device.values[0].value = 0.5              # the spike passed; back in the window
+    assert not device._news()                 # the vigil starts over
+    device._receive(600)                      # a second, separate excursion
+    assert not device._news(), "its first look counts from one, not from two"
+
+
+def test_the_persistence_figure_is_config_like_everything_else():
+    device, _ = _device([MOISTURE], SIM_ALARM_PERSIST_LOOKS="3",
+                        SIM_COMMAND_TOPIC="sensors/board_x/cmd")
+    assert device.alarm_persist == 3

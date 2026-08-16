@@ -312,6 +312,16 @@ def _meddler(world: str, rows: list[dict]) -> str:
 """
 
 
+def _persist_looks(world: str) -> int:
+    """The constitutional debounce (#180), read from the merged T-Box the way agora-firmware
+    reads it for the boards: a stand-in must rehearse the same N consecutive looks, or the
+    simulation promises a faster messenger than any real pot has."""
+    from agent.ontology import SENSING
+    rows = ratified.rows(ratified.dataset(world), f"""
+SELECT ?n WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmPersistenceLooks> ?n }} LIMIT 1""")
+    return int(float(rows[0]["n"])) if rows else 2
+
+
 def _simulator(world: str, rows: list[dict]) -> str:
     """One container per stand-in, mirroring one container per agent.
 
@@ -337,6 +347,8 @@ def _simulator(world: str, rows: list[dict]) -> str:
             # (ag:rainTopic) — where the meddler's water arrives, if this world has one.
             ("SIM_TIMESCALE", row.get("scale")),
             ("SIM_RAIN_TOPIC", row.get("rainTopic")),
+            # The society's debounce (#180), the same figure the boards compile in.
+            ("SIM_ALARM_PERSIST_LOOKS", _persist_looks(world)),
         ) if v not in (None, ""))
     return f"""
   sim-{sim_id}:

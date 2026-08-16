@@ -106,3 +106,20 @@ def test_a_pin_appears_exactly_once_across_the_whole_board(board):
     reintroduce a collision by mapping two different roles onto one #define."""
     pins = [int(board[k]) for k in ("gpio", "ledRed", "ledGreen", "ledBlue", "airPin")]
     assert len(pins) == len(set(pins)), f"a pin is claimed twice: {sorted(pins)}"
+
+
+def test_the_persistence_figure_reaches_both_temperaments():
+    """The constitutional debounce (#180): one breaching look is an ADC glitch, N are the
+    news, and N is the society's figure — so both firmwares must compile the same answer,
+    read from the ontology and never typed into a header."""
+    from onboarding.firmware import _crossing, _persist_looks
+
+    ds = ratified.dataset("sensing")
+    n = _persist_looks(ds)
+    assert n == 2, "sensing:alarmPersistenceLooks — the family's stated figure"
+    governed = _crossing({"alarm": True}, n)
+    assert "#define WAKE_ON_ALARM 1" in governed
+    assert f"#define WAKE_PERSIST_LOOKS {n}" in governed
+    assert _crossing({}, n) == "", (
+        "a board whose world makes no alarm promise carries neither define — absence stays "
+        "a statement in the firmware exactly as in the graph")

@@ -232,6 +232,22 @@ sensing:maxAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability
 
 sensing:SensingCapability sensing:minAlarmDeltaFraction 0.05 ; sensing:maxAlarmDeltaFraction 0.5 .
 
+# How many consecutive breaching looks make the news real (#180). The watch period was derived
+# from an argument this figure only extends: soil physics bounds how fast moisture really
+# moves, so a breach visible in exactly ONE look is not physics — it is an ADC glitch, and
+# waking the radio for it spends ~0.25 mAh publishing a normal-looking value. Requiring a
+# second look costs one more second of a vigil that runs anyway (~0.0001 mAh) and one second
+# of latency inside the overshoot allowance the period already carries. CONSTITUTIONAL, beside
+# steadyFraction and deliberately not a per-agent pick: what counts as evidence of a real
+# event is the society's to say, and the figure only moves if the physics argument was wrong —
+# which is a vocabulary edit and a reflash, not a belief revision. Every watcher honours it:
+# both firmwares' ULP programs count it in RTC memory, and the stand-in counts its looks the
+# same way, so the bench rehearses what the boards do.
+sensing:alarmPersistenceLooks a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+    rdfs:label "alarm persistence looks" .
+
+sensing:SensingCapability sensing:alarmPersistenceLooks 2 .
+
 #################  What the DEVICE can honour, which is a different question  #################
 #
 # The two figures above are what the society ALLOWS. They say nothing about what a particular

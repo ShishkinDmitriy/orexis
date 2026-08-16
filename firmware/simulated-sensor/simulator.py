@@ -222,6 +222,11 @@ class SimulatedSensor:
         # the vocabulary states per sensor.
         self.alarm: dict[str, tuple[float, float]] = {}
         self.alarm_period_s = _float("SIM_ALARM_PERIOD_S", 1.0)
+        # The constitutional debounce (#180): N consecutive breaching looks before a wake,
+        # mirroring the boards' ULP counter so the bench rehearses what the silicon does.
+        # Injected by the compose generator from sensing:alarmPersistenceLooks.
+        self.alarm_persist = int(_float("SIM_ALARM_PERSIST_LOOKS", 2))
+        self._breach_looks = 0
         # A PUSH sentinel's band is baked at "flash" — SIM_ALARM is its config.h, since a
         # device that takes no orders can still keep a promise the world wrote. A scheduled
         # device ignores this and is commanded instead.
@@ -456,6 +461,23 @@ class SimulatedSensor:
                 return True
         return False
 
+    def _news(self) -> bool:
+        """One look's breach, held to the persistence figure (#180) — the ULP counter's twin.
+
+        A breaching look increments, an in-window look resets, and only the Nth consecutive
+        breach is news. A stand-in has no ADC to glitch, so for IT this is pure latency — but
+        the bench exists to rehearse what the boards do, and a board that waits two looks must
+        be rehearsed waiting two looks, or the simulation would promise a faster messenger
+        than any real pot has."""
+        if self._alarmed():
+            self._breach_looks += 1
+        else:
+            self._breach_looks = 0
+        if self._breach_looks >= self.alarm_persist:
+            self._breach_looks = 0
+            return True
+        return False
+
     # --- the loop ---
 
     def run(self) -> None:
@@ -489,7 +511,7 @@ class SimulatedSensor:
                     self._stop.wait(step)
                     slept += step
                     self._advance()
-                    if self._alarmed():
+                    if self._news():
                         self._woke_by_alarm = True
                         log.info("%s: crossed the baked band — the sentinel speaks",
                                  self.sensor_id)
@@ -515,7 +537,7 @@ class SimulatedSensor:
                 self._stop.wait(step)
                 slept += step
                 self._advance()
-                if self._alarmed():
+                if self._news():
                     self._woke_by_alarm = True
                     log.info("%s: crossed the commanded band — waking off-cadence, "
                              "the world changed and this board is its messenger",
