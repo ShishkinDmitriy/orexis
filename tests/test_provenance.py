@@ -205,12 +205,12 @@ def test_a_sixth_public_graph_needs_no_python():
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
         <http://example.org/agora/graph/sixth> a ag:PublicGraph }} }}""")
     st.update("""INSERT DATA { GRAPH <http://example.org/agora/graph/sixth> {
-        ag:fern_agent ag:somethingNew "yes" } }""")
+        <http://example.org/agora/world/simulation#fern_agent> ag:somethingNew "yes" } }""")
 
     assert set(st.public_graphs()) - before == {"http://example.org/agora/graph/sixth"}
     # And an unqualified pattern reads it, which is the whole point: a reader asks what the
     # society knows and never learns which graph the answer came from.
-    assert bindings(st.query('SELECT ?v WHERE { ag:fern_agent ag:somethingNew ?v }'))
+    assert bindings(st.query('SELECT ?v WHERE { <http://example.org/agora/world/simulation#fern_agent> ag:somethingNew ?v }'))
 
 
 def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
@@ -267,9 +267,9 @@ def test_a_graph_typed_privately_stays_out_of_the_default_graph():
     """
     st = _public("simulation")
     st.update("""INSERT DATA { GRAPH <http://example.org/agora/graph/private> {
-        ag:fern_agent ag:aSecret "shh" } }""")
+        <http://example.org/agora/world/simulation#fern_agent> ag:aSecret "shh" } }""")
     assert "http://example.org/agora/graph/private" not in st.public_graphs()
-    assert not bindings(st.query('SELECT ?v WHERE { ag:fern_agent ag:aSecret ?v }'))
+    assert not bindings(st.query('SELECT ?v WHERE { <http://example.org/agora/world/simulation#fern_agent> ag:aSecret ?v }'))
     assert _in_graph(st, "http://example.org/agora/graph/private", "?s ag:aSecret ?v")
 
 

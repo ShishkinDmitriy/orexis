@@ -1,3 +1,4 @@
+@prefix : <http://example.org/agora/world/sensing#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
@@ -30,7 +31,7 @@
 
 ##########  What runs the society  ##########
 
-ag:raspberry a ag:ComputeHost ;
+:raspberry a ag:ComputeHost ;
     ag:localId "raspberry" ;
     mc:model "Raspberry Pi 5" ;
     # A NAME, because the address was a fact with an expiry date and it expired three times.
@@ -48,7 +49,7 @@ ag:raspberry a ag:ComputeHost ;
     ag:lanHost "raspberry.local" ;
     rdfs:comment "Runs the agent containers, the broker for this world, and the shared store." .
 
-ag:fern_agent ag:runsOn ag:raspberry .
+:fern_agent ag:runsOn :raspberry .
 
 ##########  The board at the edge  ##########
 
@@ -57,17 +58,17 @@ ag:fern_agent ag:runsOn ag:raspberry .
 # shapes run with inference and the runtime does not (issue #27), so a query for
 # a Microcontroller found nothing and the firmware generator reported that this
 # world states no boards at all. Third time that gap has cost something.
-ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
+:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     ag:localId "esp32_fern" ;
     mc:model "ESP32-WROOM-32D" ;
-    mqtt:onBus ag:local_bus ;
+    mqtt:onBus :local_bus ;
     #  No mc:firmware stated since #175: the board's connecting DEVICE is typed governed:Node
     #  in world.ttl — the two nodes are one physical board wearing two roles (#81) — and the
     #  firmware name is entailed onto the device from its class. The generator reads it
     #  through the hosting this board's deployment already produces. NOT typed here too: the
     #  class entails a senseMode, and a mode on the bare microcontroller node would demand a
     #  command channel that belongs to the device role, not this one.
-    ssn:inDeployment ag:fern_windowsill_deployment ;
+    ssn:inDeployment :fern_windowsill_deployment ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is sensing:Subscribing: the board keeps the interval and cannot be reached in between." .
 
 #  The deployment this hosting is PRODUCED by (#99). `sosa:hosts` used to be asserted here — a
@@ -81,9 +82,9 @@ ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
 #  and the PURPOSE — which is also where a powering condition belongs the day #59's
 #  conditioned capabilities need resolving: "on battery" is a fact about this deployment, not
 #  about any part's datasheet.
-ag:fern_windowsill_deployment a ssn:Deployment ;
-    ssn:deployedOnPlatform ag:esp32_fern ;
-    ssn:deployedSystem ag:moisture_sensor_fern , ag:status_led_fern , ag:air_sensor_fern ;
+:fern_windowsill_deployment a ssn:Deployment ;
+    ssn:deployedOnPlatform :esp32_fern ;
+    ssn:deployedSystem :moisture_sensor_fern , :status_led_fern , :air_sensor_fern ;
     prov:startedAtTime "2026-08-05T17:00:00Z"^^xsd:dateTime ;
     rdfs:comment "The windowsill bench: one fern, watched where it lives, on battery." .
 
@@ -108,21 +109,21 @@ ag:fern_windowsill_deployment a ssn:Deployment ;
 # day they name something differently, and unfindable from the graph. When issue #55 lands these
 # move to the board-model classes and are said once for the family instead of once per board.
 
-ag:esp32_fern mc:hasPin ag:pin_gpio25 , ag:pin_gpio26 , ag:pin_gpio27 ,
-                        ag:pin_gpio32 , ag:pin_gpio34 , ag:pin_3v3 , ag:pin_gnd ;
+:esp32_fern mc:hasPin :pin_gpio25 , :pin_gpio26 , :pin_gpio27 ,
+                        :pin_gpio32 , :pin_gpio34 , :pin_3v3 , :pin_gnd ;
     mc:logicVolts 3.3 .
 
-ag:pin_gpio25 a mc:Pin ; mc:gpio 25 ; skos:notation "D25" ; wokwi:name "25" .
-ag:pin_gpio26 a mc:Pin ; mc:gpio 26 ; skos:notation "D26" ; wokwi:name "26" .
-ag:pin_gpio27 a mc:Pin ; mc:gpio 27 ; skos:notation "D27" ; wokwi:name "27" .
-ag:pin_gpio32 a mc:Pin ; mc:gpio 32 ; skos:notation "D32" ; wokwi:name "32" .
-ag:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "D34" ; wokwi:name "34" .
-ag:pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ;
+:pin_gpio25 a mc:Pin ; mc:gpio 25 ; skos:notation "D25" ; wokwi:name "25" .
+:pin_gpio26 a mc:Pin ; mc:gpio 26 ; skos:notation "D26" ; wokwi:name "26" .
+:pin_gpio27 a mc:Pin ; mc:gpio 27 ; skos:notation "D27" ; wokwi:name "27" .
+:pin_gpio32 a mc:Pin ; mc:gpio 32 ; skos:notation "D32" ; wokwi:name "32" .
+:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "D34" ; wokwi:name "34" .
+:pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ;
                          skos:notation "3V3" ; wokwi:name "3V3" .
 # Three legs on this board are printed GND, so the silkscreen does not identify one of them.
 # Wokwi disambiguates where the board does not, which is what wokwi:name is for. Everything
 # here grounds to the same rail, so which of the three is arbitrary — but it has to be SAID.
-ag:pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" ;
+:pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" ;
                          wokwi:name "GND.1" .
 
 ##########  What is wired to it  ##########
@@ -130,44 +131,44 @@ ag:pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" ;
 # Declared as a sensor in world.ttl; this says what KIND of instrument it is, what legs it has,
 # and what its numbers mean. GPIO 34 is deliberate and should not be moved casually: it is ADC1,
 # the only ADC that keeps working while WiFi is up.
-ag:moisture_sensor_fern a probe:CapacitiveMoistureProbe ;
+:moisture_sensor_fern a probe:CapacitiveMoistureProbe ;
     mc:model "Capacitive Soil Moisture Sensor v2.0" ;
-    mc:hasPin ag:probe_out , ag:probe_vcc , ag:probe_gnd ;
+    mc:hasPin :probe_out , :probe_vcc , :probe_gnd ;
     # Measured on this probe, in this pot. Carried here rather than in the firmware because it
     # is per-instance and re-measured over time; changing it must not need a screwdriver.
     probe:rawDry 3200 ;
     probe:rawWet 1300 .
 
-ag:probe_out a mc:Pin ; mc:pinRole mc:AnalogInPinRole .
-ag:probe_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
-ag:probe_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
+:probe_out a mc:Pin ; mc:pinRole mc:AnalogInPinRole .
+:probe_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
+:probe_gnd a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
 # This board has no user LED of its own, so an external one says what the agent makes of the pot.
 # 25/26/27 are safe outputs — no strapping duty at boot, and their ADC2 membership costs nothing
 # to a driven line. It is lit only while the board is awake and dark through every sleep.
-ag:status_led_fern a rgbled:RgbLed ;
+:status_led_fern a rgbled:RgbLed ;
     ag:localId "status_led_fern" ;
     mc:model "KY-016 4-pin RGB LED (common cathode)" ;
-    mc:hasPin ag:led_r , ag:led_g , ag:led_b , ag:led_common .
+    mc:hasPin :led_r , :led_g , :led_b , :led_common .
 
-ag:led_r      a mc:Pin ; mc:pinRole rgbled:RedPinRole .
-ag:led_g      a mc:Pin ; mc:pinRole rgbled:GreenPinRole .
-ag:led_b      a mc:Pin ; mc:pinRole rgbled:BluePinRole .
+:led_r      a mc:Pin ; mc:pinRole rgbled:RedPinRole .
+:led_g      a mc:Pin ; mc:pinRole rgbled:GreenPinRole .
+:led_b      a mc:Pin ; mc:pinRole rgbled:BluePinRole .
 # Common CATHODE, so the return goes to ground. A common anode would go to the 3V3 rail instead,
 # and every colour would come out as its complement — which used to be a comment telling you to
 # check before soldering. It is a wire now, and a wire is a thing a checker can read.
-ag:led_common a mc:Pin ; mc:pinRole rgbled:CommonPinRole .
+:led_common a mc:Pin ; mc:pinRole rgbled:CommonPinRole .
 
 # Wired and stated, NOT yet polled — see issue #51. Its data leg is on 32 rather than 34 or 35
 # and the difference is not cosmetic: a one-wire line is DRIVEN, and 34-39 cannot drive.
-ag:air_sensor_fern a dht11:Dht11 ;
+:air_sensor_fern a dht11:Dht11 ;
     ag:localId "air_sensor_fern" ;
     mc:model "KY-015 (DHT11)" ;
-    mc:hasPin ag:air_data , ag:air_vcc , ag:air_gnd .
+    mc:hasPin :air_data , :air_vcc , :air_gnd .
 
-ag:air_data a mc:Pin ; mc:pinRole onewire:DataPinRole .
-ag:air_vcc  a mc:Pin ; mc:pinRole mc:PowerPinRole .
-ag:air_gnd  a mc:Pin ; mc:pinRole mc:GroundPinRole .
+:air_data a mc:Pin ; mc:pinRole onewire:DataPinRole .
+:air_vcc  a mc:Pin ; mc:pinRole mc:PowerPinRole .
+:air_gnd  a mc:Pin ; mc:pinRole mc:GroundPinRole .
 
 # WHICH HALF each of the society's two air sensors is. The society already declares them and
 # says what they observe and where they publish; what it cannot say is that this one is the
@@ -177,8 +178,8 @@ ag:air_gnd  a mc:Pin ; mc:pinRole mc:GroundPinRole .
 # `dht11:TemperatureSensor` carries the accuracy, the resolution and the procedure it
 # implements, and rule 5 lands them on `ag:air_temp_fern` without any of it being written twice.
 # The type is the only new fact — everything that follows from it is already in the package.
-ag:air_temp_fern     a dht11:TemperatureSensor .
-ag:air_humidity_fern a dht11:HumiditySensor .
+:air_temp_fern     a dht11:TemperatureSensor .
+:air_humidity_fern a dht11:HumiditySensor .
 
 ##########  The wires  ##########
 #
@@ -194,17 +195,17 @@ ag:air_humidity_fern a dht11:HumiditySensor .
 # and you cannot point at a blank node. The colour is the one on the actual jumper: it is a
 # fact about this bench and nothing electrical depends on it, which is exactly why it is worth
 # writing down — it is how you find the right wire among nine without tracing each to its end.
-ag:w_probe_sig a mc:Wire ; mc:joins ag:probe_out , ag:pin_gpio34 ; mc:colour "green" .
-ag:w_probe_pwr a mc:Wire ; mc:joins ag:probe_vcc , ag:pin_3v3    ; mc:colour "red" .
-ag:w_probe_gnd a mc:Wire ; mc:joins ag:probe_gnd , ag:pin_gnd    ; mc:colour "black" .
+:w_probe_sig a mc:Wire ; mc:joins :probe_out , :pin_gpio34 ; mc:colour "green" .
+:w_probe_pwr a mc:Wire ; mc:joins :probe_vcc , :pin_3v3    ; mc:colour "red" .
+:w_probe_gnd a mc:Wire ; mc:joins :probe_gnd , :pin_gnd    ; mc:colour "black" .
 
 # The LED's three channels take their own colours, which is the case where this earns itself:
 # on the breadboard they are otherwise three identical jumpers into three adjacent pins.
-ag:w_led_r   a mc:Wire ; mc:joins ag:led_r      , ag:pin_gpio25 ; mc:colour "red" .
-ag:w_led_g   a mc:Wire ; mc:joins ag:led_g      , ag:pin_gpio26 ; mc:colour "green" .
-ag:w_led_b   a mc:Wire ; mc:joins ag:led_b      , ag:pin_gpio27 ; mc:colour "blue" .
-ag:w_led_com a mc:Wire ; mc:joins ag:led_common , ag:pin_gnd    ; mc:colour "black" .
+:w_led_r   a mc:Wire ; mc:joins :led_r      , :pin_gpio25 ; mc:colour "red" .
+:w_led_g   a mc:Wire ; mc:joins :led_g      , :pin_gpio26 ; mc:colour "green" .
+:w_led_b   a mc:Wire ; mc:joins :led_b      , :pin_gpio27 ; mc:colour "blue" .
+:w_led_com a mc:Wire ; mc:joins :led_common , :pin_gnd    ; mc:colour "black" .
 
-ag:w_air_data a mc:Wire ; mc:joins ag:air_data , ag:pin_gpio32 ; mc:colour "yellow" .
-ag:w_air_pwr  a mc:Wire ; mc:joins ag:air_vcc  , ag:pin_3v3    ; mc:colour "red" .
-ag:w_air_gnd  a mc:Wire ; mc:joins ag:air_gnd  , ag:pin_gnd    ; mc:colour "black" .
+:w_air_data a mc:Wire ; mc:joins :air_data , :pin_gpio32 ; mc:colour "yellow" .
+:w_air_pwr  a mc:Wire ; mc:joins :air_vcc  , :pin_3v3    ; mc:colour "red" .
+:w_air_gnd  a mc:Wire ; mc:joins :air_gnd  , :pin_gnd    ; mc:colour "black" .

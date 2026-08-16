@@ -68,7 +68,10 @@ A **predicate** is always a term, so a project predicate the T-Box does not decl
 however it got there — a rename, a deletion, or a typo in a hand-written beliefs file.
 
 Anywhere else a project IRI may be an instance: `ag:fern_agent` has exactly the shape of a term
-and is not one. Those positions are flagged only where the rename map recognises them, which is
+and is not one — and since the worlds moved their individuals into namespaces of their own, an
+`ag:`-spelled individual in a volume is itself a sign of age: a volume born before the move
+holds `ag:fern_agent` where the world now says `:fern_agent`, and such an agent refuses to
+start rather than half-believe. Rebirth is the remedy, exactly as this record prescribes. Those positions are flagged only where the rename map recognises them, which is
 where the answer is known rather than guessed. `review:revisedTerm ag:slowSleepS` is caught that
 way — the object is a term, and the map says what it became.
 

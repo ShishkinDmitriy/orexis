@@ -99,7 +99,7 @@ def test_plant_agent_cannot_actuate(me):
 def _world_with_push_sensor():
     """Swap fern's board for one that pushes on its own clock, and re-derive.
 
-    EVERY sensor fern polls, not one named one. This used to edit `ag:moisture_sensor_fern`
+    EVERY sensor fern polls, not one named one. This used to edit `<http://example.org/agora/world/simulation#moisture_sensor_fern>`
     alone, which was the whole of fern's wiring when the world it ran against had one sensor per
     agent. It has two now — a probe and a thermometer sharing the board's one message — and
     switching only the probe leaves the thermometer scheduled, so the agent keeps `Subscribing`
@@ -119,7 +119,7 @@ def _world_with_push_sensor():
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s sensing:senseMode sensing:ScheduledProcedure }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s sensing:senseMode sensing:PushProcedure }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
-                 ag:fern_agent sensing:polls ?s .
+                 <http://example.org/agora/world/simulation#fern_agent> sensing:polls ?s .
                  ?s sensing:senseMode sensing:ScheduledProcedure }} }}
     """)
     st.clear_graph(WORLD_DERIVED_GRAPH)

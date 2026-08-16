@@ -1,3 +1,4 @@
+@prefix : <http://example.org/agora/world/simulation#> .
 @prefix review: <http://example.org/agora/review#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
 @prefix water: <http://example.org/agora/water#> .
@@ -44,7 +45,7 @@
 #  society whose members disagree about the bus is not one society. The ONLY thing the
 #  environment tells a process is where the belief base is; this is part of what it finds there.
 
-ag:local_bus a mqtt:MessageBus ;
+:local_bus a mqtt:MessageBus ;
     ag:localId "local_bus" ;
     mqtt:brokerHost "localhost" ;
     mqtt:brokerPort 1885 ;
@@ -61,7 +62,7 @@ ag:local_bus a mqtt:MessageBus ;
 #  identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never introspects.
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
-ag:world a ag:World ; ag:currentVersion ag:version_1 ;
+:world a ag:World ; ag:currentVersion :version_1 ;
     #  Ten bench minutes are one simulated day, so a week of drying, deciding and dosing
     #  fits in an evening — and every stand-in ages at this one rate, or a dose sized for a
     #  day's drying would land against an hour's. Faster was tried on paper and refused: at
@@ -73,22 +74,22 @@ ag:world a ag:World ; ag:currentVersion ag:version_1 ;
     #  per pot: the third-party impulse of #151, made routine rather than hypothetical.
     ag:strayDoseMeanDays 2 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
-ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 
 ##########  The venue  ##########
 
-ag:barrel1_market a market:Market ;
+:barrel1_market a market:Market ;
     ag:localId "barrel1_market" ;
-    market:marketFor ag:barrel1 ;
+    market:marketFor :barrel1 ;
     market:offerTopic   "market/barrel1/offer" ;
     market:bidTopic     "market/barrel1/bid" ;
     market:claimTopic "market/barrel1/claim" ;
     market:redeemTopic "market/barrel1/redeem" .
 
-ag:barrel1 a water:WaterSource ;
+:barrel1 a water:WaterSource ;
     ag:localId "barrel1" ;
-    water:suppliedBy ag:supplier ;
+    water:suppliedBy :supplier ;
     water:capacityL 5.0 .
 
 ##########  The supplier — runs the venue and owns the valves  ##########
@@ -96,14 +97,14 @@ ag:barrel1 a water:WaterSource ;
 #  Subscribing or Bidding — it is wired to no sensor and plumbed into no market as a buyer. Its
 #  class says none of this; its connections do.
 
-ag:supplier a ag:Agent ;
+:supplier a ag:Agent ;
     ag:localId "supplier" ;
-    market:hosts ag:barrel1_market ;
+    market:hosts :barrel1_market ;
     #  How it matches bids to the lot. Public because a bidder cannot bid well against a
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
     market:matchesBy market:PayAsBid ;
-    actuation:hasActuator ag:valve_fern , ag:valve_tomato , ag:valve_succulent .
+    actuation:hasActuator :valve_fern , :valve_tomato , :valve_succulent .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
 
@@ -127,8 +128,8 @@ ag:supplier a ag:Agent ;
 #  than one thing. Nothing bids on air temperature — no market relieves it — and it still changes
 #  how closely the board is watched, which is the whole of what issue #110 asked for.
 
-ag:fern a water:Plant ;
-    ag:localId "fern" ; water:servedBy ag:barrel1 ;
+:fern a water:Plant ;
+    ag:localId "fern" ; water:servedBy :barrel1 ;
     ag:rainTopic "rain/fern" ;
     water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
@@ -146,8 +147,8 @@ ag:fern a water:Plant ;
             ssn:forProperty water:AirTemperature ;
             schema:minValue 5.0 ; schema:maxValue 35.0 ; schema:unitCode unit:DEG_C ] ] .
 
-ag:tomato a water:Plant ;
-    ag:localId "tomato" ; water:servedBy ag:barrel1 ;
+:tomato a water:Plant ;
+    ag:localId "tomato" ; water:servedBy :barrel1 ;
     ag:rainTopic "rain/tomato" ;
     water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
@@ -159,8 +160,8 @@ ag:tomato a water:Plant ;
             ssn:forProperty water:SoilMoisture ;
             schema:minValue 0.18 ; schema:maxValue 0.80 ; schema:unitCode unit:UNITLESS ] ] .
 
-ag:succulent a water:Plant ;
-    ag:localId "succulent" ; water:servedBy ag:barrel1 ;
+:succulent a water:Plant ;
+    ag:localId "succulent" ; water:servedBy :barrel1 ;
     ag:rainTopic "rain/succulent" ;
     water:dryRatePerTick 0.008 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
@@ -178,25 +179,25 @@ ag:succulent a water:Plant ;
 #  sensing:polls IS the access grant: fern's agent is wired to fern's sensor and to no other.
 #  From these two connections, derivation gives each of them Subscribing + Bidding.
 
-ag:fern_agent a ag:Agent ;
+:fern_agent a ag:Agent ;
     ag:localId "fern" ;
-    ag:actsFor ag:fern ;
-    sensing:polls ag:moisture_sensor_fern , ag:air_temp_fern ;
-    market:bidsIn ag:barrel1_market ;
+    ag:actsFor :fern ;
+    sensing:polls :moisture_sensor_fern , :air_temp_fern ;
+    market:bidsIn :barrel1_market ;
     mqtt:eventTopic "readings/fern" .
 
-ag:tomato_agent a ag:Agent ;
+:tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
-    ag:actsFor ag:tomato ;
-    sensing:polls ag:moisture_sensor_tomato ;
-    market:bidsIn ag:barrel1_market ;
+    ag:actsFor :tomato ;
+    sensing:polls :moisture_sensor_tomato ;
+    market:bidsIn :barrel1_market ;
     mqtt:eventTopic "readings/tomato" .
 
-ag:succulent_agent a ag:Agent ;
+:succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
-    ag:actsFor ag:succulent ;
-    sensing:polls ag:moisture_sensor_succulent ;
-    market:bidsIn ag:barrel1_market ;
+    ag:actsFor :succulent ;
+    sensing:polls :moisture_sensor_succulent ;
+    market:bidsIn :barrel1_market ;
     mqtt:eventTopic "readings/succulent" .
 
 ##########  What each agent may re-pick, and how far  ##########
@@ -213,17 +214,17 @@ ag:succulent_agent a ag:Agent ;
 #
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
-ag:fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
-ag:tomato_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
-ag:succulent_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 900 ; review:notAbove 900 ] .
+:fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
+:tomato_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 600 ; review:notAbove 900 ] .
+:succulent_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 900 ; review:notAbove 900 ] .
 
 #  And the jolt threshold — what counts as a big-enough in-band move to wake the board for.
 #  0.25 was an estimate measured on nothing, which is exactly what latitude is for: the agent
 #  corrects it from what its own sensors do, and being wrong costs a retained command, not a
 #  reflash. The succulent gets none, deliberately: its cadence mandate is already fixed at
 #  900..900, and a world that wants no drift says so by granting no room.
-ag:fern_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .
-ag:tomato_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .
+:fern_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .
+:tomato_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .
 
 ##########  Sensors — ordinary in every respect but one: nothing is there  ##########
 #  Each states what any board states: the bus it is on, the subject it monitors, the property it
@@ -242,14 +243,14 @@ ag:tomato_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; revi
 #  for a client that never connects is exactly what the hardware world refuses. It is reachable
 #  because its neighbour publishes for it, which is what `ag:SimulatedDeviceShape` now tests.
 
-ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
+:moisture_sensor_fern a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_fern" ;
-    mqtt:onBus ag:local_bus ;
+    mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
     #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
     #  beside the cadence, and the stand-in watches them between heartbeats as a ULP would.
     ssn:implements sensing:AlarmProcedure ;
-    sensing:monitors ag:fern ;
+    sensing:monitors :fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -269,13 +270,13 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
 #  it is the same device speaking, and the only thing that makes it a separate SENSOR is that it
 #  observes a different property. Its range is degrees, not a fraction, which is the assumption
 #  ag:DeviceModelShape had to stop making.
-ag:air_temp_fern a sosa:Sensor , ag:Device ;
+:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
     #  Watched too (#151): a stand-in may watch every channel it has, where a real ESP32's ULP
     #  reaches only the analog probe — the per-channel statement is exactly for that asymmetry.
     ssn:implements sensing:AlarmProcedure ;
     #  no senseMode since #96: the clock is the device's, stated once where it connects
-    sensing:monitors ag:fern ;
+    sensing:monitors :fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -290,14 +291,14 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
         ag:modelDailySwing 4.0 ;
         ag:modelTickSeconds 3 ] .
 
-ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
+:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_tomato" ;
-    mqtt:onBus ag:local_bus ;
+    mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
     #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
     #  beside the cadence, and the stand-in watches them between heartbeats as a ULP would.
     ssn:implements sensing:AlarmProcedure ;
-    sensing:monitors ag:tomato ;
+    sensing:monitors :tomato ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
     mqtt:readingTopic "sensors/moisture_sensor_tomato/reading" ;
@@ -312,14 +313,14 @@ ag:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
         ag:modelDriesPerDay 0.20 ;
         ag:modelTickSeconds 3 ] .
 
-ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
+:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
     ag:localId "moisture_sensor_succulent" ;
-    mqtt:onBus ag:local_bus ;
+    mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
     #  This CHANNEL is watched for crossings (#151): the agent commands its region's edges
     #  beside the cadence, and the stand-in watches them between heartbeats as a ULP would.
     ssn:implements sensing:AlarmProcedure ;
-    sensing:monitors ag:succulent ;
+    sensing:monitors :succulent ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1, like the fern's
     mqtt:readingTopic "sensors/moisture_sensor_succulent/reading" ;
@@ -344,22 +345,22 @@ ag:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
 #  sensor waters on THAT and never on the command, so a command it refuses leaves the soil
 #  dry — which is the whole point of making it verify.
 
-ag:valve_fern a actuation:Valve ;
-    ag:localId "valve_fern" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:fern ; actuation:drawsFrom ag:barrel1 ;
+:valve_fern a actuation:Valve ;
+    ag:localId "valve_fern" ; mqtt:onBus :local_bus ; actuation:actuates :fern ; actuation:drawsFrom :barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
     mqtt:commandTopic "actuators/valve_fern/command" ;
     mqtt:statusTopic "actuators/valve_fern/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
-ag:valve_tomato a actuation:Valve ;
-    ag:localId "valve_tomato" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:tomato ; actuation:drawsFrom ag:barrel1 ;
+:valve_tomato a actuation:Valve ;
+    ag:localId "valve_tomato" ; mqtt:onBus :local_bus ; actuation:actuates :tomato ; actuation:drawsFrom :barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
     mqtt:commandTopic "actuators/valve_tomato/command" ;
     mqtt:statusTopic "actuators/valve_tomato/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
-ag:valve_succulent a actuation:Valve ;
-    ag:localId "valve_succulent" ; mqtt:onBus ag:local_bus ; actuation:actuates ag:succulent ; actuation:drawsFrom ag:barrel1 ;
+:valve_succulent a actuation:Valve ;
+    ag:localId "valve_succulent" ; mqtt:onBus :local_bus ; actuation:actuates :succulent ; actuation:drawsFrom :barrel1 ;
     ag:simulatedBy [ a ag:DeviceModel ] ;
     mqtt:commandTopic "actuators/valve_succulent/command" ;
     mqtt:statusTopic "actuators/valve_succulent/status" ;

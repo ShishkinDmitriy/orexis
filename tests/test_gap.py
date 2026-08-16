@@ -13,8 +13,8 @@ from packages.capability.desire import gaps_of, regions_of
 
 from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store
 
-FERN = "http://example.org/agora#fern_agent"
-SUPPLIER = "http://example.org/agora#supplier"
+FERN = "http://example.org/agora/world/simulation#fern_agent"
+SUPPLIER = "http://example.org/agora/world/simulation#supplier"
 
 
 def test_the_query_and_the_module_are_one_definition(query_with_readings):
@@ -142,8 +142,8 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
     unwired = genesis_store()
     unwired.update(f"""
         PREFIX ag: <http://example.org/agora#>
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent
-            <http://example.org/agora/sensing#polls> ag:air_temp_fern }} }}
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#fern_agent>
+            <http://example.org/agora/sensing#polls> <http://example.org/agora/world/simulation#air_temp_fern> }} }}
         WHERE {{}}""")
     for rule in loader.rule_files():
         unwired.update(genesis.substitute(rule.read_text(), unwired))

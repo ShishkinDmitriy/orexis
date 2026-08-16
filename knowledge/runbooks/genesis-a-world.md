@@ -63,8 +63,14 @@ asked for is the *target*, and it must sit inside that region or the agent will 
 Register each in the catalog inside `world.ttl`:
 
 ```turtle
-<http://example.org/agora/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .
+<http://example.org/agora/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf :fern_agent .
 ```
+
+**A world's individuals live in the world's own namespace, not in `ag:`.** Declare it once at
+the top of every file in the world — `@prefix : <http://example.org/agora/world/<name>#> .` —
+and write your agents, sensors, subjects and pins unprefixed: `:fern_agent`, `:local_bus`.
+`ag:` is the vocabulary's; a test refuses a world that puts an individual there. The same
+declaration goes in each `beliefs/<agent>.ttl`, whose subject is that same `:fern_agent`.
 
 # 4. Validate, and read what it derived
 

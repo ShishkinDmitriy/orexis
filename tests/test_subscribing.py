@@ -239,29 +239,29 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     # them, so the cut started inside the platform block and took the rest of it with it. The
     # part goes too — a KY-015 hosting two channels this world no longer has would be a
     # platform pointing at nothing.
-    for block in ("ag:air_temp_fern a sosa:Sensor , ag:Device ;", "ag:air_humidity_fern a sosa:Sensor , ag:Device ;",
-                  "ag:air_sensor_fern a ssn:System ;"):
+    for block in (":air_temp_fern a sosa:Sensor , ag:Device ;", ":air_humidity_fern a sosa:Sensor , ag:Device ;",
+                  "\n:air_sensor_fern a ssn:System ;"):
         start = s.index(block)
         s = s[:start] + s[s.index(" .\n", start) + 3:]
-    s = s.replace("    sosa:hosts ag:moisture_sensor_fern , ag:air_sensor_fern ;",
-                  "    sosa:hosts ag:moisture_sensor_fern ;")
+    s = s.replace("    sosa:hosts :moisture_sensor_fern , :air_sensor_fern ;",
+                  "    sosa:hosts :moisture_sensor_fern ;")
     s = s.replace(
-        "sensing:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;",
-        "sensing:polls ag:moisture_sensor_fern ;")
+        "sensing:polls :moisture_sensor_fern , :air_temp_fern , :air_humidity_fern ;",
+        "sensing:polls :moisture_sensor_fern ;")
 
     s = s.replace(
-        "ag:fern_agent a ag:Agent ;",
-        'ag:chatter_fern a sosa:Sensor , ag:Device ;\n'
+        ":fern_agent a ag:Agent ;",
+        ':chatter_fern a sosa:Sensor , ag:Device ;\n'
         '    ag:localId "chatter_fern" ;\n'
-        '    mqtt:onBus ag:local_bus ;\n'
+        '    mqtt:onBus :local_bus ;\n'
         '    sensing:senseMode sensing:PushProcedure ;\n'          # keeps its own clock, takes no orders
-        "    sensing:monitors ag:fern ;\n"
+        "    sensing:monitors :fern ;\n"
         f"    sosa:observes {observes} ;\n"
         '    mqtt:readingTopic "sensors/chatter_fern/reading" .\n\n'
-        "ag:fern_agent a ag:Agent ;",
+        ":fern_agent a ag:Agent ;",
     )
-    s = s.replace("sensing:polls ag:moisture_sensor_fern ;",
-                  "sensing:polls ag:moisture_sensor_fern , ag:chatter_fern ;")
+    s = s.replace("sensing:polls :moisture_sensor_fern ;",
+                  "sensing:polls :moisture_sensor_fern , :chatter_fern ;")
     w.write_text(s)
     (dst / "hardware.ttl").unlink(missing_ok=True)   # the stand describes one board, not this
 
@@ -724,17 +724,17 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
         PREFIX water: <http://example.org/agora/water#>
         PREFIX unit: <http://qudt.org/vocab/unit/>
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:fern_east a sosa:Sample ; sosa:isSampleOf ag:fern .
-            ag:fern_west a sosa:Sample ; sosa:isSampleOf ag:fern .
-            ag:moisture_sensor_fern sensing:samples ag:fern_east .
+            ag:fern_east a sosa:Sample ; sosa:isSampleOf <http://example.org/agora/world/simulation#fern> .
+            ag:fern_west a sosa:Sample ; sosa:isSampleOf <http://example.org/agora/world/simulation#fern> .
+            <http://example.org/agora/world/simulation#moisture_sensor_fern> sensing:samples ag:fern_east .
             ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
-                mqtt:onBus ag:local_bus ; sensing:senseMode sensing:ScheduledProcedure ;
-                sensing:monitors ag:fern ; sensing:samples ag:fern_west ;
+                mqtt:onBus <http://example.org/agora/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ;
+                sensing:monitors <http://example.org/agora/world/simulation#fern> ; sensing:samples ag:fern_west ;
                 sosa:observes water:SoilMoisture ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .
-            ag:fern_agent sensing:polls ag:second_probe_fern .
+            <http://example.org/agora/world/simulation#fern_agent> sensing:polls ag:second_probe_fern .
         }} }} WHERE {{}}""")
     fern = build_agent("fern", st, monkeypatch)
     p = fern.subscribing()

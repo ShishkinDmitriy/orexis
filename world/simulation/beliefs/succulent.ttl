@@ -1,3 +1,4 @@
+@prefix : <http://example.org/agora/world/simulation#> .
 @prefix intention: <http://example.org/agora/intention#> .
 @prefix schema: <https://schema.org/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -14,7 +15,7 @@
 #  content to look rarely and to trust older data. Same world, same ontology, different mind.
 
 ##  sensing:Subscribing
-ag:succulent_agent
+:succulent_agent
     sensing:fastSleepS 60 ;
     sensing:slowSleepS 900 ;
     sensing:readingGraceS 45 ;
@@ -23,21 +24,21 @@ ag:succulent_agent
                                        # says otherwise — same delta, different governance
 
 ##  market:Bidding
-ag:succulent_agent
+:succulent_agent
     market:hasEndowment 100.0 ;
     water:litresPerFraction 2.0 ;
     water:maxValuePerL 0.80 .
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
-ag:succulent_agent reporting:metricsIntervalS 60 .
+:succulent_agent reporting:metricsIntervalS 60 .
 
 ##  Self-review — how often at the very least.
 #   Required because the world gave this agent room to move (review:commits, in world.ttl): an
 #   agent granted none derives no review capability and needs no interval. A FLOOR and not a
 #   schedule — a decision plans its own next arising from when its effect could show.
 #   See knowledge/decisions/self-review-is-a-capability.md.
-ag:succulent_agent review:reviewIntervalS 300 .
+:succulent_agent review:reviewIntervalS 300 .
 
 ##  desire — the pick inside the region
 #   The point this agent steers its moisture toward. PRIVATE where the region is public: the
@@ -45,11 +46,11 @@ ag:succulent_agent review:reviewIntervalS 300 .
 #   to the region (desire:AimShape) and to nobody else, which is what makes it this agent's.
 #   It used to be water:hasTarget — one number that was also the market's pricing input. The
 #   market now asks desire for it, so an agent in a world with no market could still hold one.
-ag:succulent_agent desire:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.22 ] .
+:succulent_agent desire:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.22 ] .
 
 ##  intention — the commitment policy
 #   How long a standing commitment absorbs a second impulse to do the same thing before a new
 #   adoption may supersede it. The ledger records what this agent does either way; the patience
 #   is what makes "already doing something about it" a fact with teeth. Two minutes: several
 #   auction rounds, and far past any one bid window.
-ag:succulent_agent intention:patienceS 120 .
+:succulent_agent intention:patienceS 120 .

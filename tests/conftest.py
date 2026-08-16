@@ -74,10 +74,13 @@ def genesis_store(readings: dict[str, float] | None = None,
         genesis.birth(st, path, agent_id_of(beliefs))
 
     if readings:
+        # The subject lives in the WORLD's namespace since a world took its individuals out
+        # of ag: — a seeded reading must point where the world's fern actually is.
+        ns = f"http://example.org/agora/world/{world}#"
         ts = (result_time or datetime.now(timezone.utc)).isoformat()
         st.update("INSERT DATA { GRAPH <%s> {\n%s\n} }" % (SENSED_GRAPH, "\n".join(
             f"""  {observation_uri(pid, prop)} a sosa:Observation ;
-                    sosa:hasFeatureOfInterest ag:{pid} ;
+                    sosa:hasFeatureOfInterest <{ns}{pid}> ;
                     sosa:observedProperty <{prop}> ;
                     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
                     sosa:resultTime "{ts}"^^xsd:dateTime ."""

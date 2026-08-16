@@ -24,13 +24,13 @@ class FakeAgent:
     def __init__(self, ml_per_second=10.0, max_dose_ml=1000.0,
                  status_topic="actuators/fern/valve/status", dose_grace_s=10):
         valve = Actuator(
-            uri="ag:valve_fern", local_id="valve_fern", subject="ag:fern", subject_id="fern",
+            uri="<http://example.org/agora/world/simulation#valve_fern>", local_id="valve_fern", subject="<http://example.org/agora/world/simulation#fern>", subject_id="fern",
             command_topic="actuators/fern/valve",
             ml_per_second=ml_per_second, max_dose_ml=max_dose_ml,
             status_topic=status_topic,
         )
         self.id = "supplier"
-        self.me = Self(uri="ag:supplier", agent_id="supplier", capabilities=frozenset(),
+        self.me = Self(uri="<http://example.org/agora/world/simulation#supplier>", agent_id="supplier", capabilities=frozenset(),
                        actuators=(valve,))
         self.sent = []
         self.beliefs = _Beliefs(dose_grace_s)

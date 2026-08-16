@@ -96,7 +96,7 @@ def test_a_board_leg_is_not_asked_for_a_role_it_should_not_have(drafted):
     """A general-purpose leg has no role — it is general purpose until something is wired to
     it. Marking that absent as a TODO would ask the draft to invent the thing the model
     deliberately leaves out."""
-    assert 'ag:esp32_fern_7 a mc:Pin ; skos:notation "D34" .' in drafted
+    assert ':esp32_fern_7 a mc:Pin ; skos:notation "D34" .' in drafted
 
 
 def test_names_and_models_survive_where_a_drawing_lost_them(drafted):
@@ -126,7 +126,7 @@ def test_the_board_declares_what_it_carries(drafted):
     """Not the same statement as a wire — carrying is mounting, and a part can be carried and
     unwired — but every generator that walks a board starts from sosa:hosts. Leaving it out
     drafted a stand nothing downstream could find its parts in."""
-    assert "sosa:hosts ag:air_sensor_fern , ag:moisture_sensor_fern , ag:status_led_fern" in drafted
+    assert "sosa:hosts :air_sensor_fern , :moisture_sensor_fern , :status_led_fern" in drafted
 
 
 def test_only_what_belongs_to_the_board_MODEL_is_left_over(drafted):

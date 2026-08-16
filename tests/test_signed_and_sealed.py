@@ -22,7 +22,7 @@ from onboarding.keygen import (create_agent_signing_keypair, create_keypair,
 
 from conftest import build_agent, genesis_store
 
-FERN = "http://example.org/agora#fern_agent"
+FERN = "http://example.org/agora/world/simulation#fern_agent"
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ def market_of(agent):
 
 def _open_and_win(host):
     """One full round with fern the only bidder."""
-    host.deliver("readings/fern", {"agent": "fern", "subject": "http://example.org/agora#fern",
+    host.deliver("readings/fern", {"agent": "fern", "subject": "http://example.org/agora/world/simulation#fern",
                                    "property": "http://example.org/agora/water#SoilMoisture",
                                    "value": 0.05, "band": "LOW"})
     rid = host.sent.to(market_of(host).offer_topic)[-1]["auction_id"]
@@ -140,7 +140,7 @@ def test_the_host_refuses_a_presentation_that_fails_the_published_key(keyed, mak
 # --- the roster: real IRIs, not a naming convention --------------------------
 
 def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeypatch):
-    """`ag:supplier` has no `_agent` suffix — a roster that built IRIs from localIds by
+    """`<http://example.org/agora/world/simulation#supplier>` has no `_agent` suffix — a roster that built IRIs from localIds by
     convention attested keys for nodes that do not exist, and rule 1 is exactly the rule
     against that guess. The IRI travels with the id from the ratified files, so every agent's
     keys land on its actual node, supplier included."""
@@ -161,8 +161,8 @@ def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeyp
     monkeypatch.delenv("AGORA_WORLD_DIR", raising=False)
 
     ids = roster("sim2")
-    assert ("http://example.org/agora#supplier", "supplier") in ids
-    assert ("http://example.org/agora#fern_agent", "fern") in ids
+    assert ("http://example.org/agora/world/simulation#supplier", "supplier") in ids
+    assert ("http://example.org/agora/world/simulation#fern_agent", "fern") in ids
 
     for _, agent_id in ids:
         create_agent_signing_keypair(agent_id)
@@ -178,6 +178,6 @@ def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeyp
     genesis.refresh_public(st, worlds / "sim2")
     rows = bindings(st.query("""SELECT ?a WHERE { ?a ag:signingKey ?k }"""))
     subjects = {r["a"] for r in rows}
-    assert "http://example.org/agora#supplier" in subjects
-    assert "http://example.org/agora#fern_agent" in subjects
+    assert "http://example.org/agora/world/simulation#supplier" in subjects
+    assert "http://example.org/agora/world/simulation#fern_agent" in subjects
     assert len(subjects) == len(ids)

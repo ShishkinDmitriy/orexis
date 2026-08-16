@@ -103,28 +103,28 @@ def test_genesis_conforms():
 
 def test_polling_agent_must_state_a_cadence():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent sensing:fastSleepS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent sensing:fastSleepS ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:fastSleepS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:fastSleepS ?v }} }}"""))
 
 
 def test_polling_agent_must_state_a_freshness_limit():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent sensing:readingGraceS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent sensing:readingGraceS ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:readingGraceS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:readingGraceS ?v }} }}"""))
 
 
 def test_cadence_may_not_be_slower_when_thirsty():
     # watching LESS closely exactly when in trouble inverts the whole policy
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent sensing:fastSleepS 30 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent sensing:fastSleepS 800 }} }}
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:fastSleepS 30 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:fastSleepS 800 }} }}
         WHERE  {{}}"""))
 
 
 def test_nobody_may_sleep_past_the_constitutional_ceiling():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent sensing:slowSleepS 600 }} }}
-        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ag:fern_agent sensing:slowSleepS 5000 }} }}
+        DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:slowSleepS 600 }} }}
+        INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:slowSleepS 5000 }} }}
         WHERE  {{}}"""))
 
 
@@ -135,9 +135,9 @@ def test_a_bidder_with_no_aim_in_the_priced_property_is_refused():
     could only invent a number, and it must not start instead."""
     assert not _conforms(_mutate(f"""
         DELETE {{ GRAPH <{beliefs_graph("fern")}> {{
-                 ag:fern_agent desire:aims ?aim . ?aim ?p ?o }} }}
+                 <http://example.org/agora/world/simulation#fern_agent> desire:aims ?aim . ?aim ?p ?o }} }}
         WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
-                 ag:fern_agent desire:aims ?aim . ?aim ?p ?o }} }}"""))
+                 <http://example.org/agora/world/simulation#fern_agent> desire:aims ?aim . ?aim ?p ?o }} }}"""))
 
 
 def test_an_aim_in_a_property_with_no_region_is_refused():
@@ -145,7 +145,7 @@ def test_an_aim_in_a_property_with_no_region_is_refused():
     humidity range — so an aim there is a number with nothing behind it, whatever its value."""
     assert not _conforms(_mutate(f"""
         INSERT {{ GRAPH <{beliefs_graph("fern")}> {{
-            ag:fern_agent desire:aims [
+            <http://example.org/agora/world/simulation#fern_agent> desire:aims [
                 ssn:forProperty <http://example.org/agora/water#AirHumidity> ;
                 schema:value 0.5 ] }} }}
         WHERE {{}}"""))
@@ -153,15 +153,15 @@ def test_an_aim_in_a_property_with_no_region_is_refused():
 
 def test_bidder_must_have_a_valuation():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent water:maxValuePerL ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("tomato")}> {{ ag:tomato_agent water:maxValuePerL ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("tomato")}> {{ <http://example.org/agora/world/simulation#tomato_agent> water:maxValuePerL ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("tomato")}> {{ <http://example.org/agora/world/simulation#tomato_agent> water:maxValuePerL ?v }} }}"""))
 
 
 def test_host_must_say_how_long_it_waits_for_bids():
     # without a window a round never closes
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{beliefs_graph("supplier")}> {{ ag:supplier market:bidWindowS ?v }} }}
-        WHERE  {{ GRAPH <{beliefs_graph("supplier")}> {{ ag:supplier market:bidWindowS ?v }} }}"""))
+        DELETE {{ GRAPH <{beliefs_graph("supplier")}> {{ <http://example.org/agora/world/simulation#supplier> market:bidWindowS ?v }} }}
+        WHERE  {{ GRAPH <{beliefs_graph("supplier")}> {{ <http://example.org/agora/world/simulation#supplier> market:bidWindowS ?v }} }}"""))
 
 
 def test_the_supplier_is_not_asked_for_a_cadence():
@@ -173,8 +173,8 @@ def test_the_supplier_is_not_asked_for_a_cadence():
 
 def test_sensor_must_state_how_it_is_driven():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern sensing:senseMode ?m }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern sensing:senseMode ?m }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> sensing:senseMode ?m }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> sensing:senseMode ?m }} }}"""))
 
 
 def test_a_host_must_say_how_it_matches():
@@ -182,8 +182,8 @@ def test_a_host_must_say_how_it_matches():
     round: bids collected, deadline passed, nothing to allocate them with, every bidder waiting
     on a claim that will not come. Refusing the world costs nothing by comparison."""
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier market:matchesBy ?f }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:supplier market:matchesBy ?f }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#supplier> market:matchesBy ?f }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#supplier> market:matchesBy ?f }} }}"""))
 
 
 def test_only_a_host_may_state_how_it_matches():
@@ -191,20 +191,20 @@ def test_only_a_host_may_state_how_it_matches():
     an authoring slip, and the derivation already ignores it — so without a shape the statement
     would sit in the world doing nothing, which is the shape of a fact somebody later believes."""
     assert not _conforms(_mutate(f"""
-        INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent market:matchesBy market:PayAsBid }} }}"""))
+        INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#fern_agent> market:matchesBy market:PayAsBid }} }}"""))
 
 
 def test_pull_sensor_must_state_a_command_topic():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:commandTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:commandTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:commandTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:commandTopic ?t }} }}"""))
 
 
 def test_a_device_on_the_bus_must_state_where_it_publishes():
     """Declaring a binding and then not completing it is the failure worth catching."""
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:readingTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:moisture_sensor_fern mqtt:readingTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:readingTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:readingTopic ?t }} }}"""))
 
 
 def test_an_agent_that_only_listens_must_not_hold_a_cadence():
@@ -214,7 +214,7 @@ def test_an_agent_that_only_listens_must_not_hold_a_cadence():
     legitimate rig (a scheduled probe and a push thermometer on one plant) and needs both blocks.
 
     Every sensor fern polls is switched, and the derived capability is left to the rules rather
-    than hand-written. It used to switch `ag:moisture_sensor_fern` and then edit the derived
+    than hand-written. It used to switch `<http://example.org/agora/world/simulation#moisture_sensor_fern>` and then edit the derived
     graph directly, which worked only while fern had exactly one sensor: it has two now, so the
     untouched one kept it `Scheduled`, and `_mutate` re-derives ADDITIVELY — so the
     hand-deleted `Subscribing` came straight back and the agent conformed, holding both modes
@@ -223,10 +223,10 @@ def test_an_agent_that_only_listens_must_not_hold_a_cadence():
     assert not _conforms(_mutate(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s sensing:senseMode sensing:ScheduledProcedure }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s sensing:senseMode sensing:PushProcedure }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern_agent sensing:polls ?s .
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#fern_agent> sensing:polls ?s .
                                            ?s sensing:senseMode sensing:ScheduledProcedure }} }} ;
         DELETE {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-            ag:fern_agent ag:hasCapability sensing:Subscribing }} }}
+            <http://example.org/agora/world/simulation#fern_agent> ag:hasCapability sensing:Subscribing }} }}
         WHERE  {{}}"""))
 
 
@@ -239,26 +239,26 @@ def test_an_agent_may_hold_both_modes_at_once():
     """
     assert _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:chatter_fern a sosa:Sensor , ag:Device ; ag:localId "chatter_fern" ; mqtt:onBus ag:local_bus ;
-                sensing:senseMode sensing:PushProcedure ; sensing:monitors ag:fern ; sosa:observes water:SoilMoisture ;
+            ag:chatter_fern a sosa:Sensor , ag:Device ; ag:localId "chatter_fern" ; mqtt:onBus <http://example.org/agora/world/simulation#local_bus> ;
+                sensing:senseMode sensing:PushProcedure ; sensing:monitors <http://example.org/agora/world/simulation#fern> ; sosa:observes water:SoilMoisture ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/chatter_fern/reading" .
-            ag:fern_agent sensing:polls ag:chatter_fern .
+            <http://example.org/agora/world/simulation#fern_agent> sensing:polls ag:chatter_fern .
         }} }} WHERE {{}} ;
         INSERT {{ GRAPH <{WORLD_DERIVED_GRAPH}> {{
-            ag:fern_agent ag:hasCapability sensing:Listening }} }} WHERE {{}}"""))
+            <http://example.org/agora/world/simulation#fern_agent> ag:hasCapability sensing:Listening }} }} WHERE {{}}"""))
 
 
 def _duplicate_probe(observes: str) -> rdflib.Graph:
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
-                mqtt:onBus ag:local_bus ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors ag:fern ;
+                mqtt:onBus <http://example.org/agora/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors <http://example.org/agora/world/simulation#fern> ;
                 sosa:observes {observes} ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .
-            ag:fern_agent sensing:polls ag:second_probe_fern .
+            <http://example.org/agora/world/simulation#fern_agent> sensing:polls ag:second_probe_fern .
         }} }} WHERE {{}}""")
 
 
@@ -290,22 +290,22 @@ def test_two_sensors_on_different_properties_are_not_warned_about():
 
 def test_valve_must_carry_its_calibration():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern actuation:maxDoseMl ?v }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:valve_fern actuation:maxDoseMl ?v }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#valve_fern> actuation:maxDoseMl ?v }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#valve_fern> actuation:maxDoseMl ?v }} }}"""))
 
 
 def test_a_plant_may_not_hold_a_desire():
     """The aim belongs to an agent's beliefs; a plant that held one would be a category error."""
     assert not _conforms(_mutate(f"""
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ag:fern <http://example.org/agora/desire#aims> [
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#fern> <http://example.org/agora/desire#aims> [
             <http://www.w3.org/ns/ssn/forProperty> <http://example.org/agora/water#SoilMoisture> ;
             <https://schema.org/value> 0.55 ] }} }} WHERE {{}}"""))
 
 
 def test_market_must_state_all_three_channels():
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market market:claimTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ag:barrel1_market market:claimTopic ?t }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#barrel1_market> market:claimTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#barrel1_market> market:claimTopic ?t }} }}"""))
 
 
 # --- the mc: wiring that cannot work must be refused --------------------------------------
@@ -622,7 +622,7 @@ def test_a_mandate_past_what_the_board_can_honour_is_refused():
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX sensing: <http://example.org/agora/sensing#>
 INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
-  ag:moisture_sensor_fern ssn-system:hasSystemCapability [
+  <http://example.org/agora/world/simulation#moisture_sensor_fern> ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
       ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 700 ; schema:unitCode unit:SEC ] ] } }"""))
     assert "Conforms: False" in report
@@ -638,7 +638,7 @@ def test_a_board_faster_than_its_mandate_is_not_refused():
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX sensing: <http://example.org/agora/sensing#>
 INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
-  ag:moisture_sensor_fern ssn-system:hasSystemCapability [
+  <http://example.org/agora/world/simulation#moisture_sensor_fern> ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
       ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] } }"""))
 
@@ -662,7 +662,7 @@ def test_an_aim_outside_the_agents_region_is_refused():
         DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.55 }} }}
         INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.90 }} }}
         WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
-                 ag:fern_agent desire:aims ?aim . ?aim schema:value 0.55 }} }}""")
+                 <http://example.org/agora/world/simulation#fern_agent> desire:aims ?aim . ?aim schema:value 0.55 }} }}""")
     assert not _conforms(data)
     assert "pick within a range" in _report(data)
 
@@ -683,7 +683,7 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
     """
     data = _mutate("""
         INSERT { GRAPH <http://example.org/agora/graph/desire> {
-            ag:fern_agent <http://example.org/agora/desire#desires> [
+            <http://example.org/agora/world/simulation#fern_agent> <http://example.org/agora/desire#desires> [
                 a <http://example.org/agora/desire#Desire> ;
                 <http://www.w3.org/ns/ssn/forProperty>
                     <http://example.org/agora/water#AirHumidity> ;
@@ -719,7 +719,7 @@ def test_a_plant_still_holds_no_desire_of_its_own():
     say what it needs and may not say what it wants."""
     data = _mutate("""
         INSERT { GRAPH <http://example.org/agora/graph/world> {
-            ag:fern <http://example.org/agora/desire#aims> [
+            <http://example.org/agora/world/simulation#fern> <http://example.org/agora/desire#aims> [
                 <http://www.w3.org/ns/ssn/forProperty> <http://example.org/agora/water#SoilMoisture> ;
                 <https://schema.org/value> 0.55 ] } }
         WHERE {}""")
@@ -732,18 +732,18 @@ def _duplicate_probe_in_its_own_patch() -> rdflib.Graph:
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:fern_east a <http://www.w3.org/ns/sosa/Sample> ;
-                <http://www.w3.org/ns/sosa/isSampleOf> ag:fern .
+                <http://www.w3.org/ns/sosa/isSampleOf> <http://example.org/agora/world/simulation#fern> .
             ag:fern_west a <http://www.w3.org/ns/sosa/Sample> ;
-                <http://www.w3.org/ns/sosa/isSampleOf> ag:fern .
-            ag:moisture_sensor_fern sensing:samples ag:fern_east .
+                <http://www.w3.org/ns/sosa/isSampleOf> <http://example.org/agora/world/simulation#fern> .
+            <http://example.org/agora/world/simulation#moisture_sensor_fern> sensing:samples ag:fern_east .
             ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
-                mqtt:onBus ag:local_bus ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors ag:fern ;
+                mqtt:onBus <http://example.org/agora/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors <http://example.org/agora/world/simulation#fern> ;
                 sensing:samples ag:fern_west ;
                 sosa:observes water:SoilMoisture ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .
-            ag:fern_agent sensing:polls ag:second_probe_fern .
+            <http://example.org/agora/world/simulation#fern_agent> sensing:polls ag:second_probe_fern .
         }} }} WHERE {{}}""")
 
 
@@ -762,8 +762,8 @@ def test_a_patch_of_the_wrong_pot_is_refused():
     assert not _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:tomato_patch a <http://www.w3.org/ns/sosa/Sample> ;
-                <http://www.w3.org/ns/sosa/isSampleOf> ag:tomato .
-            ag:moisture_sensor_fern sensing:samples ag:tomato_patch .
+                <http://www.w3.org/ns/sosa/isSampleOf> <http://example.org/agora/world/simulation#tomato> .
+            <http://example.org/agora/world/simulation#moisture_sensor_fern> sensing:samples ag:tomato_patch .
         }} }} WHERE {{}}"""))
 
 
@@ -777,13 +777,13 @@ def _observation(extra: str) -> rdflib.Graph:
         PREFIX prov: <http://www.w3.org/ns/prov#>
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:obs_test a sosa:Observation ;
-                sosa:hasFeatureOfInterest ag:fern ;
+                sosa:hasFeatureOfInterest <http://example.org/agora/world/simulation#fern> ;
                 sosa:observedProperty water:SoilMoisture ;
                 sosa:resultTime "2026-08-15T10:00:00Z"^^xsd:dateTime ;
-                sosa:madeBySensor ag:moisture_sensor_fern ;
+                sosa:madeBySensor <http://example.org/agora/world/simulation#moisture_sensor_fern> ;
                 sosa:usedProcedure sensing:ScheduledProcedure ;
                 ag:underWorldVersion 1 ;
-                prov:wasGeneratedBy ag:fern_agent ;
+                prov:wasGeneratedBy <http://example.org/agora/world/simulation#fern_agent> ;
                 {extra} .
         }} }} WHERE {{}}""")
 
@@ -825,7 +825,7 @@ def test_detecting_something_that_is_not_a_stimulus_is_refused():
     """SSN's own restriction, restated because borrowed IRIs bring no axioms with them."""
     assert not _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:moisture_sensor_fern <http://www.w3.org/ns/ssn/detects> water:SoilMoisture .
+            <http://example.org/agora/world/simulation#moisture_sensor_fern> <http://www.w3.org/ns/ssn/detects> water:SoilMoisture .
         }} }} WHERE {{}}"""))
 
 
@@ -837,10 +837,10 @@ def test_a_watched_channel_on_a_push_device_is_legal():
     data = _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
             ag:sentinel_x a sosa:Sensor , ag:Device ; ag:localId "sentinel_x" ;
-                mqtt:onBus ag:local_bus ;
+                mqtt:onBus <http://example.org/agora/world/simulation#local_bus> ;
                 sensing:senseMode sensing:PushProcedure ;
                 <http://www.w3.org/ns/ssn/implements> sensing:AlarmProcedure ;
-                sensing:monitors ag:tomato ;
+                sensing:monitors <http://example.org/agora/world/simulation#tomato> ;
                 sosa:observes <http://example.org/agora/water#AirHumidity> ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/sentinel_x/reading" .
@@ -874,7 +874,7 @@ def test_a_promise_no_watcher_can_keep_is_refused():
     ESP32's FSM watcher cannot speak — the fact that lived in a comment now refuses a world."""
     st = genesis_store(world="sensing")
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
-        <http://example.org/agora#air_temp_fern>
+        <http://example.org/agora/world/sensing#air_temp_fern>
             <http://www.w3.org/ns/ssn/implements>
             <http://example.org/agora/sensing#AlarmProcedure> }} }}""")
     assert not _conforms(_flatten(st, WORLDS_ROOT / "sensing")), (

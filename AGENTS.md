@@ -32,7 +32,7 @@ record is worse than none, because it is still cited.
 ## The three rules the code lives by
 
 1. **Code may reference T-Box terms; never an instance.** `term("Subscribing")` is fine;
-   `"supplier"`, `"sensors/fern/moisture"`, `ag:world` are not. The single exception is the one
+   `"supplier"`, `"sensors/fern/moisture"`, a world's `:world` node are not. The single exception is the one
    identifier a process is handed at boot: its own agent id. Everything else is discovered from
    the graph. See [capability-packages](knowledge/decisions/capability-packages.md).
 2. **A capability is a named ability with interchangeable implementations. A DIRECTORY IS A
@@ -289,7 +289,7 @@ fails if pyshacl ever entails something the closure does not. See
   `tests/test_provenance.py` refuses a narrowed SELECT. See
   [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
 - **A graph IRI is an instance, so rule 1 applies to it.** `ag:WorldGraph` is the term code may
-  name; `…/graph/world` is not, any more than `ag:fern_agent` is. Ask `store.public_graphs()`.
+  name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.public_graphs()`.
   Two things are still named and both are writes or the bootstrap root, never a reader
   enumerating what to read — adding a public graph is a vocabulary edit that touches no Python.
 - **SPARQL prefixes.** Only what `store.PREFIXES` declares may be used. rdflib silently

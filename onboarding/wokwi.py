@@ -380,6 +380,9 @@ def draft(world: str, diagram: Path) -> str:
            "# one nobody re-reads.",
            "",
            "@prefix ag:    <http://example.org/agora#> .",
+           # The DRAFT's own individuals go into the world's namespace (a world owns
+           # its individuals; ag: is the vocabulary's), spelled with the empty prefix.
+           f"@prefix : <http://example.org/agora/world/{world}#> .",
            "@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .",
            "@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .",
            f"@prefix mc:    <{MC}> .",
@@ -398,11 +401,11 @@ def draft(world: str, diagram: Path) -> str:
     for part in doc.get("parts", []):
         pid, ptype = part["id"], part["type"]
         if pid in boards:
-            out += [f"ag:{pid} a mc:Microcontroller ;",
+            out += [f":{pid} a mc:Microcontroller ;",
                     f'    ag:localId "{pid}" ;   # {_TODO} a name a person would use',
                     f'    mc:model "{_TODO}" ;',
                     f"    mc:logicVolts {_TODO} ;   # 3.3 for an ESP32; it decides what rail a part may take",
-                    f"    mc:hasPin " + " , ".join(f"ag:{pid}_{_slug(p)}"
+                    f"    mc:hasPin " + " , ".join(f":{pid}_{_slug(p)}"
                                                    for p in sorted(used.get(pid, ()))) + " .",
                     ""]
             for pin in sorted(used.get(pid, ())):
@@ -416,15 +419,15 @@ def draft(world: str, diagram: Path) -> str:
             continue
         cls = by_part[ptype]
         legs = roles.get(cls, {})
-        out += [f"ag:{pid} a {_qname(cls)} ;",
+        out += [f":{pid} a {_qname(cls)} ;",
                 f'    ag:localId "{pid}" ;   # {_TODO} a name a person would use',
                 f'    mc:model "{_TODO}" ;',
-                f"    mc:hasPin " + " , ".join(f"ag:{pid}_{_slug(p)}"
+                f"    mc:hasPin " + " , ".join(f":{pid}_{_slug(p)}"
                                                for p in sorted(used.get(pid, ()))) + " .",
                 ""]
         for pin in sorted(used.get(pid, ())):
             role = legs.get(pin)
-            out.append(f"ag:{pid}_{_slug(pin)} a mc:Pin ; mc:pinRole "
+            out.append(f":{pid}_{_slug(pin)} a mc:Pin ; mc:pinRole "
                        + (_qname(role) if role else f"{_TODO}   # Wokwi calls this leg {pin!r}")
                        + " .")
         out.append("")
@@ -440,7 +443,7 @@ def draft(world: str, diagram: Path) -> str:
             continue
         col = f' ; mc:colour "{colour}"' if colour else ""
         out.append(f"ag:w{i} a mc:Wire ; mc:joins ag:{pa}_{_slug(pina)} , "
-                   f"ag:{pb}_{_slug(pinb)}{col} .")
+                   f":{pb}_{_slug(pinb)}{col} .")
     return "\n".join(out) + "\n"
 
 

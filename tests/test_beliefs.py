@@ -22,10 +22,10 @@ def regions(query, agent_uri):
     """What one agent wants, as its own module reads it — deduced, not believed."""
     return regions_of(query, agent_uri)
 
-FERN = "http://example.org/agora#fern_agent"
-FERN_URI = "http://example.org/agora#fern"  # the plant, not the agent that acts for it
-SUCCULENT = "http://example.org/agora#succulent_agent"
-SUPPLIER = "http://example.org/agora#supplier"
+FERN = "http://example.org/agora/world/simulation#fern_agent"
+FERN_URI = "http://example.org/agora/world/simulation#fern"  # the plant, not the agent that acts for it
+SUCCULENT = "http://example.org/agora/world/simulation#succulent_agent"
+SUPPLIER = "http://example.org/agora/world/simulation#supplier"
 
 
 @pytest.fixture
@@ -146,12 +146,12 @@ def _reading(age_s):
 
 def test_reads_its_subject(query_with_readings):
     b = Beliefs(query_with_readings({"fern": 0.18}), "fern", FERN)
-    reading = b.current_reading("http://example.org/agora#fern", MOISTURE)
+    reading = b.current_reading("http://example.org/agora/world/simulation#fern", MOISTURE)
     assert reading.value == 0.18 and reading.is_fresh(120)
 
 
 def test_no_reading_yet_is_none(fern):
-    assert fern.current_reading("http://example.org/agora#fern", MOISTURE) is None
+    assert fern.current_reading("http://example.org/agora/world/simulation#fern", MOISTURE) is None
 
 
 def test_two_properties_of_one_subject_both_survive(query_with_readings):

@@ -159,7 +159,7 @@ Measured on `world/sensing`, removing one `mqtt:commandTopic` at a time:
 
 | sensor | `mqtt:onBus` | world still conforms |
 |---|---|---|
-| `ag:moisture_sensor_fern` | yes | **no** — refused |
+| `:moisture_sensor_fern` | yes | **no** — refused |
 | `ag:air_temp_fern` | no | yes |
 | `ag:air_humidity_fern` | no | yes |
 

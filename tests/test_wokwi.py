@@ -67,8 +67,8 @@ def test_the_led_polarity_is_derived_from_the_wire(doc, tmp_path, monkeypatch):
     dst = tmp_path / "anode"
     shutil.copytree(src, dst)
     hw = dst / "hardware.ttl"
-    hw.write_text(hw.read_text().replace("mc:joins ag:led_common , ag:pin_gnd",
-                                         "mc:joins ag:led_common , ag:pin_3v3"))
+    hw.write_text(hw.read_text().replace("mc:joins :led_common , :pin_gnd",
+                                         "mc:joins :led_common , :pin_3v3"))
     monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
     monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
 
