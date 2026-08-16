@@ -2,6 +2,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix onewire: <http://example.org/agora/onewire#> .
+@prefix : <http://example.org/agora/onewire#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 
@@ -11,7 +12,7 @@
 
 Deliberately NOT under packages/transport/. Those are how an AGENT reaches a device, and each has Python behind it. Nothing in this repository speaks one-wire: the BOARD does, in firmware, and the agent never sees it. A transport package with no driver would be a promise the runtime cannot keep.""" .
 
-onewire:DataPinRole a mc:BidirectionalRole ; rdfs:label "one-wire data" ;
+:DataPinRole a mc:BidirectionalRole ; rdfs:label "one-wire data" ;
     rdfs:comment "The board pulls the line low to open a conversation, then releases it and listens. It looks like an input because almost all the traffic is inbound, which is the trap: it is DRIVEN, so it cannot sit on a pin that can only be read." .
 
 #################  What speaking it consists of  #################
@@ -24,5 +25,5 @@ onewire:DataPinRole a mc:BidirectionalRole ; rdfs:label "one-wire data" ;
 # It belongs HERE, beside the pin role, for the same reason the package exists: a DS18B20 speaks
 # one-wire and a DHT does, and neither should import the other to say so.
 
-onewire:Transaction a sosa:Procedure ; rdfs:label "One-wire transaction" ;
+:Transaction a sosa:Procedure ; rdfs:label "One-wire transaction" ;
     rdfs:comment "One conversation on one line: the initiator pulls it low, releases, and reads back a frame the part clocks out in a single burst. The consequence worth writing down is that the frame is ATOMIC — everything in it was produced by the same sampling, so a part cannot be asked for half of what it sends. That is why a DHT11's temperature and humidity are simultaneous by construction rather than by luck of timing, and it is the physical fact the reading path had been contradicting by stamping each value as it wrote it. See knowledge/decisions/a-procedure-belongs-to-whatever-performs-it.md." .

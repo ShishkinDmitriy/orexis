@@ -6,6 +6,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix dht11: <http://example.org/agora/dht11#> .
+@prefix : <http://example.org/agora/dht11#> .
 @prefix wokwi: <http://example.org/agora/wokwi#> .
 @prefix onewire: <http://example.org/agora/onewire#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
@@ -19,7 +20,7 @@
     rdfs:label "DHT11 temperature and humidity sensor" ;
     rdfs:comment """One part, its own package, layered on the microcontroller vocabulary and on one-wire. This is the shape every concrete peripheral should take: what it IS, how many legs it has and what they are for, and the shapes that refuse it wired wrong. Adding a part is adding a directory.""" .
 
-dht11:TempHumidityPeripheral a owl:Class ; rdfs:subClassOf mc:Peripheral ;
+:TempHumidityPeripheral a owl:Class ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "Temperature and humidity sensor" ;
     rdfs:comment """The family. One device reporting TWO properties down one line, which is what made it awkward: a sensor observes one property, so a device like this is TWO sensors sharing one reading topic, and each says which value in the message is its own with mqtt:readingPointer. Closed #51; see knowledge/decisions/a-reading-is-one-value-so-it-is-pointed-at.md.
 
@@ -27,8 +28,8 @@ dht11:TempHumidityPeripheral a owl:Class ; rdfs:subClassOf mc:Peripheral ;
 
 The difference is not academic — it is what the reading path got wrong. Believing the transport reason, each value was stamped as it was written, seconds of code apart, and the series store recorded a 25 ms difference between two halves of one physical read. Believing the physical one, a message is a measurement and carries one instant.""" .
 
-dht11:Dht11 a owl:Class ;
-    mc:modelName "KY-015 (DHT11)" ; rdfs:subClassOf dht11:TempHumidityPeripheral ; rdfs:label "DHT11" ;
+:Dht11 a owl:Class ;
+    mc:modelName "KY-015 (DHT11)" ; rdfs:subClassOf :TempHumidityPeripheral ; rdfs:label "DHT11" ;
     wokwi:part "wokwi-dht22" ;
     wokwi:pin [ mc:pinRole onewire:DataPinRole ; wokwi:name "SDA" ] ,
               [ mc:pinRole mc:PowerPinRole     ; wokwi:name "VCC" ] ,
@@ -71,11 +72,11 @@ dht11:Dht11 a owl:Class ;
 # humidity sensor", because that is what it is called on the shelf. A label may be colloquial;
 # an IRI is what a query has to be right about.
 
-dht11:TemperatureSensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
+:TemperatureSensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
     rdfs:label "DHT11 temperature sensor" ;
     rdfs:comment "The thermistor half. A sensor rather than a part: it has no legs of its own, cannot be bought, and cannot be read on its own — it is one of the two things the frame carries. What it OBSERVES is deliberately not stated here; see the note below on why a part vocabulary does not name a domain property." .
 
-dht11:HumiditySensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
+:HumiditySensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
     rdfs:label "DHT11 humidity sensor" ;
     rdfs:comment "The capacitive half, and the reason the part drifts: the humidity element ages and is the first thing to go out of calibration, while the thermistor stays honest. Worth separating for that alone — a recalibration applies to one of the two and not to the part." .
 
@@ -89,9 +90,9 @@ dht11:HumiditySensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
 # would need a fresh individual per unit — skolemisation, which `agent/inference.py`
 # deliberately does not do. The world names the two; this says what they must be, and
 # `shapes.ttl` is what refuses a unit that lacks one.
-dht11:Dht11 rdfs:subClassOf
-    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom dht11:TemperatureSensor ] ,
-    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom dht11:HumiditySensor ] .
+:Dht11 rdfs:subClassOf
+    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom :TemperatureSensor ] ,
+    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom :HumiditySensor ] .
 
 #################  What it does  #################
 #
@@ -107,13 +108,13 @@ dht11:Dht11 rdfs:subClassOf
 # implement as many as it can perform. That is why `ssn:implements` is the right predicate here
 # and the wrong one there — see the note in sensing's ontology.
 
-dht11:CombinedRead a sosa:Procedure ; rdfs:label "Combined temperature and humidity read" ;
+:CombinedRead a sosa:Procedure ; rdfs:label "Combined temperature and humidity read" ;
     rdfs:comment "One request, two values, one instant. The part samples both and clocks them out in a single 40-bit frame — humidity, temperature, checksum — so neither can be obtained without the other and the two are simultaneous BY CONSTRUCTION. Belongs to the whole part and not to either sensor, which is the shape of the claim: the sub-systems each observe one property, and what the part adds is that it produces them together. The library our firmware uses makes the same statement in code — a second call inside the part's stated Frequency is served from the buffer the first filled, never from the wire — so the firmware's two calls have always been one conversation, whatever the reading path did with them afterwards." .
 
-dht11:TemperatureRead a sosa:Procedure ; rdfs:label "DHT11 temperature read" ;
+:TemperatureRead a sosa:Procedure ; rdfs:label "DHT11 temperature read" ;
     rdfs:comment "Bytes 2 and 3 of the frame. Named separately from the combined read because an Observation is made BY a sensor and each half IS one — so `sosa:usedProcedure` on a temperature reading should name what produced that value, not the conversation it arrived in. It cannot be performed alone: obtaining it IS performing dht11:CombinedRead, and this names the part of that which is this sensor's." .
 
-dht11:HumidityRead a sosa:Procedure ; rdfs:label "DHT11 humidity read" ;
+:HumidityRead a sosa:Procedure ; rdfs:label "DHT11 humidity read" ;
     rdfs:comment "Bytes 0 and 1 of the frame, and the same standing as the temperature read: a name for one sensor's share of one conversation, not a second conversation." .
 
 # Restrictions rather than the bare triples this replaced. `dht11:Dht11 ssn:implements
@@ -121,15 +122,15 @@ dht11:HumidityRead a sosa:Procedure ; rdfs:label "DHT11 humidity read" ;
 # any device: on the world this repository ships, the only subject of `ssn:implements` was
 # `dht11:Dht11` itself, so no sensor in it had ever been said to do anything. Same defect the
 # capability had, found the same way, fixed the same way.
-dht11:Dht11 rdfs:subClassOf
-    [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue dht11:CombinedRead ] ,
+:Dht11 rdfs:subClassOf
+    [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue :CombinedRead ] ,
     [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue onewire:Transaction ] .
 
-dht11:TemperatureSensor rdfs:subClassOf
-    [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue dht11:TemperatureRead ] .
+:TemperatureSensor rdfs:subClassOf
+    [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue :TemperatureRead ] .
 
-dht11:HumiditySensor rdfs:subClassOf
-    [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue dht11:HumidityRead ] .
+:HumiditySensor rdfs:subClassOf
+    [ a owl:Restriction ; owl:onProperty ssn:implements ; owl:hasValue :HumidityRead ] .
 
 # The three are related, and saying so is not decoration: `dht11:TemperatureRead` on its own
 # looks like a procedure someone could ask the part to perform.
@@ -150,7 +151,7 @@ dht11:HumiditySensor rdfs:subClassOf
 # executing the larger one. `dcterms:hasPart` is right BECAUSE it is weaker. It says inclusion
 # and stops, where every plan vocabulary says inclusion and execution.
 
-dht11:CombinedRead dcterms:hasPart dht11:TemperatureRead , dht11:HumidityRead .
+:CombinedRead dcterms:hasPart :TemperatureRead , :HumidityRead .
 
 #################  What it can honour  #################
 #
@@ -177,17 +178,17 @@ dht11:CombinedRead dcterms:hasPart dht11:TemperatureRead , dht11:HumidityRead .
 # vocabulary and the wiring — observes `ag:air_sensor_fern ssn-system:hasSystemCapability
 # dht11:ContinuousOperationCapability` without anyone having written it down. See
 # knowledge/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md.
-dht11:Dht11 rdfs:subClassOf [
+:Dht11 rdfs:subClassOf [
     a owl:Restriction ;
     owl:onProperty ssn-system:hasSystemCapability ;
-    owl:hasValue  dht11:ContinuousOperationCapability ] .
+    owl:hasValue  :ContinuousOperationCapability ] .
 
 # Named for its CONDITION and not for the part, because the condition is the axis a second one
 # would differ along. SSN puts "under the defined Conditions" in the definition of Frequency
 # itself, so a part that could be read faster on mains than on a battery states two of these
 # rather than one number with a caveat — and the two would then need telling apart by name.
 # Nothing here is battery-powered yet; see issue #78.
-dht11:ContinuousOperationCapability a ssn-system:SystemCapability ;
+:ContinuousOperationCapability a ssn-system:SystemCapability ;
     rdfs:label "DHT11 sampling capability, in continuous operation" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
     ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] .
@@ -207,13 +208,13 @@ dht11:ContinuousOperationCapability a ssn-system:SystemCapability ;
 # decoration — a second capability under a second condition is how that gets said when it
 # matters, and nothing here depends on it yet.
 
-dht11:Dht11 rdfs:seeAlso <https://www.mouser.com/datasheet/2/758/DHT11-Technical-Data-Sheet-Translated-Version-1143054.pdf> .
+:Dht11 rdfs:seeAlso <https://www.mouser.com/datasheet/2/758/DHT11-Technical-Data-Sheet-Translated-Version-1143054.pdf> .
 
-dht11:TemperatureSensor rdfs:subClassOf
+:TemperatureSensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn-system:hasSystemCapability ;
-      owl:hasValue dht11:TemperatureSensorCapability ] .
+      owl:hasValue :TemperatureSensorCapability ] .
 
-dht11:TemperatureSensorCapability a ssn-system:SystemCapability ;
+:TemperatureSensorCapability a ssn-system:SystemCapability ;
     rdfs:label "DHT11 temperature sensor capability" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
     ssn-system:hasSystemProperty
@@ -224,11 +225,11 @@ dht11:TemperatureSensorCapability a ssn-system:SystemCapability ;
         [ a ssn-system:Resolution , schema:PropertyValue ;
           schema:value 1 ; schema:unitCode unit:DEG_C ] .
 
-dht11:HumiditySensor rdfs:subClassOf
+:HumiditySensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn-system:hasSystemCapability ;
-      owl:hasValue dht11:HumiditySensorCapability ] .
+      owl:hasValue :HumiditySensorCapability ] .
 
-dht11:HumiditySensorCapability a ssn-system:SystemCapability ;
+:HumiditySensorCapability a ssn-system:SystemCapability ;
     rdfs:label "DHT11 humidity sensor capability" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
     ssn-system:hasSystemProperty

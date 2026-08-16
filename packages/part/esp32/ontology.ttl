@@ -1,6 +1,7 @@
 @prefix ag:     <http://example.org/agora#> .
 @prefix mc:     <http://example.org/agora/microcontroller#> .
 @prefix esp32:  <http://example.org/agora/esp32#> .
+@prefix : <http://example.org/agora/esp32#> .
 @prefix wokwi:  <http://example.org/agora/wokwi#> .
 @prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:    <http://www.w3.org/2002/07/owl#> .
@@ -11,7 +12,7 @@
 
 Started here because a picture needs to know which board it is drawing, and that is a fact about the MODEL rather than about the particular board on the windowsill.""" .
 
-esp32:DevKitC a owl:Class ;
+:DevKitC a owl:Class ;
     mc:modelName "ESP32-WROOM-32D" ; rdfs:subClassOf mc:Microcontroller ,
         #  The sleep-watcher, stated instead of narrated (#181): the classic ESP32 carries a
         #  ULP-FSM coprocessor — four 16-bit registers, RTC memory, one look per second for

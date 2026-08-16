@@ -427,12 +427,29 @@ def test_the_docs_only_name_terms_that_exist(doc):
     people read first.
     """
     import re
+
+    import rdflib
+
     from agent import loader
 
+    # The census is built from the PARSED graphs, not from the files' spellings. It used to
+    # be a regex over the text, which went quiet the day ontologies took the default prefix
+    # for their own terms (#179): `:Actuation` matched nothing, so every doc mention of
+    # `actuation:Actuation` read as undeclared. Resolving IRIs through the discovered
+    # prefixes keeps the guard's point — a renamed term vanishes from the graph exactly as
+    # it vanished from the text — without caring how a file chooses to write itself.
+    inverse = {iri: label for label, iri in loader.prefixes().items()}
     declared = set()
     for path in loader.ontology_files():
-        declared |= set(re.findall(r"\b[a-z][a-z0-9-]*:[A-Za-z][A-Za-z0-9_]*\b",
-                                   Path(path).read_text()))
+        g = rdflib.Graph()
+        g.parse(path, format="turtle")
+        for triple in g:
+            for node in triple:
+                if not isinstance(node, rdflib.URIRef):
+                    continue
+                for ns, label in inverse.items():
+                    if str(node).startswith(ns):
+                        declared.add(f"{label}:{str(node)[len(ns):]}")
     known = set(loader.prefixes()) | {"ag"}
 
     named = {t for t in re.findall(r"`([a-z][a-z0-9-]*:[A-Za-z][A-Za-z0-9_]*)`",
