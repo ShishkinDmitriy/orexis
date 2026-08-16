@@ -58,7 +58,7 @@ services:
       SIM_READING_TOPIC: "sensors/moisture_sensor_fern/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
-      SIM_VALUES: '[{"pointer":"/temperature","min":-10.0,"max":45.0,"initial":21.0,"swing":4.0},{"pointer":"/value","min":0.0,"max":1.0,"initial":0.45,"dries":0.12,"litres":2.0}]'
+      SIM_VALUES: '[{"pointer":"/moisture","min":0.0,"max":1.0,"initial":0.45,"dries":0.12,"litres":2.0},{"pointer":"/temperature","min":-10.0,"max":45.0,"initial":21.0,"swing":4.0}]'
       # sensing:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
       # sensing:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -88,7 +88,7 @@ services:
       SIM_READING_TOPIC: "sensors/moisture_sensor_succulent/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
-      SIM_VALUES: '[{"pointer":"/value","initial":0.45,"dries":0.04,"litres":2.0}]'
+      SIM_VALUES: '[{"pointer":"/moisture","initial":0.45,"dries":0.04,"litres":2.0}]'
       # sensing:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
       # sensing:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
@@ -118,7 +118,7 @@ services:
       SIM_READING_TOPIC: "sensors/moisture_sensor_tomato/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
-      SIM_VALUES: '[{"pointer":"/value","initial":0.45,"dries":0.2,"litres":2.0}]'
+      SIM_VALUES: '[{"pointer":"/moisture","initial":0.45,"dries":0.2,"litres":2.0}]'
       # sensing:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
       # sensing:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.

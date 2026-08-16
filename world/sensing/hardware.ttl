@@ -8,6 +8,7 @@
 @prefix probe: <http://example.org/agora/moisture-probe#> .
 @prefix rgbled: <http://example.org/agora/rgb-led#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix governed: <http://example.org/agora/firmware/moisture-sensor#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -60,7 +61,12 @@ ag:esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     ag:localId "esp32_fern" ;
     mc:model "ESP32-WROOM-32D" ;
     mqtt:onBus ag:local_bus ;
-    mc:firmware "moisture-sensor" ;
+    #  No mc:firmware stated since #175: the board's connecting DEVICE is typed governed:Node
+    #  in world.ttl — the two nodes are one physical board wearing two roles (#81) — and the
+    #  firmware name is entailed onto the device from its class. The generator reads it
+    #  through the hosting this board's deployment already produces. NOT typed here too: the
+    #  class entails a senseMode, and a mode on the bare microcontroller node would demand a
+    #  command channel that belongs to the device role, not this one.
     ssn:inDeployment ag:fern_windowsill_deployment ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is sensing:Subscribing: the board keeps the interval and cannot be reached in between." .
 

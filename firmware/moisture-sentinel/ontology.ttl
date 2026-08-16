@@ -1,0 +1,27 @@
+@prefix sentinel: <http://example.org/agora/firmware/moisture-sentinel#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
+@prefix mc:   <http://example.org/agora/microcontroller#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://example.org/agora/firmware/moisture-sentinel> a owl:Ontology ;
+    rdfs:label "The sentinel — what a board running this firmware IS" ;
+    rdfs:comment """The second firmware's self-description (#175); see the governed node's for
+the pattern. The temperaments differ in every fact stated here, which is the point of stating
+them here: one flashed image, one set of promises, however many boards run it.""" .
+
+sentinel:Node a owl:Class ; rdfs:label "sentinel" ;
+    rdfs:subClassOf ag:Device ,
+        [ a owl:Restriction ; owl:onProperty sensing:senseMode ;
+          owl:hasValue sensing:PushProcedure ] ,
+        [ a owl:Restriction ; owl:onProperty mc:firmware ;
+          owl:hasValue "moisture-sentinel" ] ,
+        #  Unlike the governed node, the alarm promise is UNCONDITIONAL here: a sentinel's
+        #  whole reason to exist is the baked band its ULP watches, so every board of this
+        #  kind implements the procedure — on the class, because there is no flashing this
+        #  firmware without it.
+        [ a owl:Restriction ; owl:onProperty ssn:implements ;
+          owl:hasValue sensing:AlarmProcedure ] ;
+    rdfs:comment "A board that answers to the world alone: it takes no orders — no command channel, nothing to parse — so its agent derives Listening and can only receive. The ULP watches a band compiled in from the world's own operating range (both limits, HI/LO and deviation), a crossing wakes it to speak within a second, and a slow heartbeat generated under its agent's freshness rule keeps silence distinguishable from death." .

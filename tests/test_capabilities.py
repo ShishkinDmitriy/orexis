@@ -220,3 +220,31 @@ def test_valve_carries_its_own_calibration(me):
 
 def test_no_actuator_for_an_unplumbed_subject(me):
     assert me("supplier").actuator_for("orchid") is None
+
+
+# --- a firmware describes itself, and the board just says which one it runs (#175) -------------
+
+def test_a_boards_mode_is_entailed_from_its_firmware_class():
+    """The sensing world states NO senseMode and NO mc:firmware for its real board any more:
+    the device is typed governed:Node, and both facts arrive from
+    firmware/moisture-sensor/ontology.ttl through the closure's hasValue rule — a datasheet
+    fact whose sheet is src/main.cpp. The derivation, the runtime and the shapes all read the
+    conclusion."""
+    from packages.capability.sensing.terms import SCHEDULED, SUBSCRIBING
+
+    me = load_self(query_fn(genesis_store(world="sensing")), "fern")
+    assert SUBSCRIBING in me.capabilities, "the grant must flow through the entailed mode"
+    probe = next(s for s in me.sensors if s.local_id == "moisture_sensor_fern")
+    assert probe.sense_mode == SCHEDULED, "the runtime must read the entailed mode"
+
+
+def test_the_firmware_self_descriptions_are_still_found():
+    """The glob guard, in the spirit of test_store's: moving files has twice emptied a source
+    glob without failing anything, and a firmware tree that quietly stopped loading would
+    strip every typed board of its mode at the next genesis."""
+    from agent import loader
+
+    found = sorted(str(p) for p in loader.ontology_files() if "/firmware/" in str(p))
+    assert len(found) >= 2, "the firmware ontologies stopped being loaded"
+    assert any("moisture-sensor" in f for f in found)
+    assert any("moisture-sentinel" in f for f in found)

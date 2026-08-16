@@ -53,8 +53,13 @@ SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio 
        ?alarm
        ?ledRed ?ledGreen ?ledBlue ?airPin
 WHERE {{ 
-  ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{MC}firmware> ?firmware ;
-         <{SOSA}hosts> ?sensor .
+  ?board a <{MC}Microcontroller> ; <{AG}localId> ?boardId ; <{SOSA}hosts> ?sensor .
+  # The firmware name: stated on the board directly, or — since #175 — entailed onto the
+  # board's connecting DEVICE from its firmware class, and reached through the hosting the
+  # deployment produces. Two spellings of one fact, and either satisfies the query.
+  {{ ?board <{MC}firmware> ?firmware }}
+  UNION
+  {{ ?board <{SOSA}hosts> ?fwBearer . ?fwBearer <{MC}firmware> ?firmware }}
   ?sensor a <{PROBE}CapacitiveMoistureProbe> ; <{AG}localId> ?sensorId ;
           <{MQTT}readingTopic> ?readTopic ;
           <{PROBE}rawDry> ?rawDry ; <{PROBE}rawWet> ?rawWet .

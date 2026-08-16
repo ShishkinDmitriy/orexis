@@ -1,0 +1,39 @@
+@prefix governed: <http://example.org/agora/firmware/moisture-sensor#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
+@prefix mc:   <http://example.org/agora/microcontroller#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://example.org/agora/firmware/moisture-sensor> a owl:Ontology ;
+    rdfs:label "The governed node — what a board running this firmware IS" ;
+    rdfs:comment """A firmware describes itself (#175), so a world does not have to. This is
+a-part-is-described-once-and-fitted-many-times applied to code instead of silicon: which
+procedures a board performs is decided the moment it is flashed — the derivation rules' own
+comment has always said 'reflash a board from push to scheduled and the agent gains an
+interval' — so those facts belong to the firmware, stated once, and a board just says which
+one it runs. A world types its connecting device `governed:Node` and the sense mode and the
+firmware name follow by the closure's hasValue rule; restating them per board becomes
+needless, and contradicting them becomes refusable.
+
+What stays the WORLD's is the deployment half: which subject, which topics, which pins, which
+calibration, which bus — the same boundary deploy-dht22.ttl draws for parts. And what stays
+PER CHANNEL is the alarm: this firmware can watch its analog channel (WAKE_ON_ALARM is
+generated from the channel's own ssn:implements), and whether a given board's channel makes
+that promise is the world's statement, because it is true only once flashed with the define.
+
+Simulated devices run no firmware and never carry this type: ag:simulatedBy is their
+kind-statement, and a stand-in typed with a firmware class it does not run would be a new way
+to lie.""" .
+
+governed:Node a owl:Class ; rdfs:label "governed node" ;
+    rdfs:subClassOf ag:Device ,
+        #  The two facts every board of this kind shares, reaching each instance through the
+        #  closure's hasValue rule — a datasheet fact, except the sheet is src/main.cpp:
+        #  the agent commands the cadence and the board keeps it (Scheduled), and the
+        #  generator finds this directory by the name the class states once.
+        [ a owl:Restriction ; owl:onProperty sensing:senseMode ;
+          owl:hasValue sensing:ScheduledProcedure ] ,
+        [ a owl:Restriction ; owl:onProperty mc:firmware ;
+          owl:hasValue "moisture-sensor" ] ;
+    rdfs:comment "A board the agent governs: it takes the cadence, the verdict and the alarm limits from the retained command, keeps the interval while deep-sleeping, acks the cadence each reading (#135), and waits to be released after publishing (#152). One clock, the agent's — the mode above is not an opinion but what src/main.cpp does." .

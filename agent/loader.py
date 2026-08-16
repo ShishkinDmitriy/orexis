@@ -190,7 +190,23 @@ def files(filename: str) -> tuple[Path, ...]:
 
 
 def ontology_files() -> tuple[Path, ...]:
-    return files(ONTOLOGY)
+    """Every package's vocabulary — and every FIRMWARE's (#175).
+
+    A firmware directory may carry an `ontology.ttl` describing what a board running it IS:
+    the sense mode, the procedures, the name the generator dispatches on — stated once, like a
+    part's datasheet, and reaching every board through the closure's hasValue rule. The tree
+    sits beside `packages/` rather than inside it because a firmware is not loadable code for
+    an agent; it is a description of hardware behaviour, discovered the same way and merged
+    into the same T-Box. Namespaces and prefixes flow through `prefixes()` unchanged, since
+    that reads whatever this returns.
+    """
+    firmware_root = REPO_ROOT / "firmware"
+    from_firmware: tuple[Path, ...] = ()
+    if firmware_root.is_dir():
+        from_firmware = tuple(sorted(
+            p / ONTOLOGY for p in firmware_root.iterdir()
+            if p.is_dir() and not p.name.startswith((".", "_")) and (p / ONTOLOGY).exists()))
+    return files(ONTOLOGY) + from_firmware
 
 
 def shapes_files() -> tuple[Path, ...]:

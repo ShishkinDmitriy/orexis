@@ -7,6 +7,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix governed: <http://example.org/agora/firmware/moisture-sensor#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix market: <http://example.org/agora/market#> .
 @prefix scaling: <http://example.org/agora/scaling#> .
@@ -108,10 +109,13 @@ ag:air_sensor_fern a ssn:System ;
     ssn:hasSubSystem ag:air_temp_fern , ag:air_humidity_fern ;
     rdfs:comment "One part reporting two properties. A System rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it has the two that do as sub-systems. Not a Platform either: it is hosted and has sub-systems, and nothing is MOUNTED on a KY-015. What the part itself does is produce both values in one frame, which is why they share an instant." .
 
-ag:moisture_sensor_fern a sosa:Sensor , ag:Device ;
+ag:moisture_sensor_fern a sosa:Sensor , ag:Device , governed:Node ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus ag:local_bus ;
-    sensing:senseMode sensing:ScheduledProcedure ;     # keeps a given interval -> its agent gains sensing:Subscribing
+    #  No senseMode stated since #175: the FIRMWARE says what it is — this device is typed
+    #  governed:Node above, and the mode (Scheduled -> its agent gains sensing:Subscribing)
+    #  follows from firmware/moisture-sensor/ontology.ttl by the closure. Restating it here
+    #  would be a second copy of the flashed image's fact; contradicting it, refusable.
     #  Named for what it measures, moving in step with world/simulation because the two worlds
     #  share this device id ON PURPOSE — one flashed board, either society — and a shared board
     #  cannot send two message shapes. REFLASH BEFORE THE NEXT RESTART of this world: until
