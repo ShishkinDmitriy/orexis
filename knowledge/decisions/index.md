@@ -46,6 +46,7 @@ change something, to check you're not welding shut a planned extension.
 * [strategic-supplier](/decisions/strategic-supplier.md) - The supplier is a genuine seller with costs and a reserve price (Design B), not a stake-free utility.
 * [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md) - A round is triggered by a band and sized by a fixed host belief, so its size has nothing to do with what anyone needs — the host is deliberately blind to quantity until bids are in. Measured: half the lot can be wanted by agents none of whom can convene a round.
 * [clearing-as-validator](/decisions/clearing-as-validator.md) - The scarce side runs the auction; clearing is a thin stake-free notary that checks integrity and co-signs the trade before settlement.
+* [the-market-has-no-governor](/decisions/the-market-has-no-governor.md) - Ruling a venue is commitment power over its mechanism, which comes from structure or neutrality and never from today's state — deficit opens rounds, structure names the convener, and a rulership that followed measured deficit would make the rules a move in the game. N-to-M clears through dealers holding stock or bilaterally where too thin; the stake-free exchange was refused as a new allocating trusted party. Fairness is entry-by-one-triple, ex-ante public rules, a ledger that sees the spread and the uncontested round already clearing at cost — not a referee. The inventory dealer redeems its own claim because the stock decouples its two markets; the pass-through dealer would need claim endorsement, which is the seam.
 
 # Belief base
 
@@ -88,7 +89,7 @@ change something, to check you're not welding shut a planned extension.
 
 # Seams (open on purpose)
 
-* [standalone-clearing](/decisions/standalone-clearing.md) - The scarce side hosts the auction (host rotates with topology); the clearing validator stays invariant.
+* [standalone-clearing](/decisions/standalone-clearing.md) - The structurally scarce side hosts the auction (host rotates with topology, never with state); the clearing validator stays invariant. Amended by the-market-has-no-governor: the N-to-N row's stake-free exchange was refused — dealers and bilateral dealing clear it.
 * [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md) - Bids reflect current unmet need, so multi-source decomposition stays possible.
 * [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) - A shared triplestore couples worlds that are meant to be independent: adding the 21st restarts the other 20. The world becomes TTL files an agent loads at start, beliefs live in a persistent store inside each agent, no shared store survives, and validation moves into the agent.
 * [belief-base-isolation](/decisions/belief-base-isolation.md) - SUPERSEDED in mechanism by where-the-belief-base-lives, though its reasoning about why the graph is the write boundary still holds. Privacy was enforced by the store: per-graph ACLs behind per-agent credentials. It is now structural — there is no shared store to be let into.
