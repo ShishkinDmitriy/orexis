@@ -170,3 +170,43 @@ sensing:DetectsOnlyStimuliShape a sh:NodeShape ;
     sh:targetObjectsOf <http://www.w3.org/ns/ssn/detects> ;
     sh:class <http://www.w3.org/ns/ssn/Stimulus> ;
     sh:message "what a sensor detects is a stimulus — the physical thing it responds to, which stands in for the property via ssn:isProxyFor" .
+
+sensing:DeployedWithinItsInstrumentsRangeShape a sh:NodeShape ;
+    rdfs:comment """A deployment is held to its instruments' stated ranges (#111). A part's
+datasheet already says what it can witness — the DHT11's MeasurementRange has stated 0..50 °C
+and 20..90 %RH since its package was written, entailed onto every unit by the closure — and a
+deployment now states what its SITE will do: an ambient envelope, in the same Condition idiom
+the plants and the parts speak. This shape asks the one question that joins them: does every
+deployed sensor's range CONTAIN the envelope for the property it observes? Asked the day the
+terrace was proposed, the graph answered "not the DHT11" from figures nobody had to look up —
+this makes that answer a refusal at agora-validate time instead of a comment at first frost.
+
+Joined by UNIT as well as property, deliberately: a range stated in PERCENT and an envelope in
+a fraction are not comparable, and comparing them anyway would refuse worlds on arithmetic
+that means nothing. A mismatched unit is therefore SKIPPED, not refused — the honest seam,
+stated here so nobody mistakes silence for coverage. A sensor with no stated range is likewise
+not held: the moisture probe describes itself the old way and makes no claim to hold it to.
+
+Sovereign-scoped by construction: deployments live in hardware.ttl, which an agent is never
+given, so validate_agent never targets this — the same scoping as the wiring shapes.""" ;
+    sh:targetClass <http://www.w3.org/ns/ssn/Deployment> ;
+    sh:sparql [
+        sh:message "this deployment's site envelope leaves the stated range of a deployed sensor — the instrument cannot witness the place it is installed" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://www.w3.org/ns/ssn/deployedSystem> ?deployed .
+                ?deployed (<http://www.w3.org/ns/ssn/hasSubSystem>)* ?sensor .
+                ?sensor <http://www.w3.org/ns/sosa/observes> ?p .
+                $this <http://www.w3.org/ns/ssn/systems/inCondition> ?k .
+                ?k <http://www.w3.org/ns/ssn/forProperty> ?p ;
+                   <https://schema.org/minValue> ?kmin ;
+                   <https://schema.org/maxValue> ?kmax ;
+                   <https://schema.org/unitCode> ?u .
+                ?sensor <http://www.w3.org/ns/ssn/systems/hasSystemCapability> ?c .
+                ?c <http://www.w3.org/ns/ssn/systems/hasSystemProperty> ?r .
+                ?r a <http://www.w3.org/ns/ssn/systems/MeasurementRange> ;
+                   <https://schema.org/minValue> ?rmin ;
+                   <https://schema.org/maxValue> ?rmax ;
+                   <https://schema.org/unitCode> ?u .
+                FILTER(?kmin < ?rmin || ?kmax > ?rmax)
+            }""" ] .

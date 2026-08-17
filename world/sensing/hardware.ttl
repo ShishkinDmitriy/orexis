@@ -12,6 +12,10 @@
 @prefix governed: <http://example.org/agora/firmware/moisture-sensor#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix water: <http://example.org/agora/water#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix esp32: <http://example.org/agora/esp32#> .
@@ -86,6 +90,18 @@
     ssn:deployedOnPlatform :esp32_fern ;
     ssn:deployedSystem :moisture_sensor_fern , :status_led_fern , :air_sensor_fern ;
     prov:startedAtTime "2026-08-05T17:00:00Z"^^xsd:dateTime ;
+    #  What this SITE does to an instrument (#111): the ambient envelope a deployment commits
+    #  its systems to witnessing, in the same Condition idiom the plants and the parts already
+    #  speak. A Berlin windowsill, indoors: mild and heated. The shape holds every deployed
+    #  sensor's stated MeasurementRange to CONTAIN this envelope — which is exactly the check
+    #  the terrace question exposed as missing: a DHT11 (0..50 °C, 20..90 %RH) passes here and
+    #  would refuse an outdoor envelope, from its own datasheet figures, at agora-validate
+    #  time instead of at the first frost.
+    ssn-system:inCondition
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;
+          schema:minValue 15.0 ; schema:maxValue 32.0 ; schema:unitCode unit:DEG_C ] ,
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirHumidity ;
+          schema:minValue 25 ; schema:maxValue 70 ; schema:unitCode unit:PERCENT ] ;
     rdfs:comment "The windowsill bench: one fern, watched where it lives, on battery." .
 
 ##########  The board's own legs  ##########

@@ -879,3 +879,66 @@ def test_a_promise_no_watcher_can_keep_is_refused():
             <http://example.org/agora/sensing#AlarmProcedure> }} }}""")
     assert not _conforms(_flatten(st, WORLDS_ROOT / "sensing")), (
         "a channel whose signal pin no sleep-watcher reaches must not be allowed to promise")
+
+
+# --- a deployment is held to its instruments' ranges (#111) -------------------
+
+_SENSING_NS = "http://example.org/agora/world/sensing#"
+
+
+def test_the_windowsill_sits_inside_every_stated_range():
+    """Non-vacuity for the shape below: the join it polices — deployment envelope to
+    instrument range, matched on property AND unit — must actually bind in the shipped
+    world, or the conformance above is silence, not coverage."""
+    st = genesis_store(world="sensing")
+    rows = st.query("""SELECT ?sensor ?u WHERE {
+        ?d <http://www.w3.org/ns/ssn/deployedSystem> ?deployed .
+        ?deployed (<http://www.w3.org/ns/ssn/hasSubSystem>)* ?sensor .
+        ?sensor <http://www.w3.org/ns/sosa/observes> ?p .
+        ?d <http://www.w3.org/ns/ssn/systems/inCondition> ?k .
+        ?k <http://www.w3.org/ns/ssn/forProperty> ?p ; <https://schema.org/unitCode> ?u .
+        ?sensor <http://www.w3.org/ns/ssn/systems/hasSystemCapability> ?c .
+        ?c <http://www.w3.org/ns/ssn/systems/hasSystemProperty> ?r .
+        ?r a <http://www.w3.org/ns/ssn/systems/MeasurementRange> ;
+           <https://schema.org/unitCode> ?u . }""")
+    from agent.store import bindings
+    found = bindings(rows)
+    assert len(found) >= 2, (
+        "the windowsill envelope must reach the DHT11's two ranged channels — if this is "
+        "empty the range shape is passing vacuously")
+
+
+def test_a_deployment_past_the_instruments_range_is_refused():
+    """THE terrace test. Send the windowsill outdoors — a Berlin winter reaches -15 °C — and
+    the DHT11's own datasheet figures (0..50, stated at the class since the package was
+    written) refuse the world. The answer the graph gave in conversation, now given by
+    agora-validate instead."""
+    st = genesis_store(world="sensing")
+    st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
+        <{_SENSING_NS}fern_windowsill_deployment>
+            <http://www.w3.org/ns/ssn/systems/inCondition> [
+                a <http://www.w3.org/ns/ssn/systems/Condition> ;
+                <http://www.w3.org/ns/ssn/forProperty> <http://example.org/agora/water#AirTemperature> ;
+                <https://schema.org/minValue> -15.0 ;
+                <https://schema.org/maxValue> 40.0 ;
+                <https://schema.org/unitCode> <http://qudt.org/vocab/unit/DEG_C> ] }} }}""")
+    assert not _conforms(_flatten(st, WORLDS_ROOT / "sensing")), (
+        "an envelope the instrument's stated range cannot contain must refuse the world")
+
+
+def test_an_envelope_in_an_alien_unit_is_skipped_not_refused():
+    """The stated seam: PERCENT and a fraction are not comparable, and refusing on
+    arithmetic that means nothing would be worse than skipping. Asserted so the silence
+    is a documented choice rather than a hole nobody chose."""
+    st = genesis_store(world="sensing")
+    st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
+        <{_SENSING_NS}fern_windowsill_deployment>
+            <http://www.w3.org/ns/ssn/systems/inCondition> [
+                a <http://www.w3.org/ns/ssn/systems/Condition> ;
+                <http://www.w3.org/ns/ssn/forProperty> <http://example.org/agora/water#AirHumidity> ;
+                <https://schema.org/minValue> 0.0 ;
+                <https://schema.org/maxValue> 1.0 ;
+                <https://schema.org/unitCode> <http://qudt.org/vocab/unit/UNITLESS> ] }} }}""")
+    assert _conforms(_flatten(st, WORLDS_ROOT / "sensing")), (
+        "a mismatched unit must be skipped — comparing 0..1 against 20..90 PERCENT would "
+        "refuse on meaningless arithmetic")
