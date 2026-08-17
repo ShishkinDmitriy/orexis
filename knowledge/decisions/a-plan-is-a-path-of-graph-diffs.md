@@ -31,6 +31,27 @@ graph" less exotic than it sounds: **SHACL shapes are already desired graphs.** 
 holds them about worlds and validation is gap detection; a desiring agent holding a deduced
 pattern about the world-state is the same machinery pointed at runtime.
 
+## One formalism, a modality axis
+
+Asked next by the sovereign, and it is the sharpest formulation of the whole idea: are these
+just two KINDS of shape — one validating a world, unviolable, and one desired? Yes — and the
+axis already has two points in the house, with the third legal by SHACL's own rules:
+
+| modality | severity | violated means | who reacts | when |
+|---|---|---|---|---|
+| must hold | `sh:Violation` | illegitimate — refused | a human, at the gates | ratification, boot, each revision |
+| should hold | `sh:Warning` | legitimate, worth noticing | an operator | the gates |
+| should become | a custom severity (`sh:severity` is any IRI) | legitimate, unsatisfactory — a GAP | the agent, through its levers | continuously |
+
+Three asymmetries keep the kinds from collapsing. WHO THEY BIND: a validating shape is the
+society's, everyone held identically; a desired shape is a stake, deduced per agent — and
+neither may be weakened by the agent, which is the symmetry that matters. DEGREE AND TIME:
+conformance is boolean now; a want has signed distance (what urgency, bidding and the alarm
+bands consume — the violation must carry its measure) and is pursued TOWARD, tolerating being
+unmet while the plan runs, which is the entire reason intentions exist. THE REACTION PATH:
+violation refuses, warning notes, desire feeds the menu — which is where this record's
+machinery clicks in: gap, affordance rows, lever or plan.
+
 ## The guardrails, which are the two standing principles
 
 **A desire answers to something public.** The region is deduced from stated ranges precisely
