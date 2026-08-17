@@ -476,7 +476,16 @@ def test_a_source_drains_by_what_its_valves_dispense():
 
 def test_a_source_hears_every_valve_that_draws_from_it(monkeypatch):
     """SIM_DOSE_TOPIC is a comma-joined set now: a pot takes water on one channel, a source
-    loses it on several."""
+    loses it on several — and every one of them must actually be SUBSCRIBED, which the first
+    bench run of the barrel found was not true: the parse learned the plural and the
+    subscribe still read the singular, so the level never drained and the crash said so."""
     device, _ = _device([MOISTURE],
                         SIM_DOSE_TOPIC="actuators/a/status,actuators/b/status")
     assert device.dose_topics == {"actuators/a/status", "actuators/b/status"}
+
+    class Subs:
+        def __init__(self): self.topics = []
+        def subscribe(self, t): self.topics.append(t)
+    subs = Subs()
+    device._on_connect(subs, None, None, 0, None)
+    assert {"actuators/a/status", "actuators/b/status"} <= set(subs.topics)

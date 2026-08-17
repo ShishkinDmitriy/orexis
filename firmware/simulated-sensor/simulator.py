@@ -270,8 +270,8 @@ class SimulatedSensor:
         # refuse is being repositioned by whoever is running the simulation.
         if self.command_topic:
             client.subscribe(self.command_topic)
-        if self.dose_topic:
-            client.subscribe(self.dose_topic)
+        for topic in sorted(self.dose_topics):
+            client.subscribe(topic)
         if self.rain_topic:
             client.subscribe(self.rain_topic)
         log.info("%s up — publishing %s every %ss (%s)", self.sensor_id, self.reading_topic,
