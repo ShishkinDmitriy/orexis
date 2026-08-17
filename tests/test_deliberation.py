@@ -39,11 +39,29 @@ def test_a_stake_and_a_lever_grant_reflex():
     """The same premise as keeping, deliberately: deciding and committing are meaningful under
     exactly the same conditions. They stay two capabilities because the replaceable parts
     differ — how commitments are kept could change without changing how decisions are reached,
-    and the other way round is the case the family exists for."""
+    and the other way round is the case the family exists for.
+
+    Both flavours of lever now demonstrate the premise: fern's is a market position, the
+    supplier's the valves it always held — which became a lever's other half the day the
+    stake arrived (arc 2). The levers-without-stake counterexample the supplier used to be
+    died with that stake, so the missing-stake half is shown by taking it away."""
     q = genesis_store().query
     assert REFLEX in load_self(q, "fern").capabilities
-    assert REFLEX not in load_self(q, "supplier").capabilities
+    assert REFLEX in load_self(q, "supplier").capabilities
     assert REFLEX not in load_self(genesis_store(world="sensing").query, "fern").capabilities
+
+    from agent import genesis, loader
+    from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+
+    st = genesis_store()
+    st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+        <http://example.org/agora/world/simulation#supplier>
+            <http://example.org/agora#actsFor> ?o }} }}""")
+    st.clear_graph(WORLD_DERIVED_GRAPH)
+    for rule in loader.rule_files():
+        st.update(genesis.substitute(rule.read_text(), st))
+    assert REFLEX not in load_self(st.query, "supplier").capabilities, \
+        "means without wants have nothing to decide — the premise needs both halves"
 
 
 # --- the reflex, which is the old chain verbatim ----------------------------
@@ -171,10 +189,17 @@ def test_the_menu_is_derived_from_the_graph(make):
                    for r in rows)
 
 
-def test_an_agent_with_no_desires_has_an_empty_menu(make):
-    """The supplier holds levers everywhere and wants nothing — no rows, because an affordance
-    is a move toward an end, not a list of what the wiring physically allows."""
-    assert menu_of(genesis_store().query, "http://example.org/agora/world/simulation#supplier") == []
+def test_a_want_with_no_lever_is_observe_only(make):
+    """The supplier since the stake (arc 2): it wants its barrel full, can SEE the level, and
+    holds no lever that could raise it — the valves only drain, and it buys in no market. One
+    Observe row, no Acquire, no direction: seen but unmovable, which is the ladder's honest
+    reading and the exact gap the refill arc will fill. (The wants-nothing example this test
+    used to hold died with the stake — an affordance is still a move toward an end, and the
+    end exists now; only the means is missing.)"""
+    rows = menu_of(genesis_store().query,
+                   "http://example.org/agora/world/simulation#supplier")
+    assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1], r.direction)
+            for r in rows] == [("Observe", "StoredLitres", None)]
 
 
 FERN = "http://example.org/agora/world/simulation#fern_agent"
