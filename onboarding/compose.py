@@ -229,7 +229,7 @@ _SIM_MODE = {
 # lesson is not "name the right term" but "name no term", which this now does.
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?drainTopic ?port
-       ?pointer ?initial ?loses ?subjectLoses ?swing ?litres ?doseLitres ?minValue ?maxValue
+       ?pointer ?initial ?loses ?subjectLoses ?swing ?litres ?doseEffect ?minValue ?maxValue
        ?subjectMax ?scale ?rainTopic
 WHERE {{
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
@@ -261,7 +261,7 @@ WHERE {{
   # A subject may carry the model's ceiling by entailment (water:capacityL is a subproperty
   # of ag:modelMaxValue) — one statement, the #164 pattern, read here like the drying is.
   OPTIONAL {{ ?subject <{AG}modelMaxValue> ?subjectMax }}
-  OPTIONAL {{ ?model <{AG}modelDoseLitres> ?doseLitres }}
+  OPTIONAL {{ ?subject <{AG}modelDoseEffect> ?doseEffect }}
   OPTIONAL {{ ?w a <{AG}World> ; <{AG}timeScale> ?scale }}
   OPTIONAL {{ ?subject <{AG}rainTopic> ?rainTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
@@ -288,11 +288,12 @@ def _values(rows: list[dict]) -> str:
         # physics (entailed from its domain's word — water:driesPerDay, #164) is the fact.
         if row.get("loses") in (None, "") and row.get("subjectLoses") not in (None, ""):
             row = {**row, "loses": row["subjectLoses"]}
-        # The same two moves for the supply side: a stated dose effect (a source's -1.0)
-        # overrides the denomination's conversion, and the subject's entailed ceiling
-        # (water:capacityL) is the max where the model states none.
-        if row.get("doseLitres") not in (None, ""):
-            row = {**row, "litres": row["doseLitres"]}
+        # The same two moves for the supply side: the subject's entailed dose effect (a
+        # water source's -1.0, conservation stated once on the class) overrides the
+        # denomination's conversion, and the entailed ceiling (water:capacityL) is the max
+        # where the model states none.
+        if row.get("doseEffect") not in (None, ""):
+            row = {**row, "litres": row["doseEffect"]}
         if row.get("maxValue") in (None, "") and row.get("subjectMax") not in (None, ""):
             row = {**row, "maxValue": row["subjectMax"]}
         for key, field in (("min", "minValue"), ("max", "maxValue"),

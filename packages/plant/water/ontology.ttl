@@ -18,6 +18,13 @@
 :WaterSource a owl:Class ; rdfs:label "Water source" ;
     rdfs:comment "What a supplier dispenses; the plumbing node a market forms around." .
 :SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" .
+#  CONSERVATION, stated once: every litre a valve dispenses left some source, so a water
+#  source's level moves -1.0 per dispensed litre — true of the CLASS, by physics, which is
+#  what an owl:hasValue restriction is for (the DHT's datasheet pattern; the closure entails
+#  it onto every barrel, and no model node restates it).
+:WaterSource rdfs:subClassOf
+    [ a owl:Restriction ; owl:onProperty ag:modelDoseEffect ; owl:hasValue -1.0 ] .
+
 :StoredLitres a sosa:ObservableProperty ; rdfs:label "Stored litres" ;
     rdfs:comment "How much water a source is actually holding — the stock behind every promise the market makes. Observable because a float or level sensor can witness it, and observed so that an empty barrel is a fact an agent can hold rather than a surprise the pots discover. The first property on the SUPPLY side of the wire: a dispensed litre lowers it, which is the sign convention the stand-ins carry." .
 :AirTemperature a sosa:ObservableProperty ; rdfs:label "Air temperature" ;

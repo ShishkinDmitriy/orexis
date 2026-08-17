@@ -96,9 +96,10 @@
 #  SUPPLIER polls: the stock behind every promise the market makes becomes a fact its owner
 #  can hold, rather than a surprise the pots discover. Push, like the float switch the
 #  terrace build will wire — a level announces, it is not commanded. The stand-in drains on
-#  every dose any valve draws (ag:modelDoseLitres -1.0: the litre that fills a pot lowers
-#  the barrel it left) and its ceiling is NOT restated: water:capacityL is a subproperty of
-#  ag:modelMaxValue, so the 5.0 above is the one statement and the model inherits it.
+#  every dose any valve draws, and NEITHER of its physics is stated here: the drain rate is
+#  CONSERVATION, -1.0 per dispensed litre on the WaterSource class itself (every litre that
+#  fills a pot left some barrel), and the ceiling is water:capacityL above — both reach the
+#  model entailed, one statement each, the #164 pattern twice.
 :barrel1_level a sosa:Sensor , ag:Device ;
     ag:localId "barrel1_level" ;
     mqtt:onBus :local_bus ;
@@ -110,7 +111,6 @@
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelMinValue 0.0 ;
         ag:modelInitialValue 3.0 ;
-        ag:modelDoseLitres -1.0 ;
         ag:modelTickSeconds 30 ] .
 
 ##########  The supplier — runs the venue and owns the valves  ##########
