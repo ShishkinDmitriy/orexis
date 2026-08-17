@@ -225,7 +225,10 @@ more than before.
   `MeasurementRange` of 0–50 °C and 20–90 %RH is a part that cannot report a frost or a fog,
   stated at the class since the package was written. Fitness for a place is therefore already
   graph-visible — `packages/part/bme280/` was added as the outdoor-worthy counterpart, on this
-  record's template — but nothing CHECKS a part's stated ranges against where its deployment
-  puts it. That check is
-  [#111](https://github.com/ShishkinDmitriy/agora/issues/111), and `ssn:Deployment` arriving
-  with the SOSA arc is what makes it newly writable.
+  record's template — and the check is WRITTEN now
+  ([#111](https://github.com/ShishkinDmitriy/agora/issues/111), closed): a deployment states
+  its site's ambient envelope in the same Condition idiom the parts speak, and
+  `sensing:DeployedWithinItsRangeShape` refuses a world whose instrument cannot contain it —
+  the DHT11 passes the windowsill and refuses the terrace, from its own datasheet figures, at
+  agora-validate time. The seam that remains is UNITS: an envelope in an alien unit is skipped
+  rather than compared, a documented choice with its own test.
