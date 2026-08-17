@@ -26,7 +26,12 @@ than allocates, it is **topology-invariant** — it does not know or care who ho
 The host is the only thing that changes across topologies:
 - 1 supplier, N consumers → the [supplier](/domain/supplier.md) hosts (forward auction) — v1
 - N suppliers, 1 consumer → the consumer hosts (reverse auction)
-- N ↔ N → a stake-free exchange hosts (order book)
+- N ↔ N → no participant can host. This row first read "a stake-free exchange hosts (order
+  book)"; that resolution was refused when the case was decided — N-to-N clears through
+  dealers holding stock, or bilaterally where too thin. See
+  [the-market-has-no-governor](/decisions/the-market-has-no-governor.md), which also states
+  what "scarce side" means precisely: the *structurally* short side, never the side deficit
+  makes eager today — state opens rounds, structure names the host.
 
 In every case the participants sign their **orders** (bids or asks), the host signs the
 **match**, and clearing signs the **validation** — the same predicate over signed orders. So
