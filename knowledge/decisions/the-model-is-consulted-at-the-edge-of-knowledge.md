@@ -100,8 +100,15 @@ nothing an agent believes privately reaches another agent's store.
 # Seams left open
 
 - **The affordance vocabulary itself** — [#127](https://github.com/ShishkinDmitriy/agora/issues/127),
-  the emitted issue. Direction first; cost-shape and side-effects are speculation until a second
-  lever exists.
+  the emitted issue, now CLOSED: the domain states its direction once (`market:Raises` on the
+  valuation term, demanded by a shape), the Reflex reads the sign instead of hardcoding it, and
+  the menu is derived. Strengthened past the issue on the sovereign's ask — the Acquire row is
+  *deduced along the plumbing*: the market's host holds an actuator, the actuator is plumbed to
+  this agent's own pot, so opening it puts the good where the agent is, and only the physics
+  atom ("water raises moisture") is stated, because no topology can derive a law of nature. A
+  market whose deliveries cannot reach your pot is, for you, no lever at all — which is what
+  keeps the menu honest the day two markets move two properties. Cost-shape and side-effects
+  remain speculation until that second lever exists.
 - **A runtime interface, later.** The sovereign is absent, not abolished: a world can already be
   amended and picked up on restart (`refresh_public`), so an asynchronous channel — the agent
   writes proposals somewhere the sovereign reads at the next amendment, private adoption in the
