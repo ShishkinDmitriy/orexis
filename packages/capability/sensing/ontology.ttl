@@ -1,5 +1,6 @@
 @prefix review: <http://example.org/agora/review#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
+@prefix : <http://example.org/agora/sensing#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
@@ -26,17 +27,17 @@
 #  They are strictly decreasing in agent control, and each one asks the agent for strictly
 #  less. Only the middle one is implemented today; see the note on sensing:Polling.
 
-sensing:SensingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+:SensingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
     rdfs:label "Sensing capability" ;
     rdfs:comment "The family. Rules true of sensing however it is done target this class, so nothing is restated per transport, and one capability may ask for 'whoever perceives' without knowing which of the three answered." .
 
-sensing:Polling a sensing:SensingCapability ; rdfs:label "Polling" ;
+:Polling a :SensingCapability ; rdfs:label "Polling" ;
     rdfs:comment "The agent holds the clock and ASKS for each reading: one request, one response. The simplest possible exchange, and the one with the most agent control — but it requires a device that is reachable at any moment, so it cannot be had from a board that deep-sleeps between readings. RESERVED: declared so the vocabulary is honest about the three, but no derivation rule grants it and no module implements it, so no agent can hold it yet." .
 
-sensing:Subscribing a sensing:SensingCapability ; rdfs:label "Subscribing" ;
+:Subscribing a :SensingCapability ; rdfs:label "Subscribing" ;
     rdfs:comment "The agent states an INTERVAL and the device keeps to it: a standing request rather than a repeated one. The agent still owns the policy — how often to look is entirely its choice — but it delegates the timekeeping, which is what lets the device sleep between readings and is why a battery board can be perceived at all. What it gives up is asking at a moment of its choosing." .
 
-sensing:Listening a sensing:SensingCapability ; rdfs:label "Listening" ;
+:Listening a :SensingCapability ; rdfs:label "Listening" ;
     rdfs:comment "The agent RECEIVES readings on the device's own schedule and states no interval at all. It keeps its freshness rule — which becomes a liveness detector rather than a control — but is never asked for a cadence it could not apply." .
 
 #################  Sensors  #################
@@ -87,11 +88,11 @@ sensing:Listening a sensing:SensingCapability ; rdfs:label "Listening" ;
 # behalf of a package that may not be installed.
 sosa:Sensor rdfs:subClassOf ssn:System .
 
-sensing:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
+:polls a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
     rdfs:label "polls" ;
     rdfs:comment "The agent may read this sensor. This IS the access grant — expressed as topology rather than as a separate permission system, so isolation is visible in the wiring." .
 
-sensing:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
+:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
     rdfs:label "monitors" ;
     rdfs:comment "The subject this sensor reads. Pairs with sosa:observes, which says WHICH property." .
 
@@ -138,16 +139,16 @@ sensing:monitors a owl:ObjectProperty ; rdfs:domain sosa:Sensor ;
 
 sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 
-sensing:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
+:SenseMode a owl:Class ; rdfs:label "Sense mode" ;
     rdfs:comment "The class exists for the count: the speaking-device shape asks for exactly one, and `sosa:Procedure` is too wide to say that with. Its members are Procedures too." .
 
-sensing:PolledProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Polled procedure" ;
+:PolledProcedure a :SenseMode , sosa:Procedure ; rdfs:label "Polled procedure" ;
     rdfs:comment "Always reachable, and answers each request: ask, and it reads and replies. Gives sensing:Polling. A board that deep-sleeps is NOT this, however it is asked — it cannot hear the request. RESERVED alongside sensing:Polling: no rule maps it yet." .
 
-sensing:ScheduledProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Scheduled procedure" ;
+:ScheduledProcedure a :SenseMode , sosa:Procedure ; rdfs:label "Scheduled procedure" ;
     rdfs:comment "Takes an interval and keeps to it, sleeping in between: it accepts instruction about WHEN, then clocks itself. Gives sensing:Subscribing. This is what a deep-sleeping battery board is, and the reason the middle capability exists at all." .
 
-sensing:PushProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Push procedure" ;
+:PushProcedure a :SenseMode , sosa:Procedure ; rdfs:label "Push procedure" ;
     rdfs:comment "Self-clocked: it announces on its own cadence and takes no commands. Gives sensing:Listening. The edge holds the policy, and no agent can take it back." .
 
 #  The THIRD clock-holder, finally earning its place (#151): not the agent's (Scheduled), not
@@ -168,14 +169,14 @@ sensing:PushProcedure a sensing:SenseMode , sosa:Procedure ; rdfs:label "Push pr
 #  only "not due yet". The thresholds themselves are the agent's to command, retained beside
 #  the cadence, and the natural ones are its region's edges: the board then literally watches
 #  the agent's desire while both of them sleep.
-sensing:AlarmProcedure a sosa:Procedure ; rdfs:label "Alarm procedure" ;
+:AlarmProcedure a sosa:Procedure ; rdfs:label "Alarm procedure" ;
     rdfs:comment "Watch commanded thresholds while asleep; wake and publish when the value crosses one. Held on the SENSOR whose value is watched, with ssn:implements — per channel, because which values a board can watch is a hardware fact per channel: an ESP32's ULP reaches the analog probe and can never speak the DHT's protocol. A real board's promise arrives ENTAILED from its firmware class (#181) — the flashed image watches unconditionally, only the connecting device is typed, so the analog channel promises and the DHT channels stay honest by absence — and the wiring holds it to the silicon: the board class states which pin roles its sleep-watcher reaches (mc:watcherReachesRole) and mc:WatchedChannelWiringShape refuses a promise wired past that reach. A stand-in states its promises by hand, having no pins and no watcher. The board wakes when ANY of its watched channels crosses. A shape requires the implementing sensor to ride a Scheduled device with a command channel, because the bands arrive the way the cadence does — one retained map, a band per watched pointer." .
 
-sensing:senseMode a owl:ObjectProperty ; rdfs:domain <http://example.org/agora#Device> ; rdfs:range sensing:SenseMode ;
+:senseMode a owl:ObjectProperty ; rdfs:domain <http://example.org/agora#Device> ; rdfs:range :SenseMode ;
     rdfs:label "sense mode" ;
     rdfs:comment "Whose fact this is decided #96: the DEVICE's — the board that sleeps, wakes and keeps the interval — never the sensing element's. Three sensors on one board used to state it three times with no shape spanning them, so one could claim Scheduled while its neighbour claimed Push: a physical impossibility that would have derived both Subscribing and Listening for one agent from one firmware. Stated once on the connecting device now, and a bearer shape (transport/mqtt) refuses it anywhere else." .
 
-sensing:samples a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range <http://www.w3.org/ns/sosa/Sample> ;
+:samples a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range <http://www.w3.org/ns/sosa/Sample> ;
     rdfs:label "samples" ;
     rdfs:comment "Which PATCH this probe actually sits in (#98) — a sosa:Sample of the subject it monitors. SOSA's own words: a Sample is representative of a FeatureOfInterest that is not fully accessible, and a pot's soil is exactly that; the W3C's deployment example does the same with a room, measuring a wall and treating it as the room's witness. Optional, and the option is the point: someone has to JUDGE that two probes sit in two patches rather than one, and no shape can make that judgement — absent a sample, the subject is the feature and everything reads as it always did, exactly as mqtt:readingPointer defaults to /value. Where two probes do state two patches, each owns its observation node and the pot answers with the newest across them — kept as testimony per patch, never aggregated, which stays the seam one-agent-many-sensors.md left open. NOT sosa:Sampler/Sampling territory: nothing here extracts a specimen; a patch is soil somebody decided to treat as representative, not something a machine produced." .
 
@@ -183,54 +184,54 @@ sensing:samples a owl:ObjectProperty ; rdfs:domain sosa:Sensor ; rdfs:range <htt
 
 # Required only of an agent that can actually act on them: driving a device is what makes a
 # cadence meaningful, so the transport's rules decide whether these are demanded.
-sensing:fastSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:fastSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "fast sleep seconds" ;
     rdfs:comment "Cadence when the agent judges itself in trouble — how closely it watches when worried." .
-sensing:slowSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:slowSleepS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "slow sleep seconds" ;
     rdfs:comment "Cadence when comfortable. Attention costs energy, so looking less is a real choice." .
 
 # Required of EVERY perceiving agent, however it perceives: deciding what is too old to act
 # on is about belief, not control, so it survives losing the ability to drive the device.
-sensing:readingGraceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+:readingGraceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "reading grace" ;
     rdfs:comment "How long past the interval it ASKED for a subscribing agent still trusts a reading — a board's wake time and a late wifi association. Relative on purpose: an agent that chose to look every 600s cannot coherently refuse a 120s-old number, and an absolute limit made every comfortable plant look like a failed sensor." .
 
-sensing:maxReadingAgeS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:maxReadingAgeS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "max reading age seconds" ;
     rdfs:comment "How stale a reading may be and still back a decision. Without it, 'I choose when to look' becomes 'I choose which number to believe'." .
 
 #################  The constitutional bounds — stated, not compiled in  #################
 
-sensing:minSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+:minSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
     rdfs:label "minimum sleep seconds" .
-sensing:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+:maxSleepS a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
     rdfs:label "maximum sleep seconds" .
 
-sensing:relaxFactor a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+:relaxFactor a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "relax factor" ;
     rdfs:comment "Fast attack, slow release (#139). Tightening is INSTANTANEOUS — any voice in the urgency choir earns its cadence at once, because hesitating in that direction costs a plant — but relaxing is bounded per commanded step: the next sleep may exceed the last by at most this factor, so one comfortable reading cannot cliff a burst-tight cadence straight to the slow end. The release then runs geometrically (30, 45, 68, 101...), a few minutes of dense sampling during which the trend establishes and the #133 bound takes over — confidence is EARNED per reading, not assumed from one. On the family like the bounds, because how fast a society lets its members stop looking is the society's figure, not a compile-time constant." .
 
-sensing:SensingCapability sensing:minSleepS 10 ; sensing:maxSleepS 900 ;
-    sensing:relaxFactor 1.5 .
+:SensingCapability :minSleepS 10 ; :maxSleepS 900 ;
+    :relaxFactor 1.5 .
 
-sensing:alarmDeltaFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+:alarmDeltaFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "alarm delta fraction" ;
     rdfs:comment "The DEVIATION half of the alarm (#151): besides leaving the band, a watched value that moves by more than this fraction of its band's width since the last report is worth waking for — process control's deviation alarm beside its HI/LO one. It catches what the band alone cannot: a stranger watering a COMFORTABLE pot, or a leak draining fast while still in-range — the in-band event whose first sign the heartbeat would otherwise sleep through. Stated at TWO levels, and they are two different facts. On the family it is the society's default — the figure a sentinel bakes in, because a board that takes no orders can only be flashed with the constitution — and no module reads it at runtime. On an AGENT it is that agent's own pick: what *it* currently counts as a jolt, authored at genesis, delivered to its board inside the retained alarm command, and revisable within the bounds below — because 0.25 was an estimate measured on nothing, and correcting an estimate must not cost a reflash. An agent that states no pick commands band-only alarms, which is a choice said by omission. The board's window is simply the intersection of the band and last-report±delta, so the watching machinery gains nothing new — only the arithmetic that arms it." .
 
-sensing:SensingCapability sensing:alarmDeltaFraction 0.25 .
+:SensingCapability :alarmDeltaFraction 0.25 .
 
 # The room the society allows for the pick. A floor of 0.05: any tighter and ordinary sensor
 # noise is indistinguishable from news, so the board would spend its battery announcing nothing.
 # A ceiling of 0.5: any wider and the deviation half can never fire before a band edge does —
 # a delta past half the band's width is refusal spelled as a number, and refusing is done by
 # not stating a pick, not by picking an unreachable one.
-sensing:minAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+:minAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "minimum alarm delta fraction" .
-sensing:maxAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+:maxAlarmDeltaFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "maximum alarm delta fraction" .
 
-sensing:SensingCapability sensing:minAlarmDeltaFraction 0.05 ; sensing:maxAlarmDeltaFraction 0.5 .
+:SensingCapability :minAlarmDeltaFraction 0.05 ; :maxAlarmDeltaFraction 0.5 .
 
 # How many consecutive breaching looks make the news real (#180). The watch period was derived
 # from an argument this figure only extends: soil physics bounds how fast moisture really
@@ -243,10 +244,10 @@ sensing:SensingCapability sensing:minAlarmDeltaFraction 0.05 ; sensing:maxAlarmD
 # which is a vocabulary edit and a reflash, not a belief revision. Every watcher honours it:
 # both firmwares' ULP programs count it in RTC memory, and the stand-in counts its looks the
 # same way, so the bench rehearses what the boards do.
-sensing:alarmPersistenceLooks a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+:alarmPersistenceLooks a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
     rdfs:label "alarm persistence looks" .
 
-sensing:SensingCapability sensing:alarmPersistenceLooks 2 .
+:SensingCapability :alarmPersistenceLooks 2 .
 
 #################  What the DEVICE can honour, which is a different question  #################
 #
@@ -324,8 +325,8 @@ sensing:SensingCapability sensing:alarmPersistenceLooks 2 .
 # need first, and follows whether looking is telling it anything only inside the room need
 # leaves. That composition is the whole reason it is safe to let an agent slow itself down.
 
-sensing:slowSleepS a review:RevisableBelief ;
-    review:revisableToward sensing:minSleepS , sensing:maxSleepS .
+:slowSleepS a review:RevisableBelief ;
+    review:revisableToward :minSleepS , :maxSleepS .
 
 # And the jolt threshold, for the same reason turned around: the cadence is revisable because
 # attention costs energy, the delta because the FIRST figure was a guess — 0.25 chosen the day
@@ -334,19 +335,19 @@ sensing:slowSleepS a review:RevisableBelief ;
 # review.rq): a lively world earns a tight cadence and a coarse delta, a still one a slow
 # cadence and a fine delta, so the battery is spent wherever the information actually is.
 
-sensing:alarmDeltaFraction a review:RevisableBelief ;
-    review:revisableToward sensing:minAlarmDeltaFraction , sensing:maxAlarmDeltaFraction .
+:alarmDeltaFraction a review:RevisableBelief ;
+    review:revisableToward :minAlarmDeltaFraction , :maxAlarmDeltaFraction .
 
 # How still counts as still, and how much evidence is enough to say so. Constitutional rather
 # than private for the same reason the sleep bounds are: left to each agent, these are the two
 # numbers a lazy one tunes until it is entitled to stop looking.
 
-sensing:steadyFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
+:steadyFraction a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:decimal ;
     rdfs:label "steady fraction" ;
     rdfs:comment "How far a reading may range, as a fraction of its own mean, and still count as unchanging. Relative rather than absolute because one agent's property is a fraction and another's is degrees, and a threshold in either unit is nonsense in the other." .
 
-sensing:reviewWindow a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
+:reviewWindow a owl:DatatypeProperty ; rdfs:domain ag:Capability ; rdfs:range xsd:integer ;
     rdfs:label "review window" ;
     rdfs:comment "How many readings must have accumulated before an agent may draw a conclusion about them. Guards the failure this mechanism could otherwise cause: two identical readings are a coincidence, and an agent that relaxed its attention on the strength of them would be reasoning from noise." .
 
-sensing:SensingCapability sensing:steadyFraction 0.02 ; sensing:reviewWindow 20 .
+:SensingCapability :steadyFraction 0.02 ; :reviewWindow 20 .

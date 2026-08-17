@@ -2,6 +2,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix rgbled: <http://example.org/agora/rgb-led#> .
+@prefix : <http://example.org/agora/rgb-led#> .
 @prefix wokwi: <http://example.org/agora/wokwi#> .
 @prefix mc: <http://example.org/agora/microcontroller#> .
 
@@ -9,24 +10,24 @@
     rdfs:label "RGB LED" ;
     rdfs:comment """One part, its own package. Four legs: three driven and one common return.""" .
 
-rgbled:RgbLed a owl:Class ;
+:RgbLed a owl:Class ;
     mc:modelName "KY-016 4-pin RGB LED (common cathode)" ; rdfs:subClassOf mc:Peripheral ; rdfs:label "RGB LED" ;
     wokwi:part "wokwi-rgb-led" ;
     # No wokwi:attrs stating the polarity. Which it is, is a fact about the PART SOLDERED HERE
     # and not about RGB LEDs, and the world already says it: the common leg's wire goes to
     # ground on a cathode part and to a rail on an anode one. Declaring it beside the wire that
     # determines it is how the two get to disagree.
-    wokwi:pin [ mc:pinRole rgbled:RedPinRole   ; wokwi:name "R"   ] ,
-              [ mc:pinRole rgbled:GreenPinRole ; wokwi:name "G"   ] ,
-              [ mc:pinRole rgbled:BluePinRole  ; wokwi:name "B"   ] ,
-              [ mc:pinRole rgbled:CommonPinRole ; wokwi:name "COM" ] ;
+    wokwi:pin [ mc:pinRole :RedPinRole   ; wokwi:name "R"   ] ,
+              [ mc:pinRole :GreenPinRole ; wokwi:name "G"   ] ,
+              [ mc:pinRole :BluePinRole  ; wokwi:name "B"   ] ,
+              [ mc:pinRole :CommonPinRole ; wokwi:name "COM" ] ;
     rdfs:comment "Three driven legs and a common return, which IS now modelled — a common cathode goes to ground and a common anode to a rail, and which one it is decides whether every colour comes out as itself or as its complement. That used to be a comment in a world file saying 'check before you solder'; a checker cannot read a comment." .
 
-rgbled:CommonPinRole a mc:PinRole ; rdfs:label "common" ;
+:CommonPinRole a mc:PinRole ; rdfs:label "common" ;
     rdfs:comment """The shared return of all three colours. Neither a ground nor a power leg, which is exactly why it is its own role and why Wokwi calls it COM: WHICH of the two it is, is the wire's business and not the part's. Tied to ground it is a common-cathode LED and a leg driven HIGH lights; tied to a rail it is common-anode and the logic inverts.
 
 Modelling it as ag:GroundPinRole was a small lie that only held for half the parts in the world, and it broke the moment a common-anode one was wired — the leg stopped being nameable at all, because the mapping was keyed on a role the part no longer had.""" .
 
-rgbled:RedPinRole a mc:OutputRole ; rdfs:label "red" .
-rgbled:GreenPinRole a mc:OutputRole ; rdfs:label "green" .
-rgbled:BluePinRole a mc:OutputRole ; rdfs:label "blue" .
+:RedPinRole a mc:OutputRole ; rdfs:label "red" .
+:GreenPinRole a mc:OutputRole ; rdfs:label "green" .
+:BluePinRole a mc:OutputRole ; rdfs:label "blue" .

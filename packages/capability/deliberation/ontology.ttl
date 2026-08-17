@@ -1,4 +1,5 @@
 @prefix deliberation: <http://example.org/agora/deliberation#> .
+@prefix : <http://example.org/agora/deliberation#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -19,12 +20,12 @@ See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.""" .
 #  behaviour before anything cleverer steps into it. `deliberation:Consulting` is the reason
 #  for the extraction and is deliberately unimplemented.
 
-deliberation:DeliberationCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+:DeliberationCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
     rdfs:label "Deliberation capability" ;
     rdfs:comment "The family. Anything that turns the gap and the standing commitments into the next move is one of these, so an acting module asks 'should I?' without knowing how the answer is reached — which is what lets the answerer be replaced without touching a line of the actors." .
 
-deliberation:Reflex a deliberation:DeliberationCapability ; rdfs:label "Reflex" ;
+:Reflex a :DeliberationCapability ; rdfs:label "Reflex" ;
     rdfs:comment "Answers from the gap's sign and nothing else: below the aim, acquire; cannot see, observe; otherwise nothing. The welded chain the bidder used to BE, now a member the bidder asks — extracted unchanged, so every round test that held before holds after. Granted by the same premise as intention:Keeping, because deciding and committing are meaningful under exactly the same conditions: a stake, and a lever to act on it." .
 
-deliberation:Consulting a deliberation:DeliberationCapability ; rdfs:label "Consulting" ;
+:Consulting a :DeliberationCapability ; rdfs:label "Consulting" ;
     rdfs:comment "The agent asks a model what next, over its beliefs, the T-Box, the gap and what already stands — one call emitting a move from THIS vocabulary's menu, never free text-to-action. RESERVED: declared because seating a model is the reason the family exists and the T-Box should say so; unimplemented because the seam had to demonstrably carry Reflex first. What it will NOT be allowed to do is already fixed: the bid number stays deterministic (the model picks whether and when, code computes how much), an intention it proposes validates against the same shapes or is not adopted, and the keeper's patience bounds how often it is consulted at all — which is what makes it affordable. See knowledge/decisions/llm-heavy-deliberation.md, as amended." .

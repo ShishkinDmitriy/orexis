@@ -1,4 +1,5 @@
 @prefix governed: <http://example.org/agora/firmware/moisture-sensor#> .
+@prefix : <http://example.org/agora/firmware/moisture-sensor#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix mc:   <http://example.org/agora/microcontroller#> .
@@ -33,7 +34,7 @@ Simulated devices run no firmware and never carry this type: ag:simulatedBy is t
 kind-statement, and a stand-in typed with a firmware class it does not run would be a new way
 to lie.""" .
 
-governed:Node a owl:Class ; rdfs:label "governed node" ;
+:Node a owl:Class ; rdfs:label "governed node" ;
     rdfs:subClassOf ag:Device ,
         #  The two facts every board of this kind shares, reaching each instance through the
         #  closure's hasValue rule — a datasheet fact, except the sheet is src/main.cpp:

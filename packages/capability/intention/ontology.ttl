@@ -1,4 +1,5 @@
 @prefix intention: <http://example.org/agora/intention#> .
+@prefix : <http://example.org/agora/intention#> .
 @prefix desire: <http://example.org/agora/desire#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
@@ -18,11 +19,11 @@ See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.""" .
 
 #################  The capability  #################
 
-intention:IntentionCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+:IntentionCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
     rdfs:label "Intention capability" ;
     rdfs:comment "The family. Anything that keeps this agent's commitments is one of these, so a sibling may say 'commit to this' and ask what stands without knowing how commitments are kept." .
 
-intention:Keeping a intention:IntentionCapability ; rdfs:label "Keeping" ;
+:Keeping a :IntentionCapability ; rdfs:label "Keeping" ;
     rdfs:comment "Keeps commitments by rule: a standing intention blocks re-adoption of the same one until it resolves or outlives the agent's patience. Granted by a STAKE AND A LEVER — acting for a subject that states needs, plus at least one way to act on them — because wanting without means and means without wants both leave nothing to commit to." .
 
 #################  Where intentions are kept  #################
@@ -34,35 +35,35 @@ intention:Keeping a intention:IntentionCapability ; rdfs:label "Keeping" ;
 
 #################  What an intention IS  #################
 
-intention:Intention a owl:Class ; rdfs:label "Intention" ;
+:Intention a owl:Class ; rdfs:label "Intention" ;
     rdfs:comment """One commitment: reduce the gap in one property, by one means, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
 
 The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason. A dropped intention keeps its `becauseOf`, because a commitment abandoned without a reason is indistinguishable from one forgotten.""" .
 
-intention:by a owl:ObjectProperty ; rdfs:domain intention:Intention ; rdfs:range intention:Means ;
+:by a owl:ObjectProperty ; rdfs:domain :Intention ; rdfs:range :Means ;
     rdfs:label "by" ;
     rdfs:comment "The kind of act committed to. A MEANS, not a plan: the how stays with whichever capability executes it." .
 
-intention:Means a owl:Class ; rdfs:label "Means" .
+:Means a owl:Class ; rdfs:label "Means" .
 
-intention:Observe a intention:Means ; rdfs:label "Observe" ;
+:Observe a :Means ; rdfs:label "Observe" ;
     rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .
 
-intention:Acquire a intention:Means ; rdfs:label "Acquire" ;
+:Acquire a :Means ; rdfs:label "Acquire" ;
     rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the claim, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
 
-intention:Apply a intention:Means ; rdfs:label "Apply" ;
+:Apply a :Means ; rdfs:label "Apply" ;
     rdfs:comment "Spend a held claim against the world. REAL since #132, and earlier than the futures market this was reserved for — because the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy: never spend a dose you cannot watch land. Adopted when the claim arrives, standing while the holder waits for its watch to be live (the #135 ack at the fast cadence, or the bounded wait), satisfied when the claim is presented on the market's redeem channel. The expectation on the end opens HERE rather than at the claim, because this is when the dose becomes imminent. The futures seam now merely extends the holding period this gave a mechanism to." .
 
-intention:adoptedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+:adoptedAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "adopted at" .
-intention:resolvedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+:resolvedAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "resolved at" ;
     rdfs:comment "Absent while the intention stands. Its absence IS the standing state — no flag to keep in step." .
-intention:outcome a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:string ;
+:outcome a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:string ;
     rdfs:label "outcome" ;
     rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
-intention:becauseOf a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:string ;
+:becauseOf a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:string ;
     rdfs:label "because of" ;
     rdfs:comment "Why it was adopted, and — appended on resolution — why it ended. Prose for the operator reading a ledger, never parsed." .
 
@@ -80,38 +81,38 @@ intention:becauseOf a owl:DatatypeProperty ; rdfs:domain intention:Intention ; r
 #  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
 #  said this lever moves this property, and the world kept disagreeing.
 
-intention:expectsValueTo a owl:ObjectProperty ; rdfs:domain intention:Intention ;
+:expectsValueTo a owl:ObjectProperty ; rdfs:domain :Intention ;
     rdfs:label "expects value to" ;
     rdfs:comment "Which way the property should move if the act did what the graph claims — a market:Direction individual, copied from the lever's own statement at expectation time so the row is judgeable without a join to a vocabulary that may since have been amended." .
-intention:baselineValue a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:decimal ;
+:baselineValue a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:decimal ;
     rdfs:label "baseline value" ;
     rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
-intention:baselineAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+:baselineAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "baseline at" .
-intention:deadlineAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+:deadlineAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "deadline at" ;
     rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
-intention:expectsDelta a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:decimal ;
+:expectsDelta a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:decimal ;
     rdfs:label "expects delta" ;
     rdfs:comment "How far the act should move the property, when the actor can say — a dose of known litres through the domain's stated conversion. What the met-verdict measures its margin against (#165): a movement is the world answering only when it is commensurate with the act, and a breath of instrument grain past the baseline is not. Optional, because not every act can size its own effect; absent, the verdict falls back to exact crossing, which is the pre-noise behaviour and stays legal." .
 
-intention:metFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+:metFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "met fraction" ;
     rdfs:comment "The fraction of an expected delta that counts as the world answering (#165). On the family, like suspectAfter: what this society accepts as evidence, not how the code is written. A quarter — generous to partially-absorbed doses, far above any instrument's grain. Chosen against the OTHER failure too: a margin so strict that honest doses read unmet would feed suspectAfter and mark truthful affordances false." .
 
-intention:IntentionCapability intention:metFraction 0.25 .
+:IntentionCapability :metFraction 0.25 .
 
-intention:endMet a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:boolean ;
+:endMet a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:boolean ;
     rdfs:label "end met" ;
     rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline — and, where the row states an expectsDelta, past it by at least metFraction of that delta (#165) — or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
-intention:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain intention:Intention ; rdfs:range xsd:dateTime ;
+:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "end verified at" .
 
-intention:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "suspect after" ;
     rdfs:comment "How many consecutive unmet expectations for one (means, property) pair make the affordance suspect. On the family, like the patience bounds: a fact about what this society tolerates before it stops trusting a claim, not about how the code is written." .
 
-intention:IntentionCapability intention:suspectAfter 3 .
+:IntentionCapability :suspectAfter 3 .
 
 #################  The commitment policy — a belief, bounded here  #################
 #
@@ -120,13 +121,13 @@ intention:IntentionCapability intention:suspectAfter 3 .
 #  an agent that re-decides every second has retired the whole point of committing, and one that
 #  never reconsiders will honour a dead commitment forever.
 
-intention:patienceS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:patienceS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "patience seconds" ;
     rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second impulse to do the same thing is ABSORBED — that is the amortisation, and with an LLM deliberator it is the cost model. Past it, a new adoption supersedes the old, which is recorded as dropped with the reason." .
 
-intention:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "minimum patience" .
-intention:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "maximum patience" .
 
-intention:IntentionCapability intention:minPatienceS 10 ; intention:maxPatienceS 86400 .
+:IntentionCapability :minPatienceS 10 ; :maxPatienceS 86400 .

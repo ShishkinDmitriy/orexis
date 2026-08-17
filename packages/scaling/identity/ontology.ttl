@@ -3,6 +3,7 @@
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:         <http://www.w3.org/2002/07/owl#> .
 @prefix scaling: <http://example.org/agora/scaling#> .
+@prefix : <http://example.org/agora/scaling#> .
 
 <http://example.org/agora/scaling> a owl:Ontology ;
     rdfs:label "Agora scalings" ;
@@ -10,20 +11,20 @@
 
 #################  The family  #################
 
-scaling:Scaling a owl:Class ; rdfs:label "Scaling" ;
+:Scaling a owl:Class ; rdfs:label "Scaling" ;
     rdfs:comment "One way of turning what a device reported into what it means. A family because a curve is per-DEVICE and not per-model: two probes of one part number in different soil do not share one, which is the test for a family rather than a constant." .
 
-scaling:curve a owl:ObjectProperty ; rdfs:range scaling:Scaling ;
+:curve a owl:ObjectProperty ; rdfs:range :Scaling ;
     rdfs:label "curve" ;
     rdfs:comment "THE PREMISE, stated by the world: which curve this device's raw values follow. ABSENT means scaling:Identity, which is what every sensor here relies on today because the firmware scales before it publishes — so no shipped world states one." .
 
-scaling:scaledBy a owl:ObjectProperty ; rdfs:range scaling:Scaling ;
+:scaledBy a owl:ObjectProperty ; rdfs:range :Scaling ;
     rdfs:label "scaled by" ;
     rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which scaling actually serves this sensor. A world states the curve a probe follows; genesis writes down what serves it. The same premise-and-conclusion discipline as sensing:senseMode and ag:hasCapability, applied to a fact borne by a binding rather than by an agent." .
 
 #################  The unit  #################
 
-scaling:quantityUnit a owl:ObjectProperty ;
+:quantityUnit a owl:ObjectProperty ;
     rdfs:label "quantity unit" ;
     rdfs:comment """What unit the quantity coming out of the scaling is in. The object is a QUDT unit IRI — `unit:DEG_C`, `unit:UNITLESS` — because SOSA deliberately defines no units and names QUDT as one of the vocabularies to reach for, so this is the standard companion to the vocabulary already in use here.
 
@@ -33,11 +34,11 @@ Stating this converts nothing and is not meant to. Every number in the store is 
 
 #################  The members  #################
 
-scaling:Identity a scaling:Scaling ; rdfs:label "Identity" ;
+:Identity a :Scaling ; rdfs:label "Identity" ;
     rdfs:comment "The quantity is the raw value. The default, the only implemented member, and NOT a placeholder: the firmware scales counts to a fraction before it publishes, so from the agent's side the scaling genuinely is the identity function. The stage is not missing here — it is set to identity, which is a different and honest thing to say. What its sensor still owes is the UNIT: identity does not mean dimensionless." .
 
-scaling:Linear a scaling:Scaling ; rdfs:label "Linear" ;
+:Linear a :Scaling ; rdfs:label "Linear" ;
     rdfs:comment "Declared, unimplemented. A gain and an offset — the ordinary answer for an analogue probe read through an ADC, and what issue #26 would need first. Its arrival is the interesting moment rather than the code: the moment a curve lives in the agent instead of compiled into C, it stops being a constant and becomes a BELIEF, which is a thing an agent may hold within stated bounds and re-pick as a probe drifts. That is why moving this work off the board is worth more than the arithmetic suggests." .
 
-scaling:TwoPoint a scaling:Scaling ; rdfs:label "Two-point" ;
+:TwoPoint a :Scaling ; rdfs:label "Two-point" ;
     rdfs:comment "Declared, unimplemented. Calibration from two measured references — dry air and water, for a soil probe — rather than from a gain and an offset someone wrote down. The standard field procedure, and the one that makes recalibration something an agent could be walked through rather than a firmware change." .

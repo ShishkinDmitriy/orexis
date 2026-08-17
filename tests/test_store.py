@@ -246,3 +246,40 @@ def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
         "packages/core/agora declares no such term — whichever package owns it has a namespace "
         "of its own, and this pattern will match nothing rather than fail"
     )
+
+
+def test_an_ontology_gives_its_own_terms_the_default_prefix():
+    """#179: inside an ontology, an unprefixed term is the file's own and a prefixed one is
+    borrowed — which is the more useful thing for a prefix to say than restating the file's
+    identity on every line. Two declarations per file, and both are load-bearing: the empty
+    prefix carries the convention, and the NAMED one is what `loader.prefixes()` discovers
+    (its regex requires a label), so a query can still say `bme280:` for a namespace the
+    store never listed. Checked for every ontology that declares itself, so the next package
+    follows by failing until it does."""
+    import re
+
+    import rdflib
+
+    from agent import loader
+
+    checked = 0
+    for path in loader.ontology_files():
+        text = path.read_text()
+        g = rdflib.Graph()
+        g.parse(data=text, format="turtle")
+        onts = list(g.subjects(rdflib.RDF.type, rdflib.OWL.Ontology))
+        if len(onts) != 1:
+            continue
+        if str(onts[0]) == "http://example.org/agora/core":
+            # The kernel is the deliberate exception: ag: is the one namespace every world
+            # and every package speaks, so 'unprefixed means mine' would be a false signal —
+            # and the kernel-term census two tests up reads its spellings as written.
+            continue
+        own = re.search(r"^@prefix : <([^>]+)>", text, re.M)
+        assert own, f"{path} declares no default prefix for its own namespace"
+        assert re.search(
+            rf"^@prefix [A-Za-z][\w.-]*:\s+<{re.escape(own.group(1))}>", text, re.M), (
+            f"{path} must keep a NAMED declaration of <{own.group(1)}> beside the default "
+            "one — the loader's discovery reads labels, and a query needs a name to use")
+        checked += 1
+    assert checked >= 20, f"only {checked} ontologies checked — the glob has gone quiet"

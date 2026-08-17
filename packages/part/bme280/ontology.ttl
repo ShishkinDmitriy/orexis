@@ -4,6 +4,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix bme280: <http://example.org/agora/bme280#> .
+@prefix : <http://example.org/agora/bme280#> .
 @prefix i2c:  <http://example.org/agora/i2c#> .
 @prefix mc:   <http://example.org/agora/microcontroller#> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
@@ -16,7 +17,7 @@
 
 Structured exactly as the DHT11 package — the worked example this repository says to copy — one part class, sub-sensors named for what they are, datasheet facts on the class reaching every unit by entailment. Three sub-sensors, because this frame answers one burst read with three values taken together: a message is a measurement, exactly as the DHT's two-value frame taught.""" .
 
-bme280:Bme280 a owl:Class ;
+:Bme280 a owl:Class ;
     mc:modelName "Bosch BME280 (GY-BME280 breakout)" ; rdfs:subClassOf mc:Peripheral ;
     rdfs:label "BME280" ;
     rdfs:comment "Four legs on the common breakout: I2C data and clock, power and ground. The BARE part is 1.71-3.6V and not 5V-tolerant — the inverse of the DHT11's trap, which survives 5V and then presents it to a pin that cannot take it; most purple GY-BME280 breakouts carry a regulator and level shifting that forgive the mistake, and 'most' is not a datasheet word, so wire it for 3.3V and owe nobody an apology. I2C address 0x76 or 0x77 by the SDO strap, which matters the day two share a bus. No wokwi:part mapping yet, deliberately: the drawing generator will refuse to draw a world carrying one, which is the loud version of not having checked what wokwi calls it." .
@@ -26,22 +27,22 @@ bme280:Bme280 a owl:Class ;
 # Three sensors under one frame, ssn:hasSubSystem someValuesFrom as the DHT11 explains at
 # length: the world names each unit's three, this says what they must be.
 
-bme280:TemperatureSensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
+:TemperatureSensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
     rdfs:label "BME280 temperature sensor" ;
     rdfs:comment "Measured primarily to compensate the other two — Bosch's own note — and honest ambient temperature all the same, with the caveat that the die self-heats a little when oversampling hard." .
 
-bme280:HumiditySensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
+:HumiditySensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
     rdfs:label "BME280 humidity sensor" ;
     rdfs:comment "The full 0-100 percent span the DHT11 lacks, non-condensing. Long exposure to saturation drifts it and Bosch documents a reconditioning bake — outdoors, in a shield, that is a maintenance fact worth knowing before winter." .
 
-bme280:PressureSensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
+:PressureSensor a owl:Class ; rdfs:subClassOf sosa:Sensor , ssn:System ;
     rdfs:label "BME280 pressure sensor" ;
     rdfs:comment "The third value in the same frame. No world observes pressure yet and no domain property names it — stated here because the part reports it whether or not anyone listens, and the day a domain wants weather, the channel is waiting." .
 
-bme280:Bme280 rdfs:subClassOf
-    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom bme280:TemperatureSensor ] ,
-    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom bme280:HumiditySensor ] ,
-    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom bme280:PressureSensor ] .
+:Bme280 rdfs:subClassOf
+    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom :TemperatureSensor ] ,
+    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom :HumiditySensor ] ,
+    [ a owl:Restriction ; owl:onProperty ssn:hasSubSystem ; owl:someValuesFrom :PressureSensor ] .
 
 #################  Legs  #################
 #
@@ -57,23 +58,23 @@ bme280:Bme280 rdfs:subClassOf
 # well under the society's own ten seconds, like the DHT11's two — it binds nothing today and
 # says so honestly.
 
-bme280:Bme280 rdfs:seeAlso <https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf> .
+:Bme280 rdfs:seeAlso <https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf> .
 
-bme280:Bme280 rdfs:subClassOf [
+:Bme280 rdfs:subClassOf [
     a owl:Restriction ;
     owl:onProperty ssn-system:hasSystemCapability ;
-    owl:hasValue bme280:ForcedModeCapability ] .
+    owl:hasValue :ForcedModeCapability ] .
 
-bme280:ForcedModeCapability a ssn-system:SystemCapability ;
+:ForcedModeCapability a ssn-system:SystemCapability ;
     rdfs:label "BME280 sampling capability, forced mode" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "forced mode, full oversampling" ] ;
     ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] .
 
-bme280:TemperatureSensor rdfs:subClassOf
+:TemperatureSensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn-system:hasSystemCapability ;
-      owl:hasValue bme280:TemperatureSensorCapability ] .
+      owl:hasValue :TemperatureSensorCapability ] .
 
-bme280:TemperatureSensorCapability a ssn-system:SystemCapability ;
+:TemperatureSensorCapability a ssn-system:SystemCapability ;
     rdfs:label "BME280 temperature sensor capability" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
     ssn-system:hasSystemProperty
@@ -84,11 +85,11 @@ bme280:TemperatureSensorCapability a ssn-system:SystemCapability ;
         [ a ssn-system:Resolution , schema:PropertyValue ;
           schema:value 0.01 ; schema:unitCode unit:DEG_C ] .
 
-bme280:HumiditySensor rdfs:subClassOf
+:HumiditySensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn-system:hasSystemCapability ;
-      owl:hasValue bme280:HumiditySensorCapability ] .
+      owl:hasValue :HumiditySensorCapability ] .
 
-bme280:HumiditySensorCapability a ssn-system:SystemCapability ;
+:HumiditySensorCapability a ssn-system:SystemCapability ;
     rdfs:label "BME280 humidity sensor capability" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation, non-condensing" ] ;
     ssn-system:hasSystemProperty
@@ -99,11 +100,11 @@ bme280:HumiditySensorCapability a ssn-system:SystemCapability ;
         [ a ssn-system:Resolution , schema:PropertyValue ;
           schema:value 0.008 ; schema:unitCode unit:PERCENT ] .
 
-bme280:PressureSensor rdfs:subClassOf
+:PressureSensor rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn-system:hasSystemCapability ;
-      owl:hasValue bme280:PressureSensorCapability ] .
+      owl:hasValue :PressureSensorCapability ] .
 
-bme280:PressureSensorCapability a ssn-system:SystemCapability ;
+:PressureSensorCapability a ssn-system:SystemCapability ;
     rdfs:label "BME280 pressure sensor capability" ;
     ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
     ssn-system:hasSystemProperty
