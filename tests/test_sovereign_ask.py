@@ -8,8 +8,6 @@ cannot execute an update.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from agent import sovereign
@@ -31,7 +29,10 @@ def _answer(agent):
     replies = agent.sent.to(sovereign.result_topic(agent.id))
     assert replies, "the agent must answer on its own result topic"
     raw = replies[-1]
-    return json.loads(raw) if isinstance(raw, (str, bytes)) else raw
+    assert isinstance(raw, dict), (
+        "the answer must be handed to Agent.publish as a DICT — publish serialises, and a "
+        "pre-dumped string double-encodes (found by the first live agora-ask)")
+    return raw
 
 
 def test_a_select_is_answered_from_the_live_store(fern):

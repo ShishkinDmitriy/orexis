@@ -17,8 +17,6 @@ Vocabulary: capabilities/reporting/ontology.ttl. Rules: capabilities/reporting/r
 
 from __future__ import annotations
 
-import json
-
 from agent import config, sovereign
 from agent.metrics import tree_bytes
 from agent.module import Module, Timer
@@ -67,8 +65,9 @@ class StoringModule(Module):
             # refusal is the engine's, not a filter that could rot. The error goes back —
             # a silent drop would leave the sovereign staring at a timeout.
             answer = {"error": str(exc)}
-        self.agent.publish(sovereign.result_topic(self.agent.id),
-                           json.dumps(answer, ensure_ascii=False))
+        # The dict itself: Agent.publish serialises, and pre-dumping here double-encoded
+        # the answer into a JSON string OF a JSON string — found by the first live ask.
+        self.agent.publish(sovereign.result_topic(self.agent.id), answer)
         self.log.info("answered the sovereign: %s", "error" if "error" in answer
                       else f"{len(answer['rows'])} row(s)")
         return True
