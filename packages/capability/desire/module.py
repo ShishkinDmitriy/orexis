@@ -363,4 +363,16 @@ class DesireModule(Module):
         out["desires_measured"] = len(current)
         if current:
             out["worst_gap"] = round(max(abs(g.gap) for g in current.values()), 3)
+        # WHERE the want sits, not merely that it exists (#61's argument, extended from the
+        # revisable picks to the deduced regions): the region is public and the aim answers to
+        # it, and both go into this agent's OWN bucket — the operator sees them, rivals do not.
+        # A region that quietly moved (a world amended, an instrument narrowed) and an aim
+        # drifting inside it are exactly the lines a sovereign wants over time.
+        for prop, region in sorted(self.regions.items()):
+            local = prop.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+            out[f"desired_low_{local}"] = region.low
+            out[f"desired_high_{local}"] = region.high
+            aim = self.aim(prop)
+            if aim is not None:
+                out[f"aim_{local}"] = aim
         return out

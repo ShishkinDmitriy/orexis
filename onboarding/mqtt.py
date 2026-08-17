@@ -51,7 +51,7 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from agent import ratified
+from agent import ratified, sovereign
 
 from . import certs
 from agent.config import REPO_ROOT
@@ -268,6 +268,17 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
     for row in ratified.rows(ds, _ACTUATES_Q):
         agent(row["id"]).may(WRITE, row["commandTopic"])
 
+    # The sovereign's question channel (agent/sovereign.py): one principal per world, never
+    # mounted into any agent container, may ask each agent and hear each answer — and each
+    # agent may hear only its own questions and answer only on its own channel. Explicit
+    # topic pairs rather than wildcards, in this file's own idiom: silence is not permission.
+    asker = devices.setdefault(sovereign.SOVEREIGN, Principal(sovereign.SOVEREIGN))
+    for agent_id in sorted(agents):
+        asker.may(WRITE, sovereign.query_topic(agent_id))
+        asker.may(READ, sovereign.result_topic(agent_id))
+        agents[agent_id].may(READ, sovereign.query_topic(agent_id))
+        agents[agent_id].may(WRITE, sovereign.result_topic(agent_id))
+
     for row in ratified.rows(ds, _DEVICES_Q):
         if row["id"] in agents:
             continue  # an agent and a device may not share a name; the world says which it is
@@ -377,8 +388,10 @@ def provision(world: str, rotate: bool = False) -> None:
         # NOT rotated with the world: a device credential is flashed into a board, and rotating
         # it here would silently strand hardware that is not in front of you.
         fresh = not path.exists()
-        _credential(path, principal.username, f"device {device_id} — flashed into the board",
-                    rotate=False)
+        what = ("the sovereign's question channel — held on the host, never mounted into any "
+                "agent container" if device_id == sovereign.SOVEREIGN
+                else f"device {device_id} — flashed into the board")
+        _credential(path, principal.username, what, rotate=False)
         log.info("  device %-14s %-28s %2d grants%s", device_id, principal.username,
                  len(principal.grants), "  (new — reflash the board)" if fresh else "")
 

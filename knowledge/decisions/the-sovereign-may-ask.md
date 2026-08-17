@@ -1,0 +1,63 @@
+---
+type: Decision
+title: The sovereign may ask, and the agent answers about itself
+description: Observe-via-sovereign made mechanism — one SPARQL question per message, over the
+  world's own bus, gated to a single principal by the broker ACL, answered by the agent from
+  its live store across everything it holds. Disclosure, not access; read-only by
+  construction, because the engine's query API structurally cannot execute an update.
+---
+
+# The sovereign may ask, and the agent answers about itself
+
+[agent-centric-epistemics](/decisions/agent-centric-epistemics.md) has said "observe via
+sovereign" since the founding records. This is the via: `agora-ask <world> <agent> '<SPARQL>'`
+publishes the question on `agents/<id>/sovereign/query`, the agent answers on its result
+topic, and the broker's ACL is the whole of the admission control — a `sovereign` principal
+per world, minted by `agora-mqtt` like every other credential, held in the world's secrets
+directory and **never mounted into any container**.
+
+Three properties carry the design:
+
+- **Disclosure, not access.** No shared store returns; no volume is opened around a lock; no
+  isolation boundary grows a hole. The belief base stays the agent's, in its own volume,
+  reachable by nothing — what exists is a question one principal may put and a voluntary
+  answer the agent composes from its own store. The distinction is the same one the ladder
+  record drew for pumps: possession of a channel is not authority over the store behind it.
+- **Read-only by construction, not by filter.** The responder (in reporting — saying how you
+  are and answering what you believe are one capability's two voices) runs the store's query
+  API, and pyoxigraph's `query` structurally cannot execute an update: an INSERT arrives,
+  raises in the engine, and the error is the answer. There is no allowlist to rot.
+- **The answer spans the WHOLE agent.** An ordinary query reads public knowledge; the
+  sovereign asks about beliefs, the record, evidence, revisions — so the responder reads with
+  the default graph as the union of everything the store holds (`Store.query_union`, added
+  for exactly this one caller). Making the sovereign spell private graph IRIs would be rule
+  1's own trap: a graph IRI is an instance.
+
+The topic pair is the one channel an agent listens on that the world does not state
+(`agent/sovereign.py` is its single source, imported by both the ACL generator and the
+responder): it is not the society's business — no agent may hear another's questions or speak
+on another's answers, which the generated grants say explicitly, in the ACL's own idiom of
+silence-is-not-permission.
+
+Alongside, the passive half strengthened the same way (#61's argument extended from the
+revisable picks to the wants): the deduced region and the aim per property now reach the
+agent's own series bucket — `desired_low_*`, `desired_high_*`, `aim_*` — so a region that
+quietly moved and an aim drifting inside it are visible lines without a question asked.
+
+**Found while testing**: the store's engine errors on decimal division when the dividend is
+zero, so `gap.rq` had always lost its `?gap` for an agent sitting exactly at its region's
+centre — perfectly content, and unable to say so. Short-circuited in the query with the
+measurement recorded in its comment.
+
+# Seams left open
+
+- **No signature on the question.** The ACL is the admission control; a signed question
+  (verifiable by the agent like an actuator verifies a claim) would defend against a
+  compromised broker, and belongs with the same hardening pass as revocation
+  ([#28](https://github.com/ShishkinDmitriy/agora/issues/28),
+  [#29](https://github.com/ShishkinDmitriy/agora/issues/29)).
+- **Answers are capped, not paged.** A truncated answer says how many rows matched; a
+  sovereign who wants a million rows has the volume, offline.
+- **One agent per question.** A fan-out ("ask every agent") is a loop in the CLI the day it
+  is wanted, not a broadcast topic — a broadcast would be a channel every agent shares, and
+  the per-agent pair is what keeps the grants exact.

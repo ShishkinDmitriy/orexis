@@ -178,3 +178,18 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
     assert ok
     assert "survival envelope" not in report, \
         "merely dry is the society's ordinary working state, not a warning"
+
+
+def test_the_region_and_the_aim_reach_the_agents_own_bucket(monkeypatch):
+    """#61's argument extended from the revisable picks to the wants: WHERE the want sits, not
+    merely that it exists. The deduced region and the aim inside it go into this agent's own
+    series — the operator sees them, rivals do not — so a region that quietly moved (a world
+    amended, an instrument narrowed) and an aim drifting inside it are visible lines."""
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    desire = next(m for m in fern.modules if m.name == "desire")
+    out = desire.reports()
+    assert out["desired_low_SoilMoisture"] == 0.45
+    assert out["desired_high_SoilMoisture"] == 0.65
+    assert out["aim_SoilMoisture"] == 0.55
+    assert out["desired_low_AirTemperature"] == 18.0
+    assert out["desired_high_AirTemperature"] == 24.0
