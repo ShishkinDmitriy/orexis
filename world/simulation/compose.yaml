@@ -58,14 +58,15 @@ services:
       SIM_READING_TOPIC: "sensors/barrel1_level/reading"
       # What this board reports and where each value goes in its one message. A part that
       # reports two properties down one line is a list of two; a probe is a list of one.
-      SIM_VALUES: '[{"pointer":"/value","min":0.0,"max":5.0,"initial":3.0,"litres":-1.0}]'
+      SIM_VALUES: '[{"pointer":"/value","min":0.0,"max":5.0,"initial":3.0,"litres":1.0,"drains":-1.0}]'
       # sensing:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
       # sensing:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
       # from the same fact and never learns which side of it this is.
       SIM_SENSE_MODE: "push"
       MQTT_HOST: "localhost"
       MQTT_PORT: "1885"
-      SIM_DOSE_TOPIC: "actuators/valve_fern/status,actuators/valve_succulent/status,actuators/valve_tomato/status"
+      SIM_DOSE_TOPIC: "actuators/city_valve/status"
+      SIM_DRAIN_TOPIC: "actuators/valve_fern/status,actuators/valve_succulent/status,actuators/valve_tomato/status"
       SIM_TICK_SECONDS: "30"
       SIM_TIMESCALE: "144"
       SIM_ALARM_PERSIST_LOOKS: "2"
@@ -169,6 +170,34 @@ services:
     network_mode: host
     restart: unless-stopped
 
+  valve-city_valve:
+    build:
+      # its own directory: the repo root is excluded from image contexts, and firmware must not
+      # carry the agent any more than the agent carries firmware
+      context: ../../firmware/simulated-valve
+    image: agora-valve:local
+    environment:
+      VALVE_ID: "city_valve"
+      VALVE_COMMAND_TOPIC: "actuators/city_valve/command"
+      VALVE_STATUS_TOPIC: "actuators/city_valve/status"
+      VALVE_ML_PER_SECOND: "50"
+      VALVE_MAX_DOSE_ML: "5000"
+      # public halves only — it verifies, it never signs
+      VALVE_HOST_PUB: "/keys/host.pub"
+      VALVE_CLEARING_PUB: "/keys/clearing.pub"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1885"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a real valve's would be
+      - ./secrets/mqtt-city_valve.env
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      # the PUBLIC keys, and nothing else from secrets/. A stand-in that could reach host.key
+      # could sign for the society, and then verifying would be theatre.
+      - ./secrets/host.pub:/keys/host.pub:ro
+      - ./secrets/clearing.pub:/keys/clearing.pub:ro
+
   valve-valve_fern:
     build:
       # its own directory: the repo root is excluded from image contexts, and firmware must not
@@ -267,6 +296,61 @@ services:
       - ./secrets/mqtt-meddler.env
     network_mode: host
     restart: unless-stopped
+
+  agent-city:
+    image: agora:local
+    command: ["agora-agent"]
+    environment:
+      AGORA_AGENT_ID: "city"
+      # Where to keep its belief base. A named volume, because beliefs must survive a
+      # restart — otherwise every start would be a partial re-birth.
+      AGORA_STORE: "/app/state"
+      # the ratified world, mounted below. The agent reads files, not a service.
+      AGORA_WORLD_DIR: "/app/world"
+      # Where the three files mounted below live. The agent connects with the certificate when
+      # the world states a TLS port and it holds one.
+      MQTT_CERT: "/app/world/secrets/agent.crt"
+      MQTT_KEY: "/app/world/secrets/agent.key"
+      MQTT_CA: "/app/world/secrets/ca.crt"
+    env_file:
+      # where the series store is, and the org — safe for every agent to hold
+      - ../../infra/.env
+      # this agent's own bucket and a token that opens only it, and its own broker
+      # credential. Minted by `agora-influx` and `agora-mqtt` from this world; mounted into
+      # THIS container and no other, which is what makes the isolation structural rather
+      # than a promise. Run both tools before `up`, or these files do not exist.
+      - ./secrets/influx-city.env
+      - ./secrets/mqtt-city.env
+    network_mode: host
+    # Rootless podman maps YOUR uid into the container; without this the agent lands on a
+    # subuid that cannot write its own belief-base volume. Map it onto the image's user.
+    userns_mode: "keep-id:uid=10001,gid=10001"
+    restart: unless-stopped
+    volumes:
+      # its own belief base, and nobody else can name it
+      - agora-simulation-city:/app/state
+      # the ratified world, at a fixed path — so the agent is told only its own id and never
+      # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
+      # agent has no business reading what anyone else was authored to want.
+      - ./keys.ttl:/app/world/keys.ttl:ro
+      - ./world.ttl:/app/world/world.ttl:ro
+      - ./beliefs/city.ttl:/app/world/beliefs/city.ttl:ro
+      # Its own certificate and nothing else — the same rule as the beliefs above. The private
+      # key is the whole of its identity on the bus, so a neighbour's must be unreachable.
+      # ca.crt is THIS WORLD'S authority — what it needs to verify its own broker. The same
+      # authority vouches for both ends, which is what makes a world self-contained.
+      - ./secrets/city.crt:/app/world/secrets/agent.crt:ro
+      - ./secrets/city.key:/app/world/secrets/agent.key:ro
+      - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro
+      # it actuates, so it co-signs — these two keys and nothing else
+      - ./secrets/host.key:/app/world/secrets/host.key:ro
+      - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
+      # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
+      # ride along with it. Their old root paths survived as empty husks — git does not track
+      # an empty directory, so `git mv` left them behind and mounting them silently succeeded.
+      - ../../vocabulary:/app/vocabulary:ro
+      - ../../agent:/app/agent:ro
 
   agent-fern:
     image: agora:local
@@ -489,6 +573,7 @@ services:
 
 volumes:
   agora-simulation-mosquitto:
+  agora-simulation-city:
   agora-simulation-fern:
   agora-simulation-succulent:
   agora-simulation-supplier:

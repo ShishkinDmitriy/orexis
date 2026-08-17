@@ -72,6 +72,15 @@ honestly lives. So the domain states `market:aboutProperty` on the desire term i
 follows it from a term it already names, and the market stays a lot. See
 [one-agent-many-sensors](../decisions/one-agent-many-sensors.md).
 
+What a venue DOES state, since #198, is its **good** — `market:Good`, reached as
+`marketFor/supplies`, the source's class saying what flows out of it. That is not the
+rejected model returning: a good is what changes hands (water, a time slot, a right of way —
+still declarable when no instrument measures anything), where the rejected model put the
+buyer's *property* on the venue. The good is the join point the property-shaped stakes hang
+off — one good, a valuation per kind of recipient (a litre raises a pot's moisture and a
+barrel's stock), and every denomination join closes through it. See
+[the-lot-states-its-good](/decisions/the-lot-states-its-good.md).
+
 # Who hosts — the scarce side of the *good*
 
 The scarce (short) side of the **good** hosts (short-side principle): v1 = the supplier

@@ -343,11 +343,14 @@ def test_a_peripheral_inherits_its_boards_clock():
 
 
 
-def test_the_barrel_stands_in_with_its_one_statement_ceiling():
-    """Arc 1's generation, end to end: the level stand-in drains (litres -1.0 from the
-    model's stated dose effect), its ceiling arrives ENTAILED from water:capacityL (the
-    subject's one statement — restating 5.0 on the model would be the #164 copy), it hears
-    every valve that draws from its barrel, and the drain-topic join multiplies no specs."""
+def test_the_barrel_stands_in_on_both_sides_of_the_wire():
+    """Arcs 1 and 4 in one generation: the level stand-in DRAINS on every valve that draws
+    from its barrel (drains -1.0, the class-entailed dose effect) and FILLS on the city's
+    valve (litres 1.0, litres-per-stored-litre through the same denomination join a pot's
+    conversion rides), its ceiling arrives ENTAILED from water:capacityL (the subject's one
+    statement — restating 5.0 on the model would be the #164 copy), and neither topic join
+    multiplies specs. The two conversions are two KEYS now: one signed number carried both
+    while no subject was ever on both sides at once, and the barrel is."""
     import json
 
     from agent import ratified
@@ -356,12 +359,20 @@ def test_the_barrel_stands_in_with_its_one_statement_ceiling():
     rows = [r for r in ratified.rows(ratified.dataset("simulation"), _SIMULATED_Q)
             if r["id"] == "barrel1_level"]
     values = json.loads(_values(rows))
-    assert len(values) == 1, "three drain topics must not become three values"
+    assert len(values) == 1, "four valve topics must not become four values"
     level = values[0]
-    assert level["litres"] == -1.0, "a dispensed litre lowers the source that gave it"
+    assert level["drains"] == -1.0, "a dispensed litre lowers the source that gave it"
+    assert level["litres"] == 1.0, "a bought litre raises it — conservation's mirror, entailed"
     assert level["max"] == 5.0, "the ceiling is water:capacityL, entailed — one statement"
     assert level["initial"] == 3.0 and level["min"] == 0.0
 
     service = _simulator("simulation", rows)
     assert service.count("actuators/valve_") == 3, "it hears every valve drawing from it"
+    assert "actuators/city_valve/status" in service, "and the one that fills it"
+    # The sides must not blur: the drain set carries the plant valves, the dose set the city's.
+    import re
+    drain_line = re.search(r'SIM_DRAIN_TOPIC: "([^"]*)"', service).group(1)
+    dose_line = re.search(r'SIM_DOSE_TOPIC: "([^"]*)"', service).group(1)
+    assert drain_line.count("valve_") == 3 and "city_valve" not in drain_line
+    assert dose_line == "actuators/city_valve/status"
     assert 'SIM_SENSE_MODE: "push"' in service, "a level announces; it is not commanded"

@@ -10,11 +10,13 @@
 @prefix water: <http://example.org/agora/water#> .
 @prefix intention: <http://example.org/agora/intention#> .
 
-#  The supplier's PRIVATE beliefs — its terms as a genuine seller, not a stake-free utility.
+#  The supplier's PRIVATE beliefs — the DEALER's terms: a genuine seller downstream, a genuine
+#  buyer upstream, and the barrel between them.
 #
-#  It composed market:Hosting, actuation:Actuation and — since the barrel learned to run dry —
-#  sensing:Listening, so only those modules' terms appear. There is no target here and no
-#  cadence: it wants nothing watered, and the one thing it perceives announces on its own clock.
+#  It composed market:Hosting, actuation:Actuation, sensing:Listening (arc 1), the stake
+#  quartet desire/intention/deliberation (arc 2) and — since the city exists — market:Bidding
+#  (arc 4), so those modules' terms appear and no others. There is still no cadence: the one
+#  thing it perceives announces on its own clock.
 
 ##  market:Hosting — how it runs a round
 :supplier
@@ -37,14 +39,30 @@
 #   a listener states is how long it waits before calling the thing gone quiet.
 ##  intention — demanded the moment the stake met the valves it already held: a keeper of
 #   commitments states its patience. Long, because a merchant's commitments are rounds, not
-#   twitches — and until the refill arc its reflex can propose nothing anyway (StoredLitres
-#   has no stated direction, and the reflex refuses to guess).
+#   twitches. Its reflex proposes now (arc 4): the refill venue carries a direction for
+#   StoredLitres, so a stock below the aim is an ACQUIRE — the same four lines that move a
+#   fern, one level up the supply chain.
 :supplier intention:patienceS 300 .
 
 ##  desire — the pick inside the region the barrel states (arc 2). Three litres: enough
 #   slack to serve several rounds, comfortably above the stated reserve. Private where the
 #   region is public, exactly as a fern's aim is.
 :supplier desire:aims [ ssn:forProperty water:StoredLitres ; schema:value 3.0 ] .
+
+##  market:Bidding — the DEALER's buy side (arc 4). Derived, not declared: the city's pipe
+#   reaches its barrel and the barrel states a need in StoredLitres, so participation in the
+#   refill market follows from the wiring. What only this file says is its terms as a BUYER:
+#   the wallet it brings upstream, its conversion belief (identically 1.0 by conservation —
+#   the entailed physics say so of the barrel, and this is the agent's own copy, the one it
+#   would revise if it learned the barrel leaks), and its buy ceiling. THE SPREAD IS THE
+#   DEALER'S LIVING and it is visible right here: it buys refill litres at up to 0.15 and
+#   sells them at no less than its 0.20 reserve above — bought-at and sold-at are both signed
+#   events, so the margin is a subtraction the sovereign can perform, which is fairness by
+#   ledger rather than by referee (see the-market-has-no-governor).
+:supplier
+    market:hasEndowment 50.0 ;
+    water:litresPerStoredLitre 1.0 ;
+    water:maxValuePerL 0.15 .
 
 :supplier sensing:maxReadingAgeS 300 ;
     #  Demanded of every perceiver by the shapes; for a pure listener it has no commanded

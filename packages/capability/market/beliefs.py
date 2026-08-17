@@ -31,12 +31,18 @@ class BiddingBeliefs:
     thing in an agent that could say what a reading MEANT or what state it was steering for —
     which made both conditional on being a market participant. Judging is desire's; so is the
     aim, which any agent with a stake holds whether or not a market exists. What is left here is
-    what only a BID needs: a wallet, how a deficit becomes litres, and what a litre is worth.
-    The aim is asked of whoever provides the desire family, at bid time.
+    what only a BID needs: a wallet and what a litre is worth. The aim is asked of whoever
+    provides the desire family, at bid time.
+
+    **Nor is the conversion here any more (#198).** How a deficit becomes litres was
+    `litres_per_fraction`, a fixed term — right for every bidder while every bidder was a
+    plant's, and wrong the day a dealer's bids are priced in StoredLitres. WHICH conversion a
+    bidder needs is a fact about its venue, so the module discovers the term through the venue
+    tie and reads its own belief in it by IRI; a block, whose terms are fixed at import,
+    cannot say that.
     """
 
     endowment: float
-    litres_per_fraction: float
     max_value_per_l: float
 
 
@@ -63,8 +69,9 @@ BIDDING_BLOCK = Block(
         # The one deliberately domain-coupled corner of this package: what a bid is WORTH is
         # the domain's to say, and the coupling is a literal here rather than a kernel
         # constant (#148) — the kernel names no domain, and a cross-package reference is an
-        # IRI, exactly as terms.py already does for sensing and actuation.
-        "litres_per_fraction": _WATER + "litresPerFraction",
+        # IRI, exactly as terms.py already does for sensing and actuation. Per litre OF THE
+        # GOOD, note, not of any property — which is why it serves the fern and the dealer
+        # alike while the conversion could not stay here (#198, see the class comment).
         "max_value_per_l": _WATER + "maxValuePerL",
     },
 )

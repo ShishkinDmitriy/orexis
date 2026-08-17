@@ -18,12 +18,26 @@
 :WaterSource a owl:Class ; rdfs:label "Water source" ;
     rdfs:comment "What a supplier dispenses; the plumbing node a market forms around." .
 :SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" .
+
+#  THE GOOD (#198): what this domain's lots are quantities of. One individual, because one
+#  thing flows through every pipe here — the barrel's venue and the city's venue sell the SAME
+#  water against different properties, which is exactly why the venue tie routes through this
+#  node instead of pinning a property on either.
+:Water a market:Good ; rdfs:label "Water" .
+
 #  CONSERVATION, stated once: every litre a valve dispenses left some source, so a water
 #  source's level moves -1.0 per dispensed litre — true of the CLASS, by physics, which is
 #  what an owl:hasValue restriction is for (the DHT's datasheet pattern; the closure entails
 #  it onto every barrel, and no model node restates it).
+#  Beside it, two more facts true of every water source by what it IS, the same pattern twice:
+#  it VENDS water ('the lot states its good' — the venue derivation reads the entailed triple,
+#  so no world restates the obvious), and receiving is conservation's mirror — a litre poured
+#  in is a litre held, so the litres-per-stored-litre conversion is identically 1.0 and stating
+#  it per barrel would be the #164 copy again.
 :WaterSource rdfs:subClassOf
-    [ a owl:Restriction ; owl:onProperty ag:modelDoseEffect ; owl:hasValue -1.0 ] .
+    [ a owl:Restriction ; owl:onProperty ag:modelDoseEffect ; owl:hasValue -1.0 ] ,
+    [ a owl:Restriction ; owl:onProperty market:supplies ; owl:hasValue :Water ] ,
+    [ a owl:Restriction ; owl:onProperty :litresPerStoredLitre ; owl:hasValue 1.0 ] .
 
 :StoredLitres a sosa:ObservableProperty ; rdfs:label "Stored litres" ;
     rdfs:comment "How much water a source is actually holding — the stock behind every promise the market makes. Observable because a float or level sensor can witness it, and observed so that an empty barrel is a fact an agent can hold rather than a surprise the pots discover. The first property on the SUPPLY side of the wire: a dispensed litre lowers it, which is the sign convention the stand-ins carry." .
@@ -62,9 +76,22 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 # would revise its own copy, and being wrong about it would cost it money.
 :litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "litres per fraction" ;
+    market:ofGood :Water ;
     market:aboutProperty :SoilMoisture ;
     market:direction market:Raises ;
-    rdfs:comment "Litres needed to raise moisture by 1.0 — converts a deficit into a demand. What it is a fraction OF is stated here rather than left to the reader: the whole valuation (this, maxValuePerL, and the aim asked of desire) is denominated in soil moisture, and an agent holding readings of several properties must not price a humidity. This statement hung on water:hasTarget while that term existed; the denomination outlived the point. The DIRECTION is stated beside it now — water raises moisture — which reads as too obvious to write until you notice nothing else says it: the reflex steered by a hardcoded sign, and a menu of what acts DO could not be derived at all." .
+    rdfs:comment "Litres needed to raise moisture by 1.0 — converts a deficit into a demand. What it is a fraction OF is stated here rather than left to the reader: the whole valuation (this, maxValuePerL, and the aim asked of desire) is denominated in soil moisture, and an agent holding readings of several properties must not price a humidity. This statement hung on water:hasTarget while that term existed; the denomination outlived the point. The DIRECTION is stated beside it now — water raises moisture — which reads as too obvious to write until you notice nothing else says it: the reflex steered by a hardcoded sign, and a menu of what acts DO could not be derived at all. Since #198 the GOOD is stated as the third of the sentence's three parts: a lot of water, priced in moisture, raising it — because litres-per-fraction is a claim about water in particular, and a venue selling anything else must never borrow it." .
+
+#  The refill valuation (#198 / barrel arc 4): the same good, priced in the SUPPLY side's own
+#  property. A buyer whose subject is a water source — a dealer restocking — converts its
+#  StoredLitres deficit into litres of demand at exactly 1.0, which is why the VALUE reaches
+#  every source entailed from the class above and only the agent's own BELIEF copy is authored
+#  (the copy an agent that learned its barrel leaks would revise, and be right to).
+:litresPerStoredLitre a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "litres per stored litre" ;
+    market:ofGood :Water ;
+    market:aboutProperty :StoredLitres ;
+    market:direction market:Raises ;
+    rdfs:comment "Litres of the good needed to raise a source's stored litres by one — identically 1.0, by conservation, and stated anyway because the identity is what makes the machinery uniform: the bidder, the menu, the compose generator and the shapes all follow ofGood/aboutProperty/direction off whatever valuation term applies, and the refill market's term carrying a trivial number is better than the refill market being a special case in four files. The direction reads as tautological until the drain side is beside it: a litre DISPENSED lowers StoredLitres (modelDoseEffect -1.0), a litre BOUGHT raises it, and which of the two a venue means is exactly what the venue tie now says." .
 
 #################  What a bid means here — the bidder's private valuation  #################
 #

@@ -100,6 +100,14 @@ WHERE  {
 # market rule, honestly, as sensing's rules name mqtt: the plumbing is the premise and there
 # is no neutral word for a pipe. The market node is recomputed, not read: a derivation reads
 # facts, never conclusions, so the same BINDs land on the same minted IRI.
+#
+# The valuation is tied through the GOOD (#198): what this source vends (entailed from its
+# class — 'the lot states its good') must be what the valuation converts, or the join
+# cross-multiplies the moment a second denomination exists. Without it the city's refill
+# venue would claim the plants (their pots state a need in a property SOME valuation is
+# about) and the barrel's venue would claim the dealer. With it, each side of one pipe
+# network buys in its own market: the stake's property and the good's valuation must be the
+# SAME sentence, not two facts that each happen to be true.
 INSERT { GRAPH $derived {
     ?buyer market:bidsIn ?market ;
            ag:hasCapability market:Bidding } }
@@ -108,13 +116,14 @@ WHERE  {
     ?source market:offeredBy ?owner ; ag:localId ?srcId .
     ?owner market:matchesBy ?matching .
     ?matching a market:BidMatchingCapability .
+    ?source market:supplies ?good .
     ?valve <http://example.org/agora/actuation#drawsFrom> ?source ;
            <http://example.org/agora/actuation#actuates> ?pot .
     ?buyer ag:actsFor ?pot .
     ?pot <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
     ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
     ?cond <http://www.w3.org/ns/ssn/forProperty> ?prop .
-    ?valuation market:aboutProperty ?prop .
+    ?valuation market:ofGood ?good ; market:aboutProperty ?prop .
     FILTER(?buyer != ?owner)
     BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?srcId))) AS ?market)
 }

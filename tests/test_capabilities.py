@@ -76,11 +76,13 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     from packages.capability.intention import KEEPING
     from packages.capability.sensing.terms import LISTENING
 
-    #  Plus what the barrel arcs earned: LISTENING (arc 1 — it sees its stock), and since it
+    #  Plus what the barrel arcs earned: LISTENING (arc 1 — it sees its stock), since it
     #  acts for a barrel that states its needs (arc 2), DEDUCING, KEEPING and REFLEX — the
-    #  stake met the valves it already held, and stake plus means is the shared premise.
+    #  stake met the valves it already held, and stake plus means is the shared premise —
+    #  and since the city exists (arc 4), BIDDING: the city's pipe reaches its barrel, so
+    #  the dealer's buy side derives from the plumbing exactly as a fern's does.
     assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING, LISTENING,
-                                           DEDUCING, KEEPING, REFLEX}
+                                           DEDUCING, KEEPING, REFLEX, BIDDING}
 
 
 def test_only_a_host_matches(me):
@@ -88,10 +90,18 @@ def test_only_a_host_matches(me):
     assert PAY_AS_BID not in me("fern").capabilities
 
 
-def test_supplier_neither_perceives_nor_buys(me):
+def test_supplier_commands_no_cadence_and_buys_upstream(me):
+    """Half of what this test guarded fell to arc 4, and the half that fell is the story.
+
+    It asserted the supplier neither perceives on a commanded clock NOR buys. The first
+    stands — its one sensor announces, so Listening and never Subscribing. The second
+    inverted the day the city opened shop: bidsIn derives from the pipe that reaches its
+    barrel plus the stake it holds in it, so the dealer BUYS now, and nothing was declared
+    to make it so.
+    """
     supplier = me("supplier")
     assert not supplier.can(SUBSCRIBING)
-    assert not supplier.can(BIDDING)
+    assert supplier.can(BIDDING)
 
 
 def test_plant_agent_cannot_actuate(me):

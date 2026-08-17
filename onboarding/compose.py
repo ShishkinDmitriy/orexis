@@ -288,17 +288,19 @@ def _values(rows: list[dict]) -> str:
         # physics (entailed from its domain's word — water:driesPerDay, #164) is the fact.
         if row.get("loses") in (None, "") and row.get("subjectLoses") not in (None, ""):
             row = {**row, "loses": row["subjectLoses"]}
-        # The same two moves for the supply side: the subject's entailed dose effect (a
-        # water source's -1.0, conservation stated once on the class) overrides the
-        # denomination's conversion, and the entailed ceiling (water:capacityL) is the max
-        # where the model states none.
-        if row.get("doseEffect") not in (None, ""):
-            row = {**row, "litres": row["doseEffect"]}
+        # The supply side rides the same entailments: the subject's dose effect (a water
+        # source's -1.0, conservation stated once on the class) is what a DRAINED litre
+        # does, its own "drains" key now that a barrel can also be dosed — it used to
+        # override "litres", which was right exactly as long as no subject was on both
+        # sides of the wire. The entailed ceiling (water:capacityL) is still the max where
+        # the model states none, and "litres" keeps meaning what a DOSED litre converts by
+        # (a pot's litres-per-fraction, a barrel's litres-per-stored-litre — both arrive
+        # through the denomination join, neither named).
         if row.get("maxValue") in (None, "") and row.get("subjectMax") not in (None, ""):
             row = {**row, "maxValue": row["subjectMax"]}
         for key, field in (("min", "minValue"), ("max", "maxValue"),
                            ("initial", "initial"), ("loses", "loses"), ("swing", "swing"),
-                           ("litres", "litres")):
+                           ("litres", "litres"), ("drains", "doseEffect")):
             if row.get(field) not in (None, ""):
                 spec[key] = float(row[field])
         specs.append(spec)
@@ -369,16 +371,21 @@ def _simulator(world: str, rows: list[dict]) -> str:
     row = rows[0]
     sim_id = row["id"]
     mode = _SIM_MODE.get(row.get("senseMode") or "", "scheduled")
-    # One device may take water on one channel (a pot: the valve that actuates it) or LOSE it
-    # on several (a source: every valve that draws from it) — the union, sorted so an
-    # unchanged world regenerates an unchanged file, comma-joined into the one env var.
-    dose_topics = ",".join(sorted(
-        {r.get("doseTopic") for r in rows if r.get("doseTopic")} |
-        {r.get("drainTopic") for r in rows if r.get("drainTopic")}))
+    # A device may GAIN on some channels and LOSE on others, and the sign is which side of
+    # the wire each topic is on — so the two sets travel separately, each sorted so an
+    # unchanged world regenerates an unchanged file. A pot has dose topics only (the valve
+    # that actuates it); a source used to have drain topics only (every valve that draws
+    # from it) and the two were unioned into one env var, which was right until the barrel
+    # learned to fill: it now hears the city's valve RAISE its stock through the same kind
+    # of status message the plant valves LOWER it with, and only the set membership can say
+    # which is which.
+    dose_topics = ",".join(sorted({r.get("doseTopic") for r in rows if r.get("doseTopic")}))
+    drain_topics = ",".join(sorted({r.get("drainTopic") for r in rows if r.get("drainTopic")}))
     optional = "".join(
         f'\n      {k}: "{v}"' for k, v in (
             ("SIM_COMMAND_TOPIC", row.get("commandTopic")),
             ("SIM_DOSE_TOPIC", dose_topics),
+            ("SIM_DRAIN_TOPIC", drain_topics),
             ("SIM_TICK_SECONDS", row.get("tick")),
             # The world's clock (ag:timeScale), handed to every stand-in alike, because
             # physics that age at different rates stop composing. And the rain channel

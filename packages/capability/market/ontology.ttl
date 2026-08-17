@@ -54,6 +54,36 @@
     rdfs:label "offered by" ;
     rdfs:comment "The party whose standing offer this source is — the neutral word the venue derivation reads, with each domain bridging its own (water:suppliedBy is a subproperty, on the capacityL -> lotCapacity precedent). Together with the owner stating market:matchesBy, this is the whole premise of a shop: a source offered by someone who says how they match is a market, derived; everything else about the venue is minted from the source's id. See knowledge/decisions/a-market-arises-where-want-meets-supply.md." .
 
+#################  The lot states its good (#198)  #################
+#
+#  What a venue's lot is a quantity OF, and the missing half of every denomination join in the
+#  codebase. `market:aboutProperty` says which property a VALUATION is priced in; nothing said
+#  which valuations belong to which VENUE, so the menu, the reflex and the participation rule
+#  all joined "a market I can reach" to "a valuation about this property" as independent facts —
+#  safe while one domain meant one denomination, and a cross-multiplication the moment a second
+#  existed. The barrel plan's own arc 4 is that second: the city sells litres against
+#  StoredLitres while the barrel sells them against SoilMoisture, and BOTH sources are water.
+#
+#  Which is why the tie routes through the GOOD and not from venue straight to valuation: what a
+#  litre DOES depends on where it lands (a pot's moisture, a barrel's stock), so one good
+#  honestly has several valuations — one per kind of recipient — and what disambiguates a venue
+#  is what flows out of its source, not what any buyer will do with it. The source states its
+#  good ONCE, at class level (a WaterSource vends water — the datasheet pattern, entailed onto
+#  every barrel and every mains); each valuation term states which good it converts; and every
+#  join closes venue -> marketFor -> source -> supplies -> good <- ofGood <- valuation, so two
+#  opposite levers on one property each carry their own direction and never each other's.
+
+:Good a owl:Class ; rdfs:label "Good" ;
+    rdfs:comment "What a lot is a quantity of — water, heat, airflow, a right of way. NOT a property: a good is what changes hands, a property is what a buyer hopes it moves, and conflating them is exactly the cross-join this class exists to end. Individuals are the domain's to declare (water:Water); the market only demands that a source names one." .
+
+:supplies a owl:ObjectProperty ; rdfs:range :Good ;
+    rdfs:label "supplies" ;
+    rdfs:comment "The good a source holds — 'the lot states its good' (#198), stated where the lot is owned, because the lot IS the source's standing offer. Stated at CLASS level by the domain (every WaterSource vends water, by what the thing is) and reaching each source entailed, so no world restates it and no venue can disagree with its own source. The venue's tie is the composition marketFor/supplies — deliberately not minted onto the market node as a third triple, because a copy of a derivable fact is what one-word-for-one-relation exists to refuse." .
+
+:ofGood a owl:ObjectProperty ; rdfs:range :Good ;
+    rdfs:label "of good" ;
+    rdfs:comment "Which good this valuation term converts into its property — the valuation's half of the venue tie. A pot's litres-per-fraction is a claim about WATER, not about liquids in general; a drying lever's minutes-per-fraction is a claim about airflow that happens to price the same property the other way. Stated on the same term that carries aboutProperty and direction, because the three are one sentence: a lot of THIS GOOD, priced in THIS PROPERTY, moves it THIS WAY." .
+
 :direction a owl:ObjectProperty ; rdfs:range :Direction ;
     rdfs:label "direction" ;
     rdfs:comment "Applying this valuation's lot moves the priced property this way. What the reflex steers by instead of a hardcoded sign: gap below the aim and a lever that Raises — or above it and one that Lowers — is the move. A heater against a cold snap is the same rule with no code change, which is the whole point of stating it." .

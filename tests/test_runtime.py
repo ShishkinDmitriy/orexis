@@ -29,26 +29,28 @@ def test_plant_agent_runs_sensing_and_bidding(agent):
         "subscribing", "bidding", "desire", "intention", "deliberation", "review", "reporting"}
 
 
-def test_supplier_runs_hosting_actuation_and_matching(agent):
+def test_supplier_runs_the_dealers_full_stack(agent):
     """Its original three (protocol, valves, matching), plus what the barrel arcs earned it:
-    listening (arc 1 — it watches its stock), and since the stake (arc 2) desire, intention
-    and deliberation — because acting for a barrel that states its needs is a stake, and the
+    listening (arc 1 — it watches its stock), since the stake (arc 2) desire, intention and
+    deliberation — because acting for a barrel that states its needs is a stake, and the
     valves it always held are means, and stake plus means is the premise Keeping and Reflex
-    share. Its reflex still proposes nothing: StoredLitres has no stated direction, and
-    refusing to guess is the #127 contract.
+    share — and since the city exists (arc 4), BIDDING: the dealer buys upstream at one venue
+    and sells downstream at another, hosting and bidding in one process, and its reflex
+    proposes now because the refill venue carries a direction for StoredLitres.
 
     And `reporting`, which it did not earn — every agent is granted that one.
     """
     assert {m.name for m in agent("supplier").modules} == {
         "hosting", "actuation", "pay-as-bid", "reporting", "listening",
-        "desire", "intention", "deliberation"}
+        "desire", "intention", "deliberation", "bidding"}
 
 
 def test_the_supplier_listens_to_its_stock_and_schedules_nothing(agent):
     """Since the barrel learned to run dry, the supplier polls its level sensor — a push
     device, so it derives Listening and only Listening: it commands no cadence, because a
-    float announces and is not asked. What it still lacks is a STAKE: seeing your barrel is
-    not wanting anything about it, which is the next arc's line to cross."""
+    float announces and is not asked. The stake (arc 2) and the lever (arc 4) both arrived
+    since; what this still guards is the clock — a dealer with a full stack still may not
+    order a float around."""
     supplier = agent("supplier")
     assert any(m.name == "listening" for m in supplier.modules)
     assert not any(m.name == "subscribing" for m in supplier.modules)
