@@ -1,4 +1,5 @@
 @prefix sentinel: <http://example.org/agora/firmware/moisture-sentinel#> .
+@prefix : <http://example.org/agora/firmware/moisture-sentinel#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
 @prefix mc:   <http://example.org/agora/microcontroller#> .
 @prefix ag:   <http://example.org/agora#> .
@@ -12,7 +13,7 @@
 the pattern. The temperaments differ in every fact stated here, which is the point of stating
 them here: one flashed image, one set of promises, however many boards run it.""" .
 
-sentinel:Node a owl:Class ; rdfs:label "sentinel" ;
+:Node a owl:Class ; rdfs:label "sentinel" ;
     rdfs:subClassOf ag:Device ,
         [ a owl:Restriction ; owl:onProperty sensing:senseMode ;
           owl:hasValue sensing:PushProcedure ] ,

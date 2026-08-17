@@ -4,6 +4,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix probe: <http://example.org/agora/moisture-probe#> .
+@prefix : <http://example.org/agora/moisture-probe#> .
 @prefix wokwi: <http://example.org/agora/wokwi#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix water: <http://example.org/agora/water#> .
@@ -13,7 +14,7 @@
     rdfs:label "Capacitive soil moisture probe" ;
     rdfs:comment """One part, its own package. Three legs — an analog output, power and ground — and two calibration numbers that belong to the individual probe rather than to the model.""" .
 
-probe:CapacitiveMoistureProbe a owl:Class ;
+:CapacitiveMoistureProbe a owl:Class ;
     mc:modelName "Capacitive Soil Moisture Sensor v2.0" ; rdfs:subClassOf mc:Peripheral ;
     # A CUSTOM CHIP rather than a catalogue part — the `chip-` prefix is the tell — so a Wokwi
     # project referencing it must also carry soil-moisture-sensor.chip.json and .chip.c. That is
@@ -50,13 +51,13 @@ Welding them would break the case the whole simulation rests on. A simulated sen
 #  `ssn:detects` reaches every device through the class, by the closure's hasValue rule: a
 #  datasheet fact, stated once on the part, entailed onto each probe built from it.
 
-probe:capacitance a ssn:Stimulus ; rdfs:label "capacitance of the soil" ;
+:capacitance a ssn:Stimulus ; rdfs:label "capacitance of the soil" ;
     ssn:isProxyFor water:SoilMoisture .
 
-probe:CapacitiveMoistureProbe rdfs:subClassOf [ a owl:Restriction ;
-    owl:onProperty ssn:detects ; owl:hasValue probe:capacitance ] .
+:CapacitiveMoistureProbe rdfs:subClassOf [ a owl:Restriction ;
+    owl:onProperty ssn:detects ; owl:hasValue :capacitance ] .
 
-probe:rawDry a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when dry" ;
+:rawDry a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when dry" ;
     rdfs:comment "What this probe reads in air — a value OF THE STIMULUS (#100): a capacitance count, not a moisture. A fact about THIS probe in THIS pot — two identical probes differ — so it belongs to the instance, not to the firmware, which is per model. The scaling family's TwoPoint member consumes exactly this pair, which is why its parameters are stimulus-side by construction." .
-probe:rawWet a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when wet" ;
+:rawWet a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "raw when wet" ;
     rdfs:comment "What it reads in saturated soil — the stimulus end again, never the property. Not free water: water is wetter than soil ever gets, so calibrating against it makes the top of the scale unreachable." .

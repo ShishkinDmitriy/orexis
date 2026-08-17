@@ -1,4 +1,5 @@
 @prefix review: <http://example.org/agora/review#> .
+@prefix : <http://example.org/agora/review#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -23,17 +24,17 @@
 #  worked out at genesis and wiring is one input, and there IS a premise here: an agent given room
 #  to move must be able to use it. See rules.ru.
 
-review:ReviewCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
+:ReviewCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
     rdfs:label "Review capability" ;
     rdfs:comment "The family. Rules true of reviewing however it is done target this class, so nothing is restated per implementation, and one capability may ask for 'whoever reviews' without knowing which way it does it." .
 
-review:Reckoning a review:ReviewCapability ; rdfs:label "Reckoning" ;
+:Reckoning a :ReviewCapability ; rdfs:label "Reckoning" ;
     rdfs:comment "The agent reaches the judgement itself, by running the SPARQL rule the package that owns a term ships for it. Deterministic, inspectable, and answerable: every decision traces to a rule someone wrote and a graph anyone can read." .
 
-review:Consulting a review:ReviewCapability ; rdfs:label "Consulting" ;
+:Consulting a :ReviewCapability ; rdfs:label "Consulting" ;
     rdfs:comment "The agent asks something else to choose — a language model, an oracle, a person. RESERVED: declared so the vocabulary is honest that the judgement is the replaceable part, but no rule grants it and no module implements it. Whatever answers would still be held to the same range and the same shapes, so it could be wrong and not unsafe. Adding it is a directory." .
 
-review:reviewIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+:reviewIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "review interval (s)" ;
     rdfs:comment "The FLOOR between two arisings, not the schedule. A review plans its own next one from when its decision could possibly show an effect — checking sooner than a fresh window of readings can accumulate is looking at the same evidence twice. This figure only stops it planning something absurdly soon. Required of an agent that reviews, exactly as sensing:fastSleepS is required of one that subscribes; what says whether an agent reviews at all is whether it was given any room to move." .
 
@@ -44,10 +45,10 @@ review:reviewIntervalS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:rang
 #  act of adding a directory. A package whose ontology nobody here has read is reviewable on
 #  exactly these terms.
 
-review:RevisableBelief a owl:Class ; rdfs:label "Revisable belief" ;
+:RevisableBelief a owl:Class ; rdfs:label "Revisable belief" ;
     rdfs:comment "A belief term an agent may re-pick while running. Marking one is a statement about the TERM, made once by the package that defines it — never about an agent, and never in a world." .
 
-review:revisableToward a owl:ObjectProperty ; rdfs:domain review:RevisableBelief ;
+:revisableToward a owl:ObjectProperty ; rdfs:domain :RevisableBelief ;
     rdfs:label "revisable toward" ;
     rdfs:comment "A constitutional figure this belief may be moved toward. Stated once per end, and which end is which is read from the VALUES rather than from the property name — so a package names the two limits it already declares and invents no ordering vocabulary." .
 
@@ -60,13 +61,13 @@ review:revisableToward a owl:ObjectProperty ; rdfs:domain review:RevisableBelief
 #  Being public is what makes the granting rule possible at all: capabilities are worked out
 #  from the world, so a mandate had to be somewhere a derivation could see it.
 
-review:Commitment a owl:Class ; rdfs:label "Commitment" ;
+:Commitment a owl:Class ; rdfs:label "Commitment" ;
     rdfs:comment "How far one agent may re-pick one term. Stated in the world by whoever ratified it, because latitude granted is a governance fact and not an opinion. Its presence is what grants the review capability: room to move, and the ability to use it, are the same decision said once." .
 
-review:commits a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range review:Commitment ;
+:commits a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Commitment ;
     rdfs:label "commits" ;
     rdfs:comment "Reads as what the world commits this agent to — the range it may move within, and by stating it, the grant of the capability to move at all." .
-review:limitedTo a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range review:Commitment ;
+:limitedTo a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Commitment ;
     rdfs:label "limited to" ;
     rdfs:comment """What the EQUIPMENT allows this agent, as against what the world does. The third source `ranges()` has always named and never had: constitution, mandate, hardware.
 
@@ -74,9 +75,9 @@ Shaped like a commitment and deliberately not one. Both narrow the same term the
 
 DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sensors an agent polls, so it lands in the derived graph like every other conclusion and a world stating it by hand is stating something it does not know.""" .
 
-review:onTerm a owl:ObjectProperty ; rdfs:domain review:Commitment ; rdfs:label "on term" .
-review:notBelow a owl:DatatypeProperty ; rdfs:label "not below" .
-review:notAbove a owl:DatatypeProperty ; rdfs:label "not above" .
+:onTerm a owl:ObjectProperty ; rdfs:domain :Commitment ; rdfs:label "on term" .
+:notBelow a owl:DatatypeProperty ; rdfs:label "not below" .
+:notAbove a owl:DatatypeProperty ; rdfs:label "not above" .
 
 #################  What an agent observed, summarised — a BELIEF about history  #################
 #  The series lives in Influx. What the store keeps is fixed-size and derived: an agent does not
@@ -89,54 +90,54 @@ review:notAbove a owl:DatatypeProperty ; rdfs:label "not above" .
 #  ingest path knows nothing about them. (Whether they belong to sensing instead is issue #65
 #  and a separate argument.)
 
-review:SummariesGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Summaries graph" ;
+:SummariesGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Summaries graph" ;
     rdfs:comment "What ONE agent's readings came to. Apart from :sensed on purpose, and the separation is what makes the write boundary checkable: :sensed is the measurement record, written by whatever observed and never by a review, while a summary is the agent's own derived account of its own past. In one graph, 'a review does not touch the sensed record' would have been untestable — and an invariant nothing can check is a comment." .
 
-review:ObservationSummary a owl:Class ; rdfs:label "Observation summary" ;
+:ObservationSummary a owl:Class ; rdfs:label "Observation summary" ;
     rdfs:comment "Everything observed of one property of one subject over one window, as running totals rather than samples. Constant size whatever the window holds, so a belief base that summarises a year is the same size as one that summarises an hour." .
 
-review:sampleCount a owl:DatatypeProperty ; rdfs:domain review:ObservationSummary ; rdfs:range xsd:integer ;
+:sampleCount a owl:DatatypeProperty ; rdfs:domain :ObservationSummary ; rdfs:range xsd:integer ;
     rdfs:label "sample count" .
-review:sampleMin a owl:DatatypeProperty ; rdfs:domain review:ObservationSummary ; rdfs:label "sample min" .
-review:sampleMax a owl:DatatypeProperty ; rdfs:domain review:ObservationSummary ; rdfs:label "sample max" ;
+:sampleMin a owl:DatatypeProperty ; rdfs:domain :ObservationSummary ; rdfs:label "sample min" .
+:sampleMax a owl:DatatypeProperty ; rdfs:domain :ObservationSummary ; rdfs:label "sample max" ;
     rdfs:comment "Kept alongside the sums because EQUALITY WITH THE MINIMUM is the one thing a variance cannot say. A variance approaches zero for a nearly-still world and IS zero only for an instrument that has not moved at all, and those two want opposite responses." .
-review:sampleSum a owl:DatatypeProperty ; rdfs:domain review:ObservationSummary ; rdfs:label "sample sum" .
-review:sampleSumSquares a owl:DatatypeProperty ; rdfs:domain review:ObservationSummary ;
+:sampleSum a owl:DatatypeProperty ; rdfs:domain :ObservationSummary ; rdfs:label "sample sum" .
+:sampleSumSquares a owl:DatatypeProperty ; rdfs:domain :ObservationSummary ;
     rdfs:label "sample sum of squares" ;
     rdfs:comment "With the count and the sum, this gives the mean and the variance without keeping a single reading." .
-review:firstAt a owl:DatatypeProperty ; rdfs:domain review:ObservationSummary ; rdfs:range xsd:dateTime ;
+:firstAt a owl:DatatypeProperty ; rdfs:domain :ObservationSummary ; rdfs:range xsd:dateTime ;
     rdfs:label "first at" .
-review:lastAt a owl:DatatypeProperty ; rdfs:domain review:ObservationSummary ; rdfs:range xsd:dateTime ;
+:lastAt a owl:DatatypeProperty ; rdfs:domain :ObservationSummary ; rdfs:range xsd:dateTime ;
     rdfs:label "last at" .
-review:windowSeq a owl:DatatypeProperty ; rdfs:domain review:ObservationSummary ; rdfs:range xsd:integer ;
+:windowSeq a owl:DatatypeProperty ; rdfs:domain :ObservationSummary ; rdfs:range xsd:integer ;
     rdfs:label "window sequence" ;
     rdfs:comment "Which completed window this is, counting up. The accumulating one has none. Older windows past the ring are dropped, so the count of nodes is fixed and the newest is simply the largest." .
 
 #################  What a review saw, derived at each arising  #################
 
-review:EvidenceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Evidence graph" ;
+:EvidenceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Evidence graph" ;
     rdfs:comment "The reviewer's own scratch: statistics derived from the summaries, plus the range each revisable term may move in. Rebuilt at every arising and never read by anything else, so a rule can be plain SPARQL over well-known terms instead of arithmetic." .
 
-review:Evidence a owl:Class ; rdfs:label "Evidence" ;
+:Evidence a owl:Class ; rdfs:label "Evidence" ;
     rdfs:comment "What one property of one subject has been doing. Every figure here is computable without knowing what the property MEANS, which is what lets one rule serve a domain nobody has written yet." .
-review:ofProperty a owl:ObjectProperty ; rdfs:domain review:Evidence ; rdfs:label "of property" .
-review:sampleMean a owl:DatatypeProperty ; rdfs:domain review:Evidence ; rdfs:label "sample mean" .
-review:sampleSpread a owl:DatatypeProperty ; rdfs:domain review:Evidence ; rdfs:label "sample spread" ;
+:ofProperty a owl:ObjectProperty ; rdfs:domain :Evidence ; rdfs:label "of property" .
+:sampleMean a owl:DatatypeProperty ; rdfs:domain :Evidence ; rdfs:label "sample mean" .
+:sampleSpread a owl:DatatypeProperty ; rdfs:domain :Evidence ; rdfs:label "sample spread" ;
     rdfs:comment "The observed range as a fraction of its own mean — unit-free, because one agent's property is a fraction and another's is degrees, and a threshold in either unit is nonsense in the other. Exactly zero means the instrument did not move." .
-review:sampleGapS a owl:DatatypeProperty ; rdfs:domain review:Evidence ; rdfs:label "sample gap (s)" ;
+:sampleGapS a owl:DatatypeProperty ; rdfs:domain :Evidence ; rdfs:label "sample gap (s)" ;
     rdfs:comment "Mean seconds between readings actually observed. How the reviewer works out when a fresh window could possibly exist, without knowing what it is looking at." .
-review:newestAgeS a owl:DatatypeProperty ; rdfs:domain review:Evidence ; rdfs:label "newest age (s)" .
-review:windowsHeld a owl:DatatypeProperty ; rdfs:domain review:Evidence ; rdfs:label "windows held" .
+:newestAgeS a owl:DatatypeProperty ; rdfs:domain :Evidence ; rdfs:label "newest age (s)" .
+:windowsHeld a owl:DatatypeProperty ; rdfs:domain :Evidence ; rdfs:label "windows held" .
 
-review:Range a owl:Class ; rdfs:label "Range" ;
+:Range a owl:Class ; rdfs:label "Range" ;
     rdfs:comment "The room one term has, after the constitution's, the equipment's and the agent's mandate are intersected. Published as evidence so a rule reads a floor and a ceiling instead of re-deriving them, and so a human reading the graph can see exactly how much autonomy was in play." .
 
 #################  What it decided, and when to look again  #################
 
-review:RevisionsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Revisions graph" ;
+:RevisionsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Revisions graph" ;
     rdfs:comment "What ONE agent has decided about itself. Append-only, and apart from the beliefs graph so that the beliefs graph still holds exactly one value per term — which is what every capability's shapes are written against. Deliberately NOT validated: it is the record of a decision, not a belief anyone acts on." .
 
-review:Revision a owl:Class ; rdfs:label "Revision" ;
+:Revision a owl:Class ; rdfs:label "Revision" ;
     rdfs:comment """One settled second thought, INCLUDING one settled as 'change nothing'. Recording a decline is what separates reflection from a twitch: without it an agent re-argues the same question at every arising and can never notice that it has declined eleven times and the problem is elsewhere.
 
 **Examined against `prov:wasRevisionOf` and deliberately NOT aligned.** PROV is already spoken here — `agent/provenance.py` uses it for who put a fact in which graph — so the overlap is worth settling rather than leaving for someone to 'tidy' later.
@@ -151,16 +152,16 @@ Three things make that the wrong shape here, and the first alone settles it:
 
 The same finding as review:Commitment against vf:Commitment: a near-homonym, not an alignment. A reader who knows PROV would be WRONG about this data, which is the test.""" .
 
-review:revisedTerm a owl:ObjectProperty ; rdfs:domain review:Revision ; rdfs:label "revised term" .
-review:fromValue a owl:DatatypeProperty ; rdfs:domain review:Revision ; rdfs:label "from value" .
-review:toValue a owl:DatatypeProperty ; rdfs:domain review:Revision ; rdfs:label "to value" .
-review:atTime a owl:DatatypeProperty ; rdfs:domain review:Revision ; rdfs:range xsd:dateTime ;
+:revisedTerm a owl:ObjectProperty ; rdfs:domain :Revision ; rdfs:label "revised term" .
+:fromValue a owl:DatatypeProperty ; rdfs:domain :Revision ; rdfs:label "from value" .
+:toValue a owl:DatatypeProperty ; rdfs:domain :Revision ; rdfs:label "to value" .
+:atTime a owl:DatatypeProperty ; rdfs:domain :Revision ; rdfs:range xsd:dateTime ;
     rdfs:label "at time" .
-review:dueAt a owl:DatatypeProperty ; rdfs:domain review:Revision ; rdfs:range xsd:dateTime ;
+:dueAt a owl:DatatypeProperty ; rdfs:domain :Revision ; rdfs:range xsd:dateTime ;
     rdfs:label "due at" ;
     rdfs:comment "When this decision is worth revisiting — far enough out that a fresh window of readings could have accumulated. It is both the memory and the schedule: the next arising is the earliest of these, and a term whose decision is not yet due is not re-argued." .
-review:becauseOf a owl:DatatypeProperty ; rdfs:domain review:Revision ; rdfs:range xsd:string ;
+:becauseOf a owl:DatatypeProperty ; rdfs:domain :Revision ; rdfs:range xsd:string ;
     rdfs:label "because of" ;
     rdfs:comment "The evidence, in words. An agent that cannot say why it changed its mind — or why it did not — has not reviewed anything." .
-review:outcome a owl:DatatypeProperty ; rdfs:domain review:Revision ; rdfs:range xsd:string ;
+:outcome a owl:DatatypeProperty ; rdfs:domain :Revision ; rdfs:range xsd:string ;
     rdfs:label "outcome" ; rdfs:comment "taken | declined | refused. Refused means the shapes rejected it, which is a bug in a rule rather than a decision an agent made." .

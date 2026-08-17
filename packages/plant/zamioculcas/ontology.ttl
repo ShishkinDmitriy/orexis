@@ -1,4 +1,5 @@
 @prefix zz:   <http://example.org/agora/zamioculcas#> .
+@prefix : <http://example.org/agora/zamioculcas#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix ag:   <http://example.org/agora#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -22,7 +23,7 @@ Depends on `water:` — unlike a part package, which must not. A thermistor reso
 any world that will ever use one, so binding it to a domain would be backwards; a plant species IS
 the domain, and the properties it cares about are the domain's to name.""" .
 
-zz:ZamioculcasZamiifolia a owl:Class ; rdfs:subClassOf water:Plant ;
+:ZamioculcasZamiifolia a owl:Class ; rdfs:subClassOf water:Plant ;
     rdfs:label "Zamioculcas zamiifolia" ;
     schema:alternateName "ZZ plant" , "Zanzibar gem" , "emerald palm" ;
     rdfs:seeAlso <https://powo.science.kew.org/taxon/urn:lsid:ipni.org:names:88189-1> ;
@@ -54,13 +55,13 @@ though nothing in this repository can act on it.""" .
 # `water:dryRatePerTick`, stated per plant in a world, because it is about the pot and not the
 # species.
 
-zz:ZamioculcasZamiifolia rdfs:subClassOf
+:ZamioculcasZamiifolia rdfs:subClassOf
     [ a owl:Restriction ; owl:onProperty ssn-system:hasOperatingRange ;
-      owl:hasValue zz:IndoorOperatingRange ] ,
+      owl:hasValue :IndoorOperatingRange ] ,
     [ a owl:Restriction ; owl:onProperty ssn-system:hasSurvivalRange ;
-      owl:hasValue zz:IndoorSurvivalRange ] .
+      owl:hasValue :IndoorSurvivalRange ] .
 
-zz:IndoorOperatingRange a ssn-system:OperatingRange ;
+:IndoorOperatingRange a ssn-system:OperatingRange ;
     rdfs:label "Zamioculcas indoors, growing season" ;
     rdfs:comment "Where it grows rather than merely persists. Named for the regime it assumes, because a second one is the obvious extension and would need telling apart from this: in winter this plant genuinely wants less water, not the same water less often. What stops that being written today is recorded in knowledge/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md — ssn-system:inCondition cannot say which of its conditions is the qualifier and which the requirement, and nothing here could select a regime anyway." ;
     ssn-system:inCondition
@@ -73,7 +74,7 @@ zz:IndoorOperatingRange a ssn-system:OperatingRange ;
         [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:Illuminance ;
           schema:minValue 1000.0 ; schema:maxValue 10000.0 ; schema:unitCode unit:LUX ] .
 
-zz:IndoorSurvivalRange a ssn-system:SurvivalRange ;
+:IndoorSurvivalRange a ssn-system:SurvivalRange ;
     rdfs:label "Zamioculcas indoors, what it will tolerate" ;
     rdfs:comment "Wider at both ends and NOT symmetric, which is the fact worth having in a machine-readable form. It will come back from bone dry; it does not come back from a rotted rhizome, so the ceiling is the number that matters and the floor is nearly free. The temperature floor is where leaf damage starts rather than where it dies, and it is not frost hardy at any point." ;
     ssn-system:inCondition
