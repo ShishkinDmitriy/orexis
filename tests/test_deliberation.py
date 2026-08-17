@@ -178,3 +178,23 @@ def test_an_agent_with_no_desires_has_an_empty_menu(make):
 
 
 FERN = "http://example.org/agora/world/simulation#fern_agent"
+
+
+def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
+    """The Acquire row is DEDUCED along the plumbing (#127, strengthened): the market's host
+    holds an actuator, the actuator is plumbed to MY pot, so opening it puts the good where I
+    am — and only the physics atom (water raises moisture) is stated, once, by the domain.
+    Cut the pipe and the row vanishes: fern still bids in a market, the domain still prices
+    moisture, but a delivery that cannot reach your pot is, for you, no lever at all — and
+    the reflex must not be offered a move that moves nothing."""
+    from agent.ontology import WORLD_GRAPH
+
+    st = genesis_store()
+    st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+        <http://example.org/agora/world/simulation#valve_fern>
+            <http://example.org/agora/actuation#actuates> ?pot }} }}""")
+    rows = menu_of(st.query, FERN)
+    assert not any(r.means == ACQUIRE for r in rows), (
+        "an unplumbed market must yield no Acquire row")
+    assert any(r.means == OBSERVE for r in rows), (
+        "cutting the pipe must not blind the agent — the probes still watch")
