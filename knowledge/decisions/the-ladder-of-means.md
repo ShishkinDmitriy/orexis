@@ -70,6 +70,25 @@ honestly open: revocation ([#28](https://github.com/ShishkinDmitriy/agora/issues
 [#29](https://github.com/ShishkinDmitriy/agora/issues/29)), and carrying the sim valves'
 verification into the real pump firmware when the terrace actuator is built.
 
+**And when the firmware is not yours?** Asked next, and the answer is not "keep hardware dumb"
+but "never model loyalty you did not install" — which differ, derivably. A device nobody here
+flashed is not dumb, it is UNKNOWN, and unknown is worse: a dumb relay is a known quantity
+(does whatever its wire says, always), while a vendor's smart valve promises whatever its
+vendor promised. So the honest classes are three — BOUNDED (sovereign-flashed, verifies
+claims, auditable because its firmware is in this repository), DUMB (obeys its wire,
+guaranteed nothing else), FOREIGN (someone else's promises, honestly modelled as dumb) — and
+enforcement re-sorts by class: bounded keeps verification at the edge, which is
+thin-trusted-infra's whole trajectory (dumb-everywhere would re-fatten the broker into the
+single trusted enforcer, the exact centralisation that record relaxes); dumb retreats to the
+choke points actually held — the ACL, the accounting, and the resource owner's own gate in
+series at the source, which for a dumb actuator stops being paranoia and becomes the design.
+The trust class is a device fact the graph can state and the posture a validation result, on
+the pattern this month built three times over: a device with no sovereign firmware class is
+dumb by absence, and a world whose scarce shared source is reachable through a dumb actuator
+with no upstream gate should refuse — or state, out loud, that the broker alone enforces its
+scarcity. Only the unstated version is dishonest. Deriving that check is part of the Actuate
+issue's world-modelling, not a mechanism of its own.
+
 # Seams left open
 
 - **The Actuate rung is unimplemented** — no menu branch, no derivation granting a
