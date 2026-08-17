@@ -59,6 +59,10 @@ ag:modelInitialValue a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:
     rdfs:label "model initial value" ;
     rdfs:comment "What it reads before anything has happened to it." .
 
+ag:modelDoseEffect a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "model dose effect" ;
+    rdfs:comment "How a dispensed unit moves this modelled value, SIGNED — in units of this value per litre on the dose wire, the litre being the WIRE's unit (a valve's status message speaks ml; that is actuation's physical reality, so it lives in this comment and not in the term's name — the first draft said modelDoseLitres, and the kernel wearing the water domain's word is the exact smell modelLosesPerDay had just been cured of). A pot's conversion arrives through the domain's denomination and never through this; a SOURCE'S effect is not per-instance configuration at all but CONSERVATION — every source loses exactly what was dispensed from it — so the water domain states -1.0 once, on the WaterSource class, and the closure entails it onto every barrel. Read from the SUBJECT by the generation, like the ceiling and the drying." .
+
 ag:modelLosesPerDay a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     # Un-domained since #164: stated on a DeviceModel as an override, or entailed onto a
     # SUBJECT from a domain's own physics term (water:driesPerDay rdfs:subPropertyOf this),

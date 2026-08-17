@@ -177,7 +177,9 @@ class SimulatedSensor:
         self.sensor_id = _env("SIM_SENSOR_ID")
         self.reading_topic = _env("SIM_READING_TOPIC")
         self.command_topic = os.environ.get("SIM_COMMAND_TOPIC") or ""
-        self.dose_topic = os.environ.get("SIM_DOSE_TOPIC") or ""
+        # One or several: a pot takes water on its valve's channel; a SOURCE loses it on
+        # every valve that draws from it (the barrel learns to run dry). Comma-joined env.
+        self.dose_topics = {t for t in (os.environ.get("SIM_DOSE_TOPIC") or "").split(",") if t}
         # Water from OUTSIDE the society — the meddler's channel (ag:rainTopic). Arrives at the
         # soil exactly as a dose does, which is the point: the pot cannot tell a bought litre
         # from a kind stranger's, and neither can the agent except by not having decided it.
@@ -282,7 +284,7 @@ class SimulatedSensor:
             log.warning("%s: unreadable payload on %s", self.sensor_id, msg.topic)
             return
 
-        if msg.topic in (self.dose_topic, self.rain_topic) and msg.topic:
+        if msg.topic and (msg.topic in self.dose_topics or msg.topic == self.rain_topic):
             self._receive(float(doc.get("ml") or 0.0))
             return
 
@@ -418,7 +420,11 @@ class SimulatedSensor:
         if ml <= 0:
             return
         for v in self.values:
-            if v.litres_per_fraction > 0:
+            # The SIGN of the conversion is which side of the wire this value is on: a pot's
+            # litresPerFraction is positive (water raises the valued property), a source's
+            # stated dose effect is negative (the litre that fills a pot lowers the barrel
+            # it left). Zero stays "water means nothing to this value".
+            if v.litres_per_fraction:
                 v.value = v.clamp(v.value + (ml / 1000.0) / v.litres_per_fraction)
                 log.info("%s: received %.0f ml -> %s=%.3f", self.sensor_id, ml, v.pointer, v.value)
 

@@ -103,7 +103,12 @@ An initial value used to be held to 0..1, on the reasoning that it is a fraction
                 $this <http://example.org/agora#modelInitialValue> ?initial .
                 OPTIONAL { $this <http://example.org/agora#modelMinValue> ?min }
                 OPTIONAL { $this <http://example.org/agora#modelMaxValue> ?max }
+                OPTIONAL {
+                    ?d <http://example.org/agora#simulatedBy> $this ;
+                       <http://example.org/agora/sensing#monitors> ?subject .
+                    ?subject <http://example.org/agora#modelMaxValue> ?subjectMax
+                }
+                BIND(COALESCE(?max, ?subjectMax, 1.0) AS ?high)
                 BIND(COALESCE(?min, 0.0) AS ?low)
-                BIND(COALESCE(?max, 1.0) AS ?high)
                 FILTER(?initial < ?low || ?initial > ?high)
             }""" ] .
