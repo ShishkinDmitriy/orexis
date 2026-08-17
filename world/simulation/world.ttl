@@ -131,7 +131,7 @@
 :fern a water:Plant ;
     ag:localId "fern" ; water:servedBy :barrel1 ;
     ag:rainTopic "rain/fern" ;
-    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
+    water:driesPerDay 0.12 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
@@ -150,7 +150,7 @@
 :tomato a water:Plant ;
     ag:localId "tomato" ; water:servedBy :barrel1 ;
     ag:rainTopic "rain/tomato" ;
-    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
+    water:driesPerDay 0.20 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
@@ -163,7 +163,7 @@
 :succulent a water:Plant ;
     ag:localId "succulent" ; water:servedBy :barrel1 ;
     ag:rainTopic "rain/succulent" ;
-    water:dryRatePerTick 0.008 ; water:litresPerFraction 2.0 ;
+    water:driesPerDay 0.04 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
@@ -261,9 +261,8 @@
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
         ag:modelInitialValue 0.45 ;
-        #  A real fern pot: roughly an eighth of saturation per day, watering every two-ish
-        #  days. Under timeScale 24 that is a round every couple of bench hours.
-        ag:modelDriesPerDay 0.12 ;
+        #  No drying stated here since #164: the pot's own water:driesPerDay above is the
+        #  physics, entailed into the kernel's term, and this model would only override it.
         ag:modelTickSeconds 3 ] .
 
 #  The second property on that same wire. No bus, no command topic of its own, no principal —
@@ -286,7 +285,7 @@
         ag:modelMinValue -10.0 ; ag:modelMaxValue 45.0 ;
         ag:modelInitialValue 21.0 ;
         #  A room, not a trend: 21 at the shoulders, ~25 mid-afternoon, ~17 before dawn. The
-        #  old model warmed forever, one step per reading — the artifact modelDriesPerDay's
+        #  old model warmed forever, one step per reading — the artifact the model loss term's
         #  comment records, wearing a minus sign.
         ag:modelDailySwing 4.0 ;
         ag:modelTickSeconds 3 ] .
@@ -310,7 +309,6 @@
         ag:modelInitialValue 0.45 ;
         #  The thirsty one: a fifth of saturation per day, which is why it is also the anxious
         #  one — its cadence beliefs and its physics agree about how fast trouble arrives.
-        ag:modelDriesPerDay 0.20 ;
         ag:modelTickSeconds 3 ] .
 
 :moisture_sensor_succulent a sosa:Sensor , ag:Device ;
@@ -331,7 +329,6 @@
     ag:simulatedBy [ a ag:DeviceModel ;
         ag:modelInitialValue 0.45 ;
         #  A succulent barely drinks: a watering every week or two, real and simulated.
-        ag:modelDriesPerDay 0.04 ;
         ag:modelTickSeconds 3 ] .
 
 ##########  The supplier's valves — real valves, stood in for  ##########

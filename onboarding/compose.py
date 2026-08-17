@@ -229,7 +229,7 @@ _SIM_MODE = {
 # lesson is not "name the right term" but "name no term", which this now does.
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?port
-       ?pointer ?initial ?dries ?swing ?litres ?minValue ?maxValue ?scale ?rainTopic
+       ?pointer ?initial ?loses ?subjectLoses ?swing ?litres ?minValue ?maxValue ?scale ?rainTopic
 WHERE {{
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
      <{MQTT}onBus> ?onBus .
@@ -240,13 +240,19 @@ WHERE {{
   OPTIONAL {{ ?deviceModel <{AG}modelTickSeconds> ?tick }}
   OPTIONAL {{ ?s <{MQTT}readingPointer> ?pointer }}
   OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
-  OPTIONAL {{ ?model <{AG}modelDriesPerDay> ?dries }}
+  OPTIONAL {{ ?model <{AG}modelLosesPerDay> ?loses }}
   OPTIONAL {{ ?model <{AG}modelDailySwing> ?swing }}
   OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
   OPTIONAL {{ ?s <{SOSA}observes> ?wetProperty .
              ?conversion <{MARKET}aboutProperty> ?wetProperty .
-             ?subject ?conversion ?litres }}
+             ?subject ?conversion ?litres .
+             # The subject's own loss rate (#164), riding the same denomination join: the
+             # property water moves is the property that drains, so the physics reaches
+             # exactly the valued channel and never the thermometer beside it. The kernel
+             # term is read — a domain's own word (water:driesPerDay) arrives entailed
+             # through its subproperty bridge, so no domain is named here either.
+             OPTIONAL {{ ?subject <{AG}modelLosesPerDay> ?subjectLoses }} }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
   OPTIONAL {{ ?w a <{AG}World> ; <{AG}timeScale> ?scale }}
   OPTIONAL {{ ?subject <{AG}rainTopic> ?rainTopic }}
@@ -264,8 +270,12 @@ def _values(rows: list[dict]) -> str:
     specs = []
     for row in sorted(rows, key=lambda r: r.get("pointer") or "/value"):
         spec = {"pointer": row.get("pointer") or "/value"}
+        # An explicitly modelled loss is an OVERRIDE; absent one, the subject's own
+        # physics (entailed from its domain's word — water:driesPerDay, #164) is the fact.
+        if row.get("loses") in (None, "") and row.get("subjectLoses") not in (None, ""):
+            row = {**row, "loses": row["subjectLoses"]}
         for key, field in (("min", "minValue"), ("max", "maxValue"),
-                           ("initial", "initial"), ("dries", "dries"), ("swing", "swing"),
+                           ("initial", "initial"), ("loses", "loses"), ("swing", "swing"),
                            ("litres", "litres")):
             if row.get(field) not in (None, ""):
                 spec[key] = float(row[field])

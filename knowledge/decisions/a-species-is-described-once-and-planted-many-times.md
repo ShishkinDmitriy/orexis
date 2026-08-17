@@ -51,7 +51,7 @@ That is the whole of it. Eight conditions — two ranges across four properties,
 nothing measures — arrive from the package. Nothing about how to look after a Zamioculcas is written in a world, and a second one is
 one triple.
 
-**What stays per-pot is what is about the pot**: `water:dryRatePerTick` is how fast *this* pot
+**What stays per-pot is what is about the pot**: `water:driesPerDay` is how fast *this* pot
 dries, which depends on the pot, the position and the soil, not on the species.
 
 # Two ranges, because this plant is the case that needs them

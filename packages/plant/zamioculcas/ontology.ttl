@@ -52,7 +52,7 @@ though nothing in this repository can act on it.""" .
 #
 # Stated on the class as `owl:hasValue`, so the ranges are ONE pair of individuals every ZZ shares
 # — which is what a species fact is. A per-pot fact (how fast THIS pot dries) is not here; that is
-# `water:dryRatePerTick`, stated per plant in a world, because it is about the pot and not the
+# `water:driesPerDay`, stated per plant in a world, because it is about the pot and not the
 # species.
 
 :ZamioculcasZamiifolia rdfs:subClassOf

@@ -214,10 +214,57 @@ def test_a_generated_stand_in_runs_at_the_worlds_pace():
     assert fern_rows and fern_rows[0]["scale"] == "144"
     values = json.loads(_values(fern_rows))
     moisture = next(v for v in values if v["pointer"] == "/moisture")
-    assert moisture.get("dries") == 0.12
+    assert moisture.get("loses") == 0.12
     assert "drift" not in moisture
     temperature = next(v for v in values if v["pointer"] == "/temperature")
     assert temperature.get("swing") == 4.0
+
+
+def test_the_pot_is_the_only_statement_of_its_own_drying():
+    """#164 closed the other way round: water:driesPerDay on the PLANT is the physics, the
+    closure entails the kernel term the generation reads, and the moisture models state no
+    copy — one fact, one place. The join rides the denomination (the property water moves is
+    the property that dries), so the thermometer on the same wire gains no drying."""
+    import json
+
+    from agent import ratified
+    from agent.ontology import AG, WORLD_GRAPH
+    from onboarding.compose import _SIMULATED_Q, _values
+
+    ds = ratified.dataset("simulation")
+    models = ratified.rows(ds, f"""SELECT ?m WHERE {{
+        ?m a <{AG}DeviceModel> . ?m <{AG}modelLosesPerDay> ?v }}""")
+    assert not models, "a moisture model restating the pot's physics is the copy #164 retired"
+
+    rows = ratified.rows(ds, _SIMULATED_Q)
+    for sim_id, rate in (("moisture_sensor_fern", 0.12), ("moisture_sensor_tomato", 0.2),
+                         ("moisture_sensor_succulent", 0.04)):
+        own = [r for r in rows if r["id"] == sim_id]
+        values = json.loads(_values(own))
+        moisture = next(v for v in values if v["pointer"] in ("/moisture", "/value"))
+        assert moisture.get("loses") == rate, f"{sim_id}: the pot's own physics must arrive"
+        for v in values:
+            if v is not moisture:
+                assert "loses" not in v, "the loss rate leaked past the denomination join"
+
+
+def test_a_model_stating_its_own_drying_overrides_the_pot():
+    """The kernel term survives as an OVERRIDE: a model that states drying directly is a
+    deliberate second opinion and wins over the subject's physics."""
+    import json
+
+    from agent import ratified
+    from agent.ontology import AG, WORLD_GRAPH
+    from onboarding.compose import _SIMULATED_Q, _values
+
+    ds = ratified.dataset("simulation")
+    ds.update(f"""INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m <{AG}modelLosesPerDay> 0.5 }} }}
+WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+    ?s <{AG}localId> "moisture_sensor_fern" ; <{AG}simulatedBy> ?m }} }}""")
+    rows = [r for r in ratified.rows(ds, _SIMULATED_Q) if r["id"] == "moisture_sensor_fern"]
+    values = json.loads(_values(rows))
+    moisture = next(v for v in values if v["pointer"] == "/moisture")
+    assert moisture.get("loses") == 0.5, "an explicit model figure is a deliberate override"
 
 
 def test_the_meddler_is_its_own_service_with_its_own_credential():

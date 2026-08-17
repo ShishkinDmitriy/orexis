@@ -458,9 +458,10 @@ class SubscribingModule(SensingModule):
         ends at or before the predicted trouble, never astride it.
 
         No slope yet — fewer than two readings, or a fresh restart — means no bound, which is
-        the pre-#133 behaviour, honestly reached. The declared `dryRatePerTick` is deliberately
-        NOT the fallback the issue suggested: it is a domain term sensing may not name, and
-        its tick is undefined for a real pot. Evidence or nothing.
+        the pre-#133 behaviour, honestly reached. The declared `water:driesPerDay` is deliberately
+        NOT the fallback the issue suggested: it is a domain term sensing may not name — the
+        simulator generation reads it through the kernel bridge, but a TREND here is earned
+        from this agent's own readings. Evidence or nothing.
         """
         b = self.beliefs
         urgency = self.agent.urgency(subject_uri, observed_property, value)
