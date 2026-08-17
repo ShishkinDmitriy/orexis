@@ -152,8 +152,13 @@ WHERE {{
 _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
      <{MQTT}onBus> ?bus .
-  ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
+  {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic }}
+  UNION
+  {{ ?valve <{ACTUATION}drawsFrom> ?subject ; <{MQTT}statusTopic> ?statusTopic }}
  }}""")
+# The UNION's second branch is the SUPPLY side (the barrel learns to run dry): a source's
+# level stand-in hears every valve that draws from its subject — same guard, same grant
+# shape, because the litre is one event with two witnesses.
 
 # And the rain, by the same guard: a simulated sensor whose subject can be rained on hears it
 # arrive on the subject's ag:rainTopic. Its own channel rather than the valve's status topic,

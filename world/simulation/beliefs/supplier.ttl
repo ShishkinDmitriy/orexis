@@ -3,11 +3,13 @@
 @prefix reporting: <http://example.org/agora/reporting#> .
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
 
 #  The supplier's PRIVATE beliefs — its terms as a genuine seller, not a stake-free utility.
 #
-#  It composed market:Hosting and actuation:Actuation, so only those modules' terms appear. There is no
-#  target here and no cadence: it neither wants anything watered nor perceives anything.
+#  It composed market:Hosting, actuation:Actuation and — since the barrel learned to run dry —
+#  sensing:Listening, so only those modules' terms appear. There is no target here and no
+#  cadence: it wants nothing watered, and the one thing it perceives announces on its own clock.
 
 ##  market:Hosting — how it runs a round
 :supplier
@@ -25,6 +27,13 @@
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
 :supplier reporting:metricsIntervalS 60 .
+
+##  sensing:Listening — the barrel's level sensor announces on its own clock (arc 1), and all
+#   a listener states is how long it waits before calling the thing gone quiet.
+:supplier sensing:maxReadingAgeS 300 ;
+    #  Demanded of every perceiver by the shapes; for a pure listener it has no commanded
+    #  interval to be relative to, so it is slack on the announcing clock and nothing more.
+    sensing:readingGraceS 45 .
 
 ##  No self-review. The world gives this agent no mandate — it holds no revisable
 #   setting to be given room on — so it derives no review capability and needs no

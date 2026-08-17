@@ -130,10 +130,12 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
 
 
 def test_the_error_names_every_missing_term(query):
+    # readingGraceS left this list when the barrel learned to run dry: the supplier states it
+    # now (the shapes demand it of every perceiver), so the genuinely missing pair is what a
+    # complete error must name — the test's point is EVERY, not WHICH.
     with pytest.raises(BeliefError) as exc:
         Beliefs(query, "supplier", SUPPLIER).read(SUBSCRIBING_BLOCK)
-    for term in (ontology.SENSING + "fastSleepS", ontology.SENSING + "slowSleepS",
-                 ontology.SENSING + "readingGraceS"):
+    for term in (ontology.SENSING + "fastSleepS", ontology.SENSING + "slowSleepS"):
         assert term in str(exc.value)
 
 

@@ -458,3 +458,25 @@ def test_the_persistence_figure_is_config_like_everything_else():
     device, _ = _device([MOISTURE], SIM_ALARM_PERSIST_LOOKS="3",
                         SIM_COMMAND_TOPIC="sensors/board_x/cmd")
     assert device.alarm_persist == 3
+
+
+# --- the barrel learns to run dry (arc 1) -------------------------------------
+
+def test_a_source_drains_by_what_its_valves_dispense():
+    """The sign of the conversion is which side of the wire a value is on: the same 500 ml
+    that raises a pot's fraction lowers the source's level by half a litre. Clamped at dry —
+    a barrel cannot owe water."""
+    device, published = _device([{"pointer": "/value", "min": 0.0, "max": 5.0,
+                                  "initial": 3.0, "litres": -1.0}])
+    device._receive(500)
+    assert device.values[0].value == pytest.approx(2.5)
+    device._receive(4000)
+    assert device.values[0].value == 0.0, "a barrel cannot owe water"
+
+
+def test_a_source_hears_every_valve_that_draws_from_it(monkeypatch):
+    """SIM_DOSE_TOPIC is a comma-joined set now: a pot takes water on one channel, a source
+    loses it on several."""
+    device, _ = _device([MOISTURE],
+                        SIM_DOSE_TOPIC="actuators/a/status,actuators/b/status")
+    assert device.dose_topics == {"actuators/a/status", "actuators/b/status"}

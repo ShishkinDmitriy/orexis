@@ -37,14 +37,18 @@ def test_supplier_runs_hosting_actuation_and_matching(agent):
     And `reporting`, which it did not earn — every agent is granted that one.
     """
     assert {m.name for m in agent("supplier").modules} == {
-        "hosting", "actuation", "pay-as-bid", "reporting"}
+        "hosting", "actuation", "pay-as-bid", "reporting", "listening"}
 
 
-def test_the_supplier_has_no_sensing(agent):
-    """It is wired to no sensor, so it neither polls nor listens — and is never asked to."""
+def test_the_supplier_listens_to_its_stock_and_schedules_nothing(agent):
+    """Since the barrel learned to run dry, the supplier polls its level sensor — a push
+    device, so it derives Listening and only Listening: it commands no cadence, because a
+    float announces and is not asked. What it still lacks is a STAKE: seeing your barrel is
+    not wanting anything about it, which is the next arc's line to cross."""
     supplier = agent("supplier")
-    assert not any(m.name in ("subscribing", "listening") for m in supplier.modules)
-    assert supplier.me.sensors == ()
+    assert any(m.name == "listening" for m in supplier.modules)
+    assert not any(m.name == "subscribing" for m in supplier.modules)
+    assert [s.local_id for s in supplier.me.sensors] == ["barrel1_level"]
 
 
 def test_a_plant_agent_holds_no_actuator(agent):

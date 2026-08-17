@@ -341,3 +341,27 @@ def test_a_peripheral_inherits_its_boards_clock():
     air = next(s for s in fern.sensors if s.local_id == "air_temp_fern")
     assert air.sense_mode == SCHEDULED
 
+
+
+def test_the_barrel_stands_in_with_its_one_statement_ceiling():
+    """Arc 1's generation, end to end: the level stand-in drains (litres -1.0 from the
+    model's stated dose effect), its ceiling arrives ENTAILED from water:capacityL (the
+    subject's one statement — restating 5.0 on the model would be the #164 copy), it hears
+    every valve that draws from its barrel, and the drain-topic join multiplies no specs."""
+    import json
+
+    from agent import ratified
+    from onboarding.compose import _SIMULATED_Q, _values, _simulator
+
+    rows = [r for r in ratified.rows(ratified.dataset("simulation"), _SIMULATED_Q)
+            if r["id"] == "barrel1_level"]
+    values = json.loads(_values(rows))
+    assert len(values) == 1, "three drain topics must not become three values"
+    level = values[0]
+    assert level["litres"] == -1.0, "a dispensed litre lowers the source that gave it"
+    assert level["max"] == 5.0, "the ceiling is water:capacityL, entailed — one statement"
+    assert level["initial"] == 3.0 and level["min"] == 0.0
+
+    service = _simulator("simulation", rows)
+    assert service.count("actuators/valve_") == 3, "it hears every valve drawing from it"
+    assert 'SIM_SENSE_MODE: "push"' in service, "a level announces; it is not commanded"

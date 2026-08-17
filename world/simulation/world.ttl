@@ -92,6 +92,27 @@
     water:suppliedBy :supplier ;
     water:capacityL 5.0 .
 
+#  The barrel's own witness (the barrel learns to run dry, arc 1). A float/level sensor the
+#  SUPPLIER polls: the stock behind every promise the market makes becomes a fact its owner
+#  can hold, rather than a surprise the pots discover. Push, like the float switch the
+#  terrace build will wire — a level announces, it is not commanded. The stand-in drains on
+#  every dose any valve draws (ag:modelDoseLitres -1.0: the litre that fills a pot lowers
+#  the barrel it left) and its ceiling is NOT restated: water:capacityL is a subproperty of
+#  ag:modelMaxValue, so the 5.0 above is the one statement and the model inherits it.
+:barrel1_level a sosa:Sensor , ag:Device ;
+    ag:localId "barrel1_level" ;
+    mqtt:onBus :local_bus ;
+    sensing:senseMode sensing:PushProcedure ;
+    sensing:monitors :barrel1 ;
+    sosa:observes water:StoredLitres ;
+    scaling:quantityUnit unit:L ;
+    mqtt:readingTopic "sensors/barrel1_level/reading" ;
+    ag:simulatedBy [ a ag:DeviceModel ;
+        ag:modelMinValue 0.0 ;
+        ag:modelInitialValue 3.0 ;
+        ag:modelDoseLitres -1.0 ;
+        ag:modelTickSeconds 30 ] .
+
 ##########  The supplier — runs the venue and owns the valves  ##########
 #  Derivation gives it Hosting (it owns a market) and Actuation (it holds valves), and NOT
 #  Subscribing or Bidding — it is wired to no sensor and plumbed into no market as a buyer. Its
@@ -104,6 +125,10 @@
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
     market:matchesBy market:PayAsBid ;
+    #  It watches its own stock (arc 1): polling the barrel's level sensor derives Listening,
+    #  so the supplier finally SEES what it sells. No stake yet — that is the next arc — so
+    #  it records honestly and wants nothing about it.
+    sensing:polls :barrel1_level ;
     actuation:hasActuator :valve_fern , :valve_tomato , :valve_succulent .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########

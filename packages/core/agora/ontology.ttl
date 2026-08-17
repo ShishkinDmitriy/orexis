@@ -59,6 +59,10 @@ ag:modelInitialValue a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:
     rdfs:label "model initial value" ;
     rdfs:comment "What it reads before anything has happened to it." .
 
+ag:modelDoseLitres a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "model dose litres" ;
+    rdfs:comment "How a dispensed litre moves this modelled value, SIGNED — the override for values that are not anyone's pot, exactly as modelLosesPerDay is for drying. A pot's conversion arrives through the domain's denomination (litresPerFraction, positive: water raises the valued property); a SOURCE states -1.0 here, because the same litre that fills a pot lowers the barrel it left. The sign is which side of the wire you are on." .
+
 ag:modelLosesPerDay a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     # Un-domained since #164: stated on a DeviceModel as an override, or entailed onto a
     # SUBJECT from a domain's own physics term (water:driesPerDay rdfs:subPropertyOf this),

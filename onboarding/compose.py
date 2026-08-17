@@ -228,8 +228,9 @@ _SIM_MODE = {
 # agent/ontology.py warns about, caught by exactly the detector built to catch it — and the
 # lesson is not "name the right term" but "name no term", which this now does.
 _SIMULATED_Q = f"""
-SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?port
-       ?pointer ?initial ?loses ?subjectLoses ?swing ?litres ?minValue ?maxValue ?scale ?rainTopic
+SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?drainTopic ?port
+       ?pointer ?initial ?loses ?subjectLoses ?swing ?litres ?doseLitres ?minValue ?maxValue
+       ?subjectMax ?scale ?rainTopic
 WHERE {{
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
      <{MQTT}onBus> ?onBus .
@@ -254,6 +255,13 @@ WHERE {{
              # through its subproperty bridge, so no domain is named here either.
              OPTIONAL {{ ?subject <{AG}modelLosesPerDay> ?subjectLoses }} }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
+  # The SUPPLY side of the same wire (the barrel learns to run dry): a level stand-in watches
+  # every valve that DRAWS from its subject — the litre that fills a pot lowers the barrel.
+  OPTIONAL {{ ?drainer <{ACTUATION}drawsFrom> ?subject ; <{MQTT}statusTopic> ?drainTopic }}
+  # A subject may carry the model's ceiling by entailment (water:capacityL is a subproperty
+  # of ag:modelMaxValue) — one statement, the #164 pattern, read here like the drying is.
+  OPTIONAL {{ ?subject <{AG}modelMaxValue> ?subjectMax }}
+  OPTIONAL {{ ?model <{AG}modelDoseLitres> ?doseLitres }}
   OPTIONAL {{ ?w a <{AG}World> ; <{AG}timeScale> ?scale }}
   OPTIONAL {{ ?subject <{AG}rainTopic> ?rainTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
@@ -268,12 +276,25 @@ def _values(rows: list[dict]) -> str:
     Sorted so regenerating an unchanged world produces an unchanged file.
     """
     specs = []
+    seen_pointers = set()
     for row in sorted(rows, key=lambda r: r.get("pointer") or "/value"):
+        # One spec per VALUE: the drain-topic join (a source hears several valves) multiplies
+        # rows without multiplying values, so a pointer builds its spec exactly once.
+        if (row.get("pointer") or "/value") in seen_pointers:
+            continue
+        seen_pointers.add(row.get("pointer") or "/value")
         spec = {"pointer": row.get("pointer") or "/value"}
         # An explicitly modelled loss is an OVERRIDE; absent one, the subject's own
         # physics (entailed from its domain's word — water:driesPerDay, #164) is the fact.
         if row.get("loses") in (None, "") and row.get("subjectLoses") not in (None, ""):
             row = {**row, "loses": row["subjectLoses"]}
+        # The same two moves for the supply side: a stated dose effect (a source's -1.0)
+        # overrides the denomination's conversion, and the subject's entailed ceiling
+        # (water:capacityL) is the max where the model states none.
+        if row.get("doseLitres") not in (None, ""):
+            row = {**row, "litres": row["doseLitres"]}
+        if row.get("maxValue") in (None, "") and row.get("subjectMax") not in (None, ""):
+            row = {**row, "maxValue": row["subjectMax"]}
         for key, field in (("min", "minValue"), ("max", "maxValue"),
                            ("initial", "initial"), ("loses", "loses"), ("swing", "swing"),
                            ("litres", "litres")):
@@ -347,10 +368,16 @@ def _simulator(world: str, rows: list[dict]) -> str:
     row = rows[0]
     sim_id = row["id"]
     mode = _SIM_MODE.get(row.get("senseMode") or "", "scheduled")
+    # One device may take water on one channel (a pot: the valve that actuates it) or LOSE it
+    # on several (a source: every valve that draws from it) — the union, sorted so an
+    # unchanged world regenerates an unchanged file, comma-joined into the one env var.
+    dose_topics = ",".join(sorted(
+        {r.get("doseTopic") for r in rows if r.get("doseTopic")} |
+        {r.get("drainTopic") for r in rows if r.get("drainTopic")}))
     optional = "".join(
         f'\n      {k}: "{v}"' for k, v in (
             ("SIM_COMMAND_TOPIC", row.get("commandTopic")),
-            ("SIM_DOSE_TOPIC", row.get("doseTopic")),
+            ("SIM_DOSE_TOPIC", dose_topics),
             ("SIM_TICK_SECONDS", row.get("tick")),
             # The world's clock (ag:timeScale), handed to every stand-in alike, because
             # physics that age at different rates stop composing. And the rain channel
