@@ -285,7 +285,7 @@
         ag:modelMinValue -10.0 ; ag:modelMaxValue 45.0 ;
         ag:modelInitialValue 21.0 ;
         #  A room, not a trend: 21 at the shoulders, ~25 mid-afternoon, ~17 before dawn. The
-        #  old model warmed forever, one step per reading — the artifact modelDriesPerDay's
+        #  old model warmed forever, one step per reading — the artifact the model loss term's
         #  comment records, wearing a minus sign.
         ag:modelDailySwing 4.0 ;
         ag:modelTickSeconds 3 ] .

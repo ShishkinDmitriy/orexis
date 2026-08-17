@@ -214,7 +214,7 @@ def test_a_generated_stand_in_runs_at_the_worlds_pace():
     assert fern_rows and fern_rows[0]["scale"] == "144"
     values = json.loads(_values(fern_rows))
     moisture = next(v for v in values if v["pointer"] == "/moisture")
-    assert moisture.get("dries") == 0.12
+    assert moisture.get("loses") == 0.12
     assert "drift" not in moisture
     temperature = next(v for v in values if v["pointer"] == "/temperature")
     assert temperature.get("swing") == 4.0
@@ -233,7 +233,7 @@ def test_the_pot_is_the_only_statement_of_its_own_drying():
 
     ds = ratified.dataset("simulation")
     models = ratified.rows(ds, f"""SELECT ?m WHERE {{
-        ?m a <{AG}DeviceModel> . ?m <{AG}modelDriesPerDay> ?v }}""")
+        ?m a <{AG}DeviceModel> . ?m <{AG}modelLosesPerDay> ?v }}""")
     assert not models, "a moisture model restating the pot's physics is the copy #164 retired"
 
     rows = ratified.rows(ds, _SIMULATED_Q)
@@ -242,10 +242,10 @@ def test_the_pot_is_the_only_statement_of_its_own_drying():
         own = [r for r in rows if r["id"] == sim_id]
         values = json.loads(_values(own))
         moisture = next(v for v in values if v["pointer"] in ("/moisture", "/value"))
-        assert moisture.get("dries") == rate, f"{sim_id}: the pot's own physics must arrive"
+        assert moisture.get("loses") == rate, f"{sim_id}: the pot's own physics must arrive"
         for v in values:
             if v is not moisture:
-                assert "dries" not in v, "drying leaked past the denomination join"
+                assert "loses" not in v, "the loss rate leaked past the denomination join"
 
 
 def test_a_model_stating_its_own_drying_overrides_the_pot():
@@ -258,13 +258,13 @@ def test_a_model_stating_its_own_drying_overrides_the_pot():
     from onboarding.compose import _SIMULATED_Q, _values
 
     ds = ratified.dataset("simulation")
-    ds.update(f"""INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m <{AG}modelDriesPerDay> 0.5 }} }}
+    ds.update(f"""INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m <{AG}modelLosesPerDay> 0.5 }} }}
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
     ?s <{AG}localId> "moisture_sensor_fern" ; <{AG}simulatedBy> ?m }} }}""")
     rows = [r for r in ratified.rows(ds, _SIMULATED_Q) if r["id"] == "moisture_sensor_fern"]
     values = json.loads(_values(rows))
     moisture = next(v for v in values if v["pointer"] == "/moisture")
-    assert moisture.get("dries") == 0.5, "an explicit model figure is a deliberate override"
+    assert moisture.get("loses") == 0.5, "an explicit model figure is a deliberate override"
 
 
 def test_the_meddler_is_its_own_service_with_its_own_credential():

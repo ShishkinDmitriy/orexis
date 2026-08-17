@@ -96,7 +96,7 @@ def _device(values, **env):
 
 
 MOISTURE = {"pointer": "/value", "min": 0.0, "max": 1.0, "initial": 0.45,
-            "dries": 0.12, "litres": 2.0}
+            "loses": 0.12, "litres": 2.0}
 # Deliberately swing-less: a swing makes a reading depend on the wall clock, and the shared
 # fixture must publish the same bytes at noon and at midnight. The diurnal cycle has its own
 # test, on its own Value.

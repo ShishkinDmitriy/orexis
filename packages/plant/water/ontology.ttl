@@ -43,9 +43,9 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 #################  Physics of a pot (public: it is how the world behaves)  #################
 
 :driesPerDay a owl:DatatypeProperty ; rdfs:domain :Plant ; rdfs:range xsd:decimal ;
-    rdfs:subPropertyOf ag:modelDriesPerDay ;
+    rdfs:subPropertyOf ag:modelLosesPerDay ;
     rdfs:label "dries per day" ;
-    rdfs:comment "How fast this pot loses moisture, as a fraction of saturation per simulated day — the pot's own physics, stated publicly because it is how the world behaves (#164). Was dryRatePerTick, a figure whose tick was never defined and which nothing had ever read: the stand-ins ran on a private copy (ag:modelDriesPerDay on the device model) restating the same fact in different units. The subproperty bridge is the whole mechanism, on the capacityLitres -> market:lotCapacity precedent: the world states the pot's physics in the domain's term, the closure entails the kernel's, and the simulator generation reads the conclusion naming no domain. The model term survives as an OVERRIDE for values that are not anyone's pot — a room's temperature drifts on the model's say-so, a pot dries on its own." .
+    rdfs:comment "How fast this pot loses moisture, as a fraction of saturation per simulated day — the pot's own physics, stated publicly because it is how the world behaves (#164). Was dryRatePerTick, a figure whose tick was never defined and which nothing had ever read: the stand-ins ran on a private copy (the kernel model term, on the device model) restating the same fact in different units. The subproperty bridge is the whole mechanism, on the capacityLitres -> market:lotCapacity precedent: the world states the pot's physics in the domain's term, the closure entails the kernel's, and the simulator generation reads the conclusion naming no domain. The model term survives as an OVERRIDE for values that are not anyone's pot — a room's temperature drifts on the model's say-so, a pot dries on its own." .
 
 # Deliberately un-domained. On a PLANT (in the world) it is the physical fact: what that pot
 # actually takes. On an AGENT (in its own beliefs) it is what the agent BELIEVES its pot

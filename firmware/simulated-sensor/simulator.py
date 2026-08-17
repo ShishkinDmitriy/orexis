@@ -115,7 +115,7 @@ class Value:
     both would be describing two different kinds of number down one wire — which is exactly what
     a KY-015 does.
 
-    **The physics run on the clock, not on the readings.** `dries` is units per SIMULATED DAY,
+    **The physics run on the clock, not on the readings.** `loses` is units per SIMULATED DAY,
     integrated over real elapsed time times the world's timescale — the old per-tick drift made
     a closely-watched pot dry faster than an ignored one, which is backwards, and became
     unmissable once the agents started varying how closely they watch. `swing` is the amplitude
@@ -128,7 +128,7 @@ class Value:
         self.min = float(spec.get("min", 0.0))
         self.max = float(spec.get("max", 1.0))
         self.initial = float(spec.get("initial", self.min))
-        self.dries_per_day = float(spec.get("dries", 0.0))
+        self.loses_per_day = float(spec.get("loses", 0.0))
         self.daily_swing = float(spec.get("swing", 0.0))
         # Only the value the domain's valuation is denominated in moves when water arrives. A
         # thermometer on a watered pot reads the same before and after, which is the whole
@@ -150,7 +150,7 @@ class Value:
             self.value = self.clamp(self.value + self.forced_drift_per_s * dt_real_s)
             return
         sim_days = dt_real_s * self.timescale / 86400.0
-        self.value = self.clamp(self.value - self.dries_per_day * sim_days)
+        self.value = self.clamp(self.value - self.loses_per_day * sim_days)
 
     def read(self, sim_time_s: float) -> float:
         """What the world holds at this instant: the base plus where the day's cycle sits.
