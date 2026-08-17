@@ -42,7 +42,7 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 :servedBy a owl:ObjectProperty ; rdfs:domain :Plant ; rdfs:range :WaterSource ;
     rdfs:label "served by" ;
     rdfs:comment "Plumbing/reachability: which source can water this plant." .
-:suppliedBy a owl:ObjectProperty ; rdfs:domain :WaterSource ; rdfs:range ag:Agent ;
+:suppliedBy a owl:ObjectProperty ; rdfs:subPropertyOf market:offeredBy ; rdfs:domain :WaterSource ; rdfs:range ag:Agent ;
     rdfs:label "supplied by" .
 :capacityL a owl:DatatypeProperty ; rdfs:domain :WaterSource ; rdfs:range xsd:decimal ;
     rdfs:subPropertyOf market:lotCapacity , ag:modelMaxValue ;

@@ -56,3 +56,65 @@ WHERE  {
     ?market a market:Market .
     ?matching a market:BidMatchingCapability .
 }
+ ;
+
+# Derivation: THE MARKET ITSELF, where want meets supply (a-market-arises-where-want-meets-supply).
+#
+# Everything a venue states is a function of facts that exist for their own reasons, except one
+# triple that is CONSENT: the owner stating market:matchesBy is opening shop. A source offered
+# by someone (market:offeredBy — each domain bridges its own word; water's suppliedBy among them)
+# who says how they match IS a market; the node's IRI and its topics are minted from the
+# source's id, on the channel precedent — a derived instance as a function of a given string,
+# so any package recomputing it lands on the same node. The topics are exactly the strings the
+# hand-authored venue used to state, so nothing downstream moves: only who-put-the-fact-there
+# changes. A world may still author a venue by hand where the wiring implies none; this adds,
+# never forbids.
+INSERT { GRAPH $derived {
+    ?market a market:Market ;
+        ag:localId ?marketId ;
+        market:marketFor ?source ;
+        market:offerTopic ?offer ; market:bidTopic ?bid ;
+        market:claimTopic ?claim ; market:redeemTopic ?redeem .
+    ?owner market:hosts ?market ;
+           ag:hasCapability market:Hosting ;
+           ag:hasCapability ?matching } }
+$given
+WHERE  {
+    ?source market:offeredBy ?owner ; ag:localId ?srcId .
+    ?owner market:matchesBy ?matching .
+    ?matching a market:BidMatchingCapability .
+    BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?srcId))) AS ?market)
+    BIND(CONCAT(?srcId, "_market") AS ?marketId)
+    BIND(CONCAT("market/", ?srcId, "/offer")  AS ?offer)
+    BIND(CONCAT("market/", ?srcId, "/bid")    AS ?bid)
+    BIND(CONCAT("market/", ?srcId, "/claim")  AS ?claim)
+    BIND(CONCAT("market/", ?srcId, "/redeem") AS ?redeem)
+} ;
+
+# Derivation: PARTICIPATION — plumbing implies it, and the world stops naming buyers.
+#
+# The premises are the Acquire walk's own (#189), at the level of GIVEN facts: an agent acting
+# for a subject that states a need in the denominated property, whose pot a pipe from THIS
+# source reaches. The pipe is the venue-tie — drawsFrom names the source, actuates names the
+# pot — so a second source's market never claims another's buyers. actuation: terms in a
+# market rule, honestly, as sensing's rules name mqtt: the plumbing is the premise and there
+# is no neutral word for a pipe. The market node is recomputed, not read: a derivation reads
+# facts, never conclusions, so the same BINDs land on the same minted IRI.
+INSERT { GRAPH $derived {
+    ?buyer market:bidsIn ?market ;
+           ag:hasCapability market:Bidding } }
+$given
+WHERE  {
+    ?source market:offeredBy ?owner ; ag:localId ?srcId .
+    ?owner market:matchesBy ?matching .
+    ?matching a market:BidMatchingCapability .
+    ?valve <http://example.org/agora/actuation#drawsFrom> ?source ;
+           <http://example.org/agora/actuation#actuates> ?pot .
+    ?buyer ag:actsFor ?pot .
+    ?pot <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
+    ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
+    ?cond <http://www.w3.org/ns/ssn/forProperty> ?prop .
+    ?valuation market:aboutProperty ?prop .
+    FILTER(?buyer != ?owner)
+    BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?srcId))) AS ?market)
+}
