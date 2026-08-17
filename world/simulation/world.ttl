@@ -79,13 +79,12 @@
 
 ##########  The venue  ##########
 
-:barrel1_market a market:Market ;
-    ag:localId "barrel1_market" ;
-    market:marketFor :barrel1 ;
-    market:offerTopic   "market/barrel1/offer" ;
-    market:bidTopic     "market/barrel1/bid" ;
-    market:claimTopic "market/barrel1/claim" ;
-    market:redeemTopic "market/barrel1/redeem" .
+#  No :barrel1_market here since arc 3: the venue DERIVES — a source offered by someone
+#  who states how they match IS a market, its topics and id minted from the source's id
+#  (byte-identical to what used to be written here), its buyers implied by the plumbing.
+#  See knowledge/decisions/a-market-arises-where-want-meets-supply.md; the one authored
+#  triple is the supplier's market:matchesBy below — stating your matching rule is opening
+#  shop, and deleting it at an amendment is closing.
 
 :barrel1 a water:WaterSource ;
     ag:localId "barrel1" ;
@@ -135,7 +134,6 @@
 
 :supplier a ag:Agent ;
     ag:localId "supplier" ;
-    market:hosts :barrel1_market ;
     #  How it matches bids to the lot. Public because a bidder cannot bid well against a
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
@@ -227,21 +225,18 @@
     ag:localId "fern" ;
     ag:actsFor :fern ;
     sensing:polls :moisture_sensor_fern , :air_temp_fern ;
-    market:bidsIn :barrel1_market ;
     mqtt:eventTopic "readings/fern" .
 
 :tomato_agent a ag:Agent ;
     ag:localId "tomato" ;
     ag:actsFor :tomato ;
     sensing:polls :moisture_sensor_tomato ;
-    market:bidsIn :barrel1_market ;
     mqtt:eventTopic "readings/tomato" .
 
 :succulent_agent a ag:Agent ;
     ag:localId "succulent" ;
     ag:actsFor :succulent ;
     sensing:polls :moisture_sensor_succulent ;
-    market:bidsIn :barrel1_market ;
     mqtt:eventTopic "readings/succulent" .
 
 ##########  What each agent may re-pick, and how far  ##########

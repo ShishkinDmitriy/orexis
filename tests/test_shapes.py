@@ -303,9 +303,16 @@ def test_a_plant_may_not_hold_a_desire():
 
 
 def test_market_must_state_all_three_channels():
+    # The shipped venue DERIVES since arc 3 — deleting from it would just re-derive — so the
+    # shape is shown on what it still exists for: a hand-authored venue (the derivation adds,
+    # never forbids) that forgot a channel.
     assert not _conforms(_mutate(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#barrel1_market> market:claimTopic ?t }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#barrel1_market> market:claimTopic ?t }} }}"""))
+        INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
+            <http://example.org/agora/world/simulation#lopsided_market>
+                a <http://example.org/agora/market#Market> ;
+                <http://example.org/agora#localId> "lopsided_market" ;
+                <http://example.org/agora/market#offerTopic> "market/lopsided/offer" ;
+                <http://example.org/agora/market#bidTopic> "market/lopsided/bid" }} }}"""))
 
 
 # --- the mc: wiring that cannot work must be refused --------------------------------------
