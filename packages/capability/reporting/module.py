@@ -17,9 +17,12 @@ Vocabulary: capabilities/reporting/ontology.ttl. Rules: capabilities/reporting/r
 
 from __future__ import annotations
 
-from agent import config
+import json
+
+from agent import config, sovereign
 from agent.metrics import tree_bytes
 from agent.module import Module, Timer
+from agent.store import bindings
 
 from .beliefs import REPORTING_BLOCK
 from .terms import STORING
@@ -36,6 +39,39 @@ class StoringModule(Module):
         self.beliefs = agent.beliefs.read(REPORTING_BLOCK)
         self._timer: Timer | None = None
         self._writer = None
+
+    # How many rows an answer may carry. A cap rather than a stream: the sovereign's
+    # questions are a person's, and a person who truly wants a million rows has the volume.
+    ANSWER_ROWS = 1000
+
+    def subscriptions(self) -> list[str]:
+        # The sovereign's question channel (agent/sovereign.py) — the one topic an agent
+        # listens on that the world does not state, because it is not the society's business:
+        # the ACL grants it to exactly one principal, and this module is where the agent
+        # answers for itself. In reporting, deliberately: saying how you are and answering
+        # what you believe are one capability's two voices.
+        return [sovereign.query_topic(self.agent.id)]
+
+    def handle(self, topic: str, payload: bytes) -> bool:
+        if topic != sovereign.query_topic(self.agent.id):
+            return False
+        try:
+            # The union view, not the public one: the sovereign asks about the WHOLE
+            # agent, and its private graphs are exactly what cannot be seen elsewhere.
+            rows = bindings(self.agent.store.query_union(payload.decode("utf-8")))
+            answer: dict = {"rows": rows[: self.ANSWER_ROWS]}
+            if len(rows) > self.ANSWER_ROWS:
+                answer["truncated"] = len(rows)
+        except Exception as exc:
+            # An UPDATE lands here too: store.query structurally cannot execute one, so the
+            # refusal is the engine's, not a filter that could rot. The error goes back —
+            # a silent drop would leave the sovereign staring at a timeout.
+            answer = {"error": str(exc)}
+        self.agent.publish(sovereign.result_topic(self.agent.id),
+                           json.dumps(answer, ensure_ascii=False))
+        self.log.info("answered the sovereign: %s", "error" if "error" in answer
+                      else f"{len(answer['rows'])} row(s)")
+        return True
 
     def start(self) -> None:
         """Begin reporting. Called once the connection is up, with the signal mask in place."""
@@ -86,6 +122,8 @@ class StoringModule(Module):
                             metrics.cadence_acked_s(local_id))
                  for local_id in sorted(metrics.sensors_seen())},
                 belief_bytes=tree_bytes(getattr(self.agent.store, "path", None)),
+                tagged=[row for m in self.agent.modules for m_row in [m.series()]
+                        for row in m_row],
             )
             if events:
                 self._writer.write_events(self.agent.id, events)

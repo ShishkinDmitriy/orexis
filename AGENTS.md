@@ -202,6 +202,8 @@ agora-wokwi <world> --import d.json  # the other way: DRAFT a hardware.ttl from 
 agora-wireviz <world>       # world/<world>/wiring.yaml — the wiring as a WireViz harness
 agora-wireviz <world> --import w.yaml   # and the same, drafted back from one
 agora-keygen <world>        # once per world, before it is onboarded
+agora-ask <world> <agent> 'SPARQL'   # the sovereign asks a RUNNING agent about itself — see
+                       # decisions/the-sovereign-may-ask.md. Read-only by construction.
 agora-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent
 podman build -t agora:local .                 # only when a dependency changes

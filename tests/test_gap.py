@@ -178,3 +178,20 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
     assert ok
     assert "survival envelope" not in report, \
         "merely dry is the society's ordinary working state, not a warning"
+
+
+def test_the_region_and_the_aim_reach_the_agents_own_bucket(monkeypatch):
+    """#61's argument extended from the revisable picks to the wants: WHERE the want sits, not
+    merely that it exists — and the property is a TAG, on the sovereign's own suggestion, so
+    one generic panel groups any number of wants where a suffixed field name could only be
+    string-matched. Into this agent's own series: the operator sees them, rivals do not."""
+    fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
+    desire = next(m for m in fern.modules if m.name == "desire")
+    rows = {tags["property"]: (measurement, fields)
+            for measurement, tags, fields in desire.series()}
+    m, moisture = rows["SoilMoisture"]
+    assert m == "agent_desire"
+    assert moisture == {"desired_low": 0.45, "desired_high": 0.65, "aim": 0.55}
+    _, temperature = rows["AirTemperature"]
+    assert temperature == {"desired_low": 18.0, "desired_high": 24.0}, \
+        "a want with no aim reports its region and no invented pick"

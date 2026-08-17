@@ -49,9 +49,16 @@ SELECT ?property ?value ?low ?high ?gap ?at WHERE {
   BIND((?low + ?high) / 2 AS ?centre)
   BIND(IF(?value < ?centre, COALESCE(?floor, ?low), COALESCE(?ceiling, ?high)) AS ?outer)
   BIND(IF(?outer > ?centre, ?outer - ?centre, ?centre - ?outer) AS ?room)
-  BIND(IF(?room = 0,
-          IF(?value = ?centre, 0.0, IF(?value > ?centre, 1.0, -1.0)),
-          (?value - ?centre) / ?room) AS ?raw)
+  #  ?value = ?centre is short-circuited BEFORE the division, and not only for elegance:
+  #  this store's engine (pyoxigraph, measured on 0.4.x) errors on decimal division when the
+  #  DIVIDEND is zero — 0.2/0.3 binds, 0/0.3 does not — so the row for a perfectly content
+  #  agent silently lost its ?gap and gaps_of raised. Found the day the sovereign channel's
+  #  test seeded a reading exactly at fern's centre; every earlier test happened to sit
+  #  off-centre. The zero case is answered by arithmetic nobody disputes: at the centre, the
+  #  gap is 0.
+  BIND(IF(?value = ?centre, 0.0,
+          IF(?room = 0, IF(?value > ?centre, 1.0, -1.0),
+             (?value - ?centre) / ?room)) AS ?raw)
   BIND(IF(?raw > 1, 1.0, IF(?raw < -1, -1.0, ?raw)) AS ?gap)
 }
 ORDER BY ?property

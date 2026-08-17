@@ -203,6 +203,22 @@ class Store:
     # per agent, the distinction it drew — "as myself" versus "as admin" — has no meaning.
     query_all = query
 
+    def query_union(self, sparql: str) -> dict:
+        """Read with the default graph as the union of EVERYTHING this store holds.
+
+        For exactly one caller: the sovereign's question channel (agent/sovereign.py). An
+        agent answering its sovereign answers about its WHOLE self — beliefs, record,
+        evidence, revisions — not only the public knowledge an ordinary query reads, and
+        making the sovereign spell each private graph IRI would be rule 1's own trap
+        (a graph IRI is an instance). Still read-only by construction: this is the same
+        query API, which structurally cannot execute an update.
+        """
+        out = io.BytesIO()
+        self._store.query(PREFIXES + sparql, use_default_graph_as_union=True).serialize(
+            output=out, format=ox.QueryResultsFormat.JSON
+        )
+        return json.loads(out.getvalue())
+
     def get_graph(self, graph_iri: str) -> str:
         """A graph's contents as Turtle, or empty if it does not exist yet.
 

@@ -364,3 +364,21 @@ class DesireModule(Module):
         if current:
             out["worst_gap"] = round(max(abs(g.gap) for g in current.values()), 3)
         return out
+
+    def series(self) -> list[tuple[str, dict, dict]]:
+        """WHERE the want sits, not merely that it exists (#61's argument, extended from the
+        revisable picks to the deduced regions) — one row per property, the property as a TAG
+        on the sovereign's own suggestion: `desired_low` grouped by `property` is one generic
+        panel for any number of wants, where a suffixed field name is a string a dashboard can
+        only match. Into this agent's OWN bucket — the operator sees them, rivals do not. A
+        region that quietly moved (a world amended, an instrument narrowed, a flowering season
+        ratified) and an aim drifting inside it are exactly the lines a sovereign wants."""
+        rows = []
+        for prop, region in sorted(self.regions.items()):
+            local = prop.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+            fields = {"desired_low": region.low, "desired_high": region.high}
+            aim = self.aim(prop)
+            if aim is not None:
+                fields["aim"] = aim
+            rows.append(("agent_desire", {"property": local}, fields))
+        return rows
