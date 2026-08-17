@@ -59,7 +59,8 @@ class InfluxWriter:
         self.write_api.write(bucket=self.bucket, record=point)
 
     def write_agent_health(self, agent_id: str, fields: dict,
-                           per_sensor: dict, belief_bytes: int | None = None) -> None:
+                           per_sensor: dict, belief_bytes: int | None = None,
+                           tagged: list | None = None) -> None:
         """One round of an agent's account of itself — see agent/metrics.py.
 
         Written in one call so a round is one round: a partial write would show as a moment when
@@ -84,6 +85,15 @@ class InfluxWriter:
             # command, visible instead of silent. Absent for old firmware, which stays legal.
             if acked_s is not None:
                 p.field("cadence_acked_s", int(acked_s))
+            points.append(p)
+        # Module-contributed dimensioned rows (Module.series): a property is a TAG, so one
+        # generic panel groups by it — the same argument that put `property` on a reading.
+        for measurement, tags, row_fields in (tagged or []):
+            p = Point(measurement).tag("agent", agent_id)
+            for name, value in tags.items():
+                p.tag(name, str(value))
+            for name, value in row_fields.items():
+                p.field(name, value)
             points.append(p)
         self.write_api.write(bucket=self.bucket, record=points)
 

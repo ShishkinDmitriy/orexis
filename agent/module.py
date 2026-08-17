@@ -89,6 +89,17 @@ class Module:
         """
         return {}
 
+    def series(self) -> list[tuple[str, dict, dict]]:
+        """Tagged rows for this agent's own bucket: (measurement, tags, fields), zero or more.
+
+        Where `reports()` contributes FIELDS to the one agent-health point, this contributes
+        POINTS with their own dimensions — for figures that exist per something a person
+        groups a dashboard by. A property is a tag, not a suffix baked into a field name:
+        `desired_low` tagged `property=SoilMoisture` groups; `desired_low_SoilMoisture` is a
+        string Grafana can only ever match. Same tick, same writer, same bucket; the `agent`
+        tag is added by the writer."""
+        return []
+
     def reports(self) -> dict:
         """Fields this module wants in its agent's own health series. Most have none.
 

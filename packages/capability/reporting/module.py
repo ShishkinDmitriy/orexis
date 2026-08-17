@@ -122,6 +122,8 @@ class StoringModule(Module):
                             metrics.cadence_acked_s(local_id))
                  for local_id in sorted(metrics.sensors_seen())},
                 belief_bytes=tree_bytes(getattr(self.agent.store, "path", None)),
+                tagged=[row for m in self.agent.modules for m_row in [m.series()]
+                        for row in m_row],
             )
             if events:
                 self._writer.write_events(self.agent.id, events)

@@ -41,8 +41,12 @@ silence-is-not-permission.
 
 Alongside, the passive half strengthened the same way (#61's argument extended from the
 revisable picks to the wants): the deduced region and the aim per property now reach the
-agent's own series bucket — `desired_low_*`, `desired_high_*`, `aim_*` — so a region that
-quietly moved and an aim drifting inside it are visible lines without a question asked.
+agent's own series bucket as an `agent_desire` measurement with the PROPERTY AS A TAG — the
+sovereign's own correction to a first draft that baked it into field names: `desired_low`
+grouped by `property` is one generic panel for any number of wants, where
+`desired_low_SoilMoisture` is a string a dashboard can only match. Carried by a small generic
+hook (`Module.series` — tagged rows on the same tick, same writer, same bucket), so the next
+per-dimension figure rides the same rail.
 
 **Found while testing**: the store's engine errors on decimal division when the dividend is
 zero, so `gap.rq` had always lost its `?gap` for an agent sitting exactly at its region's
