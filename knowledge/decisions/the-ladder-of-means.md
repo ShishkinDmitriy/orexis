@@ -49,6 +49,27 @@ pump per pot on per-pot bottles (self-watering agents, no market, Actuate rows);
 per pot on the SHARED barrel — the most instructive — where every agent owns its lever and
 still must buy the water, a winning claim authorising the agent's own pump to draw.
 
+## Enforcement: possession is not authority
+
+Asked immediately by the sovereign: N agents with their own pumps on another agent's tank —
+what stops stealing? The answer is the founding split this architecture is built on
+([trust-boundary](/decisions/trust-boundary.md),
+[thin-trusted-infra](/decisions/thin-trusted-infra.md)): an agent HOSTS its pump and does not
+COMMAND it. A dose happens only against a claim signed by the clearing — keys no agent holds,
+which is why `create_keypair` lives in onboarding — and the verification runs in the PUMP'S
+FIRMWARE, the bounded device, which mounts the society's public keys and nothing secret. A
+malicious agent commanding its own pump is refused by its own hardware, because the pump is
+loyal to the society's keys, not to whoever's box it sits in; loyalty is installed at flash
+time, which is why the sovereign flashes. Around that core: the broker ACL narrows who can
+speak to a command topic at all; the REA ledger plus dose confirmations plus the tank's own
+level instrument make any theft that somehow happened VISIBLE and attributable (dispensed
+minus sold is an auditable difference — theft here is evidence-producing, not merely hard);
+and the adversarial setting has a physical mirror of the co-signature, a supplier-held gate
+valve in series at the source, so a dose needs both parties' actuators to agree. What is
+honestly open: revocation ([#28](https://github.com/ShishkinDmitriy/agora/issues/28),
+[#29](https://github.com/ShishkinDmitriy/agora/issues/29)), and carrying the sim valves'
+verification into the real pump firmware when the terrace actuator is built.
+
 # Seams left open
 
 - **The Actuate rung is unimplemented** — no menu branch, no derivation granting a
