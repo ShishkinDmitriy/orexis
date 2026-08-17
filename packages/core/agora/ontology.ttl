@@ -59,9 +59,12 @@ ag:modelInitialValue a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:
     rdfs:label "model initial value" ;
     rdfs:comment "What it reads before anything has happened to it." .
 
-ag:modelDriesPerDay a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
+ag:modelDriesPerDay a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    # Un-domained since #164: stated on a DeviceModel as an override, or entailed onto a
+    # SUBJECT from a domain's own physics term (water:driesPerDay rdfs:subPropertyOf this),
+    # so the generator reads one kernel term and the pot keeps the only copy of its fact.
     rdfs:label "model dries per day" ;
-    rdfs:comment "How much of the observed property is lost per SIMULATED DAY. This was ag:modelDryRate, per tick, and the tick made the physics an artifact of attention: the pot dried one step per reading, so a closely-watched plant dried faster than an ignored one — backwards, and visibly so once the cadence machinery started varying how closely anyone watched. Time-based now, scaled by the world's ag:timeScale, so the pot loses what the day costs it however often it is read. Named apart from domain/water's water:dryRatePerTick, which carries rdfs:domain water:Plant — reusing it would make every model infer as a plant and inherit a plant's obligations." .
+    rdfs:comment "How much of the observed property is lost per SIMULATED DAY. This was ag:modelDryRate, per tick, and the tick made the physics an artifact of attention: the pot dried one step per reading, so a closely-watched plant dried faster than an ignored one — backwards, and visibly so once the cadence machinery started varying how closely anyone watched. Time-based now, scaled by the world's ag:timeScale, so the pot loses what the day costs it however often it is read. Since #164 the domain's water:driesPerDay is a subproperty of this: a pot states its physics once, in its own vocabulary, and the closure entails the kernel's term the generation reads — while a DeviceModel may still state this directly, as an override for values that are not anyone's pot." .
 
 ag:modelDailySwing a owl:DatatypeProperty ; rdfs:domain ag:DeviceModel ; rdfs:range xsd:decimal ;
     rdfs:label "model daily swing" ;

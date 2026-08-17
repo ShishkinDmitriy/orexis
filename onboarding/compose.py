@@ -229,7 +229,7 @@ _SIM_MODE = {
 # lesson is not "name the right term" but "name no term", which this now does.
 _SIMULATED_Q = f"""
 SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?port
-       ?pointer ?initial ?dries ?swing ?litres ?minValue ?maxValue ?scale ?rainTopic
+       ?pointer ?initial ?dries ?subjectDries ?swing ?litres ?minValue ?maxValue ?scale ?rainTopic
 WHERE {{
   ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
      <{MQTT}onBus> ?onBus .
@@ -246,7 +246,13 @@ WHERE {{
   OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
   OPTIONAL {{ ?s <{SOSA}observes> ?wetProperty .
              ?conversion <{MARKET}aboutProperty> ?wetProperty .
-             ?subject ?conversion ?litres }}
+             ?subject ?conversion ?litres .
+             # The pot's own drying (#164), riding the same denomination join: the property
+             # water moves is the property that dries, so the subject's physics reaches
+             # exactly the valued channel and never the thermometer beside it. The kernel
+             # term is read — a domain's own word (water:driesPerDay) arrives entailed
+             # through its subproperty bridge, so no domain is named here either.
+             OPTIONAL {{ ?subject <{AG}modelDriesPerDay> ?subjectDries }} }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
   OPTIONAL {{ ?w a <{AG}World> ; <{AG}timeScale> ?scale }}
   OPTIONAL {{ ?subject <{AG}rainTopic> ?rainTopic }}
@@ -264,6 +270,10 @@ def _values(rows: list[dict]) -> str:
     specs = []
     for row in sorted(rows, key=lambda r: r.get("pointer") or "/value"):
         spec = {"pointer": row.get("pointer") or "/value"}
+        # An explicitly modelled drying is an OVERRIDE; absent one, the subject's own
+        # physics (entailed from water:driesPerDay, #164) is the fact. One statement.
+        if row.get("dries") in (None, "") and row.get("subjectDries") not in (None, ""):
+            row = {**row, "dries": row["subjectDries"]}
         for key, field in (("min", "minValue"), ("max", "maxValue"),
                            ("initial", "initial"), ("dries", "dries"), ("swing", "swing"),
                            ("litres", "litres")):

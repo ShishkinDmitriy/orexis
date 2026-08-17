@@ -31,7 +31,7 @@ ZZ = "http://example.org/agora/zamioculcas#ZamioculcasZamiifolia"
 _FERN = """:fern a water:Plant ;
     ag:localId "fern" ; water:servedBy :barrel1 ;
     ag:rainTopic "rain/fern" ;
-    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
+    water:driesPerDay 0.12 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
             ssn:forProperty water:SoilMoisture ;
@@ -51,7 +51,7 @@ _FERN = """:fern a water:Plant ;
 # no numbers — that is the whole point of the package.
 _ZZ = f""":fern a <{ZZ}> ;
     ag:localId "fern" ; water:servedBy :barrel1 ;
-    water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ."""
+    water:driesPerDay 0.12 ; water:litresPerFraction 2.0 ."""
 
 
 @pytest.fixture(scope="module")
