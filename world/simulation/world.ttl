@@ -90,7 +90,21 @@
 :barrel1 a water:WaterSource ;
     ag:localId "barrel1" ;
     water:suppliedBy :supplier ;
-    water:capacityL 5.0 .
+    water:capacityL 5.0 ;
+    #  What the barrel NEEDS (the seller learns to want, arc 2) — stated exactly as a plant
+    #  states its ranges, because a stock is a subject with an interest like any pot: the
+    #  operating range keeps a litre in reserve (a market whose tank runs to the last drop
+    #  has already failed its next buyer), and the survival range is the physical vessel.
+    #  desire:Deducing intersects these for whoever acts for the barrel, so the region is
+    #  deduced and answerable, never anyone's private opinion — the same guard as the ferns'.
+    ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:StoredLitres ;
+            schema:minValue 1.0 ; schema:maxValue 5.0 ; schema:unitCode unit:L ] ] ;
+    ssn-system:hasSurvivalRange [ a ssn-system:SurvivalRange ;
+        ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
+            ssn:forProperty water:StoredLitres ;
+            schema:minValue 0.0 ; schema:maxValue 5.0 ; schema:unitCode unit:L ] ] .
 
 #  The barrel's own witness (the barrel learns to run dry, arc 1). A float/level sensor the
 #  SUPPLIER polls: the stock behind every promise the market makes becomes a fact its owner
@@ -115,7 +129,8 @@
 
 ##########  The supplier — runs the venue and owns the valves  ##########
 #  Derivation gives it Hosting (it owns a market) and Actuation (it holds valves), and NOT
-#  Subscribing or Bidding — it is wired to no sensor and plumbed into no market as a buyer. Its
+#  Subscribing or Bidding — its one sensor is a push device (Listening, arc 1) and it is
+#  plumbed into no market as a buyer. Its
 #  class says none of this; its connections do.
 
 :supplier a ag:Agent ;
@@ -125,9 +140,13 @@
     #  rule it does not know, and it is the HOST's — an auction's terms belong to whoever
     #  convenes it, not to the venue. The capability is derived from this, never declared.
     market:matchesBy market:PayAsBid ;
-    #  It watches its own stock (arc 1): polling the barrel's level sensor derives Listening,
-    #  so the supplier finally SEES what it sells. No stake yet — that is the next arc — so
-    #  it records honestly and wants nothing about it.
+    #  It watches its own stock (arc 1) and, since arc 2, ACTS FOR it: polling the level
+    #  sensor derives Listening, and acting for a subject that states what it needs derives
+    #  desire:Deducing — the seller wants its barrel inside the range the barrel states.
+    #  What it still lacks is a LEVER for that want: it can open valves (which only drain
+    #  the stock further) and hosts no market it could buy water in, so its menu reads
+    #  Observe and nothing else — seen but unmovable, honestly, until the refill arc.
+    ag:actsFor :barrel1 ;
     sensing:polls :barrel1_level ;
     actuation:hasActuator :valve_fern , :valve_tomato , :valve_succulent .
 

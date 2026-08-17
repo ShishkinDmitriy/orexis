@@ -22,22 +22,26 @@ def test_plant_agent_runs_sensing_and_bidding(agent):
     """`reporting` is in every one of these sets, because every agent is granted it.
 
     `desire` is in this one because fern acts for a plant that states what it needs — a stake,
-    not a wire and not a market position. The supplier below has none and runs no desire module,
-    which is the same distinction from the other side.
+    not a wire and not a market position. The supplier gained the same the day it started
+    acting for its barrel — the distinction is the stake, not which side of the market.
     """
     assert {m.name for m in agent("fern").modules} == {
         "subscribing", "bidding", "desire", "intention", "deliberation", "review", "reporting"}
 
 
 def test_supplier_runs_hosting_actuation_and_matching(agent):
-    """Three abilities of its own: it runs the protocol, it opens valves, and it knows one way of
-    turning bids into an allocation. Hosting reaches the third through `agent.provider`, so the
-    market package never learns that pay-as-bid is implemented in Python.
+    """Its original three (protocol, valves, matching), plus what the barrel arcs earned it:
+    listening (arc 1 — it watches its stock), and since the stake (arc 2) desire, intention
+    and deliberation — because acting for a barrel that states its needs is a stake, and the
+    valves it always held are means, and stake plus means is the premise Keeping and Reflex
+    share. Its reflex still proposes nothing: StoredLitres has no stated direction, and
+    refusing to guess is the #127 contract.
 
     And `reporting`, which it did not earn — every agent is granted that one.
     """
     assert {m.name for m in agent("supplier").modules} == {
-        "hosting", "actuation", "pay-as-bid", "reporting", "listening"}
+        "hosting", "actuation", "pay-as-bid", "reporting", "listening",
+        "desire", "intention", "deliberation"}
 
 
 def test_the_supplier_listens_to_its_stock_and_schedules_nothing(agent):

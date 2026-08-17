@@ -49,12 +49,26 @@ def test_a_stake_and_a_lever_grant_keeping():
 
 
 def test_no_stake_means_nothing_to_commit_to():
-    """The supplier has levers everywhere — a market it hosts, valves it owns — and no stake,
-    so it keeps no ledger: a commitment is to reduce a named gap, and it has none. The sensing
-    world's fern is the same fact from the other side: sensors and no wants."""
-    assert KEEPING not in load_self(genesis_store().query, "supplier").capabilities
+    """A commitment is to reduce a named gap, and an agent without one keeps no ledger. The
+    supplier used to be this test's example — levers everywhere, no stake — until arc 2 gave
+    it the barrel's want and its valves became a lever's other half. The sensing world's fern
+    still shows the fact cleanly (sensors and no wants), and the supplier now shows it only
+    when its stake is taken away."""
+    assert KEEPING in load_self(genesis_store().query, "supplier").capabilities
     assert KEEPING not in load_self(
         genesis_store(world="sensing").query, "fern").capabilities
+
+    from agent import genesis, loader
+    from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+
+    st = genesis_store()
+    st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
+        <http://example.org/agora/world/simulation#supplier>
+            <http://example.org/agora#actsFor> ?o }} }}""")
+    st.clear_graph(WORLD_DERIVED_GRAPH)
+    for rule in loader.rule_files():
+        st.update(genesis.substitute(rule.read_text(), st))
+    assert KEEPING not in load_self(st.query, "supplier").capabilities
 
 
 # --- the two writers that exist, writing ------------------------------------

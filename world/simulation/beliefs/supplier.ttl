@@ -4,6 +4,11 @@
 @prefix ag: <http://example.org/agora#> .
 @prefix market: <http://example.org/agora/market#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
+@prefix desire: <http://example.org/agora/desire#> .
+@prefix ssn:  <http://www.w3.org/ns/ssn/> .
+@prefix schema: <https://schema.org/> .
+@prefix water: <http://example.org/agora/water#> .
+@prefix intention: <http://example.org/agora/intention#> .
 
 #  The supplier's PRIVATE beliefs — its terms as a genuine seller, not a stake-free utility.
 #
@@ -30,6 +35,17 @@
 
 ##  sensing:Listening — the barrel's level sensor announces on its own clock (arc 1), and all
 #   a listener states is how long it waits before calling the thing gone quiet.
+##  intention — demanded the moment the stake met the valves it already held: a keeper of
+#   commitments states its patience. Long, because a merchant's commitments are rounds, not
+#   twitches — and until the refill arc its reflex can propose nothing anyway (StoredLitres
+#   has no stated direction, and the reflex refuses to guess).
+:supplier intention:patienceS 300 .
+
+##  desire — the pick inside the region the barrel states (arc 2). Three litres: enough
+#   slack to serve several rounds, comfortably above the stated reserve. Private where the
+#   region is public, exactly as a fern's aim is.
+:supplier desire:aims [ ssn:forProperty water:StoredLitres ; schema:value 3.0 ] .
+
 :supplier sensing:maxReadingAgeS 300 ;
     #  Demanded of every perceiver by the shapes; for a pure listener it has no commanded
     #  interval to be relative to, so it is slack on the announcing clock and nothing more.

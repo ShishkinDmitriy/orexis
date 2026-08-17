@@ -73,12 +73,14 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     prices, is a separate ability, because there is more than one defensible answer and which
     one is in force changes what a rational bidder should offer.
     """
+    from packages.capability.intention import KEEPING
     from packages.capability.sensing.terms import LISTENING
 
-    #  And LISTENING, since the barrel learned to run dry: it polls its own level sensor — a
-    #  push device — so it finally sees the stock behind every promise it sells. Not a stake:
-    #  seeing your barrel is not wanting anything about it, which is the next arc's line.
-    assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING, LISTENING}
+    #  Plus what the barrel arcs earned: LISTENING (arc 1 — it sees its stock), and since it
+    #  acts for a barrel that states its needs (arc 2), DEDUCING, KEEPING and REFLEX — the
+    #  stake met the valves it already held, and stake plus means is the shared premise.
+    assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING, LISTENING,
+                                           DEDUCING, KEEPING, REFLEX}
 
 
 def test_only_a_host_matches(me):
