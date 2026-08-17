@@ -28,8 +28,8 @@ ZZ = "http://example.org/agora/zamioculcas#ZamioculcasZamiifolia"
 # The fern's block exactly as world/simulation/world.ttl states it. Matched in full and asserted
 # present, so that editing that world fails this loudly instead of silently testing nothing —
 # a substitution that quietly matches nothing is the failure mode issue #106 exists for.
-_FERN = """ag:fern a water:Plant ;
-    ag:localId "fern" ; water:servedBy ag:barrel1 ;
+_FERN = """:fern a water:Plant ;
+    ag:localId "fern" ; water:servedBy :barrel1 ;
     ag:rainTopic "rain/fern" ;
     water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
@@ -49,8 +49,8 @@ _FERN = """ag:fern a water:Plant ;
 
 # What a world says when the pot holds a ZZ: its type, and nothing else. No range, no conditions,
 # no numbers — that is the whole point of the package.
-_ZZ = f"""ag:fern a <{ZZ}> ;
-    ag:localId "fern" ; water:servedBy ag:barrel1 ;
+_ZZ = f""":fern a <{ZZ}> ;
+    ag:localId "fern" ; water:servedBy :barrel1 ;
     water:dryRatePerTick 0.01 ; water:litresPerFraction 2.0 ."""
 
 
@@ -85,7 +85,7 @@ def test_one_triple_plants_it_and_the_species_supplies_the_rest():
 
         rows = bindings(_store(w).query(PREFIXES + """
             SELECT ?kind ?property ?min ?max WHERE {
-              <http://example.org/agora#fern> ?rel ?range .
+              <http://example.org/agora/world/simulation#fern> ?rel ?range .
               VALUES ?rel { ssn-system:hasOperatingRange ssn-system:hasSurvivalRange }
               ?range a ?kind ; ssn-system:inCondition ?c .
               ?c ssn:forProperty ?property ; schema:minValue ?min ; schema:maxValue ?max }"""))

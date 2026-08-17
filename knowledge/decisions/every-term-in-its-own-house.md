@@ -77,8 +77,10 @@ the same shape as the prefix scan beside it, and for the same reason: the harnes
 forgiving than the store, so the class could not be caught by testing behaviour.
 
 Instances are exempt and that is why it is a *name* check rather than a ban —
-`ag:moisture_sensor_fern` is a thing in a world, not a term in a vocabulary, and belongs in
-`ag:`. The heuristic is that a term is Capitalised or camelCase and an instance is a single
+`ag:moisture_sensor_fern` was a thing in a world, not a term in a vocabulary. Since the worlds
+took their individuals into namespaces of their own, no world FILE puts an instance in `ag:`
+any more (a test refuses one that does) — but the exemption stays, because runtime-minted
+nodes (`ag:obs_…`) and synthetic test fixtures still do, legitimately. The heuristic is that a term is Capitalised or camelCase and an instance is a single
 lowercase word or carries an underscore. Verified by reintroducing the real defect: it fails on
 `bidsIn`, naming the file.
 

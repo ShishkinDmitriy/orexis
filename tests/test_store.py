@@ -219,7 +219,7 @@ def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
     """A full IRI in `ag:` must name something `packages/core/agora` declares.
 
     Instances are exempt and are the reason this is a name check rather than a ban: a world's
-    `ag:moisture_sensor_fern` is a thing, not a term, and lives in `ag:` correctly. So the rule
+    `<http://example.org/agora/world/simulation#moisture_sensor_fern>` is a thing, not a term, and lives in `ag:` correctly. So the rule
     is not "never spell out the kernel namespace" — it is that when you do, the local name has
     to be one the kernel actually has.
     """
@@ -235,8 +235,8 @@ def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
     for name in names:
         if name in kernel or name in _NOT_A_TERM:
             continue
-        # An INSTANCE is a single lowercase word or has an underscore — `ag:fern`,
-        # `ag:moisture_sensor_fern`. A TERM is Capitalised or camelCase. That is a convention
+        # An INSTANCE is a single lowercase word or has an underscore — `<http://example.org/agora/world/simulation#fern>`,
+        # `<http://example.org/agora/world/simulation#moisture_sensor_fern>`. A TERM is Capitalised or camelCase. That is a convention
         # rather than a rule, which is why the message says what to do if it guesses wrong.
         if "_" in name or name.islower():
             continue

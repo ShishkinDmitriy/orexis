@@ -76,7 +76,7 @@ still **listed** them: five constants in `ontology.py`, a `PUBLIC_GRAPHS` tuple,
 four `USING` lines typed by hand into every rule of every capability's `rules.ru`.
 
 That is rule 1, violated in the open. `ag:WorldGraph` is a T-Box term and code may name it;
-`…/graph/world` is a particular graph and is no more nameable than `ag:fern_agent`. The
+`…/graph/world` is a particular graph and is no more nameable than a world's `:fern_agent` — which, since worlds took their individuals out of `ag:` entirely, no longer even shares the vocabulary's namespace. The
 asymmetry gave it away: `beliefs_graph(agent_id)` *constructs* its IRI from the one identifier a
 process is legitimately handed, exactly as the rule allows, while the public five were bare
 constants nobody had questioned.
@@ -111,7 +111,7 @@ would otherwise read.
 
 ## The per-agent catalog is derived, not written
 
-Every world used to carry `<…/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent`,
+Every world used to carry `<…/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf :fern_agent`,
 once per agent, beside the roster it restated. A second list is a second thing to drift, and this
 one drifted silently — nothing failed if an agent was added and its line was not.
 
@@ -158,7 +158,7 @@ names a host it never introspects. Typing the user in the world graph would be a
 facts about the installation it runs in, which it has no standing to do — and would make an
 agent's provenance depend on a file it is deliberately not given.
 
-**What the world declares versus references:** one triple, `ag:world prov:wasAttributedTo <user>`,
+**What the world declares versus references:** one triple, `:world prov:wasAttributedTo <user>`,
 authored by the sovereign in `world.ttl`. `provenance.py` reads it and copies the identifier into
 the association. A world that names nobody simply has no association, and the shape still passes —
 it asks a graph where it came from, not who to blame.

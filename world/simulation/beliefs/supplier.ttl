@@ -1,3 +1,4 @@
+@prefix : <http://example.org/agora/world/simulation#> .
 @prefix actuation: <http://example.org/agora/actuation#> .
 @prefix reporting: <http://example.org/agora/reporting#> .
 @prefix ag: <http://example.org/agora#> .
@@ -9,7 +10,7 @@
 #  target here and no cadence: it neither wants anything watered nor perceives anything.
 
 ##  market:Hosting — how it runs a round
-ag:supplier
+:supplier
     market:offerQuantityL 2.0 ;      # what it puts up
     market:reservePricePerL 0.20 ;   # its floor; buyers never see the reasoning
     market:bidWindowS 3 ;            # how long it waits for bids before matching
@@ -19,11 +20,11 @@ ag:supplier
 #   Added to the open-seconds it computed for that dose, never used alone: a ninety-second
 #   pour is not late at thirty. Silence past the deadline is reported and counted, never acted
 #   on — the water may well have flowed and only the report been lost.
-ag:supplier actuation:doseGraceS 10 .
+:supplier actuation:doseGraceS 10 .
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
 #   Omit this line and the agent reports nothing; see agora/metrics.py.
-ag:supplier reporting:metricsIntervalS 60 .
+:supplier reporting:metricsIntervalS 60 .
 
 ##  No self-review. The world gives this agent no mandate — it holds no revisable
 #   setting to be given room on — so it derives no review capability and needs no

@@ -79,10 +79,10 @@ ag:obs_fern_SoilMoisture a sosa:Observation ;
     sosa:observedProperty water:SoilMoisture ;
     sosa:hasSimpleResult "0.183"^^xsd:decimal ;
     sosa:resultTime "…"^^xsd:dateTime ;
-    sosa:madeBySensor ag:moisture_sensor_fern ;
+    sosa:madeBySensor :moisture_sensor_fern ;
     sosa:usedProcedure sensing:ScheduledProcedure ;
     ag:underWorldVersion 1 ;
-    prov:wasGeneratedBy ag:fern_agent .
+    prov:wasGeneratedBy :fern_agent .
 ```
 
 **What it buys is what a *missing* reading means.** These are different claims, and the number

@@ -1,3 +1,4 @@
+@prefix : <http://example.org/agora/world/sensing#> .
 @prefix review: <http://example.org/agora/review#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
 @prefix water: <http://example.org/agora/water#> .
@@ -33,7 +34,7 @@
 
 ##########  The bus everyone speaks over  ##########
 
-ag:local_bus a mqtt:MessageBus ;
+:local_bus a mqtt:MessageBus ;
     ag:localId "local_bus" ;
     mqtt:brokerHost "localhost" ;
     mqtt:brokerPort 1884 ;
@@ -49,9 +50,9 @@ ag:local_bus a mqtt:MessageBus ;
 #  identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never introspects.
 #  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
 #  operate what this one ratified, and a loader that inferred the capacity could never say so.
-ag:world a ag:World ; ag:currentVersion ag:version_1 ;
+:world a ag:World ; ag:currentVersion :version_1 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
-ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 
 ##########  The subject — a thing that is watched, and nothing more  ##########
@@ -60,7 +61,7 @@ ag:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 #  to participate in. It is a feature of interest — something a sensor reads. The same IRI is
 #  an water:Plant over in world/society, because there it is one.
 
-ag:fern a sosa:FeatureOfInterest ;
+:fern a sosa:FeatureOfInterest ;
     ag:localId "fern" .
 
 ##########  The board  ##########
@@ -96,22 +97,22 @@ ag:fern a sosa:FeatureOfInterest ;
 #  business knowing: an agent polls sensors, and a thing it can never observe is the
 #  sovereign's. What is projected is the hosting of things the society already names.
 
-ag:esp32_fern a sosa:Platform ;
+:esp32_fern a sosa:Platform ;
     ag:localId "esp32_fern" ;
-    sosa:hosts ag:moisture_sensor_fern , ag:air_sensor_fern ;
+    sosa:hosts :moisture_sensor_fern , :air_sensor_fern ;
     rdfs:comment "The board. One MQTT client, one credential, one wake — which is why its three channels share a topic and a cadence, and why those are facts about IT rather than about any one of them." .
 
 #  The KY-015 itself, which until now the society did not name at all: its two channels were
 #  loose sensors with nothing tying them to the part they read. That was the gap issue #51 left
 #  open when it split them, and hosting is the thing that closes it.
-ag:air_sensor_fern a ssn:System ;
+:air_sensor_fern a ssn:System ;
     ag:localId "air_sensor_fern" ;
-    ssn:hasSubSystem ag:air_temp_fern , ag:air_humidity_fern ;
+    ssn:hasSubSystem :air_temp_fern , :air_humidity_fern ;
     rdfs:comment "One part reporting two properties. A System rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it has the two that do as sub-systems. Not a Platform either: it is hosted and has sub-systems, and nothing is MOUNTED on a KY-015. What the part itself does is produce both values in one frame, which is why they share an instant." .
 
-ag:moisture_sensor_fern a sosa:Sensor , ag:Device , governed:Node ;
+:moisture_sensor_fern a sosa:Sensor , ag:Device , governed:Node ;
     ag:localId "moisture_sensor_fern" ;
-    mqtt:onBus ag:local_bus ;
+    mqtt:onBus :local_bus ;
     #  No senseMode stated since #175: the FIRMWARE says what it is — this device is typed
     #  governed:Node above, and the mode (Scheduled -> its agent gains sensing:Subscribing)
     #  follows from firmware/moisture-sensor/ontology.ttl by the closure. Restating it here
@@ -129,7 +130,7 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device , governed:Node ;
     #  What holds the promise to the silicon is the wiring: the board's class states which
     #  pin roles its sleep-watcher reaches (esp32), and mc:WatchedChannelWiringShape refuses
     #  a watched channel wired past that reach.
-    sensing:monitors ag:fern ;
+    sensing:monitors :fern ;
     sosa:observes water:SoilMoisture ;
     scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -140,11 +141,11 @@ ag:moisture_sensor_fern a sosa:Sensor , ag:Device , governed:Node ;
 #  board, which already has one. `ag:air_sensor_fern` in hardware.ttl is the peripheral they
 #  read — its pins, its model and its wires are stated there and nothing here repeats them.
 
-ag:air_temp_fern a sosa:Sensor , ag:Device ;
+:air_temp_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_temp_fern" ;
     #  no senseMode here since #96: the clock is the BOARD's, stated once where it
     #  connects — this element rides that wire and shares that answer
-    sensing:monitors ag:fern ;
+    sensing:monitors :fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -158,11 +159,11 @@ ag:air_temp_fern a sosa:Sensor , ag:Device ;
         ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
 
-ag:air_humidity_fern a sosa:Sensor , ag:Device ;
+:air_humidity_fern a sosa:Sensor , ag:Device ;
     ag:localId "air_humidity_fern" ;
     #  no senseMode here since #96: the clock is the BOARD's, stated once where it
     #  connects — this element rides that wire and shares that answer
-    sensing:monitors ag:fern ;
+    sensing:monitors :fern ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -180,9 +181,9 @@ ag:air_humidity_fern a sosa:Sensor , ag:Device ;
 #  No ag:actsFor: with nothing to advance for it, this agent holds no stake — it records.
 #  No market:bidsIn and no market:hosts, so no market capability can be derived for it.
 
-ag:fern_agent a ag:Agent ;
+:fern_agent a ag:Agent ;
     ag:localId "fern" ;
-    sensing:polls ag:moisture_sensor_fern , ag:air_temp_fern , ag:air_humidity_fern ;
+    sensing:polls :moisture_sensor_fern , :air_temp_fern , :air_humidity_fern ;
     mqtt:eventTopic "readings/fern" .
 
 ##########  What each agent may re-pick, and how far  ##########
@@ -199,5 +200,5 @@ ag:fern_agent a ag:Agent ;
 #
 #  Note what is NOT written here: no ag:hasCapability. See AGENTS.md.
 
-ag:fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .
-ag:fern_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .
+:fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .
+:fern_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .

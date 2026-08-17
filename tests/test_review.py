@@ -383,7 +383,7 @@ def _sensing_with(update: str = ""):
     return st
 
 
-_ONE = """  ag:{sensor} ssn-system:hasSystemCapability [
+_ONE = """  <http://example.org/agora/world/sensing#{sensor}> ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
       ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value {seconds} ; schema:unitCode unit:SEC ] ] ."""
 

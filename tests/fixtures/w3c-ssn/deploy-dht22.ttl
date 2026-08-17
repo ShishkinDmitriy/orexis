@@ -10,6 +10,9 @@
 # operating range and the sub-system structure all come from them, untouched.
 
 @prefix ag:         <http://example.org/agora#> .
+# The subject is the SITE's — a deployment file is our half, and the world owns
+# its individuals, so the pot is named in the world's namespace, not the vocabulary's.
+@prefix world:      <http://example.org/agora/world/sensing#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
 @prefix mqtt:       <http://example.org/agora/mqtt#> .
 @prefix scaling:    <http://example.org/agora/scaling#> .
@@ -27,7 +30,7 @@
 # never a per-channel fact to say.
 dht22:TemperatureSensor a ag:Device ;
     ag:localId "vendor_air_temp" ;
-    sensing:monitors ag:fern ;
+    sensing:monitors world:fern ;
     sosa:observes water:AirTemperature ;
     scaling:quantityUnit unit:DEG_C ;
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
@@ -36,7 +39,7 @@ dht22:TemperatureSensor a ag:Device ;
 
 dht22:HumiditySensor a ag:Device ;
     ag:localId "vendor_air_humidity" ;
-    sensing:monitors ag:fern ;
+    sensing:monitors world:fern ;
     sosa:observes water:AirHumidity ;
     scaling:quantityUnit unit:UNITLESS ;
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;

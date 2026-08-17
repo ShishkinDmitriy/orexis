@@ -262,6 +262,9 @@ def draft(world: str, harness: Path) -> str:
            "# nobody re-reads.",
            "",
            "@prefix ag:    <http://example.org/agora#> .",
+           # The DRAFT's own individuals go into the world's namespace (a world owns
+           # its individuals; ag: is the vocabulary's), spelled with the empty prefix.
+           f"@prefix : <http://example.org/agora/world/{world}#> .",
            "@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .",
            f"@prefix mc:      <{MC}> .",
            f"@prefix onewire: <{ONEWIRE}> .",
@@ -280,7 +283,7 @@ def draft(world: str, harness: Path) -> str:
         kind = _qname(cls) if cls else ("mc:Microcontroller" if name == board else "mc:Peripheral")
         note = ("   # GUESSED: nothing here resolved to a board, so this is the connector every"
                 " cable touches" if name == board and guessed else "")
-        out += [f"ag:{name} a {kind} ;{note}",
+        out += [f":{name} a {kind} ;{note}",
                 f'    ag:localId "{name}" ;']
         if spec.get("type"):
             out.append(f'    mc:model "{spec["type"]}" ;')
@@ -297,8 +300,8 @@ def draft(world: str, harness: Path) -> str:
             # find its parts in.
             carried = sorted(n for n in conns if n != board)
             if carried:
-                out.append("    sosa:hosts " + " , ".join(f"ag:{c}" for c in carried) + " ;")
-        out.append("    mc:hasPin " + " , ".join(f"ag:{name}_{i+1}"
+                out.append("    sosa:hosts " + " , ".join(f":{c}" for c in carried) + " ;")
+        out.append("    mc:hasPin " + " , ".join(f":{name}_{i+1}"
                                                  for i in range(len(labels))) + " .")
         out.append("")
         if name == board:
@@ -306,11 +309,11 @@ def draft(world: str, harness: Path) -> str:
             out.append("# something is wired to it. A RAIL leg does: give it mc:PowerPinRole and")
             out.append("# mc:railVolts, or mc:GroundPinRole, or the rail check has nothing to read.")
         for i, label in enumerate(labels):
-            pin_id[(name, i + 1)] = f"ag:{name}_{i+1}"
+            pin_id[(name, i + 1)] = f":{name}_{i+1}"
             role = roles.get(str(label))
             gpio = f" mc:gpio {label} ;" if str(label).isdigit() else ""
             if role:
-                out.append(f"ag:{name}_{i+1} a mc:Pin ;{gpio} mc:pinRole {_qname(role)} .")
+                out.append(f":{name}_{i+1} a mc:Pin ;{gpio} mc:pinRole {_qname(role)} .")
             elif name == board:
                 out.append(f'ag:{name}_{i+1} a mc:Pin ;{gpio} skos:notation "{label}" .')
             else:

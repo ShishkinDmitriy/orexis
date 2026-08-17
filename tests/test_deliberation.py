@@ -174,7 +174,7 @@ def test_the_menu_is_derived_from_the_graph(make):
 def test_an_agent_with_no_desires_has_an_empty_menu(make):
     """The supplier holds levers everywhere and wants nothing — no rows, because an affordance
     is a move toward an end, not a list of what the wiring physically allows."""
-    assert menu_of(genesis_store().query, "http://example.org/agora#supplier") == []
+    assert menu_of(genesis_store().query, "http://example.org/agora/world/simulation#supplier") == []
 
 
-FERN = "http://example.org/agora#fern_agent"
+FERN = "http://example.org/agora/world/simulation#fern_agent"

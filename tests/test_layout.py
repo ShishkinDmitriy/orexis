@@ -506,3 +506,63 @@ def test_the_kernel_names_no_domain():
             code = line.split("#")[0]
             assert "example.org/agora/water" not in code, \
                 f"{path}:{n} names the water domain — the kernel must survive the domain swap"
+
+
+def test_the_kernel_namespace_holds_no_individuals():
+    """A world owns its individuals; ag: is the vocabulary's (#179's other half).
+
+    Every ag: name a world file uses must be a term the core ontology declares — classes,
+    properties, the shared individuals the kernel itself defines. A world's OWN things (its
+    agents, sensors, pins, its ag:world node as was) live in that world's namespace, declared
+    with the empty prefix, so the A-Box/T-Box split rule 1 polices in code is structural in
+    the files. Parse-based, so a spelling choice can never fool it."""
+    import rdflib
+
+    AG = "http://example.org/agora#"
+    core = rdflib.Graph()
+    core.parse(REPO_ROOT / "packages" / "core" / "agora" / "ontology.ttl", format="turtle")
+    declared = {str(n) for t in core for n in t
+                if isinstance(n, rdflib.URIRef) and str(n).startswith(AG)}
+
+    checked = 0
+    for path in sorted((REPO_ROOT / "world").glob("*/**/*.ttl")):
+        g = rdflib.Graph()
+        g.parse(path, format="turtle")
+        strays = {str(n) for t in g for n in t
+                  if isinstance(n, rdflib.URIRef) and str(n).startswith(AG)} - declared
+        assert not strays, (
+            f"{path.relative_to(REPO_ROOT)} puts {sorted(strays)} in the kernel namespace, "
+            "and the vocabulary declares none of them — a world's individuals belong in the "
+            "world's own namespace")
+        checked += 1
+    assert checked >= 8, f"only {checked} world files checked — the glob has gone quiet"
+
+
+def test_the_kernel_namespace_holds_no_individuals():
+    """A world owns its individuals; ag: is the vocabulary's (#179's other half).
+
+    Every ag: name a world file uses must be a term the core ontology declares — classes,
+    properties, the shared individuals the kernel itself defines. A world's OWN things (its
+    agents, sensors, pins, its ag:world node as was) live in that world's namespace, declared
+    with the empty prefix, so the A-Box/T-Box split rule 1 polices in code is structural in
+    the files. Parse-based, so a spelling choice can never fool it."""
+    import rdflib
+
+    AG = "http://example.org/agora#"
+    core = rdflib.Graph()
+    core.parse(REPO_ROOT / "packages" / "core" / "agora" / "ontology.ttl", format="turtle")
+    declared = {str(n) for t in core for n in t
+                if isinstance(n, rdflib.URIRef) and str(n).startswith(AG)}
+
+    checked = 0
+    for path in sorted((REPO_ROOT / "world").glob("*/**/*.ttl")):
+        g = rdflib.Graph()
+        g.parse(path, format="turtle")
+        strays = {str(n) for t in g for n in t
+                  if isinstance(n, rdflib.URIRef) and str(n).startswith(AG)} - declared
+        assert not strays, (
+            f"{path.relative_to(REPO_ROOT)} puts {sorted(strays)} in the kernel namespace, "
+            "and the vocabulary declares none of them — a world's individuals belong in the "
+            "world's own namespace")
+        checked += 1
+    assert checked >= 8, f"only {checked} world files checked — the glob has gone quiet"
