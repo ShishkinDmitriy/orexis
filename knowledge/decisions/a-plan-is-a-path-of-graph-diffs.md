@@ -87,6 +87,40 @@ precondition observable. Depth 2 suffices; that is the scale to build for.
 4. **Monitoring is already built**: an intention chain whose step's expected diff fails to
    appear is the unconfirmed-dose logic, generalised.
 
+## Affordances are premises, so the menu is a tool list nothing registers
+
+Asked by the sovereign on seeing the ledger and the menu side by side: why not store
+affordances — can't they be added dynamically, like a model's tools? And could SHACL search
+them? The three answers are one design.
+
+**Rows are not stored because their premises are.** An affordance is a conclusion; what the
+store holds is everything it is concluded FROM, so a row exists exactly while its plumbing
+walk holds — cut the pipe and the row vanishes, which a test pins. A stored row could
+outlive its premise silently, and "adding an affordance" would become writing a row —
+arbitrary surgery, the one move refused everywhere. Which is why they ARE dynamic, and
+dynamic the only safe way: add the premises (a valve, a venue, one valuation triple) and the
+row appears, precondition-checked by construction. Every barrel arc demonstrated it — the
+supplier's menu gained its Acquire row the day the city's consent triple existed, and no
+menu was edited anywhere. Consulting's recorded contract is the runtime case of the same
+move: the model's whole output is an affordance AS PREMISES, held to shapes, adopted, and
+then exploited by the reflex free forever.
+
+**So the menu is a tool list in the LLM sense, with two upgrades**: nothing registers the
+tools — the world implies them, per agent, per stake — and the tool call is split by
+deterministic-bid: the model picks the row, code computes the arguments. A row is a tool
+signature (means, property, lever, direction as its one-bit effect), and the list is data on
+the ask channel, not prose in a prompt.
+
+**And SHACL is the search the modality axis implies.** The axis above already makes desired
+shapes goals and validation gap-detection; the sovereign's addition completes it: a report's
+violation carries the focus node, the property and the measure, and MATCHING violations to
+affordance effects — rows whose good, property and direction would move the violated
+component toward conformance — is plan search as shape repair. What SHACL buys over the bare
+SPARQL menu: a package ships its goal-shape the way it ships `review.rq`, and gaps arrive as
+structured report entries rather than ad-hoc bindings. The caution to carry with it is the
+axis's own asymmetry, now load-bearing: conformance is boolean while a want has signed
+distance, so a goal-shape must state its measure or the planner ranks repairs blind.
+
 # Seams left open
 
 - **Implemented at depth 2, when the trigger fired.** The city mains (#201) made the supplier
