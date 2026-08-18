@@ -109,10 +109,12 @@
 #  SUPPLIER polls: the stock behind every promise the market makes becomes a fact its owner
 #  can hold, rather than a surprise the pots discover. Push, like the float switch the
 #  terrace build will wire — a level announces, it is not commanded. The stand-in drains on
-#  every dose any valve draws, and NEITHER of its physics is stated here: the drain rate is
-#  CONSERVATION, -1.0 per dispensed litre on the WaterSource class itself (every litre that
-#  fills a pot left some barrel), and the ceiling is water:capacityL above — both reach the
-#  model entailed, one statement each, the #164 pattern twice.
+#  every dose any valve draws and, since arc 4, FILLS on every dose the city valve delivers,
+#  and NONE of its physics is stated here: the drain rate is CONSERVATION, -1.0 per dispensed
+#  litre on the WaterSource class itself (every litre that fills a pot left some barrel), the
+#  fill rate is conservation's mirror (litresPerStoredLitre, identically 1.0 — a litre poured
+#  in is a litre held), and the ceiling is water:capacityL above — all three reach the model
+#  entailed, one statement each, the #164 pattern three times.
 :barrel1_level a sosa:Sensor , ag:Device ;
     ag:localId "barrel1_level" ;
     mqtt:onBus :local_bus ;
@@ -141,12 +143,62 @@
     #  It watches its own stock (arc 1) and, since arc 2, ACTS FOR it: polling the level
     #  sensor derives Listening, and acting for a subject that states what it needs derives
     #  desire:Deducing — the seller wants its barrel inside the range the barrel states.
-    #  What it still lacks is a LEVER for that want: it can open valves (which only drain
-    #  the stock further) and hosts no market it could buy water in, so its menu reads
-    #  Observe and nothing else — seen but unmovable, honestly, until the refill arc.
+    #  Since arc 4 it also has the LEVER for that want: the city's pipe reaches its barrel,
+    #  so participation in the refill market DERIVES from the plumbing and the stake — the
+    #  dealer buys upstream to sell downstream, and nothing here names either market.
     ag:actsFor :barrel1 ;
     sensing:polls :barrel1_level ;
+    #  Where it announces what it notices (arc 4). Its stock's band travels here exactly as
+    #  a fern's moisture band does, and the CITY subscribes — a LOW barrel is what convenes
+    #  a refill round, the same trigger one level up the supply chain.
+    mqtt:eventTopic "readings/supplier" ;
     actuation:hasActuator :valve_fern , :valve_tomato , :valve_succulent .
+
+##########  The city — the mains behind the barrel (arc 4)  ##########
+#  The dealer's upstream, and the working example of the-market-has-no-governor's dealer
+#  shape: the supplier buys from the city at one venue and sells to the plants at another,
+#  holding the barrel between them — the stock is what decouples the two markets, and the
+#  spread between its buy ceiling and its sell floor is its living. NOTHING here names the
+#  refill market: the city owns a source and states how it matches, which IS opening shop,
+#  and the venue, its topics and its one participant all derive from the wiring exactly as
+#  the plants' venue does. Deleting :city at an amendment closes the shop.
+#
+#  The city is what the OLD supplier was — a seller with terms and valves and no stake: it
+#  acts for nothing, wants nothing, and its mains needs no witness. That is honest for a
+#  mains (the pressure is always there; 1000 L is the constitution's allocation ceiling, not
+#  a stock anyone watches) and it is also the regression the arcs climbed away from, kept
+#  deliberately: one world now holds a stakeless seller, a dealer with a full BDI stack, and
+#  three pure buyers — the whole ladder in five agents.
+#
+#  It matches by UNIFORM PRICE, deliberately not the supplier's rule: both members of the
+#  matching family run live in one world, and a refill round with one bidder demonstrates
+#  the uncontested case dissolving to the reserve with no contested-or-not test anywhere —
+#  see knowledge/decisions/uniform-price-dissolves-the-uncontested-round.md.
+
+:city a ag:Agent ;
+    ag:localId "city" ;
+    market:matchesBy market:UniformPrice ;
+    actuation:hasActuator :city_valve .
+
+:city_mains a water:WaterSource ;
+    ag:localId "city_mains" ;
+    water:suppliedBy :city ;
+    water:capacityL 1000.0 .
+
+#  The pipe that fills the barrel: draws from the mains, actuates the barrel. The same two
+#  triples that make a plant valve a market's delivery chain make this one the refill
+#  market's — drawsFrom is the venue tie, actuates is who the good reaches — and the
+#  participation rule reads nothing else. The barrel is the one subject in this world on
+#  BOTH sides of the wire: these litres raise its stock, the plant valves' litres lower it.
+:city_valve a actuation:Valve ;
+    ag:localId "city_valve" ; mqtt:onBus :local_bus ;
+    actuation:actuates :barrel1 ; actuation:drawsFrom :city_mains ;
+    ag:simulatedBy [ a ag:DeviceModel ] ;
+    mqtt:commandTopic "actuators/city_valve/command" ;
+    mqtt:statusTopic "actuators/city_valve/status" ;
+    #  A mains pours faster than a gravity barrel: a two-litre refill is a forty-second
+    #  open, not a battery-powered dribble. The ceiling is one barrel-full.
+    actuation:mlPerSecond 50.0 ; actuation:maxDoseMl 5000.0 .
 
 ##########  Plants — sensed and watered; no stake of their own  ##########
 

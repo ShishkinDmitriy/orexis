@@ -26,6 +26,7 @@ FERN = "http://example.org/agora/world/simulation#fern_agent"
 FERN_URI = "http://example.org/agora/world/simulation#fern"  # the plant, not the agent that acts for it
 SUCCULENT = "http://example.org/agora/world/simulation#succulent_agent"
 SUPPLIER = "http://example.org/agora/world/simulation#supplier"
+CITY = "http://example.org/agora/world/simulation#city"
 
 
 @pytest.fixture
@@ -41,17 +42,20 @@ def test_subscribing_block(fern):
 
 
 def test_bidding_block(fern):
-    """A wallet and a value curve — no band and no target.
+    """A wallet and a value curve — no band, no target, and no conversion.
 
     The band edges left first: they were the plant's own limits restated privately. The target
     followed, as `desire:aims` — the point an agent steers for is a fact about its ends, not
     about a market, and the bidder now asks whoever provides the desire family for it at bid
-    time. What is left is what only a BID needs.
+    time. The conversion left last (#198): WHICH term turns a deficit into litres is a fact
+    about the bidder's venue — litres-per-fraction for a fern, litres-per-stored-litre for the
+    dealer — and a block's terms are fixed at import, so the module discovers the term through
+    the venue tie and reads its own belief in it by IRI. What is left is what only a BID needs
+    whatever the venue prices.
     """
     b = fern.read(BIDDING_BLOCK)
     assert b.max_value_per_l == 0.80
-    assert b.litres_per_fraction == 2.0
-    for gone in ("target", "low", "high"):
+    for gone in ("target", "low", "high", "litres_per_fraction"):
         assert not hasattr(b, gone), gone
 
 
@@ -116,17 +120,23 @@ def test_one_agent_cannot_read_anothers_beliefs(query):
 
 
 def test_a_missing_belief_is_an_error_not_a_default(query):
-    """The supplier holds no bidding terms — it must fail, never silently invent a valuation."""
+    """The city holds no bidding terms — it must fail, never silently invent a valuation.
+
+    This used the SUPPLIER until arc 4 made it the dealer: it holds a wallet and a value
+    curve now, because it genuinely bids upstream. The city inherits the role of the agent
+    with no buy side — it acts for nothing and wants nothing, so a code path that read its
+    bidding block would be a bug this refusal catches.
+    """
     with pytest.raises(BeliefError) as exc:
-        Beliefs(query, "supplier", SUPPLIER).read(BIDDING_BLOCK)
-    # The FULL IRI, not `water:litresPerFraction`. Belief terms come from whichever package
+        Beliefs(query, "city", CITY).read(BIDDING_BLOCK)
+    # The FULL IRI, not `water:maxValuePerL`. Belief terms come from whichever package
     # declares them and packages own their namespaces, so a prefix here would be a
     # guess — and a wrong one for anything market: owns.
     #
     # A literal, not a kernel constant: `ontology.WATER` left with #148 — the kernel names no
     # domain — so the test names the domain the way the one deliberately-coupled block does.
-    assert "http://example.org/agora/water#litresPerFraction" in str(exc.value)
-    assert "supplier" in str(exc.value)
+    assert "http://example.org/agora/water#maxValuePerL" in str(exc.value)
+    assert "city" in str(exc.value)
 
 
 def test_the_error_names_every_missing_term(query):

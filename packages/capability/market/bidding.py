@@ -42,25 +42,48 @@ from .beliefs import BIDDING_BLOCK
 from .terms import (ACQUIRE, APPLY, BIDDING, DELIBERATION, DESIRE, INTENTION, OBSERVE,
                     SENSING)
 
-# The term whose meaning this asks after is the one this package already names for its own
-# beliefs, so nothing here is written twice and nothing here is a domain property. A block's
-# terms are full IRIs, so this is written `<...>` rather than under an assumed prefix — which
-# is what lets the denomination live in the domain's namespace and `market:aboutProperty` in
-# this package's, without either being spelled twice. It hung on the target while the bidder
-# held one; the denomination outlived the point, so it hangs on the deficit-to-litres term now.
-_DENOMINATED = BIDDING_BLOCK.terms["litres_per_fraction"]
-_ABOUT_Q = f"""
-SELECT ?property WHERE {{
-  <{_DENOMINATED}> market:aboutProperty ?property  }} LIMIT 1"""
+# What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
+# naming any term: the market I bid in is for a source, the source states its good (entailed
+# from its class — 'the lot states its good'), the valuations of that good each carry a
+# property, and MINE is the one my subject states a need in — the exact premises the
+# participation rule derived my bidsIn from, asked again from the inside. Both joins are
+# load-bearing: without the venue, a fern beside a fan market would price moisture in the
+# wrong direction; without the stake, a fern at a water venue would inherit the DEALER's
+# denomination, because one good honestly has a valuation per kind of recipient (a litre
+# raises a pot's moisture and a barrel's stock, by different terms). This used to interrogate
+# one fixed term — the litres-per-fraction IRI — which was right for every bidder while every
+# bidder was a plant's. The term comes back beside the property because it is also the KEY to
+# my own conversion belief below.
+_ABOUT_Q = """
+SELECT ?property ?term WHERE {
+  <%s> market:bidsIn ?m ; ag:actsFor ?subject .
+  ?m market:marketFor ?src .
+  ?src market:supplies ?good .
+  ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
+  ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
+  ?cond <http://www.w3.org/ns/ssn/forProperty> ?property .
+  ?term market:ofGood ?good ; market:aboutProperty ?property } LIMIT 1"""
+
+# My own copy of that conversion — a private BELIEF, read from my graph by the term the venue
+# tie named, on beliefs.py's own pattern (a private graph is the one legitimate GRAPH clause:
+# the default graph is public knowledge and my beliefs are deliberately not in it). It cannot
+# ride BIDDING_BLOCK, whose terms are fixed at import: which conversion a bidder needs is a
+# fact about its venue, and the block would demand litres-per-fraction of a dealer that
+# converts stored litres. The physics copy on the SUBJECT stays untouched — this is the copy
+# an agent that learned would revise, and being wrong about it would cost it money.
+_CONV_Q = """
+SELECT ?v WHERE { GRAPH <%s> { <%s> <%s> ?v } } LIMIT 1"""
 
 
 def value_bid(moisture: float, aim: float, b, balance: float,
-              allocated_l: float = 0.0) -> Bid | None:
+              allocated_l: float = 0.0, litres_per_unit: float | None = None) -> Bid | None:
     """Deterministic willingness-to-pay from a deficit. None means cede.
 
     - the deficit below the AIM drives both the litres wanted and the urgency (price). The aim
       arrives as an argument because it is not a market belief: it is desire's — the pick
-      inside the region — and the caller asked whoever provides that family;
+      inside the region — and the caller asked whoever provides that family. So does the
+      conversion (#198): how a deficit becomes litres depends on which property my venue
+      prices, a fern's litres-per-fraction or a dealer's litres-per-stored-litre;
     - the bid is for *unmet* demand — what is already allocated is subtracted;
     - quantity is capped by what the wallet can actually pay for, so a bid is always solvent.
     """
@@ -68,7 +91,7 @@ def value_bid(moisture: float, aim: float, b, balance: float,
     if deficit <= 0:
         return None  # at or above the aim — cede
 
-    unmet_l = deficit * b.litres_per_fraction - allocated_l
+    unmet_l = deficit * (litres_per_unit or 0.0) - allocated_l
     if unmet_l <= EPS:
         return None  # a prior allocation already covers it
 
@@ -100,30 +123,46 @@ class BiddingModule(Module):
         # if the market misbehaves and one does, the newer claim replaces the older, logged.
         self.holding: dict | None = None
         self._present_deadline: Timer | None = None
-        self.about = self._what_my_desire_is_about()
+        self.about, self._valuation_term = self._what_my_bids_are_priced_in()
+        self.conversion = self._my_conversion()
 
-    def _what_my_desire_is_about(self) -> str:
-        """The observable property my valuation is denominated in.
+    def _what_my_bids_are_priced_in(self) -> tuple[str, str]:
+        """The observable property my valuation is denominated in, and the term that says so.
 
-        Asked of my own desire, not of the market. A market is a LOT — 1L of water is 1L of
-        water whether or not anyone's soil is dry — and a market for something no instrument
-        measures has to stay expressible. What is genuinely property-shaped is the stake: my
-        target is 0.55 OF something, and my bands and my litres-per-fraction are in the same
-        unit. Until this link existed that number was dimensionless, and the agent got away
-        with it only because it had exactly one kind of reading to compare it to.
+        Asked through MY VENUE (#198): the market I bid in is for a source, the source's class
+        states the good it vends, and the valuation term of that good carries the property. A
+        market is still a LOT — 1L of water is 1L of water whether or not anyone's soil is dry
+        — which is exactly why the property cannot be asked of the T-Box at large: the same
+        litre is priced in SoilMoisture by a fern and in StoredLitres by the dealer restocking
+        its barrel, and which of those MY bids mean is a fact about where I am plumbed.
 
-        Read from the T-Box against the term this package already names, so no domain property
-        is written here and no world has to restate it. Refused rather than defaulted: with no
-        answer the only thing left is to judge whichever reading arrived last, which is the
-        confusion this exists to end. An agent that will not start is a visible fault; one
-        pricing water off a humidity is not.
+        Refused rather than defaulted: with no answer the only thing left is to judge
+        whichever reading arrived last, which is the confusion this exists to end. An agent
+        that will not start is a visible fault; one pricing water off a humidity is not.
         """
-        rows = bindings(self.agent.store.query(_ABOUT_Q))
+        rows = bindings(self.agent.store.query(_ABOUT_Q % self.me.uri))
         if not rows:
             raise RuntimeError(
-                f"{self.agent.id} bids, but the domain does not say what a bid is priced IN — "
-                f"state market:aboutProperty on <{_DENOMINATED}> in the domain ontology")
-        return rows[0]["property"]
+                f"{self.agent.id} bids, but no valuation connects its venue's good to a "
+                f"property its subject states a need in — the source states no "
+                f"market:supplies good, no term carries market:ofGood/market:aboutProperty "
+                f"for it, or the stake's ranges and the good's valuations do not meet")
+        return rows[0]["property"], rows[0]["term"]
+
+    def _my_conversion(self) -> float:
+        """My own belief about how a deficit in the priced property becomes litres of the good.
+
+        Keyed by the term the venue tie named, read from my private graph. Demanded exactly as
+        a block term is — a bidder that cannot convert its deficit has no bid to compute, and
+        the domain's shapes say the same thing at the gate, where the failure is cheaper.
+        """
+        rows = bindings(self.agent.store.query(
+            _CONV_Q % (self.agent.beliefs.graph, self.me.uri, self._valuation_term)))
+        if not rows or rows[0].get("v") is None:
+            raise RuntimeError(
+                f"{self.agent.id} bids in a venue priced in <{self.about}> but holds no "
+                f"<{self._valuation_term}> belief — run agora-validate")
+        return float(rows[0]["v"])
 
     def _next_move(self, value: float | None) -> str | None:
         """The WHETHER, asked of whoever deliberates — this module only carries moves out.
@@ -180,7 +219,7 @@ class BiddingModule(Module):
         """How far a dose of this many litres should move my property — the act sizing its own
         effect for the met-verdict's margin (#165), through the same conversion the bid was
         priced with. None when the belief cannot say, which keeps the exact-crossing verdict."""
-        lpf = self.beliefs.litres_per_fraction
+        lpf = self.conversion
         return (float(amount_l) / lpf) if lpf > 0 and amount_l else None
 
     def _keeper(self):
@@ -378,7 +417,8 @@ class BiddingModule(Module):
                           auction_id, self.about)
             return
 
-        bid = value_bid(moisture, aim, self.beliefs, self.balance)
+        bid = value_bid(moisture, aim, self.beliefs, self.balance,
+                        litres_per_unit=self.conversion)
         if bid is None:
             self.log.info("auction %s: moisture %.3f, aim %.2f — cede",
                           auction_id, moisture, aim)

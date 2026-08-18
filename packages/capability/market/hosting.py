@@ -48,19 +48,28 @@ SELECT ?agentId ?eventTopic WHERE {{
   ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ; mqtt:eventTopic ?eventTopic  }}"""
 
 
-# Which property being in trouble is a reason to open a round HERE. Asked of the DOMAIN, not of
-# the market: a market is a lot — 1L of water is 1L of water whether or not anyone's soil is dry
-# — and `market:aboutProperty`'s own comment refuses to hang a property off one. What the domain
-# says is what a bid is priced in, and a host convening a round to relieve scarcity in that
-# resource wants the announcements about the same thing.
+# Which properties being in trouble are a reason to open a round HERE. Asked through THE
+# VENUE AND ITS PARTICIPANTS' STAKES (#198), per hosted market: the venue is for a source,
+# the source's class states its good, the good's valuations each carry a property, and the
+# ones THIS venue convenes on are those some participant's subject states a need in — the
+# same premises the participation rule derived that bidsIn from, read from the host's side.
+# Both joins are load-bearing, and a set rather than one property, because one venue may
+# serve two kinds of recipient: the barrel's venue waters pots (SoilMoisture) while the
+# city's fills barrels (StoredLitres), and the same good backs both.
 #
-# This became load-bearing the moment an agent could want more than one thing. Before desire, one
-# module annotated one property, so every band that ever crossed the wire was a moisture band and
-# the host could take any of them. Now a fern announces a temperature band too, and nothing
-# relieves a hot afternoon by dispensing water — an auction opened on one would spend a real
-# allocation on a reading it cannot act on.
+# This became load-bearing twice. First when an agent could want more than one thing: a fern
+# announces a temperature band too, and nothing relieves a hot afternoon by dispensing water.
+# Then again when a second denomination existed: asked of the T-Box at large (as this was),
+# the host would have filtered on whichever property the store returned first — opening
+# rounds on the wrong scarcity, or never, silently, by ORDER BY luck.
 _ABOUT_Q = """
-SELECT ?property WHERE { ?term market:aboutProperty ?property } LIMIT 1"""
+SELECT DISTINCT ?property WHERE {
+  <%s> market:marketFor ?src . ?src market:supplies ?good .
+  ?buyer market:bidsIn <%s> ; ag:actsFor ?subject .
+  ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
+  ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
+  ?cond <http://www.w3.org/ns/ssn/forProperty> ?property .
+  ?term market:ofGood ?good ; market:aboutProperty ?property }"""
 
 # The attested roster (#144, #145): each agent's published public keys, from keys.ttl swept
 # into the world graph. Absence is the pre-key era and stays legal — a world onboarded before
@@ -85,12 +94,17 @@ class HostingModule(Module):
             for row in bindings(agent.store.query(_event_topics_q(market.uri))):
                 self.event_topics[row["eventTopic"]] = market
 
-        # None when the domain names no property at all — a market in something no instrument
-        # measures, which `market:aboutProperty` exists to keep expressible. Such a host takes
-        # any band it is sent, which is the behaviour every host had before there was more than
-        # one kind of band to send.
-        rows = bindings(agent.store.query(_ABOUT_Q))
-        self.about = rows[0]["property"] if rows else None
+        # Empty when no valuation of the venue's good meets any participant's stake — a
+        # market in something no instrument measures, which `market:aboutProperty` exists to
+        # keep expressible. Such a host takes any band it is sent, which is the behaviour
+        # every host had before there was more than one kind of band to send. Per MARKET
+        # (#198), because a host of two venues convenes each on its own scarcities — the
+        # dealer hosting water-for-pots while bidding for refill litres must not confuse
+        # the two.
+        self.about = {}
+        for market in self.markets:
+            rows = bindings(agent.store.query(_ABOUT_Q % (market.uri, market.uri)))
+            self.about[market.uri] = {r["property"] for r in rows}
 
         self.open_auction: dict | None = None
         self.last_auction_at = 0.0
@@ -139,7 +153,8 @@ class HostingModule(Module):
         """
         if event.get("band") != "LOW":
             return
-        if self.about is not None and event.get("property") != self.about:
+        about = self.about.get(market.uri)
+        if about and event.get("property") not in about:
             return
         now = time.monotonic()
         if now - self.last_auction_at < self.beliefs.cooldown_s:

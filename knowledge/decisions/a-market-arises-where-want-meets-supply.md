@@ -28,7 +28,11 @@ a `marketFor` pointing at the source, and a host who owns it. So:
 - **`market:hosts` derives**: the owner of the source hosts its venue.
 - **`market:bidsIn` derives** from the Acquire walk's own premises (#189): an agent with a
   stake in the denominated property whose pot the venue's valves reach is a participant.
-  Plumbing implies participation; the world stops naming buyers.
+  Plumbing implies participation; the world stops naming buyers. Since #198 the premise
+  closes through the GOOD — the source's stated stuff must be what the valuation converts —
+  because "the denominated property" stopped being one thing the day the refill venue priced
+  the same water in StoredLitres; see
+  [the-lot-states-its-good](/decisions/the-lot-states-its-good.md).
 
 Both markets are then one mechanism. The plants' market derives from today's wiring
 unchanged — the same triples land in the derived graph with honest provenance
@@ -45,9 +49,11 @@ CHAIN as the first real plan, no new means required.
 
 # Seams left open
 
-- **Not implemented yet.** The remaining barrel arcs reorder to: derive markets (this
-  record), then the city source and its upstream venue (which then merely APPEARS), then the
-  planner. Each is PR-sized.
+- **Implemented, in two arcs.** The derivation shipped with #199 and the plants' market
+  re-derived byte-identical; the city, its mains and the refill venue shipped with the #198
+  arc — and the venue genuinely APPEARED: the world file authors a source, an owner, a pipe
+  and one consent triple, and the supplier woke up a bidder. What remains of the barrel plan
+  is the planner (arc 5).
 - **The venue's derived instances** (market node, its topics) follow the stream precedent:
   minted as a function of the source id, written to the derived graph, never authored. The
   ACL and compose generators already read the ratified dataset derivation included, so grants

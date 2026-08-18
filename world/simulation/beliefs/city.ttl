@@ -1,0 +1,27 @@
+@prefix : <http://example.org/agora/world/simulation#> .
+@prefix actuation: <http://example.org/agora/actuation#> .
+@prefix reporting: <http://example.org/agora/reporting#> .
+@prefix market: <http://example.org/agora/market#> .
+
+#  The city's PRIVATE beliefs — a seller's terms, and nothing else.
+#
+#  It composed market:Hosting, actuation:Actuation and market:UniformPrice, so only those
+#  modules' terms appear. No sensing block (its mains needs no witness), no desire, no
+#  intention, no review: the city is what the supplier was before the barrel arcs — a
+#  stakeless seller — kept deliberately, because one world now holds the whole ladder: a
+#  stakeless seller, a dealer with a full BDI stack, and three pure buyers.
+
+##  market:Hosting — how it runs a refill round
+:city
+    market:offerQuantityL 3.0 ;      # a refill lot: most of a barrel in one round
+    market:reservePricePerL 0.05 ;   # mains water is cheap; the dealer's margin lives above this
+    market:bidWindowS 3 ;            # how long it waits for bids before matching
+    market:roundCooldownS 60 .       # it will not open rounds faster than this
+
+##  actuation:Actuation — how long past a dose's own open-seconds it waits for the valve's
+#   confirmation. A refill pours at mains pace, so the grace is slack on the report, not on
+#   the water.
+:city actuation:doseGraceS 10 .
+
+##  How often it says how it is. Omit and the agent reports nothing; see agora/metrics.py.
+:city reporting:metricsIntervalS 60 .

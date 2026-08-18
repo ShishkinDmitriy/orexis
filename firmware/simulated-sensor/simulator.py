@@ -134,6 +134,11 @@ class Value:
         # thermometer on a watered pot reads the same before and after, which is the whole
         # difference between modelling a property and modelling a number.
         self.litres_per_fraction = float(spec.get("litres", 0.0) or 0.0)
+        # What a litre DRAWN OUT does — units per litre, typically the class-entailed -1.0 a
+        # water source states. Separate from `litres` above because one value can be on both
+        # sides of the wire: the barrel's stock rises by dosed litres and falls by drained
+        # ones, and each conversion is its own physics.
+        self.drains_per_litre = float(spec.get("drains", 0.0) or 0.0)
         self.timescale = timescale
         # `trend_per_s` steering: an operator-set drift, in units per real second, REPLACING
         # the modelled drying while set — a positive trend is rain, which is a different world
@@ -177,9 +182,14 @@ class SimulatedSensor:
         self.sensor_id = _env("SIM_SENSOR_ID")
         self.reading_topic = _env("SIM_READING_TOPIC")
         self.command_topic = os.environ.get("SIM_COMMAND_TOPIC") or ""
-        # One or several: a pot takes water on its valve's channel; a SOURCE loses it on
-        # every valve that draws from it (the barrel learns to run dry). Comma-joined env.
+        # Two sets, and the split IS the sign: a dose topic is a valve pouring INTO my subject
+        # (a pot's watering valve, the mains valve filling a barrel), a drain topic is a valve
+        # drawing OUT of it (the barrel learns to run dry). They used to be one comma-joined
+        # set, which was right exactly as long as no subject was on both sides of the wire —
+        # the barrel is now: the plant valves lower its stock and the city's valve raises it,
+        # through the same kind of status message, and only the set can say which is which.
         self.dose_topics = {t for t in (os.environ.get("SIM_DOSE_TOPIC") or "").split(",") if t}
+        self.drain_topics = {t for t in (os.environ.get("SIM_DRAIN_TOPIC") or "").split(",") if t}
         # Water from OUTSIDE the society — the meddler's channel (ag:rainTopic). Arrives at the
         # soil exactly as a dose does, which is the point: the pot cannot tell a bought litre
         # from a kind stranger's, and neither can the agent except by not having decided it.
@@ -270,7 +280,7 @@ class SimulatedSensor:
         # refuse is being repositioned by whoever is running the simulation.
         if self.command_topic:
             client.subscribe(self.command_topic)
-        for topic in sorted(self.dose_topics):
+        for topic in sorted(self.dose_topics | self.drain_topics):
             client.subscribe(topic)
         if self.rain_topic:
             client.subscribe(self.rain_topic)
@@ -286,6 +296,9 @@ class SimulatedSensor:
 
         if msg.topic and (msg.topic in self.dose_topics or msg.topic == self.rain_topic):
             self._receive(float(doc.get("ml") or 0.0))
+            return
+        if msg.topic and msg.topic in self.drain_topics:
+            self._receive(float(doc.get("ml") or 0.0), draining=True)
             return
 
         # The command topic IS the device's control surface — a real board reads named keys off
@@ -409,22 +422,29 @@ class SimulatedSensor:
 
     # --- the physics ---
 
-    def _receive(self, ml: float) -> None:
-        """Water arrived at the subject. How far it moves a reading is a fact about the pot.
+    def _receive(self, ml: float, draining: bool = False) -> None:
+        """Water moved at the subject. How far it moves a reading is a fact about the pot.
 
         It moves only the values that say how much a litre is worth to them, which in practice is
         the one property the domain's valuation is denominated in. A thermometer sharing the board
         is not cooled by watering the plant, and a simulation in which it was would be teaching an
         agent something false about the world.
+
+        Which WAY it moves is which side of the wire the message came in on: a dose topic pours
+        into my subject and converts by its valuation (`litres`, divide — litres per unit), a
+        drain topic draws out of it and converts by its stated dose effect (`drains`, multiply —
+        units per litre, the water source's class-entailed -1.0). The sign used to ride inside
+        one conversion, which was right until the barrel was on both sides at once.
         """
         if ml <= 0:
             return
         for v in self.values:
-            # The SIGN of the conversion is which side of the wire this value is on: a pot's
-            # litresPerFraction is positive (water raises the valued property), a source's
-            # stated dose effect is negative (the litre that fills a pot lowers the barrel
-            # it left). Zero stays "water means nothing to this value".
-            if v.litres_per_fraction:
+            if draining:
+                if v.drains_per_litre:
+                    v.value = v.clamp(v.value + (ml / 1000.0) * v.drains_per_litre)
+                    log.info("%s: drained %.0f ml -> %s=%.3f",
+                             self.sensor_id, ml, v.pointer, v.value)
+            elif v.litres_per_fraction:
                 v.value = v.clamp(v.value + (ml / 1000.0) / v.litres_per_fraction)
                 log.info("%s: received %.0f ml -> %s=%.3f", self.sensor_id, ml, v.pointer, v.value)
 

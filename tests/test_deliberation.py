@@ -189,17 +189,19 @@ def test_the_menu_is_derived_from_the_graph(make):
                    for r in rows)
 
 
-def test_a_want_with_no_lever_is_observe_only(make):
-    """The supplier since the stake (arc 2): it wants its barrel full, can SEE the level, and
-    holds no lever that could raise it — the valves only drain, and it buys in no market. One
-    Observe row, no Acquire, no direction: seen but unmovable, which is the ladder's honest
-    reading and the exact gap the refill arc will fill. (The wants-nothing example this test
-    used to hold died with the stake — an affordance is still a move toward an end, and the
-    end exists now; only the means is missing.)"""
+def test_the_dealers_menu_gained_its_lever(make):
+    """The supplier across the arcs: it wants its barrel full (arc 2), can SEE the level
+    (arc 1), and — since the city exists (arc 4) — holds the LEVER: bidding in the refill
+    venue, whose winnings physically reach its barrel through the city's pipe, priced in
+    StoredLitres, raising it. This test guarded the seen-but-unmovable reading while that
+    was the honest one; the row it waited for is derived now, direction and all, and the
+    Observe row stands beside it exactly as a fern's does."""
     rows = menu_of(genesis_store().query,
                    "http://example.org/agora/world/simulation#supplier")
-    assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1], r.direction)
-            for r in rows] == [("Observe", "StoredLitres", None)]
+    assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
+             (r.direction or "").rsplit("#", 1)[-1] or None)
+            for r in rows] == [("Acquire", "StoredLitres", "Raises"),
+                               ("Observe", "StoredLitres", None)]
 
 
 FERN = "http://example.org/agora/world/simulation#fern_agent"
@@ -223,3 +225,44 @@ def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
         "an unplumbed market must yield no Acquire row")
     assert any(r.means == OBSERVE for r in rows), (
         "cutting the pipe must not blind the agent — the probes still watch")
+
+
+def test_two_denominations_make_two_rows_and_never_four(make):
+    """#198's fixture, pinned dead: a drying market beside the water market.
+
+    A fan bank sells dry air against the SAME property water raises, into the same pot. Before
+    the venue tie, the menu joined "a market I can reach" and "a valuation about this property"
+    as independent facts, so each venue would have collected BOTH directions — four rows, two
+    of them lies, and the reflex steered by whichever the store returned first. With the tie
+    (venue -> marketFor -> source -> supplies -> good <- ofGood <- valuation) each lever
+    carries its own physics: two Acquire rows, opposite directions, and a fan is still an
+    ACQUIRE — the ladder's rung is about whose resource it is, not which way it moves things.
+
+    Authored by hand into the world graph, which stays legal for a venue the wiring does not
+    imply; the goods and the valuation are the test's own, because no shipped domain sells
+    drying yet — the day one does, this fixture retires into its ontology.
+    """
+    from agent.ontology import WORLD_GRAPH
+
+    ns = "http://example.org/agora/world/simulation#"
+    market = "http://example.org/agora/market#"
+    st = genesis_store()
+    st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
+        <{ns}dry_air> a <{market}Good> .
+        <{ns}minutesPerFraction>
+            <{market}ofGood> <{ns}dry_air> ;
+            <{market}aboutProperty> <http://example.org/agora/water#SoilMoisture> ;
+            <{market}direction> <{market}Lowers> .
+        <{ns}fan_bank> <{market}supplies> <{ns}dry_air> .
+        <{ns}fan_market> a <{market}Market> ; <{market}marketFor> <{ns}fan_bank> .
+        <{ns}fanco> <{market}hosts> <{ns}fan_market> ;
+            <http://example.org/agora/actuation#hasActuator> <{ns}fan1> .
+        <{ns}fan1> <http://example.org/agora/actuation#actuates> <{ns}fern> .
+        <{ns}fern_agent> <{market}bidsIn> <{ns}fan_market> .
+    }} }}""")
+    acquire = [r for r in menu_of(st.query, FERN)
+               if r.means == ACQUIRE and r.observed_property.endswith("SoilMoisture")]
+    assert sorted((r.direction or "").rsplit("#", 1)[-1] for r in acquire) == \
+        ["Lowers", "Raises"], (
+        "two opposite levers on one property must each carry their own direction — "
+        "a cross-join would put both directions on both venues, four rows for two levers")

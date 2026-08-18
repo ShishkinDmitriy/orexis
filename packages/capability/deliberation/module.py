@@ -46,11 +46,20 @@ ACQUIRE = _INTENTION_NS + "Acquire"
 # Which way the lot moves what it is priced in — the market vocabulary's terms, read off the
 # T-Box rather than known. Issue #127: the sign used to be hardcoded here as `value < aim`,
 # which was the one piece of "buy water to raise moisture" written nowhere in any graph.
+#
+# Joined THROUGH A VENUE I BID IN (#198), never over the T-Box at large: the direction is a
+# fact about a lever, and the lever I hold is a market. Asked bare, "which way does moisture
+# move" has no answer the moment a fan market lowers what a water market raises — whichever
+# term the store returned first would steer the reflex, silently. Asked through my venue, the
+# answer is which way MY lever moves it, which is the only question a reflex ever had.
 _RAISES = "http://example.org/agora/market#Raises"
 _LOWERS = "http://example.org/agora/market#Lowers"
 _DIRECTION_Q = """
 SELECT ?direction WHERE {
-  ?term market:aboutProperty <%s> ; market:direction ?direction
+  <%s> market:bidsIn ?m .
+  ?m market:marketFor ?src .
+  ?src market:supplies ?good .
+  ?term market:ofGood ?good ; market:aboutProperty <%s> ; market:direction ?direction
 } LIMIT 1"""
 
 
@@ -125,10 +134,13 @@ class ReflexModule(Module):
         return None
 
     def _direction_of(self, observed_property: str) -> str | None:
-        """Which way the lever I could pull moves this property — the domain's statement.
+        """Which way the lever I could pull moves this property — through a venue I bid in.
 
         Per call rather than cached, like the aim: the T-Box is replaced on restart, not under
         a running agent, but a query this small is not worth a second copy of the truth.
+        An agent bidding in no market gets None here and proposes nothing, which was already
+        true — a direction with no venue behind it was the menu offering a move with no lever.
         """
-        rows = bindings(self.agent.store.query(_DIRECTION_Q % observed_property))
+        rows = bindings(self.agent.store.query(
+            _DIRECTION_Q % (self.me.uri, observed_property)))
         return rows[0]["direction"] if rows else None
