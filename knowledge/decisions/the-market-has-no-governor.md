@@ -150,7 +150,20 @@ the open flank ([#28](https://github.com/ShishkinDmitriy/agora/issues/28),
 
 - **Claim endorsement** — a claim whose beneficiary differs from its winner. Trigger: the
   first world whose plumbing runs a source's valve to a stranger's pot with no dealer vessel
-  between.
+  between. Its signature chain is designed, settled when the sovereign asked whether the
+  dealer should sign: FOUR signatures, each answering a different question. Host and clearing
+  over the claim (exists) — the water was won. THE DEALER over the endorsement (jti +
+  beneficiary) — necessary because redirecting a claim's benefit is disposing of the dealer's
+  property, and on a bus possession of the bytes is nothing: every subscriber saw them; the
+  keys and roster exist since #144, so this is one more signed statement. CLEARING over the
+  retarget — the one nobody asks for until it bites: the original validation was
+  per-beneficiary (rot headroom is a fact about whose pot the water lands in), so retargeting
+  re-opens a question clearing already answered, and an uncountersigned endorsement is a hole
+  in the constitution exactly one endorsement wide. The beneficiary over its presentation
+  (exists) — which also settles consent: a dose is irreversible, but only the presenter
+  triggers the pour, and presentation already waits for the beneficiary's live watch. The jti
+  stays single-use throughout: endorsement retargets paper and never mints it, so double-spend
+  stays the ledger's — the one irreducible trusted thing, as above.
 - **Two dealers on one good** — the derivation already grants a venue to any stock plus
   consent, but no world yet demonstrates competing dealers, and the chooser this forces — a
   bidder facing two venues on one property — is the same cluster as the venue-denomination tie
