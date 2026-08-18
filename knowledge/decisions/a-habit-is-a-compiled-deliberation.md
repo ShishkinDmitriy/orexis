@@ -1,0 +1,78 @@
+---
+type: Decision
+title: A habit is a compiled deliberation, and review is what compiles and retires it
+description: The amortisation tower's missing top, named by the sovereign watching the loner
+  water itself — something you do without thinking. A stable environment lets deliberation
+  compile into if-then policy (if moisture is low, pump five seconds), held as a revisable
+  belief inside a mandate, answered by a Habitual member before the reflex computes, minted
+  and retired by review on evidence. Without thinking never means without watching — every
+  habitual act keeps its signature, its confirmation and its expectation, so a stale habit
+  is visible as the false-knowledge signature and retirement returns the decision to
+  deliberation. The economics only sing with Consulting: compiling a model's policy is what
+  makes an LLM member affordable at scale.
+---
+
+# A habit is a compiled deliberation, and review is what compiles and retires it
+
+Asked by the sovereign, watching the loner's first self-dose: *"What if we have habits —
+something you do without thinking? If the environment is stable we could compile some
+actions to if-then constructs — if moisture is low, turn on pump for 5 sec — as a result of
+review. Some planning actions move to habits?"*
+
+It is the missing top of a tower this project has been building floor by floor. An intention
+is an amortised deliberation — one decision spanning events
+([an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md)).
+An affordance amortises a CLASS of decisions — Consulting's whole output is a graph fact the
+reflex exploits free forever
+([the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md)).
+A habit is the next rung: the decision disappears into the perception-action edge itself —
+the whole propose-size-adopt pipeline collapsed into one if-then. The idea has a precise
+ancestor: SOAR calls it chunking, deliberation results compiled into production rules, and
+psychology calls it what the sovereign called it — what System 2 practices until System 1
+owns it.
+
+## The shape, from machinery that already exists
+
+- **A habit is a deliberation MEMBER** — `deliberation:Habitual`, answering from a lookup
+  before the reflex computes. The family was built for exactly this seat-shape: one question,
+  radically different hows.
+- **A habit is a revisable belief**, and "as a result of review" is the load-bearing half:
+  a habit is a PICK (this policy) inside a MANDATE (what the sovereign allows compiling),
+  minted on stability evidence — the steady-probe machinery already computes "the
+  environment is stable" for cadence — and retired on the evidence that it stopped paying.
+  Which terms may be compiled, and within what bounds, is the same one-triple mandate
+  mechanism every other latitude uses.
+- **A habit's DO is a menu row.** Control-the-derivative holds compiled or not: an action is
+  a path through the affordance graph, never surgery the agent imagines onto the world. The
+  sovereign's own example shows the honest trade — a FIXED five-second pulse where the
+  reflex sizes a dose: precision traded for cheapness, legitimate because —
+- **Without thinking never means without watching.** Every habitual act keeps the whole
+  verification arc: the self-claim is signed, the device confirms, the expectation opens.
+  That makes habits here SAFER than their biological ancestor, whose known failure mode is
+  persisting after the world changed: a stale habit announces itself as
+  satisfied-and-unmet — the false-knowledge signature — and review retiring it returns the
+  decision to deliberation. Habits skip DECIDING, never VERIFYING; the keeper's patience
+  still bounds the acting rate either way.
+- **The economics only sing with Consulting.** Compiling today's reflex saves microseconds;
+  compiling a MODEL's policy saves the model — consult once at the edge of knowledge,
+  habituate the answer, execute at reflex cost forever, re-consult when review retires the
+  habit. Habits are what make an LLM member affordable at scale, and
+  [single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md) is the same
+  thermodynamics priced from the other side: thinking costs, so compiled non-thinking is a
+  saving the wallet can see.
+
+# Seams left open
+
+- **Nothing is implemented, deliberately.** The trigger is Consulting's arrival — the member
+  whose calls are worth amortising — or a measured need for degradation tolerance (a habit
+  answers when the store is slow or a deliberator is broken, which is resilience the reflex
+  already mostly provides). Building Habitual before Consulting would be compiling a
+  four-line computation into a four-entry table.
+- **The stability judgment is review's evidence machinery**, and sharpening it is the same
+  seam as [#60](https://github.com/ShishkinDmitriy/agora/issues/60) (reflection wakes on a
+  timer): "the environment has been stable" and "there is something to reflect on" are one
+  question asked in two tenses.
+- **What a habit may say is the mandate's business**: a compiled dose bounded by the same
+  device caps and constitutional ceilings as a deliberated one, held to shapes at adoption
+  exactly as a Consulting affordance will be — the pattern is written before either exists,
+  so neither arrives lawless.

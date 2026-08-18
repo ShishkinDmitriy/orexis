@@ -174,3 +174,7 @@ so this is that decision growing teeth rather than changing course.
   consulted at the edge of knowledge, answer written down as affordance facts, approval split by
   time because the interface is genesis-only. What stays open there is the residue that was open
   here — endpoint as environment, the prompt as a menu derived per #127.
+
+Amended by [a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md):
+the amortisation this record names has one rung above it — a stable environment lets the
+deliberation itself compile into policy, and review is what compiles and retires it.
