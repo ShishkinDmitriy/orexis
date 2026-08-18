@@ -105,6 +105,16 @@ menu was edited anywhere. Consulting's recorded contract is the runtime case of 
 move: the model's whole output is an affordance AS PREMISES, held to shapes, adopted, and
 then exploited by the reflex free forever.
 
+The sovereign pressed the claim and found its limit, which belongs here beside it: what is
+dynamic this way is INSTANCES of affordance kinds — the KINDS are hardcoded branches in the
+menu query, one file in the deliberation package walking other packages' terms. A new kind of
+move (the Actuate rung, a fan's lever) means editing that file: a registry, in the tree whose
+claim is that adding a package edits nothing. The fix is the repo's mechanic applied a fourth
+time — a package ships its own `affordances.rq` beside its `rules.ru` and `review.rq`, and
+the menu is the union of what the loaded packages contribute; a kind whose execution reduces
+to an existing actor then ships no Python at all. Tracked as
+[#207](https://github.com/ShishkinDmitriy/agora/issues/207), with #190 as its first customer.
+
 **So the menu is a tool list in the LLM sense, with two upgrades**: nothing registers the
 tools — the world implies them, per agent, per stake — and the tool call is split by
 deterministic-bid: the model picks the row, code computes the arguments. A row is a tool
