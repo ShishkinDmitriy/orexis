@@ -61,6 +61,28 @@ owns it.
   thermodynamics priced from the other side: thinking costs, so compiled non-thinking is a
   saving the wallet can see.
 
+## What the compiled thing is: data with procedural cost, never minted code
+
+Sharpened by the sovereign's language framing: AgentSpeak is good for BDI, and even simple
+stuff pays the interpreter's toll — event, plan selection, intention stack — where a
+procedural language is easier; so compile to something procedural when nothing changes. The
+diagnosis is exact (plan BODIES were always the procedural part; SELECTION is the overhead a
+constant answer makes pointless), and it forces the one decision this record still owed:
+what the compiled artifact IS. Not code — **an agent never mints code**, because generated
+code can be held to no shape, bounded by no mandate, and is self-modification outside every
+gate. The artifact is DATA with procedural cost: a condition → (menu row, fixed args) entry,
+run by a fixed, dumb, fast loop the Habitual member ships once. Procedural in what it costs
+— one lookup, no queries, no arithmetic — declarative in what it is, so a habit stays a
+belief: shaped at adoption, bounded by the mandate, retired by review, visible to the ask.
+
+And the pattern is not new here — this architecture already compiles decisions downward, all
+the way to silicon. The retained cadence command is a compiled policy ("if comfortable,
+sleep 600") executed by plain procedural firmware with no BDI in sight; the ULP watch
+program is a habit compiled to ASSEMBLY — "crosses the band twice, wake" — a decision made
+once by the agent, running on a coprocessor in microamps while the decider sleeps. Habits
+promote that same move from sensing to acting, one substrate up: the agent-level if-then
+stands to deliberation exactly as the ULP program stands to the agent.
+
 ## The way back up, because the sovereign asked for it by name
 
 *"We just need a mechanism back — from habit to consulting or planning."* The descent alone
