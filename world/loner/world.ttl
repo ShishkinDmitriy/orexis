@@ -1,0 +1,98 @@
+@prefix : <http://example.org/agora/world/loner#> .
+@prefix zz: <http://example.org/agora/zamioculcas#> .
+@prefix water: <http://example.org/agora/water#> .
+@prefix sensing: <http://example.org/agora/sensing#> .
+@prefix actuation: <http://example.org/agora/actuation#> .
+@prefix mqtt: <http://example.org/agora/mqtt#> .
+@prefix ag:   <http://example.org/agora#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix scaling: <http://example.org/agora/scaling#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+
+#  The loner — the ladder's second rung as a whole world (#190). Named by the sovereign for
+#  what it is: EVERYTHING IN ONE AGENT — stake, sight, lever and source — so it needs nobody:
+#  no market, no peer, no city.
+#
+#  One agent, one plant, one pump, one rain butt — and NO MARKET, because none is needed:
+#  the lever is the gardener's and so is the water, and the ladder's rule is that direct
+#  actuation is honest exactly there. Nothing here states market:matchesBy, so no venue
+#  derives, the butt is a source no market offers as its lot, and the menu's Actuate row
+#  appears for the one agent whose two chains — lever and resource — both end at itself.
+#
+#  The plant is a Zamioculcas: ONE TRIPLE plants it, and its care arrives entailed from the
+#  species package — operating 0.10..0.30 of saturation, survival ceiling 0.45, the rot
+#  cliff. That asymmetry is why this world is the right home for a self-watering agent: the
+#  failure mode is not drought but attention, and the keeper's patience plus the open-watch
+#  guard are what stand between a reflex and a rotted rhizome.
+#
+#  Simulated end to end like world/simulation, its own broker on its own ports — two worlds
+#  never meet on a bus.
+
+:local_bus a mqtt:MessageBus ;
+    ag:localId "local_bus" ;
+    mqtt:brokerHost "localhost" ;
+    mqtt:brokerPort 1887 ;
+    mqtt:brokerTlsPort 8887 .
+
+:world a ag:World ; ag:currentVersion :version_1 ;
+    ag:timeScale 144 ;
+    prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
+:version_1 a ag:WorldVersion ; ag:versionNumber 1 .
+
+##########  The plant — one triple, and the species does the rest  ##########
+
+:zz a zz:ZamioculcasZamiifolia ;
+    ag:localId "zz" ;
+    water:servedBy :water_butt ;
+    #  This pot's own physics, not the species': a slow drinker in a small pot.
+    water:driesPerDay 0.03 ; water:litresPerFraction 1.5 .
+
+##########  The butt — a source that is nobody's shop  ##########
+#  Offered by the gardener (water:suppliedBy, entailed into market:offeredBy) and NOT a
+#  market: no matchesBy, no venue, no lot. Rain fills it off-stage; 20 L is the
+#  constitution's allocation ceiling, not a stock anyone watches — the honest blind-source
+#  arrangement the mains already demonstrates, one rung down the supply chain.
+
+:water_butt a water:WaterSource ;
+    ag:localId "water_butt" ;
+    water:suppliedBy :gardener ;
+    water:capacityL 20.0 .
+
+##########  The gardener — stake, lever, and no market anywhere  ##########
+#  Derivation gives it Subscribing (a scheduled probe), Deducing (it acts for a plant that
+#  states what it needs — through the species, entailed), Keeping and Reflex (stake plus
+#  lever), and Actuation (it holds the pump). NOT Bidding and NOT Hosting: it is plumbed
+#  into no venue and offers none, which is the point of the whole world.
+
+:gardener a ag:Agent ;
+    ag:localId "gardener" ;
+    ag:actsFor :zz ;
+    sensing:polls :moisture_probe ;
+    actuation:hasActuator :pump .
+
+##########  The probe — ordinary, scheduled, simulated  ##########
+
+:moisture_probe a sosa:Sensor , ag:Device ;
+    ag:localId "moisture_probe" ;
+    mqtt:onBus :local_bus ;
+    sensing:senseMode sensing:ScheduledProcedure ;
+    sensing:monitors :zz ;
+    sosa:observes water:SoilMoisture ;
+    scaling:quantityUnit unit:UNITLESS ;
+    mqtt:readingTopic "sensors/moisture_probe/reading" ;
+    mqtt:commandTopic "sensors/moisture_probe/command" ;
+    ag:simulatedBy [ a ag:DeviceModel ;
+        ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
+        ag:modelInitialValue 0.22 ;
+        ag:modelTickSeconds 3 ] .
+
+##########  The pump — the gardener's own lever on the gardener's own water  ##########
+
+:pump a actuation:Valve ;
+    ag:localId "pump" ; mqtt:onBus :local_bus ;
+    actuation:actuates :zz ; actuation:drawsFrom :water_butt ;
+    ag:simulatedBy [ a ag:DeviceModel ] ;
+    mqtt:commandTopic "actuators/pump/command" ;
+    mqtt:statusTopic "actuators/pump/status" ;
+    actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 500.0 .

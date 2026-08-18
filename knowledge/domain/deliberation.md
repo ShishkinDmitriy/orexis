@@ -62,7 +62,11 @@ list is hardcoded?"), and the fix was the repo's mechanic applied a fourth time:
 acting is a new directory, with no Python at all where execution reduces to an existing
 actor. One row per (means, property, lever, direction), joined from facts that exist for
 their own reasons — regions, wiring, denominations. For fern: *look at moisture through the
-probe; look at temperature through the thermometer; raise moisture through the market.* The
+probe; look at temperature through the thermometer; raise moisture through the market.* For
+the loner world's gardener: *raise it through your own pump* — the Actuate rung (#190), offered
+exactly where the lever AND the resource chains both end at the agent, and preferred by the
+now menu-driven reflex because the ladder's order is the preference: act with what is yours
+before buying what is not. The
 row that is **absent** is a finding too: fern wants a temperature it can see and cannot move —
 a want with no lever, legitimate and now legible. This is the Consulting member's prompt
 substrate, shipped before that member exists so "the menu is derived, not written into a
