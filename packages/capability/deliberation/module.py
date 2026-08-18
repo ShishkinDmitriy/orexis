@@ -170,18 +170,11 @@ SELECT ?q WHERE {
   GRAPH <%s> { <%s> <http://example.org/agora/market#offerQuantityL> ?q }
 } LIMIT 1"""
 
-# The two steps of the dealer's plan, as menu-row-shaped rows: my Acquire on the upstream
-# venue (the same walk the menu's Acquire branch closes), then Offer on the venue I host for
-# my vessel. Recomputed from given-level facts, never read from bidsIn/hosts conclusions.
-_PLAN_Q = """
-SELECT ?upSrcId ?downSrcId WHERE {
-  <%s> ag:actsFor ?vessel .
-  ?vessel market:offeredBy <%s> ; ag:localId ?downSrcId .
-  ?pipe <http://example.org/agora/actuation#drawsFrom> ?upstream ;
-        <http://example.org/agora/actuation#actuates> ?vessel .
-  ?upstream market:offeredBy ?owner ; ag:localId ?upSrcId .
-  FILTER(<%s> != ?owner)
-} LIMIT 1"""
+# The dealer's plan ships as SPARQL beside the menu contributions (#206), so the sovereign
+# may run the very text the planner runs — one file, two readers, no drift.
+from pathlib import Path
+
+PLAN_QUERY = (Path(__file__).parent / "plan.rq").read_text()
 
 OFFER = _INTENTION_NS + "Offer"
 
@@ -225,19 +218,12 @@ class PlanningModule(ReflexModule):
         """The dealer's two-step, as rows: acquire upstream, then offer downstream.
 
         Empty when the property is not the vessel's stock — a planner asked about somebody
-        else's gap has no chain to offer, and says so rather than inventing one.
+        else's gap has no chain to offer, and says so rather than inventing one. Runs the
+        shipped `plan.rq`, the same text the sovereign can put over the ask channel.
         """
-        if self._my_shop_needs(observed_property) is None:
-            return []
         rows = bindings(self.agent.store.query(
-            _PLAN_Q % (self.me.uri, self.me.uri, self.me.uri)))
-        if not rows:
-            return []
-        up, down = rows[0]["upSrcId"], rows[0]["downSrcId"]
-        mint = "http://example.org/agora#market."
-        return [
-            Affordance(means=ACQUIRE, observed_property=observed_property,
-                       via=mint + up, direction=_RAISES),
-            Affordance(means=OFFER, observed_property=observed_property,
-                       via=mint + down, direction=_LOWERS),
-        ]
+            PLAN_QUERY.replace("$me", f"<{self.me.uri}>")))
+        return [Affordance(means=r["means"], observed_property=r["property"],
+                           via=r["via"], direction=r.get("direction"))
+                for r in sorted(rows, key=lambda r: r["step"])
+                if r["property"] == observed_property]

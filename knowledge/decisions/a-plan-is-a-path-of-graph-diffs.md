@@ -148,8 +148,12 @@ distance, so a goal-shape must state its measure or the planner ranks repairs bl
   member's substrate. What was NOT built of the sketch: the add/delete template on menu rows
   (the serveability goal is deduced in the planner, not stated as row effects — sufficient at
   depth 2, revisit if depth grows) and goal patterns as shapes (one deduced goal exists; the
-  severity-axis machinery stays future). `intention:Offer` is declared for plans to name and
-  adopted by nobody — a host keeps no gap ledger, per the family's own boundary.
+  severity-axis machinery stays future). `intention:Offer` is ledgered since #206: the
+  "host keeps no gap ledger" line was crossed knowingly, because an owed round held in
+  module memory was a promise a restart forgot and no ask could see — adopted on deferral,
+  satisfied on the reopened round, recovered from the ledger at the next stock reading. The
+  plan itself ships as `plan.rq` beside the menu contributions, so `plan_for` and the
+  sovereign's ask channel run one text.
 - **The convening gap is the planner's ceiling.** A dealer may want stock the upstream will
   not yet sell: the city convenes on LOW alone, so a planner pursuing serveability at
   stock 1.5 has no round to bid in until the region floor is crossed. That is

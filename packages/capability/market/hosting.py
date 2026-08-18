@@ -38,7 +38,7 @@ from agent.store import bindings
 from agent.world import participants
 
 from .beliefs import HOSTING_BLOCK
-from .terms import ACTUATION, HOSTING, BID_MATCHING
+from .terms import ACTUATION, HOSTING, BID_MATCHING, INTENTION, OFFER
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -133,6 +133,10 @@ SELECT ?p WHERE {{
         # roadmap already records, not a new one.
         self.held: dict[str, object] = {}
 
+    def _keeper(self):
+        """Whoever keeps my commitments, or None — and None keeps the old behaviour whole."""
+        return self.agent.provider(INTENTION)
+
     def subscriptions(self) -> list[str]:
         topics = list(self.event_topics)
         for market in self.markets:
@@ -189,10 +193,21 @@ SELECT ?p WHERE {{
         and an open round absorbs it exactly as a fresh LOW would.
         """
         for market in self.markets:
-            if market.uri not in self.deferred:
-                continue
             if subject_uri != market.resource or observed_property != self.stock_property.get(market.uri):
                 continue
+            if market.uri not in self.deferred:
+                # An owed round survives the process that owed it (#206): the deferral used
+                # to live in module memory alone, so a restart forgot a commitment the
+                # ledger never saw. A standing Offer for this vessel's stock IS the owed
+                # round, recovered here — at the reading, where the debt becomes payable —
+                # rather than at any lifecycle moment a test or a crash could miss.
+                keeper = self._keeper()
+                if keeper is None or not any(
+                        s.observed_property == observed_property and s.means == OFFER
+                        for s in keeper.standing()):
+                    continue
+                self.deferred[market.uri] = \
+                    "a round owed before this process started — the ledger kept it"
             if value <= EPS:
                 continue
             if self.open_auction is not None:
@@ -200,6 +215,9 @@ SELECT ?p WHERE {{
             if time.monotonic() - self.last_auction_at < self.beliefs.cooldown_s:
                 continue
             trigger = self.deferred.pop(market.uri)
+            if keeper := self._keeper():
+                keeper.satisfy(OFFER, self.stock_property[market.uri],
+                               "the refill landed — the owed round opens")
             self.log.info("the refill landed (%.3f) — opening the round deferred for %s: "
                           "step two of acquire-then-offer", value, trigger)
             self.announce(market, trigger=trigger)
@@ -240,6 +258,15 @@ SELECT ?p WHERE {{
                 # SELL is deferred, and reopens the moment my witness reports the refill —
                 # the two-step, held by the market instead of sold as phantom water.
                 self.deferred[market.uri] = trigger
+                # The owed round is a COMMITMENT, and commitments live in the ledger (#206):
+                # crossing the "host keeps no gap ledger" line knowingly, because a deferral
+                # held only in module memory was a promise a restart forgot and no ask could
+                # see. Deciding is still nobody's here — physics deferred the round, and the
+                # keeper only remembers that it is owed.
+                if keeper := self._keeper():
+                    keeper.adopt(OFFER, self.stock_property[market.uri],
+                                 f"{trigger} is LOW and my vessel is dry — a round is owed "
+                                 f"on {market.local_id} the moment the refill lands")
                 self.log.info("%s is LOW but my vessel is dry — deferring the round: "
                               "acquire upstream, then offer (the depth-2 plan, distributed)",
                               trigger)

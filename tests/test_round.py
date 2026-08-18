@@ -585,3 +585,42 @@ def test_a_blind_host_sells_as_it_always_did(make, tmp_path, monkeypatch):
 
 
 STORED = "http://example.org/agora/water#StoredLitres"
+
+
+# --- the owed round is a commitment the ledger sees (#206) ------------------
+
+def keeper_of(agent):
+    return next(m for m in agent.modules if m.name == "intention")
+
+
+def test_a_deferred_round_stands_in_the_ledger_and_resolves_on_the_refill(host):
+    """The 'host keeps no gap ledger' line, crossed knowingly: a deferral held only in module
+    memory was a promise a restart forgot and no ask could see. Deciding is still nobody's —
+    physics deferred the round — but OWING it is a commitment, and commitments are ledgered:
+    adopted with the trigger's name when the vessel is dry, satisfied when the refill lands
+    and the round opens."""
+    stock_reading(host, 0.0)
+    host.deliver("readings/fern", low_event())
+    owed = [s for s in keeper_of(host).standing() if s.means.endswith("Offer")]
+    assert len(owed) == 1 and owed[0].observed_property == STORED, \
+        "the owed round stands, keyed by the stock that gates it"
+
+    stock_reading(host, 2.5)
+    assert not [s for s in keeper_of(host).standing() if s.means.endswith("Offer")], \
+        "the refill landed, the round opened, the debt is paid"
+    assert offer_from(host)["quantity_l"] == 2.0
+
+
+def test_an_owed_round_survives_the_process_that_owed_it(host, make):
+    """The whole point of the crossing: the deferral is recovered FROM the ledger at start,
+    so a restarted host still owes what it owed — the round reopens on the next stock
+    reading exactly as it would have, and no phantom water is sold meanwhile."""
+    stock_reading(host, 0.0)
+    host.deliver("readings/fern", low_event())
+    assert [s for s in keeper_of(host).standing() if s.means.endswith("Offer")]
+
+    reborn = make("supplier", host.store)  # same store: the volume the ledger lives in
+    assert reborn.sent.to(market_of(reborn).offer_topic) == []
+    stock_reading(reborn, 3.0)
+    assert offer_from(reborn)["quantity_l"] == 2.0, \
+        "the recovered debt opened the round the moment the vessel could pour"
