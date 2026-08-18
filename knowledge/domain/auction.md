@@ -60,18 +60,22 @@ Every step above is what runs today, and steps 1-3 are a single round. What
 [round](/domain/round.md) describes beyond it — re-bidding after a shock, the LLM-phrased stance —
 would be further rounds inside this same auction, and none of it is built.
 
-# Who convenes it — stated in v1, not derived
+# Who convenes it — derived from consent, settled as structure
 
-The design is the **short-side principle**: the scarce side of the *good* hosts. With one
-supplier and N thirsty consumers the [supplier](/domain/supplier.md) hosts a forward auction;
-in a buyer's market a consumer would host a reverse one. Money-scarcity does not select the
-host — money is the medium, not the good; it only gates who can afford to bid. That is what
-[standalone-clearing](/decisions/standalone-clearing.md) and [market](/domain/market.md) record.
+`market:hosts` is DERIVED now, never stated: a source offered by someone who states
+`market:matchesBy` IS a market, and the owner hosts it — one authored triple as consent,
+everything else minted from the wiring
+([a-market-arises-where-want-meets-supply](/decisions/a-market-arises-where-want-meets-supply.md)).
+Both shipped venues arise this way: the supplier's for its barrel, the city's for its mains.
 
-**Nothing implements it.** `market:hosts` is stated in `world.ttl`, and in every shipped world it
-names the supplier statically. No code compares which side is short, and the host does not
-rotate. The principle is a documented intention, and this page says so rather than describing it
-as behaviour.
+And "who rules" is settled, precisely
+([the-market-has-no-governor](/decisions/the-market-has-no-governor.md)): rulership is
+commitment power over the mechanism, which comes from STRUCTURE or neutrality and never from
+today's deficit — state opens rounds, structure names the convener, and the *structurally*
+short side is what the short-side principle always meant. At N-to-M no participant has
+commitment power, and the refusal is recorded: no stake-free exchange — the market clears
+through DEALERS holding stock (the shipped supplier is one) or bilaterally where too thin.
+Money-scarcity still selects nothing: money is the medium, not the good.
 
 The split above sharpens the open question rather than resolving it: **owning the venue is
 structural, convening an auction is per-auction.** So who convenes *this* auction could follow from

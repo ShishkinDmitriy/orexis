@@ -1,7 +1,9 @@
 ---
 type: Domain Concept
 title: Supplier
-description: Strategic seller that hosts the auction and (v2) buys water upstream.
+description: The dealer the arcs built — a strategic seller downstream, a genuine buyer
+  upstream, the barrel between them; its stake, its stock and its spread are all facts the
+  graph and the ledger can show.
 tags: [agent, market, supplier, seam]
 timestamp: 2026-08-01T00:00:00Z
 ---
@@ -26,8 +28,12 @@ consumers and suppliers know each other (the attested plumbing topology) is in
   solvency, identity, constitution, order-consistency) and **co-signs** it before settlement.
   Greedy-but-checked, not trusted-to-be-fair. See
   [clearing-as-validator](/decisions/clearing-as-validator.md).
-- **Upstream (v2, to its source): buyer / participant.** Just another bidder in *that*
-  market. Same node, two positions. Markets couple only through **price**, never shared control.
+- **Upstream (real since the city — arc 4): buyer / participant.** Just another bidder in
+  the refill market, its `bidsIn` DERIVED from the pipe that reaches its barrel plus the
+  stake it holds in it. Same node, two positions; markets couple only through **price**,
+  never shared control — the barrel is the decoupling, which is what makes it the
+  [dealer](/domain/dealer.md): no claim ever crosses from one venue to the other, and the
+  spread between its buy ceiling and its sell reserve is two beliefs the ledger can audit.
 
 # Responsibilities (v1)
 

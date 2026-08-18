@@ -16,7 +16,7 @@ a family now: a deliberator is asked `propose(property, freshest value or None)`
 with a move — `Observe`, `Acquire` — or with None, **which is a decision, not an absence of
 one**: the actors treat it exactly as they treat their own cooldowns.
 
-# The two members
+# The three members
 
 - **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;
   a gap on the side a lever moves → pursue; otherwise nothing. WHICH side is read off the
@@ -24,6 +24,14 @@ one**: the actors treat it exactly as they treat their own cooldowns.
   water Raises moisture — so a heater against a cold snap is the same rule with no code
   change, and a missing direction means the reflex refuses rather than letting the old
   hardcoded sign sneak back as a default. Still deterministic, still free.
+- **`deliberation:Planning`** — the reflex one level up (#205): bounded search over menu
+  rows, depth 2 and no deeper, granted by the DEALER premise — acting for a source you offer,
+  refillable from a source another offers: levers that compose. It subsumes the reflex and
+  adds exactly one deduced goal past the region: the hosted lot must be serveable, every
+  downstream buyer's silent Acquire precondition. Its plan — acquire upstream, then offer
+  downstream — is data twice over: `plan_for` in code and `plan.rq` on the ask channel, one
+  text, two readers. A planner always also derives Reflex (the premises nest); a pinned test
+  holds `provider` to handing actors the planner.
 - **`deliberation:Consulting`** — RESERVED. One model call over the beliefs, the T-Box, the gap
   and what already stands, emitting a move **from this vocabulary's menu, never free
   text-to-action**. Its constraints are fixed before it exists: the bid *number* stays
@@ -40,7 +48,8 @@ one**: the actors treat it exactly as they treat their own cooldowns.
   are two capabilities on one granting premise (a stake and a lever) rather than one.
 - **The host's trigger.** A host has no gap — its "whether to sell" is a stake in the *market*,
   the [strategic-supplier](/decisions/strategic-supplier.md) seam, and putting it here would
-  hand a subject-shaped answer to a venue-shaped question.
+  hand a subject-shaped answer to a venue-shaped question. (An owed round is not a counter-
+  example: physics defers it and the keeper remembers it — nothing here decides it. #206.)
 
 # The menu — what I could do, derived
 
