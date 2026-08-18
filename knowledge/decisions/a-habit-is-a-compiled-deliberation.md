@@ -61,6 +61,35 @@ owns it.
   thermodynamics priced from the other side: thinking costs, so compiled non-thinking is a
   saving the wallet can see.
 
+## The way back up, because the sovereign asked for it by name
+
+*"We just need a mechanism back — from habit to consulting or planning."* The descent alone
+is half a mechanism: compiling without de-compiling is how a creature waters a dead plant
+for a season. So the members form a CHAIN OF COUNSEL, cheapest first — Habitual, then
+Reflex/Planning, then Consulting — one deliberator to every actor (deciding stays singular;
+the chain is internal), each member answering or passing UP. And every rung of the ascent is
+triggered by a signal the machinery already measures:
+
+1. **A habit fails its watch** — the expectation closes satisfied-and-unmet, the
+   false-knowledge signature — and review RETIRES it: the next impulse falls through to the
+   reflex or the planner, which recompute honestly from the graph. The environment announced
+   it stopped being stable; the compiled answer is withdrawn, not patched.
+2. **Deliberation itself runs dry** — the reflex and planner return nothing while a gap
+   persists, or their own verifications keep failing — which is the recorded
+   edge-of-knowledge condition: the empty menu, the gap no written-down plan connects to a
+   lever. That is Consulting's invocation, exactly where
+   [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md)
+   reserved it. The `suspectAfter` counter on unmet affordances is this rung's bookkeeping,
+   already declared.
+3. **Consulting answers with graph facts** — an affordance, a policy — validated, adopted,
+   exploited by the reflex; and in time, on stability evidence, review compiles the new
+   answer DOWN into a habit again. The circle closes.
+
+Review is the lift operator in both directions — compiling on stability evidence, retiring
+on failure evidence — and the keeper is the floor indicator: its ledger of unmet
+expectations per gap is what says which rung the next question belongs to. Nothing new
+measures anything; the ascent is a reading of ledgers that already exist.
+
 # Seams left open
 
 - **Nothing is implemented, deliberately.** The trigger is Consulting's arrival — the member
