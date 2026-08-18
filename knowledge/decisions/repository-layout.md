@@ -129,3 +129,27 @@ same rule applied further: see [pins-and-wires](/decisions/pins-and-wires.md).
   reads. Extracting a shared core was proposed twice and declined twice: the dependency is already
   one-way and acyclic, the shared surface is seven modules, and a third distribution would buy a
   boundary the import contract already states.
+
+# Capability-specific dependencies (settled when Consulting came into view)
+
+Asked by the sovereign after the menu became package-contributed: should this use an existing
+package manager, given that some capabilities — Consulting first — will have dependencies of
+their own, an LLM among them? Two answers, split by what the dependency IS.
+
+**A Python library lands as an extra in the ONE pyproject** (`agora[consulting]`), the
+mechanism wireviz already uses; the Containerfile decides which extras an image carries.
+Not per-package pyprojects and not entry-points: the first is the boundary-that-enforced-
+nothing this record already removed, and the second is a registry in metadata against the
+found-by-looking commitment — the loader IS this project's package manager, and it manages
+what pip cannot (ontologies, shapes, rules, affordances). A package whose extra is absent
+guards its import and exports no `PROVIDES`, which degrades to the already-designed honest
+path: capability granted, nothing provides it, said at startup — never a crash in an agent
+that was not using it.
+
+**The model itself is a service, not a dependency**, and every existing service discipline
+applies unchanged: its URL is environment (not a belief — rule 5), it lives in `infra/` or
+beyond it, each agent's access is a credential minted at onboarding into the world's secrets
+exactly as an Influx token is, and the call is PRICED — single-wallet-metabolic-cost reserved
+this seat: thinking costs the same wallet a litre does, which is what makes the keeper's
+patience an economic fact rather than a timer.
+
