@@ -1,0 +1,41 @@
+# The dealer's plan, as data on the wire (#206): acquire upstream, then offer downstream —
+# two menu-row-shaped steps through the two venues the Planning grant's premise names, from
+# GIVEN facts only, so the sovereign may run this over the ask channel and see exactly what
+# the planner sees. `plan_for` reads this same file: one text, two readers, no drift.
+#
+# Step one's direction comes from the upstream venue's valuation (buying raises my stock);
+# step two's is stated here (selling lowers it) — the one physics atom a walk cannot derive.
+# The venue IRIs are recomputed as every rule recomputes them: a derived instance is a
+# function of a given string, so any reader lands on the same node.
+#
+# `$me` substituted by whoever asks; declares no prefixes of its own — `store.query`
+# prepends them.
+
+SELECT ?step ?means ?property ?via ?direction WHERE {
+  $me ag:actsFor ?vessel .
+  ?vessel market:offeredBy $me .
+  ?pipe actuation:drawsFrom ?upstream ;
+        actuation:actuates ?vessel .
+  ?upstream market:offeredBy ?owner .
+  FILTER($me != ?owner)
+  ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?property .
+  ?upstream market:supplies ?good .
+  ?valuation market:ofGood ?good ; market:aboutProperty ?property .
+  # The id patterns sit INSIDE each branch, not above them: a BIND sees only what its own
+  # group has bound so far, so a venue IRI minted from an outer-bound id comes out unbound —
+  # silently, one more member of the empty-result family this project keeps a list of.
+  {
+    ?valuation market:direction ?direction .
+    ?upstream ag:localId ?id .
+    BIND(1 AS ?step)
+    BIND(intention:Acquire AS ?means)
+    BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?id))) AS ?via)
+  } UNION {
+    ?vessel ag:localId ?id .
+    BIND(2 AS ?step)
+    BIND(intention:Offer AS ?means)
+    BIND(market:Lowers AS ?direction)
+    BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?id))) AS ?via)
+  }
+}
+ORDER BY ?step

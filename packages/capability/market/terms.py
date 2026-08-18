@@ -68,3 +68,4 @@ DELIBERATION = DELIBERATION_NS + "DeliberationCapability"  # whoever decides the
 OBSERVE = INTENTION_NS + "Observe"
 ACQUIRE = INTENTION_NS + "Acquire"
 APPLY = INTENTION_NS + "Apply"      # real since #132: holding a claim until the watch is live
+OFFER = INTENTION_NS + "Offer"      # the owed round (#206): deferred for dry stock, opened on refill
