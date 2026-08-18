@@ -345,6 +345,8 @@ services:
       # it actuates, so it co-signs — these two keys and nothing else
       - ./secrets/host.key:/app/world/secrets/host.key:ro
       - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro
+      - ./secrets/city.sign.key:/app/world/secrets/city.sign.key:ro
+      - ./secrets/city.seal.key:/app/world/secrets/city.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
       # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
       # ride along with it. Their old root paths survived as empty husks — git does not track

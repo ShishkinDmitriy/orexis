@@ -29,6 +29,7 @@ from dataclasses import asdict, dataclass
 
 from agent import signing
 from agent.module import Module, Timer
+from agent.store import bindings
 
 from .beliefs import ACTUATION_BLOCK
 from .terms import ACTUATION
@@ -71,8 +72,25 @@ class ActuationModule(Module):
         except Exception:
             self.log.warning("no signing keys (run agora-keygen) — devices will reject commands")
 
+    def _subject_of(self, winner_id: str) -> str:
+        """The winner's SUBJECT — where its dose goes. A claim names the buying AGENT.
+
+        This used to hand `claim.sub` straight to `actuator_for`, which matches actuators by
+        the SUBJECT they actuate — and it worked for every claim ever redeemed because a pot
+        and the agent acting for it share a localId (fern's pot is "fern"). The first buyer
+        named unlike its subject broke it: the dealer is "supplier", its barrel is "barrel1",
+        and the city owned a perfectly good valve it could not find. The walk the id
+        coincidence was standing in for is one triple: whoever bears the claim's name, the
+        dose goes to what it acts for. Falls back to the name itself, because a world may
+        author a claim's sub as a subject directly and the coincidence path must keep working.
+        """
+        rows = bindings(self.agent.store.query(
+            f'SELECT ?sid WHERE {{ ?a ag:localId "{winner_id}" ; ag:actsFor ?s . '
+            f'?s ag:localId ?sid }} LIMIT 1'))
+        return rows[0]["sid"] if rows else winner_id
+
     def command_for(self, claim) -> tuple[Command, object]:
-        device = self.me.actuator_for(claim.sub)
+        device = self.me.actuator_for(self._subject_of(claim.sub))
         if device is None:
             raise ValueError(f"I own no actuator that serves {claim.sub!r}")
         ml = min(claim.amount_l * 1000.0, device.max_dose_ml)  # the device's own cap
