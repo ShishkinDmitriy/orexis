@@ -119,6 +119,18 @@ class Module:
         """
         return None
 
+    def gaps(self) -> list[tuple[str, str]]:
+        """(subject, property) pairs this module notices are unknown or too stale to act on.
+
+        The choir again (#208), for NOTICING: whoever is positioned to see that something
+        warrants a decision reports it, and only reports — the deliberator turns gaps into
+        moves and the keeper commits them, because deciding and remembering stay singular or
+        every module becomes its own little welded chain. Sensing's are the archetype: a
+        property with no observation, or a freshest reading past what the agent trusts —
+        judgments it already computes for freshness and quiet(). Default: nothing to notice.
+        """
+        return []
+
     def quiet(self) -> list[str]:
         """What this module has stopped hearing that it expected to hear — one line each.
 

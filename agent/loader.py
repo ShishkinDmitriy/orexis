@@ -101,6 +101,7 @@ RULES = "rules.ru"
 # What a package would like its agents to reconsider about themselves. A SPARQL SELECT binding
 # ?term and ?value, run by the reviewer — never an update, and never Python. See agora/review.py.
 REVIEW = "review.rq"
+AFFORDANCES = "affordances.rq"
 
 
 @dataclass(frozen=True)
@@ -215,6 +216,19 @@ def shapes_files() -> tuple[Path, ...]:
 
 def rule_files() -> tuple[Path, ...]:
     return files(RULES)
+
+
+def affordance_files() -> tuple[Path, ...]:
+    """Every package's menu contribution — the rows its levers put on the table (#207).
+
+    A package that ships `affordances.rq` states what an agent CAN DO through the things this
+    package knows about, preconditions as its own walk, `$me` substituted by the consumer.
+    The menu is the union of these, so a new KIND of move is a new directory and never an
+    edit to the deliberation package — which used to hold every branch, a registry in the
+    tree whose claim is that adding a package edits nothing. Goes through `store.query` like
+    a review rule, so no file here declares prefixes.
+    """
+    return files(AFFORDANCES)
 
 
 def review_rules() -> tuple[Path, ...]:

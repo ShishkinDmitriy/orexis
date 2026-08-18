@@ -229,6 +229,23 @@ class SensingModule(Module):
                            f"{limit}s I allow")
         return out
 
+    def gaps(self) -> list[tuple[str, str]]:
+        """The gaps I am positioned to notice (#208): unobserved, or too stale to act on.
+
+        Per sensor, both clocks: a channel that has never delivered, or whose freshest
+        reading is past the limit `stale_after_s` already dispatches per mode. The same
+        judgment bidding makes before trusting a number and quiet() makes about the board —
+        said here as a GAP, so the deliberator can turn it into a move and the keeper can
+        ledger the look, whether or not any market ever asks about this property. Noticing
+        only: this module adopts nothing and decides nothing.
+        """
+        out = []
+        for sensor in self.sensors:
+            reading = self.agent.beliefs.current_reading(sensor.subject, sensor.observes)
+            if reading is None or not reading.is_fresh(
+                    self.stale_after_s(sensor.subject, sensor.observes)):
+                out.append((sensor.subject, sensor.observes))
+        return out
     def sense_now(self) -> None:
         """Ask for a reading now, if my hardware allows it. Listening cannot.
 

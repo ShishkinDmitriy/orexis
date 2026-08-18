@@ -1,0 +1,24 @@
+# Sensing's menu contribution (#207): the Observe rows — what looking is available to $me.
+#
+# One row per (sensor, desired property): a sensor I poll, watching my subject, reporting a
+# property I hold a desire in. The lever is the instrument; the direction column is empty
+# because looking moves nothing, and that emptiness is data — a model reading the menu learns
+# which moves change the world and which only change what I know.
+#
+# This branch lived in the deliberation package's menu.rq, which made the menu's KINDS a
+# registry: adding a way of acting meant editing another package's file. It is sensing's walk
+# — polls, monitors, observes are this package's own terms — so it ships from sensing's
+# directory, and deleting this package deletes the rows, the terms and the executor together.
+#
+# `$me` is the one thing a shipped query cannot know, substituted by whoever collects the
+# menu. Unqualified patterns on purpose: regions and wiring are public, so the row spans the
+# default graph. Declares no prefixes of its own: `store.query` prepends them.
+
+SELECT ?means ?property ?via ?direction WHERE {
+  $me desire:desires ?region ; ag:actsFor ?subject .
+  ?region ssn:forProperty ?property .
+  $me sensing:polls ?via .
+  ?via sensing:monitors ?subject ;
+       sosa:observes ?property .
+  BIND(intention:Observe AS ?means)
+}

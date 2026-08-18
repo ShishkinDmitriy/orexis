@@ -22,16 +22,12 @@ bring its own block. See knowledge/decisions/an-intention-is-an-amortised-delibe
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
+from agent import loader
 from agent.module import Module
 from agent.store import bindings
 
 from .terms import PLANNING, REFLEX
-
-# The affordance menu, shipped as SPARQL — see the file's own header. Read at import, so a
-# malformed query fails when the package loads rather than when a model first asks.
-MENU_QUERY = (Path(__file__).parent / "menu.rq").read_text()
 
 # What this package asks OF others, by family — their namespaces, never their Python.
 _DESIRE = "http://example.org/agora/desire#DesireCapability"
@@ -80,10 +76,22 @@ def menu_of(query, agent_uri: str) -> list[Affordance]:
     The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
     row here is a move nothing should propose. Free function for the same reason `gaps_of` is —
     a test about what a world implies should not have to build an agent to ask.
+
+    THE UNION OF WHAT THE LOADED PACKAGES CONTRIBUTE (#207): each package may ship an
+    `affordances.rq` — its rows, its preconditions as its own walk — and this collects them,
+    so the menu's KINDS stop being a registry in this package's directory. Sensing ships the
+    Observe branch, the market ships Acquire, and a new way of acting is a new directory:
+    ontology as the tool's schema, affordances.rq as its availability, a module as its
+    implementation — or no module at all, where execution reduces to an existing actor.
+    Sorted here because ORDER BY lived in the one big query; per-file order is no order.
     """
-    return [Affordance(means=r["means"], observed_property=r["property"], via=r["via"],
-                       direction=r.get("direction"))
-            for r in bindings(query(MENU_QUERY.replace("$me", f"<{agent_uri}>")))]
+    rows = []
+    for path in loader.affordance_files():
+        q = path.read_text().replace("$me", f"<{agent_uri}>")
+        rows += [Affordance(means=r["means"], observed_property=r["property"], via=r["via"],
+                            direction=r.get("direction"))
+                 for r in bindings(query(q))]
+    return sorted(rows, key=lambda a: (a.observed_property, a.means))
 
 
 class ReflexModule(Module):

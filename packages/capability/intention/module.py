@@ -25,18 +25,19 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from agent.beliefs import Block
-from agent.module import Module
+from agent.module import Module, Timer
 from agent.store import bindings
 
 from .graphs import intentions_graph
 from .terms import (APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEADLINE_AT, END_MET,
-                    END_VERIFIED_AT, EXPECTS_DELTA, EXPECTS_VALUE_TO, KEEPING, NS, PATIENCE_S,
-                    term)
+                    END_VERIFIED_AT, EXPECTS_DELTA, EXPECTS_VALUE_TO, KEEPING, NS, OBSERVE,
+                    PATIENCE_S, term)
 
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
 # sensing is asked to look once so the baseline is the freshest thing on record.
 _SENSING = "http://example.org/agora/sensing#SensingCapability"
+_DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
 _RAISES = "http://example.org/agora/market#Raises"
 _LOWERS = "http://example.org/agora/market#Lowers"
 _DIRECTION_Q = """
@@ -110,6 +111,48 @@ class IntentionModule(Module):
         super().__init__(agent)
         self.beliefs = agent.beliefs.read(KEEPING_BLOCK)
         self.graph = intentions_graph(agent.id)
+        self._tick: Timer | None = None
+
+    def start(self) -> None:
+        # The non-market entry into deliberation (#208): on my own patience clock, collect
+        # what the modules notice, ask the one deliberator, commit what it proposes. The
+        # patience is the rate bound by construction — an impulse younger than it is absorbed
+        # by adopt() anyway, so ticking faster would only ask questions whose answers are
+        # already standing.
+        self._tick = Timer(float(self.beliefs.patience_s), self.deliberate_on_gaps)
+        self._tick.start()
+
+    def stop(self) -> None:
+        if self._tick:
+            self._tick.stop()
+
+    # --- gap-driven deliberation (#208) --------------------------------------------------
+
+    def deliberate_on_gaps(self) -> None:
+        """Gaps -> the deliberator -> the ledger. Noticing is plural; deciding is not.
+
+        Deliberation used to run only when the market knocked — an offer arrived, or birth —
+        so an agent's watching of a property no market relieves lived in cadence machinery
+        and never reached this ledger: the sovereign inspecting intentions saw market conduct
+        only. Now whoever is positioned to notice contributes (Module.gaps), the ONE
+        deliberator turns each gap into a move or into nothing, and what it proposes is
+        committed here — visible, resolvable, and bounded by the same patience as everything
+        else. Only Observe is carried out from here: an Acquire needs a round nobody may
+        convene from this side (the-lot-is-the-hosts-standing-offer's seam), and the acting
+        modules adopt their own when the market knocks.
+        """
+        deliberator = self.agent.provider(_DELIBERATION)
+        if deliberator is None:
+            return
+        for subject_uri, observed_property in {g for m in self.agent.modules
+                                               for g in m.gaps()}:
+            move = deliberator.propose(observed_property, None)
+            if move != OBSERVE:
+                continue
+            adopted = self.adopt(OBSERVE, observed_property,
+                                 "unobserved or too stale to act on — noticed, not asked for")
+            if adopted and (sensing := self.agent.provider(_SENSING)) is not None:
+                sensing.sense_now()
 
     # --- the ledger, written -------------------------------------------------------------
 
@@ -279,7 +322,12 @@ SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline ?delta WHE
         since a dose may land late. The verdict is a separate fact from the outcome, written
         beside it — satisfied-and-unmet is the false-knowledge signature review and the
         dashboard look for.
+
+        And every reading is a look that happened (#208): a standing Observe for this
+        property is satisfied first, whoever caused the look — since the tick, an Observe
+        can stand that no auction is waiting on, and the reading IS its arrival.
         """
+        self.satisfy(OBSERVE, observed_property, "a reading arrived — the look happened")
         if subject_uri != self.me.acts_for:
             return
         now = datetime.now(timezone.utc)

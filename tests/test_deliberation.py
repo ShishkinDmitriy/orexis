@@ -321,3 +321,29 @@ def test_the_plan_is_two_rows_through_two_venues(make):
         ("Acquire", "city_mains"), ("Offer", "barrel1")]
     assert supplier.provider(_DELIBERATION).plan_for(MOISTURE) == [], \
         "a planner asked about somebody else's gap has no chain to offer, and says so"
+
+
+# --- the menu is the union of package contributions (#207) ------------------
+
+def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
+    """The tool-plugin claim, proven: a package shipping an `affordances.rq` puts a new KIND
+    of row on the menu with no edit outside its own directory. The toy consults an oracle —
+    a means no shipped package knows — and its row appears beside Observe and Acquire the
+    moment the loader would find its file. Instances were always dynamic (premises in, rows
+    out); this is the kinds joining them."""
+    from agent import loader
+
+    toy = tmp_path / "affordances.rq"
+    toy.write_text("""
+SELECT ?means ?property ?via ?direction WHERE {
+  $me desire:desires ?region .
+  ?region ssn:forProperty ?property .
+  BIND(intention:Consult AS ?means)
+  BIND($me AS ?via)
+}""")
+    real = loader.affordance_files()
+    monkeypatch.setattr(loader, "affordance_files", lambda: real + (toy,))
+    rows = menu_of(genesis_store().query, FERN)
+    kinds = {r.means.rsplit("#", 1)[-1] for r in rows}
+    assert "Consult" in kinds, "the toy package's kind must appear"
+    assert {"Observe", "Acquire"} <= kinds, "and the shipped kinds must survive it"
