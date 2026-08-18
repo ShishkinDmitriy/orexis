@@ -77,7 +77,7 @@ prompt" is checkable now.
 Deliberation used to run only when the market knocked: an offer arrived, or birth. So an
 agent's watching of a property no market relieves lived in cadence machinery and never
 reached the intention ledger — the sovereign inspecting intentions saw market conduct only.
-Noticing is now the choir again: `Module.gaps()` beside `annotate`/`urgency`/`quiet`, each
+Noticing is now the choir again: `Module.notices()` beside `annotate`/`urgency`/`quiet`, each
 module reporting the (subject, property) pairs it can see are unknown or too stale to act on
 — sensing's are the archetype — and the KEEPER ticks on its own patience clock, handing each
 gap to the ONE deliberator and committing what it proposes. Deciding and remembering stay

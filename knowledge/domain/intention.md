@@ -17,7 +17,7 @@ a `becauseOf` in both directions, because a commitment abandoned without a reaso
 indistinguishable from one forgotten.
 
 **The keeper also ticks (#208)**: on its own patience clock it collects what the modules'
-`gaps()` notice — sensing's unobserved-or-stale channels first — hands each gap to the one
+`notices()` report — sensing's unobserved-or-stale channels first — hands each gap to the one
 deliberator, and commits what it proposes. Deliberation stopped being something only the
 market can start: a marketless property's watching reaches this ledger too, Observe adopted
 when stale and satisfied by the reading, whoever caused the look. A healthy society's gap

@@ -223,7 +223,7 @@ def test_sensing_notices_what_it_has_never_seen(make):
     nothing, which is the deciding/keeping boundary said as a hook."""
     fern = make("fern")
     sensing = next(m for m in fern.modules if m.name == "subscribing")
-    assert {p for _, p in sensing.gaps()} == {MOIST, TEMP}
+    assert {p for _, p in sensing.notices()} == {MOIST, TEMP}
 
 
 def test_the_tick_puts_marketless_watching_in_the_ledger(make):
@@ -274,3 +274,15 @@ def test_only_the_keeper_writes_the_intentions_graph():
         if "intentions_graph" in path.read_text():
             offenders.append(str(path))
     assert not offenders, f"a second pen on the ledger: {offenders}"
+
+
+def test_the_tick_survives_an_agent_that_has_seen_things(make):
+    """The collision regression: desire has ALWAYS had a `gaps()` — the rich desired/sensed
+    dict — and the choir hook briefly shared its name, so the tick iterated property IRIs as
+    pairs and died unpacking a string. Invisible to the original test because a fresh agent
+    has no observations and desire's dict was empty; the bench, where observations exist on
+    every stake, crashed per tick. So: see something first, then tick."""
+    fern = make("fern")
+    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2, "temperature": 21.0})
+    keeper = next(m for m in fern.modules if m.name == "intention")
+    keeper.deliberate_on_gaps()  # must not raise — that is the whole test

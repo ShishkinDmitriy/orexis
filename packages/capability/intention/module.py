@@ -134,7 +134,7 @@ class IntentionModule(Module):
         Deliberation used to run only when the market knocked — an offer arrived, or birth —
         so an agent's watching of a property no market relieves lived in cadence machinery
         and never reached this ledger: the sovereign inspecting intentions saw market conduct
-        only. Now whoever is positioned to notice contributes (Module.gaps), the ONE
+        only. Now whoever is positioned to notice contributes (Module.notices), the ONE
         deliberator turns each gap into a move or into nothing, and what it proposes is
         committed here — visible, resolvable, and bounded by the same patience as everything
         else. Only Observe is carried out from here: an Acquire needs a round nobody may
@@ -145,7 +145,7 @@ class IntentionModule(Module):
         if deliberator is None:
             return
         for subject_uri, observed_property in {g for m in self.agent.modules
-                                               for g in m.gaps()}:
+                                               for g in m.notices()}:
             move = deliberator.propose(observed_property, None)
             if move != OBSERVE:
                 continue

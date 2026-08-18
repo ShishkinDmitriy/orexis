@@ -229,7 +229,7 @@ class SensingModule(Module):
                            f"{limit}s I allow")
         return out
 
-    def gaps(self) -> list[tuple[str, str]]:
+    def notices(self) -> list[tuple[str, str]]:
         """The gaps I am positioned to notice (#208): unobserved, or too stale to act on.
 
         Per sensor, both clocks: a channel that has never delivered, or whose freshest
