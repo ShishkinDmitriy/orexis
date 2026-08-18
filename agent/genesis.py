@@ -325,6 +325,23 @@ def birth(st: Store, world: Path, agent_id: str, rebirth: bool = False) -> bool:
     return True
 
 
+def endow(st: Store, world: Path, agent_id: str) -> list[str]:
+    """Give an already-born agent whatever the sovereign has authored SINCE its birth (#202).
+
+    An amendment may grant a capability whose opening beliefs an existing volume has never
+    held — the dealer's buy side arrived exactly so, and the agent crash-looped while the
+    only remedy was discarding who it had become. The unit is the (subject, predicate) pair:
+    held pairs are the agent's, revisions included, and are never touched; never-held pairs
+    arrive with their structures. This is not a reset and not rebirth — rebirth stays the
+    explicit act of discarding, and this is the opposite: history kept, grant delivered.
+    Returns the endowed terms, so boot can say what changed; empty on every ordinary boot.
+    """
+    path = world / BELIEFS_DIR / f"{agent_id}.ttl"
+    if not path.exists() or not st.has_graph(beliefs_graph(agent_id)):
+        return []
+    return st.endow_graph(beliefs_graph(agent_id), path.read_text())
+
+
 def open_belief_base(world: Path, agent_id: str, path: str | None = None,
                      rebirth: bool = False) -> Store:
     """An agent's whole boot sequence: open the store, refresh the world, be born if new.
@@ -337,7 +354,16 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     """
     st = Store(path)
     refresh_public(st, world)
-    if birth(st, world, agent_id, rebirth):
+    born = birth(st, world, agent_id, rebirth)
+    if born:
         log.info("%s born — opening beliefs written", agent_id)
     vocabulary.check(st, migrating=bool(config.env("AGORA_MIGRATE_BELIEFS")))
+    # Endowment comes AFTER the vocabulary check, deliberately: an aged volume's old
+    # spellings would read as never-held pairs, and endowing before migrating re-authored a
+    # belief the migration was about to convert — the same value twice, found by the
+    # migration test the day endowment was born. Migration first puts the volume in today's
+    # spelling; whatever is still never-held after that is genuinely a grant.
+    if not born and (endowed := endow(st, world, agent_id)):
+        log.info("%s endowed — an amendment authored terms this volume never held: %s",
+                 agent_id, ", ".join(t.rsplit("#", 1)[-1] for t in endowed))
     return st
