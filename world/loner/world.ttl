@@ -1,4 +1,4 @@
-@prefix : <http://example.org/agora/world/cistern#> .
+@prefix : <http://example.org/agora/world/loner#> .
 @prefix zz: <http://example.org/agora/zamioculcas#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
@@ -10,7 +10,9 @@
 @prefix scaling: <http://example.org/agora/scaling#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
 
-#  The cistern — the ladder's second rung as a whole world (#190).
+#  The loner — the ladder's second rung as a whole world (#190). Named by the sovereign for
+#  what it is: EVERYTHING IN ONE AGENT — stake, sight, lever and source — so it needs nobody:
+#  no market, no peer, no city.
 #
 #  One agent, one plant, one pump, one rain butt — and NO MARKET, because none is needed:
 #  the lever is the gardener's and so is the water, and the ladder's rule is that direct

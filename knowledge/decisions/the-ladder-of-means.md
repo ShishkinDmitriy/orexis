@@ -91,7 +91,7 @@ issue's world-modelling, not a mechanism of its own.
 
 # Seams left open
 
-- **The Actuate rung is BUILT (#190)**, ahead of the terrace: `world/cistern` is the first
+- **The Actuate rung is BUILT (#190)**, ahead of the terrace: `world/loner` is the first
   world with an agent holding both a stake and its own supplied lever — a gardener, a
   Zamioculcas planted by one triple, a pump on a rain butt, and no market anywhere. The menu
   branch ships as the actuation package's own `affordances.rq` (#207's recorded first

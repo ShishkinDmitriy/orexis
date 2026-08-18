@@ -1,4 +1,4 @@
-@prefix : <http://example.org/agora/world/cistern#> .
+@prefix : <http://example.org/agora/world/loner#> .
 @prefix sensing: <http://example.org/agora/sensing#> .
 @prefix water: <http://example.org/agora/water#> .
 @prefix desire: <http://example.org/agora/desire#> .

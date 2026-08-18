@@ -2,7 +2,7 @@
 
 The ladder's second rung, last to be built, first new KIND of move to arrive as a package's
 own menu branch (#207's recorded first customer). The world that exercises it is
-`world/cistern`: one gardener, one Zamioculcas planted by one triple, one pump on one rain
+`world/loner`: one gardener, one Zamioculcas planted by one triple, one pump on one rain
 butt, and no market anywhere — the demonstration that every rung of wanting, watching,
 deciding, committing and acting runs with no economy at all.
 """
@@ -15,7 +15,7 @@ from packages.capability.deliberation.module import ACTUATE, ACQUIRE, OBSERVE
 from conftest import build_agent, genesis_store
 
 MOIST = "http://example.org/agora/water#SoilMoisture"
-GARDENER = "http://example.org/agora/world/cistern#gardener"
+GARDENER = "http://example.org/agora/world/loner#gardener"
 _DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
 
 
@@ -32,7 +32,7 @@ def gardener(make, tmp_path, monkeypatch):
     (tmp_path / "secrets").mkdir()
     for name in ("host", "clearing"):
         create_keypair(name)
-    return make("gardener", genesis_store(world="cistern"))
+    return make("gardener", genesis_store(world="loner"))
 
 
 # --- the menu's second rung -------------------------------------------------
@@ -41,21 +41,21 @@ def test_the_menu_offers_actuate_where_both_chains_are_mine():
     """Lever chain: my pump, plumbed to my pot. Resource chain: drawing from a source that is
     mine and that no market offers as its lot. Both end at the gardener, so the rung appears —
     beside Observe, with the domain's one stated physics atom as its direction."""
-    rows = menu_of(genesis_store(world="cistern").query, GARDENER)
+    rows = menu_of(genesis_store(world="loner").query, GARDENER)
     assert [(r.means.rsplit("#", 1)[-1], r.direction and r.direction.rsplit("#", 1)[-1])
             for r in rows if r.observed_property == MOIST] == [
         ("Actuate", "Raises"), ("Observe", None)]
 
 
 def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
-    """The cut-source pin, from the cistern's side: state market:matchesBy on the gardener —
+    """The cut-source pin, from the loner's side: state market:matchesBy on the gardener —
     consent, a shop on the butt — re-derive, and the venue exists, so the butt is a source a
     market offers and the Actuate row vanishes. The market is about the resource: once it is
     a lot, even its owner's own pump answers to the venue."""
     from agent import genesis, loader
     from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 
-    st = genesis_store(world="cistern")
+    st = genesis_store(world="loner")
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
         <{GARDENER}> <http://example.org/agora/market#matchesBy>
             <http://example.org/agora/market#PayAsBid> }} }}""")
@@ -136,5 +136,5 @@ def test_the_gardener_derives_no_market_pair():
     from agent.world import load_self
 
     caps = {c.rsplit("#", 1)[-1] for c in
-            load_self(genesis_store(world="cistern").query, "gardener").capabilities}
+            load_self(genesis_store(world="loner").query, "gardener").capabilities}
     assert caps == {"Subscribing", "Storing", "Keeping", "Deducing", "Reflex", "Actuation"}
