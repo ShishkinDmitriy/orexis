@@ -253,7 +253,11 @@ still interrupts nothing.
 `agora-validate` and `pytest` are the two gates. Both must pass before a change is done.
 
 Beliefs are the agent's: **authored** once at birth, never touched by start or stop. Anything
-that would reset them on a restart is a bug, not a convenience.
+that would reset them on a restart is a bug, not a convenience. One addition is not a reset:
+an amendment that grants a capability may author terms an existing volume has NEVER held, and
+boot **endows** those — never-held terms arrive with their structures, held terms stay the
+agent's whatever their value. `rebirth` remains the explicit discard. See
+[an-amendment-endows-what-it-grants](knowledge/decisions/an-amendment-endows-what-it-grants.md).
 
 But a belief is a **point chosen inside a range**, not a constant, and what genesis wrote is the
 first pick rather than a bound. An agent whose **world gives it room to move** — `review:commits`, in

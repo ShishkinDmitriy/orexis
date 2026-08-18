@@ -260,6 +260,52 @@ class Store:
             ttl, format=ox.RdfFormat.TRIG if dataset else ox.RdfFormat.TURTLE, to_graph=graph)
         self._public = None
 
+    def endow_graph(self, graph_iri: str, ttl: str) -> list[str]:
+        """Add whatever the Turtle authors that the graph has NEVER held. Touch nothing held.
+
+        The amendment half of birth (#202): a world may grant an agent a new capability, and
+        the capability's opening beliefs must reach a volume that already exists — but a
+        belief the agent holds is the agent's, revisions included, so the unit of novelty is
+        the TERM: a predicate the graph holds is skipped whole, whatever its value, and one
+        it has never held is added with its blank-node closure (an aim is a structure, not a
+        triple). The term and not the (subject, predicate) pair, measured rather than
+        assumed: a beliefs graph has one owner, in whatever spelling its era wrote — a
+        volume from before the worlds-own-their-individuals sweep says `ag:fern_agent` where
+        today's files say the world's name — and pair-keying read that drift as novelty,
+        doubling a migrated belief the first time the two met. Returns the terms added, so
+        the caller can say what the amendment endowed; empty means the volume already holds
+        everything authored, which is every boot but the first after an amendment.
+        """
+        graph = ox.NamedNode(graph_iri)
+        held = {q.predicate
+                for q in self._store.quads_for_pattern(None, None, None, graph)}
+        authored = list(ox.parse(ttl, format=ox.RdfFormat.TURTLE))
+        by_subject: dict = {}
+        for t in authored:
+            by_subject.setdefault(t.subject, []).append(t)
+
+        added: list[str] = []
+        queue: list = []
+        for t in authored:
+            if isinstance(t.subject, ox.BlankNode):
+                continue  # reached only through the pair that owns it
+            if t.predicate in held:
+                continue
+            queue.append(t)
+            added.append(t.predicate.value)
+        seen_bnodes: set = set()
+        i = 0
+        while i < len(queue):
+            t = queue[i]
+            i += 1
+            self._store.add(ox.Quad(t.subject, t.predicate, t.object, graph))
+            if isinstance(t.object, ox.BlankNode) and t.object not in seen_bnodes:
+                seen_bnodes.add(t.object)
+                queue.extend(by_subject.get(t.object, []))
+        if added:
+            self._public = None
+        return sorted(set(added))
+
     def clear_graph(self, graph_iri: str) -> None:
         """Empty one graph. For the computed ones, which are written by update rather than
         loaded from a file and so have no `put_graph` to replace them wholesale."""
