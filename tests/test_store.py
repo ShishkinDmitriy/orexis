@@ -283,3 +283,20 @@ def test_an_ontology_gives_its_own_terms_the_default_prefix():
             "one — the loader's discovery reads labels, and a query needs a name to use")
         checked += 1
     assert checked >= 20, f"only {checked} ontologies checked — the glob has gone quiet"
+
+
+def test_an_affordance_query_leans_on_the_stores_prefixes_like_a_review_rule():
+    """Same contract, third file kind (#207): an `affordances.rq` goes through `store.query`,
+    which prepends PREFIXES — declaring them again is a duplicate-prefix error, and using an
+    undeclared one fails exactly as a hand-written query would. Non-empty asserted first,
+    because a glob that quietly empties has taken cases off a guard twice already."""
+    found = loader.affordance_files()
+    assert found, "no affordances.rq found — the glob has gone stale and this is checking nothing"
+    for path in found:
+        text = path.read_text()
+        assert "PREFIX " not in text.upper(), (
+            f"{path.name} declares its own prefixes, but store.query prepends them")
+        used = {m.group(1) for m in _PREFIXED.finditer(text)}
+        undeclared = used - store.DECLARED - {"http", "https", "urn"}
+        assert not undeclared, (
+            f"{path.name} uses {sorted(undeclared)}, which store.PREFIXES does not declare")

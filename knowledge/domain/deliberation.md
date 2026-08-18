@@ -44,13 +44,34 @@ one**: the actors treat it exactly as they treat their own cooldowns.
 
 # The menu — what I could do, derived
 
-The package ships `menu.rq`: one row per (means, property, lever, direction), joined from facts
-that exist for their own reasons — regions, wiring, denominations. For fern: *look at moisture
-through the probe; look at temperature through the thermometer; raise moisture through the
-market.* The row that is **absent** is a finding too: fern wants a temperature it can see and
-cannot move — a want with no lever, legitimate and now legible. This is the Consulting member's
-prompt substrate, shipped before that member exists so "the menu is derived, not written into a
+The menu is THE UNION OF WHAT THE LOADED PACKAGES CONTRIBUTE (#207): each package may ship an
+`affordances.rq` — its rows, its preconditions as its own walk — and `menu_of` collects them.
+Sensing ships the Observe branch, the market ships Acquire; this package keeps only the frame
+and its consumers. It shipped one big `menu.rq` here first, which made the menu's KINDS a
+registry in this directory — the sovereign caught the overclaim ("how is it dynamic if the
+list is hardcoded?"), and the fix was the repo's mechanic applied a fourth time: a new way of
+acting is a new directory, with no Python at all where execution reduces to an existing
+actor. One row per (means, property, lever, direction), joined from facts that exist for
+their own reasons — regions, wiring, denominations. For fern: *look at moisture through the
+probe; look at temperature through the thermometer; raise moisture through the market.* The
+row that is **absent** is a finding too: fern wants a temperature it can see and cannot move —
+a want with no lever, legitimate and now legible. This is the Consulting member's prompt
+substrate, shipped before that member exists so "the menu is derived, not written into a
 prompt" is checkable now.
+
+# The gaps — what I should decide about, noticed by whoever is positioned to (#208)
+
+Deliberation used to run only when the market knocked: an offer arrived, or birth. So an
+agent's watching of a property no market relieves lived in cadence machinery and never
+reached the intention ledger — the sovereign inspecting intentions saw market conduct only.
+Noticing is now the choir again: `Module.gaps()` beside `annotate`/`urgency`/`quiet`, each
+module reporting the (subject, property) pairs it can see are unknown or too stale to act on
+— sensing's are the archetype — and the KEEPER ticks on its own patience clock, handing each
+gap to the ONE deliberator and committing what it proposes. Deciding and remembering stay
+singular, and the boundary is pinned by a source-scan test: one deliberator, one pen on the
+ledger. Only Observe is carried out from the tick — an Acquire needs a round nobody may
+convene from this side, which is the-lot-is-the-hosts-standing-offer's seam, not this
+mechanism's.
 
 # The proof the seam is load-bearing
 

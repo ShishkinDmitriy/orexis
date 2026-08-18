@@ -112,8 +112,10 @@ move (the Actuate rung, a fan's lever) means editing that file: a registry, in t
 claim is that adding a package edits nothing. The fix is the repo's mechanic applied a fourth
 time — a package ships its own `affordances.rq` beside its `rules.ru` and `review.rq`, and
 the menu is the union of what the loaded packages contribute; a kind whose execution reduces
-to an existing actor then ships no Python at all. Tracked as
-[#207](https://github.com/ShishkinDmitriy/agora/issues/207), with #190 as its first customer.
+to an existing actor then ships no Python at all. Implemented as proposed (#207), with the
+toy-package test proving a new KIND appears with no edit outside its directory — and #208
+beside it: gaps are the choir too (`Module.gaps()`), the keeper ticks on its patience clock,
+and the marketless watching finally reaches the ledger the sovereign asks.
 
 **So the menu is a tool list in the LLM sense, with two upgrades**: nothing registers the
 tools — the world implies them, per agent, per stake — and the tool call is split by

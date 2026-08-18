@@ -67,7 +67,7 @@ record is worse than none, because it is still cited.
    a registry. `PROVIDES` in `__init__.py` is how an implementation registers, and its absence
    is what makes a package knowledge-only. Adding one is adding a directory. Packages never
    import each other's Python: ask `agent.provider(family)` or contribute via
-   `annotate`/`urgency`.
+   the choir hooks (`annotate`, `urgency`, `gaps`, `series`, `quiet`).
 
    **`agent/` is the kernel that loads them, not their home.** Capability Python used to live
    under it, so the tree itself showed which of it a runtime loads — it does not show that now.

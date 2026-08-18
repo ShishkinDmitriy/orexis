@@ -209,3 +209,68 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
     verdicts = fern.metrics.take_events()
     assert [kind for _, kind, _, _ in verdicts] == ["end-met"]
     assert "moved from" in verdicts[0][2]
+
+
+# --- gap-driven deliberation (#208) -----------------------------------------
+
+TEMP = "http://example.org/agora/water#AirTemperature"
+MOIST = "http://example.org/agora/water#SoilMoisture"
+
+
+def test_sensing_notices_what_it_has_never_seen(make):
+    """The archetype gap contribution: a freshly born fern has two sensors and no
+    observations, so sensing reports both channels as gaps — noticing only, adopting
+    nothing, which is the deciding/keeping boundary said as a hook."""
+    fern = make("fern")
+    sensing = next(m for m in fern.modules if m.name == "subscribing")
+    assert {p for _, p in sensing.gaps()} == {MOIST, TEMP}
+
+
+def test_the_tick_puts_marketless_watching_in_the_ledger(make):
+    """The hole the sovereign's question exposed, closed: deliberation used to run only when
+    the market knocked, so fern's thermometer — a stake, a sensor, and no market that could
+    ever relieve it — never appeared in the intention ledger at all. The keeper's tick turns
+    sensing's gap into the one deliberator's Observe and commits it: the watching is now a
+    commitment the sovereign can ask for, and a reading arriving resolves it, whoever
+    caused the look."""
+    fern = make("fern")
+    keeper = next(m for m in fern.modules if m.name == "intention")
+    keeper.deliberate_on_gaps()
+    standing = {(s.means.rsplit("#", 1)[-1], s.observed_property) for s in keeper.standing()}
+    assert ("Observe", TEMP) in standing, "the marketless property is watched ON THE RECORD"
+    assert ("Observe", MOIST) in standing
+
+    fern.deliver(fern.me.sensors[0].reading_topic, {"temperature": 21.0})
+    left = {s.observed_property for s in keeper.standing()}
+    assert TEMP not in left, "the look happened — satisfied, whoever triggered it"
+    assert MOIST in left, "the other channel still owes a reading"
+
+
+def test_a_second_tick_within_patience_is_absorbed(make):
+    """The rate bound is the patience, by construction rather than by a second mechanism:
+    ticking again while the Observe stands adopts nothing new — adopt() refuses — so the
+    ledger holds one commitment per gap, however often anyone notices it."""
+    fern = make("fern")
+    keeper = next(m for m in fern.modules if m.name == "intention")
+    keeper.deliberate_on_gaps()
+    first = len(keeper.standing())
+    keeper.deliberate_on_gaps()
+    assert len(keeper.standing()) == first
+
+
+def test_only_the_keeper_writes_the_intentions_graph():
+    """The boundary, pinned as source: gaps() notices and propose() decides, but the ledger
+    has ONE writer. A module reaching for the intentions graph by name would be a second
+    keeper — the welded chain returning with a pen — and this scan is what makes that a
+    failing test instead of a review comment."""
+    from pathlib import Path
+
+    from agent import loader
+
+    offenders = []
+    for path in sorted(loader.PACKAGES_ROOT.rglob("*.py")):
+        if "capability/intention" in str(path):
+            continue
+        if "intentions_graph" in path.read_text():
+            offenders.append(str(path))
+    assert not offenders, f"a second pen on the ledger: {offenders}"
