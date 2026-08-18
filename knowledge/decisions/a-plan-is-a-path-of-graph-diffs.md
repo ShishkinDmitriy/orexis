@@ -114,7 +114,7 @@ time — a package ships its own `affordances.rq` beside its `rules.ru` and `rev
 the menu is the union of what the loaded packages contribute; a kind whose execution reduces
 to an existing actor then ships no Python at all. Implemented as proposed (#207), with the
 toy-package test proving a new KIND appears with no edit outside its directory — and #208
-beside it: gaps are the choir too (`Module.gaps()`), the keeper ticks on its patience clock,
+beside it: gaps are the choir too (`Module.notices()`), the keeper ticks on its patience clock,
 and the marketless watching finally reaches the ledger the sovereign asks.
 
 **So the menu is a tool list in the LLM sense, with two upgrades**: nothing registers the

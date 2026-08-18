@@ -119,7 +119,7 @@ class Module:
         """
         return None
 
-    def gaps(self) -> list[tuple[str, str]]:
+    def notices(self) -> list[tuple[str, str]]:
         """(subject, property) pairs this module notices are unknown or too stale to act on.
 
         The choir again (#208), for NOTICING: whoever is positioned to see that something
@@ -128,6 +128,13 @@ class Module:
         every module becomes its own little welded chain. Sensing's are the archetype: a
         property with no observation, or a freshest reading past what the agent trusts —
         judgments it already computes for freshness and quiet(). Default: nothing to notice.
+
+        Named for the act and not the object, the hard way: the first name was `gaps()`, and
+        desire already HAD a `gaps()` — the rich desired/sensed diff, a dict — so the choir
+        collected property IRIs as if they were pairs and the keeper's tick died unpacking a
+        string, per tick, on every agent with a stake. Two hooks may not share a name with
+        different contracts; the collision test seeds an observation first, which is the
+        condition the original test missed.
         """
         return []
 
