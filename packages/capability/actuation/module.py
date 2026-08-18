@@ -27,12 +27,36 @@ import json
 import time
 from dataclasses import asdict, dataclass
 
+import uuid
+
 from agent import signing
+from agent.clearing import Claim
+from agent.market import EPS
 from agent.module import Module, Timer
 from agent.store import bindings
 
 from .beliefs import ACTUATION_BLOCK
 from .terms import ACTUATION
+
+# What this package asks OF others, by family or by IRI — namespaces, never Python.
+_DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
+_DESIRE = "http://example.org/agora/desire#DesireCapability"
+_INTENTION = "http://example.org/agora/intention#IntentionCapability"
+_ACTUATE = "http://example.org/agora/intention#Actuate"
+
+# My own conversion belief for a SELF-dose (#190), keyed by the valuation term the resource
+# chain names: my actuator draws from my own source, the source's class states its good, and
+# the good's valuation for this property is the term my belief is held in — the same
+# discovery the bidder makes through its venue, made through the pipe instead, because a
+# self-actuating agent may have no venue at all.
+_CONVERSION_Q = """
+SELECT ?v WHERE {
+  <%s> ag:actsFor ?subject ; actuation:hasActuator ?lever .
+  ?lever actuation:actuates ?subject ; actuation:drawsFrom ?source .
+  ?source market:offeredBy <%s> ; market:supplies ?good .
+  ?term market:ofGood ?good ; market:aboutProperty <%s> .
+  GRAPH <%s> { <%s> ?term ?v }
+} LIMIT 1"""
 
 # How often the module looks for doses nobody confirmed. Not the deadline — that is per dose
 # and derived — only how coarsely it is noticed. A sweep is cheap and lateness is not urgent.
@@ -99,6 +123,65 @@ class ActuationModule(Module):
             ml=round(ml, 1), seconds=round(ml / device.ml_per_second, 2),
             auction_id=claim.auction_id,
         ), device
+
+    def on_reading_recorded(self, subject_uri: str, observed_property: str,
+                            value: float) -> None:
+        """The Actuate rung's trigger (#190): a fresh look at my own subject, whose gap the
+        deliberator answers with the cheaper rung.
+
+        Everything the market path earns, a self-dose keeps: the WHETHER is the
+        deliberator's (the menu offers Actuate only where the lever and the source are both
+        mine and no market offers the source as its lot); the amortisation is the keeper's
+        (an adoption absorbed within patience means no dose, and an open expectation means
+        my last dose has not answered — the same two guards a bidder runs); and the act
+        itself goes through `redeem` on a SELF-CLAIM — signed by both keys, verified in the
+        device, confirmed on the status channel, counted when silent. An unconfirmed
+        self-dose is not a delivered one either; the REA event stands, it merely fulfils no
+        exchange.
+        """
+        if subject_uri != self.me.acts_for:
+            return
+        if self.me.actuator_for(self._subject_of(self.me.agent_id)) is None:
+            return
+        deliberator = self.agent.provider(_DELIBERATION)
+        if deliberator is None or deliberator.propose(observed_property, value) != _ACTUATE:
+            return
+        desire = self.agent.provider(_DESIRE)
+        aim = desire.aim(observed_property) if desire is not None else None
+        conversion = self._conversion_for(observed_property)
+        if aim is None or conversion is None:
+            return
+        litres = round((aim - value) * conversion, 3)
+        if litres <= EPS:
+            return
+        keeper = self.agent.provider(_INTENTION)
+        if keeper is not None:
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            if any(now < w.deadline for w in keeper.open_expectations(observed_property)):
+                return  # my own dose has not answered yet — the #167 guard, rung 2
+            adopted = keeper.adopt(_ACTUATE, observed_property,
+                                   f"self-dose {litres}L toward the aim of {aim} — lever "
+                                   f"and source both mine, no market to ask")
+            if adopted is None:
+                return  # standing within patience — the amortisation at work
+        jti = uuid.uuid4().hex
+        cmd = self.redeem(Claim(sub=self.me.agent_id, scope="actuate:self",
+                                amount_l=litres, debit=0.0,
+                                auction_id=f"self-{jti[:8]}", jti=jti))
+        if keeper is not None:
+            for u in keeper.satisfy(_ACTUATE, observed_property,
+                                    f"the dose is commanded — {cmd.ml:.0f} ml on its way"):
+                keeper.expect(u, observed_property,
+                              f"self-dosed {litres}L — the graph says this raises what I "
+                              f"am short of, so show me",
+                              expected_delta=(litres / conversion) if conversion > 0 else None)
+
+    def _conversion_for(self, observed_property: str) -> float | None:
+        rows = bindings(self.agent.store.query(_CONVERSION_Q % (
+            self.me.uri, self.me.uri, observed_property,
+            self.agent.beliefs.graph, self.me.uri)))
+        return float(rows[0]["v"]) if rows and rows[0].get("v") is not None else None
 
     def redeem(self, claim) -> Command:
         if claim.jti in self.settled:

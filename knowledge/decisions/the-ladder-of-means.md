@@ -91,14 +91,20 @@ issue's world-modelling, not a mechanism of its own.
 
 # Seams left open
 
-- **The Actuate rung is unimplemented** — no menu branch, no derivation granting a
-  self-actuating agent its capability pair, no executor path for a dose that fulfils no
-  claim (it still needs signing, confirmation and a ledger entry: an unconfirmed self-dose is
-  not a delivered one either). Tracked as an issue; the trigger is the first world with an
-  agent that holds both a stake and its own supplied lever — which the terrace build can
-  produce the day a pump is plumbed per pot.
-- **Source contestedness is derivable but not yet derived**: "a source no market offers" is a
-  walk over `market:hosts` / `actuation:drawsFrom` that nothing performs yet. It belongs in
-  the same menu branch.
+- **The Actuate rung is BUILT (#190)**, ahead of the terrace: `world/cistern` is the first
+  world with an agent holding both a stake and its own supplied lever — a gardener, a
+  Zamioculcas planted by one triple, a pump on a rain butt, and no market anywhere. The menu
+  branch ships as the actuation package's own `affordances.rq` (#207's recorded first
+  customer), walking BOTH chains; the capability pair needed no new rule — stake-plus-lever
+  already granted it; and the executor path is the SAME `redeem`, on a self-claim: signed,
+  confirmed, expectation-watched, patience-bounded — an unconfirmed self-dose is not a
+  delivered one either, and the REA event stands though it fulfils no exchange. The reflex
+  became menu-driven to hold the rung ORDER: act with what is yours before buying what is
+  not, so an agent with a private bottle and a market seat takes the cheaper rung. Two pins
+  hold the honesty rule from both sides: a pot-local pump on the shared barrel yields
+  Acquire and only Acquire, and opening a shop on your own bottle costs you the free rung.
+- **Source contestedness is derived**: "a source no market offers as its lot" is the
+  `NOT EXISTS { ?venue market:marketFor ?source }` guard in the branch, seeing hand-authored
+  and derived venues alike.
 - **The selection rule between Reflex and Consulting** stays where the parent record left it:
   the empty menu is the intended trigger, and wiring it is the Consulting member's business.

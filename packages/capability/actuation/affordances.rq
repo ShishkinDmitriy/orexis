@@ -1,0 +1,36 @@
+# Actuation's menu contribution (#190): the Actuate rows — the ladder's second rung, and the
+# first NEW kind of move to arrive as a package's own branch (#207 built the mechanism with
+# this row as its recorded first customer).
+#
+# The premise walks BOTH chains, and both must end at $me:
+#   the LEVER chain — an actuator I hold, plumbed to my own subject; and
+#   the RESOURCE chain — the lever draws from a source that is MINE (market:offeredBy $me,
+#   arriving entailed through the domain's word) AND that no market offers as its lot.
+# The second guard is the rule that keeps the rung honest: the market is about the resource,
+# not the lever. A pot-local pump on the shared barrel is a lever I own on a resource I do
+# not, and opening it without a claim would take from the commons without bidding — so that
+# pump yields Acquire and only Acquire, and this row appears exactly where nothing anyone
+# else owns is touched. "A source no market offers" was the ladder record's open seam; the
+# NOT EXISTS below is that walk, derived at last — it sees hand-authored venues and derived
+# ones alike, because a menu query reads the whole default graph.
+#
+# The direction is the domain's stated atom, reached through the source's good exactly as the
+# market's branch reaches it: one physics sentence, whichever rung applies it.
+#
+# `$me` substituted by the collector; declares no prefixes of its own — `store.query`
+# prepends them.
+
+SELECT ?means ?property ?via ?direction WHERE {
+  $me desire:desires ?region ; ag:actsFor ?subject .
+  ?region ssn:forProperty ?property .
+  $me actuation:hasActuator ?via .
+  ?via actuation:actuates ?subject ;
+       actuation:drawsFrom ?source .
+  ?source market:offeredBy $me .
+  FILTER NOT EXISTS { ?venue market:marketFor ?source }
+  ?source market:supplies ?good .
+  ?valuation market:ofGood ?good ;
+             market:aboutProperty ?property ;
+             market:direction ?direction .
+  BIND(intention:Actuate AS ?means)
+}

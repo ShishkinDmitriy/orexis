@@ -37,6 +37,7 @@ BECAUSE_OF = term("becauseOf")
 
 # The means — what kind of act the commitment is to.
 OBSERVE = term("Observe")  # look: get a reading where the gap is unmeasured or stale
+ACTUATE = term("Actuate")  # move it myself: lever and resource both mine — the second rung
 ACQUIRE = term("Acquire")  # obtain: bid for what would reduce a gap
 APPLY = term("Apply")      # spend: redeem a held claim against the world — RESERVED, see ontology
 

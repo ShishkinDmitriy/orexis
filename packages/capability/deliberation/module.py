@@ -37,7 +37,15 @@ _DESIRE = "http://example.org/agora/desire#DesireCapability"
 # between deciding and remembering.
 _INTENTION_NS = "http://example.org/agora/intention#"
 OBSERVE = _INTENTION_NS + "Observe"
+ACTUATE = _INTENTION_NS + "Actuate"
 ACQUIRE = _INTENTION_NS + "Acquire"
+
+# The ladder's order IS the preference (#190): act with what is yours before buying what is
+# not — each rung costlier and more social than the last. Disjoint per source by
+# construction (a source with a shop is contested, so its pump yields no Actuate row; a
+# source without one convenes no venue), but one agent may hold a private bottle AND bid in
+# a market, and then the cheaper rung wins.
+_RUNG = {ACTUATE: 0, ACQUIRE: 1}
 
 # Which way the lot moves what it is priced in — the market vocabulary's terms, read off the
 # T-Box rather than known. Issue #127: the sign used to be hardcoded here as `value < aim`,
@@ -134,11 +142,18 @@ class ReflexModule(Module):
         aim = desire.aim(observed_property)
         if aim is None:
             return None
-        direction = self._direction_of(observed_property)
-        if direction == _RAISES and value < aim:
-            return ACQUIRE
-        if direction == _LOWERS and value > aim:
-            return ACQUIRE
+        # MENU-DRIVEN since #190: every move the reflex can propose is a row, literally —
+        # the rows for this property, cheapest rung first, and the first whose stated
+        # direction matches the gap's sign is the move. Acquire used to be hardcoded here,
+        # which was right while buying was the only lever that moved anything; the Actuate
+        # rung made "which means" a question, and the menu was already the answer's home.
+        for row in sorted((r for r in menu_of(self.agent.store.query, self.me.uri)
+                           if r.observed_property == observed_property and r.direction),
+                          key=lambda r: _RUNG.get(r.means, len(_RUNG))):
+            if row.direction == _RAISES and value < aim:
+                return row.means
+            if row.direction == _LOWERS and value > aim:
+                return row.means
         return None
 
     def _direction_of(self, observed_property: str) -> str | None:
