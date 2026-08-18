@@ -27,7 +27,7 @@ from pathlib import Path
 from agent.module import Module
 from agent.store import bindings
 
-from .terms import REFLEX
+from .terms import PLANNING, REFLEX
 
 # The affordance menu, shipped as SPARQL — see the file's own header. Read at import, so a
 # malformed query fails when the package loads rather than when a model first asks.
@@ -144,3 +144,92 @@ class ReflexModule(Module):
         rows = bindings(self.agent.store.query(
             _DIRECTION_Q % (self.me.uri, observed_property)))
         return rows[0]["direction"] if rows else None
+
+
+# The dealer's shop, asked from inside: the lot my downstream venue owes, IF the property in
+# hand is my own vessel's stock. Both joins are the Planning grant's premises re-asked —
+# I act for a vessel I offer, the property is one its stated ranges name — plus my own
+# offerQuantityL belief, read from my private graph exactly as the bidder reads its
+# conversion: a lot is a HOSTING belief, and this package may name the term's IRI but never
+# import the market's Python.
+_SHOP_Q = """
+SELECT ?q WHERE {
+  <%s> ag:actsFor ?vessel .
+  ?vessel market:offeredBy <%s> .
+  ?vessel <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
+  ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
+  ?cond <http://www.w3.org/ns/ssn/forProperty> <%s> .
+  GRAPH <%s> { <%s> <http://example.org/agora/market#offerQuantityL> ?q }
+} LIMIT 1"""
+
+# The two steps of the dealer's plan, as menu-row-shaped rows: my Acquire on the upstream
+# venue (the same walk the menu's Acquire branch closes), then Offer on the venue I host for
+# my vessel. Recomputed from given-level facts, never read from bidsIn/hosts conclusions.
+_PLAN_Q = """
+SELECT ?upSrcId ?downSrcId WHERE {
+  <%s> ag:actsFor ?vessel .
+  ?vessel market:offeredBy <%s> ; ag:localId ?downSrcId .
+  ?pipe <http://example.org/agora/actuation#drawsFrom> ?upstream ;
+        <http://example.org/agora/actuation#actuates> ?vessel .
+  ?upstream market:offeredBy ?owner ; ag:localId ?upSrcId .
+  FILTER(<%s> != ?owner)
+} LIMIT 1"""
+
+OFFER = _INTENTION_NS + "Offer"
+
+
+class PlanningModule(ReflexModule):
+    """The dealer's member: the reflex plus one deduced goal, and the plan said out loud.
+
+    Depth 2 and no deeper, by construction: the search space is the two venues the grant's
+    premise names, not open-ended STRIPS. What it adds to the reflex is exactly one goal past
+    the region — MY HOSTED LOT MUST BE SERVEABLE. Every downstream buyer's Acquire silently
+    preconditions stock >= lot ("refilling makes lotCapacity > 0 true" is the planning
+    record's own sentence), and the reflex would only pursue the vessel's aim; a dealer whose
+    aim sat below its lot would honestly keep a vessel too empty to trade from. The plan
+    itself — acquire upstream, then offer downstream — is exposed as data (`plan_for`) for
+    the same reason the menu is: the Consulting member's prompt substrate, and the
+    sovereign's inspection, without a line of prose maintained anywhere.
+    """
+
+    CAPABILITY = PLANNING
+    name = "planning"
+
+    def propose(self, observed_property: str, value: float | None) -> str | None:
+        move = super().propose(observed_property, value)
+        if move is not None:
+            return move
+        if value is None:
+            return None
+        needed = self._my_shop_needs(observed_property)
+        if needed is not None and value < needed                 and self._direction_of(observed_property) == _RAISES:
+            return ACQUIRE
+        return None
+
+    def _my_shop_needs(self, observed_property: str) -> float | None:
+        """The lot my downstream venue owes — None when this property is not my shop's stock."""
+        rows = bindings(self.agent.store.query(_SHOP_Q % (
+            self.me.uri, self.me.uri, observed_property,
+            self.agent.beliefs.graph, self.me.uri)))
+        return float(rows[0]["q"]) if rows else None
+
+    def plan_for(self, observed_property: str) -> list[Affordance]:
+        """The dealer's two-step, as rows: acquire upstream, then offer downstream.
+
+        Empty when the property is not the vessel's stock — a planner asked about somebody
+        else's gap has no chain to offer, and says so rather than inventing one.
+        """
+        if self._my_shop_needs(observed_property) is None:
+            return []
+        rows = bindings(self.agent.store.query(
+            _PLAN_Q % (self.me.uri, self.me.uri, self.me.uri)))
+        if not rows:
+            return []
+        up, down = rows[0]["upSrcId"], rows[0]["downSrcId"]
+        mint = "http://example.org/agora#market."
+        return [
+            Affordance(means=ACQUIRE, observed_property=observed_property,
+                       via=mint + up, direction=_RAISES),
+            Affordance(means=OFFER, observed_property=observed_property,
+                       via=mint + down, direction=_LOWERS),
+        ]

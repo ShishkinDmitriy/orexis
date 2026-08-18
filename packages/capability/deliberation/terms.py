@@ -26,4 +26,5 @@ DELIBERATION = term("DeliberationCapability")
 
 # The members, in decreasing order of self-sufficiency — the axis review's and desire's share.
 REFLEX = term("Reflex")          # answers from the gap's sign; deterministic, free
+PLANNING = term("Planning")      # bounded depth-2 over menu rows — the dealer's member
 CONSULTING = term("Consulting")  # asks a model — RESERVED, nothing implements it yet

@@ -87,11 +87,74 @@ precondition observable. Depth 2 suffices; that is the scale to build for.
 4. **Monitoring is already built**: an intention chain whose step's expected diff fails to
    appear is the unconfirmed-dose logic, generalised.
 
+## Affordances are premises, so the menu is a tool list nothing registers
+
+Asked by the sovereign on seeing the ledger and the menu side by side: why not store
+affordances — can't they be added dynamically, like a model's tools? And could SHACL search
+them? The three answers are one design.
+
+**Rows are not stored because their premises are.** An affordance is a conclusion; what the
+store holds is everything it is concluded FROM, so a row exists exactly while its plumbing
+walk holds — cut the pipe and the row vanishes, which a test pins. A stored row could
+outlive its premise silently, and "adding an affordance" would become writing a row —
+arbitrary surgery, the one move refused everywhere. Which is why they ARE dynamic, and
+dynamic the only safe way: add the premises (a valve, a venue, one valuation triple) and the
+row appears, precondition-checked by construction. Every barrel arc demonstrated it — the
+supplier's menu gained its Acquire row the day the city's consent triple existed, and no
+menu was edited anywhere. Consulting's recorded contract is the runtime case of the same
+move: the model's whole output is an affordance AS PREMISES, held to shapes, adopted, and
+then exploited by the reflex free forever.
+
+The sovereign pressed the claim and found its limit, which belongs here beside it: what is
+dynamic this way is INSTANCES of affordance kinds — the KINDS are hardcoded branches in the
+menu query, one file in the deliberation package walking other packages' terms. A new kind of
+move (the Actuate rung, a fan's lever) means editing that file: a registry, in the tree whose
+claim is that adding a package edits nothing. The fix is the repo's mechanic applied a fourth
+time — a package ships its own `affordances.rq` beside its `rules.ru` and `review.rq`, and
+the menu is the union of what the loaded packages contribute; a kind whose execution reduces
+to an existing actor then ships no Python at all. Tracked as
+[#207](https://github.com/ShishkinDmitriy/agora/issues/207), with #190 as its first customer.
+
+**So the menu is a tool list in the LLM sense, with two upgrades**: nothing registers the
+tools — the world implies them, per agent, per stake — and the tool call is split by
+deterministic-bid: the model picks the row, code computes the arguments. A row is a tool
+signature (means, property, lever, direction as its one-bit effect), and the list is data on
+the ask channel, not prose in a prompt.
+
+**And SHACL is the search the modality axis implies.** The axis above already makes desired
+shapes goals and validation gap-detection; the sovereign's addition completes it: a report's
+violation carries the focus node, the property and the measure, and MATCHING violations to
+affordance effects — rows whose good, property and direction would move the violated
+component toward conformance — is plan search as shape repair. What SHACL buys over the bare
+SPARQL menu: a package ships its goal-shape the way it ships `review.rq`, and gaps arrive as
+structured report entries rather than ad-hoc bindings. The caution to carry with it is the
+axis's own asymmetry, now load-bearing: conformance is boolean while a want has signed
+distance, so a goal-shape must state its measure or the planner ranks repairs blind.
+
 # Seams left open
 
-- **Nothing here is implemented, and nothing shipped needs it.** The trigger is the first
-  world whose supplier can refill — a mains valve or a human-in-the-loop restock lever — at
-  which point the barrel plan is depth 2 and the Planning member earns its seat.
+- **Implemented at depth 2, when the trigger fired.** The city mains (#201) made the supplier
+  refillable, and the Planning member took its seat: granted by the dealer premise (acting
+  for a source it offers, refillable from a source another offers — levers that compose),
+  subsuming the reflex, adding exactly ONE deduced goal past the region — the hosted lot must
+  be serveable, which is every downstream buyer's silent Acquire precondition. The other half
+  landed in the host: rounds are sized by the vessel's own freshest reading (the bench had
+  sold 2 L lots from a barrel at 0.000 — phantom water, conservation violated live), and a
+  LOW nobody can serve DEFERS the round, reopening the moment the witness reports the refill
+  — acquire-then-offer, the two-step held by the market and observable in the logs. The plan
+  is also data: `plan_for` returns the two rows through the two venues, the Consulting
+  member's substrate. What was NOT built of the sketch: the add/delete template on menu rows
+  (the serveability goal is deduced in the planner, not stated as row effects — sufficient at
+  depth 2, revisit if depth grows) and goal patterns as shapes (one deduced goal exists; the
+  severity-axis machinery stays future). `intention:Offer` is declared for plans to name and
+  adopted by nobody — a host keeps no gap ledger, per the family's own boundary.
+- **The convening gap is the planner's ceiling.** A dealer may want stock the upstream will
+  not yet sell: the city convenes on LOW alone, so a planner pursuing serveability at
+  stock 1.5 has no round to bid in until the region floor is crossed. That is
+  [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md)'s
+  recorded seam ("half the lot can be wanted by agents none of whom can convene a round"),
+  reached now from the buy side — the fix is a convening shock beyond the demand shock
+  (market.md names four), not a deeper planner.
 - **Plan search is bounded by construction**, not by hope: depth 2–3 over menu rows whose
   preconditions are SPARQL, never open-ended STRIPS search. If a domain ever wants more, that
   is a different decision, taken then.
