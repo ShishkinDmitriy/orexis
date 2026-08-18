@@ -18,6 +18,13 @@ from packages.capability.actuation import ActuationModule
 from agent.world import Actuator, Self
 
 
+class _EmptyStore:
+    """No rows, in the SPARQL-JSON shape `bindings` reads."""
+
+    def query(self, _q):
+        return {"results": {"bindings": []}}
+
+
 class FakeAgent:
     """The smallest thing an actuation module needs: an identity and somewhere to publish."""
 
@@ -34,6 +41,10 @@ class FakeAgent:
                        actuators=(valve,))
         self.sent = []
         self.beliefs = _Beliefs(dose_grace_s)
+        # An empty store: `_subject_of` walks winner -> actsFor -> subject and falls back to
+        # the name itself when the walk finds nothing, which is exactly what these tests
+        # exercise — claims here name subjects directly, the pre-dealer arrangement.
+        self.store = _EmptyStore()
 
     def publish(self, topic, payload, retain=False):
         self.sent.append((topic, payload))
