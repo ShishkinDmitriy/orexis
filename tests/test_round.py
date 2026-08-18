@@ -507,3 +507,29 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
     assert host.hosting().matcher().CAPABILITY == UNIFORM_PRICE
     host.deliver("readings/fern", low_event())
     assert offer_from(host)["matches_by"] == UNIFORM_PRICE
+
+
+# --- the dealer's redemption (#201 aftermath) -------------------------------
+
+def test_a_winner_named_unlike_its_subject_still_gets_its_dose(make, tmp_path, monkeypatch):
+    """The city redeeming for the supplier: the claim names the buying AGENT, and the dose
+    goes to what it ACTS FOR. `actuator_for(claim.sub)` worked for every claim ever redeemed
+    because a pot and its agent share a localId (fern's pot is "fern") — an id coincidence
+    standing in for a one-triple walk, and the first buyer named unlike its subject broke it
+    live: the dealer is "supplier", its barrel is "barrel1", and the city owned a perfectly
+    good valve it could not find while the barrel sat at 0.000."""
+    from onboarding.keygen import create_keypair
+
+    from agent.clearing import Claim
+
+    monkeypatch.setenv("AGORA_WORLD_DIR", str(tmp_path))
+    (tmp_path / "secrets").mkdir()
+    for name in ("host", "clearing"):
+        create_keypair(name)
+    city = make("city")
+    actuation = next(m for m in city.modules if m.name == "actuation")
+    cmd, device = actuation.command_for(
+        Claim(jti="j1", sub="supplier", amount_l=2.0, debit=0.3, scope="water", auction_id="a1"))
+    assert device.local_id == "city_valve", (
+        "the winner's subject, found through actsFor — never the winner's own name")
+    assert cmd.ml == 2000.0
