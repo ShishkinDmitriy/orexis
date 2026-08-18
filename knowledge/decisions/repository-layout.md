@@ -146,6 +146,13 @@ guards its import and exports no `PROVIDES`, which degrades to the already-desig
 path: capability granted, nothing provides it, said at startup — never a crash in an agent
 that was not using it.
 
+**And the soft layer got its linker (#210)**: at the head of `agora-validate`, every
+project-namespace IRI the loaded packages reference is subtracted from what the loaded
+ontologies and shapes declare, and a dangling reference refuses the world by name — a check,
+never a resolver. Its first run over the shipped tree caught `ag:modelDryRate` in
+DeviceModelShape: a constraint that had survived TWO renames of its term by matching
+nothing — the vacuous green the check exists to refuse, found on the day the check was born.
+
 **The model itself is a service, not a dependency**, and every existing service discipline
 applies unchanged: its URL is environment (not a belief — rule 5), it lives in `infra/` or
 beyond it, each agent's access is a credential minted at onboarding into the world's secrets
