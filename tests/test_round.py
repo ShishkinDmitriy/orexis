@@ -533,3 +533,55 @@ def test_a_winner_named_unlike_its_subject_still_gets_its_dose(make, tmp_path, m
     assert device.local_id == "city_valve", (
         "the winner's subject, found through actsFor — never the winner's own name")
     assert cmd.ml == 2000.0
+
+
+# --- the host and its vessel (arc 5: no phantom water) ----------------------
+
+def stock_reading(host, litres):
+    """The barrel's level arriving as it really does — through the wire and the listener."""
+    host.deliver("sensors/barrel1_level/reading", {"value": litres})
+
+
+def test_a_round_is_sized_by_the_vessel_not_the_belief(host):
+    """The lot is the host's standing offer; the vessel is physics. Live on the bench, a
+    barrel at 0.000 kept selling 2 L lots and the sim valve poured water from nothing —
+    conservation violated while every module behaved exactly as written. A host with a
+    witness on its source now offers min(lot, stock)."""
+    stock_reading(host, 1.5)
+    host.deliver("readings/fern", low_event())
+    assert offer_from(host)["quantity_l"] == 1.5
+
+
+def test_a_dry_vessel_defers_the_round_until_the_refill_lands(host):
+    """The two-step, held by the market: a LOW nobody can serve is not sold phantom water —
+    the round is DEFERRED, and the moment the host's own witness reports the refill, the
+    round it owed opens, cooldown respected. Acquire upstream, then offer: the planning
+    record's first honest customer, distributed across the dealer's two venues."""
+    stock_reading(host, 0.0)
+    host.deliver("readings/fern", low_event())
+    assert host.sent.to(market_of(host).offer_topic) == [], \
+        "a dry vessel must not announce a lot it cannot pour"
+
+    stock_reading(host, 2.5)  # the refill lands — step two opens by itself
+    offer = offer_from(host)
+    assert offer["quantity_l"] == 2.0, "full lot again — the belief is the cap, stock permitting"
+
+
+def test_a_blind_host_sells_as_it_always_did(make, tmp_path, monkeypatch):
+    """The city has no witness on its mains — honestly: the pressure is always there, and
+    1000 L is a constitutional ceiling, not a stock anyone watches. A host without a witness
+    keeps the old behaviour unchanged, which is what keeps this a widening."""
+    from onboarding.keygen import create_keypair
+
+    monkeypatch.setenv("AGORA_WORLD_DIR", str(tmp_path))
+    (tmp_path / "secrets").mkdir()
+    for name in ("host", "clearing"):
+        create_keypair(name)
+    city = make("city")
+    city.deliver("readings/supplier", low_event(
+        agent_id="supplier", observed_property=STORED))
+    offers = city.sent.to("market/city_mains/offer")
+    assert len(offers) == 1 and offers[0]["quantity_l"] == 3.0
+
+
+STORED = "http://example.org/agora/water#StoredLitres"

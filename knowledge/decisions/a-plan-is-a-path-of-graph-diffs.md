@@ -89,9 +89,28 @@ precondition observable. Depth 2 suffices; that is the scale to build for.
 
 # Seams left open
 
-- **Nothing here is implemented, and nothing shipped needs it.** The trigger is the first
-  world whose supplier can refill — a mains valve or a human-in-the-loop restock lever — at
-  which point the barrel plan is depth 2 and the Planning member earns its seat.
+- **Implemented at depth 2, when the trigger fired.** The city mains (#201) made the supplier
+  refillable, and the Planning member took its seat: granted by the dealer premise (acting
+  for a source it offers, refillable from a source another offers — levers that compose),
+  subsuming the reflex, adding exactly ONE deduced goal past the region — the hosted lot must
+  be serveable, which is every downstream buyer's silent Acquire precondition. The other half
+  landed in the host: rounds are sized by the vessel's own freshest reading (the bench had
+  sold 2 L lots from a barrel at 0.000 — phantom water, conservation violated live), and a
+  LOW nobody can serve DEFERS the round, reopening the moment the witness reports the refill
+  — acquire-then-offer, the two-step held by the market and observable in the logs. The plan
+  is also data: `plan_for` returns the two rows through the two venues, the Consulting
+  member's substrate. What was NOT built of the sketch: the add/delete template on menu rows
+  (the serveability goal is deduced in the planner, not stated as row effects — sufficient at
+  depth 2, revisit if depth grows) and goal patterns as shapes (one deduced goal exists; the
+  severity-axis machinery stays future). `intention:Offer` is declared for plans to name and
+  adopted by nobody — a host keeps no gap ledger, per the family's own boundary.
+- **The convening gap is the planner's ceiling.** A dealer may want stock the upstream will
+  not yet sell: the city convenes on LOW alone, so a planner pursuing serveability at
+  stock 1.5 has no round to bid in until the region floor is crossed. That is
+  [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md)'s
+  recorded seam ("half the lot can be wanted by agents none of whom can convene a round"),
+  reached now from the buy side — the fix is a convening shock beyond the demand shock
+  (market.md names four), not a deeper planner.
 - **Plan search is bounded by construction**, not by hope: depth 2–3 over menu rows whose
   preconditions are SPARQL, never open-ended STRIPS search. If a domain ever wants more, that
   is a different decision, taken then.

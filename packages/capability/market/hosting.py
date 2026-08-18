@@ -31,7 +31,7 @@ import json
 
 from agent import signing
 from agent.auction import run_auction
-from agent.market import Bid, Limits, MarketState, Offer
+from agent.market import EPS, Bid, Limits, MarketState, Offer
 from agent.module import Module, Timer
 from agent.ontology import WORLD_GRAPH
 from agent.store import bindings
@@ -106,6 +106,23 @@ class HostingModule(Module):
             rows = bindings(agent.store.query(_ABOUT_Q % (market.uri, market.uri)))
             self.about[market.uri] = {r["property"] for r in rows}
 
+        # My witness on each venue's source, where I have one (#the-planner): the sensor I
+        # poll that monitors the resource, and the property it observes. A host with a witness
+        # sizes its rounds by what the vessel actually holds; a host without one sells blind —
+        # honest for the mains, whose pressure is always there and whose 1000 L is a
+        # constitutional ceiling rather than a stock anyone watches.
+        self.stock_property = {}
+        for market in self.markets:
+            rows = bindings(agent.store.query(f"""
+SELECT ?p WHERE {{
+  <{self.me.uri}> sensing:polls ?s .
+  ?s sensing:monitors <{market.resource}> ; sosa:observes ?p }} LIMIT 1"""))
+            self.stock_property[market.uri] = rows[0]["p"] if rows else None
+        # A LOW I could not serve, per market: the refill-then-sell dependency, held until the
+        # stock arrives. The deferred round is the plan's second step made observable — see
+        # knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md, "the first honest customer".
+        self.deferred: dict[str, str] = {}
+
         self.open_auction: dict | None = None
         self.last_auction_at = 0.0
         self._timer: Timer | None = None
@@ -163,6 +180,30 @@ class HostingModule(Module):
             return
         self.announce(market, trigger=event.get("agent", "?"))
 
+    def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
+        """The refill landed — the deferred sell reopens. The two-step's second step.
+
+        A LOW nobody could serve was held in `deferred` instead of being sold as phantom
+        water; the moment my own witness reports the vessel holding anything again, the
+        round it owed opens. The cooldown still applies — a refill is not a licence to spam —
+        and an open round absorbs it exactly as a fresh LOW would.
+        """
+        for market in self.markets:
+            if market.uri not in self.deferred:
+                continue
+            if subject_uri != market.resource or observed_property != self.stock_property.get(market.uri):
+                continue
+            if value <= EPS:
+                continue
+            if self.open_auction is not None:
+                continue
+            if time.monotonic() - self.last_auction_at < self.beliefs.cooldown_s:
+                continue
+            trigger = self.deferred.pop(market.uri)
+            self.log.info("the refill landed (%.3f) — opening the round deferred for %s: "
+                          "step two of acquire-then-offer", value, trigger)
+            self.announce(market, trigger=trigger)
+
     def matcher(self):
         """Whichever of my capabilities can turn bids into an allocation, or None.
 
@@ -173,18 +214,49 @@ class HostingModule(Module):
         """
         return self.agent.provider(BID_MATCHING)
 
+    def _stock_of(self, market) -> float | None:
+        """What my venue's vessel holds, by my own freshest reading — None when I am blind.
+
+        The freshest I have, however old: a stale level is still my best knowledge of my own
+        stock, and a push sensor updates it on its own clock. What this exists to end is the
+        phantom dose: a barrel at 0.000 kept selling 2 L lots, the sim valve poured water
+        from nothing, and conservation was violated live on the bench while every module
+        behaved exactly as written.
+        """
+        prop = self.stock_property.get(market.uri)
+        if prop is None:
+            return None
+        reading = self.agent.beliefs.current_reading(market.resource, prop)
+        return reading.value if reading is not None else None
+
     def announce(self, market, trigger: str) -> None:
+        quantity_l = self.beliefs.quantity_l
+        stock = self._stock_of(market)
+        if stock is not None:
+            if stock <= EPS:
+                # The dry vessel is the dependency the planning record names: "water fern"
+                # dead-ends here, and the true plan is refill, then sell. The refill is the
+                # stake's own business (the reflex is already pursuing the stock's aim); the
+                # SELL is deferred, and reopens the moment my witness reports the refill —
+                # the two-step, held by the market instead of sold as phantom water.
+                self.deferred[market.uri] = trigger
+                self.log.info("%s is LOW but my vessel is dry — deferring the round: "
+                              "acquire upstream, then offer (the depth-2 plan, distributed)",
+                              trigger)
+                return
+            quantity_l = min(quantity_l, stock)
         auction_id = uuid.uuid4().hex[:8]
         self.last_auction_at = time.monotonic()
-        self.open_auction = {"auction_id": auction_id, "market": market, "bids": {}}
+        self.open_auction = {"auction_id": auction_id, "market": market, "bids": {},
+                             "quantity_l": quantity_l}
         matcher = self.matcher()
         self.log.info("auction %s opened on %s (%s is LOW) — %.2f L, reserve €%.2f, %ss to bid",
-                      auction_id, market.local_id, trigger, self.beliefs.quantity_l,
+                      auction_id, market.local_id, trigger, quantity_l,
                       self.beliefs.reserve_price_per_l, self.beliefs.bid_window_s)
         self.publish(market.offer_topic, {
             "auction_id": auction_id,
             "host": self.me.agent_id,
-            "quantity_l": self.beliefs.quantity_l,
+            "quantity_l": quantity_l,
             "reserve_price_per_l": self.beliefs.reserve_price_per_l,
             "closes_in_s": self.beliefs.bid_window_s,
             # The matching travels with the invitation, as a real auction announces its terms
@@ -242,7 +314,10 @@ class HostingModule(Module):
         )
         offer = Offer(
             supplier=self.me.agent_id,
-            quantity_l=self.beliefs.quantity_l,
+            # The round's own quantity, not the belief: the announce may have sized this
+            # round down to what the vessel actually held, and matching against the full
+            # lot would allocate the phantom litres the sizing exists to refuse.
+            quantity_l=rnd.get("quantity_l", self.beliefs.quantity_l),
             reserve_price_per_l=self.beliefs.reserve_price_per_l,
         )
 

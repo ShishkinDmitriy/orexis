@@ -266,3 +266,58 @@ def test_two_denominations_make_two_rows_and_never_four(make):
         ["Lowers", "Raises"], (
         "two opposite levers on one property must each carry their own direction — "
         "a cross-join would put both directions on both venues, four rows for two levers")
+
+
+# --- the Planning member (arc 5) --------------------------------------------
+
+STORED = "http://example.org/agora/water#StoredLitres"
+SUPPLIER = "http://example.org/agora/world/simulation#supplier"
+_DESIRE = "http://example.org/agora/desire#DesireCapability"
+_DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
+
+
+def test_the_dealer_derives_planning_and_nobody_else_does(make):
+    """The grant's premise is levers that compose: acting for a source you offer, refillable
+    from a source another offers. The supplier is that shape; a fern offers nothing and the
+    city acts for nothing, so depth-2 deliberation arises exactly once in this world."""
+    supplier = make("supplier")
+    assert any(m.name == "planning" for m in supplier.modules)
+    for other in ("fern", "city"):
+        assert not any(m.name == "planning" for m in make(other).modules), other
+
+
+def test_the_provider_hands_actors_the_planner(make):
+    """A planner always also derives Reflex (its premise subsumes the reflex's), so two
+    family members run in one agent — and which one answers the actors must be a fact, not
+    the accident of IRI sort order. This is the pin: if a rename ever flips the build order,
+    this fails instead of the dealer quietly losing its depth."""
+    supplier = make("supplier")
+    assert supplier.provider(_DELIBERATION).name == "planning"
+
+
+def test_the_planner_pursues_the_lot_past_the_aim(make, monkeypatch):
+    """The one deduced goal past the region: the hosted lot must be serveable. With the aim
+    satisfied (value above it) the reflex says nothing — and the planner still says ACQUIRE
+    while the vessel holds less than the lot its shop owes, because every downstream buyer's
+    Acquire silently preconditions stock >= lot. Aim moved to 1.0 for the test so the two
+    members genuinely disagree: value 1.5 is comfortable for the reflex and too empty to
+    trade from."""
+    supplier = make("supplier")
+    planner = supplier.provider(_DELIBERATION)
+    monkeypatch.setattr(supplier.provider(_DESIRE), "aim", lambda p: 1.0)
+    assert planner.propose(STORED, 1.5) == ACQUIRE, \
+        "stock 1.5 < lot 2.0 — the shop cannot serve, so the dealer buys"
+    assert planner.propose(STORED, 2.5) is None, \
+        "stock covers the lot and the aim is met — nothing to do is a decision"
+
+
+def test_the_plan_is_two_rows_through_two_venues(make):
+    """The record's sentence made data: acquire upstream, then offer downstream — a path of
+    menu-row-shaped steps through the two venues the grant's premise names, and the minted
+    market IRIs recomputed exactly as every rule recomputes them."""
+    supplier = make("supplier")
+    steps = supplier.provider(_DELIBERATION).plan_for(STORED)
+    assert [(s.means.rsplit("#", 1)[-1], s.via.rsplit(".", 1)[-1]) for s in steps] == [
+        ("Acquire", "city_mains"), ("Offer", "barrel1")]
+    assert supplier.provider(_DELIBERATION).plan_for(MOISTURE) == [], \
+        "a planner asked about somebody else's gap has no chain to offer, and says so"

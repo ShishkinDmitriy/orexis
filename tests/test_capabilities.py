@@ -81,8 +81,14 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     #  stake met the valves it already held, and stake plus means is the shared premise —
     #  and since the city exists (arc 4), BIDDING: the city's pipe reaches its barrel, so
     #  the dealer's buy side derives from the plumbing exactly as a fern's does.
+    #  And PLANNING (arc 5): the dealer premise — acting for a source it offers, refillable
+    #  from a source another offers — is levers that compose, and depth-2 deliberation is
+    #  meaningful for exactly that shape. It keeps Reflex too: the premises nest, both are
+    #  true abilities, and a pinned test holds `provider` to handing actors the planner.
+    from packages.capability.deliberation.terms import PLANNING
+
     assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING, LISTENING,
-                                           DEDUCING, KEEPING, REFLEX, BIDDING}
+                                           DEDUCING, KEEPING, REFLEX, BIDDING, PLANNING}
 
 
 def test_only_a_host_matches(me):

@@ -8,10 +8,10 @@ Reflex first, and granting a capability no module provides only produces a start
 Adding it is a class and one line of `PROVIDES`; no actor moves.
 """
 
-from .module import Affordance, ReflexModule, menu_of
-from .terms import CONSULTING, DELIBERATION, REFLEX
+from .module import Affordance, PlanningModule, ReflexModule, menu_of
+from .terms import CONSULTING, DELIBERATION, PLANNING, REFLEX
 
-PROVIDES = (ReflexModule,)
+PROVIDES = (ReflexModule, PlanningModule)
 
-__all__ = ["PROVIDES", "Affordance", "ReflexModule", "menu_of",
-           "DELIBERATION", "REFLEX", "CONSULTING"]
+__all__ = ["PROVIDES", "Affordance", "PlanningModule", "ReflexModule", "menu_of",
+           "DELIBERATION", "PLANNING", "REFLEX", "CONSULTING"]
