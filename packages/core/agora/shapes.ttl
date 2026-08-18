@@ -90,7 +90,7 @@ ag:DeviceModelShape a sh:NodeShape ;
 
 An initial value used to be held to 0..1, on the reasoning that it is a fraction of the observed property. That was true of every value this project had and false of sensing: a KY-015 reports degrees Celsius, and 21.4 is not a fraction of anything. It is held to the model's OWN range now, which catches the slip the old rule was written for — 45 where 0.45 was meant, in a model that says it runs 0..1 — and catches it in a thermometer too, where the old rule could not look.""" ;
     sh:targetClass ag:DeviceModel ;
-    sh:property [ sh:path ag:modelDryRate ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path ag:modelLosesPerDay ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path ag:modelMinValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path ag:modelMaxValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
     sh:property [ sh:path ag:modelInitialValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;

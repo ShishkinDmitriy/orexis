@@ -40,6 +40,17 @@ def validate_world(world: str) -> bool:
     every agent's opening beliefs — and validates the lot. This is what genesis is checked
     with, and it needs no store, no server and no credentials.
     """
+    # The LINK step first (#210): a world built on packages that reference terms nobody
+    # declares would validate against constraints that match nothing — the vacuous kind of
+    # green. Cheapest check, loudest failure, so it goes before anything is built.
+    from onboarding import linker
+
+    if broken := linker.dangling():
+        for iri, files in broken.items():
+            log.error("dangling reference: <%s> is declared by no loaded ontology "
+                      "(referenced by %s)", iri, ", ".join(files))
+        return False
+
     path = genesis.world_dir(world)
     st = Store()  # in memory: built, read, thrown away
     genesis.refresh_public(st, path)
