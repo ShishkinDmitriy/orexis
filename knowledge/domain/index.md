@@ -8,10 +8,12 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [agent](/domain/agent.md) - The general principal: certified identity, wallet, stake. Plant agent and supplier specialize it.
 * [plant-agent](/domain/plant-agent.md) - A self-interested plant: desire, wallet, event-driven state machine, one LLM call for its stance; judges its own band, asserts its own `:sensed` data.
-* [supplier](/domain/supplier.md) - Strategic seller that hosts the auction, and (as resource owner) actuates its own valves to fulfil claims. Cannot mint. In v2 buys upstream.
+* [supplier](/domain/supplier.md) - The dealer the arcs built: strategic seller downstream, genuine buyer upstream (derived, since the city), the barrel between them; actuates its own valves to fulfil claims; cannot mint.
+* [dealer](/domain/dealer.md) - An intermediary participant — buys from the N, sells to the M, holds stock, earns the spread. How N-to-M clears without a governor: the stock decouples its two markets so no claim ever changes hands, and fairness is entry, public terms and an auditable margin rather than a referee.
 
 # Market
 
+* [good](/domain/good.md) - What a lot is a quantity OF — not a property: one good has a valuation per kind of recipient, and every denomination join closes through it (venue → source → supplies → good ← ofGood ← valuation, plus the asker's stake).
 * [market](/domain/market.md) - A market is the standing structure — a resource, who can supply it, who can consume it, and the links between them; the auction is the process that condenses inside it and dissolves. Who hosts, who's in the cluster, and how participants know each other (attested topology).
 * [auction](/domain/auction.md) - The process, not a place: it condenses out of scarcity, announces its terms, collects bids, matches, is co-signed by clearing, and dissolves. What it is made of (market, round, matching, clearing) and what it is not. Who convenes it is stated in v1 — the short-side principle is documented and unimplemented.
 * [round](/domain/round.md) - One pass of bidding inside an auction, not the auction itself — the standard meaning from multiple-round designs. Exactly one is built, so today an auction has a single round and the two coincide; the iterative flow described is designed and unbuilt.
@@ -24,9 +26,9 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [desire](/domain/desire.md) - What an agent is trying to bring about: one region per property its subject states a need in, plus the envelope outside which that subject ends. Deduced by intersecting every operating range that applies, never authored, and held in a graph found by type so a second source needs no code. The band and the urgency every other capability reads come from here — which is why an agent with no stake has neither.
 
-* [intention](/domain/intention.md) - BDI's third letter: a commitment to reduce a named gap by a named means, kept in a private ledger with an adoption, a resolution and a reason. Reifies what was module state — a pending look, a bid awaiting its claim — and the patience that absorbs repeat impulses is each agent's own belief. Granted by a stake AND a lever; gates nothing until deliberation is its own capability.
+* [intention](/domain/intention.md) - BDI's third letter: a commitment to reduce a named gap by a named means, kept in a private ledger with an adoption, a resolution and a reason. Four moves — Observe, Acquire, Apply, and Offer, the owed round that survives the process that owed it. The keeper also ticks on its patience: gaps from the choir reach the one deliberator, so a marketless property's watching is ledgered too. Granted by a stake AND a lever.
 
-* [deliberation](/domain/deliberation.md) - The whether, extracted: given the gap and what already stands, name the next move; the actors carry it out. Reflex is the welded chain as the first member; Consulting is the declared, unimplemented seat for a model, constrained before it exists. The host's trigger stays out — a host has no gap.
+* [deliberation](/domain/deliberation.md) - The whether, extracted: given the gap and what already stands, name the next move; the actors carry it out. Three members — Reflex (the welded chain, depth 1), Planning (the dealer's, depth 2: the hosted lot must be serveable, and the plan is one text with two readers), Consulting (the declared, unimplemented seat for a model, constrained before it exists). The menu is the union of what the packages contribute, and gaps are the choir too — the keeper ticks so deliberation runs on need, not only on offers. The host's trigger stays out — a host has no gap.
 
 # Sensing
 

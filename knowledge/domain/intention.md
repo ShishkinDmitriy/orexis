@@ -16,6 +16,13 @@ They are rows in a graph now, each with `adoptedAt`, a resolution (`satisfied` |
 a `becauseOf` in both directions, because a commitment abandoned without a reason is
 indistinguishable from one forgotten.
 
+**The keeper also ticks (#208)**: on its own patience clock it collects what the modules'
+`gaps()` notice — sensing's unobserved-or-stale channels first — hands each gap to the one
+deliberator, and commits what it proposes. Deliberation stopped being something only the
+market can start: a marketless property's watching reaches this ledger too, Observe adopted
+when stale and satisfied by the reading, whoever caused the look. A healthy society's gap
+entries are ZERO — they mark need, not routine.
+
 **An intention is an amortised deliberation.** Intentions exist to *save* deciding: an agent
 that re-decides on every reading is a reflex machine wearing a planner's name. Here that is a
 cost model rather than philosophy — deliberation is about to include an LLM call
@@ -29,6 +36,7 @@ standing intention is what makes one affordable: committed means not re-consulte
 | `intention:Observe` | get a reading where the gap is unmeasured or stale | the bidder starts waiting on its sensor | the look comes back (satisfied) or the auction closes first (dropped, with why) |
 | `intention:Acquire` | bid for what would reduce a gap | the first bid flies | the claim arrives |
 | `intention:Apply` | spend a held claim against the world | the claim arrives — holding IS the intention | the claim is presented on the redeem channel (watch live, or the bounded wait) |
+| `intention:Offer` | open a round owed on a hosted venue (#206) | a LOW arrives at a dry vessel — the deferral IS the debt | the refill lands and the round opens; recovered from the ledger if the process that owed it died |
 
 `Observe` is first for a structural reason: at birth there is a desired state and an empty
 sensed graph, so the first intention is always to look — see

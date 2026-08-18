@@ -35,7 +35,11 @@ agora-onboard <world>
 | `agora-dashboards` | a Grafana folder per world: what was measured, and how the agents are | what each agent observes, and the roster |
 | `agora-firmware` | a board's `config.h` | the broker, the ids and topics, the pins, the calibration, the credential |
 
-`agora-onboard` runs the first four, after `agora-validate`. They remain separately callable,
+`agora-onboard` runs the first four, after `agora-validate` — which itself begins with the
+LINK step (#210): every project-namespace IRI the loaded packages reference must be declared
+by some loaded ontology, or the world is refused naming the dangling term. A reference to a
+term nobody declares matches nothing, and an empty result is not an error — the linker is
+what makes that silence a gate instead of a hazard. They remain separately callable,
 because rotating one service's credentials should not touch the other's.
 
 `agora-firmware` is deliberately **not** in the umbrella. It writes into a firmware project rather

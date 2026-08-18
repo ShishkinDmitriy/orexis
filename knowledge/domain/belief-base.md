@@ -134,7 +134,11 @@ The graph names survive the move to per-agent stores unchanged, and the reasonin
 they were never about *partitioning one server*, they were about who may write a container. In
 an agent's own store the boundary is doubly held — `:world` is replaced from the ratified files
 on every start and is not the agent's to author, while `:beliefs/<agent>` is written once at
-birth and is the agent's alone thereafter.
+birth and is the agent's alone thereafter — with one addition that is not a reset: an
+amendment may grant a capability whose opening beliefs the volume has never held, and boot
+**endows** those (never-held terms arrive with their structures, held terms stay the agent's
+whatever their value; `rebirth` remains the explicit discard). See
+[an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md).
 
 The **`:sensed` singleton is a v1 artifact**. Within it, an observation is keyed by its subject
 *and the property observed*, so a pot with a moisture probe and a temp/humidity board holds
