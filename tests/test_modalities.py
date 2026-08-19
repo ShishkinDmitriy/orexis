@@ -49,7 +49,7 @@ def test_the_region_graph_is_a_constraint():
     with the instrument's, deduced by a rule, unmovable by the agent and refused at boot if
     violated. Whatever the capability computing it is called, that is a constraint."""
     st = genesis_store()
-    kinds = types_of(st, "http://example.org/agora/graph/desire")
+    kinds = types_of(st, "http://example.org/agora/graph/constraint")
     assert "ConstraintGraph" in kinds
     assert "DesireGraph" not in kinds, "the region is not anybody's want"
 

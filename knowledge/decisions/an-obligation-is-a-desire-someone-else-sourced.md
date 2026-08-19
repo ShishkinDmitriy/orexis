@@ -26,7 +26,7 @@ through affordances. Nothing needs a second decision path.
 
 ## It is the seat the design reserved
 
-`desire:DesireGraph` has been a CLASS since desire was built, and its comment says why: *"a
+`ag:ConstraintGraph` has been a CLASS since desire was built, and its comment says why: *"a
 class rather than one graph, because desire may have more than one source and a reader must not
 have to know how many."* One source has existed all along — the region deduced from the ranges
 a subject states. This is the second, and it needs no new reader: `store.query` merges every

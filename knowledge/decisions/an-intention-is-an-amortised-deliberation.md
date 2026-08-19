@@ -23,7 +23,7 @@ a happy absence. It is a gap, and this record says why and what to do about it.
 | BDI | agora | state |
 |---|---|---|
 | **Beliefs** | the store: public graphs, private beliefs, `:sensed` | done |
-| **Desires** | `ag:Desire` regions, plus the aim inside one | region done; aim still `water:hasTarget` |
+| **Desires** | `ag:Bounds` regions, plus the aim inside one | region done; aim still `water:hasTarget` |
 | **Goals** | implicit — the worst gap wins attention | unnamed, deliberately |
 | **Intentions** | **proto only**: a pending bid, a held claim, a commanded cadence | no name, no lifecycle |
 | **Interpreter** | hardwired: reading → band → LOW → announce → bid → claim → actuate | welded; it IS the planner |
@@ -165,7 +165,7 @@ so this is that decision growing teeth rather than changing course.
 - **No composite distance.** The gap is per property; `max()` of normalised gaps ranks troubles,
   and the envelope already carries the weighting a `desire:weight` triple would duplicate. A
   scalar "wellness" number tells nobody which lever to pull, so it waits for a consumer.
-- **Regimes still unexpressed.** A second `desire:DesireGraph` is where a seasonal regime would
+- **Regimes still unexpressed.** A second `ag:ConstraintGraph` is where a seasonal regime would
   land; the selection mechanism is still missing, unchanged from
   [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md).
 - ~~**Which model, and what context window**~~ — the *when* and the *what-becomes-of-the-answer*

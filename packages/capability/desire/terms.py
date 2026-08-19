@@ -41,11 +41,11 @@ CONSULTING = term("Consulting")  # asks something else — RESERVED, nothing imp
 # What a deduced desire is made of. Named here because the module reads them back out of the
 # graph the rule wrote, and because a region is this package's subject even though every figure
 # in one came from somewhere else.
-DESIRES = kernel("desires")
-DESIRE_CLASS = kernel("Desire")
+BOUNDED_BY = kernel("boundedBy")
+BOUNDS = kernel("Bounds")
 TOLERATED_MIN = kernel("toleratedMin")
 TOLERATED_MAX = kernel("toleratedMax")
 
 # The graph class. A TERM, not an instance: `agent.store` is asked which graphs are of this
 # class, so a second source of desire is a vocabulary edit and touches no Python here.
-REGION_GRAPH = term("RegionGraph")  # the regions that BIND — a constraint graph, not a desire
+CONSTRAINT_GRAPH = KERNEL + "ConstraintGraph"  # where the bounds land: the kernel's graph

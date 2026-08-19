@@ -68,7 +68,7 @@ SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
 # public graph, so a region contributed by something other than the deduction is simply seen.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
-  <%s> ag:desires ?desire .
+  <%s> ag:boundedBy ?desire .
   ?desire ssn:forProperty ?property ;
           schema:minValue ?low ;
           schema:maxValue ?high .

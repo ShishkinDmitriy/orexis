@@ -76,9 +76,9 @@ WHERE  {
 #  other produce no region at all, the agent keeps the capability, and `desire:DesirerShape`
 #  refuses to let it start. Silence here is deliberate — a rule cannot report, and an
 #  intersection quietly rounded into a point would be the worst of the three outcomes.
-INSERT { GRAPH $into(desire:RegionGraph) {
-    ?agent ag:desires _:region .
-    _:region a ag:Desire ;
+INSERT { GRAPH $into(ag:ConstraintGraph) {
+    ?agent ag:boundedBy _:region .
+    _:region a ag:Bounds ;
         ssn:forProperty ?property ;
         schema:minValue ?low ;
         schema:maxValue ?high ;

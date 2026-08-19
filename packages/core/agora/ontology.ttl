@@ -284,6 +284,18 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 <http://example.org/agora/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
 <http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .
 
+##  The bounds a subject's stated ranges put on whoever acts for it: an operating region to
+##  hold a property inside, and the survival envelope outside which the subject ends. Derived
+##  by the desire package's rule, declared HERE like the derived world graph, because a graph
+##  is the kernel's furniture whoever fills it — and a rule targets `ag:ConstraintGraph`
+##  directly now, since `graph_of_class` refuses ambiguity loudly rather than guessing.
+##
+##  It was `graph/desire` and typed a region graph, which was wrong twice: the name followed
+##  the capability that computes it, and the content is not anybody's want. An agent holding
+##  bounds and no aim pursues NOTHING — the running proof that a bound motivates nobody.
+<http://example.org/agora/graph/constraint>        a ag:ConstraintGraph , ag:PublicGraph ;
+    ag:arrivedBy ag:Derived .
+
 
 #################  THE MIND'S STATES  #################
 #
@@ -305,12 +317,12 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 
 #################  What a desire IS  #################
 
-ag:Desire a owl:Class ; rdfs:label "Desire" ;
+ag:Bounds a owl:Class ; rdfs:label "Desire" ;
     rdfs:comment """One property, the region to hold it in, and the envelope outside which the subject does not merely suffer but ends. A desire is per PROPERTY and an agent holds as many as its subject states ranges for — which is the whole of what makes a humidity reading actionable where it was previously a number with nowhere to go.
 
 Not a point. A target is a point and remains one, privately, in the agent's beliefs; this is what that point must answer to.""" .
 
-ag:desires a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Desire ;
+ag:boundedBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Bounds ;
     rdfs:label "desires" ;
     rdfs:comment "Reads as what this agent is trying to bring about. Derived, never written by hand — a world stating one would be authoring an agent's ends instead of the facts they follow from, and the shapes refuse it." .
 
@@ -324,7 +336,7 @@ ag:desires a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Desire ;
 #  is a range of, and `sosa:ObservableProperty rdfs:subClassOf ssn:Property` makes it well-typed
 #  here too.
 
-ag:toleratedMin a owl:DatatypeProperty ; rdfs:domain ag:Desire ; rdfs:range xsd:decimal ;
+ag:toleratedMin a owl:DatatypeProperty ; rdfs:domain ag:Bounds ; rdfs:range xsd:decimal ;
     rdfs:label "tolerated minimum" ;
     rdfs:comment """The floor of the survival envelope for this property, when the world states one. Below it the subject does not merely sit outside where it does well — it ends.
 
@@ -332,7 +344,7 @@ Here rather than left in the plant's own range because it is what makes URGENCY 
 
 Optional, and its absence is not a defect. A world that states no survival range simply has an agent whose urgency is scaled by the width of the region instead — a cruder answer, honestly reached.""" .
 
-ag:toleratedMax a owl:DatatypeProperty ; rdfs:domain ag:Desire ; rdfs:range xsd:decimal ;
+ag:toleratedMax a owl:DatatypeProperty ; rdfs:domain ag:Bounds ; rdfs:range xsd:decimal ;
     rdfs:label "tolerated maximum" .
 
 #################  The aim — the pick inside a region  #################
@@ -380,7 +392,7 @@ ag:aims a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Aim ;
 #  stored is what I owe NOW, in a graph of my own, because a debt outlives the process that
 #  incurred it: a host used to keep its issued claims in memory and forget them on restart.
 
-ag:Obligation a owl:Class ; rdfs:subClassOf ag:Desire ;
+ag:Obligation a owl:Class ; rdfs:subClassOf ag:Bounds ;
     rdfs:label "Obligation" ;
     rdfs:comment "A desire this agent did not source: what it owes another, raised when the society issued that other a claim against this agent's hardware, discharged when the dose it names is confirmed. A subclass of Desire and not a sibling, because everything that reads desire should read this too — urgency, disclosure, and the deliberation that ranges over wants. What differs is only where it came from, which is what prov says." .
 

@@ -689,9 +689,9 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
     would certainly violate: 0.55 is nowhere near 0.60-0.80.
     """
     data = _mutate("""
-        INSERT { GRAPH <http://example.org/agora/graph/desire> {
-            <http://example.org/agora/world/simulation#fern_agent> <http://example.org/agora#desires> [
-                a <http://example.org/agora#Desire> ;
+        INSERT { GRAPH <http://example.org/agora/graph/constraint> {
+            <http://example.org/agora/world/simulation#fern_agent> <http://example.org/agora#boundedBy> [
+                a <http://example.org/agora#Bounds> ;
                 <http://www.w3.org/ns/ssn/forProperty>
                     <http://example.org/agora/water#AirHumidity> ;
                 <https://schema.org/minValue> 0.60 ;

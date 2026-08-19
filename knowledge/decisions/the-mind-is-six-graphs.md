@@ -49,7 +49,30 @@ does not. So the graph classification and the trust story turn out to be one sto
 
 ## What the frame immediately found
 
-**The region is a constraint, not a desire.** It is the plant's operating range intersected
+**The region is a constraint, not a desire** — and the naming followed, in three steps the
+sovereign drove: the graph is `graph/constraint`, typed `ag:ConstraintGraph` **and**
+`ag:PublicGraph` (the two axes, needed independently — typing it on modality alone made it
+invisible to every reader for exactly as long as it took a test to say so); the class inside
+it is `ag:Bounds`, not `ag:Desire`; and the predicate is `ag:boundedBy`, because an agent does
+not desire 0.45–0.65, it is HELD to it — what it desires is the aim, 0.55.
+
+The decisive evidence is in the running code rather than in the argument: **an agent holding
+bounds and no aim pursues nothing.** `aim()` returns None, the reflex proposes None, and the
+comment has said so all along — "an agent that picked no point has decided not to steer this
+property." If bounds were an end they would motivate alone. They do not.
+
+What the two pairs of numbers differ in is SEVERITY, not modality: leaving the operating
+region is legitimate and temporary (it is what a gap IS), leaving the survival envelope is the
+subject ending. That is `sh:Warning` against `sh:Violation` — the axis
+[a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) already
+records — so they stay one node with two pairs, and urgency needs both at once.
+
+The obligation in all this is not the range at all: it is **`ag:actsFor`**, the office the
+sovereign appointed. That is why no range carries an `owedTo` — you are not obliged to a
+plant, which can present no claim; you are obliged by the appointment, and the plant is the
+beneficiary. The range only says what discharging the office looks like, numerically.
+
+**The original finding, for the record:** It is the plant's operating range intersected
 with the instrument's, deduced by a rule; the agent cannot move it and is refused at boot for
 violating it. Something you cannot move and are refused for violating is a constraint. It was
 called desire because the name followed the *capability that computes it* — which is also why

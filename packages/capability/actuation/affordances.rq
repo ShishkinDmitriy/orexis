@@ -21,7 +21,7 @@
 # prepends them.
 
 SELECT ?means ?property ?via ?direction ?mode WHERE {
-  $me ag:desires ?region ; ag:actsFor ?subject .
+  $me ag:boundedBy ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property .
   $me actuation:hasActuator ?via .
   ?via actuation:actuates ?subject ;

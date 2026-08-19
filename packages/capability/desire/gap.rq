@@ -34,7 +34,7 @@
 # and when each side was true; whoever consumes it judges. See issue #124.
 
 SELECT ?property ?value ?low ?high ?gap ?at WHERE {
-  $me ag:desires ?region ; ag:actsFor ?subject .
+  $me ag:boundedBy ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property ;
           schema:minValue ?low ;
           schema:maxValue ?high .

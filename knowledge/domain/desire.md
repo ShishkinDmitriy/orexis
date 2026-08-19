@@ -29,7 +29,7 @@ The property is bound from the **subject's** conditions. An instrument may narro
 may never create one — a thermometer rated 0-50 °C states a fact about the thermometer, not an
 ambition for the pot.
 
-The result lives in a graph of its own, typed `desire:DesireGraph` and found by that type rather
+The result lives in a graph of its own, typed `ag:ConstraintGraph` and found by that type rather
 than by name, so more than one source of desire is expressible without any code learning there is
 a second. It is public and recomputed on every start, because it is a function of the ratified
 files: a plant whose range is amended must not leave an agent holding the old region.

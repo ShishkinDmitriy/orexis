@@ -341,7 +341,7 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
     toy = tmp_path / "affordances.rq"
     toy.write_text("""
 SELECT ?means ?property ?via ?direction WHERE {
-  $me ag:desires ?region .
+  $me ag:boundedBy ?region .
   ?region ssn:forProperty ?property .
   BIND(intention:Consult AS ?means)
   BIND($me AS ?via)

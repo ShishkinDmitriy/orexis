@@ -20,12 +20,12 @@ That failure is the one this whole design is most exposed to, because its sympto
                       <http://example.org/agora/desire#Deducing> .
             }
         """ ] ;
-    sh:property [ sh:path ag:desires ; sh:minCount 1 ;
+    sh:property [ sh:path ag:boundedBy ; sh:minCount 1 ;
                   sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
 
 desire:DesireShape a sh:NodeShape ;
     rdfs:comment "What a region must be to be readable. Every figure here was computed, so this is arithmetic rather than authorship — but a shape over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width." ;
-    sh:targetClass ag:Desire ;
+    sh:targetClass ag:Bounds ;
     sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
                   sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "a region must say which property it is a region OF" ] ;
@@ -88,7 +88,7 @@ desire:AimShape a sh:NodeShape ;
                 $this <http://example.org/agora#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora#desires> ?region .
+                    $this <http://example.org/agora#boundedBy> ?region .
                     ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 }
             }""" ] ;
@@ -99,7 +99,7 @@ desire:AimShape a sh:NodeShape ;
                 $this <http://example.org/agora#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
                      <https://schema.org/value> ?value .
-                $this <http://example.org/agora#desires> ?region .
+                $this <http://example.org/agora#boundedBy> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property ;
                         <https://schema.org/minValue> ?low ;
                         <https://schema.org/maxValue> ?high .
@@ -143,7 +143,7 @@ desire:BeyondSurvivalShape a sh:NodeShape ;
         sh:select """
             SELECT $this ?property ?value WHERE {
                 $this <http://example.org/agora#actsFor> ?subject ;
-                      <http://example.org/agora#desires> ?region .
+                      <http://example.org/agora#boundedBy> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 ?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ?subject ;
                      <http://www.w3.org/ns/sosa/observedProperty> ?property ;
@@ -184,7 +184,7 @@ desire:UnwatchedDesireShape a sh:NodeShape ;
         sh:select """
             SELECT $this ?property WHERE {
                 $this <http://example.org/agora#actsFor> ?subject ;
-                      <http://example.org/agora#desires> ?region .
+                      <http://example.org/agora#boundedBy> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
                     $this <http://example.org/agora/sensing#polls> ?sensor .

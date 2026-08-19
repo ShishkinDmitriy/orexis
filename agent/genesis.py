@@ -170,7 +170,7 @@ _GRAPH_OF_CLASS = "SELECT ?g WHERE {{ ?g a <{cls}> }}"
 
 
 def _expand(prefixed: str) -> str:
-    """`desire:RegionGraph` -> its full IRI, using the namespaces every rule already has.
+    """`ag:ConstraintGraph` -> its full IRI, using the namespaces every rule already has.
 
     The same table `store.PREFIXES` is built from, so a rule may name a class exactly as it
     names one in its own WHERE clause and there is no second spelling to keep in step.
