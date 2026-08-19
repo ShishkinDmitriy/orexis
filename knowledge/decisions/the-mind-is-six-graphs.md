@@ -188,11 +188,18 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
 ## The order of work, and why
 
 1. **Name the modalities** — vocabulary only, typing the graphs that exist. No data moves.
-2. **Goals get identity and source** — regions are blank nodes today, so nothing can reference
-   one; obligations already have IRIs.
-3. **`intention:pursues`** — intentions key on `(means, property)`, so two obligations about
-   one property are indistinguishable and satisfying one satisfies both. Latent today, live
-   the moment obligations drive acts, so it lands before them.
+2. **Goals get identity and source** — DONE. Bounds are minted as a function of the agent's
+   id and the property's local name (`ag:bounds.fern.SoilMoisture`, the channel precedent) and
+   carry `prov:wasDerivedFrom` the subject whose ranges produced them; an obligation carries
+   the claim that raised it. A blank node is a thing nothing can reference, and an intention
+   must be able to say which end it serves.
+3. **`ag:pursues`** — DONE, before it could go live. Intentions keyed on `(means, property)`
+   alone, so two obligations about one property were indistinguishable: satisfying one
+   satisfied both and the patience absorbed the second impulse as the first — the shape of the
+   observation-keyed-by-subject bug, caught while obligations still do not drive acts. The
+   goal is optional, and a row without one is keyed exactly as before, so a ledger written
+   before goals had names stays readable and is never orphaned by a question it could not
+   have answered.
 4. **History as a ring** — gives amendment somewhere to be recorded, and gives `within_patience`
    a home matching its meaning: a question about the past.
 5. **Versioned worlds, birth and amendment as events.**
@@ -202,7 +209,11 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
 7. **Character as source-ordering** — the sovereign bounds how far obligation outranks desire,
    the agent picks inside, review moves the pick. Default social, or the shipped worlds change
    behaviour.
-8. **Obligations drive acts** — deliberation takes goals rather than a property and a value.
+8. **Desired states take belief's shape** — the aim becomes a desired observation, the gap
+   becomes a modality-scoped diff, and `ag:Aim`/`ag:aims`/`schema:value` retire. Before the
+   next step, because a goal that is a graph pattern is what makes the next step expressible
+   at all.
+9. **Obligations drive acts** — deliberation takes goals rather than a property and a value.
 
 # Seams left open
 

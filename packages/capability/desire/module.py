@@ -334,6 +334,7 @@ class DesireModule(Module):
             return None
         self.agent.store.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
             <{uri}> a <{KERNEL}Obligation> ;
+                <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
                 <{KERNEL}owedTo> <{to_agent}> ;
                 <{KERNEL}forClaim> "{claim_jti}" ;
                 <{KERNEL}presented> false ;

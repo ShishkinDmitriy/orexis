@@ -285,6 +285,12 @@ working around it — `tests/test_inference.py` refuses a seventh hand-rolled wa
 fails if pyshacl ever entails something the closure does not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
+- **Name the graph CLASS, never an instance — and scope by MODALITY when you leave belief.**
+  `?d a ag:DesireGraph` unions every instance of that class, exactly as `store.public_graphs()`
+  does, so a scoped query keeps the property the rule below exists to protect. What it buys is
+  the other direction of wrongness: desires and beliefs share their SHAPE, so an unscoped query
+  for a reading returns the wanted value beside the observed one — an extra result, which looks
+  like an answer. See [the-mind-is-six-graphs](knowledge/decisions/the-mind-is-six-graphs.md).
 - **Never wrap `GRAPH <…>` around a SELECT.** Public knowledge is SEVERAL graphs — asserted,
   derived and entailed, for the vocabulary and for the world, plus whichever a package owns —
   and `store.query` merges them as the default graph, so an ordinary pattern reads all of them.
