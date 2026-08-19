@@ -47,6 +47,35 @@ services:
       # its agent set before the broker bounced
       - agora-loner-mosquitto:/var/lib/mosquitto
 
+  sim-butt_level:
+    build:
+      # its own directory: it needs one file, and the repo root is excluded from image
+      # contexts anyway — the agent image must not carry the simulator, nor it the agent
+      context: ../../firmware/simulated-sensor
+    image: agora-simulator:local
+    environment:
+      SIM_SENSOR_ID: "butt_level"
+      SIM_READING_TOPIC: "sensors/butt_level/reading"
+      # What this board reports and where each value goes in its one message. A part that
+      # reports two properties down one line is a list of two; a probe is a list of one.
+      SIM_VALUES: '[{"pointer":"/value","min":0.0,"max":20.0,"initial":15.0,"litres":1.0,"drains":-1.0}]'
+      # sensing:ScheduledProcedure keeps the interval its agent gives it, like a deep-sleeping board;
+      # sensing:PushProcedure keeps its own clock and takes no orders. The agent derives its capability
+      # from the same fact and never learns which side of it this is.
+      SIM_SENSE_MODE: "push"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1887"
+      SIM_DRAIN_TOPIC: "actuators/pump/status"
+      SIM_TICK_SECONDS: "30"
+      SIM_TIMESCALE: "144"
+      SIM_ALARM_PERSIST_LOOKS: "2"
+    env_file:
+      # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
+      # way to tell a stand-in from hardware, which is the point
+      - ./secrets/mqtt-butt_level.env
+    network_mode: host
+    restart: unless-stopped
+
   sim-moisture_probe:
     build:
       # its own directory: it needs one file, and the repo root is excluded from image

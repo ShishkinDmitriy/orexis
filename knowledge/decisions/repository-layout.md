@@ -142,9 +142,13 @@ Not per-package pyprojects and not entry-points: the first is the boundary-that-
 nothing this record already removed, and the second is a registry in metadata against the
 found-by-looking commitment — the loader IS this project's package manager, and it manages
 what pip cannot (ontologies, shapes, rules, affordances). A package whose extra is absent
-guards its import and exports no `PROVIDES`, which degrades to the already-designed honest
-path: capability granted, nothing provides it, said at startup — never a crash in an agent
-that was not using it.
+degrades to the already-designed honest path: capability granted, nothing provides it, said
+at startup — never a crash in an agent that was not using it. That is now MECHANISM rather
+than discipline (#216): imports follow grants. A capability names its owning package by
+NAMESPACE — every package implements the terms it declares, checked by the eager registry
+the gates still run — so a runtime imports only what its own grants reach, an ImportError is
+scoped to the agents granted that capability, and no package needs to hand-guard anything.
+Before it, one missing extra would have crashed every agent in the society at import time.
 
 **And the soft layer got its linker (#210)**: at the head of `agora-validate`, every
 project-namespace IRI the loaded packages reference is subtracted from what the loaded

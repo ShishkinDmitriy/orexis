@@ -92,8 +92,10 @@ class Agent:
         self.mqtt.on_disconnect = self._on_disconnect
         self.mqtt.on_message = self._on_message
 
-        # exactly the modules this agent composed — no more, no less
-        registry = loader.registry()
+        # exactly the modules this agent composed — no more, no less, and since #216 the
+        # IMPORTS follow the grants too: a capability names its owning package by namespace,
+        # so nothing this agent was not granted is ever imported into this process.
+        registry = loader.registry_for(self.me.capabilities)
         self.modules = [
             registry[c](self) for c in sorted(self.me.capabilities) if c in registry
         ]
