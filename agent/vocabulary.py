@@ -86,6 +86,34 @@ def declared(st) -> set[str]:
     return {r["t"] for r in bindings(st.query(_DECLARED))}
 
 
+#  Moves this project has actually made, written down because they cannot be computed.
+#
+#  `renames` infers a successor by LOCAL NAME, which answers the historical direction — terms
+#  leaving `ag:` for a package they now belong to — and answers nothing when a term moved the
+#  other way, or moved and was renamed at once. Both happened when the mind's states became
+#  kernel words (the-mind-is-six-graphs): `intention:outcome` has two candidates by local name
+#  (`ag:outcome` and `review:outcome`) and nothing could choose, while `desire:desires` became
+#  `ag:boundedBy` and has no candidate at all.
+#
+#  So a MOVE is data. Each entry is a decision somebody made once, and the alternative — a
+#  heuristic that picks a namespace — would be this module guessing at meaning, which is the
+#  one thing its own error message refuses to do.
+MOVED = {
+    **{f"http://example.org/agora/intention#{n}": f"http://example.org/agora#{n}"
+       for n in ("Intention", "by", "Means", "Observe", "Acquire", "Apply", "Actuate", "Offer",
+                 "adoptedAt", "resolvedAt", "outcome", "becauseOf", "expectsValueTo",
+                 "baselineValue", "baselineAt", "deadlineAt", "expectsDelta", "endMet",
+                 "endVerifiedAt")},
+    **{f"http://example.org/agora/desire#{n}": f"http://example.org/agora#{n}"
+       for n in ("Aim", "aims", "Obligation", "owedTo", "forClaim", "presented", "owedAt",
+                 "dischargedAt", "toleratedMin", "toleratedMax")},
+    #  Renamed as it moved: the region binds, so it is bounds, and an agent is held to it
+    #  rather than desiring it — what it desires is the aim.
+    "http://example.org/agora/desire#Desire": "http://example.org/agora#Bounds",
+    "http://example.org/agora/desire#desires": "http://example.org/agora#boundedBy",
+}
+
+
 def renames(st) -> tuple[dict[str, str], dict[str, list[str]]]:
     """What a kernel spelling became: `(settled, contested)`.
 
@@ -144,6 +172,12 @@ def stale(st) -> dict[str, dict[str, str | list[str] | None]]:
     for row in bindings(st.query(_USED)):
         graph, term, position = row["g"], row["t"], row["position"]
         if graph in public or term in known:
+            continue
+        #  A recorded MOVE wins over the local-name inference, and is the only thing that
+        #  can answer where a term changed namespace and name at once, or where its local
+        #  name is contested by a package that also declares it.
+        if (moved := MOVED.get(term)) is not None and moved in known:
+            out.setdefault(graph, {})[term] = moved
             continue
         candidates = by_local.get(_local(term), [])
         if position != "predicate" and not candidates:

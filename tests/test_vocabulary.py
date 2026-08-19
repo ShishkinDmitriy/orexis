@@ -239,3 +239,45 @@ ag:fern_agent old:fastSleepS 30 ; old:slowSleepS 600 ; old:readingGraceS 45 .
         "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
     assert [r["v"] for r in rows] == ["600"]
     assert vocabulary.stale(st) == {}
+
+
+# --- a move is data, and litter is dropped (found by the first live migration) ------------
+
+def test_a_term_that_changed_namespace_and_name_still_migrates(tmp_path):
+    """`renames` infers a successor by LOCAL NAME, which answers the historical direction —
+    a term leaving `ag:` for the package it belongs to — and answers nothing when the move
+    goes the other way or renames as it goes. Both happened when the mind's states became
+    kernel words: `desire:desires` became `ag:boundedBy` (no candidate at all) and
+    `intention:outcome` had two candidates by local name with nothing able to choose. So a
+    MOVE is data — a decision made once, written down, and preferred over the inference."""
+    st = genesis_store(world="simulation")
+    st.put_graph(beliefs_graph("fern"), f"""
+@prefix old: <http://example.org/agora/desire#> .
+@prefix older: <http://example.org/agora/intention#> .
+<http://example.org/agora/world/simulation#fern_agent>
+    old:desires <http://example.org/agora#r> ;
+    older:outcome "dropped" .""")
+    found = vocabulary.stale(st)
+    successors = found[beliefs_graph("fern")]
+    assert successors["http://example.org/agora/desire#desires"] == AG + "boundedBy"
+    assert successors["http://example.org/agora/intention#outcome"] == AG + "outcome"
+
+
+def test_a_graph_nothing_declares_any_more_is_dropped(tmp_path, monkeypatch):
+    """The ghost this found on the bench: a PUBLIC graph is replaced on every start by
+    whatever declares it, so one that stops being declared is never cleared by anyone — it
+    sits in the volume for ever holding facts in a spelling the code no longer speaks. The
+    old `graph/desire` was exactly that after the bounds graph was named, and the first
+    migration refused to guess what its `desire:desires` triples meant."""
+    from agent import genesis
+
+    st = genesis_store(world="simulation")
+    ghost = "http://example.org/agora/graph/desire"
+    st.put_graph(ghost, "<http://x#a> <http://example.org/agora/desire#desires> <http://x#b> .")
+    assert ghost in st.graph_names()
+
+    dropped = genesis.drop_ghost_graphs(st, "fern")
+    assert ghost in dropped and ghost not in st.graph_names()
+    # and nothing owned or declared went with it
+    assert beliefs_graph("fern") not in dropped
+    assert all(g not in dropped for g in st.public_graphs())
