@@ -209,10 +209,13 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
 7. **Character as source-ordering** — the sovereign bounds how far obligation outranks desire,
    the agent picks inside, review moves the pick. Default social, or the shipped worlds change
    behaviour.
-8. **Desired states take belief's shape** — the aim becomes a desired observation, the gap
-   becomes a modality-scoped diff, and `ag:Aim`/`ag:aims`/`schema:value` retire. Before the
-   next step, because a goal that is a graph pattern is what makes the next step expressible
-   at all.
+8. **What an agent pursues becomes SHACL** — constraint, desire and obligation as shapes
+   differing in severity and in whose graph they sit; `ag:Bounds`, `ag:boundedBy` and `ag:Aim`
+   retire. Before the next step, because a goal that is a pattern is what makes the next step
+   expressible at all. This step was first designed as *desired states in belief's shape* and
+   the sovereign turned it over within a day — see
+   [a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md), which supersedes that design and
+   keeps its diagnosis.
 9. **Obligations drive acts** — deliberation takes goals rather than a property and a value.
 
 # Seams left open
