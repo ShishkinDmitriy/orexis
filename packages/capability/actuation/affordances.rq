@@ -20,7 +20,7 @@
 # `$me` substituted by the collector; declares no prefixes of its own — `store.query`
 # prepends them.
 
-SELECT ?means ?property ?via ?direction WHERE {
+SELECT ?means ?property ?via ?direction ?mode WHERE {
   $me desire:desires ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property .
   $me actuation:hasActuator ?via .
@@ -33,4 +33,5 @@ SELECT ?means ?property ?via ?direction WHERE {
              market:aboutProperty ?property ;
              market:direction ?direction .
   BIND(intention:Actuate AS ?means)
+  BIND(market:Chosen AS ?mode)
 }

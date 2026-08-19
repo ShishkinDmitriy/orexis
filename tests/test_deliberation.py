@@ -200,8 +200,13 @@ def test_the_dealers_menu_gained_its_lever(make):
                    "http://example.org/agora/world/simulation#supplier")
     assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
-            for r in rows] == [("Acquire", "StoredLitres", "Raises"),
-                               ("Observe", "StoredLitres", None)]
+            for r in rows if r.is_chosen] == [("Acquire", "StoredLitres", "Raises"),
+                                              ("Observe", "StoredLitres", None)]
+    #  And beside them, since #218, what the dealer HONOURS: claims presented against the
+    #  venue it hosts are redeemed through its valves — one row per lever, never a proposal.
+    honoured = [r for r in rows if not r.is_chosen]
+    assert {r.means.rsplit("#", 1)[-1] for r in honoured} == {"Apply"}
+    assert len(honoured) == 3, "one duty per valve it holds for its buyers"
 
 
 FERN = "http://example.org/agora/world/simulation#fern_agent"
@@ -347,3 +352,30 @@ SELECT ?means ?property ?via ?direction WHERE {
     kinds = {r.means.rsplit("#", 1)[-1] for r in rows}
     assert "Consult" in kinds, "the toy package's kind must appear"
     assert {"Observe", "Acquire"} <= kinds, "and the shipped kinds must survive it"
+
+
+# --- the menu's two modes (#218) --------------------------------------------
+
+def test_a_duty_is_on_the_menu_and_never_in_the_deliberator(make):
+    """The whole point of the mode: the sovereign asking what an agent DOES gets its duties
+    beside its options — and the deliberator gets only the options, so a host can never
+    decide whether to honour the society's word. Asked across the range rather than at one
+    value, because a filter that leaks at one sign is a filter that leaks."""
+    supplier = make("supplier")
+    rows = menu_of(supplier.store.query, supplier.me.uri)
+    duties = [r for r in rows if not r.is_chosen]
+    assert duties, "the conduct surface includes what it honours"
+
+    deliberator = supplier.provider(
+        "http://example.org/agora/deliberation#DeliberationCapability")
+    duty_means = {r.means for r in duties}
+    for row in duties:
+        for value in (0.0, 0.5, 5.0, 50.0):
+            assert deliberator.propose(row.observed_property, value) not in duty_means, \
+                "a duty was proposed as if it were a choice"
+
+
+def test_a_buyer_honours_nothing(make):
+    """Fern holds no venue and no valve: everything on its menu is its own to choose."""
+    fern = make("fern")
+    assert all(r.is_chosen for r in menu_of(fern.store.query, fern.me.uri))

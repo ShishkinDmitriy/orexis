@@ -290,8 +290,8 @@ def test_an_affordance_query_leans_on_the_stores_prefixes_like_a_review_rule():
     which prepends PREFIXES — declaring them again is a duplicate-prefix error, and using an
     undeclared one fails exactly as a hand-written query would. Non-empty asserted first,
     because a glob that quietly empties has taken cases off a guard twice already."""
-    found = loader.affordance_files()
-    assert found, "no affordances.rq found — the glob has gone stale and this is checking nothing"
+    found = loader.affordance_files() + loader.honoured_files()
+    assert found, "no affordance queries found — the glob has gone stale and this checks nothing"
     for path in found:
         text = path.read_text()
         assert "PREFIX " not in text.upper(), (
