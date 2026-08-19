@@ -72,6 +72,23 @@ a want with no lever, legitimate and now legible. This is the Consulting member'
 substrate, shipped before that member exists so "the menu is derived, not written into a
 prompt" is checkable now.
 
+# Two modes: what I choose, and what I honour (#218)
+
+A menu row says what happens THROUGH an agent, and there are two kinds. **Chosen** rows are
+options — what a deliberator ranges over. **Honoured** rows are duties, exercised when a
+valid presentation arrives and never proposed: the whether was settled elsewhere and by
+others (the winner's Apply, the auction's allocation, the signature chain), and a host that
+could deliberate over honouring claims is a host that can defect politely, one "None is a
+decision" at a time. Packages ship duties in `honoured.rq` beside their options in
+`affordances.rq` — a second file rather than a flag, because an author writing options
+should not be one FILTER away from writing duties.
+
+What this bought: the menu used to answer only *what could I do about MY gaps*, so an
+ability that serves others — claims against my valves are redeemed — was a true fact about
+the agent that lived nowhere queryable, and the sovereign asking what an agent does saw half
+its conduct. Now one query answers both, the reflex filters to chosen, and the dealer's own
+menu reads honestly: buy upstream, watch my stock, and honour three pots' claims.
+
 # The gaps — what I should decide about, noticed by whoever is positioned to (#208)
 
 Deliberation used to run only when the market knocked: an offer arrived, or birth. So an

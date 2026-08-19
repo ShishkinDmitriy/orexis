@@ -67,15 +67,28 @@ SELECT ?direction WHERE {
 } LIMIT 1"""
 
 
+_CHOSEN = "http://example.org/agora/market#Chosen"
+
+
 @dataclass(frozen=True)
 class Affordance:
-    """One row of the menu: a means, the property it is about, the lever, and — for a means
-    that moves anything — which way it moves it."""
+    """One row of the menu: a means, the property it is about, the lever, — for a means that
+    moves anything — which way it moves it, and whether it is mine to CHOOSE or to HONOUR.
+
+    The mode is the #218 half: a chosen row is an option a deliberator ranges over; an
+    honoured row is a duty exercised on a valid presentation and never proposed. Absent
+    means chosen, so a branch written before the distinction keeps its meaning.
+    """
 
     means: str
     observed_property: str
     via: str
     direction: str | None = None
+    mode: str = _CHOSEN
+
+    @property
+    def is_chosen(self) -> bool:
+        return self.mode == _CHOSEN
 
 
 def menu_of(query, agent_uri: str) -> list[Affordance]:
@@ -94,12 +107,12 @@ def menu_of(query, agent_uri: str) -> list[Affordance]:
     Sorted here because ORDER BY lived in the one big query; per-file order is no order.
     """
     rows = []
-    for path in loader.affordance_files():
+    for path in loader.affordance_files() + loader.honoured_files():
         q = path.read_text().replace("$me", f"<{agent_uri}>")
         rows += [Affordance(means=r["means"], observed_property=r["property"], via=r["via"],
-                            direction=r.get("direction"))
+                            direction=r.get("direction"), mode=r.get("mode") or _CHOSEN)
                  for r in bindings(query(q))]
-    return sorted(rows, key=lambda a: (a.observed_property, a.means))
+    return sorted(rows, key=lambda a: (a.observed_property, a.means, a.mode))
 
 
 class ReflexModule(Module):
@@ -147,8 +160,16 @@ class ReflexModule(Module):
         # direction matches the gap's sign is the move. Acquire used to be hardcoded here,
         # which was right while buying was the only lever that moved anything; the Actuate
         # rung made "which means" a question, and the menu was already the answer's home.
+        # Chosen rows only, and the reason is narrower than it first looked. An obligation
+        # IS a want (desire:Obligation, #218 remade) and is meant to reach deliberation —
+        # but this member steers a PROPERTY toward an aim, and a duty is not a property-gap:
+        # it is "this claim discharged", a graph-shaped goal. So the reflex passes over
+        # honoured rows because it cannot express them, not because they are nobody's to
+        # decide; the filter lifts when a member can pursue a goal that is a diff rather
+        # than a distance — the widening a-plan-is-a-path-of-graph-diffs records.
         for row in sorted((r for r in menu_of(self.agent.store.query, self.me.uri)
-                           if r.observed_property == observed_property and r.direction),
+                           if r.observed_property == observed_property and r.direction
+                           and r.is_chosen),
                           key=lambda r: _RUNG.get(r.means, len(_RUNG))):
             if row.direction == _RAISES and value < aim:
                 return row.means

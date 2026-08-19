@@ -104,3 +104,18 @@ the rows themselves.
 - **Not universal.** An agent that acts for nothing derives no desire capability at all — no
   module, no region, no band. `world/sensing`'s agent is exactly that: three sensors, no stake,
   and it records.
+
+# Obligations — the desires an agent did not source
+
+BOID's O, and the second source the desire-graph class was reserved for: when the society
+issues a claim against this agent's hardware, it OWES — recorded as a `desire:Obligation` in
+a graph of its own, naming the counterparty, the claim that caused it, whether it has been
+demanded yet, and when it was discharged. Kept after payment, because a debt paid and a debt
+forgotten must not look alike.
+
+Two levels, and the split is the point. **Whom I may owe is topology** — derived from the
+wiring that says who may present to me, exactly as the broker ACL is derived, so a debt to an
+agent the world does not declare is refused before it becomes a want. **What I owe now** is
+runtime state, private like the intention ledger and disclosed the same way: the sovereign
+asks. See
+[an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md).
