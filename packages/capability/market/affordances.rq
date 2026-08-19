@@ -22,7 +22,7 @@
 # `$me` substituted by the collector; declares no prefixes of its own — `store.query` prepends them.
 
 SELECT ?means ?property ?via ?direction ?mode WHERE {
-  $me desire:desires ?region ; ag:actsFor ?subject .
+  $me ag:desires ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property .
   $me market:bidsIn ?via .
   ?via market:marketFor ?src .
@@ -33,6 +33,6 @@ SELECT ?means ?property ?via ?direction ?mode WHERE {
   ?valuation market:ofGood ?good ;
              market:aboutProperty ?property ;
              market:direction ?direction .
-  BIND(intention:Acquire AS ?means)
+  BIND(ag:Acquire AS ?means)
   BIND(deliberation:Chosen AS ?mode)
 }

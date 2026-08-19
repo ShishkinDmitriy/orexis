@@ -24,7 +24,7 @@ SELECT ?means ?property ?via ?direction ?mode ?buyer WHERE {
   # must be an agent this venue actually admits, acting for the subject this lever serves. A
   # presentation from anyone else is a forgery before it is a duty, and the closed universe is
   # ratified rather than trusted, exactly as the broker's is. This row is DISCLOSURE, not a
-  # filter: what an obligation makes me do arrives as a want (desire:Obligation), and the
+  # filter: what an obligation makes me do arrives as a want (ag:Obligation), and the
   # deliberator ranges over it like any other.
   ?source market:supplies ?good .
   # The valuation is tied by the RECIPIENT's stated need, not by the good alone (#198's
@@ -37,6 +37,6 @@ SELECT ?means ?property ?via ?direction ?mode ?buyer WHERE {
   ?valuation market:ofGood ?good ;
              market:aboutProperty ?property ;
              market:direction ?direction .
-  BIND(intention:Apply AS ?means)
+  BIND(ag:Apply AS ?means)
   BIND(deliberation:Honoured AS ?mode)
 }

@@ -33,86 +33,19 @@ See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.""" .
 #  market sees what you do, never what you are trying to bring about. The graph is named from
 #  the one identifier a process is given; see graphs.py.
 
-#################  What an intention IS  #################
-
-:Intention a owl:Class ; rdfs:label "Intention" ;
-    rdfs:comment """One commitment: reduce the gap in one property, by one means, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
-
-The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason. A dropped intention keeps its `becauseOf`, because a commitment abandoned without a reason is indistinguishable from one forgotten.""" .
-
-:by a owl:ObjectProperty ; rdfs:domain :Intention ; rdfs:range :Means ;
-    rdfs:label "by" ;
-    rdfs:comment "The kind of act committed to. A MEANS, not a plan: the how stays with whichever capability executes it." .
-
-:Means a owl:Class ; rdfs:label "Means" .
-
-:Observe a :Means ; rdfs:label "Observe" ;
-    rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .
-
-:Acquire a :Means ; rdfs:label "Acquire" ;
-    rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the claim, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
-
-:Apply a :Means ; rdfs:label "Apply" ;
-    rdfs:comment "Spend a held claim against the world. REAL since #132, and earlier than the futures market this was reserved for — because the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy: never spend a dose you cannot watch land. Adopted when the claim arrives, standing while the holder waits for its watch to be live (the #135 ack at the fast cadence, or the bounded wait), satisfied when the claim is presented on the market's redeem channel. The expectation on the end opens HERE rather than at the claim, because this is when the dose becomes imminent. The futures seam now merely extends the holding period this gave a mechanism to." .
-
-:Actuate a :Means ; rdfs:label "Actuate" ;
-    rdfs:comment "Move a property directly: the lever is mine and the resource is mine, so no negotiation — the ladder's second rung (#190), honest exactly where BOTH chains end at the agent: the lever chain (my actuator, plumbed to my subject) and the resource chain (drawing from a source no market offers as its lot — a pot-local pump on the shared barrel still bids, because the market is about the resource, not the lever). Adopted when the reflex picks the cheaper rung over Acquire, satisfied when the self-dose is commanded; the dose itself is still signed, still confirmed, still watched by an expectation — an unconfirmed self-dose is not a delivered one either, and the REA event stands even though it fulfils no exchange." .
-
-:Offer a :Means ; rdfs:label "Offer" ;
-    rdfs:comment "The host's move: open a round on a venue it convenes — the sell half of the dealer's acquire-then-offer, named so a PLAN can say its second step in the same vocabulary the keeper records the first in. ADOPTED since #206, by hosting, exactly once per owed round: a LOW nobody can serve defers the round and the deferral is a commitment — held only in module memory it was a promise a restart forgot and no ask could see. Adopted when the vessel is dry, satisfied when the refill lands and the round opens, recovered from the ledger at the next stock reading when the process that owed it has died. Deciding is still nobody's here: physics defers the round, the keeper only remembers it is owed — the whether-to-sell (the strategic-supplier seam) remains untouched." .
-
-:adoptedAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
-    rdfs:label "adopted at" .
-:resolvedAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
-    rdfs:label "resolved at" ;
-    rdfs:comment "Absent while the intention stands. Its absence IS the standing state — no flag to keep in step." .
-:outcome a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:string ;
-    rdfs:label "outcome" ;
-    rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
-:becauseOf a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:string ;
-    rdfs:label "because of" ;
-    rdfs:comment "Why it was adopted, and — appended on resolution — why it ended. Prose for the operator reading a ledger, never parsed." .
-
-#################  The expectation — the END, judged apart from the means  #################
+#################  What this society tolerates  #################
 #
-#  `outcome` above says whether the MEANS succeeded: the claim arrived, the look came back.
-#  It says nothing about the END — the commitment was to reduce a gap, and an agent whose water
-#  never reaches the pot buys, records "satisfied", and buys again forever: transaction
-#  confirmed, outcome never audited. Confidently dumb, structurally. Issue #131.
-#
-#  So an intention whose act should MOVE something carries an expectation: the value it left
-#  from (the baseline, copied here at adoption because the sensed graph keeps only the current
-#  witness — the ledger is what remembers), which way it should move (the same direction the
-#  domain states on its valuation, #127), and by when. The verdict lands beside the outcome as
-#  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
-#  said this lever moves this property, and the world kept disagreeing.
-
-:expectsValueTo a owl:ObjectProperty ; rdfs:domain :Intention ;
-    rdfs:label "expects value to" ;
-    rdfs:comment "Which way the property should move if the act did what the graph claims — a market:Direction individual, copied from the lever's own statement at expectation time so the row is judgeable without a join to a vocabulary that may since have been amended." .
-:baselineValue a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:decimal ;
-    rdfs:label "baseline value" ;
-    rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
-:baselineAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
-    rdfs:label "baseline at" .
-:deadlineAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
-    rdfs:label "deadline at" ;
-    rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
-:expectsDelta a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:decimal ;
-    rdfs:label "expects delta" ;
-    rdfs:comment "How far the act should move the property, when the actor can say — a dose of known litres through the domain's stated conversion. What the met-verdict measures its margin against (#165): a movement is the world answering only when it is commensurate with the act, and a breath of instrument grain past the baseline is not. Optional, because not every act can size its own effect; absent, the verdict falls back to exact crossing, which is the pre-noise behaviour and stays legal." .
+#  Two figures ON THE FAMILY rather than on any agent: what counts as the world
+#  answering, and how much unanswered evidence makes an affordance suspect. They
+#  stayed here when the mind's STATES moved to the kernel, because a state is what a
+#  mind contains while these are how THIS capability judges — the how, which is the
+#  package's by rule 2.
 
 :metFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
     rdfs:label "met fraction" ;
     rdfs:comment "The fraction of an expected delta that counts as the world answering (#165). On the family, like suspectAfter: what this society accepts as evidence, not how the code is written. A quarter — generous to partially-absorbed doses, far above any instrument's grain. Chosen against the OTHER failure too: a margin so strict that honest doses read unmet would feed suspectAfter and mark truthful affordances false." .
 
 :IntentionCapability :metFraction 0.25 .
-
-:endMet a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:boolean ;
-    rdfs:label "end met" ;
-    rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline — and, where the row states an expectsDelta, past it by at least metFraction of that delta (#165) — or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
-:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain :Intention ; rdfs:range xsd:dateTime ;
-    rdfs:label "end verified at" .
 
 :suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "suspect after" ;

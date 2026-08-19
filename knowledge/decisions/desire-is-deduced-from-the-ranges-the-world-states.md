@@ -52,10 +52,10 @@ ag:fern ssn-system:hasOperatingRange [ ssn-system:inCondition
           [ ssn:forProperty water:SoilMoisture ; schema:minValue 0.20 ; schema:maxValue 0.85 ] ] .
 
 # what the agent concludes (public, derived, in its own graph)
-ag:fern_agent desire:desires [ a desire:Desire ;
+ag:fern_agent ag:desires [ a ag:Desire ;
     ssn:forProperty water:SoilMoisture ;
     schema:minValue 0.45 ; schema:maxValue 0.65 ;      # the region to hold it in
-    desire:toleratedMin 0.20 ; desire:toleratedMax 0.85 ] .   # and the room outside it
+    ag:toleratedMin 0.20 ; ag:toleratedMax 0.85 ] .   # and the room outside it
 ```
 
 | | where it lives | what it is | who may move it |

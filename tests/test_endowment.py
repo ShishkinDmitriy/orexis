@@ -16,10 +16,10 @@ from agent.store import Store, bindings
 
 NS = "http://example.org/agora/world/simulation#"
 MARKET = "http://example.org/agora/market#"
-DESIRE = "http://example.org/agora/desire#"
+DESIRE = "http://example.org/agora#"
 PROLOG = """@prefix : <http://example.org/agora/world/simulation#> .
 @prefix market: <http://example.org/agora/market#> .
-@prefix desire: <http://example.org/agora/desire#> .
+@prefix ag:   <http://example.org/agora#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
 """
@@ -67,7 +67,7 @@ def test_a_structure_arrives_whole(tmp_path):
     assert genesis.birth(st, world, "dealer")
 
     world_with(tmp_path, """:dealer market:hasEndowment 50.0 ;
-        desire:aims [ ssn:forProperty <http://example.org/agora/water#StoredLitres> ;
+        ag:aims [ ssn:forProperty <http://example.org/agora/water#StoredLitres> ;
                       schema:value 3.0 ] .""")
     assert genesis.endow(st, world, "dealer") == [DESIRE + "aims"]
     rows = bindings(st.query(f"""

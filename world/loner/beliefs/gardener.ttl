@@ -7,6 +7,7 @@
 @prefix reporting: <http://example.org/agora/reporting#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
+@prefix ag:   <http://example.org/agora#> .
 
 #  The gardener's PRIVATE beliefs. No market blocks at all — it buys nothing and sells
 #  nothing, which is what this world exists to show: an agent can want, watch, decide,
@@ -26,7 +27,7 @@
 #   0.18: dry-side of centre, deliberately — the survival ceiling is a rot cliff and the
 #   floor is nearly free, so a ZZ keeper errs dry. The region arrives entailed; only this
 #   pick is the gardener's.
-:gardener desire:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.18 ] .
+:gardener ag:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.18 ] .
 
 ##  water — what it believes its pot takes: the conversion a self-dose is sized with.
 #   The physics copy lives on the pot in the world; this is the agent's own, the one it

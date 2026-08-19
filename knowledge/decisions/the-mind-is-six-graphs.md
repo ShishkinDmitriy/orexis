@@ -110,31 +110,57 @@ codebase: an expectation **copies** the baseline into its own row (#165), so not
 into history and whatever must outlive the window takes what it needs at commit time. No
 reference counting, no pinning, no unbounded graph.
 
-## The frame is the kernel's; the furniture is the packages'
+## The mind's STATES are the kernel's; the ways of reaching them are the packages'
 
 Asked by the sovereign once the axes existed: if this is the core of Agora, should it be in
-the `ag:` namespace? Yes for the frame, no for what fills it, and the test is rule 2's —
-**not whether a term is universal, but whether the HOW could differ.**
+the `ag:` namespace? The first answer drawn here was "the frame yes, the contents no" — and
+the sovereign's follow-up corrected it, rightly. Two arguments settle it the other way:
+
+**The states are already a lingua franca.** Four capability packages had to name them —
+market's bidding and hosting, deliberation, actuation — and a term many packages must name is
+not a package-private word. That is exactly what `ag:actsFor` and `ag:localId` are, and the
+kernel is where such words live.
+
+**And the objection against it does not survive.** "Not every agent is a BDI agent" —
+`world/sensing`'s agent wants nothing — argues against making the CAPABILITY mandatory, never
+against the TERM being kernel: `ag:Device` is a kernel class and most agents hold none. The
+existence of a class was never a claim about the universality of its instances.
+
+So the line falls one notch over: **what a mind CONTAINS is the kernel's — desires, aims,
+obligations, intentions and the means they name — and HOW a mind reaches them is the
+packages'.** `desire:Deducing` and `desire:Consulting` are two ways of arriving at a region;
+`intention:Keeping` is one way of keeping a ledger; each family keeps its own figures (a
+patience, a met-fraction, what this society tolerates before it stops trusting a claim). Rule
+2 is untouched, because it asks only whether the HOW could differ — and
+[telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md)
+already settled the mirror case: universality never promoted a term, and here non-universality
+never demoted one.
+
+It also ends a split brain the axes had just created: `ag:IntentionGraph` holding
+`intention:Intention` instances, the container kernel and the content not.
+
+The general test, stated once: **not whether a term is universal, but whether the HOW could
+differ** — and, for a noun rather than a verb, whether many packages must speak it.
 [telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md)
 settled that case: reporting is granted to every agent and is still a package, because there
 is more than one way to report.
 
-So the kernel declares what a graph IS — modality, visibility, arrival — because the how
-cannot differ (a graph is a graph) and because the kernel itself uses them: `store.query`
-resolves the default graph by class, `genesis` resolves a rule's write target by class,
-provenance describes graphs by class. The packages keep what a desire, an obligation and an
-intention are, because `desire:Deducing` and `desire:Consulting` are two hows of one question.
+The kernel therefore declares both what a graph IS — modality, visibility, arrival, which it
+resolves against itself — and what a mind contains. This does not reverse
+[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md): that record's
+criterion is *whose term is it*, and it moved five packages' private words out of `ag:` by
+applying it. Applying the same criterion here gives the opposite answer, because these words
+turned out to be everyone's.
 
-There is also a fact that forbids the other arrangement: **not every agent is a BDI agent.**
-`world/sensing`'s agent holds no stake — it perceives and records, wants nothing, commits to
-nothing, derives none of the three. Making `Desire` kernel would declare wanting universal
-and the shipped worlds would refute it immediately, which is what
-[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) moved five packages'
-terms out of `ag:` to stop.
+The lifecycle joins them when it exists: birth, amendment and death are performed by the
+kernel whatever an agent composes.
 
-The one part of the mind that will join the kernel is the **lifecycle**: birth, amendment,
-death are performed by the kernel whatever an agent composes, so the terms that record them
-belong beside the graph classes rather than in any package.
+**What the move cost**: a term rename across every file kind, plus one belief-term migration —
+`desire:aims` is in every deployed volume — carried by the by-local-name mapping
+[a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md)
+built for exactly this, verified end to end. And it re-met that record's own warning: three
+IRIs were built by CONCATENATION (`_INTENTION_NS + "Observe"`), invisible to any textual
+rename, so writes moved while reads stayed — caught by tests, not by a scan.
 
 ## The order of work, and why
 

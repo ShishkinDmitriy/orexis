@@ -87,7 +87,7 @@ the rows themselves.
 
 # What it is not
 
-- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`desire:aims`,
+- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`ag:aims`,
   which replaced `water:hasTarget`) stays a private belief in `beliefs/<id>.ttl`, is the agent's
   to move within its
   [mandate](/decisions/self-review-is-a-capability.md), and is checked against the region at boot.
@@ -108,7 +108,7 @@ the rows themselves.
 # Obligations — the desires an agent did not source
 
 BOID's O, and the second source the desire-graph class was reserved for: when the society
-issues a claim against this agent's hardware, it OWES — recorded as a `desire:Obligation` in
+issues a claim against this agent's hardware, it OWES — recorded as a `ag:Obligation` in
 a graph of its own, naming the counterparty, the claim that caused it, whether it has been
 demanded yet, and when it was discharged. Kept after payment, because a debt paid and a debt
 forgotten must not look alike.

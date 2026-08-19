@@ -19,6 +19,16 @@ def term(name: str) -> str:
     """A term of this package's, by local name."""
     return NS + name
 
+# The mind's STATES live in the kernel now: they are the lingua franca four packages
+# already had to name, and `ag:IntentionGraph` holding `intention:Intention` was a split
+# brain. What stays here is the HOW — this family, its members, and its own figures.
+KERNEL = "http://example.org/agora#"
+
+
+def kernel(name: str) -> str:
+    """A mind state, by local name. Kernel-owned; see the-mind-is-six-graphs."""
+    return KERNEL + name
+
 
 # The family. Anything that can say where a property should be held is one of these — so a
 # caller may ask for "whoever holds a desire" without knowing how it reached one.
@@ -31,10 +41,10 @@ CONSULTING = term("Consulting")  # asks something else — RESERVED, nothing imp
 # What a deduced desire is made of. Named here because the module reads them back out of the
 # graph the rule wrote, and because a region is this package's subject even though every figure
 # in one came from somewhere else.
-DESIRES = term("desires")
-DESIRE_CLASS = term("Desire")
-TOLERATED_MIN = term("toleratedMin")
-TOLERATED_MAX = term("toleratedMax")
+DESIRES = kernel("desires")
+DESIRE_CLASS = kernel("Desire")
+TOLERATED_MIN = kernel("toleratedMin")
+TOLERATED_MAX = kernel("toleratedMax")
 
 # The graph class. A TERM, not an instance: `agent.store` is asked which graphs are of this
 # class, so a second source of desire is a vocabulary edit and touches no Python here.

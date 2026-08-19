@@ -77,13 +77,13 @@ WHERE  {
 #  refuses to let it start. Silence here is deliberate — a rule cannot report, and an
 #  intersection quietly rounded into a point would be the worst of the three outcomes.
 INSERT { GRAPH $into(desire:RegionGraph) {
-    ?agent desire:desires _:region .
-    _:region a desire:Desire ;
+    ?agent ag:desires _:region .
+    _:region a ag:Desire ;
         ssn:forProperty ?property ;
         schema:minValue ?low ;
         schema:maxValue ?high ;
-        desire:toleratedMin ?floor ;
-        desire:toleratedMax ?ceiling } }
+        ag:toleratedMin ?floor ;
+        ag:toleratedMax ?ceiling } }
 $given
 WHERE  {
     { SELECT ?agent ?property (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {

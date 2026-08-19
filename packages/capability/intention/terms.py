@@ -19,6 +19,16 @@ def term(name: str) -> str:
     """A term of this package's, by local name."""
     return NS + name
 
+# The mind's STATES live in the kernel now: they are the lingua franca four packages
+# already had to name, and `ag:IntentionGraph` holding `intention:Intention` was a split
+# brain. What stays here is the HOW — this family, its members, and its own figures.
+KERNEL = "http://example.org/agora#"
+
+
+def kernel(name: str) -> str:
+    """A mind state, by local name. Kernel-owned; see the-mind-is-six-graphs."""
+    return KERNEL + name
+
 
 # The family. Anything that keeps this agent's commitments is one of these — so a caller may
 # say "commit to this" without knowing how commitments are kept.
@@ -28,28 +38,28 @@ INTENTION = term("IntentionCapability")
 KEEPING = term("Keeping")  # a ledger with a patience clock: rule-kept commitments
 
 # What an intention is made of. Named here because the module writes and reads them.
-INTENTION_CLASS = term("Intention")
-BY = term("by")
-ADOPTED_AT = term("adoptedAt")
-RESOLVED_AT = term("resolvedAt")
-OUTCOME = term("outcome")
-BECAUSE_OF = term("becauseOf")
+INTENTION_CLASS = kernel("Intention")
+BY = kernel("by")
+ADOPTED_AT = kernel("adoptedAt")
+RESOLVED_AT = kernel("resolvedAt")
+OUTCOME = kernel("outcome")
+BECAUSE_OF = kernel("becauseOf")
 
 # The means — what kind of act the commitment is to.
-OBSERVE = term("Observe")  # look: get a reading where the gap is unmeasured or stale
-ACTUATE = term("Actuate")  # move it myself: lever and resource both mine — the second rung
-ACQUIRE = term("Acquire")  # obtain: bid for what would reduce a gap
-APPLY = term("Apply")      # spend: redeem a held claim against the world — RESERVED, see ontology
+OBSERVE = kernel("Observe")  # look: get a reading where the gap is unmeasured or stale
+ACTUATE = kernel("Actuate")  # move it myself: lever and resource both mine — the second rung
+ACQUIRE = kernel("Acquire")  # obtain: bid for what would reduce a gap
+APPLY = kernel("Apply")      # spend: redeem a held claim against the world — RESERVED, see ontology
 
 # The commitment policy — the belief, not the mechanism.
 PATIENCE_S = term("patienceS")
 
 # The expectation — the END, judged apart from the means. See ontology.ttl's own section.
-EXPECTS_VALUE_TO = term("expectsValueTo")
-BASELINE_VALUE = term("baselineValue")
-BASELINE_AT = term("baselineAt")
-EXPECTS_DELTA = term("expectsDelta")
-DEADLINE_AT = term("deadlineAt")
-END_MET = term("endMet")
-END_VERIFIED_AT = term("endVerifiedAt")
+EXPECTS_VALUE_TO = kernel("expectsValueTo")
+BASELINE_VALUE = kernel("baselineValue")
+BASELINE_AT = kernel("baselineAt")
+EXPECTS_DELTA = kernel("expectsDelta")
+DEADLINE_AT = kernel("deadlineAt")
+END_MET = kernel("endMet")
+END_VERIFIED_AT = kernel("endVerifiedAt")
 SUSPECT_AFTER = term("suspectAfter")

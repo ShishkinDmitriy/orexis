@@ -119,7 +119,7 @@ Three costs, and the third is the one that matters:
   or how many agents are plumbed in. `water:capacityL` is the physical ceiling and is checked by
   clearing, but nothing connects it to what is offered.
 - ~~**Nothing ties `bandLow` to `hasTarget`.**~~ **DISSOLVED** rather than closed: both terms
-  are gone. The band is now the deduced region and the target is `desire:aims`, a pick shaped to
+  are gone. The band is now the deduced region and the target is `ag:aims`, a pick shaped to
   sit inside that same region — so "announce trouble it will not bid on" can no longer be
   authored by drifting two decimals apart. What survives of the observation is the two-threshold
   DESIGN above (trouble opens a round, the aim prices the bid), which is now carried by the

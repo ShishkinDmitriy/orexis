@@ -139,7 +139,7 @@ Three properties keep it honest: the buffer is **bounded** (the graph is the rec
 projection for eyes, so under a long outage the oldest markers are the right casualty); a
 failed write hands the drained events **back** (a figure missed is superseded by the next
 tick's, a transition missed is gone); and the text is **prose that must never be parsed** — the
-same contract as `intention:becauseOf`, whose projection it is. An agent without the intention
+same contract as `ag:becauseOf`, whose projection it is. An agent without the intention
 capability tells no events and writes none; nothing new is granted anywhere.
 
 # Seams left open

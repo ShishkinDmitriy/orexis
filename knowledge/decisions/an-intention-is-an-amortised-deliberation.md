@@ -23,7 +23,7 @@ a happy absence. It is a gap, and this record says why and what to do about it.
 | BDI | agora | state |
 |---|---|---|
 | **Beliefs** | the store: public graphs, private beliefs, `:sensed` | done |
-| **Desires** | `desire:Desire` regions, plus the aim inside one | region done; aim still `water:hasTarget` |
+| **Desires** | `ag:Desire` regions, plus the aim inside one | region done; aim still `water:hasTarget` |
 | **Goals** | implicit — the worst gap wins attention | unnamed, deliberately |
 | **Intentions** | **proto only**: a pending bid, a held claim, a commanded cadence | no name, no lifecycle |
 | **Interpreter** | hardwired: reading → band → LOW → announce → bid → claim → actuate | welded; it IS the planner |
@@ -66,7 +66,7 @@ it, which is review's existing pattern and needs no new mechanism.
 ## 2. The aim moves into desire
 
 `water:hasTarget` is two things fused: the point an agent aims at inside its region (desire's)
-and the input a litre-deficit is priced from (the market's). They split: `desire:aims` is
+and the input a litre-deficit is priced from (the market's). They split: `ag:aims` is
 private, per property, checked against the region it picks inside; bidding reads the aim through
 `agent.provider(DESIRE)` and keeps only its value curve (`litresPerFraction`,
 `maxValuePerL`). The old term migrates through the vocabulary successor mechanism, so a running
@@ -80,7 +80,7 @@ default; this repo refuses fabricated beliefs everywhere else and an aim is not 
 ## 3. Intention is named, by reifying what already exists
 
 No new behaviour. The three proto-intentions get one name and one lifecycle:
-`intention:Intention` is a commitment to reduce a named gap by a named means — *observe* (a
+`ag:Intention` is a commitment to reduce a named gap by a named means — *observe* (a
 cadence command), *acquire* (a bid, satisfied by a claim), *apply* (a redemption) — with
 states adopted → active → satisfied | dropped and a `becauseOf`, the same PROV-flavoured shape
 `review:Revision` already has.

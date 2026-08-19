@@ -42,7 +42,7 @@ from .terms import ACTUATION
 _DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
 _DESIRE = "http://example.org/agora/desire#DesireCapability"
 _INTENTION = "http://example.org/agora/intention#IntentionCapability"
-_ACTUATE = "http://example.org/agora/intention#Actuate"
+_ACTUATE = "http://example.org/agora#Actuate"
 
 # My own conversion belief for a SELF-dose (#190), keyed by the valuation term the resource
 # chain names: my actuator draws from my own source, the source's class states its good, and

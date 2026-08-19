@@ -63,7 +63,7 @@ below on why the graph, not the provenance triple, carries the trust):
   reads all of it. It exists so the wiring is stated **once** instead of being repeated in
   every agent's beliefs. Written by genesis, not sensed. Nothing interpretive lives here —
   no targets, no bands, no cadence, no prices. See [world-graph](/decisions/world-graph.md).
-- `:beliefs/<agent>` — one agent's **private opinion**: its aim (`desire:aims`), its comfort
+- `:beliefs/<agent>` — one agent's **private opinion**: its aim (`ag:aims`), its comfort
   limits (`bandLow`/`bandHigh`), its sensing cadence and freshness limit, its value curve.
   Per-agent, not shared; two agents may hold different numbers about the same plant and
   neither is wrong.

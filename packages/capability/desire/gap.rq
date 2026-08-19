@@ -34,12 +34,12 @@
 # and when each side was true; whoever consumes it judges. See issue #124.
 
 SELECT ?property ?value ?low ?high ?gap ?at WHERE {
-  $me desire:desires ?region ; ag:actsFor ?subject .
+  $me ag:desires ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property ;
           schema:minValue ?low ;
           schema:maxValue ?high .
-  OPTIONAL { ?region desire:toleratedMin ?floor }
-  OPTIONAL { ?region desire:toleratedMax ?ceiling }
+  OPTIONAL { ?region ag:toleratedMin ?floor }
+  OPTIONAL { ?region ag:toleratedMax ?ceiling }
   GRAPH $sensed {
     ?obs sosa:hasFeatureOfInterest ?subject ;
          sosa:observedProperty ?property ;

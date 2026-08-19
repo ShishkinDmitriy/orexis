@@ -28,12 +28,12 @@ SELECT ?step ?means ?property ?via ?direction WHERE {
     ?valuation market:direction ?direction .
     ?upstream ag:localId ?id .
     BIND(1 AS ?step)
-    BIND(intention:Acquire AS ?means)
+    BIND(ag:Acquire AS ?means)
     BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?id))) AS ?via)
   } UNION {
     ?vessel ag:localId ?id .
     BIND(2 AS ?step)
-    BIND(intention:Offer AS ?means)
+    BIND(ag:Offer AS ?means)
     BIND(market:Lowers AS ?direction)
     BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?id))) AS ?via)
   }

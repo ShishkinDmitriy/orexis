@@ -97,7 +97,7 @@ visible. The same agent id, the same hardware, two worlds:
 | | `world/society` | `world/sensing` |
 |---|---|---|
 | `sensing:slowSleepS` | 600 | 10 |
-| `desire:aims` (soil moisture) | 0.55 | *absent — it holds no stake* |
+| `ag:aims` (soil moisture) | 0.55 | *absent — it holds no stake* |
 
 The cadence differs because the **circumstance** differs, not because the agent wants anything
 different. A bench rig should be watched every ten seconds; a battery board in a garden should
@@ -109,7 +109,7 @@ So there are two families, and they behave differently:
   to watch, how stale is too stale. These track the *world's kind*: bench, staging, production.
   A sensible default could be supplied per kind, and hand-authoring near-identical numbers into
   every world is duplication waiting to drift.
-- **Stake beliefs** — `desire:aims`, `market:hasEndowment`, `water:maxValuePerL`. What this
+- **Stake beliefs** — `ag:aims`, `market:hasEndowment`, `water:maxValuePerL`. What this
   agent aims at and what it will pay. **Not derivable from anything** — "this is a test world"
   tells you nothing about what a fern is worth to whoever planted it. These are the agent's own
   and must be elicited.

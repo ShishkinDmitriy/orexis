@@ -29,7 +29,7 @@ from agent.module import Module, Timer
 from agent.store import bindings
 
 from .graphs import intentions_graph
-from .terms import (APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEADLINE_AT, END_MET,
+from .terms import (kernel, APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEADLINE_AT, END_MET,
                     END_VERIFIED_AT, EXPECTS_DELTA, EXPECTS_VALUE_TO, KEEPING, NS, OBSERVE,
                     PATIENCE_S, term)
 
@@ -176,10 +176,10 @@ class IntentionModule(Module):
         uri = f"{NS}intent_{self.agent.id}_{uuid.uuid4().hex[:8]}"
         self.agent.store.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{uri}> a <{term("Intention")}> ;
-    <{term("by")}> <{means}> ;
+  <{uri}> a <{kernel("Intention")}> ;
+    <{kernel("by")}> <{means}> ;
     <http://www.w3.org/ns/ssn/forProperty> <{observed_property}> ;
-    <{term("adoptedAt")}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+    <{kernel("adoptedAt")}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         self.log.info("adopted %s(%s): %s",
@@ -212,8 +212,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         now = datetime.now(timezone.utc).isoformat()
         self.agent.store.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{standing.uri}> <{term("resolvedAt")}> "{now}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-          <{term("outcome")}> {_literal(outcome)} ;
+  <{standing.uri}> <{kernel("resolvedAt")}> "{now}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+          <{kernel("outcome")}> {_literal(outcome)} ;
           <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         self.log.info("%s: %s", outcome, because)
@@ -293,7 +293,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         rows = bindings(self.agent.store.query(f"""
 SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline ?delta WHERE {{
   GRAPH <{self.graph}> {{
-    ?i <{term("by")}> ?means ;
+    ?i <{kernel("by")}> ?means ;
        <http://www.w3.org/ns/ssn/forProperty> ?property ;
        <{EXPECTS_VALUE_TO}> ?direction ;
        <{BASELINE_VALUE}> ?baseline ;
@@ -386,7 +386,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         """
         rows = bindings(self.agent.store.query(f"""
 SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{term("by")}> <{means}> ;
+  ?i <{kernel("by")}> <{means}> ;
      <http://www.w3.org/ns/ssn/forProperty> <{observed_property}> ;
      <{END_MET}> ?met ;
      <{END_VERIFIED_AT}> ?at .
@@ -398,7 +398,7 @@ SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
         """Every (means, property) pair currently suspect. What review and the report read."""
         pairs = {(r["means"], r["property"]) for r in bindings(self.agent.store.query(f"""
 SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{term("by")}> ?means ;
+  ?i <{kernel("by")}> ?means ;
      <http://www.w3.org/ns/ssn/forProperty> ?property ;
      <{END_MET}> ?met .
 }} }}"""))}
@@ -435,10 +435,10 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
     def standing(self, means: str | None = None,
                  observed_property: str | None = None) -> list[Standing]:
         """What stands: adopted and not resolved. The question a deliberator asks first."""
-        clauses = [f"?i a <{term('Intention')}> ; <{term('by')}> ?means ; "
+        clauses = [f"?i a <{kernel('Intention')}> ; <{kernel('by')}> ?means ; "
                    f"<http://www.w3.org/ns/ssn/forProperty> ?property ; "
-                   f"<{term('adoptedAt')}> ?at .",
-                   f"FILTER NOT EXISTS {{ ?i <{term('resolvedAt')}> ?done }}"]
+                   f"<{kernel('adoptedAt')}> ?at .",
+                   f"FILTER NOT EXISTS {{ ?i <{kernel('resolvedAt')}> ?done }}"]
         if means:
             clauses.append(f"FILTER(?means = <{means}>)")
         if observed_property:
@@ -466,8 +466,8 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
             "SELECT ?at WHERE { GRAPH <%s> { ?i a <%s> ; <%s> <%s> ; "
             "<http://www.w3.org/ns/ssn/forProperty> <%s> ; <%s> ?at } } "
             "ORDER BY DESC(?at) LIMIT 1"
-            % (self.graph, term("Intention"), term("by"), means,
-               observed_property, term("adoptedAt"))))
+            % (self.graph, kernel("Intention"), kernel("by"), means,
+               observed_property, kernel("adoptedAt"))))
         if not latest:
             return False
         age = (datetime.now(timezone.utc)

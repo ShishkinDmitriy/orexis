@@ -71,7 +71,7 @@ it ratifies a mandate rather than a belief.
 ## What shipped first, and why in that order
 
 Implemented as DATA before it drives acts, deliberately: a claim issued raises a
-`desire:Obligation` in a graph of the agent's own — counterparty, claim, presented-flag, two
+`ag:Obligation` in a graph of the agent's own — counterparty, claim, presented-flag, two
 timestamps — stepped to demanded on presentation and discharged when the dose goes out, kept
 after payment because a debt paid and a debt forgotten must not look alike. Redemption itself
 still runs where it always ran, so nothing regressed while the motivation layer grew under

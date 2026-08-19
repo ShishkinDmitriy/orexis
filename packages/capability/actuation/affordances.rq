@@ -21,7 +21,7 @@
 # prepends them.
 
 SELECT ?means ?property ?via ?direction ?mode WHERE {
-  $me desire:desires ?region ; ag:actsFor ?subject .
+  $me ag:desires ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property .
   $me actuation:hasActuator ?via .
   ?via actuation:actuates ?subject ;
@@ -32,6 +32,6 @@ SELECT ?means ?property ?via ?direction ?mode WHERE {
   ?valuation market:ofGood ?good ;
              market:aboutProperty ?property ;
              market:direction ?direction .
-  BIND(intention:Actuate AS ?means)
+  BIND(ag:Actuate AS ?means)
   BIND(deliberation:Chosen AS ?mode)
 }

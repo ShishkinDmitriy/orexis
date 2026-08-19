@@ -148,7 +148,7 @@ distance, so a goal-shape must state its measure or the planner ranks repairs bl
   member's substrate. What was NOT built of the sketch: the add/delete template on menu rows
   (the serveability goal is deduced in the planner, not stated as row effects — sufficient at
   depth 2, revisit if depth grows) and goal patterns as shapes (one deduced goal exists; the
-  severity-axis machinery stays future). `intention:Offer` is ledgered since #206: the
+  severity-axis machinery stays future). `ag:Offer` is ledgered since #206: the
   "host keeps no gap ledger" line was crossed knowingly, because an owed round held in
   module memory was a promise a restart forgot and no ask could see — adopted on deferral,
   satisfied on the reopened round, recovered from the ledger at the next stock reading. The

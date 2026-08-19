@@ -37,7 +37,7 @@ from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from .graphs import obligations_graph
-from .terms import DEDUCING, NS
+from .terms import DEDUCING, KERNEL, NS
 
 # What this package asks OF others, by family — their namespaces, never their Python. The
 # freshness rule lives with whoever holds the clock, and this module asks it exactly as
@@ -54,7 +54,7 @@ GAP_QUERY = (Path(__file__).parent / "gap.rq").read_text()
 # never arrive that way.
 _AIMS_Q = """
 SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
-  <{me}> desire:aims ?aim .
+  <{me}> ag:aims ?aim .
   ?aim ssn:forProperty ?property ;
        schema:value ?value .
 }} }}"""
@@ -68,11 +68,11 @@ SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
 # public graph, so a region contributed by something other than the deduction is simply seen.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
-  <%s> desire:desires ?desire .
+  <%s> ag:desires ?desire .
   ?desire ssn:forProperty ?property ;
           schema:minValue ?low ;
           schema:maxValue ?high .
-  OPTIONAL { ?desire desire:toleratedMin ?floor ; desire:toleratedMax ?ceiling }
+  OPTIONAL { ?desire ag:toleratedMin ?floor ; ag:toleratedMax ?ceiling }
 } ORDER BY ?property"""
 
 
@@ -327,17 +327,17 @@ class DesireModule(Module):
             self.log.warning("asked to owe %s, whom this world does not declare — refused",
                              to_agent_id)
             return None
-        uri = f"{NS}obligation.{claim_jti}"
+        uri = f"{KERNEL}obligation.{claim_jti}"
         graph = obligations_graph(self.agent.id)
         if bindings(self.agent.store.query(
                 f"SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} LIMIT 1")):
             return None
         self.agent.store.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
-            <{uri}> a <{NS}Obligation> ;
-                <{NS}owedTo> <{to_agent}> ;
-                <{NS}forClaim> "{claim_jti}" ;
-                <{NS}presented> false ;
-                <{NS}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+            <{uri}> a <{KERNEL}Obligation> ;
+                <{KERNEL}owedTo> <{to_agent}> ;
+                <{KERNEL}forClaim> "{claim_jti}" ;
+                <{KERNEL}presented> false ;
+                <{KERNEL}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
         self.log.info("owed to %s for claim %s", to_agent_id, claim_jti)
         return uri
 
@@ -350,10 +350,10 @@ class DesireModule(Module):
         """
         graph = obligations_graph(self.agent.id)
         self.agent.store.update(f"""
-            DELETE {{ GRAPH <{graph}> {{ ?o <{NS}presented> ?was }} }}
-            INSERT {{ GRAPH <{graph}> {{ ?o <{NS}presented> true }} }}
-            WHERE  {{ GRAPH <{graph}> {{ ?o <{NS}forClaim> "{claim_jti}" ;
-                                         <{NS}presented> ?was }} }}""")
+            DELETE {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> ?was }} }}
+            INSERT {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> true }} }}
+            WHERE  {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" ;
+                                         <{KERNEL}presented> ?was }} }}""")
 
     def discharge(self, claim_jti: str) -> None:
         """The dose is out: the debt is paid, and says when. Never deleted — a debt paid and
@@ -361,19 +361,19 @@ class DesireModule(Module):
         stays in its ledger."""
         graph = obligations_graph(self.agent.id)
         self.agent.store.update(f"""INSERT {{ GRAPH <{graph}> {{
-                ?o <{NS}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-            WHERE {{ GRAPH <{graph}> {{ ?o <{NS}forClaim> "{claim_jti}" .
-                     FILTER NOT EXISTS {{ ?o <{NS}dischargedAt> ?done }} }} }}""")
+                ?o <{KERNEL}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
+            WHERE {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" .
+                     FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }}""")
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
-        extra = f'?o <{NS}presented> true .' if presented_only else ""
+        extra = f'?o <{KERNEL}presented> true .' if presented_only else ""
         return bindings(self.agent.store.query(f"""
 SELECT ?o ?to ?jti ?presented ?at WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
-  ?o a <{NS}Obligation> ; <{NS}owedTo> ?to ; <{NS}forClaim> ?jti ;
-     <{NS}presented> ?presented ; <{NS}owedAt> ?at .
+  ?o a <{KERNEL}Obligation> ; <{KERNEL}owedTo> ?to ; <{KERNEL}forClaim> ?jti ;
+     <{KERNEL}presented> ?presented ; <{KERNEL}owedAt> ?at .
   {extra}
-  FILTER NOT EXISTS {{ ?o <{NS}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
+  FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
 
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
