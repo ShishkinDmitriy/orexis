@@ -42,7 +42,7 @@ See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.""
 
 #################  Where a desire is kept  #################
 #
-#  A GRAPH CLASS, and that is the point of it. `desire:DesireGraph` is the term; which graphs
+#  A GRAPH CLASS, and that is the point of it. `desire:RegionGraph` is the term; which graphs
 #  happen to be instances of it is data, asked for and never listed — the same arrangement
 #  `ag:PublicGraph` has, for the same reason. A reader unions whatever is of this class, so a
 #  SECOND source of desire is a vocabulary edit and touches no Python: an operator's override,
@@ -53,13 +53,15 @@ See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.""
 #  own beliefs. Range public, value private, exactly as before; this only moves the range from
 #  something a reader had to assemble to something the store states.
 
-:DesireGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph ;
-    rdfs:label "Desire graph" ;
-    rdfs:comment "Holds what agents are trying to bring about. A class rather than one graph, because desire may have more than one source and a reader must not have to know how many: `agent.genesis` resolves a rule's write target from this term, and `store.query` merges every instance into the default graph like any other public knowledge." .
+:RegionGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:ConstraintGraph ;
+    rdfs:label "Region graph" ;
+    rdfs:comment """Holds the regions a subject's stated ranges bind an agent to. A CONSTRAINT graph, which is what naming the modality axis exposed (the-mind-is-six-graphs): the region is the plant's operating range intersected with the instrument's, deduced by a rule, unmovable by the agent, and an agent whose aim falls outside it is refused at boot. Something you cannot move and are refused for violating is a constraint, whatever the capability that computes it is called — and this class was `desire:DesireGraph` until the axis was named, which would now collide with `ag:DesireGraph` meaning the opposite thing.
 
-<http://example.org/agora/graph/desire> a :DesireGraph ;
-    rdfs:label "deduced desire" ;
-    rdfs:comment "The one instance today: what `rules.ru` computed from the ranges the world states. Cleared and recomputed on every start, because it is a function of the ratified files rather than an accumulation — a plant whose range is amended must not leave an agent holding the old region." .
+A class rather than one graph, because a constraint may have more than one source and a reader must not have to know how many: `agent.genesis` resolves a rule's write target from this term, and `store.query` merges every instance into the default graph like any other public knowledge.""" .
+
+<http://example.org/agora/graph/desire> a :RegionGraph ; ag:arrivedBy ag:Derived ;
+    rdfs:label "deduced regions" ;
+    rdfs:comment "The one instance today: what `rules.ru` computed from the ranges the world states. Cleared and recomputed on every start, because it is a function of the ratified files rather than an accumulation — a plant whose range is amended must not leave an agent holding the old region. The IRI still reads `graph/desire`, kept until a migration makes renaming free; the TYPE carries the truth." .
 
 #################  An obligation: a desire someone else sourced  #################
 #

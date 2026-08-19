@@ -38,4 +38,4 @@ TOLERATED_MAX = term("toleratedMax")
 
 # The graph class. A TERM, not an instance: `agent.store` is asked which graphs are of this
 # class, so a second source of desire is a vocabulary edit and touches no Python here.
-DESIRE_GRAPH = term("DesireGraph")
+REGION_GRAPH = term("RegionGraph")  # the regions that BIND — a constraint graph, not a desire

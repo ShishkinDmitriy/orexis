@@ -170,7 +170,7 @@ _GRAPH_OF_CLASS = "SELECT ?g WHERE {{ ?g a <{cls}> }}"
 
 
 def _expand(prefixed: str) -> str:
-    """`desire:DesireGraph` -> its full IRI, using the namespaces every rule already has.
+    """`desire:RegionGraph` -> its full IRI, using the namespaces every rule already has.
 
     The same table `store.PREFIXES` is built from, so a rule may name a class exactly as it
     names one in its own WHERE clause and there is no second spelling to keep in step.
@@ -342,6 +342,37 @@ def endow(st: Store, world: Path, agent_id: str) -> list[str]:
     return st.endow_graph(beliefs_graph(agent_id), path.read_text())
 
 
+def classify_own_graphs(st: Store, agent_id: str) -> None:
+    """Say what this agent's own graphs ARE, on all three axes (the-mind-is-six-graphs).
+
+    The static graphs declare their own classification in the vocabulary; a per-agent graph
+    cannot, because the agent does not exist until it does. So it says so itself, into the
+    provenance graph — which already exists to hold statements ABOUT graphs, and is kept out
+    of the default graph for exactly that reason: these are mentions, not uses.
+
+    Written on every start rather than once at birth, and cheap: the classification is a
+    function of the vocabulary, so a graph whose modality is refined by an amendment says the
+    new thing on the next boot without a migration.
+    """
+    from .ontology import AG, PROVENANCE_GRAPH
+    from packages.capability.desire.graphs import obligations_graph
+    from packages.capability.intention.graphs import intentions_graph
+
+    # Both classes where they differ, because a reader must ASK what a graph is rather than
+    # walk a subclass path (one-graph-both-engines-read), and the closure cannot help here:
+    # these triples are written at runtime, long after it ran.
+    mine = [
+        (beliefs_graph(agent_id), ("BeliefsGraph", "DesireGraph"), "Asserted"),
+        (intentions_graph(agent_id), ("IntentionGraph",), "Recorded"),
+        (obligations_graph(agent_id), ("ConstraintGraph",), "Received"),
+    ]
+    triples = " ".join(
+        f"<{iri}> a {' , '.join(f'<{AG}{c}>' for c in classes)} ; "
+        f"<{AG}arrivedBy> <{AG}{arrival}> ."
+        for iri, classes, arrival in mine)
+    st.update(f"INSERT DATA {{ GRAPH <{PROVENANCE_GRAPH}> {{ {triples} }} }}")
+
+
 def open_belief_base(world: Path, agent_id: str, path: str | None = None,
                      rebirth: bool = False) -> Store:
     """An agent's whole boot sequence: open the store, refresh the world, be born if new.
@@ -357,6 +388,7 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     born = birth(st, world, agent_id, rebirth)
     if born:
         log.info("%s born — opening beliefs written", agent_id)
+    classify_own_graphs(st, agent_id)
     vocabulary.check(st, migrating=bool(config.env("AGORA_MIGRATE_BELIEFS")))
     # Endowment comes AFTER the vocabulary check, deliberately: an aged volume's old
     # spellings would read as never-held pairs, and endowing before migrating re-authored a

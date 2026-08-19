@@ -195,16 +195,74 @@ ag:underWorldVersion a owl:DatatypeProperty ; rdfs:range xsd:integer ;
 
 ag:Graph a owl:Class ; rdfs:label "Named graph" .
 
+#################  Three axes over one graph  #################
+#
+#  A named graph is classified THREE ways, independently, and conflating them is why some
+#  graphs never found a natural home: what its content ASSERTS, WHOSE it is, and HOW IT
+#  ARRIVED. A species' range is a constraint AND public AND derived; an aim is a desire AND
+#  private AND asserted; an obligation is a constraint AND private AND received. Nothing but
+#  the first axis is about meaning, and the first axis is the one the vocabulary lacked.
+#
+#  See knowledge/decisions/the-mind-is-six-graphs.md. The classes below say what a graph IS;
+#  which graphs are instances of each is data, asked for and never listed — the arrangement
+#  ag:PublicGraph already had, generalised to six modalities and five arrivals.
+
+#  --- modality: what the content asserts ---
+
+ag:Modality a owl:Class ; rdfs:label "Modality" ;
+    rdfs:comment "What a graph's content asserts about the subjects in it. The same subject, property and unit appear in every modality — fern's moisture is observed, bounded, aimed at, moved by a lever, committed to and recorded — so the modality is what a reader must know to interpret a triple, and the one thing the graph vocabulary could not previously say." .
+
+ag:BeliefGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Belief graph" ;
+    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
+
+ag:ConstraintGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Constraint graph" ;
+    rdfs:comment "What MAY be: bounds this agent cannot move and is refused for violating. A species' operating and survival ranges, an instrument's working range, the constitution's ceilings, the sovereign's mandates, and a peer's claim — one kind of thing, differing only in who stated it and whether there is anyone to be wronged." .
+
+ag:DesireGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Desire graph" ;
+    rdfs:comment "What the agent PURSUES: its aim in a property, its picks about its own conduct, and the goals a claim sourced. Everything here is ordered — which is where character will live — and everything here is the agent's, chosen inside constraints it did not choose." .
+
+ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
+    rdfs:comment "What the agent COULD do: the affordance rows, and what others may demand of it. Derived and never authored — a row is a conclusion whose premises are stored, so an authored row could outlive its premise, which is the one hazard this graph must never reintroduce." .
+
+ag:IntentionGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Intention graph" ;
+    rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
+
+ag:HistoryGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "History graph" ;
+    rdfs:comment "What the agent DID: resolved commitments, discharged obligations, doses delivered, amendments woken into. A bounded ring with the series store behind it — nothing points INTO history, because whatever must outlive the window copies what it needs at commit time, which is how an expectation already carries its own baseline." .
+
+#  --- how it arrived ---
+
+ag:Arrival a owl:Class ; rdfs:label "Arrival" ;
+    rdfs:comment "How a graph's content got there. Five values and no sixth: everything in this system is said, computed one of two ways, done, or heard." .
+
+ag:Asserted a ag:Arrival ; rdfs:label "asserted" ;
+    rdfs:comment "The sovereign said so. True by ratification, not by argument." .
+ag:Derived a ag:Arrival ; rdfs:label "derived" ;
+    rdfs:comment "A package's rule concluded it from given facts. Policy: another society could rule otherwise with the same vocabulary." .
+ag:Entailed a ag:Arrival ; rdfs:label "entailed" ;
+    rdfs:comment "The vocabulary's own logic implies it — subclass, subproperty, hasValue, property chains. Not policy: any reasoner over these axioms would agree." .
+ag:Recorded a ag:Arrival ; rdfs:label "recorded" ;
+    rdfs:comment "This agent's own act, at runtime. Its word about itself." .
+ag:Received a ag:Arrival ; rdfs:label "received" ;
+    rdfs:comment "Another party's word: an instrument's reading, a peer's claim. The only arrival whose trustworthiness is a question — an assertion is the sovereign's by definition and a derivation is checkable arithmetic, but this either carries a signature or does not, which is why the graph classification and the trust story are one story." .
+
+ag:arrivedBy a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Arrival ;
+    rdfs:label "arrived by" .
+
 ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph" ;
     rdfs:comment "Knowledge every agent in a world may read: the vocabulary, the topology, and what the rules and the RDFS closure made of them. This is the class `store.query` looks for — the default graph of every query is whatever is an instance of THIS, discovered rather than listed, so adding one is a vocabulary edit and touches no code. Membership is deliberately by declaration and not by exclusion: a graph nobody typed is invisible, which is the safe direction to fail — the other way round, a new private graph nobody remembered to exclude would leak into every query." .
 
-ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph ; rdfs:label "World graph" ;
+#  The existing classes, now saying their modality too. Nothing moves: a graph that was a
+#  WorldGraph is a WorldGraph AND a BeliefGraph, because "topology the sovereign ratified" and
+#  "an assertion about what is" are answers to different questions.
+
+ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "World graph" ;
     rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see agora/provenance.py." .
-ag:BeliefsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Beliefs graph" ;
-    rdfs:comment "ONE agent's private parameters for the capabilities it composed. Opinion, not fact. NOT a public graph: reachable only by naming it, which is what makes a review's write boundary checkable." .
-ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Sensed graph" ;
-    rdfs:comment "What sensors read. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
-ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph ; rdfs:label "Ontology graph" ;
+ag:BeliefsGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:DesireGraph ; rdfs:label "Beliefs graph" ;
+    rdfs:comment "ONE agent's private parameters for the capabilities it composed — and a DESIRE graph, which the name has never said: sort its contents and the aim is a desire about the world while the cadence, patience and ceilings are desires about the agent's own conduct, every one a pick inside a mandate. Nothing in it is a belief; what this agent believes is in the sensed and public graphs. The name is kept for now because graph IRIs are load-bearing in deployed volumes and a rename is a migration; the TYPE is what carries the truth. NOT a public graph: reachable only by naming it, which is what makes a review's write boundary checkable." .
+ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:label "Sensed graph" ;
+    rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
+ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
 ag:ProvenanceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Provenance graph" ;
     rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
@@ -214,13 +272,15 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
     rdfs:comment "Which agent owns this graph — the write boundary, made explicit." .
 
 ##  The instances. Data, not terms — code names the classes above and finds these by asking.
-##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and the
-##  three ways a fact got there (asserted, derived, entailed) are provenance, recorded separately.
+##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and how
+##  a fact got there is a separate question — which each instance now answers with ag:arrivedBy
+##  rather than by having its arrival encoded in its name.
 
-<http://example.org/agora/graph/ontology>          a ag:OntologyGraph .
-<http://example.org/agora/graph/ontology/entailed> a ag:OntologyGraph .
-<http://example.org/agora/graph/world>             a ag:WorldGraph .
-<http://example.org/agora/graph/world/derived>     a ag:WorldGraph .
-<http://example.org/agora/graph/world/entailed>    a ag:WorldGraph .
-<http://example.org/agora/graph/sensed>            a ag:SensedGraph .
+<http://example.org/agora/graph/ontology>          a ag:OntologyGraph ; ag:arrivedBy ag:Asserted .
+<http://example.org/agora/graph/ontology/entailed> a ag:OntologyGraph ; ag:arrivedBy ag:Entailed .
+<http://example.org/agora/graph/world>             a ag:WorldGraph ;    ag:arrivedBy ag:Asserted .
+<http://example.org/agora/graph/world/derived>     a ag:WorldGraph ;    ag:arrivedBy ag:Derived .
+<http://example.org/agora/graph/world/entailed>    a ag:WorldGraph ;    ag:arrivedBy ag:Entailed .
+<http://example.org/agora/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
 <http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .
+

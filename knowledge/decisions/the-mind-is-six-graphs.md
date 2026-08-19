@@ -1,0 +1,143 @@
+---
+type: Decision
+title: "The mind is six graphs, and a graph is classified on three axes"
+description: The sovereign's reframe of the whole core — an agent's mind is named graphs in one
+  vocabulary, and what changes between them is the MODALITY of what they assert: is, may be,
+  would like, could do, doing, did. Classified on three orthogonal axes (modality, visibility,
+  how it arrived), which immediately shows two joints were misnamed: the region the desire
+  graph holds is a CONSTRAINT nobody chose, and the graph called beliefs holds no beliefs at
+  all — only picks. Birth authors picks and nothing else; amendment is an event a versioned
+  world makes visible; history is a ring with Influx behind it.
+---
+
+# The mind is six graphs, and a graph is classified on three axes
+
+Proposed by the sovereign across a long design sitting, and it names the organising principle
+the architecture had been circling: **the graph is the modality.** Same subject, same
+property, same units everywhere — what differs between graphs is what they ASSERT about them.
+
+| graph | asserts | example |
+|---|---|---|
+| belief | what IS | fern's moisture is 0.31 |
+| constraint | what MAY be | fern's moisture must stay within 0.45–0.65 |
+| desire | what I PURSUE | fern aims at 0.55 |
+| menu | what I COULD do | I can raise moisture by bidding at this venue |
+| intention | what I am DOING | committed to acquire, since 12:04 |
+| history | what I DID | dosed 0.3 L at 12:06; the claim discharged |
+
+One vocabulary across all six is what makes the difference legible: a plan step becomes
+literally a triple moving from the desire graph's shape into the belief graph's, which is the
+graph-diff planning [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)
+could previously only gesture at.
+
+## Three axes, not one
+
+A graph carries three independent classifications, and conflating them is why some graphs
+never found a natural home:
+
+- **modality** — what its content asserts (the six above);
+- **visibility** — whose it is: public knowledge every agent may read, or one agent's own;
+- **how it arrived** — **asserted** (the sovereign said so), **derived** (a package's rule
+  concluded it from givens), **entailed** (the vocabulary's own logic implies it), **recorded**
+  (this agent's act, at runtime), **received** (another party's word — a device's reading, a
+  peer's claim).
+
+*Received* is the axis value obligations introduced, and the one whose trustworthiness is a
+question: an assertion is the sovereign's by definition and a derivation is checkable
+arithmetic, but a received fact is someone else's word and either carries their signature or
+does not. So the graph classification and the trust story turn out to be one story.
+
+## What the frame immediately found
+
+**The region is a constraint, not a desire.** It is the plant's operating range intersected
+with the instrument's, deduced by a rule; the agent cannot move it and is refused at boot for
+violating it. Something you cannot move and are refused for violating is a constraint. It was
+called desire because the name followed the *capability that computes it* — which is also why
+`desire:Deducing`'s own comment says it has "no judgement and no latitude", the signature of
+something that was never a want.
+
+**The graph called `beliefs` holds no beliefs.** Sort its contents: the aim is a desire about
+the world; the cadence, patience, ceiling and delta fraction are desires about the agent's own
+conduct — every one a pick inside a mandate, revised by review on evidence. Everything the
+agent actually believes is in `sensed` and the public graphs. That name followed the
+*container's role* — "the agent's private store" — rather than its content.
+
+Both misnamings came from different wrong axes, which is the argument for naming all three.
+
+**Norms unify.** Operating and survival ranges (sourced by a species), device limits (by a
+manufacturer), allocation ceilings (by the constitution), review latitude (by the sovereign)
+and claims (by a peer) are one kind of thing: someone else says what this agent may do. One
+class, `Constraint`, with `Obligation` the subclass that names a counterparty — because a
+rotting rhizome is not a duty owed to a plant, and the difference between a hard bound and a
+debt is exactly whether there is someone to be wronged.
+
+## Birth authors picks, and nothing else
+
+Sorted by where content comes from, only one graph is born: beliefs are empty (an agent is
+born blind, which is why its first intention is always Observe), constraints pre-exist it,
+the menu is implied, intentions and history start empty — and the **desires** are what genesis
+authors. So birth is one act: *the sovereign endows this agent with its opening picks inside
+constraints that already existed*. Endowment (#202) is not a special case but the same act
+happening again when new room appears.
+
+## A world that is replaced makes history uninterpretable
+
+If each start replaces the world graph, an amendment is invisible — the agent cannot tell
+being born into a world from waking into a changed one — and an act recorded last week was
+committed under a constitution that no longer exists anywhere, so "why did it do that" is
+unanswerable however carefully reasons were recorded. `ag:currentVersion` and
+`ag:WorldVersion` are already declared and observed by nothing, which is the tell.
+
+**Worlds append rather than replace.** Each ratification is its own immutable graph; the
+current version says which is in force; and boot compares the version held with the version
+current. When they differ, that is an EVENT: recorded in history, picks re-validated against
+the new bounds, new room endowed, standing commitments whose affordance vanished dropped with
+"the world moved" as their reason, and debts to departed agents marked **uncollectable**
+rather than deleted — a debt does not vanish because the creditor left. An agent down across
+two amendments records one waking, not a replay:
+amendment is a fact about the world's history, not a migration script.
+
+This is what [genesis](/decisions/genesis.md) already claims — *"amendable and versioned;
+structure mutable, history immutable"* — made true, since immutable history against a mutable
+constitution is only half a memory.
+
+## History is a ring, with the series store behind it
+
+Recent executed intentions, doses and observations in the graph; everything streamed to Influx
+for the deep questions, which is [two-store-beliefs](/decisions/two-store-beliefs.md)
+unchanged. The objection — that bounding history breaks citation — is already answered by the
+codebase: an expectation **copies** the baseline into its own row (#165), so nothing points
+into history and whatever must outlive the window takes what it needs at commit time. No
+reference counting, no pinning, no unbounded graph.
+
+## The order of work, and why
+
+1. **Name the modalities** — vocabulary only, typing the graphs that exist. No data moves.
+2. **Goals get identity and source** — regions are blank nodes today, so nothing can reference
+   one; obligations already have IRIs.
+3. **`intention:pursues`** — intentions key on `(means, property)`, so two obligations about
+   one property are indistinguishable and satisfying one satisfies both. Latent today, live
+   the moment obligations drive acts, so it lands before them.
+4. **History as a ring** — gives amendment somewhere to be recorded, and gives `within_patience`
+   a home matching its meaning: a question about the past.
+5. **Versioned worlds, birth and amendment as events.**
+6. **Move the data to match the labels** — optional, and treated so: if the types carry the
+   truth, an ugly IRI with an honest type may be worth keeping until another migration makes
+   the rename free.
+7. **Character as source-ordering** — the sovereign bounds how far obligation outranks desire,
+   the agent picks inside, review moves the pick. Default social, or the shipped worlds change
+   behaviour.
+8. **Obligations drive acts** — deliberation takes goals rather than a property and a value.
+
+# Seams left open
+
+- **Whether the menu belongs in the mind at all.** It is the one graph with no independent
+  existence — a join of beliefs, constraints and wiring. Kept because a model and a sovereign
+  must be able to read it, and materialising a conclusion is legitimate where authoring one is
+  not; the day nothing reads it, it is the first to go.
+- **What bounds the history ring.** Fixed size is the starting answer; whether the window
+  should be time-shaped, act-shaped, or amendment-shaped is a measurement nobody has taken.
+- **Where a received fact's trust is recorded.** Signature checking happens at the edge today
+  and leaves no trace in the graph, so "this fact arrived signed" is currently a log line
+  rather than a triple. The received axis value is the natural place to fix that, and it is
+  not fixed here.
