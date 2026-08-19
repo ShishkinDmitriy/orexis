@@ -152,6 +152,20 @@ class ActuationModule(Module):
         if aim is None or conversion is None:
             return
         litres = round((aim - value) * conversion, 3)
+        stock = self._stock_of_my_source()
+        if stock is not None:
+            # The witness meters rung 2 exactly as it meters the host's rounds: pour at most
+            # what the vessel holds, and refuse when it is spent. The other 584-dose finding:
+            # self-claims never meet clearing's allocation ledger, so without a witness the
+            # butt's capacityL bounded nothing — a source with no witness still doses blind,
+            # the mains precedent, but a FINITE bottle deserves a level sensor and the world
+            # that has one is now honest about running dry.
+            if stock <= EPS:
+                self.log.warning("the vessel is spent (%.3f L) — no self-dose; wanting "
+                                 "continues, the means is gone until something refills it",
+                                 stock)
+                return
+            litres = min(litres, round(stock, 3))
         if litres <= EPS:
             return
         keeper = self.agent.provider(_INTENTION)
@@ -160,6 +174,9 @@ class ActuationModule(Module):
             now = datetime.now(timezone.utc)
             if any(now < w.deadline for w in keeper.open_expectations(observed_property)):
                 return  # my own dose has not answered yet — the #167 guard, rung 2
+            if keeper.within_patience(_ACTUATE, observed_property):
+                return  # the same impulse (the 584-dose morning: a satisfied Actuate is
+                        # still a RECENT one, and patience reads the ledger, not the standing)
             adopted = keeper.adopt(_ACTUATE, observed_property,
                                    f"self-dose {litres}L toward the aim of {aim} — lever "
                                    f"and source both mine, no market to ask")
@@ -176,6 +193,24 @@ class ActuationModule(Module):
                               f"self-dosed {litres}L — the graph says this raises what I "
                               f"am short of, so show me",
                               expected_delta=(litres / conversion) if conversion > 0 else None)
+
+    def _stock_of_my_source(self) -> float | None:
+        """My freshest reading of the source my lever draws from — None when I am blind.
+
+        The hosting module's `_stock_of`, at rung 2: the same witness pattern, the same
+        freshest-regardless-of-age honesty, the same None-means-blind for a mains-like
+        source nobody watches.
+        """
+        rows = bindings(self.agent.store.query(f"""
+SELECT ?source ?p WHERE {{
+  <{self.me.uri}> ag:actsFor ?subject ; actuation:hasActuator ?lever ;
+      sensing:polls ?s .
+  ?lever actuation:actuates ?subject ; actuation:drawsFrom ?source .
+  ?s sensing:monitors ?source ; sosa:observes ?p }} LIMIT 1"""))
+        if not rows:
+            return None
+        reading = self.agent.beliefs.current_reading(rows[0]["source"], rows[0]["p"])
+        return reading.value if reading is not None else None
 
     def _conversion_for(self, observed_property: str) -> float | None:
         rows = bindings(self.agent.store.query(_CONVERSION_Q % (

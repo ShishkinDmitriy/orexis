@@ -13,11 +13,14 @@
 #  commit and act with no economy anywhere, and every rung it uses is the same machinery
 #  the market worlds run.
 
-##  sensing:Subscribing — the interval it asks its probe to keep
+##  sensing:Subscribing — the interval it asks its probe to keep — and, since the butt got
+#   its witness, sensing:Listening's one term beside it: how long the announcing clock may
+#   go quiet before the level is called gone. The grace serves both clocks.
 :gardener
     sensing:fastSleepS 30 ;
     sensing:slowSleepS 600 ;
-    sensing:readingGraceS 45 .
+    sensing:readingGraceS 45 ;
+    sensing:maxReadingAgeS 300 .
 
 ##  desire — the pick inside the region the SPECIES states (operating 0.10..0.30).
 #   0.18: dry-side of centre, deliberately — the survival ceiling is a rot cliff and the

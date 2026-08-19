@@ -1,7 +1,10 @@
 ---
 type: Domain Concept
 title: Intention
-description: BDI's third letter — a commitment to reduce a named gap by a named means, persisting until satisfied, dropped or outwaited rather than being re-decided on every sensing. Kept in a private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat impulses is each agent's own belief. Since #131 the MEANS and the END are judged apart: an acquire's claim opens a watch — baseline copied into the row, promised direction from the domain, deadline from the patience — and the verdict lands beside the outcome, so satisfied-and-unmet is recordable, the false-knowledge signature. An open watch is maximum urgency, so the cadence tightens until the world answers; an affordance unmet suspectAfter times running is flagged, never auto-retracted.
+description: BDI's third letter — a commitment to reduce a named gap by a named means, persisting until satisfied, dropped or outwaited rather than being re-decided on every sensing. Kept in a private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat impulses is each agent's own belief — and it asks the
+LEDGER, any outcome, not only what stands: an instantly-resolving means (Actuate is satisfied
+at the command) never stands, and the standing-only check let a gardener pulse its pump 584
+times in a night before the ledger-read closed the void. Since #131 the MEANS and the END are judged apart: an acquire's claim opens a watch — baseline copied into the row, promised direction from the domain, deadline from the patience — and the verdict lands beside the outcome, so satisfied-and-unmet is recordable, the false-knowledge signature. An open watch is maximum urgency, so the cadence tightens until the world answers; an affordance unmet suspectAfter times running is flagged, never auto-retracted.
 tags: [intention, bdi, capability, market, sensing, beliefs]
 timestamp: 2026-08-13T00:00:00Z
 ---

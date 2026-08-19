@@ -48,27 +48,46 @@
     #  This pot's own physics, not the species': a slow drinker in a small pot.
     water:driesPerDay 0.03 ; water:litresPerFraction 1.5 .
 
-##########  The butt — a source that is nobody's shop  ##########
+##########  The butt — a source that is nobody's shop, and FINITE  ##########
 #  Offered by the gardener (water:suppliedBy, entailed into market:offeredBy) and NOT a
-#  market: no matchesBy, no venue, no lot. Rain fills it off-stage; 20 L is the
-#  constitution's allocation ceiling, not a stock anyone watches — the honest blind-source
-#  arrangement the mains already demonstrates, one rung down the supply chain.
+#  market: no matchesBy, no venue, no lot. The first draft said rain fills it off-stage,
+#  which was a lie the 584-dose morning exposed: nothing modelled refill, nothing metered
+#  draw, and the pump would have pulled nine litres a night from a bottle nobody watched.
+#  So the butt has a WITNESS now — the same level-sensor arrangement the barrel earned in
+#  its first arc — and the gardener doses at most what the vessel holds, refusing when it
+#  is spent. It starts at 15 of 20 litres and only empties: rain is not modelled yet, and a
+#  world that runs dry honestly is better than one fed by a comment. When the water is gone
+#  the wanting continues and the means is gone — the ladder's honest floor.
 
 :water_butt a water:WaterSource ;
     ag:localId "water_butt" ;
     water:suppliedBy :gardener ;
     water:capacityL 20.0 .
 
+:butt_level a sosa:Sensor , ag:Device ;
+    ag:localId "butt_level" ;
+    mqtt:onBus :local_bus ;
+    sensing:senseMode sensing:PushProcedure ;
+    sensing:monitors :water_butt ;
+    sosa:observes water:StoredLitres ;
+    scaling:quantityUnit unit:L ;
+    mqtt:readingTopic "sensors/butt_level/reading" ;
+    ag:simulatedBy [ a ag:DeviceModel ;
+        ag:modelMinValue 0.0 ;
+        ag:modelInitialValue 15.0 ;
+        ag:modelTickSeconds 30 ] .
+
 ##########  The gardener — stake, lever, and no market anywhere  ##########
-#  Derivation gives it Subscribing (a scheduled probe), Deducing (it acts for a plant that
-#  states what it needs — through the species, entailed), Keeping and Reflex (stake plus
-#  lever), and Actuation (it holds the pump). NOT Bidding and NOT Hosting: it is plumbed
-#  into no venue and offers none, which is the point of the whole world.
+#  Derivation gives it Subscribing (a scheduled probe), Listening (the butt's level
+#  announces on its own clock), Deducing (it acts for a plant that states what it needs —
+#  through the species, entailed), Keeping and Reflex (stake plus lever), and Actuation (it
+#  holds the pump). NOT Bidding and NOT Hosting: it is plumbed into no venue and offers
+#  none, which is the point of the whole world.
 
 :gardener a ag:Agent ;
     ag:localId "gardener" ;
     ag:actsFor :zz ;
-    sensing:polls :moisture_probe ;
+    sensing:polls :moisture_probe , :butt_level ;
     actuation:hasActuator :pump .
 
 ##########  The probe — ordinary, scheduled, simulated  ##########

@@ -137,4 +137,45 @@ def test_the_gardener_derives_no_market_pair():
 
     caps = {c.rsplit("#", 1)[-1] for c in
             load_self(genesis_store(world="loner").query, "gardener").capabilities}
-    assert caps == {"Subscribing", "Storing", "Keeping", "Deducing", "Reflex", "Actuation"}
+    assert caps == {"Subscribing", "Listening", "Storing", "Keeping", "Deducing", "Reflex",
+                    "Actuation"}, "both clocks in one agent since the butt got its witness"
+
+
+# --- the 584-dose morning (patience reads the ledger; the butt is metered) --
+
+def test_a_satisfied_actuate_still_absorbs_the_next_impulse(gardener, monkeypatch):
+    """The flood, pinned: Actuate is adopted and satisfied within milliseconds, so the
+    standing-only patience check absorbed nothing and the gardener pulsed its pump every
+    second reading, all night — 584 doses. Patience asks the LEDGER now, any outcome: a
+    recently satisfied impulse to do the same thing is the same impulse."""
+    keeper = next(m for m in gardener.modules if m.name == "intention")
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    assert len(gardener.sent.to("actuators/pump/command")) == 1
+    monkeypatch.setattr(keeper, "open_expectations", lambda p: [])  # the watch out of the way
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    assert len(gardener.sent.to("actuators/pump/command")) == 1, \
+        "the ledger remembers what the standing list forgot"
+    assert keeper.within_patience(
+        "http://example.org/agora/intention#Actuate", MOIST)
+
+
+def test_the_dose_is_capped_by_what_the_vessel_holds(gardener):
+    """The witness meters rung 2 as it meters the host's rounds: the sized dose wants
+    120 ml, the butt holds 50 ml, the pump gets 50."""
+    gardener.deliver("sensors/butt_level/reading", {"value": 0.05})
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    sent = gardener.sent.to("actuators/pump/command")
+    assert len(sent) == 1 and sent[0]["ml"] == 50.0
+
+
+def test_a_spent_vessel_refuses_the_dose_and_says_so(gardener, caplog):
+    """The other 584-dose finding: self-claims never meet clearing's allocation ledger, so
+    without a witness the capacity bounded nothing. With one, a spent butt refuses — the
+    wanting continues, the means is gone, and the log says exactly that."""
+    import logging
+
+    gardener.deliver("sensors/butt_level/reading", {"value": 0.0})
+    with caplog.at_level(logging.WARNING):
+        gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    assert gardener.sent.to("actuators/pump/command") == []
+    assert "the vessel is spent" in caplog.text

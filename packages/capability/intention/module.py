@@ -450,6 +450,30 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
                          adopted_at=datetime.fromisoformat(r["at"]))
                 for r in rows]
 
+    def within_patience(self, means: str, observed_property: str) -> bool:
+        """Whether a new impulse to do this is THE SAME impulse — the ledger answering.
+
+        The record's sentence — "within your patience, a second impulse to do the same thing
+        is the same impulse" — used to be implemented only for STANDING intentions, because
+        the first three means all span naturally: an Acquire stands from bid to claim. The
+        584-dose morning found the void: an instantly-resolving means (Actuate is adopted
+        and satisfied within milliseconds of commanding) never stands, so `adopt` refused
+        nothing and the gardener pulsed its pump every second reading, all night. So the
+        question is asked of the LEDGER, any outcome: the newest same-means same-property
+        intention, standing or resolved, younger than my patience, absorbs the impulse.
+        """
+        latest = bindings(self.agent.store.query(
+            "SELECT ?at WHERE { GRAPH <%s> { ?i a <%s> ; <%s> <%s> ; "
+            "<http://www.w3.org/ns/ssn/forProperty> <%s> ; <%s> ?at } } "
+            "ORDER BY DESC(?at) LIMIT 1"
+            % (self.graph, term("Intention"), term("by"), means,
+               observed_property, term("adoptedAt"))))
+        if not latest:
+            return False
+        age = (datetime.now(timezone.utc)
+               - datetime.fromisoformat(latest[0]["at"])).total_seconds()
+        return age <= self.beliefs.patience_s
+
     def reports(self) -> dict:
         """How many commitments stand, and how old the oldest is.
 
