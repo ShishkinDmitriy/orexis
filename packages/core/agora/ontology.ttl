@@ -216,6 +216,7 @@ ag:BeliefGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Belief graph
     rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
 
 ag:ConstraintGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Constraint graph" ;
+    ag:graphPrefix "http://example.org/agora/graph/obligations/" ;
     rdfs:comment "What MAY be: bounds this agent cannot move and is refused for violating. A species' operating and survival ranges, an instrument's working range, the constitution's ceilings, the sovereign's mandates, and a peer's claim — one kind of thing, differing only in who stated it and whether there is anyone to be wronged." .
 
 ag:DesireGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Desire graph" ;
@@ -225,6 +226,7 @@ ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
     rdfs:comment "What the agent COULD do: the affordance rows, and what others may demand of it. Derived and never authored — a row is a conclusion whose premises are stored, so an authored row could outlive its premise, which is the one hazard this graph must never reintroduce." .
 
 ag:IntentionGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Intention graph" ;
+    ag:graphPrefix "http://example.org/agora/graph/intentions/" ;
     rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
 
 ag:HistoryGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "History graph" ;
@@ -249,6 +251,10 @@ ag:Received a ag:Arrival ; rdfs:label "received" ;
 ag:arrivedBy a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Arrival ;
     rdfs:label "arrived by" .
 
+ag:graphPrefix a owl:DatatypeProperty ; rdfs:domain ag:Graph ; rdfs:range xsd:string ;
+    rdfs:label "graph prefix" ;
+    rdfs:comment "Where graphs of this class live, for the ones that cannot be declared: a per-agent graph does not exist until its agent does, so the vocabulary states the PREFIX and the instances are found under it. What this exists for is knowing litter from property — a graph nothing declares and no prefix claims is a ghost from an amendment, and dropping it is how a volume stops holding facts in a spelling nothing speaks. Declared by whichever package mints the graphs, which is why the sweep needs no list: it asks." .
+
 ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph" ;
     rdfs:comment "Knowledge every agent in a world may read: the vocabulary, the topology, and what the rules and the RDFS closure made of them. This is the class `store.query` looks for — the default graph of every query is whatever is an instance of THIS, discovered rather than listed, so adding one is a vocabulary edit and touches no code. Membership is deliberately by declaration and not by exclusion: a graph nobody typed is invisible, which is the safe direction to fail — the other way round, a new private graph nobody remembered to exclude would leak into every query." .
 
@@ -259,6 +265,7 @@ ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph
 ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "World graph" ;
     rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see agora/provenance.py." .
 ag:BeliefsGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:DesireGraph ; rdfs:label "Beliefs graph" ;
+    ag:graphPrefix "http://example.org/agora/graph/beliefs/" ;
     rdfs:comment "ONE agent's private parameters for the capabilities it composed — and a DESIRE graph, which the name has never said: sort its contents and the aim is a desire about the world while the cadence, patience and ceilings are desires about the agent's own conduct, every one a pick inside a mandate. Nothing in it is a belief; what this agent believes is in the sensed and public graphs. The name is kept for now because graph IRIs are load-bearing in deployed volumes and a rename is a migration; the TYPE is what carries the truth. NOT a public graph: reachable only by naming it, which is what makes a review's write boundary checkable." .
 ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:label "Sensed graph" ;
     rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .

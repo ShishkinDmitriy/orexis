@@ -306,6 +306,10 @@ class Store:
             self._public = None
         return sorted(set(added))
 
+    def graph_names(self) -> list[str]:
+        """Every named graph actually present, whatever anyone still declares."""
+        return [str(g.value) for g in self._store.named_graphs()]
+
     def clear_graph(self, graph_iri: str) -> None:
         """Empty one graph. For the computed ones, which are written by update rather than
         loaded from a file and so have no `put_graph` to replace them wholesale."""

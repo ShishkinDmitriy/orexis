@@ -31,7 +31,7 @@ from pathlib import Path
 
 from . import config, inference, loader, provenance, vocabulary
 from .config import REPO_ROOT
-from .ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH,
+from .ontology import (GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from .store import NAMESPACES, Store, bindings
 
@@ -342,6 +342,41 @@ def endow(st: Store, world: Path, agent_id: str) -> list[str]:
     return st.endow_graph(beliefs_graph(agent_id), path.read_text())
 
 
+def drop_ghost_graphs(st: Store, agent_id: str) -> list[str]:
+    """Remove graphs nothing declares and nobody owns — the amendment's litter.
+
+    Public knowledge is exactly what the vocabulary says it is, and a public graph is
+    REPLACED on every start by whatever declares it. So a graph that stops being declared is
+    never cleared by anyone: it sits in the volume for ever, holding facts in a spelling the
+    code no longer speaks, and the first thing that notices is a migration refusing to guess
+    what `desire:desires` meant — which is exactly how this was found, on the first live
+    migration after the mind's states moved.
+
+    Conservative by construction: a graph is a ghost only if the vocabulary types it as
+    nothing AND it is none of this agent's own. Anything owned or declared is left alone,
+    because the safe direction to fail is to keep too much.
+    """
+    from .ontology import AG, PROVENANCE_GRAPH
+
+    declared = {r["g"] for r in bindings(st.query("SELECT ?g WHERE { ?g a ?class }"))
+                if r["g"].startswith(GRAPH_PREFIX)}
+    # Where per-agent graphs live, ASKED rather than listed: a graph that does not exist
+    # until its agent does cannot be declared, so its class states the prefix and this finds
+    # the instances under it. Listing them here instead would eat the next package's graphs,
+    # which is exactly what the first draft did to review's summaries.
+    prefixes = tuple(r["p"] for r in bindings(st.query(
+        f"SELECT ?p WHERE {{ ?class <{AG}graphPrefix> ?p }}")))
+    ghosts = [g for g in st.graph_names()
+              if g.startswith(GRAPH_PREFIX) and g not in declared and g != PROVENANCE_GRAPH
+              and not g.startswith(prefixes)]
+    for g in ghosts:
+        st.clear_graph(g)
+    if ghosts:
+        log.info("%s: dropped %d graph(s) nothing declares any more: %s",
+                 agent_id, len(ghosts), ", ".join(sorted(g.rsplit("/", 2)[-1] for g in ghosts)))
+    return ghosts
+
+
 def classify_own_graphs(st: Store, agent_id: str) -> None:
     """Say what this agent's own graphs ARE, on all three axes (the-mind-is-six-graphs).
 
@@ -389,6 +424,10 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     if born:
         log.info("%s born — opening beliefs written", agent_id)
     classify_own_graphs(st, agent_id)
+    # Before the vocabulary check, deliberately: a ghost graph holds terms this code no
+    # longer speaks, and refusing to boot over facts nobody declares any more would be
+    # refusing over litter.
+    drop_ghost_graphs(st, agent_id)
     vocabulary.check(st, migrating=bool(config.env("AGORA_MIGRATE_BELIEFS")))
     # Endowment comes AFTER the vocabulary check, deliberately: an aged volume's old
     # spellings would read as never-held pairs, and endowing before migrating re-authored a
