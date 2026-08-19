@@ -9,6 +9,8 @@ graph — is exactly the thing a unit test with a hand-built store would fake aw
 
 from __future__ import annotations
 
+import re
+
 from packages.capability.desire import gaps_of, regions_of
 
 from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store
@@ -195,3 +197,66 @@ def test_the_region_and_the_aim_reach_the_agents_own_bucket(monkeypatch):
     _, temperature = rows["AirTemperature"]
     assert temperature == {"desired_low": 18.0, "desired_high": 24.0}, \
         "a want with no aim reports its region and no invented pick"
+
+
+def test_an_unmet_want_is_not_printed_as_a_finding():
+    """A report is what a person reads when something is wrong, and a want is not that.
+
+    Once a desire compiled to SHACL, every property nobody has read yet produced a result —
+    which at genesis is every property — and `agora-validate` printed a wall of them about a
+    world it was accepting. The verdict was never affected; the noise was, and noise in a gate
+    teaches people to skip the gate.
+
+    Written so it fails from either end. The want must be REAL — the same store, asked through
+    the package's own reader, reports it — or this would pass on a world with nothing to say.
+    And the header has to agree with the body, because the filter rewrites a count pySHACL
+    wrote: a report claiming three results and showing one is how a filter goes wrong quietly.
+    """
+    from agent import genesis
+    from agent.ontology import SENSED_GRAPH, beliefs_graph
+    from agent.validate import conforms, graph_from
+
+    dry = genesis_store({("fern", MOISTURE): 0.30})   # outside the region, inside the envelope
+    genesis.birth(dry, genesis.world_dir("simulation"), "fern")
+    data = graph_from(dry, *dry.public_graphs(), beliefs_graph("fern"), SENSED_GRAPH)
+    ok, report = conforms(data, focus=FERN)
+
+    assert ok
+    assert "a gap, which is what an agent is for" not in report, \
+        "the want's own message is the signal: the filter matches pySHACL's spelling of the " \
+        "severity, so its spelling is a dependency, and this is how a change in it surfaces"
+    #  Not a search for `ShouldBecome` anywhere — a surviving WARNING quotes the term inside
+    #  its own SPARQL text, and refusing that would be refusing a shape for talking about the
+    #  thing it is there to talk about.
+
+    shown = report.count("Validation Result in")
+    if claimed := re.search(r"Results \((\d+)\):", report):
+        assert int(claimed.group(1)) == shown, "the header must count what the body shows"
+
+    assert gaps_of(dry.query, FERN)[MOISTURE].gap < 0, \
+        "the store must still report the gap the report no longer prints"
+
+
+def test_the_filter_keeps_a_violation_however_pyshacl_heads_it():
+    """The filter reads pySHACL's prose, and prose has two headings.
+
+    A violation is written "Constraint Violation in ...", everything else "Validation Result
+    in ...". Knowing only the second put every violation into the report's HEADER, where the
+    filter discarded it along with the rest — so a world was refused with a report that said
+    it conformed. Four shape tests caught it; this one names it, because those four would all
+    have to be read before anyone suspected the filter.
+    """
+    from agent.validate import _without_wants
+
+    report = (
+        "Validation Report\nConforms: False\nResults (2):\n"
+        "Constraint Violation in SPARQLConstraintComponent (http://example/x):\n"
+        "\tSeverity: sh:Violation\n\tMessage: the aim sits outside the region\n"
+        "Validation Result in QualifiedValueShapeConstraintComponent (http://example/y):\n"
+        "\tSeverity: ag:ShouldBecome\n\tMessage: a gap, which is what an agent is for\n")
+
+    kept = _without_wants(report)
+    assert "the aim sits outside the region" in kept
+    assert "a gap, which is what an agent is for" not in kept
+    assert "Results (1):" in kept, "the count must follow what survived"
+    assert _without_wants("Validation Report\nConforms: True") == "Validation Report\nConforms: True"

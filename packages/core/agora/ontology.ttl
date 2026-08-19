@@ -2,6 +2,7 @@
 @prefix water: <http://example.org/agora/water#> .
 @prefix mqtt: <http://example.org/agora/mqtt#> .
 @prefix ag:   <http://example.org/agora#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
@@ -321,6 +322,31 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
     ag:arrivedBy ag:Derived .
 
 
+#  `ag:Bounds`, `ag:boundedBy`, `ag:toleratedMin` and `ag:toleratedMax` were here and are GONE.
+#  They said that what an agent is held to is a kind of THING with two pairs of numbers; it is a
+#  kind of FORCE, and the numbers belong to shapes that already knew how to carry them. The
+#  region became a shape at ag:ShouldBecome and the envelope one at sh:Warning, so what used to
+#  need four terms and a class now needs none. See a-desire-is-a-shape.
+
+#################  What an agent pursues, and with what force  #################
+#
+#  A desire is a SHAPE (a-desire-is-a-shape): the one language this project already had for
+#  saying what a graph should look like, so constraint, desire and obligation stop being three
+#  structures and become one, differing in SEVERITY and in whose graph they sit.
+#
+#  `sh:Violation` is the force the vocabulary already had — illegitimate, refused. This adds
+#  the one it lacked: a shape whose violation is neither illegal nor merely noteworthy but a
+#  GAP, something an agent is trying to close. `conforms()` has let non-violations through
+#  since it was written, so an agent whose pot is dry starts, wants, and acts — which is the
+#  whole point of a desire being a shape rather than a rule.
+
+ag:ShouldBecome a sh:Severity ; rdfs:label "should become" ;
+    rdfs:comment "The force of a want. A result at this severity is a GAP: legitimate, unsatisfactory, and addressed through the agent's levers rather than by refusing to run — the third point on the modality axis a-plan-is-a-path-of-graph-diffs named, finally expressible because SHACL lets severity be any IRI. It belongs on the shape that PRODUCES the result and not on the node shape above it: put it above and every unmet desire reports as a Violation, which would refuse to boot any agent whose pot is dry." .
+
+ag:holds a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sh:NodeShape ;
+    rdfs:label "holds" ;
+    rdfs:comment "A shape this agent is held to or holds to: the room its subject's ranges leave it, the aim it picked inside that room, a debt a peer's claim raised. Replaces `ag:boundedBy`, which named only the first and named it as though bounds were a kind of thing rather than a kind of FORCE — what differs between a bound and a want is the severity of the shape, not its structure." .
+
 #################  THE MIND'S STATES  #################
 #
 #  What a mind CONTAINS — desires, obligations, intentions and the means they name — declared
@@ -340,36 +366,24 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 #  See knowledge/decisions/the-mind-is-six-graphs.md.
 
 #################  What a desire IS  #################
-
-ag:Bounds a owl:Class ; rdfs:label "Desire" ;
-    rdfs:comment """One property, the region to hold it in, and the envelope outside which the subject does not merely suffer but ends. A desire is per PROPERTY and an agent holds as many as its subject states ranges for — which is the whole of what makes a humidity reading actionable where it was previously a number with nowhere to go.
-
-Not a point. A target is a point and remains one, privately, in the agent's beliefs; this is what that point must answer to.""" .
-
-ag:boundedBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Bounds ;
-    rdfs:label "desires" ;
-    rdfs:comment "Reads as what this agent is trying to bring about. Derived, never written by hand — a world stating one would be authoring an agent's ends instead of the facts they follow from, and the shapes refuse it." .
-
-#  The region itself is stated in schema.org's terms and not in ours, and the reuse is
-#  load-bearing rather than thrifty: an operating range's condition says `schema:minValue` /
-#  `schema:maxValue` about a property, and so does this. One vocabulary for one kind of claim
-#  means the deduction is MAX and MIN over comparable numbers, with nothing to translate — and
-#  a reader who knows how to read a plant's range can already read an agent's.
 #
-#  `ssn:forProperty` for the same reason. It is what a condition uses to say which property it
-#  is a range of, and `sosa:ObservableProperty rdfs:subClassOf ssn:Property` makes it well-typed
-#  here too.
+#  Nothing, here. A desire has no class and no predicate of its own any more: it is a
+#  `sh:NodeShape` an agent `ag:holds`, carrying `ag:ShouldBecome`, and every term it needs was
+#  already in SHACL. The section is kept for the two facts that outlived the terms.
+#
+#  The INPUT is stated in schema.org's terms and the reuse is load-bearing rather than thrifty:
+#  an operating range's condition says `schema:minValue` / `schema:maxValue` about a property,
+#  and the deduction is MAX and MIN over those comparable numbers. What comes OUT is SHACL's
+#  `sh:minInclusive` / `sh:maxInclusive` — so there IS a translation now, one, in `rules.ru`,
+#  and it buys a want that the validator can check and a query can read without a second
+#  vocabulary for the same claim.
+#
+#  `ssn:forProperty` survived both spellings. It is what a condition uses to say which property
+#  it is a range of, and `sosa:ObservableProperty rdfs:subClassOf ssn:Property` makes it
+#  well-typed on a shape too — which is why a reader can still join a plant's range to an
+#  agent's want on one predicate.
 
-ag:toleratedMin a owl:DatatypeProperty ; rdfs:domain ag:Bounds ; rdfs:range xsd:decimal ;
-    rdfs:label "tolerated minimum" ;
-    rdfs:comment """The floor of the survival envelope for this property, when the world states one. Below it the subject does not merely sit outside where it does well — it ends.
 
-Here rather than left in the plant's own range because it is what makes URGENCY meaningful and unit-free. How bad it is to be 0.05 below the region depends entirely on how much room there is below the region, and that figure is asymmetric in exactly the cases that matter: a Zamioculcas comes back from bone dry and does not come back from a rotted rhizome, so the same distance out reads as far more urgent on the wet side. That falls out of the two numbers rather than out of any code, which is why it is worth carrying them here instead of hard-coding a curve.
-
-Optional, and its absence is not a defect. A world that states no survival range simply has an agent whose urgency is scaled by the width of the region instead — a cruder answer, honestly reached.""" .
-
-ag:toleratedMax a owl:DatatypeProperty ; rdfs:domain ag:Bounds ; rdfs:range xsd:decimal ;
-    rdfs:label "tolerated maximum" .
 
 #################  The aim — the pick inside a region  #################
 #
@@ -416,9 +430,9 @@ ag:aims a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Aim ;
 #  stored is what I owe NOW, in a graph of my own, because a debt outlives the process that
 #  incurred it: a host used to keep its issued claims in memory and forget them on restart.
 
-ag:Obligation a owl:Class ; rdfs:subClassOf ag:Bounds ;
+ag:Obligation a owl:Class ;
     rdfs:label "Obligation" ;
-    rdfs:comment "A desire this agent did not source: what it owes another, raised when the society issued that other a claim against this agent's hardware, discharged when the dose it names is confirmed. A subclass of Desire and not a sibling, because everything that reads desire should read this too — urgency, disclosure, and the deliberation that ranges over wants. What differs is only where it came from, which is what prov says." .
+    rdfs:comment "A desire this agent did not source. It subclassed `ag:Bounds` until bounds became shapes and the class went; it is still DATA today — a counterparty, a claim, two timestamps — and becomes a shape itself when obligations drive acts, which is the step after this one. what it owes another, raised when the society issued that other a claim against this agent's hardware, discharged when the dose it names is confirmed. A subclass of Desire and not a sibling, because everything that reads desire should read this too — urgency, disclosure, and the deliberation that ranges over wants. What differs is only where it came from, which is what prov says." .
 
 ag:owedTo a owl:ObjectProperty ; rdfs:domain ag:Obligation ; rdfs:range ag:Agent ;
     rdfs:label "owed to" ;

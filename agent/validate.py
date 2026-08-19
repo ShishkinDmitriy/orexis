@@ -21,6 +21,7 @@ See knowledge/decisions/where-the-belief-base-lives.md.
 from __future__ import annotations
 
 import logging
+import re
 
 import rdflib
 from pyshacl import validate as shacl_validate
@@ -52,6 +53,18 @@ def _shapes_and_vocabulary() -> tuple[rdflib.Graph, rdflib.Graph]:
 
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+#  How pyshacl spells our severity in the text report, which is the only place this is read —
+#  the verdict itself is decided on the results GRAPH.
+#  Both spellings: a report renders the severity through whatever namespaces its shapes graph
+#  carries, and a filter that knew only the short form failed silently the first time a graph
+#  arrived without them. `tests/test_gap.py` fails if neither form matches any more.
+#  A result begins at one of TWO headings: pySHACL writes "Constraint Violation in ..." for a
+#  violation and "Validation Result in ..." for everything else. Knowing only the second put
+#  every violation in the report's HEADER, where this dropped it along with the rest — the
+#  filter hid exactly the results it exists to preserve, and four tests caught it.
+_RESULT = re.compile(r"(?=(?:Constraint Violation|Validation Result) in )")
+_SHOULD_BECOME_FORMS = ("Severity: ag:ShouldBecome",
+                        "Severity: <http://example.org/agora#ShouldBecome>")
 
 
 def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
@@ -83,17 +96,87 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     """
     ontology, shapes = _shapes_and_vocabulary()
     data += ontology
+    #  The shapes an agent HOLDS are shapes too (a-desire-is-a-shape). They arrive in the data
+    #  because a derivation writes them there, and a validator reading only the files would see
+    #  a want as inert triples — so anything in the data typed `sh:NodeShape` joins the shapes
+    #  graph, and the severity decides which kind it is: a violation refuses, a want does not.
+    #
+    #  Only when nobody focused, though. A shape a desire compiles to reaches its readings
+    #  through `sh:qualifiedValueShape`, and pySHACL answers those WRONG under `focus_nodes` —
+    #  measured both ways round: the operating region returned nothing where a gap was plainly
+    #  there, and the survival envelope fired on a plant merely dry. A focused caller is one
+    #  agent asking about itself, and it gets its own held shapes in the second pass below,
+    #  unfocused. So a data-borne shape is checked exactly once, and never under a focus filter.
+    if not focus:
+        held = rdflib.Graph()
+        for shape in set(data.subjects(rdflib.RDF.type, _SH.NodeShape)):
+            held += data.cbd(shape)      # the shape and everything hanging off it
+        if held:
+            shapes = shapes + held
     # advanced=True enables SPARQL-based targets, which is how a shape scopes itself to the
     # agents that composed its capability.
     _, results, report = shacl_validate(
         data, shacl_graph=shapes, ont_graph=ontology, inference="none", advanced=True,
         **({"focus_nodes": [focus]} if focus else {}),
     )
-    violated = any(
-        results.value(result, _SH.resultSeverity) == _SH.Violation
-        for result in results.subjects(rdflib.RDF.type, _SH.ValidationResult)
-    )
-    return not violated, report.strip()
+    violated = _violated(results)
+    #  The shapes that agent holds, unfocused, over no others: ownership is `ag:holds`, so
+    #  every result is about the asker by construction — which is the guarantee the focus
+    #  filter was supposed to give and, for these shapes, does not.
+    if focus and (mine := _shapes_held_by(data, focus)):
+        #  No `ont_graph`: the ontology is already inside `data`, and passing it twice only
+        #  ever meant handing pySHACL a second chance to disagree with itself.
+        _, own, own_report = shacl_validate(
+            data, shacl_graph=mine, inference="none", advanced=True)
+        violated = violated or _violated(own)
+        report = report.strip() + "\n" + own_report.strip()
+    return not violated, _without_wants(report)
+
+
+def _without_wants(report: str) -> str:
+    """Drop the `ag:ShouldBecome` results from what a person is shown.
+
+    A want is a shape and an unmet want is a result, so once desires compiled to SHACL every
+    report grew one block per property nobody has read yet — which at genesis is all of them.
+    `agora-validate` printed forty lines about a world it was accepting. The gap is not a
+    finding about the world: it is the state of one, and `gap.rq` is where to ask for it.
+
+    Violations and warnings stay, header and all. The count is rewritten so it agrees with
+    what follows it, and a report left with nothing to say says so.
+    """
+    head, *blocks = _RESULT.split(report)
+    if not blocks:
+        return report.strip()
+    kept = [b for b in blocks if not any(form in b for form in _SHOULD_BECOME_FORMS)]
+    if not kept:
+        return "Validation Report\nConforms: True"
+    head = re.sub(r"Results \(\d+\):", f"Results ({len(kept)}):", head)
+    return (head + "".join(kept)).strip()
+
+
+def _violated(results: rdflib.Graph) -> bool:
+    return any(results.value(r, _SH.resultSeverity) == _SH.Violation
+               for r in results.subjects(rdflib.RDF.type, _SH.ValidationResult))
+
+
+def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
+    """The shapes this agent holds, with everything hanging off them.
+
+    Ownership is `ag:holds`, so this asks the graph rather than trusting a filter: a shape an
+    agent holds is a shape about that agent, which is the guarantee focus filtering was being
+    used for and does not actually give.
+    """
+    held = rdflib.Graph()
+    for shape in data.objects(rdflib.URIRef(agent_uri),
+                              rdflib.URIRef("http://example.org/agora#holds")):
+        held += data.cbd(shape)
+    #  A graph carved out of another keeps its spellings. pySHACL renders the report through
+    #  the shapes graph's namespaces, so without this the second pass printed
+    #  `<http://example.org/agora#ShouldBecome>` where the first printed `ag:ShouldBecome` —
+    #  one severity in two spellings, in one report, for no reason a reader could see.
+    for prefix, namespace in data.namespaces():
+        held.bind(prefix, namespace)
+    return held
 
 
 def graph_from(st: Store, *graph_iris: str) -> rdflib.Graph:

@@ -20,6 +20,8 @@
 
 PREFIX desire: <http://example.org/agora/desire#>
 PREFIX sensing: <http://example.org/agora/sensing#>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX ag:   <http://example.org/agora#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
@@ -84,15 +86,65 @@ WHERE  {
 #  without reading another rule's conclusions. And it carries WHERE IT CAME FROM: the ranges
 #  it was deduced from, so the sovereign asking "why am I held to 0.45" gets the answer in
 #  the graph rather than in a comment.
+#  What comes out is SHACL (a-desire-is-a-shape): the room a subject's stated ranges leave
+#  whoever acts for it, expressed in the one language this project already has for saying what
+#  a graph should look like. Two shapes from one deduction, differing in FORCE — the operating
+#  region at ag:ShouldBecome, whose violation is a GAP an agent pursues; the survival envelope
+#  at sh:Warning, whose violation is the subject past tolerating — loud, and never a refusal.
+#  `ag:Bounds` and `ag:boundedBy` retire, and with them a two-day argument about what to call a
+#  thing that binds AND motivates: it binds at one severity and motivates at the other.
+#
+#  DECLARATIVE on purpose, not sh:sparql: the numbers stay ordinary triples, so urgency reads
+#  them with a query on every reading instead of running a validator in the hot path. Reaching
+#  the value through a reified observation needs the inverse path plus a qualified shape, which
+#  is convoluted to read and was measured working before it was written.
+#
+#  The target is the AGENT, not the subject, and the path walks `ag:actsFor` to its readings.
+#  Whose desire this is, is exactly what a target answers — two agents could act for one subject
+#  and want different things of it — and an agent checking itself focuses on its own node, so a
+#  subject-targeted shape would be invisible at precisely the moment it matters.
+#
+#  The severity sits on the PROPERTY shape rather than the node shape, because that is the one
+#  that produces the result — put it above and every unmet desire reports as a Violation, which
+#  would refuse to boot any agent whose pot is dry.
 INSERT { GRAPH $into(ag:BoundsGraph) {
-    ?agent ag:boundedBy ?bounds .
-    ?bounds a ag:Bounds ;
+    ?agent ag:holds ?bounds , ?envelope .
+    ?bounds a sh:NodeShape ;
+        sh:targetNode ?agent ;
         ssn:forProperty ?property ;
-        schema:minValue ?low ;
-        schema:maxValue ?high ;
-        ag:toleratedMin ?floor ;
-        ag:toleratedMax ?ceiling ;
-        prov:wasDerivedFrom ?subject } }
+        prov:wasDerivedFrom ?subject ;
+        sh:property [
+            sh:severity ag:ShouldBecome ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            sh:qualifiedMinCount 1 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ;
+                              sh:minInclusive ?low ; sh:maxInclusive ?high ] ] ;
+            sh:message "a reading sits outside the region this agent holds for that property — a gap, which is what an agent is for" ] .
+    ?envelope a sh:NodeShape ;
+        sh:targetNode ?agent ;
+        ssn:forProperty ?property ;
+        prov:wasDerivedFrom ?subject ;
+        sh:property [
+            #  A WARNING and not a violation, which is the difference between "this world is
+            #  illegitimate" and "this plant is dying". Refusing here would stop an agent
+            #  booting exactly when its subject most needs it — and the envelope's real work
+            #  is scaling urgency, which happens whether or not anything is validated.
+            sh:severity sh:Warning ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            #  NO observation of this property may sit outside the envelope — where the region
+            #  above demands that one exist INSIDE it. The asymmetry is the point and it is
+            #  about evidence: not knowing is a gap an agent closes by looking, so an
+            #  unmeasured property fails the region honestly; but silence is not evidence that
+            #  a subject is past tolerating, and a shape that said so would have every agent
+            #  reporting catastrophe at birth, when it has observed nothing at all.
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                sh:not [ sh:property [ sh:path sosa:hasSimpleResult ;
+                                       sh:minInclusive ?floor ; sh:maxInclusive ?ceiling ] ] ] ;
+            sh:message "a reading sits outside the survival envelope for a property this agent holds — the subject is past tolerating, not merely uncomfortable" ] } }
 $given
 WHERE  {
     { SELECT ?agent ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
@@ -126,4 +178,6 @@ WHERE  {
     ?agent ag:localId ?who .
     BIND(IRI(CONCAT("http://example.org/agora#bounds.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?bounds)
+    BIND(IRI(CONCAT("http://example.org/agora#envelope.", ENCODE_FOR_URI(?who), ".",
+                    ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?envelope)
 }

@@ -23,7 +23,7 @@ a happy absence. It is a gap, and this record says why and what to do about it.
 | BDI | agora | state |
 |---|---|---|
 | **Beliefs** | the store: public graphs, private beliefs, `:sensed` | done |
-| **Desires** | `ag:Bounds` regions, plus the aim inside one | region done; aim still `water:hasTarget` |
+| **Desires** | the region shapes an agent `ag:holds`, plus the aim inside one | region done; aim still `water:hasTarget` |
 | **Goals** | implicit — the worst gap wins attention | unnamed, deliberately |
 | **Intentions** | **proto only**: a pending bid, a held claim, a commanded cadence | no name, no lifecycle |
 | **Interpreter** | hardwired: reading → band → LOW → announce → bid → claim → actuate | welded; it IS the planner |

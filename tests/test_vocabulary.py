@@ -247,7 +247,7 @@ def test_a_term_that_changed_namespace_and_name_still_migrates(tmp_path):
     """`renames` infers a successor by LOCAL NAME, which answers the historical direction —
     a term leaving `ag:` for the package it belongs to — and answers nothing when the move
     goes the other way or renames as it goes. Both happened when the mind's states became
-    kernel words: `desire:desires` became `ag:boundedBy` (no candidate at all) and
+    kernel words: `desire:desires` became `ag:holds` (no candidate at all) and
     `intention:outcome` had two candidates by local name with nothing able to choose. So a
     MOVE is data — a decision made once, written down, and preferred over the inference."""
     st = genesis_store(world="simulation")
@@ -259,7 +259,7 @@ def test_a_term_that_changed_namespace_and_name_still_migrates(tmp_path):
     older:outcome "dropped" .""")
     found = vocabulary.stale(st)
     successors = found[beliefs_graph("fern")]
-    assert successors["http://example.org/agora/desire#desires"] == AG + "boundedBy"
+    assert successors["http://example.org/agora/desire#desires"] == AG + "holds"
     assert successors["http://example.org/agora/intention#outcome"] == AG + "outcome"
 
 

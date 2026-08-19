@@ -93,6 +93,57 @@ That gives the *profile of pursuable goals* a concrete meaning: **a goal the ref
 by is declarative; a goal that is merely checkable may be anything.** Without the profile an
 agent could hold goals nothing could ever plan for, and the failure would be silence.
 
+## What building it changed
+
+Three things the design had wrong or unsaid, found by writing it:
+
+- **The envelope is a WARNING, not a violation.** The first derivation emitted the survival
+  range at `sh:Violation`, which would have made any world with a dying plant fail onboarding
+  — refusing to start an agent exactly when its subject most needs one. The hand-written check
+  it replaced had been a warning all along, for that reason. A plant past tolerating is a fact
+  about the world, not an illegitimate world.
+- **A hand-written shape disappeared.** "A reading sits outside the survival envelope" was a
+  `sh:sparql` check maintained by hand; the deduction now emits that shape natively, in the
+  language the checker already speaks. Two statements of one rule is one too many, and the
+  surviving one is the one an agent can also steer by.
+- **pySHACL answers a qualified shape WRONG under `focus_nodes`, in both directions.** An
+  agent checking itself passes its own IRI as the focus, and a shape reaching its readings
+  through `sh:qualifiedValueShape` then returned nothing where a gap was plainly there — and,
+  measured from the other side, reported a plant sitting comfortably at 0.30 as past its
+  survival envelope. Neither is a near miss: one is silence about a thirsty plant, the other a
+  false catastrophe. So a shape carried in the DATA is validated exactly once, unfocused, over
+  the shapes that agent `ag:holds` and no others. Ownership does what the focus filter was
+  there for, and does it by construction: every result is about the asker because the asker
+  holds the shape. It cost most of a day to find, because the focused pass and the unfocused
+  pass disagreed and the report concatenated both.
+- **An agent holds TWO shapes per property, and `ssn:forProperty` no longer identifies one.**
+  The region and the survival envelope both carry it, so every query matching on it alone
+  doubled: two Acquire rows where there is one lever, two of every affordance. The severity is
+  the discriminator — and it is the better question anyway. A lever is worth listing because
+  there is something the agent WANTS about that property, not because the property has an edge
+  past which its subject dies.
+- **A want is a result, so a report stopped being a list of defects.** `agora-validate` printed
+  forty lines about a world it was accepting: at genesis nothing has been observed, so every
+  region reports a gap. The gap is the state of a world, not a finding about one, and `gap.rq`
+  is where to ask for it — so `ag:ShouldBecome` results are filtered out of the report a person
+  is shown. The verdict was never affected; the noise would have trained someone to ignore it.
+  The filter reads pySHACL's prose, and prose has two headings: a violation is written
+  *Constraint Violation in …* and everything else *Validation Result in …*. The first draft
+  knew only the second, so every violation fell into the header and was dropped with it — a
+  world refused, with a report saying it conformed. Reading a tool's output is a dependency on
+  its formatting, and the guard for that has to be a test, because nothing else will say so.
+- **The store had never queried SHACL.** `sh:` was not a declared prefix, because shapes had
+  only ever been validated against, never read. That a desire is now something an agent READS
+  is the whole change, seen from one line of the prefix table.
+
+What the aim check became is the seam this record predicted, arriving immediately:
+`desire:AimShape` reads `sh:minInclusive` out of the deduced shape as the ordinary RDF it is —
+SHACL validated by a query over SHACL, because there is no containment operator and a shape is
+data like anything else.
+
+Four terms retired: `ag:Bounds`, `ag:boundedBy`, `ag:toleratedMin`, `ag:toleratedMax`. What
+replaced them is `ag:holds` and vocabulary SHACL already had.
+
 # Seams left open
 
 - **Shape versus shape has no operator.** "The agent's aim sits inside the sovereign's bounds"

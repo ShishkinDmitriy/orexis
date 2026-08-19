@@ -65,6 +65,9 @@ SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
 # arrive in production — see the module docstring of `tests/test_store.py`.
 _EXTERNAL = {
     "sosa": "http://www.w3.org/ns/sosa/",
+    #  Queried, not just validated against, since a desire became a shape: what an agent
+    #  pursues is SHACL, so reading its numbers is an ordinary query over ordinary triples.
+    "sh": "http://www.w3.org/ns/shacl#",
     "prov": "http://www.w3.org/ns/prov#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
