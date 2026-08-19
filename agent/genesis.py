@@ -389,7 +389,7 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     function of the vocabulary, so a graph whose modality is refined by an amendment says the
     new thing on the next boot without a migration.
     """
-    from .ontology import AG, PROVENANCE_GRAPH
+    from .ontology import AG, CLASSIFICATION_GRAPH
     from packages.capability.desire.graphs import obligations_graph
     from packages.capability.intention.graphs import intentions_graph
 
@@ -405,7 +405,8 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
         f"<{iri}> a {' , '.join(f'<{AG}{c}>' for c in classes)} ; "
         f"<{AG}arrivedBy> <{AG}{arrival}> ."
         for iri, classes, arrival in mine)
-    st.update(f"INSERT DATA {{ GRAPH <{PROVENANCE_GRAPH}> {{ {triples} }} }}")
+    st.clear_graph(CLASSIFICATION_GRAPH)
+    st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} }} }}")
 
 
 def open_belief_base(world: Path, agent_id: str, path: str | None = None,

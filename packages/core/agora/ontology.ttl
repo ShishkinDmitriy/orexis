@@ -215,6 +215,9 @@ ag:Modality a owl:Class ; rdfs:label "Modality" ;
 ag:BeliefGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Belief graph" ;
     rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
 
+ag:BoundsGraph a owl:Class ; rdfs:subClassOf ag:ConstraintGraph ; rdfs:label "Bounds graph" ;
+    rdfs:comment "The one constraint graph a rule WRITES: the bounds deduced from the ranges a subject states. A subclass rather than the modality itself, because a write must land somewhere definite and the modality has several instances — an agent's obligations are constraints too, and became visible as such the moment classifications moved somewhere readable. `graph_of_class` refuses ambiguity loudly rather than choosing, which is how that showed up: as a refusal to start rather than as facts in a graph nobody named." .
+
 ag:ConstraintGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Constraint graph" ;
     ag:graphPrefix "http://example.org/agora/graph/obligations/" ;
     rdfs:comment "What MAY be: bounds this agent cannot move and is refused for violating. A species' operating and survival ranges, an instrument's working range, the constitution's ceilings, the sovereign's mandates, and a peer's claim — one kind of thing, differing only in who stated it and whether there is anyone to be wronged." .
@@ -291,6 +294,20 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 <http://example.org/agora/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
 <http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .
 
+##  Where an agent says what its OWN graphs are. A per-agent graph cannot be declared in a
+##  T-Box — it does not exist until its agent does — so the agent classifies its own at boot,
+##  and it has to land somewhere READABLE: a modality-scoped query says `?d a ag:DesireGraph`
+##  and must resolve it without naming any graph instance, which is the rule that keeps a
+##  query from silently reading part of the truth.
+##
+##  Public and belief-modality, because a classification is a fact about what a graph IS —
+##  and the static graphs above have always been classified in the ontology graph, which is
+##  public too. Putting the per-agent ones in `provenance` (which is deliberately outside the
+##  default union, to keep mentions of graphs from answering questions about devices) was the
+##  inconsistency, and it showed up the first time a scoped query could not see them.
+<http://example.org/agora/graph/classification>    a ag:PublicGraph , ag:BeliefGraph ;
+    ag:arrivedBy ag:Recorded .
+
 ##  The bounds a subject's stated ranges put on whoever acts for it: an operating region to
 ##  hold a property inside, and the survival envelope outside which the subject ends. Derived
 ##  by the desire package's rule, declared HERE like the derived world graph, because a graph
@@ -300,7 +317,7 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 ##  It was `graph/desire` and typed a region graph, which was wrong twice: the name followed
 ##  the capability that computes it, and the content is not anybody's want. An agent holding
 ##  bounds and no aim pursues NOTHING — the running proof that a bound motivates nobody.
-<http://example.org/agora/graph/constraint>        a ag:ConstraintGraph , ag:PublicGraph ;
+<http://example.org/agora/graph/constraint>        a ag:BoundsGraph , ag:PublicGraph ;
     ag:arrivedBy ag:Derived .
 
 

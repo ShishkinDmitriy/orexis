@@ -42,7 +42,8 @@ from pathlib import Path
 
 from . import loader
 from .config import REPO_ROOT
-from .ontology import (ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
+from .ontology import (CLASSIFICATION_GRAPH, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
+                       PROVENANCE_GRAPH,
                        WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 
 # A file, as something a graph can be derived FROM. Minted under our own namespace rather than
@@ -57,6 +58,10 @@ _ACTIVITY = "http://example.org/agora/activity/"
 CLOSURE = _ACTIVITY + "closure"  # agora/inference.py
 DERIVATION = _ACTIVITY + "derivation"  # every package's rules.ru
 RATIFICATION = _ACTIVITY + "ratification"  # a user authored the world files
+CLASSIFICATION = _ACTIVITY + "classification"  # the agent said what its own graphs are
+#  Who does it: the kernel, named by its file like every rule is. A computed graph must
+#  say what made it, and "the runtime" is not an answer a reader can follow to a line.
+_KERNEL_AGENT = _FILE + "agent/genesis.py"
 
 
 def file_iri(path: Path, world: Path | None = None) -> str:
@@ -149,6 +154,19 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
         + " .",
     ]
     lines += [f"<{r}> a prov:SoftwareAgent ." for r in rules]
+
+    #  What an agent says its OWN graphs are (the-mind-is-six-graphs): public, because a
+    #  modality-scoped query must resolve `?d a ag:DesireGraph` without naming an instance —
+    #  and public means it accounts for itself here like every other public graph. Generated
+    #  by the kernel from the vocabulary's graph classes and the one identifier the process
+    #  is given, which is why the classification activity used the ontology and nothing else.
+    lines += [
+        "",
+        f"<{CLASSIFICATION_GRAPH}> a prov:Entity ; prov:wasGeneratedBy <{CLASSIFICATION}> .",
+        f"<{CLASSIFICATION}> a prov:Activity ; prov:used <{ONTOLOGY_GRAPH}> , "
+        f"<{ONTOLOGY_ENTAILED_GRAPH}> ; prov:wasAssociatedWith <{_KERNEL_AGENT}> .",
+        f"<{_KERNEL_AGENT}> a prov:SoftwareAgent .",
+    ]
 
     lines += [
         "",

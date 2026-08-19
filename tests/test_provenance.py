@@ -174,7 +174,11 @@ def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
 
     activities = {r["a"] for r in _in_graph(
         st, PROVENANCE_GRAPH, "?g a prov:Entity ; prov:wasGeneratedBy ?a")}
-    assert len(activities) == 3, "ratification, derivation and closure are distinct"
+    assert len(activities) == 4, (
+        "ratification, derivation, closure and classification are distinct — a fourth joined "
+        "when an agent began saying what its own graphs ARE, which it must do somewhere "
+        "READABLE for a modality-scoped query to resolve `?d a ag:DesireGraph` without naming "
+        "an instance (the-mind-is-six-graphs)")
 
 
 def test_a_graph_that_explains_nothing_is_refused():

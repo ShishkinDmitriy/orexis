@@ -84,7 +84,7 @@ WHERE  {
 #  without reading another rule's conclusions. And it carries WHERE IT CAME FROM: the ranges
 #  it was deduced from, so the sovereign asking "why am I held to 0.45" gets the answer in
 #  the graph rather than in a comment.
-INSERT { GRAPH $into(ag:ConstraintGraph) {
+INSERT { GRAPH $into(ag:BoundsGraph) {
     ?agent ag:boundedBy ?bounds .
     ?bounds a ag:Bounds ;
         ssn:forProperty ?property ;

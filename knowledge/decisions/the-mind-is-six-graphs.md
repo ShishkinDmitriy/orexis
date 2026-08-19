@@ -209,7 +209,11 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
 7. **Character as source-ordering** — the sovereign bounds how far obligation outranks desire,
    the agent picks inside, review moves the pick. Default social, or the shipped worlds change
    behaviour.
-8. **Obligations drive acts** — deliberation takes goals rather than a property and a value.
+8. **Desired states take belief's shape** — the aim becomes a desired observation, the gap
+   becomes a modality-scoped diff, and `ag:Aim`/`ag:aims`/`schema:value` retire. Before the
+   next step, because a goal that is a graph pattern is what makes the next step expressible
+   at all.
+9. **Obligations drive acts** — deliberation takes goals rather than a property and a value.
 
 # Seams left open
 
