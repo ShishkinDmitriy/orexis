@@ -624,3 +624,74 @@ def test_an_owed_round_survives_the_process_that_owed_it(host, make):
     stock_reading(reborn, 3.0)
     assert offer_from(reborn)["quantity_l"] == 2.0, \
         "the recovered debt opened the round the moment the vessel could pour"
+
+
+# --- obligations: the desires a host did not source (#218 remade) -----------
+
+def desire_of(agent):
+    return next(m for m in agent.modules if m.name == "desire")
+
+
+def test_a_claim_issued_is_a_debt_the_host_holds_as_a_want(host):
+    """BOID's O, arriving through the door the design left open: the society allocated, so
+    this agent OWES — and a debt is a desire it did not source, in its own ledger, naming the
+    counterparty and the claim that caused it. Raised at ISSUE and not at presentation: the
+    holder's silence afterwards is the holder's business, and the debt exists regardless."""
+    stock_reading(host, 3.0)
+    host.deliver("readings/fern", low_event())
+    host.deliver(f"{market_of(host).bid_topic}/fern",
+                 {"auction_id": offer_from(host)["auction_id"], "agent": "fern",
+                  "max_qty_l": 0.5, "max_price_per_l": 0.9, "balance": 100.0})
+    host.hosting().close()
+
+    owed = desire_of(host).owed()
+    assert len(owed) == 1
+    assert owed[0]["to"].endswith("fern_agent") and owed[0]["presented"] in ("false", "0")
+
+
+def test_a_debt_outlives_the_process_that_incurred_it(host, make):
+    """What persisting the debt buys immediately: `held` is a module dict that dies with the
+    process, so a restarted host used to forget every claim it had issued. The obligation is
+    in a graph of its own, so the same store answers for the new process."""
+    stock_reading(host, 3.0)
+    host.deliver("readings/fern", low_event())
+    host.deliver(f"{market_of(host).bid_topic}/fern",
+                 {"auction_id": offer_from(host)["auction_id"], "agent": "fern",
+                  "max_qty_l": 0.5, "max_price_per_l": 0.9, "balance": 100.0})
+    host.hosting().close()
+
+    reborn = make("supplier", host.store)
+    assert len(desire_of(reborn).owed()) == 1, "the ledger remembers what the dict forgot"
+
+
+def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
+    """Presented, then paid: demanded steps the flag, the dose discharges the row, and
+    nothing is deleted — a debt paid and a debt forgotten must not look alike."""
+    stock_reading(host, 3.0)
+    host.deliver("readings/fern", low_event())
+    host.deliver(f"{market_of(host).bid_topic}/fern",
+                 {"auction_id": offer_from(host)["auction_id"], "agent": "fern",
+                  "max_qty_l": 0.5, "max_price_per_l": 0.9, "balance": 100.0})
+    host.hosting().close()
+    jti = desire_of(host).owed()[0]["jti"]
+
+    host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
+    assert desire_of(host).owed() == [], "paid — nothing stands"
+    from packages.capability.desire.graphs import obligations_graph
+    from agent.store import bindings
+    kept = bindings(host.store.query(
+        "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/agora/desire#dischargedAt> ?d } }"
+        % obligations_graph("supplier")))
+    assert kept, "and the record of having paid it stays"
+
+
+def test_a_debt_to_a_stranger_is_refused_before_it_is_a_want(host, caplog):
+    """Whom I may owe is TOPOLOGY — the ACL's shape applied to obligation. An agent this
+    world does not declare cannot make me want anything, which is the guardrail that keeps
+    'a claim raises a desire' from being 'anyone can raise a desire in me'."""
+    import logging
+
+    with caplog.at_level(logging.WARNING):
+        assert desire_of(host).owe("orchid_from_nowhere", "j-forged") is None
+    assert desire_of(host).owed() == []
+    assert "does not declare" in caplog.text

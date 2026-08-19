@@ -36,7 +36,8 @@ from agent.module import Module
 from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
-from .terms import DEDUCING
+from .graphs import obligations_graph
+from .terms import DEDUCING, NS
 
 # What this package asks OF others, by family — their namespaces, never their Python. The
 # freshness rule lives with whoever holds the clock, and this module asks it exactly as
@@ -296,6 +297,83 @@ class DesireModule(Module):
             return None
         region = self.regions.get(observed_property)
         return (region.low, region.high) if region else None
+
+    # --- obligations: the desires this agent did not source (#218 remade) ----------------
+
+    def _uri_of(self, agent_id: str) -> str | None:
+        """The counterparty's node, from the one thing a claim carries: its id. Public wiring,
+        so a debt names an agent the world declares and never a string somebody sent me."""
+        rows = bindings(self.agent.store.query(
+            f'SELECT ?a WHERE {{ ?a a <http://example.org/agora#Agent> ; '
+            f'<http://example.org/agora#localId> "{agent_id}" }} LIMIT 1'))
+        return rows[0]["a"] if rows else None
+
+    def owe(self, to_agent_id: str, claim_jti: str) -> str | None:
+        """Record what the society just made this agent owe. Returns the obligation's IRI.
+
+        Raised when a claim is ISSUED, not when it is presented: the debt exists from the
+        moment the society allocated it, and the holder's silence afterwards is the holder's
+        business. Idempotent by the claim's own jti — single-use there, single-use here — so a
+        replay raises nothing new.
+
+        Written to a graph of this agent's own, so a restarting host still knows what it owes:
+        the issued claims used to live in a module dict that died with the process.
+        """
+        to_agent = self._uri_of(to_agent_id)
+        if to_agent is None:
+            # Whom I may owe is TOPOLOGY (the ACL shape): an obligation to an agent this
+            # world does not declare is not a debt, it is a forgery, and refusing here means
+            # no forged presentation can ever raise a want.
+            self.log.warning("asked to owe %s, whom this world does not declare — refused",
+                             to_agent_id)
+            return None
+        uri = f"{NS}obligation.{claim_jti}"
+        graph = obligations_graph(self.agent.id)
+        if bindings(self.agent.store.query(
+                f"SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} LIMIT 1")):
+            return None
+        self.agent.store.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
+            <{uri}> a <{NS}Obligation> ;
+                <{NS}owedTo> <{to_agent}> ;
+                <{NS}forClaim> "{claim_jti}" ;
+                <{NS}presented> false ;
+                <{NS}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+        self.log.info("owed to %s for claim %s", to_agent_id, claim_jti)
+        return uri
+
+    def demanded(self, claim_jti: str) -> None:
+        """The holder presented: an obligation nobody had asked for is now asked for.
+
+        The step this capability's `presented` flag exists for — an unpresented claim
+        requires nothing of me, a presented one requires acting now — and the reason urgency
+        here is a step rather than a curve until claims may be held over time.
+        """
+        graph = obligations_graph(self.agent.id)
+        self.agent.store.update(f"""
+            DELETE {{ GRAPH <{graph}> {{ ?o <{NS}presented> ?was }} }}
+            INSERT {{ GRAPH <{graph}> {{ ?o <{NS}presented> true }} }}
+            WHERE  {{ GRAPH <{graph}> {{ ?o <{NS}forClaim> "{claim_jti}" ;
+                                         <{NS}presented> ?was }} }}""")
+
+    def discharge(self, claim_jti: str) -> None:
+        """The dose is out: the debt is paid, and says when. Never deleted — a debt paid and
+        a debt forgotten must not look alike, which is the same reason a resolved intention
+        stays in its ledger."""
+        graph = obligations_graph(self.agent.id)
+        self.agent.store.update(f"""INSERT {{ GRAPH <{graph}> {{
+                ?o <{NS}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
+            WHERE {{ GRAPH <{graph}> {{ ?o <{NS}forClaim> "{claim_jti}" .
+                     FILTER NOT EXISTS {{ ?o <{NS}dischargedAt> ?done }} }} }}""")
+
+    def owed(self, presented_only: bool = False) -> list[dict]:
+        """What still stands, newest first — what an agent owes, askable by the sovereign."""
+        extra = f'?o <{NS}presented> true .' if presented_only else ""
+        return bindings(self.agent.store.query(f"""
+SELECT ?o ?to ?jti ?presented ?at WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
+  ?o a <{NS}Obligation> ; <{NS}owedTo> ?to ; <{NS}forClaim> ?jti ;
+     <{NS}presented> ?presented ; <{NS}owedAt> ?at .
+  {extra}
+  FILTER NOT EXISTS {{ ?o <{NS}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
 
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:

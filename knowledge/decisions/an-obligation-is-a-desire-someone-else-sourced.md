@@ -68,6 +68,27 @@ social agent lets obligations dominate, a selfish one does not. That maps onto
 the sovereign ratifies the ORDER (or the weighting), never the individual decision, exactly as
 it ratifies a mandate rather than a belief.
 
+## What shipped first, and why in that order
+
+Implemented as DATA before it drives acts, deliberately: a claim issued raises a
+`desire:Obligation` in a graph of the agent's own — counterparty, claim, presented-flag, two
+timestamps — stepped to demanded on presentation and discharged when the dose goes out, kept
+after payment because a debt paid and a debt forgotten must not look alike. Redemption itself
+still runs where it always ran, so nothing regressed while the motivation layer grew under
+it.
+
+Two things fell out immediately. The debt is now DURABLE — a host kept its issued claims in a
+module dict that died with the process, and a restarted host forgot every one — and the
+counterparty is CHECKED: `owe` refuses an agent the world does not declare, which is the
+guardrail that keeps "a claim raises a desire" from meaning "anyone may raise a desire in
+me". Whom I may owe stays topology, disclosed by the honoured row and never stored.
+
+The mode survives the reframe as DISCLOSURE rather than exemption: an honoured row says which
+of my levers others may demand and by whom. The reflex still passes over those rows, and the
+reason narrowed usefully — not "a duty is nobody's to decide" but "this member steers a
+property toward an aim, and a duty is a graph-shaped goal it cannot express". That filter
+lifts when a member can pursue a diff rather than a distance.
+
 # Seams left open
 
 - **How an obligation's urgency is computed.** A stake's urgency comes from the envelope; an

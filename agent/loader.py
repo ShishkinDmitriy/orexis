@@ -102,6 +102,7 @@ RULES = "rules.ru"
 # ?term and ?value, run by the reviewer — never an update, and never Python. See agora/review.py.
 REVIEW = "review.rq"
 AFFORDANCES = "affordances.rq"
+HONOURED = "honoured.rq"
 
 
 @dataclass(frozen=True)
@@ -229,6 +230,18 @@ def affordance_files() -> tuple[Path, ...]:
     a review rule, so no file here declares prefixes.
     """
     return files(AFFORDANCES)
+
+
+def honoured_files() -> tuple[Path, ...]:
+    """Every package's HONOURED rows (#218) — what happens through an agent because others
+    hold paper, rather than because it chose.
+
+    A second file rather than a flag inside the first, for the reason the two kinds differ
+    at all: an author writing options should not be one FILTER away from writing duties, and
+    a reader asking "what does this package impose on whoever holds the hardware" should
+    have one file to read.
+    """
+    return files(HONOURED)
 
 
 def review_rules() -> tuple[Path, ...]:

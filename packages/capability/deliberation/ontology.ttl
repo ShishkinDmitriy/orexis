@@ -12,6 +12,33 @@
 
 See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.""" .
 
+#################  What kind of row this is  #################
+#
+#  A menu row says what happens THROUGH an agent, and there are two kinds. A CHOSEN row is an
+#  option: mine, at my discretion. An HONOURED row is a lever others may demand — disclosed so
+#  an agent's conduct surface is legible whole, which the desire-scoped menu could not do: an
+#  ability that serves others was a true fact living nowhere queryable.
+#
+#  DISCLOSURE, not exemption. What an obligation makes an agent do arrives as a WANT — a
+#  desire it did not source, with provenance saying whose it is — so duties and wants share
+#  one currency and one decision path. See
+#  knowledge/decisions/an-obligation-is-a-desire-someone-else-sourced.md.
+#
+#  Declared HERE and not in the market package, where it was first written: a mode is a fact
+#  about a menu row, and the menu is this package's. Sensing saying `market:Chosen` about its
+#  own Observe row was a package reaching into another's vocabulary to describe itself.
+
+:Mode a owl:Class ; rdfs:label "Mode" ;
+    rdfs:comment "Whether a row is mine to choose or a lever others may demand. Two individuals and no third: a row nobody may ask for and nobody may decline is not an affordance, it is a description." .
+:Chosen a :Mode ; rdfs:label "chosen" ;
+    rdfs:comment "At my discretion — the rows a deliberator ranges over." .
+:Honoured a :Mode ; rdfs:label "honoured" ;
+    rdfs:comment "A lever a valid presentation may demand. The reflex passes over these — not because a duty is nobody's to decide, but because it steers a property toward an aim and a duty is a graph-shaped goal it cannot express." .
+
+:mode a owl:ObjectProperty ; rdfs:range :Mode ;
+    rdfs:label "mode" ;
+    rdfs:comment "Which kind of row this is. Absent means chosen, so a branch written before the distinction keeps its meaning — but the shipped ones say it out loud." .
+
 #################  The capability  #################
 #
 #  The family this whole roadmap was run to open. `deliberation:Reflex` is the old welded chain

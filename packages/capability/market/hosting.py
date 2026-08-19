@@ -38,7 +38,7 @@ from agent.store import bindings
 from agent.world import participants
 
 from .beliefs import HOSTING_BLOCK
-from .terms import ACTUATION, HOSTING, BID_MATCHING, INTENTION, OFFER
+from .terms import ACTUATION, DESIRE, HOSTING, BID_MATCHING, INTENTION, OFFER
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -380,6 +380,14 @@ SELECT ?p WHERE {{
                 self.held[claim.jti] = claim
         else:
             self.redeem(result.claims)
+        # The debt is a WANT now (#218 remade): the society allocated, so this agent owes —
+        # raised as an obligation in its own desire ledger, with the counterparty and the
+        # claim that sourced it, whether or not the holder ever presents. What it buys
+        # immediately is durability: `held` above dies with the process, and a restarted host
+        # used to forget every claim it had issued.
+        if (desire := self.agent.provider(DESIRE)) is not None:
+            for claim in result.claims:
+                desire.owe(claim.sub, claim.jti)
 
     def on_redeem(self, presenter: str, claim: dict) -> None:
         """A holder presented its claim: verify it is theirs, then actuate. Single-use.
@@ -419,7 +427,15 @@ SELECT ?p WHERE {{
         del self.held[jti]
         self.log.info("%s presented claim %s — redeeming %.3f L", presenter, jti,
                       claim.amount_l)
+        # Asked for, and then paid: the obligation steps from owed to demanded, and the dose
+        # going out discharges it. Never deleted — a debt paid and a debt forgotten must not
+        # look alike, which is why the intention ledger keeps its resolutions too.
+        desire = self.agent.provider(DESIRE)
+        if desire is not None:
+            desire.demanded(jti)
         self.redeem([claim])
+        if desire is not None:
+            desire.discharge(jti)
 
     def _issue(self, market, auction_id: str, claim) -> None:
         """Publish one winner's claim — sealed to it, where the roster says it can open one.

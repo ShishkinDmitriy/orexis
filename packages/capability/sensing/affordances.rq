@@ -14,11 +14,12 @@
 # menu. Unqualified patterns on purpose: regions and wiring are public, so the row spans the
 # default graph. Declares no prefixes of its own: `store.query` prepends them.
 
-SELECT ?means ?property ?via ?direction WHERE {
+SELECT ?means ?property ?via ?direction ?mode WHERE {
   $me desire:desires ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property .
   $me sensing:polls ?via .
   ?via sensing:monitors ?subject ;
        sosa:observes ?property .
   BIND(intention:Observe AS ?means)
+  BIND(deliberation:Chosen AS ?mode)
 }
