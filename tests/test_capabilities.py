@@ -284,3 +284,51 @@ def test_the_alarm_promise_is_entailed_from_the_governed_class():
     assert probe.alarm, "the promise must flow from governed:Node to the connecting device"
     air = next(s for s in me.sensors if s.local_id == "air_temp_fern")
     assert not air.alarm, "an untyped channel promises nothing — honest by absence"
+
+
+# --- imports follow grants (#216) -------------------------------------------
+
+def test_a_package_whose_import_fails_costs_only_the_agents_granted_it(tmp_path, monkeypatch):
+    """The declared degrade path, synthesised: a package whose optional extra is missing.
+
+    Before #216 the loader imported every package to build the registry, so ONE missing
+    dependency — `agora[consulting]` and its model client — crashed every agent in the
+    society at import time, including the ones never granted the capability. Now a
+    capability names its owning package by NAMESPACE (no Python read to find out), so the
+    failure is scoped: the granted agent gets the honest "nothing provides it" path, and
+    everyone else never touches the package at all.
+    """
+    from agent import loader
+
+    pkg = tmp_path / "capability" / "oracular"
+    pkg.mkdir(parents=True)
+    (pkg / "ontology.ttl").write_text(
+        "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n"
+        "<http://example.org/agora/oracular> a owl:Ontology .\n")
+    (pkg / "__init__.py").write_text("import definitely_not_installed  # the missing extra\n")
+
+    real = loader.of_kind
+    monkeypatch.setattr(loader, "of_kind", lambda kind: real(kind) + (
+        loader.Package(path=pkg, kind="capability", name="oracular"),))
+    loader._namespace_owners.cache_clear()
+
+    consulting = "http://example.org/agora/oracular#Consulting"
+    assert loader.registry_for({consulting}) == {}, "granted: unprovided, and no crash"
+    assert set(loader.registry_for({SUBSCRIBING})) == {SUBSCRIBING}, \
+        "ungranted: the broken package is never even imported"
+    loader._namespace_owners.cache_clear()
+
+
+def test_a_fern_imports_no_actuation(monkeypatch):
+    """The economy, stated as a fact rather than hoped for: the packages a grant reaches are
+    the packages imported. Fern holds no actuator, so actuation's Python — and whatever a
+    future package brings with it — stays out of its process."""
+    from agent import loader
+
+    imported = []
+    real = loader._provider_in
+    monkeypatch.setattr(loader, "_provider_in",
+                        lambda p, c: (imported.append(p.name), real(p, c))[1])
+    loader.registry_for(load_self(query_fn(genesis_store()), "fern").capabilities)
+    assert "actuation" not in imported
+    assert "sensing" in imported and "market" in imported

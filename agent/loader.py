@@ -237,15 +237,79 @@ def review_rules() -> tuple[Path, ...]:
     return files(REVIEW)
 
 
+_ONTOLOGY_IRI = re.compile(r"<(http://example\.org/agora[^>\s]*)>\s+a\s+owl:Ontology")
+
+
+@lru_cache(maxsize=1)
+def _namespace_owners() -> dict[str, "Package"]:
+    """namespace -> the capability package that owns it, WITHOUT importing a line of Python.
+
+    A package declares one `owl:Ontology` IRI and puts its terms in that IRI plus `#`, and it
+    implements terms of its own namespace and no other — checked by `registry()` below, which
+    is the eager build every gate still runs. That invariant is what lets a granted capability
+    name its own implementer by string alone, so imports can follow grants (#216).
+    """
+    out: dict[str, Package] = {}
+    for package in of_kind(CAPABILITIES):
+        path = package.file(ONTOLOGY)
+        if path is None:
+            continue
+        for iri in _ONTOLOGY_IRI.findall(path.read_text()):
+            out[iri + "#"] = package
+    return out
+
+
+def _provider_in(package: "Package", capability: str) -> type | None:
+    """The class in one package that implements one term — importing that package and no other.
+
+    An ImportError is the DECLARED degrade path (#216): a package whose optional extra is not
+    installed — `agora[consulting]` and its model client — leaves its capability unprovided
+    for the agents that were granted it, and costs nothing at all to the agents that were
+    not. Before this, one missing extra crashed every agent in the society at import time,
+    including those that had never heard of the capability.
+    """
+    try:
+        provided = package.provides()
+    except ImportError as exc:
+        log.warning("%s cannot be imported (%s) — anything it provides is unavailable to "
+                    "the agents granted it, and unnoticed by the rest",
+                    package.import_name, exc)
+        return None
+    return next((c for c in provided if getattr(c, "CAPABILITY", "") == capability), None)
+
+
+def registry_for(capabilities) -> dict[str, type]:
+    """capability term -> its module class, importing only the packages the grants reach.
+
+    Composition has always followed the graph; imports did not, and the universal image made
+    that invisible until an optional dependency existed. A capability names its owner by
+    namespace — no Python read to find out — so a fern imports sensing, market, desire,
+    intention, deliberation, review and reporting, and never actuation's, and an agent
+    granted no Consulting never touches whatever Consulting will need installed.
+    """
+    owners = _namespace_owners()
+    out: dict[str, type] = {}
+    for capability in capabilities:
+        package = next((p for ns, p in owners.items() if capability.startswith(ns)), None)
+        if package is None:
+            continue
+        if (cls := _provider_in(package, capability)) is not None:
+            out[capability] = cls
+    return out
+
+
 @lru_cache(maxsize=1)
 def registry() -> dict[str, type]:
-    """capability term -> the module class that implements it.
+    """capability term -> the module class that implements it, for EVERY package there is.
 
-    Built by asking each capability package what it provides. A capability the world composes
-    but no package implements is not an error here — the agent reports it at startup, because
-    a world that expects more than this build has is a deployment fact, not a crash.
+    The eager build, kept for the gates and the tools that ask what this checkout can do at
+    all. A runtime asks `registry_for` instead, so its imports follow its grants; this one
+    holds the two invariants that make that legal — every provided class names a term, and
+    no term is implemented twice — plus the one it rests on: a package implements only terms
+    of its own namespace, so a capability IRI identifies its implementer by string alone.
     """
     out: dict[str, type] = {}
+    owners = _namespace_owners()
     for package in of_kind(CAPABILITIES):
         for cls in package.provides():
             if not getattr(cls, "CAPABILITY", ""):
@@ -257,6 +321,14 @@ def registry() -> dict[str, type]:
                 raise RuntimeError(
                     f"{cls.CAPABILITY} is implemented twice: {out[cls.CAPABILITY].__name__} "
                     f"and {cls.__name__}. One term, one module."
+                )
+            owner = next((p for ns, p in owners.items() if cls.CAPABILITY.startswith(ns)),
+                         None)
+            if owner is not package:
+                raise RuntimeError(
+                    f"{package.import_name} provides {cls.CAPABILITY}, which belongs to "
+                    f"{owner.import_name if owner else 'no package'} — a package implements "
+                    "the terms it declares, which is what lets imports follow grants (#216)"
                 )
             out[cls.CAPABILITY] = cls
     return out

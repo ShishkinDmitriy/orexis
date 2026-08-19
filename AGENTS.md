@@ -65,7 +65,9 @@ record is worse than none, because it is still cited.
    lists them — `agent.loader` finds them two levels down, and the FAMILY is the parent
    directory rather than anything declared, so `kind` distinguishes a plant from a part without
    a registry. `PROVIDES` in `__init__.py` is how an implementation registers, and its absence
-   is what makes a package knowledge-only. Adding one is adding a directory. Packages never
+   is what makes a package knowledge-only. A package implements the terms IT declares —
+   which is what lets imports follow grants: a runtime imports only the packages its own
+   capabilities name (#216). Adding one is adding a directory. Packages never
    import each other's Python: ask `agent.provider(family)` or contribute via
    the choir hooks (`annotate`, `urgency`, `notices`, `series`, `quiet`).
 
