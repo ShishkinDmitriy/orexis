@@ -32,6 +32,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from agent.goal import Goal
 from agent.module import Module
 from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
@@ -178,6 +179,9 @@ class Gap:
     high: float
     gap: float
     at: datetime | None = None
+    #  The shape this diff is against, so a goal built from it can name its own node rather
+    #  than rebuilding the IRI — a want minted by a rule is found by asking, never by spelling.
+    region: str | None = None
 
     def age_s(self, now: datetime | None = None) -> float | None:
         """Seconds since the sensed side was true, or None for a reading with no timestamp."""
@@ -205,6 +209,7 @@ def gaps_of(query, agent_uri: str) -> dict[str, Gap]:
         low=float(row["low"]), high=float(row["high"]),
         gap=float(row["gap"]),
         at=datetime.fromisoformat(row["at"]) if row.get("at") else None,
+        region=row.get("region"),
     ) for row in bindings(query(substituted))}
 
 
@@ -324,7 +329,8 @@ class DesireModule(Module):
             f'<http://example.org/agora#localId> "{agent_id}" }} LIMIT 1'))
         return rows[0]["a"] if rows else None
 
-    def owe(self, to_agent_id: str, claim_jti: str) -> str | None:
+    def owe(self, to_agent_id: str, claim_jti: str,
+            expires_at: float | None = None) -> str | None:
         """Record what the society just made this agent owe. Returns the obligation's IRI.
 
         Raised when a claim is ISSUED, not when it is presented: the debt exists from the
@@ -343,6 +349,17 @@ class DesireModule(Module):
             self.log.warning("asked to owe %s, whom this world does not declare — refused",
                              to_agent_id)
             return None
+        #  The claim's own deadline, kept as the debt's. Both timestamps are recorded because
+        #  urgency is the room BETWEEN them — how much of the window has run — and an agent
+        #  that stored only the expiry would have to assume when the window opened. A claim
+        #  with no expiry leaves the triple out, and the obligation is simply never hot: that
+        #  is a market with no redeem channel, where the dose went out on issue and there was
+        #  never a wait to be late for.
+        expiry = ""
+        if expires_at is not None:
+            expiry = (f' ;\n                <{KERNEL}expiresAt> '
+                      f'"{datetime.fromtimestamp(expires_at, timezone.utc).isoformat()}"'
+                      f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
         uri = f"{KERNEL}obligation.{claim_jti}"
         graph = obligations_graph(self.agent.id)
         if bindings(self.agent.store.query(
@@ -354,7 +371,7 @@ class DesireModule(Module):
                 <{KERNEL}owedTo> <{to_agent}> ;
                 <{KERNEL}forClaim> "{claim_jti}" ;
                 <{KERNEL}presented> false ;
-                <{KERNEL}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+                <{KERNEL}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
         self.log.info("owed to %s for claim %s", to_agent_id, claim_jti)
         return uri
 
@@ -386,11 +403,66 @@ class DesireModule(Module):
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
         extra = f'?o <{KERNEL}presented> true .' if presented_only else ""
         return bindings(self.agent.store.query(f"""
-SELECT ?o ?to ?jti ?presented ?at WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
+SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
   ?o a <{KERNEL}Obligation> ; <{KERNEL}owedTo> ?to ; <{KERNEL}forClaim> ?jti ;
      <{KERNEL}presented> ?presented ; <{KERNEL}owedAt> ?at .
+  OPTIONAL {{ ?o <{KERNEL}expiresAt> ?expires }}
   {extra}
   FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
+
+    def duties(self, now: datetime | None = None) -> list[Goal]:
+        """What this agent owes, as goals — hottest first, and hot means CLOSE TO EXPIRY.
+
+        A stake's urgency is distance scaled by the survival envelope; a duty has no envelope,
+        so its room is time: the fraction of the redeem window that has run. At issue nothing
+        has gone wrong and the debt is cool; at the deadline it is maximal. The sovereign chose
+        this over the two alternatives the obligation record names as the whole risk — a duty
+        pinned at 1.0 is the honoured mode returning under another name, and a duty with no heat
+        is an agent that defects while its ledger looks tidy.
+
+        A debt whose claim named no deadline stays at zero for ever, and that is not a bug: the
+        market that issued it has no redeem channel, so the dose went out when it was won and
+        nobody is waiting. `pursuable` is the OTHER question — whether the holder has asked —
+        and it is deliberately not folded into urgency, because a debt this agent can see
+        expiring while nobody has presented is worth seeing.
+        """
+        now = now or datetime.now(timezone.utc)
+        out = []
+        for row in self.owed():
+            owed_at = datetime.fromisoformat(row["at"])
+            expires = datetime.fromisoformat(row["expires"]) if row.get("expires") else None
+            urgency = 0.0
+            if expires is not None:
+                window = (expires - owed_at).total_seconds()
+                #  A window of zero would be a claim that expired as it was issued. It cannot
+                #  arrive from a validated world — the shape refuses a non-positive window —
+                #  so this only guards a hand-built ledger, and it guards it the honest way:
+                #  no room at all IS the deadline, which is maximal rather than a division.
+                urgency = 1.0 if window <= 0 else max(0.0, min(
+                    1.0, (now - owed_at).total_seconds() / window))
+            #  Two reasons a standing debt is not actionable, and they are different facts.
+            #  Nobody has asked yet: the holder is waiting for its own watch. Or the window
+            #  closed: the venue stopped holding the claim, so there is nothing left to spend
+            #  even though the debt is still on the books. Both stay in the list — a duty that
+            #  ran out unserved is exactly the evidence this design refuses to throw away, and
+            #  a consumer that iterates rather than taking the maximum is never blocked by one.
+            presented = str(row["presented"]).lower() in ("true", "1")
+            lapsed = expires is not None and now >= expires
+            out.append(Goal(uri=row["o"], urgency=urgency, claim=row["jti"],
+                            owed_to=row["to"], pursuable=presented and not lapsed))
+        return sorted(out, key=lambda g: -g.urgency)
+
+    def goals(self, now: datetime | None = None) -> list[Goal]:
+        """Everything this agent wants, hottest first, whoever sourced it.
+
+        The one list a deliberator ranges over. Stakes and duties in one order is the whole
+        claim of the obligation record — urgency is the common currency, so a litre owed and a
+        pot drying rank against each other instead of running down two paths that never meet.
+        """
+        stakes = [Goal(uri=gap.region or "", urgency=abs(gap.gap),
+                       observed_property=prop, value=gap.value)
+                  for prop, gap in self.gaps().items()]
+        return sorted(stakes + self.duties(now), key=lambda g: -g.urgency)
 
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:

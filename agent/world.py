@@ -118,6 +118,10 @@ class Market:
     claim_topic: str
     redeem_topic: str | None = None  # absent in a world authored before #132 — paper, unspendable
     capacity_l: float = 0.0  # physical ceiling of the resource — the allocation limit
+    #  How long this venue holds a winner's claim. None where the world authored no window,
+    #  which is the same era as no redeem channel: the host redeemed on issue and no winner
+    #  ever waited. A stated window is what puts an expiry on every claim the venue issues.
+    redeem_window_s: float | None = None
 
 
 @dataclass
@@ -215,12 +219,13 @@ WHERE {{
 
 def _markets_q(agent_uri: str, relation: str) -> str:
     return f"""
-SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?claimTopic ?redeemTopic ?capacity
+SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?claimTopic ?redeemTopic ?window ?capacity
 WHERE {{ 
   <{agent_uri}> market:{relation} ?market .
   ?market ag:localId ?localId ; market:marketFor ?resource ;
           market:offerTopic ?offerTopic ; market:bidTopic ?bidTopic ; market:claimTopic ?claimTopic .
   OPTIONAL {{ ?market market:redeemTopic ?redeemTopic }}
+  OPTIONAL {{ ?market market:redeemWindowS ?window }}
   OPTIONAL {{ ?resource market:lotCapacity ?capacity }}
  }}"""
 
@@ -237,6 +242,7 @@ def _market_from(row: dict) -> Market:
         uri=row["market"], local_id=row["localId"], resource=row["resource"],
         offer_topic=row["offerTopic"], bid_topic=row["bidTopic"],
         claim_topic=row["claimTopic"], redeem_topic=row.get("redeemTopic"),
+        redeem_window_s=float(row["window"]) if row.get("window") else None,
         capacity_l=float(row["capacity"]) if row.get("capacity") else 0.0,
     )
 

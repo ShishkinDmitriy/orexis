@@ -16,6 +16,11 @@ a family now: a deliberator is asked `propose(property, freshest value or None)`
 with a move — `Observe`, `Acquire` — or with None, **which is a decision, not an absence of
 one**: the actors treat it exactly as they treat their own cooldowns.
 
+`propose_for(goal)` is the same question asked properly. A property and a value can only ever
+express a stake, and an agent also wants things that are not distances — "this claim redeemed"
+is a state, wanted, with a deadline. A goal carries either shape and one urgency, so a duty is
+ranked against a thirst rather than running down a second path that never meets the first.
+
 # The three members
 
 - **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;
@@ -75,11 +80,20 @@ prompt" is checkable now.
 # Two modes: what I choose, and what I honour (#218)
 
 A menu row says what happens THROUGH an agent, and there are two kinds. **Chosen** rows are
-options — what a deliberator ranges over. **Honoured** rows are duties, exercised when a
-valid presentation arrives and never proposed: the whether was settled elsewhere and by
-others (the winner's Apply, the auction's allocation, the signature chain), and a host that
-could deliberate over honouring claims is a host that can defect politely, one "None is a
-decision" at a time. The mode is this package's term, not the market's — a mode is a fact about a menu row, and
+options — what a deliberator ranges over. **Honoured** rows are duties — what happens through this agent because
+others hold paper against it.
+
+They used to be *never proposed*: the whether was settled elsewhere and by others (the winner's
+Apply, the auction's allocation, the signature chain), and the fear was that a host free to
+deliberate over honouring claims is a host that can defect politely, one "None is a decision" at
+a time. That is no longer the arrangement, and the fear was answered rather than ignored —
+**enforcement was never the deliberation**. The dose still opens against a claim the pump's
+firmware verifies, clearing still validated the trade, the ACL still bounds who may speak. What
+deliberation controls is only whether the agent *tries*, so making the duty a want converts an
+invisible non-event into a hot unpursued goal — evidence instead of silence. An honoured row is
+now what lets a duty FIND ITS LEVER: an obligation names who it is owed to, and the row honoured
+for exactly that counterparty is the means. See
+[an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md). The mode is this package's term, not the market's — a mode is a fact about a menu row, and
 sensing saying `market:Chosen` about its own Observe row was a package reaching into
 another's vocabulary to describe itself. Packages ship duties in `honoured.rq` beside their
 options in `affordances.rq` — a second file rather than a flag, because an author writing options

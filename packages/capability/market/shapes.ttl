@@ -46,7 +46,14 @@ market:MarketShape a sh:NodeShape ;
     sh:property [ sh:path market:bidTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path market:claimTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path market:redeemTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
-                  sh:message "a market states where a holder presents its claim — without it a claim is paper nobody can spend" ] .
+                  sh:message "a market states where a holder presents its claim — without it a claim is paper nobody can spend" ] ;
+    #  Belt and braces, and the braces are the derivation: a source stating no window derives
+    #  no venue, so this fires only for a venue somebody authored BY HAND — which a world may
+    #  still do. Positive because a window of zero is a claim that expires before the wire
+    #  carries it, and there is no reading of "held for no time" that a buyer could act on.
+    sh:property [ sh:path market:redeemWindowS ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:integer ; sh:minExclusive 0 ;
+                  sh:message "a market that takes presentations states how long it holds a winner's claim — a deadline is what makes a debt urgent rather than eternal, and what stops a host keeping paper for ever" ] .
 
 market:HostStatesHowItMatchesShape a sh:NodeShape ;
     rdfs:comment "A host must say how it matches. Without it no matching capability is derived, `agent.provider` finds nobody, and the failure arrives at the END of a round — bids collected, deadline passed, nothing to allocate them with, and every bidder waiting on a claim that will not come. That is expensive and silent, and it is exactly what a world can be held to before anything starts. Targeted at whoever hosts rather than at ag:Agent, because an agent that hosts nothing has no auction to state terms for." ;

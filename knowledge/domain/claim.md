@@ -46,6 +46,25 @@ it (the presenter is read off the topic segment the ACL lets it write). The held
 in-process — a host that restarts forgets unpresented claims, which is the claim-ledger seam
 the roadmap records.
 
+# It expires, and the venue says when
+
+`exp` is set at issue from the market's own `market:redeemWindowS`, a triple the source states
+and the derived venue carries. Every claim from one round shares it: the window runs from the
+moment the society allocated, so two winners are held for the same time and neither can be late
+by an accident of loop order. A presentation after it is refused, the paper is dropped, and the
+debt stays on the host's books undischarged — which reads differently from paid and differently
+again from never demanded.
+
+The window has to comfortably exceed the longest a holder may wait before presenting, and that
+is one full cycle of whatever cadence its sensing currently commands — dynamic, so no shape can
+check it. State it long: a generous window costs a debt remembered slightly too long, a mean one
+charges a buyer for water that never left the barrel.
+
+What it is *for* is urgency. A stake's heat comes from the survival envelope, and a duty has no
+envelope — its room is time, so an obligation's urgency is the fraction of the window that has
+run. That is why the deadline had to exist as data before obligations could drive acts; see
+[an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md).
+
 # The boundary, stated honestly (#144, #145)
 
 Three layers, three adversaries, and the broker is no longer trusted for any of it where the

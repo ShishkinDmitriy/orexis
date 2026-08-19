@@ -13,6 +13,7 @@ change, not a logic change. See knowledge/decisions/authn-authz-capabilities.md.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from uuid import uuid4
 
@@ -92,11 +93,25 @@ class Claim:
     debit: float  # credit leg
     auction_id: str  # binds to the auction it was won in, never to a bidding pass
     jti: str  # anti-replay id
+    #  When the venue stops holding it, in epoch seconds — JWT's word, as `jti` is. None means
+    #  a market that named no window, which is a market with no redeem channel: the host
+    #  redeemed on issue and there was never a wait to bound. It is what makes a debt URGENT
+    #  rather than eternal — an obligation's heat is the room its claim has left — and what
+    #  lets a host stop holding paper for a winner that walked away.
+    exp: float | None = None
 
 
-def issue_claims(trade: Trade, auction_id: str) -> list[Claim]:
+def issue_claims(trade: Trade, auction_id: str,
+                 redeem_window_s: float | None = None) -> list[Claim]:
     """Turn a *validated* trade into per-buyer settlement claims. Caller must have
-    confirmed `validate(trade, state).ok` first."""
+    confirmed `validate(trade, state).ok` first.
+
+    Every claim from one auction shares an expiry, computed ONCE here rather than per line:
+    the window runs from the moment the society allocated the good, so two winners of the
+    same round are held for the same time and neither can be late by an accident of loop
+    order. A `None` window leaves `exp` unset — see the field.
+    """
+    expires = time.time() + redeem_window_s if redeem_window_s is not None else None
     return [
         Claim(
             sub=line.agent,
@@ -105,14 +120,16 @@ def issue_claims(trade: Trade, auction_id: str) -> list[Claim]:
             debit=line.cost,
             auction_id=auction_id,
             jti=uuid4().hex,
+            exp=expires,
         )
         for line in trade.lines
     ]
 
 
-def clear(trade: Trade, state: MarketState, auction_id: str) -> list[Claim]:
+def clear(trade: Trade, state: MarketState, auction_id: str,
+          redeem_window_s: float | None = None) -> list[Claim]:
     """Validate then issue claims; raise if the trade is invalid."""
     result = validate(trade, state)
     if not result.ok:
         raise ValueError("invalid trade: " + "; ".join(result.violations))
-    return issue_claims(trade, auction_id)
+    return issue_claims(trade, auction_id, redeem_window_s)
