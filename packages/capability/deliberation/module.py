@@ -67,7 +67,7 @@ SELECT ?direction WHERE {
 } LIMIT 1"""
 
 
-_CHOSEN = "http://example.org/agora/market#Chosen"
+_CHOSEN = "http://example.org/agora/deliberation#Chosen"
 
 
 @dataclass(frozen=True)

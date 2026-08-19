@@ -54,36 +54,6 @@
     rdfs:label "offered by" ;
     rdfs:comment "The party whose standing offer this source is — the neutral word the venue derivation reads, with each domain bridging its own (water:suppliedBy is a subproperty, on the capacityL -> lotCapacity precedent). Together with the owner stating market:matchesBy, this is the whole premise of a shop: a source offered by someone who says how they match is a market, derived; everything else about the venue is minted from the source's id. See knowledge/decisions/a-market-arises-where-want-meets-supply.md." .
 
-#################  Chosen or honoured: the menu's two modes (#218)  #################
-#
-#  A menu row says what happens THROUGH an agent, and there are two kinds. A CHOSEN row is an
-#  option: mine, at my discretion. An HONOURED row is a lever others may demand — disclosed so
-#  an agent's conduct surface is legible whole.
-#
-#  It is DISCLOSURE and not exemption. The sovereign's reframe put motivation where it belongs:
-#  a claim raises an OBLIGATION — a desire this agent did not source, with provenance saying
-#  whose it is — so duties and wants share one currency and one decision path, and an
-#  unfulfilled duty is a hot unpursued goal rather than an invisible non-event. What this row
-#  adds is the other half: which of my levers are reachable that way, and by whom, which is
-#  topology and therefore knowable before anything runs.
-#
-#  The distinction is not decoration: without it, the menu answers only "what could I do about
-#  MY gaps", so an ability that serves others — claims presented against my valves will be
-#  redeemed — is a true fact about the agent that lives nowhere queryable, and the sovereign
-#  asking what an agent does sees half its conduct. With it, one query answers both, the
-#  deliberator filters to Chosen, and duties stay duties.
-
-:Mode a owl:Class ; rdfs:label "Mode" ;
-    rdfs:comment "Whether a row is mine to choose or mine to honour. Two individuals and no third: a row nobody may decline and nobody must perform is not an affordance, it is a description." .
-:Chosen a :Mode ; rdfs:label "chosen" ;
-    rdfs:comment "At my discretion — the rows a deliberator ranges over." .
-:Honoured a :Mode ; rdfs:label "honoured" ;
-    rdfs:comment "Exercised on a valid presentation, never proposed. The duty a signature chain imposes on whoever holds the hardware." .
-
-:mode a owl:ObjectProperty ; rdfs:range :Mode ;
-    rdfs:label "mode" ;
-    rdfs:comment "Which kind of row this is. Absent means chosen, so every branch written before the distinction existed keeps its meaning — but the shipped ones say it out loud, because an omission that means something is worth spending three words to avoid." .
-
 #################  The lot states its good (#198)  #################
 #
 #  What a venue's lot is a quantity OF, and the missing half of every denomination join in the

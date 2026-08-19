@@ -21,5 +21,5 @@ SELECT ?means ?property ?via ?direction ?mode WHERE {
   ?via sensing:monitors ?subject ;
        sosa:observes ?property .
   BIND(intention:Observe AS ?means)
-  BIND(market:Chosen AS ?mode)
+  BIND(deliberation:Chosen AS ?mode)
 }

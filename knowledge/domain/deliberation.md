@@ -79,8 +79,10 @@ options — what a deliberator ranges over. **Honoured** rows are duties, exerci
 valid presentation arrives and never proposed: the whether was settled elsewhere and by
 others (the winner's Apply, the auction's allocation, the signature chain), and a host that
 could deliberate over honouring claims is a host that can defect politely, one "None is a
-decision" at a time. Packages ship duties in `honoured.rq` beside their options in
-`affordances.rq` — a second file rather than a flag, because an author writing options
+decision" at a time. The mode is this package's term, not the market's — a mode is a fact about a menu row, and
+sensing saying `market:Chosen` about its own Observe row was a package reaching into
+another's vocabulary to describe itself. Packages ship duties in `honoured.rq` beside their
+options in `affordances.rq` — a second file rather than a flag, because an author writing options
 should not be one FILTER away from writing duties.
 
 What this bought: the menu used to answer only *what could I do about MY gaps*, so an
