@@ -45,7 +45,7 @@ def test_bidding_block(fern):
     """A wallet and a value curve — no band, no target, and no conversion.
 
     The band edges left first: they were the plant's own limits restated privately. The target
-    followed, as `desire:aims` — the point an agent steers for is a fact about its ends, not
+    followed, as `ag:aims` — the point an agent steers for is a fact about its ends, not
     about a market, and the bidder now asks whoever provides the desire family for it at bid
     time. The conversion left last (#198): WHICH term turns a deficit into litres is a fact
     about the bidder's venue — litres-per-fraction for a fern, litres-per-stored-litre for the

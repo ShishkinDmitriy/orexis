@@ -195,16 +195,74 @@ ag:underWorldVersion a owl:DatatypeProperty ; rdfs:range xsd:integer ;
 
 ag:Graph a owl:Class ; rdfs:label "Named graph" .
 
+#################  Three axes over one graph  #################
+#
+#  A named graph is classified THREE ways, independently, and conflating them is why some
+#  graphs never found a natural home: what its content ASSERTS, WHOSE it is, and HOW IT
+#  ARRIVED. A species' range is a constraint AND public AND derived; an aim is a desire AND
+#  private AND asserted; an obligation is a constraint AND private AND received. Nothing but
+#  the first axis is about meaning, and the first axis is the one the vocabulary lacked.
+#
+#  See knowledge/decisions/the-mind-is-six-graphs.md. The classes below say what a graph IS;
+#  which graphs are instances of each is data, asked for and never listed — the arrangement
+#  ag:PublicGraph already had, generalised to six modalities and five arrivals.
+
+#  --- modality: what the content asserts ---
+
+ag:Modality a owl:Class ; rdfs:label "Modality" ;
+    rdfs:comment "What a graph's content asserts about the subjects in it. The same subject, property and unit appear in every modality — fern's moisture is observed, bounded, aimed at, moved by a lever, committed to and recorded — so the modality is what a reader must know to interpret a triple, and the one thing the graph vocabulary could not previously say." .
+
+ag:BeliefGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Belief graph" ;
+    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
+
+ag:ConstraintGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Constraint graph" ;
+    rdfs:comment "What MAY be: bounds this agent cannot move and is refused for violating. A species' operating and survival ranges, an instrument's working range, the constitution's ceilings, the sovereign's mandates, and a peer's claim — one kind of thing, differing only in who stated it and whether there is anyone to be wronged." .
+
+ag:DesireGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Desire graph" ;
+    rdfs:comment "What the agent PURSUES: its aim in a property, its picks about its own conduct, and the goals a claim sourced. Everything here is ordered — which is where character will live — and everything here is the agent's, chosen inside constraints it did not choose." .
+
+ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
+    rdfs:comment "What the agent COULD do: the affordance rows, and what others may demand of it. Derived and never authored — a row is a conclusion whose premises are stored, so an authored row could outlive its premise, which is the one hazard this graph must never reintroduce." .
+
+ag:IntentionGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Intention graph" ;
+    rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
+
+ag:HistoryGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "History graph" ;
+    rdfs:comment "What the agent DID: resolved commitments, discharged obligations, doses delivered, amendments woken into. A bounded ring with the series store behind it — nothing points INTO history, because whatever must outlive the window copies what it needs at commit time, which is how an expectation already carries its own baseline." .
+
+#  --- how it arrived ---
+
+ag:Arrival a owl:Class ; rdfs:label "Arrival" ;
+    rdfs:comment "How a graph's content got there. Five values and no sixth: everything in this system is said, computed one of two ways, done, or heard." .
+
+ag:Asserted a ag:Arrival ; rdfs:label "asserted" ;
+    rdfs:comment "The sovereign said so. True by ratification, not by argument." .
+ag:Derived a ag:Arrival ; rdfs:label "derived" ;
+    rdfs:comment "A package's rule concluded it from given facts. Policy: another society could rule otherwise with the same vocabulary." .
+ag:Entailed a ag:Arrival ; rdfs:label "entailed" ;
+    rdfs:comment "The vocabulary's own logic implies it — subclass, subproperty, hasValue, property chains. Not policy: any reasoner over these axioms would agree." .
+ag:Recorded a ag:Arrival ; rdfs:label "recorded" ;
+    rdfs:comment "This agent's own act, at runtime. Its word about itself." .
+ag:Received a ag:Arrival ; rdfs:label "received" ;
+    rdfs:comment "Another party's word: an instrument's reading, a peer's claim. The only arrival whose trustworthiness is a question — an assertion is the sovereign's by definition and a derivation is checkable arithmetic, but this either carries a signature or does not, which is why the graph classification and the trust story are one story." .
+
+ag:arrivedBy a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Arrival ;
+    rdfs:label "arrived by" .
+
 ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph" ;
     rdfs:comment "Knowledge every agent in a world may read: the vocabulary, the topology, and what the rules and the RDFS closure made of them. This is the class `store.query` looks for — the default graph of every query is whatever is an instance of THIS, discovered rather than listed, so adding one is a vocabulary edit and touches no code. Membership is deliberately by declaration and not by exclusion: a graph nobody typed is invisible, which is the safe direction to fail — the other way round, a new private graph nobody remembered to exclude would leak into every query." .
 
-ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph ; rdfs:label "World graph" ;
+#  The existing classes, now saying their modality too. Nothing moves: a graph that was a
+#  WorldGraph is a WorldGraph AND a BeliefGraph, because "topology the sovereign ratified" and
+#  "an assertion about what is" are answers to different questions.
+
+ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "World graph" ;
     rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see agora/provenance.py." .
-ag:BeliefsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Beliefs graph" ;
-    rdfs:comment "ONE agent's private parameters for the capabilities it composed. Opinion, not fact. NOT a public graph: reachable only by naming it, which is what makes a review's write boundary checkable." .
-ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Sensed graph" ;
-    rdfs:comment "What sensors read. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
-ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph ; rdfs:label "Ontology graph" ;
+ag:BeliefsGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:DesireGraph ; rdfs:label "Beliefs graph" ;
+    rdfs:comment "ONE agent's private parameters for the capabilities it composed — and a DESIRE graph, which the name has never said: sort its contents and the aim is a desire about the world while the cadence, patience and ceilings are desires about the agent's own conduct, every one a pick inside a mandate. Nothing in it is a belief; what this agent believes is in the sensed and public graphs. The name is kept for now because graph IRIs are load-bearing in deployed volumes and a rename is a migration; the TYPE is what carries the truth. NOT a public graph: reachable only by naming it, which is what makes a review's write boundary checkable." .
+ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:label "Sensed graph" ;
+    rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
+ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
 ag:ProvenanceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Provenance graph" ;
     rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
@@ -214,13 +272,222 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
     rdfs:comment "Which agent owns this graph — the write boundary, made explicit." .
 
 ##  The instances. Data, not terms — code names the classes above and finds these by asking.
-##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and the
-##  three ways a fact got there (asserted, derived, entailed) are provenance, recorded separately.
+##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and how
+##  a fact got there is a separate question — which each instance now answers with ag:arrivedBy
+##  rather than by having its arrival encoded in its name.
 
-<http://example.org/agora/graph/ontology>          a ag:OntologyGraph .
-<http://example.org/agora/graph/ontology/entailed> a ag:OntologyGraph .
-<http://example.org/agora/graph/world>             a ag:WorldGraph .
-<http://example.org/agora/graph/world/derived>     a ag:WorldGraph .
-<http://example.org/agora/graph/world/entailed>    a ag:WorldGraph .
-<http://example.org/agora/graph/sensed>            a ag:SensedGraph .
+<http://example.org/agora/graph/ontology>          a ag:OntologyGraph ; ag:arrivedBy ag:Asserted .
+<http://example.org/agora/graph/ontology/entailed> a ag:OntologyGraph ; ag:arrivedBy ag:Entailed .
+<http://example.org/agora/graph/world>             a ag:WorldGraph ;    ag:arrivedBy ag:Asserted .
+<http://example.org/agora/graph/world/derived>     a ag:WorldGraph ;    ag:arrivedBy ag:Derived .
+<http://example.org/agora/graph/world/entailed>    a ag:WorldGraph ;    ag:arrivedBy ag:Entailed .
+<http://example.org/agora/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
 <http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .
+
+##  The bounds a subject's stated ranges put on whoever acts for it: an operating region to
+##  hold a property inside, and the survival envelope outside which the subject ends. Derived
+##  by the desire package's rule, declared HERE like the derived world graph, because a graph
+##  is the kernel's furniture whoever fills it — and a rule targets `ag:ConstraintGraph`
+##  directly now, since `graph_of_class` refuses ambiguity loudly rather than guessing.
+##
+##  It was `graph/desire` and typed a region graph, which was wrong twice: the name followed
+##  the capability that computes it, and the content is not anybody's want. An agent holding
+##  bounds and no aim pursues NOTHING — the running proof that a bound motivates nobody.
+<http://example.org/agora/graph/constraint>        a ag:ConstraintGraph , ag:PublicGraph ;
+    ag:arrivedBy ag:Derived .
+
+
+#################  THE MIND'S STATES  #################
+#
+#  What a mind CONTAINS — desires, obligations, intentions and the means they name — declared
+#  in the kernel because they are the lingua franca: four capability packages already had to
+#  name them (market's bidding and hosting, deliberation, actuation), and a term many packages
+#  must name is nobody's package-private word. `ag:IntentionGraph` holding `intention:Intention`
+#  was a split brain the graph axes exposed.
+#
+#  WHAT STAYS IN THE PACKAGES is the HOW: `desire:Deducing` and `desire:Consulting` are two ways
+#  of arriving at a region, `intention:Keeping` one way of keeping a ledger, and each capability
+#  keeps its own parameters (a patience, a met-fraction). That is rule 2 unchanged — a family is
+#  where the how could differ — and it is why universality was never the test:
+#  telemetry-is-a-mandatory-capability settled that a capability every agent holds is still a
+#  capability, and the mirror holds here, that a STATE no agent is obliged to have is still the
+#  kernel's word for it. `ag:Device` is kernel and most agents hold none.
+#
+#  See knowledge/decisions/the-mind-is-six-graphs.md.
+
+#################  What a desire IS  #################
+
+ag:Bounds a owl:Class ; rdfs:label "Desire" ;
+    rdfs:comment """One property, the region to hold it in, and the envelope outside which the subject does not merely suffer but ends. A desire is per PROPERTY and an agent holds as many as its subject states ranges for — which is the whole of what makes a humidity reading actionable where it was previously a number with nowhere to go.
+
+Not a point. A target is a point and remains one, privately, in the agent's beliefs; this is what that point must answer to.""" .
+
+ag:boundedBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Bounds ;
+    rdfs:label "desires" ;
+    rdfs:comment "Reads as what this agent is trying to bring about. Derived, never written by hand — a world stating one would be authoring an agent's ends instead of the facts they follow from, and the shapes refuse it." .
+
+#  The region itself is stated in schema.org's terms and not in ours, and the reuse is
+#  load-bearing rather than thrifty: an operating range's condition says `schema:minValue` /
+#  `schema:maxValue` about a property, and so does this. One vocabulary for one kind of claim
+#  means the deduction is MAX and MIN over comparable numbers, with nothing to translate — and
+#  a reader who knows how to read a plant's range can already read an agent's.
+#
+#  `ssn:forProperty` for the same reason. It is what a condition uses to say which property it
+#  is a range of, and `sosa:ObservableProperty rdfs:subClassOf ssn:Property` makes it well-typed
+#  here too.
+
+ag:toleratedMin a owl:DatatypeProperty ; rdfs:domain ag:Bounds ; rdfs:range xsd:decimal ;
+    rdfs:label "tolerated minimum" ;
+    rdfs:comment """The floor of the survival envelope for this property, when the world states one. Below it the subject does not merely sit outside where it does well — it ends.
+
+Here rather than left in the plant's own range because it is what makes URGENCY meaningful and unit-free. How bad it is to be 0.05 below the region depends entirely on how much room there is below the region, and that figure is asymmetric in exactly the cases that matter: a Zamioculcas comes back from bone dry and does not come back from a rotted rhizome, so the same distance out reads as far more urgent on the wet side. That falls out of the two numbers rather than out of any code, which is why it is worth carrying them here instead of hard-coding a curve.
+
+Optional, and its absence is not a defect. A world that states no survival range simply has an agent whose urgency is scaled by the width of the region instead — a cruder answer, honestly reached.""" .
+
+ag:toleratedMax a owl:DatatypeProperty ; rdfs:domain ag:Bounds ; rdfs:range xsd:decimal ;
+    rdfs:label "tolerated maximum" .
+
+#################  The aim — the pick inside a region  #################
+#
+#  PRIVATE, and the one part of desire that is. A region is deduced and public; the AIM is the
+#  point inside it this agent is currently steering for, and it is the last thing left that an
+#  agent decides about its own ends — which is exactly why it is a belief in the agent's own
+#  graph, why review may move it, and why nothing may default it. "No preference inside my
+#  region" is not a stance this vocabulary can express, deliberately: a consumer that needs a
+#  point needs the agent to have picked one, and a missing belief is an error rather than a
+#  default everywhere in this project.
+#
+#  This replaces `water:hasTarget`, which fused two things: the point an agent aims at
+#  (desire's) and the input a litre-deficit is priced from (the market's). The domain keeps the
+#  pricing — `water:litresPerFraction`, `water:maxValuePerL`, and the statement of which
+#  property a bid is denominated in — and asks the aim of whoever provides the desire family.
+#
+#  NOTE ON MIGRATION: this is a structural move, not a rename, so the vocabulary successor
+#  mechanism cannot carry a store across it — `water:hasTarget 0.55` has no single term it
+#  became. A volume holding the old term is refused loudly at boot with the term named, which
+#  is `agent/vocabulary.py`'s designed behaviour for a deletion: deciding what a dead structure
+#  meant is authorship, not computation.
+
+ag:Aim a owl:Class ; rdfs:label "Aim" ;
+    rdfs:comment "One property and the value this agent is holding it toward: the pick inside the region. Shaped to lie inside the region for that same property, and meaningless — refused — for a property the agent holds no region in." .
+
+ag:aims a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Aim ;
+    rdfs:label "aims" ;
+    rdfs:comment "Reads as the point this agent is steering one property toward. In the agent's own beliefs graph, never the world: the region answers to the sovereign's facts, the pick inside it answers to nobody — which is what makes it the agent's. Stated with ssn:forProperty and schema:value, the same two terms a region and a condition already use, so a reader that can read either can read this." .
+
+#################  An obligation: a desire someone else sourced  #################
+#
+#  BOID's O, and the sovereign's reframe of #218: a claim presented against my hardware does
+#  not bypass my wanting — it RAISES a want, with provenance saying whose it is. One kind of
+#  motivation, one decision path, and an agent's whole conduct is desires pursued through
+#  affordances. See knowledge/decisions/an-obligation-is-a-desire-someone-else-sourced.md.
+#
+#  The guardrail is the one every desire answers to: an agent may RECEIVE a desire and never
+#  AUTHOR one. A deduced desire is derived from ranges the world states; an obligation is
+#  derived from a signed claim the society issued. Both externally anchored, so the
+#  self-satisfaction loophole stays shut from both directions.
+#
+#  WHOM I may owe is not stored at all — it is topology, derived like the broker ACL from the
+#  wiring that says who may present to me (the market package's honoured.rq walks it). What is
+#  stored is what I owe NOW, in a graph of my own, because a debt outlives the process that
+#  incurred it: a host used to keep its issued claims in memory and forget them on restart.
+
+ag:Obligation a owl:Class ; rdfs:subClassOf ag:Bounds ;
+    rdfs:label "Obligation" ;
+    rdfs:comment "A desire this agent did not source: what it owes another, raised when the society issued that other a claim against this agent's hardware, discharged when the dose it names is confirmed. A subclass of Desire and not a sibling, because everything that reads desire should read this too — urgency, disclosure, and the deliberation that ranges over wants. What differs is only where it came from, which is what prov says." .
+
+ag:owedTo a owl:ObjectProperty ; rdfs:domain ag:Obligation ; rdfs:range ag:Agent ;
+    rdfs:label "owed to" ;
+    rdfs:comment "The counterparty. Always an agent this world's wiring already connects to me — an obligation to a stranger is not a debt, it is a forgery, refused before it becomes a want." .
+
+ag:forClaim a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:string ;
+    rdfs:label "for claim" ;
+    rdfs:comment "The jti of the claim that sourced it — single-use there, single-use here, so a discharged obligation cannot be raised twice by a replayed presentation." .
+
+ag:presented a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:boolean ;
+    rdfs:label "presented" ;
+    rdfs:comment "Whether the holder has asked yet. An unpresented claim requires NOTHING of me — the holder is waiting for its own watch to be live — and a presented one requires acting now, which is why urgency here is a step rather than a curve. A deadline-shaped curve belongs to the futures seam, where a claim may be held over time." .
+
+ag:owedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
+    rdfs:label "owed at" .
+ag:dischargedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
+    rdfs:label "discharged at" ;
+    rdfs:comment "Absent while it stands. The same two-timestamps-and-a-reason shape an intention and a revision already have, because a debt paid and a debt forgotten must never look alike." .
+
+
+#################  What an intention IS  #################
+
+ag:Intention a owl:Class ; rdfs:label "Intention" ;
+    rdfs:comment """One commitment: reduce the gap in one property, by one means, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
+
+The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason. A dropped intention keeps its `becauseOf`, because a commitment abandoned without a reason is indistinguishable from one forgotten.""" .
+
+ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Means ;
+    rdfs:label "by" ;
+    rdfs:comment "The kind of act committed to. A MEANS, not a plan: the how stays with whichever capability executes it." .
+
+ag:Means a owl:Class ; rdfs:label "Means" .
+
+ag:Observe a ag:Means ; rdfs:label "Observe" ;
+    rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .
+
+ag:Acquire a ag:Means ; rdfs:label "Acquire" ;
+    rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the claim, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
+
+ag:Apply a ag:Means ; rdfs:label "Apply" ;
+    rdfs:comment "Spend a held claim against the world. REAL since #132, and earlier than the futures market this was reserved for — because the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy: never spend a dose you cannot watch land. Adopted when the claim arrives, standing while the holder waits for its watch to be live (the #135 ack at the fast cadence, or the bounded wait), satisfied when the claim is presented on the market's redeem channel. The expectation on the end opens HERE rather than at the claim, because this is when the dose becomes imminent. The futures seam now merely extends the holding period this gave a mechanism to." .
+
+ag:Actuate a ag:Means ; rdfs:label "Actuate" ;
+    rdfs:comment "Move a property directly: the lever is mine and the resource is mine, so no negotiation — the ladder's second rung (#190), honest exactly where BOTH chains end at the agent: the lever chain (my actuator, plumbed to my subject) and the resource chain (drawing from a source no market offers as its lot — a pot-local pump on the shared barrel still bids, because the market is about the resource, not the lever). Adopted when the reflex picks the cheaper rung over Acquire, satisfied when the self-dose is commanded; the dose itself is still signed, still confirmed, still watched by an expectation — an unconfirmed self-dose is not a delivered one either, and the REA event stands even though it fulfils no exchange." .
+
+ag:Offer a ag:Means ; rdfs:label "Offer" ;
+    rdfs:comment "The host's move: open a round on a venue it convenes — the sell half of the dealer's acquire-then-offer, named so a PLAN can say its second step in the same vocabulary the keeper records the first in. ADOPTED since #206, by hosting, exactly once per owed round: a LOW nobody can serve defers the round and the deferral is a commitment — held only in module memory it was a promise a restart forgot and no ask could see. Adopted when the vessel is dry, satisfied when the refill lands and the round opens, recovered from the ledger at the next stock reading when the process that owed it has died. Deciding is still nobody's here: physics defers the round, the keeper only remembers it is owed — the whether-to-sell (the strategic-supplier seam) remains untouched." .
+
+ag:adoptedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "adopted at" .
+ag:resolvedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "resolved at" ;
+    rdfs:comment "Absent while the intention stands. Its absence IS the standing state — no flag to keep in step." .
+ag:outcome a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:string ;
+    rdfs:label "outcome" ;
+    rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
+ag:becauseOf a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:string ;
+    rdfs:label "because of" ;
+    rdfs:comment "Why it was adopted, and — appended on resolution — why it ended. Prose for the operator reading a ledger, never parsed." .
+
+#################  The expectation — the END, judged apart from the means  #################
+#
+#  `outcome` above says whether the MEANS succeeded: the claim arrived, the look came back.
+#  It says nothing about the END — the commitment was to reduce a gap, and an agent whose water
+#  never reaches the pot buys, records "satisfied", and buys again forever: transaction
+#  confirmed, outcome never audited. Confidently dumb, structurally. Issue #131.
+#
+#  So an intention whose act should MOVE something carries an expectation: the value it left
+#  from (the baseline, copied here at adoption because the sensed graph keeps only the current
+#  witness — the ledger is what remembers), which way it should move (the same direction the
+#  domain states on its valuation, #127), and by when. The verdict lands beside the outcome as
+#  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
+#  said this lever moves this property, and the world kept disagreeing.
+
+ag:expectsValueTo a owl:ObjectProperty ; rdfs:domain ag:Intention ;
+    rdfs:label "expects value to" ;
+    rdfs:comment "Which way the property should move if the act did what the graph claims — a market:Direction individual, copied from the lever's own statement at expectation time so the row is judgeable without a join to a vocabulary that may since have been amended." .
+ag:baselineValue a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:decimal ;
+    rdfs:label "baseline value" ;
+    rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
+ag:baselineAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "baseline at" .
+ag:deadlineAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "deadline at" ;
+    rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
+ag:expectsDelta a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:decimal ;
+    rdfs:label "expects delta" ;
+    rdfs:comment "How far the act should move the property, when the actor can say — a dose of known litres through the domain's stated conversion. What the met-verdict measures its margin against (#165): a movement is the world answering only when it is commensurate with the act, and a breath of instrument grain past the baseline is not. Optional, because not every act can size its own effect; absent, the verdict falls back to exact crossing, which is the pre-noise behaviour and stays legal." .
+
+
+ag:endMet a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:boolean ;
+    rdfs:label "end met" ;
+    rdfs:comment "Whether the world answered as the graph promised: a reading past the baseline in the expected direction before the deadline — and, where the row states an expectsDelta, past it by at least metFraction of that delta (#165) — or the deadline passed without one (false). Absent while the watch is still on. A row satisfied-and-unmet is one false-knowledge datum; enough of them for one (means, property) pair and the affordance is SUSPECT — flagged, never auto-retracted, because deleting knowledge would be reaching down a level." .
+ag:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "end verified at" .
+

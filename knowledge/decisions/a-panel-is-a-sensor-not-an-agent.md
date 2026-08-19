@@ -82,7 +82,7 @@ sensor without a unit is a reading nothing downstream can draw.
   `water:servedBy` the bench does not have. Ranges hang off any subject — `ssn-system:` declares
   no domain — so stating them there needs no plumbing, only a decision about what that pot is.
 - **The agent's own desired range is not drawn**, because there was no such term when this was
-  written. There is now: #110 closed, and `desire:desires` is a PUBLIC, per-property region in a
+  written. There is now: #110 closed, and `ag:boundedBy` is a PUBLIC, per-property region in a
   graph of its own — so a panel could draw an agent's region beside its subject's ranges with no
   privacy question at all. The aim inside it stays private and stays undrawn. A dashboard pass
   picking this up is real, unclaimed work; see

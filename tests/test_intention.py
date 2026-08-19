@@ -96,8 +96,8 @@ def test_a_wait_the_auction_outlives_is_dropped_with_the_reason(make):
     # the resolution carries why — a commitment abandoned without a reason is one forgotten
     from agent.store import bindings
     rows = bindings(fern.store.query(
-        "SELECT ?why WHERE { GRAPH <%s> { ?i intention:outcome \"dropped\" ; "
-        "intention:becauseOf ?why } }" % intentions_graph("fern")))
+        "SELECT ?why WHERE { GRAPH <%s> { ?i ag:outcome \"dropped\" ; "
+        "ag:becauseOf ?why } }" % intentions_graph("fern")))
     assert any("auction closed first" in r["why"] for r in rows)
 
 
@@ -147,8 +147,8 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
 
     from agent.store import bindings
     rows = bindings(fern.store.query(
-        "SELECT ?why WHERE { GRAPH <%s> { <%s> intention:outcome \"dropped\" ; "
-        "intention:becauseOf ?why } }" % (intentions_graph("fern"), first)))
+        "SELECT ?why WHERE { GRAPH <%s> { <%s> ag:outcome \"dropped\" ; "
+        "ag:becauseOf ?why } }" % (intentions_graph("fern"), first)))
     assert any("outwaited" in r["why"] for r in rows)
 
 
@@ -166,7 +166,7 @@ def test_intentions_are_nobody_elses_to_read(make):
     assert intentions_graph("fern") not in fern.store.public_graphs()
     from agent.store import bindings
     assert bindings(fern.store.query(
-        "SELECT ?i WHERE { ?i a intention:Intention }")) == []
+        "SELECT ?i WHERE { ?i a ag:Intention }")) == []
 
 
 def test_the_agent_reports_what_stands_and_how_old(make):

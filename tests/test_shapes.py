@@ -135,9 +135,9 @@ def test_a_bidder_with_no_aim_in_the_priced_property_is_refused():
     could only invent a number, and it must not start instead."""
     assert not _conforms(_mutate(f"""
         DELETE {{ GRAPH <{beliefs_graph("fern")}> {{
-                 <http://example.org/agora/world/simulation#fern_agent> desire:aims ?aim . ?aim ?p ?o }} }}
+                 <http://example.org/agora/world/simulation#fern_agent> ag:aims ?aim . ?aim ?p ?o }} }}
         WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
-                 <http://example.org/agora/world/simulation#fern_agent> desire:aims ?aim . ?aim ?p ?o }} }}"""))
+                 <http://example.org/agora/world/simulation#fern_agent> ag:aims ?aim . ?aim ?p ?o }} }}"""))
 
 
 def test_an_aim_in_a_property_with_no_region_is_refused():
@@ -145,7 +145,7 @@ def test_an_aim_in_a_property_with_no_region_is_refused():
     humidity range — so an aim there is a number with nothing behind it, whatever its value."""
     assert not _conforms(_mutate(f"""
         INSERT {{ GRAPH <{beliefs_graph("fern")}> {{
-            <http://example.org/agora/world/simulation#fern_agent> desire:aims [
+            <http://example.org/agora/world/simulation#fern_agent> ag:aims [
                 ssn:forProperty <http://example.org/agora/water#AirHumidity> ;
                 schema:value 0.5 ] }} }}
         WHERE {{}}"""))
@@ -297,7 +297,7 @@ def test_valve_must_carry_its_calibration():
 def test_a_plant_may_not_hold_a_desire():
     """The aim belongs to an agent's beliefs; a plant that held one would be a category error."""
     assert not _conforms(_mutate(f"""
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#fern> <http://example.org/agora/desire#aims> [
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#fern> <http://example.org/agora#aims> [
             <http://www.w3.org/ns/ssn/forProperty> <http://example.org/agora/water#SoilMoisture> ;
             <https://schema.org/value> 0.55 ] }} }} WHERE {{}}"""))
 
@@ -669,7 +669,7 @@ def test_an_aim_outside_the_agents_region_is_refused():
         DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.55 }} }}
         INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.90 }} }}
         WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
-                 <http://example.org/agora/world/simulation#fern_agent> desire:aims ?aim . ?aim schema:value 0.55 }} }}""")
+                 <http://example.org/agora/world/simulation#fern_agent> ag:aims ?aim . ?aim schema:value 0.55 }} }}""")
     assert not _conforms(data)
     assert "pick within a range" in _report(data)
 
@@ -689,9 +689,9 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
     would certainly violate: 0.55 is nowhere near 0.60-0.80.
     """
     data = _mutate("""
-        INSERT { GRAPH <http://example.org/agora/graph/desire> {
-            <http://example.org/agora/world/simulation#fern_agent> <http://example.org/agora/desire#desires> [
-                a <http://example.org/agora/desire#Desire> ;
+        INSERT { GRAPH <http://example.org/agora/graph/constraint> {
+            <http://example.org/agora/world/simulation#fern_agent> <http://example.org/agora#boundedBy> [
+                a <http://example.org/agora#Bounds> ;
                 <http://www.w3.org/ns/ssn/forProperty>
                     <http://example.org/agora/water#AirHumidity> ;
                 <https://schema.org/minValue> 0.60 ;
@@ -726,7 +726,7 @@ def test_a_plant_still_holds_no_desire_of_its_own():
     say what it needs and may not say what it wants."""
     data = _mutate("""
         INSERT { GRAPH <http://example.org/agora/graph/world> {
-            <http://example.org/agora/world/simulation#fern> <http://example.org/agora/desire#aims> [
+            <http://example.org/agora/world/simulation#fern> <http://example.org/agora#aims> [
                 <http://www.w3.org/ns/ssn/forProperty> <http://example.org/agora/water#SoilMoisture> ;
                 <https://schema.org/value> 0.55 ] } }
         WHERE {}""")

@@ -156,7 +156,7 @@ def test_a_satisfied_actuate_still_absorbs_the_next_impulse(gardener, monkeypatc
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
         "the ledger remembers what the standing list forgot"
     assert keeper.within_patience(
-        "http://example.org/agora/intention#Actuate", MOIST)
+        "http://example.org/agora#Actuate", MOIST)
 
 
 def test_the_dose_is_capped_by_what_the_vessel_holds(gardener):

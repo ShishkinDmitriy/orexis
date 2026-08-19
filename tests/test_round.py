@@ -680,7 +680,7 @@ def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
     from packages.capability.desire.graphs import obligations_graph
     from agent.store import bindings
     kept = bindings(host.store.query(
-        "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/agora/desire#dischargedAt> ?d } }"
+        "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/agora#dischargedAt> ?d } }"
         % obligations_graph("supplier")))
     assert kept, "and the record of having paid it stays"
 

@@ -36,7 +36,7 @@ water:WaterBidderShape a sh:NodeShape ;
                 <http://example.org/agora/water#litresPerFraction>
                       <http://example.org/agora/market#aboutProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora/desire#aims> ?aim .
+                    $this <http://example.org/agora#aims> ?aim .
                     ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
                 }
             }""" ] .
@@ -69,7 +69,7 @@ water:RefillBidderShape a sh:NodeShape ;
                 <http://example.org/agora/water#litresPerStoredLitre>
                       <http://example.org/agora/market#aboutProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora/desire#aims> ?aim .
+                    $this <http://example.org/agora#aims> ?aim .
                     ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
                 }
             }""" ] .
@@ -81,7 +81,7 @@ water:PlantShape a sh:NodeShape ;
     sh:property [ sh:path water:servedBy ; sh:minCount 1 ; sh:class water:WaterSource ] ;
     sh:property [ sh:path water:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
-    sh:property [ sh:path <http://example.org/agora/desire#aims> ; sh:maxCount 0 ;
+    sh:property [ sh:path <http://example.org/agora#aims> ; sh:maxCount 0 ;
                   sh:message "a plant holds no desire — the aim belongs to its agent's beliefs" ] ;
 
     # What it MAY state is the range it needs, which is not a desire but a fact about the plant.

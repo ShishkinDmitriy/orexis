@@ -341,7 +341,7 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
     toy = tmp_path / "affordances.rq"
     toy.write_text("""
 SELECT ?means ?property ?via ?direction WHERE {
-  $me desire:desires ?region .
+  $me ag:boundedBy ?region .
   ?region ssn:forProperty ?property .
   BIND(intention:Consult AS ?means)
   BIND($me AS ?via)
@@ -359,7 +359,7 @@ SELECT ?means ?property ?via ?direction WHERE {
 def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
     """The sovereign asking what an agent DOES gets its duties beside its options — and this
     member proposes none of them, for a narrower reason than the first draft claimed: an
-    obligation IS a want (desire:Obligation) and is meant to reach deliberation, but the
+    obligation IS a want (ag:Obligation) and is meant to reach deliberation, but the
     reflex steers a PROPERTY toward an aim and a duty is not a property-gap. Asked across the
     range rather than at one value, because a filter that leaks at one sign is a filter that
     leaks."""

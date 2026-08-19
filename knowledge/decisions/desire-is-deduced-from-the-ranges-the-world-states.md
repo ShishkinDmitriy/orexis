@@ -52,16 +52,16 @@ ag:fern ssn-system:hasOperatingRange [ ssn-system:inCondition
           [ ssn:forProperty water:SoilMoisture ; schema:minValue 0.20 ; schema:maxValue 0.85 ] ] .
 
 # what the agent concludes (public, derived, in its own graph)
-ag:fern_agent desire:desires [ a desire:Desire ;
+ag:fern_agent ag:boundedBy [ a ag:Bounds ;
     ssn:forProperty water:SoilMoisture ;
     schema:minValue 0.45 ; schema:maxValue 0.65 ;      # the region to hold it in
-    desire:toleratedMin 0.20 ; desire:toleratedMax 0.85 ] .   # and the room outside it
+    ag:toleratedMin 0.20 ; ag:toleratedMax 0.85 ] .   # and the room outside it
 ```
 
 | | where it lives | what it is | who may move it |
 |---|---|---|---|
 | the plant's two ranges | `world.ttl` / a species package, **public** | horticultural fact | the sovereign, by ratifying |
-| the agent's **region** | `…/graph/desire`, **public, derived** | what it will try to hold | nobody — it is a function of the above |
+| the agent's **region** | `…/graph/constraint`, **public, derived** | what it will try to hold | nobody — it is a function of the above |
 | the agent's **target** | `beliefs/<id>.ttl`, **private** | the point it aims at inside the region | the agent, via [review](/decisions/self-review-is-a-capability.md) |
 
 The middle row is new, and it is the one that was missing. Range public, pick private, exactly as
@@ -135,7 +135,7 @@ different answer to the same question; it is declared and deliberately unimpleme
 
 ## A graph class, not a graph
 
-`desire:DesireGraph` is a **class**, and `…/graph/desire` is the one instance today. That is the
+`ag:ConstraintGraph` is a **class**, and `…/graph/constraint` is the one instance today. That is the
 same arrangement `ag:PublicGraph` has and it is here for the same reason: **a reader asks by type
 and unions whatever it finds**, so a second source of desire — an operator's override, a regime
 selected for the season, a region an agent narrowed for itself — is a vocabulary edit that
@@ -185,7 +185,7 @@ is more urgent set how closely its board is watched. Nothing bids on air tempera
   recorded is unchanged: `ssn-system:inCondition` cannot say which of its conditions qualifies and
   which is the requirement, so *"0.30-0.50 when illuminance is low"* is not expressible. What has
   changed is that there is now somewhere for a selected regime to land — a second
-  `desire:DesireGraph` — so the missing half is the selection and no longer the representation.
+  `ag:ConstraintGraph` — so the missing half is the selection and no longer the representation.
 - **Nothing weighs one desire against another.** Urgency is per property and sensing takes the
   max. An agent that is both too dry and too cold has no way to say which matters more, and a
   weight would have to come from somewhere no ratified file currently is.

@@ -29,7 +29,7 @@ The property is bound from the **subject's** conditions. An instrument may narro
 may never create one — a thermometer rated 0-50 °C states a fact about the thermometer, not an
 ambition for the pot.
 
-The result lives in a graph of its own, typed `desire:DesireGraph` and found by that type rather
+The result lives in a graph of its own, typed `ag:ConstraintGraph` and found by that type rather
 than by name, so more than one source of desire is expressible without any code learning there is
 a second. It is public and recomputed on every start, because it is a function of the ratified
 files: a plant whose range is amended must not leave an agent holding the old region.
@@ -87,7 +87,7 @@ the rows themselves.
 
 # What it is not
 
-- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`desire:aims`,
+- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`ag:aims`,
   which replaced `water:hasTarget`) stays a private belief in `beliefs/<id>.ttl`, is the agent's
   to move within its
   [mandate](/decisions/self-review-is-a-capability.md), and is checked against the region at boot.
@@ -108,7 +108,7 @@ the rows themselves.
 # Obligations — the desires an agent did not source
 
 BOID's O, and the second source the desire-graph class was reserved for: when the society
-issues a claim against this agent's hardware, it OWES — recorded as a `desire:Obligation` in
+issues a claim against this agent's hardware, it OWES — recorded as a `ag:Obligation` in
 a graph of its own, naming the counterparty, the claim that caused it, whether it has been
 demanded yet, and when it was discharged. Kept after payment, because a debt paid and a debt
 forgotten must not look alike.

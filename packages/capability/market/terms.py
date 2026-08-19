@@ -57,6 +57,8 @@ ACTUATION_NS = "http://example.org/agora/actuation#"
 
 SENSING = ontology.SENSING + "SensingCapability"  # whoever can look, however it looks
 ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if this agent can at all
+# The mind's STATES are kernel words; the FAMILIES that arrive at them are not.
+KERNEL = "http://example.org/agora#"
 DESIRE_NS = "http://example.org/agora/desire#"
 DESIRE = DESIRE_NS + "DesireCapability"  # whoever holds the ends — the aim a bid prices toward
 INTENTION_NS = "http://example.org/agora/intention#"
@@ -65,7 +67,7 @@ DELIBERATION_NS = "http://example.org/agora/deliberation#"
 DELIBERATION = DELIBERATION_NS + "DeliberationCapability"  # whoever decides the whether
 # The three means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
 # when the keeper records it, so they are the intention package's individuals referenced by IRI.
-OBSERVE = INTENTION_NS + "Observe"
-ACQUIRE = INTENTION_NS + "Acquire"
-APPLY = INTENTION_NS + "Apply"      # real since #132: holding a claim until the watch is live
-OFFER = INTENTION_NS + "Offer"      # the owed round (#206): deferred for dry stock, opened on refill
+OBSERVE = KERNEL + "Observe"
+ACQUIRE = KERNEL + "Acquire"
+APPLY = KERNEL + "Apply"      # real since #132: holding a claim until the watch is live
+OFFER = KERNEL + "Offer"      # the owed round (#206): deferred for dry stock, opened on refill

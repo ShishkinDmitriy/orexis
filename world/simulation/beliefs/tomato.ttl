@@ -47,7 +47,7 @@
 #   to the region (desire:AimShape) and to nobody else, which is what makes it this agent's.
 #   It used to be water:hasTarget — one number that was also the market's pricing input. The
 #   market now asks desire for it, so an agent in a world with no market could still hold one.
-:tomato_agent desire:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.50 ] .
+:tomato_agent ag:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.50 ] .
 
 ##  intention — the commitment policy
 #   How long a standing commitment absorbs a second impulse to do the same thing before a new

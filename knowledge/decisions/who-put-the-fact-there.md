@@ -301,14 +301,14 @@ treatment if that ever changes.
 # Amended: there are six, and a package may own one
 
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
-added `…/graph/desire`, so **"five" is now the count at the time of writing and not the claim**.
+added `…/graph/constraint`, so **"five" is now the count at the time of writing and not the claim**.
 Read every "five" below as "the public set", which is what the record actually argues for — the
 whole point of `ag:PublicGraph` being a class is that the number is data.
 
 Nothing about the axis moved. A region is **derived**: a rule computed it, the rule could have
 said otherwise, and it lands beside `ag:hasCapability` in provenance terms even though it lands
 in a different graph. What changed is only that a rule may now name **which** derived graph its
-conclusions belong in, by naming a graph *class* — `$into(desire:DesireGraph)` — which genesis
+conclusions belong in, by naming a graph *class* — `$into(ag:ConstraintGraph)` — which genesis
 resolves. So *no rule names a graph* survives intact, and three things that were true of exactly
 one graph because there was exactly one are now asked of the rules rather than remembered: what
 `$given` excludes, what is cleared before a recompute, and what the meta-graph must account for.

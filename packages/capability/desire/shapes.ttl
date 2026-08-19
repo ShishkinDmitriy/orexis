@@ -20,12 +20,12 @@ That failure is the one this whole design is most exposed to, because its sympto
                       <http://example.org/agora/desire#Deducing> .
             }
         """ ] ;
-    sh:property [ sh:path desire:desires ; sh:minCount 1 ;
+    sh:property [ sh:path ag:boundedBy ; sh:minCount 1 ;
                   sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
 
 desire:DesireShape a sh:NodeShape ;
     rdfs:comment "What a region must be to be readable. Every figure here was computed, so this is arithmetic rather than authorship — but a shape over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width." ;
-    sh:targetClass desire:Desire ;
+    sh:targetClass ag:Bounds ;
     sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
                   sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "a region must say which property it is a region OF" ] ;
@@ -33,8 +33,8 @@ desire:DesireShape a sh:NodeShape ;
                   sh:datatype xsd:decimal ] ;
     sh:property [ sh:path <https://schema.org/maxValue> ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path desire:toleratedMin ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path desire:toleratedMax ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path ag:toleratedMin ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path ag:toleratedMax ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
 
     # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales
     # urgency by it produces a negative denominator and an agent that is most relaxed exactly
@@ -56,8 +56,8 @@ desire:DesireShape a sh:NodeShape ;
             SELECT $this ?low ?high WHERE {
                 $this <https://schema.org/minValue> ?low ;
                       <https://schema.org/maxValue> ?high .
-                OPTIONAL { $this <http://example.org/agora/desire#toleratedMin> ?floor }
-                OPTIONAL { $this <http://example.org/agora/desire#toleratedMax> ?ceiling }
+                OPTIONAL { $this <http://example.org/agora#toleratedMin> ?floor }
+                OPTIONAL { $this <http://example.org/agora#toleratedMax> ?ceiling }
                 FILTER(   ?low > ?high
                        || (BOUND(?floor)   && ?low  < ?floor)
                        || (BOUND(?ceiling) && ?high > ?ceiling))
@@ -70,25 +70,25 @@ desire:DesireShape a sh:NodeShape ;
 # domain's shapes, because only the domain knows a bid exists.
 #
 # Targeted through what POINTS at an aim, not by class: an aim is written inline as
-# `desire:aims [ ... ]` and nobody types `a desire:Aim` on a node they are already describing —
+# `ag:aims [ ... ]` and nobody types `a ag:Aim` on a node they are already describing —
 # the same lesson review's mandate shape records.
 desire:AimShape a sh:NodeShape ;
     rdfs:comment "An aim is one property and one value, and the value sits inside the agent's own region for that property. The checks span a PUBLIC region and a PRIVATE aim, which meet only inside the agent at boot — nothing outside it ever sees the number." ;
-    sh:targetSubjectsOf desire:aims ;
-    sh:property [ sh:path ( desire:aims <http://www.w3.org/ns/ssn/forProperty> ) ;
+    sh:targetSubjectsOf ag:aims ;
+    sh:property [ sh:path ( ag:aims <http://www.w3.org/ns/ssn/forProperty> ) ;
                   sh:minCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "an aim must say which property it is a pick FOR" ] ;
-    sh:property [ sh:path ( desire:aims <https://schema.org/value> ) ;
+    sh:property [ sh:path ( ag:aims <https://schema.org/value> ) ;
                   sh:minCount 1 ; sh:datatype xsd:decimal ;
                   sh:message "an aim must carry one decimal value" ] ;
     sh:sparql [
         sh:message "an aim names a property this agent holds no region in — a pick with nothing to pick inside is a number with nothing behind it" ;
         sh:select """
             SELECT $this ?property WHERE {
-                $this <http://example.org/agora/desire#aims> ?aim .
+                $this <http://example.org/agora#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora/desire#desires> ?region .
+                    $this <http://example.org/agora#boundedBy> ?region .
                     ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 }
             }""" ] ;
@@ -96,10 +96,10 @@ desire:AimShape a sh:NodeShape ;
         sh:message "the aim sits outside the region this agent deduced for that property — a desire is a pick within a range, not a number of its own" ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/agora/desire#aims> ?aim .
+                $this <http://example.org/agora#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
                      <https://schema.org/value> ?value .
-                $this <http://example.org/agora/desire#desires> ?region .
+                $this <http://example.org/agora#boundedBy> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property ;
                         <https://schema.org/minValue> ?low ;
                         <https://schema.org/maxValue> ?high .
@@ -109,7 +109,7 @@ desire:AimShape a sh:NodeShape ;
         sh:message "two aims for one property — an agent steering one property toward two points is not steering" ;
         sh:select """
             SELECT $this ?property WHERE {
-                $this <http://example.org/agora/desire#aims> ?one , ?other .
+                $this <http://example.org/agora#aims> ?one , ?other .
                 ?one   <http://www.w3.org/ns/ssn/forProperty> ?property .
                 ?other <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER(?one != ?other)
@@ -143,13 +143,13 @@ desire:BeyondSurvivalShape a sh:NodeShape ;
         sh:select """
             SELECT $this ?property ?value WHERE {
                 $this <http://example.org/agora#actsFor> ?subject ;
-                      <http://example.org/agora/desire#desires> ?region .
+                      <http://example.org/agora#boundedBy> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 ?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ?subject ;
                      <http://www.w3.org/ns/sosa/observedProperty> ?property ;
                      <http://www.w3.org/ns/sosa/hasSimpleResult> ?value .
-                OPTIONAL { ?region <http://example.org/agora/desire#toleratedMin> ?floor }
-                OPTIONAL { ?region <http://example.org/agora/desire#toleratedMax> ?ceiling }
+                OPTIONAL { ?region <http://example.org/agora#toleratedMin> ?floor }
+                OPTIONAL { ?region <http://example.org/agora#toleratedMax> ?ceiling }
                 # One group, not a UNION of two: a FILTER sees only its own group's bindings,
                 # so `FILTER(?value < ?floor)` inside a UNION branch reads ?value as unbound,
                 # errors, and silently empties the branch — a shape that never fires, which is
@@ -184,7 +184,7 @@ desire:UnwatchedDesireShape a sh:NodeShape ;
         sh:select """
             SELECT $this ?property WHERE {
                 $this <http://example.org/agora#actsFor> ?subject ;
-                      <http://example.org/agora/desire#desires> ?region .
+                      <http://example.org/agora#boundedBy> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
                     $this <http://example.org/agora/sensing#polls> ?sensor .

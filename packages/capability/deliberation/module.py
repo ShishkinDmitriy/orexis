@@ -35,7 +35,9 @@ _DESIRE = "http://example.org/agora/desire#DesireCapability"
 # The moves. The intention package's individuals, referenced by IRI: a move IS what the keeper
 # records when the actor carries it out, so naming anything else would put a translation table
 # between deciding and remembering.
-_INTENTION_NS = "http://example.org/agora/intention#"
+# The means are the kernel's words (the-mind-is-six-graphs): a move IS what the keeper
+# records, and four packages name these, which is what makes them lingua franca.
+_INTENTION_NS = "http://example.org/agora#"
 OBSERVE = _INTENTION_NS + "Observe"
 ACTUATE = _INTENTION_NS + "Actuate"
 ACQUIRE = _INTENTION_NS + "Acquire"
@@ -161,7 +163,7 @@ class ReflexModule(Module):
         # which was right while buying was the only lever that moved anything; the Actuate
         # rung made "which means" a question, and the menu was already the answer's home.
         # Chosen rows only, and the reason is narrower than it first looked. An obligation
-        # IS a want (desire:Obligation, #218 remade) and is meant to reach deliberation —
+        # IS a want (ag:Obligation, #218 remade) and is meant to reach deliberation —
         # but this member steers a PROPERTY toward an aim, and a duty is not a property-gap:
         # it is "this claim discharged", a graph-shaped goal. So the reflex passes over
         # honoured rows because it cannot express them, not because they are nobody's to
