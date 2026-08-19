@@ -110,6 +110,32 @@ codebase: an expectation **copies** the baseline into its own row (#165), so not
 into history and whatever must outlive the window takes what it needs at commit time. No
 reference counting, no pinning, no unbounded graph.
 
+## The frame is the kernel's; the furniture is the packages'
+
+Asked by the sovereign once the axes existed: if this is the core of Agora, should it be in
+the `ag:` namespace? Yes for the frame, no for what fills it, and the test is rule 2's —
+**not whether a term is universal, but whether the HOW could differ.**
+[telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md)
+settled that case: reporting is granted to every agent and is still a package, because there
+is more than one way to report.
+
+So the kernel declares what a graph IS — modality, visibility, arrival — because the how
+cannot differ (a graph is a graph) and because the kernel itself uses them: `store.query`
+resolves the default graph by class, `genesis` resolves a rule's write target by class,
+provenance describes graphs by class. The packages keep what a desire, an obligation and an
+intention are, because `desire:Deducing` and `desire:Consulting` are two hows of one question.
+
+There is also a fact that forbids the other arrangement: **not every agent is a BDI agent.**
+`world/sensing`'s agent holds no stake — it perceives and records, wants nothing, commits to
+nothing, derives none of the three. Making `Desire` kernel would declare wanting universal
+and the shipped worlds would refute it immediately, which is what
+[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) moved five packages'
+terms out of `ag:` to stop.
+
+The one part of the mind that will join the kernel is the **lifecycle**: birth, amendment,
+death are performed by the kernel whatever an agent composes, so the terms that record them
+belong beside the graph classes rather than in any package.
+
 ## The order of work, and why
 
 1. **Name the modalities** — vocabulary only, typing the graphs that exist. No data moves.
