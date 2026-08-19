@@ -21,8 +21,14 @@
 # prepends them.
 
 SELECT ?means ?property ?via ?direction ?mode WHERE {
-  $me ag:boundedBy ?region ; ag:actsFor ?subject .
-  ?region ssn:forProperty ?property .
+  # An agent holds TWO shapes per property — the region it wants to be in and the survival
+  # envelope it must not leave — and both carry `ssn:forProperty`, so matching on that alone
+  # offered every lever twice. The severity is what tells them apart, and it is also the right
+  # question: a lever is worth listing because there is something the agent WANTS about that
+  # property, not because the property has an edge past which its subject dies.
+  $me ag:holds ?region ; ag:actsFor ?subject .
+  ?region ssn:forProperty ?property ;
+          sh:property/sh:severity ag:ShouldBecome .
   $me actuation:hasActuator ?via .
   ?via actuation:actuates ?subject ;
        actuation:drawsFrom ?source .

@@ -196,6 +196,10 @@ _NOT_A_TERM = {"NoSuchTermAnyoneAuthored", "noSuchTerm"}
 _QUOTES_THE_OLD_SPELLINGS = {
     "test_store.py":
         "quotes the offending forms as examples, which is what makes it readable",
+    "vocabulary.py":
+        "IS a table of moves, and a move names where a term CAME FROM — a retired kernel word "
+        "on the left of every row. A guard that refused those would refuse the one file whose "
+        "job is to remember them",
     "test_vocabulary.py":
         "IS the old spellings — it authors a belief base the way the code wrote them before "
         "the sweep, then opens it with the code that came after. A fixture generated from the "

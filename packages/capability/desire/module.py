@@ -66,13 +66,29 @@ SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
 # graph pattern inside one `GRAPH` clause must match entirely within that graph, and desire is a
 # CLASS of graph precisely so that a second source may exist. An unqualified pattern reads every
 # public graph, so a region contributed by something other than the deduction is simply seen.
+#  The numbers are read out of the SHAPES the deduction emits (a-desire-is-a-shape), and that
+#  is the whole reason those shapes are DECLARATIVE rather than sh:sparql: `sh:minInclusive` is
+#  an ordinary triple, so a gap costs one query per reading instead of a validator run. The
+#  path is deep because a reified observation has to be reached through an inverse path and a
+#  qualified shape — convoluted to read, and the price of not inventing a second way to say
+#  what a graph should look like.
+#
+#  Two shapes per property, told apart by the FORCE they carry: the region a violation of which
+#  is a gap, and the envelope a violation of which is the subject ending.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
-  <%s> ag:boundedBy ?desire .
-  ?desire ssn:forProperty ?property ;
-          schema:minValue ?low ;
-          schema:maxValue ?high .
-  OPTIONAL { ?desire ag:toleratedMin ?floor ; ag:toleratedMax ?ceiling }
+  <%s> ag:holds ?shape .
+  ?shape ssn:forProperty ?property ;
+         sh:property ?want .
+  ?want sh:severity ag:ShouldBecome ;
+        sh:qualifiedValueShape/sh:property/sh:minInclusive ?low ;
+        sh:qualifiedValueShape/sh:property/sh:maxInclusive ?high .
+  OPTIONAL {
+    <%s> ag:holds ?envelope .
+    ?envelope ssn:forProperty ?property ; sh:property ?tolerate .
+    ?tolerate sh:severity sh:Warning ;
+              sh:qualifiedValueShape/sh:not/sh:property/sh:minInclusive ?floor ;
+              sh:qualifiedValueShape/sh:not/sh:property/sh:maxInclusive ?ceiling }
 } ORDER BY ?property"""
 
 
@@ -211,7 +227,7 @@ def regions_of(query, agent_uri: str) -> dict[str, Region]:
     produced these numbers is in `rules.ru` and ran at genesis; this only reads the answer.
     """
     out: dict[str, Region] = {}
-    for row in bindings(query(_REGIONS_Q % agent_uri)):
+    for row in bindings(query(_REGIONS_Q % (agent_uri, agent_uri))):
         floor, ceiling = row.get("floor"), row.get("ceiling")
         out[row["property"]] = Region(
             observed_property=row["property"],

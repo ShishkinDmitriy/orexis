@@ -20,21 +20,27 @@ That failure is the one this whole design is most exposed to, because its sympto
                       <http://example.org/agora/desire#Deducing> .
             }
         """ ] ;
-    sh:property [ sh:path ag:boundedBy ; sh:minCount 1 ;
+    sh:property [ sh:path ag:holds ; sh:minCount 1 ;
                   sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
 
 desire:DesireShape a sh:NodeShape ;
-    rdfs:comment "What a region must be to be readable. Every figure here was computed, so this is arithmetic rather than authorship — but a shape over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width." ;
-    sh:targetClass ag:Bounds ;
+    rdfs:comment """What a deduced shape must be to be readable — a shape ABOUT shapes, which is the seam a-desire-is-a-shape names: SHACL has no containment operator, so anything said about what an agent pursues is said by treating its shapes as the RDF they are.
+
+Every figure here was computed, so this is arithmetic rather than authorship — but a check over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width.""" ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?agent <http://example.org/agora#holds> ?this .
+                ?this a <http://www.w3.org/ns/shacl#NodeShape> .
+            }
+        """ ] ;
     sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
                   sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
-                  sh:message "a region must say which property it is a region OF" ] ;
-    sh:property [ sh:path <https://schema.org/minValue> ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path <https://schema.org/maxValue> ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path ag:toleratedMin ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path ag:toleratedMax ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+                  sh:message "a deduced shape must say which property it is about" ] ;
+    sh:property [ sh:path sh:targetNode ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a deduced shape must say whose state it is about" ] ;
+    sh:property [ sh:path ( sh:property sh:severity ) ; sh:minCount 1 ;
+                  sh:message "a deduced shape must carry its FORCE on the property shape that produces the result — above it, every unmet want reports as a violation and an agent whose pot is dry refuses to boot" ] ;
 
     # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales
     # urgency by it produces a negative denominator and an agent that is most relaxed exactly
@@ -54,10 +60,22 @@ desire:DesireShape a sh:NodeShape ;
         sh:message "a region lies outside the envelope it is supposed to sit inside — the survival range stated for this property is narrower than the operating range, once every source is intersected" ;
         sh:select """
             SELECT $this ?low ?high WHERE {
-                $this <https://schema.org/minValue> ?low ;
-                      <https://schema.org/maxValue> ?high .
-                OPTIONAL { $this <http://example.org/agora#toleratedMin> ?floor }
-                OPTIONAL { $this <http://example.org/agora#toleratedMax> ?ceiling }
+                $this <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                      <http://www.w3.org/ns/shacl#property> ?want .
+                ?want <http://www.w3.org/ns/shacl#severity>
+                      <http://example.org/agora#ShouldBecome> ;
+                      <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property> ?bound .
+                ?bound <http://www.w3.org/ns/shacl#minInclusive> ?low ;
+                       <http://www.w3.org/ns/shacl#maxInclusive> ?high .
+                OPTIONAL {
+                    ?agent <http://example.org/agora#holds> $this , ?envelope .
+                    ?envelope <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                              <http://www.w3.org/ns/shacl#property> ?tolerate .
+                    ?tolerate <http://www.w3.org/ns/shacl#severity>
+                              <http://www.w3.org/ns/shacl#Warning> ;
+                              <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#not>/<http://www.w3.org/ns/shacl#property> ?edge .
+                    ?edge <http://www.w3.org/ns/shacl#minInclusive> ?floor ;
+                          <http://www.w3.org/ns/shacl#maxInclusive> ?ceiling }
                 FILTER(   ?low > ?high
                        || (BOUND(?floor)   && ?low  < ?floor)
                        || (BOUND(?ceiling) && ?high > ?ceiling))
@@ -73,7 +91,7 @@ desire:DesireShape a sh:NodeShape ;
 # `ag:aims [ ... ]` and nobody types `a ag:Aim` on a node they are already describing —
 # the same lesson review's mandate shape records.
 desire:AimShape a sh:NodeShape ;
-    rdfs:comment "An aim is one property and one value, and the value sits inside the agent's own region for that property. The checks span a PUBLIC region and a PRIVATE aim, which meet only inside the agent at boot — nothing outside it ever sees the number." ;
+    rdfs:comment """An aim is one property and one value, and the value sits inside the shape the agent is held to for that property. The checks span a PUBLIC shape and a PRIVATE aim, which meet only inside the agent at boot — nothing outside it ever sees the number.\n\nThis is the containment check a-desire-is-a-shape names as a seam: SHACL has no operator for "this shape is inside that one", so the bound is read out of the deduced shape as the ordinary RDF it is. SHACL, validated by a query over SHACL — mind-bending to read, and the price of having one language for what a graph should look like instead of two.""" ;
     sh:targetSubjectsOf ag:aims ;
     sh:property [ sh:path ( ag:aims <http://www.w3.org/ns/ssn/forProperty> ) ;
                   sh:minCount 1 ; sh:nodeKind sh:IRI ;
@@ -88,8 +106,8 @@ desire:AimShape a sh:NodeShape ;
                 $this <http://example.org/agora#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora#boundedBy> ?region .
-                    ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                    $this <http://example.org/agora#holds> ?shape .
+                    ?shape <http://www.w3.org/ns/ssn/forProperty> ?property .
                 }
             }""" ] ;
     sh:sparql [
@@ -99,10 +117,14 @@ desire:AimShape a sh:NodeShape ;
                 $this <http://example.org/agora#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
                      <https://schema.org/value> ?value .
-                $this <http://example.org/agora#boundedBy> ?region .
-                ?region <http://www.w3.org/ns/ssn/forProperty> ?property ;
-                        <https://schema.org/minValue> ?low ;
-                        <https://schema.org/maxValue> ?high .
+                $this <http://example.org/agora#holds> ?shape .
+                ?shape <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                       <http://www.w3.org/ns/shacl#property> ?want .
+                ?want <http://www.w3.org/ns/shacl#severity>
+                      <http://example.org/agora#ShouldBecome> ;
+                      <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property> ?bound .
+                ?bound <http://www.w3.org/ns/shacl#minInclusive> ?low ;
+                       <http://www.w3.org/ns/shacl#maxInclusive> ?high .
                 FILTER(?value < ?low || ?value > ?high)
             }""" ] ;
     sh:sparql [
@@ -137,54 +159,18 @@ desire:BeyondSurvivalShape a sh:NodeShape ;
                       <http://example.org/agora/desire#Deducing> .
             }
         """ ] ;
-    sh:sparql [
-        sh:severity sh:Warning ;
-        sh:message "a reading sits outside the survival envelope for a property this agent wants held — the subject is past tolerating, not merely uncomfortable" ;
-        sh:select """
-            SELECT $this ?property ?value WHERE {
-                $this <http://example.org/agora#actsFor> ?subject ;
-                      <http://example.org/agora#boundedBy> ?region .
-                ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
-                ?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ?subject ;
-                     <http://www.w3.org/ns/sosa/observedProperty> ?property ;
-                     <http://www.w3.org/ns/sosa/hasSimpleResult> ?value .
-                OPTIONAL { ?region <http://example.org/agora#toleratedMin> ?floor }
-                OPTIONAL { ?region <http://example.org/agora#toleratedMax> ?ceiling }
-                # One group, not a UNION of two: a FILTER sees only its own group's bindings,
-                # so `FILTER(?value < ?floor)` inside a UNION branch reads ?value as unbound,
-                # errors, and silently empties the branch — a shape that never fires, which is
-                # this project's least favourite failure. BOUND guards for the same reason as
-                # in DesireShape: an unbound comparison is an error `||` propagates.
-                FILTER(   (BOUND(?floor)   && ?value < ?floor)
-                       || (BOUND(?ceiling) && ?value > ?ceiling))
-            }""" ] .
-
-# The blind case, said out loud at the gate. A region is deduced from what the subject states —
-# deliberately without asking whether anything can measure it, because a range is a fact about
-# the plant that does not wait for an instrument (the Zamioculcas states an Illuminance range
-# nothing here measures, and that is the honest state). But an agent holding a desire it can
-# never see has no gap row, no band, no urgency and no worst_gap for that property, and NOTHING
-# else will ever mention it — which is exactly the shape of silence this project keeps paying
-# for. A WARNING, not a refusal: the wiring is legitimate, the sentence in the boot log is what
-# was missing. The mirror of issue #111 — that one asks whether the instrument covers the
-# conditions; this one asks whether there is an instrument at all.
-desire:UnwatchedDesireShape a sh:NodeShape ;
-    rdfs:comment "A desire in a property this agent polls no sensor for. desires and desires_measured diverging on the dashboard is this same fact at runtime; this is it at the gate, where the sovereign who could add the instrument is the one reading." ;
-    sh:severity sh:Warning ;
-    sh:target [ a sh:SPARQLTarget ;
-        sh:select """
-            SELECT ?this WHERE {
-                ?this <http://example.org/agora#hasCapability>
-                      <http://example.org/agora/desire#Deducing> .
-            }
-        """ ] ;
+    #  The hand-written "a reading sits outside the survival envelope" check was HERE and is gone.
+    #  The deduction emits that shape now — targeting the subject, at sh:Warning, saying the
+    #  same sentence in the language the checker already speaks. Two statements of one rule is
+    #  one too many, and the surviving one is the one an agent can also steer by.
+    
     sh:sparql [
         sh:severity sh:Warning ;
         sh:message "a desire in a property this agent polls no sensor for — the region is real, and the agent will never see a reading to hold it to" ;
         sh:select """
             SELECT $this ?property WHERE {
                 $this <http://example.org/agora#actsFor> ?subject ;
-                      <http://example.org/agora#boundedBy> ?region .
+                      <http://example.org/agora#holds> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
                     $this <http://example.org/agora/sensing#polls> ?sensor .

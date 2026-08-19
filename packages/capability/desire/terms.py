@@ -41,7 +41,6 @@ CONSULTING = term("Consulting")  # asks something else — RESERVED, nothing imp
 # What a deduced desire is made of. Named here because the module reads them back out of the
 # graph the rule wrote, and because a region is this package's subject even though every figure
 # in one came from somewhere else.
-BOUNDED_BY = kernel("boundedBy")
 BOUNDS = kernel("Bounds")
 TOLERATED_MIN = kernel("toleratedMin")
 TOLERATED_MAX = kernel("toleratedMax")

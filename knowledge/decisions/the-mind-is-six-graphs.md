@@ -56,6 +56,12 @@ invisible to every reader for exactly as long as it took a test to say so); the 
 it is `ag:Bounds`, not `ag:Desire`; and the predicate is `ag:boundedBy`, because an agent does
 not desire 0.45–0.65, it is HELD to it — what it desires is the aim, 0.55.
 
+*Both of those terms are gone, within a day, and the distinction they were drawn to make
+survives them:* a region and an aim became SHACL differing in severity, so the predicate is
+`ag:holds` for either and the class is `sh:NodeShape`. See
+[a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md). The reasoning above is why the
+constraint graph is not called the desire graph, and that outlived the vocabulary.
+
 The decisive evidence is in the running code rather than in the argument: **an agent holding
 bounds and no aim pursues nothing.** `aim()` returns None, the reflex proposes None, and the
 comment has said so all along — "an agent that picked no point has decided not to steer this

@@ -640,14 +640,22 @@ def test_a_board_faster_than_its_mandate_is_not_refused():
     """The negative half, and the reason the shipped worlds still pass: a device that can be read
     every second under a mandate committing to ten minutes has contradicted nothing. Without this
     the shape above would be satisfied by any floor at all, which is a shape that fires on the
-    ordinary case."""
-    assert "Conforms: True" in _report(_mutate("""
+    ordinary case.
+
+    It asks the VERDICT rather than reading "Conforms: True" off the report, which is the same
+    lesson `_conforms` above records: a report is now false whenever any agent wants anything,
+    because a want is a shape and an unmet want is a result. The verdict is what refuses a
+    world, and the message is what says why — so the negative case asserts both.
+    """
+    data = _mutate("""
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX sensing: <http://example.org/agora/sensing#>
 INSERT DATA { GRAPH <http://example.org/agora/graph/world> {
   <http://example.org/agora/world/simulation#moisture_sensor_fern> ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
-      ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] } }"""))
+      ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 1 ; schema:unitCode unit:SEC ] ] } }""")
+    assert _conforms(data), _report(data)
+    assert "equipment can honour" not in _report(data)
 
 
 # --- the target answers to the region ------------------------------------------------------
@@ -679,8 +687,8 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
     against it. The constraint matches on `market:aboutProperty`, which is what the desire term
     itself declares — the same reason `_is_mine` compares the property in the desire module.
 
-    Written against a region rather than against a plant's range, which is what the shape now
-    reads. It matters that it is the region: fern already holds two, so this could have been
+    Written against a region — a shape the agent HOLDS — rather than against a plant's range,
+    which is what the aim check now reads. It matters that it is the region: fern already holds two, so this could have been
     written by moving the target against the temperature one — and 0.55 sits nowhere near 18-24
     either, which would make the test pass for a reason having nothing to do with the property
     match. A humidity region nothing else in this world has is the case with only one exit.
@@ -690,12 +698,26 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
     """
     data = _mutate("""
         INSERT { GRAPH <http://example.org/agora/graph/constraint> {
-            <http://example.org/agora/world/simulation#fern_agent> <http://example.org/agora#boundedBy> [
-                a <http://example.org/agora#Bounds> ;
+            <http://example.org/agora/world/simulation#fern_agent> <http://example.org/agora#holds> [
+                a <http://www.w3.org/ns/shacl#NodeShape> ;
+                <http://www.w3.org/ns/shacl#targetNode>
+                    <http://example.org/agora/world/simulation#fern_agent> ;
                 <http://www.w3.org/ns/ssn/forProperty>
                     <http://example.org/agora/water#AirHumidity> ;
-                <https://schema.org/minValue> 0.60 ;
-                <https://schema.org/maxValue> 0.80 ] } }
+                <http://www.w3.org/ns/shacl#property> [
+                    <http://www.w3.org/ns/shacl#severity>
+                        <http://example.org/agora#ShouldBecome> ;
+                    <http://www.w3.org/ns/shacl#path> (
+                        <http://example.org/agora#actsFor>
+                        [ <http://www.w3.org/ns/shacl#inversePath>
+                          <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ] ) ;
+                    <http://www.w3.org/ns/shacl#qualifiedMinCount> 1 ;
+                    <http://www.w3.org/ns/shacl#qualifiedValueShape> [
+                        <http://www.w3.org/ns/shacl#property> [
+                            <http://www.w3.org/ns/shacl#path>
+                                <http://www.w3.org/ns/sosa/hasSimpleResult> ;
+                            <http://www.w3.org/ns/shacl#minInclusive> 0.60 ;
+                            <http://www.w3.org/ns/shacl#maxInclusive> 0.80 ] ] ] ] } }
         WHERE {}""")
     assert _conforms(data), _report(data)
 

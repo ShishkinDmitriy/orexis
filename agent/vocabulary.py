@@ -93,7 +93,7 @@ def declared(st) -> set[str]:
 #  other way, or moved and was renamed at once. Both happened when the mind's states became
 #  kernel words (the-mind-is-six-graphs): `intention:outcome` has two candidates by local name
 #  (`ag:outcome` and `review:outcome`) and nothing could choose, while `desire:desires` became
-#  `ag:boundedBy` and has no candidate at all.
+#  `ag:holds` and has no candidate at all.
 #
 #  So a MOVE is data. Each entry is a decision somebody made once, and the alternative — a
 #  heuristic that picks a namespace — would be this module guessing at meaning, which is the
@@ -106,11 +106,20 @@ MOVED = {
                  "endVerifiedAt")},
     **{f"http://example.org/agora/desire#{n}": f"http://example.org/agora#{n}"
        for n in ("Aim", "aims", "Obligation", "owedTo", "forClaim", "presented", "owedAt",
-                 "dischargedAt", "toleratedMin", "toleratedMax")},
+                 "dischargedAt")},
+    #  `toleratedMin` and `toleratedMax` were here and are not, because they went nowhere: the
+    #  envelope is a shape now and its edges are `sh:minInclusive` inside it, which no rename
+    #  can reach from two loose literals. They needed no migration either way — they only ever
+    #  lived in the DERIVED constraint graph, which is public and rebuilt at every boot.
     #  Renamed as it moved: the region binds, so it is bounds, and an agent is held to it
     #  rather than desiring it — what it desires is the aim.
-    "http://example.org/agora/desire#Desire": "http://example.org/agora#Bounds",
-    "http://example.org/agora/desire#desires": "http://example.org/agora#boundedBy",
+    #  Two moves in two days, so the map records the DESTINATION rather than the step: a
+    #  volume migrated yesterday holds `ag:boundedBy`, one migrated today holds neither, and
+    #  both must land on what the vocabulary says now. A migration table is a record of where
+    #  things went, not of how they travelled.
+    "http://example.org/agora/desire#Desire": "http://www.w3.org/ns/shacl#NodeShape",
+    "http://example.org/agora/desire#desires": "http://example.org/agora#holds",
+    "http://example.org/agora#boundedBy": "http://example.org/agora#holds",
 }
 
 

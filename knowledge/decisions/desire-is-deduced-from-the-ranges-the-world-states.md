@@ -51,12 +51,28 @@ ag:fern ssn-system:hasOperatingRange [ ssn-system:inCondition
         ssn-system:hasSurvivalRange  [ ssn-system:inCondition
           [ ssn:forProperty water:SoilMoisture ; schema:minValue 0.20 ; schema:maxValue 0.85 ] ] .
 
-# what the agent concludes (public, derived, in its own graph)
-ag:fern_agent ag:boundedBy [ a ag:Bounds ;
+# what the agent concludes (public, derived, in its own graph) — a SHAPE, one per
+# (agent, property), the region and the envelope differing only in severity
+ag:fern_agent ag:holds ag:bounds.fern.SoilMoisture .
+
+ag:bounds.fern.SoilMoisture a sh:NodeShape ;
+    sh:targetNode ag:fern_agent ;
     ssn:forProperty water:SoilMoisture ;
-    schema:minValue 0.45 ; schema:maxValue 0.65 ;      # the region to hold it in
-    ag:toleratedMin 0.20 ; ag:toleratedMax 0.85 ] .   # and the room outside it
+    sh:property [
+        sh:severity ag:ShouldBecome ;                  # a want, never a refusal
+        sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+        sh:qualifiedMinCount 1 ;                       # unmeasured IS a gap
+        sh:qualifiedValueShape [
+            sh:property [ sh:path sosa:observedProperty ; sh:hasValue water:SoilMoisture ] ,
+                        [ sh:path sosa:hasSimpleResult ;
+                          sh:minInclusive 0.45 ; sh:maxInclusive 0.65 ] ] ] .
 ```
+
+The envelope is a second shape alongside it, at `sh:Warning`, and asks the opposite question —
+`sh:qualifiedMaxCount 0` over `sh:not` in the range, because silence is not evidence of
+catastrophe where it *is* evidence of a gap. See
+[a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md) for why, and for the vocabulary this
+example used to be written in.
 
 | | where it lives | what it is | who may move it |
 |---|---|---|---|
