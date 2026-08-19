@@ -40,6 +40,7 @@ KEEPING = term("Keeping")  # a ledger with a patience clock: rule-kept commitmen
 # What an intention is made of. Named here because the module writes and reads them.
 INTENTION_CLASS = kernel("Intention")
 BY = kernel("by")
+PURSUES = kernel("pursues")  # which goal this commitment serves (#the collision)
 ADOPTED_AT = kernel("adoptedAt")
 RESOLVED_AT = kernel("resolvedAt")
 OUTCOME = kernel("outcome")

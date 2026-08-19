@@ -217,7 +217,7 @@ SELECT ?p WHERE {{
             trigger = self.deferred.pop(market.uri)
             if keeper := self._keeper():
                 keeper.satisfy(OFFER, self.stock_property[market.uri],
-                               "the refill landed — the owed round opens")
+                               "the refill landed — the owed round opens", goal=market.uri)
             self.log.info("the refill landed (%.3f) — opening the round deferred for %s: "
                           "step two of acquire-then-offer", value, trigger)
             self.announce(market, trigger=trigger)
@@ -264,9 +264,12 @@ SELECT ?p WHERE {{
                 # see. Deciding is still nobody's here — physics deferred the round, and the
                 # keeper only remembers that it is owed.
                 if keeper := self._keeper():
+                    #  The venue IS the goal here: a host of two venues owes two rounds, and
+                    #  keying by property alone would make paying one look like paying both.
                     keeper.adopt(OFFER, self.stock_property[market.uri],
                                  f"{trigger} is LOW and my vessel is dry — a round is owed "
-                                 f"on {market.local_id} the moment the refill lands")
+                                 f"on {market.local_id} the moment the refill lands",
+                                 goal=market.uri)
                 self.log.info("%s is LOW but my vessel is dry — deferring the round: "
                               "acquire upstream, then offer (the depth-2 plan, distributed)",
                               trigger)

@@ -429,6 +429,12 @@ ag:Intention a owl:Class ; rdfs:label "Intention" ;
 
 The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason. A dropped intention keeps its `becauseOf`, because a commitment abandoned without a reason is indistinguishable from one forgotten.""" .
 
+ag:pursues a owl:ObjectProperty ; rdfs:domain ag:Intention ;
+    rdfs:label "pursues" ;
+    rdfs:comment """WHICH goal this commitment serves — the bounds an agent is held to, or the obligation a claim raised. A commitment keyed by (means, property) alone cannot tell two obligations about one property apart: a dealer owing water to fern and to tomato holds two Apply commitments that look identical, so satisfying one satisfies both and the patience absorbs the second impulse as if it were the first. That is the shape of the observation-keyed-by-subject bug (#one-agent-many-sensors), found before it went live rather than after — obligations do not yet drive acts, and this lands first so they never can while it is open.
+
+Optional, because the first three means predate goals having names: an intention with no goal is keyed as it always was, and every old row in a ledger stays readable.""" .
+
 ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Means ;
     rdfs:label "by" ;
     rdfs:comment "The kind of act committed to. A MEANS, not a plan: the how stays with whichever capability executes it." .

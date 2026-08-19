@@ -20,6 +20,7 @@
 
 PREFIX desire: <http://example.org/agora/desire#>
 PREFIX sensing: <http://example.org/agora/sensing#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX ag:   <http://example.org/agora#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
@@ -76,17 +77,25 @@ WHERE  {
 #  other produce no region at all, the agent keeps the capability, and `desire:DesirerShape`
 #  refuses to let it start. Silence here is deliberate — a rule cannot report, and an
 #  intersection quietly rounded into a point would be the worst of the three outcomes.
+#  The bounds node is NAMED, not blank (step 2 of the-mind-is-six-graphs): a blank node is a
+#  thing nothing can reference, and an intention must be able to say which goal it serves.
+#  Minted as a function of the agent and the property, on the channel precedent — a derived
+#  instance computed from given strings, so any package recomputing it lands on the same node
+#  without reading another rule's conclusions. And it carries WHERE IT CAME FROM: the ranges
+#  it was deduced from, so the sovereign asking "why am I held to 0.45" gets the answer in
+#  the graph rather than in a comment.
 INSERT { GRAPH $into(ag:ConstraintGraph) {
-    ?agent ag:boundedBy _:region .
-    _:region a ag:Bounds ;
+    ?agent ag:boundedBy ?bounds .
+    ?bounds a ag:Bounds ;
         ssn:forProperty ?property ;
         schema:minValue ?low ;
         schema:maxValue ?high ;
         ag:toleratedMin ?floor ;
-        ag:toleratedMax ?ceiling } }
+        ag:toleratedMax ?ceiling ;
+        prov:wasDerivedFrom ?subject } }
 $given
 WHERE  {
-    { SELECT ?agent ?property (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
+    { SELECT ?agent ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
         ?agent a ag:Agent ; ag:actsFor ?subject .
         ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
         ?need ssn:forProperty ?property .
@@ -97,7 +106,7 @@ WHERE  {
         ?condition ssn:forProperty ?property ;
                    schema:minValue ?min ;
                    schema:maxValue ?max .
-      } GROUP BY ?agent ?property }
+      } GROUP BY ?agent ?property ?subject }
     OPTIONAL {
       SELECT ?agent ?property (MAX(?least) AS ?floor) (MIN(?most) AS ?ceiling) WHERE {
         ?agent a ag:Agent ; ag:actsFor ?subject .
@@ -112,4 +121,9 @@ WHERE  {
                    schema:maxValue ?most .
       } GROUP BY ?agent ?property }
     FILTER(?low <= ?high)
+    #  After the subqueries, because a BIND sees only what its own group has bound so far —
+    #  the scope rule plan.rq met the hard way (#206).
+    ?agent ag:localId ?who .
+    BIND(IRI(CONCAT("http://example.org/agora#bounds.", ENCODE_FOR_URI(?who), ".",
+                    ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?bounds)
 }
