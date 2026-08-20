@@ -38,7 +38,7 @@ from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from .graphs import obligations_graph
-from .terms import DEDUCING, KERNEL, NS
+from .terms import DELIBERATION, DEDUCING, KERNEL, NS
 
 # What this package asks OF others, by family — their namespaces, never their Python. The
 # freshness rule lives with whoever holds the clock, and this module asks it exactly as
@@ -49,6 +49,7 @@ _SENSING = "http://example.org/agora/sensing#SensingCapability"
 # file's own header. Read once at import: a malformed query is then an error the moment the
 # package loads rather than the first time somebody asks.
 GAP_QUERY = (Path(__file__).parent / "gap.rq").read_text()
+GOALS_QUERY = (Path(__file__).parent / "goals.rq").read_text()
 
 # My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
 # graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
@@ -211,6 +212,53 @@ def gaps_of(query, agent_uri: str) -> dict[str, Gap]:
         at=datetime.fromisoformat(row["at"]) if row.get("at") else None,
         region=row.get("region"),
     ) for row in bindings(query(substituted))}
+
+
+def goals_of(query, agent_uri: str, agent_id: str,
+             now: datetime | None = None) -> list[Goal]:
+    """Everything an agent is pursuing, hottest first — from the shipped `goals.rq`.
+
+    A free function for the same reason `gaps_of` is: what a world implies about an agent
+    should be askable without building one. The query is the DEFINITION — the sovereign can
+    run the very text this runs — and the only arithmetic left in Python is the one thing the
+    store's engine will not do, which is dividing one duration by another.
+    """
+    now = now or datetime.now(timezone.utc)
+    substituted = (GOALS_QUERY
+                   .replace("$me", f"<{agent_uri}>")
+                   .replace("$sensed", f"<{SENSED_GRAPH}>")
+                   .replace("$owed", f"<{obligations_graph(agent_id)}>"))
+    out = []
+    for row in bindings(query(substituted)):
+        if row["kind"] == "stake":
+            out.append(Goal(uri=row["want"], urgency=float(row["urgency"]),
+                            observed_property=row["property"],
+                            value=float(row["value"]) if row.get("value") else None))
+            continue
+        #  Lapsed is judged HERE, against the same clock the urgency uses. The query records
+        #  what happened and carries the deadline; one reader, one now, so a debt cannot be
+        #  maximally hot and still count as open because two clocks disagreed.
+        lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
+        out.append(Goal(uri=row["want"], urgency=_duty_urgency(row, now),
+                        claim=row["claim"], owed_to=row["owedTo"],
+                        pursuable=row["state"] == "demanded" and not lapsed))
+    return sorted(out, key=lambda g: -g.urgency)
+
+
+def _duty_urgency(row: dict, now: datetime) -> float:
+    """The fraction of the claim's redeem window that has run, clamped.
+
+    Here rather than in the query because the store's engine binds NOTHING for
+    `duration / duration` — measured, and pinned by a test, because an unsupported operation
+    that returns unbound instead of failing is how a whole column silently reads zero.
+    """
+    if not row.get("expires"):
+        return 0.0                        # a market with no redeem channel; nobody is waiting
+    owed_at = datetime.fromisoformat(row["at"])
+    window = (datetime.fromisoformat(row["expires"]) - owed_at).total_seconds()
+    if window <= 0:
+        return 1.0
+    return max(0.0, min(1.0, (now - owed_at).total_seconds() / window))
 
 
 def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
@@ -422,47 +470,37 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
 
         A debt whose claim named no deadline stays at zero for ever, and that is not a bug: the
         market that issued it has no redeem channel, so the dose went out when it was won and
-        nobody is waiting. `pursuable` is the OTHER question — whether the holder has asked —
-        and it is deliberately not folded into urgency, because a debt this agent can see
-        expiring while nobody has presented is worth seeing.
+        nobody is waiting. `pursuable` is the OTHER question — whether the holder has asked, and
+        whether the window is still open — and it is deliberately not folded into urgency,
+        because a debt this agent can see expiring while nobody has presented is worth seeing.
         """
-        now = now or datetime.now(timezone.utc)
-        out = []
-        for row in self.owed():
-            owed_at = datetime.fromisoformat(row["at"])
-            expires = datetime.fromisoformat(row["expires"]) if row.get("expires") else None
-            urgency = 0.0
-            if expires is not None:
-                window = (expires - owed_at).total_seconds()
-                #  A window of zero would be a claim that expired as it was issued. It cannot
-                #  arrive from a validated world — the shape refuses a non-positive window —
-                #  so this only guards a hand-built ledger, and it guards it the honest way:
-                #  no room at all IS the deadline, which is maximal rather than a division.
-                urgency = 1.0 if window <= 0 else max(0.0, min(
-                    1.0, (now - owed_at).total_seconds() / window))
-            #  Two reasons a standing debt is not actionable, and they are different facts.
-            #  Nobody has asked yet: the holder is waiting for its own watch. Or the window
-            #  closed: the venue stopped holding the claim, so there is nothing left to spend
-            #  even though the debt is still on the books. Both stay in the list — a duty that
-            #  ran out unserved is exactly the evidence this design refuses to throw away, and
-            #  a consumer that iterates rather than taking the maximum is never blocked by one.
-            presented = str(row["presented"]).lower() in ("true", "1")
-            lapsed = expires is not None and now >= expires
-            out.append(Goal(uri=row["o"], urgency=urgency, claim=row["jti"],
-                            owed_to=row["to"], pursuable=presented and not lapsed))
-        return sorted(out, key=lambda g: -g.urgency)
+        return [g for g in self.goals(now) if g.is_duty]
 
     def goals(self, now: datetime | None = None) -> list[Goal]:
         """Everything this agent wants, hottest first, whoever sourced it.
 
-        The one list a deliberator ranges over. Stakes and duties in one order is the whole
+        The one list a deliberator ranges over, and the one a sovereign can ask for: this runs
+        `goals.rq`, the text shipped beside `gap.rq`, so what an agent acts on and what it can
+        be interrogated about are the same sentence. Stakes and duties in one order is the whole
         claim of the obligation record — urgency is the common currency, so a litre owed and a
         pot drying rank against each other instead of running down two paths that never meet.
         """
-        stakes = [Goal(uri=gap.region or "", urgency=abs(gap.gap),
-                       observed_property=prop, value=gap.value)
-                  for prop, gap in self.gaps().items()]
-        return sorted(stakes + self.duties(now), key=lambda g: -g.urgency)
+        return goals_of(self.agent.store.query, self.me.uri, self.agent.id, now)
+
+    def pursued(self, now: datetime | None = None) -> list[tuple[Goal, str | None]]:
+        """My goals, each with the move my deliberator proposes for it — or None.
+
+        The column a ranking is misleading without, and the reason it is computed by ASKING
+        rather than in the query: whether a lever answers is the menu's business, and a second
+        copy of the menu inside a desire query would be free to disagree with the one the agent
+        acts on. Live on the bench this is the difference between two identical-looking rows —
+        a fern at 0.91 and a fern at 0.30 are both `unmet` at urgency 1.00, and only one of them
+        is anybody's to fix, because no lever in this society lowers moisture.
+        """
+        deliberator = self.agent.provider(DELIBERATION)
+        if deliberator is None:
+            return [(goal, None) for goal in self.goals(now)]
+        return [(goal, deliberator.propose_for(goal)) for goal in self.goals(now)]
 
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
@@ -548,4 +586,25 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
             if aim is not None:
                 fields["aim"] = aim
             rows.append(("agent_desire", {"property": local}, fields))
+
+        #  What the ranking says, so a society can be READ rather than tailed. Three counts and
+        #  a maximum, and the split is the point: before this, a fern drowning at 0.91 and a
+        #  fern dying at 0.30 both graphed as one unmet want at urgency 1.00, and only one of
+        #  them was anybody's to fix. `unactionable` is the row an operator should look at last
+        #  and a model should never propose against — no lever in this society lowers moisture.
+        #
+        #  Duties are here for the first time. A host straining under debts it cannot serve used
+        #  to look exactly like a calm one on every panel; now `owed` rises and `hottest_duty`
+        #  approaches its deadline, which is the shape of a society failing at its promises.
+        pursued = self.pursued()
+        stakes = [(g, move) for g, move in pursued if not g.is_duty]
+        duties = [(g, move) for g, move in pursued if g.is_duty]
+        rows.append(("agent_goals", {}, {
+            "goals": float(len(pursued)),
+            "unmet": float(sum(1 for g, _ in stakes if g.urgency > 0)),
+            "unactionable": float(sum(1 for g, move in pursued if move is None)),
+            "owed": float(len(duties)),
+            "hottest": max((g.urgency for g, _ in pursued), default=0.0),
+            "hottest_duty": max((g.urgency for g, _ in duties), default=0.0),
+        }))
         return rows

@@ -190,7 +190,8 @@ def test_the_region_and_the_aim_reach_the_agents_own_bucket(monkeypatch):
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
     desire = next(m for m in fern.modules if m.name == "desire")
     rows = {tags["property"]: (measurement, fields)
-            for measurement, tags, fields in desire.series()}
+            for measurement, tags, fields in desire.series()
+            if measurement == "agent_desire"}   # the ranking's own row has no property tag
     m, moisture = rows["SoilMoisture"]
     assert m == "agent_desire"
     assert moisture == {"desired_low": 0.45, "desired_high": 0.65, "aim": 0.55}
@@ -260,3 +261,26 @@ def test_the_filter_keeps_a_violation_however_pyshacl_heads_it():
     assert "a gap, which is what an agent is for" not in kept
     assert "Results (1):" in kept, "the count must follow what survived"
     assert _without_wants("Validation Report\nConforms: True") == "Validation Report\nConforms: True"
+
+
+def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypatch):
+    """A drowning society must not graph like a thirsty one.
+
+    Both are "unmet at urgency 1.00", and only one of them is anybody's to fix: no lever in
+    this society lowers moisture, so a fern above its region is a row an operator should read
+    last and a model should never propose against. The count that says so is `unactionable`,
+    and it is computed by ASKING the deliberator rather than by a second copy of the menu.
+
+    Asked at a value ABOVE the region on purpose. Below it, every count agrees whatever the
+    join does, and the test would pass on a version that never consulted anything.
+    """
+    fern = build_agent("fern", genesis_store({("fern", MOISTURE): 0.95}), monkeypatch)
+    desire = next(m for m in fern.modules if m.name == "desire")
+    _, _, fields = next(row for row in desire.series() if row[0] == "agent_goals")
+
+    assert fields["unmet"] >= 1
+    assert fields["hottest"] == 1.0, "past the survival ceiling is as bad as it gets"
+    assert fields["unactionable"] >= 1, \
+        "wet is unmet and unactionable — the whole point of the column"
+    assert fields["owed"] == 0.0 and fields["hottest_duty"] == 0.0, \
+        "a plant owes nobody, and an absent debt is zero rather than missing"

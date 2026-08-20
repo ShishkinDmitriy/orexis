@@ -38,12 +38,14 @@ DESIRE = term("DesireCapability")
 DEDUCING = term("Deducing")      # intersects the ranges the world states; no latitude at all
 CONSULTING = term("Consulting")  # asks something else — RESERVED, nothing implements it yet
 
-# What a deduced desire is made of. Named here because the module reads them back out of the
-# graph the rule wrote, and because a region is this package's subject even though every figure
-# in one came from somewhere else.
-BOUNDS = kernel("Bounds")
-TOLERATED_MIN = kernel("toleratedMin")
-TOLERATED_MAX = kernel("toleratedMax")
+#  `BOUNDS`, `TOLERATED_MIN` and `TOLERATED_MAX` were here and went with the terms they named:
+#  what a deduced desire is made of is SHACL now, and the module reads `sh:minInclusive` out of
+#  the shape the rule wrote. Nothing replaced them, because nothing needed to.
+
+# What this package ASKS OF others, by family — their namespace, never their Python. Deciding
+# whether anything can be done about a want is the deliberator's, and a copy of that reasoning
+# here would be a second menu, free to disagree with the one the agent acts on.
+DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
 
 # The graph class. A TERM, not an instance: `agent.store` is asked which graphs are of this
 # class, so a second source of desire is a vocabulary edit and touches no Python here.
