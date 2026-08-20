@@ -133,6 +133,98 @@ structured report entries rather than ad-hoc bindings. The caution to carry with
 axis's own asymmetry, now load-bearing: conformance is boolean while a want has signed
 distance, so a goal-shape must state its measure or the planner ranks repairs blind.
 
+## What the sovereign settled: effects are CONSTRUCTs, and a plan is checked by simulating it
+
+Asked after step 8 landed, in the sovereign's own framing: a goal is a single triple's value in
+a range today — what if it were a GRAPH? What if the desire were *the existence of a fresh
+observation* — extra triples, and a recent date? Then intentions must construct graphs, a plan
+may hold more than one action, and possible worlds might be worth keeping in the store.
+
+**The first half is already true, which is the useful thing to notice.** Since a desire became a
+shape, what fern holds is not a triple: it is a property shape walking `ag:actsFor` and then the
+inverse of `sosa:hasFeatureOfInterest`, demanding `sh:qualifiedMinCount 1` over a shape that
+matches `sosa:observedProperty` AND `sosa:hasSimpleResult` in range. That is *there exists an
+observation, of this property, about my subject, whose value is inside my region* — existence
+over a reified structure five triples deep, of which the range is one leaf. Freshness adds
+`sosa:resultTime` to the same qualified shape and nothing else.
+
+What blocks freshness is only the comparand. SHACL core compares against a literal written IN
+the shape, and "within the last N seconds" needs *now*, so a freshness goal has to be
+`sh:sparql`. That is acceptable, and the rule it establishes is worth stating: **declarative or
+SPARQL is decided per goal KIND, by whether anything reads numbers out of it.** A region is
+declarative because `urgency` divides by its bounds on every reading; freshness has no distance
+to divide by — a boolean and an age, both cheap — so nothing is lost by hiding it in a query.
+
+### A means says what it makes true, as a CONSTRUCT
+
+`effects.rq` beside `affordances.rq` and `rules.ru`: a package ships, per means, a CONSTRUCT
+yielding the triples that applying it WOULD add. Chosen over two alternatives the sovereign was
+shown:
+
+- *a shape fragment the result satisfies*, matched symbolically against the goal — cheaper, no
+  simulation, and limited to the vocabulary of components somebody thought to define;
+- *add/delete triple patterns*, the textbook STRIPS form this record first sketched — simplest
+  to reason about, and wrong for the one lever that matters most. **Opening a valve adds no
+  triple.** It changes a number that a LATER observation reports, and no add/delete template
+  can state that without predicting the number.
+
+A CONSTRUCT can predict it, because this project already computes that prediction: the keeper
+records `ag:expectsDelta` when it adopts an Apply, and actuation converts millilitres to a
+delta. Which forces a constraint worth naming before anyone writes the code: **the number an
+effect predicts and the number verification expects must come from one source.** Two sources
+means an agent that plans against one future and checks against another, and the disagreement
+would show up as false UNMET verdicts — the shape of the false-knowledge bug, arriving from the
+planning side.
+
+### Chaining needs no new language, because the menu is a query
+
+A plan step's precondition is already the affordance row's WHERE clause: a row that cannot hold
+does not exist. So the recursion is *re-run the menu in the possible world*. An effect that makes
+a missing row appear IS the step before it, and the dealer's acquire-then-offer chain stops being
+hand-written: refilling makes the vessel serveable, serveability is the offer row's premise, and
+the row appears in the simulated world. One query, used twice — as the list of levers, and as the
+test of whether a lever would exist.
+
+### Possible worlds are computed, not kept
+
+The store already answers this, in the rule that keeps affordances out of it: **what is stored is
+premises, never conclusions**, because a stored conclusion can outlive the premise it came from.
+A possible world is a conclusion from beliefs plus an effect. So it is built per candidate,
+validated, and dropped.
+
+The exception is a reader outside the process — a Consulting member being shown the options, or a
+sovereign asking *why did you choose that*. For those it may be materialised into a graph of its
+own class, cleared at the start of every planning pass exactly as genesis clears its write
+targets, carrying PROV to the affordance row that generated it. Never public, never in belief,
+and never a graph class anything else reads: the modality frame has the room for it — belief is
+*is*, the menu is *could do*, and this is *would be, if I did*.
+
+Validation of a candidate runs the goal shape **unfocused**, which is not a detail: pySHACL
+answers qualified value shapes wrong under `focus_nodes`, measured both ways round
+([a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md)), and every goal shape here is
+qualified. A candidate world validated with a focus would be silently judged by the wrong
+answer.
+
+### The test of whether this is a generalisation
+
+Two hardcoded things must DISAPPEAR, not survive beside it:
+
+1. `if value is None: return OBSERVE` in the reflex — *the first intention is always to look*.
+   Under the widening that is a freshness goal, unmet, and Observe is the lever whose effect
+   repairs it. The special case should fall out of the machinery rather than be kept for luck.
+2. The dealer's hand-written `plan.rq`. Acquire-then-offer should be derived from effects and
+   the re-run menu, not stated as a two-step in a file.
+
+If either survives, this is added machinery rather than a widening, and should be refused on
+those grounds.
+
+### And a duty becomes a shape
+
+The obligation record left a seam — *what a claim-sourced desire says exactly* — with the honest
+note that "valve X open for three seconds" is an ACT, and desires here are states. Graph goals
+answer it: the state is *this claim discharged*, which is a pattern over the ledger, and the act
+stays an affordance. That closes the last place where a want is not a shape.
+
 # Seams left open
 
 - **Implemented at depth 2, when the trigger fired.** The city mains (#201) made the supplier
@@ -147,7 +239,8 @@ distance, so a goal-shape must state its measure or the planner ranks repairs bl
   is also data: `plan_for` returns the two rows through the two venues, the Consulting
   member's substrate. What was NOT built of the sketch: the add/delete template on menu rows
   (the serveability goal is deduced in the planner, not stated as row effects — sufficient at
-  depth 2, revisit if depth grows) and goal patterns as shapes (one deduced goal exists; the
+  depth 2, and superseded rather than revisited: the section above replaces add/delete with a
+  CONSTRUCT per means, for a reason that only shows up at an actuation) and goal patterns as shapes (one deduced goal exists; the
   severity-axis machinery stays future). `ag:Offer` is ledgered since #206: the
   "host keeps no gap ledger" line was crossed knowingly, because an owed round held in
   module memory was a promise a restart forgot and no ask could see — adopted on deferral,
