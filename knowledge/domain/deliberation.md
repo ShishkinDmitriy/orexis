@@ -79,6 +79,68 @@ about rules no effect could have broken — and a depth-2 pass would take twenty
 instead of under two. What must be true is that the agent never COMMITS to reaching a world the
 society refuses, so the expensive question is asked of the world it actually intends.
 
+# Watching it decide (#256)
+
+Every one of those decisions used to die in-process as a single log line, and it could not be
+recovered from outside: pyoxigraph holds an exclusive lock on the belief base, so nothing else
+can open the store to re-run the search and see what it saw. That is the same fact `agora-ask`
+exists for, arriving at the planner.
+
+So a pass writes itself down. Per goal, into `graph/deliberation`, replaced at the start of the
+next pass:
+
+```sparql
+SELECT ?goal ?verdict ?standsAt ?means ?via ?wouldReach ?why WHERE {
+  GRAPH <http://example.org/agora/graph/deliberation> {
+    ?d a ag:Deliberation ; ag:deliberatedOn ?goal ; ag:verdict ?verdict ;
+       ag:standsAt ?standsAt ; ag:considered ?c .
+    ?c ag:wouldTake ?means ; ag:through ?via ; ag:verdict ?why .
+    OPTIONAL { ?c ag:wouldReach ?wouldReach } } }
+```
+
+Asked of the loner's gardener, wet at 0.42:
+
+```
+goal bounds.gardener.SoilMoisture   pass: not better   at 0.88
+  considered Observe  via moisture_probe  would reach 0.88  — a world already reached
+  considered Actuate  via pump            would reach 1.00  — no better than standing still
+```
+
+Which is the whole argument in four lines: the pump was weighed rather than passed over, and
+watering would take this plant from 0.88 to **1.00** — worse. A reader gets the numbers, not the
+verdict on trust.
+
+**It is the record's one exception and not an exemption from the rule.** Possible worlds are
+computed and dropped, except where a reader outside the process needs one — and then: its own
+graph class, cleared at the start of every pass, PROV to what generated it, never public and
+never in belief. All four hold. `ag:through` is the PROV: a trace that said only `Actuate` would
+not answer *through which valve*, which stops being rhetorical the moment an agent holds two.
+
+Three things it must not become:
+
+- **A second pass replaces the first**, candidates and all. An orphaned candidate is a trace
+  outliving the pass it described, which is the hazard the computed-not-stored rule exists to
+  prevent — and the node is minted deterministically from the goal's IRI precisely so a restart
+  can find and replace it. `hash()` would not do: Python salts it per interpreter, so every boot
+  would orphan a trace instead of replacing one.
+- **A restart inherits nothing.** The world moved while the agent was not running.
+- **Nothing reads it back.** Cycle detection lives in the search, in a set that lasts as long as
+  the pass. A trace that became memory would be a conclusion feeding a conclusion.
+
+Not public, and the reason is not tidiness: which levers an agent weighed and rejected is a
+disclosure nobody decided to make, and a rival reading it would learn what its neighbour can
+nearly do. It is reachable the way an intention ledger is — the sovereign asks.
+
+The aggregate rides the same tick: `agent_deliberation` carries a field per outcome, so a
+dashboard shows how often an agent finds nothing worth doing. Six fields where a planner
+returning a move or None gave two, and the pair worth watching is `no_candidate` against
+`exhausted` — one says equip me, the other says my doses are too coarse. Counted from the trace
+rather than tallied in the module, so the figure on a dashboard and the answer over the ask
+channel cannot drift.
+
+Writing it costs **0.7%** of a pass — 6.6ms against 0.96s, measured on the bench. A debugging aid
+that slowed the thing it observes would be a poor trade.
+
 # The three members
 
 - **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;

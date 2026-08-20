@@ -26,9 +26,10 @@ from dataclasses import dataclass
 from agent import loader
 from agent.goal import Goal
 from agent.module import Module
+from agent.ontology import DELIBERATION_GRAPH
 from agent.store import bindings
 
-from . import search
+from . import search, trace
 from .search import Planner
 from .terms import PLANNING, REFLEX
 
@@ -141,6 +142,16 @@ class ReflexModule(Module):
         """
         return [(goal, self.propose_for(goal)) for goal in self.agent.goals()]
 
+    def start(self) -> None:
+        """Drop whatever the last process was thinking.
+
+        A trace describes a pass over a world, and the world moved while this agent was not
+        running. Keeping one across a restart would leave the graph holding a decision about
+        readings nobody has taken since — the same hazard as a trace outliving its pass, one
+        lifecycle up. Cheap: the graph holds one pass per goal and most agents hold a handful.
+        """
+        self.agent.store.clear_graph(DELIBERATION_GRAPH)
+
     def series(self) -> list[tuple[str, dict, dict]]:
         """The ranking, as figures — and the split that stops it misleading.
 
@@ -152,12 +163,24 @@ class ReflexModule(Module):
         """
         pursued = self.pursued()
         wanting = [(g, move) for g, move in pursued if not g.is_met]
-        return [("agent_goals", {}, {
+        rows = [("agent_goals", {}, {
             "goals": float(len(pursued)),
             "unmet": float(len(wanting)),
             "unactionable": float(sum(1 for _, move in wanting if move is None)),
             "hottest": max((g.urgency for g, _ in pursued), default=0.0),
         })]
+        #  HOW IT DECIDED, not just what it wants (#256). `pursued()` above has just re-planned
+        #  every goal, so the trace holds this tick's verdicts — read from there rather than
+        #  counted here, so the figure a dashboard shows and the answer `agora-ask` gives are
+        #  one fact. Six fields because a planner has six answers where returning a move or
+        #  None had two, and the pair worth watching is `no candidate` against `exhausted`:
+        #  one says equip me, the other says my doses are too coarse.
+        verdicts = trace.outcomes(self.agent.store.query_union)
+        rows.append(("agent_deliberation", {}, {
+            outcome.replace(" ", "_"): float(verdicts.get(outcome, 0))
+            for outcome in (search.SATISFIED, search.IMPROVED, search.NOTHING,
+                            search.EXHAUSTED, search.NOT_BETTER, search.REFUSED)}))
+        return rows
 
     def propose_for(self, goal: Goal) -> str | None:
         """The move for one GOAL, whoever sourced it — the deliberator's real question.
