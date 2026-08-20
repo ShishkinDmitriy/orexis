@@ -27,7 +27,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from . import genesis, loader
-from .ontology import SENSED_GRAPH, beliefs_graph
+from .ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
 from .store import Store
 
 log = logging.getLogger("validate")
@@ -203,7 +203,11 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities) -> No
     # and the shapes go quiet rather than failing, which is the worst way to be wrong. Passing
     # Asking the store which graphs are public, rather than naming them, means a sixth can never
     # be forgotten — and that nothing here has to know what the five happen to be called.
-    data = graph_from(st, *st.public_graphs(), beliefs_graph(agent_id), SENSED_GRAPH)
+    #  INSTRUMENTS too, because the freshness want reads the horizon this agent published for
+    #  its own sensors (#240). Leave it out and that shape binds nothing, fires never, and says
+    #  so to no one — the silent direction to be wrong, which this file has met before.
+    data = graph_from(st, *st.public_graphs(), beliefs_graph(agent_id), SENSED_GRAPH,
+                      INSTRUMENTS_GRAPH)
     ok, report = conforms(data, focus=agent_uri)
     if not ok:
         raise BeliefsInvalid(

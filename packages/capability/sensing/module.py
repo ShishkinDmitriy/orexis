@@ -46,10 +46,11 @@ from agent.scaling import scaling_for
 from agent.driver import driver_for
 from agent.module import Module
 from agent.observation import Observations
+from agent.ontology import INSTRUMENTS_GRAPH
 from agent.store import bindings
 
 from .beliefs import ALARM_BLOCK, LISTENING_BLOCK, SUBSCRIBING_BLOCK
-from .terms import LISTENING, PUSH, SCHEDULED, SUBSCRIBING
+from .terms import LISTENING, PUSH, SCHEDULED, STALE_AFTER_S, SUBSCRIBING
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future sensing inherits them.
@@ -101,6 +102,11 @@ class SensingModule(Module):
 
         # Recording is not sensing's to define — see agent/observation.py.
         self.observations = Observations(agent)
+        #  What I have already written down, so publishing is a no-op until the answer moves.
+        #  Nothing is published from HERE: `SubscribingModule` fills its cadence dicts after
+        #  `super().__init__()` returns, so asking what rhythm is in force during construction
+        #  reaches attributes that do not exist yet. `start()` is after everyone is built.
+        self._published: dict[str, int] = {}
 
     def stale_after_s(self, subject_uri: str) -> int:
         """How old a reading of this subject may be before I stop trusting it.
@@ -111,11 +117,47 @@ class SensingModule(Module):
         """
         raise NotImplementedError
 
+    def publish_horizon(self, sensor=None) -> None:
+        """Write down how old a reading of mine may be — `stale_after_s`, per sensor, as a fact.
+
+        The number was process state until #240: `sent_cadence` and `acked_cadence` are dicts on
+        this module, so the horizon they yield died with the process and no query could ask for
+        it. That was tolerable while only Python judged freshness. It stopped being tolerable
+        when freshness became a WANT, because a want is a shape and a shape cannot run a method.
+
+        What is published is the ANSWER, not the inputs. A shape that recomputed cadence-plus-
+        grace would be a second definition of the same figure, free to drift from this one the
+        first time the fallback chain changed; a shape carrying a baked constant would be wrong
+        within a tick, since the cadence is re-commanded whenever urgency moves. Publishing what
+        the method returns leaves exactly one definition and nothing to disagree with it.
+
+        Idempotent and cheap: the store is only touched when the answer actually moves, which is
+        when a cadence is commanded or acknowledged rather than on every reading.
+        """
+        for aimed in ([sensor] if sensor is not None else self.sensors):
+            horizon = int(self.stale_after_s(aimed.subject, aimed.observes))
+            if self._published.get(aimed.uri) == horizon:
+                continue
+            self._published[aimed.uri] = horizon
+            self.agent.store.update(f"""
+                DELETE {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
+                    <{aimed.uri}> <{STALE_AFTER_S}> ?was }} }}
+                WHERE  {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
+                    <{aimed.uri}> <{STALE_AFTER_S}> ?was }} }} ;
+                INSERT DATA {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
+                    <{aimed.uri}> <{STALE_AFTER_S}> {horizon} }} }}""")
+
     def subscriptions(self) -> list[str]:
         # exactly my own sensors, and only where their binding listens at all — never a
         # wildcard, so the access grant stays visible in the subscription itself
         return [t for s in self.sensors if self.drivers[s.uri]
                 for t in self.drivers[s.uri].subscriptions(s)]
+
+    def start(self) -> None:
+        """Say what I will treat as stale, before anything asks. A listening agent's horizon is
+        constant and still has to be written down: a want that cannot find the number reads a
+        reading of any age as fresh, which is the silent direction to fail."""
+        self.publish_horizon()
 
     def stop(self) -> None:
         self.observations.close()
@@ -366,6 +408,7 @@ class SubscribingModule(SensingModule):
         become measured together — and the one case that differs (a peer whose pointer never
         yields) is a broken payload, already visible as desires_measured diverging (#124).
         """
+        super().start()
         self.sense_now()
         for sensor in self.sensors:
             reading = self.fresh_reading(sensor.subject, sensor.observes)
@@ -424,6 +467,9 @@ class SubscribingModule(SensingModule):
         key = sensor.command_topic or sensor.local_id
         self.sent.pop(key, None)
         self.acked_cadence[key] = int(acknowledged_s)
+        #  The board's own testimony beats my intent, so it moves the published horizon as well
+        #  — a rhythm clamped to a device's floor makes readings stale later, not sooner.
+        self.publish_horizon(sensor)
         for peer in self._aimed_with(sensor):
             self.agent.metrics.cadence_acked(peer.local_id, int(acknowledged_s))
         commanded = self.sent_cadence.get(sensor.local_id)
@@ -622,6 +668,8 @@ class SubscribingModule(SensingModule):
         self.sent[key] = message
         for aimed in group:
             self.sent_cadence[aimed.local_id] = sleep_s
+            #  The horizon moved with the rhythm, so what a shape reads moves with it too.
+            self.publish_horizon(aimed)
         (self.log.info if changed else self.log.debug)(
             "%s: cadence now %ss%s", sensor.local_id, sleep_s,
             f", showing {verdict}" if verdict else "")

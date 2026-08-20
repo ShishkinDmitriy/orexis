@@ -193,6 +193,25 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 
 # Required of EVERY perceiving agent, however it perceives: deciding what is too old to act
 # on is about belief, not control, so it survives losing the ability to drive the device.
+#  THE HORIZON, PUBLISHED. How old a reading of this sensor's property may be before this
+#  agent stops trusting it — `stale_after_s` computed and then written down, per sensor.
+#
+#  It exists because freshness had to become a WANT (#240) and a want is a shape: a shape can
+#  compare a `sosa:resultTime` against a number in the graph, and cannot run the Python that
+#  works the number out. The cadence in force is the board's own acknowledgement where it gives
+#  one and the agent's intent where it does not, and NEITHER was ever written down — both were
+#  dicts on a module, lost at every restart and invisible to `agora-ask`. So a shape had two
+#  ways to get the number and both were wrong: recompute the fallback chain in SPARQL, which is
+#  a second definition free to drift, or bake a constant that is stale the moment the cadence
+#  is re-commanded — and it is re-commanded whenever urgency moves.
+#
+#  Publishing the ANSWER rather than its inputs is what keeps one definition: nothing recomputes
+#  it, so nothing can disagree with it. `tests/test_freshness.py` fails if the triple and the
+#  method ever part company.
+:staleAfterS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "stale after (s)" ;
+    rdfs:comment "How old a reading of this sensor may be before the agent stops trusting it — the cadence in force plus grace where the agent sets the interval, an absolute where the device keeps its own clock. Written by the sensing module whenever the answer changes, into the agent's instruments graph. A fact about an instrument, so it lives with the instrument and not with the reading: a horizon stored on an observation would be a snapshot, and would say 35 seconds about a board that has since been told to sleep for ten minutes." .
+
 :readingGraceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
     rdfs:label "reading grace" ;
     rdfs:comment "How long past the interval it ASKED for a subscribing agent still trusts a reading — a board's wake time and a late wifi association. Relative on purpose: an agent that chose to look every 600s cannot coherently refuse a 120s-old number, and an absolute limit made every comfortable plant look like a failed sensor." .

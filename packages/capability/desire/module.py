@@ -34,7 +34,7 @@ from pathlib import Path
 
 from agent.goal import Goal
 from agent.module import Module
-from agent.ontology import SENSED_GRAPH, beliefs_graph
+from agent.ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from .graphs import obligations_graph
@@ -235,6 +235,7 @@ def goals_of(query, agent_uri: str, agent_id: str,
     substituted = (GOALS_QUERY
                    .replace("$me", f"<{agent_uri}>")
                    .replace("$sensed", f"<{SENSED_GRAPH}>")
+                   .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>")
                    .replace("$owed", f"<{obligations_graph(agent_id)}>"))
     out = []
     for row in bindings(query(substituted)):

@@ -300,6 +300,12 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 <http://example.org/agora/graph/world/derived>     a ag:WorldGraph ;    ag:arrivedBy ag:Derived .
 <http://example.org/agora/graph/world/entailed>    a ag:WorldGraph ;    ag:arrivedBy ag:Entailed .
 <http://example.org/agora/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
+##  A BELIEF and not a reading: what the agent holds about the instruments it polls. It
+##  arrives `ag:Recorded` because the agent writes it down as it goes, the way it records
+##  its own classification — not asserted from a file, not derived by a rule, and not
+##  received from anyone. Private: nobody else needs to know what rhythm I am running,
+##  and the horizon it yields is mine to judge readings by.
+<http://example.org/agora/graph/instruments>       a ag:BeliefGraph ;  ag:arrivedBy ag:Recorded .
 <http://example.org/agora/graph/effects>            a ag:EffectGraph ;  ag:arrivedBy ag:Asserted .
 <http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .
 
@@ -365,6 +371,9 @@ ag:Below a ag:Side ; rdfs:label "below" ;
     rdfs:comment "A reading sits under the floor of the region, or under the survival envelope. The side a lever that RAISES the property repairs." .
 ag:Above a ag:Side ; rdfs:label "above" ;
     rdfs:comment "A reading sits over the ceiling. The side a lever that LOWERS the property repairs — and for soil moisture in this domain, no lever does: a drowning plant is a real want with no answer, which is worth being able to say." .
+ag:Stale a ag:Side ; rdfs:label "stale" ;
+    rdfs:comment "A reading exists and stopped being evidence about now — older than the horizon this agent publishes for that sensor. Distinct from `ag:Unmeasured`, which is having no reading at all, because the two differ in fact and an agent should be able to say which: one has never looked, the other looked and let the answer go cold. Both are repaired by the same move, and by no other — no lever moves a number you cannot see." .
+
 ag:Unmeasured a ag:Side ; rdfs:label "unmeasured" ;
     rdfs:comment "Nothing has been read. Not a side of the range at all, which is why it is a value here rather than an absence: the repair is to LOOK, and the lever that answers it is Observe rather than anything that moves the world." .
 

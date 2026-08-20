@@ -173,6 +173,18 @@ class ReflexModule(Module):
         a goal that stays hot, stays owed, and shows up in the ledger unpaid, which is this
         project's posture towards everything it cannot prevent: leave evidence.
         """
+        #  NOT KNOWING is its own want, and the answer to it is always the same move. A want
+        #  with no reading behind it, or one whose reading stopped being evidence about now,
+        #  is repaired by looking and by nothing else — no lever moves a number you cannot see.
+        #
+        #  This is where `if value is None: return OBSERVE` used to live, as a first line in
+        #  `propose` that ran before anything was asked. It said the same thing and could not
+        #  say WHY: a value of None meant both "never read" and "the caller did not tell me",
+        #  and the keeper exploited the second to ask "should I look at this?" by passing None
+        #  deliberately. A goal carries its own state, so the question is now asked in the
+        #  words it means.
+        if goal.state in ("unmeasured", "stale"):
+            return OBSERVE
         if not goal.is_duty:
             return self.propose(goal.observed_property, goal.value)
         #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
@@ -211,8 +223,11 @@ class ReflexModule(Module):
         cannot know which way — refusing is honest where guessing would be the hardcoded sign
         sneaking back in as a default.
         """
+        #  A value of None no longer means "look" — `propose_for` answers that, from a goal
+        #  that says which of the two epistemic failures it is. Here it means only that the
+        #  caller has no reading to steer by, and steering is all this member does.
         if value is None:
-            return OBSERVE
+            return None
         desire = self.agent.provider(_DESIRE)
         if desire is None:
             return None

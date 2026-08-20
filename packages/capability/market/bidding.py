@@ -164,7 +164,7 @@ class BiddingModule(Module):
                 f"<{self._valuation_term}> belief — run agora-validate")
         return float(rows[0]["v"])
 
-    def _next_move(self, value: float | None) -> str | None:
+    def _next_move(self, value: float | None = None) -> str | None:
         """The WHETHER, asked of whoever deliberates — this module only carries moves out.
 
         The deciding used to be welded in here: an offer meant look-then-bid, and value_bid's
@@ -172,11 +172,34 @@ class BiddingModule(Module):
         without touching this module — see packages/capability/deliberation/. An agent granted
         no deliberator keeps the old welded behaviour, which is what None falls through to at
         each call site: the seam must not change what an agent WITHOUT it does.
+
+        ASKED ABOUT THE GOAL since #240, which is why a `None` value no longer means "look".
+        It used to: `propose` read None as ignorance and answered Observe, and this module
+        leaned on that when an offer arrived with no reading it trusts. But None also meant
+        "the caller has no number", and one sentinel answering two questions is a sentinel
+        that will eventually answer the wrong one. A goal says which of the two epistemic
+        failures it is — never read, or read too long ago — so the question is asked properly
+        and this module keeps the same behaviour for a better reason.
+
+        The two call sites ask DIFFERENT questions, which is what the sentinel was hiding. With
+        a reading in hand this is "what should I do about this number", and the number is the
+        one just read — not one fetched back out of the store, because that would make the
+        answer depend on whether the observation had been written yet, an ordering no caller
+        can see. With nothing in hand it is "what should I do about not knowing", and only a
+        goal can say which kind of not-knowing it is.
         """
         deliberator = self.agent.provider(DELIBERATION)
         if deliberator is None:
             return None
-        return deliberator.propose(self.about, value)
+        if value is not None:
+            return deliberator.propose(self.about, value)
+        goal = next((g for g in self.agent.goals()
+                     if not g.is_duty and g.observed_property == self.about), None)
+        if goal is None:
+            #  No want in this property at all: nothing to steer toward, and the old code
+            #  reached the same answer through an aim it could not find.
+            return None
+        return deliberator.propose_for(goal)
 
     def _unseal(self, doc: dict) -> dict:
         """Open a sealed claim (#145), or pass a plaintext one through untouched.
@@ -330,7 +353,7 @@ class BiddingModule(Module):
         # No reading it trusts — so ask whoever deliberates what to do about not seeing. The
         # reflex says look, which is what this module always did; the point of asking anyway is
         # that a member with more context could say otherwise, without this line changing.
-        if self.agent.provider(DELIBERATION) is not None                 and self._next_move(None) != OBSERVE:
+        if self.agent.provider(DELIBERATION) is not None                 and self._next_move() != OBSERVE:
             self.log.info("auction %s: deliberation chose not to look — sitting out",
                           auction_id)
             self.pending = None

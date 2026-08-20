@@ -32,3 +32,8 @@ LISTENING = term("Listening")  # the device announces on its own clock; the agen
 PULL = term("PolledProcedure")           # answers when asked — the unbuilt sensing:Polling would serve it
 SCHEDULED = term("ScheduledProcedure")   # keeps an interval it is given -> sensing:Subscribing
 PUSH = term("PushProcedure")            # keeps its own clock, takes no orders -> sensing:Listening
+
+#  The horizon this agent publishes per sensor, so a SHAPE can read what only Python could work
+#  out (#240). One definition and one direction: `stale_after_s` computes it, `publish_horizon`
+#  writes it, and everything else — including the freshness want — reads what was written.
+STALE_AFTER_S = term("staleAfterS")

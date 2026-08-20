@@ -78,6 +78,89 @@ WHERE  {
     ?lever actuation:drawsFrom ?source .
 } ;
 
+#  1c. The freshness want: a reading exists, and it is still evidence about NOW (#240).
+#
+#  A SHAPE OF ITS OWN, not a fourth property shape on the region, and the reason is structural
+#  before it is conceptual: `sh:sparql` is a constraint on a NODE shape, and it has to be SPARQL
+#  because SHACL core compares against a literal written in the shape while the horizon moves —
+#  the agent re-commands its cadence whenever urgency does. So it could not have been a
+#  `sh:property` beside the three declarative ones even if that had been wanted.
+#
+#  It is also a different KIND of want, which is the conceptual half. The region is about the
+#  world (is the number where it should be); this is about the agent's knowledge of it (is the
+#  number still worth anything). They are repaired by different means — no lever moves a number
+#  you cannot see — and they must be droppable independently, which the next paragraph needs.
+#
+#  ONLY WHERE A SENSOR EXISTS, which is the decision this rule takes. An epistemic want in a
+#  property nothing measures could never be satisfied: it would sit at maximum urgency for
+#  ever, top every ranking an operator or a model reads, and inflate the `unactionable` count
+#  the dashboards carry — training a reader to ignore the top row, which is the failure that
+#  count exists to prevent. The case is already reported, once, by the shape that says "a
+#  desire in a property this agent polls no sensor for" — `world/loner`'s zz plant states
+#  ranges for light and humidity nothing reads, and gets three such warnings today. A permanent
+#  maximal want would be a second and noisier way of saying what is already said.
+#
+#  The horizon is READ, never recomputed: `stale_after_s` works it out from the rhythm in force
+#  and `publish_horizon` writes it into the instruments graph. A shape that recomputed it would
+#  be a second definition free to drift; one that baked it would be wrong within a tick.
+INSERT { GRAPH $into(ag:BoundsGraph) {
+    ?agent ag:holds ?fresh .
+    ?fresh a sh:NodeShape ;
+        sh:targetNode ?agent ;
+        ssn:forProperty ?property ;
+        #  BOTH, because a sensor is the reason this want exists and the subject is what it is
+        #  about — and an agent may poll instruments pointed at things it does not act for.
+        prov:wasDerivedFrom ?sensor , ?subject ;
+        ag:violationIs ag:Stale ;
+        #  ON THE NODE SHAPE, and that is the opposite of where the declarative wants carry it.
+        #  Measured on pySHACL 0.40.1, both ways round: a `sh:sparql` constraint's own
+        #  `sh:severity` is IGNORED and the result comes back `sh:Violation`, while the node
+        #  shape's is honoured; for a core `sh:property` constraint it is the other way about,
+        #  which is why the region's three shapes carry theirs individually. Getting this wrong
+        #  is not cosmetic — a want reported as a violation refuses the agent's boot, which is
+        #  the one thing a want must never do, and it did exactly that before this line moved.
+        sh:severity ag:ShouldBecome ;
+        sh:sparql [
+            #  Kept here too: it is what the spec says, so a conformant engine reads it, and a
+            #  reader of this shape should not have to know our engine's quirk to see the force.
+            sh:severity ag:ShouldBecome ;
+            sh:message ?tooOld ;
+            sh:select ?staleQuery ] } }
+$given
+WHERE  {
+    #  THE PREMISE IS THE INSTRUMENT, not the stake, and the difference is not academic: the
+    #  loner's gardener polls a water butt it does not act for. Tying this to the subject's
+    #  stated ranges — the region's premise — left the butt's level with no freshness want, and
+    #  since the keeper now pursues goals rather than sweeping noticed gaps, nothing would have
+    #  watched it at all. `notices()` covered every sensor, and the want that replaces it must
+    #  cover exactly the same ground.
+    #
+    #  It is also the honest premise on its own terms. Wanting a reading to be current is about
+    #  the instrument and what it is pointed at: if this agent went to the trouble of polling
+    #  something, it wants to know what that thing reads NOW. A stake is what makes the VALUE
+    #  matter; a sensor is what makes the reading knowable, and this want is about knowing.
+    ?agent a ag:Agent ; ag:localId ?who ; sensing:polls ?sensor .
+    ?sensor sensing:monitors ?subject ; sosa:observes ?property .
+    BIND(STRAFTER(STR(?property), "#") AS ?name)
+    #  Keyed by the SENSOR, not by the property: one agent may poll two instruments reading the
+    #  same property of different subjects — the loner's gardener does not, but the dealer's
+    #  shape of world does, and a name that collided would silently merge two wants into one.
+    BIND(IRI(CONCAT("http://example.org/agora#fresh.", ENCODE_FOR_URI(?who), ".",
+                    ENCODE_FOR_URI(STRAFTER(STR(?sensor), "#")))) AS ?fresh)
+    BIND(CONCAT(?name, " was last read longer ago than ", ?who,
+                " trusts a reading of it — the number is no longer evidence about now")
+         AS ?tooOld)
+    BIND(CONCAT(
+      "SELECT $this ?value WHERE { ",
+      "?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> <", STR(?subject), "> ; ",
+      "<http://www.w3.org/ns/sosa/observedProperty> <", STR(?property), "> ; ",
+      "<http://www.w3.org/ns/sosa/resultTime> ?at ; ",
+      "<http://www.w3.org/ns/sosa/hasSimpleResult> ?value . ",
+      "<", STR(?sensor), "> <http://example.org/agora/sensing#staleAfterS> ?horizon . ",
+      "FILTER(?at + STRDT(CONCAT(\"PT\", STR(?horizon), \"S\"), ",
+      "<http://www.w3.org/2001/XMLSchema#dayTimeDuration>) < NOW()) }") AS ?staleQuery)
+} ;
+
 #  2. The regions themselves, one per property the subject states a need in.
 #
 #  `$into` names the CLASS of graph these conclusions belong in, and genesis resolves it to the

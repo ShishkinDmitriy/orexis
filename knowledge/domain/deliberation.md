@@ -21,6 +21,15 @@ express a stake, and an agent also wants things that are not distances — "this
 is a state, wanted, with a deadline. A goal carries either shape and one urgency, so a duty is
 ranked against a thirst rather than running down a second path that never meets the first.
 
+**And it is where not-seeing is answered** (#240). `propose` used to open with
+`if value is None: return OBSERVE` — a first line that read a missing number as ignorance. It
+said the right thing for the wrong reason, because None meant two things: *never read*, and
+*the caller has no number to hand you*. The keeper exploited the second to ask the first,
+sweeping noticed gaps and passing None deliberately to mean "should I look?". A goal says which
+epistemic failure it is — `unmeasured` or `stale` — so the question is now asked in the words it
+means, both are answered by the same move, and the bare-value door steers only. One sentinel
+answering two questions is a sentinel that eventually answers the wrong one.
+
 # The three members
 
 - **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;
