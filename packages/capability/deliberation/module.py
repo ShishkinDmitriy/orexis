@@ -169,6 +169,23 @@ class ReflexModule(Module):
             "unactionable": float(sum(1 for _, move in wanting if move is None)),
             "hottest": max((g.urgency for g, _ in pursued), default=0.0),
         })]
+        #  ONE ROW PER WANT, which is what makes a single graph able to show all of them.
+        #  The tag is the want ITSELF and not the property it is about, because a property
+        #  cannot name every want: freshness is per instrument, a duty is per counterparty, and
+        #  a panel keyed on `property` could only ever draw stakes. Urgency is unit-free by
+        #  construction, so a moisture, a look overdue and a litre owed belong on one axis —
+        #  that is the whole claim of a common currency, and this is where it becomes visible.
+        #
+        #  A DUTY is tagged by whom it is owed to and never by its claim. A jti is unique per
+        #  round, so tagging by it would mint a new series every time the society traded and
+        #  make the store's cardinality grow with its history — the cost of a dashboard nobody
+        #  could then load. Whom I owe is a handful of agents and says the thing worth seeing.
+        for goal, _ in pursued:
+            about = (goal.owed_to.rsplit("#", 1)[-1] if goal.is_duty
+                     else goal.uri.rsplit("#", 1)[-1])
+            rows.append(("agent_want", {"want": f"duty.{about}" if goal.is_duty else about},
+                         {"urgency": float(goal.urgency)}))
+
         #  HOW IT DECIDED, not just what it wants (#256). `pursued()` above has just re-planned
         #  every goal, so the trace holds this tick's verdicts — read from there rather than
         #  counted here, so the figure a dashboard shows and the answer `agora-ask` gives are
