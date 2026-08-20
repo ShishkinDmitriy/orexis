@@ -224,6 +224,22 @@ row can outlive the plumbing it was concluded from. A rule is a SCHEMA. Schemas 
 the store: that is what `ontology.ttl` and `shapes.ttl` are. So the means keeps its stored rule
 and the menu keeps computing its rows, and neither claim gives way.
 
+**It does not bring everything, and the split matters.** SHACL-AF gives the VOCABULARY for two
+of the five things a planner needs — a precondition that is a shape, an effect that is a stored
+CONSTRUCT — and nothing for the other three. It has no goal, no candidate and no backtracking:
+its rules are forward-chaining inference, applied to a fixpoint over every matching target, where
+a planner applies ONE action hypothetically and asks whether the goal now conforms. It offers no
+sandbox — the measured `inplace=True` is that execution model showing through — and nothing
+connects a validation result to the rule that would repair it.
+
+So take the vocabulary and not necessarily the engine. A rule stored as `sh:construct` text can
+be run directly against a possible world with the SPARQL engine already here, and its
+`sh:condition` checked by validating that shape, which keeps everything worth having — standard
+terms, persisted, readable by a model, one format — without inheriting fixpoint semantics and
+in-place mutation that a planner then has to fight. The wrong turn to avoid is "pySHACL runs
+rules, so let pySHACL run them": it runs rule SETS over all targets, and a plan step is one rule
+against one hypothesis.
+
 **"Does CONSTRUCT support deletion?"** No — and neither does SHACL-AF, whose rules exist to add
 entailments. So a retraction template sits beside the construct one, and the simulator computes
 `(beliefs − retracts) + adds`, side-effect free.
