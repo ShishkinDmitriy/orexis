@@ -147,38 +147,74 @@ INSERT { GRAPH $into(ag:BoundsGraph) {
         sh:targetNode ?agent ;
         ssn:forProperty ?property ;
         prov:wasDerivedFrom ?subject ;
+        #  NOT LOOKED. Existence alone, so an unmeasured property reports exactly one thing and
+        #  it is the true one. The two side shapes below cannot say this: each asks whether a
+        #  reading is outside its edge, and no reading is outside anything.
         sh:property [
             sh:severity ag:ShouldBecome ;
             sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Unmeasured ;
             sh:qualifiedMinCount 1 ;
             sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ] ;
+            sh:message ?unseen ] ;
+        #  BELOW, and ABOVE, as two shapes rather than one range test inside a qualified shape.
+        #  The old form violated `QualifiedMinCount` — "no conforming reading exists" — which
+        #  is true of a drowning plant and a dying one alike, and watering repairs one of them.
+        #  A means will declare which violations it repairs (#239), a message can name the side
+        #  it is about, and a dashboard stops showing the two as one row.
+        sh:property [
+            sh:severity ag:ShouldBecome ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Below ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
-                sh:property [ sh:path sosa:hasSimpleResult ;
-                              sh:minInclusive ?low ; sh:maxInclusive ?high ] ] ;
-            sh:message "a reading sits outside the region this agent holds for that property — a gap, which is what an agent is for" ] .
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:maxExclusive ?low ] ] ;
+            sh:message ?tooLow ] ;
+        sh:property [
+            sh:severity ag:ShouldBecome ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Above ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:minExclusive ?high ] ] ;
+            sh:message ?tooHigh ] .
     ?envelope a sh:NodeShape ;
         sh:targetNode ?agent ;
         ssn:forProperty ?property ;
         prov:wasDerivedFrom ?subject ;
+        #  A WARNING and not a violation, which is the difference between "this world is
+        #  illegitimate" and "this plant is dying". Refusing here would stop an agent booting
+        #  exactly when its subject most needs it — and the envelope's real work is scaling
+        #  urgency, which happens whether or not anything is validated.
+        #
+        #  NO observation may sit past either edge — where the region demands that one exist at
+        #  all. The asymmetry is about evidence: not knowing is a gap an agent closes by
+        #  looking, but silence is not evidence that a subject is past tolerating, and a shape
+        #  that said so would have every agent reporting catastrophe at birth.
+        #
+        #  Two shapes here too, and splitting them cost nothing but bought the `sh:not` back:
+        #  "outside the range" needed a negation, "past this edge" is `sh:maxExclusive`.
         sh:property [
-            #  A WARNING and not a violation, which is the difference between "this world is
-            #  illegitimate" and "this plant is dying". Refusing here would stop an agent
-            #  booting exactly when its subject most needs it — and the envelope's real work
-            #  is scaling urgency, which happens whether or not anything is validated.
             sh:severity sh:Warning ;
             sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-            #  NO observation of this property may sit outside the envelope — where the region
-            #  above demands that one exist INSIDE it. The asymmetry is the point and it is
-            #  about evidence: not knowing is a gap an agent closes by looking, so an
-            #  unmeasured property fails the region honestly; but silence is not evidence that
-            #  a subject is past tolerating, and a shape that said so would have every agent
-            #  reporting catastrophe at birth, when it has observed nothing at all.
+            ag:violationIs ag:Below ;
             sh:qualifiedMaxCount 0 ;
             sh:qualifiedValueShape [
                 sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
-                sh:not [ sh:property [ sh:path sosa:hasSimpleResult ;
-                                       sh:minInclusive ?floor ; sh:maxInclusive ?ceiling ] ] ] ;
-            sh:message "a reading sits outside the survival envelope for a property this agent holds — the subject is past tolerating, not merely uncomfortable" ] } }
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:maxExclusive ?floor ] ] ;
+            sh:message ?underFloor ] ;
+        sh:property [
+            sh:severity sh:Warning ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Above ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:minExclusive ?ceiling ] ] ;
+            sh:message ?overCeiling ] } }
 $given
 WHERE  {
     { SELECT ?agent ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
@@ -214,4 +250,25 @@ WHERE  {
                     ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?bounds)
     BIND(IRI(CONCAT("http://example.org/agora#envelope.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?envelope)
+
+    #  The messages, with the property and the numbers IN them. A shape is minted per (agent,
+    #  property), so a message written here is already about one property and one region — no
+    #  templating engine required, and none available: pySHACL interpolates `{$var}` only for
+    #  `sh:sparql` constraints, measured, and these are declarative on purpose.
+    #
+    #  What cannot be baked in is the offending VALUE, which is not known until validation.
+    #  That one is answered where it belongs — `gap.rq` reports value, region and signed
+    #  distance together, and a report is for saying WHAT is wrong, not how far.
+    BIND(STRAFTER(STR(?property), "#") AS ?name)
+    BIND(CONCAT("nothing has read ", ?name, " for ", ?who,
+                " — an unmeasured want is a gap, and the first intention is to look")
+         AS ?unseen)
+    BIND(CONCAT(?name, " is below ", STR(?low), ", the floor of the region deduced for ",
+                ?who, " (", STR(?low), "-", STR(?high), ")") AS ?tooLow)
+    BIND(CONCAT(?name, " is above ", STR(?high), ", the ceiling of the region deduced for ",
+                ?who, " (", STR(?low), "-", STR(?high), ")") AS ?tooHigh)
+    BIND(CONCAT(?name, " is below ", STR(?floor), " — past what ", ?who,
+                " survives, not merely uncomfortable") AS ?underFloor)
+    BIND(CONCAT(?name, " is above ", STR(?ceiling), " — past what ", ?who,
+                " survives, not merely uncomfortable") AS ?overCeiling)
 }

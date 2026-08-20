@@ -69,28 +69,36 @@ SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
 # CLASS of graph precisely so that a second source may exist. An unqualified pattern reads every
 # public graph, so a region contributed by something other than the deduction is simply seen.
 #  The numbers are read out of the SHAPES the deduction emits (a-desire-is-a-shape), and that
-#  is the whole reason those shapes are DECLARATIVE rather than sh:sparql: `sh:minInclusive` is
-#  an ordinary triple, so a gap costs one query per reading instead of a validator run. The
-#  path is deep because a reified observation has to be reached through an inverse path and a
+#  is the whole reason those shapes are DECLARATIVE rather than sh:sparql: an edge is an
+#  ordinary triple, so a gap costs one query per reading instead of a validator run. The path
+#  is deep because a reified observation has to be reached through an inverse path and a
 #  qualified shape — convoluted to read, and the price of not inventing a second way to say
 #  what a graph should look like.
 #
-#  Two shapes per property, told apart by the FORCE they carry: the region a violation of which
-#  is a gap, and the envelope a violation of which is the subject ending.
+#  TWO NODE SHAPES per property, told apart by the FORCE they carry: the region, a violation of
+#  which is a gap, and the envelope, a violation of which is the subject ending.
+#
+#  Within each, the edges live on the SIDE shapes, one number apiece (#242): the floor is what
+#  the Below shape refuses to see a reading under (`sh:maxExclusive`) and the ceiling is what
+#  the Above shape refuses to see one over (`sh:minExclusive`). That is one hop further than
+#  reading a min and a max off a single node, and it buys a violation that says WHICH WAY it
+#  went — which watering repairs and a fan does not. See ag:violationIs.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
   <%s> ag:holds ?shape .
   ?shape ssn:forProperty ?property ;
-         sh:property ?want .
-  ?want sh:severity ag:ShouldBecome ;
-        sh:qualifiedValueShape/sh:property/sh:minInclusive ?low ;
-        sh:qualifiedValueShape/sh:property/sh:maxInclusive ?high .
+         sh:property ?below , ?above .
+  ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
+         sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
+  ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
+         sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
   OPTIONAL {
     <%s> ag:holds ?envelope .
-    ?envelope ssn:forProperty ?property ; sh:property ?tolerate .
-    ?tolerate sh:severity sh:Warning ;
-              sh:qualifiedValueShape/sh:not/sh:property/sh:minInclusive ?floor ;
-              sh:qualifiedValueShape/sh:not/sh:property/sh:maxInclusive ?ceiling }
+    ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
+    ?underFloor sh:severity sh:Warning ; ag:violationIs ag:Below ;
+                sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
+    ?overCeiling sh:severity sh:Warning ; ag:violationIs ag:Above ;
+                 sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
 } ORDER BY ?property"""
 
 

@@ -171,14 +171,19 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
     data = graph_from(st, *st.public_graphs(), beliefs_graph("fern"), SENSED_GRAPH)
     ok, report = conforms(data, focus=FERN)
     assert ok, "a warning must not fail validation — the agent has to be able to start"
-    assert "survival envelope" in report
+    #  The message names the side and the edge, because the shape that produced it was minted
+    #  for this agent and this property (#242). Before the split both sides fired one shape
+    #  with one sentence, and a plant drowning read exactly like a plant dying of thirst.
+    assert "SoilMoisture is below 0.2" in report
+    assert "past what fern survives" in report
+    assert "is above" not in report, "one side is wrong, and only that side should be reported"
 
     calm = genesis_store({("fern", MOISTURE): 0.30})  # outside the region, inside the envelope
     genesis.birth(calm, genesis.world_dir("simulation"), "fern")
     data = graph_from(calm, *calm.public_graphs(), beliefs_graph("fern"), SENSED_GRAPH)
     ok, report = conforms(data, focus=FERN)
     assert ok
-    assert "survival envelope" not in report, \
+    assert "past what fern survives" not in report, \
         "merely dry is the society's ordinary working state, not a warning"
 
 

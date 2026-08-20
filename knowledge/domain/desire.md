@@ -34,6 +34,39 @@ than by name, so more than one source of desire is expressible without any code 
 a second. It is public and recomputed on every start, because it is a function of the ratified
 files: a plant whose range is amended must not leave an agent holding the old region.
 
+# A violation names its side
+
+A region and an envelope are each several property shapes rather than one, because a violation has
+to say WHICH WAY it went. The region carries three — nothing has been read at all, a reading sits
+below the floor, a reading sits above the ceiling — and the envelope two, one per edge.
+
+The old form put the range test inside a single qualified value shape, so a reading outside the
+region violated `QualifiedMinCount`: *no conforming reading exists*. That is equally true of a
+plant dying of thirst and a plant drowning, and watering repairs exactly one of them. Split, the
+violation names its side: `ag:violationIs` is `ag:Below`, `ag:Above` or `ag:Unmeasured`, carried
+on the property shape that produces the result, so the answer travels with the constraint instead
+of being worked out again by whoever reads it — which the module, the query and the dashboard
+each did separately, and which is how a fern above its region came to be reported as one unmet
+want indistinguishable from a fern dying of thirst.
+
+`ag:Unmeasured` is a value here rather than an absence because the repair differs: what answers it
+is looking, not anything that moves the world. And it needs its own shape — the two side shapes
+cannot say it, since each asks whether a reading is past its edge and an unmeasured property has
+no reading to be past anything.
+
+Two consequences worth knowing. **The numbers moved**: the floor is the Below shape's
+`sh:maxExclusive` and the ceiling the Above shape's `sh:minExclusive`, one edge each, where they
+used to be a `sh:minInclusive`/`sh:maxInclusive` pair on one node. The region is still inclusive
+of both — what the shape refuses is a reading strictly past an edge. And **the message is baked at
+derivation time**: a shape minted per (agent, property) already knows both, so it can say
+"SoilMoisture is below 0.45, the floor of the region deduced for fern" with no templating — which
+is just as well, because pySHACL interpolates `{$var}` only for `sh:sparql` constraints, measured.
+
+What this is FOR is plan search: a means will declare which violations it repairs, matched against
+the report of the goal shape, and watering-repairs-Below is that match. `market:direction` — the
+one-bit effect hardcoded into the reflex — becomes redundant the day that lands. See
+[a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md).
+
 # What the rest of the society asks it
 
 Four questions, and none of the askers imports this package — they arrive through the hooks
@@ -82,7 +115,10 @@ Three deliberate differences from the diff above:
   a ranking: not knowing whether the pot is dying is at least as urgent as knowing it is
   uncomfortable, which is the answer `urgency(None)` has always given.
 - **`side` says which way out a stake sits.** For moisture only the low side has a lever, so a
-  drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things.
+  drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things. The
+  shape says the same thing in `ag:violationIs` now; the query still reaches it by comparing the
+  value to the bounds, which is the same answer, and reading it off a validation report waits for
+  something that produces one in the hot path.
 - **A count is about wanting, not about distance.** `unmet` means the reading sits outside the
   region, and `unactionable` means a want nothing can be done about — both read off the row's
   `state`. The first cut inferred them from urgency, which is zero only at a region's exact

@@ -35,15 +35,17 @@
 
 SELECT ?region ?property ?value ?low ?high ?gap ?at WHERE {
   $me ag:holds ?region ; ag:actsFor ?subject .
-  ?region ssn:forProperty ?property ; sh:property ?want .
-  ?want sh:severity ag:ShouldBecome ;
-        sh:qualifiedValueShape/sh:property/sh:minInclusive ?low ;
-        sh:qualifiedValueShape/sh:property/sh:maxInclusive ?high .
+  ?region ssn:forProperty ?property ; sh:property ?below , ?above .
+  ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
+         sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
+  ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
+         sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
   OPTIONAL { $me ag:holds ?envelope .
-             ?envelope ssn:forProperty ?property ; sh:property ?tolerate .
-             ?tolerate sh:severity sh:Warning ;
-                       sh:qualifiedValueShape/sh:not/sh:property/sh:minInclusive ?floor ;
-                       sh:qualifiedValueShape/sh:not/sh:property/sh:maxInclusive ?ceiling }
+             ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
+             ?underFloor sh:severity sh:Warning ; ag:violationIs ag:Below ;
+                         sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
+             ?overCeiling sh:severity sh:Warning ; ag:violationIs ag:Above ;
+                          sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
   GRAPH $sensed {
     ?obs sosa:hasFeatureOfInterest ?subject ;
          sosa:observedProperty ?property ;
