@@ -264,7 +264,11 @@ class Planner:
         """
         world = self._beliefs()
         for step in plan.steps:
-            world = effects.world_after(world, self.agent.store, step.means, **self._bind(goal))
+            #  Each step simulated FROM where the last one left off, exactly as the search
+            #  did — replaying with the goal's original reading would rebuild a different
+            #  world from the one that was chosen, and legality would be judged on it.
+            world = effects.world_after(world, self.agent.store, step.means,
+                                        **self._bind(goal, world))
         return world
 
     def _candidates(self, node, goal: Goal):
@@ -300,15 +304,34 @@ class Planner:
     def _world_after(self, node, row, goal: Goal):
         try:
             return effects.world_after(node.world, self.agent.store, row.means,
-                                       **self._bind(goal))
+                                       **self._bind(goal, node.world))
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.means, exc)
             return None
 
-    def _bind(self, goal: Goal | None) -> dict:
-        """What a rule needs filled in to answer about THIS agent and THIS want."""
+    def _bind(self, goal: Goal | None, world=None) -> dict:
+        """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
+
+        `world` is where the step is being taken FROM, and passing it is what makes depth 2
+        more than a number. Bound from the goal alone — which is how this was first written —
+        every step is predicted from the reading the agent actually holds, so a second dose
+        computes `0.04 + 0.21/conversion` exactly as the first did, lands on the world the
+        first one reached, and is discarded by cycle detection as somewhere already seen.
+        The loop iterated twice and the search was depth 1, silently, for every means that
+        moves a measured property. Measured before it was fixed: value 0.04 at depth 0, the
+        world at 0.18 after one step, and `_bind` still saying 0.04.
+
+        The DOSE moves with it for the same reason and by the same road: `dose_for` sizes an
+        act from where the property stands, so a second dose asked about the world the first
+        one reached is the act the actor would actually take next — which is the whole of what
+        makes "too small to finish in one" a plannable situation rather than an unreachable one.
+        """
         prop = goal.observed_property if goal else None
         value = goal.value if goal else None
+        if world is not None and prop is not None:
+            here = self._value_in(world, goal)
+            if here is not None:
+                value = here
         return {
             "me": f"<{self.me.uri}>",
             "subject": f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>",
@@ -316,7 +339,7 @@ class Planner:
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
             "sensed": f"<{SENSED_GRAPH}>",
             "value": value if value is not None else 0,
-            "litres": self._dose(goal) if goal else 0.0,
+            "litres": self._dose(goal, value) if goal else 0.0,
         }
 
     def _signature(self, world, goal: Goal):
@@ -330,7 +353,7 @@ class Planner:
         value = self._value_in(world, goal)
         return None if value is None else round(value, 6)
 
-    def _dose(self, goal: Goal) -> float:
+    def _dose(self, goal: Goal, value: float | None = None) -> float:
         """How much this act would pour — ASKED of the actuator, never computed here.
 
         `dose_for` is the sizing the actor would actually use: enough to reach the aim, capped
@@ -344,9 +367,10 @@ class Planner:
         too coarse to settle. The rig is fine. The invented number was not.
         """
         actuation = self.agent.provider(_ACTUATION)
-        if actuation is None or goal.observed_property is None or goal.value is None:
+        value = goal.value if value is None else value
+        if actuation is None or goal.observed_property is None or value is None:
             return 0.0
-        litres = actuation.dose_for(goal.observed_property, goal.value)
+        litres = actuation.dose_for(goal.observed_property, value)
         #  NEVER NEGATIVE, and this is the guard that matters most in the whole file. Sizing a
         #  dose is `(aim - value) * conversion`, so a property ABOVE its aim asks for a
         #  negative pour — and the effect rule, asked politely, predicts exactly what a
