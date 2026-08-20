@@ -303,6 +303,31 @@ ever. That is a fact about ratified files — a device's calibration against a s
 ranges — so it belongs at the gates beside "a board faster than its mandate can honour", not at
 3am on the bench.
 
+### A sensing action is always the last step
+
+Building the effects (#238) surfaced a limit that belongs here before a planner is written
+against it. Observe's rule constructs an observation carrying the value last seen and a current
+`sosa:resultTime` — the only honest prediction available, since nobody can say what a look will
+find. On a FIRST look there is no value to carry, so the constructed reading has none, and a
+range shape asked about an unknown value is satisfied vacuously: SHACL is two-valued, and it
+renders "unknown" as "not violated".
+
+The temptation is to call that a bug and make the unmeasured shape demand a RESULT. Do not: then
+no honest effect could ever satisfy it — predicting a value you cannot know is the dishonest
+alternative — and an agent could never plan to look at all. The semantics are right as they
+stand, and they are the ones already in the house: `urgency(None)` is 1.0 and the first intention
+is always to look, because the unmeasured want is about HAVING LOOKED, not about knowing a good
+value.
+
+What follows is a constraint on the planner rather than on the shapes. **A possible world with no
+violations means "nothing I can foresee is wrong", not "the world will be fine"** — so a plan may
+not chain PAST a sensing action. What to do after looking depends on what the look returns, which
+is contingent planning, and the bounded answer this project should take is the simple one: a
+sensing action ends a plan. Look, then decide again with a reading in hand.
+
+That also disposes of a nonsense the search would otherwise produce — "look, then water" scored
+as a two-step plan whose second step was chosen against a value nobody had yet seen.
+
 ### The test of whether this is a generalisation
 
 Two hardcoded things must DISAPPEAR, not survive beside it:
