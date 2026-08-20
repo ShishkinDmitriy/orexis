@@ -36,6 +36,8 @@ from pyshacl import validate as shacl_validate
 from rdflib import RDF, URIRef
 
 from agent import effects
+
+from . import trace
 from agent.goal import Goal
 from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.validate import conforms, graph_from
@@ -177,17 +179,29 @@ class Planner:
     # --- the search --------------------------------------------------------------------------
 
     def plan(self, goal: Goal) -> Plan:
-        """The best bounded sequence of levers for one goal, or the reason there is none."""
+        """The best bounded sequence of levers for one goal, or the reason there is none.
+
+        Every candidate weighed is remembered as it is weighed, and the pass is written down
+        when it ends (#256) — otherwise all of this dies in-process as a single log line, and
+        nothing outside can reconstruct it, because the belief base is locked by the process
+        holding it. `trace` explains why that is the record's one sanctioned exception.
+        """
         base = self._beliefs()
         here = _Node(world=base, urgency=self._urgency_in(base, goal))
+        #  CLEARED AT THE START, which is the difference between a graph that holds one pass
+        #  and one that holds two. It also means a pass that raises leaves no trace claiming
+        #  to describe a decision nobody reached.
+        trace.clear(self.agent.store, self.agent.id, goal.uri)
         if self._met_in(base, goal):
-            return Plan(SATISFIED, (), here.urgency, here.urgency)
+            return self._record(goal, Plan(SATISFIED, (), here.urgency, here.urgency),
+                                here.urgency)
 
         best, saw_candidate = here, False
         self._skipped = False
+        self._weighed = []
         seen = {self._signature(base, goal)}
         frontier = [here]
-        for _ in range(self.MAX_DEPTH):
+        for depth in range(self.MAX_DEPTH):
             nxt = []
             for node in frontier:
                 for row in self._candidates(node, goal):
@@ -201,6 +215,7 @@ class Planner:
                     taken = node.taken + (row,)
                     world = self._world_after(node, row, goal)
                     if world is None:
+                        self._weighed.append((depth, row, None, trace.UNSIMULATED))
                         continue
                     #  CYCLE DETECTION, and it compares WORLDS rather than means. The first
                     #  draft refused to apply the same means twice, which is not what a cycle
@@ -211,13 +226,22 @@ class Planner:
                     #  going nowhere.
                     where = self._signature(world, goal)
                     if where in seen:
+                        self._weighed.append(
+                            (depth, row, self._urgency_in(world, goal), trace.SEEN))
                         continue
                     seen.add(where)
                     step = _Node(world, taken, self._urgency_in(world, goal))
                     if step.urgency < best.urgency:
                         best = step
                     if self._met_in(world, goal):
-                        return self._offer(Plan(SATISFIED, taken, here.urgency, step.urgency), goal)
+                        self._weighed.append((depth, row, step.urgency, trace.MET))
+                        return self._record(
+                            goal,
+                            self._offer(Plan(SATISFIED, taken, here.urgency, step.urgency), goal),
+                            here.urgency)
+                    self._weighed.append(
+                        (depth, row, step.urgency,
+                         trace.BETTER if step.urgency < here.urgency else trace.WORSE))
                     #  A SENSING action ends a plan. Looking tells you what is true; it does
                     #  not make anything true, so a step chosen to follow it would be chosen
                     #  against a reading nobody has taken.
@@ -228,14 +252,28 @@ class Planner:
                 break
 
         if not saw_candidate:
-            return Plan(NOTHING, (), here.urgency, here.urgency, self._skipped)
+            return self._record(goal, Plan(NOTHING, (), here.urgency, here.urgency,
+                                           self._skipped), here.urgency)
         if best is here:
-            return Plan(NOT_BETTER, (), here.urgency, here.urgency, self._skipped)
+            return self._record(goal, Plan(NOT_BETTER, (), here.urgency, here.urgency,
+                                           self._skipped), here.urgency)
         if best.urgency >= here.urgency:
-            return Plan(NOT_BETTER, (), here.urgency, best.urgency, self._skipped)
-        return self._offer(
+            return self._record(goal, Plan(NOT_BETTER, (), here.urgency, best.urgency,
+                                           self._skipped), here.urgency)
+        return self._record(goal, self._offer(
             Plan(EXHAUSTED if not self._met_in(best.world, goal) else SATISFIED,
-                 best.taken, here.urgency, best.urgency), goal)
+                 best.taken, here.urgency, best.urgency), goal), here.urgency)
+
+    def _record(self, goal, plan, stands_at):
+        """Write the pass down and hand back the plan unchanged.
+
+        Threaded through the returns rather than wrapped around `plan()` so that the EARLY ones
+        are recorded too — a goal already satisfied and a goal nothing points at are the two
+        answers a reader most wants and the two a wrapper would have missed.
+        """
+        trace.write(self.agent.store, self.agent.id, goal, plan,
+                    getattr(self, "_weighed", []), stands_at)
+        return plan
 
     def _offer(self, plan: Plan, goal: Goal) -> Plan:
         """A plan, once it has been checked for legality — and only the winner is checked.

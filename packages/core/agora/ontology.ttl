@@ -235,6 +235,11 @@ ag:IntentionGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Intention
     ag:graphPrefix "http://example.org/agora/graph/intentions/" ;
     rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
 
+ag:PossibleGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Possible graph" ;
+    rdfs:comment """What WOULD be, if the agent did. The seventh modality, and the one a-plan-is-a-path-of-graph-diffs reserved when it said possible worlds are computed and dropped: belief is *is*, the menu is *could do*, and this is *would be, if I did*.
+
+Nothing here is believed, wanted, committed to or done, which is why it could not sit under any of the six. A reader who mistook it for belief would think an agent had observed a reading no instrument took.""" .
+
 ag:HistoryGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "History graph" ;
     rdfs:comment "What the agent DID: resolved commitments, discharged obligations, doses delivered, amendments woken into. A bounded ring with the series store behind it — nothing points INTO history, because whatever must outlive the window copies what it needs at commit time, which is how an expectation already carries its own baseline." .
 
@@ -282,6 +287,80 @@ ag:EffectGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:MenuGraph ; rdf
 
 PUBLIC and not belief. A rule here is a SCHEMA — what applying a lever WOULD do, stated once by the package that owns the lever — and schemas have always lived in the store: that is what the ontology graph is. It is not a belief, because nobody holds it and no agent may revise it; and it is not the menu, which is INSTANCES (this valve, this venue) and stays computed for the reason affordances are never stored — a stored row can outlive the plumbing it was concluded from, and a schema cannot.""" .
 
+ag:DeliberationGraph a owl:Class ; rdfs:subClassOf ag:PossibleGraph ; rdfs:label "Deliberation graph" ;
+    rdfs:comment """What the planner considered on its last pass, per goal: the levers it simulated, the urgency each world would have reached, which one it took and why the others lost.
+
+THIS IS THE RECORD'S ONE EXCEPTION, TAKEN DELIBERATELY AND NOT AN EXEMPTION FROM THE RULE. Possible worlds are computed and dropped, because a stored conclusion can outlive the premise it came from — except where a reader outside the process needs one, and then it is materialised into a graph of its own class, cleared at the start of every pass, carrying PROV to what generated it, never public and never in belief. All four hold here. See a-plan-is-a-path-of-graph-diffs, "Possible worlds are computed, not kept".
+
+The reader who needs it cannot get it any other way: pyoxigraph holds an exclusive lock on the belief base, so nothing outside the process can re-run the search to see what it saw. That is the same fact `agora-ask` exists for.
+
+NOT PUBLIC, and the reason is not tidiness. Which levers an agent weighed and rejected is a disclosure nobody decided to make, and a rival reading it would learn what its neighbour can nearly do.
+
+And nothing may read it BACK: cycle detection lives in the search where it can be reasoned about, not in a graph the agent consults about its own past thinking. A trace that becomes memory is a conclusion feeding a conclusion, which is the failure the computed-not-stored rule exists to prevent.""" .
+
+#################  What the planner considered  #################
+#
+#  The vocabulary of a deliberation trace. It describes a PASS — one goal, the levers weighed
+#  for it, and the verdict on each — and it exists so a sovereign can ask "why did you not
+#  water it" and get the working rather than the answer.
+#
+#  Why it needs terms of its own rather than reusing the intention ledger's: an intention is
+#  something an agent COMMITTED to, and every word there says so. A candidate is a world the
+#  agent looked at and declined. Spelling the two alike would make "considered" and "adopted"
+#  indistinguishable to a query, which is exactly the distinction a trace is for.
+
+ag:Deliberation a owl:Class ; rdfs:label "Deliberation" ;
+    rdfs:comment "One pass of the planner, about one goal. Replaced whenever that goal is planned again — the graph holds the last pass and never two, because a trace that outlives its pass is a conclusion sitting beside beliefs it can contradict." .
+
+ag:Candidate a owl:Class ; rdfs:label "Candidate" ;
+    rdfs:comment "One lever, simulated. Carries the world it would have reached as a number and the reason it was or was not taken — the same lever may appear twice in one pass at different depths, because what a dose is worth depends on where it is taken from." .
+
+ag:deliberatedOn a owl:ObjectProperty ; rdfs:domain ag:Deliberation ;
+    rdfs:label "deliberated on" ;
+    rdfs:comment "The goal this pass was about — the shape itself, so a reader can join the trace to the want and see what was being pursued rather than a label for it." .
+
+ag:considered a owl:ObjectProperty ; rdfs:domain ag:Deliberation ; rdfs:range ag:Candidate ;
+    rdfs:label "considered" .
+
+ag:chose a owl:ObjectProperty ; rdfs:domain ag:Deliberation ; rdfs:range ag:Candidate ;
+    rdfs:label "chose" ;
+    rdfs:comment "The candidate whose world the plan commits to reaching. Absent when the pass took nothing, which is most of them and is an answer rather than a gap: `ag:verdict` then says which of the silences it was." .
+
+#  NO DOMAIN, and deliberately: a verdict is said of a PASS (why it ended) and of a CANDIDATE
+#  (why it lost), and they are the same idea at two scales. Declaring a domain would make the
+#  closure type every candidate a Deliberation, which is worse than saying nothing.
+ag:verdict a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "verdict" ;
+    rdfs:comment "Why it ended as it did. On a pass: satisfied, improved, no candidate, exhausted, not better, refused — six answers where a planner returning a move or None could give two. On a candidate: whether it met the goal, improved on standing still, was worse, or landed in a world already seen." .
+
+ag:wouldReach a owl:DatatypeProperty ; rdfs:domain ag:Candidate ; rdfs:range xsd:decimal ;
+    rdfs:label "would reach" ;
+    rdfs:comment "The urgency of the world this lever would have made. The comparison the whole search turns on: a candidate is worth taking only if this is lower than where the agent already stands." .
+
+ag:standsAt a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xsd:decimal ;
+    rdfs:label "stands at" ;
+    rdfs:comment "The urgency of the world the agent is actually in — what every candidate is measured against, kept so a reader need not recompute it to understand the verdicts." .
+
+ag:wouldTake a owl:ObjectProperty ; rdfs:domain ag:Candidate ; rdfs:range ag:Means ;
+    rdfs:label "would take" ;
+    rdfs:comment "The move this candidate is. NOT `ag:by`, whose domain is `ag:Intention` — spelling a weighed lever with the word for a carried-out one would have the closure type every candidate a commitment, which is the exact distinction a trace exists to keep." .
+
+ag:through a owl:ObjectProperty ; rdfs:domain ag:Candidate ;
+    rdfs:label "through" ;
+    rdfs:comment "The lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
+
+ag:atDepth a owl:DatatypeProperty ; rdfs:domain ag:Candidate ; rdfs:range xsd:integer ;
+    rdfs:label "at depth" ;
+    rdfs:comment "How many steps into the plan this candidate sits. Kept because a lever rejected at depth 0 and the same lever rejected at depth 1 are different findings — the second says a chain was tried." .
+
+ag:asOf a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xsd:dateTime ;
+    rdfs:label "as of" ;
+    rdfs:comment "When the pass ran. A trace is about a moment — the readings it weighed were the ones held then — and a reader who cannot tell how old it is cannot tell whether it explains what the agent is doing now or what it was doing before the last reading arrived." .
+
+ag:blind a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xsd:boolean ;
+    rdfs:label "blind" ;
+    rdfs:comment "Whether some lever was passed over for want of a stated effect, leaving the pass unable to claim it looked at everything. A verdict of `no candidate` beside this being true means the search saw part of the menu — which is why the deliberator defers to the reflex rather than reporting that nothing helps." .
+
 ag:ProvenanceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Provenance graph" ;
     rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
 
@@ -308,6 +387,8 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 <http://example.org/agora/graph/instruments>       a ag:BeliefGraph ;  ag:arrivedBy ag:Recorded .
 <http://example.org/agora/graph/effects>            a ag:EffectGraph ;  ag:arrivedBy ag:Asserted .
 <http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .
+##  One pass per goal and no more: written at the start of each, replacing what was there.
+<http://example.org/agora/graph/deliberation>      a ag:DeliberationGraph ; ag:arrivedBy ag:Derived .
 
 ##  Where an agent says what its OWN graphs are. A per-agent graph cannot be declared in a
 ##  T-Box — it does not exist until its agent does — so the agent classifies its own at boot,

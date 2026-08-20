@@ -136,6 +136,11 @@ INSTRUMENTS_GRAPH = _GRAPH + "instruments"
 #  a planner reads it on every pass and a model must be able to see the whole tool list;
 #  asserted from files, so it is replaced at each boot rather than accumulated.
 EFFECTS_GRAPH = _GRAPH + "effects"
+#  What the planner considered on its last pass, per goal — the record's one sanctioned
+#  materialisation of a possible world, for the reader who cannot re-run the search from
+#  outside because the belief base is locked by the process holding it. Private, replaced per
+#  pass, never read back by the planner itself. See ag:DeliberationGraph.
+DELIBERATION_GRAPH = _GRAPH + "deliberation"
 PROVENANCE_GRAPH = _GRAPH + "provenance"
 #  What this agent's own graphs ARE, said by the agent at boot: public, because a
 #  modality-scoped query must resolve `?d a ag:DesireGraph` without naming an instance.
