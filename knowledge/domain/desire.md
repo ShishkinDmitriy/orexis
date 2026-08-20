@@ -83,6 +83,11 @@ Three deliberate differences from the diff above:
   uncomfortable, which is the answer `urgency(None)` has always given.
 - **`side` says which way out a stake sits.** For moisture only the low side has a lever, so a
   drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things.
+- **A count is about wanting, not about distance.** `unmet` means the reading sits outside the
+  region, and `unactionable` means a want nothing can be done about — both read off the row's
+  `state`. The first cut inferred them from urgency, which is zero only at a region's exact
+  centre, so a barrel resting comfortably inside 1–5 reported one unmet and one unactionable
+  goal and a calm society graphed as a stuck one. Ten minutes on the bench found it.
 - **Whether anything can be DONE is not in the query.** That is the deliberator's answer — the
   menu is the union of what every loaded package contributes, and a copy of it inside a desire
   query would be free to disagree with the one the agent acts on. `pursued()` annotates each row
