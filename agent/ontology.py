@@ -128,6 +128,10 @@ SENSED_GRAPH = _GRAPH + "sensed"  # what sensors read
 # Rename every graph to `g1`..`g5` and a reader could still work out which hold computed facts:
 # that is the test this graph exists to pass, and the reason the names above are a convenience
 # rather than the record. See agora/provenance.py.
+#  What every MEANS makes true, loaded from the packages at genesis (#238). Public, because
+#  a planner reads it on every pass and a model must be able to see the whole tool list;
+#  asserted from files, so it is replaced at each boot rather than accumulated.
+EFFECTS_GRAPH = _GRAPH + "effects"
 PROVENANCE_GRAPH = _GRAPH + "provenance"
 #  What this agent's own graphs ARE, said by the agent at boot: public, because a
 #  modality-scoped query must resolve `?d a ag:DesireGraph` without naming an instance.

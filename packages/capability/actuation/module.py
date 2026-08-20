@@ -29,10 +29,11 @@ from dataclasses import asdict, dataclass
 
 import uuid
 
-from agent import signing
+from agent import effects, signing
 from agent.clearing import Claim
 from agent.market import EPS
 from agent.module import Module, Timer
+from agent.ontology import SENSED_GRAPH
 from agent.store import bindings
 
 from .beliefs import ACTUATION_BLOCK
@@ -49,6 +50,10 @@ _ACTUATE = "http://example.org/agora#Actuate"
 # the good's valuation for this property is the term my belief is held in — the same
 # discovery the bidder makes through its venue, made through the pipe instead, because a
 # self-actuating agent may have no venue at all.
+#  SOSA, spelled once: the effect rule answers in observations, and this file has to
+#  recognise the result predicate to invert it.
+_SOSA = "http://www.w3.org/ns/sosa/"
+
 _CONVERSION_Q = """
 SELECT ?v WHERE {
   <%s> ag:actsFor ?subject ; actuation:hasActuator ?lever .
@@ -192,7 +197,7 @@ class ActuationModule(Module):
                 keeper.expect(u, observed_property,
                               f"self-dosed {litres}L — the graph says this raises what I "
                               f"am short of, so show me",
-                              expected_delta=(litres / conversion) if conversion > 0 else None)
+                              expected_delta=self._expected_delta(observed_property, litres, value))
 
     def _stock_of_my_source(self) -> float | None:
         """My freshest reading of the source my lever draws from — None when I am blind.
@@ -211,6 +216,39 @@ SELECT ?source ?p WHERE {{
             return None
         reading = self.agent.beliefs.current_reading(rows[0]["source"], rows[0]["p"])
         return reading.value if reading is not None else None
+
+    def _expected_delta(self, observed_property: str, litres: float,
+                        value: float) -> float | None:
+        """How far this dose should move the property — asked of the EFFECT RULE, not computed.
+
+        `litres / conversion` used to be written here, and separately in the bidder, and the
+        rule for #238 would have made a third copy. That is the arrangement the planning record
+        names as the whole risk: an agent that plans against one future and verifies against
+        another reports false UNMET verdicts, and the failure LOOKS like a device lying rather
+        than like arithmetic disagreeing with itself. So the rule is the single source and this
+        runs it: the number the planner will use to decide whether dosing helps is the number
+        the keeper will later hold the world to.
+
+        The subtraction is not a second formula — it inverts the rule's own answer, which is
+        stated as a predicted READING because that is what an effect can honestly say about a
+        valve. None whenever the rule declines to predict: no conversion belief, or no lever
+        reaching this subject. The keeper takes None and falls back to the
+        exact-crossing verdict, exactly as it did when the conversion belief was missing.
+        """
+        added, _ = effects.apply(
+            self.agent.store, _ACTUATE,
+            me=f"<{self.me.uri}>", subject=f"<{self.me.acts_for}>",
+            property=f"<{observed_property}>", sensed=f"<{SENSED_GRAPH}>",
+            beliefs=f"<{self.agent.beliefs.graph}>",
+            litres=repr(float(litres)), value=repr(float(value)))
+        #  `.value` and not `str()`: a pyoxigraph term stringifies to its N-Triples form, angle
+        #  brackets and datatype included, so comparing `str(predicate)` to an IRI silently
+        #  never matches and every expectation comes back None. It cost a test run to notice,
+        #  which is cheap only because the test was pinning a number rather than a shape.
+        for triple in added:
+            if triple.predicate.value == f"{_SOSA}hasSimpleResult":
+                return float(triple.object.value) - value
+        return None
 
     def _conversion_for(self, observed_property: str) -> float | None:
         rows = bindings(self.agent.store.query(_CONVERSION_Q % (

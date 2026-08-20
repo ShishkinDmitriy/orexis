@@ -77,6 +77,52 @@ a want with no lever, legitimate and now legible. This is the Consulting member'
 substrate, shipped before that member exists so "the menu is derived, not written into a
 prompt" is checkable now.
 
+# What a lever DOES — the effect a means carries (#238)
+
+A row says a lever is available. It does not say what pulling it would achieve, and a goal that
+is a graph needs that: matching a want to a lever means asking what the lever would MAKE TRUE.
+
+So a package ships `effects.ttl` beside its `affordances.rq`, found the same way and named by
+nothing — a `sh:SPARQLRule` per means, loaded into the effect graph at genesis. The vocabulary is
+SHACL Advanced Features': `sh:condition` for the shape that must hold before it may run, and
+`sh:construct` for the query yielding the triples applying it would add. One term is ours,
+`ag:retracts`, because the standard has none: SHACL rules exist to add entailments, so nothing in
+it can say a thing stops being true.
+
+**Retraction is not decoration.** The sensed graph upserts — one observation node per (subject,
+property), DELETE then INSERT — so an effect predicting a reading that left the old one standing
+would put two results on one node. A shape asking whether ANY reading sits past an edge would
+then answer about the reading the dose just replaced, and a planner would reject the plan that
+works.
+
+Two rules ship today and the pair is instructive:
+
+- **Observe** carries the current value forward with a new `sosa:resultTime`. Looking changes
+  what you KNOW and nothing else, and the tempting error — predicting a reading inside the
+  region, since that is what the agent wants — would teach a planner that a thirsty plant can be
+  watered by looking at it.
+- **Actuate** predicts the post-dose reading, which is the case that decided the whole shape of
+  this: **opening a valve adds no triple.** It changes a number a later observation reports, and
+  only a template that can predict the number can say so.
+
+**The prediction has ONE source, and that is enforced rather than intended.** `litres /
+conversion` was already written twice in Python — the bidder sizing its expectation, the actuator
+sizing its self-dose — before anything asked what a dose would do. The actuator now runs the rule
+and subtracts rather than computing its own, so the number a planner uses to decide whether
+dosing helps is the number the keeper later holds the world to. Two numbers would mean an agent
+planning against one future and verifying against another, and the failure would look like a
+device lying rather than like arithmetic disagreeing with itself.
+
+The rules are a SCHEMA, which is why they live in the store while rows stay computed: a stored
+row can outlive the plumbing it was concluded from, and a rule about a means cannot. Both are the
+same modality — what I could do — and they differ in arrival, which is what `ag:arrivedBy`
+records.
+
+**The vocabulary is SHACL-AF's; the engine is not.** pySHACL will execute these rules, and
+measurably does — but only `inplace=True`, because its rules are forward-chaining inference run
+to a fixpoint over every target, where a plan step is one rule against one hypothesis. A stored
+`sh:construct` is just a query, and this project already has an engine that runs queries.
+
 # Two modes: what I choose, and what I honour (#218)
 
 A menu row says what happens THROUGH an agent, and there are two kinds. **Chosen** rows are

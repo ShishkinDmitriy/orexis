@@ -1,0 +1,166 @@
+"""What a lever says it makes true, and the one number that must not fork (#238).
+
+A means states its effect as a SHACL-AF rule the package ships and genesis loads: `sh:condition`
+for the shape that must hold, `sh:construct` for what applying it would add, `ag:retracts` — ours
+— for what it removes. These hold the rules to what they claim, and hold the ACTUATOR to reading
+its expectation out of the same rule a planner will read.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from agent import effects, genesis
+from agent.ontology import SENSED_GRAPH, beliefs_graph
+
+from conftest import MOISTURE, build_agent, genesis_store
+
+OBSERVE = "http://example.org/agora#Observe"
+ACTUATE = "http://example.org/agora#Actuate"
+RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
+RESULT_TIME = "http://www.w3.org/ns/sosa/resultTime"
+
+
+def _loner(readings):
+    st = genesis_store(readings, world="loner")
+    genesis.birth(st, genesis.world_dir("loner"), "gardener")
+    return st
+
+
+def _values(triples, predicate=RESULT):
+    return [t.object.value for t in triples if t.predicate.value == predicate]
+
+
+# --- the rules are found because a package shipped one, not because anything lists them ----
+
+def test_a_package_that_ships_an_effect_file_is_found_without_being_named():
+    """The loader idiom, applied a fourth time. A lever that grows an effect is a file in the
+    package that owns the lever, and nothing in the kernel learns its name — the same claim
+    `affordances.rq` makes, and the reason adding a capability is adding a directory."""
+    from agent import loader
+
+    shipped = {p.parent.name for p in loader.effect_files()}
+    assert {"sensing", "actuation"} <= shipped
+    assert all(p.name == "effects.ttl" for p in loader.effect_files())
+
+
+def test_the_rules_are_in_the_store_where_a_sovereign_can_read_them():
+    """A schema belongs in the store — that is what the ontology graph already is — and this
+    one has to be readable by a model deciding what it could do, not only by the planner. The
+    menu stays computed, which is the standing rule and is about INSTANCES: a stored row can
+    outlive the plumbing it was concluded from, and a rule about a means cannot."""
+    st = _loner({("zz", MOISTURE): 0.10})
+
+    for means in (OBSERVE, ACTUATE):
+        rule = effects.rule_for(st, means)
+        assert rule is not None, f"{means} states no effect"
+        assert "CONSTRUCT" in rule["construct"]
+
+
+# --- what looking makes true, and what it must NOT claim -----------------------------------
+
+def test_looking_refreshes_the_reading_and_carries_its_value_unchanged():
+    """Observe's whole effect: the same value, a new instant.
+
+    The tempting error is a predicted reading INSIDE the region, since that is what the agent
+    wants — and it would teach a planner that a thirsty plant can be watered by looking at it.
+    So this asserts the value is carried through unchanged, at a value well outside the region,
+    where a shape that invented an improvement would be obvious.
+    """
+    st = _loner({("zz", MOISTURE): 0.10})
+    added, retracted = effects.apply(
+        st, OBSERVE, me="<http://example.org/agora/world/loner#gardener>",
+        subject="<http://example.org/agora/world/loner#zz>", property=f"<{MOISTURE}>",
+        sensed=f"<{SENSED_GRAPH}>")
+
+    assert _values(added) == ["0.1"], "looking tells you what IS, and changes nothing"
+    assert _values(added, RESULT_TIME), "and it tells you so NOW — the freshness half"
+    assert retracted, "the reading it replaces goes, because the sensed graph upserts"
+
+
+def test_the_retraction_takes_the_whole_node_the_writer_would_replace():
+    """`ag:retracts` exists because SHACL-AF has none, and it is not decoration: the sensed
+    graph does DELETE-then-INSERT on ONE node per (subject, property). A retraction that took
+    less than the writer takes would leave a possible world holding two results on one node —
+    and then a shape asking whether ANY reading sits past an edge answers about the reading the
+    plan just replaced.
+    """
+    st = _loner({("zz", MOISTURE): 0.10})
+    _, retracted = effects.apply(
+        st, OBSERVE, me="<http://example.org/agora/world/loner#gardener>",
+        subject="<http://example.org/agora/world/loner#zz>", property=f"<{MOISTURE}>",
+        sensed=f"<{SENSED_GRAPH}>")
+
+    held = {(t.subject.value, t.predicate.value) for t in retracted}
+    assert len({s for s, _ in held}) == 1, "one node, which is what the writer keys on"
+    assert {RESULT, RESULT_TIME} <= {p for _, p in held}, \
+        "and all of it — a half-retracted node is the two-results bug in slow motion"
+
+
+def test_a_means_no_package_described_simply_has_no_effect():
+    """None is an ordinary answer. Most levers state no effect yet, and one whose consequences
+    nobody has written down still works — it is only one a planner cannot reason about. A
+    caller that treated the absence as an error would make shipping a package a two-file
+    obligation, which is the registry this layout exists to avoid."""
+    st = _loner({("zz", MOISTURE): 0.10})
+
+    assert effects.rule_for(st, "http://example.org/agora#Offer") is None
+    assert effects.apply(st, "http://example.org/agora#Offer") == ([], [])
+
+
+# --- the number that must not fork ---------------------------------------------------------
+
+def test_the_dose_the_actuator_expects_is_the_dose_its_rule_predicts(monkeypatch):
+    """THE constraint of #238, and the reason the rule exists rather than a third helper.
+
+    `litres / conversion` was already written twice in Python — the bidder sizing its
+    expectation, the actuator sizing its self-dose — before anything asked what a dose would DO.
+    A copy inside the effect would have been the worst of the three: an agent that plans against
+    one future and verifies against another reports false UNMET verdicts, and the failure looks
+    like a device lying rather than like arithmetic disagreeing with itself.
+
+    So the ledger's number is compared against the RULE's, computed here from the shipped text
+    with no arithmetic of this test's own. Rewrite the rule's expression and this test moves
+    with it; reintroduce a Python copy that disagrees and it fails.
+    """
+    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
+    actuation = next(m for m in gardener.modules if m.name == "actuation")
+
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    keeper = next(m for m in gardener.modules if m.name == "intention")
+    watches = keeper.open_expectations(MOISTURE)
+    assert len(watches) == 1, "a self-dose went out and opened exactly one expectation"
+
+    litres = float(gardener.sent.to("actuators/pump/command")[0]["ml"]) / 1000.0
+    predicted, _ = effects.apply(
+        gardener.store, ACTUATE, me=f"<{actuation.me.uri}>",
+        subject=f"<{actuation.me.acts_for}>", property=f"<{MOISTURE}>",
+        sensed=f"<{SENSED_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
+        litres=repr(litres), value="0.1")
+    from_rule = float(_values(predicted)[0]) - 0.10
+
+    assert watches[0].expected_delta == pytest.approx(from_rule), \
+        "the number the keeper holds the world to must be the number the rule predicted"
+
+
+def test_the_prediction_is_a_function_of_value_litres_and_the_agents_own_belief(monkeypatch):
+    """Three arguments and nothing else, which is what lets a planner ask the same question
+    about a world that does not exist yet.
+
+    The base is GIVEN rather than read, and that was a correction the runtime forced: an
+    actuator decides on the reading it has just been handed, which is not in the sensed graph
+    at the moment it decides — a rule reading the store for its base predicted from the
+    PREVIOUS reading, or from nothing at all on the first one. Asked here at two bases and two
+    doses, because a function of three arguments is not pinned by one case.
+    """
+    gardener = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
+    actuation = next(m for m in gardener.modules if m.name == "actuation")
+
+    def delta(value, litres):
+        return actuation._expected_delta(MOISTURE, litres, value)
+
+    assert delta(0.10, 0.12) == pytest.approx(delta(0.90, 0.12)), \
+        "the same dose moves the property the same distance wherever it started"
+    assert delta(0.10, 0.24) == pytest.approx(2 * delta(0.10, 0.12)), \
+        "and twice the water moves it twice as far — the conversion is a ratio"
+    assert delta(0.10, 0.12) > 0, "a dose of water raises moisture, which the belief states"
