@@ -343,6 +343,27 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 ag:ShouldBecome a sh:Severity ; rdfs:label "should become" ;
     rdfs:comment "The force of a want. A result at this severity is a GAP: legitimate, unsatisfactory, and addressed through the agent's levers rather than by refusing to run — the third point on the modality axis a-plan-is-a-path-of-graph-diffs named, finally expressible because SHACL lets severity be any IRI. It belongs on the shape that PRODUCES the result and not on the node shape above it: put it above and every unmet desire reports as a Violation, which would refuse to boot any agent whose pot is dry." .
 
+#  WHICH WAY a want is unmet, said by the shape rather than worked out by whoever reads the
+#  result. A validation result carries `sh:sourceConstraintComponent`, and after the split both
+#  sides fail the SAME component (`QualifiedMaxCount`) — so the component cannot tell them apart
+#  and something on the shape must. This is that something, and it is what a means will match
+#  against when it declares which violations it repairs (#239): watering repairs Below, a fan
+#  repairs Above, and `market:direction` stops being a hardcoded bit in a reflex.
+
+ag:Side a owl:Class ; rdfs:label "Side" ;
+    rdfs:comment "Which way a want is unmet. Three values and not two, because not having looked is its own answer rather than a point on the number line." .
+
+ag:Below a ag:Side ; rdfs:label "below" ;
+    rdfs:comment "A reading sits under the floor of the region, or under the survival envelope. The side a lever that RAISES the property repairs." .
+ag:Above a ag:Side ; rdfs:label "above" ;
+    rdfs:comment "A reading sits over the ceiling. The side a lever that LOWERS the property repairs — and for soil moisture in this domain, no lever does: a drowning plant is a real want with no answer, which is worth being able to say." .
+ag:Unmeasured a ag:Side ; rdfs:label "unmeasured" ;
+    rdfs:comment "Nothing has been read. Not a side of the range at all, which is why it is a value here rather than an absence: the repair is to LOOK, and the lever that answers it is Observe rather than anything that moves the world." .
+
+ag:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:range ag:Side ;
+    rdfs:label "violation is" ;
+    rdfs:comment "What it MEANS when this property shape is violated. On the shape, so the answer travels with the constraint that produced the result and cannot be recomputed differently by two readers. The alternative was for every consumer to compare the value against the bounds again — which is what the module, the query and the dashboard each did separately, and which is how a fern above its region came to be reported as one unmet want indistinguishable from a fern dying of thirst." .
+
 ag:holds a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sh:NodeShape ;
     rdfs:label "holds" ;
     rdfs:comment "A shape this agent is held to or holds to: the room its subject's ranges leave it, the aim it picked inside that room, a debt a peer's claim raised. Replaces `ag:boundedBy`, which named only the first and named it as though bounds were a kind of thing rather than a kind of FORCE — what differs between a bound and a want is the severity of the shape, not its structure." .

@@ -21,12 +21,17 @@
 #
 # `$me` substituted by the collector; declares no prefixes of its own — `store.query` prepends them.
 
-SELECT ?means ?property ?via ?direction ?mode WHERE {
+SELECT DISTINCT ?means ?property ?via ?direction ?mode WHERE {
   # An agent holds TWO shapes per property — the region it wants to be in and the survival
   # envelope it must not leave — and both carry `ssn:forProperty`, so matching on that alone
   # offered every lever twice. The severity is what tells them apart, and it is also the right
   # question: a lever is worth listing because there is something the agent WANTS about that
   # property, not because the property has an edge past which its subject dies.
+  #
+  # DISTINCT because a region carries three property shapes now — not looked, below, above —
+  # and all three are wants. Matching a severity therefore matches three times per property,
+  # and every lever would be offered three times. The row is about the property; which side
+  # of it is unmet is the GOAL's business, not the menu's.
   $me ag:holds ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property ;
           sh:property/sh:severity ag:ShouldBecome .

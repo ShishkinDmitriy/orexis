@@ -39,15 +39,17 @@ SELECT ?want ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?cl
        ?at ?expires WHERE {
   {
     $me ag:holds ?want ; ag:actsFor ?subject .
-    ?want ssn:forProperty ?property ; sh:property ?wanted .
-    ?wanted sh:severity ag:ShouldBecome ;
-            sh:qualifiedValueShape/sh:property/sh:minInclusive ?low ;
-            sh:qualifiedValueShape/sh:property/sh:maxInclusive ?high .
+    ?want ssn:forProperty ?property ; sh:property ?below , ?above .
+    ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
+           sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
+    ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
+           sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
     OPTIONAL { $me ag:holds ?envelope .
-               ?envelope ssn:forProperty ?property ; sh:property ?tolerate .
-               ?tolerate sh:severity sh:Warning ;
-                         sh:qualifiedValueShape/sh:not/sh:property/sh:minInclusive ?floor ;
-                         sh:qualifiedValueShape/sh:not/sh:property/sh:maxInclusive ?ceiling }
+               ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
+               ?underFloor sh:severity sh:Warning ; ag:violationIs ag:Below ;
+                           sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
+               ?overCeiling sh:severity sh:Warning ; ag:violationIs ag:Above ;
+                            sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
     #  OPTIONAL, where gap.rq requires it: a property nobody has read yet produces NO gap row,
     #  and that is right for a diff — but it is a GOAL, and the hottest kind. Not knowing
     #  whether the pot is dying is at least as urgent as knowing it is uncomfortable, which is

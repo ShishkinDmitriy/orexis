@@ -695,6 +695,14 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
 
     Without the property match this passes vacuously, so it is written as a region the target
     would certainly violate: 0.55 is nowhere near 0.60-0.80.
+
+    Built as TWO SIDE SHAPES since #242, because that is what the aim check now reads — the
+    floor off the Below shape's `sh:maxExclusive`, the ceiling off the Above shape's
+    `sh:minExclusive`, each identified by `ag:violationIs`. Left in the old single-shape form
+    this test went on passing and stopped meaning anything: the query matched the fixture
+    nowhere, so the property match it exists to prove was no longer being exercised at all.
+    A fixture that drifts from what the derivation emits fails silently, in the direction of
+    green.
     """
     data = _mutate("""
         INSERT { GRAPH <http://example.org/agora/graph/constraint> {
@@ -707,17 +715,41 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
                 <http://www.w3.org/ns/shacl#property> [
                     <http://www.w3.org/ns/shacl#severity>
                         <http://example.org/agora#ShouldBecome> ;
+                    <http://example.org/agora#violationIs> <http://example.org/agora#Below> ;
                     <http://www.w3.org/ns/shacl#path> (
                         <http://example.org/agora#actsFor>
                         [ <http://www.w3.org/ns/shacl#inversePath>
                           <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ] ) ;
-                    <http://www.w3.org/ns/shacl#qualifiedMinCount> 1 ;
+                    <http://www.w3.org/ns/shacl#qualifiedMaxCount> 0 ;
                     <http://www.w3.org/ns/shacl#qualifiedValueShape> [
                         <http://www.w3.org/ns/shacl#property> [
                             <http://www.w3.org/ns/shacl#path>
+                                <http://www.w3.org/ns/sosa/observedProperty> ;
+                            <http://www.w3.org/ns/shacl#hasValue>
+                                <http://example.org/agora/water#AirHumidity> ] ,
+                        [
+                            <http://www.w3.org/ns/shacl#path>
                                 <http://www.w3.org/ns/sosa/hasSimpleResult> ;
-                            <http://www.w3.org/ns/shacl#minInclusive> 0.60 ;
-                            <http://www.w3.org/ns/shacl#maxInclusive> 0.80 ] ] ] ] } }
+                            <http://www.w3.org/ns/shacl#maxExclusive> 0.60 ] ] ] ,
+                [
+                    <http://www.w3.org/ns/shacl#severity>
+                        <http://example.org/agora#ShouldBecome> ;
+                    <http://example.org/agora#violationIs> <http://example.org/agora#Above> ;
+                    <http://www.w3.org/ns/shacl#path> (
+                        <http://example.org/agora#actsFor>
+                        [ <http://www.w3.org/ns/shacl#inversePath>
+                          <http://www.w3.org/ns/sosa/hasFeatureOfInterest> ] ) ;
+                    <http://www.w3.org/ns/shacl#qualifiedMaxCount> 0 ;
+                    <http://www.w3.org/ns/shacl#qualifiedValueShape> [
+                        <http://www.w3.org/ns/shacl#property> [
+                            <http://www.w3.org/ns/shacl#path>
+                                <http://www.w3.org/ns/sosa/observedProperty> ;
+                            <http://www.w3.org/ns/shacl#hasValue>
+                                <http://example.org/agora/water#AirHumidity> ] ,
+                        [
+                            <http://www.w3.org/ns/shacl#path>
+                                <http://www.w3.org/ns/sosa/hasSimpleResult> ;
+                            <http://www.w3.org/ns/shacl#minExclusive> 0.80 ] ] ] ] } }
         WHERE {}""")
     assert _conforms(data), _report(data)
 

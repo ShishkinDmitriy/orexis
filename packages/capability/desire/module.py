@@ -77,20 +77,26 @@ SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
 #
 #  Two shapes per property, told apart by the FORCE they carry: the region a violation of which
 #  is a gap, and the envelope a violation of which is the subject ending.
+#  The edges come from the two SIDE shapes, one number each: the floor is what the Below shape
+#  refuses to see a reading under (`sh:maxExclusive`), and the ceiling is what the Above shape
+#  refuses to see one over. That is one hop further than reading a min and a max off one node,
+#  and it buys a violation that says which way it went — see ag:violationIs.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
   <%s> ag:holds ?shape .
   ?shape ssn:forProperty ?property ;
-         sh:property ?want .
-  ?want sh:severity ag:ShouldBecome ;
-        sh:qualifiedValueShape/sh:property/sh:minInclusive ?low ;
-        sh:qualifiedValueShape/sh:property/sh:maxInclusive ?high .
+         sh:property ?below , ?above .
+  ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
+         sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
+  ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
+         sh:qualifiedValueShape/sh:property/sh:minExclusive ?high .
   OPTIONAL {
     <%s> ag:holds ?envelope .
-    ?envelope ssn:forProperty ?property ; sh:property ?tolerate .
-    ?tolerate sh:severity sh:Warning ;
-              sh:qualifiedValueShape/sh:not/sh:property/sh:minInclusive ?floor ;
-              sh:qualifiedValueShape/sh:not/sh:property/sh:maxInclusive ?ceiling }
+    ?envelope ssn:forProperty ?property ; sh:property ?underFloor , ?overCeiling .
+    ?underFloor sh:severity sh:Warning ; ag:violationIs ag:Below ;
+                sh:qualifiedValueShape/sh:property/sh:maxExclusive ?floor .
+    ?overCeiling sh:severity sh:Warning ; ag:violationIs ag:Above ;
+                 sh:qualifiedValueShape/sh:property/sh:minExclusive ?ceiling }
 } ORDER BY ?property"""
 
 
