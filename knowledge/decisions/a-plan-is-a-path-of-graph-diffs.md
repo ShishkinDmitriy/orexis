@@ -205,6 +205,59 @@ answers qualified value shapes wrong under `focus_nodes`, measured both ways rou
 qualified. A candidate world validated with a focus would be silently judged by the wrong
 answer.
 
+### The sovereign's three amendments: rules in the store, and the diff as the report
+
+Asked immediately after the above, and each one changed it.
+
+**"Means should be persisted, and be SHACL, with a CONSTRUCT as the effect."** That is a
+standard, and we already depend on it: SHACL Advanced Features' `sh:SPARQLRule` carries
+`sh:condition` — a shape that must hold for the rule to apply — and `sh:construct`, the query
+text as a literal in the graph. Preconditions as shapes, effects as CONSTRUCTs, both persisted,
+both readable by a model and a sovereign, no vocabulary invented. **Measured on pySHACL 0.40.1:
+the rule fires, and `sh:condition` gates it correctly** — two targets, the one whose condition
+failed got nothing. It needs `inplace=True`; without it the constructed triples land in a clone
+pySHACL discards, which is the silent-nothing shape this project keeps meeting.
+
+The record's standing rule survives it, because it was about a different thing. *Rows are not
+stored because their premises are* is about INSTANCES — this valve, this venue — and a stored
+row can outlive the plumbing it was concluded from. A rule is a SCHEMA. Schemas already live in
+the store: that is what `ontology.ttl` and `shapes.ttl` are. So the means keeps its stored rule
+and the menu keeps computing its rows, and neither claim gives way.
+
+**"Does CONSTRUCT support deletion?"** No — and neither does SHACL-AF, whose rules exist to add
+entailments. So a retraction template sits beside the construct one, and the simulator computes
+`(beliefs − retracts) + adds`, side-effect free.
+
+It is needed, and the reason is measurable rather than theoretical: **the sensed graph upserts.**
+`sensed_writer` does DELETE-then-INSERT on one deterministic observation node per (subject,
+property). An effect predicting a new reading that does not retract the old one leaves that node
+carrying two `sosa:hasSimpleResult` values in the possible world — and the survival envelope is
+`sh:qualifiedMaxCount 0` over readings outside it, so a stale bad reading left in place reports a
+catastrophe in a world where the plan has just fixed it. The planner would reject the plan that
+works. It fails the other way too: a stale GOOD reading satisfies a region goal the predicted
+value misses.
+
+**"Do we search the diff, and should a means describe which diff it repairs — moisture low means
+watering, moisture high means a fan?"** Yes, and the diff is a thing this stack already produces:
+the validation REPORT of the goal shape against belief. Each result carries its focus node, its
+path, its value and — the useful part — `sh:sourceConstraintComponent`, which names WHAT failed.
+So a means declares a shape over validation RESULTS: the diffs it repairs. Everything is a shape,
+including the description of what a lever is for.
+
+One thing has to change first, and it is the change this record's own reader asked for from a
+different direction. **The region shape must split into two property shapes**, one for below the
+floor and one for above the ceiling. Today the range test is nested inside a qualified value
+shape, so the violated component is `QualifiedMinCount` — *no conforming reading exists* — which
+does not say which SIDE the reading is on. Watering and a fan repair opposite sides, and a report
+that cannot tell them apart cannot select between them. Splitting makes the violation name the
+side, which is also what makes a message say "0.91 is above 0.65" and what a dashboard needs to
+stop showing a drowning plant as a thirsty one.
+
+And when it does, `market:direction` becomes redundant: Raises repairs the below-violation,
+Lowers repairs the above-violation, and the one-bit effect that was hardcoded into a reflex
+becomes a match between two shapes. That is a fourth special case this widening should DELETE
+rather than keep.
+
 ### The test of whether this is a generalisation
 
 Two hardcoded things must DISAPPEAR, not survive beside it:
