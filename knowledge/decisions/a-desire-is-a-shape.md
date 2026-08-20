@@ -132,6 +132,15 @@ Three things the design had wrong or unsaid, found by writing it:
   knew only the second, so every violation fell into the header and was dropped with it — a
   world refused, with a report saying it conformed. Reading a tool's output is a dependency on
   its formatting, and the guard for that has to be a test, because nothing else will say so.
+- **pySHACL ignores `sh:severity` on a `sh:sparql` constraint and honours the node shape's** —
+  the exact opposite of a declarative constraint, where the severity must sit on the property
+  shape that produces the result and putting it above turns every unmet want into a violation.
+  Measured while building the freshness want (#240), which first reported as `sh:Violation` and
+  refused to boot an agent whose reading had merely gone stale. So the rule for where severity
+  goes is not one rule: DOWN on the property shape for a declarative constraint, UP on the node
+  shape for a SPARQL one. Two forms of the same shape language disagreeing about where force
+  lives is exactly the kind of thing that is discovered at 3am, and it is written here so it is
+  not discovered twice.
 - **The store had never queried SHACL.** `sh:` was not a declared prefix, because shapes had
   only ever been validated against, never read. That a desire is now something an agent READS
   is the whole change, seen from one line of the prefix table.
