@@ -112,3 +112,24 @@ An initial value used to be held to 0..1, on the reasoning that it is a fraction
                 BIND(COALESCE(?min, 0.0) AS ?low)
                 FILTER(?initial < ?low || ?initial > ?high)
             }""" ] .
+
+#################  An effect rule accounts for its own timing  #################
+#
+#  The ontology says a rule that omitted these would be claiming immediacy by silence, and this
+#  is what makes that true rather than aspirational. Targeted at `sh:SPARQLRule`, so a package
+#  shipping a new `effects.ttl` is held to it without anything here naming that package — the
+#  same mechanic as every other contribution: the loader finds the file, the shapes hold it.
+#
+#  A VIOLATION and not a warning. An effect nobody can wait for is worse than an effect nobody
+#  stated: a planner reads the rule, commits to the act, and then has no answer to "has it
+#  landed yet" — which is the flooding failure with a plan wrapped around it.
+
+ag:EffectRuleAccountsForItsTimingShape a sh:NodeShape ;
+    rdfs:comment "What a rule must say beyond what it does: when the world change completes, and by which route anyone would learn that it had." ;
+    sh:targetClass sh:SPARQLRule ;
+    sh:property [ sh:path ag:landsAfter ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:datatype xsd:string ;
+                  sh:message "an effect must say when it lands — a SELECT yielding ?seconds, and zero is a real answer for an act that changes nothing about the world" ] ;
+    sh:property [ sh:path ag:confirmedBy ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:class ag:ConfirmationRoute ;
+                  sh:message "an effect must say how it would be confirmed — by construction, by report, by observation, or not at all; silence would leave a planner waiting for a message nobody will send" ] .

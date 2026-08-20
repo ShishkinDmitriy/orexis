@@ -392,6 +392,51 @@ ag:retracts a owl:DatatypeProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range xsd:
 
 It is not optional, and the reason is arithmetic rather than taste. `sensed_writer` does DELETE-then-INSERT on ONE deterministic observation node per (subject, property), so a reading REPLACES its predecessor rather than joining it. An effect that predicts a new reading without retracting the node it replaces leaves that node carrying two `sosa:hasSimpleResult` values — and the survival envelope is `sh:qualifiedMaxCount 0` over readings past its edge, so a stale bad reading makes a possible world report a catastrophe in a world the plan has just fixed, and the planner rejects the plan that works. It fails the other way too: a stale GOOD reading satisfies a region goal the predicted value misses.""" .
 
+#################  WHEN an effect lands, and how you would know  #################
+#
+#  A planner must know two things a rule did not say: when it may RE-DECIDE — never before an
+#  effect could have landed, which states the flooding failure as a rule instead of patching it
+#  with patience — and when to call an act failed, which is when "nothing happened" stops being
+#  impatience and becomes a verdict.
+#
+#  Both figures existed and neither was a property of the effect. Actuation deadlined a dose at
+#  `cmd.seconds + doseGraceS`, sensing computed `stale_after_s` from the cadence it commanded,
+#  the keeper used `patienceS` and its own docstring called that a seam — "the dose and the
+#  physics could derive a better one". Each was right where it sat, and a planner could read
+#  none of them.
+#
+#  This is the argument #238 made for magnitude, one axis over. `cmd.seconds + grace` is a claim
+#  about when the world should have answered; if a planner computes its own version, the agent
+#  plans against one timeline and verifies against another, and the disagreement surfaces as
+#  false UNMET verdicts — the same failure arriving through the clock instead of the arithmetic.
+
+ag:landsAfter a owl:DatatypeProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range xsd:string ;
+    rdfs:label "lands after" ;
+    rdfs:comment """A SELECT yielding `?seconds`: how long after the act until the WORLD CHANGE is complete. A query and not a number, because the duration is a function of the act rather than a property of the lever — a valve open for a two-litre dose is open longer than for a half-litre one, and `min(litres, cap) / calibration` is exactly the arithmetic the effect rule already performs. Its parameters are the effect's own, so one text answers for any act it could be asked about.
+
+ZERO is a real answer and the honest one for a look. Observing changes nothing about the world; what a sensing act delays is KNOWLEDGE, and that is the confirmation route's business rather than this one's. A rule that omitted this would be claiming immediacy by silence, so the shapes ask for it.""" .
+
+ag:ConfirmationRoute a owl:Class ; rdfs:label "Confirmation route" ;
+    rdfs:comment "How an effect becomes knowable. A property of the MEANS — whether a given agent can actually take the route is a fact about its wiring (a valve with no status channel, a property no sensor watches), which the runtime already answers and this deliberately does not." .
+
+ag:ByConstruction a ag:ConfirmationRoute ; rdfs:label "by construction" ;
+    rdfs:comment """CONSTITUTIVE: saying makes it so, and there is nothing to wait for and nothing to verify. A claim is issued the moment the host issues it; a debt steps to demanded because the holder presented. The graph IS the world for these facts.
+
+Named because conflating it with a causal effect produces code that verifies an agent really did write down what it just wrote down — and, worse, leaves a planner waiting for a confirmation that no one will ever send. Opening a valve is the contrast: it does not make a plant watered, and the world may decline to answer.""" .
+
+ag:ByReport a ag:ConfirmationRoute ; rdfs:label "by report" ;
+    rdfs:comment "A device says what it did, on a channel the world states. The dose's own report — `actuation:doseGraceS` past its landing is when nobody is going to send one." .
+
+ag:ByObservation a ag:ConfirmationRoute ; rdfs:label "by observation" ;
+    rdfs:comment "A later reading shows it. The slowest route and the only one that answers whether the act HELPED rather than whether it happened — which is why a dose has both: the valve reports that it opened, and the sensor reports whether the pot moved." .
+
+ag:Unconfirmed a ag:ConfirmationRoute ; rdfs:label "unconfirmed" ;
+    rdfs:comment "Nothing will ever say. A valve wired with no status channel and a property no sensor watches is a REAL deployment, not an oversight, and the honest response is to say so — an agent that cannot verify should stop acting on the property and restore its observation first, rather than dosing blind, which is exactly how a society floods a plant while every module behaves as written." .
+
+ag:confirmedBy a owl:ObjectProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range ag:ConfirmationRoute ;
+    rdfs:label "confirmed by" ;
+    rdfs:comment "By which route this effect becomes knowable. On the rule, so a planner reading the tool list learns what waiting for this act would even mean before it commits to one." .
+
 ag:effectOf a owl:ObjectProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range ag:Means ;
     rdfs:label "effect of" ;
     rdfs:comment "Which means this rule is the effect of. The join a planner walks from a menu row to what taking that row would do — the row names its means, and this names the rule. On the rule rather than on the means, so a package ships one file that adds itself: nothing in the kernel lists which levers have effects, exactly as nothing lists which packages ship affordances." .

@@ -15,7 +15,10 @@ from dataclasses import replace
 
 import pytest
 
-from packages.capability.intention.terms import ACQUIRE
+from packages.capability.intention.terms import ACQUIRE, ACTUATE as _ACTUATE
+
+from agent.store import bindings
+from packages.capability.intention.terms import DEADLINE_AT
 
 from conftest import MOISTURE, build_agent, genesis_store
 
@@ -295,3 +298,62 @@ def test_a_dose_past_its_deadline_frees_the_bidder(monkeypatch):
     bids = len(fern.sent.to(f"{market.bid_topic}/fern"))
     fern.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 3})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == bids + 1
+
+
+# --- the window is the physics, not the patience (#247) ----------------------
+
+def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeypatch):
+    """The seam this docstring used to name — "the deadline is the patience; the dose and the
+    physics could derive a better one" — closed.
+
+    Patience was never WRONG, only unrelated: it is how long an agent waits before re-deciding,
+    not how long the physics takes. Holding a dose to it judged a valve at 120s while the pot's
+    own sensor reported every 600 — a false UNMET manufactured by a clock, and one that feeds
+    `suspectAfter`, which is how an honest lever comes to be marked a liar.
+
+    Both halves are asserted because both are load-bearing. The landing is the act's own, from
+    its effect rule; the seeing is how stale a reading may be before this agent distrusts it,
+    which is the cadence it commanded plus its own grace. A window that dropped either would be
+    too short exactly when the equipment is slow.
+    """
+    from datetime import datetime, timezone
+
+    gardener = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.10}, world="loner"),
+                           monkeypatch)
+    keeper = keeper_of(gardener)
+    sensing = gardener.provider("http://example.org/agora/sensing#SensingCapability")
+    seeing = float(sensing.stale_after_s(gardener.me.acts_for, MOISTURE))
+
+    uri = keeper.adopt(_ACTUATE, MOISTURE, "a dose is on its way")
+    before = datetime.now(timezone.utc).timestamp()
+    assert keeper.expect(uri, MOISTURE, "50 seconds of pouring", expected_delta=0.1,
+                         lands_after_s=50.0)
+
+    rows = bindings(gardener.store.query(f"""
+SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))
+    window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
+    assert abs(window - (50.0 + seeing)) < 2.0, (
+        f"the watch should run for the dose (50s) plus how long seeing takes ({seeing}s), "
+        f"and it ran for {window:.0f}s")
+    assert window != pytest.approx(keeper.beliefs.patience_s, abs=2.0) or seeing + 50 == \
+        keeper.beliefs.patience_s, "and not for the patience, which is a different question"
+
+
+def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
+    """The fallback, and it is the same shape as `expected_delta`'s: a caller that cannot say
+    passes nothing and keeps exactly the behaviour it had. A buyer is the real case — it holds
+    a claim on somebody else's valve and cannot ask its own rules how long that valve stays
+    open, so patience is the only honest bound it has."""
+    from datetime import datetime, timezone
+
+    gardener = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.10}, world="loner"),
+                           monkeypatch)
+    keeper = keeper_of(gardener)
+    uri = keeper.adopt(_ACTUATE, MOISTURE, "something is on its way")
+    before = datetime.now(timezone.utc).timestamp()
+    assert keeper.expect(uri, MOISTURE, "bought from someone else's valve", expected_delta=0.1)
+
+    rows = bindings(gardener.store.query(f"""
+SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))
+    window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
+    assert abs(window - keeper.beliefs.patience_s) < 2.0

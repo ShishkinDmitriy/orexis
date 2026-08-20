@@ -251,7 +251,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     # --- the expectation: the end, judged apart from the means (#131) ---------------------
 
     def expect(self, intention_uri: str, observed_property: str, because: str,
-               expected_delta: float | None = None) -> bool:
+               expected_delta: float | None = None,
+               lands_after_s: float | None = None) -> bool:
         """Open the watch: the act happened, now the world owes a movement.
 
         The BASELINE is copied into the row — the sensed graph keeps only the current witness,
@@ -261,10 +262,22 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         margin against (#165); an act that cannot size its own effect passes None and keeps
         the exact-crossing verdict. The DIRECTION comes
         from the domain's own statement on its valuation (#127), copied so the row stays
-        judgeable even if the vocabulary is later amended. The DEADLINE is the patience — a
-        recorded seam; the dose and the physics could derive a better one. And sensing is
-        asked to look once, so the freshest possible before is on record and the first after
-        arrives sooner.
+        judgeable even if the vocabulary is later amended. And sensing is asked to look once, so
+        the freshest possible before is on record and the first after arrives sooner.
+
+        The DEADLINE was the patience, and that was a recorded seam in this docstring — "the
+        dose and the physics could derive a better one". `lands_after_s` is that better one
+        (#247): the actor asks its own effect rule when the world change completes and passes
+        the answer, and the watch runs until then PLUS how long a reading of that property may
+        honestly take to arrive. Both halves are figures somebody already states — the device's
+        calibration through the rule, and the cadence this agent itself commanded through
+        `stale_after_s` — so nothing here invents a number.
+
+        Patience remains the answer when an act cannot size itself, which is the same shape as
+        `expected_delta`: a caller that cannot say passes nothing and keeps exactly the
+        behaviour it had. Patience was never wrong, only unrelated — it is how long an agent
+        waits before re-deciding, not how long the physics takes, and holding a dose to it
+        called a valve late at 120s while the pot's own sensor reported every 600.
 
         False rather than a row when something needed is missing — no reading to baseline on,
         no direction stated — and the reason is logged: an expectation that cannot be judged
@@ -283,7 +296,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             return False
         direction = rows[0]["direction"]
         now = datetime.now(timezone.utc)
-        deadline = now.timestamp() + self.beliefs.patience_s
+        window = self._window_for(observed_property, lands_after_s)
+        deadline = now.timestamp() + window
         deadline_dt = datetime.fromtimestamp(deadline, tz=timezone.utc)
         delta = (f"""
     <{EXPECTS_DELTA}> "{expected_delta}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;"""
@@ -299,11 +313,36 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 }} }}""")
         self.log.info("expecting %s to move %s from %.3f within %ss: %s",
                       observed_property.rsplit("#", 1)[-1],
-                      direction.rsplit("#", 1)[-1], reading.value,
-                      self.beliefs.patience_s, because)
+                      direction.rsplit("#", 1)[-1], reading.value, round(window), because)
         if (sensing := self.agent.provider(_SENSING)) is not None:
             sensing.sense_now()
         return True
+
+    def _window_for(self, observed_property: str, lands_after_s: float | None) -> float:
+        """How long to hold the world to this expectation: landing plus the latency of SEEING it.
+
+        Two figures, neither of them new. The first is the act's own — the effect rule's answer
+        for this dose — and the second is how stale a reading of this property may be before
+        this agent stops trusting it, which is the cadence it commanded plus its own grace.
+        An act that cannot size itself gets the patience, unchanged.
+
+        The observation half matters as much as the landing half: a dose that takes 50s to pour
+        into a pot whose sensor reports every 600s cannot be judged at 50s, and holding it to
+        the patience judged it at 120 — before any reading could possibly have shown it. That
+        is a false UNMET manufactured by a clock, and it feeds `suspectAfter`, which is how an
+        honest lever comes to be marked a liar.
+        """
+        if lands_after_s is None:
+            return float(self.beliefs.patience_s)
+        seeing = 0.0
+        if (sensing := self.agent.provider(_SENSING)) is not None:
+            try:
+                seeing = float(sensing.stale_after_s(self.me.acts_for, observed_property))
+            except Exception:
+                #  A property this agent polls no sensor for: the act may still be worth
+                #  waiting on, and the landing time alone is the honest bound.
+                seeing = 0.0
+        return lands_after_s + seeing
 
     def open_expectations(self, observed_property: str | None = None) -> list[OpenExpectation]:
         """Every watch still on: expectation adopted, end not yet verified."""

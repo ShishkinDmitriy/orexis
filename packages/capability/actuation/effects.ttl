@@ -68,6 +68,38 @@ actuation:ActuateEffect
             BIND(NOW() AS ?now)
         }""" ;
 
+    #  WHEN IT LANDS, from the same premises and by the same argument as the magnitude above.
+    #  `min(litres, the device's cap) / its calibration` is the open-seconds — the identical
+    #  arithmetic `command_for` puts on the wire — and it is here because a deadline computed
+    #  somewhere else is a second claim about when the world should have answered. An agent
+    #  holding two of those plans against one timeline and verifies against another, and the
+    #  disagreement arrives as a false UNMET that looks like a device lying.
+    #
+    #  A QUERY and not a number because the duration is a function of the act: a two-litre dose
+    #  holds the valve open longer than a half-litre one. The cap is the device's own, so a
+    #  request past what it will pour is timed at what it will actually do.
+    #  NOT joined through `ag:actsFor`, where the construct above is. How long a valve stays
+    #  open is a fact about the VALVE — the device's cap and its calibration — and a host
+    #  dosing a buyer's pot needs it exactly as much as an agent dosing its own. Written with
+    #  the stake join first and caught on the bench: every market dose fell back, so the
+    #  single source held only for self-doses, which is the half that needed it least.
+    ag:landsAfter """
+        SELECT ?seconds WHERE {
+            $me actuation:hasActuator ?lever .
+            ?lever actuation:actuates $subject ;
+                   actuation:maxDoseMl ?cap ;
+                   actuation:mlPerSecond ?rate .
+            FILTER(?rate > 0)
+            BIND(IF($litres * 1000 < ?cap, $litres * 1000, ?cap) AS ?ml)
+            BIND(?ml / ?rate AS ?seconds)
+        }""" ;
+
+    #  BY OBSERVATION, and that is about the EFFECT rather than about the act. The valve also
+    #  reports that it opened, which is a different question answered on a different channel:
+    #  a report says the dose happened, a reading says it helped. The rule states what makes
+    #  its own predicted triple knowable, and only a later reading can do that.
+    ag:confirmedBy ag:ByObservation ;
+
     #  The reading it replaces. Not optional: `sensed_writer` upserts one node per (subject,
     #  property), so a predicted reading that left the old one standing would put two results on
     #  one node — and a shape asking whether ANY reading sits past an edge would answer about

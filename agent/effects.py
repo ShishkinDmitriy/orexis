@@ -34,10 +34,12 @@ log = logging.getLogger("effects")
 #  by NAME, because that graph is the one place rules live and a rule for a means nobody loaded
 #  is a rule nothing will ever ask for.
 _RULE_Q = """
-SELECT ?rule ?construct ?retracts WHERE { GRAPH <%s> {
+SELECT ?rule ?construct ?retracts ?lands ?confirmed WHERE { GRAPH <%s> {
   ?rule <http://example.org/agora#effectOf> <%s> ;
         <http://www.w3.org/ns/shacl#construct> ?construct .
-  OPTIONAL { ?rule <http://example.org/agora#retracts> ?retracts } } } LIMIT 1"""
+  OPTIONAL { ?rule <http://example.org/agora#retracts> ?retracts }
+  OPTIONAL { ?rule <http://example.org/agora#landsAfter> ?lands }
+  OPTIONAL { ?rule <http://example.org/agora#confirmedBy> ?confirmed } } } LIMIT 1"""
 
 
 def rule_for(store, means: str) -> dict | None:
@@ -72,6 +74,50 @@ def apply(store, means: str, **bind) -> tuple[list, list]:
         return [], []
     return (_run(store, rule.get("construct"), bind),
             _run(store, rule.get("retracts"), bind))
+
+
+def lands_after(store, means: str, **bind) -> float | None:
+    """How long after this act the world change completes, in seconds — asked, never computed.
+
+    The figure a waiter needs and the figure a planner needs, and they must be the same one.
+    `cmd.seconds + doseGraceS` is a claim about when the world should have answered; an agent
+    that holds a second copy plans against one timeline and verifies against another, and the
+    disagreement surfaces as a false UNMET that looks like a device lying. That is #238's
+    argument for magnitude, one axis over — see `ag:landsAfter`.
+
+    None where the rule declines: no effect stated for this means, no timing on the effect, or
+    premises that do not hold (an agent whose lever does not reach this subject). Every caller
+    must take None and keep whatever it did before, because a lever with no stated timing is
+    still a lever that works — it is only one nobody can wait for precisely.
+    """
+    rule = rule_for(store, means)
+    if rule is None or not rule.get("lands"):
+        return None
+    rows = _select(store, rule["lands"], bind)
+    if not rows or rows[0].get("seconds") is None:
+        return None
+    return float(rows[0]["seconds"])
+
+
+def confirmed_by(store, means: str) -> str | None:
+    """By which route this effect becomes knowable — construction, report, observation, or not
+    at all. Static, unlike the timing: it is a property of the MEANS, where whether a given
+    agent can take that route is a fact about its wiring."""
+    rule = rule_for(store, means)
+    return rule.get("confirmed") if rule else None
+
+
+def _select(store, text: str, bind: dict) -> list:
+    """A rule's query that answers with BINDINGS rather than a graph. Same substitution, same
+    swallowing of a rule that will not run: a package's broken query must not take an agent
+    down, and what is lost is precision about waiting rather than the ability to act."""
+    for name, value in bind.items():
+        text = text.replace(f"${name}", value if isinstance(value, str) else repr(value))
+    try:
+        return bindings(store.query(text))
+    except Exception as exc:
+        log.error("timing query for this means would not run: %s", exc)
+        return []
 
 
 def _run(store, text: str | None, bind: dict) -> list:
