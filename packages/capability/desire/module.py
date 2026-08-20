@@ -232,7 +232,7 @@ def goals_of(query, agent_uri: str, agent_id: str,
     for row in bindings(query(substituted)):
         if row["kind"] == "stake":
             out.append(Goal(uri=row["want"], urgency=float(row["urgency"]),
-                            observed_property=row["property"],
+                            observed_property=row["property"], state=row["state"],
                             value=float(row["value"]) if row.get("value") else None))
             continue
         #  Lapsed is judged HERE, against the same clock the urgency uses. The query records
@@ -241,6 +241,7 @@ def goals_of(query, agent_uri: str, agent_id: str,
         lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
         out.append(Goal(uri=row["want"], urgency=_duty_urgency(row, now),
                         claim=row["claim"], owed_to=row["owedTo"],
+                        state="lapsed" if lapsed else row["state"],
                         pursuable=row["state"] == "demanded" and not lapsed))
     return sorted(out, key=lambda g: -g.urgency)
 
@@ -599,10 +600,16 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
         pursued = self.pursued()
         stakes = [(g, move) for g, move in pursued if not g.is_duty]
         duties = [(g, move) for g, move in pursued if g.is_duty]
+        #  Both counts are about WANTING something, which is `state` and not urgency: a stake
+        #  is unmet when its reading sits outside the region, and a content agent proposes no
+        #  move for the same reason it needs none. Counting "no move proposed" alone made the
+        #  supplier — barrel at 1.97 inside 1-5, urgency 0.003 — report one unmet and one
+        #  unactionable goal, which is a calm society graphing as a stuck one.
+        wanting = [(g, move) for g, move in pursued if not g.is_met]
         rows.append(("agent_goals", {}, {
             "goals": float(len(pursued)),
-            "unmet": float(sum(1 for g, _ in stakes if g.urgency > 0)),
-            "unactionable": float(sum(1 for g, move in pursued if move is None)),
+            "unmet": float(sum(1 for g, _ in stakes if not g.is_met)),
+            "unactionable": float(sum(1 for g, move in wanting if move is None)),
             "owed": float(len(duties)),
             "hottest": max((g.urgency for g, _ in pursued), default=0.0),
             "hottest_duty": max((g.urgency for g, _ in duties), default=0.0),

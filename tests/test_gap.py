@@ -284,3 +284,30 @@ def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypa
         "wet is unmet and unactionable — the whole point of the column"
     assert fields["owed"] == 0.0 and fields["hottest_duty"] == 0.0, \
         "a plant owes nobody, and an absent debt is zero rather than missing"
+
+
+def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):
+    """The counts are about WANTING, not about distance from the centre.
+
+    Shipped wrong and caught on the bench inside ten minutes: `unmet` was "urgency > 0", which
+    is false only at the exact centre of a region, and `unactionable` was "no move proposed",
+    which is equally true of an agent that needs no move. The supplier — barrel at 1.97, well
+    inside 1-5, urgency 0.003 — reported one unmet and one unactionable goal, so a calm society
+    graphed as a stuck one. That is the failure the panel exists to prevent, arriving through
+    the panel itself.
+
+    A reading INSIDE the region but off its point is the only case that separates the two
+    definitions, so that is what this asks about.
+    """
+    fern = build_agent("fern", genesis_store({("fern", MOISTURE): 0.52,
+                                              ("fern", TEMPERATURE): 21.0}), monkeypatch)
+    desire = next(m for m in fern.modules if m.name == "desire")
+    goals = desire.goals()
+    assert all(g.is_met for g in goals), "0.52 in 0.45-0.65 and 21 in 18-24 are both met"
+    assert any(g.urgency > 0 for g in goals), \
+        "and still off-centre — which is what made the old definition look right"
+
+    _, _, fields = next(row for row in desire.series() if row[0] == "agent_goals")
+    assert fields["unmet"] == 0.0
+    assert fields["unactionable"] == 0.0, "content is not stuck"
+    assert fields["goals"] == 2.0, "the wants are still counted — they are simply satisfied"

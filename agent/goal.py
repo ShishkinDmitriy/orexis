@@ -51,6 +51,19 @@ class Goal:
     # for a stake — a plant does not ask.
     pursuable: bool = True
 
+    #  What state the want is in, in its own kind's vocabulary: `met`, `unmet` or `unmeasured`
+    #  for a stake, `standing` or `demanded` for a duty. Carried rather than inferred from
+    #  urgency, and that distinction is not academic — urgency is 0 only exactly at a region's
+    #  centre, so "urgency > 0" counts a barrel sitting comfortably inside 1-5 as unmet. It
+    #  read that way on the bench for about ten minutes and made a calm society look stuck.
+    state: str | None = None
+
+    @property
+    def is_met(self) -> bool:
+        """Nothing is wanted here right now. False for a duty, which is never *met* — it is
+        discharged, and a discharged debt is history rather than a goal."""
+        return self.state == "met"
+
     @property
     def is_duty(self) -> bool:
         return self.claim is not None
