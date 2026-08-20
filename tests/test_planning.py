@@ -153,3 +153,46 @@ def test_a_planning_pass_costs_about_a_second(monkeypatch):
     start = time.monotonic()
     _gardener(monkeypatch, DRY)
     assert time.monotonic() - start < 10.0
+
+
+def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
+    """A plan's second step starts where its first one finished, or depth 2 is a number.
+
+    The bindings a rule is filled with were first computed from the GOAL and reused at every
+    depth, so a second dose predicted `0.04 + 0.21/conversion` exactly as the first had, landed
+    on the world the first one reached, and was discarded by cycle detection as somewhere
+    already seen. The loop iterated twice and the search was depth 1, silently, for every means
+    that moves a measured property.
+
+    Measured before the fix: 0.04 at the start, the world at 0.18 after one step, and `_bind`
+    still saying 0.04. This pins both halves — the reading a rule predicts FROM, and the dose,
+    which `dose_for` sizes from where the property stands and which is therefore the act the
+    actor would take NEXT rather than a repeat of the first.
+    """
+    from packages.capability.deliberation.search import _Node
+
+    monkeypatch.setenv("AGORA_WORLD", "loner")
+    st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
+    agent = build_agent("gardener", st, monkeypatch)
+    desire = next(m for m in agent.modules if m.name == "desire")
+    planner = Planner(agent, desire, agent.me)
+    goal = next(g for g in agent.goals() if g.observed_property == MOISTURE)
+
+    base = planner._beliefs()
+    start_node = _Node(world=base, urgency=planner._urgency_in(base, goal))
+    row = next(iter(planner._candidates(start_node, goal)))
+    reached = planner._world_after(start_node, row, goal)
+
+    assert planner._value_in(base, goal) == DRY
+    moved = planner._value_in(reached, goal)
+    assert moved > DRY, "the dose moved the world it was simulated into"
+
+    assert planner._bind(goal, base)["value"] == DRY
+    assert planner._bind(goal, reached)["value"] == moved, \
+        "a step taken from here must be predicted from HERE, not from where the agent stands"
+
+    asked = []
+    monkeypatch.setattr(agent.provider("http://example.org/agora/actuation#Actuation"),
+                        "dose_for", lambda prop, value: asked.append(value) or 0.06)
+    planner._bind(goal, reached)
+    assert asked == [moved], "the dose is sized from the world the step starts in"
