@@ -197,7 +197,10 @@ class ActuationModule(Module):
                 keeper.expect(u, observed_property,
                               f"self-dosed {litres}L — the graph says this raises what I "
                               f"am short of, so show me",
-                              expected_delta=self._expected_delta(observed_property, litres, value))
+                              expected_delta=self._expected_delta(observed_property, litres, value),
+                              lands_after_s=effects.lands_after(
+                                  self.agent.store, _ACTUATE, me=f"<{self.me.uri}>",
+                                  subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
 
     def _stock_of_my_source(self) -> float | None:
         """My freshest reading of the source my lever draws from — None when I am blind.
@@ -267,13 +270,24 @@ SELECT ?source ?p WHERE {{
             payload["val_sig"] = signing.sign(self.clearing_key, data)  # clearing validated
         self.publish(device.command_topic, payload)
         self.settled.add(claim.jti)  # single-use either way: a dry run still spends the jti
-        # Commanded is not delivered. The deadline is THIS dose's own duration — which this
-        # agent computed, from the device's own calibration — plus the slack it believes the
-        # bus needs. Relative and not absolute, for the reason `sensing:readingGraceS` is:
-        # an agent cannot ask a valve for a ninety-second pour and then call it late at thirty.
+        # Commanded is not delivered. The deadline is THIS dose's own duration plus the slack
+        # this agent believes the bus needs — relative and not absolute, for the reason
+        # `sensing:readingGraceS` is: an agent cannot ask a valve for a ninety-second pour and
+        # then call it late at thirty.
+        #
+        # The duration is ASKED OF THE EFFECT (#247) rather than taken from the command, so the
+        # figure a planner will wait on and the figure this deadline uses cannot become two
+        # figures. `cmd.seconds` is what goes on the wire and stays the device's instruction;
+        # the rule computes the same `min(litres, cap) / rate` from the same world, and
+        # `test_effects` fails if they ever disagree. None keeps the old arrangement whole,
+        # which is what a lever with no stated timing deserves.
         if device.status_topic:
-            self.pending[cmd.jti] = (time.monotonic() + cmd.seconds + self.grace_s,
-                                     cmd.plant, cmd.ml)
+            lands = effects.lands_after(
+                self.agent.store, _ACTUATE, me=f"<{self.me.uri}>",
+                subject=f"<{self._subject_of(claim.sub)}>", litres=repr(float(claim.amount_l)))
+            self.pending[cmd.jti] = (
+                time.monotonic() + (cmd.seconds if lands is None else lands) + self.grace_s,
+                cmd.plant, cmd.ml)
         self.log.info("%s: open %.2fs (~%.0f ml) -> %s", cmd.plant, cmd.seconds, cmd.ml,
                       device.command_topic)
         return cmd

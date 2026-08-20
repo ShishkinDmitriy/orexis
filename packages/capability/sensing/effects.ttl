@@ -59,6 +59,18 @@ sensing:ObserveEffect
             BIND(NOW() AS ?now)
         }""" ;
 
+    #  ZERO, and it is not a shrug. Looking changes NOTHING about the world — the pot is exactly
+    #  as wet after the reading as before it — so the world-change completes instantly and
+    #  emptily. What a look delays is KNOWLEDGE, and that is what the route below says. The
+    #  record's sentence, from the other side: a sensing action changes what you know, not what
+    #  is.
+    ag:landsAfter """
+        SELECT (0 AS ?seconds) WHERE { }""" ;
+
+    #  The reading arriving IS the confirmation, which makes this the one act whose landing and
+    #  whose confirmation are the same event.
+    ag:confirmedBy ag:ByObservation ;
+
     ag:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $sensed {

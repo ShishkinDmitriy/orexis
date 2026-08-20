@@ -11,12 +11,14 @@ from __future__ import annotations
 import pytest
 
 from agent import effects, genesis
-from agent.ontology import SENSED_GRAPH, beliefs_graph
+from agent.ontology import EFFECTS_GRAPH, SENSED_GRAPH, beliefs_graph
+from agent.store import bindings
 
 from conftest import MOISTURE, build_agent, genesis_store
 
 OBSERVE = "http://example.org/agora#Observe"
 ACTUATE = "http://example.org/agora#Actuate"
+_AG = "http://example.org/agora#"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 RESULT_TIME = "http://www.w3.org/ns/sosa/resultTime"
 
@@ -164,3 +166,80 @@ def test_the_prediction_is_a_function_of_value_litres_and_the_agents_own_belief(
     assert delta(0.10, 0.24) == pytest.approx(2 * delta(0.10, 0.12)), \
         "and twice the water moves it twice as far — the conversion is a ratio"
     assert delta(0.10, 0.12) > 0, "a dose of water raises moisture, which the belief states"
+
+
+# --- when it lands, and how you would know (#247) ----------------------------
+
+def _lands(store, litres, me, subject):
+    return effects.lands_after(store, ACTUATE, me=f"<{me}>", subject=f"<{subject}>",
+                               litres=repr(float(litres)))
+
+
+def test_the_deadline_and_the_command_cannot_be_two_different_durations(monkeypatch):
+    """The divergence guard, and the whole reason timing moved onto the effect.
+
+    `cmd.seconds` is what goes on the wire — the device's instruction — and the rule computes
+    the duration a waiter holds the world to. They are the same physics said twice, and #238's
+    lesson is what happens when two copies drift: an agent plans against one future and
+    verifies against another, and the failure LOOKS like a device lying rather than like
+    arithmetic disagreeing with itself. Here the disagreement would be a clock instead of a
+    number, and it would arrive as a dose called late that was never late.
+
+    Across a RANGE, including past the device's cap: the cap is where two implementations of
+    "how long is this dose" most easily part company, since one of them may forget it.
+    """
+    from agent.clearing import Claim
+
+    agent = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
+    actuation = next(m for m in agent.modules if m.name == "actuation")
+    subject = agent.me.acts_for
+
+    for litres in (0.05, 0.1, 0.37, 0.5, 2.0, 9.0):
+        cmd, _ = actuation.command_for(
+            Claim(sub="gardener", scope="actuate:self", amount_l=litres, debit=0.0,
+                  auction_id="a", jti=f"j{litres}"))
+        stated = _lands(agent.store, litres, agent.me.uri, subject)
+        assert stated is not None, "a device with a calibration can always be timed"
+        assert abs(stated - cmd.seconds) < 0.01, (
+            f"{litres}L: the wire says {cmd.seconds}s and the rule says {stated}s")
+
+
+def test_a_dose_is_timed_by_the_valve_and_not_by_whose_pot_it_fills():
+    """Written after the first version of the rule joined through `ag:actsFor` and answered
+    only for self-doses — so every market dose fell back to the local computation, and the
+    single source held for the half that needed it least. How long a valve stays open is a fact
+    about the VALVE."""
+    st = genesis_store({})
+    genesis.birth(st, genesis.world_dir("simulation"), "supplier")
+    supplier = "http://example.org/agora/world/simulation#supplier"
+
+    for pot in ("fern", "tomato", "succulent"):
+        stated = _lands(st, 0.3, supplier, f"http://example.org/agora/world/simulation#{pot}")
+        assert stated is not None, f"the host's valve on {pot} is a valve it can time"
+        assert stated > 0
+
+
+def test_looking_lands_at_once_because_looking_changes_nothing():
+    """Zero is the honest answer, not a shrug. The pot is exactly as wet after the reading as
+    before it, so the world-change completes instantly and emptily — what a look delays is
+    KNOWLEDGE, which is what the confirmation route says instead."""
+    st = genesis_store({})
+    genesis.birth(st, genesis.world_dir("simulation"), "fern")
+    fern = "http://example.org/agora/world/simulation#fern"
+    assert effects.lands_after(st, f"{_AG}Observe", me=f"<{fern}_agent>",
+                               subject=f"<{fern}>") == 0.0
+
+
+def test_every_shipped_effect_says_how_it_would_be_confirmed():
+    """A rule that omitted this would be claiming immediacy by silence — and worse, would leave
+    a planner waiting for a confirmation nobody will ever send. Asked of whatever the packages
+    ship rather than of a list, so a new effect file is held to it without this test moving."""
+    st = genesis_store({})
+    genesis.birth(st, genesis.world_dir("simulation"), "fern")
+    rows = bindings(st.query(f"""
+SELECT ?rule ?means ?confirmed WHERE {{ GRAPH <{EFFECTS_GRAPH}> {{
+  ?rule <{_AG}effectOf> ?means .
+  OPTIONAL {{ ?rule <{_AG}confirmedBy> ?confirmed }} }} }}"""))
+    assert rows, "the packages ship effects, or this test is asking nothing"
+    for row in rows:
+        assert row.get("confirmed"), f"{row['means']} states no confirmation route"
