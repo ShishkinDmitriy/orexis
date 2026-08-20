@@ -123,6 +123,34 @@ whether the agent *tries* — so the defection worry is answered by evidence: a 
 serve stays owed, stays hot, and says so in the log and the ledger, where before it was a claim
 silently dropped from a dict.
 
+## Owing is its own capability (#233)
+
+A debt was kept inside `desire:Deducing`, whose premise is a STAKE — `ag:actsFor` a subject that
+states what it needs. `world/simulation`'s city has no stake: it acts for a mains that states a
+capacity and no ranges. So it deduced no region, composed no desire module, and recorded not one
+of the claims it had been issuing and redeeming all day. Under the step-9 framing that is the
+worst possible place for the gap to be: an unserved duty is supposed to be evidence, and the one
+agent whose failure to deliver would leave none was the one best placed to fail.
+
+Two abilities had been sharing one premise that covered only one of them. **Deducing a region is
+meaningful because you have a stake; owing is meaningful because others can DEMAND your levers.**
+So `desire:Owing` is its own capability, granted by its own fact — a venue this agent opened and
+an actuator drawing from its source, which is the honoured row's premise read from the side of
+the agent that will be asked. A plant has no such lever and keeps no ledger; the city keeps one
+and still wants nothing for itself; the supplier has both and is unchanged.
+
+**Goals stopped being one module's.** No single module can see them all now, so `Module.wants()`
+joins `annotate`, `series` and `notices` as a choir hook, and `agent.goals()` merges and ranks
+what the modules contribute. `pursued()` — each goal with the move proposed for it — belongs to
+the DELIBERATOR, because counting what nothing can be done about needs the wants and the moves
+together, and because the kernel may not name a capability's family.
+
+**What it cost to learn:** the first grant rested on `market:hosts`, and matched nothing. Rules
+run ONCE, in package-directory order, so `desire/` runs before `market/` and a premise resting on
+another package's CONCLUSIONS sees an empty graph — silently, granting nothing. The same three
+facts were sayable in authored and entailed terms (`market:matchesBy`, `market:offeredBy`,
+`actuation:drawsFrom`), which is what every other cross-package premise here already does.
+
 # Seams left open
 
 - **How an obligation's urgency is computed.** ANSWERED, by the sovereign, and by adding the

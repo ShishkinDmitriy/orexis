@@ -87,8 +87,32 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     #  true abilities, and a pinned test holds `provider` to handing actors the planner.
     from packages.capability.deliberation.terms import PLANNING
 
+    #  And OWING (#233), whose premise is not the stake the others share: a venue it opened
+    #  and a valve drawing from that venue's source, which is "others may demand this lever".
+    #  The city has it WITHOUT Deducing, which is the whole reason it is a capability of its
+    #  own — see test_only_a_lever_others_may_demand_earns_a_ledger below.
+    from packages.capability.desire.terms import OWING
+
     assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING, LISTENING,
-                                           DEDUCING, KEEPING, REFLEX, BIDDING, PLANNING}
+                                           DEDUCING, KEEPING, REFLEX, BIDDING, PLANNING, OWING}
+
+
+def test_only_a_lever_others_may_demand_earns_a_ledger(me):
+    """The split #233 asked for, stated as the two agents that separate it.
+
+    The city keeps a ledger and deduces nothing: it acts for a mains that states a capacity and
+    no ranges, so it has no stake and wants nothing for itself — and it hosts a venue and holds
+    the valve that serves it, so others may demand its lever. A plant is the mirror: every want
+    of its own, no lever anybody may demand, no ledger.
+
+    Both directions asserted, because a premise that is too WIDE is as wrong as one too narrow
+    and only one of those is visible from the agent that was broken.
+    """
+    from packages.capability.desire.terms import OWING
+
+    assert OWING in me("city").capabilities
+    assert DEDUCING not in me("city").capabilities, "a mains states no ranges — it wants nothing"
+    assert OWING not in me("fern").capabilities, "a plant holds no lever anyone may demand"
 
 
 def test_only_a_host_matches(me):

@@ -19,6 +19,8 @@
 # startup. What would SELECT between the two once both exist is an open seam.
 
 PREFIX desire: <http://example.org/agora/desire#>
+PREFIX market: <http://example.org/agora/market#>
+PREFIX actuation: <http://example.org/agora/actuation#>
 PREFIX sensing: <http://example.org/agora/sensing#>
 PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
@@ -42,6 +44,38 @@ WHERE  {
     ?condition ssn:forProperty ?property ;
                schema:minValue ?min ;
                schema:maxValue ?max .
+} ;
+
+#  1b. The grant for OWING, whose premise is not a stake at all.
+#
+#  A lever others can demand through a venue this agent hosts — the honoured row's own premise,
+#  read from the side of the agent that will be asked. Both halves again: hosting a market with
+#  no actuator is issuing paper nobody can spend here, and holding an actuator while hosting
+#  nothing means nobody may demand it.
+#
+#  It names the market's vocabulary and that is not a package reaching into another's Python:
+#  a premise is a fact about the world, and the fact that makes owing meaningful happens to be
+#  market-shaped. What this package may not do is import the market's code, and it does not.
+#
+#  AUTHORED AND ENTAILED FACTS ONLY, which is a constraint the first draft of this rule learnt
+#  the hard way. Rules run ONCE, in package-directory order, so `desire/` runs before `market/`
+#  and a premise resting on `market:hosts` — which the market package DERIVES — matched nothing
+#  and granted nothing, silently. The same three facts are sayable without it: the agent offers
+#  the source (`market:offeredBy`, entailed from the domain's own word before any rule runs), it
+#  consents to a venue (`market:matchesBy`, authored — stating your matching rule is opening
+#  shop), and it holds a lever drawing from that source. That is "others may demand this lever
+#  through a venue of mine", in facts that exist before any package concludes anything.
+#
+#  Deliberately NOT joined to `desire:Deducing`. The city hosts, owes and has no stake; the
+#  supplier has all three. Two premises, two grants, and an agent may compose either, both or
+#  neither.
+INSERT { GRAPH $derived {
+    ?agent ag:hasCapability desire:Owing } }
+$given
+WHERE  {
+    ?agent a ag:Agent ; market:matchesBy ?matching ; actuation:hasActuator ?lever .
+    ?source market:offeredBy ?agent .
+    ?lever actuation:drawsFrom ?source .
 } ;
 
 #  2. The regions themselves, one per property the subject states a need in.

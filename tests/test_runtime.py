@@ -42,7 +42,9 @@ def test_supplier_runs_the_dealers_full_stack(agent):
     """
     assert {m.name for m in agent("supplier").modules} == {
         "hosting", "actuation", "pay-as-bid", "reporting", "listening",
-        "desire", "intention", "deliberation", "bidding",
+        # `owing` beside `desire` and not inside it (#233): the ledger is granted by a lever
+        # others may demand, the region by a stake, and the supplier is the agent that has both.
+        "desire", "owing", "intention", "deliberation", "bidding",
         # arc 5: the planner runs BESIDE the reflex — both premises hold, both modules
         # build, and provider() hands actors the planner (pinned in test_deliberation)
         "planning"}

@@ -275,15 +275,18 @@ def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypa
     join does, and the test would pass on a version that never consulted anything.
     """
     fern = build_agent("fern", genesis_store({("fern", MOISTURE): 0.95}), monkeypatch)
-    desire = next(m for m in fern.modules if m.name == "desire")
-    _, _, fields = next(row for row in desire.series() if row[0] == "agent_goals")
+    #  Reported by the DELIBERATOR since #233: counting what nothing can be done about needs
+    #  both the wants (the modules') and the moves (its own), and it is the one module that
+    #  sees both.
+    reflex = next(m for m in fern.modules if m.name == "deliberation")
+    _, _, fields = next(row for row in reflex.series() if row[0] == "agent_goals")
 
     assert fields["unmet"] >= 1
     assert fields["hottest"] == 1.0, "past the survival ceiling is as bad as it gets"
     assert fields["unactionable"] >= 1, \
         "wet is unmet and unactionable — the whole point of the column"
-    assert fields["owed"] == 0.0 and fields["hottest_duty"] == 0.0, \
-        "a plant owes nobody, and an absent debt is zero rather than missing"
+    assert not [m for m in fern.modules if m.name == "owing"], \
+        "a plant holds no lever anyone may demand, so it keeps no ledger at all"
 
 
 def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):
@@ -301,13 +304,13 @@ def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):
     """
     fern = build_agent("fern", genesis_store({("fern", MOISTURE): 0.52,
                                               ("fern", TEMPERATURE): 21.0}), monkeypatch)
-    desire = next(m for m in fern.modules if m.name == "desire")
-    goals = desire.goals()
+    goals = fern.goals()
     assert all(g.is_met for g in goals), "0.52 in 0.45-0.65 and 21 in 18-24 are both met"
     assert any(g.urgency > 0 for g in goals), \
         "and still off-centre — which is what made the old definition look right"
 
-    _, _, fields = next(row for row in desire.series() if row[0] == "agent_goals")
+    reflex = next(m for m in fern.modules if m.name == "deliberation")
+    _, _, fields = next(row for row in reflex.series() if row[0] == "agent_goals")
     assert fields["unmet"] == 0.0
     assert fields["unactionable"] == 0.0, "content is not stuck"
     assert fields["goals"] == 2.0, "the wants are still counted — they are simply satisfied"

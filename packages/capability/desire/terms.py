@@ -34,6 +34,11 @@ def kernel(name: str) -> str:
 # caller may ask for "whoever holds a desire" without knowing how it reached one.
 DESIRE = term("DesireCapability")
 
+#  A capability of its own, and not a member of the family above: keeping a ledger of debts is
+#  a different ability from working out a region, granted by a different fact (#233). A family
+#  of one for now, as actuation's is — what could differ is WHEN a debt is discharged.
+OWING = term("Owing")
+
 # The members, in decreasing order of self-sufficiency — the same axis review's are on.
 DEDUCING = term("Deducing")      # intersects the ranges the world states; no latitude at all
 CONSULTING = term("Consulting")  # asks something else — RESERVED, nothing implements it yet

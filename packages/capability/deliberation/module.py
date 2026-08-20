@@ -130,6 +130,33 @@ class ReflexModule(Module):
     CAPABILITY = REFLEX
     name = "deliberation"
 
+    def pursued(self) -> list[tuple[Goal, str | None]]:
+        """Every goal this agent holds, with the move I propose for it — or None.
+
+        Here because deciding what can be done is exactly what a deliberator is, and because
+        the kernel may not name a capability's family: `agent.goals()` merges what the modules
+        want, and this is the only place that can say whether anything answers.
+        """
+        return [(goal, self.propose_for(goal)) for goal in self.agent.goals()]
+
+    def series(self) -> list[tuple[str, dict, dict]]:
+        """The ranking, as figures — and the split that stops it misleading.
+
+        `unactionable` is a want nothing I can propose would move: a fern above its region and
+        a fern below it are both unmet at urgency 1.00, and only one of them is anybody's to
+        fix, because no lever in this society lowers moisture. Counting it needs both halves —
+        the wants, which are the modules', and the moves, which are mine — so it is reported
+        by the one module that sees both.
+        """
+        pursued = self.pursued()
+        wanting = [(g, move) for g, move in pursued if not g.is_met]
+        return [("agent_goals", {}, {
+            "goals": float(len(pursued)),
+            "unmet": float(len(wanting)),
+            "unactionable": float(sum(1 for _, move in wanting if move is None)),
+            "hottest": max((g.urgency for g, _ in pursued), default=0.0),
+        })]
+
     def propose_for(self, goal: Goal) -> str | None:
         """The move for one GOAL, whoever sourced it — the deliberator's real question.
 

@@ -321,6 +321,12 @@ fails if pyshacl ever entails something the closure does not. See
   that generated zero cases, nor a glob that still matches but no longer covers what it is named
   for; both have happened, and both are still found by hand. See
   [a-test-that-asserted-nothing](knowledge/decisions/a-test-that-asserted-nothing.md).
+- **A premise may not rest on another package's CONCLUSIONS.** Derivations run once, in
+  package-directory order, so a rule in `desire/` cannot see what `market/` derives — the
+  pattern matches nothing, the grant does not happen, and nothing says so. Premises use
+  AUTHORED or ENTAILED facts, which every cross-package grant here already does: entailment is
+  materialised before any rule runs, so `market:offeredBy` is available where `market:hosts`
+  is not.
 - **An operation this engine lacks binds NOTHING — it does not fail.** `duration / duration`
   and `duration * number` return unbound in pyoxigraph, so a column computed that way reads
   empty for every row and no query errors, no test goes red. It is the same family as the

@@ -632,6 +632,12 @@ def desire_of(agent):
     return next(m for m in agent.modules if m.name == "desire")
 
 
+def ledger_of(agent):
+    """Whoever keeps this agent's debts — its own capability since #233, because owing is
+    granted by holding a lever others may demand and not by having a stake of one's own."""
+    return next(m for m in agent.modules if m.name == "owing")
+
+
 def test_a_claim_issued_is_a_debt_the_host_holds_as_a_want(host):
     """BOID's O, arriving through the door the design left open: the society allocated, so
     this agent OWES — and a debt is a desire it did not source, in its own ledger, naming the
@@ -644,7 +650,7 @@ def test_a_claim_issued_is_a_debt_the_host_holds_as_a_want(host):
                   "max_qty_l": 0.5, "max_price_per_l": 0.9, "balance": 100.0})
     host.hosting().close()
 
-    owed = desire_of(host).owed()
+    owed = ledger_of(host).owed()
     assert len(owed) == 1
     assert owed[0]["to"].endswith("fern_agent") and owed[0]["presented"] in ("false", "0")
 
@@ -661,7 +667,7 @@ def test_a_debt_outlives_the_process_that_incurred_it(host, make):
     host.hosting().close()
 
     reborn = make("supplier", host.store)
-    assert len(desire_of(reborn).owed()) == 1, "the ledger remembers what the dict forgot"
+    assert len(ledger_of(reborn).owed()) == 1, "the ledger remembers what the dict forgot"
 
 
 def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
@@ -673,10 +679,10 @@ def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
                  {"auction_id": offer_from(host)["auction_id"], "agent": "fern",
                   "max_qty_l": 0.5, "max_price_per_l": 0.9, "balance": 100.0})
     host.hosting().close()
-    jti = desire_of(host).owed()[0]["jti"]
+    jti = ledger_of(host).owed()[0]["jti"]
 
     host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
-    assert desire_of(host).owed() == [], "paid — nothing stands"
+    assert ledger_of(host).owed() == [], "paid — nothing stands"
     from packages.capability.desire.graphs import obligations_graph
     from agent.store import bindings
     kept = bindings(host.store.query(
@@ -692,8 +698,8 @@ def test_a_debt_to_a_stranger_is_refused_before_it_is_a_want(host, caplog):
     import logging
 
     with caplog.at_level(logging.WARNING):
-        assert desire_of(host).owe("orchid_from_nowhere", "j-forged") is None
-    assert desire_of(host).owed() == []
+        assert ledger_of(host).owe("orchid_from_nowhere", "j-forged") is None
+    assert ledger_of(host).owed() == []
     assert "does not declare" in caplog.text
 
 
@@ -707,7 +713,7 @@ def _win_a_claim(host):
                  {"auction_id": offer_from(host)["auction_id"], "agent": "fern",
                   "max_qty_l": 0.5, "max_price_per_l": 0.9, "balance": 100.0})
     host.hosting().close()
-    return desire_of(host).owed()[0]["jti"]
+    return ledger_of(host).owed()[0]["jti"]
 
 
 def test_a_claim_carries_the_window_its_venue_states(host):
@@ -718,7 +724,7 @@ def test_a_claim_carries_the_window_its_venue_states(host):
     from datetime import datetime
 
     jti = _win_a_claim(host)
-    row = desire_of(host).owed()[0]
+    row = ledger_of(host).owed()[0]
     assert row.get("expires"), "a debt from a venue with a window knows when it runs out"
     window = (datetime.fromisoformat(row["expires"])
               - datetime.fromisoformat(row["at"])).total_seconds()
@@ -735,12 +741,12 @@ def test_a_debts_heat_is_the_room_its_claim_has_left(host):
     from datetime import datetime, timedelta, timezone
 
     _win_a_claim(host)
-    owed_at = datetime.fromisoformat(desire_of(host).owed()[0]["at"])
+    owed_at = datetime.fromisoformat(ledger_of(host).owed()[0]["at"])
 
-    at_issue = desire_of(host).duties(now=owed_at)[0]
-    halfway = desire_of(host).duties(now=owed_at + timedelta(seconds=450))[0]
-    at_deadline = desire_of(host).duties(now=owed_at + timedelta(seconds=900))[0]
-    past_it = desire_of(host).duties(now=owed_at + timedelta(seconds=5000))[0]
+    at_issue = ledger_of(host).duties(now=owed_at)[0]
+    halfway = ledger_of(host).duties(now=owed_at + timedelta(seconds=450))[0]
+    at_deadline = ledger_of(host).duties(now=owed_at + timedelta(seconds=900))[0]
+    past_it = ledger_of(host).duties(now=owed_at + timedelta(seconds=5000))[0]
 
     assert at_issue.urgency == 0.0
     assert abs(halfway.urgency - 0.5) < 0.02
@@ -761,9 +767,9 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
 
     _win_a_claim(host)
     stock_reading(host, 3.0)  # 1-5 is the barrel's region, so this is a small gap
-    owed_at = datetime.fromisoformat(desire_of(host).owed()[0]["at"])
+    owed_at = datetime.fromisoformat(ledger_of(host).owed()[0]["at"])
 
-    goals = desire_of(host).goals(now=owed_at + timedelta(seconds=800))
+    goals = host.goals(now=owed_at + timedelta(seconds=800))
     assert goals, "an agent with a stake and a debt wants something"
     assert goals[0].is_duty, "a debt near its deadline outranks a barrel that is merely low"
     assert any(not g.is_duty for g in goals), "and the stake is still on the list, not replaced"
@@ -787,7 +793,7 @@ def test_a_claim_presented_after_its_window_is_refused_and_the_debt_stands(host,
         host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
 
     assert "after its window closed" in caplog.text
-    assert desire_of(host).owed(), "the debt stands — unserved is not the same as unowed"
+    assert ledger_of(host).owed(), "the debt stands — unserved is not the same as unowed"
     assert jti not in host.hosting().held, "and the venue has stopped holding the paper"
 
 
@@ -810,10 +816,40 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
     with caplog.at_level(logging.WARNING):
         host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
     assert "stands unserved" in caplog.text
-    assert desire_of(host).owed(), "undischarged: nothing went out"
+    assert ledger_of(host).owed(), "undischarged: nothing went out"
     assert jti in host.hosting().held, "and still held, because it is still owed"
 
     deliberator.propose_for = real
     stock_reading(host, 4.0)
-    assert desire_of(host).owed() == [], "the vessel reported, the answer changed, the debt is paid"
+    assert ledger_of(host).owed() == [], "the vessel reported, the answer changed, the debt is paid"
     assert jti not in host.hosting().held
+
+
+def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path, monkeypatch):
+    """#233, and the reason the ledger is its own capability.
+
+    `world/simulation`'s city is a pure seller: it acts for a mains that states no ranges, so it
+    has no stake, so no region, so — while the ledger lived inside `desire:Deducing` — no module
+    to record a debt in. It hosted a market, issued claims and redeemed them all day, and its
+    obligations existed nowhere. The one agent whose failure to deliver would leave no evidence
+    was the one best placed to fail.
+
+    Owing is now granted by a lever others may demand, which the city has and a plant does not.
+    Asked of the CITY specifically rather than of a fixture host, because the whole defect was
+    about which agents compose what.
+    """
+    city = make("city")
+    assert not [m for m in city.modules if m.name == "desire"], \
+        "still no stake — a mains that states no ranges wants nothing, and that stays true"
+    ledger = ledger_of(city)
+
+    assert ledger.owe("supplier", "j-city-1", expires_at=None) is not None
+    owed = ledger.owed()
+    assert len(owed) == 1 and owed[0]["to"].endswith("#supplier")
+
+    assert city.goals(), "and its debts are goals like anyone else's"
+    assert all(g.is_duty for g in city.goals()), "all of them owed, none of them its own"
+
+    ledger.discharge("j-city-1")
+    assert ledger.owed() == [], "paid"
+    assert city.goals() == [], "and a pure seller with nothing outstanding wants nothing at all"

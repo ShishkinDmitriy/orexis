@@ -40,6 +40,15 @@ See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.""
 :Consulting a :DesireCapability ; rdfs:label "Consulting" ;
     rdfs:comment "The agent asks something else where inside the stated ranges to aim — a language model, an oracle, a person. RESERVED: declared so the vocabulary is honest that the judgement is the replaceable part, but no rule grants it and no module implements it. Whatever answered would still be held to the same shapes, so it could be wrong and not unsafe. Adding it is a directory." .
 
+#################  The debts — wants this agent did not source  #################
+
+:Owing a ag:Capability ; rdfs:label "Owing" ;
+    rdfs:comment """Keeping the ledger of what this agent owes: a debt raised when the society allocates, stepped to demanded on presentation, discharged when the dose goes out, and never deleted — a debt paid and a debt forgotten must not look alike.
+
+ITS OWN CAPABILITY, and the split is the point. Deducing a region is meaningful because the agent has a STAKE; owing is meaningful because others can DEMAND this agent's levers, which is a different fact about a different agent. They lived in one capability and `world/simulation`'s city showed what that cost: a pure seller, acting for a mains that states no ranges, so no stake, so no desire module, so no ledger at all — while hosting a market, issuing claims and redeeming them. The one agent whose failure to deliver would leave no evidence was the one most able to fail. See issue #233.
+
+A family of one for now, as `actuation:Actuation` is. What could differ is WHEN a debt is discharged — on the command going out, as here, or on a device confirming delivery — which is a real alternative and the reason this is a capability rather than a function.""" .
+
 #################  Where the bounds are kept  #################
 #
 #  Nowhere in this package. The rule writes into `ag:ConstraintGraph` — the kernel's, declared
