@@ -199,10 +199,15 @@ def test_the_region_and_the_aim_reach_the_agents_own_bucket(monkeypatch):
             if measurement == "agent_desire"}   # the ranking's own row has no property tag
     m, moisture = rows["SoilMoisture"]
     assert m == "agent_desire"
-    assert moisture == {"desired_low": 0.45, "desired_high": 0.65, "aim": 0.55}
+    #  Urgency rides beside the region so a reader can see WHICH want is hot rather than
+    #  eyeballing where a curve sits between two others. 0.55 is the region's own point, so a
+    #  reading there is a want perfectly met — the one value that proves the figure is a
+    #  distance from the point and not from an edge.
+    assert moisture == {"desired_low": 0.45, "desired_high": 0.65, "aim": 0.55, "urgency": 0.0}
     _, temperature = rows["AirTemperature"]
     assert temperature == {"desired_low": 18.0, "desired_high": 24.0}, \
-        "a want with no aim reports its region and no invented pick"
+        "a want with no aim reports its region and no invented pick — and no urgency " \
+        "either, because nothing has read it: unmeasured must not draw as contented"
 
 
 def test_an_unmet_want_is_not_printed_as_a_finding():
