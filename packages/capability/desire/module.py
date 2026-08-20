@@ -69,18 +69,20 @@ SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
 # CLASS of graph precisely so that a second source may exist. An unqualified pattern reads every
 # public graph, so a region contributed by something other than the deduction is simply seen.
 #  The numbers are read out of the SHAPES the deduction emits (a-desire-is-a-shape), and that
-#  is the whole reason those shapes are DECLARATIVE rather than sh:sparql: `sh:minInclusive` is
-#  an ordinary triple, so a gap costs one query per reading instead of a validator run. The
-#  path is deep because a reified observation has to be reached through an inverse path and a
+#  is the whole reason those shapes are DECLARATIVE rather than sh:sparql: an edge is an
+#  ordinary triple, so a gap costs one query per reading instead of a validator run. The path
+#  is deep because a reified observation has to be reached through an inverse path and a
 #  qualified shape — convoluted to read, and the price of not inventing a second way to say
 #  what a graph should look like.
 #
-#  Two shapes per property, told apart by the FORCE they carry: the region a violation of which
-#  is a gap, and the envelope a violation of which is the subject ending.
-#  The edges come from the two SIDE shapes, one number each: the floor is what the Below shape
-#  refuses to see a reading under (`sh:maxExclusive`), and the ceiling is what the Above shape
-#  refuses to see one over. That is one hop further than reading a min and a max off one node,
-#  and it buys a violation that says which way it went — see ag:violationIs.
+#  TWO NODE SHAPES per property, told apart by the FORCE they carry: the region, a violation of
+#  which is a gap, and the envelope, a violation of which is the subject ending.
+#
+#  Within each, the edges live on the SIDE shapes, one number apiece (#242): the floor is what
+#  the Below shape refuses to see a reading under (`sh:maxExclusive`) and the ceiling is what
+#  the Above shape refuses to see one over (`sh:minExclusive`). That is one hop further than
+#  reading a min and a max off a single node, and it buys a violation that says WHICH WAY it
+#  went — which watering repairs and a fan does not. See ag:violationIs.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
   <%s> ag:holds ?shape .
