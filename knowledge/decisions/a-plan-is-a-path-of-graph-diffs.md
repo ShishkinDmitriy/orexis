@@ -328,6 +328,49 @@ sensing action ends a plan. Look, then decide again with a reading in hand.
 That also disposes of a nonsense the search would otherwise produce — "look, then water" scored
 as a two-step plan whose second step was chosen against a value nobody had yet seen.
 
+### `plan.rq` is a narrative, not a path to a goal
+
+The sovereign ruled that the hand-written plan should be dropped *if the planner can create it*.
+It cannot, and the reason is not a missing feature: **acquire-then-offer is not a path to any goal
+the supplier holds.**
+
+Probed against the real world rather than argued. The supplier's one chosen goal is its own stake
+in `StoredLitres`, and its chosen menu is Acquire from the city and Observe. Offering does not
+raise stock — it SELLS stock — so no state the supplier wants is nearer for having offered, and
+Acquire alone satisfies serveability. The two-step is a true and useful description of the
+dealer's business cycle. It is not a plan in the planner's sense, and asking a goal-directed
+search to reproduce it was asking the wrong question.
+
+So the acceptance test was right in spirit and wrong in one of its two examples. The spirit holds:
+a widening must ABSORB the special cases it replaces or it is machinery bolted beside them, and
+`value is None -> OBSERVE` was exactly such a case and is gone (#240). `plan.rq` is not one. It is
+an exposition of a business cycle for a reader, with no runtime caller, and it stands with this
+note beside it saying why the planner will never produce it.
+
+**The genuine multi-step dependency this record describes — refill, then deliver — is
+`Acquire → Apply`, and it is a DUTY.** Since obligations drive acts, `propose_for` routes a duty
+to the honoured row serving its counterparty and never to the planner. That is the real gap the
+exercise found: the one chain in the shipped worlds with a true dependency is the one the planner
+is not allowed to see.
+
+### Two limits found by building, and one is structural
+
+**The bindings were computed once and reused at every depth**, so a second dose predicted the same
+world the first had reached and cycle detection discarded it as already seen. The search was depth
+1, silently, for every means that moves a measured property — a planner that reported plans and
+never made one longer than a step. Fixed, and pinned by a test that fails if the bindings stop
+advancing with the world.
+
+**The structural one is not fixed: a rule's CONSTRUCTs run against the STORE.** So
+`(beliefs − retracts) + adds` holds for one step and stops holding for the next — the retraction
+re-asks the store, finds the observation still stored, and never sees what the previous step added
+to the world. After two steps a world holds two readings and the reader takes the stale one. Depth
+beyond 1 is therefore nominal today for any goal about a measured value.
+
+Fixing it means a rule must be askable about a WORLD rather than a store, which the effects layer
+cannot express. That is the next real piece of this design, and it is worth saying plainly that
+the planner shipped with a ceiling of one step for the cases that matter.
+
 ### An invented number does not give a wrong answer — it gives a convincing one
 
 Worth keeping from building the planner, because it nearly shipped as a discovery. A first draft
@@ -369,7 +412,8 @@ Two hardcoded things must DISAPPEAR, not survive beside it:
 1. `if value is None: return OBSERVE` in the reflex — *the first intention is always to look*.
    Under the widening that is a freshness goal, unmet, and Observe is the lever whose effect
    repairs it. The special case should fall out of the machinery rather than be kept for luck.
-2. The dealer's hand-written `plan.rq`. Acquire-then-offer should be derived from effects and
+2. ~~The dealer's hand-written `plan.rq`~~ — **mis-specified, and building it is what showed
+   why; see "a narrative, not a path to a goal" below.** Acquire-then-offer should be derived from effects and
    the re-run menu, not stated as a two-step in a file.
 
 If either survives, this is added machinery rather than a widening, and should be refused on
