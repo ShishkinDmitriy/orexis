@@ -107,10 +107,26 @@ builds the rest of BDI on.
 want this agent holds, hottest first, whoever sourced it. A stake and a duty appear in one list
 because urgency is the common currency — a litre owed and a pot drying rank against each other
 instead of running down two paths that never meet — and each row says what state its want is in:
-a stake is `met`, `unmet` or `unmeasured`, a duty `standing`, `demanded` or `settled`.
+a stake is `met`, `unmet`, `stale` or `unmeasured`, a duty `standing`, `demanded` or
+`settled`.
 
 Three deliberate differences from the diff above:
 
+- **A reading that went cold is its own want** (#240). `stale` sits beside `met` and `unmet`
+  because a number past its horizon is not wrong, it has stopped being EVIDENCE — so it is
+  reported at urgency 1.0, the same as never having looked, and for the same reason: ranking an
+  agent by a distance it no longer trusts would rank it by something it does not know. The last
+  reading is still carried on the row, because "this is what it said, and that was too long ago"
+  is more useful than silence.
+- **Freshness is about the INSTRUMENT, not the stake.** A want exists for every property this
+  agent polls a sensor for — including one pointed at something it does not act for, which
+  `world/loner`'s gardener does with its water butt. If an agent went to the trouble of polling
+  something, it wants to know what that reads now; a stake is what makes the VALUE matter, and
+  this want is about knowing. And no want exists where there is no sensor: an epistemic want
+  nothing could ever satisfy would sit at maximum urgency for ever, top every ranking, and
+  inflate the `unactionable` count — training a reader to ignore the top row, which is the
+  failure that count exists to prevent. That case is already reported once, by the shape saying
+  a desire exists in a property this agent polls no sensor for.
 - **An unmeasured want is a row here, at urgency 1.0.** No row is right for a diff and wrong for
   a ranking: not knowing whether the pot is dying is at least as urgent as knowing it is
   uncomfortable, which is the answer `urgency(None)` has always given.
@@ -129,6 +145,14 @@ Three deliberate differences from the diff above:
   query would be free to disagree with the one the agent acts on. `pursued()` annotates each row
   by asking `propose_for`, and `series()` publishes the count, so a society drowning stops
   graphing like a society thirsty.
+
+**The horizon is published, not recomputed.** `stale_after_s` works it out from the rhythm in
+force — the board's own acknowledgement where it gives one, the agent's intent where it does
+not — and none of that was ever written down: both were dicts on a module, lost at every restart
+and invisible to `agora-ask`. A shape cannot run a method, so freshness would have needed either
+a second copy of that fallback chain in SPARQL, free to drift, or a baked constant, wrong the
+moment urgency re-commands the cadence. The agent writes the ANSWER instead, per sensor, into its
+instruments graph; everything reads what was written, and nothing can disagree with it.
 
 Two things the query cannot do, and both are recorded where they bite. A duty's urgency is the
 fraction of its redeem window that has run, and this store binds **nothing** for

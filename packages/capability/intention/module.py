@@ -144,13 +144,20 @@ class IntentionModule(Module):
         deliberator = self.agent.provider(_DELIBERATION)
         if deliberator is None:
             return
-        for subject_uri, observed_property in {g for m in self.agent.modules
-                                               for g in m.notices()}:
-            move = deliberator.propose(observed_property, None)
+        #  GOALS, not notices, and not a sentinel (#240). This used to walk the choir's noticed
+        #  gaps and ask `propose(property, None)` — where None meant "should I look?", a
+        #  question the deliberator answered by a special case reading None as ignorance. Both
+        #  ends of that arrangement are gone: an epistemic want is a want like any other now,
+        #  it says which failure it is, and the ordinary door takes it.
+        for goal in self.agent.goals():
+            if goal.is_duty or goal.state not in ("unmeasured", "stale"):
+                continue
+            move = deliberator.propose_for(goal)
             if move != OBSERVE:
                 continue
+            observed_property = goal.observed_property
             adopted = self.adopt(OBSERVE, observed_property,
-                                 "unobserved or too stale to act on — noticed, not asked for")
+                                 f"{goal.state} — noticed, not asked for")
             if adopted and (sensing := self.agent.provider(_SENSING)) is not None:
                 sensing.sense_now()
 

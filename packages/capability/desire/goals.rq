@@ -6,13 +6,14 @@
 # urgency is the common currency — so a litre owed and a pot drying rank against each other
 # rather than running down two paths that never meet.
 #
-# `$me`, `$sensed` and `$owed` are substituted before it runs, exactly as `gap.rq`'s are: the
-# one identifier a process is handed, and the two private graphs of its own — where its
-# readings land and where its debts are kept.
+# `$me`, `$sensed`, `$owed` and `$instruments` are substituted before it runs, exactly as
+# `gap.rq`'s are: the one identifier a process is handed, and the private graphs of its own —
+# where its readings land, where its debts are kept, and what it knows about its own sensors.
 #
 # ?state, per row, and the vocabulary differs by kind because the situations do:
 #
-#   stake   met | unmet | unmeasured      — is the reading inside the region
+#   stake   met | unmet | stale | unmeasured   — is the reading inside the region, and is it
+#                                             still evidence about now
 #   duty    standing | demanded          — a settled debt is history and is not returned,
 #                                        and `lapsed` is the reader's own judgement made
 #                                        against `?expires` with its own clock
@@ -59,6 +60,21 @@ SELECT ?want ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?cl
            sosa:observedProperty ?property ;
            sosa:hasSimpleResult ?value .
       OPTIONAL { ?obs sosa:resultTime ?at } } }
+    #  TOO OLD TO ACT ON, which is a want of its own (#240). The horizon is not recomputed
+    #  here: `stale_after_s` works it out from the rhythm in force and `publish_horizon` writes
+    #  it down, so this reads the answer. A store with no horizon published — a bare test store,
+    #  or an agent before `start()` — does not judge staleness at all, which is the honest
+    #  outcome of not knowing what rhythm is being kept.
+    OPTIONAL { GRAPH $instruments {
+      ?instrument sensing:staleAfterS ?horizon } .
+      ?instrument sensing:monitors ?subject ; sosa:observes ?property }
+    #  `IF` evaluates only the branch it takes, so the arithmetic is never reached without
+    #  both operands. Seconds become a duration the long way because this engine will not
+    #  multiply or divide one — measured — while `dateTime + duration` and comparing two
+    #  dateTimes both work.
+    BIND(IF(BOUND(?horizon) && BOUND(?at),
+            ?at + STRDT(CONCAT("PT", STR(?horizon), "S"), xsd:dayTimeDuration) < NOW(),
+            false) AS ?isStale)
     BIND("stake" AS ?kind)
     BIND((?low + ?high) / 2 AS ?centre)
     BIND(IF(?value < ?centre, COALESCE(?floor, ?low), COALESCE(?ceiling, ?high)) AS ?outer)
@@ -71,11 +87,53 @@ SELECT ?want ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?cl
             IF(?room = 0, 1.0,
                IF(?value > ?centre, (?value - ?centre) / ?room,
                                     (?centre - ?value) / ?room)))) AS ?raw)
-    BIND(IF(?raw > 1, 1.0, ?raw) AS ?urgency)
+    #  A stale want is as urgent as an unread one, and for the same reason: the number in hand
+    #  is not evidence about now. Scaling it by the distance the LAST reading showed would rank
+    #  an agent by something it no longer knows.
+    BIND(IF(?isStale, 1.0, IF(?raw > 1, 1.0, ?raw)) AS ?urgency)
     BIND(IF(!BOUND(?value), "unmeasured",
-         IF(?value < ?low || ?value > ?high, "unmet", "met")) AS ?state)
+         IF(?isStale, "stale",
+            IF(?value < ?low || ?value > ?high, "unmet", "met"))) AS ?state)
     BIND(IF(!BOUND(?value), "",
          IF(?value < ?low, "below", IF(?value > ?high, "above", ""))) AS ?side)
+  }
+  UNION
+  {
+    #  KNOWING, where there is nothing to know it ABOUT. An agent may poll an instrument
+    #  pointed at something it holds no region in — the loner's gardener watches a water butt
+    #  it does not act for — and it still wants that reading current: it went to the trouble of
+    #  polling the thing. The stake branch above cannot produce this goal, because it starts
+    #  from a region, and `notices()` used to cover exactly this ground before goals replaced
+    #  it. Without this branch the butt would have a freshness SHAPE that fires and no GOAL
+    #  anyone pursues, which is the worst of both.
+    #
+    #  Guarded against the properties the stake branch already answers for, so a want with a
+    #  region and a want with an instrument do not both arrive as separate goals about one
+    #  property. A region reports its own staleness; this covers what a region does not reach.
+    $me ag:holds ?want .
+    ?want ag:violationIs ag:Stale ;
+          ssn:forProperty ?property ;
+          prov:wasDerivedFrom ?instrument .
+    ?instrument sensing:monitors ?subject ; sosa:observes ?property .
+    FILTER NOT EXISTS { $me ag:holds ?region .
+                        ?region ssn:forProperty ?property ;
+                                sh:property/ag:violationIs ag:Below }
+    OPTIONAL { GRAPH $sensed {
+      ?obs sosa:hasFeatureOfInterest ?subject ;
+           sosa:observedProperty ?property ;
+           sosa:hasSimpleResult ?value .
+      OPTIONAL { ?obs sosa:resultTime ?at } } }
+    OPTIONAL { GRAPH $instruments { ?instrument sensing:staleAfterS ?horizon } }
+    BIND("stake" AS ?kind)
+    BIND(IF(BOUND(?horizon) && BOUND(?at),
+            ?at + STRDT(CONCAT("PT", STR(?horizon), "S"), xsd:dayTimeDuration) < NOW(),
+            false) AS ?isStale)
+    #  Nothing to be far FROM, so the only urgencies here are the epistemic ones: knowing
+    #  nothing, or knowing something too old to be about now. A reading in hand and current
+    #  yields no want at all, which is why `met` scores zero.
+    BIND(IF(!BOUND(?value) || ?isStale, 1.0, 0.0) AS ?urgency)
+    BIND(IF(!BOUND(?value), "unmeasured", IF(?isStale, "stale", "met")) AS ?state)
+    BIND("" AS ?side)
   }
   UNION
   {

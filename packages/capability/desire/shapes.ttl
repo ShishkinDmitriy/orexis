@@ -39,7 +39,20 @@ Every figure here was computed, so this is arithmetic rather than authorship —
                   sh:message "a deduced shape must say which property it is about" ] ;
     sh:property [ sh:path sh:targetNode ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "a deduced shape must say whose state it is about" ] ;
-    sh:property [ sh:path ( sh:property sh:severity ) ; sh:minCount 1 ;
+    #  WHERE THE ENGINE WILL READ IT, which differs by constraint kind and was measured both
+    #  ways round on pySHACL 0.40.1. A core `sh:property` constraint takes its severity from
+    #  the property shape and ignores the node shape's; a `sh:sparql` constraint does the
+    #  reverse. So this accepts either place — the original rule (never let the force drift up
+    #  to the node shape) held for the declarative wants it was written for, and is exactly
+    #  wrong for the SPARQL one, whose severity is ignored anywhere else.
+    #
+    #  What it still refuses is a deduced shape carrying no force at all, which is the failure
+    #  it exists for: an unmet want reported as a violation refuses the boot of an agent whose
+    #  pot is dry.
+    sh:property [ sh:path [ sh:alternativePath (
+                      ( [ sh:alternativePath ( sh:property sh:sparql ) ] sh:severity )
+                      sh:severity ) ] ;
+                  sh:minCount 1 ;
                   sh:message "a deduced shape must carry its FORCE on the property shape that produces the result — above it, every unmet want reports as a violation and an agent whose pot is dry refuses to boot" ] ;
 
     # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales

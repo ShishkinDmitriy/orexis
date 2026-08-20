@@ -67,7 +67,27 @@ def test_a_stake_and_a_lever_grant_reflex():
 # --- the reflex, which is the old chain verbatim ----------------------------
 
 def test_not_seeing_means_look(make):
-    assert decider_of(make("fern")).propose(MOISTURE, None) == OBSERVE
+    """The oldest rule in the reflex, now asked in the words it means (#240).
+
+    It used to be `propose(property, None) == OBSERVE` — a first line that read a missing value
+    as ignorance. The behaviour is unchanged and the QUESTION is different: a goal says which
+    epistemic failure it is, so "never read" and "the caller passed no number" stop being the
+    same sentinel. Both epistemic states are asserted, because they are repaired by the same
+    move for the same reason and a rule that covered only one would leave stale readings
+    unwatched.
+    """
+    from agent.goal import Goal
+
+    decider = decider_of(make("fern"))
+    never_read = Goal(uri="urn:w", urgency=1.0, observed_property=MOISTURE,
+                      value=None, state="unmeasured")
+    too_old = Goal(uri="urn:w", urgency=1.0, observed_property=MOISTURE,
+                   value=0.30, state="stale")
+    assert decider.propose_for(never_read) == OBSERVE
+    assert decider.propose_for(too_old) == OBSERVE, \
+        "a reading that stopped being evidence is repaired by looking, not by watering"
+    assert decider.propose(MOISTURE, None) is None, \
+        "and the bare value door steers only — it no longer answers the epistemic question"
 
 
 def test_below_the_aim_means_pursue_and_above_means_nothing(make):
@@ -99,7 +119,11 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
     """
     fern = make("fern", genesis_store({"fern": 0.10}))
     market = market_of(fern)
+    #  Both doors: "silenced" means it answers nothing whatever it is asked. Patching only
+    #  the one this scenario happens to use would pass while saying less than it claims, and
+    #  would break silently the next time a caller changed which question it asks.
     monkeypatch.setattr(decider_of(fern), "propose", lambda prop, value: None)
+    monkeypatch.setattr(decider_of(fern), "propose_for", lambda goal: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
 
@@ -110,7 +134,11 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     second-guessed. The bidder neither senses nor waits; the round simply passes."""
     fern = make("fern")  # no reading at all
     market = market_of(fern)
+    #  Both doors: "silenced" means it answers nothing whatever it is asked. Patching only
+    #  the one this scenario happens to use would pass while saying less than it claims, and
+    #  would break silently the next time a caller changed which question it asks.
     monkeypatch.setattr(decider_of(fern), "propose", lambda prop, value: None)
+    monkeypatch.setattr(decider_of(fern), "propose_for", lambda goal: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert fern.bidding().pending is None
     # and no observe intention was adopted — nothing committed to a wait nobody is waiting on

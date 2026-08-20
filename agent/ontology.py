@@ -124,6 +124,10 @@ WORLD_GRAPH = _GRAPH + "world"  # topology, as the sovereign ratified it
 WORLD_DERIVED_GRAPH = _GRAPH + "world/derived"  # what each package's rules.ru computed
 WORLD_ENTAILED_GRAPH = _GRAPH + "world/entailed"  # what the vocabulary implies of instances
 SENSED_GRAPH = _GRAPH + "sensed"  # what sensors read
+#  What this agent knows about its own instruments — the rhythm each is running and the
+#  horizon that follows from it. Private, and separate from `sensed` because a cadence is
+#  not a reading: it is what the agent believes about the instrument that produced one.
+INSTRUMENTS_GRAPH = _GRAPH + "instruments"
 # What the five above ARE, in PROV-O, so the store can say it rather than this file's comments.
 # Rename every graph to `g1`..`g5` and a reader could still work out which hold computed facts:
 # that is the test this graph exists to pass, and the reason the names above are a convenience

@@ -93,7 +93,11 @@ def test_the_reflex_proposes_actuate_below_the_aim(gardener):
     deliberator = gardener.provider(_DELIBERATION)
     assert deliberator.propose(MOIST, 0.10) == ACTUATE
     assert deliberator.propose(MOIST, 0.25) is None, "above the aim, nothing — as ever"
-    assert deliberator.propose(MOIST, None) == OBSERVE
+    #  Not seeing is answered through the goal door now (#240), because a bare None meant two
+    #  things — never read, and the caller has no number — and only one of them means look.
+    from agent.goal import Goal
+    assert deliberator.propose_for(
+        Goal(uri="urn:w", urgency=1.0, observed_property=MOIST, state="unmeasured")) == OBSERVE
 
 
 # --- the self-dose: signed, confirmed, ledgered, watched --------------------
