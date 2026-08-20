@@ -76,10 +76,10 @@ SELECT DISTINCT ?subjectId ?kind ?property ?lo ?hi WHERE {{
 MEASUREMENT = "soil_moisture"
 FIELD = "value"
 AGENT_MEASUREMENT = "agent_health"
-#  What the desire capability writes, one row per want, tagged by property. Named
-#  here rather than spelled twice: the panel below and any future reader of the
-#  same series should move together.
-DESIRE_MEASUREMENT = "agent_desire"
+#  One row per WANT — tagged by the want itself, not by a property, because a
+#  property cannot name a freshness want (per instrument) or a duty (per
+#  counterparty). Written by whoever sees every goal, which is the deliberator.
+WANT_MEASUREMENT = "agent_want"
 SENSOR_MEASUREMENT = "agent_sensor_health"
 EVENT_MEASUREMENT = "agent_events"
 
@@ -248,10 +248,11 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
     moisture or its temperature, and `agent_desire` already carried the region and the aim —
     three curves whose gap between them a reader had to eyeball. Urgency states it.
 
-    Grouped by the `property` TAG rather than split into a panel per property, which is why the
-    tag exists (#61's argument, on the sovereign's own suggestion): one generic panel serves any
-    number of wants, and a world that adds a humidity range gets its line without a dashboard
-    edit. One target per agent, because a bucket is per agent and a token opens only its own.
+    Grouped by the WANT rather than by the property it is about — the sovereign's correction,
+    and it is what lets one graph hold every kind. A property cannot name a freshness want,
+    which is per instrument, or a duty, which is per counterparty, so a panel keyed on
+    `property` could only ever draw stakes and the common currency would stay a claim. One
+    target per agent, because a bucket is per agent and a token opens only its own.
 
     Zero to one, fixed. Urgency IS normalised — 0 at the region's point and 1 at the edge of
     what the subject survives — so an axis that rescaled itself would throw away the only thing
@@ -260,12 +261,20 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
     """
     return {
         "id": panel_id,
-        "type": "timeseries",
+        #  A STATUS HISTORY and not a line chart, on the sovereign's call. Five agents holding
+        #  several wants each is ten curves over one another, and the question an operator has
+        #  is not what shape a curve made — it is WHICH want was hot, and WHEN. A row per want,
+        #  each cell coloured by its heat, answers that without reading anything.
+        #
+        #  What it costs is the shape: a plant drying and being watered draws a saw-tooth, and
+        #  that saw-tooth says the society is working. It is still legible here as a rhythm of
+        #  colour, and the per-property panels above keep the curve where the curve matters.
+        "type": "status-history",
         "title": "How badly each want is unmet",
         "description": (
             "Urgency per want: 0 at the point of the region, 1 at the edge of what the subject "
             "survives. Unit-free by construction, so a moisture and a temperature are "
-            "comparable on one axis — and so is a litre owed, once duties reach here. A line "
+            "comparable on one axis — and so is a litre owed, and a look overdue. A line "
             "ABSENT is a want nobody has read: unmeasured is not satisfied, so it is drawn as "
             "a gap rather than as zero. A line pinned at 1 with no fall is a want nothing can "
             "repair — check `unactionable` beside it before looking for a fault."),
@@ -273,13 +282,24 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
         "gridPos": {"h": 9, "w": 24, "x": 0, "y": y},
         "targets": [
             {"refId": chr(ord("A") + i),
-             "query": (f'from(bucket: "{bucket}")\n'
+             "query": ('import "strings"\n'
+                       f'from(bucket: "{bucket}")\n'
                        "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
-                       f'  |> filter(fn: (r) => r._measurement == "{DESIRE_MEASUREMENT}")\n'
+                       f'  |> filter(fn: (r) => r._measurement == "{WANT_MEASUREMENT}")\n'
                        '  |> filter(fn: (r) => r._field == "urgency")\n'
                        "  |> aggregateWindow(every: v.windowPeriod, fn: last, "
                        "createEmpty: false)\n"
-                       f'  |> map(fn: (r) => ({{ r with _field: "{agent_id}/" + r.property }}))')}
+                       #  The tag is the want's own node name so it can be pasted straight
+                       #  into an `agora-ask` — and a derived want is minted as
+                       #  `bounds.<who>.<property>`, so the agent sits in the MIDDLE of it and
+                       #  a legend would say fern twice. Removed for DISPLAY only; what is
+                       #  stored stays the name the graph knows it by.
+                       #
+                       #  The prefix is kept rather than dropped, because it is not always
+                       #  redundant: a duty is tagged `duty.<owed to>`, and in the supplier's
+                       #  bucket that reads "supplier owes fern" only if the holder is said.
+                       f'  |> map(fn: (r) => ({{ r with _field: "{agent_id}/" + '
+                       f'strings.replace(v: r.want, t: ".{agent_id}.", u: ".", i: 1) }}))')}
             for i, (agent_id, bucket) in enumerate(sorted(buckets.items()))
         ],
         "fieldConfig": {"defaults": {
@@ -290,12 +310,20 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
                 {"color": "orange", "value": 0.6},
                 {"color": "red", "value": 1},
             ]},
-            "custom": {"thresholdsStyle": {"mode": "line"}, "fillOpacity": 0},
+            #  `thresholdsStyle` is a line-chart option and means nothing here; a status
+            #  history colours each cell by the same steps instead. Full opacity because a
+            #  half-transparent cell in a grid of cells reads as a different colour.
+            "custom": {"fillOpacity": 100, "lineWidth": 1},
         }, "overrides": []},
         "options": {
-            "legend": {"showLegend": True, "displayMode": "table", "placement": "bottom",
-                       "calcs": ["lastNotNull", "max"]},
-            "tooltip": {"mode": "multi", "sort": "desc"},
+            #  A list, not a table: the table's `lastNotNull` and `max` columns are what a line
+            #  chart needs to say where a curve ended, and a status history's right-hand edge
+            #  IS where it ended — the number is under the cursor.
+            "legend": {"showLegend": True, "displayMode": "list", "placement": "bottom"},
+            "tooltip": {"mode": "single", "sort": "none"},
+            "showValue": "never",
+            "colWidth": 0.9,
+            "rowHeight": 0.9,
         },
     }
 

@@ -42,17 +42,17 @@ def test_urgency_is_drawn_per_want_and_per_agent():
     """The panel that answers WHICH want is straining, not merely that one is.
 
     `agent_goals.hottest` carries the maximum an agent holds and cannot say whether that
-    maximum is a plant's moisture or its temperature. This draws one line per (agent,
-    property), grouped by the tag rather than split into a panel per property — which is why
-    the tag exists: a world that states a humidity range gets its line on the next
-    `agora-onboard`, with no dashboard edited.
+    maximum is a plant's moisture or its temperature. This draws one line per (agent, WANT) —
+    by the want and not by the property it is about, because a property cannot name a
+    freshness want (per instrument) or a duty (per counterparty), and a panel keyed on
+    property could only ever draw stakes.
 
     The axis is pinned 0–1 because urgency IS normalised — 0 at the region's point, 1 at the
     edge of what the subject survives — so a rescaling axis would throw away the only thing
     that makes a moisture and a temperature comparable on one canvas. That is asserted, not
     left to whoever next opens the panel in the UI.
     """
-    from onboarding.dashboards import DESIRE_MEASUREMENT
+    from onboarding.dashboards import WANT_MEASUREMENT
 
     doc = render_health("simulation")
     panel = next((p for p in doc["panels"] if p.get("title") == "How badly each want is unmet"),
@@ -62,10 +62,14 @@ def test_urgency_is_drawn_per_want_and_per_agent():
     agents = {t["query"].split('bucket: "')[1].split('"')[0] for t in panel["targets"]}
     assert len(agents) == len(panel["targets"]), "one target per agent — a bucket is per agent"
     for target in panel["targets"]:
-        assert DESIRE_MEASUREMENT in target["query"]
+        assert WANT_MEASUREMENT in target["query"]
         assert '_field == "urgency"' in target["query"]
-        assert "r.property" in target["query"], \
-            "lines must be split by the property tag, or every want of an agent is one curve"
+        assert "r.want" in target["query"], \
+            "lines are split by the WANT, so freshness and duties can share the axis"
+
+    assert panel["type"] == "status-history", \
+        "a row per want, coloured by heat — five agents' curves over one another answer " \
+        "'which want is hot' far worse than a grid does"
 
     defaults = panel["fieldConfig"]["defaults"]
     assert (defaults["min"], defaults["max"]) == (0, 1), \

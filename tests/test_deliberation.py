@@ -460,3 +460,29 @@ def test_a_stake_reaches_the_same_door_and_behaves_exactly_as_before(make):
     for value in (0.30, 0.55, 0.80):
         stake = Goal(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
         assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value)
+
+
+def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):
+    """One row per want, tagged by the WANT — the sovereign's correction to a first draft that
+    keyed the panel on the property.
+
+    A property cannot name every want: freshness is per instrument, a duty is per counterparty.
+    So a graph grouped by property could only ever draw stakes, and "urgency is the common
+    currency" would stay a claim rather than something you can look at.
+
+    A duty is tagged by whom it is owed to and NEVER by its claim: a jti is unique per round, so
+    tagging by it would mint a series every time the society traded and grow the store's
+    cardinality with its history.
+    """
+    fern = make("fern")
+    rows = [(tags, fields) for meas, tags, fields in
+            next(m for m in fern.modules if m.name == "deliberation").series()
+            if meas == "agent_want"]
+
+    assert rows, "an agent that wants things reports each of them"
+    assert all(set(f) == {"urgency"} for _, f in rows), "one figure: how badly it is unmet"
+    assert all(0.0 <= f["urgency"] <= 1.0 for _, f in rows), "normalised, or the axis lies"
+    tags = {t["want"] for t, _ in rows}
+    assert len(tags) == len(rows), "one line per want, not several sharing a name"
+    assert not any(len(t) > 60 for t in tags), \
+        "a tag carrying a jti would mint a new series per round — duties are tagged by whom"

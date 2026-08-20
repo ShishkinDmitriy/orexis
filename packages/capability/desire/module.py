@@ -465,12 +465,6 @@ class DesireModule(Module):
         only match. Into this agent's OWN bucket — the operator sees them, rivals do not. A
         region that quietly moved (a world amended, an instrument narrowed, a flowering season
         ratified) and an aim drifting inside it are exactly the lines a sovereign wants."""
-        #  The gap, per property, so urgency can be READ rather than inferred from where a
-        #  curve sits between two other curves. `agent_goals` already carries the hottest
-        #  figure an agent holds; this is the same number per want, which is what says WHICH
-        #  want is hot — the difference between "this agent is straining" and "this agent's
-        #  moisture is straining while its temperature is fine".
-        gaps = self.gaps()
         rows = []
         for prop, region in sorted(self.regions.items()):
             local = prop.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
@@ -478,11 +472,6 @@ class DesireModule(Module):
             aim = self.aim(prop)
             if aim is not None:
                 fields["aim"] = aim
-            #  Absent rather than zero where nothing has been read. A zero here would draw a
-            #  contented line for a want nobody has looked at, which is the one reading this
-            #  project refuses everywhere else: unmeasured is not satisfied.
-            if (gap := gaps.get(prop)) is not None:
-                fields["urgency"] = abs(gap.gap)
             rows.append(("agent_desire", {"property": local}, fields))
 
         return rows
