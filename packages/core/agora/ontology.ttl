@@ -227,7 +227,9 @@ ag:DesireGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Desire graph
     rdfs:comment "What the agent PURSUES: its aim in a property, its picks about its own conduct, and the goals a claim sourced. Everything here is ordered — which is where character will live — and everything here is the agent's, chosen inside constraints it did not choose." .
 
 ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
-    rdfs:comment "What the agent COULD do: the affordance rows, and what others may demand of it. Derived and never authored — a row is a conclusion whose premises are stored, so an authored row could outlive its premise, which is the one hazard this graph must never reintroduce." .
+    rdfs:comment """What the agent COULD do: the affordance rows, what others may demand of it, and what taking any of it would MAKE TRUE.
+
+A ROW is derived and never authored — it is a conclusion whose premises are stored, so an authored row could outlive its premise, and that is the one hazard this modality must never reintroduce. A RULE about a means is asserted, from the file of the package that owns the lever, and is in no danger of outliving anything because it is a schema rather than a conclusion. Both are the same modality and they differ in ARRIVAL, which is what `ag:arrivedBy` is for: the two axes were separated precisely so a class would not have to encode how its facts got there.""" .
 
 ag:IntentionGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Intention graph" ;
     ag:graphPrefix "http://example.org/agora/graph/intentions/" ;
@@ -275,6 +277,11 @@ ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:la
     rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
 ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
+ag:EffectGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:MenuGraph ; rdfs:label "Effect graph" ;
+    rdfs:comment """What each MEANS makes true — one `sh:SPARQLRule` per lever, loaded from the packages at genesis exactly as the T-Box is, and replaced from those files on every boot.
+
+PUBLIC and not belief. A rule here is a SCHEMA — what applying a lever WOULD do, stated once by the package that owns the lever — and schemas have always lived in the store: that is what the ontology graph is. It is not a belief, because nobody holds it and no agent may revise it; and it is not the menu, which is INSTANCES (this valve, this venue) and stays computed for the reason affordances are never stored — a stored row can outlive the plumbing it was concluded from, and a schema cannot.""" .
+
 ag:ProvenanceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Provenance graph" ;
     rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
 
@@ -293,6 +300,7 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:
 <http://example.org/agora/graph/world/derived>     a ag:WorldGraph ;    ag:arrivedBy ag:Derived .
 <http://example.org/agora/graph/world/entailed>    a ag:WorldGraph ;    ag:arrivedBy ag:Entailed .
 <http://example.org/agora/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
+<http://example.org/agora/graph/effects>            a ag:EffectGraph ;  ag:arrivedBy ag:Asserted .
 <http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .
 
 ##  Where an agent says what its OWN graphs are. A per-agent graph cannot be declared in a
@@ -363,6 +371,30 @@ ag:Unmeasured a ag:Side ; rdfs:label "unmeasured" ;
 ag:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:range ag:Side ;
     rdfs:label "violation is" ;
     rdfs:comment "What it MEANS when this property shape is violated. On the shape, so the answer travels with the constraint that produced the result and cannot be recomputed differently by two readers. The alternative was for every consumer to compare the value against the bounds again — which is what the module, the query and the dashboard each did separately, and which is how a fern above its region came to be reported as one unmet want indistinguishable from a fern dying of thirst." .
+
+#################  What a lever MAKES TRUE  #################
+#
+#  A means states its effect as a CONSTRUCT: the triples that applying it would add. The
+#  vocabulary is SHACL-AF's — `sh:SPARQLRule`, `sh:condition` for the shape that must hold
+#  before it may run, `sh:construct` for the query as a literal — because a rule with a
+#  condition and a construct IS the action schema this needed, already RDF, already persisted,
+#  already readable by a model and a sovereign. Nothing was invented here except the one thing
+#  the spec has no word for.
+#
+#  WHY A CONSTRUCT rather than add/delete patterns, which is the textbook form: opening a valve
+#  ADDS NO TRIPLE. It changes a number a later observation reports, and no template of concrete
+#  triples can say that without predicting the number. A CONSTRUCT can, because this project
+#  already computes that prediction for verification.
+
+ag:retracts a owl:DatatypeProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range xsd:string ;
+    rdfs:label "retracts" ;
+    rdfs:comment """A CONSTRUCT whose result is the triples this effect REMOVES. Ours, because SHACL-AF has none: its rules exist to add entailments, so the standard has no way to say a thing stops being true. A simulator computes `(beliefs - retracts) + adds`, which keeps the whole operation side-effect free — nothing is deleted anywhere, two graphs are subtracted.
+
+It is not optional, and the reason is arithmetic rather than taste. `sensed_writer` does DELETE-then-INSERT on ONE deterministic observation node per (subject, property), so a reading REPLACES its predecessor rather than joining it. An effect that predicts a new reading without retracting the node it replaces leaves that node carrying two `sosa:hasSimpleResult` values — and the survival envelope is `sh:qualifiedMaxCount 0` over readings past its edge, so a stale bad reading makes a possible world report a catastrophe in a world the plan has just fixed, and the planner rejects the plan that works. It fails the other way too: a stale GOOD reading satisfies a region goal the predicted value misses.""" .
+
+ag:effectOf a owl:ObjectProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range ag:Means ;
+    rdfs:label "effect of" ;
+    rdfs:comment "Which means this rule is the effect of. The join a planner walks from a menu row to what taking that row would do — the row names its means, and this names the rule. On the rule rather than on the means, so a package ships one file that adds itself: nothing in the kernel lists which levers have effects, exactly as nothing lists which packages ship affordances." .
 
 ag:holds a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sh:NodeShape ;
     rdfs:label "holds" ;

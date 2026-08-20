@@ -42,8 +42,8 @@ from pathlib import Path
 
 from . import loader
 from .config import REPO_ROOT
-from .ontology import (CLASSIFICATION_GRAPH, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
-                       PROVENANCE_GRAPH,
+from .ontology import (CLASSIFICATION_GRAPH, EFFECTS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
+                       ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                        WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 
 # A file, as something a graph can be derived FROM. Minted under our own namespace rather than
@@ -115,6 +115,14 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
         "# --- asserted: read from files, and the chain stops there (see the module note) ---",
         f"<{ONTOLOGY_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {ontology_files} .",
     ]
+    #  The effect rules, from the packages that own the levers (#238). Asserted from files
+    #  exactly as the vocabulary is, and described here for the same reason: a public graph
+    #  that cannot say where it came from is the silence `ag:PublicGraphShape` refuses. A build
+    #  where no package states an effect still has the graph — empty, and honest about being
+    #  derived from nothing rather than absent and unexplained.
+    effect_files = " , ".join(f"<{file_iri(p)}>" for p in loader.effect_files())
+    lines.append(f"<{EFFECTS_GRAPH}> a prov:Entity"
+                 + (f" ; prov:wasDerivedFrom {effect_files} ." if effect_files else " ."))
     if world_files_:
         lines.append(f"<{WORLD_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
         if attribution:

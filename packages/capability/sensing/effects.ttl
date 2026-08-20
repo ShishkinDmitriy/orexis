@@ -1,0 +1,77 @@
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ag:      <http://example.org/agora#> .
+@prefix sosa:    <http://www.w3.org/ns/sosa/> .
+@prefix sensing: <http://example.org/agora/sensing#> .
+
+#################  What LOOKING makes true  #################
+#
+#  The one effect every agent has, and the one whose limits are worth stating carefully.
+#
+#  Looking does not change the world. What it changes is what the agent KNOWS, so this rule
+#  predicts a reading with a current `sosa:resultTime` and the SAME VALUE the last one carried.
+#  That is the whole of Observe's effect, and getting it wrong in the tempting direction — a
+#  predicted reading sitting inside the region, since after all that is what the agent wants —
+#  would teach a planner that a thirsty plant can be watered by looking at it.
+#
+#  A property nothing has ever read carries no value forward, and the construct then emits the
+#  observation WITHOUT `sosa:hasSimpleResult`: SPARQL drops a triple whose terms are unbound, so
+#  the omission needs no branch. That is honest — nobody can predict what a first look will say
+#  — and it has a consequence a planner must handle rather than inherit: a valueless reading
+#  satisfies "no reading sits below the floor" VACUOUSLY, so a region goal read as a whole would
+#  look repaired by looking. The freshness half genuinely is; the range half is not. Judging
+#  "goal achieved" is the planner's job (#239) and that is where the distinction has to live.
+#
+#  The node is NOT minted here. `sensed_writer` mints it from a Python slug of the feature and
+#  the property, and re-deriving that in SPARQL would put the identity of an observation in two
+#  places. The retraction FINDS the node by its pattern, and the construct reuses whichever it
+#  found or a fresh blank node — which costs nothing, because no shape names an observation: they
+#  ask whether one EXISTS with a property and a value, and a blank node exists exactly as well.
+
+sensing:ObserveEffect
+    a sh:SPARQLRule ;
+    ag:effectOf ag:Observe ;
+    rdfs:label "what looking makes true" ;
+
+    #  A COARSE gate, and the coarseness is the finding rather than a shortcut. `sh:condition`
+    #  validates a FOCUS NODE, so it can say "this agent polls something" — a fact about the
+    #  agent — and it cannot say "…that watches THIS subject for THIS property", because those
+    #  are the rule's arguments and a shape has no arguments. The precise precondition is the
+    #  affordance row's own walk, which is per (means, property, lever) and exists only when
+    #  every hop holds. So the two are not redundant: the condition refuses a rule outright for
+    #  an agent that could never take it, and the row decides whether it is available NOW.
+    sh:condition sensing:PollsSomethingShape ;
+
+    sh:construct """
+        CONSTRUCT {
+            ?obs a sosa:Observation ;
+                 sosa:hasFeatureOfInterest $subject ;
+                 sosa:observedProperty $property ;
+                 sosa:resultTime ?now ;
+                 sosa:hasSimpleResult ?value .
+        } WHERE {
+            OPTIONAL { GRAPH $sensed {
+                ?seen sosa:hasFeatureOfInterest $subject ;
+                      sosa:observedProperty $property .
+                OPTIONAL { ?seen sosa:hasSimpleResult ?value }
+            } }
+            BIND(COALESCE(?seen, BNODE()) AS ?obs)
+            BIND(NOW() AS ?now)
+        }""" ;
+
+    ag:retracts """
+        CONSTRUCT { ?obs ?p ?o } WHERE {
+            GRAPH $sensed {
+                ?obs sosa:hasFeatureOfInterest $subject ;
+                     sosa:observedProperty $property ;
+                     ?p ?o
+            }
+        }""" .
+
+sensing:PollsSomethingShape
+    a sh:NodeShape ;
+    rdfs:comment "An agent that polls nothing can never look, whatever it is asked about — the node-level half of Observe's precondition, and all of it a shape can carry. Targeted at nothing: a condition is evaluated against the node the rule is being considered for, never on its own." ;
+    sh:property [
+        sh:path sensing:polls ;
+        sh:minCount 1 ;
+        sh:message "this agent polls no sensor at all, so looking is not among its means" ] .

@@ -102,6 +102,8 @@ RULES = "rules.ru"
 # ?term and ?value, run by the reviewer — never an update, and never Python. See agora/review.py.
 REVIEW = "review.rq"
 AFFORDANCES = "affordances.rq"
+# What applying one of this package's levers MAKES TRUE — SHACL-AF rules, as RDF.
+EFFECTS = "effects.ttl"
 HONOURED = "honoured.rq"
 
 
@@ -230,6 +232,22 @@ def affordance_files() -> tuple[Path, ...]:
     a review rule, so no file here declares prefixes.
     """
     return files(AFFORDANCES)
+
+
+def effect_files() -> tuple[Path, ...]:
+    """Every package's statement of what its levers DO (#238).
+
+    A package that ships `effects.ttl` says, per means, what applying it would make true: a
+    `sh:SPARQLRule` with `sh:condition` for the shape that must hold first and `sh:construct`
+    for the triples it would add, plus `ag:retracts` where it replaces something. RDF rather
+    than a query file, because the vocabulary is SHACL-AF's and a rule with a condition and a
+    construct already IS the action schema — so it loads into the store at genesis and a model
+    or a sovereign can read the whole tool list without a second format existing anywhere.
+
+    Found rather than listed, exactly as affordances are: a lever that grows an effect is a
+    file in the package that owns the lever, and nothing here learns its name.
+    """
+    return files(EFFECTS)
 
 
 def honoured_files() -> tuple[Path, ...]:

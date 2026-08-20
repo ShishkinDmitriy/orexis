@@ -202,6 +202,21 @@ class Store:
         )
         return json.loads(out.getvalue())
 
+    def construct(self, sparql: str):
+        """Run a CONSTRUCT and hand back the triples, which are not written anywhere.
+
+        The one thing `query` cannot do: it serialises results as JSON bindings, and a
+        CONSTRUCT has none — it has a graph. Added for effect rules (#238), where the answer to
+        "what would this lever make true" is a set of triples nobody has asserted and nobody
+        should: a possible world is computed and dropped, so the only honest return here is the
+        triples themselves.
+
+        Reads the same public default graph an ordinary query does, so a rule sees the world
+        and the vocabulary and not another agent's beliefs.
+        """
+        public = [ox.NamedNode(g) for g in self.public_graphs()]
+        return list(self._store.query(PREFIXES + sparql, default_graph=public))
+
     # Kept so callers written against the old two-door store still read: with one private store
     # per agent, the distinction it drew — "as myself" versus "as admin" — has no meaning.
     query_all = query
