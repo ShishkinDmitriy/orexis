@@ -68,6 +68,34 @@ satisfied, and the first intention is always to look. That boot-order fact is wh
 [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md)
 builds the rest of BDI on.
 
+# What am I pursuing — the whole list, with status
+
+`goals.rq` is the question a sovereign and a model actually ask, shipped beside `gap.rq`: every
+want this agent holds, hottest first, whoever sourced it. A stake and a duty appear in one list
+because urgency is the common currency — a litre owed and a pot drying rank against each other
+instead of running down two paths that never meet — and each row says what state its want is in:
+a stake is `met`, `unmet` or `unmeasured`, a duty `standing`, `demanded` or `settled`.
+
+Three deliberate differences from the diff above:
+
+- **An unmeasured want is a row here, at urgency 1.0.** No row is right for a diff and wrong for
+  a ranking: not knowing whether the pot is dying is at least as urgent as knowing it is
+  uncomfortable, which is the answer `urgency(None)` has always given.
+- **`side` says which way out a stake sits.** For moisture only the low side has a lever, so a
+  drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things.
+- **Whether anything can be DONE is not in the query.** That is the deliberator's answer — the
+  menu is the union of what every loaded package contributes, and a copy of it inside a desire
+  query would be free to disagree with the one the agent acts on. `pursued()` annotates each row
+  by asking `propose_for`, and `series()` publishes the count, so a society drowning stops
+  graphing like a society thirsty.
+
+Two things the query cannot do, and both are recorded where they bite. A duty's urgency is the
+fraction of its redeem window that has run, and this store binds **nothing** for
+`duration / duration` — so the row carries `owedAt` and `expiresAt` and the division happens in
+Python, pinned by a test that fails the day the engine grows the operation. And `lapsed` is the
+reader's judgement rather than a `NOW()` inside the query, because a deadline judged by the
+store and an urgency judged by Python are two clocks.
+
 **Three states of measurement, told apart** (#124). A row carries `at` — when the sensed side
 was true — and does not judge its own freshness, because how old is too old is the agent's own
 rule (the cadence it commanded plus its grace, sensing's to answer). `gaps()` returns
