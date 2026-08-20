@@ -258,6 +258,76 @@ Lowers repairs the above-violation, and the one-bit effect that was hardcoded in
 becomes a match between two shapes. That is a fourth special case this widening should DELETE
 rather than keep.
 
+### Unreachable is not the same as unequipped
+
+The sovereign, sharpening "what if the desire is not possible": *what if I have two levers in the
+menu and they do not work together — I need to increase by 2, and I hold only +3 and −3?*
+
+That is a different failure from a want nothing points at, and the difference matters to whoever
+must fix it. Nothing is missing from the menu; the levers point the right way; their GRANULARITY
+cannot land inside the region. From −2, the reachable set is a lattice at ±3 — it never contains
+the target. A want nothing points at says *equip me*; a want whose levers overshoot says *my
+equipment is too coarse for my ends, or my ends are too tight for my equipment*, and the remedies
+are different: a finer lever, or a wider region, or an admission that oscillation is the best
+this rig can do.
+
+**It is the case that decides simulation over symbolic matching.** Repair-matching — the
+violation is Below, this lever repairs Below, therefore propose it — cannot see an overshoot: it
+compares the violation's kind to the lever's kind and both are exactly right. A possible world
+sees it immediately, because after applying the effect the goal is still violated, from the other
+side. The sovereign chose CONSTRUCT-and-simulate before this case came up; this is what that
+choice buys.
+
+Three requirements follow, none of which a planner written for the reflex's world would have:
+
+- **Cycle detection.** +3 then −3 returns to the starting world. A search that does not notice
+  will spend its whole depth budget going nowhere. Worlds here are belief plus a small diff, so
+  comparing the applied effects is enough; graph isomorphism is not needed and would not be
+  affordable.
+- **Depth exhaustion is an ANSWER, not a failure.** "No bounded plan reaches this goal" is a
+  distinct outcome from "no lever repairs this violation", and the two must reach the report as
+  different things or the sovereign is told to buy a fan when the problem is dose size.
+- **Satisfice: prefer the world with the lowest urgency, and act only if it beats doing nothing.**
+  This is where the widening pays for itself in behaviour rather than expressiveness. The reflex
+  today acts whenever a lever's direction matches the gap's sign, with NO check that the outcome
+  is an improvement — which is how a society floods a plant while every module behaves as
+  written. Simulation turns "does this lever point the right way" into "does this lever leave me
+  better off", and the second question is the one worth asking.
+
+**And most of it is checkable before anything runs.** The region's width is the tolerance that
+makes a coarse lever usable at all: the goal is not "+2", it is "inside 0.45–0.65", and a dose
+that overshoots the far edge from every reachable starting point is a rig that can never settle.
+When the smallest step a lever can take exceeds the width of the region it is aimed at, there are
+starting points from which no sequence of doses lands inside, and the agent will oscillate for
+ever. That is a fact about ratified files — a device's calibration against a subject's stated
+ranges — so it belongs at the gates beside "a board faster than its mandate can honour", not at
+3am on the bench.
+
+### A sensing action is always the last step
+
+Building the effects (#238) surfaced a limit that belongs here before a planner is written
+against it. Observe's rule constructs an observation carrying the value last seen and a current
+`sosa:resultTime` — the only honest prediction available, since nobody can say what a look will
+find. On a FIRST look there is no value to carry, so the constructed reading has none, and a
+range shape asked about an unknown value is satisfied vacuously: SHACL is two-valued, and it
+renders "unknown" as "not violated".
+
+The temptation is to call that a bug and make the unmeasured shape demand a RESULT. Do not: then
+no honest effect could ever satisfy it — predicting a value you cannot know is the dishonest
+alternative — and an agent could never plan to look at all. The semantics are right as they
+stand, and they are the ones already in the house: `urgency(None)` is 1.0 and the first intention
+is always to look, because the unmeasured want is about HAVING LOOKED, not about knowing a good
+value.
+
+What follows is a constraint on the planner rather than on the shapes. **A possible world with no
+violations means "nothing I can foresee is wrong", not "the world will be fine"** — so a plan may
+not chain PAST a sensing action. What to do after looking depends on what the look returns, which
+is contingent planning, and the bounded answer this project should take is the simple one: a
+sensing action ends a plan. Look, then decide again with a reading in hand.
+
+That also disposes of a nonsense the search would otherwise produce — "look, then water" scored
+as a two-step plan whose second step was chosen against a value nobody had yet seen.
+
 ### The test of whether this is a generalisation
 
 Two hardcoded things must DISAPPEAR, not survive beside it:
