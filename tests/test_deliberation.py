@@ -486,3 +486,59 @@ def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):
     assert len(tags) == len(rows), "one line per want, not several sharing a name"
     assert not any(len(t) > 60 for t in tags), \
         "a tag carrying a jti would mint a new series per round — duties are tagged by whom"
+
+
+def test_a_pass_reports_what_it_cost_and_what_it_could_not_see(make):
+    """The figures fall out of the pass that already happened — never a second one.
+
+    Re-planning to measure would double the cost being measured, which is the one thing an
+    observability change must not do. So every figure here is a projection of the trace the
+    pass wrote as it ended.
+
+    Asked of FERN, and the numbers are the point rather than the plumbing: fern buys its water,
+    Acquire has no effect rule, so the search sees Observe alone. `blind` is therefore above
+    zero and `deepest` is 1 — the recorded state of the world, made visible instead of being a
+    sentence in a decision record.
+    """
+    from packages.capability.deliberation import trace
+
+    #  WITH A READING, because an agent that has never looked does not plan: `propose_for`
+    #  answers an unmeasured or stale want with Observe before any search runs (#240). So an
+    #  agent at rest reports zeros here — honestly, since nothing was deliberated — and a test
+    #  that used one would have pinned the figures of a pass that never happened.
+    fern = make("fern", genesis_store({"fern": 0.10}))
+    rows = {measurement: fields for measurement, _, fields in
+            next(m for m in fern.modules if m.name == "deliberation").series()}
+    planning = rows["agent_planning"]
+
+    assert planning["seconds"] > 0, "a pass that took no time did not happen"
+    assert planning["blind"] >= 1, \
+        "Acquire has no effect rule, so fern's search could not claim to see the whole menu"
+    assert planning["deepest"] <= 1, \
+        "depth beyond one step is nominal today (#254, #258) — if this rises, those were fixed"
+    assert set(trace.FIELD.values()) <= set(planning), \
+        "every candidate verdict is reported under the short name declared beside it"
+
+
+def test_the_figures_do_not_cost_what_they_report(make):
+    """An observability change that slows the thing it observes is worse than none.
+
+    The trace write was measured at 0.7% of a pass when it landed; this reads that trace back
+    and must stay in the same league. Generous bound because a shared machine's noise is larger
+    than the thing being bounded — what would fail here is an implementation that re-planned,
+    or one that walked the whole store per field.
+    """
+    import time
+
+    from packages.capability.deliberation import trace
+
+    fern = make("fern", genesis_store({"fern": 0.10}))
+    next(m for m in fern.modules if m.name == "deliberation").series()   # fill the trace
+
+    trace.effort(fern.store.query_union)                                 # warm
+    started = time.monotonic()
+    for _ in range(5):
+        trace.effort(fern.store.query_union)
+    each = (time.monotonic() - started) / 5
+
+    assert each < 0.05, f"reading the figures took {each*1000:.0f}ms — it should be under 1ms"

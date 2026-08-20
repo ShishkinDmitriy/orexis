@@ -40,6 +40,18 @@ WORSE = "no better than standing still"
 SEEN = "a world already reached"
 UNSIMULATED = "could not be simulated"
 
+#  What each verdict is called in the series, declared HERE beside the verdict it names so the
+#  two cannot drift — the same one-definition-two-readers argument `gap.rq` and `urgency` make.
+#  The prose is what a sovereign reads in the trace; these are what a dashboard can put on an
+#  axis, and a field name that was a sentence would be neither.
+FIELD = {
+    MET: "met",
+    BETTER: "better",
+    WORSE: "worse",
+    SEEN: "cycles",
+    UNSIMULATED: "unsimulated",
+}
+
 
 def _uri(agent_id: str, goal_uri: str) -> str:
     """One node per (agent, goal), so planning the same goal twice replaces rather than adds.
@@ -73,7 +85,8 @@ def clear(store, agent_id: str, goal_uri: str) -> None:
                     OPTIONAL {{ <{node}> <{KERNEL}considered> ?c . ?c ?cp ?co }} }} }}""")
 
 
-def write(store, agent_id: str, goal, plan, considered, stands_at: float) -> None:
+def write(store, agent_id: str, goal, plan, considered, stands_at: float,
+          took_s: float = 0.0) -> None:
     """Record one pass: what was weighed, what each would have reached, and what was taken.
 
     Never raises. A planner that fell over because its debugging aid did would be a poor trade
@@ -81,12 +94,13 @@ def write(store, agent_id: str, goal, plan, considered, stands_at: float) -> Non
     the same posture `reporting` takes towards the series store.
     """
     try:
-        _write(store, agent_id, goal, plan, considered, stands_at)
+        _write(store, agent_id, goal, plan, considered, stands_at, took_s)
     except Exception as exc:                      # noqa: BLE001 - see the docstring
         log.warning("could not record what was considered: %s", exc)
 
 
-def _write(store, agent_id: str, goal, plan, considered, stands_at: float) -> None:
+def _write(store, agent_id: str, goal, plan, considered, stands_at: float,
+           took_s: float) -> None:
     node = _uri(agent_id, goal.uri)
     chosen = plan.steps[0].means if plan.steps else None
     rows = []
@@ -116,6 +130,7 @@ def _write(store, agent_id: str, goal, plan, considered, stands_at: float) -> No
         <{KERNEL}deliberatedOn> <{goal.uri}> ;
         <{KERNEL}verdict> "{plan.outcome}" ;
         <{KERNEL}standsAt> {stands_at:.6f} ;
+        <{KERNEL}tookSeconds> {took_s:.6f} ;
         <{KERNEL}blind> {"true" if plan.partial else "false"} ;
 {took}        <{KERNEL}asOf> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
 {"".join(rows)}}} }}""")
@@ -134,3 +149,76 @@ def outcomes(query) -> dict[str, int]:
 SELECT ?verdict (COUNT(?d) AS ?n) WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
   ?d a <{KERNEL}Deliberation> ; <{KERNEL}verdict> ?verdict }} }} GROUP BY ?verdict"""))
     return {r["verdict"]: int(r["n"]) for r in rows}
+
+
+def effort(query) -> dict[str, float]:
+    """What the last pass over every goal COST, and what the search did with each lever.
+
+    Read from the trace for the same reason `outcomes` is: the pass already happened, and
+    re-running it to gather figures would double the cost the figures report. Everything here
+    is a projection of what was written down a moment ago.
+
+    Each field is diagnostic of something recorded and otherwise invisible, which is the whole
+    reason to have them rather than a general count:
+
+    - `seconds` is what a reporting tick's planning costs, summed over goals. `series()` calls
+      `pursued()`, which re-plans every goal, so this is the price of being asked what you want
+      — and if it dominates an agent's cost then the instrumentation is the workload.
+    - `deepest` is how many steps the longest path considered had. **Pinned at 1 is the
+      signature of two recorded limits at once** — a rule's CONSTRUCTs run against the store
+      rather than the world, and the cycle signature is the goal's own value, so a step that
+      moves nothing else is discarded as somewhere already reached.
+    - `worlds` is how many simulations were built: the cost driver, and what to divide
+      `seconds` by before blaming the shape checker.
+    - `cycles` climbing while `deepest` stays at 1 says the search keeps arriving back where it
+      started rather than being unable to go further.
+    - `unsimulated` counts levers whose rule raised — an error, not a shrug.
+    - `blind` counts goals where some lever had no stated effect at all, so the pass could not
+      claim it looked at everything. That is a package that never said what its lever does, and
+      it is why a partial plan defers to the reflex rather than reporting that nothing helps.
+    """
+    from agent.store import bindings
+
+    #  `?c a ag:Candidate` is load-bearing, not tidiness: `ag:verdict` is deliberately declared
+    #  with NO domain because a pass and a candidate both carry one, so a query that forgot to
+    #  say which it meant would count the six pass outcomes among the five candidate ones.
+    counted = bindings(query(f"""
+SELECT ?verdict (COUNT(?c) AS ?n) WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
+  ?c a <{KERNEL}Candidate> ; <{KERNEL}verdict> ?verdict }} }} GROUP BY ?verdict"""))
+
+    out = {name: 0.0 for name in FIELD.values()}
+    for row in counted:
+        if (name := FIELD.get(row["verdict"])) is not None:
+            out[name] = float(row["n"])
+
+    #  ONE query for the four scalars rather than four, and the reason is measured: this runs
+    #  inside `series()` on every reporting tick, and four separate asks cost 15ms of the 430ms
+    #  a tick already spends — a debugging aid taking three per cent of the thing it observes.
+    #  A union of aggregate subqueries asks once and costs a third of that.
+    scalars = bindings(query(f"""
+SELECT ?k ?v WHERE {{
+  {{ SELECT ("seconds" AS ?k) (SUM(?s) AS ?v)
+     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d <{KERNEL}tookSeconds> ?s }} }} }}
+  UNION
+  {{ SELECT ("worlds" AS ?k) (COUNT(?c) AS ?v)
+     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c <{KERNEL}wouldReach> ?u }} }} }}
+  UNION
+  {{ SELECT ("deepest" AS ?k) (MAX(?depth) AS ?v)
+     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c <{KERNEL}atDepth> ?depth }} }} }}
+  UNION
+  {{ SELECT ("blind" AS ?k) (COUNT(?d) AS ?v)
+     WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?d <{KERNEL}blind> true }} }} }}
+}}"""))
+    got = {r["k"]: r["v"] for r in scalars if r.get("v") not in (None, "")}
+
+    out["seconds"] = float(got.get("seconds", 0.0))
+    #  A world was BUILT wherever an urgency was reached — the one candidate kind that never
+    #  has one is the lever whose rule raised, which is counted as `unsimulated` above.
+    out["worlds"] = float(got.get("worlds", 0.0))
+    #  `atDepth` is the loop's own counter and starts at zero, so a candidate at depth 0 is a
+    #  ONE-step path. Reported as steps, because "depth 0" reads as "no planning happened" to
+    #  everyone except the person who wrote the loop, and a pass that weighed nothing reports
+    #  0 rather than 1 — no path was considered at all.
+    out["deepest"] = float(got["deepest"]) + 1.0 if "deepest" in got else 0.0
+    out["blind"] = float(got.get("blind", 0.0))
+    return out

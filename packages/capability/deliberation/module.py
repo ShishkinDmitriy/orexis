@@ -197,6 +197,18 @@ class ReflexModule(Module):
             outcome.replace(" ", "_"): float(verdicts.get(outcome, 0))
             for outcome in (search.SATISFIED, search.IMPROVED, search.NOTHING,
                             search.EXHAUSTED, search.NOT_BETTER, search.REFUSED)}))
+        #  WHAT IT COST, from the same pass and not a second one. `pursued()` above re-planned
+        #  every goal this agent holds, so these are that work's own figures — asking again to
+        #  measure would double the cost being measured, which is the one thing an observability
+        #  change must not do.
+        #
+        #  Three of these exist to make a RECORDED LIMIT visible rather than to confirm health.
+        #  `deepest` pinned at 1 is two of them at once: a rule's CONSTRUCTs run against the
+        #  store rather than the world, and the cycle signature is the goal's own value, so a
+        #  step that moves nothing else looks like somewhere already reached. `blind` above zero
+        #  is a package that never stated what its lever does. A number that shows a known
+        #  defect is worth more than one that says things are fine.
+        rows.append(("agent_planning", {}, trace.effort(self.agent.store.query_union)))
         return rows
 
     def propose_for(self, goal: Goal) -> str | None:
