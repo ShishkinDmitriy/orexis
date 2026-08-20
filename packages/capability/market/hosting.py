@@ -38,8 +38,8 @@ from agent.store import bindings
 from agent.world import participants
 
 from .beliefs import HOSTING_BLOCK
-from .terms import (ACTUATION, DELIBERATION, DESIRE, HOSTING, BID_MATCHING,
-                    INTENTION, OFFER)
+from .terms import (ACTUATION, DELIBERATION, HOSTING, BID_MATCHING,
+                    INTENTION, OFFER, OWING)
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -202,8 +202,8 @@ SELECT ?p WHERE {{
             # here, on the reading, exactly as the deferred round does. The two are the same
             # shape — a commitment held until the world can honour it — and it is worth
             # noticing that the duty case needed no new machinery, only a want to point at.
-            if (desire := self.agent.provider(DESIRE)) is not None:
-                for goal in desire.duties():
+            if (ledger := self.agent.provider(OWING)) is not None:
+                for goal in ledger.duties():
                     if goal.pursuable and goal.claim in self.held:
                         self._pursue(goal.claim,
                                      f"my vessel reports {value:.3f} — trying again")
@@ -402,9 +402,12 @@ SELECT ?p WHERE {{
         # claim that sourced it, whether or not the holder ever presents. What it buys
         # immediately is durability: `held` above dies with the process, and a restarted host
         # used to forget every claim it had issued.
-        if (desire := self.agent.provider(DESIRE)) is not None:
+        #  Asked for by OWING and no longer by DESIRE (#233). A host with no stake of its
+        #  own — the city, acting for a mains that states no ranges — used to reach this line,
+        #  find no desire module, and record nothing at all while issuing claims all day.
+        if (ledger := self.agent.provider(OWING)) is not None:
             for claim in result.claims:
-                desire.owe(claim.sub, claim.jti, expires_at=claim.exp)
+                ledger.owe(claim.sub, claim.jti, expires_at=claim.exp)
 
     def on_redeem(self, presenter: str, claim: dict) -> None:
         """A holder presented its claim: verify it is theirs, then actuate. Single-use.
@@ -454,9 +457,9 @@ SELECT ?p WHERE {{
             return
         # Asked for: the obligation steps from owed to demanded. What happens next is a
         # DECISION and not a handler any more — the whole of step 9. See below.
-        desire = self.agent.provider(DESIRE)
-        if desire is not None:
-            desire.demanded(jti)
+        ledger = self.agent.provider(OWING)
+        if ledger is not None:
+            ledger.demanded(jti)
         self._pursue(jti, f"{presenter} presented it")
 
     def _pursue(self, jti: str, why: str) -> None:
@@ -482,10 +485,10 @@ SELECT ?p WHERE {{
         claim = self.held.get(jti)
         if claim is None:
             return
-        desire = self.agent.provider(DESIRE)
+        ledger = self.agent.provider(OWING)
         deliberator = self.agent.provider(DELIBERATION)
-        if desire is not None and deliberator is not None:
-            goal = next((g for g in desire.duties() if g.claim == jti), None)
+        if ledger is not None and deliberator is not None:
+            goal = next((g for g in ledger.duties() if g.claim == jti), None)
             if goal is None:
                 return
             if deliberator.propose_for(goal) is None:
@@ -498,8 +501,8 @@ SELECT ?p WHERE {{
         del self.held[jti]
         self.log.info("serving claim %s (%.3f L) — %s", jti, claim.amount_l, why)
         self.redeem([claim])
-        if desire is not None:
-            desire.discharge(jti)
+        if ledger is not None:
+            ledger.discharge(jti)
 
     def _issue(self, market, auction_id: str, claim) -> None:
         """Publish one winner's claim — sealed to it, where the roster says it can open one.

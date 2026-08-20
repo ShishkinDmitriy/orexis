@@ -368,141 +368,6 @@ class DesireModule(Module):
         region = self.regions.get(observed_property)
         return (region.low, region.high) if region else None
 
-    # --- obligations: the desires this agent did not source (#218 remade) ----------------
-
-    def _uri_of(self, agent_id: str) -> str | None:
-        """The counterparty's node, from the one thing a claim carries: its id. Public wiring,
-        so a debt names an agent the world declares and never a string somebody sent me."""
-        rows = bindings(self.agent.store.query(
-            f'SELECT ?a WHERE {{ ?a a <http://example.org/agora#Agent> ; '
-            f'<http://example.org/agora#localId> "{agent_id}" }} LIMIT 1'))
-        return rows[0]["a"] if rows else None
-
-    def owe(self, to_agent_id: str, claim_jti: str,
-            expires_at: float | None = None) -> str | None:
-        """Record what the society just made this agent owe. Returns the obligation's IRI.
-
-        Raised when a claim is ISSUED, not when it is presented: the debt exists from the
-        moment the society allocated it, and the holder's silence afterwards is the holder's
-        business. Idempotent by the claim's own jti — single-use there, single-use here — so a
-        replay raises nothing new.
-
-        Written to a graph of this agent's own, so a restarting host still knows what it owes:
-        the issued claims used to live in a module dict that died with the process.
-        """
-        to_agent = self._uri_of(to_agent_id)
-        if to_agent is None:
-            # Whom I may owe is TOPOLOGY (the ACL shape): an obligation to an agent this
-            # world does not declare is not a debt, it is a forgery, and refusing here means
-            # no forged presentation can ever raise a want.
-            self.log.warning("asked to owe %s, whom this world does not declare — refused",
-                             to_agent_id)
-            return None
-        #  The claim's own deadline, kept as the debt's. Both timestamps are recorded because
-        #  urgency is the room BETWEEN them — how much of the window has run — and an agent
-        #  that stored only the expiry would have to assume when the window opened. A claim
-        #  with no expiry leaves the triple out, and the obligation is simply never hot: that
-        #  is a market with no redeem channel, where the dose went out on issue and there was
-        #  never a wait to be late for.
-        expiry = ""
-        if expires_at is not None:
-            expiry = (f' ;\n                <{KERNEL}expiresAt> '
-                      f'"{datetime.fromtimestamp(expires_at, timezone.utc).isoformat()}"'
-                      f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
-        uri = f"{KERNEL}obligation.{claim_jti}"
-        graph = obligations_graph(self.agent.id)
-        if bindings(self.agent.store.query(
-                f"SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} LIMIT 1")):
-            return None
-        self.agent.store.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
-            <{uri}> a <{KERNEL}Obligation> ;
-                <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
-                <{KERNEL}owedTo> <{to_agent}> ;
-                <{KERNEL}forClaim> "{claim_jti}" ;
-                <{KERNEL}presented> false ;
-                <{KERNEL}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
-        self.log.info("owed to %s for claim %s", to_agent_id, claim_jti)
-        return uri
-
-    def demanded(self, claim_jti: str) -> None:
-        """The holder presented: an obligation nobody had asked for is now asked for.
-
-        The step this capability's `presented` flag exists for — an unpresented claim
-        requires nothing of me, a presented one requires acting now — and the reason urgency
-        here is a step rather than a curve until claims may be held over time.
-        """
-        graph = obligations_graph(self.agent.id)
-        self.agent.store.update(f"""
-            DELETE {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> ?was }} }}
-            INSERT {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> true }} }}
-            WHERE  {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" ;
-                                         <{KERNEL}presented> ?was }} }}""")
-
-    def discharge(self, claim_jti: str) -> None:
-        """The dose is out: the debt is paid, and says when. Never deleted — a debt paid and
-        a debt forgotten must not look alike, which is the same reason a resolved intention
-        stays in its ledger."""
-        graph = obligations_graph(self.agent.id)
-        self.agent.store.update(f"""INSERT {{ GRAPH <{graph}> {{
-                ?o <{KERNEL}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-            WHERE {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" .
-                     FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }}""")
-
-    def owed(self, presented_only: bool = False) -> list[dict]:
-        """What still stands, newest first — what an agent owes, askable by the sovereign."""
-        extra = f'?o <{KERNEL}presented> true .' if presented_only else ""
-        return bindings(self.agent.store.query(f"""
-SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
-  ?o a <{KERNEL}Obligation> ; <{KERNEL}owedTo> ?to ; <{KERNEL}forClaim> ?jti ;
-     <{KERNEL}presented> ?presented ; <{KERNEL}owedAt> ?at .
-  OPTIONAL {{ ?o <{KERNEL}expiresAt> ?expires }}
-  {extra}
-  FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
-
-    def duties(self, now: datetime | None = None) -> list[Goal]:
-        """What this agent owes, as goals — hottest first, and hot means CLOSE TO EXPIRY.
-
-        A stake's urgency is distance scaled by the survival envelope; a duty has no envelope,
-        so its room is time: the fraction of the redeem window that has run. At issue nothing
-        has gone wrong and the debt is cool; at the deadline it is maximal. The sovereign chose
-        this over the two alternatives the obligation record names as the whole risk — a duty
-        pinned at 1.0 is the honoured mode returning under another name, and a duty with no heat
-        is an agent that defects while its ledger looks tidy.
-
-        A debt whose claim named no deadline stays at zero for ever, and that is not a bug: the
-        market that issued it has no redeem channel, so the dose went out when it was won and
-        nobody is waiting. `pursuable` is the OTHER question — whether the holder has asked, and
-        whether the window is still open — and it is deliberately not folded into urgency,
-        because a debt this agent can see expiring while nobody has presented is worth seeing.
-        """
-        return [g for g in self.goals(now) if g.is_duty]
-
-    def goals(self, now: datetime | None = None) -> list[Goal]:
-        """Everything this agent wants, hottest first, whoever sourced it.
-
-        The one list a deliberator ranges over, and the one a sovereign can ask for: this runs
-        `goals.rq`, the text shipped beside `gap.rq`, so what an agent acts on and what it can
-        be interrogated about are the same sentence. Stakes and duties in one order is the whole
-        claim of the obligation record — urgency is the common currency, so a litre owed and a
-        pot drying rank against each other instead of running down two paths that never meet.
-        """
-        return goals_of(self.agent.store.query, self.me.uri, self.agent.id, now)
-
-    def pursued(self, now: datetime | None = None) -> list[tuple[Goal, str | None]]:
-        """My goals, each with the move my deliberator proposes for it — or None.
-
-        The column a ranking is misleading without, and the reason it is computed by ASKING
-        rather than in the query: whether a lever answers is the menu's business, and a second
-        copy of the menu inside a desire query would be free to disagree with the one the agent
-        acts on. Live on the bench this is the difference between two identical-looking rows —
-        a fern at 0.91 and a fern at 0.30 are both `unmet` at urgency 1.00, and only one of them
-        is anybody's to fix, because no lever in this society lowers moisture.
-        """
-        deliberator = self.agent.provider(DELIBERATION)
-        if deliberator is None:
-            return [(goal, None) for goal in self.goals(now)]
-        return [(goal, deliberator.propose_for(goal)) for goal in self.goals(now)]
-
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
         """How close this puts me to trouble. Sensing turns it into a cadence.
@@ -571,6 +436,18 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
             out["worst_gap"] = round(max(abs(g.gap) for g in current.values()), 3)
         return out
 
+    def wants(self, now: datetime | None = None) -> list[Goal]:
+        """MY contribution to what this agent is pursuing: its stakes, and no duties.
+
+        The choir hook for goals (`agent.goals()` merges every module's). Split from the debts
+        when the ledger became its own capability: an agent may hold stakes and owe nothing, owe
+        and hold no stake — `world/simulation`'s city is exactly that — or both, and none of
+        those is the others' business. `goals_of` reads the whole shipped query and each module
+        takes its own kind, so there is still one text and one definition.
+        """
+        return [g for g in goals_of(self.agent.store.query, self.me.uri, self.agent.id, now)
+                if not g.is_duty]
+
     def series(self) -> list[tuple[str, dict, dict]]:
         """WHERE the want sits, not merely that it exists (#61's argument, extended from the
         revisable picks to the deduced regions) — one row per property, the property as a TAG
@@ -588,30 +465,4 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
                 fields["aim"] = aim
             rows.append(("agent_desire", {"property": local}, fields))
 
-        #  What the ranking says, so a society can be READ rather than tailed. Three counts and
-        #  a maximum, and the split is the point: before this, a fern drowning at 0.91 and a
-        #  fern dying at 0.30 both graphed as one unmet want at urgency 1.00, and only one of
-        #  them was anybody's to fix. `unactionable` is the row an operator should look at last
-        #  and a model should never propose against — no lever in this society lowers moisture.
-        #
-        #  Duties are here for the first time. A host straining under debts it cannot serve used
-        #  to look exactly like a calm one on every panel; now `owed` rises and `hottest_duty`
-        #  approaches its deadline, which is the shape of a society failing at its promises.
-        pursued = self.pursued()
-        stakes = [(g, move) for g, move in pursued if not g.is_duty]
-        duties = [(g, move) for g, move in pursued if g.is_duty]
-        #  Both counts are about WANTING something, which is `state` and not urgency: a stake
-        #  is unmet when its reading sits outside the region, and a content agent proposes no
-        #  move for the same reason it needs none. Counting "no move proposed" alone made the
-        #  supplier — barrel at 1.97 inside 1-5, urgency 0.003 — report one unmet and one
-        #  unactionable goal, which is a calm society graphing as a stuck one.
-        wanting = [(g, move) for g, move in pursued if not g.is_met]
-        rows.append(("agent_goals", {}, {
-            "goals": float(len(pursued)),
-            "unmet": float(sum(1 for g, _ in stakes if not g.is_met)),
-            "unactionable": float(sum(1 for g, move in wanting if move is None)),
-            "owed": float(len(duties)),
-            "hottest": max((g.urgency for g, _ in pursued), default=0.0),
-            "hottest_duty": max((g.urgency for g, _ in duties), default=0.0),
-        }))
         return rows

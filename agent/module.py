@@ -16,6 +16,10 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from .goal import Goal
+
 import json
 import logging
 import threading
@@ -118,6 +122,18 @@ class Module:
         agent's desire while both of them sleep.
         """
         return None
+
+    def wants(self, now: "datetime | None" = None) -> list["Goal"]:
+        """What this module contributes to what the agent is pursuing. Empty by default.
+
+        A choir hook, like `annotate` and `series`: goals are the AGENT's, assembled from
+        whichever of its modules hold wants, because no single module can see all of them any
+        more. Desire contributes stakes and owing contributes debts, and an agent may have
+        either without the other — a plant wants for itself and owes nobody, a pure seller owes
+        and wants nothing for itself. Ranking them against each other is `agent.goals()`, which
+        is where a currency common to both belongs.
+        """
+        return []
 
     def notices(self) -> list[tuple[str, str]]:
         """(subject, property) pairs this module notices are unknown or too stale to act on.

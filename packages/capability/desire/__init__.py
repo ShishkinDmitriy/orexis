@@ -10,10 +10,15 @@ of `PROVIDES`; no other package moves.
 
 from .module import (DesireModule, Gap, Region, aims_of, gaps_of, goals_of,
                      regions_of)
-from .terms import CONSULTING, DEDUCING, DESIRE
+from .owing import OwingModule
+from .terms import CONSULTING, DEDUCING, DESIRE, OWING
 
-PROVIDES = (DesireModule,)
+#  Two capabilities, two modules, and an agent may compose either or both: a plant
+#  holds stakes and owes nothing, the city owes and holds no stake, the supplier does
+#  both. They are separate families, so `agent.provider` is never ambiguous.
+PROVIDES = (DesireModule, OwingModule)
 
-__all__ = ["PROVIDES", "DesireModule", "Gap", "Region", "aims_of", "gaps_of",
+__all__ = ["PROVIDES", "DesireModule", "OwingModule", "Gap", "Region", "aims_of",
+           "gaps_of",
            "goals_of", "regions_of",
-           "DESIRE", "DEDUCING", "CONSULTING"]
+           "DESIRE", "DEDUCING", "CONSULTING", "OWING"]

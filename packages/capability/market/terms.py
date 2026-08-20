@@ -61,6 +61,10 @@ ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if thi
 KERNEL = "http://example.org/agora#"
 DESIRE_NS = "http://example.org/agora/desire#"
 DESIRE = DESIRE_NS + "DesireCapability"  # whoever holds the ends — the aim a bid prices toward
+#  Whoever keeps the debts. Its OWN family, because owing is granted by holding a lever
+#  others may demand and not by having a stake — a host with no interest of its own still
+#  owes what its market allocated (#233).
+OWING = DESIRE_NS + "Owing"
 INTENTION_NS = "http://example.org/agora/intention#"
 INTENTION = INTENTION_NS + "IntentionCapability"  # whoever keeps commitments, if anything does
 DELIBERATION_NS = "http://example.org/agora/deliberation#"
