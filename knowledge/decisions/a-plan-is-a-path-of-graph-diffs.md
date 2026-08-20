@@ -328,6 +328,40 @@ sensing action ends a plan. Look, then decide again with a reading in hand.
 That also disposes of a nonsense the search would otherwise produce — "look, then water" scored
 as a two-step plan whose second step was chosen against a value nobody had yet seen.
 
+### An invented number does not give a wrong answer — it gives a convincing one
+
+Worth keeping from building the planner, because it nearly shipped as a discovery. A first draft
+asked the actuator nothing and assumed half a litre for a dose. Every simulated dose then
+overshot, and the planner duly reported a rig too coarse to settle inside its region — which is
+#244's exact signature, arriving as evidence, with numbers attached. The rig was fine. The
+invented figure had manufactured a finding.
+
+That is the sharper form of the rule this project already keeps ("do not invent constants"): a
+made-up number does not produce an obviously wrong answer that someone catches. It produces a
+plausible one, in the shape of a defect the team is already looking for, and the more coherent
+the surrounding design the more convincing the artefact. The dose is now asked of the actuator
+that would deliver it, which is the same single-source argument as the delta and the timing,
+reaching the third of three places it could have been faked.
+
+### The cheap check and the expensive one are different questions
+
+Measured on the bench before any of the planner was written: validating ONE goal shape costs
+0.083s, and validating everything the packages ship costs 1.73s — twenty times more. Checking
+every candidate against the whole rulebook would make a depth-2 pass take twenty-two seconds to
+answer a question about rules no effect could have broken.
+
+So the two are asked differently, and the split follows from what each is FOR. The goal shape
+is the search — asked of every candidate, because that is what choosing means. Legality is a
+guarantee about what an agent COMMITS to, so it is asked once, of the world the winning plan
+would actually reach. An agent that never commits to an illegitimate world is the property that
+was wanted; validating the roads not taken buys nothing and costs everything.
+
+The seam that leaves: a winner refused for illegality yields NO plan, rather than falling back to
+the best legal candidate. That is the safe direction and it is logged, but it means an agent that
+could have acted legally does nothing. Nothing shipped can trigger it — no shape here refuses a
+world a dose would reach — and the day one can, the fix is to ask the next candidate rather than
+to ask them all.
+
 ### The test of whether this is a generalisation
 
 Two hardcoded things must DISAPPEAR, not survive beside it:
