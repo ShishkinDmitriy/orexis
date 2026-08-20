@@ -151,27 +151,8 @@ class ActuationModule(Module):
         deliberator = self.agent.provider(_DELIBERATION)
         if deliberator is None or deliberator.propose(observed_property, value) != _ACTUATE:
             return
-        desire = self.agent.provider(_DESIRE)
-        aim = desire.aim(observed_property) if desire is not None else None
-        conversion = self._conversion_for(observed_property)
-        if aim is None or conversion is None:
-            return
-        litres = round((aim - value) * conversion, 3)
-        stock = self._stock_of_my_source()
-        if stock is not None:
-            # The witness meters rung 2 exactly as it meters the host's rounds: pour at most
-            # what the vessel holds, and refuse when it is spent. The other 584-dose finding:
-            # self-claims never meet clearing's allocation ledger, so without a witness the
-            # butt's capacityL bounded nothing — a source with no witness still doses blind,
-            # the mains precedent, but a FINITE bottle deserves a level sensor and the world
-            # that has one is now honest about running dry.
-            if stock <= EPS:
-                self.log.warning("the vessel is spent (%.3f L) — no self-dose; wanting "
-                                 "continues, the means is gone until something refills it",
-                                 stock)
-                return
-            litres = min(litres, round(stock, 3))
-        if litres <= EPS:
+        litres = self.dose_for(observed_property, value)
+        if litres is None or litres <= EPS:
             return
         keeper = self.agent.provider(_INTENTION)
         if keeper is not None:
@@ -183,7 +164,7 @@ class ActuationModule(Module):
                 return  # the same impulse (the 584-dose morning: a satisfied Actuate is
                         # still a RECENT one, and patience reads the ledger, not the standing)
             adopted = keeper.adopt(_ACTUATE, observed_property,
-                                   f"self-dose {litres}L toward the aim of {aim} — lever "
+                                   f"self-dose {litres}L toward my aim — lever "
                                    f"and source both mine, no market to ask")
             if adopted is None:
                 return  # standing within patience — the amortisation at work
@@ -201,6 +182,41 @@ class ActuationModule(Module):
                               lands_after_s=effects.lands_after(
                                   self.agent.store, _ACTUATE, me=f"<{self.me.uri}>",
                                   subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
+
+    def dose_for(self, observed_property: str, value: float) -> float | None:
+        """How much I would pour, given where this property stands — the size of ONE act.
+
+        Public, and asked by the planner as well as taken by the actor, because a planner that
+        computed its own dose would be simulating a different act from the one that would
+        actually happen. It would predict a world nobody was going to reach, and be wrong in
+        the direction that looks like the device lying: the same single-source argument #238
+        made for the magnitude of an effect and #247 for its timing, arriving a third time at
+        the quantity itself.
+
+        None where the agent cannot size a dose at all — no aim to steer toward, no stated
+        conversion, or a vessel it has watched run dry.
+        """
+        desire = self.agent.provider(_DESIRE)
+        aim = desire.aim(observed_property) if desire is not None else None
+        conversion = self._conversion_for(observed_property)
+        if aim is None or conversion is None:
+            return None
+        litres = round((aim - value) * conversion, 3)
+        stock = self._stock_of_my_source()
+        if stock is not None:
+            # The witness meters rung 2 exactly as it meters the host's rounds: pour at most
+            # what the vessel holds, and refuse when it is spent. The other 584-dose finding:
+            # self-claims never meet clearing's allocation ledger, so without a witness the
+            # butt's capacityL bounded nothing — a source with no witness still doses blind,
+            # the mains precedent, but a FINITE bottle deserves a level sensor and the world
+            # that has one is now honest about running dry.
+            if stock <= EPS:
+                self.log.warning("the vessel is spent (%.3f L) — no self-dose; wanting "
+                                 "continues, the means is gone until something refills it",
+                                 stock)
+                return None
+            litres = min(litres, round(stock, 3))
+        return litres
 
     def _stock_of_my_source(self) -> float | None:
         """My freshest reading of the source my lever draws from — None when I am blind.

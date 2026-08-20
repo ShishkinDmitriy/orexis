@@ -28,6 +28,8 @@ from agent.goal import Goal
 from agent.module import Module
 from agent.store import bindings
 
+from . import search
+from .search import Planner
 from .terms import PLANNING, REFLEX
 
 # What this package asks OF others, by family — their namespaces, never their Python.
@@ -186,6 +188,19 @@ class ReflexModule(Module):
         if goal.state in ("unmeasured", "stale"):
             return OBSERVE
         if not goal.is_duty:
+            #  SIMULATE FIRST, where the levers say what they do. Asking whether a lever points
+            #  the right way is not the same as asking whether taking it leaves this agent
+            #  better off, and only the second question refuses to water a plant that is
+            #  already too wet — the reflex's direction test says Raises, the gap says below
+            #  the aim, and both are true of a drowning plant whose aim sits above it.
+            #
+            #  Falls back to the direction test whenever the search cannot answer: a means with
+            #  no effect rule cannot be simulated, and most of them have none. So this changes
+            #  behaviour for exactly the agents whose packages have said what their levers do,
+            #  and changes nothing for the rest — which is how a widening should arrive.
+            answered, move = self._simulated(goal)
+            if answered:
+                return move
             return self.propose(goal.observed_property, goal.value)
         #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
         #  that doses early spends the water where nothing is looking (#132) — so a standing
@@ -196,6 +211,39 @@ class ReflexModule(Module):
             if not row.is_chosen and row.for_agent == goal.owed_to:
                 return row.means
         return None
+
+    def _simulated(self, goal: Goal) -> tuple[bool, str | None]:
+        """`(answered, move)` — what the search says, and whether it said anything at all.
+
+        A PAIR because there are three answers and only two would fit in one: take this move,
+        take none, and "I cannot decide this by simulation". The third must not collapse into
+        the second, or a lever whose package never stated its effect would silently become a
+        lever nobody pulls — the search would decline for want of a rule and the agent would
+        read it as a decision not to act.
+        """
+        desire = self.agent.provider(_DESIRE)
+        plan = Planner(self.agent, desire, self.me).plan(goal)
+        if plan.outcome == search.NOTHING:
+            return False, None               # nothing to simulate; let the reflex answer
+        if plan.outcome == search.SATISFIED and not plan.steps:
+            return False, None               # already met; the reflex will also propose nothing
+        if plan.steps:
+            self.log.info("%s: %s (urgency %.2f -> %.2f)",
+                          goal.observed_property.rsplit("#", 1)[-1] if goal.observed_property
+                          else "a duty", plan.outcome, plan.urgency_now, plan.urgency_after)
+            return True, plan.first
+        #  A SEARCH OVER PART OF THE MENU CANNOT SAY "NOTHING HELPS". Some lever had no stated
+        #  effect and was passed over, so the one that works may be the one nobody simulated —
+        #  fern buys its water, Acquire has no rule, and a search that saw only Observe would
+        #  have found that looking does not wet soil and stopped the plant buying. Defer.
+        if plan.partial:
+            return False, None
+        #  A world reachable and not worth reaching. THIS is the decision the reflex could not
+        #  make, and returning None here is the whole point rather than a failure to answer.
+        self.log.info("%s: %s — no move improves on doing nothing",
+                      goal.observed_property.rsplit("#", 1)[-1] if goal.observed_property
+                      else "a duty", plan.outcome)
+        return True, None
 
     def propose(self, observed_property: str, value: float | None) -> str | None:
         """Given where this property stands, the next move — or None, which is a decision.
