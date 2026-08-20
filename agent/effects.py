@@ -25,6 +25,9 @@ from __future__ import annotations
 
 import logging
 
+import pyoxigraph as ox
+import rdflib
+
 from .ontology import EFFECTS_GRAPH
 from .store import bindings
 
@@ -74,6 +77,69 @@ def apply(store, means: str, **bind) -> tuple[list, list]:
         return [], []
     return (_run(store, rule.get("construct"), bind),
             _run(store, rule.get("retracts"), bind))
+
+
+def world_after(base, store, means: str, /, **bind):
+    """The world as it WOULD be, had this means been taken: `(base − retracted) + added`.
+
+    The three are POSITIONAL-ONLY, and that is load-bearing rather than tidy: everything after
+    them is a binding for the rule, and a rule is free to have a placeholder called `$base` —
+    Actuate's does, since #247 made the reading it predicts from a parameter. Without the `/`
+    the caller's world and the rule's baseline collide on the name, which Python reports as
+    "multiple values for argument" and which would otherwise have been fixed by renaming one of
+    them and waiting for the next collision.
+
+    A new graph every time and nothing written anywhere, which is what makes a hypothesis safe
+    to hold: the store never learns that anyone imagined this. Possible worlds are computed and
+    dropped for the reason affordance rows are never stored — what is kept is premises, and a
+    world is a conclusion from beliefs plus an effect, so keeping one would be keeping something
+    that can outlive what it was concluded from.
+
+    Retraction before addition, and the order is not arbitrary. The sensed graph upserts one
+    observation node per (subject, property), so an effect that predicts a reading retracts the
+    node it replaces and then adds its own — done the other way round, the addition would be
+    removed by the retraction that was meant to precede it, and the possible world would come
+    back holding neither reading.
+    """
+    added, retracted = apply(store, means, **bind)
+    world = rdflib.Graph()
+    for triple in base:
+        world.add(triple)
+    for triple in retracted:
+        world.remove(_triple(triple))
+    for triple in added:
+        world.add(_triple(triple))
+    return world
+
+
+def _triple(t):
+    """One of the store's triples as the three terms rdflib wants.
+
+    Term by term, and NOT through `str()`. A pyoxigraph term stringifies to its N-Triples form
+    — `<http://…>` with the angle brackets, a literal with its quotes and datatype — so a
+    conversion that went through text would hand rdflib a URIRef whose value included the
+    brackets. It would compare unequal to the same IRI everywhere else, silently: no exception,
+    no empty result, just a possible world whose triples never match the ones they replace.
+    The same trap caught the effect reader itself in #238, from the other direction.
+    """
+    return tuple(_term(x) for x in (t[0], t[1], t[2]))
+
+
+def _term(x):
+    """A pyoxigraph term as an rdflib one, keeping what makes it that term.
+
+    A literal's datatype and language are not decoration: a predicted reading compared against
+    a shape's `sh:minExclusive` is a decimal against a decimal, and the same digits typed as a
+    string would simply fail to match — which reads exactly like a plan that does not work.
+    """
+    if isinstance(x, ox.NamedNode):
+        return rdflib.URIRef(x.value)
+    if isinstance(x, ox.BlankNode):
+        return rdflib.BNode(x.value)
+    if isinstance(x, ox.Literal):
+        return rdflib.Literal(x.value, lang=x.language,
+                              datatype=rdflib.URIRef(x.datatype.value) if x.datatype else None)
+    return x
 
 
 def lands_after(store, means: str, **bind) -> float | None:

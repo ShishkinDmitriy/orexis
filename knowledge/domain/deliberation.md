@@ -30,6 +30,40 @@ epistemic failure it is — `unmeasured` or `stale` — so the question is now a
 means, both are answered by the same move, and the bare-value door steers only. One sentinel
 answering two questions is a sentinel that eventually answers the wrong one.
 
+# Deciding by simulating it
+
+`propose_for` no longer answers only from the gap's sign. Where a lever's package has said what
+that lever DOES, the deliberator builds the world taking it would make — `(beliefs − retracts) +
+adds`, written nowhere — scores that world by the same `Region.urgency` every consumer reads, and
+takes the move only if the result beats doing nothing.
+
+The difference is not academic. A plant sitting ABOVE its region passes every test the reflex
+applies: the pump raises moisture, the aim is above the reading, direction matches sign. Both are
+true of a drowning plant, which is how a society floods one while every module behaves as written.
+Simulation reaches the opposite answer without knowing anything about wetness — it builds the
+world the dose would make, finds it no better, and declines. *Not better* is a decision.
+
+Three things bound it, and each exists because building it found the failure:
+
+- **A search that could not see every lever may not conclude that nothing helps.** Most means
+  have no effect rule, and a plant in `world/simulation` BUYS its water — so a search there sees
+  Observe alone, correctly finds that looking does not wet soil, and would have reported that
+  nothing does. The plant would have stopped bidding. A plan that passed over any lever is
+  marked partial, and a partial plan defers to the reflex.
+- **The dose is asked of the actuator, never computed here.** `dose_for` is the sizing the actor
+  would use; a planner that sized its own would simulate an act nobody was going to take. The
+  first draft invented half a litre and manufactured a finding — every dose overshot, and the
+  planner reported a rig too coarse to settle. The rig was fine.
+- **A negative dose is not an act.** Sizing is `(aim − value) × conversion`, so a property above
+  its aim asks for a negative pour, and the effect rule politely predicts the plant arriving back
+  at its aim. The actor has always refused this; the refusal has to live on both sides.
+
+**Legality is checked once, on the winner.** Validating every candidate against everything the
+packages ship costs 1.73s against the goal shape's 0.083s — twenty times more, for an answer
+about rules no effect could have broken — and a depth-2 pass would take twenty-two seconds
+instead of under two. What must be true is that the agent never COMMITS to reaching a world the
+society refuses, so the expensive question is asked of the world it actually intends.
+
 # The three members
 
 - **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;
