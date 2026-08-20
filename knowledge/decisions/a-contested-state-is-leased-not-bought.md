@@ -79,23 +79,45 @@ neither entitled — comfort against ventilation, not comfort against safety.
 This is the strongest argument the severity axis has had. It is not bookkeeping about how loud a
 report should be. **It decides what may be bought.**
 
-## Temporal wants live on the condition, not on the agent
+## Temporal wants: NOT on `ssn-system:inCondition`
 
-"Open by day, closed at night" needs a want that knows the time, and the home for it is
-`ssn-system:inCondition` — which this project already writes and uses degenerately, as a wrapper
-around a property and two numbers. SSN's conditions exist to say *this holds under these
-circumstances*, so a range that applies between 06:00 and 22:00 is native modelling rather than
-an extension. The guarantee is preserved exactly: the SUBJECT states when it needs what, and no
-agent authors its own ends.
+A first draft of this record said the home for "open by day, closed at night" was
+`ssn-system:inCondition`. The sovereign refused it, and was right twice over.
 
-The freshness want already proves the runtime half works — its horizon is computed at validation
-time through `sh:sparql`, because SHACL core can only compare against a literal written into the
-shape.
+`ssn-system` is the System Capabilities module: `inCondition` exists to say *this device has this
+accuracy in these ambient conditions*. Hardware, qualified by environment. This project already
+stretches it once by hanging `hasOperatingRange` on a PLANT rather than on a system; hanging time
+on it as well would be stretching a hardware vocabulary a second time, for a purpose it was never
+about.
 
-**But the world's legitimacy must stay time-independent even where a state's is not.** If
+And it answers the wrong question. A time-conditioned range makes ONE want evaluate differently.
+What was being asked is which wants EXIST at all — one root mandate, *keep everything good*,
+decomposed into sub-desires whose existence depends on circumstances, with stale ones ceasing to
+apply. That is a lifecycle, not a comparison.
+
+**The asymmetry it exposes is the real finding.** A menu row exists exactly while its premise
+holds: cut the pipe and the row is gone, recomputed per ask, and nothing had to notice. A desire
+is derived once at genesis into `graph/constraint` and sits there until the next boot. Two
+conclusions drawn from premises, treated completely differently — so a want whose premise
+includes *now* is frozen at the moment the agent started.
+
+**And the safe formulation matters more than the mechanism.** "A desire becomes outdated" is one
+step from "an agent decides it no longer wants something", which is the self-satisfaction loophole
+wearing a clock: an agent that can retire its own wants can be satisfied by attrition. So desires
+are never RETRACTED, only RECOMPUTED. The derivation is a function of premises; when the premises
+change, re-running yields a different set, and a want that no longer appears was not dropped by
+anyone — it is no longer implied. Nothing decides; the world says.
+
+Two wants already disappear this way, which is the precedent to build on rather than a new idea:
+a duty lapses when its claim's window closes, and a freshness want exists only where an instrument
+does. A seasonal or diurnal want is the same shape with a clock in the premise instead of a claim
+or a sensor. What is missing is only that the region derivation runs once and never again — see
+[#263](https://github.com/ShishkinDmitriy/agora/issues/263).
+
+**And the world's legitimacy must stay time-independent even where a state's is not.** If
 `agora-validate` consulted the clock, a world that passes at noon would fail at midnight and the
-gate would stop being a gate. So validation holds a world to EVERY condition it states, and only
-the runtime check asks what time it is.
+gate would stop being a gate. Validation holds a world to EVERY circumstance it states; only the
+runtime asks what time it is.
 
 ## Contradiction, in its three kinds
 
