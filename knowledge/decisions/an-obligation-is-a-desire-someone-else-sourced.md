@@ -89,13 +89,50 @@ reason narrowed usefully — not "a duty is nobody's to decide" but "this member
 property toward an aim, and a duty is a graph-shaped goal it cannot express". That filter
 lifts when a member can pursue a diff rather than a distance.
 
+## What driving acts changed (step 9)
+
+The motivation layer had been data for a while; this is where it started moving hardware, and
+three things surfaced that the design had not.
+
+- **The deadline did not exist.** The seam below proposed the claim's redeem window as an
+  obligation's source of urgency, and the window was not a fact anybody held: a `Claim` carried
+  who, how much, what it cost and an anti-replay id, and nothing about how long it was good for.
+  So the choice was to invent a proxy or to add the missing data, and the sovereign chose the
+  data. `market:redeemWindowS` is stated by the SOURCE — a venue is keyed by its source, so one
+  owner offering two goods can hold each for a different time — and carried onto the derived
+  venue, where the host reads it and stamps `exp` on every claim of the round.
+
+  The first cut required it in the derivation, and a test caught what that cost: with the window
+  in the rule's WHERE, a source stating `market:matchesBy` and nothing else derived NO VENUE —
+  so consent had quietly come to cost two triples, against a claim this project makes on purpose
+  and guards elsewhere. The venue now arises on consent alone and the shape refuses it for
+  lacking a window, which is the difference between a world that is refused and a world that is
+  silently smaller than its author thought.
+- **A deadline makes expiry expressible, and expiry is a third state.** A claim presented after
+  its window is refused: the venue stops holding the paper and the debt stays on the books,
+  undischarged, with a deadline in the past. Paid, never-demanded, and ran-out are now three
+  distinguishable things, where the first draft had two.
+- **The honoured row found a second job.** It was disclosure — what others may demand of me —
+  and it is now also how a duty finds its LEVER: an obligation names its counterparty, and the
+  row honoured for exactly that agent is the means. The mode survived by being useful twice,
+  which is the better argument for keeping a distinction than the one it was introduced with.
+
+What did NOT change is the guarantee. Redemption still opens against a claim the pump's firmware
+verifies, clearing still validated the trade, the ACL still bounds who may speak. What moved is
+whether the agent *tries* — so the defection worry is answered by evidence: a duty nothing can
+serve stays owed, stays hot, and says so in the log and the ledger, where before it was a claim
+silently dropped from a dict.
+
 # Seams left open
 
-- **How an obligation's urgency is computed.** A stake's urgency comes from the envelope; an
-  obligation's has no envelope, and the honest candidate is its DEADLINE — the claim's own
-  redeem window, rising as it closes, which makes lateness hot rather than making obligations
-  permanently maximal. Getting this wrong in either direction is the whole risk: always-hottest
-  is the mode by another name, never-hot is a defecting agent.
+- **How an obligation's urgency is computed.** ANSWERED, by the sovereign, and by adding the
+  fact rather than working around its absence: it is the fraction of the claim's redeem window
+  that has run — cool at issue, maximal at the deadline, clamped after. Both timestamps are kept
+  on the obligation because the urgency is the room BETWEEN them; an agent holding only the
+  expiry would have to assume when the window opened. The two failures this shape was chosen
+  against are recorded because they remain the risk if anyone re-tunes it: a duty pinned at 1.0
+  is the honoured mode returning under another name, since it outranks a plant that is dying,
+  and a duty with no heat is an agent that defects while its ledger looks tidy.
 - **Where the override order lives.** A belief (the agent's character, revisable) or a world
   fact (the society's contract, ratified)? The mandate pattern says the sovereign should bound
   it and the agent pick inside — which would make "how social am I" a revisable belief inside a
@@ -104,6 +141,8 @@ lifts when a member can pursue a diff rather than a distance.
   desires here are states — so the honest form is the state the act brings about (this claim
   redeemed, that pot dosed), with the act remaining the affordance. Getting this wrong would
   put an action in the desire and lose the layer the whole architecture rests on.
-- **What becomes of the honoured row.** Disclosure survives the reframe: a lever that serves
-  others is still worth showing the sovereign and a model. What does not survive is the mode as
-  a FILTER on deliberation, since an obligation is meant to reach it.
+- **What becomes of the honoured row.** ANSWERED: disclosure survived, the filter did not, and
+  the row gained a job nobody had planned for it — it is how a duty finds the lever that serves
+  its counterparty. The reflex still passes over honoured rows when it is steering a PROPERTY,
+  which is not a filter but an inability: a duty is not a distance, and that member cannot
+  express one.

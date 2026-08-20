@@ -42,9 +42,14 @@ class AuctionResult:
 
 
 def run_auction(offer: Offer, bids: Iterable[Bid], state: MarketState, auction_id: str,
-              match: Match) -> AuctionResult:
-    """Host proposes the match; clearing validates; claims issue only on a green light."""
+              match: Match, redeem_window_s: float | None = None) -> AuctionResult:
+    """Host proposes the match; clearing validates; claims issue only on a green light.
+
+    The window is the VENUE's and arrives from the host, which is the only party that has read
+    the market node. Optional here so a caller with no venue — every matcher test — still runs
+    the path it is testing rather than being made to invent a deadline.
+    """
     trade = match(offer, bids)
     result = validate(trade, state)
-    claims = issue_claims(trade, auction_id) if result.ok else []
+    claims = issue_claims(trade, auction_id, redeem_window_s) if result.ok else []
     return AuctionResult(trade=trade, validation=result, claims=claims)

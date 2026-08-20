@@ -222,7 +222,12 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
    the sovereign turned it over within a day — see
    [a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md), which supersedes that design and
    keeps its diagnosis.
-9. **Obligations drive acts** — deliberation takes goals rather than a property and a value.
+9. **Obligations drive acts** — DONE. Deliberation takes goals rather than a property and a
+   value: `propose_for(goal)` answers for a stake and a duty alike, and a host serves a
+   presented claim because its deliberator proposed the move, not because a handler fired. What
+   it needed first was a DEADLINE — a claim had none, so an obligation had no honest source of
+   urgency — and the sovereign chose to add the fact rather than proxy it. A duty nothing can
+   serve now stays owed, stays hot, and is tried again when the vessel reports.
 
 # Seams left open
 

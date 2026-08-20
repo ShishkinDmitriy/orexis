@@ -67,20 +67,34 @@ WHERE  {
 # source's id, on the channel precedent — a derived instance as a function of a given string,
 # so any package recomputing it lands on the same node. The topics are exactly the strings the
 # hand-authored venue used to state, so nothing downstream moves: only who-put-the-fact-there
-# changes. A world may still author a venue by hand where the wiring implies none; this adds,
+# changes.
+#
+# The redeem window is the one figure that travels rather than being minted: it is a POLICY and
+# no id implies it, so the source states how long its good is held and the venue carries it.
+# On the source and not the owner because a venue is keyed by its source — one owner offering
+# two goods may hold each for a different time, and that stays sayable without a new node.
+#
+# OPTIONAL, and that is a correction rather than laxity. Requiring it here made the venue not
+# ARISE without one, which quietly made opening shop cost two triples — and the one authored
+# triple being `market:matchesBy` is a claim this project makes on purpose and has a test for
+# (a-market-arises-where-want-meets-supply). So consent still opens the shop, the venue is
+# derived either way, and a venue with no window fails its shape LOUDLY at validation instead of
+# vanishing from a world that thought it had a market. A world may still author a venue by hand where the wiring implies none; this adds,
 # never forbids.
 INSERT { GRAPH $derived {
     ?market a market:Market ;
         ag:localId ?marketId ;
         market:marketFor ?source ;
         market:offerTopic ?offer ; market:bidTopic ?bid ;
-        market:claimTopic ?claim ; market:redeemTopic ?redeem .
+        market:claimTopic ?claim ; market:redeemTopic ?redeem ;
+        market:redeemWindowS ?window .
     ?owner market:hosts ?market ;
            ag:hasCapability market:Hosting ;
            ag:hasCapability ?matching } }
 $given
 WHERE  {
     ?source market:offeredBy ?owner ; ag:localId ?srcId .
+    OPTIONAL { ?source market:redeemWindowS ?window }
     ?owner market:matchesBy ?matching .
     ?matching a market:BidMatchingCapability .
     BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?srcId))) AS ?market)

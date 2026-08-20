@@ -24,6 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from agent import loader
+from agent.goal import Goal
 from agent.module import Module
 from agent.store import bindings
 
@@ -87,6 +88,11 @@ class Affordance:
     via: str
     direction: str | None = None
     mode: str = _CHOSEN
+    #  Whom an honoured row serves — the counterparty entitled to demand this lever. Absent on
+    #  a chosen row, which serves nobody but the agent itself. It is what lets a DUTY find its
+    #  means: an obligation names who it is owed to, and the row that answers is the one
+    #  honoured for exactly that agent.
+    for_agent: str | None = None
 
     @property
     def is_chosen(self) -> bool:
@@ -112,7 +118,8 @@ def menu_of(query, agent_uri: str) -> list[Affordance]:
     for path in loader.affordance_files() + loader.honoured_files():
         q = path.read_text().replace("$me", f"<{agent_uri}>")
         rows += [Affordance(means=r["means"], observed_property=r["property"], via=r["via"],
-                            direction=r.get("direction"), mode=r.get("mode") or _CHOSEN)
+                            direction=r.get("direction"), mode=r.get("mode") or _CHOSEN,
+                            for_agent=r.get("buyer"))
                  for r in bindings(query(q))]
     return sorted(rows, key=lambda a: (a.observed_property, a.means, a.mode))
 
@@ -122,6 +129,34 @@ class ReflexModule(Module):
 
     CAPABILITY = REFLEX
     name = "deliberation"
+
+    def propose_for(self, goal: Goal) -> str | None:
+        """The move for one GOAL, whoever sourced it — the deliberator's real question.
+
+        `propose` asks about a property and a value, which can only ever express a stake. This
+        takes the want itself, so a duty reaches deliberation as what it is: a thing wanted,
+        ranked in the same currency, pursued through an affordance like anything else. It is
+        the widening the obligation record predicted — "the filter lifts when a member can
+        pursue a goal that is a diff rather than a distance".
+
+        A duty's means is not deduced here and could not be: it is the HONOURED row for that
+        counterparty, which the market's own `honoured.rq` derives from the delivery chain.
+        None where no lever answers — a debt to somebody my hardware cannot reach — and that
+        None is the point. It used to be an exception thrown deep inside actuation; now it is
+        a goal that stays hot, stays owed, and shows up in the ledger unpaid, which is this
+        project's posture towards everything it cannot prevent: leave evidence.
+        """
+        if not goal.is_duty:
+            return self.propose(goal.observed_property, goal.value)
+        #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
+        #  that doses early spends the water where nothing is looking (#132) — so a standing
+        #  debt is visible, rankable, and still not actionable until it is presented.
+        if not goal.pursuable:
+            return None
+        for row in menu_of(self.agent.store.query, self.me.uri):
+            if not row.is_chosen and row.for_agent == goal.owed_to:
+                return row.means
+        return None
 
     def propose(self, observed_property: str, value: float | None) -> str | None:
         """Given where this property stands, the next move — or None, which is a decision.

@@ -444,10 +444,18 @@ ag:forClaim a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:
 
 ag:presented a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:boolean ;
     rdfs:label "presented" ;
-    rdfs:comment "Whether the holder has asked yet. An unpresented claim requires NOTHING of me — the holder is waiting for its own watch to be live — and a presented one requires acting now, which is why urgency here is a step rather than a curve. A deadline-shaped curve belongs to the futures seam, where a claim may be held over time." .
+    rdfs:comment "Whether the holder has asked yet. An unpresented claim requires NOTHING of me — the holder is waiting for its own watch to be live — and a presented one requires acting now. It says whether a debt is PURSUABLE, and no longer how hot it is: heat is `ag:expiresAt`'s job, so an unpresented claim near its deadline is a debt this agent can see coming and still may not act on. The two were one step while a claim had no deadline to be measured against." .
 
 ag:owedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
     rdfs:label "owed at" .
+ag:expiresAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
+    rdfs:label "expires at" ;
+    rdfs:comment """When the venue stops holding the claim this debt came from — the claim's own `exp`, kept as the debt's. Absent where the market stated no window, and such a debt never becomes urgent, which is right: nobody is waiting on it.
+
+This is what gives an obligation its urgency, and the reason it had to exist as DATA before obligations could drive acts. A stake's urgency comes from a survival envelope — how much room is left before the subject ends — and a duty has no envelope, so the room it has is TIME: at issue the whole window is ahead and nothing has gone wrong, near expiry there is none and lateness is real. Read with `ag:owedAt`, which is why both are kept: urgency is the fraction of the window that has run, and an agent holding only the deadline would have to guess when the window opened.
+
+The alternatives were measured against this and both are recorded as the risk in an-obligation-is-a-desire-someone-else-sourced: a duty pinned at maximum is the honoured mode returning by another name, since it outranks a plant that is dying, and a duty with no heat at all is an agent that quietly defects while its ledger looks tidy.""" .
+
 ag:dischargedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
     rdfs:label "discharged at" ;
     rdfs:comment "Absent while it stands. The same two-timestamps-and-a-reason shape an intention and a revision already have, because a debt paid and a debt forgotten must never look alike." .

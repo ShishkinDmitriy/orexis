@@ -382,3 +382,53 @@ def test_a_buyer_honours_nothing(make):
     """Fern holds no venue and no valve: everything on its menu is its own to choose."""
     fern = make("fern")
     assert all(r.is_chosen for r in menu_of(fern.store.query, fern.me.uri))
+
+
+# --- step 9: a goal, not a property and a value -----------------------------
+
+def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
+    """`propose_for` takes the WANT, so a duty reaches deliberation as what it is.
+
+    Its means is not deduced here and could not be: it is the honoured row the market derives
+    from the delivery chain, and the one that answers is the row honoured for exactly this
+    counterparty. A host with two buyers must not serve one's claim through the other's valve,
+    which is why the match is on the agent and not on the mode alone.
+    """
+    from agent.goal import Goal
+
+    supplier = make("supplier")
+    duty = Goal(uri="urn:o", urgency=0.9, claim="j-1",
+                owed_to="http://example.org/agora/world/simulation#fern_agent")
+    assert supplier.provider(_DELIBERATION).propose_for(duty) == \
+        "http://example.org/agora#Apply"
+
+    stranger = Goal(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
+    assert supplier.provider(_DELIBERATION).propose_for(stranger) is None, \
+        "a debt no lever of mine can reach proposes nothing — and stays owed"
+
+
+def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
+    """Two questions, kept apart: how urgent a debt is, and whether anything is being asked
+    yet. The holder waits for its own watch to be live (#132), so a host that doses on the
+    strength of urgency alone would spend the water where nothing is looking — and a debt
+    approaching its deadline that nobody has presented is exactly the case where the two
+    answers differ."""
+    from agent.goal import Goal
+
+    supplier = make("supplier")
+    standing = Goal(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
+                    owed_to="http://example.org/agora/world/simulation#fern_agent")
+    assert supplier.provider(_DELIBERATION).propose_for(standing) is None
+
+
+def test_a_stake_reaches_the_same_door_and_behaves_exactly_as_before(make):
+    """The widening must not move the reflex. A goal with a property and a value is the old
+    question in the new shape, and it has to answer identically — the regression this design
+    is most exposed to is a rewrite that quietly changes what a thirsty agent does."""
+    from agent.goal import Goal
+
+    fern = make("fern")
+    reflex = fern.provider(_DELIBERATION)
+    for value in (0.30, 0.55, 0.80):
+        stake = Goal(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
+        assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value)

@@ -695,3 +695,125 @@ def test_a_debt_to_a_stranger_is_refused_before_it_is_a_want(host, caplog):
         assert desire_of(host).owe("orchid_from_nowhere", "j-forged") is None
     assert desire_of(host).owed() == []
     assert "does not declare" in caplog.text
+
+
+# --- step 9: a debt is a goal, and a deadline is what makes it hot ----------
+
+def _win_a_claim(host):
+    """One full round, ending with fern holding a claim this host owes. Returns the jti."""
+    stock_reading(host, 3.0)
+    host.deliver("readings/fern", low_event())
+    host.deliver(f"{market_of(host).bid_topic}/fern",
+                 {"auction_id": offer_from(host)["auction_id"], "agent": "fern",
+                  "max_qty_l": 0.5, "max_price_per_l": 0.9, "balance": 100.0})
+    host.hosting().close()
+    return desire_of(host).owed()[0]["jti"]
+
+
+def test_a_claim_carries_the_window_its_venue_states(host):
+    """The venue says how long it holds a winner's claim, and the claim says when that runs
+    out. Before this a claim had no deadline at all, which is why an obligation's urgency had
+    no honest source: the alternatives were a proxy for lateness or a constant, and the
+    obligation record names both as the whole risk."""
+    from datetime import datetime
+
+    jti = _win_a_claim(host)
+    row = desire_of(host).owed()[0]
+    assert row.get("expires"), "a debt from a venue with a window knows when it runs out"
+    window = (datetime.fromisoformat(row["expires"])
+              - datetime.fromisoformat(row["at"])).total_seconds()
+    assert abs(window - 900) < 5, "and the window is the one the world ratified, not a default"
+    assert host.hosting().held[jti].exp is not None, "the claim itself carries it too"
+
+
+def test_a_debts_heat_is_the_room_its_claim_has_left(host):
+    """Urgency, for a duty, is the fraction of the redeem window that has run. Asked at three
+    points across one window rather than at one, because a curve that is right at a single
+    instant is not a curve — and the two failures this shape exists to avoid are both about
+    its ENDS: cool at issue (nothing has gone wrong yet) and maximal at the deadline (late is
+    late), with neither pinned."""
+    from datetime import datetime, timedelta, timezone
+
+    _win_a_claim(host)
+    owed_at = datetime.fromisoformat(desire_of(host).owed()[0]["at"])
+
+    at_issue = desire_of(host).duties(now=owed_at)[0]
+    halfway = desire_of(host).duties(now=owed_at + timedelta(seconds=450))[0]
+    at_deadline = desire_of(host).duties(now=owed_at + timedelta(seconds=900))[0]
+    past_it = desire_of(host).duties(now=owed_at + timedelta(seconds=5000))[0]
+
+    assert at_issue.urgency == 0.0
+    assert abs(halfway.urgency - 0.5) < 0.02
+    assert at_deadline.urgency == 1.0
+    assert past_it.urgency == 1.0, "clamped — a debt cannot be more overdue than overdue"
+    assert not past_it.pursuable, "and past the window there is nothing left to spend"
+
+
+def test_a_duty_and_a_thirst_rank_in_one_currency(host):
+    """The claim the obligation record makes, made checkable: 'my vessel is low' and 'I owe
+    fern a litre' become comparable, where before they ran down two paths that never met.
+
+    Written as an ORDER and not as two numbers, because that is what a deliberator consumes —
+    and asked at a moment chosen so the answer could go either way: the barrel sits inside its
+    region (a mild stake) while the debt is most of the way through its window.
+    """
+    from datetime import datetime, timedelta
+
+    _win_a_claim(host)
+    stock_reading(host, 3.0)  # 1-5 is the barrel's region, so this is a small gap
+    owed_at = datetime.fromisoformat(desire_of(host).owed()[0]["at"])
+
+    goals = desire_of(host).goals(now=owed_at + timedelta(seconds=800))
+    assert goals, "an agent with a stake and a debt wants something"
+    assert goals[0].is_duty, "a debt near its deadline outranks a barrel that is merely low"
+    assert any(not g.is_duty for g in goals), "and the stake is still on the list, not replaced"
+    assert goals == sorted(goals, key=lambda g: -g.urgency)
+
+
+def test_a_claim_presented_after_its_window_is_refused_and_the_debt_stands(host, caplog):
+    """The window is the venue's promise and its limit. A holder that never presented has
+    forfeited — dosing now would put water where nothing is watching for it — and the debt
+    stays on the books undischarged, which reads differently from paid and differently again
+    from never demanded."""
+    import dataclasses
+    import logging
+    import time as _time
+
+    jti = _win_a_claim(host)
+    held = host.hosting().held
+    held[jti] = dataclasses.replace(held[jti], exp=_time.time() - 1)
+
+    with caplog.at_level(logging.WARNING):
+        host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
+
+    assert "after its window closed" in caplog.text
+    assert desire_of(host).owed(), "the debt stands — unserved is not the same as unowed"
+    assert jti not in host.hosting().held, "and the venue has stopped holding the paper"
+
+
+def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog):
+    """The whole of step 9 in one test: the host serves a claim because it WANTS to, and a
+    want its deliberator cannot pursue does not vanish — it stays owed, stays held, and is
+    tried again the moment the world could have changed the answer.
+
+    That moment is the vessel's own reading, which is where the deferred round already waits.
+    A society whose redemption is a handler cannot express 'I am out of stock'; one whose
+    redemption is a decision reports it as a hot unpursued goal, and converts an invisible
+    non-event into evidence.
+    """
+    import logging
+
+    jti = _win_a_claim(host)
+    deliberator = host.provider("http://example.org/agora/deliberation#DeliberationCapability")
+    real, deliberator.propose_for = deliberator.propose_for, lambda goal: None
+
+    with caplog.at_level(logging.WARNING):
+        host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
+    assert "stands unserved" in caplog.text
+    assert desire_of(host).owed(), "undischarged: nothing went out"
+    assert jti in host.hosting().held, "and still held, because it is still owed"
+
+    deliberator.propose_for = real
+    stock_reading(host, 4.0)
+    assert desire_of(host).owed() == [], "the vessel reported, the answer changed, the debt is paid"
+    assert jti not in host.hosting().held

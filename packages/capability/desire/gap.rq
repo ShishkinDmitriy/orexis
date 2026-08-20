@@ -33,7 +33,7 @@
 # query cannot know a policy that moves with the cadence. The query answers what the diff IS
 # and when each side was true; whoever consumes it judges. See issue #124.
 
-SELECT ?property ?value ?low ?high ?gap ?at WHERE {
+SELECT ?region ?property ?value ?low ?high ?gap ?at WHERE {
   $me ag:holds ?region ; ag:actsFor ?subject .
   ?region ssn:forProperty ?property ; sh:property ?want .
   ?want sh:severity ag:ShouldBecome ;

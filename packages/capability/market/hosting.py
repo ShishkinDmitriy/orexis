@@ -38,7 +38,8 @@ from agent.store import bindings
 from agent.world import participants
 
 from .beliefs import HOSTING_BLOCK
-from .terms import ACTUATION, DESIRE, HOSTING, BID_MATCHING, INTENTION, OFFER
+from .terms import (ACTUATION, DELIBERATION, DESIRE, HOSTING, BID_MATCHING,
+                    INTENTION, OFFER)
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -195,6 +196,17 @@ SELECT ?p WHERE {{
         for market in self.markets:
             if subject_uri != market.resource or observed_property != self.stock_property.get(market.uri):
                 continue
+            # My own vessel just said what it holds, which is the one moment the answer to
+            # "can I serve what I owe" can have changed without anybody speaking to me. A debt
+            # refused for want of stock is not lost and is not retried on a clock: it waits
+            # here, on the reading, exactly as the deferred round does. The two are the same
+            # shape — a commitment held until the world can honour it — and it is worth
+            # noticing that the duty case needed no new machinery, only a want to point at.
+            if (desire := self.agent.provider(DESIRE)) is not None:
+                for goal in desire.duties():
+                    if goal.pursuable and goal.claim in self.held:
+                        self._pursue(goal.claim,
+                                     f"my vessel reports {value:.3f} — trying again")
             if market.uri not in self.deferred:
                 # An owed round survives the process that owed it (#206): the deferral used
                 # to live in module memory alone, so a restart forgot a commitment the
@@ -360,7 +372,9 @@ SELECT ?p WHERE {{
                            "so the bids are discarded. Check its market:matchesBy.", auction_id)
             return
 
-        result = run_auction(offer, bids, state, auction_id=auction_id, match=matcher.propose_match)
+        result = run_auction(offer, bids, state, auction_id=auction_id,
+                             match=matcher.propose_match,
+                             redeem_window_s=market.redeem_window_s)
         if not result.validation.ok:
             self.log.warning("auction %s RED — clearing rejected: %s",
                              auction_id, result.validation.violations)
@@ -390,7 +404,7 @@ SELECT ?p WHERE {{
         # used to forget every claim it had issued.
         if (desire := self.agent.provider(DESIRE)) is not None:
             for claim in result.claims:
-                desire.owe(claim.sub, claim.jti)
+                desire.owe(claim.sub, claim.jti, expires_at=claim.exp)
 
     def on_redeem(self, presenter: str, claim: dict) -> None:
         """A holder presented its claim: verify it is theirs, then actuate. Single-use.
@@ -427,15 +441,62 @@ SELECT ?p WHERE {{
             self.log.warning("%s presented %s's claim %s — ignored",
                              presenter, claim.sub, jti)
             return
-        del self.held[jti]
-        self.log.info("%s presented claim %s — redeeming %.3f L", presenter, jti,
-                      claim.amount_l)
-        # Asked for, and then paid: the obligation steps from owed to demanded, and the dose
-        # going out discharges it. Never deleted — a debt paid and a debt forgotten must not
-        # look alike, which is why the intention ledger keeps its resolutions too.
+        # A window that closed (#step 9). The venue held this claim for exactly as long as it
+        # said it would, and afterwards the good is the venue's again — a holder that never
+        # presented has forfeited, and dosing now would put water where nobody is watching for
+        # it. The debt stays on the books, undischarged, with a deadline in the past: that is
+        # the evidence, and it reads differently from a debt paid and differently again from a
+        # debt nobody ever demanded.
+        if claim.exp is not None and time.time() > claim.exp:
+            del self.held[jti]
+            self.log.warning("%s presented claim %s after its window closed — refused, and the "
+                             "debt stands unserved", presenter, jti)
+            return
+        # Asked for: the obligation steps from owed to demanded. What happens next is a
+        # DECISION and not a handler any more — the whole of step 9. See below.
         desire = self.agent.provider(DESIRE)
         if desire is not None:
             desire.demanded(jti)
+        self._pursue(jti, f"{presenter} presented it")
+
+    def _pursue(self, jti: str, why: str) -> None:
+        """Serve a debt because this agent WANTS to, or leave it standing and hot.
+
+        The step-9 turn, and it is small on the page because the design had been laid for it:
+        an obligation is a want (an-obligation-is-a-desire-someone-else-sourced), so the host
+        does not redeem *on presentation* — it asks its deliberator about a GOAL, exactly as it
+        would about a pot drying, and acts on the answer. A society where a claim is honoured
+        by a handler cannot express a host that is out of stock; one where it is honoured by a
+        decision reports that as a hot unpursued goal, which is the posture this project takes
+        towards everything it cannot prevent.
+
+        The guarantee that was never deliberation's is untouched: the dose still opens against
+        a claim the pump's firmware verifies, clearing still validated the trade, and the ACL
+        still bounds who may speak. What moved is only whether this agent TRIES — see "why a
+        deliberating host is not a defecting host" in that record.
+
+        No deliberator means the old arrangement, whole: a build without one redeems on
+        presentation as it always did, because refusing to act for want of an opinion would be
+        a worse failure than the one this replaces.
+        """
+        claim = self.held.get(jti)
+        if claim is None:
+            return
+        desire = self.agent.provider(DESIRE)
+        deliberator = self.agent.provider(DELIBERATION)
+        if desire is not None and deliberator is not None:
+            goal = next((g for g in desire.duties() if g.claim == jti), None)
+            if goal is None:
+                return
+            if deliberator.propose_for(goal) is None:
+                # Hot, owed, and unpursued. It stays in `held`, so the moment the answer
+                # changes — stock arrives, a lever comes back — the sweep below serves it.
+                self.log.warning(
+                    "claim %s stands unserved (urgency %.2f, owed to %s): %s proposed no move",
+                    jti, goal.urgency, goal.owed_to.rsplit("#", 1)[-1], deliberator.name)
+                return
+        del self.held[jti]
+        self.log.info("serving claim %s (%.3f L) — %s", jti, claim.amount_l, why)
         self.redeem([claim])
         if desire is not None:
             desire.discharge(jti)

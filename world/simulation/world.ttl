@@ -90,6 +90,11 @@
     ag:localId "barrel1" ;
     water:suppliedBy :supplier ;
     water:capacityL 5.0 ;
+    #  How long a winner has to present. Generous on purpose: a holder waits for its watch to
+    #  be live and gives up after one full cycle of whatever cadence it currently commands, so
+    #  a window shorter than a slow board's cycle would expire claims nobody could have
+    #  presented in time — and the buyer would be billed for water still in the barrel.
+    market:redeemWindowS 900 ;
     #  What the barrel NEEDS (the seller learns to want, arc 2) — stated exactly as a plant
     #  states its ranges, because a stock is a subject with an interest like any pot: the
     #  operating range keeps a litre in reserve (a market whose tank runs to the last drop
@@ -183,7 +188,8 @@
 :city_mains a water:WaterSource ;
     ag:localId "city_mains" ;
     water:suppliedBy :city ;
-    water:capacityL 1000.0 .
+    water:capacityL 1000.0 ;
+    market:redeemWindowS 900 .
 
 #  The pipe that fills the barrel: draws from the mains, actuates the barrel. The same two
 #  triples that make a plant valve a market's delivery chain make this one the refill

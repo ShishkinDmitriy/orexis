@@ -971,3 +971,27 @@ def test_an_envelope_in_an_alien_unit_is_skipped_not_refused():
     assert _conforms(_flatten(st, WORLDS_ROOT / "sensing")), (
         "a mismatched unit must be skipped — comparing 0..1 against 20..90 PERCENT would "
         "refuse on meaningless arithmetic")
+
+
+def test_a_venue_that_takes_presentations_must_say_how_long_it_holds_a_claim():
+    """Opening shop is still ONE authored triple, and the window is not it.
+
+    Requiring `market:redeemWindowS` in the derivation was the first attempt, and it was wrong
+    in a way worth keeping a test about: the venue then failed to ARISE without one, so a world
+    that stated `market:matchesBy` and nothing else had no market and no error — consent had
+    quietly come to cost two triples. The venue now arises either way and the shape says what
+    is missing, which is the difference between a world that is refused and a world that is
+    silently smaller than its author thought.
+
+    Deleting the window rather than building a venue by hand, because the deletion is the case
+    that actually happens: somebody adds a source, copies the neighbouring one, and drops a line.
+    """
+    #  Wherever it lives, by asking rather than by naming a graph: the world states the
+    #  window and the derivation copies it onto the venue, and `_mutate` re-derives by adding,
+    #  so deleting only the authored triple leaves the derived one behind — a world that
+    #  validates for a fact its files no longer contain.
+    data = _mutate("""
+        DELETE { GRAPH ?g { ?s <http://example.org/agora/market#redeemWindowS> ?w } }
+        WHERE  { GRAPH ?g { ?s <http://example.org/agora/market#redeemWindowS> ?w } }""")
+    assert not _conforms(data)
+    assert "how long it holds a winner's claim" in _report(data)
