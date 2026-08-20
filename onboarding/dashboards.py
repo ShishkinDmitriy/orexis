@@ -76,6 +76,10 @@ SELECT DISTINCT ?subjectId ?kind ?property ?lo ?hi WHERE {{
 MEASUREMENT = "soil_moisture"
 FIELD = "value"
 AGENT_MEASUREMENT = "agent_health"
+#  What the desire capability writes, one row per want, tagged by property. Named
+#  here rather than spelled twice: the panel below and any future reader of the
+#  same series should move together.
+DESIRE_MEASUREMENT = "agent_desire"
 SENSOR_MEASUREMENT = "agent_sensor_health"
 EVENT_MEASUREMENT = "agent_events"
 
@@ -235,6 +239,67 @@ def _health_panel(title: str, buckets: dict, measurement: str, field: str, kind:
     }
 
 
+def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
+    """Every want in the world, drawn by how badly it is unmet — one line per (agent, property).
+
+    The health panels above answer "is this society straining"; this answers WHICH WANT is
+    straining, which is the question an operator actually has at 3am. `agent_goals.hottest`
+    carries the maximum an agent holds and cannot say whether the maximum is one plant's
+    moisture or its temperature, and `agent_desire` already carried the region and the aim —
+    three curves whose gap between them a reader had to eyeball. Urgency states it.
+
+    Grouped by the `property` TAG rather than split into a panel per property, which is why the
+    tag exists (#61's argument, on the sovereign's own suggestion): one generic panel serves any
+    number of wants, and a world that adds a humidity range gets its line without a dashboard
+    edit. One target per agent, because a bucket is per agent and a token opens only its own.
+
+    Zero to one, fixed. Urgency IS normalised — 0 at the region's point and 1 at the edge of
+    what the subject survives — so an axis that rescaled itself would throw away the only thing
+    that makes two properties in different units comparable on one canvas. The threshold at 1 is
+    where a reading has left the envelope.
+    """
+    return {
+        "id": panel_id,
+        "type": "timeseries",
+        "title": "How badly each want is unmet",
+        "description": (
+            "Urgency per want: 0 at the point of the region, 1 at the edge of what the subject "
+            "survives. Unit-free by construction, so a moisture and a temperature are "
+            "comparable on one axis — and so is a litre owed, once duties reach here. A line "
+            "ABSENT is a want nobody has read: unmeasured is not satisfied, so it is drawn as "
+            "a gap rather than as zero. A line pinned at 1 with no fall is a want nothing can "
+            "repair — check `unactionable` beside it before looking for a fault."),
+        "datasource": {"type": "influxdb", "uid": "influxdb"},
+        "gridPos": {"h": 9, "w": 24, "x": 0, "y": y},
+        "targets": [
+            {"refId": chr(ord("A") + i),
+             "query": (f'from(bucket: "{bucket}")\n'
+                       "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
+                       f'  |> filter(fn: (r) => r._measurement == "{DESIRE_MEASUREMENT}")\n'
+                       '  |> filter(fn: (r) => r._field == "urgency")\n'
+                       "  |> aggregateWindow(every: v.windowPeriod, fn: last, "
+                       "createEmpty: false)\n"
+                       f'  |> map(fn: (r) => ({{ r with _field: "{agent_id}/" + r.property }}))')}
+            for i, (agent_id, bucket) in enumerate(sorted(buckets.items()))
+        ],
+        "fieldConfig": {"defaults": {
+            "unit": "short", "min": 0, "max": 1,
+            "color": {"mode": "palette-classic"},
+            "thresholds": {"mode": "absolute", "steps": [
+                {"color": "green", "value": None},
+                {"color": "orange", "value": 0.6},
+                {"color": "red", "value": 1},
+            ]},
+            "custom": {"thresholdsStyle": {"mode": "line"}, "fillOpacity": 0},
+        }, "overrides": []},
+        "options": {
+            "legend": {"showLegend": True, "displayMode": "table", "placement": "bottom",
+                       "calcs": ["lastNotNull", "max"]},
+            "tooltip": {"mode": "multi", "sort": "desc"},
+        },
+    }
+
+
 def _events_flux(bucket: str, agent_id: str) -> str:
     """One agent's story, shaped for Grafana's annotation reader: `_time`, `text`, `tags`.
 
@@ -338,6 +403,12 @@ def render_health(world: str) -> dict:
                                     panel_id=pid, desc=desc))
         pid += 1
         y += h if w == 24 else (h if pid % 2 else 0)
+
+    #  Last, and full width, because it is the panel to read FIRST: everything above says how
+    #  hard the society is working, and this says what it is working on.
+    panels.append(_urgency_panel(buckets, y=y, panel_id=pid))
+    pid += 1
+    y += 9
 
     # The story over the series (#125): each agent's intention transitions, drawn as
     # annotations across every panel — `worst_gap` climbing with an `adopted Acquire` marker
