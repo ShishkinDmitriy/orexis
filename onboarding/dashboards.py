@@ -80,6 +80,10 @@ AGENT_MEASUREMENT = "agent_health"
 #  property cannot name a freshness want (per instrument) or a duty (per
 #  counterparty). Written by whoever sees every goal, which is the deliberator.
 WANT_MEASUREMENT = "agent_want"
+#  What a planning pass cost and what it did with each lever. Written by the
+#  deliberator from its own trace, so a dashboard and an `agora-ask` of the same
+#  agent are reading one fact.
+PLANNING_MEASUREMENT = "agent_planning"
 SENSOR_MEASUREMENT = "agent_sensor_health"
 EVENT_MEASUREMENT = "agent_events"
 
@@ -328,6 +332,68 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
     }
 
 
+def _levers_panel(buckets: dict, y: int, panel_id: int) -> dict:
+    """What the search did with each lever it looked at — and what it could not look at.
+
+    The panels above say how much planning cost and how far it reached. This says WHY it
+    reached that far, and every line is diagnostic of something recorded rather than a
+    confirmation that things are fine:
+
+    - `cycles` climbing while depth stays at 1 says the search keeps arriving back where it
+      started (#258 — the cycle signature is the goal's own value, so a step that moves nothing
+      else is indistinguishable from having gone nowhere);
+    - `blind` above zero is a package that never stated what its lever does, so the pass could
+      not claim it looked at everything and deferred to the reflex;
+    - `unsimulated` is a rule that RAISED, which is an error rather than a shrug;
+    - `better` flat at zero while `worse` climbs is an agent whose levers exist and never help.
+
+    Counts per pass rather than rates, because the trace holds one pass per goal and is cleared
+    at the start of the next: each point is what the last pass did, not a total since boot.
+    """
+    fields = ("worlds", "better", "worse", "cycles", "unsimulated", "blind")
+    matches = " or ".join(f'r._field == "{f}"' for f in fields)
+    return {
+        "id": panel_id,
+        "type": "timeseries",
+        "title": "What the planner did with each lever",
+        "description": (
+            "Per pass, not since boot — the trace holds the last pass per goal and is cleared "
+            "at the start of the next. `cycles` high with depth pinned at 1 is #258; `blind` "
+            "above zero is a lever whose package never said what it does, which is why a "
+            "partial plan defers to the reflex instead of reporting that nothing helps; "
+            "`unsimulated` is a rule that raised and is a fault, not a shrug. All zero "
+            "means nothing was DELIBERATED at all — an agent whose wants are unmeasured or "
+            "stale is answered by Observe before any search runs, which is a state to read "
+            "beside the freshness wants rather than a planner sitting idle."),
+        "datasource": {"type": "influxdb", "uid": "influxdb"},
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": y},
+        "targets": [
+            {"refId": chr(ord("A") + i),
+             "query": (f'from(bucket: "{bucket}")\n'
+                       "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
+                       f'  |> filter(fn: (r) => r._measurement == "{PLANNING_MEASUREMENT}")\n'
+                       f"  |> filter(fn: (r) => {matches})\n"
+                       "  |> aggregateWindow(every: v.windowPeriod, fn: last, "
+                       "createEmpty: false)\n"
+                       #  The agent is named on every line because a bucket is per agent and
+                       #  Grafana's legend shows the field, not the source it came from.
+                       f'  |> map(fn: (r) => ({{ r with _field: "{agent_id}/" + r._field }}))')}
+            for i, (agent_id, bucket) in enumerate(sorted(buckets.items()))
+        ],
+        "fieldConfig": {"defaults": {
+            "unit": "short", "min": 0,
+            "color": {"mode": "palette-classic"},
+            "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 8,
+                       "showPoints": "never"},
+        }, "overrides": []},
+        "options": {
+            "legend": {"showLegend": True, "displayMode": "table", "placement": "bottom",
+                       "calcs": ["lastNotNull", "max"]},
+            "tooltip": {"mode": "multi", "sort": "desc"},
+        },
+    }
+
+
 def _events_flux(bucket: str, agent_id: str) -> str:
     """One agent's story, shaped for Grafana's annotation reader: `_time`, `text`, `tags`.
 
@@ -418,6 +484,20 @@ def render_health(world: str) -> dict:
          "succeed (claims arrive) and the property never moves as promised, suspectAfter "
          "times running. The false-knowledge flag — see #131. What to do about it is a "
          "decision, which is why this flags and nothing auto-retracts."),
+        ("Seconds spent planning", PLANNING_MEASUREMENT, "seconds", "timeseries", "s", 12, 7,
+         "What a reporting tick's planning cost, summed over every goal. Worth watching for a "
+         "reason that is not performance: reporting an agent's state RE-PLANS every goal it "
+         "holds, so this is the price of being asked what you want, paid on top of the "
+         "planning done to decide. Divide by `worlds` beside it before blaming the shape "
+         "checker — a pass that built ten worlds and one that built one are not comparable. "
+         "Zero means no search ran: a want nobody has read is answered by looking, before "
+         "any planning happens."),
+        ("Depth reached", PLANNING_MEASUREMENT, "deepest", "timeseries", "short", 12, 7,
+         "Steps in the longest path the search considered. PINNED AT 1 is the signature of two "
+         "recorded limits at once (#254, #258): a rule's CONSTRUCTs run against the store "
+         "rather than the world, and the cycle signature is the goal's own value, so a step "
+         "that moves nothing else looks like somewhere already reached. Above 1 means a chain "
+         "was genuinely tried. Zero means nothing was weighed at all."),
         ("Desires held", AGENT_MEASUREMENT, "desires", "stat", "short", 12, 5,
          "How many properties this agent wants held — deduced from what its subject states, so "
          "a change here means the WORLD changed, not the agent. Zero on an agent that should "
@@ -437,6 +517,12 @@ def render_health(world: str) -> dict:
     panels.append(_urgency_panel(buckets, y=y, panel_id=pid))
     pid += 1
     y += 9
+
+    #  Beneath it, because the order is the reading order: what is wanted, then what was done
+    #  about it and why so little.
+    panels.append(_levers_panel(buckets, y=y, panel_id=pid))
+    pid += 1
+    y += 8
 
     # The story over the series (#125): each agent's intention transitions, drawn as
     # annotations across every panel — `worst_gap` climbing with an `adopted Acquire` marker

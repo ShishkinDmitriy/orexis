@@ -29,6 +29,7 @@ rather than refinements, and each is here because a question found the failure i
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass, field
 
 import rdflib
@@ -186,6 +187,10 @@ class Planner:
         nothing outside can reconstruct it, because the belief base is locked by the process
         holding it. `trace` explains why that is the record's one sanctioned exception.
         """
+        #  Timed from HERE, which is inside the pass and outside the trace write below: a
+        #  caller timing `plan()` would be timing the recording as well, and reporting the
+        #  observer's cost as the observed's.
+        self._started = time.monotonic()
         base = self._beliefs()
         here = _Node(world=base, urgency=self._urgency_in(base, goal))
         #  CLEARED AT THE START, which is the difference between a graph that holds one pass
@@ -269,10 +274,12 @@ class Planner:
 
         Threaded through the returns rather than wrapped around `plan()` so that the EARLY ones
         are recorded too — a goal already satisfied and a goal nothing points at are the two
-        answers a reader most wants and the two a wrapper would have missed.
+        answers a reader most wants and the two a wrapper would have missed. The same threading
+        is why the clock is read here: every return passes through, so no exit is untimed.
         """
         trace.write(self.agent.store, self.agent.id, goal, plan,
-                    getattr(self, "_weighed", []), stands_at)
+                    getattr(self, "_weighed", []), stands_at,
+                    time.monotonic() - self._started)
         return plan
 
     def _offer(self, plan: Plan, goal: Goal) -> Plan:

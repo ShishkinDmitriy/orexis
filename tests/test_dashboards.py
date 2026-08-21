@@ -74,3 +74,30 @@ def test_urgency_is_drawn_per_want_and_per_agent():
     defaults = panel["fieldConfig"]["defaults"]
     assert (defaults["min"], defaults["max"]) == (0, 1), \
         "urgency is normalised; an axis that rescales hides what normalisation bought"
+
+
+def test_what_planning_costs_is_drawn_per_agent():
+    """Cost and reach, panel by panel — the figures the sovereign asked for.
+
+    `seconds` and `deepest` ride the ordinary health-panel idiom (one target per agent, because
+    a bucket is per agent), and the lever panel is bespoke because it draws six fields at once
+    and the idiom takes one.
+    """
+    from onboarding.dashboards import PLANNING_MEASUREMENT
+
+    doc = render_health("simulation")
+    titles = {p.get("title") for p in doc["panels"]}
+    assert {"Seconds spent planning", "Depth reached",
+            "What the planner did with each lever"} <= titles
+
+    levers = next(p for p in doc["panels"]
+                  if p["title"] == "What the planner did with each lever")
+    for target in levers["targets"]:
+        assert PLANNING_MEASUREMENT in target["query"]
+        #  The three that make a recorded limit visible. A panel that dropped one of them
+        #  would still look like a planning panel and would stop answering the question it
+        #  exists for.
+        for diagnostic in ("cycles", "blind", "unsimulated"):
+            assert f'r._field == "{diagnostic}"' in target["query"], \
+                f"{diagnostic} is the signature of a known limit and must stay drawn"
+        assert "r._field }" in target["query"], "lines are split by field, one per agent"

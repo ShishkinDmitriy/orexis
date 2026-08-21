@@ -141,6 +141,34 @@ channel cannot drift.
 Writing it costs **0.7%** of a pass — 6.6ms against 0.96s, measured on the bench. A debugging aid
 that slowed the thing it observes would be a poor trade.
 
+# What a pass cost, and what it could not see
+
+`agent_planning` carries the other half of the same trace: how long the pass took
+(`ag:tookSeconds`, the one figure the trace could not already answer), how many worlds it built,
+how deep it reached, and what it did with each lever — `met`, `better`, `worse`, `cycles`,
+`unsimulated`, and `blind` for the goals where some lever had no stated effect at all. Read back
+out of the trace rather than counted a second time, so the pass being measured is the pass that
+happened; measuring by re-planning would double the cost it reports. Reading them costs **0.4ms**,
+which is a tenth of one per cent of a pass.
+
+**Three of the fields exist to make a recorded limit visible rather than to confirm health**, and
+that is the argument for having them at all. `deepest` pinned at 1 is two limits at once — a
+rule's CONSTRUCTs run against the store rather than the world, and the cycle signature is the
+goal's own value, so a step that moves nothing else is indistinguishable from having gone
+nowhere. `cycles` climbing beside it says which of the two is biting. `blind` above zero is a
+package that never said what its lever does, which is why a partial plan defers to the reflex
+instead of reporting that nothing helps.
+
+**And the figure that surfaced something uncomfortable: a reporting tick IS a planning pass.**
+`series()` calls `pursued()`, which re-plans every goal the agent holds, so essentially the whole
+cost of reporting an agent's state — measured at ~0.4s for a fern with two goals — is deliberation
+done over again to describe deliberation. Planning to decide happens on a reading; planning to
+report happens on the tick; nothing shares the answer between them. That is not a defect in the
+figures, it is what the figures found.
+
+**All zero means nothing was deliberated**, not that planning is free: a want nobody has read is
+answered by Observe before any search runs, so an agent at rest reports zeros honestly.
+
 # The three members
 
 - **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;
