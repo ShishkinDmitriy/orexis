@@ -14,7 +14,7 @@ The domain layer is where terms are defined, and everything else — code, ontol
 speaks them. That only works if there is one word per concept.
 
 There were three. One thing was implemented — turning a lot and a set of bids into a proposed
-allocation with prices, then its own package and now `capabilities/market/matching.py`. It was called **matching** (the directory, the
+allocation with prices, then its own package and now `packages/capability/market/matching.py`. It was called **matching** (the directory, the
 class, the property `market:matchesBy`, `propose_match`), **rule** (six places, in newer comments and
 error messages), and **format** (seven places, from `auction.py`'s original framing). All three
 appeared in `hosting.py` alone, and the family class's own `rdfs:comment` managed two in one
@@ -32,7 +32,7 @@ deliverable, and this record is why they say what they say.
 
 The identifiers that carry the family name moved with it: `market:BidMatchingCapability`, the
 directory, and the `BID_MATCHING` constant. (The directory was `capabilities/bid_matching/` when
-this was written and is now `capabilities/market/`, which also took the namespace — see
+this was written and is now `packages/capability/market/`, which also took the namespace — see
 [a-package-owns-its-namespace](a-package-owns-its-namespace.md).) **`market:matchesBy` did not**, and neither did `propose_match`, the `Match` callable or
 `market:HostStatesHowItMatchesShape` — see below. No behaviour changed.
 
@@ -134,7 +134,7 @@ names it: pay-as-bid, uniform price.
   moving the directory and touching every import of it, where the earlier draft of this change had
   touched none. What the directory does NOT name is a capability: it named this one only while
   this one had a package to itself, and [a-package-owns-its-namespace](a-package-owns-its-namespace.md)
-  folded it into `capabilities/market/` shortly afterwards. The term is what survived.
+  folded it into `packages/capability/market/` shortly afterwards. The term is what survived.
 - **The scope boundary is now written down twice** — in `market:BidMatchingCapability`'s comment and in
   `domain/bid-matching.md`. Unstated scope is what a ubiquitous language exists to prevent, and *we
   do not model the bidding procedure* had never been said anywhere.
@@ -146,7 +146,7 @@ names it: pay-as-bid, uniform price.
 
 - **The bidding procedure is not a family.** Naming the axis is not building a slot for it. If
   ascending, descending and sealed-bid ever become interchangeable here, that is a second family
-  in `capabilities/market`, and Dutch would join *it* while still matching by pay-as-bid.
+  in `packages/capability/market`, and Dutch would join *it* while still matching by pay-as-bid.
 - **Nothing enforces the vocabulary.** `tests/test_store.py` scans source text for stray SPARQL
   prefixes; nothing comparable scans prose for a rejected word, and the drift this record fixes
   would recur silently. A grep in CI would catch it and would also be a new kind of gate; not

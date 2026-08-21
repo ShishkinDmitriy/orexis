@@ -90,7 +90,7 @@ terms as the one shipped with it.
 
 ## A rule is SPARQL, not code
 
-`capabilities/<name>/review.rq`, beside the `rules.ru` that derives the capability itself: one
+`packages/capability/<name>/review.rq`, beside the `rules.ru` that derives the capability itself: one
 `SELECT`, rows of `?term ?value` — one row per re-pick, so a package revising two settings ships
 one file with a `UNION` rather than two files (sensing does exactly that: the cadence and the
 jolt threshold, read off the same evidence window the opposite way round). The rule contains no

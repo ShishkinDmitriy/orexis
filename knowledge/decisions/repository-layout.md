@@ -83,7 +83,7 @@ the boundary test trivial. See
 # Why there is no `agent/kernel/`
 
 Symmetry was proposed — `agent/{kernel,capabilities,transports}`, three peer trees — and refused,
-because the symmetry would be false. `capabilities/` and `transports/` are **discovered**: the
+because the symmetry would be false. `packages/capability/` and `packages/transport/` are **discovered**: the
 loader globs them, anything dropped in is found, nothing lists them. A kernel is what those
 discovered trees **import**. One is a trunk, the others are places to graft onto, and presenting
 them as peers would suggest the trunk is replaceable.

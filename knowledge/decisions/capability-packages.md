@@ -121,7 +121,7 @@ nothing else — asks. An agent with no stake in a subject gets no answer and wa
 cadence, which is the honest reading of "nothing here is urgent to me". A perceiving agent that
 holds no band is now a coherent thing to be, rather than a `try/except`.
 
-They landed on `BiddingBeliefs` and have since moved again, to `capabilities/desire/`, which is
+They landed on `BiddingBeliefs` and have since moved again, to `packages/capability/desire/`, which is
 where they should have gone the first time: putting them on a bidder made *having an opinion
 about your own state* conditional on being a market participant, and limited it to the one
 property a bid is priced in. The seam this section is about is unchanged and is why the second

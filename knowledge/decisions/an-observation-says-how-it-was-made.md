@@ -39,7 +39,7 @@ lost the tie to its capability would have cost more than the elliptical reading 
 This record shipped them as `…Sensing` — SOSA's own word, free, and used by nothing else here.
 That spelling has since been superseded by `…Procedure`, for a reason this record could not have
 seen: it did not yet have a use site where the name is read aloud. See
-[a-sensor-implements-its-procedure](a-sensor-implements-its-procedure.md), and the amendment
+[a-sensor-implements-its-procedure](/decisions/a-procedure-belongs-to-whatever-performs-it.md), and the amendment
 table in [who-holds-the-clock](who-holds-the-clock.md), which is where these spellings are
 tracked. The table above shows today's names against the ones this record replaced.
 
@@ -52,7 +52,7 @@ taken:
   create or transform one or more samples."* It produces a `sosa:Sample`: a specimen removed and
   examined. Our probes sit in the soil and remove nothing, so the name imported a concept we
   deliberately do not model — and one that is the subject of an open issue.
-- **`Reporting` is ours.** `capabilities/reporting/` was created eight commits earlier for
+- **`Reporting` is ours.** `packages/capability/reporting/` was created eight commits earlier for
   telemetry an agent emits *about itself* — `reporting:Storing`, `reporting:Announcing`. A
   sensing procedure called `PushReporting` is a second sense of that word, in one codebase,
   introduced the same day.

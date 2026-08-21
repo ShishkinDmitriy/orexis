@@ -67,7 +67,7 @@ two independent things:
 
 **We model only the second.** `market:BidMatchingCapability` is the allocation-and-payment half alone.
 The first axis is fixed here: [round](/domain/round.md) describes an iterative-ascending round,
-and that is a property of the protocol in `capabilities/market`, not a slot anything plugs into.
+and that is a property of the protocol in `packages/capability/market`, not a slot anything plugs into.
 
 **Dutch makes it concrete.** A Dutch auction is descending open outcry — the auctioneer starts
 high and lowers the price until someone accepts. It is a complete mechanism, fixing both axes.
@@ -175,7 +175,7 @@ host must say how it matches; only a host may) in its `shapes.ttl`, and the deri
 update in its `rules.ru`. `agent/auction.py` holds the path around it: propose, validate, issue.
 
 **It shares a package with the protocol and is still its own family.** A directory is a package,
-not a capability — `capabilities/market/` provides three. What keeps the two independent is
+not a capability — `packages/capability/market/` provides three. What keeps the two independent is
 `PROVIDES` and the term, never the directory: `hosting.py` asks `agent.provider(BID_MATCHING)` and
 never learns which member answered. See
 [a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md).

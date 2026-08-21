@@ -13,8 +13,8 @@ durable "what and why"; the code follows it, not the other way round.
 Invoke the `okf-open-knowledge-format` skill when adding, editing or checking documents there.
 If it is unavailable, the rules are short enough to follow by hand:
 
-- every concept `.md` has YAML frontmatter with a non-empty `type` (`Decision`, `Domain
-  Concept`, `Component`), plus `title` and `description`;
+- every concept `.md` has YAML frontmatter with a non-empty `type` — one of `Decision`,
+  `Domain Concept`, `Component` or `Runbook` — plus `title` and `description`;
 - `index.md` carries **no** frontmatter — it is navigation, and its title is its heading. Only
   `knowledge/index.md` may declare `okf_version`;
 - validate with `./tools/validate-okf.sh knowledge` — vendored from the skill, because a gate
@@ -29,7 +29,7 @@ not add more for design knowledge.
 `knowledge/` for claims the change made false and fix them in the same commit. A stale decision
 record is worse than none, because it is still cited.
 
-## The three rules the code lives by
+## The rules the code lives by
 
 1. **Code may reference T-Box terms; never an instance.** `term("Subscribing")` is fine;
    `"supplier"`, `"sensors/fern/moisture"`, a world's `:world` node are not. The single exception is the one
@@ -45,7 +45,7 @@ record is worse than none, because it is still cited.
    differ, you have a function, not a capability.
 
    The two are not the same axis, and saying "a capability is a directory" hid that.
-   `capabilities/market/` provides three — bidding, hosting, and the matching family — and it is
+   `packages/capability/market/` provides three — bidding, hosting, and the matching family — and it is
    one package. **What isolates a capability is `PROVIDES` and its term, never the directory
    boundary**: `hosting.py` asks `agent.provider(BID_MATCHING)` and never learns which member
    answered, so uniform price landed without touching a line of it. A directory is how a package
@@ -78,10 +78,10 @@ record is worse than none, because it is still cited.
    `Containerfile` decides what reaches an image by naming two trees and not a third. Both were
    always the real enforcement; the layout was a reminder, and the reminder is gone.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
-installation: the broker image, the installation CA, Grafana's material, the admin token. A
-world's broker config, its ACL, its certificates and its device credentials live with the world.
-Also: **no `.env` at the repo root, because nothing there is true of every world at once.**
-   `infra/.env` says where the shared series store is — the URL and the org, and nothing
+   installation: the broker image, the installation CA, Grafana's material, the admin token. A
+   world's broker config, its ACL, its certificates and its device credentials live with the
+   world. Also: **no `.env` at the repo root, because nothing there is true of every world at
+   once.** `infra/.env` says where the shared series store is — the URL and the org, and nothing
    secret, because that file is handed to every agent container. What an agent may *do* with
    the store and the bus arrives as its own credentials, minted per agent into
    `world/<name>/secrets/` and mounted into that container alone. The admin token lives apart
@@ -91,8 +91,9 @@ Also: **no `.env` at the repo root, because nothing there is true of every world
    at boot and holds it in a volume of its own, so isolation is structural rather than
    enforced. An agent is told its id and given one world, mounted — it never learns that other
    worlds exist. See [where-the-belief-base-lives](knowledge/decisions/where-the-belief-base-lives.md).
-5. **There is no config file for the model.** Topology lives in the world graph, desire and limits in each
-   service URLs) are environment, because they are not beliefs anyone holds. See
+5. **There is no config file for the model.** Topology lives in the world graph, desire and
+   limits in each agent's own beliefs, both authored in `world/<world>/`. Deployment facts
+   (service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
 **One principle explains most of the shapes above: control the derivative, not the value.**
@@ -216,8 +217,8 @@ pytest infra -q        # 8 more, against the RUNNING broker and store — see be
 lint-imports           # the layering: onboarding may import agent, never the reverse
 ```
 
-`agora-validate` and `pytest` are the two gates. `pytest infra` is a third thing, run
-deliberately, and it is not part of them.
+`agora-validate` and `pytest` are the two gates, and both must pass before a change is done.
+`pytest infra` is a third thing, run deliberately, and it is not part of them.
 
 **`infra/tests/` is a contract with the infrastructure, not with the code.** It holds mosquitto
 and InfluxDB to the behaviour the isolation design leans on — that a revoked grant stops delivery
@@ -252,8 +253,6 @@ generated and mosquitto now refuses anonymous clients. It then **reloads** the b
 (SIGHUP, not a restart — connected agents keep their sessions), so adding an agent or a world
 still interrupts nothing.
 
-`agora-validate` and `pytest` are the two gates. Both must pass before a change is done.
-
 Beliefs are the agent's: **authored** once at birth, never touched by start or stop. Anything
 that would reset them on a restart is a bug, not a convenience. One addition is not a reset:
 an amendment that grants a capability may author terms an existing volume has NEVER held, and
@@ -264,16 +263,16 @@ agent's whatever their value. `rebirth` remains the explicit discard. See
 But a belief is a **point chosen inside a range**, not a constant, and what genesis wrote is the
 first pick rather than a bound. An agent whose **world gives it room to move** — `review:commits`, in
 `world.ttl` — re-picks on its own clock inside that room, so the author's job is to constrain
-well, not to guess well. **The mandate is also the grant**: `capabilities/review/` derives its
+well, not to guess well. **The mandate is also the grant**: `packages/capability/review/` derives its
 capability from exactly those triples, so an agent given no room has no review module, keeps no
 summaries and never arises. Which terms may move is one triple in the owning package's
-`ontology.ttl`; a review rule is `capabilities/<name>/review.rq`, SPARQL and never Python; and a
+`ontology.ttl`; a review rule is `packages/capability/<name>/review.rq`, SPARQL and never Python; and a
 revision is legitimate exactly when `validate_agent` still passes, which is the same call the
 agent makes at boot. **Compaction is not part of this** — it is not a choice, so it stayed in the
 kernel on a clock of its own. See
 [self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md).
 
-## Three traps worth knowing, and one that is closed
+## Traps worth knowing, and one that is closed
 
 **Closed: the two engines used to disagree about what the vocabulary says.** Shapes ran with RDFS
 inference and the runtime ran none, so a world could validate against a relationship the code
@@ -314,7 +313,7 @@ fails if pyshacl ever entails something the closure does not. See
   production. `tests/test_store.py` checks this by scanning the source text — and asserts each
   source tree is still *found*, because moving files has twice emptied one of its globs and taken
   cases off the guard without failing anything.
-- - **A test that asserts inside a loop can assert nothing.** An empty result set is not an error,
+- **A test that asserts inside a loop can assert nothing.** An empty result set is not an error,
   so the body never runs and the test is green. The repo-root `conftest.py` traces the at-risk
   tests — an `assert` inside a loop over something that could be empty — and fails the run if a
   test function executed no assertion in any of its cases. It does NOT catch a parametrisation

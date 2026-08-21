@@ -93,8 +93,8 @@ something an *agent* has. What differs is the bearer, and the predicate follows 
 
 | tree | borne by | conclusion |
 |---|---|---|
-| `capabilities/` | an agent | `ag:hasCapability` on the agent |
-| `transports/`, `codecs/`, `scalings/` | a binding | a predicate on the **sensor** |
+| `packages/capability/` | an agent | `ag:hasCapability` on the agent |
+| `packages/transport/`, `packages/codec/`, `packages/scaling/` | a binding | a predicate on the **sensor** |
 
 The reason is not convention. An agent's capability is about what it **is**, which is a fact the
 world should hold and validate. A binding's is about what a device **speaks**, which only the

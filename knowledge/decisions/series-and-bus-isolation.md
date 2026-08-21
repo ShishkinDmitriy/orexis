@@ -49,7 +49,7 @@ topics that capability needs:
 | `actuation:hasActuator V` | write V's `commandTopic` |
 | `mqtt:eventTopic E` | write E |
 
-Read that against `capabilities/market/bidding.py` and `hosting.py` and it is the same set of
+Read that against `packages/capability/market/bidding.py` and `hosting.py` and it is the same set of
 topics they subscribe and publish. This is the same move `agora-compose` makes for the roster:
 derived, never hand-maintained, because a second list is a second thing to drift.
 

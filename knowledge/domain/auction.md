@@ -25,8 +25,8 @@ vocabulary before it could say anything else.
 | | what it is | where it lives |
 |---|---|---|
 | [market](/domain/market.md) | the standing structure it happens inside | `market:Market` in the world |
-| [round](/domain/round.md) | one pass of bidding inside it — exactly one is built | `capabilities/market/hosting.py` |
-| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `capabilities/market/matching.py` |
+| [round](/domain/round.md) | one pass of bidding inside it — exactly one is built | `packages/capability/market/hosting.py` |
+| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `packages/capability/market/matching.py` |
 | [clearing](/domain/clearing.md) | the notary that validates and co-signs — never allocates | `agent/clearing.py` |
 
 The line that holds them apart is **the host proposes, clearing disposes**. Matching decides

@@ -70,7 +70,7 @@ This is the same shape the W3C's own worked DHT22 example takes, which names
 [their-descriptions-are-our-fixtures](their-descriptions-are-our-fixtures.md).
 
 **The punned triple is gone, not kept alongside.** Two statements of one fact is what this reduces,
-and nothing read the pun: the derivation in `capabilities/sensing/rules.ru` asks about *sensors*
+and nothing read the pun: the derivation in `packages/capability/sensing/rules.ru` asks about *sensors*
 in the world, never about the class, and the one reader that did walk from the class was the guard
 test, which now reads the entailment instead.
 

@@ -134,7 +134,7 @@ from two facts it already holds. That check does not exist yet and is worth more
     a stake and no market still knows it is in trouble.
 - **Nothing yet justifies a target against the range.** Still open, and sharper now that the
   range is derived: a region can move under a target that stays merely *legal* rather than still
-  sensible. `capabilities/review/` could be asked to explain a pick within it rather than only to
+  sensible. `packages/capability/review/` could be asked to explain a pick within it rather than only to
   stay inside it.
 - **Intention is still unnamed.** A bid and a claim are the closest things to one, and neither
   is described in those terms. Whether that is a gap or a happy absence is not settled here —

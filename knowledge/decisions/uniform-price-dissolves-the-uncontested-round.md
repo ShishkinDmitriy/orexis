@@ -20,7 +20,7 @@ falsifiable, which is most of why this was worth doing next.
 # The claim held
 
 Everything that changed is inside the matching package, plus tests. (It was its own directory at
-the time — `capabilities/bid_matching/` — and is now `capabilities/market/matching.py`; see
+the time — `capabilities/bid_matching/` — and is now `packages/capability/market/matching.py`; see
 [a-package-owns-its-namespace](a-package-owns-its-namespace.md). The claim below is about what
 did NOT have to move, and folding it in did not weaken that: `hosting.py` is still untouched.)
 

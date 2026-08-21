@@ -137,7 +137,7 @@ and **eleven are not true of every agent**:
   declared `rdfs:subClassOf ag:Capability`, had a shape, and appeared in no world. The reasoning
   above assumed *a capability is what only some agents have*, which conflates two questions:
   rule 2 asks whether the HOW could differ, not who holds it. It is a package now,
-  `capabilities/reporting/`, granted to every agent by a rule and insisted on by a shape. See
+  `packages/capability/reporting/`, granted to every agent by a rule and insisted on by a shape. See
   [telemetry-is-a-mandatory-capability](telemetry-is-a-mandatory-capability.md).
 
 Moving the remaining ten was out of scope: the seven need a package to exist, and the deployment

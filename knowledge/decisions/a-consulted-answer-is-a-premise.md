@@ -63,7 +63,7 @@ that a hose reaches the far bed enriches a menu; every later decision that uses 
 
 **Ratification.** A premise is a claim about the world, and a model inventing one is a model
 inventing a hose that is not there. The
-[consulted-at-the-edge](/decisions/consulted-at-the-edge.md) split applies unchanged: a PRESENT
+[consulted-at-the-edge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md) split applies unchanged: a PRESENT
 sovereign ratifies, an ABSENT sovereign means private adoption plus review.
 
 **The immune response, which is why private adoption is survivable.** An invented affordance gets

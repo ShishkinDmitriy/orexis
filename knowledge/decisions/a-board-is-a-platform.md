@@ -177,7 +177,7 @@ property chain — a platform **in a deployment** that **deploys a system** host
 and we were stating the conclusion with the premise nowhere in the graph. `hardware.ttl` now
 states the premise: `ssn:Deployment`, with the systems, the platform, `prov:startedAtTime` for
 when this board went to this window, and the purpose in prose. The closure's rule 6 (the axiom
-restated in `capabilities/sensing/ontology.ttl`, since we borrow IRIs and never import
+restated in `packages/capability/sensing/ontology.ttl`, since we borrow IRIs and never import
 ontologies) entails the hosting, so rewiring means editing the deployment and the hosts follow.
 
 What survives from this record unchanged: the SOCIETY still asserts its own `sosa:hosts`,
