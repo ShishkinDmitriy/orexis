@@ -227,12 +227,16 @@ podman build -t agora:local .                 # only when a dependency changes
 pytest -q              # BOTH roots: tests/ and any a package carries. No infra needed.
                        # NOT `pytest tests` — a package's own tests are invisible to that,
                        # and to a bare `pytest` if testpaths does not name packages.
-pytest infra -q        # 8 more, against the RUNNING broker and store — see below
+pytest infra -q -n0    # 8 more, against the RUNNING broker and store — see below.
+                       # -n0 is REQUIRED: they rewrite one acl.conf in place. It refuses without it.
 lint-imports           # the layering: onboarding may import agent, never the reverse
 ```
 
 `agora-validate` and `pytest` are the two gates, and both must pass before a change is done.
-`pytest infra` is a third thing, run deliberately, and it is not part of them.
+`pytest infra` is a third thing, run deliberately, and it is not part of them — and it must
+be run `-n0`, because `addopts` carries `-n auto` for everything else and those eight tests
+cannot share a broker. They refuse rather than letting you find out: see
+`infra/tests/conftest.py`.
 
 **`infra/tests/` is a contract with the infrastructure, not with the code.** It holds mosquitto
 and InfluxDB to the behaviour the isolation design leans on — that a revoked grant stops delivery
@@ -241,7 +245,7 @@ token cannot reach another's bucket. None of that is guaranteed by MQTT or compu
 here; it is how those two services happen to behave, so it is worth re-proving whenever they
 change. Both files report the version they ran against and assert nothing about it: bump
 `MOSQUITTO_VERSION` in `infra/mosquitto/Containerfile` or the Influx image in
-`infra/compose.yaml`, rebuild, and re-run `pytest infra`.
+`infra/compose.yaml`, rebuild, and re-run `pytest infra -q -n0`.
 
 **Onboarding is the phase between a ratified world and a running society** — see
 [onboarding](knowledge/domain/onboarding.md). Its three generators all read the same `world.ttl`

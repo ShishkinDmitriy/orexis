@@ -76,34 +76,38 @@ include = ["agent*", "packages*", "onboarding*"]
 # it runs only when named by path, so the suite would have gone green while skipping it.
 testpaths = ["tests", "packages"]
 
-# NO `addopts = "-n auto"`, and this is the reason rather than an oversight.
+addopts = "-n auto"
+
+# Parallel by default, which is only defensible because #271 made the vacuity guard survive a
+# worker. Read that before removing the flag or trusting a green run.
 #
-# The suite is pyshacl-bound and embarrassingly parallel — 772s serial, 362s under `-n auto` on
-# the Pi's four cores, a 2.13x speedup for one flag. `pytest-xdist` is a dev dependency so it is
-# there when you want it. It is NOT on by default because it SILENTLY DISABLES the vacuity guard
-# in the repo-root `conftest.py`, which is the one thing this project added after a guard went
-# green while checking nothing four times over (#106).
+# The suite is pyshacl-bound and embarrassingly parallel: 772s serial against 362s on the Pi's
+# four cores. It used to be OFF, because a worker process SILENTLY DISABLED the guard in the
+# repo-root `conftest.py` — the one this project added after four guards went green while
+# checking nothing (#106). The tally and the verdict both lived in the worker, whose
+# `session.exitstatus` xdist does not propagate and whose stdout it discards on a passing run.
 #
-# Measured, with a test whose assert sits in a loop over an empty call result:
+# The verdict now travels over `workeroutput` and the controller SUMS the tallies per test
+# function before judging. Re-measured with a probe whose assert sits in a loop over an empty
+# call result, and it now fails the run in every mode rather than only serially:
 #
-#     pytest tests/test_zz_probe.py                  -> exit 1, guard names the test
-#     pytest tests/test_zz_probe.py -n 0             -> exit 1, guard names the test
-#     pytest tests/test_zz_probe.py -n auto          -> exit 0, SILENT
-#     pytest tests/test_zz_probe.py -n auto --dist loadfile   -> exit 0, SILENT
-#     pytest tests/test_zz_probe.py -n auto --dist loadscope  -> exit 0, SILENT
+#     pytest <probe>                          -> exit 1, guard names the test
+#     pytest <probe> -n 0                     -> exit 1, guard names the test
+#     pytest <probe> -n auto                  -> exit 1, guard names the test
+#     pytest <probe> -n auto --dist loadfile  -> exit 1, guard names the test
+#     pytest <probe> -n auto --dist loadscope -> exit 1, guard names the test
 #
-# It is not a distribution-mode problem: any worker process kills it. `_asserts_run` and
-# `pytest_sessionfinish` live in the worker, so the worker sets its own `session.exitstatus = 1`
-# — which xdist does not propagate, the controller computing its own from test reports — and
-# prints its verdict into a captured stdout that a passing run discards. The controller's own
-# `pytest_sessionfinish` runs no tests, sees an empty `_asserts_run`, and returns early.
+# Summing is the load-bearing word and not an implementation detail: `--dist load` splits a
+# parametrised function's cases across workers, and `test_queries_use_only_declared_prefixes`
+# legitimately asserts nothing for most of its 261, so believing any single worker would bring
+# back the 54 false positives #106 was careful to avoid.
 #
-# So `-n auto` today buys 410 seconds by turning off a correctness gate, which is the trade this
-# project refuses everywhere else. Fixing it is small and specific — carry the verdict over
-# xdist's `workeroutput` channel and re-raise it on the controller — and is issue #271. Turn
-# this on in the same change that closes it, not before.
-#
-# `pytest infra` is a separate deliberate run against live services and is unaffected either way.
+# ONE THING THIS BREAKS. `pytest infra` must be run as `pytest infra -n0`. Those eight tests are
+# a contract with a LIVE broker and store, and they rewrite one `acl.conf` and one `passwd` in
+# place and restore them byte for byte. The principals are uniquely named per probe, so the
+# collision is not obvious, but two workers restoring the same file discard each other's block —
+# and the failure mode is not a loud error, it is a grant test passing against an ACL somebody
+# else wrote. They are the one suite here whose isolation is not structural.
 
 # ---------------------------------------------------------------------------------------------
 # The layering, stated and checked rather than implied by a directory.
