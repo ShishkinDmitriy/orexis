@@ -236,6 +236,27 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   together. The silos are real, and a store per family would need a join across stores for about
   four queries out of a hundred and forty-five.
 
+  **And the split would buy correctness, not only speed, which is the better argument.** The
+  modality axis says a graph's TYPE is what its contents assert — is, would like, could do,
+  doing, did — and the types do not overlap. A store per type makes that structural: the store
+  answers *what modality is this* and the named graphs inside it keep answering *whose is it
+  and how did it arrive*, which is the two-axis split
+  [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) already draws.
+
+  It is violated today, in exactly one place, and it is already filed as
+  [#264](https://github.com/ShishkinDmitriy/agora/issues/264): `ag:aims` is a WANT and it lives
+  in `graph/beliefs/<agent>`, beside `patienceS`, `fastSleepS` and `maxValuePerL`, which are
+  settings. Under a store per modality that triple could not be written at all — an aim is not a
+  belief and there would be nowhere to put it. A defect becomes an unrepresentable state, which
+  is worth more than the 109 ms.
+
+  The desire store is the case that shows the shape working. `ag:ConstraintGraph` is deliberately
+  a CLASS rather than one graph, and its comment says why — *"desire may have more than one
+  source and a reader must not have to know how many"* — so one store would hold the sovereign's
+  ratified mandate, the regions deduced from the world's ranges, and the duties received on other
+  agents' claims, as three graphs distinguished by `ag:arrivedBy`. Every reader still matches an
+  unqualified pattern and sees all three, exactly as it does now.
+
   So this is blocked by a missing engine feature rather than by the design, and that is the
   useful thing to have written down. **The trigger for revisiting is local federation** — a
   SPARQL engine that can join two in-process stores, whether pyoxigraph grows one or something
