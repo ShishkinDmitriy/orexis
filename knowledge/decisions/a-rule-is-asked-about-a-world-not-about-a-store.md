@@ -6,7 +6,9 @@ description: >-
   the second step never sees what the first added. Measured what the rules actually read, and
   the answer decides it: every shipped effect reads exactly ONE mutable graph, `$sensed`, and
   `$sensed` is already a substituted parameter — so the rules need no change and the engine
-  needs no diff layer. Run them against a per-plan snapshot with the hypothesis bound in. The
+  needs no diff layer. Run them against a per-plan snapshot of the invariant graphs, with each
+  search node's own readings bound in as `$sensed` — one graph per node, because the frontier
+  holds siblings at once. It copies less than the search does today, not more. The
   cost is that effect queries move from pyoxigraph to rdflib, which is a second engine reading
   the same text, and that cost is paid with the same guard one-graph-both-engines-read used.
 status: accepted
@@ -56,17 +58,53 @@ the store; that is an accident of what the caller passes.
 
 # The decision
 
-**Run a rule against a per-plan snapshot, with the hypothesis bound in as `$sensed`.**
+**Run a rule against a per-plan snapshot, with each node's own readings bound in as `$sensed`.**
 
 At the start of a plan, copy the graphs a rule may read but no step may change — world, derived,
-entailed, ontology, beliefs — into one rdflib dataset. That is the invariant part. For each
-step, put the hypothesis's readings in a graph of that dataset and bind `$sensed` to its name.
-The rule runs unchanged, sees the world the previous step reached, and its retraction finds the
-reading the previous step predicted rather than the one on disk.
+entailed, ontology, beliefs — into one rdflib dataset. That is the invariant part, and it is
+shared by the whole search. Each node of the search then owns **one named graph** in that same
+dataset, holding the readings that node's world reached, and a rule evaluated at that node has
+`$sensed` bound to that node's graph name. The rule runs unchanged, sees the world the previous
+step reached, and its retraction finds the reading the previous step predicted rather than the
+one on disk.
 
-Measured cost of the snapshot, on `world/simulation`: the store holds 3,261 triples and the
-graphs a rule reads come to under 500, dominated by the world graph's 312. Once per plan, not
-once per step.
+## One graph per NODE, and not one mutable graph
+
+The obvious reading of the paragraph above is a single hypothesis graph that each step
+overwrites. That is wrong, and it is wrong in a way worth stating because it is the first thing
+anyone will try.
+
+**Planning is a search over a tree of states, and the states are alive at the same time.** The
+search is breadth-first — `frontier` holds every node at a depth, `nxt` collects their children
+— so siblings coexist rather than being visited one after another. A single mutable graph would
+need save/restore around every expansion, and not even a stack discipline would serve, because
+the frontier is a set rather than a path. Backtracking is not the hard case; *branching* is.
+
+So a world is a VALUE, one named graph per node, written once when the node is created and
+never mutated. Choosing another branch is binding `$sensed` to another name. There is nothing
+to restore because nothing was disturbed.
+
+The tree is bounded and small: `MAX_DEPTH` is 2 and a plant's menu offers two rows, so the
+worst case is seven live worlds. That bound is the search's, not this design's — the same seven
+worlds exist today.
+
+## Which makes it cheaper than what happens now
+
+The bound above is why the invariant/mutable split is worth making, and the measurement is
+lopsided enough to be the argument on its own. On `world/simulation`:
+
+| | triples |
+|---|---|
+| the store | 3,261 |
+| a node's world **today**, copied per node | 3,044 |
+| the sensed graph — **the only part a plan step changes** | **5** |
+| copied per plan today (7 nodes) | 21,308 |
+| copied per plan if only the readings are per-node | **35**, plus one shared snapshot |
+
+Today `_world_after` copies the entire belief base into a fresh `rdflib.Graph` for every node,
+because a world is one flat graph and there is nothing in it that says which part a step could
+have changed. Separating the invariant bulk from the five triples that move is not a cost this
+design pays; it is a cost it stops paying.
 
 ## Why not the other two
 
@@ -99,6 +137,12 @@ what makes the second engine safe to introduce rather than merely convenient.
 
 # Seams left open
 
+- **A node's world is read by two things that want different shapes.** Rules want a dataset
+  whose `$sensed` is separable; `_met_in` runs pyshacl and `_urgency_in` reads a value, and both
+  want one flat graph. So a node becomes a pair — the shared invariant snapshot and its own
+  readings — with the flat view being their union. That union is cheap to take and it is a real
+  piece of work, not a detail: it is why this is a change to what a possible world IS and not
+  only to which dataset a query runs against.
 - **A plan that moves something other than a reading.** The table is true of the three rules
   that exist, not of rules in general — an effect that wrote an intention or a belief would add
   a second mutable graph, and the snapshot would have to make that one replaceable too. The
