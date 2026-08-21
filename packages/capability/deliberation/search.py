@@ -40,6 +40,7 @@ from agent import effects
 
 from . import trace
 from agent.goal import Goal
+from agent.imaginarium import Imaginarium
 from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.validate import conforms, graph_from
 
@@ -85,9 +86,19 @@ class Plan:
 
 @dataclass
 class _Node:
-    """One point in the search: a world, how it was reached, and what it is worth."""
+    """One point in the search: a world, how it was reached, and what it is worth.
+
+    The world is held TWICE, and the pair is what makes depth 2 mean what it says. `graph` names
+    this node's readings inside the plan's imaginarium, which is what the next step's rule reads
+    and where its `$sensed` points; `world` is the same readings flattened over public knowledge
+    into the one rdflib graph pySHACL and `_value_in` want. Two engines want different shapes of
+    the same fact, and materialising the second from the first is the piece of work the design
+    does not remove — see the seams in
+    knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
+    """
 
     world: object
+    graph: str = SENSED_GRAPH                     # this node's readings, in the imaginarium
     taken: tuple = field(default_factory=tuple)   # the means applied to get here, in order
     urgency: float = 1.0
 
@@ -110,6 +121,10 @@ class Planner:
         self.agent = agent
         self.desire = desire
         self.me = me
+        #  Alive only during a pass. Between passes there is no imaginarium, which is the point:
+        #  a hypothesis explored against a world that has moved is not a hypothesis, so the
+        #  snapshot is per plan and nothing carries over.
+        self.imaginarium = None
 
     # --- what a world is worth ---------------------------------------------------------------
 
@@ -186,13 +201,26 @@ class Planner:
         when it ends (#256) — otherwise all of this dies in-process as a single log line, and
         nothing outside can reconstruct it, because the belief base is locked by the process
         holding it. `trace` explains why that is the record's one sanctioned exception.
+
+        THE IMAGINARIUM IS DISCARDED WHOLE when the pass ends, which is the property that makes
+        a possible world safe to materialise at all: an intention must survive a restart and a
+        hypothesis must survive nothing, and these are opposites on the axis that matters. In a
+        `finally`, so it holds for the pass that raises as well as the one that answers — and no
+        node's graph has a lifecycle of its own, because there is nothing left to have one in.
         """
+        try:
+            return self._search(goal)
+        finally:
+            self.imaginarium = None
+
+    def _search(self, goal: Goal) -> Plan:
+        """The pass itself. Separate only so `plan` can guarantee the discard above."""
         #  Timed from HERE, which is inside the pass and outside the trace write below: a
         #  caller timing `plan()` would be timing the recording as well, and reporting the
         #  observer's cost as the observed's.
         self._started = time.monotonic()
-        base = self._beliefs()
-        here = _Node(world=base, urgency=self._urgency_in(base, goal))
+        here = self._begin(goal)
+        base = here.world
         #  CLEARED AT THE START, which is the difference between a graph that holds one pass
         #  and one that holds two. It also means a pass that raises leaves no trace claiming
         #  to describe a decision nobody reached.
@@ -217,9 +245,8 @@ class Planner:
                     #  were somewhere new, which is all cycle detection is for here.
                     #  Steps are ROWS, not means: a plan is a path through the affordance
                     #  graph, and which lever a step goes through is half of what it says.
-                    taken = node.taken + (row,)
-                    world = self._world_after(node, row, goal)
-                    if world is None:
+                    step = self._step_from(node, row, goal)
+                    if step is None:
                         self._weighed.append((depth, row, None, trace.UNSIMULATED))
                         continue
                     #  CYCLE DETECTION, and it compares WORLDS rather than means. The first
@@ -229,29 +256,52 @@ class Planner:
                     #  not be explored twice is a world already seen — +3 then −3 lands back
                     #  where it started, and expanding it again would spend the depth budget
                     #  going nowhere.
-                    where = self._signature(world, goal)
+                    #
+                    #  KEYED ON THE WORLD AND NEVER ON THE GRAPH NAME, which is the one thing
+                    #  naming a graph per node could quietly have broken. `seen` is global
+                    #  across the search, so two paths arriving at the same value collide and
+                    #  the second is pruned — two names, one world, still one entry.
+                    where = self._signature(step.world, goal)
                     if where in seen:
-                        self._weighed.append(
-                            (depth, row, self._urgency_in(world, goal), trace.SEEN))
+                        self._weighed.append((depth, row, step.urgency, trace.SEEN))
                         continue
                     seen.add(where)
-                    step = _Node(world, taken, self._urgency_in(world, goal))
                     if step.urgency < best.urgency:
                         best = step
-                    if self._met_in(world, goal):
+                    if self._met_in(step.world, goal):
                         self._weighed.append((depth, row, step.urgency, trace.MET))
                         return self._record(
                             goal,
-                            self._offer(Plan(SATISFIED, taken, here.urgency, step.urgency), goal),
+                            self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency),
+                                        goal, step.world),
                             here.urgency)
                     self._weighed.append(
                         (depth, row, step.urgency,
                          trace.BETTER if step.urgency < here.urgency else trace.WORSE))
-                    #  A SENSING action ends a plan. Looking tells you what is true; it does
-                    #  not make anything true, so a step chosen to follow it would be chosen
-                    #  against a reading nobody has taken.
-                    if effects.confirmed_by(self.agent.store, row.means) != _BY_OBSERVATION:
-                        nxt.append(step)
+                    #  EVERY step that survived the cycle check extends the frontier, and a
+                    #  SENSING action still ends a plan — by the same road every other "this
+                    #  does not help" arrives by, rather than by a rule of its own.
+                    #
+                    #  There WAS a rule of its own, and it is the reason depth was 1. It asked
+                    #  `ag:confirmedBy ag:ByObservation`, which every effect here answers — a
+                    #  dose and a bid included, since only a later reading says either arrived
+                    #  — so the guard matched every lever, `nxt` came back empty at every
+                    #  depth, and the search never took a second step whatever MAX_DEPTH said.
+                    #  Replacing it with a truer term was the first fix and the wrong one: what
+                    #  a look does is already stated by its EFFECT, which predicts the value it
+                    #  found, so the world it reaches has the parent's signature and `seen`
+                    #  discards it. Measured with no guard at all, on three worlds including a
+                    #  first look with nothing sensed: Observe is pruned as a world already
+                    #  reached, every time. A second statement of a fact the effect settles is
+                    #  a fact that can disagree with it.
+                    #
+                    #  WHAT THIS RESTS ON, so the next person can see it break: `_signature` is
+                    #  the goal's own value, and a look does not move it. #258 asks whether a
+                    #  signature should carry where a plan IS rather than only that number — and
+                    #  a signature that noticed a fresher `sosa:resultTime` would make "look,
+                    #  then look" a new world every time. Chaining past a look becomes a real
+                    #  question again exactly there, and nowhere earlier.
+                    nxt.append(step)
             frontier = nxt
             if not frontier:
                 break
@@ -267,7 +317,7 @@ class Planner:
                                            self._skipped), here.urgency)
         return self._record(goal, self._offer(
             Plan(EXHAUSTED if not self._met_in(best.world, goal) else SATISFIED,
-                 best.taken, here.urgency, best.urgency), goal), here.urgency)
+                 best.taken, here.urgency, best.urgency), goal, best.world), here.urgency)
 
     def _record(self, goal, plan, stands_at):
         """Write the pass down and hand back the plan unchanged.
@@ -282,7 +332,7 @@ class Planner:
                     time.monotonic() - self._started)
         return plan
 
-    def _offer(self, plan: Plan, goal: Goal) -> Plan:
+    def _offer(self, plan: Plan, goal: Goal, world) -> Plan:
         """A plan, once it has been checked for legality — and only the winner is checked.
 
         Validating every candidate against the whole rulebook was the obvious reading and costs
@@ -291,30 +341,24 @@ class Planner:
         not need it. What must be true is that the agent never COMMITS to reaching an
         illegitimate world, and the plan it commits to is one — so the expensive question is
         asked once, of the world it actually intends.
+
+        **The world is PASSED, and it used to be replayed.** `_world_of` rebuilt it by re-running
+        each step's rule from the root, which is the same defect the search loop had and in the
+        same place: a rule re-run has to be re-run against something, and that something was the
+        store — so past step one the society's refusal was judged on a world the plan would not
+        reach. The node that won already holds the world it would reach, so nothing has to be
+        rebuilt at all. It arrives as an ARGUMENT rather than on the `Plan`, which is the
+        distinction the old docstring was really drawing: a `Plan` crosses a module boundary and
+        goes out to the ask channel, and a possible world must not ride along into somewhere
+        that keeps things.
         """
         if not plan.steps:
             return plan
-        ok, _ = conforms(self._world_of(plan, goal), focus=self.me.uri)
+        ok, _ = conforms(world, focus=self.me.uri)
         if ok:
             return plan
         log.warning("the world this plan would reach is one the society refuses — not taken")
         return Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
-
-    def _world_of(self, plan: Plan, goal: Goal):
-        """The world the whole plan would reach — replayed, because only its steps were kept.
-
-        Rebuilt rather than carried on the node: a `Plan` crosses a module boundary and out to
-        the ask channel, and a graph riding along with it would be a possible world escaping
-        into somewhere that keeps things.
-        """
-        world = self._beliefs()
-        for step in plan.steps:
-            #  Each step simulated FROM where the last one left off, exactly as the search
-            #  did — replaying with the goal's original reading would rebuild a different
-            #  world from the one that was chosen, and legality would be judged on it.
-            world = effects.world_after(world, self.agent.store, step.means,
-                                        **self._bind(goal, world, step.means))
-        return world
 
     def _candidates(self, node, goal: Goal):
         """The levers worth simulating from here — the menu, re-run in the world reached.
@@ -323,6 +367,12 @@ class Planner:
         row whose premises cannot hold does not exist, so an effect that makes a missing row
         appear is the step before it. At depth 0 this is the ordinary menu; deeper, it is the
         menu of a world nobody is in yet.
+
+        Asked of the agent's store rather than of the node's, and that is not the defect #254
+        closed arriving a third time: no affordance query names a graph or reads a reading, so
+        every row is a conclusion from wiring alone and the menu of a possible world is the menu
+        of this one. It would stop being true of a rule whose effect moved something a row's
+        premises walk, and then this would take the imaginarium too.
 
         No `which violations do I repair` declaration is consulted. The record proposes one and
         it is an OPTIMISATION — a way to skip simulating a lever that obviously cannot help —
@@ -346,19 +396,53 @@ class Planner:
                 continue
             yield row
 
-    def _world_after(self, node, row, goal: Goal):
+    def _begin(self, goal: Goal) -> _Node:
+        """This plan's imaginarium, and the root node standing in the world the agent is in.
+
+        The imaginarium is built per PLAN and dropped with it — see `plan`, which does that in a
+        `finally` so a pass that raises leaves nothing imagined behind either. What it holds is
+        public knowledge, this agent's beliefs and this agent's readings, all copied: the
+        readings are the root node's own graph, which is why `$sensed` at depth 0 still names
+        exactly what it always did, and every deeper node forks from it.
+        """
+        self.imaginarium = Imaginarium(
+            self.agent.store, beliefs_graph(self.agent.id), SENSED_GRAPH)
+        base = self._beliefs()
+        return _Node(world=base, graph=SENSED_GRAPH, urgency=self._urgency_in(base, goal))
+
+    def _step_from(self, node, row, goal: Goal):
+        """The node one step on from here, or None where the rule would not run.
+
+        The diff is computed ONCE and lands in both halves of what a node is: the imaginarium
+        graph the next step's rule will read, and the flat rdflib world validation reads. Asked
+        of the IMAGINARIUM and not of the belief base, which is the whole of #254 — a retraction
+        asked of the store finds the observation still on disk, so the second dose lands beside
+        the first instead of replacing it and is then discarded as a world already seen.
+        """
         try:
-            return effects.world_after(node.world, self.agent.store, row.means,
-                                       **self._bind(goal, node.world, row.means))
+            added, retracted = effects.apply(self.imaginarium, row.means,
+                                             **self._bind(goal, node, row.means))
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.means, exc)
             return None
+        taken = node.taken + (row,)
+        world = effects.applied(node.world, added, retracted)
+        return _Node(world=world,
+                     graph=self.imaginarium.reached(node.graph, taken, added, retracted),
+                     taken=taken, urgency=self._urgency_in(world, goal))
 
-    def _bind(self, goal: Goal | None, world=None, means: str | None = None) -> dict:
+    def _bind(self, goal: Goal | None, node=None, means: str | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
 
-        `world` is where the step is being taken FROM, and passing it is what makes depth 2
-        more than a number. Bound from the goal alone — which is how this was first written —
+        `node` is where the step is being taken FROM, and passing it is what makes depth 2
+        more than a number. It carries BOTH halves of that, and the second is #254: the value
+        the rule predicts from, read out of the node's flat world, and `$sensed` — the graph in
+        the imaginarium holding the readings this node's path reached, which is what the
+        retraction half of the rule asks about. Bound to the agent's own sensed graph, as it was
+        before, the retraction found the observation still on disk and predicted a reading that
+        landed BESIDE the previous step's instead of replacing it.
+
+        Bound from the goal alone — which is how this was first written —
         every step is predicted from the reading the agent actually holds, so a second dose
         computes `0.04 + 0.21/conversion` exactly as the first did, lands on the world the
         first one reached, and is discarded by cycle detection as somewhere already seen.
@@ -373,8 +457,8 @@ class Planner:
         """
         prop = goal.observed_property if goal else None
         value = goal.value if goal else None
-        if world is not None and prop is not None:
-            here = self._value_in(world, goal)
+        if node is not None and prop is not None:
+            here = self._value_in(node.world, goal)
             if here is not None:
                 value = here
         return {
@@ -382,7 +466,7 @@ class Planner:
             "subject": f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>",
             "property": f"<{prop}>" if prop else "<urn:nothing>",
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
-            "sensed": f"<{SENSED_GRAPH}>",
+            "sensed": f"<{node.graph if node is not None else SENSED_GRAPH}>",
             "value": value if value is not None else 0,
             "litres": self._dose(goal, value, means) if goal else 0.0,
         }
@@ -451,7 +535,6 @@ class Planner:
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
-_BY_OBSERVATION = "http://example.org/agora#ByObservation"
 _ACTUATION = "http://example.org/agora/actuation#Actuation"
 #  Sizing is asked of whichever module OWNS the lever, so the means and the family that carries
 #  it are both named here. Spelled out rather than imported: `intention/terms.py` and

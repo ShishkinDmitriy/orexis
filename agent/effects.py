@@ -15,10 +15,11 @@ fighting it. A stored `sh:construct` is just a query, and this project already h
 that runs queries. See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md, "take the
 vocabulary and not necessarily the engine".
 
-WHAT IS NOT HERE is the possible world and the search that would use it — that is #239. This
-reads a rule and runs it, and the one caller today is the actuator asking what its own dose
-will do, so that the number it predicts and the number it later verifies against cannot be two
-numbers.
+WHAT IS NOT HERE is the SEARCH — that is `packages/capability/deliberation`. This reads a rule
+and runs it against a dataset it is handed, and the two callers ask about different worlds: the
+actuator asks about the one it is standing in, so that the number it predicts and the number it
+later verifies against cannot be two numbers, and the planner asks about one nobody is in yet.
+Which of them a rule is answering about is `store`, and nothing else here.
 """
 
 from __future__ import annotations
@@ -59,7 +60,19 @@ def rule_for(store, means: str) -> dict | None:
 def apply(store, means: str, **bind) -> tuple[list, list]:
     """Run one means' effect: `(added, retracted)`, as triples, against nothing.
 
-    Nothing is written. Both halves are CONSTRUCTs, so this asks the store two questions and
+    **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
+    what #254 changed here.** An actuator asks about the world it is standing in and passes its
+    own belief base; a planner asks about a world nobody is in yet and passes its
+    `agent.imaginarium.Imaginarium`, where `$sensed` names the readings that node's path
+    reached. Nothing in this file distinguishes them, and nothing should: a rule already asks
+    about *whichever graph it is pointed at*, and being bound to the store was an accident of
+    what the caller happened to hand over. The retraction is the half that made it visible —
+    re-asked of the belief base, it finds the observation still on disk and never sees what the
+    previous step added, so `(beliefs − retracts) + adds` was true for the first step and false
+    for every step after it. See
+    knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
+
+    Nothing is written. Both halves are CONSTRUCTs, so this asks the dataset two questions and
     returns their answers — which is what makes a possible world computable as
     `(beliefs - retracted) + added` without a single mutation anywhere. `ag:retracts` exists
     because SHACL-AF has no deletion, and it is not optional: the sensed graph upserts one
@@ -82,6 +95,12 @@ def apply(store, means: str, **bind) -> tuple[list, list]:
 def world_after(base, store, means: str, /, **bind):
     """The world as it WOULD be, had this means been taken: `(base − retracted) + added`.
 
+    The two halves are separately callable and the search calls them separately, because it
+    needs the diff twice: once to fork the node's readings inside the imaginarium, where the
+    NEXT step's rule will read them, and once to build the flat rdflib view pySHACL validates.
+    This composed form states the equation, and is what a caller asking about a single step
+    wants.
+
     The three are POSITIONAL-ONLY, and that is load-bearing rather than tidy: everything after
     them is a binding for the rule, and a rule is free to have a placeholder called `$base` —
     Actuate's does, since #247 made the reading it predicts from a parameter. Without the `/`
@@ -102,6 +121,11 @@ def world_after(base, store, means: str, /, **bind):
     back holding neither reading.
     """
     added, retracted = apply(store, means, **bind)
+    return applied(base, added, retracted)
+
+
+def applied(base, added, retracted):
+    """One step's diff, as an rdflib graph: `(base − retracted) + added`, base untouched."""
     world = rdflib.Graph()
     for triple in base:
         world.add(triple)
@@ -163,14 +187,6 @@ def lands_after(store, means: str, **bind) -> float | None:
     if not rows or rows[0].get("seconds") is None:
         return None
     return float(rows[0]["seconds"])
-
-
-def confirmed_by(store, means: str) -> str | None:
-    """By which route this effect becomes knowable — construction, report, observation, or not
-    at all. Static, unlike the timing: it is a property of the MEANS, where whether a given
-    agent can take that route is a fact about its wiring."""
-    rule = rule_for(store, means)
-    return rule.get("confirmed") if rule else None
 
 
 def _select(store, text: str, bind: dict) -> list:
