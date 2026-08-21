@@ -77,27 +77,13 @@ the buyer's *property* on the venue. Everything else about a good — that it is
 property-shaped stakes hang off, and what that keeps expressible — is
 [good](/domain/good.md)'s to say.
 
-# Who hosts — the STRUCTURALLY short side of the *good*
+# Who hosts
 
-The short side of the **good** hosts: v1 = the supplier (supply-scarce); a consumer in a buyer's
-market (reverse auction).
+The short side of the good, and *structurally* short rather than short today — which is
+[host](/domain/host.md)'s, along with what a convener owes once a round has run.
 
-**Structurally short, and the qualifier is the whole of it.** The principle was first written
-without it ([standalone-clearing](/decisions/standalone-clearing.md)) and reads as though it
-follows from today's deficit. It does not, and it must not:
-[the-market-has-no-governor](/decisions/the-market-has-no-governor.md) amends that record, and
-its argument is that a convener chosen by measured scarcity would make the rules a move in the
-game — state opens rounds, structure names the convener. Which side is short *by construction*
-is a fact about the wiring and cannot be played for.
-
-**Money is the *medium*, not the good.** Money-scarcity **gates participation** — can this agent
-afford to bid? — and selects nothing. A round simply *waits* for the allowance, then a budget
-shock opens it, still hosted by the water-scarce supplier. This is the claim
-[auction](/domain/auction.md) defers to when it settles who rules.
-
-Who *owns* the venue is structural; who convenes a **given** auction is per-auction, and that
-split is an open question rather than a settled one — [auction](/domain/auction.md) states it,
-along with the one route to it that is closed rather than merely unbuilt.
+What matters to the structure is only this: the answer is fixed by the wiring, so a market's
+convener is knowable before any bidding happens.
 
 # Who initiates — an agent, never infra
 
