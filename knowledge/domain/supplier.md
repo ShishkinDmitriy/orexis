@@ -10,12 +10,12 @@ description: The dealer the arcs built — a strategic seller downstream, a genu
 
 The water source as a **strategic seller** (Design B): it has real costs (electricity, pump
 wear, upstream water price) and wants to cover them plus a margin. In v1 it is the **host**
-of the auction — but only because it is the *scarce side* (supply is the bottleneck;
-consumers cluster around it). Hosting is not intrinsic to being a supplier; it belongs to
-whichever side is short. Money is the *medium*, not the good: money-scarcity gates who can
-bid, it does not select the host. How the auction forms, who's in the cluster, and how
-consumers and suppliers know each other (the attested plumbing topology) is in
-[market](/domain/market.md). See [standalone-clearing](/decisions/standalone-clearing.md).
+of the auction — but only because it is the *structurally* scarce side (supply is the
+bottleneck; consumers cluster around it). **Hosting is not intrinsic to being a supplier**, and
+that is the only part of the principle this page owns: who hosts, why the qualifier is
+load-bearing, and why money selects nothing are [market](/domain/market.md)'s, under *who
+hosts*. How the auction forms, who is in the cluster, and how consumers and suppliers know each
+other is there too.
 
 # Host role is scoped — it runs the auction, not the clearing
 

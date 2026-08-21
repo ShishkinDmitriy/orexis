@@ -218,10 +218,9 @@ lives with the agent (`cadence_for`), never on the board — same reason the ban
 polling agent would read the same two figures: they describe an interval either way, and only
 whose timer runs it changes.
 
-**Ignorance is urgent** (#137). The choir answering `urgency` can be asked a second question
-— pass no value, and the question becomes *how urgent is not knowing* — and desire answers it
-with the maximum for any property it wants held: not knowing whether the pot is dying is at
-least as urgent as knowing it is uncomfortable. So `start()` aims every sensor at once instead
+**Ignorance is urgent** (#137), for the reason [desire](/domain/desire.md) gives — ask the
+choir `urgency` with no value and the question becomes *how urgent is not knowing*. What sensing
+does about it is the part that belongs here: `start()` aims every sensor at once instead
 of waiting for a first reading to trigger the computation: at birth — a desired state, an empty
 sensed graph, maximum uncertainty — the board opens at the fast end, gathers the readings that
 end the ignorance and establish a trend, and relaxes through the same recomputation every

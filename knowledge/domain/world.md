@@ -219,8 +219,8 @@ What that buys:
 - **Readings stay with the agent that made them**, which closes a provenance hole: an
   observation records `ag:underWorldVersion`, but two worlds can both be v1, so a shared
   `:sensed` mixed readings nothing could tell apart.
-- **Isolation is structural.** An agent's store contains only what it may see, so there is
-  nothing to enforce, no credential to issue and no registry to keep in step.
+- **Isolation is structural**, which is [belief-base](/domain/belief-base.md)'s to state and
+  the reason a world needs no access model of its own.
 - **Derivation needs no authority.** Every agent runs `rules.ru` over its own copy and computes
   the same answer from the same ratified files.
 
