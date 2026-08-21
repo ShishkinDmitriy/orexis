@@ -495,10 +495,11 @@ def test_a_pass_reports_what_it_cost_and_what_it_could_not_see(make):
     observability change must not do. So every figure here is a projection of the trace the
     pass wrote as it ended.
 
-    Asked of FERN, and the numbers are the point rather than the plumbing: fern buys its water,
-    Acquire has no effect rule, so the search sees Observe alone. `blind` is therefore above
-    zero and `deepest` is 1 — the recorded state of the world, made visible instead of being a
-    sentence in a decision record.
+    Asked of FERN, and the numbers are the point rather than the plumbing. fern buys its
+    water, and since #268 the market states what buying does — so the search now sees the lever
+    that matters and `blind` is ZERO. That number was 1 for every plant, and its falling is the
+    whole of what #268 changed: a search that passed over Acquire could not claim to see the
+    menu, and the pass now does.
     """
     from packages.capability.deliberation import trace
 
@@ -512,8 +513,8 @@ def test_a_pass_reports_what_it_cost_and_what_it_could_not_see(make):
     planning = rows["agent_planning"]
 
     assert planning["seconds"] > 0, "a pass that took no time did not happen"
-    assert planning["blind"] >= 1, \
-        "Acquire has no effect rule, so fern's search could not claim to see the whole menu"
+    assert planning["blind"] == 0, \
+        "since #268 every lever on fern's menu states its effect, so no goal is passed over"
     assert planning["deepest"] <= 1, \
         "depth beyond one step is nominal today (#254, #258) — if this rises, those were fixed"
     assert set(trace.FIELD.values()) <= set(planning), \

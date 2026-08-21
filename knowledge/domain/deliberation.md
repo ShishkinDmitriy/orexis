@@ -62,6 +62,17 @@ Three things bound it, and each exists because building it found the failure:
   already seen. The loop ran twice and the search was depth 1, for every means that moves a
   measured property.
 
+**Every lever on a plant's menu states its effect now (#268), and until recently one did not.**
+Only sensing and actuation shipped effect rules, so a plant that BUYS its water had a search
+that saw Observe alone: it correctly found that looking does not wet soil, marked the plan
+partial and deferred. `blind` was 1 for every plant and `better` was zero across three
+societies. The market states what buying does, and the sizing is asked of whoever would take
+the act — the bidder for Acquire, the actuator for Actuate. Asking the actuator about
+everything is what made the first attempt worse than the blindness it replaced: a plant that
+holds no valve was sized at nothing, the rule predicted the world the agent already stood in,
+and the search reported that buying does not help. A partial plan defers; a confident one
+overrides the reflex and stops the plant bidding.
+
 **Depth beyond one does not work yet, and the reason is worth knowing before anyone relies on
 it.** A rule's two CONSTRUCTs are run against the STORE, so `(beliefs − retracts) + adds` holds
 for the first step and stops holding for the second: the retraction re-asks the store, finds the
