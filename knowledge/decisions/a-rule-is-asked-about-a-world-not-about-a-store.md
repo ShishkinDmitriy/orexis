@@ -5,12 +5,11 @@ description: >-
   Depth beyond one is nominal because a means' effect runs its CONSTRUCTs against the STORE, so
   the second step never sees what the first added. Measured what the rules actually read, and
   the answer decides it: every shipped effect reads exactly ONE mutable graph, `$sensed`, and
-  `$sensed` is already a substituted parameter — so the rules need no change and the engine
-  needs no diff layer. Run them against a per-plan snapshot of the invariant graphs, with each
-  search node's own readings bound in as `$sensed` — one graph per node, because the frontier
-  holds siblings at once. It copies less than the search does today, not more. The
-  cost is that effect queries move from pyoxigraph to rdflib, which is a second engine reading
-  the same text, and that cost is paid with the same guard one-graph-both-engines-read used.
+  `$sensed` is already a substituted parameter — so no rule changes. Run them against a SECOND
+  pyoxigraph store, in memory for the life of one plan, with one named graph per search node
+  because the frontier holds siblings at once. About 7 ms a plan against a 200-500 ms pass. An
+  rdflib version of this was written first and refused by measurement: 163x slower per query,
+  which would have tripled a pass on the Pi to save twenty thousand triples of memory.
 status: accepted
 timestamp: 2026-08-21T12:00:00Z
 ---
@@ -58,15 +57,20 @@ the store; that is an accident of what the caller passes.
 
 # The decision
 
-**Run a rule against a per-plan snapshot, with each node's own readings bound in as `$sensed`.**
+**Run a rule against a second pyoxigraph store, held in memory for the life of one plan, with
+each node's own readings in a graph of its own.**
 
 At the start of a plan, copy the graphs a rule may read but no step may change — world, derived,
-entailed, ontology, beliefs — into one rdflib dataset. That is the invariant part, and it is
-shared by the whole search. Each node of the search then owns **one named graph** in that same
-dataset, holding the readings that node's world reached, and a rule evaluated at that node has
-`$sensed` bound to that node's graph name. The rule runs unchanged, sees the world the previous
-step reached, and its retraction finds the reading the previous step predicted rather than the
-one on disk.
+entailed, beliefs — into a fresh `pyoxigraph.Store()` with no path, which is in memory and is
+not the belief base. Each node of the search then owns **one named graph** in that store,
+holding the readings that node's world reached, and a rule evaluated at that node has `$sensed`
+bound to that node's graph name. The rule runs unchanged, sees the world the previous step
+reached, and its retraction finds the reading the previous step predicted rather than the one on
+disk.
+
+Nothing is written to the agent's own store, which is the property that mattered: a possible
+world still cannot escape into somewhere that keeps things, because the store it lives in is
+discarded with the plan.
 
 ## One graph per NODE, and not one mutable graph
 
@@ -88,23 +92,25 @@ The tree is bounded and small: `MAX_DEPTH` is 2 and a plant's menu offers two ro
 worst case is seven live worlds. That bound is the search's, not this design's — the same seven
 worlds exist today.
 
-## Which makes it cheaper than what happens now
+## What it costs, measured
 
-The bound above is why the invariant/mutable split is worth making, and the measurement is
-lopsided enough to be the argument on its own. On `world/simulation`:
+On `world/simulation`, per plan:
 
-| | triples |
+| | |
 |---|---|
-| the store | 3,261 |
-| a node's world **today**, copied per node | 3,044 |
-| the sensed graph — **the only part a plan step changes** | **5** |
-| copied per plan today (7 nodes) | 21,308 |
-| copied per plan if only the readings are per-node | **35**, plus one shared snapshot |
+| load the invariant graphs into the in-memory store | **1.45 ms** (486 quads) |
+| fork one node's readings into its own graph | 0.19 ms × 7 nodes |
+| run a rule's CONSTRUCT | 0.32 ms × 14 |
+| **a whole plan** | **≈ 7 ms** |
+| a whole plan today, giving wrong answers past step one | ≈ 4 ms |
+| a whole deliberation pass, for scale (#268) | 200–500 ms |
 
-Today `_world_after` copies the entire belief base into a fresh `rdflib.Graph` for every node,
-because a world is one flat graph and there is nothing in it that says which part a step could
-have changed. Separating the invariant bulk from the five triples that move is not a cost this
-design pays; it is a cost it stops paying.
+Three milliseconds on a pass that costs two hundred, to make depth 2 mean what it says.
+
+**Load only the graphs a rule reads.** The whole store is 3,266 quads and takes 25.8 ms to copy;
+the graphs rules actually read are 486 and take 1.45. The table above is the second number, and
+the difference is large enough that it is part of the decision rather than an optimisation to
+consider later.
 
 ## Why not the other two
 
@@ -120,29 +126,42 @@ legitimately needs the world graph or a belief. The table above answers it: they
 none of them needs a *changed* one. So the layer does not need a second mode. It needs to be
 handed a different dataset.
 
-# The cost, stated plainly
+# What this replaces, and the measurement that replaced it
 
-**Effect queries move from pyoxigraph to rdflib**, because the snapshot is an rdflib dataset.
-That is a second engine reading the same query text, which is the hazard
-[one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) exists to name. This
-project has already been bitten from the other direction — pyoxigraph binds nothing for
-`duration / duration`, and a column computed that way read empty with no test going red.
+**The first version of this record chose an rdflib dataset**, on the reasoning that
+`world_after` already builds rdflib graphs and pyshacl already reads them, so the planning path
+was rdflib's anyway. It stated the cost as a second SPARQL engine reading one query text — the
+hazard [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) exists to name —
+and proposed to pay it with a both-engines test.
 
-It is a real cost and it is bounded, for two reasons. rdflib is already in the planning path:
-`world_after` builds rdflib graphs today, and `_met_in` runs pyshacl over them. And the fix is
-the one this project already knows — the guard, not the hope. **A test runs every shipped rule
-on both engines against one graph and fails if the answers differ.** That is
-`one-graph-both-engines-read`'s move applied to effects rather than to entailment, and it is
-what makes the second engine safe to introduce rather than merely convenient.
+The sovereign asked whether a triplestore would not be easier on the Pi. It is, by two orders of
+magnitude, and the design was refused by its own numbers:
+
+| the same CONSTRUCT, the same data | |
+|---|---|
+| pyoxigraph | **0.27 ms** |
+| rdflib | **43.59 ms** — 163× slower |
+| snapshot store → rdflib dataset | 132 ms per plan |
+| **a plan on rdflib** | **≈ 742 ms** |
+
+A deliberation pass costs 200–500 ms. The rdflib design would have roughly tripled it, per agent
+per tick, on a four-core Pi — to buy a memory saving of about twenty thousand triples, which is
+nothing. **It measured the cheap axis and ignored the expensive one.**
+
+Keeping pyoxigraph does not merely avoid that. It deletes the cost the first version was
+budgeting for: with one engine there is no second engine to disagree with, so the both-engines
+test that design owed is not owed by this one. The hazard was self-inflicted.
 
 # Seams left open
 
-- **A node's world is read by two things that want different shapes.** Rules want a dataset
-  whose `$sensed` is separable; `_met_in` runs pyshacl and `_urgency_in` reads a value, and both
-  want one flat graph. So a node becomes a pair — the shared invariant snapshot and its own
-  readings — with the flat view being their union. That union is cheap to take and it is a real
-  piece of work, not a detail: it is why this is a change to what a possible world IS and not
-  only to which dataset a query runs against.
+- **A node's world is read by two things that want different shapes, and now two engines.**
+  Rules want named graphs in the in-memory pyoxigraph store; `_met_in` runs pyshacl and
+  `_urgency_in` reads a value, and both want one flat rdflib graph. So a node becomes a pair —
+  the shared invariant snapshot and its own readings — and the flat rdflib view is materialised
+  from that pair when validation asks for it. That materialisation is the piece of work this
+  design does not remove, and it is why this is a change to what a possible world IS rather than
+  only to which store a query runs against. It is also where the rdflib cost reappears, bounded:
+  pyshacl was always going to run on rdflib, and it already does today.
 - **A plan that moves something other than a reading.** The table is true of the three rules
   that exist, not of rules in general — an effect that wrote an intention or a belief would add
   a second mutable graph, and the snapshot would have to make that one replaceable too. The
