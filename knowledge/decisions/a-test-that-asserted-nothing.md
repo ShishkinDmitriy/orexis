@@ -3,8 +3,6 @@ type: Decision
 title: A test that asserted nothing passed by doing nothing
 description: Four times a guard went green while checking nothing, because its assertions sat inside a loop over an empty collection. The check is now mechanical and asks the true question — did any assert in this test actually execute — rather than a proxy each site would spell differently. Per test FUNCTION rather than per parametrised case, because a scan over every source file legitimately asserts nothing for the files with no queries; checking cases separately called 54 of those a failure. Traced only for tests an AST scan finds at risk, so the cost is 4% rather than the whole suite.
 status: accepted
-stage: v1
-tags: [testing, gates, guards]
 timestamp: 2026-08-12T00:00:00Z
 ---
 

@@ -3,8 +3,6 @@ type: Decision
 title: Strategic supplier (Design B)
 description: The supplier is a real seller with costs and a reserve price, not a neutral utility.
 status: accepted
-stage: v1
-tags: [economy, market, supplier]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

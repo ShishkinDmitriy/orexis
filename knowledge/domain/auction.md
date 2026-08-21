@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Auction
 description: The process, not a place. An auction condenses out of scarcity, collects bids over one or more rounds, allocates by matching, is co-signed by clearing, and dissolves. The market is the standing structure it happens inside; a round is one pass of bidding within it; who convenes it is stated in v1, not derived.
-tags: [auction, market, process, protocol]
-timestamp: 2026-08-10T00:00:00Z
 ---
 
 # What it is — a process, not a thing
@@ -25,8 +23,8 @@ vocabulary before it could say anything else.
 | | what it is | where it lives |
 |---|---|---|
 | [market](/domain/market.md) | the standing structure it happens inside | `market:Market` in the world |
-| [round](/domain/round.md) | one pass of bidding inside it — exactly one is built | `capabilities/market/hosting.py` |
-| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `capabilities/market/matching.py` |
+| [round](/domain/round.md) | one pass of bidding inside it — exactly one is built | `packages/capability/market/hosting.py` |
+| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `packages/capability/market/matching.py` |
 | [clearing](/domain/clearing.md) | the notary that validates and co-signs — never allocates | `agent/clearing.py` |
 
 The line that holds them apart is **the host proposes, clearing disposes**. Matching decides

@@ -2,8 +2,6 @@
 type: Domain Concept
 title: What an agent says about itself
 description: The figures an agent is uniquely placed to report — belief base size, reading freshness, and the write failures that were previously only logged. Counting is the kernel's because it could not be done differently; where the account GOES is a mandatory capability, granted to every agent and insisted on by a shape. The interval is required, because an agent permitted to be silent cannot be told from a dead one.
-tags: [metrics, observability, kernel, capabilities, beliefs, dashboards]
-timestamp: 2026-08-06T00:00:00Z
 ---
 
 # What it is
@@ -63,7 +61,7 @@ kernel for longer than it belonged there.
 `Observations` counts into them before any module exists — so the account itself is the kernel's,
 on the same argument that put [observation](/decisions/capability-packages.md) there.
 
-**Where the account goes could differ**, so that is `capabilities/reporting/`: a credential, a
+**Where the account goes could differ**, so that is `packages/capability/reporting/`: a credential, a
 writer, a clock and one write per tick. `reporting:Storing` puts it in this agent's own series
 bucket; `reporting:Announcing` — declared, unimplemented — would put it on the bus, and the two
 fail independently, which for telemetry is the point rather than a nicety.

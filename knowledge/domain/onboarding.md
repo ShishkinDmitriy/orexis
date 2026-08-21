@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Onboarding — a ratified world, granted the means to run
 description: The phase between genesis and a running society. What it grants, why every grant is derived from the wiring rather than decided here, why it is not birth, and why its code lives outside the agent's package.
-tags: [onboarding, credentials, provisioning, lifecycle, isolation, deployment]
-timestamp: 2026-08-05T00:00:00Z
 ---
 
 # What it is

@@ -1,10 +1,15 @@
 ---
 type: Decision
 title: Desire is deduced from the ranges the world states, never picked
-description: An agent's desire was three decimals in a private file — a target and two band edges, in soil moisture and nothing else — so an agent could want exactly one thing and could pick where its own comfort limits lay. Desire is now a capability with its own namespace and its own graph class: for each property its subject states a need in, the agent DEDUCES a region by intersecting every operating range that applies, and carries the survival ranges as the envelope that makes urgency asymmetric and unit-free. The band left market:Bidding with it, so having an opinion about your own state no longer requires being a market participant.
+description: >-
+  An agent's desire was three decimals in a private file — a target and two band edges, in
+  soil moisture and nothing else — so an agent could want exactly one thing and could pick
+  where its own comfort limits lay. Desire is now a capability with its own namespace and its
+  own graph class: for each property its subject states a need in, the agent DEDUCES a region
+  by intersecting every operating range that applies, and carries the survival ranges as the
+  envelope that makes urgency asymmetric and unit-free. The band left market:Bidding with it,
+  so having an opinion about your own state no longer requires being a market participant.
 status: accepted
-stage: v1
-tags: [desire, bdi, beliefs, ssn, capability, market, sensing, graphs]
 timestamp: 2026-08-13T00:00:00Z
 ---
 
@@ -207,7 +212,7 @@ is more urgent set how closely its board is watched. Nothing bids on air tempera
   weight would have to come from somewhere no ratified file currently is.
 - **The target is still a separate belief.** A region and a point are different things and the
   split is deliberate, but nothing stops an agent whose region moved from keeping a target that
-  is merely still legal rather than still sensible. `capabilities/review/` could be asked to
+  is merely still legal rather than still sensible. `packages/capability/review/` could be asked to
   justify a target against its region; today it only refuses one outside it.
 - **Only the bidder consumes a region for anything but attention.** Actuation doses against a
   claim, not against a region, so *"keep the value inside the region"* is a market's job

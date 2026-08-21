@@ -28,10 +28,15 @@ runtime belief base).
 # How to use this bundle
 
 * Building a component? Read its [domain](domain/) concept, then any [decision](decisions/) it links.
+* **Want to know what is true NOW, not how it got that way?** The domain concept is the current
+  statement; a decision record is the argument that produced it, and several may amend one
+  another. Where that has happened the records carry a banner pointing at the concept — see
+  [domain/package](/domain/package.md) and [domain/model-and-unit](/domain/model-and-unit.md),
+  which each stand in for four records.
 * Trying to *operate* one? Start at [runbooks](runbooks/) — the domain says what things are, the runbooks say what to type.
 * Tempted to change something? Check whether a decision pins it — several choices exist to keep v2/v3 open and must not be welded shut.
 * Runtime testimony (attested sensor triples — the witness of record, not "shared knowledge") is NOT here — see [domain/belief-base](/domain/belief-base.md).
-* Adding a document? Concept files carry frontmatter with a non-empty `type` (`Decision`, `Domain Concept`, `Component`), plus `title` and `description`. An `index.md` carries **none** — it is navigation, and its title is its heading. Only this root file may declare `okf_version`.
+* Adding a document? Concept files carry frontmatter with a non-empty `type` — one of `Decision`, `Domain Concept`, `Component` or `Runbook` — plus `title` and `description`. An `index.md` carries **none** — it is navigation, and its title is its heading. Only this root file may declare `okf_version`.
 
 # Format
 

@@ -2,7 +2,7 @@
 type: Decision
 title: A drawing drafts a stand; the world ratifies it
 description: Why the import is one-way and produces a draft rather than a source of truth — what Wokwi's model can give back, what it cannot express at all, and why bidirectional sync was refused rather than deferred.
-tags: [wokwi, wireviz, hardware, genesis, drafting, seams]
+status: accepted
 timestamp: 2026-08-08T00:00:00Z
 ---
 

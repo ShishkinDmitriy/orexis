@@ -3,8 +3,6 @@ type: Decision
 title: Single wallet with metabolic cost
 description: One wallet pays for water and for thinking; deliberation is priced.
 status: accepted
-stage: v1
-tags: [economy, bounded-rationality]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

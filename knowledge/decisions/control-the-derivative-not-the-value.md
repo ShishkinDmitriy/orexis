@@ -1,10 +1,17 @@
 ---
 type: Decision
 title: Control the derivative, not the value
-description: The design principle the project kept applying without naming — stated once, by the sovereign's analogy. When you walk you control distance; when you drive you control acceleration. Nothing here controls a step - not a reading, not a moisture level, not a move. Every layer controls the rules of the layer below - a cadence not a reading, a region not an aim, a mandate not a belief, an affordance not an action - and the tower is why the sovereign can leave the room at start: control exercised entirely through rules needs exercising only once. Predictive, not decorative - any change that reaches down a level (a deliberator setting a price, a sovereign pinning an aim, a model emitting an action) is grabbing the walking-controls from the driver's seat, and is refused on sight.
+description: >-
+  The design principle the project kept applying without naming — stated once, by the
+  sovereign's analogy. When you walk you control distance; when you drive you control
+  acceleration. Nothing here controls a step - not a reading, not a moisture level, not a
+  move. Every layer controls the rules of the layer below - a cadence not a reading, a region
+  not an aim, a mandate not a belief, an affordance not an action - and the tower is why the
+  sovereign can leave the room at start: control exercised entirely through rules needs
+  exercising only once. Predictive, not decorative - any change that reaches down a level (a
+  deliberator setting a price, a sovereign pinning an aim, a model emitting an action) is
+  grabbing the walking-controls from the driver's seat, and is refused on sight.
 status: accepted
-stage: v1
-tags: [architecture, principle, bdi, sovereignty, control]
 timestamp: 2026-08-14T00:00:00Z
 ---
 

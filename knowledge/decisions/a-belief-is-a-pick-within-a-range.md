@@ -3,8 +3,6 @@ type: Decision
 title: A belief is a pick within a range, and an agent may re-pick
 description: Beliefs are still authored once at birth, but what genesis wrote is the first pick rather than a bound — the room comes from constraints, and an agent re-picks inside it on evidence about itself.
 status: accepted
-stage: v1
-tags: [beliefs, review, autonomy, constitution, sensing, upkeep]
 timestamp: 2026-08-09T00:00:00Z
 ---
 
@@ -90,7 +88,7 @@ terms as the one shipped with it.
 
 ## A rule is SPARQL, not code
 
-`capabilities/<name>/review.rq`, beside the `rules.ru` that derives the capability itself: one
+`packages/capability/<name>/review.rq`, beside the `rules.ru` that derives the capability itself: one
 `SELECT`, rows of `?term ?value` — one row per re-pick, so a package revising two settings ships
 one file with a `UNION` rather than two files (sensing does exactly that: the cadence and the
 jolt threshold, read off the same evidence window the opposite way round). The rule contains no

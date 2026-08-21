@@ -2,8 +2,6 @@
 type: Runbook
 title: Genesis a world
 description: Author a new world and seed it — what you write, what genesis derives instead, and the four checks that tell you the result hangs together before anything runs.
-tags: [genesis, world, seeding, validation]
-timestamp: 2026-08-04T00:00:00Z
 ---
 
 # When to use this

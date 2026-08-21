@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Deliberation
 description: The whether, extracted into a family — given the gap and the standing commitments, name the next move; the acting modules carry it out. Reflex is the old welded chain as the first member, deterministic and free; Consulting is the declared, unimplemented seat for a model, constrained before it exists — a move from the vocabulary's menu, never free text-to-action, with the bid number staying deterministic and the keeper's patience bounding how often it is consulted.
-tags: [deliberation, bdi, llm, capability, market, intention]
-timestamp: 2026-08-13T00:00:00Z
 ---
 
 # What it is
@@ -169,7 +167,34 @@ figures, it is what the figures found.
 **All zero means nothing was deliberated**, not that planning is free: a want nobody has read is
 answered by Observe before any search runs, so an agent at rest reports zeros honestly.
 
-# The three members
+# The members, and which of them exist
+
+Two of the three are built. The table is the whole answer to "which rungs can I rely on" —
+`PROVIDES` in `packages/capability/deliberation/__init__.py` is the ground truth, and
+`tests/test_knowledge.py` holds this table to it.
+
+| member | what it is | built? |
+|---|---|---|
+| `deliberation:Reflex` | the welded chain, depth 1 | **yes** — `ReflexModule` |
+| `deliberation:Planning` | bounded search, depth 2, granted by the dealer premise | **yes** — `PlanningModule` |
+| `deliberation:Consulting` | one model call, emitting a move from the menu | **no** — declared and reserved |
+
+The same asymmetry runs through the rest of the amortisation ladder, and it is worth seeing in
+one place before reading the records that argue each rung:
+
+| rung | where it lives | built? | record |
+|---|---|---|---|
+| look / act / buy | `deliberation:Reflex` | **yes** | [the-ladder-of-means](/decisions/the-ladder-of-means.md) |
+| commit once, keep it | `intention:Keeping` | **yes** | [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) |
+| plan two levels | `deliberation:Planning` | **yes** | [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) |
+| re-pick your own settings | `review:Reckoning` | **yes** | [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) |
+| ask a model what next | `deliberation:Consulting` | **no** | [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md), [a-consulted-answer-is-a-premise](/decisions/a-consulted-answer-is-a-premise.md) |
+| ask a model to re-pick | `review:Consulting` | **no** | [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) |
+| compile it into a habit | — | **no**, not even declared | [a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md) |
+
+**Declared is not implemented, and that is deliberate** — a term is declared when seating the
+thing is the reason the family exists and the T-Box should say so. What each reserved member will
+NOT be allowed to do is fixed before it exists, which is the point of declaring early.
 
 - **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;
   a gap on the side a lever moves → pursue; otherwise nothing. WHICH side is read off the

@@ -3,8 +3,6 @@ type: Decision
 title: Public knowledge is five graphs, split by who put the fact there
 description: Asserted, derived and entailed facts live in separate named graphs; an ordinary query still reads all of them, because the default graph is their union.
 status: accepted
-stage: v1
-tags: [provenance, graphs, inference, derivation, sparql, trig]
 timestamp: 2026-08-09T00:00:00Z
 ---
 

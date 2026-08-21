@@ -3,8 +3,6 @@ type: Decision
 title: A panel is a sensor, not an agent, and it draws what the world says
 description: One panel per agent put every property that agent records on one axis under one unit, so a 23.9 degree reading was drawn as 2390% and thresholds meant for soil moisture coloured a temperature. A panel is keyed on the sensor now — one full-width history each, with the latest reading in its legend — because a sensor observes one property, states one unit, and its subject states the range that property belongs in. Nothing about units or bands is written in the generator; all three come from the world.
 status: accepted
-stage: v1
-tags: [grafana, onboarding, units, ssn, observability]
 timestamp: 2026-08-12T00:00:00Z
 ---
 

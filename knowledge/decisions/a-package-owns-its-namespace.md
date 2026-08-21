@@ -1,18 +1,20 @@
 ---
 type: Decision
 title: A package owns its namespace, and a directory is a package rather than a capability
-description: Every package has declared an owl:Ontology IRI of its own since there were packages, and then put its terms in someone else's namespace — because store.PREFIXES was a kernel constant, so a package wanting one had to edit the kernel to be nameable in SPARQL. The prefixes are now read off the ontologies that declare them, capabilities/market took market:, and bid matching folded into it. Three latent bugs only became visible once a second namespace existed.
+description: Every package has declared an owl:Ontology IRI of its own since there were packages, and then put its terms in someone else's namespace — because store.PREFIXES was a kernel constant, so a package wanting one had to edit the kernel to be nameable in SPARQL. The prefixes are now read off the ontologies that declare them, packages/capability/market took market:, and bid matching folded into it. Three latent bugs only became visible once a second namespace existed.
 status: accepted
-stage: v1
-tags: [capabilities, packaging, vocabulary, store, market]
 timestamp: 2026-08-10T00:00:00Z
 ---
+
+> **Current statement: [package](/domain/package.md).** This record is how the model got
+> there and why; the domain concept is what it is now. Four records amend each other on
+> this subject, so read the concept first unless you want the argument.
 
 # Context
 
 Two things were true at once and should not have been.
 
-**Every package already declared a namespace of its own.** `capabilities/market/ontology.ttl` opens
+**Every package already declared a namespace of its own.** `packages/capability/market/ontology.ttl` opens
 `<http://example.org/agora/market> a owl:Ontology`, and so does every other package — review,
 sensing, actuation, the mqtt transport. The trees under `vocabulary/` went further and put their
 *terms* there too: `mc:`, `onewire:`, `i2c:`, `probe:`, since
@@ -60,15 +62,15 @@ and hard-coding it would have made it an exception for no reason but habit.
 are valid SPARQL, so one package's query would read another's terms and no engine could tell
 anyone.
 
-## A directory is a package, and `capabilities/market/` holds three capabilities
+## A directory is a package, and `packages/capability/market/` holds three capabilities
 
 AGENTS.md rule 2 said *"a capability … is a directory"*. That was already false when it was
-written: `capabilities/market/` provided `ag:Bidding` and `ag:Hosting`, which are not
+written: `packages/capability/market/` provided `ag:Bidding` and `ag:Hosting`, which are not
 interchangeable members of one family but two different abilities. The rule conflated two axes and
 hid the one that matters.
 
 **What isolates a capability is `PROVIDES` and its term, never the directory boundary.** So bid
-matching moved into `capabilities/market/` — `matching.py`, plus its share of the package's
+matching moved into `packages/capability/market/` — `matching.py`, plus its share of the package's
 ontology, shapes and rules — and the family is unchanged. `hosting.py` still asks
 `agent.provider(BID_MATCHING)` and still never learns which member answered.
 
@@ -86,7 +88,7 @@ In exchange the cross-package reference goes. `market/terms.py` had to re-declar
 to ask for it, and under a namespace split would have had to re-declare the namespace IRI beside
 it — one string in two files, with nothing to catch drift.
 
-## `capabilities/market/` takes `market:`
+## `packages/capability/market/` takes `market:`
 
 Nineteen terms and five shapes. The line is **who declares the term**:
 

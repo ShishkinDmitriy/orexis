@@ -1,11 +1,7 @@
 ---
-type: Domain
+type: Domain Concept
 title: Sensing — sensing as the agent's initiative
 description: Sensing splits by who holds the clock — Polling (the agent asks each time, reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). The agent owns when it looks, the board owns what it reads.
-status: accepted
-stage: v1
-tags: [sensing, epistemics, firmware, cadence, freshness]
-timestamp: 2026-08-02T00:00:00Z
 ---
 
 **An agent may hold several sensors, and two combinations are broken.** Different properties on

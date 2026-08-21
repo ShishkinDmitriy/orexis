@@ -1,12 +1,22 @@
 ---
 type: Decision
 title: What is true of a part is true of every one of them, and OWL already says so
-description: A datasheet fact was written on dht11:Dht11 and entailed nothing about any DHT11, because a class-level triple is punning. It is an owl:hasValue restriction now and the closure materialises it, so the sovereign observes the capability on the device the wiring declares without anyone writing it there. Describing at class level was the idea and plain OWL was enough for it — a metamodel is for saying things ABOUT a classification, and this says something about members. What does not change is the boundary: an agent is never given `a dht11:Dht11`, so the entailment stops at the sovereign, and an agent may know a part's properties and not its identity.
+description: >-
+  A datasheet fact was written on dht11:Dht11 and entailed nothing about any DHT11, because a
+  class-level triple is punning. It is an owl:hasValue restriction now and the closure
+  materialises it, so the sovereign observes the capability on the device the wiring declares
+  without anyone writing it there. Describing at class level was the idea and plain OWL was
+  enough for it — a metamodel is for saying things ABOUT a classification, and this says
+  something about members. What does not change is the boundary: an agent is never given `a
+  dht11:Dht11`, so the entailment stops at the sovereign, and an agent may know a part's
+  properties and not its identity.
 status: accepted
-stage: v1
-tags: [vocabulary, inference, hardware, reuse, owl, boundary]
 timestamp: 2026-08-12T00:00:00Z
 ---
+
+> **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one
+> application of a principle four of them share; the domain concept states the principle
+> and the mechanism once.
 
 # Context
 
@@ -70,7 +80,7 @@ This is the same shape the W3C's own worked DHT22 example takes, which names
 [their-descriptions-are-our-fixtures](their-descriptions-are-our-fixtures.md).
 
 **The punned triple is gone, not kept alongside.** Two statements of one fact is what this reduces,
-and nothing read the pun: the derivation in `capabilities/sensing/rules.ru` asks about *sensors*
+and nothing read the pun: the derivation in `packages/capability/sensing/rules.ru` asks about *sensors*
 in the world, never about the class, and the one reader that did walk from the class was the guard
 test, which now reads the entailment instead.
 

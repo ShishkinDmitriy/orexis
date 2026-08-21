@@ -1,10 +1,15 @@
 ---
 type: Decision
 title: A board says what it can honour, in SSN's words rather than ours
-description: The third source `ranges()` has always named — constitution, mandate, hardware — existed only in a docstring, so an agent could commit to a cadence its board would never keep and a healthy board would read as a quiet one. A device now states an ssn-system:Frequency, qualified by a Condition because SSN puts "under the defined Conditions" in the definition itself. Borrowed and not imported, which cost one axiom: SSN's own sosa:Sensor rdfs:subClassOf ssn:System, restated here because borrowing an IRI brings its definition and none of the axioms other documents state about it.
+description: >-
+  The third source `ranges()` has always named — constitution, mandate, hardware — existed
+  only in a docstring, so an agent could commit to a cadence its board would never keep and a
+  healthy board would read as a quiet one. A device now states an ssn-system:Frequency,
+  qualified by a Condition because SSN puts "under the defined Conditions" in the definition
+  itself. Borrowed and not imported, which cost one axiom: SSN's own sosa:Sensor
+  rdfs:subClassOf ssn:System, restated here because borrowing an IRI brings its definition and
+  none of the axioms other documents state about it.
 status: accepted
-stage: v1
-tags: [sensing, review, hardware, reuse, vocabulary, ssn]
 timestamp: 2026-08-11T00:00:00Z
 ---
 
@@ -74,7 +79,7 @@ So:
 `mc:carries rdfs:subPropertyOf sosa:hosts` was the same move from the other direction, and this is
 the second instance — enough to call it the shape rather than the exception.
 
-It is restated in `capabilities/sensing/ontology.ttl`, not in `packages/core/agora/`, though the
+It is restated in `packages/capability/sensing/ontology.ttl`, not in `packages/core/agora/`, though the
 subject is a class this package does not own. The axiom is load-bearing only because sensors have
 capabilities, and sensing is where a sensor is; the kernel would be asserting it on behalf of a
 package that may not be installed.

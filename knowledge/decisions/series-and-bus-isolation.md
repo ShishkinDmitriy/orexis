@@ -3,8 +3,6 @@ type: Decision
 title: Series and bus isolation — a bucket each, and an ACL derived from the wiring
 description: The belief base was isolated structurally, but history and channels stayed shared - one Influx bucket behind an admin token every agent held, and a broker with no ACLs at all. Decision, one per backing service, both derived from the world - a bucket and a scoped token per agent, and per-principal broker credentials whose permitted topics come from the same connections that derive capability.
 status: accepted
-stage: v1
-tags: [influxdb, mqtt, isolation, acl, credentials, provisioning, world-graph]
 timestamp: 2026-08-05T00:00:00Z
 ---
 
@@ -49,7 +47,7 @@ topics that capability needs:
 | `actuation:hasActuator V` | write V's `commandTopic` |
 | `mqtt:eventTopic E` | write E |
 
-Read that against `capabilities/market/bidding.py` and `hosting.py` and it is the same set of
+Read that against `packages/capability/market/bidding.py` and `hosting.py` and it is the same set of
 topics they subscribe and publish. This is the same move `agora-compose` makes for the roster:
 derived, never hand-maintained, because a second list is a second thing to drift.
 

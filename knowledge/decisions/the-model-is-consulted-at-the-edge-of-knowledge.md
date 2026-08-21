@@ -3,8 +3,6 @@ type: Decision
 title: The model is consulted at the edge of knowledge, and its answer is written down
 description: The LLM is not a decider in the loop — it is a teacher consulted when no written-down plan connects a gap to a lever, and its whole output is one or two graph facts that are then held to shapes and never asked for again. The reflex handles everything the graph already knows, free and forever; the model appears when the world surprises, and periodically through review to propose improvements. Who approves the answer splits by TIME, not by kind, because the approval interface itself is a genesis-only thing — while the world is being designed the sovereign is present and ratifies; once the society runs, the sovereign is absent, so the agent adopts privately, bounded by shapes, wrong at its own cost. Emits the affordance issue - the graph must state which direction a lever moves a property - as the substrate the whole design stands on.
 status: accepted
-stage: v1
-tags: [llm, deliberation, bdi, affordance, genesis, sovereignty, capability]
 timestamp: 2026-08-14T00:00:00Z
 ---
 
@@ -64,7 +62,7 @@ completes the amortisation ladder the roadmap was named for:
 | a review arising | re-opening either | bounded by its own clock, on evidence |
 
 **Periodic improvement is review's, and review already works this way.** "Propose changes when
-the environment shifts" is not a new mechanism — `capabilities/review/` wakes on its own clock,
+the environment shifts" is not a new mechanism — `packages/capability/review/` wakes on its own clock,
 reads evidence summaries, re-picks a belief within its mandate and records why.
 `review:Consulting` has been declared-and-reserved since that capability was built; a model
 proposing a better aim from gap history is that member, inside the same mandate every re-pick

@@ -5,8 +5,6 @@ description: An intermediary PARTICIPANT — buys from the N, sells to the M, ho
   earns the spread. How N-to-M clears without a governor; the stock decouples its two
   markets so no claim ever changes hands, and its fairness is entry, public terms and an
   auditable margin rather than a referee.
-tags: [market, dealer, supplier, topology]
-timestamp: 2026-08-18T00:00:00Z
 ---
 
 # What it is

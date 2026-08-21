@@ -3,8 +3,6 @@ type: Decision
 title: One word for one relation, and a term of ours earns its place by answering a different question
 description: A subclass axiom is a claim that our term means something more, so where it does not, ours is a synonym with an unenforced comment. mc:carries, sensing:Sensor, actuation:Actuator and sensing:seconds went; ag:Device, sensing:senseMode and review:Revision stayed, and the reasons are the deliverable. The test that emerged is not whether a standard has a similar word but whether it is answering the same question — SOSA's axis is functional, ours is substrate, and terms on different axes cut across each other rather than duplicating.
 status: accepted
-stage: v1
-tags: [vocabulary, reuse, ubiquitous-language, sosa, ssn, prov]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

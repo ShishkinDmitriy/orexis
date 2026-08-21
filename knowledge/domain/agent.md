@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Agent
 description: A certified, self-interested principal with a wallet and a stake — the only tier the trust boundary constrains.
-tags: [agent, identity, architecture]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

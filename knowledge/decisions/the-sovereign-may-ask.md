@@ -5,6 +5,8 @@ description: Observe-via-sovereign made mechanism — one SPARQL question per me
   world's own bus, gated to a single principal by the broker ACL, answered by the agent from
   its live store across everything it holds. Disclosure, not access; read-only by
   construction, because the engine's query API structurally cannot execute an update.
+status: accepted
+timestamp: 2026-08-17T11:03:04Z
 ---
 
 # The sovereign may ask, and the agent answers about itself

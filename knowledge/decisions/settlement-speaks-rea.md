@@ -3,8 +3,6 @@ type: Decision
 title: A claim is a commitment, not a claim, and REA already had both words
 description: The settlement half is aligned to the REA accounting ontology through its RDF form, ValueFlows — offer and bid are intents, the trade is an agreement, the claim is a commitment and actuation is the event that fulfils it. The words are borrowed and the IRIs are not, because a hand-materialised RDFS closure has to cover every axiom it imports. Naming the one REA term we have no use for says something true about the design.
 status: accepted
-stage: v1
-tags: [settlement, claim, vocabulary, reuse, ubiquitous-language]
 timestamp: 2026-08-10T00:00:00Z
 ---
 
@@ -87,9 +85,8 @@ against the **supplier**, not a command naming a valve. Only the noun changes.
 - **FIX** — the actual industry term set for orders and executions, and not RDF. Useful as a naming
   reference if bid and trade fields ever need standard names; nothing needs that now.
 - **FIPA's auction protocols** — English, Dutch, Contract Net, Iterated Contract Net. These cover
-  the *choreography* rather than the vocabulary, which is the one thing REA does not, and
-  `domain/round.md` already carries a `contract-net` tag. **Not examined here**, and the most
-  promising thing left unread.
+  the *choreography* rather than the vocabulary, which is the one thing REA does not.
+  **Not examined here**, and the most promising thing left unread.
 
 # Consequences
 

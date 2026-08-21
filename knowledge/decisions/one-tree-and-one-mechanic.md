@@ -1,12 +1,21 @@
 ---
 type: Decision
 title: One tree and one mechanic, and the family is the directory above
-description: There were two package systems that looked alike and lived apart — vocabulary/ at the root and capability trees under agent/ — split by who loads the Python, which is invisible in a listing. They are one tree now, packages/<family>/<name>/, and the family is the parent directory, so Package.kind distinguishes a plant from a part instead of saying "vocabulary" eleven times. The cost is that the layout no longer shows which Python a runtime loads, so the import contracts and the Containerfile carry that boundary alone. The move also cost 143 tests silently, which is the sharpest argument yet for issue #106.
+description: >-
+  There were two package systems that looked alike and lived apart — vocabulary/ at the root
+  and capability trees under agent/ — split by who loads the Python, which is invisible in a
+  listing. They are one tree now, packages/<family>/<name>/, and the family is the parent
+  directory, so Package.kind distinguishes a plant from a part instead of saying "vocabulary"
+  eleven times. The cost is that the layout no longer shows which Python a runtime loads, so
+  the import contracts and the Containerfile carry that boundary alone. The move also cost 143
+  tests silently, which is the sharpest argument yet for issue #106.
 status: accepted
-stage: v1
-tags: [layout, packages, loader, boundary, testing]
 timestamp: 2026-08-12T00:00:00Z
 ---
+
+> **Current statement: [package](/domain/package.md).** This record is how the model got
+> there and why; the domain concept is what it is now. Four records amend each other on
+> this subject, so read the concept first unless you want the argument.
 
 # Context
 

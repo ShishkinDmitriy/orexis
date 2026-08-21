@@ -3,8 +3,6 @@ type: Decision
 title: Thin trusted infrastructure — public functions, signed artifacts, bounded devices
 description: Relax the three privileged powers toward public/verifiable mechanisms; the one irreducible trusted thing is the currency ledger (double-spend), thin in single-operator mode.
 status: accepted
-stage: v1
-tags: [trust, architecture, thin-infra, clearing, actuate, mint]
 timestamp: 2026-08-02T00:00:00Z
 ---
 

@@ -4,8 +4,6 @@ title: Good
 description: What a lot is a quantity OF — water, heat, a right of way. Not a property; the
   join point every denomination walk closes through, because one good honestly has a
   valuation per kind of recipient.
-tags: [market, good, denomination, vocabulary]
-timestamp: 2026-08-18T00:00:00Z
 ---
 
 # What it is

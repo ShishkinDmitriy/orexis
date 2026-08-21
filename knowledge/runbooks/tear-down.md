@@ -2,8 +2,6 @@
 type: Runbook
 title: Tear down — and why `down` is not "kill all"
 description: A society lives in four places with four different lifetimes, and compose down addresses exactly one of them. What survives it, why each thing survives on purpose, and how to remove each in turn.
-tags: [operations, teardown, compose, mqtt, cleanup]
-timestamp: 2026-08-04T00:00:00Z
 ---
 
 # Why this needs a page at all

@@ -3,8 +3,6 @@ type: Decision
 title: Identity, authorization, and settlement as self-verifying artifacts
 description: Certificates for who-you-are, signed capability grants (JWT) for what-you-may-do-now; revoke only on provable violation.
 status: accepted
-stage: v1
-tags: [security, identity, authorization, jwt, capabilities, pki]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

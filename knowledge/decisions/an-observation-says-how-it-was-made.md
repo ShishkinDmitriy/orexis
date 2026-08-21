@@ -1,10 +1,14 @@
 ---
 type: Decision
 title: An observation says how it was made, and a procedure is named for what it does
-description: A reading now carries sosa:usedProcedure — the sensor's sense mode — because whether a missing reading means a late board or a quiet one was recoverable only by joining back to the sensor. The three modes are renamed to read as procedures rather than states, since #95 made them sosa:Procedure instances and a Procedure is a plan. The rename crossed seven spellings, one of which left the process and would have silently changed a simulated device's behaviour, and one of which arrived on another branch after the sweep was complete.
+description: >-
+  A reading now carries sosa:usedProcedure — the sensor's sense mode — because whether a
+  missing reading means a late board or a quiet one was recoverable only by joining back to
+  the sensor. The three modes are renamed to read as procedures rather than states, since #95
+  made them sosa:Procedure instances and a Procedure is a plan. The rename crossed seven
+  spellings, one of which left the process and would have silently changed a simulated
+  device's behaviour, and one of which arrived on another branch after the sweep was complete.
 status: accepted
-stage: v1
-tags: [sensing, ontology, naming, provenance, reuse]
 timestamp: 2026-08-12T00:00:00Z
 ---
 
@@ -39,7 +43,7 @@ lost the tie to its capability would have cost more than the elliptical reading 
 This record shipped them as `…Sensing` — SOSA's own word, free, and used by nothing else here.
 That spelling has since been superseded by `…Procedure`, for a reason this record could not have
 seen: it did not yet have a use site where the name is read aloud. See
-[a-sensor-implements-its-procedure](a-sensor-implements-its-procedure.md), and the amendment
+[a-sensor-implements-its-procedure](/decisions/a-procedure-belongs-to-whatever-performs-it.md), and the amendment
 table in [who-holds-the-clock](who-holds-the-clock.md), which is where these spellings are
 tracked. The table above shows today's names against the ones this record replaced.
 
@@ -52,7 +56,7 @@ taken:
   create or transform one or more samples."* It produces a `sosa:Sample`: a specimen removed and
   examined. Our probes sit in the soil and remove nothing, so the name imported a concept we
   deliberately do not model — and one that is the subject of an open issue.
-- **`Reporting` is ours.** `capabilities/reporting/` was created eight commits earlier for
+- **`Reporting` is ours.** `packages/capability/reporting/` was created eight commits earlier for
   telemetry an agent emits *about itself* — `reporting:Storing`, `reporting:Announcing`. A
   sensing procedure called `PushReporting` is a second sense of that word, in one codebase,
   introduced the same day.

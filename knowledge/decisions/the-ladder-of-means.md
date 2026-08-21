@@ -5,6 +5,8 @@ description: Look, act with what is yours, buy what is not, ask what you do not 
   rung costlier and more social than the last. Direct actuation is legitimate exactly where
   both the lever AND the source are the agent's own; owning the pump does not exempt anyone
   from the auction when the water is common. Consulting is the rung above the empty menu.
+status: accepted
+timestamp: 2026-08-17T10:01:17Z
 ---
 
 # Means form a ladder, and the market is about the resource, not the lever
@@ -30,6 +32,24 @@ Each rung amortises the one above: intention amortises deliberation, the market 
 negotiation, and consulting is priced at the rate the world genuinely surprises. This extends
 [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md)
 by one level rather than amending it.
+
+**The cost axis has a name, and knowing it buys a warning.** Rasmussen's *skill–rule–knowledge*
+taxonomy (1983) splits human performance the same way this ladder does: skill-based is the
+practised edge (the reflex, and the habit
+[a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md) proposes),
+rule-based is *if this situation, that stored procedure* (the menu of affordances), and
+knowledge-based is reasoning from a model of the world when no stored rule fits (Consulting,
+invoked on exactly the empty menu). The mapping is close enough to be worth stating and is not
+evidence of anything — arriving at a known decomposition from the economics of an LLM call is a
+mild confirmation, no more.
+
+What it buys is the failure mode the literature spends most of its time on: **the cheap rungs
+misfire silently, and the expensive one is where you notice.** A skill-based slip is a correct
+procedure run in the wrong situation, which is precisely the stale habit
+`a-habit-is-a-compiled-deliberation` calls the false-knowledge signature; a rule-based mistake is
+a good rule with a bad precondition, which is what an affordance adopted from a model can be.
+That is the argument for why every habitual act keeps its signature, confirmation and
+expectation, made from outside this project rather than from inside it.
 
 ## The rule that makes rung 2 honest
 

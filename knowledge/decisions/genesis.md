@@ -3,8 +3,6 @@ type: Decision
 title: Genesis — how a world is born and amended
 description: The sovereign narrates, the LLM drafts, the sovereign ratifies; genesis is versioned and amendable — structure is mutable while history stays immutable.
 status: accepted
-stage: v1
-tags: [genesis, sovereign, bootstrapping, amendment, provenance]
 timestamp: 2026-08-02T00:00:00Z
 ---
 

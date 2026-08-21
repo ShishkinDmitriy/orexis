@@ -1,10 +1,13 @@
 ---
 type: Decision
 title: A volume can be older than the vocabulary, and nothing could see it
-description: Beliefs are authored once and never touched again, so a belief base outlives the code that wrote it — and PR #85 moved 102 terms out of ag: while both gates stayed green. Boot now asks whether the vocabulary still declares what the store actually uses, which needs no version marker because the store already holds the evidence. Migration rewrites how a value is spelled and never which value it is, and it is a flag rather than a side effect.
+description: >-
+  Beliefs are authored once and never touched again, so a belief base outlives the code that
+  wrote it — and PR #85 moved 102 terms out of ag: while both gates stayed green. Boot now
+  asks whether the vocabulary still declares what the store actually uses, which needs no
+  version marker because the store already holds the evidence. Migration rewrites how a value
+  is spelled and never which value it is, and it is a flag rather than a side effect.
 status: accepted
-stage: v1
-tags: [beliefs, vocabulary, migration, genesis, gates]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

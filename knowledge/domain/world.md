@@ -2,8 +2,6 @@
 type: Domain Concept
 title: World (a ratified genesis output)
 description: What a world is made of — public topology plus one private beliefs file per agent — the three rules for authoring one, and what genesis derives rather than accepts. Several worlds coexist; which one is seeded decides what each agent becomes.
-tags: [genesis, world, topology, derivation, authoring, capabilities]
-timestamp: 2026-08-04T00:00:00Z
 ---
 
 # What it is

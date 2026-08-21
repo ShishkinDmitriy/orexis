@@ -1,12 +1,21 @@
 ---
 type: Decision
 title: A species is described once and planted many times
-description: Zamioculcas zamiifolia gets its own package, shaped exactly like a part's — a species is a model and the pots are units, so its care is stated on the class and reaches each pot by owl:hasValue. It states TWO ranges, because SSN has both words and this plant is the case that needs them: OperatingRange is where it grows and SurvivalRange is where it does not die, and the gap is asymmetric because the dry end is enormous and the wet end is a cliff. Also answers the structural question that prompted it — vocabulary packages already ARE capability-shaped, and the only difference is Python they have no use for.
+description: >-
+  Zamioculcas zamiifolia gets its own package, shaped exactly like a part's — a species is a
+  model and the pots are units, so its care is stated on the class and reaches each pot by
+  owl:hasValue. It states TWO ranges, because SSN has both words and this plant is the case
+  that needs them: OperatingRange is where it grows and SurvivalRange is where it does not
+  die, and the gap is asymmetric because the dry end is enormous and the wet end is a cliff.
+  Also answers the structural question that prompted it — vocabulary packages already ARE
+  capability-shaped, and the only difference is Python they have no use for.
 status: accepted
-stage: v1
-tags: [vocabulary, domain, ssn, plants, packages, owl]
 timestamp: 2026-08-12T00:00:00Z
 ---
+
+> **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one
+> application of a principle four of them share; the domain concept states the principle
+> and the mechanism once.
 
 # The structural question first, because it dissolved
 

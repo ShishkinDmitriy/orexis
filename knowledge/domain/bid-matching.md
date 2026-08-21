@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Bid matching
 description: Turning a lot and a set of bids into a proposed allocation with prices — an allocation rule and a payment rule together. The host declares how it matches and the offer announces it; pay-as-bid and uniform price share the first and differ in the second, and each costs the bidder something different. Deliberately narrower than an auction format, and qualified because bare matching collides with matching a capability to a provider.
-tags: [auction, matching, mechanism, ubiquitous-language]
-timestamp: 2026-08-10T00:00:00Z
 ---
 
 # What it is
@@ -32,27 +30,17 @@ proposes, clearing disposes* is the line, and matching is what the host does whe
 
 # The word
 
-Three words were in circulation for this one thing — *matching*, *rule* and *format* — and all
-three appeared in `hosting.py` alone. **Matching is the root word.** It is accurate about the width
-of what we model: it covers the allocation rule *and* the payment rule, and it survives a member
-that varies the first rather than the second — pro-rata rather than highest-first — which is
-exactly the case the family exists to allow.
+**Bid matching** — and the qualifier is load-bearing, not decoration. Bare *matching* collides
+inside this project: `agent.provider(family)` matches a request for an ability to whichever
+module registered a member of it, so *matching capability* parses two ways. *Bid matching* says
+which.
 
-*Rule* was the worst of the three, because `rules.ru` already means something specific in every
-capability directory here — a SPARQL derivation. *Format* over-claims, for the reason the next
-section gives.
+The qualifier is carried where something could be misread and nowhere else. `market:matchesBy`
+has a host for its domain and this family for its range, so *supplier matchesBy PayAsBid* admits
+one reading and stays as it is; so do `propose_match` and `Match`.
 
-**And the qualifier is load-bearing, not decoration.** Bare *matching* collides inside this
-project: `agent.provider(family)` matches a request for an ability to whichever module registered a
-member of it, which is what every package here does. So *matching capability* parses two ways —
-the capability of matching, and matching, of capabilities. **Bid matching** says which. *Order
-matching* is the standard phrase and bids are our orders: the host posts one lot and bidders
-answer, so there is no two-sided book to have orders in. See
+Why this word and not *rule* or *format* is argued in
 [bid-matching-is-the-word](/decisions/bid-matching-is-the-word.md).
-
-The qualifier is carried where something could be misread and nowhere else. `market:matchesBy` has a
-host for its domain and this family for its range, so *supplier matchesBy PayAsBid* admits one
-reading and stays as it is; so do `propose_match` and `Match`.
 
 # What bid matching is NOT — the format it is only half of
 
@@ -67,7 +55,7 @@ two independent things:
 
 **We model only the second.** `market:BidMatchingCapability` is the allocation-and-payment half alone.
 The first axis is fixed here: [round](/domain/round.md) describes an iterative-ascending round,
-and that is a property of the protocol in `capabilities/market`, not a slot anything plugs into.
+and that is a property of the protocol in `packages/capability/market`, not a slot anything plugs into.
 
 **Dutch makes it concrete.** A Dutch auction is descending open outcry — the auctioneer starts
 high and lowers the price until someone accepts. It is a complete mechanism, fixing both axes.
@@ -147,25 +135,18 @@ none. Neither is strategy-proof, and no member here is: the mechanism that would
 Vickrey-Clarke-Groves, pricing each winner at the externality it imposes — fits the same
 signature and is not attempted.
 
-# How #50 closed
+# The uncontested round, under each member
 
-[#50](https://github.com/ShishkinDmitriy/agora/issues/50) recorded that an **uncontested**
-round was priced as if contested: under pay-as-bid, a bidder with no rival for anything still
-paid what it offered, charged for urgency that moved no allocation. It was a defect *in
-pay-as-bid*, not in the auction, and there were two ways to close it — branch inside pay-as-bid,
-or switch the world's `market:matchesBy` to `market:UniformPrice`, where there is nothing to
-detect because the clearing price *starts* at the reserve.
+`PayAsBidModule.propose_match` measures contest over the **eligible** bids — below-reserve
+demand neither quiets a round nor profits from one — and when everything asked for fits inside
+the lot, it fills everyone in full **at the reserve**. Under `UniformPrice` there is nothing to
+detect: the clearing price *starts* at the reserve, so an uncontested round clears there by
+construction.
 
-**The sovereign chose the branch and kept pay-as-bid.** `PayAsBidModule.propose_match` now
-measures contest over the *eligible* bids — below-reserve demand neither quiets a round nor
-profits from one — and when everything asked for fits inside the lot, fills everyone in full at
-the reserve. The issue's warning that this must not become a way to pay less by bidding in a
-quiet round is held by test: the contested path is unchanged, and the two members still
-disagree exactly there, which is their reason to be two. Switching a world to uniform price
-remains one edit, weighed by
-[uniform-price-dissolves-the-uncontested-round](/decisions/uniform-price-dissolves-the-uncontested-round.md) —
-whose dissolution argument stands; what changed is that staying on pay-as-bid no longer costs
-the quiet-round overcharge.
+So the two members still disagree exactly on the contested path, which is their reason to be
+two, and switching a world between them remains one edit. Why pay-as-bid branches rather than
+the world switching: [#50](https://github.com/ShishkinDmitriy/agora/issues/50) and
+[uniform-price-dissolves-the-uncontested-round](/decisions/uniform-price-dissolves-the-uncontested-round.md).
 
 # Where it lives
 
@@ -175,7 +156,7 @@ host must say how it matches; only a host may) in its `shapes.ttl`, and the deri
 update in its `rules.ru`. `agent/auction.py` holds the path around it: propose, validate, issue.
 
 **It shares a package with the protocol and is still its own family.** A directory is a package,
-not a capability — `capabilities/market/` provides three. What keeps the two independent is
+not a capability — `packages/capability/market/` provides three. What keeps the two independent is
 `PROVIDES` and the term, never the directory: `hosting.py` asks `agent.provider(BID_MATCHING)` and
 never learns which member answered. See
 [a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md).

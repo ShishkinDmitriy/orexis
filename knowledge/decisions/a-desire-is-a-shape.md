@@ -1,14 +1,18 @@
 ---
 type: Decision
-title: "A desire is a shape, and the graph it sits in says whose it is"
-description: The sovereign's proposal, and it supersedes the desired-state design of a day
-  earlier — store what an agent pursues as SHACL rather than as data. Constraint, desire and
-  obligation become one language differing in severity and in whose graph they sit; a shape
-  is a template so silence means "no constraint" instead of being ambiguous; and the SHACL
-  hazard the desired-state design created is closed by construction, since a want that is not
-  in the data graph cannot be mistaken for a fact. Measured before recording: custom severity
-  survives the engine, instance targeting is native, and one shape covers every property a
-  subject states a range for.
+title: >-
+  "A desire is a shape, and the graph it sits in says whose it is"
+description: >-
+  The sovereign's proposal, and it supersedes the desired-state design of a day earlier —
+  store what an agent pursues as SHACL rather than as data. Constraint, desire and obligation
+  become one language differing in severity and in whose graph they sit; a shape is a template
+  so silence means "no constraint" instead of being ambiguous; and the SHACL hazard the
+  desired-state design created is closed by construction, since a want that is not in the data
+  graph cannot be mistaken for a fact. Measured before recording: custom severity survives the
+  engine, instance targeting is native, and one shape covers every property a subject states a
+  range for.
+status: accepted
+timestamp: 2026-08-19T21:41:18Z
 ---
 
 # A desire is a shape, and the graph it sits in says whose it is

@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Market (structure & membership)
 description: A market is the standing structure — a resource, who can supply it, who can consume it, and the links between them. The auction is the process that condenses inside it and dissolves again.
-tags: [market, auction, topology, discovery, emergence]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is — structure, not an event

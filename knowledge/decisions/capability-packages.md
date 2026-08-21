@@ -3,10 +3,12 @@ type: Decision
 title: A package is a directory — discovered, never listed
 description: Each package is one self-contained directory (ontology, shapes, derivation rules, code, beliefs, and its own namespace) found by looking rather than named in a registry; capabilities reach each other through T-Box terms, never through Python imports. Adding one is adding a directory. A package may provide SEVERAL capabilities — that distinction was added later.
 status: accepted
-stage: v1
-tags: [ontology, modules, capabilities, architecture, extensibility, packaging]
 timestamp: 2026-08-03T12:00:00Z
 ---
+
+> **Current statement: [package](/domain/package.md).** This record is how the model got
+> there and why; the domain concept is what it is now. Four records amend each other on
+> this subject, so read the concept first unless you want the argument.
 
 # Context
 
@@ -121,7 +123,7 @@ nothing else — asks. An agent with no stake in a subject gets no answer and wa
 cadence, which is the honest reading of "nothing here is urgent to me". A perceiving agent that
 holds no band is now a coherent thing to be, rather than a `try/except`.
 
-They landed on `BiddingBeliefs` and have since moved again, to `capabilities/desire/`, which is
+They landed on `BiddingBeliefs` and have since moved again, to `packages/capability/desire/`, which is
 where they should have gone the first time: putting them on a bidder made *having an opinion
 about your own state* conditional on being a market participant, and limited it to the one
 property a bid is priced in. The seam this section is about is unchanged and is why the second

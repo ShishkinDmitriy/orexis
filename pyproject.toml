@@ -26,7 +26,7 @@ dependencies = [
 # for an output format nobody here can eyeball, since it is easy to emit YAML that
 # parses and that the tool then rejects. Rendering to SVG additionally needs the
 # graphviz BINARY, which pip cannot install and no test needs.
-dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4"]
+dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4", "pyyaml>=6", "pytest-xdist>=3"]
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.
@@ -75,6 +75,35 @@ include = ["agent*", "packages*", "onboarding*"]
 # ["tests"]`, neither `pytest tests` NOR a bare `pytest` collects a test file inside a package —
 # it runs only when named by path, so the suite would have gone green while skipping it.
 testpaths = ["tests", "packages"]
+
+# NO `addopts = "-n auto"`, and this is the reason rather than an oversight.
+#
+# The suite is pyshacl-bound and embarrassingly parallel — 772s serial, 362s under `-n auto` on
+# the Pi's four cores, a 2.13x speedup for one flag. `pytest-xdist` is a dev dependency so it is
+# there when you want it. It is NOT on by default because it SILENTLY DISABLES the vacuity guard
+# in the repo-root `conftest.py`, which is the one thing this project added after a guard went
+# green while checking nothing four times over (#106).
+#
+# Measured, with a test whose assert sits in a loop over an empty call result:
+#
+#     pytest tests/test_zz_probe.py                  -> exit 1, guard names the test
+#     pytest tests/test_zz_probe.py -n 0             -> exit 1, guard names the test
+#     pytest tests/test_zz_probe.py -n auto          -> exit 0, SILENT
+#     pytest tests/test_zz_probe.py -n auto --dist loadfile   -> exit 0, SILENT
+#     pytest tests/test_zz_probe.py -n auto --dist loadscope  -> exit 0, SILENT
+#
+# It is not a distribution-mode problem: any worker process kills it. `_asserts_run` and
+# `pytest_sessionfinish` live in the worker, so the worker sets its own `session.exitstatus = 1`
+# — which xdist does not propagate, the controller computing its own from test reports — and
+# prints its verdict into a captured stdout that a passing run discards. The controller's own
+# `pytest_sessionfinish` runs no tests, sees an empty `_asserts_run`, and returns early.
+#
+# So `-n auto` today buys 410 seconds by turning off a correctness gate, which is the trade this
+# project refuses everywhere else. Fixing it is small and specific — carry the verdict over
+# xdist's `workeroutput` channel and re-raise it on the controller — and is issue #271. Turn
+# this on in the same change that closes it, not before.
+#
+# `pytest infra` is a separate deliberate run against live services and is unaffected either way.
 
 # ---------------------------------------------------------------------------------------------
 # The layering, stated and checked rather than implied by a directory.

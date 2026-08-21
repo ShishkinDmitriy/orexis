@@ -3,8 +3,6 @@ type: Decision
 title: Self-review is a capability, and what grants it is latitude
 description: Self-review left the kernel and became a capability family with members. What grants it is the mandate itself — an agent whose world gives it room to move gets the module that uses the room, derived rather than declared — which required the mandate to stop being a private belief. Latitude is this capability's premise, not a rule about capabilities.
 status: accepted
-stage: v1
-tags: [capabilities, review, beliefs, constitution, provenance, upkeep]
 timestamp: 2026-08-10T00:00:00Z
 ---
 
@@ -53,7 +51,7 @@ record is the second input.
 # Decision — the mandate is the grant
 
 An agent that its world gives room to move gets the ability to use the room. One premise, one
-rule, in `capabilities/review/rules.ru`:
+rule, in `packages/capability/review/rules.ru`:
 
 ```sparql
 INSERT { GRAPH $derived { ?agent ag:hasCapability review:Reckoning } }
@@ -166,7 +164,7 @@ latitude, rather than having had no second thoughts.
   nothing. There is no third state where a mandate and a switch disagree.
 - The kernel ontology is back to what every agent has. ~20 terms moved to the family.
 - A review rule still belongs to the package owning the term it re-picks — `review.rq` for the
-  sensing cadence stays in `capabilities/sensing/`. The review capability owns *reviewing*; it
+  sensing cadence stays in `packages/capability/sensing/`. The review capability owns *reviewing*; it
   does not own what may be reviewed.
 - The old kernel `ag:CommitmentShape` used `sh:targetClass review:Commitment` and matched nothing for
   as long as it existed: a mandate is written inline as `review:commits [ ... ]`, and nobody types a

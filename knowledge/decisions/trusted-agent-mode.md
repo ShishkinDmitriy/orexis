@@ -3,8 +3,6 @@ type: Decision
 title: Trusted-agent mode — agents assert their own beliefs
 description: Under a trusted-agent assumption the gateway/witness is dropped; each agent states its own current-state as opinion, and sensor access is capability-gated (genesis links agent↔sensor and grants the read).
 status: accepted
-stage: v1
-tags: [trust, gateway, capabilities, genesis, mode]
 timestamp: 2026-08-02T00:00:00Z
 ---
 

@@ -3,8 +3,6 @@ type: Decision
 title: A round is an iteration, not the auction
 description: The bundle used round for two things in one file — the whole allocating process and one pass of bidding inside it — and the code has no loop, so the two coincide and the drift was invisible. A round is the iteration, which is the standard meaning in multiple-round auction design. The auction is what condenses and dissolves, and hosting is per-auction, not per-round.
 status: accepted
-stage: v1
-tags: [ubiquitous-language, auction, round, documentation]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

@@ -3,8 +3,6 @@ type: Decision
 title: One graph both engines read — entailments are materialised, not inferred twice
 description: The vocabulary's entailments are asserted into the store at genesis, and validation runs with inference off against that same graph.
 status: accepted
-stage: v1
-tags: [inference, rdfs, shacl, validation, vocabulary, store]
 timestamp: 2026-08-09T00:00:00Z
 ---
 

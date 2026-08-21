@@ -3,8 +3,6 @@ type: Decision
 title: Bytes become a quantity in stages, and each stage is borne by the binding
 description: The codec and the scaling become package trees beside transports, each a family whose serving member is DERIVED onto the sensor at genesis rather than searched for at boot. The pointer stays a function, because RFC 6901 works over any tree. The trees are one mechanism split by bearer, not by importance — a capability is derived onto an agent, these onto a binding. Named scaling and not calibration, because calibration is the procedure that finds the numbers a scaling applies. Scaling is also where a number acquires a unit, so three sensors state QUDT IRIs, borrowed and not imported. Identity stays identity and no number moved.
 status: accepted
-stage: v1
-tags: [sensing, codecs, calibration, units, capabilities, packages]
 timestamp: 2026-08-10T00:00:00Z
 ---
 
@@ -93,8 +91,8 @@ something an *agent* has. What differs is the bearer, and the predicate follows 
 
 | tree | borne by | conclusion |
 |---|---|---|
-| `capabilities/` | an agent | `ag:hasCapability` on the agent |
-| `transports/`, `codecs/`, `scalings/` | a binding | a predicate on the **sensor** |
+| `packages/capability/` | an agent | `ag:hasCapability` on the agent |
+| `packages/transport/`, `packages/codec/`, `packages/scaling/` | a binding | a predicate on the **sensor** |
 
 The reason is not convention. An agent's capability is about what it **is**, which is a fact the
 world should hold and validate. A binding's is about what a device **speaks**, which only the

@@ -1,10 +1,11 @@
 ---
 type: Decision
 title: World graph — public topology, private everything-else
-description: All configuration moves into the belief base, split by kind: the world holds only the wiring (public, versioned, stated once); limits, cadence, desire and prices are each agent's private opinion. No config file remains.
+description: >-
+  All configuration moves into the belief base, split by kind: the world holds only the wiring
+  (public, versioned, stated once); limits, cadence, desire and prices are each agent's
+  private opinion. No config file remains.
 status: accepted
-stage: v1
-tags: [belief-base, topology, genesis, config, privacy, ontology]
 timestamp: 2026-08-02T00:00:00Z
 ---
 

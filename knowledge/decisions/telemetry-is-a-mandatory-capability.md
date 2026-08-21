@@ -1,10 +1,15 @@
 ---
 type: Decision
 title: Telemetry is a mandatory capability, because mandatory and uniform are different questions
-description: ag:SelfReporting claimed to be a capability directly above a comment saying it is granted to nobody, and it sat in the kernel because grant-universality and implementation-uniformity were being treated as one question. They are not — rule 2 asks whether the HOW could differ, not whether every agent has it. Reporting becomes a package granted to every agent by a rule and insisted on by a shape; counting stays in the kernel, because counting is the part that could not differ. What latitude grants is publishing which value an agent settled on, and that is #61.
+description: >-
+  ag:SelfReporting claimed to be a capability directly above a comment saying it is granted to
+  nobody, and it sat in the kernel because grant-universality and implementation-uniformity
+  were being treated as one question. They are not — rule 2 asks whether the HOW could differ,
+  not whether every agent has it. Reporting becomes a package granted to every agent by a rule
+  and insisted on by a shape; counting stays in the kernel, because counting is the part that
+  could not differ. What latitude grants is publishing which value an agent settled on, and
+  that is #61.
 status: accepted
-stage: v1
-tags: [metrics, observability, capabilities, kernel, ubiquitous-language]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

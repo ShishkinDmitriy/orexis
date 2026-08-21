@@ -3,8 +3,7 @@ type: Decision
 title: Capability modules — code reads terms, never instances
 description: A capability is an ontology module + SHACL rules + derivation rules + a code module. Capabilities are derived at genesis from hardware and wiring; an agent process is given only its own id and discovers everything else. Superseded on packaging by capability-packages.
 status: superseded-in-part
-stage: v1
-tags: [ontology, modules, capabilities, genesis, architecture, agents]
+superseded-by: capability-packages
 timestamp: 2026-08-03T00:00:00Z
 ---
 
@@ -14,6 +13,9 @@ timestamp: 2026-08-03T00:00:00Z
 > directory per capability now, discovered rather than listed, and a capability never imports
 > another's Python. The file table and the "one line of registry" in this document are the
 > parts that were replaced.
+>
+> **Current statement: [package](/domain/package.md)** — the model as it stands after all
+> four amendments, so nobody has to replay them.
 
 # Context
 

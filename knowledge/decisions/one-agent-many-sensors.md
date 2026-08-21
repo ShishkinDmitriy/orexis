@@ -2,7 +2,7 @@
 type: Decision
 title: One agent, many sensors — what collides and what does not
 description: An agent may hold several sensors, and every combination now works. Both failures were triggered by adding a second kind of sensor to a subject; this records what broke, why, what was done, and why the strictest reading is a warning rather than a refusal — which turned out to require changing what conformance means here.
-tags: [sensing, sensors, observations, sense-mode, shacl, seams]
+status: accepted
 timestamp: 2026-08-07T00:00:00Z
 ---
 

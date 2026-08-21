@@ -2,8 +2,6 @@
 type: Component
 title: Clearing
 description: Thin stake-free validator that checks a proposed trade and co-signs it before settlement — a notary, not an allocator.
-tags: [infrastructure, trusted, auction, validation, seam]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

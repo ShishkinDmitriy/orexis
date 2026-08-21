@@ -2,8 +2,6 @@
 type: Component
 title: Gateway
 description: Thin stake-free attestor on the RPi; turns the ESP32's raw readings into citable, provenance-stamped current-state.
-tags: [infrastructure, trusted, belief-base, sensors, esp32]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

@@ -1,9 +1,10 @@
 ---
 type: Domain Concept
 title: The genesis session — from a description to a living society
-description: The LLM-assisted, interactive process that turns a sovereign's description into a ratified world: what must be elicited, what "consistent" means concretely, where each agent's opening beliefs come from, and why a world's KIND changes some of them but not others.
-tags: [genesis, llm, bootstrapping, beliefs, world-kind, birth]
-timestamp: 2026-08-04T00:00:00Z
+description: >-
+  The LLM-assisted, interactive process that turns a sovereign's description into a ratified
+  world: what must be elicited, what "consistent" means concretely, where each agent's opening
+  beliefs come from, and why a world's KIND changes some of them but not others.
 ---
 
 # What it is

@@ -3,8 +3,6 @@ type: Decision
 title: Their descriptions are our fixtures, and a part is not a deployment
 description: The W3C's own SSN worked examples are vendored as test fixtures, because whether a standard description can be deployed without editing was a question reasoning kept circling and one measurement settled. The answer is yes for a description and no for an illustration. Two relaxations were needed and both were spelling — the legacy http schema.org namespace and QUDT 1.1 — while the four remaining refusals are deployment facts no vendor could know, which is the boundary that makes "as-is" coherent rather than a wish.
 status: accepted
-stage: v1
-tags: [vocabulary, reuse, sosa, ssn, testing, provenance]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

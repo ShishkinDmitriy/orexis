@@ -1,13 +1,10 @@
 ---
 type: Decision
-title: "The market has no governor: deficit opens rounds, structure names the convener"
-description: Ruling a venue is commitment power over its mechanism, which comes from structure
-  or neutrality and never from today's state — deficit decides whether a round is worth
-  opening, never who rules. N-to-M clears through dealers holding stock, or bilaterally where
-  too thin; the stake-free exchange was considered and refused. Fairness is entry, ex-ante
-  rules and a ledger that sees the spread, not a referee. An inventory dealer needs no claim
-  transfer because the stock decouples its two markets; pass-through dealing would, and that
-  is the seam.
+title: >-
+  "The market has no governor: deficit opens rounds, structure names the convener"
+description: Ruling a venue is commitment power over its mechanism, which comes from structure or neutrality and never from today's state — deficit decides whether a round is worth opening, never who rules. N-to-M clears through dealers holding stock, or bilaterally where too thin; the stake-free exchange was considered and refused. Fairness is entry, ex-ante rules and a ledger that sees the spread, not a referee. An inventory dealer needs no claim transfer because the stock decouples its two markets; pass-through dealing would, and that is the seam.
+status: accepted
+timestamp: 2026-08-17T22:13:25Z
 ---
 
 # The market has no governor: deficit opens rounds, structure names the convener

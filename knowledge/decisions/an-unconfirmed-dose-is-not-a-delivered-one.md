@@ -3,8 +3,6 @@ type: Decision
 title: An unconfirmed dose is not a delivered one, and it stays spent anyway
 description: The status channel a valve has always published on had no listener, so a dose that never happened looked exactly like one that did. Actuation now waits for the device to say what it dispensed, on a deadline derived from that dose's own duration plus a stated grace. An unconfirmed dose is reported and counted but never re-sent — the device refuses replays itself, and over-watering is irreversible where a missed round is not. Getting there needed the runtime to stop handing a message to only the first module that wanted it.
 status: accepted
-stage: v1
-tags: [actuation, settlement, observation, dispatch, metrics]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

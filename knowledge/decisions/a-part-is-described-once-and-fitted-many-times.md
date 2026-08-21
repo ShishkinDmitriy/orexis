@@ -3,10 +3,12 @@ type: Decision
 title: A part is described once and fitted many times, so the description belongs to the model
 description: W3C's SSN example describes one serial-numbered DHT22, and every fact in it is a fact about that unit. We ship a package for a model, so the DHT11's two sub-sensors, its procedures and its datasheet figures are stated on classes and reach devices by entailment. Building it found that ssn:implements had been punned since it was introduced — the only subject with that predicate anywhere was the class itself, so no device in any world had ever been said to do anything. A capability is one shared individual and takes owl:hasValue; a sub-sensor is per-unit and takes owl:someValuesFrom, which entails nothing and is enforced by a shape instead.
 status: accepted
-stage: v1
-tags: [vocabulary, sosa, ssn, hardware, inference, owl, reuse]
 timestamp: 2026-08-12T00:00:00Z
 ---
+
+> **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one
+> application of a principle four of them share; the domain concept states the principle
+> and the mechanism once.
 
 # Context
 

@@ -1,13 +1,17 @@
 ---
 type: Decision
-title: "The mind is six graphs, and a graph is classified on three axes"
-description: The sovereign's reframe of the whole core — an agent's mind is named graphs in one
+title: >-
+  "The mind is six graphs, and a graph is classified on three axes"
+description: >-
+  The sovereign's reframe of the whole core — an agent's mind is named graphs in one
   vocabulary, and what changes between them is the MODALITY of what they assert: is, may be,
   would like, could do, doing, did. Classified on three orthogonal axes (modality, visibility,
   how it arrived), which immediately shows two joints were misnamed: the region the desire
   graph holds is a CONSTRAINT nobody chose, and the graph called beliefs holds no beliefs at
   all — only picks. Birth authors picks and nothing else; amendment is an event a versioned
   world makes visible; history is a ring with Influx behind it.
+status: accepted
+timestamp: 2026-08-19T13:31:09Z
 ---
 
 # The mind is six graphs, and a graph is classified on three axes

@@ -2,8 +2,6 @@
 type: Runbook
 title: Run a world
 description: Deploy, up, down, logs, and what to do after a code change. One container per agent, generated from the world — with ordinary compose verbs and no wrapper commands.
-tags: [deploy, compose, podman, containers, operations]
-timestamp: 2026-08-04T00:00:00Z
 ---
 
 # The shape of it

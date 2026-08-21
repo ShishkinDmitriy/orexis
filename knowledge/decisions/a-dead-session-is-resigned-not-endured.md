@@ -1,7 +1,13 @@
 ---
 type: Decision
 title: A dead session is resigned, not endured
-description: The kernel watchdog for issue #53 — an agent cut off from its bus past ag:resignAfterS sends itself the same SIGTERM podman stop would, and the container's restart policy is the recovery. In the kernel like upkeep, on a clock of its own because paho's network thread is one of the things watched, with the bound in the ontology as what the society tolerates.
+description: >-
+  The kernel watchdog for issue #53 — an agent cut off from its bus past ag:resignAfterS sends
+  itself the same SIGTERM podman stop would, and the container's restart policy is the
+  recovery. In the kernel like upkeep, on a clock of its own because paho's network thread is
+  one of the things watched, with the bound in the ontology as what the society tolerates.
+status: accepted
+timestamp: 2026-08-14T19:36:12Z
 ---
 
 # A dead session is resigned, not endured

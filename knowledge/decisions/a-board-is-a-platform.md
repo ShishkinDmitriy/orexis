@@ -3,8 +3,6 @@ type: Decision
 title: A board is a sosa:Platform, and mc:carries was sosa:hosts all along
 description: The board that three sensors share was not a thing in the model, so every fact about it was repeated per sensor or recovered by comparing topic strings. It is a sosa:Platform now, hosting its parts and they their channels. mc:carries is declared a subproperty of sosa:hosts — the first subPropertyOf axiom here, which the closure was already built for. The society states its own hosting because an agent is never given the wiring, and a test holds the two to agreeing. The codec did not move, and the reason was a category error rather than a missing entity — see the-wire-is-ours-and-it-has-two-levels.
 status: accepted
-stage: v1
-tags: [hardware, sensing, vocabulary, reuse, sosa]
 timestamp: 2026-08-11T00:00:00Z
 ---
 
@@ -177,7 +175,7 @@ property chain — a platform **in a deployment** that **deploys a system** host
 and we were stating the conclusion with the premise nowhere in the graph. `hardware.ttl` now
 states the premise: `ssn:Deployment`, with the systems, the platform, `prov:startedAtTime` for
 when this board went to this window, and the purpose in prose. The closure's rule 6 (the axiom
-restated in `capabilities/sensing/ontology.ttl`, since we borrow IRIs and never import
+restated in `packages/capability/sensing/ontology.ttl`, since we borrow IRIs and never import
 ontologies) entails the hosting, so rewiring means editing the deployment and the hosts follow.
 
 What survives from this record unchanged: the SOCIETY still asserts its own `sosa:hosts`,

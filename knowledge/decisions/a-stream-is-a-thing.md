@@ -1,10 +1,15 @@
 ---
 type: Decision
 title: A stream is a thing, and the encoding is its rather than its sensors'
-description: A channel is derived from the topics devices already state, one node per distinct topic, with an IRI minted as a function of that string — because `$given` excludes the derived graph, so two packages can only agree on a node by computing it independently. The codec moves off the sensor onto the stream, which closes a hole that was really open: one device on a shared topic claiming CBOR while its neighbours claimed nothing validated clean on main and is refused now. Moving the credential to the board did not follow, and the reason is a collision worth reading.
+description: >-
+  A channel is derived from the topics devices already state, one node per distinct topic,
+  with an IRI minted as a function of that string — because `$given` excludes the derived
+  graph, so two packages can only agree on a node by computing it independently. The codec
+  moves off the sensor onto the stream, which closes a hole that was really open: one device
+  on a shared topic claiming CBOR while its neighbours claimed nothing validated clean on main
+  and is refused now. Moving the credential to the board did not follow, and the reason is a
+  collision worth reading.
 status: accepted
-stage: v1
-tags: [sensing, transport, codec, vocabulary, isolation]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

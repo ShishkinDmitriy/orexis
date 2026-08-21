@@ -1,10 +1,12 @@
 ---
 type: Decision
 title: Sensing splits by who holds the clock — Polling, Subscribing, Listening
-description: The sensing family is three capabilities on one axis: the agent asks for each reading (Polling, reserved), the agent states an interval the device keeps (Subscribing, implemented), or the device announces on its own (Listening). What was called Polling was Subscribing all along.
+description: >-
+  The sensing family is three capabilities on one axis: the agent asks for each reading
+  (Polling, reserved), the agent states an interval the device keeps (Subscribing,
+  implemented), or the device announces on its own (Listening). What was called Polling was
+  Subscribing all along.
 status: accepted
-stage: v1
-tags: [sensing, capabilities, firmware, ontology, naming]
 timestamp: 2026-08-03T18:00:00Z
 ---
 
@@ -28,12 +30,12 @@ explicitly recounting the earlier rename.
 
 **The `briefly` column never shipped past a review.** `Sampling` collides with `sosa:Sampling`,
 an act that produces a `sosa:Sample` — a specimen taken away and examined, which is not what a
-probe sitting in soil does. `Reporting` collides with `capabilities/reporting/`, which this
+probe sitting in soil does. `Reporting` collides with `packages/capability/reporting/`, which this
 project created eight commits earlier for telemetry an agent emits about itself.
 
 **`Sensing` shipped and was superseded for a different kind of reason.** It collided with
 nothing; it was SOSA's own word for what a sensor does. It went because
-[a-sensor-implements-its-procedure](a-sensor-implements-its-procedure.md) gave these instances a
+[a-sensor-implements-its-procedure](/decisions/a-procedure-belongs-to-whatever-performs-it.md) gave these instances a
 use site where they are read aloud — `?sensor ssn:implements sensing:ScheduledProcedure` — and
 there *"the sensor implements the scheduled sensing"* is a sentence about an activity, while
 *"implements the scheduled procedure"* is a sentence about a plan. `ssn:implements` relates a

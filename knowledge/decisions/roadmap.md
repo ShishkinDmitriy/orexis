@@ -3,8 +3,6 @@ type: Decision
 title: Staging roadmap — v1 scope and what the seams unlock
 description: What to build now, what's parked, and which decision opens each extension.
 status: accepted
-stage: v1
-tags: [roadmap, scope]
 timestamp: 2026-08-01T00:00:00Z
 ---
 
