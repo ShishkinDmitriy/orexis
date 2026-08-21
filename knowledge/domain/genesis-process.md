@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Process
 title: The genesis session — from a description to a living society
 description: >-
   The LLM-assisted, interactive process that turns a sovereign's description into a ratified

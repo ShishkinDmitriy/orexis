@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Role
 title: Plant agent
 description: A self-interested plant with a desire, a wallet, and an event-driven loop.
 ---

@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Role
 title: Dealer
 description: An intermediary PARTICIPANT — buys from the N, sells to the M, holds stock,
   earns the spread. How N-to-M clears without a governor; the stock decouples its two

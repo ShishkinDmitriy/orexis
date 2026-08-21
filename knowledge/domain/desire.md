@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Capability
 title: Desire
 description: What an agent is trying to bring about — for each property its subject states a need in, the region to hold that property inside and the envelope outside which the subject ends. Deduced at genesis by intersecting every operating range that applies, never authored; the band and the urgency every other capability reads come from here.
 ---

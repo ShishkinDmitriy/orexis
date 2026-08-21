@@ -41,7 +41,18 @@ BUNDLE = REPO_ROOT / "knowledge"
 
 # What `type` may say. The bundle root and AGENTS.md both state this list in prose; this is the
 # copy that fails when they disagree with the files.
-TYPES = {"Decision", "Domain Concept", "Component", "Runbook"}
+#
+# FIVE concept types where there were two, and the split was asked for by the pages themselves:
+# `auction` opened "an auction is a PROCESS", `bid-matching` called itself "the STEP that turns a
+# lot and a set of bids into an allocation", `onboarding` "the PHASE between genesis and a running
+# society" — three pages naming their own type in prose because the field could not hold it.
+# `Capability` is rule 2's unit and not a subtype of convenience: those pages carry a family term,
+# its interchangeable members, and the premise that grants it, which no other kind of page has.
+#
+# Distribution when the split landed: Concept 10, Process 5, Component 5, Capability 4, Role 4 —
+# no type with one member, which is the evidence it is a real division rather than a tidy one. A
+# type that drops to one page is a type to fold back, not to defend.
+TYPES = {"Decision", "Domain Concept", "Process", "Capability", "Role", "Component", "Runbook"}
 STATUSES = {"accepted", "superseded", "superseded-in-part"}
 
 # An index entry is the CLAIM. The abstract is the record's own `description`, and the record is
@@ -99,6 +110,7 @@ def test_frontmatter_carries_what_its_kind_requires():
             if not meta.get("timestamp"):
                 wrong.append(f"{rel}: a decision states when it was taken")
         else:
+            #  Every other type is either current or wrong; only a decision has a state to be in.
             for key in ("status", "timestamp", "stage", "tags"):
                 if key in meta:
                     wrong.append(f"{rel}: {key} is a decision's field")
