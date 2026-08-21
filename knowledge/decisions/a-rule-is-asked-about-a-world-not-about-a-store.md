@@ -209,12 +209,24 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
 
   It does not follow, because **pyoxigraph has no in-process federation**: `SERVICE` requires a
   URI scheme and is remote, and `default_graph`/`named_graphs` scope within one store. Derived
-  facts in a second store would be invisible to every query that reads them. Getting the saving
-  would mean the WHOLE store in memory with the durable 2% mirrored to disk — which buys 109 ms
-  of boot and 2.4 MiB, and costs a write-through path on every belief write whose failure mode
-  is a belief that reaches memory and not disk. Beliefs are authored once and never touched, so
-  that is precisely the kind of loss nobody notices for weeks. Not now, and the numbers are here
-  so it is not re-argued from intuition.
+  facts in a second store would be invisible to every query that reads them.
+
+  **The split the queries would actually permit is by graph family, and it is cleaner than
+  splitting by persistence.** The sovereign's observation, measured: of 145 shipped query
+  blocks, 140 read public knowledge alone, three name one private graph beside it, and
+  **exactly one joins private graphs at all** — `desire/goals.rq`, over instruments, owed and
+  sensed. Beliefs, intentions, obligations, summaries, revisions and evidence are never selected
+  together. The silos are real, and a store per family would need a join across stores for about
+  four queries out of a hundred and forty-five.
+
+  So this is blocked by a missing engine feature rather than by the design, and that is the
+  useful thing to have written down. **The trigger for revisiting is local federation** — a
+  SPARQL engine that can join two in-process stores, whether pyoxigraph grows one or something
+  else is adopted. Until then the alternative is the whole store in memory with the durable 2%
+  mirrored to disk, which buys 109 ms of boot and 2.4 MiB and costs a write-through path on
+  every belief write whose failure mode is a belief that reaches memory and not disk. Beliefs
+  are authored once and never touched, so that is the kind of loss nobody notices for weeks.
+  Not worth it for that price; worth doing at the price local federation would charge.
 
   The imaginarium works *because* it needs no federation: it is a whole store, self-contained,
   and every query about a possible world is asked of it alone.
