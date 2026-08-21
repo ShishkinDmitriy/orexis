@@ -74,13 +74,29 @@ def test_the_spread_is_unit_free(summaries):
 
 def test_a_summary_of_a_year_is_the_size_of_a_summary_of_an_hour(summaries):
     """The guarantee `agent-metrics.md` makes about a flat triple count. History lives in Influx;
-    what the store keeps is running totals, so the belief base does not grow with time."""
-    for value in range(50):
-        summaries.record(FERN, MOISTURE, value / 100)
-    small = len(summaries.store)
-    for value in range(5000):
-        summaries.record(FERN, MOISTURE, value / 10000)
-    assert len(summaries.store) == small
+    what the store keeps is running totals, so the belief base does not grow with time.
+
+    Three checkpoints rather than two, and 1050 records rather than 5050 (#273). Two orders of
+    magnitude between the first and the last is the whole argument — if the store grew per
+    reading, 50 against 1050 shows it as plainly as 50 against 5050 — and three points
+    demonstrate a flat LINE where two only show equal endpoints.
+
+    The 5000 was not costing what it looked like it cost. It ran in 30s against a projected 3s,
+    because `record()` is a read-modify-write and every write appends a version plus a tombstone:
+    per-record cost rose from 1.26s to 9.39s per thousand while the store sat at ten triples the
+    whole way. That is `agent/upkeep.py`'s write amplification, seen from the READ side, and this
+    fixture has no `Upkeep` so nothing ever reclaims. Giving it one was the other way to make
+    this fast, and it is the wrong fix: compaction reclaims dead versions and has no bearing on
+    the triple count, which is the only thing asserted here. It would have made this test slower
+    in order to exercise something it is not about. A test asserting that compaction bounds the
+    per-record cost is a real and separate test, and belongs beside the other upkeep ones.
+    """
+    sizes = []
+    for batch in (50, 500, 500):
+        for value in range(batch):
+            summaries.record(FERN, MOISTURE, value / 10000)
+        sizes.append(len(summaries.store))
+    assert len(set(sizes)) == 1, f"the summary grew with the readings folded into it: {sizes}"
 
 
 def test_the_ring_is_bounded(summaries):
