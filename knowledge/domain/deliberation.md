@@ -274,107 +274,15 @@ search's "would this lever even exist afterwards" is the ordinary menu query, ru
 simulated world instead of this one. What a row carries, what an absent one means, and the two
 modes are all over there.
 
-# What a lever DOES — the effect a means carries (#238)
+# What the search does with an effect
 
-A row says a lever is available. It does not say what pulling it would achieve, and a goal that
-is a graph needs that: matching a want to a lever means asking what the lever would MAKE TRUE.
+Runs one per candidate, against the [imaginarium](/domain/imaginarium.md). What an
+[effect](/domain/effect.md) IS, what it may claim, and its timing are that page's.
 
-So a package ships `effects.ttl` beside its `affordances.rq`, found the same way and named by
-nothing — a `sh:SPARQLRule` per means, loaded into the effect graph at genesis. The vocabulary is
-SHACL Advanced Features': `sh:condition` for the shape that must hold before it may run, and
-`sh:construct` for the query yielding the triples applying it would add. One term is ours,
-`ag:retracts`, because the standard has none: SHACL rules exist to add entailments, so nothing in
-it can say a thing stops being true.
-
-**Retraction is not decoration.** The sensed graph upserts — one observation node per (subject,
-property), DELETE then INSERT — so an effect predicting a reading that left the old one standing
-would put two results on one node. A shape asking whether ANY reading sits past an edge would
-then answer about the reading the dose just replaced, and a planner would reject the plan that
-works.
-
-Two rules ship today and the pair is instructive:
-
-- **Observe** carries the current value forward with a new `sosa:resultTime`. Looking changes
-  what you KNOW and nothing else, and the tempting error — predicting a reading inside the
-  region, since that is what the agent wants — would teach a planner that a thirsty plant can be
-  watered by looking at it.
-- **Actuate** predicts the post-dose reading, which is the case that decided the whole shape of
-  this: **opening a valve adds no triple.** It changes a number a later observation reports, and
-  only a template that can predict the number can say so.
-
-**The prediction has ONE source, and that is enforced rather than intended.** `litres /
-conversion` was already written twice in Python — the bidder sizing its expectation, the actuator
-sizing its self-dose — before anything asked what a dose would do. The actuator now runs the rule
-and subtracts rather than computing its own, so the number a planner uses to decide whether
-dosing helps is the number the keeper later holds the world to. Two numbers would mean an agent
-planning against one future and verifying against another, and the failure would look like a
-device lying rather than like arithmetic disagreeing with itself.
-
-# When it lands, and how you would know (#247)
-
-A rule says two more things, and a planner needs both: **when it may re-decide** — never before
-an effect could have landed, which states the flooding failure as a rule rather than patching it
-with patience — and **when to call an act failed**, which is when "nothing happened" stops being
-impatience and becomes a verdict.
-
-`ag:landsAfter` is a SELECT yielding `?seconds`: how long until the WORLD CHANGE completes. A
-query and not a number, because the duration is a function of the act — a two-litre dose holds a
-valve open longer than a half-litre one — and `min(litres, the device's cap) / its calibration`
-is arithmetic the rule is already the home of. **Zero is a real answer**, and the honest one for
-a look: observing changes nothing about the world, so the change completes instantly and emptily.
-What a sensing act delays is knowledge, which the other term is for.
-
-`ag:confirmedBy` names the route by which the effect becomes knowable, and the four are worth
-distinguishing because one of them is not causal at all:
-
-| route | means | example |
-|---|---|---|
-| `ag:ByConstruction` | saying makes it so | a claim issued, a debt demanded |
-| `ag:ByReport` | a device says what it did | a valve's status channel |
-| `ag:ByObservation` | a later reading shows it | the pot moved |
-| `ag:Unconfirmed` | nothing will ever say | a valve with no status channel and no witness |
-
-**Constitutive effects are the ones worth naming.** Conflating them with causal ones produces
-code that verifies an agent really did write down what it just wrote down — and, worse, leaves a
-planner waiting for a confirmation nobody will send. Issuing a claim MAKES the claim issued;
-opening a valve does not make a plant watered.
-
-`ag:Unconfirmed` stays expressible on purpose. A valve wired without a status channel is a real
-deployment, not an oversight, and the honest response is to say so — an agent that cannot verify
-should restore its observation before acting again, rather than dosing blind.
-
-**It says how you would find out, and nothing about whether there is anything to find out.**
-The planner once used it for the second question — deciding which acts end a plan by asking the
-route — and every shipped effect answers `ag:ByObservation`, so every lever ended a plan and the
-search never reached its second step (#254). A discriminator whose every answer is the same one
-is not discriminating. The lesson generalises past this term: what an act DOES is the effect's
-to state, and a planner that wants to know it should read the effect rather than a label beside
-it.
-
-**Both readers now ask instead of computing**, which is the single-source argument one axis over
-from the prediction. The dose deadline is the rule's answer plus the bus slack the agent already
-believes (`actuation:doseGraceS`); the keeper's watch is the rule's answer plus how long a
-reading of that property may honestly take to arrive (`stale_after_s` — the cadence the agent
-itself commanded, plus its own grace). A second copy of either would be a second claim about when
-the world should have answered, and the disagreement arrives as a false UNMET that looks like a
-device lying.
-
-That closed a seam the keeper's own docstring had recorded: the deadline used to be the
-`patienceS`, and patience was never *wrong*, only unrelated — it is how long an agent waits
-before re-deciding, not how long the physics takes. Holding a dose to it judged a valve at 120s
-while the pot's sensor reported every 600. **Patience remains the answer when an act cannot size
-itself**, which is the buyer's case: it holds a claim on somebody else's valve and cannot ask its
-own rules how long that valve stays open.
-
-The rules are a SCHEMA, which is why they live in the store while rows stay computed: a stored
-row can outlive the plumbing it was concluded from, and a rule about a means cannot. Both are the
-same modality — what I could do — and they differ in arrival, which is what `ag:arrivedBy`
-records.
-
-**The vocabulary is SHACL-AF's; the engine is not.** pySHACL will execute these rules, and
-measurably does — but only `inplace=True`, because its rules are forward-chaining inference run
-to a fixpoint over every target, where a plan step is one rule against one hypothesis. A stored
-`sh:construct` is just a query, and this project already has an engine that runs queries.
+The consequence for this loop: a [means](/domain/means.md) carrying no rule cannot be simulated,
+so the pass is marked PARTIAL and defers to the reflex. Concluding otherwise would be concluding
+from part of the menu, and the row nobody could simulate may be the one that works — measured on
+fern, which buys its water.
 
 # What deliberation does with a duty (#218)
 
@@ -398,19 +306,10 @@ lived nowhere queryable, and the sovereign asking what an agent does saw half it
 one query answers both, and the dealer's own menu reads honestly: buy upstream, watch my stock,
 and honour three pots' claims.
 
-# The gaps — what I should decide about, noticed by whoever is positioned to (#208)
+# What starts a pass
 
-Deliberation used to run only when the market knocked: an offer arrived, or birth. So an
-agent's watching of a property no market relieves lived in cadence machinery and never
-reached the intention ledger — the sovereign inspecting intentions saw market conduct only.
-Noticing is now the choir again: `Module.notices()` beside `annotate`/`urgency`/`quiet`, each
-module reporting the (subject, property) pairs it can see are unknown or too stale to act on
-— sensing's are the archetype — and the KEEPER ticks on its own patience clock, handing each
-gap to the ONE deliberator and committing what it proposes. Deciding and remembering stay
-singular, and the boundary is pinned by a source-scan test: one deliberator, one pen on the
-ledger. Only Observe is carried out from the tick — an Acquire needs a round nobody may
-convene from this side, which is the-lot-is-the-hosts-standing-offer's seam, not this
-mechanism's.
+The keeper's tick. Where the work comes from, and why noticing stopped being the market's job, is
+[gap](/domain/gap.md)'s.
 
 # The proof the seam is load-bearing
 
