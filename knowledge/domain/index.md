@@ -30,6 +30,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [deliberation](/domain/deliberation.md) - The whether, extracted: given the gap and what stands, name the next move. Three members, two of them built.
 
+* [affordance](/domain/affordance.md) - One row of what an agent could do. Derived and never stored, contributed per package, and the reason chaining needs no preconditions.
+
+* [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: in memory for one plan, a graph per search node, required to be lost.
+
 # Sensing
 
 * [sensing](/domain/sensing.md) - Split by WHO HOLDS THE CLOCK: Polling, Subscribing, Listening. Either way the agent owns the freshness rule.
