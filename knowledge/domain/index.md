@@ -42,6 +42,12 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: in memory for one plan, a graph per search node, required to be lost.
 
+# Doing
+
+* [actuation](/domain/actuation.md) - The power to touch the physical world, held by whoever owns the hardware. Bounded by a claim and by the device's own cap.
+
+* [review](/domain/review.md) - An agent re-picking its own settings inside the room its world left it. Granted by latitude; a mandate whose ends meet grants nothing.
+
 # Sensing
 
 * [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
