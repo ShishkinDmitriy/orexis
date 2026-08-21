@@ -62,7 +62,7 @@ can supply honestly:
 | where each device is reachable — its bus and channels | nothing builds a topic from a naming convention |
 | who is wired to what (`sensing:polls`, `actuation:hasActuator`) | this *is* the access grant, not a separate permission system |
 | whether there is anything scarce, and who owns it | a market with no owner is a market nobody can host |
-| each agent's desire and limits | opinion; a fern and a succulent may disagree and neither is wrong |
+| each agent's desire and limits | opinion, and two agents may hold different numbers about one subject |
 | **what kind of world this is** | see below — it changes the operational beliefs, and nothing else |
 
 # What "consistent" means here
@@ -70,15 +70,16 @@ can supply honestly:
 Not a feeling — four mechanical checks, in order. A world that passes all four is coherent in
 the only sense the system needs.
 
-1. **It parses, and every wire name is stated.** A device on a bus with no channel is caught by
-   that transport's shapes.
-2. **Derivation produces the abilities the sovereign expected.** `agora-validate` builds the
-   world from the files and prints what it derived; read it. An agent that derived nothing has
-   wiring implying no ability — almost always a missing `sensing:senseMode`. This is the step where a
-   misunderstanding surfaces cheaply.
-3. **Every derived capability has the beliefs it needs.** `agora-validate` is capability-aware:
-   a shape applies to an agent only if that agent derived the capability it belongs to. A
-   subscribing agent with no interval fails here rather than at 3am.
+1. **It parses, and every wire name is stated.** The transport's own shapes catch a device that
+   cannot be reached.
+2. **Derivation produces the abilities the sovereign expected.** Run `agora-validate` and read
+   what it printed — an agent that came out with nothing has wiring implying no ability, almost
+   always a missing `sensing:senseMode`. This is the step where a misunderstanding surfaces
+   cheaply. What the command does and how to read it is [world](/domain/world.md)'s.
+3. **Every derived capability has the beliefs it needs.** A subscribing agent with no interval
+   fails here rather than at 3am. Why a shape reaches this agent and not that one is
+   [world](/domain/world.md)'s to explain — validation is capability-aware, and that is a
+   property of a ratified world rather than of this session.
 4. **The society actually comes up.** One container per agent; each validates itself against
    the shapes for the capabilities it derived and refuses to boot if they do not hold.
 
@@ -162,8 +163,8 @@ agora-onboard <world>     # validate, then grant: a bucket and token per agent, 
 ```
 
 Every one of those is **derived** from the wiring this session produced, so onboarding decides
-nothing and can be re-run freely. Adding an agent to the world and running it again is the whole
-of onboarding that agent.
+nothing and can be re-run freely — see [onboarding](/domain/onboarding.md), which is the phase
+this session hands off to.
 
 `agora-compose` is the part of it that reads the roster out of `world.ttl` and writes one service
 per agent, handing each the only instance identifier it will ever be given: its own id. The

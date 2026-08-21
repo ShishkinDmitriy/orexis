@@ -30,6 +30,7 @@ going green.
 
 from __future__ import annotations
 
+import itertools
 import re
 from pathlib import Path
 
@@ -328,4 +329,57 @@ def test_a_domain_page_names_only_terms_that_exist():
         "a domain page names a term no TTL declares — either the term was renamed and the page "
         "was not, or the page invented the name the thing deserves (which is #275):\n  "
         + "\n  ".join(sorted(undeclared))
+    )
+
+
+# --- one claim, one owner -----------------------------------------------------------------------
+
+# A `domain/` page is the current statement of ONE concept. When two of them state the same claim
+# in the same words, the claim has two owners, and the next change updates whichever the author
+# happened to open. That is how `market` came to carry the short-side principle WITHOUT the word
+# "structurally" while citing the very record that was amended to add it — the page and the
+# amendment never met.
+#
+# Measured rather than judged: overlapping runs of words between every pair of domain pages. It
+# does not care about topic, only about restatement, which is the thing that rots.
+#
+# The cluster measured 32 shared runs before this check existed and 4 after, and the 4 are a
+# deliberate mirror — see the exception. The cap sits just above them: high enough that a shared
+# term of art or a quoted `sh:message` is fine, low enough that a restated paragraph is not.
+
+_RUN = 8          # words; shorter matches idiom, longer misses a restated sentence
+_CAP = 4          # shared runs allowed between any two pages
+
+
+def _runs(path: Path) -> set[tuple[str, ...]]:
+    body = path.read_text().split("\n---\n", 1)[-1]
+    # links, code spans and punctuation are not prose and must not count as agreement
+    words = re.sub(r"`[^`]*`|\[[^\]]*\]\([^)]*\)|[^\w\s]", " ", body).lower().split()
+    return {tuple(words[i:i + _RUN]) for i in range(max(0, len(words) - _RUN))}
+
+
+def test_no_two_domain_pages_state_the_same_claim():
+    # Pairs that legitimately share wording, with the reason. A mirror is not a duplicate.
+    mirrors = {
+        # `market` uses "a time slot, a right of way" to show the REJECTED model made such a
+        # market undeclarable; `good` uses it to show the current one keeps it expressible.
+        # Same example, opposite halves of one argument — changing one should change both.
+        frozenset({"market.md", "good.md"}),
+    }
+    pages = sorted((BUNDLE / "domain").glob("*.md"))
+    runs = {p.name: _runs(p) for p in pages}
+
+    offenders = []
+    for a, b in itertools.combinations(sorted(runs), 2):
+        shared = runs[a] & runs[b]
+        if len(shared) > _CAP and frozenset({a, b}) not in mirrors:
+            sample = "; ".join(" ".join(s) for s in sorted(shared)[:2])
+            offenders.append(f"{a} <-> {b}: {len(shared)} shared runs — e.g. “{sample}”")
+
+    assert pages, "no domain pages found — the glob stopped matching"
+    assert any(runs.values()), "no word runs extracted — the pattern stopped matching"
+    assert not offenders, (
+        "two domain pages state the same claim in the same words. Give the claim ONE owner and "
+        "have the other link to it — or, if it is a deliberate mirror, add the pair to `mirrors` "
+        "with the reason:\n  " + "\n  ".join(offenders)
     )
