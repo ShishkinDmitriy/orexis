@@ -3,8 +3,6 @@ type: Decision
 title: Agent-centric epistemics — judgment, data, and initiative belong to the agent
 description: Push interpretation, private data, and sensing to the agent; keep infra thin and honest; author by stake; disclose need-to-know; observe via sovereign god-view.
 status: accepted
-stage: v1
-tags: [epistemics, privacy, trust, sensing, metabolic-cost, observability]
 timestamp: 2026-08-02T00:00:00Z
 ---
 

@@ -2,7 +2,7 @@
 type: Decision
 title: The lot is the host's standing offer, and the threshold that opens a round is not the one that makes a bid
 description: A round is triggered by a band crossing and sized by a fixed host belief, so its size has nothing to do with what anyone needs. Why the host is deliberately blind to quantity before a round, what the two-threshold split costs — measured at half the lot in demand that can never convene one — and what an iterative auction would buy.
-tags: [market, auction, lot, demand, thresholds, privacy, seams]
+status: accepted
 timestamp: 2026-08-07T00:00:00Z
 ---
 

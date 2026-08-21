@@ -3,8 +3,6 @@ type: Decision
 title: Two worlds were one, and the one that stays is the one that needs no hardware
 description: society and simulation differed by 45 lines of ~230 with identical beliefs, so society went and simulation took its place as the deployment target. Keeping the flashed-board property meant simulation adopting sensing's device ids AND dropping its sim/ topic prefix, because matching ids alone would have made the test green and the property false. The prefix was safe to drop because each world runs its own broker; what it cost is legibility.
 status: accepted
-stage: v1
-tags: [worlds, genesis, isolation, simulation, testing]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

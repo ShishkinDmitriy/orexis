@@ -1,10 +1,11 @@
 ---
 type: Domain Concept
 title: Package — the one unit the loader knows, and the one tree it lives in
-description: What a package IS today, in one place: `packages/<family>/<name>/`, five optional
-  files, the family read off the path, the namespace read off the ontology, and `PROVIDES` as
-  the only registration. Four decision records got here in four steps and each amends the one
-  before; this says where they landed, so nobody has to replay them to learn the current model.
+description: >-
+  What a package IS today, in one place: `packages/<family>/<name>/`, five optional files, the
+  family read off the path, the namespace read off the ontology, and `PROVIDES` as the only
+  registration. Four decision records got here in four steps and each amends the one before;
+  this says where they landed, so nobody has to replay them to learn the current model.
 ---
 
 # What a package is

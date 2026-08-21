@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Constitution
 description: Hard, non-negotiable constraints enforced by code, not persuasion.
-tags: [rules, safety, shacl]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

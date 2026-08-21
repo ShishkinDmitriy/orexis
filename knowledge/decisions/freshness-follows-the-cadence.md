@@ -2,7 +2,7 @@
 type: Decision
 title: Freshness follows the cadence, except where the agent does not set it
 description: A subscribing agent chose how long to wait between readings, so an absolute staleness limit contradicts its own instruction. Why the rule is relative for sensing:Subscribing and absolute for sensing:Listening, and why "I do not know" is not the same answer as "I am fine".
-tags: [sensing, freshness, cadence, beliefs, subscribing, listening]
+status: accepted
 timestamp: 2026-08-07T00:00:00Z
 ---
 

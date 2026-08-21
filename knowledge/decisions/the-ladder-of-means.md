@@ -5,6 +5,8 @@ description: Look, act with what is yours, buy what is not, ask what you do not 
   rung costlier and more social than the last. Direct actuation is legitimate exactly where
   both the lever AND the source are the agent's own; owning the pump does not exempt anyone
   from the auction when the water is common. Consulting is the rung above the empty menu.
+status: accepted
+timestamp: 2026-08-17T10:01:17Z
 ---
 
 # Means form a ladder, and the market is about the resource, not the lever

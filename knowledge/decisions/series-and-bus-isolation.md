@@ -3,8 +3,6 @@ type: Decision
 title: Series and bus isolation — a bucket each, and an ACL derived from the wiring
 description: The belief base was isolated structurally, but history and channels stayed shared - one Influx bucket behind an admin token every agent held, and a broker with no ACLs at all. Decision, one per backing service, both derived from the world - a bucket and a scoped token per agent, and per-principal broker credentials whose permitted topics come from the same connections that derive capability.
 status: accepted
-stage: v1
-tags: [influxdb, mqtt, isolation, acl, credentials, provisioning, world-graph]
 timestamp: 2026-08-05T00:00:00Z
 ---
 

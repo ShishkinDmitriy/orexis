@@ -1,10 +1,14 @@
 ---
 type: Decision
 title: A term is named seven ways, and a rename sees one of them
-description: The five packages still declaring into ag: took namespaces of their own, finishing a correction begun when review's terms left the kernel file but kept the kernel's name. The sweep's finding is bigger than the move: a term is named seven different ways here, six of them survive a rename by matching nothing, and one had been doing so undetected for four merged PRs. There is now a test for it. The audit half found no standard worth adopting that we had not already taken.
+description: >-
+  The five packages still declaring into ag: took namespaces of their own, finishing a
+  correction begun when review's terms left the kernel file but kept the kernel's name. The
+  sweep's finding is bigger than the move: a term is named seven different ways here, six of
+  them survive a rename by matching nothing, and one had been doing so undetected for four
+  merged PRs. There is now a test for it. The audit half found no standard worth adopting that
+  we had not already taken.
 status: accepted
-stage: v1
-tags: [vocabulary, namespaces, ubiquitous-language, reuse, testing]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

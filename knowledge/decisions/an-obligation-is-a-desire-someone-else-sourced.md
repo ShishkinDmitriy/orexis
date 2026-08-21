@@ -1,13 +1,16 @@
 ---
 type: Decision
 title: An obligation is a desire someone else sourced, and provenance says who
-description: The sovereign's reframe of #218, and a better cut than the mode it replaces — the
+description: >-
+  The sovereign's reframe of #218, and a better cut than the mode it replaces — the
   distinction belongs on the GOAL, not on the lever. A claim presented against my hardware
   raises a desire ("valve X open for three seconds") in a desire graph of its own, with PROV
   saying why it exists and whose it is; urgency is the common currency, so the hottest want
   wins whether it is my plant dying or a litre I owe. It is the second instance of a class the
   design reserved for several sources, the first real customer of the graph-desire widening,
   and BOID's override order is the shape of an agent's character.
+status: accepted
+timestamp: 2026-08-19T10:13:28Z
 ---
 
 # An obligation is a desire someone else sourced, and provenance says who

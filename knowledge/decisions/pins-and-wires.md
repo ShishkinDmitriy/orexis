@@ -2,7 +2,7 @@
 type: Decision
 title: A pin is a piece of metal, a role is abstract, and a wire is the thing you get wrong
 description: Why the core vocabulary split into a stand plus a package per protocol and per part, and why a pin assignment became three objects instead of one — which is what made the rail-voltage fault sayable at all.
-tags: [vocabulary, hardware, pins, wires, shacl, packages, seams]
+status: accepted
 timestamp: 2026-08-07T00:00:00Z
 ---
 

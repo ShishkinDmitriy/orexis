@@ -3,8 +3,6 @@ type: Decision
 title: Deterministic bid, LLM justification
 description: The bid number is code; the LLM only argues around it.
 status: accepted
-stage: v1
-tags: [architecture, economy, leash]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

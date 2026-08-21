@@ -1,10 +1,16 @@
 ---
 type: Decision
 title: What is true of a part is true of every one of them, and OWL already says so
-description: A datasheet fact was written on dht11:Dht11 and entailed nothing about any DHT11, because a class-level triple is punning. It is an owl:hasValue restriction now and the closure materialises it, so the sovereign observes the capability on the device the wiring declares without anyone writing it there. Describing at class level was the idea and plain OWL was enough for it — a metamodel is for saying things ABOUT a classification, and this says something about members. What does not change is the boundary: an agent is never given `a dht11:Dht11`, so the entailment stops at the sovereign, and an agent may know a part's properties and not its identity.
+description: >-
+  A datasheet fact was written on dht11:Dht11 and entailed nothing about any DHT11, because a
+  class-level triple is punning. It is an owl:hasValue restriction now and the closure
+  materialises it, so the sovereign observes the capability on the device the wiring declares
+  without anyone writing it there. Describing at class level was the idea and plain OWL was
+  enough for it — a metamodel is for saying things ABOUT a classification, and this says
+  something about members. What does not change is the boundary: an agent is never given `a
+  dht11:Dht11`, so the entailment stops at the sovereign, and an agent may know a part's
+  properties and not its identity.
 status: accepted
-stage: v1
-tags: [vocabulary, inference, hardware, reuse, owl, boundary]
 timestamp: 2026-08-12T00:00:00Z
 ---
 

@@ -3,8 +3,6 @@ type: Decision
 title: Clearing validates, it does not compute
 description: The scarce side runs the auction; clearing is a thin stake-free notary that checks integrity and co-signs the trade before settlement.
 status: accepted
-stage: v1
-tags: [clearing, market, trust, validation, capabilities]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

@@ -1,10 +1,13 @@
 ---
 type: Decision
 title: Uniform price dissolves the uncontested round rather than branching on it
-description: The second member of market:BidMatchingCapability, which both tests the family's claim that adding one moves nothing else and changes what issue #50 is. Under pay-as-bid an uncontested round needs a special case; under a uniform price with the reserve as its floor, a round whose demand never reaches the lot simply clears at the reserve — so #50 becomes a choice of mechanism rather than a defect to patch.
+description: >-
+  The second member of market:BidMatchingCapability, which both tests the family's claim that
+  adding one moves nothing else and changes what issue #50 is. Under pay-as-bid an uncontested
+  round needs a special case; under a uniform price with the reserve as its floor, a round
+  whose demand never reaches the lot simply clears at the reserve — so #50 becomes a choice of
+  mechanism rather than a defect to patch.
 status: accepted
-stage: v1
-tags: [market, auction, capabilities, mechanism]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

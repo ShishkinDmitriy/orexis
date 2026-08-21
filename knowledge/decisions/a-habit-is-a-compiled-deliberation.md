@@ -1,15 +1,18 @@
 ---
 type: Decision
 title: A habit is a compiled deliberation, and review is what compiles and retires it
-description: The amortisation tower's missing top, named by the sovereign watching the loner
-  water itself — something you do without thinking. A stable environment lets deliberation
-  compile into if-then policy (if moisture is low, pump five seconds), held as a revisable
-  belief inside a mandate, answered by a Habitual member before the reflex computes, minted
-  and retired by review on evidence. Without thinking never means without watching — every
-  habitual act keeps its signature, its confirmation and its expectation, so a stale habit
-  is visible as the false-knowledge signature and retirement returns the decision to
-  deliberation. The economics only sing with Consulting: compiling a model's policy is what
-  makes an LLM member affordable at scale.
+description: >-
+  The amortisation tower's missing top, named by the sovereign watching the loner water itself
+  — something you do without thinking. A stable environment lets deliberation compile into
+  if-then policy (if moisture is low, pump five seconds), held as a revisable belief inside a
+  mandate, answered by a Habitual member before the reflex computes, minted and retired by
+  review on evidence. Without thinking never means without watching — every habitual act keeps
+  its signature, its confirmation and its expectation, so a stale habit is visible as the
+  false-knowledge signature and retirement returns the decision to deliberation. The economics
+  only sing with Consulting: compiling a model's policy is what makes an LLM member affordable
+  at scale.
+status: accepted
+timestamp: 2026-08-18T21:28:25Z
 ---
 
 # A habit is a compiled deliberation, and review is what compiles and retires it

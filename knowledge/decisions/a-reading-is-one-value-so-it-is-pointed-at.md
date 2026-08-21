@@ -3,8 +3,6 @@ type: Decision
 title: A reading is one value, so it is pointed at rather than queried
 description: Where a sensor's value sits in a payload is a JSON Pointer (RFC 6901), which identifies exactly one value — not a JSONPath (RFC 9535), which returns a nodelist and would need a collapse rule invented on top of it. Absent means /value, so no existing sensor states one. Getting a value off the wire is three stages — codec, pointer, calibration — and only the middle one is built here; the outer two became packages in bytes-become-a-quantity-in-stages, which also renamed the third.
 status: accepted
-stage: v1
-tags: [sensing, transports, payload, reuse, ubiquitous-language]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

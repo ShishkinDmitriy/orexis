@@ -3,8 +3,6 @@ type: Decision
 title: Bid matching is a capability, and the host announces how it matches
 description: Turning a lot and a set of bids into an allocation with prices left agent/auction.py and became market:BidMatchingCapability, with pay-as-bid implemented and uniform-price declared beside it. The host states how it matches, the capability is derived from that, and it travels in the offer — because a bidder cannot bid well against terms it does not know. Separating it first required separating market from auction, which the bundle had backwards.
 status: accepted
-stage: v1
-tags: [market, auction, capabilities, protocol]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

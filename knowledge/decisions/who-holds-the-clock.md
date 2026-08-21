@@ -1,10 +1,12 @@
 ---
 type: Decision
 title: Sensing splits by who holds the clock — Polling, Subscribing, Listening
-description: The sensing family is three capabilities on one axis: the agent asks for each reading (Polling, reserved), the agent states an interval the device keeps (Subscribing, implemented), or the device announces on its own (Listening). What was called Polling was Subscribing all along.
+description: >-
+  The sensing family is three capabilities on one axis: the agent asks for each reading
+  (Polling, reserved), the agent states an interval the device keeps (Subscribing,
+  implemented), or the device announces on its own (Listening). What was called Polling was
+  Subscribing all along.
 status: accepted
-stage: v1
-tags: [sensing, capabilities, firmware, ontology, naming]
 timestamp: 2026-08-03T18:00:00Z
 ---
 

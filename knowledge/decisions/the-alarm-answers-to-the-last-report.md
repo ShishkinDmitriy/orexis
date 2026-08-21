@@ -5,6 +5,8 @@ description: The deviation limit measures from the last value that LEFT the boar
   only by a successful publish — so slow drift is the cadence's story, the between-reports jolt
   is the alarm's, and the band edge catches what creeps. Which watcher pays for vigilance is
   decided by the same evidence, the opposite way round.
+status: accepted
+timestamp: 2026-08-15T21:19:41Z
 ---
 
 # The alarm answers to the last report

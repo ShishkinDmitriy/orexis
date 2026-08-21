@@ -1,10 +1,13 @@
 ---
 type: Decision
 title: Bid matching is the word, and auction format is not
-description: Three words were in circulation for one concept — matching, rule and format — all three in hosting.py alone. Matching wins on width: it covers the allocation rule and the payment rule, not how bidding proceeds. Format over-claims and is ambiguous in the wild; rule collides with rules.ru. The qualifier is load-bearing, because bare matching collides with matching a capability to a provider — which is what this project does everywhere else.
+description: >-
+  Three words were in circulation for one concept — matching, rule and format — all three in
+  hosting.py alone. Matching wins on width: it covers the allocation rule and the payment
+  rule, not how bidding proceeds. Format over-claims and is ambiguous in the wild; rule
+  collides with rules.ru. The qualifier is load-bearing, because bare matching collides with
+  matching a capability to a provider — which is what this project does everywhere else.
 status: accepted
-stage: v1
-tags: [ubiquitous-language, auction, matching, documentation]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

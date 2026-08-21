@@ -1,10 +1,14 @@
 ---
 type: Decision
 title: An observation says how it was made, and a procedure is named for what it does
-description: A reading now carries sosa:usedProcedure — the sensor's sense mode — because whether a missing reading means a late board or a quiet one was recoverable only by joining back to the sensor. The three modes are renamed to read as procedures rather than states, since #95 made them sosa:Procedure instances and a Procedure is a plan. The rename crossed seven spellings, one of which left the process and would have silently changed a simulated device's behaviour, and one of which arrived on another branch after the sweep was complete.
+description: >-
+  A reading now carries sosa:usedProcedure — the sensor's sense mode — because whether a
+  missing reading means a late board or a quiet one was recoverable only by joining back to
+  the sensor. The three modes are renamed to read as procedures rather than states, since #95
+  made them sosa:Procedure instances and a Procedure is a plan. The rename crossed seven
+  spellings, one of which left the process and would have silently changed a simulated
+  device's behaviour, and one of which arrived on another branch after the sweep was complete.
 status: accepted
-stage: v1
-tags: [sensing, ontology, naming, provenance, reuse]
 timestamp: 2026-08-12T00:00:00Z
 ---
 

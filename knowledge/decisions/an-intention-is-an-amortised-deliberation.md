@@ -1,10 +1,17 @@
 ---
 type: Decision
 title: An intention is an amortised deliberation, and the gap is what deliberation is about
-description: BDI's three letters, mapped honestly — beliefs are the store, desire is the region-plus-aim, and intention was proto only, existing as a pending bid, a held claim and a commanded cadence with no name, no lifecycle and no way to be queried. The plan in four phases — make the desired/sensed gap a query, move the aim into desire, reify the intention, then extract the welded reflex chain into a deliberation capability whose second member is an LLM. The ordering is the argument: intentions exist to SAVE deliberation, so for an LLM planner they are the cost model — an intention is an amortised LLM call, and the commitment policy is what keeps the planner affordable. Reflex ships first, so the LLM drops into a seam that provably exists.
+description: >-
+  BDI's three letters, mapped honestly — beliefs are the store, desire is the region-plus-aim,
+  and intention was proto only, existing as a pending bid, a held claim and a commanded
+  cadence with no name, no lifecycle and no way to be queried. The plan in four phases — make
+  the desired/sensed gap a query, move the aim into desire, reify the intention, then extract
+  the welded reflex chain into a deliberation capability whose second member is an LLM. The
+  ordering is the argument: intentions exist to SAVE deliberation, so for an LLM planner they
+  are the cost model — an intention is an amortised LLM call, and the commitment policy is
+  what keeps the planner affordable. Reflex ships first, so the LLM drops into a seam that
+  provably exists.
 status: accepted
-stage: v1
-tags: [bdi, desire, intention, deliberation, llm, planning, capability, roadmap]
 timestamp: 2026-08-14T00:00:00Z
 ---
 

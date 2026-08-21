@@ -3,8 +3,6 @@ type: Decision
 title: English for contested, formal for trusted
 description: The line between what agents argue and what infrastructure guarantees.
 status: accepted
-stage: v1
-tags: [architecture, ontology, principle]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

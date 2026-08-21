@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Auction
 description: The process, not a place. An auction condenses out of scarcity, collects bids over one or more rounds, allocates by matching, is co-signed by clearing, and dissolves. The market is the standing structure it happens inside; a round is one pass of bidding within it; who convenes it is stated in v1, not derived.
-tags: [auction, market, process, protocol]
-timestamp: 2026-08-10T00:00:00Z
 ---
 
 # What it is — a process, not a thing

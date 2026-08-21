@@ -3,8 +3,6 @@ type: Decision
 title: Bids are a function of unmet demand
 description: An agent bids for what it still needs, updated by prior allocations.
 status: accepted
-stage: v1
-tags: [seam, economy, decomposition]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

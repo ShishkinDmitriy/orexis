@@ -1,7 +1,14 @@
 ---
 type: Decision
 title: A firmware describes itself, and a board just says which one it runs
-description: firmware/<name>/ontology.ttl is a third T-Box source beside packages/ — the sense mode, the implemented procedures and the generator's dispatch name are the flashed image's facts, stated once as a class with hasValue restrictions and entailed onto every board typed with it. a-part-is-described-once-and-fitted-many-times applied to code instead of silicon; issue #175.
+description: >-
+  firmware/<name>/ontology.ttl is a third T-Box source beside packages/ — the sense mode, the
+  implemented procedures and the generator's dispatch name are the flashed image's facts,
+  stated once as a class with hasValue restrictions and entailed onto every board typed with
+  it. a-part-is-described-once-and-fitted-many-times applied to code instead of silicon; issue
+  #175.
+status: accepted
+timestamp: 2026-08-15T16:33:30Z
 ---
 
 > **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one

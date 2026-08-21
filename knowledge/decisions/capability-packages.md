@@ -3,8 +3,6 @@ type: Decision
 title: A package is a directory — discovered, never listed
 description: Each package is one self-contained directory (ontology, shapes, derivation rules, code, beliefs, and its own namespace) found by looking rather than named in a registry; capabilities reach each other through T-Box terms, never through Python imports. Adding one is adding a directory. A package may provide SEVERAL capabilities — that distinction was added later.
 status: accepted
-stage: v1
-tags: [ontology, modules, capabilities, architecture, extensibility, packaging]
 timestamp: 2026-08-03T12:00:00Z
 ---
 

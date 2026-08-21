@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Wallet
 description: The single budget; how bids, allowance, and metabolic cost work.
-tags: [economy, currency, bounded-rationality]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

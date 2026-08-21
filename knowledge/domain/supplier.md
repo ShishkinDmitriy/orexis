@@ -4,8 +4,6 @@ title: Supplier
 description: The dealer the arcs built — a strategic seller downstream, a genuine buyer
   upstream, the barrel between them; its stake, its stock and its spread are all facts the
   graph and the ledger can show.
-tags: [agent, market, supplier, seam]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

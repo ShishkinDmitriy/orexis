@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Deliberation
 description: The whether, extracted into a family — given the gap and the standing commitments, name the next move; the acting modules carry it out. Reflex is the old welded chain as the first member, deterministic and free; Consulting is the declared, unimplemented seat for a model, constrained before it exists — a move from the vocabulary's menu, never free text-to-action, with the bid number staying deterministic and the keeper's patience bounding how often it is consulted.
-tags: [deliberation, bdi, llm, capability, market, intention]
-timestamp: 2026-08-13T00:00:00Z
 ---
 
 # What it is
@@ -173,7 +171,7 @@ answered by Observe before any search runs, so an agent at rest reports zeros ho
 
 Two of the three are built. The table is the whole answer to "which rungs can I rely on" —
 `PROVIDES` in `packages/capability/deliberation/__init__.py` is the ground truth, and
-`tests/test_capabilities.py` holds this table to it.
+`tests/test_knowledge.py` holds this table to it.
 
 | member | what it is | built? |
 |---|---|---|

@@ -6,6 +6,8 @@ description: The sovereign's question re-derived STRIPS from inside the graph, a
   depth-1 planner, intentions committed steps, verification the monitoring. The widening is
   effects on the menu row, deduced goal patterns, and a bounded Planning member; its guardrails
   are the two standing principles, and its first honest customer is the supplier's empty barrel.
+status: accepted
+timestamp: 2026-08-17T12:19:35Z
 ---
 
 # A desire could be a graph, and a plan a path of diffs

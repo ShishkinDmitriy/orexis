@@ -3,8 +3,6 @@ type: Decision
 title: A belief is a pick within a range, and an agent may re-pick
 description: Beliefs are still authored once at birth, but what genesis wrote is the first pick rather than a bound — the room comes from constraints, and an agent re-picks inside it on evidence about itself.
 status: accepted
-stage: v1
-tags: [beliefs, review, autonomy, constitution, sensing, upkeep]
 timestamp: 2026-08-09T00:00:00Z
 ---
 

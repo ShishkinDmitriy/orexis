@@ -3,8 +3,6 @@ type: Decision
 title: Trust boundary — agents propose, infrastructure disposes
 description: Agents cite but never author facts, mint currency, or actuate hardware.
 status: accepted
-stage: v1
-tags: [security, trust, architecture]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

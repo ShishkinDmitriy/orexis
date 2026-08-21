@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Plant agent
 description: A self-interested plant with a desire, a wallet, and an event-driven loop.
-tags: [agent, bdi, architecture]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

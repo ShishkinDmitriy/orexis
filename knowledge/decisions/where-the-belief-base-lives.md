@@ -1,10 +1,12 @@
 ---
 type: Decision
 title: Where the belief base lives — the world is files, beliefs are the agent's own
-description: A shared triplestore couples worlds that are supposed to be independent — adding the 21st forces a restart of the other 20. Decision: the world becomes TTL files an agent loads at start, beliefs live in a persistent store inside each agent, no shared store survives, and validation moves into the agent.
+description: >-
+  A shared triplestore couples worlds that are supposed to be independent — adding the 21st
+  forces a restart of the other 20. Decision: the world becomes TTL files an agent loads at
+  start, beliefs live in a persistent store inside each agent, no shared store survives, and
+  validation moves into the agent.
 status: accepted
-stage: v1
-tags: [belief-base, fuseki, isolation, acl, memory, validation, world-version]
 timestamp: 2026-08-04T00:00:00Z
 ---
 

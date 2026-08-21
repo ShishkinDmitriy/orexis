@@ -3,8 +3,6 @@ type: Decision
 title: LLM-heavy deliberation (thin BDI)
 description: The LLM drives deliberation; classical BDI machinery stays thin.
 status: accepted
-stage: v1
-tags: [architecture, bdi, llm]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

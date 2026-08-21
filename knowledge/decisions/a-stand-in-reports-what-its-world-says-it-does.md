@@ -3,8 +3,6 @@ type: Decision
 title: A stand-in reports what its world says it does, and the message finally happened
 description: The simulator published one value while the real firmware published three, so the multi-value path was argued in unit tests and never travelled a wire. It now reports a value per property at the pointers its world declares, each drifting in its own range. Two shapes had to stop assuming every value is a fraction and every device holds a credential — both assumptions the hardware world had already disproved. Running it found a stale belief volume that no gate can see.
 status: accepted
-stage: v1
-tags: [simulation, sensing, firmware, testing, units]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

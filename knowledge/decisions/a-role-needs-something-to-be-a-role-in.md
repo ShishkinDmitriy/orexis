@@ -1,10 +1,13 @@
 ---
 type: Decision
 title: A role needs something to be a role in, and there is deliberately no auction
-description: Market positions stay predicates rather than becoming first-class roles. Both places this project already models a role — a pin's role and a user's role in ratifying a world — hang it off a context object, and an auction has none on purpose. A role with nothing to be a role in is a second spelling of a predicate. The trigger for revisiting is precise: the day an auction becomes an object in the graph.
+description: >-
+  Market positions stay predicates rather than becoming first-class roles. Both places this
+  project already models a role — a pin's role and a user's role in ratifying a world — hang
+  it off a context object, and an auction has none on purpose. A role with nothing to be a
+  role in is a second spelling of a predicate. The trigger for revisiting is precise: the day
+  an auction becomes an object in the graph.
 status: accepted
-stage: v1
-tags: [market, roles, vocabulary, capabilities, auction]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

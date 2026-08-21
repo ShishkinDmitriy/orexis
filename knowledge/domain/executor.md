@@ -2,8 +2,6 @@
 type: Component
 title: Executor
 description: The trusted actuator — validates the capability grant and drives the pump/valve; the only thing that touches hardware.
-tags: [infrastructure, trusted, actuation, capabilities, esp32]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

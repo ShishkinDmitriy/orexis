@@ -1,10 +1,15 @@
 ---
 type: Decision
 title: A package may test itself, and the gate had to stop naming a path
-description: A package can now carry its own tests as plain test_*.py files beside the code they cover — not in a tests/ subdirectory, which collides on module names and reads as a subpackage. Only one file qualified, test_auction.py, and the count that motivated this was wrong: 17 rather than 29, because eleven "reporting unit tests" take a fixture that builds a real agent. The load-bearing part is that pytest tests -q stopped being the gate: a test inside a package is collected by neither that nor a bare pytest, so the suite would have gone green while skipping it.
+description: >-
+  A package can now carry its own tests as plain test_*.py files beside the code they cover —
+  not in a tests/ subdirectory, which collides on module names and reads as a subpackage. Only
+  one file qualified, test_auction.py, and the count that motivated this was wrong: 17 rather
+  than 29, because eleven "reporting unit tests" take a fixture that builds a real agent. The
+  load-bearing part is that pytest tests -q stopped being the gate: a test inside a package is
+  collected by neither that nor a bare pytest, so the suite would have gone green while
+  skipping it.
 status: accepted
-stage: v1
-tags: [testing, packages, layout, gates]
 timestamp: 2026-08-12T00:00:00Z
 ---
 

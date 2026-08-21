@@ -1,10 +1,15 @@
 ---
 type: Decision
 title: A procedure belongs to whatever performs it, and procedures distribute down the hosting chain
-description: Procedures were declared only as sense modes, on sensors, so a board's own doing — publishing, driving a line, keeping time — was stated nowhere and a part's combined read was explained as a transport economy instead. Each system now implements what it can actually do, and the ESP32 became an ssn:System rather than a Platform alone in order to be able to do anything at all. The frame's first prediction was a defect nobody had reported: one physical read was being stamped three times, which #88's own evidence had recorded as two points 25 ms apart without noticing.
+description: >-
+  Procedures were declared only as sense modes, on sensors, so a board's own doing —
+  publishing, driving a line, keeping time — was stated nowhere and a part's combined read was
+  explained as a transport economy instead. Each system now implements what it can actually
+  do, and the ESP32 became an ssn:System rather than a Platform alone in order to be able to
+  do anything at all. The frame's first prediction was a defect nobody had reported: one
+  physical read was being stamped three times, which #88's own evidence had recorded as two
+  points 25 ms apart without noticing.
 status: accepted
-stage: v1
-tags: [sensing, sosa-ssn, hardware, provenance, reuse]
 timestamp: 2026-08-12T00:00:00Z
 ---
 

@@ -3,8 +3,6 @@ type: Decision
 title: The scarce side hosts; clearing is topology-invariant
 description: Who runs the auction rotates with market shape; the clearing validator does not.
 status: accepted
-stage: v1
-tags: [seam, clearing, market-topology]
 timestamp: 2026-08-01T00:00:00Z
 ---
 

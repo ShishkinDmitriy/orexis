@@ -2,7 +2,7 @@
 type: Decision
 title: One convention, and a boundary that is checked rather than implied
 description: Why the repository is flat, why it ships one distribution instead of two, why capabilities and transports live inside the agent while the vocabulary does not, and why the packaging boundary was replaced with a test and an import contract.
-tags: [layout, packaging, boundaries, enforcement, seams]
+status: accepted
 timestamp: 2026-08-07T00:00:00Z
 ---
 

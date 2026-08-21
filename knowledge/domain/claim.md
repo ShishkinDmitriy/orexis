@@ -2,8 +2,6 @@
 type: Domain Concept
 title: Claim
 description: The token you win in the auction — a co-signed, single-use commitment by the supplier for N litres, redeemed to actuate. A commitment in REA's sense and deliberately not a claim, because nothing here is delivered before it is settled.
-tags: [market, capabilities, settlement, futures]
-timestamp: 2026-08-02T00:00:00Z
 ---
 
 # What it is

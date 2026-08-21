@@ -1,12 +1,15 @@
 ---
 type: Decision
 title: When the menu is empty, consult — and what comes back is a premise, not a plan
-description: The sovereign's proposal for the Consulting seat, and the one correction that keeps
-  it safe. An agent with nothing on its menu for a goal is already counted — `unactionable` —
-  and that number becomes the trigger for asking something that might know a lever it does not.
-  What a model returns must be PREMISES rather than steps: adopt a premise and the row exists,
-  the plan derives, and the affordance discipline survives. Ratification and the verification arc
+description: >-
+  The sovereign's proposal for the Consulting seat, and the one correction that keeps it safe.
+  An agent with nothing on its menu for a goal is already counted — `unactionable` — and that
+  number becomes the trigger for asking something that might know a lever it does not. What a
+  model returns must be PREMISES rather than steps: adopt a premise and the row exists, the
+  plan derives, and the affordance discipline survives. Ratification and the verification arc
   are what make adopting an invented premise survivable.
+status: accepted
+timestamp: 2026-08-21T08:02:05Z
 ---
 
 # When the menu is empty, consult

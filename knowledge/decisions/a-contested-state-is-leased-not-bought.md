@@ -1,12 +1,15 @@
 ---
 type: Decision
 title: A contested state is leased, not bought — and only desires may be bid for
-description: The sovereign's door, put beside the barrel. Water is divisible, consumed, and
-  wanted in one direction; a door is none of those, so what the auction allocates stops being a
-  quantity and becomes an interval of control. The bid names a state, clearing chooses between
-  incompatible worlds instead of dividing a pool, and a claim's expiry turns out to be a lease's
-  end. The guardrail the comparison exposes is sharper than the mechanism: a market allocates
-  between DESIRES and never between a desire and a rule, or safety is for sale.
+description: >-
+  The sovereign's door, put beside the barrel. Water is divisible, consumed, and wanted in one
+  direction; a door is none of those, so what the auction allocates stops being a quantity and
+  becomes an interval of control. The bid names a state, clearing chooses between incompatible
+  worlds instead of dividing a pool, and a claim's expiry turns out to be a lease's end. The
+  guardrail the comparison exposes is sharper than the mechanism: a market allocates between
+  DESIRES and never between a desire and a rule, or safety is for sale.
+status: accepted
+timestamp: 2026-08-20T21:39:53Z
 ---
 
 # A contested state is leased, not bought

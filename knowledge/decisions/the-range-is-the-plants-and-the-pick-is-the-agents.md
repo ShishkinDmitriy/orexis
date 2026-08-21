@@ -1,10 +1,16 @@
 ---
 type: Decision
 title: The range is the plant's and the pick is the agent's
-description: Desire was three bare numbers in an agent's beliefs with nothing to answer to, so 0.55 was as defensible as 0.95. A plant now states the range it needs, publicly in the world, using SSN's OperatingRange and Condition; the agent's target is a pick inside that range, privately in its own beliefs, and an agent whose target leaves the range will not start. Only the target is held to it — the bands are alarm thresholds and legitimately sit outside. It also records what is still missing: an agent can hold exactly ONE desire, denominated in soil moisture, so the temperature and humidity this society now senses feed nothing that can want anything.
+description: >-
+  Desire was three bare numbers in an agent's beliefs with nothing to answer to, so 0.55 was
+  as defensible as 0.95. A plant now states the range it needs, publicly in the world, using
+  SSN's OperatingRange and Condition; the agent's target is a pick inside that range,
+  privately in its own beliefs, and an agent whose target leaves the range will not start.
+  Only the target is held to it — the bands are alarm thresholds and legitimately sit outside.
+  It also records what is still missing: an agent can hold exactly ONE desire, denominated in
+  soil moisture, so the temperature and humidity this society now senses feed nothing that can
+  want anything.
 status: accepted
-stage: v1
-tags: [beliefs, desire, bdi, domain, ssn, market, constitution]
 timestamp: 2026-08-12T00:00:00Z
 ---
 

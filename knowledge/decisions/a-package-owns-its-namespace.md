@@ -3,8 +3,6 @@ type: Decision
 title: A package owns its namespace, and a directory is a package rather than a capability
 description: Every package has declared an owl:Ontology IRI of its own since there were packages, and then put its terms in someone else's namespace — because store.PREFIXES was a kernel constant, so a package wanting one had to edit the kernel to be nameable in SPARQL. The prefixes are now read off the ontologies that declare them, packages/capability/market took market:, and bid matching folded into it. Three latent bugs only became visible once a second namespace existed.
 status: accepted
-stage: v1
-tags: [capabilities, packaging, vocabulary, store, market]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

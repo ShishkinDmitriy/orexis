@@ -3,8 +3,6 @@ type: Decision
 title: Bytes become a quantity in stages, and each stage is borne by the binding
 description: The codec and the scaling become package trees beside transports, each a family whose serving member is DERIVED onto the sensor at genesis rather than searched for at boot. The pointer stays a function, because RFC 6901 works over any tree. The trees are one mechanism split by bearer, not by importance — a capability is derived onto an agent, these onto a binding. Named scaling and not calibration, because calibration is the procedure that finds the numbers a scaling applies. Scaling is also where a number acquires a unit, so three sensors state QUDT IRIs, borrowed and not imported. Identity stays identity and no number moved.
 status: accepted
-stage: v1
-tags: [sensing, codecs, calibration, units, capabilities, packages]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

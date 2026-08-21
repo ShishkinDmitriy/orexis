@@ -3,8 +3,7 @@ type: Decision
 title: Belief-base isolation — making privacy enforced rather than agreed
 description: Privacy is now enforced by the store, not by code discipline — per-graph ACLs behind per-agent credentials, with two doors because Jena's access control is read-only.
 status: superseded
-stage: v1
-tags: [privacy, fuseki, isolation, security, seam]
+superseded-by: where-the-belief-base-lives
 timestamp: 2026-08-03T00:00:00Z
 ---
 

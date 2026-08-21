@@ -3,8 +3,6 @@ type: Decision
 title: Self-review is a capability, and what grants it is latitude
 description: Self-review left the kernel and became a capability family with members. What grants it is the mandate itself — an agent whose world gives it room to move gets the module that uses the room, derived rather than declared — which required the mandate to stop being a private belief. Latitude is this capability's premise, not a rule about capabilities.
 status: accepted
-stage: v1
-tags: [capabilities, review, beliefs, constitution, provenance, upkeep]
 timestamp: 2026-08-10T00:00:00Z
 ---
 

@@ -1,11 +1,14 @@
 ---
 type: Decision
 title: A market arises where want meets supply, and stating your matching rule is opening shop
-description: Market existence becomes derived — venue and topics minted from the source's id
-  (the derived-stream precedent), hosts from ownership, bidsIn from the Acquire walk's own
-  premises — with one authored triple as consent: the owner stating market:matchesBy IS
-  opening shop. Both the plants' market and the coming refill market are then one mechanism,
-  and the second genuinely appears the moment its wiring exists.
+description: >-
+  Market existence becomes derived — venue and topics minted from the source's id (the
+  derived-stream precedent), hosts from ownership, bidsIn from the Acquire walk's own premises
+  — with one authored triple as consent: the owner stating market:matchesBy IS opening shop.
+  Both the plants' market and the coming refill market are then one mechanism, and the second
+  genuinely appears the moment its wiring exists.
+status: accepted
+timestamp: 2026-08-17T18:54:31Z
 ---
 
 # A market arises where want meets supply

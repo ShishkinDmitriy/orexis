@@ -2,8 +2,6 @@
 type: Component
 title: Belief base
 description: One belief base per agent, not one shared store — named-graph layout, SOSA observations, provenance, and the split between the series and the graph.
-tags: [rdf, influxdb, sosa, provenance, isolation]
-timestamp: 2026-08-01T00:00:00Z
 ---
 
 # What it is

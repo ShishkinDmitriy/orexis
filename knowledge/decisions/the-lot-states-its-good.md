@@ -1,14 +1,18 @@
 ---
 type: Decision
-title: "The lot states its good, and every denomination join closes through it"
-description: The good becomes a node — market:Good, water:Water — because the venue tie
-  cannot run venue-to-valuation or through a property: one good honestly has a valuation per
-  kind of recipient (a litre raises a pot's moisture and a barrel's stock), and what
-  disambiguates a venue is what flows out of its source. Every join that used to float over
-  the T-Box now closes venue -> marketFor -> source -> supplies -> good <- ofGood <-
-  valuation, plus the asker's own stake. Shipped together with the world it was gating: the
-  city mains, the refill venue that derives from one consent triple, and the supplier as a
-  live inventory dealer whose spread sits in its beliefs file.
+title: >-
+  "The lot states its good, and every denomination join closes through it"
+description: >-
+  The good becomes a node — market:Good, water:Water — because the venue tie cannot run
+  venue-to-valuation or through a property: one good honestly has a valuation per kind of
+  recipient (a litre raises a pot's moisture and a barrel's stock), and what disambiguates a
+  venue is what flows out of its source. Every join that used to float over the T-Box now
+  closes venue -> marketFor -> source -> supplies -> good <- ofGood <- valuation, plus the
+  asker's own stake. Shipped together with the world it was gating: the city mains, the refill
+  venue that derives from one consent triple, and the supplier as a live inventory dealer
+  whose spread sits in its beliefs file.
+status: accepted
+timestamp: 2026-08-17T23:28:46Z
 ---
 
 # The lot states its good, and every denomination join closes through it

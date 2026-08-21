@@ -1,10 +1,14 @@
 ---
 type: Decision
 title: The wire is ours, and it has two levels — the connection and the stream
-description: A codec and a credential are facts about the wire rather than about a board, but not about the same part of it: a credential belongs to the connection and an encoding to the stream, because a transport and a codec vary independently — JSON over MQTT or over REST. SOSA gives the physical decomposition and SSN the procedural one, and neither says anything about transmission, so the wire is the project's own. Which means a simulated world correctly has no platforms, and scaling was never a wire fact at all.
+description: >-
+  A codec and a credential are facts about the wire rather than about a board, but not about
+  the same part of it: a credential belongs to the connection and an encoding to the stream,
+  because a transport and a codec vary independently — JSON over MQTT or over REST. SOSA gives
+  the physical decomposition and SSN the procedural one, and neither says anything about
+  transmission, so the wire is the project's own. Which means a simulated world correctly has
+  no platforms, and scaling was never a wire fact at all.
 status: accepted
-stage: v1
-tags: [sensing, platform, transport, vocabulary, reuse, ubiquitous-language]
 timestamp: 2026-08-11T00:00:00Z
 ---
 

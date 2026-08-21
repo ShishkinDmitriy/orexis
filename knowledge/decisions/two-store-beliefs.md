@@ -6,8 +6,7 @@ description: Time-series and RDF split by role, joined by plant URI, never feder
   shared store, and the gateway is decommissioned. Superseded in part by
   where-the-belief-base-lives.
 status: superseded-in-part
-stage: v1
-tags: [belief-base, influxdb, rdf, sosa]
+superseded-by: where-the-belief-base-lives
 timestamp: 2026-08-01T00:00:00Z
 ---
 

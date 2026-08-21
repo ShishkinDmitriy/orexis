@@ -7,6 +7,8 @@ description: Beliefs stay authored-once and never reset — but an amendment may
   pairs arrive with their blank-node closures, held pairs stay the agent's whatever their
   value — so a revised pick survives every amendment, rebirth remains the explicit discard,
   and "amend, onboard, restart" is the whole of growing a running agent.
+status: accepted
+timestamp: 2026-08-18T14:12:58Z
 ---
 
 # An amendment endows what it grants, and touches nothing the agent holds

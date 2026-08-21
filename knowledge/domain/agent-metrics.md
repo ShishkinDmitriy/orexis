@@ -2,8 +2,6 @@
 type: Domain Concept
 title: What an agent says about itself
 description: The figures an agent is uniquely placed to report — belief base size, reading freshness, and the write failures that were previously only logged. Counting is the kernel's because it could not be done differently; where the account GOES is a mandatory capability, granted to every agent and insisted on by a shape. The interval is required, because an agent permitted to be silent cannot be told from a dead one.
-tags: [metrics, observability, kernel, capabilities, beliefs, dashboards]
-timestamp: 2026-08-06T00:00:00Z
 ---
 
 # What it is

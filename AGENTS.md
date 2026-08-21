@@ -15,10 +15,24 @@ If it is unavailable, the rules are short enough to follow by hand:
 
 - every concept `.md` has YAML frontmatter with a non-empty `type` — one of `Decision`,
   `Domain Concept`, `Component` or `Runbook` — plus `title` and `description`;
+- a **decision** additionally carries `status` (`accepted`, `superseded`, `superseded-in-part`)
+  and `timestamp`, and a superseded one carries `superseded-by`. A domain concept carries none
+  of those: it has no state to be in, being either current or wrong. `stage` and `tags` are
+  gone — `stage` said `v1` in every record, and `tags` had 147 values of which 86 were used
+  once and nothing read any of them;
+- **quote or fold anything with a colon in it.** A `description` reading `on one axis: the
+  agent asks` is not valid YAML, and 27 files were unreadable to every OKF consumer while
+  passing the vendored check, which greps rather than parses. Use `>-` and indent;
 - `index.md` carries **no** frontmatter — it is navigation, and its title is its heading. Only
   `knowledge/index.md` may declare `okf_version`;
+- **an index entry is the claim, not the abstract** — 26 words is the cap, the abstract lives
+  in the record's own `description`, and the argument lives in the record;
 - validate with `./tools/validate-okf.sh knowledge` — vendored from the skill, because a gate
-  that only runs from one person's home directory cannot be run by a fresh clone or by CI.
+  that only runs from one person's home directory cannot be run by a fresh clone or by CI. It
+  checks the OKF spec and nothing about THIS project, so do not edit it: the project's own
+  rules are `tests/test_knowledge.py`, which runs under `pytest` and fails on unparseable
+  frontmatter, an orphan document, a dead link, an over-long index entry, or a document naming
+  a path that is not on disk.
 
 **Durable knowledge goes in the bundle, never in a new README.** `domain/` says what a thing is
 and how to use it; `decisions/` says why a choice was made and which seams it leaves open. The
