@@ -128,6 +128,23 @@ two different paths that arrive at the same value collide and the second is prun
 graphs after paths must not quietly turn that into per-branch detection: two names, one world,
 still one entry in `seen`.
 
+## The imaginarium is not the intention ledger, and they must not converge
+
+Both hold things that have not happened, which is enough of a resemblance to be worth refusing
+in writing before someone tidies them together.
+
+An **intention** is a commitment: `ag:IntentionGraph`, per agent, with an adoption, a resolution
+and a reason, and it MUST survive a restart — a keeper that forgot what it had committed to
+would re-adopt what already stands, and the patience that makes an intention an amortised
+deliberation would amortise nothing. A **possible world** is `ag:PossibleGraph`, and it must
+never survive anything: it is a conclusion drawn from beliefs plus an effect, so keeping one
+would be keeping something that can outlive what it was concluded from.
+
+They are opposites on the axis that matters. The intention ledger is the most durable thing an
+agent writes; the imaginarium is the only thing in the design that is *required* to be lost.
+That is why the imaginarium is a store rather than a graph in the agent's own: a graph can be
+forgotten to be dropped, and a store that was never on disk cannot be.
+
 ## What it costs, measured
 
 On `world/simulation`, per plan:
