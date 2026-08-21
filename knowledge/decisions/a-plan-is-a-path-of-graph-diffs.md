@@ -28,6 +28,33 @@ architecture is already its degenerate case:
 | committed plan step | an intention, lifecycle and patience included |
 | execution monitoring | the verification arc — expected effect vs observed, UNMET and false-knowledge |
 
+## What the field already settled, and what we are deliberately not taking
+
+STRIPS is 1971, and the fifty years after it are worth naming — not to adopt, but so that the
+next widening is a lookup rather than a re-derivation.
+
+- **PDDL** is what STRIPS became: a standard language for exactly the action schemas above,
+  with typed parameters, conditional effects and numeric fluents. The CONSTRUCT-per-means below
+  is a PDDL effect schema written in SPARQL, and the reason to know that is
+  [#268](https://github.com/ShishkinDmitriy/agora/issues/268) — Acquire has no effect rule, so
+  the planner is blind to how every plant actually acts. That is a missing effect schema, and
+  PDDL has a settled answer for the shape of one.
+- **HTN planning** decomposes a task into a fixed method rather than searching, which is what
+  *acquire upstream, then offer downstream* IS. We arrived at it by writing the method down as
+  `plan.rq`, which is an HTN method by another name. The relevance is that HTN's bound is the
+  method library rather than the depth — so if depth 3 is ever wanted, the question to ask is
+  whether another method should be written down, not whether the search should go deeper.
+- **The frame problem** is the one to know about before it bites. Classical planning assumes
+  what an action does not mention does not change; a graph diff over a store that other
+  processes write does not get that for free.
+  [#258](https://github.com/ShishkinDmitriy/agora/issues/258) — cycle detection asking "where am
+  I" with a number only some plans move — is a frame problem in the small, and the depth-2
+  limitation recorded above (a rule's CONSTRUCTs run against the STORE, so the second step never
+  sees what the first added to the WORLD) is the same thing again.
+
+What stays refused is unchanged and is the last seam below: preconditions are SPARQL and search
+is bounded by construction, never open-ended. Naming PDDL is not proposing to parse it.
+
 So the generalisation is a WIDENING, not a rebuild — and one precedent makes "desire as a
 graph" less exotic than it sounds: **SHACL shapes are already desired graphs.** The sovereign
 holds them about worlds and validation is gap detection; a desiring agent holding a deduced

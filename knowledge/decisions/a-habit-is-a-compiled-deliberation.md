@@ -32,7 +32,10 @@ A habit is the next rung: the decision disappears into the perception-action edg
 the whole propose-size-adopt pipeline collapsed into one if-then. The idea has a precise
 ancestor: SOAR calls it chunking, deliberation results compiled into production rules, and
 psychology calls it what the sovereign called it — what System 2 practices until System 1
-owns it.
+owns it. ACT-R names the same move *production compilation* and is the more useful of the
+two to read here, because it models the COST curve — a compiled production is faster and
+less flexible, and the literature is mostly about when that trade goes bad. Which is the
+retirement problem below, arrived at from outside.
 
 ## The shape, from machinery that already exists
 

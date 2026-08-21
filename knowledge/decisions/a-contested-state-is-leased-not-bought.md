@@ -50,6 +50,25 @@ A door lease is a claim whose window IS the duration of control. The term was in
 deadline and turns out to describe a lease, which is the ordinary way a vocabulary earns its
 keep.
 
+**And the word is load-bearing, because a lease is a distributed-systems primitive with known
+edges.** Gray and Cheriton (1989) named it for exactly this shape — a time-bounded grant that
+expires on its own rather than being revoked, so a holder that dies costs the system a wait
+instead of a stuck resource. Two of its documented hazards apply directly and neither is closed
+here:
+
+- **A lease is only as good as the clocks agreeing.** `exp` is an absolute time on the wire, so a
+  holder and the door disagreeing about now is a door held past its window or released inside it.
+  Everything else here is deliberately relative for this reason — sensing's freshness follows the
+  cadence, a dose's deadline is its own open-seconds plus a grace — and a lease is the one place
+  that reasoning does not reach, because the *point* is an interval two parties share.
+- **Renewal is where the contention actually lives.** An air conditioner that re-leases every
+  three minutes has a door nobody else can win, without ever holding it illegitimately. That is
+  the same shape as the convening gap and is not a market fix.
+
+The preemption question below — whether a lease binds when security's urgency spikes mid-window
+— is the third of Gray and Cheriton's, and the record's answer is unchanged: it is a
+constitutional question and not a market one.
+
 ## The door agent wants nothing, and that is a class now
 
 The sovereign's own addition: **the door agent has no desires of its own — only obligations,

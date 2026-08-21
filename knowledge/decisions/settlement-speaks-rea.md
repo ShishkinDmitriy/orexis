@@ -85,9 +85,8 @@ against the **supplier**, not a command naming a valve. Only the noun changes.
 - **FIX** — the actual industry term set for orders and executions, and not RDF. Useful as a naming
   reference if bid and trade fields ever need standard names; nothing needs that now.
 - **FIPA's auction protocols** — English, Dutch, Contract Net, Iterated Contract Net. These cover
-  the *choreography* rather than the vocabulary, which is the one thing REA does not, and
-  `domain/round.md` already carries a `contract-net` tag. **Not examined here**, and the most
-  promising thing left unread.
+  the *choreography* rather than the vocabulary, which is the one thing REA does not.
+  **Not examined here**, and the most promising thing left unread.
 
 # Consequences
 
