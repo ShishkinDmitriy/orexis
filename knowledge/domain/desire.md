@@ -166,9 +166,13 @@ everything, stale included, since "last I looked I was dry and I cannot see any 
 information; `current()` is the same diff with the agent's rule applied, and is what the report
 is computed over — so a dead sensor's upserted last reading makes `worst_gap` **disappear
 rather than reassure**, and `reading_age_s` on the same dashboard says why. The blind case — a
-desire in a property the agent polls no sensor for — warns at the gate
-(`desire:UnwatchedDesireShape`, the mirror of #111) and shows at runtime as `desires` and
-`desires_measured` diverging.
+desire in a property the agent polls no sensor for — warns at the gate (the mirror of #111)
+and shows at runtime as `desires` and `desires_measured` diverging. That warning has no shape
+of its own: it is an `sh:sparql` constraint sitting inside `desire:BeyondSurvivalShape`, whose
+name and comment describe a survival check that moved into the deduction and is no longer
+there ([#275](https://github.com/ShishkinDmitriy/agora/issues/275)). An earlier version of this
+page called it `desire:UnwatchedDesireShape`, which is the name it deserves and not a name that
+exists.
 
 Consumers today: `reports()` discloses `desires`, `desires_measured` and `worst_gap` into the
 health series; `desire:BeyondSurvivalShape` turns |gap| = 1 into a **warning** at boot — never

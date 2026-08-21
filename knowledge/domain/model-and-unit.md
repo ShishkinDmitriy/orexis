@@ -32,7 +32,7 @@ This is the same move in four places, which is why it is worth stating once:
 ## A bare class-level triple is punning, and entails nothing
 
 ```turtle
-dht11:Dht11 ssn-system:hasSystemCapability dht11:ContinuousOperation .   # WRONG
+dht11:Dht11 ssn-system:hasSystemCapability dht11:ContinuousOperationCapability .  # WRONG
 ```
 
 Legal RDF. It says the **class** has the capability, which entails nothing whatever about a DHT11
