@@ -8,6 +8,10 @@ tags: [vocabulary, domain, ssn, plants, packages, owl]
 timestamp: 2026-08-12T00:00:00Z
 ---
 
+> **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one
+> application of a principle four of them share; the domain concept states the principle
+> and the mechanism once.
+
 # The structural question first, because it dissolved
 
 The request came with a preference: *one feature has all it needs — ontology, scripts* — and a

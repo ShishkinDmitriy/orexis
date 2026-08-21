@@ -8,6 +8,10 @@ tags: [ontology, modules, capabilities, architecture, extensibility, packaging]
 timestamp: 2026-08-03T12:00:00Z
 ---
 
+> **Current statement: [package](/domain/package.md).** This record is how the model got
+> there and why; the domain concept is what it is now. Four records amend each other on
+> this subject, so read the concept first unless you want the argument.
+
 # Context
 
 [capability-modules](/decisions/capability-modules.md) established what a capability *is*:

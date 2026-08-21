@@ -8,6 +8,10 @@ tags: [vocabulary, sosa, ssn, hardware, inference, owl, reuse]
 timestamp: 2026-08-12T00:00:00Z
 ---
 
+> **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one
+> application of a principle four of them share; the domain concept states the principle
+> and the mechanism once.
+
 # Context
 
 `packages/part/dht11/` was asked to become the reference for describing a part — the directory

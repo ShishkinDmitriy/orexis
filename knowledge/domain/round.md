@@ -30,15 +30,15 @@ opens"*). See
 
 # The word is the standard one
 
-In iterative auction design a round is the iteration. The canonical multi-unit format is named for
-it — the **simultaneous multiple-round auction** used for spectrum, where one auction for one set
-of lots runs many rounds, each a pass of bidding with results published in between. Clock auctions
-are counted in rounds the same way.
+In iterative auction design a round is the iteration — the **simultaneous multiple-round
+auction** used for spectrum is named for it, and clock auctions are counted the same way.
 
-Splitting a large quantity into smaller pieces does not produce rounds — it produces **lots**, and
-each is allocated by an auction of its own. Here the lot is the host's standing offer and one
-auction sells it whole; see
-[the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md).
+Splitting a large quantity into smaller pieces does not produce rounds; it produces **lots**,
+each allocated by an auction of its own. Here the lot is the host's standing offer and one
+auction sells it whole — see
+[the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md), and
+[a-round-is-an-iteration-not-the-auction](/decisions/a-round-is-an-iteration-not-the-auction.md)
+for why the two had to be told apart.
 
 # Flow
 
@@ -87,7 +87,7 @@ The transcript IS the explanation ("Fern got only 1 L because rain was forecast 
 Tomato's afternoon need"). A single optimizer can't hand you that sentence — and it is a transcript
 *of rounds*, which is the other reason the iteration deserves its own word.
 
-# Nothing calls a round an auction any more
+# What `auction_id` names
 
 `auction_id` is minted once per auction and travels on all four payloads — the offer, the bid, the
 [claim](/domain/claim.md) and the signed command. It names the auction, which is what it always

@@ -8,6 +8,10 @@ tags: [layout, packages, loader, boundary, testing]
 timestamp: 2026-08-12T00:00:00Z
 ---
 
+> **Current statement: [package](/domain/package.md).** This record is how the model got
+> there and why; the domain concept is what it is now. Four records amend each other on
+> this subject, so read the concept first unless you want the argument.
+
 # Context
 
 Two package systems, identical in shape and apart in the tree:

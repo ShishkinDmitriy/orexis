@@ -14,6 +14,9 @@ timestamp: 2026-08-03T00:00:00Z
 > directory per capability now, discovered rather than listed, and a capability never imports
 > another's Python. The file table and the "one line of registry" in this document are the
 > parts that were replaced.
+>
+> **Current statement: [package](/domain/package.md)** — the model as it stands after all
+> four amendments, so nobody has to replay them.
 
 # Context
 

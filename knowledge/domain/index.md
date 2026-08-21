@@ -34,7 +34,12 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [sensing](/domain/sensing.md) - Sensing split by WHO HOLDS THE CLOCK: Polling (the agent asks each time — reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). Either way the agent owns the freshness rule, and a bid must cite a reading it trusts.
 
-# Genesis and structure
+# Structure — how the project is put together
+
+* [package](/domain/package.md) - The one unit the loader knows: `packages/<family>/<name>/`, five optional files, the family read off the path, the namespace off the ontology, `PROVIDES` as the only registration. What four decision records amended their way to, stated once.
+* [model-and-unit](/domain/model-and-unit.md) - A part, a species and a firmware are MODELS; the things in a world are UNITS. What the datasheet says is stated once on the class and reaches every unit by entailment — `owl:hasValue` for what units share, `owl:someValuesFrom` plus a shape for what each has its own of, and a bare class-level triple for neither, because that is punning.
+
+# Genesis and worlds
 
 * [genesis-process](/domain/genesis-process.md) - The LLM-assisted session that turns a description into a living society: what must be elicited, what "consistent" means concretely, where opening beliefs come from, and why a world's KIND changes the operational ones but never the stake ones.
 * [agent-metrics](/domain/agent-metrics.md) - What an agent says about itself: belief base size, seconds since a sensor last delivered, and the write failures that were previously caught and only logged. In the kernel because every agent has a belief base whatever it composed; the interval is a belief whose absence means it reports nothing.

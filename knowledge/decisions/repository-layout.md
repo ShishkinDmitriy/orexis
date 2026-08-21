@@ -6,6 +6,10 @@ tags: [layout, packaging, boundaries, enforcement, seams]
 timestamp: 2026-08-07T00:00:00Z
 ---
 
+> **Current statement: [package](/domain/package.md).** This record is how the model got
+> there and why; the domain concept is what it is now. Four records amend each other on
+> this subject, so read the concept first unless you want the argument.
+
 # What it looks like
 
 ```
