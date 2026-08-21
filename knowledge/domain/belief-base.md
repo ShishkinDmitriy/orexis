@@ -69,7 +69,21 @@ below on why the graph, not the provenance triple, carries the trust):
   its `resultTime` (which is what the freshness gate checks). In an adversarial society this
   is the witness of record and the only graph a justification may cite; in v1's trusted-agent
   mode it is self-asserted (see below). Forecast lives here too (tense in the timestamp).
-- `:claims` — what agents assert during negotiation. Untrusted; never merged into `:sensed`.
+- What agents assert during negotiation is untrusted and is never merged into `:sensed`.
+  There is no `:claims` graph — a bid is a message on the bus, weighed and discarded, and
+  what survives a round is the co-signed claim rather than the assertions that produced it.
+
+**And that is five of them.** The list above is the original trust partition and is no longer
+the whole store: the mind grew a graph per modality, and provenance grew one per arrival. The
+full set is whatever `ag:Graph` has instances of — ask, never count — but for orientation it is
+now `graph/beliefs/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived`,
+`graph/world/entailed`, `graph/ontology`, `graph/ontology/entailed`, `graph/provenance`,
+`graph/desire`, `graph/constraint`, `graph/intentions/<agent>`, `graph/obligations/<agent>`,
+`graph/deliberation`, `graph/effects`, `graph/evidence/<agent>`, `graph/revisions/<agent>`,
+`graph/summaries/<agent>`, `graph/classification` and `graph/instruments`. See
+[the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) for the three axes that classify
+them and [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) for why the public ones
+split by who authored the fact.
 
 The graphs themselves are **typed, self-describing resources** (`:world a agora:WorldGraph`,
 `:beliefs/fern a agora:BeliefsGraph ; agora:beliefsOf agora:fern_agent`) — a graph catalog,
@@ -83,17 +97,26 @@ are already in place; the remaining scoping work is:
 - `:sensed/<plant>` — the plant's own measurement, **private / need-to-know** (peers never
   read it; the constitution and the plant do). Moisture is the plant's business; the market
   needs its *bid*, not its moisture. Today `:sensed` is still one shared graph.
-- `:ledger` — wallet balances, debits, and grants, **authored by clearing** (the mint), not
-  by the agents they are *about* ("about X" ≠ "authored by X").
+- a **ledger** — wallet balances, debits and grants, authored by clearing rather than by the
+  agents they are *about*. It does not exist: there is no such graph and no mint, so a
+  balance is self-reported and clearing checks solvency against the bidder's own number.
+  See [wallet](/domain/wallet.md), which marks what is built apart from what is designed.
 - `:beliefs/<agent>` — done: the agent's private desire and limits, and later its learning
   *and* its own (untrusted) self-metrics.
 
-**Reads are enforced.** The store holds a per-graph access list keyed to per-agent
-credentials, generated from the world, so an agent connecting as itself sees the shared graphs
-and its own beliefs and nothing else — another agent's beliefs come back empty rather than
-refused. Writes are *not* graph-scoped (the store cannot), which is the same
-integrity-of-self-report assumption trusted-agent mode already accepts. The bus is a separate
-question and is still open. See [belief-base-isolation](/decisions/belief-base-isolation.md).
+**Reads are isolated STRUCTURALLY, and no longer by the store.** An earlier design enforced
+privacy with per-graph access lists behind per-agent credentials in a shared triplestore; there
+is no shared store now. Each agent embeds its own, in a volume of its own, and is handed one
+world and its own id — so another agent's beliefs are not refused, they are *absent*. Nothing
+to be let into is a stronger guarantee than an ACL, and it is why
+[belief-base-isolation](/decisions/belief-base-isolation.md) is superseded in mechanism while
+its reasoning about why the graph is the write boundary still holds. See
+[where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md).
+
+The bus and the series store are the two places isolation still has to be *granted* rather than
+being structural, and both are —  a credential and an ACL per principal, a bucket and a scoped
+token per agent, all derived from the same wiring that derives capability. See
+[series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 
 Every writer uses the two stores (RDF current-state + Influx history) for its own scope; the
 **sovereign** reads all of it for observability.

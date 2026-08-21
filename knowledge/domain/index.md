@@ -49,6 +49,6 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Rules and resources
 
 * [constitution](/domain/constitution.md) - Hard, non-negotiable constraints enforced by code, not persuasion.
-* [wallet](/domain/wallet.md) - The single budget; how bids and metabolic cost are computed and debited.
+* [wallet](/domain/wallet.md) - The single budget for water and thinking. Solvency is checked against a balance the bidder self-reports; the ledger, the allowance and metering are designed, not built.
 * [belief-base](/domain/belief-base.md) - One belief base per agent, not one shared store: named-graph layout, SOSA shape, provenance, structural isolation.
 * [gateway](/domain/gateway.md) - Decommissioned in v1: the measurement-witness role, folded into the self-asserting plant edge.
