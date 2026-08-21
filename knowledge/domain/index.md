@@ -48,6 +48,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Structure — how the project is put together
 
+* [capability](/domain/capability.md) - A named ability with interchangeable implementations. Granted by its own premise, deduced at genesis, and never hand-declared.
+
+* [shape](/domain/shape.md) - SHACL, saying both "you may not" and "I want". Severity is the only difference, and the split is ours rather than the spec's.
+
 * [package](/domain/package.md) - The one unit the loader knows: one directory, five optional files, the family read off the path, PROVIDES as the only registration.
 * [model-and-unit](/domain/model-and-unit.md) - A part, a species and a firmware are MODELS; the things in a world are UNITS, and inherit the model's facts by entailment.
 

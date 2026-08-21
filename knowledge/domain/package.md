@@ -60,40 +60,15 @@ editing the kernel.
 A package implements the terms **it** declares. That is what lets imports follow grants — a
 runtime imports only the packages its own capabilities name.
 
-# What isolates a capability is `PROVIDES`, not the directory
+# A package is not a capability
 
-**A directory is a package. A package is not a capability, and may hold several.**
-`packages/capability/market/` provides three — bidding, hosting, and the matching *family* — and
-it is one package.
+**A directory is a package**, and one package may provide several abilities — the market's
+provides three. What an ability IS, what separates its members, and the premise that hands it to
+an agent are all [capability](/domain/capability.md)'s.
 
-A **family** is the slot; its **members** are the interchangeable implementations.
-`sensing:SensingCapability` is a family; `sensing:Subscribing` and `sensing:Listening` are two ways
-of having it. `hosting.py` asks `agent.provider(BID_MATCHING)` and never learns which member
-answered, which is why uniform price landed without touching a line of it.
-
-**Packages never import each other's Python.** Reach another package by asking
-`agent.provider(family)` for a term, or contribute through the choir hooks — `annotate`,
-`urgency`, `notices`, `series`, `quiet`.
-
-# What grants one is its own premise
-
-There is no pattern to fit a new capability into. **The premise lives in the capability's own
-`rules.ru`**, and it is whatever fact makes *that* capability meaningful:
-
-| granted by | capability | the premise |
-|---|---|---|
-| **wiring** | `sensing`, `actuation`, `market` | equipment, or a position in a market |
-| **latitude** | `review:Reckoning` | an `review:commits` mandate whose ends differ — settings you may move |
-| **a stake** | `desire:Deducing` | `ag:actsFor` a subject that states what it needs |
-| **a stake AND a lever** | `intention:Keeping`, `deliberation:Reflex` | wanting without means is a wish; means without wants decide nothing |
-| **universally** | `reporting` | granted by a rule and insisted on by a shape — mandatory, not optional |
-
-When you add one, ask what makes *yours* meaningful rather than which of these it resembles.
-
-**Capabilities are worked out at genesis, never hand-declared** — `world.ttl` must not contain
-`ag:hasCapability`. Sensing's are `derived` (the hardware forces the answer); the others are
-`deduced` (someone judged, and could have judged otherwise). Both land in the world graph, and
-since the provenance split they are distinguishable rather than merely distinct.
+What belongs here is the consequence for the tree: nothing about a directory says which abilities
+it carries, so `PROVIDES` in `__init__.py` is the only registration, and a directory with none is
+knowledge and nothing else.
 
 # `agent/` is the kernel that loads them, not their home
 
