@@ -7,9 +7,10 @@ description: >-
   the answer decides it: every shipped effect reads exactly ONE mutable graph, `$sensed`, and
   `$sensed` is already a substituted parameter — so no rule changes. Run them against a SECOND
   pyoxigraph store, in memory for the life of one plan, with one named graph per search node
-  because the frontier holds siblings at once. About 7 ms a plan against a 200-500 ms pass. An
-  rdflib version of this was written first and refused by measurement: 163x slower per query,
-  which would have tripled a pass on the Pi to save twenty thousand triples of memory.
+  because the frontier holds siblings at once. About 11 ms a plan against a pass costing over a
+  second, and building it corrected two of the numbers below. An rdflib version of this was
+  written first and refused by measurement: 163x slower per query, which would have tripled a
+  pass on the Pi to save twenty thousand triples of memory.
 status: accepted
 timestamp: 2026-08-21T12:00:00Z
 ---
@@ -60,9 +61,10 @@ the store; that is an accident of what the caller passes.
 **Run a rule against a second pyoxigraph store, held in memory for the life of one plan, with
 each node's own readings in a graph of its own.**
 
-At the start of a plan, copy the graphs a rule may read but no step may change — world, derived,
-entailed, beliefs — into a fresh `pyoxigraph.Store()` with no path, which is in memory and is
-not the belief base — the agent's **imaginarium**, in the sovereign's word, and the word is
+At the start of a plan, copy the graphs a rule may read but no step may change — every PUBLIC
+graph, this agent's beliefs, and its readings (see *what building it corrected*, below: the four
+this record first named are not enough, and the shortfall is silent) — into a fresh
+`pyoxigraph.Store()` with no path, which is in memory and is not the belief base — the agent's **imaginarium**, in the sovereign's word, and the word is
 better than a description because it says the thing that matters: what is in it never happened. Each node of the search then owns **one named graph** in that store,
 holding the readings that node's world reached, and a rule evaluated at that node has `$sensed`
 bound to that node's graph name. The rule runs unchanged, sees the world the previous step
@@ -117,6 +119,13 @@ reading.
 rebuilds the chosen plan's world for the legality check, and past step one it rebuilds the wrong
 one. Both call sites move together or neither is fixed.
 
+It moved by being DELETED, which the argument above should have predicted and did not. If a
+world is materialised per node, the node that wins is already holding the world the plan would
+reach — so the legality check takes it as an argument and rebuilds nothing. `_world_of` existed
+only because a node's world was thrown away when the search returned, and the reason given for
+throwing it away was about the `Plan` (a possible world must not ride out to the ask channel on
+a record that crosses module boundaries), which an argument does not do.
+
 **Nothing is cleaned up per node.** The imaginarium is discarded whole when the plan ends, so a
 node's graph has no lifecycle of its own and no step has to remember to drop one. That falls out
 of the store being separate, and it is most of why separate is the right call rather than a
@@ -147,23 +156,26 @@ forgotten to be dropped, and a store that was never on disk cannot be.
 
 ## What it costs, measured
 
-On `world/simulation`, per plan:
+Re-measured on the Pi against what was built, because the estimate below it was wrong in one
+place by a factor of seven — see *what building it corrected*:
 
-| | |
-|---|---|
-| load the invariant graphs into the in-memory store | **1.45 ms** (486 quads) |
-| fork one node's readings into its own graph | 0.19 ms × 7 nodes |
-| run a rule's CONSTRUCT | 0.32 ms × 14 |
-| **a whole plan** | **≈ 7 ms** |
-| a whole plan today, giving wrong answers past step one | ≈ 4 ms |
-| a whole deliberation pass, for scale (#268) | 200–500 ms |
+| | `world/loner` | `world/simulation` |
+|---|---|---|
+| build the imaginarium | **10.4 ms** (2,646 quads) | **13.3 ms** (3,131 quads) |
+| fork one node's readings into its own graph | 0.09 ms × 7 nodes | |
+| run one rule (construct + retract) | 0.80 ms × 14 | |
+| **the imaginarium's whole share of a plan** | **≈ 11 ms** | ≈ 14 ms |
+| a whole deliberation pass, holding it | ≈ 1,100 ms | ≈ 1,100 ms |
+| the same pass before this, at depth 1 with the wrong answer | ≈ 1,400 ms | |
 
-Three milliseconds on a pass that costs two hundred, to make depth 2 mean what it says.
+**One percent of a pass, to make depth 2 mean what it says.** The pass is dominated by pySHACL —
+`_met_in` is 0.083 s per candidate and depth 2 weighs roughly twice as many — and the two
+figures above are close enough on this machine that the honest claim is *no measurable cost*
+rather than a speedup, even though the deleted `_world_of` replay genuinely removed work.
 
-**Load only the graphs a rule reads.** The whole store is 3,266 quads and takes 25.8 ms to copy;
-the graphs rules actually read are 486 and take 1.45. The table above is the second number, and
-the difference is large enough that it is part of the decision rather than an optimisation to
-consider later.
+The estimate this replaces read 1.45 ms for 486 quads and ≈ 7 ms a plan, against a pass of
+200–500 ms. Both halves moved: the copy is larger because it has to be, and the pass is longer
+because it is finally doing two steps.
 
 ## Why not the other two
 
@@ -171,13 +183,86 @@ consider later.
 them. The subtlety in "unless it covers them" is not a detail of the implementation, it *is*
 the bug: two readings on one node is precisely a fall-through that went wrong. A design whose
 central mechanism is the failure mode it must prevent needs a reason to be chosen, and there
-is none here — it exists to avoid a copy that measurement shows is cheap.
+is none here — it exists to avoid a copy that measurement shows is cheap (10–13 ms against a
+pass over a second, once the copy is the size it actually has to be).
 
 **Not a new contract for the effects layer.** The issue proposed that `agent/effects.py` gain
 the ability to execute a rule over an arbitrary graph, and asked what happens to a rule that
 legitimately needs the world graph or a belief. The table above answers it: they all do, and
 none of them needs a *changed* one. So the layer does not need a second mode. It needs to be
 handed a different dataset.
+
+# What building it corrected
+
+Two claims above were measured wrong and one thing was missed entirely. They are here rather
+than edited away, because the shape of both mistakes is the shape this project keeps meeting:
+**a query that reaches somewhere nothing put anything returns an empty result, not an error.**
+
+## The lean snapshot binds nothing
+
+The record said to copy world, derived, entailed and beliefs — 486 quads, 1.45 ms — on the
+reasoning that those are the graphs the shipped rules read, and made the smallness part of the
+decision. It is not enough. Both the dose and the bid walk `?term market:ofGood ?good`, and a
+valuation term is stated in a package's `ontology.ttl`, so it lands in the **ontology graph**
+along with the T-Box. Copy the lean set and the CONSTRUCT binds nothing at all: no rows, no
+error, no test going red — a planner that quietly finds every lever useless.
+
+So the imaginarium copies **every public graph**, asked rather than listed, plus the private
+graphs it is named: this agent's beliefs and its readings. That is 2,646 quads and 10.4 ms on
+`world/loner` rather than 486 and 1.45. It is also the rule the rest of the repo already
+follows — `store.public_graphs()` asks the vocabulary which graphs are public, and enumerating
+four of them by hand is the same move [who-put-the-fact-there](/decisions/who-put-the-fact-there.md)
+forbids for exactly this failure.
+
+The table in *what the rules actually read* is still true as far as it goes. What it got wrong
+was the inference from it: the rules read one MUTABLE graph, which is the load-bearing fact and
+still holds, but the immutable half is not four graphs a person can enumerate — it is public
+knowledge, whatever that currently consists of.
+
+## Depth was 1 for a second reason, and it hid the first — and the fix was to delete, not to add
+
+The contradiction at the top of this record says the second dose "is computed correctly and
+thrown away by cycle detection". It was not computed at all. `MAX_DEPTH` is 2 and the frontier
+was empty at every depth, because of an unrelated defect in how the search decides a step may be
+followed:
+
+> **A SENSING ACTION ENDS A PLAN.** A world with no violations means "nothing I can foresee is
+> wrong", so a step chosen after a look was chosen against a value nobody has seen.
+
+The search enforced that by asking `ag:confirmedBy ag:ByObservation` — and every effect in this
+project answers exactly that. A dose is confirmed by observation; so is a bid; only a later
+reading says the water arrived. So the guard matched every lever, nothing was ever added to the
+next depth, and the search ran at depth 1 whatever the constant said. It was invisible because
+the only thing that would have noticed is a correct second step, which the defect above
+prevented — two bugs each hiding the other's symptom.
+
+**The first fix was a truer term — `ag:changes ag:WhatIsTrue` against `ag:WhatIsKnown` — and it
+was refused, correctly, by the sovereign asking whether it was needed at all.** It is not. An
+action states a precondition, an implementation and an EFFECT; a plan is a path through world
+space; and what a look does is something its effect already says, since it predicts the value it
+found. The world it reaches therefore carries its parent's signature and the cycle check
+discards it — the same road a zero-size bid arrives at "this does not help" by, which
+`market:AcquireEffect`'s own comment was already arguing for.
+
+Measured with the guard deleted outright, on three worlds including a first look with nothing
+sensed at all: Observe is pruned as *a world already reached*, every time, and depth 2 works.
+**A second statement of a fact the effect settles is a fact that can disagree with it** — which
+is the argument this project makes everywhere else about capabilities being deduced rather than
+hand-declared, arriving at a means. So the guard is gone and no vocabulary was added.
+
+What that rests on is stated where it can be seen to break. `_signature` is the goal's own
+value, and a look does not move it; [#258](https://github.com/ShishkinDmitriy/agora/issues/258)
+asks whether a signature should carry where a plan IS, and one noticing a fresher
+`sosa:resultTime` would make "look, then look" a new world every time. Chaining past a look
+becomes a live question exactly there and nowhere earlier — the trigger, written down.
+
+## The seams held
+
+Everything else the record committed to survived contact. `$sensed` needed no rule change; one
+graph per node was the right shape and a single mutable graph would have been wrong for the
+reason given; cycle detection stayed keyed on the world; the flat rdflib view is materialised
+per node exactly as the seam predicted, and that is still the piece of work this design does not
+remove.
 
 # What this replaces, and the measurement that replaced it
 
@@ -285,10 +370,11 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   correct — a hypothesis explored against a moving world is not a hypothesis — but it means a
   long search plans against a world that has aged. The keeper's patience already bounds how
   long that can be, and nothing measures it yet.
-- **`_world_of` moves with the search loop or neither is fixed.** It replays the chosen plan to
-  check the world's legality and re-runs each rule against the store, so past step one it
-  validates a world the plan would not reach. Named here because it is the same defect in a
-  second place, and a fix that reached only the search would leave the legality check wrong.
+- ~~**`_world_of` moves with the search loop or neither is fixed.**~~ CLOSED, and not the way
+  this predicted: it moved by being deleted. Once a world is materialised per node, the node
+  that won is holding the world the plan would reach, so the legality check takes it as an
+  argument and replays nothing. A seam that turns out to be one line of the design's own logic
+  is worth leaving visible rather than editing away.
 - **Nothing here fixes cycle detection's signature.**
   [#258](https://github.com/ShishkinDmitriy/agora/issues/258) asks where a plan *is* using a
   number only some plans move; a correct baseline makes that question answerable rather than

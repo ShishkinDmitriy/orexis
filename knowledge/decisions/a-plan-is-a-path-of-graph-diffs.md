@@ -354,6 +354,17 @@ not chain PAST a sensing action. What to do after looking depends on what the lo
 is contingent planning, and the bounded answer this project should take is the simple one: a
 sensing action ends a plan. Look, then decide again with a reading in hand.
 
+**Nothing enforces this but the effect itself, and that is the right amount.** The search once
+carried a guard, reading `ag:confirmedBy ag:ByObservation` to spot a sensing act — a different
+question whose answer is the same for every lever here, so the guard matched all of them,
+nothing was ever added to the next depth, and the search never went past one step at all (#254).
+Removing it changes no behaviour: Observe's effect predicts the value it found, so the world it
+reaches has its parent's signature and the cycle check discards it, exactly as a zero-size bid
+is discarded. What that rests on is `_signature` being the goal's value; if
+[#258](https://github.com/ShishkinDmitriy/agora/issues/258) makes a signature carry where a plan
+IS, a fresher `sosa:resultTime` would make each look a new world and this becomes a live
+question again.
+
 That also disposes of a nonsense the search would otherwise produce — "look, then water" scored
 as a two-step plan whose second step was chosen against a value nobody had yet seen.
 
@@ -390,15 +401,21 @@ world the first had reached and cycle detection discarded it as already seen. Th
 never made one longer than a step. Fixed, and pinned by a test that fails if the bindings stop
 advancing with the world.
 
-**The structural one is not fixed: a rule's CONSTRUCTs run against the STORE.** So
-`(beliefs − retracts) + adds` holds for one step and stops holding for the next — the retraction
-re-asks the store, finds the observation still stored, and never sees what the previous step added
-to the world. After two steps a world holds two readings and the reader takes the stale one. Depth
-beyond 1 is therefore nominal today for any goal about a measured value.
+**The structural one was that a rule's CONSTRUCTs ran against the STORE.** So
+`(beliefs − retracts) + adds` held for one step and stopped holding for the next — the retraction
+re-asked the store, found the observation still stored, and never saw what the previous step added
+to the world. After two steps a world held two readings and the reader took the stale one.
 
-Fixing it means a rule must be askable about a WORLD rather than a store, which the effects layer
-cannot express. That is the next real piece of this design, and it is worth saying plainly that
-the planner shipped with a ceiling of one step for the cases that matter.
+FIXED (#254): a rule is run against the agent's **imaginarium**, a second pyoxigraph store held in
+memory for the life of one plan, with one named graph per node of the search. No rule changed —
+`$sensed` was already a substituted parameter, and every shipped effect reads exactly one mutable
+graph. See [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md),
+which also records the two things this record got wrong about it. Chief among them: a THIRD limit
+was hiding underneath, and the first two hid it. The frontier guard below asked the confirmation
+route to identify a sensing act, every effect here answers `ag:ByObservation`, and so nothing was
+ever added to the next depth — the search ran at depth 1 whatever `MAX_DEPTH` said, which is why
+nobody in a running society ever saw the two readings this section describes. That guard is
+gone rather than replaced — see the sensing-action section below.
 
 ### An invented number does not give a wrong answer — it gives a convincing one
 

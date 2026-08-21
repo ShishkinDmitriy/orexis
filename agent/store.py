@@ -249,6 +249,18 @@ class Store:
         )
         return out.getvalue().decode()
 
+    def quads(self, graph_iri: str):
+        """One graph's contents as QUADS, for a reader that is going to put them somewhere else.
+
+        `get_graph` says the same thing in Turtle, and going through text is what a copy must
+        not do: a serialise-and-reparse relabels blank nodes, so an observation node would come
+        out the far side unequal to the one a retraction names. It is also the same trap
+        `effects._triple` exists for, one layer up — a term crossing a boundary as text stops
+        being that term. The one caller is `agent.imaginarium`, which is filling a second store
+        with what this one holds.
+        """
+        return self._store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri))
+
     def has_graph(self, graph_iri: str) -> bool:
         """Whether anything has been written here — how birth knows it already happened."""
         return any(self._store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri)))

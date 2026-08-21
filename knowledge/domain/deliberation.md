@@ -73,14 +73,42 @@ holds no valve was sized at nothing, the rule predicted the world the agent alre
 and the search reported that buying does not help. A partial plan defers; a confident one
 overrides the reflex and stops the plant bidding.
 
-**Depth beyond one does not work yet, and the reason is worth knowing before anyone relies on
-it.** A rule's two CONSTRUCTs are run against the STORE, so `(beliefs − retracts) + adds` holds
-for the first step and stops holding for the second: the retraction re-asks the store, finds the
-same stored observation, and never sees what the previous step added to the WORLD. Measured on
-the loner's gardener — one reading of 0.04 in beliefs, one of 0.08 after a step, and **two** after
-two, 0.08 beside 0.12, with the value read back arbitrarily. Fixing it means asking a rule about
-a world rather than about a store, which the effects layer cannot do today. Until then the search
-is honest at depth 1 and the ceiling is nominal.
+**Depth 2 is honest now, and two separate things had to be true for it (#254).**
+
+The first is that a rule is asked about a WORLD. Both of a rule's CONSTRUCTs used to run against
+the STORE while the diff was applied to the hypothesis, so `(beliefs − retracts) + adds` held for
+the first step and stopped holding for the second: the retraction re-asked the store, found the
+same stored observation, and never saw what the previous step added. Measured on the loner's
+gardener — 0.08 beside 0.12 on one observation node after two doses, with the value read back
+arbitrarily. A rule now runs against the agent's **imaginarium**: a second pyoxigraph store, in
+memory for the life of one plan, with one named graph per node of the search. Nothing about the
+rules changed — `$sensed` was already a substituted parameter, and every shipped effect reads
+exactly one mutable graph. See
+[a-rule-is-asked-about-a-world-not-about-a-store](../decisions/a-rule-is-asked-about-a-world-not-about-a-store.md).
+
+The second was found by fixing the first, and is why nobody had seen the two readings in a
+running society. **A sensing action ends a plan, and the search enforced that with a rule of its
+own** — it read `ag:confirmedBy ag:ByObservation`, which every effect here answers, a dose and a
+bid included, because only a later reading says either arrived. So the guard matched every
+lever, the frontier was empty at every depth, and the search ran at depth 1 whatever `MAX_DEPTH`
+said.
+
+**There is no guard now, and that is the fix rather than a shortcut.** What a look does is
+already stated by its EFFECT: it predicts the value it found, so the world it reaches carries
+its parent's signature and cycle detection discards it — by the same road a zero-size bid
+arrives at "this does not help". Measured with the guard removed, on three worlds including a
+first look with nothing sensed: Observe is pruned as a world already reached, every time. A
+second statement of a fact the effect already settles is a fact that can disagree with it.
+
+What that rests on is `_signature`, which is the goal's own value, and a look does not move it.
+[#258](https://github.com/ShishkinDmitriy/agora/issues/258) asks whether a signature should
+carry where a plan IS rather than only that number — and a signature noticing a fresher
+`sosa:resultTime` would make "look, then look" a new world every time. Chaining past a look
+becomes a real question again exactly there, and nowhere earlier.
+
+**What limits depth now is the menu, not the machinery.** Fixing the baseline makes depth 2
+honest; it does not make depth 3 useful, because what decides that is whether the levers compose
+— [the-ladder-of-means](../decisions/the-ladder-of-means.md)' question rather than this one's.
 
 **Legality is checked once, on the winner.** Validating every candidate against everything the
 packages ship costs 1.73s against the goal shape's 0.083s — twenty times more, for an answer
@@ -329,6 +357,14 @@ opening a valve does not make a plant watered.
 `ag:Unconfirmed` stays expressible on purpose. A valve wired without a status channel is a real
 deployment, not an oversight, and the honest response is to say so — an agent that cannot verify
 should restore its observation before acting again, rather than dosing blind.
+
+**It says how you would find out, and nothing about whether there is anything to find out.**
+The planner once used it for the second question — deciding which acts end a plan by asking the
+route — and every shipped effect answers `ag:ByObservation`, so every lever ended a plan and the
+search never reached its second step (#254). A discriminator whose every answer is the same one
+is not discriminating. The lesson generalises past this term: what an act DOES is the effect's
+to state, and a planner that wants to know it should read the effect rather than a label beside
+it.
 
 **Both readers now ask instead of computing**, which is the single-source argument one axis over
 from the prediction. The dose deadline is the rule's answer plus the bus slack the agent already
