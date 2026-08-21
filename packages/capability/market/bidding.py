@@ -164,6 +164,33 @@ class BiddingModule(Module):
                 f"<{self._valuation_term}> belief — run agora-validate")
         return float(rows[0]["v"])
 
+    def qty_for(self, observed_property: str, value: float) -> float | None:
+        """How many litres I would BID for, given where this property stands — one bid's size.
+
+        The buying twin of `ActuationModule.dose_for`, public for the same reason and asked by
+        the same caller. A planner simulating an Acquire must size it the way the bidder would
+        actually size it, or it predicts a world nobody was going to reach — the single-source
+        argument #238 made for an effect's magnitude, arriving at the quantity of a PURCHASE.
+
+        Sized by `value_bid`, which is the same function `submit` runs, so the affordability cap
+        is included rather than idealised away: an agent that cannot pay for the litres that
+        would close its deficit would not bid for them, and a plan that assumed otherwise plans
+        on money the wallet does not hold.
+
+        None where this agent cannot size a bid at all — a property its venue does not price, no
+        aim to steer toward, no stated conversion, or a deficit that `value_bid` cedes on.
+        """
+        # My bids are denominated in exactly one property (#198), so a question about any other
+        # is not a question about buying: answering it would price a humidity in litres.
+        if observed_property != self.about or self.conversion is None:
+            return None
+        aim = self._my_aim()
+        if aim is None:
+            return None
+        bid = value_bid(value, aim, self.beliefs, self.balance,
+                        litres_per_unit=self.conversion)
+        return bid.max_qty_l if bid is not None else None
+
     def _next_move(self, value: float | None = None) -> str | None:
         """The WHETHER, asked of whoever deliberates — this module only carries moves out.
 

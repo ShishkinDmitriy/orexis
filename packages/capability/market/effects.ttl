@@ -1,0 +1,140 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ag:        <http://example.org/agora#> .
+@prefix sosa:      <http://www.w3.org/ns/sosa/> .
+@prefix market:    <http://example.org/agora/market#> .
+@prefix actuation: <http://example.org/agora/actuation#> .
+
+#################  What BUYING would make true  #################
+#
+#  The lever every plant in this project actually pulls, and the planner could not see it. Only
+#  sensing and actuation shipped effects, so a search over a plant's menu saw Observe alone,
+#  correctly found that looking does not wet soil, marked the plan PARTIAL and deferred to the
+#  reflex — which is what waters the society. Measured the hour #265 landed: `better` was zero
+#  across three societies and `blind` was 1 for every plant. The planner decided correctly and
+#  could not see the one lever that mattered. See #268.
+#
+#  THE HONEST DIFFICULTY, stated rather than smuggled: **an agent does not control whether it
+#  WINS.** A dose is an act whose effect follows from taking it; a bid is an act whose effect
+#  follows from taking it AND from a host matching it AND from nobody outbidding it. So this
+#  rule predicts the world in which the bid clears, which is optimistic, and the optimism is
+#  the correct choice for three reasons rather than a convenience:
+#
+#    * It is what planning does everywhere. A STRIPS action schema states what the action
+#      achieves, not what it achieves times a probability; uncertainty lives in re-planning and
+#      in monitoring, which is where this repo already puts it.
+#    * The machinery for the unmet case already exists and already runs. An Acquire that does
+#      not clear produces an UNMET verdict through the same expectation path a dose that never
+#      landed does — see `an-intention-is-an-amortised-deliberation` on the verification arc.
+#      A rule that hedged here would be inventing a second, quieter way to be disappointed.
+#    * A pessimistic rule is not more honest, it is just useless: predicting no change would
+#      make Acquire indistinguishable from doing nothing, and the search would go on refusing
+#      to bid — which is exactly the bug this closes.
+#
+#  What it must NOT do is hide that. The optimism is why `ag:landsAfter` below is generous and
+#  why `ag:confirmedBy` is by OBSERVATION: nothing is true until a reading says so.
+
+market:AcquireEffect
+    a sh:SPARQLRule ;
+    ag:effectOf ag:Acquire ;
+    rdfs:label "what winning a bid makes true" ;
+
+    #  The node-level half — an agent with no venue and no balance cannot buy anything, whatever
+    #  it is asked about. Which venue reaches THIS subject is the affordance row's walk, exactly
+    #  as `HoldsAnActuatorShape` leaves the valve to the row.
+    sh:condition market:BiddingAgentShape ;
+
+    #  THE SAME ARITHMETIC AS A DOSE, and that is the point rather than a coincidence. Water
+    #  bought and water poured raise the same property by the same amount; what differs is who
+    #  owns the valve and whether anyone had to be paid. So the prediction is `value + litres /
+    #  conversion` — the one function `actuation:ActuateEffect` exists to keep in a single
+    #  place — reached along the plumbing walk `affordances.rq` already deduces the row from:
+    #  a venue I bid in, whose source supplies a good, whose host holds a lever plumbed to MY
+    #  subject. An agent bidding in a market no valve connects to its pot gets no row and no
+    #  effect, because a delivery that cannot reach you is, for you, no lever at all.
+    #
+    #  The conversion is the agent's OWN belief, keyed by the term the venue tie names — the
+    #  copy it would lose money by being wrong about, and the copy a review would revise.
+    sh:construct """
+        CONSTRUCT {
+            ?obs a sosa:Observation ;
+                 sosa:hasFeatureOfInterest $subject ;
+                 sosa:observedProperty $property ;
+                 sosa:resultTime ?now ;
+                 sosa:hasSimpleResult ?predicted .
+        } WHERE {
+            $me ag:actsFor $subject ; market:bidsIn ?via .
+            ?via market:marketFor ?source .
+            ?source market:supplies ?good .
+            ?host market:hosts ?via ; actuation:hasActuator ?lever .
+            ?lever actuation:actuates $subject .
+            ?term market:ofGood ?good ; market:aboutProperty $property .
+            GRAPH $beliefs { $me ?term ?conversion }
+            FILTER(?conversion > 0)
+            #  AN ACT OF ZERO SIZE MAKES NOTHING TRUE, and the filter is load-bearing rather
+            #  than defensive. `value_bid` cedes at or above the aim, so a content agent sizes
+            #  its bid at nothing — and without this the rule would still CONSTRUCT a reading
+            #  equal to the value it started from. In a world that holds no reading yet, that
+            #  fabricates one: the search then scores the step as an improvement, because
+            #  ending ignorance IS an improvement (#137), and a content plant would buy water
+            #  to find out how wet it is. Yielding nothing instead leaves the world untouched,
+            #  the signature unchanged, and the step discarded as somewhere already seen —
+            #  which is the same road every other "this does not help" arrives by.
+            FILTER($litres > 0)
+            BIND($value + ($litres / ?conversion) AS ?predicted)
+            BIND(BNODE() AS ?obs)
+            BIND(NOW() AS ?now)
+        }""" ;
+
+    #  WHEN IT LANDS — and this is where buying and dosing genuinely differ, so the number is
+    #  built from what a BIDDER can see rather than from what a host knows.
+    #
+    #  Two legs are visible and one is not. `market:redeemWindowS` is on the VENUE, so a bidder
+    #  reads it: it is how long a winner has to present, and using the whole window rather than
+    #  a guess at how promptly this agent will present is deliberate — an upper bound is the
+    #  safe direction here, because patience shorter than an effect's landing time lets an agent
+    #  act before it could know (#250). The host's valve then pours, and that leg is the
+    #  identical arithmetic `actuation:ActuateEffect` uses, off the same public device facts.
+    #
+    #  WHAT IS EXCLUDED, and cannot honestly be included: the time until a round opens and
+    #  closes. `market:bidWindowS` and `market:roundCooldownS` are the HOST's private beliefs —
+    #  a bidder is not told them, and must not be, because a venue that published its schedule
+    #  would let a bidder time its arrival. So this is the landing time of a bid that finds a
+    #  round already open. A bid that has to wait for one lands later than this says, and the
+    #  honest name for that gap is the convening seam
+    #  (`the-lot-is-the-hosts-standing-offer`), not a number to invent here.
+    ag:landsAfter """
+        SELECT ?seconds WHERE {
+            $me market:bidsIn ?via .
+            ?via market:redeemWindowS ?window ; market:marketFor ?source .
+            ?host market:hosts ?via ; actuation:hasActuator ?lever .
+            ?lever actuation:actuates $subject ;
+                   actuation:maxDoseMl ?cap ;
+                   actuation:mlPerSecond ?rate .
+            FILTER(?rate > 0)
+            BIND(IF($litres * 1000 < ?cap, $litres * 1000, ?cap) AS ?ml)
+            BIND(?window + (?ml / ?rate) AS ?seconds)
+        }""" ;
+
+    #  BY OBSERVATION, and for a sharper reason than the dose's. A claim is co-signed and a
+    #  valve reports that it opened, so it is tempting to call this confirmed by report. But a
+    #  report says the SUPPLIER acted; only a reading says the water reached this pot. That gap
+    #  is exactly `an-unconfirmed-dose-is-not-a-delivered-one` seen from the buyer's side, and
+    #  the buyer is the one who paid.
+    ag:confirmedBy ag:ByObservation ;
+
+    #  The reading it replaces, identical to the dose's and for the identical reason: the sensed
+    #  graph holds one node per (subject, property), so a predicted reading left beside the old
+    #  one would put two results on one node and a reader would take whichever it found first.
+    #  Retracts NOTHING when it adds nothing, for the same reason and by the same guard: a
+    #  zero-size act that removed the standing reading would leave the world blinder than it
+    #  found it, which is the opposite of the error above and just as wrong.
+    ag:retracts """
+        CONSTRUCT { ?obs ?p ?o } WHERE {
+            GRAPH $sensed {
+                ?obs sosa:hasFeatureOfInterest $subject ;
+                     sosa:observedProperty $property ;
+                     ?p ?o
+            }
+            FILTER($litres > 0)
+        }""" .

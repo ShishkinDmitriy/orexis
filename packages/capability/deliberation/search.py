@@ -313,7 +313,7 @@ class Planner:
             #  did — replaying with the goal's original reading would rebuild a different
             #  world from the one that was chosen, and legality would be judged on it.
             world = effects.world_after(world, self.agent.store, step.means,
-                                        **self._bind(goal, world))
+                                        **self._bind(goal, world, step.means))
         return world
 
     def _candidates(self, node, goal: Goal):
@@ -349,12 +349,12 @@ class Planner:
     def _world_after(self, node, row, goal: Goal):
         try:
             return effects.world_after(node.world, self.agent.store, row.means,
-                                       **self._bind(goal, node.world))
+                                       **self._bind(goal, node.world, row.means))
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.means, exc)
             return None
 
-    def _bind(self, goal: Goal | None, world=None) -> dict:
+    def _bind(self, goal: Goal | None, world=None, means: str | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
 
         `world` is where the step is being taken FROM, and passing it is what makes depth 2
@@ -384,7 +384,7 @@ class Planner:
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
             "sensed": f"<{SENSED_GRAPH}>",
             "value": value if value is not None else 0,
-            "litres": self._dose(goal, value) if goal else 0.0,
+            "litres": self._dose(goal, value, means) if goal else 0.0,
         }
 
     def _signature(self, world, goal: Goal):
@@ -398,36 +398,50 @@ class Planner:
         value = self._value_in(world, goal)
         return None if value is None else round(value, 6)
 
-    def _dose(self, goal: Goal, value: float | None = None) -> float:
-        """How much this act would pour — ASKED of the actuator, never computed here.
+    def _dose(self, goal: Goal, value: float | None = None,
+              means: str | None = None) -> float:
+        """How much this act would move — ASKED OF WHOEVER WOULD TAKE IT, never computed here.
 
-        `dose_for` is the sizing the actor would actually use: enough to reach the aim, capped
-        by what the vessel holds. A planner that sized its own dose would simulate an act
-        nobody was going to take, predict a world nobody would reach, and be wrong in the
-        direction that looks like a device lying — the single-source argument #238 made for an
-        effect's magnitude and #247 for its timing, arriving a third time at the quantity.
+        Each lever's owner sizes its own act, and the two owners size differently: an actuator
+        pours what closes the deficit capped by what its vessel holds, a bidder asks for what
+        closes the deficit capped by what its WALLET can pay for. A planner that computed either
+        for itself would simulate an act nobody was going to take, predict a world nobody would
+        reach, and be wrong in the direction that looks like a device lying — the single-source
+        argument #238 made for an effect's magnitude and #247 for its timing.
 
-        The first draft invented 0.5 litres because the sizing was buried in `act_on`, and it
-        manufactured a finding: every dose overshot zz's region and the planner reported a rig
-        too coarse to settle. The rig is fine. The invented number was not.
+        DISPATCHED ON THE MEANS, and getting that wrong is what #268 was underneath. Asking the
+        actuator about everything returned 0.0 for every Acquire, because a plant that BUYS its
+        water holds no actuator — so the effect rule predicted a world identical to the one the
+        agent was in, and the search concluded that buying does not help. That is worse than the
+        blindness it replaced: a partial plan defers to the reflex, but a plan that confidently
+        finds nothing better STOPS the agent bidding.
+
+        Zero for a means nobody sizes. A zero dose predicts the value it started from, and a
+        world no better than the one you are in is refused by the satisficing test one line
+        later — so an unsized lever arrives at "this does not help" by the same road as every
+        other, rather than by an exception.
         """
-        actuation = self.agent.provider(_ACTUATION)
         value = goal.value if value is None else value
-        if actuation is None or goal.observed_property is None or value is None:
+        if goal.observed_property is None or value is None:
             return 0.0
-        litres = actuation.dose_for(goal.observed_property, value)
-        #  NEVER NEGATIVE, and this is the guard that matters most in the whole file. Sizing a
-        #  dose is `(aim - value) * conversion`, so a property ABOVE its aim asks for a
-        #  negative pour — and the effect rule, asked politely, predicts exactly what a
-        #  negative dose would do: it reports the plant arriving neatly back at its aim. The
-        #  planner then proposes watering a drowning plant, with a simulation agreeing.
+        if means == _ACQUIRE:
+            bidding = self.agent.provider(_BIDDING)
+            litres = (bidding.qty_for(goal.observed_property, value)
+                      if bidding is not None else None)
+        elif means == _ACTUATE:
+            actuation = self.agent.provider(_ACTUATION)
+            litres = (actuation.dose_for(goal.observed_property, value)
+                      if actuation is not None else None)
+        else:
+            return 0.0
+        #  NEVER NEGATIVE, and this is the guard that matters most in the whole file. Sizing is
+        #  `(aim - value) * conversion`, so a property ABOVE its aim asks for a negative pour —
+        #  and the effect rule, asked politely, predicts exactly what a negative dose would do:
+        #  it reports the plant arriving neatly back at its aim. The planner then proposes
+        #  watering a drowning plant, with a simulation agreeing.
         #
         #  The actor has always refused this (`litres <= EPS`), and the refusal has to live on
         #  both sides: a planner that simulates an act the actor would decline is not planning.
-        #  Clamped to zero rather than skipped, because a zero dose predicts the value it
-        #  started from, and a world no better than the one you are in is refused by the
-        #  satisficing test one line later — the answer arrives by the same road as every
-        #  other "this does not help".
         return float(litres) if litres and litres > 0 else 0.0
 
     def _beliefs(self):
@@ -439,3 +453,9 @@ _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
 _BY_OBSERVATION = "http://example.org/agora#ByObservation"
 _ACTUATION = "http://example.org/agora/actuation#Actuation"
+#  Sizing is asked of whichever module OWNS the lever, so the means and the family that carries
+#  it are both named here. Spelled out rather than imported: `intention/terms.py` and
+#  `market/terms.py` hold the same strings, and a package may not import another's Python.
+_ACTUATE = "http://example.org/agora#Actuate"
+_ACQUIRE = "http://example.org/agora#Acquire"
+_BIDDING = "http://example.org/agora/market#Bidding"

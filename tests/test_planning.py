@@ -79,25 +79,36 @@ def test_a_goal_already_met_plans_nothing(monkeypatch):
 def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch):
     """The finding that would have stopped fern buying water, and the rule it forced.
 
-    A plant in `world/simulation` acquires its water: the lever that works is Acquire, and no
-    package has stated what Acquire does. So the search sees Observe alone, correctly finds
-    that looking does not wet soil, and — before this — reported that nothing helps. The
-    reflex was overridden by a conclusion drawn from part of the menu, and the plant stopped
-    bidding.
+    A plant in `world/simulation` acquires its water, so the lever that works is Acquire. When
+    no package has stated what Acquire does, the search sees Observe alone, correctly finds
+    that looking does not wet soil, and — before this rule existed — reported that nothing
+    helps. The reflex was overridden by a conclusion drawn from part of the menu, and the plant
+    stopped bidding.
 
     A search that passed over any lever marks its plan PARTIAL, and a partial plan may not say
-    "nothing helps". The deliberator defers, and the reflex answers as it always did — which
-    is the honest division: simulation decides where the packages have said enough for it to,
-    and nowhere else.
+    "nothing helps". The deliberator defers, and the reflex answers as it always did.
+
+    THE MENU IS COMPLETE NOW (#268), so the blind condition is created here rather than found:
+    the rule is removed from the effect graph for the duration. That is the honest way to keep
+    this property under test once the gap it was written about is closed — and it is worth
+    keeping, because #268 measured what a NON-partial wrong answer costs. A plan that
+    confidently finds nothing better does not defer: it returns "do nothing" and overrides the
+    reflex, which is a louder failure than the blindness it replaced.
     """
+    from agent.ontology import EFFECTS_GRAPH
+
     monkeypatch.setenv("AGORA_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
+    st.update("""DELETE { GRAPH <%s> { ?rule ag:effectOf ag:Acquire } }
+                 WHERE  { GRAPH <%s> { ?rule ag:effectOf ag:Acquire } }"""
+              % (EFFECTS_GRAPH, EFFECTS_GRAPH))
+
     fern = build_agent("fern", st, monkeypatch)
     desire = next(m for m in fern.modules if m.name == "desire")
     goal = next(g for g in fern.goals() if g.observed_property == MOISTURE)
 
     plan = Planner(fern, desire, fern.me).plan(goal)
-    assert plan.partial, "Acquire has no effect rule, so the menu was not fully simulated"
+    assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
 
     reflex = fern.provider("http://example.org/agora/deliberation#DeliberationCapability")
     assert reflex.propose_for(goal) == reflex.propose(MOISTURE, 0.30), \
@@ -187,12 +198,73 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     moved = planner._value_in(reached, goal)
     assert moved > DRY, "the dose moved the world it was simulated into"
 
-    assert planner._bind(goal, base)["value"] == DRY
-    assert planner._bind(goal, reached)["value"] == moved, \
+    #  The MEANS is passed because sizing is dispatched to whoever would take the act (#268):
+    #  an actuator sizes a dose, a bidder sizes a bid, and a planner asks neither for the
+    #  other's. Both production call sites pass it; a bare `_bind` sizes nothing on purpose.
+    actuate = "http://example.org/agora#Actuate"
+    assert planner._bind(goal, base, actuate)["value"] == DRY
+    assert planner._bind(goal, reached, actuate)["value"] == moved, \
         "a step taken from here must be predicted from HERE, not from where the agent stands"
 
     asked = []
     monkeypatch.setattr(agent.provider("http://example.org/agora/actuation#Actuation"),
                         "dose_for", lambda prop, value: asked.append(value) or 0.06)
-    planner._bind(goal, reached)
+    planner._bind(goal, reached, actuate)
     assert asked == [moved], "the dose is sized from the world the step starts in"
+
+
+def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatch):
+    """#268, from the other side: what the menu being complete actually buys.
+
+    Measured the hour #265 landed — `better` zero across three societies, `blind` 1 for every
+    plant. Only sensing and actuation shipped effects, so a plant that BUYS its water had a
+    search that saw Observe alone. It decided correctly, at 0.2–0.5s per agent per tick, and
+    could not see the one lever that mattered.
+
+    Two things had to be true for that to change, and the second is the one that bites. The
+    market states what buying does; and the DOSE is asked of whoever would take the act, which
+    for Acquire is the bidder. Asking the actuator — as the planner did for every means —
+    returns nothing for a plant that holds no valve, so the rule would have predicted a world
+    identical to the one the agent stands in, and the search would have concluded that buying
+    does not help. That is worse than the blindness: a partial plan defers to the reflex, but a
+    confident "nothing is better" overrides it and stops the plant bidding.
+    """
+    monkeypatch.setenv("AGORA_WORLD", "simulation")
+    st = genesis_store({("fern", MOISTURE): 0.30})
+    fern = build_agent("fern", st, monkeypatch)
+    desire = next(m for m in fern.modules if m.name == "desire")
+    goal = next(g for g in fern.goals() if g.observed_property == MOISTURE)
+
+    plan = Planner(fern, desire, fern.me).plan(goal)
+
+    assert not plan.partial, "every lever on this menu states its effect"
+    assert [s.means for s in plan.steps] == ["http://example.org/agora#Acquire"], \
+        "the lever that waters this plant is the one the search found"
+    assert plan.urgency_after < plan.urgency_now, \
+        "and the world it reaches is better than standing still — `better` was zero before"
+
+
+def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatch):
+    """A zero-size act must make nothing true, or ending ignorance pays for itself.
+
+    `value_bid` cedes at or above the aim, so a content agent sizes its bid at nothing. Without
+    a guard the effect rule still CONSTRUCTs a reading equal to the value it started from —
+    and in a world holding no reading yet that FABRICATES one. The search then scores the step
+    as an improvement, because ending ignorance is an improvement (#137), and a content plant
+    buys water to discover how wet it is.
+
+    Caught by the equivalence this design is most exposed to: the reflex cedes at the aim and
+    the planner did not.
+    """
+    from agent.goal import Goal
+
+    monkeypatch.setenv("AGORA_WORLD", "simulation")
+    fern = build_agent("fern", genesis_store(), monkeypatch)
+    reflex = fern.provider("http://example.org/agora/deliberation#DeliberationCapability")
+
+    #  fern aims at 0.55. Below it the two agree to buy; at and above it they agree to cede,
+    #  and the second half is what the guard restores.
+    for value in (0.30, 0.55, 0.80):
+        stake = Goal(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
+        assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value), \
+            f"planner and reflex disagree at {value}"
