@@ -260,3 +260,72 @@ def test_the_deliberation_table_matches_what_is_built():
         f"the table says {sorted(m for m, v in rows.items() if v == 'yes')} are built; "
         f"PROVIDES says {sorted(built)}"
     )
+
+
+# --- the terms a document cites ----------------------------------------------------------------
+
+# `domain/` is the CURRENT statement, so a term it names in the present tense should be a term
+# that exists. `decisions/` is deliberately not checked: a record narrates the vocabulary of its
+# own moment, and half the value of one is the rejected name it argues against.
+#
+# This found #275. `domain/desire.md` cited `desire:UnwatchedDesireShape` for a constraint that
+# is real and fires — but the term does not exist, because the constraint has no shape of its
+# own and sits inside one named for something else. The page had reached for the name the
+# constraint deserves. Nothing could see that: SHACL does not care what a shape is called, and
+# no gate read the prose.
+
+_TERM = re.compile(r"\b([a-z][a-z0-9]*):([A-Za-z]\w*)\b")
+
+
+def _declared() -> set[str]:
+    """Every local name any project TTL declares — packages and the ratified worlds both.
+
+    Worlds are included because a domain page legitimately names an individual as an example,
+    and an individual is declared by the world that holds it rather than by an ontology.
+    """
+    names: set[str] = set()
+    for ttl in list((REPO_ROOT / "packages").rglob("*.ttl")) + \
+               list((REPO_ROOT / "world").rglob("*.ttl")):
+        text = ttl.read_text()
+        names |= set(re.findall(r"^:(\w+)\b", text, re.M))
+        names |= {local for _, local in _TERM.findall(text)}
+    return names
+
+
+def test_a_domain_page_names_only_terms_that_exist():
+    # Terms the pages state do NOT exist. Each is a sentence saying so, which is a legitimate and
+    # useful thing for a page to say — and is exactly why this cannot be a bare existence check.
+    said_not_to_exist = {
+        # domain/auction.md: "no `ag:Auction` anywhere", "There is no `ag:Auction` to point at."
+        "ag:Auction",
+        # domain/genesis-process.md: "There is no `ag:worldKind`".
+        "ag:worldKind",
+        # domain/world.md, under "What this replaced": the simulation design that was removed.
+        "ag:models", "ag:ModelledSubject", "ag:SimulatedSensing",
+        # domain/desire.md names this to say it is NOT a name that exists — it is what an earlier
+        # version of the page invented for a constraint that has no shape of its own (#275).
+        # When #275 lands and gives that constraint a real name, this entry comes out.
+        "desire:UnwatchedDesireShape",
+    }
+
+    from agent import loader
+    project = set(loader.prefixes())          # found by looking, never listed — as the code does
+    declared = _declared()
+
+    pages = sorted((BUNDLE / "domain").glob("*.md"))
+    undeclared = []
+    for page in pages:
+        for prefix, local in set(_TERM.findall(page.read_text())):
+            term = f"{prefix}:{local}"
+            if prefix not in project or term in said_not_to_exist or local in declared:
+                continue
+            undeclared.append(f"{page.name}: {term}")
+
+    assert pages, "no domain pages found — the glob stopped matching"
+    assert project, "no project prefixes discovered — loader.prefixes() stopped finding them"
+    assert declared, "no terms discovered — the TTL globs stopped matching"
+    assert not undeclared, (
+        "a domain page names a term no TTL declares — either the term was renamed and the page "
+        "was not, or the page invented the name the thing deserves (which is #275):\n  "
+        + "\n  ".join(sorted(undeclared))
+    )
