@@ -62,7 +62,11 @@ class Limits:
     """Constitution constraints — hard, non-negotiable. See knowledge/domain/constitution.md."""
 
     tank_capacity_l: float
-    rot_headroom_l: dict[str, float]  # agent -> max additional L before root-rot
+    # agent -> the most it may be allocated in one trade. ABSENT is not zero: a participant
+    # with no ceiling is one whose subject states no survival range, and clearing checks nothing
+    # for it. Named for what the KERNEL can know — it was `rot_headroom_l`, which named a domain
+    # the kernel must not, and described a live headroom nobody could compute. See #270.
+    allocation_ceiling_l: dict[str, float]
 
 
 @dataclass(frozen=True)

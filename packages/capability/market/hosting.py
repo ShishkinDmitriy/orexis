@@ -35,7 +35,7 @@ from agent.market import EPS, Bid, Limits, MarketState, Offer
 from agent.module import Module, Timer
 from agent.ontology import WORLD_GRAPH
 from agent.store import bindings
-from agent.world import participants
+from agent.world import allocation_ceilings, participants
 
 from .beliefs import HOSTING_BLOCK
 from .terms import (ACTUATION, DELIBERATION, HOSTING, BID_MATCHING,
@@ -89,6 +89,11 @@ class HostingModule(Module):
         self.markets = self.me.hosted_markets
         self.participants = {
             m.uri: participants(agent.store.query, m) for m in self.markets
+        }
+        # Derived at genesis from the world, so it is read once rather than per round. A
+        # participant absent from this map has no stated ceiling and is not checked; see #270.
+        self.ceilings = {
+            m.uri: allocation_ceilings(agent.store.query, m) for m in self.markets
         }
         self.event_topics = {}  # topic -> market
         for market in self.markets:
@@ -352,7 +357,8 @@ SELECT ?p WHERE {{
             bids={b.agent: b for b in bids},
             wallets=wallets,
             certified=frozenset({self.me.agent_id, *self.participants[market.uri]}),
-            limits=Limits(tank_capacity_l=market.capacity_l, rot_headroom_l={}),
+            limits=Limits(tank_capacity_l=market.capacity_l,
+                          allocation_ceiling_l=self.ceilings[market.uri]),
         )
         offer = Offer(
             supplier=self.me.agent_id,

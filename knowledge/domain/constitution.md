@@ -13,7 +13,8 @@ independently before any action fires.
 
 # Constraints (examples)
 
-- Never water a plant past its **root-rot threshold** (over-watering is negative utility).
+- Never allocate a participant more than its subject could survive being moved by — the
+  **allocation ceiling**, which for a plant is the root-rot end of its survival range.
 - Total allocation ≤ **tank capacity** (conservation).
 - **Budget conserved** — no minting outside the allowance.
 - A plant already above target is **blocked** from receiving water.
@@ -25,14 +26,25 @@ with no argument. The first shapes exist (each package's `shapes.ttl`, run toget
 every observation must be complete and world-versioned, and — under
 [trusted-agent-mode](/decisions/trusted-agent-mode.md) — **self-asserted** (authored by the
 plant itself; a signing sensor re-adds an independent witness in adversarial mode). The
-allocation constraints are Python in `agent/clearing.py` rather than SHACL, and only one of the
-two is live: **total ≤ tank fires; per-agent rot headroom cannot**, because the only production
-caller passes an empty headroom map, so the branch is skipped for every line of every trade
-([#270](https://github.com/ShishkinDmitriy/agora/issues/270)). Its unit test is green and
-correct — it proves the check, not that anything populates it. Over-watering is still unreachable
-for an honest agent, held off by deliberation declining a dose that does not improve the region
-and by the device's fail-safe cap; what is inert is the layer meant to hold when those two are
-the ones defecting. Whether this layer should become SHACL over the proposed trade is open. This is
+allocation constraints are Python in `agent/clearing.py` rather than SHACL, and **both are now
+live**: total ≤ tank, and a per-participant **allocation ceiling** ([#270](https://github.com/ShishkinDmitriy/agora/issues/270)).
+
+The ceiling is **structural, and that is what makes it safe to compute**. It is the span of what
+the participant's subject survives, in litres — bone dry to the wet cliff — derived at genesis
+from facts a host is allowed to hold. It is deliberately NOT a live headroom measured from where
+the subject is now: a host cannot see a bidder's state and must not need to
+([agent-centric-epistemics](/decisions/agent-centric-epistemics.md)). No honest allocation ever
+needs more than the span, because the span is the whole distance the subject could legitimately
+be moved, so a line asking for more can only overshoot whichever end it started from. Bound the
+envelope, never the dose.
+
+The domain computes it and the kernel reads it, on the `market:lotCapacity` precedent: what
+counts as too much water is a fact about plants, and `agent/clearing.py` must name no domain.
+**Absent is not zero** — a participant whose subject states no survival range has no ceiling and
+is not checked, because nothing in the world says what too much would be for it.
+
+Whether this layer should become SHACL over the proposed trade, and whether a host should CLAMP a
+greedy bid rather than let clearing refuse the whole trade, are both open. This is
 why the constitution must be formal, not English: the more persuasive the agents, the more
 the backstop must be immune to persuasion. See
 [english-vs-formal](/decisions/english-vs-formal.md).

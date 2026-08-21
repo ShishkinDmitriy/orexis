@@ -27,7 +27,7 @@ def state(**overrides) -> MarketState:
         bids={},  # filled per test where solvency matters; propose_match doesn't need it
         wallets={"fern": 100.0, "tomato": 100.0, "succulent": 100.0},
         certified=frozenset({"supplier", "fern", "tomato", "succulent"}),
-        limits=Limits(tank_capacity_l=100.0, rot_headroom_l={}),
+        limits=Limits(tank_capacity_l=100.0, allocation_ceiling_l={}),
     )
     base.update(overrides)
     return MarketState(**base)
@@ -132,16 +132,16 @@ def test_round_happy_path_issues_grants():
 
 
 def test_round_red_light_on_constitution():
-    # Host greedily proposes 4 L to tomato, but tomato's rot headroom is 1 L -> clearing rejects.
+    # Host greedily proposes 4 L to tomato, whose allocation ceiling is 1 L -> clearing rejects.
     bids = [Bid("tomato", 4.0, 0.55)]
     st = state(
         bids={b.agent: b for b in bids},
-        limits=Limits(tank_capacity_l=100.0, rot_headroom_l={"tomato": 1.0}),
+        limits=Limits(tank_capacity_l=100.0, allocation_ceiling_l={"tomato": 1.0}),
     )
     result = run_auction(offer(quantity_l=5.0), bids, st, auction_id="R-1", match=propose_match)
     assert not result.validation.ok
     assert result.claims == []
-    assert any("rot headroom" in v for v in result.validation.violations)
+    assert any("allocation ceiling" in v for v in result.validation.violations)
 
 
 def test_round_red_light_on_insolvency():

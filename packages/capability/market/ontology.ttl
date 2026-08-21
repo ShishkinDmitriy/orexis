@@ -119,6 +119,10 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
     rdfs:label "lot capacity" ;
     rdfs:comment "The physical ceiling of what a market's resource can supply — the constitution's total-allocation limit, read by clearing. Deliberately the MARKET's word (#148): the kernel loads a market's capacity and must name no domain, so a domain states its own term as a subproperty (water:capacityL does) and the closure entails this one — the same move mc:carries makes under sosa:hosts." .
 
+:allocationCeilingL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "allocation ceiling" ;
+    rdfs:comment "The most this participant may be allocated in ONE trade, whatever it bid — the constitution's per-participant limit, read by clearing beside the total. Deliberately the MARKET's word for the same reason :lotCapacity is (#148): the kernel must name no domain, and what counts as too much is a fact only a domain knows. Unlike :lotCapacity this cannot be a subproperty bridge, because the number is COMPUTED rather than stated and the subproperty closure is materialised before any rule runs — so a domain DERIVES this term directly, as water/rules.ru does from the span of a subject's survival range. STRUCTURAL, and that is the whole of why it is safe: it is the span the subject could ever legitimately traverse, not a headroom measured from where the subject is now. A host cannot see a bidder's state and must not need to — see decisions/agent-centric-epistemics.md. A participant whose subject states no survival range simply has no ceiling, and clearing checks nothing for it: absent is not zero." .
+
 #################  The host's own terms (private belief)  #################
 
 :offerQuantityL a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;

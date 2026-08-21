@@ -230,6 +230,17 @@ WHERE {{
  }}"""
 
 
+# What each participant may be allocated at most, in one trade. A DOMAIN derives this — the
+# span of what its subject survives, in litres — and states it in the market's word, exactly as
+# a domain states `market:lotCapacity` for the total. This reads the conclusion and names no
+# domain. See packages/plant/water/rules.ru and #270.
+def _ceilings_q(market_uri: str) -> str:
+    return f"""
+SELECT ?agentId ?ceiling WHERE {{
+  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ;
+         market:allocationCeilingL ?ceiling }}"""
+
+
 # Everyone entitled to bid here — the host needs this to know who may answer an offer.
 def _participants_q(market_uri: str) -> str:
     return f"""
@@ -331,3 +342,15 @@ def load_bus(query: QueryFn) -> MessageBus:
 def participants(query: QueryFn, market: Market) -> frozenset[str]:
     """Who may bid here. Public — a host must know who its counterparties are."""
     return frozenset(r["agentId"] for r in bindings(query(_participants_q(market.uri))))
+
+
+def allocation_ceilings(query: QueryFn, market: Market) -> dict[str, float]:
+    """The most each participant may be allocated in one trade, for whoever has one.
+
+    A participant is ABSENT rather than zero when its subject states no survival range — a
+    ceiling of 0.0 would refuse every trade it is in, and `world/sensing`'s agents are exactly
+    that case. Clearing treats absent as unchecked, which is the honest answer: nothing in the
+    world says what too much would be.
+    """
+    return {r["agentId"]: float(r["ceiling"])
+            for r in bindings(query(_ceilings_q(market.uri)))}

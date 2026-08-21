@@ -70,13 +70,13 @@ def validate(trade: Trade, state: MarketState) -> Validation:
         if line.cost > bal + EPS:
             v.append(f"{line.agent}: cost {line.cost} exceeds wallet {bal}")
 
-    # --- constitution: tank capacity + per-agent rot headroom ------------------
+    # --- constitution: total ≤ the lot, and each line within its own ceiling (#270) ------
     if trade.total_qty_l > state.limits.tank_capacity_l + EPS:
         v.append(f"exceeds tank capacity: {trade.total_qty_l} > {state.limits.tank_capacity_l}")
     for line in trade.lines:
-        head = state.limits.rot_headroom_l.get(line.agent)
-        if head is not None and line.qty_l > head + EPS:
-            v.append(f"{line.agent}: qty {line.qty_l} past rot headroom {head}")
+        ceiling = state.limits.allocation_ceiling_l.get(line.agent)
+        if ceiling is not None and line.qty_l > ceiling + EPS:
+            v.append(f"{line.agent}: qty {line.qty_l} past allocation ceiling {ceiling}")
 
     return Validation(ok=not v, violations=v)
 

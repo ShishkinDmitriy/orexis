@@ -9,7 +9,7 @@ from agent.market import Bid, Limits, MarketState, Offer, Trade, TradeLine
 
 
 def base_state() -> MarketState:
-    """Two solvent, certified buyers with generous rot headroom; 5 L tank."""
+    """Two solvent, certified buyers with generous allocation ceilings; 5 L tank."""
     return MarketState(
         bids={
             "fern": Bid("fern", max_qty_l=3.0, max_price_per_l=0.50),
@@ -17,7 +17,7 @@ def base_state() -> MarketState:
         },
         wallets={"fern": 100.0, "tomato": 100.0},
         certified=frozenset({"supplier", "fern", "tomato"}),
-        limits=Limits(tank_capacity_l=5.0, rot_headroom_l={"fern": 3.0, "tomato": 4.0}),
+        limits=Limits(tank_capacity_l=5.0, allocation_ceiling_l={"fern": 3.0, "tomato": 4.0}),
     )
 
 
@@ -132,7 +132,7 @@ def test_insolvent_buyer_rejected():
 
 def test_exceeds_tank_capacity_rejected():
     # Raise the offer above tank so conservation passes but the constitution catches it.
-    state = dataclasses.replace(base_state(), limits=Limits(tank_capacity_l=3.0, rot_headroom_l={"tomato": 4.0}))
+    state = dataclasses.replace(base_state(), limits=Limits(tank_capacity_l=3.0, allocation_ceiling_l={"tomato": 4.0}))
     trade = Trade(
         offer=Offer(supplier="supplier", quantity_l=5.0, reserve_price_per_l=0.20),
         lines=(TradeLine("tomato", qty_l=4.0, price_per_l=0.40),),
@@ -142,12 +142,12 @@ def test_exceeds_tank_capacity_rejected():
     assert any("tank capacity" in x for x in result.violations)
 
 
-def test_past_rot_headroom_rejected():
-    state = dataclasses.replace(base_state(), limits=Limits(tank_capacity_l=5.0, rot_headroom_l={"fern": 0.5, "tomato": 4.0}))
+def test_past_the_allocation_ceiling_rejected():
+    state = dataclasses.replace(base_state(), limits=Limits(tank_capacity_l=5.0, allocation_ceiling_l={"fern": 0.5, "tomato": 4.0}))
     trade = trade_with(TradeLine("fern", qty_l=2.0, price_per_l=0.40))  # headroom 0.5
     result = validate(trade, state)
     assert not result.ok
-    assert any("rot headroom" in x for x in result.violations)
+    assert any("allocation ceiling" in x for x in result.violations)
 
 
 # --- claims / clear() ------------------------------------------------------
@@ -170,3 +170,46 @@ def test_clear_raises_on_invalid_trade():
     trade = trade_with(TradeLine("fern", qty_l=99.0, price_per_l=0.40))
     with pytest.raises(ValueError, match="invalid trade"):
         clear(trade, base_state(), auction_id="R-1")
+
+
+# --- the ceiling is POPULATED, not merely checked (#270) -----------------------------------------
+
+
+def test_a_world_whose_plants_state_survival_ranges_yields_ceilings():
+    """The half that was missing for as long as the check existed.
+
+    `agent/clearing.py` has always refused a line past a participant's ceiling, and the only
+    production caller passed `{}` — so `.get()` returned None for every agent and the branch was
+    skipped for every line of every trade. The unit test above passes a populated map and is
+    correct; it proves the CHECK. Nothing asserted that anything FILLS it, which is
+    `a-test-that-asserted-nothing` one level up: not an assertion that never ran, but a production
+    input that was always empty.
+
+    So this asserts the derivation reaches the map, per world, and that the numbers are the span
+    of what each subject survives rather than anything read off its current state.
+    """
+    from types import SimpleNamespace
+
+    from conftest import genesis_store
+    from agent.world import allocation_ceilings
+
+    # world -> agents that must have a ceiling. `sensing` is the control: its agents act for
+    # subjects that state no survival range, so they get NO entry — and absent is not zero,
+    # because a ceiling of 0.0 would refuse every trade they are in.
+    expected = {"simulation": {"fern", "tomato", "succulent"}, "sensing": set()}
+
+    checked = 0
+    for world, want in expected.items():
+        store = genesis_store(world=world)
+        venues = [r["m"] for r in
+                  store.query("SELECT ?m WHERE { ?m a market:Market }")["results"]["bindings"]]
+        # Aggregated across the world's venues: a plant bids at the barrel, the supplier at the
+        # city mains, and only the first kind acts for something with a survival range.
+        found: dict[str, float] = {}
+        for venue in venues:
+            # `allocation_ceilings` reads only the uri; a Market is not needed to ask the store.
+            found |= allocation_ceilings(store.query, SimpleNamespace(uri=venue["value"]))
+            checked += 1
+        assert set(found) == want, f"{world}: ceilings for {sorted(found)}, expected {sorted(want)}"
+        assert all(v > 0 for v in found.values()), f"{world}: a ceiling of zero refuses everything"
+    assert checked, "no markets found in any world — the fixture stopped building them"
