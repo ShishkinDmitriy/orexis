@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Process
 title: Onboarding — a ratified world, granted the means to run
 description: The phase between genesis and a running society. What it grants, why every grant is derived from the wiring rather than decided here, why it is not birth, and why its code lives outside the agent's package.
 ---

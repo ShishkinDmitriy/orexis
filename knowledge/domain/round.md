@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Process
 title: Round
 description: One iteration of bidding inside an auction — not the auction itself. The auction is the process that allocates a lot; a round is a pass of bidding within it. Exactly one is built, so today an auction has a single round and the two coincide; the iterative flow described here is designed and unbuilt. The word is the standard one from multiple-round auctions.
 ---

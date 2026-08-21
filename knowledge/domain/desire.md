@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Capability
 title: Desire
 description: What an agent is trying to bring about — for each property its subject states a need in, the region to hold that property inside and the envelope outside which the subject ends. Deduced at genesis by intersecting every operating range that applies, never authored; the band and the urgency every other capability reads come from here.
 ---
@@ -84,20 +84,10 @@ asymmetric per subject for free, because the room on each side is whatever that 
 ranges leave. See
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 
-# The gap — the diff between desired and sensed
+# The gap it is measured against
 
-The package ships the question it exists to make askable, as SPARQL: `gap.rq` joins the public
-regions against the agent's own sensed graph and yields, per property, a **signed** distance
-normalised by the survival room on the side the value sits on — 0 at the region's point, the
-sign saying which way out, |gap| = 1 at the edge of what the subject survives. |gap| *is*
-`urgency`, by construction; the package's tests hold the query and the module to one definition.
-
-A gap is a **verdict**: computed on every asking, stored nowhere — the same number is a crisis
-for one agent and nothing for another. And a property with no observation yet produces **no row
-rather than a zero**: at birth every desire is unmeasured, unmeasured must not read as
-satisfied, and the first intention is always to look. That boot-order fact is what
-[an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md)
-builds the rest of BDI on.
+A region states where a subject should be. How far outside it something sits, and what that
+distance is worth, is [gap](/domain/gap.md)'s.
 
 # What am I pursuing — the whole list, with status
 

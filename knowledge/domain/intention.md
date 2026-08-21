@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Capability
 title: Intention
 description: >-
   BDI's third letter — a commitment to reduce a named gap by a named means, persisting until

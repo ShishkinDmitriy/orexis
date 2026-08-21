@@ -1,5 +1,5 @@
 ---
-type: Domain Concept
+type: Role
 title: Supplier
 description: The dealer the arcs built — a strategic seller downstream, a genuine buyer
   upstream, the barrel between them; its stake, its stock and its spread are all facts the

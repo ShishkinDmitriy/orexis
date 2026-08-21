@@ -13,11 +13,28 @@ durable "what and why"; the code follows it, not the other way round.
 Invoke the `okf-open-knowledge-format` skill when adding, editing or checking documents there.
 If it is unavailable, the rules are short enough to follow by hand:
 
-- every concept `.md` has YAML frontmatter with a non-empty `type` — one of `Decision`,
-  `Domain Concept`, `Component` or `Runbook` — plus `title` and `description`;
+- every concept `.md` has YAML frontmatter with a non-empty `type`, plus `title` and
+  `description`. **Seven types, and the one to reach for is the one that answers what KIND of
+  thing the page is:**
+
+  | | |
+  |---|---|
+  | `Decision` | why the code is as it is. Closed by nothing; superseded or amended |
+  | `Domain Concept` | a **thing** in the model — a claim, a good, an affordance, a world |
+  | `Process` | something that **happens**, with phases and an end — an auction, a round, onboarding |
+  | `Capability` | a named ability with **interchangeable implementations**, granted by its own premise and provided by a package — rule 2's unit |
+  | `Role` | a kind of **principal** that holds a stake — an agent, a supplier, a dealer |
+  | `Component` | a part of the **implementation** — the belief base, the imaginarium |
+  | `Runbook` | how to **operate** it |
+
+  The split was asked for by the pages: `auction` opened "an auction is a PROCESS", `bid-matching`
+  called itself "the STEP that…", `onboarding` "the PHASE between…" — three pages naming their own
+  type in prose because the field could not hold it. **A type that falls to one member is a type
+  to fold back**, not to defend; the split landed at 10 / 5 / 5 / 4 / 4;
 - a **decision** additionally carries `status` (`accepted`, `superseded`, `superseded-in-part`)
-  and `timestamp`, and a superseded one carries `superseded-by`. A domain concept carries none
-  of those: it has no state to be in, being either current or wrong. `stage` and `tags` are
+  and `timestamp`, and a superseded one carries `superseded-by`. **No other type carries any of
+  those**: a concept, a process, a capability, a role and a component have no state to be in,
+  being either current or wrong. `stage` and `tags` are
   gone — `stage` said `v1` in every record, and `tags` had 147 values of which 86 were used
   once and nothing read any of them;
 - **quote or fold anything with a colon in it.** A `description` reading `on one axis: the
@@ -33,6 +50,19 @@ If it is unavailable, the rules are short enough to follow by hand:
   rules are `tests/test_knowledge.py`, which runs under `pytest` and fails on unparseable
   frontmatter, an orphan document, a dead link, an over-long index entry, or a document naming
   a path that is not on disk.
+
+**`knowledge/domain/` is the shared dictionary, and a term is defined before it is used.** The
+pages there fix what our words MEAN — affordance, gap, imaginarium, capability, means, lot, venue
+— and a discussion, a commit message, a docstring or an issue that uses one of them uses it the
+way its page does. **If a change needs a word the bundle does not have, write the page in the SAME
+change, first.** A word used before it is defined is a word everyone defines differently, and the
+definitions never meet. This is the discipline
+`tests/test_knowledge.py::test_no_two_domain_pages_state_the_same_claim` already enforces between
+pages — one claim, one owner — applied to the vocabulary itself.
+
+Prefer **extracting** a buried section over writing a page beside it. Every concept worth naming
+here is already stated somewhere; a new page that restates rather than moves leaves the claim with
+two owners, and the next change updates whichever page its author happened to open.
 
 **Durable knowledge goes in the bundle, never in a new README.** `domain/` says what a thing is
 and how to use it; `decisions/` says why a choice was made and which seams it leaves open. The
