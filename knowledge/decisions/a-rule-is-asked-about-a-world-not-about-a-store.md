@@ -62,7 +62,8 @@ each node's own readings in a graph of its own.**
 
 At the start of a plan, copy the graphs a rule may read but no step may change — world, derived,
 entailed, beliefs — into a fresh `pyoxigraph.Store()` with no path, which is in memory and is
-not the belief base. Each node of the search then owns **one named graph** in that store,
+not the belief base — the agent's **imaginarium**, in the sovereign's word, and the word is
+better than a description because it says the thing that matters: what is in it never happened. Each node of the search then owns **one named graph** in that store,
 holding the readings that node's world reached, and a rule evaluated at that node has `$sensed`
 bound to that node's graph name. The rule runs unchanged, sees the world the previous step
 reached, and its retraction finds the reading the previous step predicted rather than the one on
@@ -91,6 +92,41 @@ to restore because nothing was disturbed.
 The tree is bounded and small: `MAX_DEPTH` is 2 and a plant's menu offers two rows, so the
 worst case is seven live worlds. That bound is the search's, not this design's — the same seven
 worlds exist today.
+
+## How the tree is held: paths, which are already there
+
+The search does not need a tree structure added to it, and that is worth saying because the
+obvious next step is to build one.
+
+**A node already carries its path from the root.** `_Node.taken` is the ordered tuple of
+affordance rows applied to reach it, and a child is `parent.taken + (row,)`. There are no parent
+pointers and none are wanted: the frontier is one depth's worth of nodes, expansion produces the
+next, and the path is the only ancestry anything asks about. What this design adds is a NAME per
+node, and the path is what names it — deterministic, and it reads back in the trace beside the
+`ag:through` a candidate already records.
+
+**Fork, do not replay.** A node's graph is made by copying its parent's and applying the step's
+diff — 0.19 ms, against a hypothesis of five triples. The alternative is to keep only paths and
+recompute a world by replaying from the root whenever one is needed, which sounds cheaper and is
+the shape of the bug: replay is exactly what `_world_of` does today, and it re-runs each step's
+rule against the store rather than against the world the previous step reached. Materialising
+per node is what makes a step's baseline the previous step's conclusion instead of the stored
+reading.
+
+`_world_of` therefore has the same defect as the search loop, at the end rather than during: it
+rebuilds the chosen plan's world for the legality check, and past step one it rebuilds the wrong
+one. Both call sites move together or neither is fixed.
+
+**Nothing is cleaned up per node.** The imaginarium is discarded whole when the plan ends, so a
+node's graph has no lifecycle of its own and no step has to remember to drop one. That falls out
+of the store being separate, and it is most of why separate is the right call rather than a
+temporary graph in the agent's own store: a crash mid-plan leaves nothing behind to find.
+
+**Cycle detection stays keyed on the WORLD, never on the name.** `seen` holds signatures — the
+rounded value the goal is about — and it is global across the search rather than per branch, so
+two different paths that arrive at the same value collide and the second is pruned. Naming
+graphs after paths must not quietly turn that into per-branch detection: two names, one world,
+still one entry in `seen`.
 
 ## What it costs, measured
 
@@ -175,6 +211,10 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   correct — a hypothesis explored against a moving world is not a hypothesis — but it means a
   long search plans against a world that has aged. The keeper's patience already bounds how
   long that can be, and nothing measures it yet.
+- **`_world_of` moves with the search loop or neither is fixed.** It replays the chosen plan to
+  check the world's legality and re-runs each rule against the store, so past step one it
+  validates a world the plan would not reach. Named here because it is the same defect in a
+  second place, and a fix that reached only the search would leave the legality check wrong.
 - **Nothing here fixes cycle detection's signature.**
   [#258](https://github.com/ShishkinDmitriy/agora/issues/258) asks where a plan *is* using a
   number only some plans move; a correct baseline makes that question answerable rather than
