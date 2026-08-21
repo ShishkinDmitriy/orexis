@@ -5,6 +5,8 @@ only if the world derived that capability for it. So an agent on a push-mode boa
 asked for an interval it could not apply, and one on a scheduled board is required to have it.
 """
 
+import pathlib
+
 import pytest
 import rdflib
 
@@ -55,6 +57,29 @@ def test_every_shipped_world_conforms(world):
     assert _conforms(_flatten(genesis_store(world=world), WORLDS_ROOT / world))
 
 
+def _validated(data: rdflib.Graph) -> tuple[bool, str]:
+    """One pyshacl run per graph, keeping BOTH halves of what it already returns.
+
+    Issue #272. `agent.validate.conforms` hands back `(ok, report)` from a single validation, and
+    `_conforms` and `_report` each threw away the half they were not asked for — so a test that
+    asserts a world is refused and then checks WHY validated a byte-identical graph twice, and
+    one of them three times. Measured on the Pi: pyshacl is 2.35s a call, against 0.20s for all
+    of `_mutate` (build 0.052s, re-derive 0.033s, flatten 0.116s). The validation is 92% of this
+    file, and this file is the largest block of the suite.
+
+    Cached on the graph OBJECT rather than in a dict keyed on identity, which would hold every
+    graph alive for the session and go wrong the moment CPython reused an id. It cannot go stale:
+    `_mutate` returns a freshly flattened graph per test and nothing here mutates one after
+    validating it — asserted by `test_a_graph_is_never_changed_after_it_is_validated` below, so
+    the day someone does, the guard says so rather than the cache lying.
+    """
+    verdict = getattr(data, "_agora_verdict", None)
+    if verdict is None:
+        verdict = validate_conforms(data)
+        data._agora_verdict = verdict
+    return verdict
+
+
 def _conforms(data: rdflib.Graph) -> bool:
     """The real verdict — `agent.validate.conforms`, not a second copy of it.
 
@@ -63,12 +88,11 @@ def _conforms(data: rdflib.Graph) -> bool:
     the tests still failed a world that `agora-validate` accepted. Two ways to decide whether
     a world holds is one too many, and the one that ships is the one to test.
     """
-    ok, _ = validate_conforms(data)
-    return ok
+    return _validated(data)[0]
 
 
 def _report(data: rdflib.Graph) -> str:
-    return validate_conforms(data)[1]
+    return _validated(data)[1]
 
 
 def _mutate(update: str) -> rdflib.Graph:
@@ -1027,3 +1051,40 @@ def test_a_venue_that_takes_presentations_must_say_how_long_it_holds_a_claim():
         WHERE  { GRAPH ?g { ?s <http://example.org/agora/market#redeemWindowS> ?w } }""")
     assert not _conforms(data)
     assert "how long it holds a winner's claim" in _report(data)
+
+
+# --- the guard on the cache above -------------------------------------------------------------
+
+def test_a_graph_is_never_changed_after_it_is_validated():
+    """`_validated` memoises pyshacl's verdict ON the graph, which is only safe while no test
+    validates a graph and then changes it. That is true today (#272) and is exactly the kind of
+    thing a later test would break without noticing, because the stale verdict would simply be
+    the one from before the change — a passing assertion about a world that no longer exists.
+
+    A source scan rather than a runtime check: the hazard is a test that COULD be written, and
+    the cheapest moment to refuse it is the one where someone writes it.
+    """
+    import ast
+
+    source = ast.parse(pathlib.Path(__file__).read_text())
+    functions = [fn for fn in source.body
+                 if isinstance(fn, ast.FunctionDef) and fn.name.startswith("test_")]
+    mutating = ("add", "remove", "parse", "update", "set", "addN", "bind")
+
+    offenders = []
+    for fn in functions:
+        validated = False
+        for node in ast.walk(fn):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) \
+                    and node.func.id in ("_conforms", "_report", "_validated"):
+                validated = True
+            elif validated and isinstance(node, ast.Call) \
+                    and isinstance(node.func, ast.Attribute) and node.func.attr in mutating:
+                offenders.append(f"{fn.name}: .{node.func.attr}() after validating")
+
+    assert functions, "no test functions found — the scan stopped matching"
+    assert not offenders, (
+        "a graph is mutated after being validated, so `_validated`'s cached verdict is stale:\n  "
+        + "\n  ".join(offenders)
+        + "\nEither build a fresh graph for the second question, or drop the memoisation."
+    )
