@@ -44,6 +44,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Sensing
 
+* [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
+
+* [reading](/domain/reading.md) - The value an observation carries, and the only fact in a belief base that is somebody else's word. It ages; it never expires.
+
 * [sensing](/domain/sensing.md) - Split by WHO HOLDS THE CLOCK: Polling, Subscribing, Listening. Either way the agent owns the freshness rule.
 
 # Structure — how the project is put together

@@ -60,9 +60,25 @@ definitions never meet. This is the discipline
 `tests/test_knowledge.py::test_no_two_domain_pages_state_the_same_claim` already enforces between
 pages — one claim, one owner — applied to the vocabulary itself.
 
-Prefer **extracting** a buried section over writing a page beside it. Every concept worth naming
-here is already stated somewhere; a new page that restates rather than moves leaves the claim with
-two owners, and the next change updates whichever page its author happened to open.
+**One concept, one article.** If a page turns out to define a second thing, that thing gets an
+article and the two link — ownership is then structural, and there is nothing to keep in step.
+Three clauses make that workable, and each was learned by getting it wrong:
+
+- **Where an owner already exists, POINT — do not extract.** Extraction is for a claim that has no
+  page yet. `capability.md` restated capability-aware validation, the materialised closure and
+  "refusing to start is not self-report" before the gate objected; all three already had owners,
+  one of them a page written in the same commit.
+- **A pointer that restates is a second owner.** A stub saying what the other page says has not
+  moved the claim, it has copied it. Say what THIS page does with the thing, and link.
+- **A relationship can be the concept**, and the test is whether each half stands alone.
+  `means` and `lever` split because each had content of its own — a means is a term code may name
+  and the joint three subsystems meet at; a lever is an instance whose absence removes a row.
+  `model-and-unit` does not split: its whole content is what a unit inherits from its model, so
+  two pages would each have to restate the relationship, and the gate would refuse them.
+
+The gate is `tests/test_knowledge.py::test_no_two_domain_pages_state_the_same_claim` — overlapping
+runs of eight words between any two domain pages, capped at four. It does not care about topic,
+only about restatement, which is the thing that rots.
 
 **Durable knowledge goes in the bundle, never in a new README.** `domain/` says what a thing is
 and how to use it; `decisions/` says why a choice was made and which seams it leaves open. The

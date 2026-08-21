@@ -278,13 +278,9 @@ as the **agent's own** assertion — `prov:wasGeneratedBy` the agent, no witness
 [trusted-agent-mode](/decisions/trusted-agent-mode.md), then announces its verdict on its
 event topic.
 
-The observation also says **how it was made**: `sosa:usedProcedure` carries the sensor's sense
-mode, which is a `sosa:Procedure`. That is not recoverable from the number, and it changes what
-a *missing* reading means — under `sensing:ScheduledProcedure` the board is late, under
-`sensing:PushProcedure` there may simply have been nothing to say. It is the clock part of
-how, not the whole method: the codec, the pointer and the scaling are also how that number came
-to be. See
-[an-observation-says-how-it-was-made](/decisions/an-observation-says-how-it-was-made.md).
+The sense mode rides along on the node, so a late board and a quiet one are distinguishable
+afterwards — [observation](/domain/observation.md) says why that cannot be recovered from the
+number.
 
 Which sensors it listens to is not configured: it reads `sensing:polls` from the
 [world](/decisions/world-graph.md) and subscribes exactly those topics, never a wildcard.
@@ -294,24 +290,8 @@ is its own process, it could not reach another's sensor even if it tried.
 
 # What a stored figure is, and when
 
-Two questions every recorded number answers since #100 and #101, both previously answerable
-only by knowing the code:
-
-**Which of the two ends is it?** The figure in an observation is the **property's** — a
-moisture fraction, a temperature — never the stimulus's. What the probe physically responds to
-is capacitance (`ssn:detects`, entailed from the part), which *stands in for* moisture
-(`ssn:isProxyFor`, the part's own statement); the calibration pair (`probe:rawDry`,
-`probe:rawWet`) are values **of the stimulus**, and the scaling stage is the crossing between
-the two ends. A calibration drifts because the proxy relationship degrades — the capacitance
-stops standing in for the moisture as well as it did — while neither end changed.
-
-**Which instant is it stamped with?** `sosa:resultTime` means **arrival**, always — the honest
-instant an agent with clockless boards has, and the invariant
-[freshness-follows-the-cadence](/decisions/freshness-follows-the-cadence.md) leans on. The day
-a device speaks for itself — timestamps its readings, or batches ten and sends one message —
-its own instant lands in `sosa:phenomenonTime` beside it: *when the result applies to the
-world*, as distinct from when we heard. The two coincide for every device here today, and the
-writer, the shape and this sentence are ready for the first one where they do not.
+Both questions belong to the node rather than to the sensing loop — which of the two ends the
+number is, and which instant it is stamped with. [observation](/domain/observation.md) has them.
 
 # The price of watching, and who actually spends the battery
 
