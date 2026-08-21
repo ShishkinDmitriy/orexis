@@ -364,12 +364,29 @@ def test_the_winner_gets_a_claim_on_its_own_channel(host):
 def test_the_higher_bid_is_served_first(host):
     rid = open_auction(host)
     market = market_of(host)
-    # 2.0 L on offer; tomato wants all of it but bids less
-    host.deliver(f"{market.bid_topic}/tomato", a_bid("tomato", rid, qty=2.0, price=0.3))
+    # 2.0 L on offer. Both asks are within their own allocation ceilings (#270): fern's subject
+    # survives a 0.65 span at 2.0 L per fraction, so 1.3 L is the most it may ever be given, and
+    # this test used to ask for 2.0 — which nothing refused, because the ceiling map was empty.
+    host.deliver(f"{market.bid_topic}/tomato", a_bid("tomato", rid, qty=1.2, price=0.3))
+    host.deliver(f"{market.bid_topic}/fern", a_bid("fern", rid, qty=1.3, price=0.9))
+    host.hosting().close()
+    # The higher bid is filled FIRST and in full; the lower gets what is left of the lot.
+    assert host.sent.to(f"{market.claim_topic}/fern")[-1]["amount_l"] == 1.3
+    assert host.sent.to(f"{market.claim_topic}/tomato")[-1]["amount_l"] == pytest.approx(0.7)
+
+
+def test_a_bid_past_its_subjects_survival_span_is_refused(host):
+    """The constitutional check that could not fire before #270.
+
+    fern's pot survives a 0.65 span of soil moisture at 2.0 L per fraction, so 1.3 L is the most
+    any single allocation may be — 2.0 L is +1.0 of moisture, which overshoots the wet end from
+    any legal starting point. Nothing refused it while `rot_headroom_l` was always `{}`.
+    """
+    rid = open_auction(host)
+    market = market_of(host)
     host.deliver(f"{market.bid_topic}/fern", a_bid("fern", rid, qty=2.0, price=0.9))
     host.hosting().close()
-    assert host.sent.to(f"{market.claim_topic}/fern")[-1]["amount_l"] == 2.0
-    assert host.sent.to(f"{market.claim_topic}/tomato") == []
+    assert host.sent.to(f"{market.claim_topic}/fern") == []
 
 
 def test_the_supply_is_never_oversold(host):
