@@ -198,6 +198,30 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   design does not remove, and it is why this is a change to what a possible world IS rather than
   only to which store a query runs against. It is also where the rdflib cost reappears, bounded:
   pyshacl was always going to run on rdflib, and it already does today.
+- **One query reads one store, so this pattern does not generalise to derived facts.** The
+  obvious next thought is that if a planning store can be in memory, so could the derived and
+  entailed graphs — they are a function of the files and nothing durable depends on them
+  surviving. Measured, the case is stronger than it sounds: `refresh_public` rebuilds them on
+  every start, and **98% of an agent's store is rebuilt every boot** — 3,196 triples of
+  ontology, world, constraint, provenance, effects and both entailed graphs against 65 that are
+  genuinely the agent's. Persisting them costs 175 ms a boot instead of 66, and 2.4 MiB of
+  volume.
+
+  It does not follow, because **pyoxigraph has no in-process federation**: `SERVICE` requires a
+  URI scheme and is remote, and `default_graph`/`named_graphs` scope within one store. Derived
+  facts in a second store would be invisible to every query that reads them. Getting the saving
+  would mean the WHOLE store in memory with the durable 2% mirrored to disk — which buys 109 ms
+  of boot and 2.4 MiB, and costs a write-through path on every belief write whose failure mode
+  is a belief that reaches memory and not disk. Beliefs are authored once and never touched, so
+  that is precisely the kind of loss nobody notices for weeks. Not now, and the numbers are here
+  so it is not re-argued from intuition.
+
+  The imaginarium works *because* it needs no federation: it is a whole store, self-contained,
+  and every query about a possible world is asked of it alone.
+- **`$sensed` is bound by text and has to be.** pyoxigraph 0.5's `query()` takes a
+  `substitutions` argument, which looks like the native binding `agent/effects.py` says it would
+  prefer. It is not: it pre-binds variables in the SELECT projection and cannot substitute a
+  GRAPH name. The text substitution stays, and the comment saying so stays true.
 - **A plan that moves something other than a reading.** The table is true of the three rules
   that exist, not of rules in general — an effect that wrote an intention or a belief would add
   a second mutable graph, and the snapshot would have to make that one replaceable too. The
