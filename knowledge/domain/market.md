@@ -70,23 +70,34 @@ honestly lives. So the domain states `market:aboutProperty` on the desire term i
 follows it from a term it already names, and the market stays a lot. See
 [one-agent-many-sensors](../decisions/one-agent-many-sensors.md).
 
-What a venue DOES state, since #198, is its **good** — `market:Good`, reached as
-`marketFor/supplies`, the source's class saying what flows out of it. That is not the
-rejected model returning: a good is what changes hands (water, a time slot, a right of way —
-still declarable when no instrument measures anything), where the rejected model put the
-buyer's *property* on the venue. The good is the join point the property-shaped stakes hang
-off — one good, a valuation per kind of recipient (a litre raises a pot's moisture and a
-barrel's stock), and every denomination join closes through it. See
-[the-lot-states-its-good](/decisions/the-lot-states-its-good.md).
+What a venue DOES state, since #198, is its **[good](/domain/good.md)** — `market:Good`,
+reached as `marketFor/supplies`. That is not the rejected model returning, and the difference is
+exactly the one this section is about: a good is what changes hands, where the rejected model put
+the buyer's *property* on the venue. Everything else about a good — that it is the join point the
+property-shaped stakes hang off, and what that keeps expressible — is
+[good](/domain/good.md)'s to say.
 
-# Who hosts — the scarce side of the *good*
+# Who hosts — the STRUCTURALLY short side of the *good*
 
-The scarce (short) side of the **good** hosts (short-side principle): v1 = the supplier
-(supply-scarce); a consumer in a buyer's market (reverse auction). See
-[standalone-clearing](/decisions/standalone-clearing.md). **Money is the *medium*, not the
-good**: money-scarcity **gates participation** (can this agent afford to bid?) — it does not
-select the host. A round simply *waits* for the allowance, then a budget shock opens it,
-still hosted by the water-scarce supplier.
+The short side of the **good** hosts: v1 = the supplier (supply-scarce); a consumer in a buyer's
+market (reverse auction).
+
+**Structurally short, and the qualifier is the whole of it.** The principle was first written
+without it ([standalone-clearing](/decisions/standalone-clearing.md)) and reads as though it
+follows from today's deficit. It does not, and it must not:
+[the-market-has-no-governor](/decisions/the-market-has-no-governor.md) amends that record, and
+its argument is that a convener chosen by measured scarcity would make the rules a move in the
+game — state opens rounds, structure names the convener. Which side is short *by construction*
+is a fact about the wiring and cannot be played for.
+
+**Money is the *medium*, not the good.** Money-scarcity **gates participation** — can this agent
+afford to bid? — and selects nothing. A round simply *waits* for the allowance, then a budget
+shock opens it, still hosted by the water-scarce supplier. This is the claim
+[auction](/domain/auction.md) defers to when it settles who rules.
+
+Who *owns* the venue is structural; who convenes a **given** auction is per-auction, and that
+split is an open question rather than a settled one — [auction](/domain/auction.md) states it,
+along with the one route to it that is closed rather than merely unbuilt.
 
 # Who initiates — an agent, never infra
 

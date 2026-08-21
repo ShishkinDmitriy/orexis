@@ -12,11 +12,10 @@ the world graph, no `ag:Auction` anywhere. What persists is the [market](/domain
 standing structure of a resource, who can supply it, who can consume it, and the channels they
 meet on.
 
-That distinction is load-bearing and the bundle had it backwards until recently. **Structure is
-the market's; the terms of a given auction are its host's.** A market with nothing contested is
-still a market; there is simply no auction happening in it. See
-[bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md), which had to fix the
-vocabulary before it could say anything else.
+That distinction is load-bearing and the bundle had it backwards until recently. It is stated
+where the standing thing is defined — see [market](/domain/market.md), *"structure, not an
+event"* — and [bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md) had to
+fix the vocabulary before it could say anything else.
 
 # The four things it is made of
 
@@ -40,8 +39,8 @@ which they take turns.
    schedule and not an operator. A cooldown stops a flapping participant from spamming the
    market, and a host with an auction already open does not open a second.
 2. **It announces its terms.** The offer carries the lot, the reserve, the deadline and
-   `matches_by`. Terms travel with the invitation, because a bidder cannot bid well against terms
-   it does not know.
+   `matches_by`. Terms travel with the invitation rather than being discoverable, and
+   [bid matching](/domain/bid-matching.md) says why that is a requirement and not a courtesy.
 3. **It collects bids.** Each bidder answers with a number only it can compute, from beliefs the
    host cannot see. Bids from agents that do not bid in that market are ignored; late bids and
    bids for another auction are dropped.
@@ -73,7 +72,8 @@ today's deficit — state opens rounds, structure names the convener, and the *s
 short side is what the short-side principle always meant. At N-to-M no participant has
 commitment power, and the refusal is recorded: no stake-free exchange — the market clears
 through DEALERS holding stock (the shipped supplier is one) or bilaterally where too thin.
-Money-scarcity still selects nothing: money is the medium, not the good.
+Money-scarcity still selects nothing, for the reason [market](/domain/market.md) gives under
+*who hosts*.
 
 The split above sharpens the open question rather than resolving it: **owning the venue is
 structural, convening an auction is per-auction.** So who convenes *this* auction could follow from

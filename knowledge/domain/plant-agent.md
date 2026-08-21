@@ -17,10 +17,9 @@ world plus its own private beliefs — identity,
 plant URI, desire, endowment, skill set, system prompt), the **certificate** (signed proof
 of who it is; see [authn-authz-capabilities](/decisions/authn-authz-capabilities.md)), the
 **wallet**, the **active intention**, and its own **beliefs** (self-asserted `:sensed` +
-`:opinion`; no witness in [trusted-agent-mode](/decisions/trusted-agent-mode.md)). The LLM is
-a stateless pure function called inside a plan body; memory lives in the wallet and beliefs,
-never in chat history. This is what lets 50 agents share one model yet hold separate
-positions.
+`:opinion`; no witness in [trusted-agent-mode](/decisions/trusted-agent-mode.md)). It holds the
+model the same way every agent does — see [agent](/domain/agent.md) for the invariants, which
+are what let 50 of these share one model and still hold separate positions.
 
 # Architecture — two layers, two tempos
 
@@ -48,8 +47,10 @@ its "loop" is the bus delivering messages. See [deterministic-bid](/decisions/de
 
 # Invariants
 
-- The **bid is deterministic**; the LLM produces only the stance/justification.
-- A justification **may cite** the agent's sensed facts to be believed — *voluntary*
+Every agent's are in [agent](/domain/agent.md) — a deterministic bid, an LLM that produces only
+the stance, a bid that is a function of unmet demand. One is this tier's own:
+
+- A justification **may cite** the agent's own sensed facts to be believed — *voluntary*
   disclosure, not mandatory (the leash relaxed in trusted mode; see
-  [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)).
-- The bid is a function of **unmet demand**. See [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md).
+  [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)). It is the plant edge that
+  has facts of its own to disclose, which is why the choice lands here.
