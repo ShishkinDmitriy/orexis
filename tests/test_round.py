@@ -786,7 +786,7 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
     stock_reading(host, 3.0)  # 1-5 is the barrel's region, so this is a small gap
     owed_at = datetime.fromisoformat(ledger_of(host).owed()[0]["at"])
 
-    desires = host.desires(now=owed_at + timedelta(seconds=800))
+    desires = host.pursuing(now=owed_at + timedelta(seconds=800))
     assert desires, "an agent with a stake and a debt wants something"
     assert desires[0].is_duty, "a debt near its deadline outranks a barrel that is merely low"
     assert any(not g.is_duty for g in desires), "and the stake is still on the list, not replaced"
