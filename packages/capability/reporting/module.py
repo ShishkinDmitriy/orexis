@@ -17,6 +17,8 @@ Vocabulary: capabilities/reporting/ontology.ttl. Rules: capabilities/reporting/r
 
 from __future__ import annotations
 
+import json
+
 from agent import config, sovereign
 from agent.metrics import tree_bytes
 from agent.module import Module, Timer
@@ -53,18 +55,49 @@ class StoringModule(Module):
     def handle(self, topic: str, payload: bytes) -> bool:
         if topic != sovereign.query_topic(self.agent.id):
             return False
+        answer = self._answer_for(payload)
+        return self._reply(answer)
+
+    def _modalities(self) -> dict:
+        """The mind's askable surfaces, by the modality's own name — the agent's attributes,
+        not a registry: a store that lands on the agent (#299) lands here by one line."""
+        return {"beliefs": self.agent.beliefs.query_union,
+                "desires": self.agent.desires.query_union}
+
+    def _answer_for(self, payload: bytes) -> dict:
+        """One question against ONE modality — named, required, never defaulted.
+
+        The sovereign asks a modality, not a shard and not a union: a-store-is-a-modality's
+        third ruling, which is "there is no default world" applied to a mind. A payload that
+        names none is refused with the road spelled out, because a fallback would answer a
+        question the asker did not ask.
+        """
         try:
-            # The union view, not the public one: the sovereign asks about the WHOLE
-            # agent, and its private graphs are exactly what cannot be seen elsewhere.
-            rows = bindings(self.agent.beliefs.query_union(payload.decode("utf-8")))
+            asked = json.loads(payload.decode("utf-8"))
+            modality, sparql = asked["modality"], asked["sparql"]
+        except Exception:
+            return {"error": "the payload is JSON with 'modality' and 'sparql', and there is "
+                             "no default modality — as there is no default world"}
+        surface = self._modalities().get(modality)
+        if surface is None:
+            return {"error": f"no modality called {modality!r} in this mind — there is "
+                             f"{', '.join(sorted(self._modalities()))}"}
+        try:
+            # The union view within the modality: its private graphs are exactly what cannot
+            # be seen elsewhere, and asking is still read-only by construction — the query
+            # API structurally cannot execute an update, whichever store answers.
+            rows = bindings(surface(sparql))
             answer: dict = {"rows": rows[: self.ANSWER_ROWS]}
             if len(rows) > self.ANSWER_ROWS:
                 answer["truncated"] = len(rows)
+            return answer
         except Exception as exc:
-            # An UPDATE lands here too: store.query structurally cannot execute one, so the
-            # refusal is the engine's, not a filter that could rot. The error goes back —
-            # a silent drop would leave the sovereign staring at a timeout.
-            answer = {"error": str(exc)}
+            # An UPDATE lands here too: the refusal is the engine's, not a filter that could
+            # rot. The error goes back — a silent drop would leave the sovereign staring at
+            # a timeout.
+            return {"error": str(exc)}
+
+    def _reply(self, answer: dict) -> bool:
         # The dict itself: Agent.publish serialises, and pre-dumping here double-encoded
         # the answer into a JSON string OF a JSON string — found by the first live ask.
         self.agent.publish(sovereign.result_topic(self.agent.id), answer)

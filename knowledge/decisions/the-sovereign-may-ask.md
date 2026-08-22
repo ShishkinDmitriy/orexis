@@ -29,11 +29,14 @@ Three properties carry the design:
   are and answering what you believe are one capability's two voices) runs the store's query
   API, and pyoxigraph's `query` structurally cannot execute an update: an INSERT arrives,
   raises in the engine, and the error is the answer. There is no allowlist to rot.
-- **The answer spans the WHOLE agent.** An ordinary query reads public knowledge; the
-  sovereign asks about beliefs, the record, evidence, revisions — so the responder reads with
-  the default graph as the union of everything the store holds (`Store.query_union`, added
-  for exactly this one caller). Making the sovereign spell private graph IRIs would be rule
-  1's own trap: a graph IRI is an instance.
+- **The answer spans one MODALITY of the agent, named in the ask.** First drawn wider — the
+  union of everything the one store held — and narrowed when the mind became several stores:
+  [a-store-is-a-modality](/decisions/a-store-is-a-modality.md)'s third ruling makes the
+  modality a required argument, no default, exactly as there is no default world. Within the
+  named modality the answer is still its whole self — `query_union` over that store, private
+  graphs included — because making the sovereign spell graph IRIs would be rule 1's own trap:
+  a graph IRI is an instance. A payload naming no modality, or one this mind lacks, is
+  refused with the road spelled out.
 
 The topic pair is the one channel an agent listens on that the world does not state
 (`agent/sovereign.py` is its single source, imported by both the ACL generator and the
