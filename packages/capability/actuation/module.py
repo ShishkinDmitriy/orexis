@@ -36,7 +36,7 @@ from agent.module import Module, Timer
 from agent.ontology import SENSED_GRAPH
 from agent.store import bindings
 
-from .beliefs import ACTUATION_BLOCK
+from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION
 
 # What this package asks OF others, by family or by IRI — namespaces, never Python.
@@ -90,7 +90,7 @@ class ActuationModule(Module):
         self.pending: dict[str, tuple[float, str, float]] = {}
         self.confirmed = 0
         self.unconfirmed = 0
-        self.grace_s = agent.beliefs.read(ACTUATION_BLOCK).dose_grace_s
+        self.grace_s = agent.desires.read(ACTUATION_PICKS).dose_grace_s
         self._sweep = Timer(SWEEP_S, self._expire)
         # v1 in-process: the settlement side holds both keys and co-signs. The device opens
         # only for a token signed by BOTH the host and clearing.

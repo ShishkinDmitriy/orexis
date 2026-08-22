@@ -1,7 +1,7 @@
 """Beliefs are read per capability, from the agent's own graph, with no defaults.
 
 The reader is kernel; the blocks belong to the capability packages, so a test reaches for
-`SUBSCRIBING_BLOCK` from `capabilities.sensing` exactly as the module that runs does.
+`SUBSCRIBING_PICKS` from `capabilities.sensing` exactly as the module that runs does.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -12,8 +12,8 @@ from agent import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
 from agent.beliefs import BeliefError, Beliefs, Reading
 from packages.capability.desire import aims_of, regions_of
-from packages.capability.market.beliefs import BIDDING_BLOCK, HOSTING_BLOCK
-from packages.capability.sensing.beliefs import SUBSCRIBING_BLOCK
+from packages.capability.market.beliefs import BIDDING_PICKS, HOSTING_PICKS
+from packages.capability.sensing.beliefs import SUBSCRIBING_PICKS
 
 from conftest import MOISTURE, TEMPERATURE, genesis_store
 
@@ -37,7 +37,7 @@ def fern():
 # --- one block per capability ----------------------------------------------
 
 def test_subscribing_block(fern):
-    p = fern.read(SUBSCRIBING_BLOCK)
+    p = fern.read(SUBSCRIBING_PICKS)
     assert (p.fast_sleep_s, p.slow_sleep_s, p.grace_s) == (30, 600, 45)
 
 
@@ -53,14 +53,14 @@ def test_bidding_block(fern):
     the venue tie and reads its own belief in it by IRI. What is left is what only a BID needs
     whatever the venue prices.
     """
-    b = fern.read(BIDDING_BLOCK)
+    b = fern.read(BIDDING_PICKS)
     assert b.max_value_per_l == 0.80
     for gone in ("target", "low", "high", "litres_per_fraction"):
         assert not hasattr(b, gone), gone
 
 
 def test_hosting_block(query):
-    h = Beliefs(genesis_store(), "supplier").read(HOSTING_BLOCK)
+    h = Beliefs(genesis_store(), "supplier").read(HOSTING_PICKS)
     assert (h.quantity_l, h.reserve_price_per_l) == (2.0, 0.20)
     assert h.bid_window_s == 3
 
@@ -75,8 +75,8 @@ def test_agents_hold_different_opinions(query):
 
 
 def test_slower_agent_tolerates_older_data(query):
-    fern = Beliefs(genesis_store(), "fern").read(SUBSCRIBING_BLOCK)
-    succ = Beliefs(genesis_store(), "succulent").read(SUBSCRIBING_BLOCK)
+    fern = Beliefs(genesis_store(), "fern").read(SUBSCRIBING_PICKS)
+    succ = Beliefs(genesis_store(), "succulent").read(SUBSCRIBING_PICKS)
     assert succ.slow_sleep_s > fern.slow_sleep_s
     assert succ.grace_s >= fern.grace_s
 
@@ -133,7 +133,7 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
     bidding block would be a bug this refusal catches.
     """
     with pytest.raises(BeliefError) as exc:
-        Beliefs(genesis_store(), "city").read(BIDDING_BLOCK)
+        Beliefs(genesis_store(), "city").read(BIDDING_PICKS)
     # The FULL IRI, not `water:maxValuePerL`. Belief terms come from whichever package
     # declares them and packages own their namespaces, so a prefix here would be a
     # guess — and a wrong one for anything market: owns.
@@ -149,7 +149,7 @@ def test_the_error_names_every_missing_term(query):
     # now (the shapes demand it of every perceiver), so the genuinely missing pair is what a
     # complete error must name — the test's point is EVERY, not WHICH.
     with pytest.raises(BeliefError) as exc:
-        Beliefs(genesis_store(), "supplier").read(SUBSCRIBING_BLOCK)
+        Beliefs(genesis_store(), "supplier").read(SUBSCRIBING_PICKS)
     for term in (ontology.SENSING + "fastSleepS", ontology.SENSING + "slowSleepS"):
         assert term in str(exc.value)
 

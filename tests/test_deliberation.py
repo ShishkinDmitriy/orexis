@@ -203,7 +203,8 @@ def test_the_menu_is_derived_from_the_graph(make):
     """The Consulting member's prompt substrate, checkable before that member exists: for this
     agent — these properties, these levers, these directions. Nothing here was written as a
     menu; every row is a join over facts that exist for their own reasons."""
-    rows = menu_of(genesis_store().query, FERN)
+    st = genesis_store()
+    rows = menu_of(st.query, FERN, st.query_union)
     as_tuples = {(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
                   r.direction.rsplit("#", 1)[-1] if r.direction else None) for r in rows}
     assert as_tuples == {
@@ -224,8 +225,9 @@ def test_the_dealers_menu_gained_its_lever(make):
     StoredLitres, raising it. This test guarded the seen-but-unmovable reading while that
     was the honest one; the row it waited for is derived now, direction and all, and the
     Observe row stands beside it exactly as a fern's does."""
-    rows = menu_of(genesis_store().query,
-                   "http://example.org/agora/world/simulation#supplier")
+    st = genesis_store()
+    rows = menu_of(st.query,
+                   "http://example.org/agora/world/simulation#supplier", st.query_union)
     assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
             for r in rows if r.is_chosen] == [("Acquire", "StoredLitres", "Raises"),
@@ -253,7 +255,7 @@ def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
     st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
         <http://example.org/agora/world/simulation#valve_fern>
             <http://example.org/agora/actuation#actuates> ?pot }} }}""")
-    rows = menu_of(st.query, FERN)
+    rows = menu_of(st.query, FERN, st.query_union)
     assert not any(r.means == ACQUIRE for r in rows), (
         "an unplumbed market must yield no Acquire row")
     assert any(r.means == OBSERVE for r in rows), (
@@ -293,7 +295,7 @@ def test_two_denominations_make_two_rows_and_never_four(make):
         <{ns}fan1> <http://example.org/agora/actuation#actuates> <{ns}fern> .
         <{ns}fern_agent> <{market}bidsIn> <{ns}fan_market> .
     }} }}""")
-    acquire = [r for r in menu_of(st.query, FERN)
+    acquire = [r for r in menu_of(st.query, FERN, st.query_union)
                if r.means == ACQUIRE and r.observed_property.endswith("SoilMoisture")]
     assert sorted((r.direction or "").rsplit("#", 1)[-1] for r in acquire) == \
         ["Lowers", "Raises"], (
@@ -377,7 +379,8 @@ SELECT ?means ?property ?via ?direction WHERE {
 }""")
     real = loader.affordance_files()
     monkeypatch.setattr(loader, "affordance_files", lambda: real + (toy,))
-    rows = menu_of(genesis_store().query, FERN)
+    st = genesis_store()
+    rows = menu_of(st.query, FERN, st.query_union)
     kinds = {r.means.rsplit("#", 1)[-1] for r in rows}
     assert "Consult" in kinds, "the toy package's kind must appear"
     assert {"Observe", "Acquire"} <= kinds, "and the shipped kinds must survive it"
@@ -393,7 +396,7 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
     range rather than at one value, because a filter that leaks at one sign is a filter that
     leaks."""
     supplier = make("supplier")
-    rows = menu_of(supplier.beliefs.query, supplier.me.uri)
+    rows = menu_of(supplier.beliefs.query, supplier.me.uri, supplier.beliefs.query_union)
     duties = [r for r in rows if not r.is_chosen]
     assert duties, "the conduct surface includes what it honours"
 
@@ -409,7 +412,7 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
 def test_a_buyer_honours_nothing(make):
     """Fern holds no venue and no valve: everything on its menu is its own to choose."""
     fern = make("fern")
-    assert all(r.is_chosen for r in menu_of(fern.beliefs.query, fern.me.uri))
+    assert all(r.is_chosen for r in menu_of(fern.beliefs.query, fern.me.uri, fern.beliefs.query_union))
 
 
 # --- step 9: a desire, not a property and a value -----------------------------

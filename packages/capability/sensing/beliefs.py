@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.beliefs import Block
+from agent.beliefs import Picks
 
 
 from .terms import LISTENING, SUBSCRIBING, term
@@ -65,7 +65,7 @@ class AlarmBeliefs:
     delta_fraction: float
 
 
-SUBSCRIBING_BLOCK = Block(
+SUBSCRIBING_PICKS = Picks(
     capability=SUBSCRIBING,
     cls=SubscribingBeliefs,
     terms={
@@ -75,13 +75,13 @@ SUBSCRIBING_BLOCK = Block(
     },
 )
 
-ALARM_BLOCK = Block(
+ALARM_PICKS = Picks(
     capability=SUBSCRIBING,
     cls=AlarmBeliefs,
     terms={"delta_fraction": term("alarmDeltaFraction")},
 )
 
-LISTENING_BLOCK = Block(
+LISTENING_PICKS = Picks(
     capability=LISTENING,
     cls=ListeningBeliefs,
     terms={"max_age_s": term("maxReadingAgeS")},

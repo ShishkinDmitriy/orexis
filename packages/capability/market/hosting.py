@@ -37,7 +37,7 @@ from agent.ontology import WORLD_GRAPH
 from agent.store import bindings
 from agent.world import allocation_ceilings, participants
 
-from .beliefs import HOSTING_BLOCK
+from .beliefs import HOSTING_PICKS
 from .terms import (ACTUATION, DELIBERATION, HOSTING, BID_MATCHING,
                     INTENTION, OFFER, OWING)
 
@@ -85,7 +85,7 @@ class HostingModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.beliefs = agent.beliefs.read(HOSTING_BLOCK)
+        self.beliefs = agent.desires.read(HOSTING_PICKS)
         self.markets = self.me.hosted_markets
         self.participants = {
             m.uri: participants(agent.beliefs.query, m) for m in self.markets

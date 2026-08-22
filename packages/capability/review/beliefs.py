@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.beliefs import Block
+from agent.beliefs import Picks
 
 
 from .terms import RECKONING, term
@@ -29,7 +29,7 @@ class ReviewBeliefs:
     interval_s: int
 
 
-REVIEW_BLOCK = Block(
+REVIEW_PICKS = Picks(
     capability=RECKONING,
     cls=ReviewBeliefs,
     terms={"interval_s": term("reviewIntervalS")},

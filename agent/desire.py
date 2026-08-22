@@ -149,3 +149,19 @@ class Desires:
         self.query_union = copy.query_union
         self.construct = copy.construct
         self.quads = copy.quads
+
+    def read(self, picks):
+        """Fill one capability's picks FROM THE DESIRE MODALITY — where they belong,
+        because a pick is a want (#297's sort, knowledge/domain/pick.md). Served from
+        this store's rebuilt copy, so a re-pick reaches a module the moment the rebuild runs
+        and never before: the record is the belief base's, the read surface is this one."""
+        from .beliefs import read_picks
+        return read_picks(self.query_union, self._beliefs.agent_uri, self._beliefs.graph,
+                          self._beliefs.agent_id, picks)
+
+    def read_optional(self, picks):
+        """The picks, or None where the agent said nothing at all — `Beliefs.read_optional`'s
+        contract, served from this modality's copy."""
+        from .beliefs import read_picks_optional
+        return read_picks_optional(self.query_union, self._beliefs.agent_uri,
+                                   self._beliefs.graph, self._beliefs.agent_id, picks)

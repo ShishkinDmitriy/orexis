@@ -38,7 +38,7 @@ from agent.module import Module, Timer
 from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
-from .beliefs import BIDDING_BLOCK
+from .beliefs import BIDDING_PICKS
 from .terms import (ACQUIRE, APPLY, BIDDING, DELIBERATION, DESIRE, INTENTION, OBSERVE,
                     SENSING)
 
@@ -67,7 +67,7 @@ SELECT ?property ?term WHERE {
 # My own copy of that conversion — a private BELIEF, read from my graph by the term the venue
 # tie named, on beliefs.py's own pattern (a private graph is the one legitimate GRAPH clause:
 # the default graph is public knowledge and my beliefs are deliberately not in it). It cannot
-# ride BIDDING_BLOCK, whose terms are fixed at import: which conversion a bidder needs is a
+# ride BIDDING_PICKS, whose terms are fixed at import: which conversion a bidder needs is a
 # fact about its venue, and the block would demand litres-per-fraction of a dealer that
 # converts stored litres. The physics copy on the SUBJECT stays untouched — this is the copy
 # an agent that learned would revise, and being wrong about it would cost it money.
@@ -112,7 +112,7 @@ class BiddingModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.beliefs = agent.beliefs.read(BIDDING_BLOCK)
+        self.beliefs = agent.desires.read(BIDDING_PICKS)
         self.balance = self.beliefs.endowment
         self.won_l = 0.0
         self.pending: dict | None = None  # an auction I have been asked to answer

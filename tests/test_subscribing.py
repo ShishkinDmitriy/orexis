@@ -817,6 +817,7 @@ def test_a_repicked_jolt_threshold_rearms_the_watch(monkeypatch):
 DELETE {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}
 INSERT {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> 0.5 }} }}
 WHERE  {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}""")
+    fern.desires.rebuild()   # what review does between recording and notifying
     p.on_belief_revised(delta, 0.5)
 
     # half the 0.45..0.65 band's width now, on the same channel, without a reflash
@@ -827,7 +828,7 @@ def test_an_agent_with_no_pick_commands_band_only_alarms(monkeypatch):
     """Absence is a statement, not an error: no jolt threshold means the board watches the
     band's edges and nothing else — and no figure is invented from the family's default,
     because a pick must be the agent's own to be revisable."""
-    from packages.capability.sensing.beliefs import ALARM_BLOCK
+    from packages.capability.sensing.beliefs import ALARM_PICKS
     from packages.capability.sensing.module import SubscribingModule
     from packages.capability.sensing.terms import term as sensing_term
     from agent.ontology import beliefs_graph
@@ -836,7 +837,8 @@ def test_an_agent_with_no_pick_commands_band_only_alarms(monkeypatch):
     fern.beliefs.update(f"""
 DELETE WHERE {{ GRAPH <{beliefs_graph(fern.id)}> {{
   ?a <{sensing_term("alarmDeltaFraction")}> ?old }} }}""")
-    assert fern.beliefs.read_optional(ALARM_BLOCK) is None
+    fern.desires.rebuild()   # the record moved; the modality recomputes, as it always does
+    assert fern.desires.read_optional(ALARM_PICKS) is None
     p = SubscribingModule(fern)
     s = moisture_sensor(fern)
     p.set_cadence(s, 600, None)

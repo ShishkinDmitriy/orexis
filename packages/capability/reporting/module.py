@@ -22,7 +22,7 @@ from agent.metrics import tree_bytes
 from agent.module import Module, Timer
 from agent.store import bindings
 
-from .beliefs import REPORTING_BLOCK
+from .beliefs import REPORTING_PICKS
 from .terms import STORING
 
 
@@ -34,7 +34,7 @@ class StoringModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.beliefs = agent.beliefs.read(REPORTING_BLOCK)
+        self.beliefs = agent.desires.read(REPORTING_PICKS)
         self._timer: Timer | None = None
         self._writer = None
 

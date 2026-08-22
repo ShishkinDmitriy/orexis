@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.beliefs import Block
+from agent.beliefs import Picks
 
 from .terms import ACTUATION, term
 
@@ -34,7 +34,7 @@ class ActuationBeliefs:
     dose_grace_s: int
 
 
-ACTUATION_BLOCK = Block(
+ACTUATION_PICKS = Picks(
     capability=ACTUATION,
     cls=ActuationBeliefs,
     terms={"dose_grace_s": term("doseGraceS")},

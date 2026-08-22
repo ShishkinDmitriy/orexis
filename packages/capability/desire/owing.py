@@ -85,6 +85,11 @@ class OwingModule(Module):
                 <{KERNEL}forClaim> "{claim_jti}" ;
                 <{KERNEL}presented> false ;
                 <{KERNEL}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
+        #  A debt arriving at runtime is a want arriving at runtime: the record above is the
+        #  belief base's, and the desire modality is RECOMPUTED to hold it — the same
+        #  record-then-rebuild order a re-pick follows, because recomputation is the only way
+        #  that store ever changes.
+        self.agent.desires.rebuild()
         self.log.info("owed to %s for claim %s", to_agent_id, claim_jti)
         return uri
 
@@ -101,6 +106,7 @@ class OwingModule(Module):
             INSERT {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> true }} }}
             WHERE  {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" ;
                                          <{KERNEL}presented> ?was }} }}""")
+        self.agent.desires.rebuild()   # standing became demanded — the want moved
 
     def discharge(self, claim_jti: str) -> None:
         """The dose is out: the debt is paid, and says when. Never deleted — a debt paid and
@@ -111,6 +117,7 @@ class OwingModule(Module):
                 ?o <{KERNEL}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
             WHERE {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" .
                      FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }}""")
+        self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
@@ -148,7 +155,8 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
         had no way to contribute before, which is the whole of #233. One shipped query still
         defines both; each module takes its own kind out of it.
         """
-        return [g for g in desires_of(self.agent.beliefs.query, self.me.uri, self.agent.id, now)
+        return [g for g in desires_of(self.agent.desires.query_union,
+                                    self.agent.beliefs.query, self.me.uri, self.agent.id, now)
                 if g.is_duty]
 
     def series(self) -> list[tuple[str, dict, dict]]:

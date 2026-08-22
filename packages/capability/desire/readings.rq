@@ -1,0 +1,25 @@
+# What is currently known, asked of the BELIEF MODALITY alone — the other half of `wants.rq`.
+#
+# One row per current observation: its subject, its property, its value and when it was
+# taken, plus — where an instrument watches that pair — the instrument and the staleness
+# horizon `publish_horizon` wrote down. No judging here: the query answers what each side
+# READS and when it was true, and how old is too old is the clock-holder's rule, exactly as
+# gap.rq always said (#124).
+#
+# No `$me` restriction on the readings, deliberately: the sensed graph is a PRIVATE graph in
+# a store no other agent can reach, so every reading in it is already this agent's to know —
+# and the freshness wants need readings of subjects the agent does not act for, which is why
+# the subject is a column rather than a bound.
+
+SELECT ?subject ?property ?value ?at ?instrument ?horizon WHERE {
+  GRAPH $sensed {
+    ?obs sosa:hasFeatureOfInterest ?subject ;
+         sosa:observedProperty ?property ;
+         sosa:hasSimpleResult ?value .
+    OPTIONAL { ?obs sosa:resultTime ?at }
+  }
+  OPTIONAL {
+    ?instrument sensing:monitors ?subject ; sosa:observes ?property .
+    OPTIONAL { GRAPH $instruments { ?instrument sensing:staleAfterS ?horizon } }
+  }
+}

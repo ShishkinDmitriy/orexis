@@ -102,7 +102,12 @@ class Affordance:
         return self.mode == _CHOSEN
 
 
-def menu_of(query, agent_uri: str) -> list[Affordance]:
+_DESIRED_Q = """SELECT DISTINCT ?property WHERE {
+  <%s> ag:holds ?region .
+  ?region ssn:forProperty ?property ; sh:property/sh:severity ag:ShouldBecome }"""
+
+
+def menu_of(query, agent_uri: str, desires) -> list[Affordance]:
     """What one agent could do, about what, through which lever — derived, never written.
 
     The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
@@ -117,9 +122,15 @@ def menu_of(query, agent_uri: str) -> list[Affordance]:
     implementation — or no module at all, where execution reduces to an existing actor.
     Sorted here because ORDER BY lived in the one big query; per-file order is no order.
     """
+    #  The desired properties, asked of the desire modality once and injected into every
+    #  walk: a row is wiring x want, and since the dataset split (#298) the want half lives
+    #  in a store of its own. An empty block is legal SPARQL and yields no rows — an agent
+    #  with no desires has no menu, exactly as when the shape pattern sat in each file.
+    props = " ".join(f"<{r['property']}>" for r in bindings(desires(_DESIRED_Q % agent_uri)))
     rows = []
     for path in loader.affordance_files() + loader.honoured_files():
-        q = path.read_text().replace("$me", f"<{agent_uri}>")
+        q = (path.read_text().replace("$me", f"<{agent_uri}>")
+             .replace("$properties", props))
         rows += [Affordance(means=r["means"], observed_property=r["property"], via=r["via"],
                             direction=r.get("direction"), mode=r.get("mode") or _CHOSEN,
                             for_agent=r.get("buyer"))
@@ -271,7 +282,7 @@ class ReflexModule(Module):
         #  debt is visible, rankable, and still not actionable until it is presented.
         if not desire.pursuable:
             return None
-        for row in menu_of(self.agent.beliefs.query, self.me.uri):
+        for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union):
             if not row.is_chosen and row.for_agent == desire.owed_to:
                 return row.means
         return None
@@ -358,7 +369,7 @@ class ReflexModule(Module):
         # honoured rows because it cannot express them, not because they are nobody's to
         # decide; the filter lifts when a member can pursue a desire that is a diff rather
         # than a distance — the widening a-plan-is-a-path-of-graph-diffs records.
-        for row in sorted((r for r in menu_of(self.agent.beliefs.query, self.me.uri)
+        for row in sorted((r for r in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union)
                            if r.observed_property == observed_property and r.direction
                            and r.is_chosen),
                           key=lambda r: _RUNG.get(r.means, len(_RUNG))):
