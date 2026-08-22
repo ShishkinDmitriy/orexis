@@ -405,7 +405,7 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     # walk a subclass path (one-graph-both-engines-read), and the closure cannot help here:
     # these triples are written at runtime, long after it ran.
     mine = [
-        (beliefs_graph(agent_id), ("BeliefsGraph", "DesireGraph"), "Asserted"),
+        (beliefs_graph(agent_id), ("DesireGraph",), "Asserted"),
         (intentions_graph(agent_id), ("IntentionGraph",), "Recorded"),
         (obligations_graph(agent_id), ("ConstraintGraph",), "Received"),
     ]

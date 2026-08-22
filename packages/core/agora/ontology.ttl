@@ -275,9 +275,6 @@ ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph
 
 ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "World graph" ;
     rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see agora/provenance.py." .
-ag:BeliefsGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:DesireGraph ; rdfs:label "Beliefs graph" ;
-    ag:graphPrefix "http://example.org/agora/graph/beliefs/" ;
-    rdfs:comment "ONE agent's private parameters for the capabilities it composed — and a DESIRE graph, which the name has never said: sort its contents and the aim is a desire about the world while the cadence, patience and ceilings are desires about the agent's own conduct, every one a pick inside a mandate. Nothing in it is a belief; what this agent believes is in the sensed and public graphs. The name is kept for now because graph IRIs are load-bearing in deployed volumes and a rename is a migration; the TYPE is what carries the truth. NOT a public graph: reachable only by naming it, which is what makes a review's write boundary checkable." .
 ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:label "Sensed graph" ;
     rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
 ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
@@ -368,9 +365,9 @@ ag:blind a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xsd:b
 ag:ProvenanceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Provenance graph" ;
     rdfs:comment "What the other graphs ARE, in PROV-O. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merging them into the default graph would make an ordinary `?device a ?class` start returning activities." .
 
-ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:BeliefsGraph ; rdfs:range ag:Agent ;
+ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
     rdfs:label "beliefs of" ;
-    rdfs:comment "Which agent owns this graph — the write boundary, made explicit." .
+    rdfs:comment "Which agent owns this graph — the write boundary, made explicit. The domain is ag:Graph since ag:BeliefsGraph retired (#299): the whole store is beliefs, so a class naming one graph inside it 'the beliefs graph' asserted nothing — what the graph at .../graph/beliefs/<id> actually holds is the PICK RECORD, typed ag:DesireGraph because a pick is a want, and this property still says whose it is." .
 
 ##  The instances. Data, not terms — code names the classes above and finds these by asking.
 ##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and how

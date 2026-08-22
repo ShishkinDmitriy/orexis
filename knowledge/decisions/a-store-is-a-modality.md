@@ -63,7 +63,10 @@ precedents generalised, because modality *determines* lifecycle:
 | history | volume ring | the runtime, append-only | the ring's own bound; Influx keeps the rest |
 | the [imaginarium](/domain/imaginarium.md) | memory, per pass | the planner | the end of the pass |
 
-**`ag:BeliefsGraph` retires, with the modality graph classes.** Everything in the beliefs
+**`ag:BeliefsGraph` is retired — DONE — and the remaining modality graph classes follow
+by [#312](https://github.com/ShishkinDmitriy/agora/issues/312)**, because today they are the
+desires-store build's selection vocabulary and cannot go before genesis derives into the
+store directly. Everything in the beliefs
 store is a belief; a class that names one graph inside it "the beliefs graph" asserts nothing.
 [#65](https://github.com/ShishkinDmitriy/agora/issues/65) asked for a rename; deletion answers
 it more strongly. The graph classes that survive are the arrival ones — and the reader

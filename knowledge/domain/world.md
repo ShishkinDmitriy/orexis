@@ -134,7 +134,7 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
 3. **Write one `beliefs/<agent>.ttl` per agent**, with only the blocks for the capabilities the
    wiring will give it. Unsure which? Seed and read what derivation decided.
 4. **Register each beliefs graph** in the catalog inside `world.ttl`:
-   `<.../graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .`
+   `<.../graph/beliefs/fern> a ag:DesireGraph ; ag:beliefsOf ag:fern_agent .`
 5. **Validate, and read what it derived.** `agora-validate orchard` builds the world from the
    files and prints `tree_north  Subscribing`. An agent that derived nothing has wiring
    implying no ability — usually a missing `sensing:senseMode`, or a device that is not a kind of

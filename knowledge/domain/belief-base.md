@@ -93,7 +93,7 @@ modality's own room of the volume (`<state>/intentions`, beside `<state>/belief-
 pathless test mind keeps it here, exactly as pre-split volumes did.
 
 The graphs themselves are **typed, self-describing resources** (`:world a agora:WorldGraph`,
-`:beliefs/fern a agora:BeliefsGraph ; agora:beliefsOf agora:fern_agent`) — a graph catalog,
+`:beliefs/fern a agora:DesireGraph ; agora:beliefsOf agora:fern_agent` — the pick record, typed by its modality since `ag:BeliefsGraph` retired) — a graph catalog,
 not magic strings. Topology (durable, authored) is kept out of `:sensed` (sensed, overwritten)
 and out of the belief graphs (opinion, revisable): three origins, three kinds of graph. See
 [genesis](/decisions/genesis.md) and [world-graph](/decisions/world-graph.md).

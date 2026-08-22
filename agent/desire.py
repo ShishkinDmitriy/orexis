@@ -129,7 +129,7 @@ class Desires:
     `ag:ConstraintGraph`, asserted in the public catalog for the shared graphs and in the
     classification graph for the agent's own — so a package that declares a new
     desire-modality graph is copied without the kernel learning its name. The picks ride
-    along already: `ag:BeliefsGraph` is typed `ag:DesireGraph`, which the sovereign's ruling
+    along already: the pick record is typed `ag:DesireGraph`, which the sovereign's ruling
     made literal.
     """
 
