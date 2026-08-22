@@ -38,7 +38,7 @@ which they take turns.
    judgement about its own sensed state — and the host convenes. Scarcity is the trigger, not a
    schedule and not an operator. A cooldown stops a flapping participant from spamming the
    market, and a host with an auction already open does not open a second.
-2. **It announces its terms.** The offer carries the lot, the reserve, the deadline and
+2. **It announces its terms.** The offer carries the [lot](/domain/lot.md), the reserve, the deadline and
    `matches_by`. Terms travel with the invitation rather than being discoverable, and
    [bid matching](/domain/bid-matching.md) says why that is a requirement and not a courtesy.
 3. **It collects bids.** Each bidder answers with a number only it can compute, from beliefs the
@@ -63,7 +63,7 @@ would be further rounds inside this same auction, and none of it is built.
 `market:matchesBy` IS a market, and the owner hosts it — one authored triple as consent,
 everything else minted from the wiring
 ([a-market-arises-where-want-meets-supply](/decisions/a-market-arises-where-want-meets-supply.md)).
-Both shipped venues arise this way: the supplier's for its barrel, the city's for its mains.
+Both shipped [venues](/domain/venue.md) arise this way: the supplier's for its barrel, the city's for its mains.
 
 And "who rules" is settled, precisely
 ([the-market-has-no-governor](/decisions/the-market-has-no-governor.md)): rulership is

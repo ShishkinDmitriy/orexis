@@ -31,7 +31,7 @@ opens"*). See
 In iterative auction design a round is the iteration — the **simultaneous multiple-round
 auction** used for spectrum is named for it, and clock auctions are counted the same way.
 
-Splitting a large quantity into smaller pieces does not produce rounds; it produces **lots**,
+Splitting a large quantity into smaller pieces does not produce rounds; it produces **[lots](/domain/lot.md)**,
 each allocated by an auction of its own. Here the lot is the host's standing offer and one
 auction sells it whole — see
 [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md), and

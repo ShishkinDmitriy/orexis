@@ -18,7 +18,9 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Market
 
 * [good](/domain/good.md) - What a lot is a quantity OF. One good has a valuation per kind of recipient, and every denomination join closes through it.
+* [lot](/domain/lot.md) - What one auction sells — a quantity of the venue's good at a reserve, both the host's own beliefs, sized by nothing anyone needs.
 * [market](/domain/market.md) - The standing structure — a resource, who supplies it, who consumes it, and the links between. The auction condenses inside it.
+* [venue](/domain/venue.md) - One market, as a node in the graph — minted from stock plus consent, keyed by its source, so one owner with two goods holds two.
 * [auction](/domain/auction.md) - The process, not a place: it condenses out of scarcity, announces terms, collects bids, matches, is co-signed, and dissolves.
 * [round](/domain/round.md) - One pass of bidding inside an auction. Exactly one is built, so today the two coincide.
 * [bid matching](/domain/bid-matching.md) - A lot and a set of bids become an allocation with prices — an allocation rule and a payment rule together.
@@ -74,6 +76,8 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Structure — how the project is put together
 
 * [capability](/domain/capability.md) - A named ability with interchangeable implementations. Granted by its own premise, deduced at genesis, and never hand-declared.
+
+* [choir](/domain/choir.md) - The kernel asks every module, whoever holds an opinion answers, and the asker never learns who — provider's complement, and silence is not zero.
 
 * [shape](/domain/shape.md) - SHACL, saying both "you may not" and "I want". Severity is the only difference, and the split is ours rather than the spec's.
 

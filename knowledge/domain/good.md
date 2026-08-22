@@ -8,13 +8,13 @@ description: What a lot is a quantity OF — water, heat, a right of way. Not a 
 
 # What it is
 
-`market:Good` — what changes hands. **Not a property**: a property is what a buyer hopes the
+`market:Good` — what changes hands: what a [lot](/domain/lot.md) is a quantity OF. **Not a property**: a property is what a buyer hopes the
 good moves, and one good honestly has several valuations, one per kind of recipient — a
 litre raises a pot's `SoilMoisture` *and* a barrel's `StoredLitres`, by different conversion
 terms. The domain declares its individuals (`water:Water` is the one shipped); the market
 only demands that a source names one.
 
-# The venue tie
+# The [venue](/domain/venue.md) tie
 
 The good is the join point the cross-join died at (#198). A source states its good ONCE, at
 class level — every `WaterSource` vends water, entailed, the datasheet pattern — and each

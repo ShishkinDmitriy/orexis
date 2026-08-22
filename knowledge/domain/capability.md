@@ -38,7 +38,7 @@ why uniform price landed without touching a line of it. `PROVIDES` in a package'
 how an implementation registers, and its absence is what makes a package knowledge-only.
 
 **Packages never import each other's Python.** Reach another by asking `agent.provider(family)`,
-or contribute through the choir hooks — `annotate`, `urgency`, `notices`, `series`, `quiet`.
+or contribute through the [choir](/domain/choir.md) hooks.
 
 # Each is granted by its own premise
 

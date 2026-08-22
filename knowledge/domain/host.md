@@ -57,7 +57,7 @@ the host is the one who cannot treat delivery as optional.
 
 # What it is not
 
-**Not the venue.** The venue is the standing structure; hosting is what an agent does with one.
+**Not the [venue](/domain/venue.md).** The venue is the standing structure; hosting is what an agent does with one.
 Who *owns* a venue is structural; who convenes a **given** auction is per-auction, and that split
 is an open question rather than a settled one.
 
