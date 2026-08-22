@@ -104,9 +104,21 @@ and every crossing already has a native shape in the house:
 - **The migration is the largest since the package tree.** Genesis, endowment, compaction,
   rebirth, `agora-ask`, every module's store handle and the test fixtures all assume one
   store. The order of work below keeps both gates green at every step; no step lands half.
-- **The split queries are unmeasured.** The `VALUES`-injected walks and the per-tick gap
-  computation are expected to be cheap — small sets, per-tick cadence — and expected is not
-  measured. The measurement is the first step, on the Pi, before anything moves.
+- **The split queries are MEASURED, and the split is faster than the join.** On the Pi,
+  against `world/simulation`'s fern with a prototype desires store of 545 quads beside a
+  beliefs store of 2,716 (medians of 30, each split checked equal to the query it replaces):
+
+  | crossing | one dataset | split | why |
+  |---|---|---|---|
+  | `desires.rq` | 3.2 ms | 1.0 ms | two small scoped queries and a Python join beat one large `UNION`-and-`BIND` plan |
+  | market affordance walk | 0.8 ms | 0.6 ms | props from the desires store, `VALUES`-injected into the wiring walk |
+  | `AcquireEffect` | 0.8 ms | 0.5 ms | conversion prefetched, `$conversion` a parameter |
+
+  Two bounds on what this says: the world was freshly born, so the duty branch ran over an
+  empty obligations graph on both sides — its cost is bounded by open claims, which are few by
+  construction; and the Python join reproduced the stake arithmetic (asserted equal, to three
+  decimals) but not staleness, which is two comparisons. Neither can turn a 3x win into the
+  pass-scale loss the fallback was reserved for.
 
 ## Three rulings this record does not make
 
@@ -131,14 +143,16 @@ Each is marked here with a recommendation, and the sovereign decides:
 - **Received-fact trust** is inherited from six-graphs unchanged: a signature checked at the
   edge still leaves no triple. The received graphs now recur in two stores (readings in
   beliefs, obligations in desires), which sharpens the question without answering it.
-- **The trigger for revisiting:** if the measurement (order of work, step 1) shows the split
-  queries costing what a planning pass costs, the graph-partition of six-graphs remains the
-  recorded fallback, and this record is the one to supersede.
+- **The trigger for revisiting did not fire.** The measurement (order of work, step 1) was
+  reserved the right to send this record back; it came in faster on every crossing instead.
+  The graph-partition of six-graphs remains the recorded fallback should a future crossing —
+  a duty-heavy society, a query the audit did not foresee — cost what a planning pass costs.
 
 ## The order of work
 
 1. Measure the split-query shapes on the Pi before anything moves —
-   [#296](https://github.com/ShishkinDmitriy/agora/issues/296).
+   [#296](https://github.com/ShishkinDmitriy/agora/issues/296). DONE: every split faster
+   than the join it replaces; the table above. Verdict: proceed.
 2. Sort the beliefs graph's contents by what each term asserts —
    [#297](https://github.com/ShishkinDmitriy/agora/issues/297).
 3. The desires store, read-only to the runtime, with the query splits above —
