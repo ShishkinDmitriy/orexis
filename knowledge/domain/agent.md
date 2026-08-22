@@ -39,9 +39,8 @@ positions.
 Interpretation and initiative belong to the agent, not infra (see
 [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)):
 
-- **Its own band.** "Am I `:LOW`?" is desire-relative — the agent computes it from the sensed
-  measurement + its own `bandLow`/`bandHigh`. The record holds the number, never the verdict;
-  the band is not stored anywhere at all.
+- **Its own [band](/domain/band.md).** "Am I `:LOW`?" is the agent's to answer, from the reading
+  and the region its subject states. The record holds the number, never the verdict.
 - **Its private state.** Its moisture (need-to-know), value curve, desire, and limits are the
   agent's, and live in its own `:beliefs/<agent>` graph. It shares its *bid*, not its state.
   What is *public* is only the wiring — see [world-graph](/decisions/world-graph.md).
@@ -80,12 +79,12 @@ thereafter: revision survives a restart precisely because a restart is not a bir
 
 Birth is the only event that may **author** beliefs, and it is the sovereign's act, not code's
 (see [genesis-process](/domain/genesis-process.md)). It is no longer the only event that may
-change one. A belief is a **point chosen inside a range**, and what genesis wrote is the first
-pick rather than a bound: an agent its world gives room to move — `review:commits`, in `world.ttl` —
-re-picks on its own clock, inside that room. That is a fourth event, and it belongs to the
-agent alone — not to start, not to stop, and not to the sovereign — which is why the table above
-is unchanged by it. See
-[a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md).
+change one: an agent whose world leaves it room revises its own settings, and what that means for
+a belief is [review](/domain/review.md)'s.
+
+What belongs to this page is that revision is **a fourth event in an agent's life** — after birth,
+start and stop — and that it belongs to the agent ALONE. Not to start, not to stop, and not to the
+sovereign, which is why the table above is unchanged by it.
 
 Death — an agent removed from the world —
 is unmodelled; [genesis](/decisions/genesis.md) flags it as the hard case in a destructive

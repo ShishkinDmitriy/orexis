@@ -138,12 +138,12 @@ moisture.
   readings. That gap is not drift to be corrected: the agent is choosing how long the device
   may rest, and the device honours exactly that. Anything tighter than the wake cost is
   mostly wake cost, which is why the constitutional floor sits where it does.
-- **The bands** (`watch`: a `pointer -> [low, high]` map) arm the crossing-watchers (#151),
+- **The bands** ([band](/domain/band.md) edges, as a `watch` map of `pointer -> [low, high]`) arm the crossing-watchers (#151),
   one per channel the world says is watched (`ssn:implements sensing:AlarmProcedure`, on
   the SENSOR — per channel, because which values a board can watch is a per-channel hardware
   fact: an ESP32's ULP reaches the analog probe and never the DHT, where a stand-in may watch
   everything it has). The bands are the agent's region edges, retained beside the cadence, and
-  the board wakes off-cadence the moment ANY watched value leaves its band — the reading then
+  the board wakes off-cadence the moment ANY watched value leaves it — the reading then
   says `"wake":"alarm"`, the one arrival that means the world changed rather than the clock
   ticked. Silence from a watched channel means "nothing crossed", which is information; a
   plain scheduled board's silence means only "not due yet".
@@ -162,9 +162,8 @@ cadence actually kept.
 
 # The band rides the same message, and gets the retention for free
 
-`band` travels on the command topic beside `sleep_s`, for a device that can display it — a
-status LED. It is not a third lever and the board never acts on it: the colour is the agent's
-verdict about its own pot, painted by hardware that computes nothing.
+A [band](/domain/band.md) travels on the command topic beside `sleep_s`, for a device that can
+display it — a status LED. It is not a third lever and the board never acts on it.
 
 It goes here rather than on a topic of its own for the reason a control topic was never added
 either: **the channel already exists, the board is already subscribed, and the ACL already
@@ -180,10 +179,10 @@ which is correct for an interval and wrong once anything travels with it: a pot 
 to LOW *inside one cadence band* would have kept the old colour indefinitely — the state most
 worth seeing, displayed as the state before it. The comparison is now the whole message.
 
-The verdict is collected the way every cross-capability opinion is: sensing asks, whoever
-holds a stake answers, and sensing passes the answer on without reading it. An agent with no
-stake in the property contributes nothing and its device is told only a cadence. The transport
-driver never learns what a band is.
+The verdict is collected the way every cross-capability opinion is, through the choir — whose
+answer it is, and why an agent with no stake has none to give, is [band](/domain/band.md)'s. What
+matters here is that this capability passes it on without reading it, and the transport driver
+below never learns what one is.
 
 The unequal pair is the whole reason `sensing:Polling` is a separate capability rather than a mode
 of this one. `sense` is what polling would be built on, and its unreliability here is not an
