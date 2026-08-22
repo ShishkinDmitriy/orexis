@@ -415,8 +415,13 @@ class Planner:
         base = self._beliefs()
         #  The base's canonical facts, once per pass: `advance` needs them to tell a fact
         #  restored from a fact introduced, which is what lets a path that returns to the base
-        #  world return to the EMPTY diff instead of accumulating noise.
-        self._base_facts = signature.facts(base)
+        #  world return to the EMPTY diff instead of accumulating noise. Read as the store's
+        #  own quads — the same graphs `_beliefs` flattens — because the signature works in
+        #  pyoxigraph terms and the rdflib copy exists only for pySHACL.
+        store = self.agent.store
+        self._base_facts = signature.facts(
+            quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id), SENSED_GRAPH]
+            for quad in store.quads(iri))
         return _Node(world=base, graph=SENSED_GRAPH, urgency=self._urgency_in(base, desire))
 
     def _step_from(self, node, row, desire: Desire):
@@ -436,13 +441,10 @@ class Planner:
             return None
         taken = node.taken + (row,)
         world = effects.applied(node.world, added, retracted)
-        #  Where this node stands, advanced by the same diff that built the world above —
-        #  `applied` against nothing converts the step's triples into the small graphs the
-        #  canonical form is read from.
-        diff = signature.advance(node.diff,
-                                 signature.facts(effects.applied((), added, ())),
-                                 signature.facts(effects.applied((), retracted, ())),
-                                 self._base_facts)
+        #  Where this node stands, advanced by the same diff that built the world above. The
+        #  step's triples go in as they arrived — pyoxigraph terms, no conversion.
+        diff = signature.advance(node.diff, signature.facts(added),
+                                 signature.facts(retracted), self._base_facts)
         return _Node(world=world,
                      graph=self.imaginarium.reached(node.graph, taken, added, retracted),
                      taken=taken, urgency=self._urgency_in(world, desire), diff=diff)

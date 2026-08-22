@@ -34,15 +34,22 @@ CANONICAL, and the canonical form states what "the same place" means here:
   blank nodes for the same claim still collide. "I now hold a claim" stops looking like
   "nothing happened", which is the sentence this module exists for.
 
-Nothing here reads a store or names a graph: facts are computed from the flat worlds the
-search already builds, and the base's facts are computed once per pass.
+**The terms are pyoxigraph's, never rdflib's.** The record that built the imaginarium refused
+an rdflib store by measurement, and the same ruling holds here: an effect's diff arrives as
+pyoxigraph triples and the base is the store's own quads, so canonicalising them where they
+are costs no conversion at all. The flat rdflib worlds the search also builds exist for one
+consumer — pySHACL — and the signature never touches them. Nothing here runs a query or names
+a graph: facts are computed from whatever triples the caller hands over.
 """
 
 from __future__ import annotations
 
-import rdflib
+import pyoxigraph as ox
 
-_SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
+_SOSA = "http://www.w3.org/ns/sosa/"
+_OBSERVED = ox.NamedNode(_SOSA + "observedProperty")
+_FOI = ox.NamedNode(_SOSA + "hasFeatureOfInterest")
+_RESULT = ox.NamedNode(_SOSA + "hasSimpleResult")
 
 #  How far a literal is trusted, and it is the OLD signature surviving as a clause: two worlds
 #  whose readings agree to six decimals were the same place before, and still are.
@@ -51,23 +58,35 @@ _ROUND = 6
 EMPTY = (frozenset(), frozenset())
 
 
-def facts(graph) -> frozenset:
-    """The canonical facts a set of triples states — what of it counts as 'where I am'."""
-    observations = {
-        s: (f, p)
-        for s, p in graph.subject_objects(_SOSA.observedProperty)
-        for f in graph.objects(s, _SOSA.hasFeatureOfInterest)
-    }
+def facts(triples) -> frozenset:
+    """The canonical facts a set of triples states — what of it counts as 'where I am'.
+
+    `triples` is anything with `.subject`, `.predicate` and `.object` — a step's diff as
+    `effects.apply` returns it, or the base as the store's own quads — and is read twice:
+    once to learn which nodes are observations and what hangs off each blank node, once to
+    emit. Both passes are the caller's iterable materialised, so a generator is fine.
+    """
+    triples = [(t.subject, t.predicate, t.object) for t in triples]
+    prop, foi, outgoing, incoming = {}, {}, {}, {}
+    for s, p, o in triples:
+        if p == _OBSERVED:
+            prop[s] = o
+        elif p == _FOI:
+            foi[s] = o
+        if isinstance(s, ox.BlankNode):
+            outgoing.setdefault(s, []).append((p, o))
+        if isinstance(o, ox.BlankNode):
+            incoming.setdefault(o, []).append((s, p))
+    world = _World({s: (foi[s].value, p.value) for s, p in prop.items() if s in foi},
+                   outgoing, incoming)
     out = set()
-    memo = {}
-    for s, p, o in graph:
-        if s in observations:
-            if p == _SOSA.hasSimpleResult:
-                foi, prop = observations[s]
-                out.add(("obs", str(foi), str(prop), _literal(o)))
+    for s, p, o in triples:
+        if s in world.observations:
+            if p == _RESULT:
+                f, pr = world.observations[s]
+                out.add(("obs", f, pr, _literal(o)))
             continue
-        out.add((_term(s, graph, observations, memo), str(p),
-                 _term(o, graph, observations, memo)))
+        out.add((world.term(s), p.value, world.term(o)))
     return frozenset(out)
 
 
@@ -84,65 +103,65 @@ def advance(diff: tuple, added: frozenset, retracted: frozenset, base: frozenset
             frozenset((dminus | (retracted & base)) - added))
 
 
-def _term(x, graph, observations, memo):
-    """One term's canonical form: an IRI is itself, a number is its rounded value, a blank
-    node is its content — and an observation reached as an OBJECT is its upsert key, the same
-    identity its own triples canonicalise to.
+class _World:
+    """One `facts` call's view of its triples: the observation keys, and each blank node's
+    neighbourhood — what a term needs to canonicalise, held once rather than re-derived per
+    triple. `memo` is why: a blank node with k triples would otherwise have its content walked
+    k times, and the belief base carries whole SHACL shape trees of them."""
 
-    `memo` holds each blank node's finished label for the duration of one `facts` call — a
-    node with k triples is otherwise recomputed k times, and the belief base carries whole
-    SHACL shape trees of them. Only a label computed from the top (no path context) is
-    memoisable, which is exactly what every call from here is.
-    """
-    if x in observations:
-        foi, prop = observations[x]
-        return ("obs", str(foi), str(prop))
-    if isinstance(x, rdflib.BNode):
-        if x not in memo:
-            memo[x] = _content(x, graph, observations, frozenset())
-        return memo[x]
-    if isinstance(x, rdflib.Literal):
-        return _literal(x)
-    return str(x)
+    def __init__(self, observations, outgoing, incoming):
+        self.observations = observations
+        self.outgoing = outgoing
+        self.incoming = incoming
+        self.memo = {}
+
+    def term(self, x):
+        """One term's canonical form: an IRI is itself, a number is its rounded value, a blank
+        node is its content — and an observation reached as an OBJECT is its upsert key, the
+        same identity its own triples canonicalise to."""
+        if x in self.observations:
+            return ("obs",) + self.observations[x]
+        if isinstance(x, ox.BlankNode):
+            if x not in self.memo:
+                self.memo[x] = self._content(x, frozenset())
+            return self.memo[x]
+        if isinstance(x, ox.Literal):
+            return _literal(x)
+        return x.value
+
+    def _content(self, node, seen) -> tuple:
+        """A blank node as what is said about it, so identity minted per run cannot differ.
+
+        Recursive because a blank node may point at another; `seen` stops a cycle, which then
+        canonicalises by its shape up to the revisit — coarser than isomorphism and safe in the
+        direction that matters here, since conflating two worlds prunes a branch the frontier
+        would have rejected as no better, while the identity-noise this removes would have made
+        every world novel and cycle detection decorative.
+        """
+        if node in seen:
+            return ("bnode", "~")
+        seen = seen | {node}
+        out = sorted(((p.value, self._leaf(o, seen)) for p, o in self.outgoing.get(node, ())),
+                     key=repr)
+        into = sorted(((self._leaf(s, seen), p.value) for s, p in self.incoming.get(node, ())
+                       if s not in self.observations),
+                      key=repr)
+        return ("bnode", tuple(out), tuple(into))
+
+    def _leaf(self, x, seen):
+        if x in self.observations:
+            return ("obs",) + self.observations[x]
+        if isinstance(x, ox.BlankNode):
+            return self._content(x, seen)
+        if isinstance(x, ox.Literal):
+            return _literal(x)
+        return x.value
 
 
 def _literal(o):
-    if isinstance(o, rdflib.Literal):
+    if isinstance(o, ox.Literal):
         try:
-            return round(float(o), _ROUND)
+            return round(float(o.value), _ROUND)
         except (TypeError, ValueError):
-            return str(o)
-    return str(o)
-
-
-def _content(node, graph, observations, seen) -> tuple:
-    """A blank node as what is said about it, so identity minted per run cannot differ.
-
-    Recursive because a blank node may point at another; `seen` stops a cycle, which then
-    canonicalises by its shape up to the revisit — coarser than isomorphism and safe in the
-    direction that matters here, since conflating two worlds prunes a branch the frontier
-    would have rejected as no better, while the identity-noise this removes would have made
-    every world novel and cycle detection decorative.
-    """
-    if node in seen:
-        return ("bnode", "~")
-    seen = seen | {node}
-    outgoing = sorted(
-        ((str(p), _leaf(o, graph, observations, seen)) for p, o in graph.predicate_objects(node)),
-        key=repr)
-    incoming = sorted(
-        ((_leaf(s, graph, observations, seen), str(p)) for s, p in graph.subject_predicates(node)
-         if s not in observations),
-        key=repr)
-    return ("bnode", tuple(outgoing), tuple(incoming))
-
-
-def _leaf(x, graph, observations, seen):
-    if x in observations:
-        foi, prop = observations[x]
-        return ("obs", str(foi), str(prop))
-    if isinstance(x, rdflib.BNode):
-        return _content(x, graph, observations, seen)
-    if isinstance(x, rdflib.Literal):
-        return _literal(x)
-    return str(x)
+            return o.value
+    return o.value

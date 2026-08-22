@@ -523,26 +523,32 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
     be decorative — so this is the test that says an observation is its upsert key and its
     value, and its identity and its timestamp are not part of where a plan stands.
     """
+    import pyoxigraph as ox
+
     from packages.capability.deliberation import signature
 
-    sosa = rdflib.Namespace("http://www.w3.org/ns/sosa/")
-    zz = rdflib.URIRef("http://example.org/agora/world/loner#zz")
-    prop = rdflib.URIRef(MOISTURE)
+    sosa = "http://www.w3.org/ns/sosa/"
+    xsd = "http://www.w3.org/2001/XMLSchema#"
+    zz = ox.NamedNode("http://example.org/agora/world/loner#zz")
+    prop = ox.NamedNode(MOISTURE)
 
-    def observation(node, value, when):
-        g = rdflib.Graph()
-        g.add((node, rdflib.RDF.type, sosa.Observation))
-        g.add((node, sosa.hasFeatureOfInterest, zz))
-        g.add((node, sosa.observedProperty, prop))
-        g.add((node, sosa.hasSimpleResult,
-               value if isinstance(value, rdflib.Literal) else rdflib.Literal(value)))
-        g.add((node, sosa.resultTime, rdflib.Literal(when)))
-        return g
+    def observation(node, value, datatype, when):
+        return [
+            ox.Triple(node, ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                      ox.NamedNode(sosa + "Observation")),
+            ox.Triple(node, ox.NamedNode(sosa + "hasFeatureOfInterest"), zz),
+            ox.Triple(node, ox.NamedNode(sosa + "observedProperty"), prop),
+            ox.Triple(node, ox.NamedNode(sosa + "hasSimpleResult"),
+                      ox.Literal(value, datatype=ox.NamedNode(xsd + datatype))),
+            ox.Triple(node, ox.NamedNode(sosa + "resultTime"),
+                      ox.Literal(when, datatype=ox.NamedNode(xsd + "dateTime"))),
+        ]
 
-    base = observation(rdflib.URIRef("http://example.org/agora#obs_zz_SoilMoisture"),
-                       rdflib.Literal("0.30", datatype=rdflib.XSD.decimal), "t0")
-    up = observation(rdflib.BNode(), 0.33, "t1")
-    back = observation(rdflib.BNode(), 0.33 - 0.03, "t2")   # 0.30000000000000004
+    base = observation(ox.NamedNode("http://example.org/agora#obs_zz_SoilMoisture"),
+                       "0.30", "decimal", "2026-01-01T00:00:00Z")
+    up = observation(ox.BlankNode(), "0.33", "double", "2026-01-01T00:01:00Z")
+    back = observation(ox.BlankNode(), repr(0.33 - 0.03),   # 0.30000000000000004
+                       "double", "2026-01-01T00:02:00Z")
 
     base_facts = signature.facts(base)
     there = signature.advance(signature.EMPTY,
@@ -556,16 +562,17 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
 
 def test_two_mintings_of_the_same_claim_are_the_same_place():
     """A blank node is its content, not its identity — or every world would be novel."""
+    import pyoxigraph as ox
+
     from packages.capability.deliberation import signature
 
-    holds = rdflib.URIRef("http://example.org/agora/market#holdsClaim")
-    litres = rdflib.URIRef("http://example.org/agora/market#litres")
+    holds = ox.NamedNode("http://example.org/agora/market#holdsClaim")
+    litres = ox.NamedNode("http://example.org/agora/market#litres")
+    double = ox.NamedNode("http://www.w3.org/2001/XMLSchema#double")
 
     def minted():
-        g = rdflib.Graph()
-        c = rdflib.BNode()
-        g.add((rdflib.URIRef(GARDENER), holds, c))
-        g.add((c, litres, rdflib.Literal(2.0)))
-        return g
+        c = ox.BlankNode()
+        return [ox.Triple(ox.NamedNode(GARDENER), holds, c),
+                ox.Triple(c, litres, ox.Literal("2.0", datatype=double))]
 
     assert signature.facts(minted()) == signature.facts(minted())
