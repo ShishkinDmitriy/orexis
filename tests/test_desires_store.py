@@ -144,3 +144,46 @@ GRAPH <{ASSERTED_GRAPH}> {{
     agent.desires.rebuild()
     assert not agent.desires.query_union(ask)["boolean"], \
         "a want the ratification dropped must not survive it"
+
+
+def test_a_commitment_survives_a_restart_in_its_own_room(monkeypatch, tmp_path):
+    """The intention modality's row of the table, exercised where it is true: a volume.
+
+    A pre-split volume is one store at the root; the first boot with rooms moves the belief
+    base into its own, adopts any ledger written before intentions had a store, and a second
+    opening finds the commitment still there — persistence is the volume's, whichever store
+    holds the quads.
+    """
+    import pyoxigraph as ox
+
+    from agent import genesis
+    from agent.beliefs import Beliefs
+    from agent.intentions import Intentions
+    from agent.store import Store
+    from packages.capability.intention.graphs import intentions_graph
+
+    state = tmp_path / "state"
+    world = genesis.world_dir("loner")
+
+    # a pre-split life: one store at the volume root, a ledger entry in the belief base
+    st = Store(str(state))
+    genesis.refresh_public(st, world)
+    genesis.birth(st, world, "gardener")
+    st.update(f"""INSERT DATA {{ GRAPH <{intentions_graph("gardener")}> {{
+        <urn:test:i1> a <http://example.org/agora#Intention> }} }}""")
+    del st
+
+    # first boot with rooms: layout migrates, the modality adopts the ledger
+    st = Store(genesis._belief_room(str(state)))
+    beliefs = Beliefs(st, "gardener")
+    intentions = Intentions(str(state), beliefs)
+    ask = "ASK { <urn:test:i1> ?p ?o }"
+    assert intentions.query_union(ask)["boolean"], "the adopted commitment must be readable"
+    assert not beliefs.query_union(ask)["boolean"], \
+        "and gone from the belief base — moved, not copied"
+    del intentions, beliefs, st
+
+    # a restart: nothing re-adopts, the commitment is simply still there
+    st = Store(genesis._belief_room(str(state)))
+    intentions = Intentions(str(state), Beliefs(st, "gardener"))
+    assert intentions.query_union(ask)["boolean"], "a commitment survives a restart"

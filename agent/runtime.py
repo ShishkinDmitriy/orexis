@@ -37,6 +37,7 @@ import paho.mqtt.client as mqtt
 from . import config, genesis, loader
 from .beliefs import Beliefs
 from .desire import Desire, Desires
+from .intentions import Intentions
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
@@ -76,6 +77,7 @@ class Agent:
 
     def __init__(self, agent_id: str, st=None):
         self.id = agent_id
+        st_given = st
         # Genesis builds my store from the ratified files; the belief MODALITY owns it from
         # here, and this class never learns what kind it is — that is the separation of
         # concerns a-store-is-a-modality rules. Nothing else can reach it either: the
@@ -90,6 +92,12 @@ class Agent:
         # decides its own store and its own writability — this one exposes no writer — and
         # the agent holds the modalities, never the stores, by the sovereign's ruling.
         self.desires = Desires(self.beliefs)
+        # The intention modality: the ledger's own store, in its own room of the volume — a
+        # commitment survives a restart, so it persists where the imaginarium never does. A
+        # pathless mind (every test agent) has no rooms and the ledger stays beside the
+        # beliefs, exactly as pre-split volumes kept it; the surface is the boundary.
+        self.intentions = Intentions(config.env("AGORA_STORE") if st_given is None else None,
+                                     self.beliefs)
 
         # Built before the modules, because Observations counts into it and a module builds one
         # of those. Counting only — nothing is reported until run() starts it.

@@ -196,7 +196,7 @@ def test_an_aged_volume_refuses_to_open(tmp_path, monkeypatch):
     world = WORLDS_ROOT / "simulation"
 
     genesis.open_belief_base(world, "fern", path)  # born, current
-    aged = Store(path)
+    aged = Store(genesis._belief_room(path))
     aged.put_graph(beliefs_graph("fern"), BEFORE_THE_SWEEP)  # and then the code moved on
     del aged
 
@@ -209,7 +209,7 @@ def test_and_opens_when_asked_to_migrate(tmp_path, monkeypatch):
     world = WORLDS_ROOT / "simulation"
 
     genesis.open_belief_base(world, "fern", path)
-    aged = Store(path)
+    aged = Store(genesis._belief_room(path))
     aged.put_graph(beliefs_graph("fern"), BEFORE_THE_SWEEP)
     del aged
 
