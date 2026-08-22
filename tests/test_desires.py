@@ -1,6 +1,6 @@
 """What an agent is pursuing, hottest first — the split pair and its one join (#234, #298).
 
-`wants.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
+`desires.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
 is the join — the arithmetic lives once, in `Region` and `_duty_urgency`. These pin the
 states, the ranking, and the duty fraction that was always Python's because the store's
 engine will not divide durations.

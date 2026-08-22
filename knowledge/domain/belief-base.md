@@ -88,7 +88,7 @@ them and [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) for why 
 split by who authored the fact. Two caveats now that
 [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) is carried out: the WANTS are not
 here at all — no constraint graph exists anywhere; the desire modality derives its own content
-from the world, the records and the packages' `wants.ru` on every rebuild (#312), and
+from the world, the records and the packages' `desires.ru` on every rebuild (#312), and
 `graph/desire/asserted` above is the world's TriG block the build projects, replaced from the
 files each boot. And `graph/intentions/<agent>` has moved OUT of a deployed belief base into
 the intention modality's own room of the volume (`<state>/intentions`, beside

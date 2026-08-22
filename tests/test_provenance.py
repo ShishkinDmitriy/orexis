@@ -231,7 +231,7 @@ def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
     targets = set(genesis.write_targets(st))
     assert WORLD_DERIVED_GRAPH in targets
     #  Exactly one, since #312: the one package graph that owned a genesis write target — the
-    #  desire package's bounds — moved into the desire modality's own build, whose `wants.ru`
+    #  desire package's bounds — moved into the desire modality's own build, whose `desires.ru`
     #  writes `$derived` in a store it owns and genesis never touches. The `$into` machinery
     #  stays for the next package that owns a public graph; when one arrives this set widens
     #  and the assertions below cover it unchanged.

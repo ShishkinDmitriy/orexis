@@ -157,7 +157,7 @@ class Agent:
         ranking is what makes the two comparable — urgency is unit-free on both sides, so a
         litre owed and a pot drying finally rank against each other.
         """
-        return sorted((desire for m in self.modules for desire in m.wants(now)),
+        return sorted((desire for m in self.modules for desire in m.desires(now)),
                       key=lambda g: -g.urgency)
 
     def annotations(self, subject_uri: str, observed_property: str, value: float) -> dict:

@@ -94,7 +94,7 @@ class _Derivation(Store):
     Four moves, in order. The premises are copied in — every public graph, plus the two
     records the rules and the projections read: the pick record and the obligations record,
     both reached by the one construction from an agent's own id the rules allow. The
-    packages' `wants.ru` rules run against them, `$derived` bound to this store's own derived
+    packages' `desires.ru` rules run against them, `$derived` bound to this store's own derived
     graph and `$given` to the premises, exactly the substitution genesis performs for its
     rules. The world's asserted block (`graph/desire/asserted`, a public graph a world's TriG
     may fill) is already among the copied publics and simply stays. Last, the public premises
@@ -113,7 +113,7 @@ class _Derivation(Store):
             for quad in beliefs.quads(iri):
                 self._store.add(quad)
         given = "\n".join(f"USING <{g}>" for g in publics + records)
-        for rule in loader.wants_files():
+        for rule in loader.desires_rule_files():
             text = rule.read_text()
             out = []
             for line in text.splitlines():
@@ -141,7 +141,7 @@ class Desires:
     Since #312 there is no copy and no selection: genesis derives no wants, the belief base
     holds no desire-modality graphs, and this build is the one place the regions, envelopes,
     freshness wants and asserted root desires come to exist — from the world, the records,
-    and the packages' `wants.ru`. The pick record and the obligations record are projected in
+    and the packages' `desires.ru`. The pick record and the obligations record are projected in
     beside them, because the picks ARE wants by the sovereign's ruling and a duty is this
     agent's debts record, served as the wants they raise.
     """

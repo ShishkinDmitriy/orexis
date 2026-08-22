@@ -66,7 +66,7 @@ precedents generalised, because modality *determines* lifecycle:
 **The modality graph classes are retired — ALL of them, by
 [#312](https://github.com/ShishkinDmitriy/agora/issues/312)**: `ag:BeliefsGraph` first, then
 `ag:DesireGraph`, `ag:ConstraintGraph` and `ag:BoundsGraph` when the copy they selected
-dissolved — genesis derives no wants, the modality's own build runs the packages' `wants.ru`
+dissolved — genesis derives no wants, the modality's own build runs the packages' `desires.ru`
 against the world and the records on every rebuild, and the belief base keeps records only,
 typed for what they are (`ag:PickRecordGraph`, `ag:ObligationsGraph`). That build is also
 [#263](https://github.com/ShishkinDmitriy/agora/issues/263)'s mechanism: re-derivation during

@@ -99,10 +99,17 @@ ranges leave. See
 A region states where a subject should be. How far outside it something sits, and what that
 distance is worth, is [gap](/domain/gap.md)'s.
 
+# One word owns the concept
+
+"Want" in prose means a desire — the records have always said both, and prose may. What may
+not: an ARTIFACT named for the synonym, which is how a second vocabulary starts. The files,
+the queries, the hooks and the classes say desire (`desires.ru`, `desires.rq`,
+`Module.desires()`), ruled when a `wants.ru` briefly existed and the sovereign asked why.
+
 # What am I pursuing — the whole list, with status
 
 `desires_of` answers the question a sovereign and a model actually ask — every want this agent
-holds, hottest first, whoever sourced it — by joining `wants.rq` (the desire modality's half)
+holds, hottest first, whoever sourced it — by joining `desires.rq` (the desire modality's half)
 with `readings.rq` (the belief modality's), the judging done where the clock is. A stake and a duty appear in one list
 because urgency is the common currency — a litre owed and a pot drying rank against each other
 instead of running down two paths that never meet — and each row says what state its desire is in:
