@@ -62,7 +62,8 @@ class StoringModule(Module):
         """The mind's askable surfaces, by the modality's own name — the agent's attributes,
         not a registry: a store that lands on the agent (#299) lands here by one line."""
         return {"beliefs": self.agent.beliefs.query_union,
-                "desires": self.agent.desires.query_union}
+                "desires": self.agent.desires.query_union,
+                "intentions": self.agent.intentions.query_union}
 
     def _answer_for(self, payload: bytes) -> dict:
         """One question against ONE modality — named, required, never defaulted.

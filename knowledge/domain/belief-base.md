@@ -85,7 +85,12 @@ now `graph/beliefs/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived
 `graph/summaries/<agent>`, `graph/classification` and `graph/instruments`. See
 [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) for the three axes that classify
 them and [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) for why the public ones
-split by who authored the fact.
+split by who authored the fact. Two caveats as
+[a-store-is-a-modality](/decisions/a-store-is-a-modality.md) is carried out: the desire-modality
+graphs are also served from the desires store's rebuilt copy, which is what deliberation reads;
+and `graph/intentions/<agent>` has moved OUT of a deployed belief base into the intention
+modality's own room of the volume (`<state>/intentions`, beside `<state>/belief-base`) — a
+pathless test mind keeps it here, exactly as pre-split volumes did.
 
 The graphs themselves are **typed, self-describing resources** (`:world a agora:WorldGraph`,
 `:beliefs/fern a agora:BeliefsGraph ; agora:beliefsOf agora:fern_agent`) — a graph catalog,

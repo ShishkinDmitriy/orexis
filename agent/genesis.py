@@ -25,6 +25,8 @@ See knowledge/decisions/where-the-belief-base-lives.md, knowledge/domain/world.m
 
 from __future__ import annotations
 
+import shutil
+
 import logging
 import re
 from pathlib import Path
@@ -415,6 +417,33 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     st.update(f"INSERT DATA {{ GRAPH <{CLASSIFICATION_GRAPH}> {{ {triples} }} }}")
 
 
+def _belief_room(path: str | None) -> str | None:
+    """Where the belief base lives inside the agent's volume: its own room.
+
+    The volume used to BE the store — one RocksDB directory at the root — and the mind's
+    other stores need rooms beside it (a-store-is-a-modality), so the layout is now
+    `<state>/belief-base` and siblings. A pre-split volume is recognised by the store's own
+    files sitting at the root and moved whole into the room, once; the move is a rename, so
+    nothing is copied and an interrupted first boot re-runs it harmlessly.
+    """
+    if path is None:
+        return None
+    root = Path(path)
+    room = root / "belief-base"
+    if (root / "CURRENT").exists() and not room.exists():
+        room.mkdir()
+        for entry in list(root.iterdir()):
+            if entry.name != "belief-base":
+                shutil.move(str(entry), str(room / entry.name))
+        log.info("belief base moved into its room — the volume grew a mind layout")
+    else:
+        # A fresh volume: the store only creates its own directory, never the parents —
+        # and a caller may hand a path whose parents do not exist yet, as the old layout
+        # allowed by pointing the store at the leaf itself.
+        room.mkdir(parents=True, exist_ok=True)
+    return str(room)
+
+
 def open_belief_base(world: Path, agent_id: str, path: str | None = None,
                      rebirth: bool = False) -> Store:
     """An agent's whole boot sequence: open the store, refresh the world, be born if new.
@@ -425,7 +454,7 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     fail. Last, because it is about what is in the store once everything that writes has run.
     See agora/vocabulary.py and issue #87.
     """
-    st = Store(path)
+    st = Store(_belief_room(path))
     refresh_public(st, world)
     born = birth(st, world, agent_id, rebirth)
     if born:
