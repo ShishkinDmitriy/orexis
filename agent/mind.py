@@ -1,5 +1,8 @@
 """The mind's second store: what this agent pursues, copied out of what it knows.
 
+The mind is the dictionary's word, not this file's — knowledge/domain/mind.md — for what an
+agent holds organised by modality: its stores as one named whole.
+
 Part of [a-store-is-a-modality](../knowledge/decisions/a-store-is-a-modality.md), which rules
 that a modality is a STORE and a graph says only who put the fact there. This file is the
 first store after the belief base: **the desires store**, holding every graph whose content
