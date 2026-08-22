@@ -13,12 +13,26 @@ import re
 
 from packages.capability.desire import gaps_of, regions_of
 
-from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store
+from conftest import MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
 
-def _gaps(st, uri):
-    """Both handles from one genesis store — the same content the two modalities split."""
-    return gaps_of(st.query_union, st.query, uri)
+def _judged(st, *extra):
+    """Validation data the way the boot builds it since #312: publics and readings from the
+    store, the wants and the pick record through the desire modality — and only through it."""
+    from agent import effects
+    from agent.validate import graph_from
+
+    data = graph_from(st, *st.public_graphs(), *extra)
+    for triple in desires_build(st, "fern").construct(
+            "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
+        data.add(effects._triple(triple))
+    return data
+
+
+def _gaps(st, uri, agent_id="fern"):
+    """Both handles the way an agent holds them: wants from the desire modality's build,
+    readings from the store (#312)."""
+    return gaps_of(desires_build(st, agent_id).query_union, st.query, uri)
 
 FERN = "http://example.org/agora/world/simulation#fern_agent"
 SUPPLIER = "http://example.org/agora/world/simulation#supplier"
@@ -29,7 +43,7 @@ def test_the_query_and_the_module_are_one_definition(query_with_readings):
     literal sense: `gaps_of` computes the gap FROM `Region.urgency`, so this holds the sign
     convention and the join to the same numbers every other consumer reads."""
     st = genesis_store({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
-    gaps, regions = _gaps(st, FERN), regions_of(st.query, FERN)
+    gaps, regions = _gaps(st, FERN), regions_of(desires_build(st, "fern").query_union, FERN)
     assert set(gaps) == {MOISTURE, TEMPERATURE}
     for prop, gap in gaps.items():
         assert abs(gap.gap) == round(regions[prop].urgency(gap.value), 6) or \
@@ -67,7 +81,7 @@ def test_unmeasured_is_not_satisfied():
 def test_an_agent_with_no_desire_has_no_gap(query_with_readings):
     """The supplier observes nothing and wants nothing — no regions, no rows, and nothing here
     invents a stake for it. Handed readings about somebody else's plant, still nothing."""
-    assert _gaps(genesis_store({("fern", MOISTURE): 0.05}), SUPPLIER) == {}
+    assert _gaps(genesis_store({("fern", MOISTURE): 0.05}), SUPPLIER, "supplier") == {}
 
 
 def test_the_agent_reports_its_worst_gap(monkeypatch, query_with_readings):
@@ -140,7 +154,7 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
 
     st = genesis_store()
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
-    data = graph_from(st, *st.public_graphs(), beliefs_graph("fern"))
+    data = _judged(st)
     ok, report = conforms(data, focus=FERN)
     assert ok and "polls no sensor" not in report, "the shipped world must warn nothing"
 
@@ -153,7 +167,7 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
     for rule in loader.rule_files():
         unwired.update(genesis.substitute(rule.read_text(), unwired))
     genesis.birth(unwired, genesis.world_dir("simulation"), "fern")
-    data = graph_from(unwired, *unwired.public_graphs(), beliefs_graph("fern"))
+    data = _judged(unwired)
     ok, report = conforms(data, focus=FERN)
     assert ok, "blind is legal — the region is real and the agent must start"
     assert "polls no sensor" in report
@@ -171,7 +185,7 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
     st = genesis_store({("fern", MOISTURE): 0.05})   # fern survives 0.20-0.85
     from agent import genesis
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
-    data = graph_from(st, *st.public_graphs(), beliefs_graph("fern"), SENSED_GRAPH)
+    data = _judged(st, SENSED_GRAPH)
     ok, report = conforms(data, focus=FERN)
     assert ok, "a warning must not fail validation — the agent has to be able to start"
     #  The message names the side and the edge, because the shape that produced it was minted
@@ -183,7 +197,7 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
 
     calm = genesis_store({("fern", MOISTURE): 0.30})  # outside the region, inside the envelope
     genesis.birth(calm, genesis.world_dir("simulation"), "fern")
-    data = graph_from(calm, *calm.public_graphs(), beliefs_graph("fern"), SENSED_GRAPH)
+    data = _judged(calm, SENSED_GRAPH)
     ok, report = conforms(data, focus=FERN)
     assert ok
     assert "past what fern survives" not in report, \
@@ -231,7 +245,7 @@ def test_an_unmet_want_is_not_printed_as_a_finding():
 
     dry = genesis_store({("fern", MOISTURE): 0.30})   # outside the region, inside the envelope
     genesis.birth(dry, genesis.world_dir("simulation"), "fern")
-    data = graph_from(dry, *dry.public_graphs(), beliefs_graph("fern"), SENSED_GRAPH)
+    data = _judged(dry, SENSED_GRAPH)
     ok, report = conforms(data, focus=FERN)
 
     assert ok

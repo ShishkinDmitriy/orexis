@@ -98,6 +98,7 @@ KINDS = (CORE, BUS, PART, PLANT, TOOL, CAPABILITIES, TRANSPORTS, CODECS, CALIBRA
 ONTOLOGY = "ontology.ttl"
 SHAPES = "shapes.ttl"
 RULES = "rules.ru"
+WANTS = "wants.ru"
 # What a package would like its agents to reconsider about themselves. A SPARQL SELECT binding
 # ?term and ?value, run by the reviewer — never an update, and never Python. See agora/review.py.
 REVIEW = "review.rq"
@@ -219,6 +220,14 @@ def shapes_files() -> tuple[Path, ...]:
 
 def rule_files() -> tuple[Path, ...]:
     return files(RULES)
+
+
+def wants_files() -> tuple[Path, ...]:
+    """Every package's want-derivation — run by the desire modality's build on every rebuild,
+    never by genesis (#312). Only the desire package ships one today; a package that grows a
+    kind of want ships its own, and the build collects them exactly as genesis collects
+    `rules.ru` — the same union-of-what-is-loaded discipline, one lifecycle over."""
+    return files(WANTS)
 
 
 def affordance_files() -> tuple[Path, ...]:

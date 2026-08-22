@@ -128,6 +128,12 @@ SENSED_GRAPH = _GRAPH + "sensed"  # what sensors read
 #  horizon that follows from it. Private, and separate from `sensed` because a cadence is
 #  not a reading: it is what the agent believes about the instrument that produced one.
 INSTRUMENTS_GRAPH = _GRAPH + "instruments"
+#  The desire modality's own graphs — named by the kernel as write/bootstrap roots, exactly
+#  the two-category exception the graph-IRI rule states: the build WRITES the first and
+#  projects the second, and no reader ever enumerates either (reads go through the modality's
+#  union surface).
+DESIRE_DERIVED_GRAPH = _GRAPH + "desire/derived"
+DESIRE_ASSERTED_GRAPH = _GRAPH + "desire/asserted"
 # What the five above ARE, in PROV-O, so the store can say it rather than this file's comments.
 # Rename every graph to `g1`..`g5` and a reader could still work out which hold computed facts:
 # that is the test this graph exists to pass, and the reason the names above are a convenience

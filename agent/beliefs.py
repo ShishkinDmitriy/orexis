@@ -119,9 +119,10 @@ class Beliefs:
     A modality is a class that owns its store, and the agent never learns what kind
     (a-store-is-a-modality). This one's choices: the store genesis built into the agent's
     volume, WRITABLE at runtime — believing is recording and receiving, so update stays on
-    the surface — and, until the sibling stores land (#299), the home of record every other
-    modality is rebuilt from. The whole store surface is forwarded, because during that
-    migration the belief base still fronts graphs that are not yet elsewhere; what this class
+    the surface — and the PREMISE store the desire modality derives from: the world, the
+    records, the readings. The whole store surface is forwarded, because the belief base
+    still fronts every graph that has no store of its own (deliberation's trace, review's
+    evidence, the records); what this class
     adds of its own is the typed reads below, and the isolation stands as it always did: the
     store is this process's alone, so no other agent's beliefs are reachable to forward.
 

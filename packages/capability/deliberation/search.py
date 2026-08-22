@@ -41,7 +41,8 @@ from agent import effects
 from . import signature, trace
 from agent.desire import Desire
 from agent.imaginarium import Imaginarium
-from agent.ontology import SENSED_GRAPH, beliefs_graph
+from agent.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
+                            SENSED_GRAPH, beliefs_graph)
 from agent.validate import conforms, graph_from
 
 log = logging.getLogger("search")
@@ -422,9 +423,21 @@ class Planner:
         #  What this agent PURSUES, snapshotted for the pass: the desire modality's triples as
         #  one rdflib graph, because pySHACL wants rdflib and a cbd walks blank nodes. Small —
         #  a few hundred triples — and per pass for the same reason the imaginarium is.
+        #  The WANT graphs alone — derived and asserted — never the record projections: the
+        #  flat world below already carries the pick record through the belief flatten, and a
+        #  second copy with fresh blank nodes splits every aim in two, which AimShape rightly
+        #  refuses as not steering.
         self._shapes = effects.applied((), self.agent.desires.construct(
-            "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"), ())
+            f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ "
+            f"VALUES ?g {{ <{DESIRE_DERIVED_GRAPH}> <{DESIRE_ASSERTED_GRAPH}> }} "
+            f"GRAPH ?g {{ ?s ?p ?o }} }}"), ())
         base = self._beliefs()
+        #  The wants ride in the flat world too, exactly as they did when the constraint graph
+        #  was public: `_offer`'s legality check validates the world the plan would reach, and
+        #  the capability shapes demand the regions — a world without them is refused for a
+        #  reason no lever caused (#312).
+        for triple in self._shapes:
+            base.add(triple)
         #  The base's canonical facts, once per pass: `advance` needs them to tell a fact
         #  restored from a fact introduced, which is what lets a path that returns to the base
         #  world return to the EMPTY diff instead of accumulating noise. Read as the store's

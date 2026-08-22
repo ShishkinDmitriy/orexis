@@ -33,7 +33,7 @@ from pathlib import Path
 
 from . import config, inference, loader, provenance, vocabulary
 from .config import REPO_ROOT
-from .ontology import (EFFECTS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
+from .ontology import (DESIRE_ASSERTED_GRAPH, EFFECTS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from .store import NAMESPACES, Store, bindings
@@ -284,6 +284,11 @@ def refresh_public(st: Store, world: Path) -> None:
     #  executable text a planner runs, and keeping it in a graph of its own means a package
     #  that grows one is visible as a graph that grew rather than as vocabulary that moved.
     st.put_graph(EFFECTS_GRAPH, "\n".join(p.read_text() for p in loader.effect_files()))
+    #  The asserted-desire graph is REPLACED FROM THE FILES like everything ratified — and
+    #  cleared here first, because `put_graph` can only replace graphs the new document still
+    #  NAMES: a world that deletes its desire.ttl names nothing, and the dropped want would
+    #  survive its own ratification. Named by the kernel as the bootstrap-root exception.
+    st.clear_graph(DESIRE_ASSERTED_GRAPH)
     st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in world_files(world)),
                  dataset=True)
     # The T-Box is in, so a rule's `$into` can be resolved: a write target is discovered from
@@ -405,9 +410,9 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     # walk a subclass path (one-graph-both-engines-read), and the closure cannot help here:
     # these triples are written at runtime, long after it ran.
     mine = [
-        (beliefs_graph(agent_id), ("DesireGraph",), "Asserted"),
+        (beliefs_graph(agent_id), ("PickRecordGraph",), "Asserted"),
         (intentions_graph(agent_id), ("IntentionGraph",), "Recorded"),
-        (obligations_graph(agent_id), ("ConstraintGraph",), "Received"),
+        (obligations_graph(agent_id), ("ObligationsGraph",), "Received"),
     ]
     triples = " ".join(
         f"<{iri}> a {' , '.join(f'<{AG}{c}>' for c in classes)} ; "

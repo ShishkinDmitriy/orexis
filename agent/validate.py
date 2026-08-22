@@ -190,11 +190,17 @@ def graph_from(st: Store, *graph_iris: str) -> rdflib.Graph:
 
 # --- the agent's own check, at startup --------------------------------------------------------
 
-def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities) -> None:
+def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
+                   desires=None) -> None:
     """Hold ONE agent to the shapes of the capabilities it derived. Raises if it fails.
 
     Checked against its own store, which holds the world it booted with and its own beliefs —
-    everything a capability-scoped shape needs, and nothing belonging to anyone else.
+    everything a capability-scoped shape needs, and nothing belonging to anyone else. Since
+    #312 the wants are not in that store: the desire modality derives them, so a caller with
+    one passes it and its quads join the data graph — `DesirerShape` demands a region and
+    `AimShape` holds the aim to it, and both would fire falsely against a store that
+    rightly no longer holds either. `None` stays legal for the world-level caller, which
+    builds the modality itself per agent.
     """
     if not capabilities:
         return
@@ -206,8 +212,18 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities) -> No
     #  INSTRUMENTS too, because the freshness want reads the horizon this agent published for
     #  its own sensors (#240). Leave it out and that shape binds nothing, fires never, and says
     #  so to no one — the silent direction to be wrong, which this file has met before.
-    data = graph_from(st, *st.public_graphs(), beliefs_graph(agent_id), SENSED_GRAPH,
-                      INSTRUMENTS_GRAPH)
+    #  The pick record travels THROUGH the modality when one is given, never beside it: the
+    #  flatten serialises and re-parses, which relabels blank nodes, so a record arriving by
+    #  both roads splits every aim into two nodes — and AimShape rightly calls two aims for
+    #  one property not steering.
+    private = [SENSED_GRAPH, INSTRUMENTS_GRAPH] if desires is not None else \
+        [beliefs_graph(agent_id), SENSED_GRAPH, INSTRUMENTS_GRAPH]
+    data = graph_from(st, *st.public_graphs(), *private)
+    if desires is not None:
+        from agent import effects
+        for triple in desires.construct(
+                "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
+            data.add(effects._triple(triple))
     ok, report = conforms(data, focus=agent_uri)
     if not ok:
         raise BeliefsInvalid(

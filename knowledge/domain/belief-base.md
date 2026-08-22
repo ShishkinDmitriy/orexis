@@ -80,17 +80,20 @@ the whole store: the mind grew a graph per modality, and provenance grew one per
 full set is whatever `ag:Graph` has instances of — ask, never count — but for orientation it is
 now `graph/beliefs/<agent>`, `graph/sensed`, `graph/world`, `graph/world/derived`,
 `graph/world/entailed`, `graph/ontology`, `graph/ontology/entailed`, `graph/provenance`,
-`graph/desire`, `graph/constraint`, `graph/intentions/<agent>`, `graph/obligations/<agent>`,
+`graph/desire/asserted`, `graph/obligations/<agent>`,
 `graph/deliberation`, `graph/effects`, `graph/evidence/<agent>`, `graph/revisions/<agent>`,
 `graph/summaries/<agent>`, `graph/classification` and `graph/instruments`. See
 [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) for the three axes that classify
 them and [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) for why the public ones
-split by who authored the fact. Two caveats as
-[a-store-is-a-modality](/decisions/a-store-is-a-modality.md) is carried out: the desire-modality
-graphs are also served from the desires store's rebuilt copy, which is what deliberation reads;
-and `graph/intentions/<agent>` has moved OUT of a deployed belief base into the intention
-modality's own room of the volume (`<state>/intentions`, beside `<state>/belief-base`) — a
-pathless test mind keeps it here, exactly as pre-split volumes did.
+split by who authored the fact. Two caveats now that
+[a-store-is-a-modality](/decisions/a-store-is-a-modality.md) is carried out: the WANTS are not
+here at all — no constraint graph exists anywhere; the desire modality derives its own content
+from the world, the records and the packages' `wants.ru` on every rebuild (#312), and
+`graph/desire/asserted` above is the world's TriG block the build projects, replaced from the
+files each boot. And `graph/intentions/<agent>` has moved OUT of a deployed belief base into
+the intention modality's own room of the volume (`<state>/intentions`, beside
+`<state>/belief-base`) — a pathless test mind keeps it here, exactly as pre-split volumes
+did.
 
 The graphs themselves are **typed, self-describing resources** (`:world a agora:WorldGraph`,
 `:beliefs/fern a agora:DesireGraph ; agora:beliefsOf agora:fern_agent` — the pick record, typed by its modality since `ag:BeliefsGraph` retired) — a graph catalog,

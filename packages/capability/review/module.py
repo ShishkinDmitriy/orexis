@@ -349,11 +349,16 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
     def _apply(self, room: Range, was: float, value: float) -> bool:
         graph = beliefs_graph(self.agent.id)
         self._write(graph, room.term, value)
+        #  Rebuild BEFORE validating: the modality re-derives from the record just written,
+        #  so the shapes judge the new pick against the wants as they now stand — validating
+        #  against the previous build would hold the new aim beside the old one.
+        self.agent.desires.rebuild()
         try:
             validate_agent(self.agent.beliefs, self.agent.id, self.agent.me.uri,
-                           self.agent.me.capabilities)
+                           self.agent.me.capabilities, desires=self.agent.desires)
         except BeliefsInvalid as exc:
             self._write(graph, room.term, was)
+            self.agent.desires.rebuild()   # the record reverted, and the modality follows it
             self.refused += 1
             self._remember(room.term, was, value, "refused", "the shapes refused it")
             log.warning("%s: <%s> -> %s refused by the shapes, reverted to %s\n%s",
@@ -363,10 +368,8 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         self.revisions += 1
         self._remember(room.term, was, value, "taken", "the evidence no longer supports it")
         log.info("%s: <%s> %s -> %s", self.agent.id, room.term, was, value)
-        # The ruling's write path, in order: the re-pick is RECORDED above (the belief base is
-        # the pick record), and the desires store is RECOMPUTED here — recomputation is the
-        # only way that modality ever changes, and it must happen before any module re-reads.
-        self.agent.desires.rebuild()
+        # The rebuild already ran, before the validation above — record, recompute, judge,
+        # and only then tell the modules, so what they re-read is what the shapes accepted.
         # Modules read their block once, into a frozen dataclass. A revision nothing tells them
         # about would not take effect until the next restart, which makes the whole mechanism
         # look broken rather than absent.

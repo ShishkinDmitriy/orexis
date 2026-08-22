@@ -42,7 +42,7 @@ from pathlib import Path
 
 from . import loader
 from .config import REPO_ROOT
-from .ontology import (CLASSIFICATION_GRAPH, EFFECTS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
+from .ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, EFFECTS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
                        ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                        WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 
@@ -125,6 +125,13 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
                  + (f" ; prov:wasDerivedFrom {effect_files} ." if effect_files else " ."))
     if world_files_:
         lines.append(f"<{WORLD_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
+        #  The asserted-desire graph is fed by the same ratified files — a world's TriG block
+        #  is where a root desire comes from (#312) — and replaced from them on every start
+        #  exactly as the world graph is, so it accounts for itself the same way. Described
+        #  even when no world states one: an empty graph honest about its source, exactly as
+        #  the effects graph is.
+        lines.append(
+            f"<{DESIRE_ASSERTED_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
         if attribution:
             user, role = attribution
             # A qualified association, because the interesting part is the ROLE. `prov:agent`

@@ -230,7 +230,13 @@ def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
     st = _public("simulation")
     targets = set(genesis.write_targets(st))
     assert WORLD_DERIVED_GRAPH in targets
-    assert len(targets) > 1, "no package owns a graph — this test is asserting nothing"
+    #  Exactly one, since #312: the one package graph that owned a genesis write target — the
+    #  desire package's bounds — moved into the desire modality's own build, whose `wants.ru`
+    #  writes `$derived` in a store it owns and genesis never touches. The `$into` machinery
+    #  stays for the next package that owns a public graph; when one arrives this set widens
+    #  and the assertions below cover it unchanged.
+    assert targets == {WORLD_DERIVED_GRAPH}, \
+        f"a package owns a genesis write target again — good, but check it is deliberate: {targets}"
 
     # A derivation reads facts, never conclusions. Every write target is kept out of `$given`,
     # so the answer cannot depend on which package's rule happened to run first.

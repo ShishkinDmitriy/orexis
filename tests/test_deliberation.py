@@ -17,7 +17,7 @@ from packages.capability.deliberation import menu_of
 from packages.capability.deliberation.module import ACQUIRE, OBSERVE
 from packages.capability.deliberation.terms import REFLEX
 
-from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store
+from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build
 
 
 @pytest.fixture
@@ -204,7 +204,7 @@ def test_the_menu_is_derived_from_the_graph(make):
     agent — these properties, these levers, these directions. Nothing here was written as a
     menu; every row is a join over facts that exist for their own reasons."""
     st = genesis_store()
-    rows = menu_of(st.query, FERN, st.query_union)
+    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union)
     as_tuples = {(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
                   r.direction.rsplit("#", 1)[-1] if r.direction else None) for r in rows}
     assert as_tuples == {
@@ -226,8 +226,7 @@ def test_the_dealers_menu_gained_its_lever(make):
     was the honest one; the row it waited for is derived now, direction and all, and the
     Observe row stands beside it exactly as a fern's does."""
     st = genesis_store()
-    rows = menu_of(st.query,
-                   "http://example.org/agora/world/simulation#supplier", st.query_union)
+    rows = menu_of(st.query, "http://example.org/agora/world/simulation#supplier", desires_build(st, "supplier").query_union)
     assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
             for r in rows if r.is_chosen] == [("Acquire", "StoredLitres", "Raises"),
@@ -255,7 +254,7 @@ def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
     st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
         <http://example.org/agora/world/simulation#valve_fern>
             <http://example.org/agora/actuation#actuates> ?pot }} }}""")
-    rows = menu_of(st.query, FERN, st.query_union)
+    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union)
     assert not any(r.means == ACQUIRE for r in rows), (
         "an unplumbed market must yield no Acquire row")
     assert any(r.means == OBSERVE for r in rows), (
@@ -295,7 +294,7 @@ def test_two_denominations_make_two_rows_and_never_four(make):
         <{ns}fan1> <http://example.org/agora/actuation#actuates> <{ns}fern> .
         <{ns}fern_agent> <{market}bidsIn> <{ns}fan_market> .
     }} }}""")
-    acquire = [r for r in menu_of(st.query, FERN, st.query_union)
+    acquire = [r for r in menu_of(st.query, FERN, desires_build(st, "fern").query_union)
                if r.means == ACQUIRE and r.observed_property.endswith("SoilMoisture")]
     assert sorted((r.direction or "").rsplit("#", 1)[-1] for r in acquire) == \
         ["Lowers", "Raises"], (
@@ -371,16 +370,14 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
     toy = tmp_path / "affordances.rq"
     toy.write_text("""
 SELECT ?means ?property ?via ?direction WHERE {
-  $me ag:holds ?region .
-  ?region ssn:forProperty ?property ;
-          sh:property/sh:severity ag:ShouldBecome .
+  VALUES ?property { $properties }
   BIND(intention:Consult AS ?means)
   BIND($me AS ?via)
 }""")
     real = loader.affordance_files()
     monkeypatch.setattr(loader, "affordance_files", lambda: real + (toy,))
     st = genesis_store()
-    rows = menu_of(st.query, FERN, st.query_union)
+    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union)
     kinds = {r.means.rsplit("#", 1)[-1] for r in rows}
     assert "Consult" in kinds, "the toy package's kind must appear"
     assert {"Observe", "Acquire"} <= kinds, "and the shipped kinds must survive it"
@@ -396,7 +393,7 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
     range rather than at one value, because a filter that leaks at one sign is a filter that
     leaks."""
     supplier = make("supplier")
-    rows = menu_of(supplier.beliefs.query, supplier.me.uri, supplier.beliefs.query_union)
+    rows = menu_of(supplier.beliefs.query, supplier.me.uri, supplier.desires.query_union)
     duties = [r for r in rows if not r.is_chosen]
     assert duties, "the conduct surface includes what it honours"
 
@@ -412,7 +409,7 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
 def test_a_buyer_honours_nothing(make):
     """Fern holds no venue and no valve: everything on its menu is its own to choose."""
     fern = make("fern")
-    assert all(r.is_chosen for r in menu_of(fern.beliefs.query, fern.me.uri, fern.beliefs.query_union))
+    assert all(r.is_chosen for r in menu_of(fern.beliefs.query, fern.me.uri, fern.desires.query_union))
 
 
 # --- step 9: a desire, not a property and a value -----------------------------
@@ -539,10 +536,10 @@ def test_the_figures_do_not_cost_what_they_report(make):
     fern = make("fern", genesis_store({"fern": 0.10}))
     next(m for m in fern.modules if m.name == "deliberation").series()   # fill the trace
 
-    trace.effort(fern.beliefs.query_union)                                 # warm
+    trace.effort(fern.desires.query_union)                                 # warm
     started = time.monotonic()
     for _ in range(5):
-        trace.effort(fern.beliefs.query_union)
+        trace.effort(fern.desires.query_union)
     each = (time.monotonic() - started) / 5
 
     assert each < 0.05, f"reading the figures took {each*1000:.0f}ms — it should be under 1ms"

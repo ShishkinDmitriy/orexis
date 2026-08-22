@@ -207,3 +207,15 @@ class _Recorder:
 
     def subscribe(self, topic):
         self.into.append(topic)
+
+
+def desires_build(st: Store, agent_id: str):
+    """One agent's desire modality over a genesis store — what a test asks for wants (#312).
+
+    The belief base holds no wants any more; a test that reads regions, gaps or the whole
+    pursuit list builds the modality the way the agent's boot does, and asks it.
+    """
+    from agent.beliefs import Beliefs
+    from agent.desire import Desires
+
+    return Desires(Beliefs(st, agent_id))

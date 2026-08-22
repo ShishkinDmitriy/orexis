@@ -87,7 +87,9 @@ def test_the_sovereign_asks_a_modality_and_the_desires_answer(fern):
         ?region <http://www.w3.org/ns/ssn/forProperty>
                 <http://example.org/agora/water#SoilMoisture> ;
                 <http://www.w3.org/ns/shacl#property> ?below .
-        ?below <http://example.org/agora#violationIs> <http://example.org/agora#Below> ;
+        ?below <http://www.w3.org/ns/shacl#severity>
+               <http://example.org/agora#ShouldBecome> ;
+               <http://example.org/agora#violationIs> <http://example.org/agora#Below> ;
                <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low
     }""", modality="desires")
     answer = _answer(fern)

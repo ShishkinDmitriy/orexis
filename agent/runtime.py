@@ -123,7 +123,8 @@ class Agent:
         # Check myself before acting. A shape applies only to capabilities I actually derived,
         # so this asks exactly the right questions — and refusing to start is the enforcement.
         # It is not self-report: the consequence is not running, not a claim to be fine.
-        validate_agent(self.beliefs, agent_id, self.me.uri, self.me.capabilities)
+        validate_agent(self.beliefs, agent_id, self.me.uri, self.me.capabilities,
+                       desires=self.desires)
 
         # Keeping my own house. Not a capability and never optional: every agent's belief base
         # bloats whatever else it can do, so this holds a clock no capability owns — an agent

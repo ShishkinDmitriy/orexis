@@ -79,58 +79,71 @@ class Desire:
 #  module asks for the one it means — and a holder no question needs is a namespace, not a
 #  concept.
 
-from .ontology import AG
-from .store import Store, bindings
+from . import loader
+from .ontology import DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH
+from .store import Store
 
 #  The two modality classes whose instances are wants. ConstraintGraph is a want's boundary
 #  rather than a want — but gap, menu and validation all read the two together, and the record
 #  files both under the desires store because what MAY be and what is PURSUED are the two
 #  halves of one question no belief answers.
-_DESIRE_MODALITIES_Q = f"""
-SELECT DISTINCT ?g WHERE {{
-  {{ ?g a <{AG}DesireGraph> }} UNION {{ ?g a <{AG}ConstraintGraph> }}
-}}"""
+class _Derivation(Store):
+    """One rebuild's worth of store: the wants DERIVED, the records PROJECTED, and nothing
+    else left standing. Memory, no path — the imaginarium's construction, one lifecycle over.
 
-
-def desire_graphs(source: Store) -> list[str]:
-    """Every graph the catalog types with a desire modality, public or this agent's own.
-
-    Asked with the union default, because "what are this store's graphs" is a question about
-    the whole store — the classification of an agent's own graphs is deliberately outside the
-    public default, and listing names here would be rule 1's trap.
+    Four moves, in order. The premises are copied in — every public graph, plus the two
+    records the rules and the projections read: the pick record and the obligations record,
+    both reached by the one construction from an agent's own id the rules allow. The
+    packages' `wants.ru` rules run against them, `$derived` bound to this store's own derived
+    graph and `$given` to the premises, exactly the substitution genesis performs for its
+    rules. The world's asserted block (`graph/desire/asserted`, a public graph a world's TriG
+    may fill) is already among the copied publics and simply stays. Last, the public premises
+    that are NOT desire content are dropped — a store answering "what do I want" must not
+    answer with the topology it derived that from — leaving the derived wants, the asserted
+    wants, and the two records.
     """
-    return sorted(r["g"] for r in bindings(source.query_union(_DESIRE_MODALITIES_Q)))
 
+    def __init__(self, beliefs):
+        from packages.capability.desire.graphs import obligations_graph
 
-class _Copy(Store):
-    """One rebuild's worth of store: the desire-modality graphs, copied. Memory, no path —
-    the same construction the imaginarium uses, for the same reason: nothing to clean up."""
-
-    def __init__(self, source):
         super().__init__()
-        for iri in desire_graphs(source):
-            for quad in source.quads(iri):
+        publics = list(beliefs.public_graphs())
+        records = [beliefs.graph, obligations_graph(beliefs.agent_id)]
+        for iri in publics + records:
+            for quad in beliefs.quads(iri):
                 self._store.add(quad)
+        given = "\n".join(f"USING <{g}>" for g in publics + records)
+        for rule in loader.wants_files():
+            text = rule.read_text()
+            out = []
+            for line in text.splitlines():
+                if not line.lstrip().startswith("#"):
+                    line = (line.replace("$derived", f"<{DESIRE_DERIVED_GRAPH}>")
+                                .replace("$given", given)
+                                .replace("$me", f"<{beliefs.agent_uri}>"))
+                out.append(line)
+            self.update("\n".join(out))
+        for iri in publics:
+            if iri != DESIRE_ASSERTED_GRAPH:
+                self.clear_graph(iri)
 
 
 class Desires:
     """The desire modality: what this agent pursues, owning a store the agent never sees.
 
     A modality is a class that owns its store, and its store's nature is ITS decision
-    (a-store-is-a-modality). This one's choices: in memory, rebuilt and never edited —
-    `rebuild()` replaces the store wholesale, so a want whose premise has ceased is absent
-    afterwards without anyone having retracted it (#263's discipline, structural) — and
-    READ-ONLY on the surface: the class exposes queries and no writer, so a write attempt
+    (a-store-is-a-modality). This one's choices: in memory, DERIVED and never edited —
+    `rebuild()` re-runs the want-derivation wholesale, so a want whose premise has ceased is
+    absent afterwards because the derivation no longer implies it (#263's discipline, live) —
+    and READ-ONLY on the surface: the class exposes queries and no writer, so a write attempt
     fails at the call site, whatever the store underneath could do.
 
-    Rebuilt from the belief modality, which remains the home of record while the reader
-    migration lands: genesis derives into it, a volume persists it, and this copy is the
-    read surface. What selects a graph is what it IS — `ag:DesireGraph` or
-    `ag:ConstraintGraph`, asserted in the public catalog for the shared graphs and in the
-    classification graph for the agent's own — so a package that declares a new
-    desire-modality graph is copied without the kernel learning its name. The picks ride
-    along already: the pick record is typed `ag:DesireGraph`, which the sovereign's ruling
-    made literal.
+    Since #312 there is no copy and no selection: genesis derives no wants, the belief base
+    holds no desire-modality graphs, and this build is the one place the regions, envelopes,
+    freshness wants and asserted root desires come to exist — from the world, the records,
+    and the packages' `wants.ru`. The pick record and the obligations record are projected in
+    beside them, because the picks ARE wants by the sovereign's ruling and a duty is this
+    agent's debts record, served as the wants they raise.
     """
 
     def __init__(self, beliefs):
@@ -138,17 +151,18 @@ class Desires:
         self.rebuild()
 
     def rebuild(self) -> None:
-        """Recompute the store from its premises — the ONLY way this modality ever changes.
+        """Re-derive the store from its premises — the ONLY way this modality ever changes.
 
-        Called after anything that moves a premise: a re-derivation, an endowment, a
-        recorded re-pick. A fresh store rather than an edit; the read surface is rebound, so
-        every holder of `agent.desires` sees the new state and nobody holds a stale handle.
+        Called after anything that moves a premise: an obligation transition, a recorded
+        re-pick, an endowment. A fresh store rather than an edit; the read surface is
+        rebound, so every holder of `agent.desires` sees the new state and nobody holds a
+        stale handle.
         """
-        copy = _Copy(self._beliefs)
-        self.query = copy.query
-        self.query_union = copy.query_union
-        self.construct = copy.construct
-        self.quads = copy.quads
+        built = _Derivation(self._beliefs)
+        self.query = built.query
+        self.query_union = built.query_union
+        self.construct = built.construct
+        self.quads = built.quads
 
     def read(self, picks):
         """Fill one capability's picks FROM THE DESIRE MODALITY — where they belong,

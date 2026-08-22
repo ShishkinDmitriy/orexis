@@ -32,14 +32,23 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
     seven pin-role tests failing was the only reason anyone noticed.
     """
     data = rdflib.Graph()
-    graphs = list(st.public_graphs())
-    # every agent genesis authors, found the way an agent's birth finds them — so adding one
-    # to the world is caught here rather than quietly skipped
-    graphs += [beliefs_graph(agent_id_of(p)) for p in sorted(world_dir.glob(genesis.BELIEFS_GLOB))]
-    for iri in graphs:
+    for iri in st.public_graphs():
         ttl = st.get_graph(iri)
         if ttl.strip():
             data.parse(data=ttl, format="turtle")
+    # every agent genesis authors, found the way an agent's birth finds them — and its WANTS
+    # built the way its boot builds them (#312): the derived regions and the projected pick
+    # record arrive through the desire modality, and only through it, because a record
+    # flattened beside its projection splits every blank-node aim in two.
+    from agent import effects
+    from agent.beliefs import Beliefs
+    from agent.desire import Desires
+
+    for path in sorted(world_dir.glob(genesis.BELIEFS_GLOB)):
+        wants = Desires(Beliefs(st, agent_id_of(path)))
+        for triple in wants.construct(
+                "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
+            data.add(effects._triple(triple))
     return data
 
 
