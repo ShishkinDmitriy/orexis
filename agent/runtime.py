@@ -85,7 +85,7 @@ class Agent:
         self.world: World = load_world(st.query)
         self.bus: MessageBus = load_bus(st.query)  # discovered, not configured
         self.me: Self = load_self(st.query, agent_id)
-        self.beliefs = Beliefs(agent_id, self.me.uri, st)
+        self.beliefs = Beliefs(st, agent_id)
         # The desire modality, rebuilt from the beliefs it is deduced from. Each modality
         # decides its own store and its own writability — this one exposes no writer — and
         # the agent holds the modalities, never the stores, by the sovereign's ruling.

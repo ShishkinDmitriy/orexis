@@ -124,13 +124,25 @@ class Beliefs:
     migration the belief base still fronts graphs that are not yet elsewhere; what this class
     adds of its own is the typed reads below, and the isolation stands as it always did: the
     store is this process's alone, so no other agent's beliefs are reachable to forward.
+
+    The constructor takes the store and the ONE identifier a process is legitimately handed —
+    its own local id, rule 1's single stated exception — and discovers everything else,
+    URI included, from the store: the world says `?a ag:localId "<id>"`, and the URI is the
+    answer, not an argument. An empty volume at birth is why the id cannot be discovered too;
+    by the time this class exists, birth has run and the lookup cannot miss.
     """
 
-    def __init__(self, agent_id: str, agent_uri: str, store):
+    def __init__(self, store, agent_id: str):
         self._store = store
         self.agent_id = agent_id
-        self.agent_uri = agent_uri
         self.graph = beliefs_graph(agent_id)
+        rows = bindings(store.query(
+            f'SELECT ?a WHERE {{ ?a ag:localId "{agent_id}" }} LIMIT 1'))
+        if not rows:
+            raise BeliefError(
+                f"no agent with localId '{agent_id}' in this store — "
+                "was the world loaded before the modality was built?")
+        self.agent_uri = rows[0]["a"]
 
     def __getattr__(self, name):
         return getattr(self._store, name)

@@ -31,7 +31,7 @@ CITY = "http://example.org/agora/world/simulation#city"
 
 @pytest.fixture
 def fern():
-    return Beliefs("fern", FERN, genesis_store())
+    return Beliefs(genesis_store(), "fern")
 
 
 # --- one block per capability ----------------------------------------------
@@ -60,7 +60,7 @@ def test_bidding_block(fern):
 
 
 def test_hosting_block(query):
-    h = Beliefs("supplier", SUPPLIER, genesis_store()).read(HOSTING_BLOCK)
+    h = Beliefs(genesis_store(), "supplier").read(HOSTING_BLOCK)
     assert (h.quantity_l, h.reserve_price_per_l) == (2.0, 0.20)
     assert h.bid_window_s == 3
 
@@ -75,8 +75,8 @@ def test_agents_hold_different_opinions(query):
 
 
 def test_slower_agent_tolerates_older_data(query):
-    fern = Beliefs("fern", FERN, genesis_store()).read(SUBSCRIBING_BLOCK)
-    succ = Beliefs("succulent", SUCCULENT, genesis_store()).read(SUBSCRIBING_BLOCK)
+    fern = Beliefs(genesis_store(), "fern").read(SUBSCRIBING_BLOCK)
+    succ = Beliefs(genesis_store(), "succulent").read(SUBSCRIBING_BLOCK)
     assert succ.slow_sleep_s > fern.slow_sleep_s
     assert succ.grace_s >= fern.grace_s
 
@@ -113,10 +113,15 @@ def test_an_agent_wants_one_thing_per_property_its_plant_states(query):
 
 # --- isolation and failure -------------------------------------------------
 
-def test_one_agent_cannot_read_anothers_beliefs(query):
-    """The graph IS the boundary: fern's URI against succulent's graph yields nothing."""
-    with pytest.raises(BeliefError):
-        Beliefs("succulent", FERN, genesis_store()).read(BIDDING_BLOCK)
+def test_one_agent_cannot_read_anothers_beliefs():
+    """The graph IS the boundary — and since identity became discovered, the mismatched
+    reader this test used to build (fern's URI against succulent's graph) cannot even be
+    constructed: an id yields its OWN uri and its OWN graph, so the misread is
+    unrepresentable rather than merely empty. What remains checkable is that discovery
+    binds the pair correctly."""
+    b = Beliefs(genesis_store(), "succulent")
+    assert b.agent_uri == SUCCULENT
+    assert b.graph.endswith("/succulent")
 
 
 def test_a_missing_belief_is_an_error_not_a_default(query):
@@ -128,7 +133,7 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
     bidding block would be a bug this refusal catches.
     """
     with pytest.raises(BeliefError) as exc:
-        Beliefs("city", CITY, genesis_store()).read(BIDDING_BLOCK)
+        Beliefs(genesis_store(), "city").read(BIDDING_BLOCK)
     # The FULL IRI, not `water:maxValuePerL`. Belief terms come from whichever package
     # declares them and packages own their namespaces, so a prefix here would be a
     # guess — and a wrong one for anything market: owns.
@@ -144,7 +149,7 @@ def test_the_error_names_every_missing_term(query):
     # now (the shapes demand it of every perceiver), so the genuinely missing pair is what a
     # complete error must name — the test's point is EVERY, not WHICH.
     with pytest.raises(BeliefError) as exc:
-        Beliefs("supplier", SUPPLIER, genesis_store()).read(SUBSCRIBING_BLOCK)
+        Beliefs(genesis_store(), "supplier").read(SUBSCRIBING_BLOCK)
     for term in (ontology.SENSING + "fastSleepS", ontology.SENSING + "slowSleepS"):
         assert term in str(exc.value)
 
@@ -157,7 +162,7 @@ def _reading(age_s):
 
 
 def test_reads_its_subject(query_with_readings):
-    b = Beliefs("fern", FERN, genesis_store({"fern": 0.18}))
+    b = Beliefs(genesis_store({"fern": 0.18}), "fern")
     reading = b.current_reading("http://example.org/agora/world/simulation#fern", MOISTURE)
     assert reading.value == 0.18 and reading.is_fresh(120)
 
@@ -173,8 +178,8 @@ def test_two_properties_of_one_subject_both_survive(query_with_readings):
     was the smaller half, because a lookup returned whichever wrote last. Asking for moisture
     could hand back 21.0, a plausible number in the wrong unit that a market would act on.
     """
-    b = Beliefs("fern", FERN, genesis_store({("fern", MOISTURE): 0.18,
-                                             ("fern", TEMPERATURE): 21.0}))
+    b = Beliefs(genesis_store({("fern", MOISTURE): 0.18,
+                                             ("fern", TEMPERATURE): 21.0}), "fern")
     assert b.current_reading(FERN_URI, MOISTURE).value == 0.18
     assert b.current_reading(FERN_URI, TEMPERATURE).value == 21.0
 
@@ -182,7 +187,7 @@ def test_two_properties_of_one_subject_both_survive(query_with_readings):
 def test_a_property_nothing_has_read_is_none_not_the_other_one(query_with_readings):
     """The substitution, guarded from the other side. Silence must not be answered with a
     number that happens to be about the same pot."""
-    b = Beliefs("fern", FERN, genesis_store({("fern", TEMPERATURE): 21.0}))
+    b = Beliefs(genesis_store({("fern", TEMPERATURE): 21.0}), "fern")
     assert b.current_reading(FERN_URI, MOISTURE) is None
 
 
