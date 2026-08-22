@@ -166,7 +166,7 @@ latitude, rather than having had no second thoughts.
 - A review rule still belongs to the package owning the term it re-picks — `review.rq` for the
   sensing cadence stays in `packages/capability/sensing/`. The review capability owns *reviewing*; it
   does not own what may be reviewed.
-- The old kernel `ag:CommitmentShape` used `sh:targetClass review:Commitment` and matched nothing for
+- The old kernel `ag:CommitmentShape` used `sh:targetClass review:Commitment` (the class since renamed `review:Mandate`) and matched nothing for
   as long as it existed: a mandate is written inline as `review:commits [ ... ]`, and nobody types a
   blank node they are already describing. The replacements target `sh:targetObjectsOf review:commits`.
   Worth remembering as a class of bug — a shape that never fires passes.

@@ -1,6 +1,7 @@
 ---
 type: Domain Concept
 title: Reading
+term: http://www.w3.org/ns/sosa/hasSimpleResult
 description: >-
   The VALUE an observation carries, and the only thing in an agent's belief base that is somebody
   else's word — `ag:Received`, the one arrival whose trustworthiness is a question at all. It is

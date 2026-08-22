@@ -21,7 +21,7 @@
 
 :decodedBy a owl:ObjectProperty ; rdfs:range :Encoding ;
     rdfs:label "decoded by" ;
-    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which codec actually serves this CHANNEL. Two predicates rather than one because a world states what is TRUE of a device and genesis writes down what SERVES it — collapsing them would let a world state its own conclusion. Deriving it also puts the DEFAULT in the graph: before this, every sensor in every world was decoded as JSON by a flag on a Python class, which was true, load-bearing and unreadable by anything. A sensor's pipeline is now something you can query rather than something you infer from which classes a build imported — read through mqtt:publishesOn, since the fact belongs to the stream." .
+    rdfs:comment "THE CONCLUSION, derived at genesis by rules.ru and never written by hand: which codec actually serves this CHANNEL. Two predicates rather than one because a world states what is TRUE of a device and genesis writes down what SERVES it — collapsing them would let a world state its own conclusion. Deriving it also puts the DEFAULT in the graph: before this, every sensor in every world was decoded as JSON by a flag on a Python class, which was true, load-bearing and unreadable by anything. A sensor's pipeline is now something you can query rather than something you infer from which classes a build imported — read through mqtt:publishesOn, since the fact belongs to the channel." .
 
 #################  The members  #################
 

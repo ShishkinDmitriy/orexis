@@ -18,16 +18,16 @@ review:ReviewingAgentShape a sh:NodeShape ;
                   sh:datatype xsd:integer ; sh:minInclusive 60 ;
                   sh:message "an agent that may re-pick must state a review interval of at least 60 seconds — reviewing itself is not free" ] .
 
-review:CommitmentShape a sh:NodeShape ;
+review:MandateShape a sh:NodeShape ;
     rdfs:comment "A mandate is a range, so it must have at least one end, and the ends must be the right way round. Stated in the world and therefore reviewable by whoever ratifies it — which is the point of moving it out of beliefs. Targeted by what POINTS at it rather than by its class: a mandate is written inline as `review:commits [ ... ]` and nobody types a blank node they are already describing, so a targetClass shape here matched nothing at all — which is exactly what the version of this shape in the kernel used to do, silently, for as long as it existed." ;
     sh:targetObjectsOf review:commits ;
     sh:property [ sh:path review:onTerm ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
-                  sh:message "a commitment must say which term it is about" ] ;
+                  sh:message "a mandate must say which term it is about" ] ;
     sh:property [ sh:path review:notBelow ; sh:maxCount 1 ; sh:lessThanOrEquals review:notAbove ;
                   sh:message "the floor of a mandate may not be above its ceiling" ] ;
     sh:property [ sh:path review:notAbove ; sh:maxCount 1 ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a mandate must name at least one bound — a commitment with neither is not a range, and an agent would be told it has room without being told how much" ;
+        sh:message "a mandate must name at least one bound — a mandate with neither is not a range, and an agent would be told it has room without being told how much" ;
         sh:select """
             SELECT $this WHERE {
                 FILTER NOT EXISTS { $this <http://example.org/agora/review#notBelow> ?lo }

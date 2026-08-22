@@ -1,6 +1,7 @@
 ---
 type: Domain Concept
 title: Model and unit — a thing is described once, and every one of them inherits it
+term: http://example.org/agora#DeviceModel
 description: One principle behind four decision records. A part, a species and a firmware are all
   MODELS; the things in a world are UNITS of them. What the datasheet says is stated once on the
   class and reaches every unit by entailment, never by repetition. `owl:hasValue` for what units

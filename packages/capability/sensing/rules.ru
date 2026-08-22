@@ -71,7 +71,7 @@ WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; mqtt:readingTopi
 #  taking the min would let the slower board be asked for something it will never keep — which
 #  is the exact failure this exists to prevent, arrived at from the other side.
 #
-#  Shaped as a review:Commitment because it narrows the same term the same way and `ranges()`
+#  Shaped as a review:Mandate because it narrows the same term the same way and `ranges()`
 #  can then intersect both with one arithmetic. Under review:limitedTo and never
 #  review:commits: one is what a board can do and the other what a sovereign allowed, and a
 #  refused revision should say which of the two refused it.

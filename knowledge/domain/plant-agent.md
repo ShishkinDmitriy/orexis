@@ -1,6 +1,7 @@
 ---
 type: Role
 title: Plant agent
+term: http://example.org/agora/water#Plant
 description: A self-interested plant with a desire, a wallet, and an event-driven loop.
 ---
 

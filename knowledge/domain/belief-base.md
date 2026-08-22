@@ -1,6 +1,7 @@
 ---
 type: Component
 title: Belief base
+term: http://example.org/agora#BeliefBase
 description: One belief base per agent, not one shared store — named-graph layout, SOSA observations, provenance, and the split between the series and the graph.
 ---
 

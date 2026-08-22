@@ -1,6 +1,7 @@
 ---
 type: Domain Concept
 title: Observation
+term: http://www.w3.org/ns/sosa/Observation
 description: >-
   The NODE — a `sosa:Observation` recording one act of observing: what was observed, which
   property, the value, when it arrived, and by which procedure. One per (subject, property), and

@@ -71,6 +71,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [reading](/domain/reading.md) - The value an observation carries, and the only fact in a belief base that is somebody else's word. It ages; it never expires.
 
+* [channel](/domain/channel.md) - One named message flow on a bus, as a node — derived per distinct topic, discovered never authored, and the bearer of the encoding.
 * [sensing](/domain/sensing.md) - Split by WHO HOLDS THE CLOCK: Polling, Subscribing, Listening. Either way the agent owns the freshness rule.
 
 # Structure — how the project is put together
