@@ -1,7 +1,7 @@
 ---
 type: Capability
 title: Sensing — sensing as the agent's initiative
-term: sensing:SensingCapability
+term: http://example.org/agora/sensing#SensingCapability
 description: Sensing splits by who holds the clock — Polling (the agent asks each time, reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). The agent owns when it looks, the board owns what it reads.
 ---
 

@@ -5,7 +5,9 @@ status: accepted
 timestamp: 2026-08-22T00:00:00Z
 description: >-
   A domain page that fixes a word carried by the T-Box binds it in frontmatter — term:
-  prefix:Name — and tests/test_knowledge.py holds the join in both directions: every bound
+  a full IRI, because the bundle is the unit of distribution and a prefixed name is
+  unresolvable outside this repo — and tests/test_knowledge.py holds the join in both
+  directions: every bound
   term must be declared, one term has one owner, and every capability family must be bound by
   some page. A page without a term is a statement, never an omission. External vocabularies
   are vendored under tests/fixtures/vocabularies/ so sosa:Observation is checked against SOSA
@@ -27,16 +29,23 @@ that `every-term-in-its-own-house` had *recorded* without renaming, and
 
 # Decision
 
-**A domain page that fixes a word the T-Box carries binds it**: `term: prefix:Name` in
-frontmatter, a list where one page legitimately fixes two (`review` binds the family and the
-mandate; `intention` binds the record and the family). OKF permits producer-defined keys, so
-the bundle stays conformant for any consumer.
+**A domain page that fixes a word the T-Box carries binds it**: `term:` in frontmatter, a
+list where one page legitimately fixes two (`review` binds the family and the mandate;
+`intention` binds the record and the family). OKF permits producer-defined keys, so the bundle
+stays conformant for any consumer.
+
+**The value is a full IRI, never `prefix:Name`.** The first cut wrote `ag:Agent`, and the
+review caught what that is: a name resolvable only where the ontologies that declare the
+prefixes live. An OKF bundle is the unit of distribution — tarball `knowledge/` alone and a
+prefixed name is an opaque string, where `http://example.org/agora#Agent` is still the term.
+OKF's own `resource` field is the precedent for a full URI in frontmatter; `term:` stays a
+producer key rather than reusing it because `resource` is singular and a page may bind two.
 
 `test_a_dictionary_term_is_a_declared_one` holds the join:
 
 - every bound term must be **declared** — by a project ontology for our namespaces, by the
   vendored vocabulary for `sosa`, `ssn`, `prov`, `dcterms` and `sh`, and by at least a bound
-  prefix for the rest;
+  namespace for the rest;
 - **one term, one owner** — two pages binding one term is the frontmatter form of the
   restatement the overlap gate refuses in prose;
 - the reverse, scoped to rule 2's unit: **every class `rdfs:subClassOf ag:Capability` must be

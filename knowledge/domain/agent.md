@@ -1,7 +1,7 @@
 ---
 type: Role
 title: Agent
-term: ag:Agent
+term: http://example.org/agora#Agent
 description: A certified, self-interested principal with a wallet and a stake — the only tier the trust boundary constrains.
 ---
 

@@ -449,6 +449,11 @@ def test_a_dictionary_term_is_a_declared_one():
         vocabulary.parse(REPO_ROOT / "tests" / "fixtures" / "vocabularies" / filename)
         vendored[prefix] = {str(s) for s in vocabulary.subjects() if isinstance(s, rdflib.URIRef)}
 
+    #  Longest binding first, so nested namespaces (ag: inside every package's) resolve to the
+    #  package that actually owns the term rather than to the kernel.
+    bindings = sorted(((str(iri), prefix) for prefix, iri in NAMESPACES.items()),
+                      key=lambda pair: -len(pair[0]))
+
     owners: dict[str, list[str]] = {}
     wrong = []
     pages = concepts()
@@ -459,28 +464,28 @@ def test_a_dictionary_term_is_a_declared_one():
         if terms and page.parent.name != "domain":
             wrong.append(f"{rel}: only the dictionary binds terms — a {meta.get('type')} is not a word's owner")
             continue
-        for spec in terms:
-            if not isinstance(spec, str) or ":" not in spec:
-                wrong.append(f"{rel}: term {spec!r} is not prefix:Name")
+        for iri in terms:
+            #  A FULL IRI, never prefix:Name — the bundle is the unit of distribution, and a
+            #  prefixed name is unresolvable the moment knowledge/ leaves this repo.
+            if not isinstance(iri, str) or not iri.startswith(("http://", "https://")):
+                wrong.append(f"{rel}: term {iri!r} is not a full IRI")
                 continue
-            prefix, local = spec.split(":", 1)
-            iri_base = NAMESPACES.get(prefix)
-            if iri_base is None:
-                wrong.append(f"{rel}: prefix {prefix!r} is not one the store binds")
+            prefix = next((p for base, p in bindings if iri.startswith(base)), None)
+            if prefix is None:
+                wrong.append(f"{rel}: {iri} is in no namespace the store binds")
                 continue
-            owners.setdefault(spec, []).append(page.name)
-            iri = str(iri_base) + local
-            if str(iri_base).startswith("http://example.org/agora"):
+            owners.setdefault(iri, []).append(page.name)
+            if str(NAMESPACES[prefix]).startswith("http://example.org/agora"):
                 if iri not in declared:
-                    wrong.append(f"{rel}: {spec} is not declared by any project ontology")
+                    wrong.append(f"{rel}: {iri} is not declared by any project ontology")
             elif prefix in vendored:
                 if iri not in vendored[prefix]:
-                    wrong.append(f"{rel}: {spec} is not in the vendored {prefix} vocabulary")
-            # a bound prefix with no vendored copy (schema, unit …) is prefix-checked only
+                    wrong.append(f"{rel}: {iri} is not in the vendored {prefix} vocabulary")
+            # a bound namespace with no vendored copy (schema, unit …) is binding-checked only
 
-    for spec, holders in sorted(owners.items()):
+    for iri, holders in sorted(owners.items()):
         if len(holders) > 1:
-            wrong.append(f"{spec} is bound by {len(holders)} pages ({', '.join(sorted(holders))}) — one term, one owner")
+            wrong.append(f"{iri} is bound by {len(holders)} pages ({', '.join(sorted(holders))}) — one term, one owner")
 
     # The reverse direction, scoped to what rule 2 calls its unit: every capability FAMILY the
     # ontologies declare is a word someone answers for. Members and single abilities typed
@@ -489,11 +494,7 @@ def test_a_dictionary_term_is_a_declared_one():
     RDFS = rdflib.RDFS
     ag_capability = rdflib.URIRef(str(NAMESPACES["ag"]) + "Capability")
     families = {str(s) for s in project.subjects(RDFS.subClassOf, ag_capability)}
-    bound_iris = set()
-    for spec in owners:
-        prefix, local = spec.split(":", 1)
-        bound_iris.add(str(NAMESPACES[prefix]) + local)
-    for family in sorted(families - bound_iris):
+    for family in sorted(families - set(owners)):
         wrong.append(f"{family} is a capability family no dictionary page binds")
 
     assert pages, "no concept documents found — the glob stopped matching"

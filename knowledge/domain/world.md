@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: World (a ratified genesis output)
-term: ag:World
+term: http://example.org/agora#World
 description: What a world is made of — public topology plus one private beliefs file per agent — the three rules for authoring one, and what genesis derives rather than accepts. Several worlds coexist; which one is seeded decides what each agent becomes.
 ---
 

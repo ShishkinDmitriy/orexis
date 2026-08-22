@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Channel
-term: mqtt:Channel
+term: http://example.org/agora/mqtt#Channel
 description: >-
   One named message flow on a bus, as a node — derived from the topics devices already state,
   one per distinct string, so it is discovered rather than authored. It bears the encoding,

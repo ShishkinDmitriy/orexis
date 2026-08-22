@@ -1,7 +1,7 @@
 ---
 type: Role
 title: Sovereign
-term: ag:Sovereign
+term: http://example.org/agora#Sovereign
 description: >-
   Whoever ratified a world — authored its files and stands behind them. A ROLE and not an
   identity: `ag:Sovereign` is a `prov:Role`, there is no sovereign agent and there must not be,

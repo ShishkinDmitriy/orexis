@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Aim
-term: ag:Aim
+term: http://example.org/agora#Aim
 description: >-
   The point an agent picks inside the region it was given — its own, and the one part of its
   desire it chose. A structure rather than a triple (`ag:aims` carries the property and the

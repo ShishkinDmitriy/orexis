@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Good
-term: market:Good
+term: http://example.org/agora/market#Good
 description: What a lot is a quantity OF — water, heat, a right of way. Not a property; the
   join point every denomination walk closes through, because one good honestly has a
   valuation per kind of recipient.

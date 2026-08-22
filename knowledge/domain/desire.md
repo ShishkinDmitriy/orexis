@@ -1,7 +1,7 @@
 ---
 type: Capability
 title: Desire
-term: desire:DesireCapability
+term: http://example.org/agora/desire#DesireCapability
 description: What an agent is trying to bring about — for each property its subject states a need in, the region to hold that property inside and the envelope outside which the subject ends. Deduced at genesis by intersecting every operating range that applies, never authored; the band and the urgency every other capability reads come from here.
 ---
 

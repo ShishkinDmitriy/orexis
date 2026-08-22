@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: What an agent says about itself
-term: reporting:ReportingCapability
+term: http://example.org/agora/reporting#ReportingCapability
 description: The figures an agent is uniquely placed to report — belief base size, reading freshness, and the write failures that were previously only logged. Counting is the kernel's because it could not be done differently; where the account GOES is a mandatory capability, granted to every agent and insisted on by a shape. The interval is required, because an agent permitted to be silent cannot be told from a dead one.
 ---
 
