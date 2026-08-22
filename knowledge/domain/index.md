@@ -28,6 +28,14 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Ends
 
+* [region](/domain/region.md) - The range a subject needs a property to stay inside, deduced by intersection. Beside it, the envelope outside which the subject ends.
+
+* [aim](/domain/aim.md) - The point an agent picks inside its region. Its own, and a first pick rather than a bound — so constrain well, do not guess well.
+
+* [urgency](/domain/urgency.md) - One scalar from 0 to 1 that makes unlike wants comparable. Several sources, one meaning; not knowing is maximal.
+
+* [obligation](/domain/obligation.md) - A desire the agent did not source. Whom it may owe is topology; what it owes now is private runtime state.
+
 * [desire](/domain/desire.md) - One region per property its subject states a need in, plus the envelope outside which that subject ends. Deduced, never authored.
 
 * [intention](/domain/intention.md) - A commitment to reduce a named gap by a named means, kept in a private ledger. Granted by a stake AND a lever.
