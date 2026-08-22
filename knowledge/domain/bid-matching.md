@@ -1,6 +1,7 @@
 ---
 type: Process
 title: Bid matching
+term: market:BidMatchingCapability
 description: Turning a lot and a set of bids into a proposed allocation with prices — an allocation rule and a payment rule together. The host declares how it matches and the offer announces it; pay-as-bid and uniform price share the first and differ in the second, and each costs the bidder something different. Deliberately narrower than an auction format, and qualified because bare matching collides with matching a capability to a provider.
 ---
 

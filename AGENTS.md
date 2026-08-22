@@ -14,7 +14,9 @@ Invoke the `okf-open-knowledge-format` skill when adding, editing or checking do
 If it is unavailable, the rules are short enough to follow by hand:
 
 - every concept `.md` has YAML frontmatter with a non-empty `type`, plus `title` and
-  `description`. **Seven types, and the one to reach for is the one that answers what KIND of
+  `description` — and a `domain/` page whose word the T-Box carries binds it with `term:`,
+  which `tests/test_knowledge.py` holds to what the ontologies (ours vendored under
+  `tests/fixtures/vocabularies/` for the external ones) actually declare. **Seven types, and the one to reach for is the one that answers what KIND of
   thing the page is:**
 
   | | |

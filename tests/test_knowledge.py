@@ -395,3 +395,110 @@ def test_no_two_domain_pages_state_the_same_claim():
         "have the other link to it — or, if it is a deliberate mirror, add the pair to `mirrors` "
         "with the reason:\n  " + "\n  ".join(offenders)
     )
+
+
+# --- the dictionary names its terms ---------------------------------------------------------------
+
+# A `term:` in a domain page's frontmatter binds the page's WORD to the T-Box term that carries
+# it, which is the join the other gates could not see: prose↔prose is the overlap check above,
+# code↔ontology is tests/test_vocabulary.py, and nothing held the dictionary to the ontology —
+# which is how the class everyone called the mandate stayed `review:Commitment` for months after
+# the collision was recorded, and how "stream" and "channel" named one node for longer. See
+# knowledge/decisions/the-dictionary-names-its-terms.md.
+#
+# A page WITHOUT a `term:` is a statement, not an omission: a gap is computed and never stored,
+# an auction is an event, a venue is an instance-side word for a class another page owns — none
+# of them has a term to bind, and forcing one would be reification for the gate's sake.
+#
+# External vocabularies are vendored under tests/fixtures/vocabularies/ so that sosa:Observation
+# is checked against what SOSA actually declares rather than against our spelling of it. Words
+# borrowed WITHOUT their IRIs (REA/ValueFlows, per settlement-speaks-rea) never appear in
+# `term:` — vf: is deliberately unbound, and `term:` names only what code could query.
+
+_VENDORED_VOCABULARIES = {
+    "sosa": "sosa.ttl",
+    "ssn": "ssn.ttl",
+    "prov": "prov.ttl",
+    "dcterms": "dcterms.ttl",
+    "sh": "shacl.ttl",
+}
+
+
+def _bound_terms(meta: dict) -> list[str]:
+    value = meta.get("term")
+    if value is None:
+        return []
+    return value if isinstance(value, list) else [value]
+
+
+def test_a_dictionary_term_is_a_declared_one():
+    import rdflib
+
+    from agent.store import NAMESPACES
+
+    ontologies = list((REPO_ROOT / "packages").rglob("ontology.ttl")) + \
+                 list((REPO_ROOT / "firmware").glob("*/ontology.ttl"))
+    project = rdflib.Graph()
+    for ttl in ontologies:
+        project.parse(ttl)
+    declared = {str(s) for s in project.subjects() if isinstance(s, rdflib.URIRef)}
+
+    vendored: dict[str, set[str]] = {}
+    for prefix, filename in _VENDORED_VOCABULARIES.items():
+        vocabulary = rdflib.Graph()
+        vocabulary.parse(REPO_ROOT / "tests" / "fixtures" / "vocabularies" / filename)
+        vendored[prefix] = {str(s) for s in vocabulary.subjects() if isinstance(s, rdflib.URIRef)}
+
+    owners: dict[str, list[str]] = {}
+    wrong = []
+    pages = concepts()
+    for page in pages:
+        rel = str(page.relative_to(REPO_ROOT))
+        meta = frontmatter(page)
+        terms = _bound_terms(meta)
+        if terms and page.parent.name != "domain":
+            wrong.append(f"{rel}: only the dictionary binds terms — a {meta.get('type')} is not a word's owner")
+            continue
+        for spec in terms:
+            if not isinstance(spec, str) or ":" not in spec:
+                wrong.append(f"{rel}: term {spec!r} is not prefix:Name")
+                continue
+            prefix, local = spec.split(":", 1)
+            iri_base = NAMESPACES.get(prefix)
+            if iri_base is None:
+                wrong.append(f"{rel}: prefix {prefix!r} is not one the store binds")
+                continue
+            owners.setdefault(spec, []).append(page.name)
+            iri = str(iri_base) + local
+            if str(iri_base).startswith("http://example.org/agora"):
+                if iri not in declared:
+                    wrong.append(f"{rel}: {spec} is not declared by any project ontology")
+            elif prefix in vendored:
+                if iri not in vendored[prefix]:
+                    wrong.append(f"{rel}: {spec} is not in the vendored {prefix} vocabulary")
+            # a bound prefix with no vendored copy (schema, unit …) is prefix-checked only
+
+    for spec, holders in sorted(owners.items()):
+        if len(holders) > 1:
+            wrong.append(f"{spec} is bound by {len(holders)} pages ({', '.join(sorted(holders))}) — one term, one owner")
+
+    # The reverse direction, scoped to what rule 2 calls its unit: every capability FAMILY the
+    # ontologies declare is a word someone answers for. Members and single abilities typed
+    # `a ag:Capability` directly are deliberately out of scope — a member is the family's page's
+    # to describe, not a second owner.
+    RDFS = rdflib.RDFS
+    ag_capability = rdflib.URIRef(str(NAMESPACES["ag"]) + "Capability")
+    families = {str(s) for s in project.subjects(RDFS.subClassOf, ag_capability)}
+    bound_iris = set()
+    for spec in owners:
+        prefix, local = spec.split(":", 1)
+        bound_iris.add(str(NAMESPACES[prefix]) + local)
+    for family in sorted(families - bound_iris):
+        wrong.append(f"{family} is a capability family no dictionary page binds")
+
+    assert pages, "no concept documents found — the glob stopped matching"
+    assert ontologies, "no ontologies found — the globs stopped matching"
+    assert declared, "no declared terms found — the ontology parse yielded nothing"
+    assert families, "no capability families found — the subclass pattern stopped matching"
+    assert owners, "no page binds any term — the term: field stopped being read"
+    assert not wrong, "the dictionary and the T-Box disagree:\n  " + "\n  ".join(wrong)

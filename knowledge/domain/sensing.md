@@ -1,6 +1,7 @@
 ---
 type: Capability
 title: Sensing — sensing as the agent's initiative
+term: sensing:SensingCapability
 description: Sensing splits by who holds the clock — Polling (the agent asks each time, reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). The agent owns when it looks, the board owns what it reads.
 ---
 
@@ -49,8 +50,8 @@ agent -> peers   mqtt:eventTopic     {"agent":...,"property":...,"value":...,"ba
 
 Every one of those channels is **stated in the world graph** on the resource that owns it —
 nothing builds a topic from a naming convention, so renaming a channel is a genesis edit. Each
-topic also **derives an `mqtt:Channel`**, one node per distinct string, so a stream is a thing
-rather than a literal and two devices naming one topic are visibly on one stream rather than
+topic also **derives an `mqtt:Channel`**, one node per distinct string, so a [channel](/domain/channel.md) is a thing
+rather than a literal and two devices naming one topic are visibly on one channel rather than
 coincidentally alike. That is what carries the encoding — see
 [a-stream-is-a-thing](/decisions/a-stream-is-a-thing.md). The
 broker they are on is stated there too, as an `mqtt:MessageBus`: a channel name means nothing
@@ -110,7 +111,7 @@ The pointer above is the middle one. The outer two are families with interchange
 genesis**, from what a world states or from its silence, exactly as `sensing:Subscribing` is derived
 onto an agent from `sensing:senseMode`. They land on different bearers, because they are facts about
 different things: the **scaling** is the sensor's, since a curve is a property of the probe, and
-the **codec** is the **stream's**, since one topic carries one format however many sensors read
+the **codec** is the **[channel](/domain/channel.md)'s**, since one topic carries one format however many sensors read
 out of it. A sensor reaches its codec through the channel it publishes on. Every sensor here gets `codec:Json`
 and `scaling:Identity`, and neither is a placeholder: the boards send JSON, and they scale
 their counts before publishing, so the calibration that remains genuinely is the identity

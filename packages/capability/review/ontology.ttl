@@ -61,13 +61,13 @@
 #  Being public is what makes the granting rule possible at all: capabilities are worked out
 #  from the world, so a mandate had to be somewhere a derivation could see it.
 
-:Commitment a owl:Class ; rdfs:label "Commitment" ;
-    rdfs:comment "How far one agent may re-pick one term. Stated in the world by whoever ratified it, because latitude granted is a governance fact and not an opinion. Its presence is what grants the review capability: room to move, and the ability to use it, are the same decision said once." .
+:Mandate a owl:Class ; rdfs:label "Mandate" ;
+    rdfs:comment "How far one agent may re-pick one term. Stated in the world by whoever ratified it, because latitude granted is a governance fact and not an opinion. Its presence is what grants the review capability: room to move, and the ability to use it, are the same decision said once. Named for what everyone already called it: 'Commitment' collided twice — vf:Commitment is a promised economic flow, which is the CLAIM (settlement-speaks-rea), and BDI's commitment is an INTENTION — see knowledge/decisions/a-mandate-is-not-a-commitment.md." .
 
-:commits a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Commitment ;
+:commits a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Mandate ;
     rdfs:label "commits" ;
     rdfs:comment "Reads as what the world commits this agent to — the range it may move within, and by stating it, the grant of the capability to move at all." .
-:limitedTo a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Commitment ;
+:limitedTo a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :Mandate ;
     rdfs:label "limited to" ;
     rdfs:comment """What the EQUIPMENT allows this agent, as against what the world does. The third source `ranges()` has always named and never had: constitution, mandate, hardware.
 
@@ -75,7 +75,7 @@ Shaped like a commitment and deliberately not one. Both narrow the same term the
 
 DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sensors an agent polls, so it lands in the derived graph like every other conclusion and a world stating it by hand is stating something it does not know.""" .
 
-:onTerm a owl:ObjectProperty ; rdfs:domain :Commitment ; rdfs:label "on term" .
+:onTerm a owl:ObjectProperty ; rdfs:domain :Mandate ; rdfs:label "on term" .
 :notBelow a owl:DatatypeProperty ; rdfs:label "not below" .
 :notAbove a owl:DatatypeProperty ; rdfs:label "not above" .
 
@@ -153,7 +153,7 @@ Three things make that the wrong shape here, and the first alone settles it:
 * **A belief value is a literal, not an entity.** `review:fromValue 900` is a number. PROV would need a node per belief-version, and the beliefs graph deliberately holds exactly ONE value per term — see review:RevisionsGraph — because every capability's shapes are written against that.
 * **Most of this class is not derivation at all.** `review:dueAt` is a schedule, `review:becauseOf` is the argument in words, `review:outcome` distinguishes declined from refused. Those describe a DELIBERATION, and PROV describes what happened to a thing.
 
-The same finding as review:Commitment against vf:Commitment: a near-homonym, not an alignment. A reader who knows PROV would be WRONG about this data, which is the test.""" .
+The same finding that renamed review:Mandate away from 'Commitment' (a-mandate-is-not-a-commitment): a near-homonym, not an alignment. A reader who knows PROV would be WRONG about this data, which is the test.""" .
 
 :revisedTerm a owl:ObjectProperty ; rdfs:domain :Revision ; rdfs:label "revised term" .
 :fromValue a owl:DatatypeProperty ; rdfs:domain :Revision ; rdfs:label "from value" .

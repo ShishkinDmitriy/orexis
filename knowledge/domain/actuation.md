@@ -1,6 +1,7 @@
 ---
 type: Capability
 title: Actuation
+term: actuation:Actuation
 description: >-
   The power to touch the physical world, held by whoever OWNS the hardware and by nobody else —
   a plant agent that wins water still cannot open a valve, because it owns none. Never declared:

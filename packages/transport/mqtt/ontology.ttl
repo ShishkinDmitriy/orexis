@@ -67,7 +67,7 @@
 # the whole point — sharing a stream is a fact about the world, not a coincidence of authoring.
 
 :Channel a owl:Class ; rdfs:label "Channel" ;
-    rdfs:comment "One named stream on a bus. Derived from the topics devices state, one node per distinct topic, so it is discovered rather than authored — a world that names a topic twice has one channel and knows it. What it bears is the ENCODING: one stream, one format, which is the claim worth refusing to break and which no sensor-borne fact could make, because a command channel has no sensor at all. Not a member of anything: there is one way to be a stream. Named here rather than in the kernel because its premise is this transport's — a REST binding would derive its own from URLs, and the day that exists is the day this is worth hoisting." .
+    rdfs:comment "One named message flow on a bus. Derived from the topics devices state, one node per distinct topic, so it is discovered rather than authored — a world that names a topic twice has one channel and knows it. What it bears is the ENCODING: one channel, one format, which is the claim worth refusing to break and which no sensor-borne fact could make, because a command channel has no sensor at all. Not a member of anything: there is one way to be a channel. Named here rather than in the kernel because its premise is this transport's — a REST binding would derive its own from URLs, and the day that exists is the day this is worth hoisting." .
 
 :channelTopic a owl:DatatypeProperty ; rdfs:domain :Channel ; rdfs:range xsd:string ;
     rdfs:label "channel topic" ;

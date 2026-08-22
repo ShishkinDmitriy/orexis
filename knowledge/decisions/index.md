@@ -70,6 +70,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) - Public knowledge is graphs split by who put the fact there. A SELECT that names one reads only part, silently.
 * [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) - Entailments are materialised into the store at genesis, so shapes and the runtime cannot disagree about the vocabulary.
 * [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) - Five packages took namespaces of their own. A term is named seven ways, and a rename sees one of them.
+* [a-mandate-is-not-a-commitment](/decisions/a-mandate-is-not-a-commitment.md) - review:Commitment is renamed review:Mandate: REA's commitment is the claim and BDI's is an intention, so the governance thing takes the word everyone used.
 * [one-word-for-one-relation](/decisions/one-word-for-one-relation.md) - A subclass axiom claims our term means more; where nothing checks the difference it is a synonym.
 * [what-is-true-of-a-part-is-true-of-every-one-of-them](/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md) - A class-level triple is punning. An owl:hasValue restriction is what reaches every instance.
 * [a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md) - Beliefs outlive the code that wrote them, so boot asks whether the vocabulary still declares what the store uses.
@@ -94,6 +95,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [a-reading-is-one-value-so-it-is-pointed-at](/decisions/a-reading-is-one-value-so-it-is-pointed-at.md) - Where a value sits in a shared payload is a JSON Pointer, which identifies exactly one value.
 * [bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md) - Codec, pointer and scaling are stages borne by the binding rather than by the agent; scaling is where a number gets its unit.
 * [a-stream-is-a-thing](/decisions/a-stream-is-a-thing.md) - A channel is derived from the topics devices state, its IRI a function of that string; the codec is the stream's.
+* [channel-is-the-word](/decisions/channel-is-the-word.md) - The per-topic node was channel and stream interchangeably; the T-Box declares mqtt:Channel, so the prose moved to the code's word.
 * [the-wire-is-ours-and-it-has-two-levels](/decisions/the-wire-is-ours-and-it-has-two-levels.md) - A transport and an encoding vary independently: the credential is the connection's, the encoding is the stream's.
 * [a-board-is-a-platform](/decisions/a-board-is-a-platform.md) - The board three sensors share is a sosa:Platform hosting its parts, and mc:carries was sosa:hosts all along.
 * [a-board-says-what-it-can-honour](/decisions/a-board-says-what-it-can-honour.md) - A device states a frequency it can keep, so an agent cannot commit to a cadence its board would never honour.
@@ -119,6 +121,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 # Gates and guards
 
 * [a-test-that-asserted-nothing](/decisions/a-test-that-asserted-nothing.md) - Four guards went green while checking nothing. A root conftest fails the run if a test executed no assert.
+* [the-dictionary-names-its-terms](/decisions/the-dictionary-names-its-terms.md) - A domain page binds its word to the declared term in frontmatter, and a test holds the join; external vocabularies are vendored to check against.
 
 # Direction
 

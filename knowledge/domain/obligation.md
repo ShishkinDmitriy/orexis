@@ -1,6 +1,7 @@
 ---
 type: Domain Concept
 title: Obligation
+term: ag:Obligation
 description: >-
   A desire this agent did not source — what it OWES because the society issued a claim against
   its hardware. BOID's O, recorded in a graph of its own with the counterparty, the claim that

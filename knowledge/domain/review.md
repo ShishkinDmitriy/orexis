@@ -1,6 +1,7 @@
 ---
 type: Capability
 title: Review
+term: [review:ReviewCapability, review:Mandate]
 description: >-
   An agent re-picking its own settings inside the room its world left it. Granted by LATITUDE —
   an `review:commits` mandate whose ends differ — so an agent given no room has no review module,

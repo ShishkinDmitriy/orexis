@@ -1,6 +1,7 @@
 ---
 type: Domain Concept
 title: Capability
+term: ag:Capability
 description: >-
   A named ability with INTERCHANGEABLE IMPLEMENTATIONS — the family is the slot, its members are
   the ways of having it, and a caller asks for the family and never learns which member

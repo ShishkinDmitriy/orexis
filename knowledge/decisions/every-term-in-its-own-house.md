@@ -114,7 +114,7 @@ the next person does not re-derive it:
 | `sensing:monitors` | — | SOSA puts feature-of-interest on the **Observation**, not the Sensor. Nothing to defer to |
 | `sensing:senseMode` values | `sosa:Procedure` | Pull, Push and Scheduled are procedures by SOSA's own definition. A cheap alignment, untaken — it belongs with whatever next touches [who-holds-the-clock](who-holds-the-clock.md) |
 | `review:Revision`, `fromValue`, `atTime` | `prov:wasRevisionOf`, `prov:atTime` | PROV models a revision as provenance. Real overlap, not a synonym, and unexamined |
-| `review:Commitment` | `vf:Commitment` | **a name collision, not an alignment.** Ours is a governance mandate — the room an agent may move in. REA's is a promised economic flow. Same word, different concept |
+| `review:Commitment` | `vf:Commitment` | **a name collision, not an alignment.** Ours is a governance mandate — the room an agent may move in. REA's is a promised economic flow. Same word, different concept. Acted on since: the class is renamed `review:Mandate` — see [a-mandate-is-not-a-commitment](a-mandate-is-not-a-commitment.md) |
 | `actuation:mlPerSecond`, `maxDoseMl` | `ssn-system:ActuationRange` | [#84](https://github.com/ShishkinDmitriy/agora/issues/84) |
 | the wire — topics, codec, channel, principal | — | ours by decision; the SSN spec has no guidance on transmission |
 

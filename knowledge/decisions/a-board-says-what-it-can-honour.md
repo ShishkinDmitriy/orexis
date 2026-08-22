@@ -95,7 +95,7 @@ every other conclusion.
 it can go no faster than its slowest device. Taking the minimum would ask the slow board for a
 cadence it never keeps — the exact failure this exists to prevent, arrived at from the other side.
 
-`review:limitedTo` is shaped like a `review:Commitment` and deliberately is not one. Both narrow
+`review:limitedTo` is shaped like a `review:Mandate` and deliberately is not one. Both narrow
 the same term the same way, so `ranges()` intersects them with one alternation and one arithmetic —
 but **a mandate is a governance fact somebody ratified and could have written differently, and this
 is a fact about a board that nobody chose.** Collapsing them would make `review:commits` mean two

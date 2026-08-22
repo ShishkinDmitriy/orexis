@@ -1,6 +1,7 @@
 ---
 type: Capability
 title: Intention
+term: [ag:Intention, intention:IntentionCapability]
 description: >-
   BDI's third letter — a commitment to reduce a named gap by a named means, persisting until
   satisfied, dropped or outwaited rather than being re-decided on every sensing. Kept in a
