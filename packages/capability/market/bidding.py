@@ -140,7 +140,7 @@ class BiddingModule(Module):
         whichever reading arrived last, which is the confusion this exists to end. An agent
         that will not start is a visible fault; one pricing water off a humidity is not.
         """
-        rows = bindings(self.agent.store.query(_ABOUT_Q % self.me.uri))
+        rows = bindings(self.agent.beliefs.query(_ABOUT_Q % self.me.uri))
         if not rows:
             raise RuntimeError(
                 f"{self.agent.id} bids, but no valuation connects its venue's good to a "
@@ -156,7 +156,7 @@ class BiddingModule(Module):
         a block term is — a bidder that cannot convert its deficit has no bid to compute, and
         the domain's shapes say the same thing at the gate, where the failure is cheaper.
         """
-        rows = bindings(self.agent.store.query(
+        rows = bindings(self.agent.beliefs.query(
             _CONV_Q % (self.agent.beliefs.graph, self.me.uri, self._valuation_term)))
         if not rows or rows[0].get("v") is None:
             raise RuntimeError(
@@ -220,7 +220,7 @@ class BiddingModule(Module):
             return None
         if value is not None:
             return deliberator.propose(self.about, value)
-        desire = next((g for g in self.agent.desires()
+        desire = next((g for g in self.agent.pursuing()
                      if not g.is_duty and g.observed_property == self.about), None)
         if desire is None:
             #  No want in this property at all: nothing to steer toward, and the old code

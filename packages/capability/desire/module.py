@@ -309,8 +309,8 @@ class DesireModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.regions = regions_of(agent.store.query, self.me.uri)
-        self._aims = aims_of(agent.store.query, agent.id, self.me.uri)
+        self.regions = regions_of(agent.beliefs.query, self.me.uri)
+        self._aims = aims_of(agent.beliefs.query, agent.id, self.me.uri)
         self.log.info("wants %s", ", ".join(
             f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
             for p, r in sorted(self.regions.items())) or "nothing")
@@ -340,7 +340,7 @@ class DesireModule(Module):
         """An aim is a belief, so a review may move it — within the region, which is the same
         check boot makes. Re-read rather than patched, because the revision names a term and an
         aim is a structure: simplest correct answer is to ask the graph again."""
-        self._aims = aims_of(self.agent.store.query, self.agent.id, self.me.uri)
+        self._aims = aims_of(self.agent.beliefs.query, self.agent.id, self.me.uri)
 
     # --- what I contribute to my siblings, through the contract every module has ---
 
@@ -402,7 +402,7 @@ class DesireModule(Module):
         more", which a deliberator needs precisely because nothing else will mention it. Rows
         carry `at`, and `current()` is the same diff with my own freshness rule applied.
         """
-        return gaps_of(self.agent.store.query, self.me.uri)
+        return gaps_of(self.agent.beliefs.query, self.me.uri)
 
     def current(self) -> dict[str, Gap]:
         """The diff I would act on: every row still inside my own freshness rule.
@@ -448,13 +448,13 @@ class DesireModule(Module):
     def wants(self, now: datetime | None = None) -> list[Desire]:
         """MY contribution to what this agent is pursuing: its stakes, and no duties.
 
-        The choir hook for desires (`agent.desires()` merges every module's). Split from the debts
+        The choir hook for desires (`agent.pursuing()` merges every module's). Split from the debts
         when the ledger became its own capability: an agent may hold stakes and owe nothing, owe
         and hold no stake — `world/simulation`'s city is exactly that — or both, and none of
         those is the others' business. `desires_of` reads the whole shipped query and each module
         takes its own kind, so there is still one text and one definition.
         """
-        return [g for g in desires_of(self.agent.store.query, self.me.uri, self.agent.id, now)
+        return [g for g in desires_of(self.agent.beliefs.query, self.me.uri, self.agent.id, now)
                 if not g.is_duty]
 
     def series(self) -> list[tuple[str, dict, dict]]:

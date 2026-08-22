@@ -170,7 +170,11 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
         monkeypatch.setenv("INFLUX_BUCKET", f"test-{agent_id}")
         monkeypatch.setenv("INFLUX_TOKEN", f"test-token-{agent_id}")
 
-    agent = runtime.Agent(agent_id, st=st or genesis_store())
+    st = st or genesis_store()
+    # What `open_belief_base` does for a deployed agent and a bare genesis store lacks: the
+    # agent's own graphs say what they ARE, which is how the mind's build selects them.
+    genesis.classify_own_graphs(st, agent_id)
+    agent = runtime.Agent(agent_id, st=st)
     agent.sent = Sent()
     agent.publish = lambda topic, payload, retain=False: agent.sent.append(
         (topic, payload, retain))

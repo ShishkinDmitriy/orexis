@@ -36,7 +36,7 @@ import paho.mqtt.client as mqtt
 
 from . import config, genesis, loader
 from .beliefs import Beliefs
-from .desire import Desire
+from .desire import Desire, Desires
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
@@ -76,14 +76,20 @@ class Agent:
 
     def __init__(self, agent_id: str, st=None):
         self.id = agent_id
-        # My own store, built from the ratified files. Nothing else can reach it — that is the
-        # isolation, and it is structural rather than enforced.
-        self.store = st or genesis.open_belief_base(
+        # Genesis builds my store from the ratified files; the belief MODALITY owns it from
+        # here, and this class never learns what kind it is — that is the separation of
+        # concerns a-store-is-a-modality rules. Nothing else can reach it either: the
+        # isolation is structural, one process, one volume.
+        st = st or genesis.open_belief_base(
             genesis.current_world(), agent_id, config.env("AGORA_STORE"))
-        self.world: World = load_world(self.store.query)
-        self.bus: MessageBus = load_bus(self.store.query)  # discovered, not configured
-        self.me: Self = load_self(self.store.query, agent_id)
-        self.beliefs = Beliefs(self.store.query, agent_id, self.me.uri)
+        self.world: World = load_world(st.query)
+        self.bus: MessageBus = load_bus(st.query)  # discovered, not configured
+        self.me: Self = load_self(st.query, agent_id)
+        self.beliefs = Beliefs(st, agent_id)
+        # The desire modality, rebuilt from the beliefs it is deduced from. Each modality
+        # decides its own store and its own writability — this one exposes no writer — and
+        # the agent holds the modalities, never the stores, by the sovereign's ruling.
+        self.desires = Desires(self.beliefs)
 
         # Built before the modules, because Observations counts into it and a module builds one
         # of those. Counting only — nothing is reported until run() starts it.
@@ -109,7 +115,7 @@ class Agent:
         # Check myself before acting. A shape applies only to capabilities I actually derived,
         # so this asks exactly the right questions — and refusing to start is the enforcement.
         # It is not self-report: the consequence is not running, not a claim to be fine.
-        validate_agent(self.store, agent_id, self.me.uri, self.me.capabilities)
+        validate_agent(self.beliefs, agent_id, self.me.uri, self.me.capabilities)
 
         # Keeping my own house. Not a capability and never optional: every agent's belief base
         # bloats whatever else it can do, so this holds a clock no capability owns — an agent
@@ -130,10 +136,10 @@ class Agent:
         another's Python, so any of them can be removed without breaking the rest. None is a
         normal answer — an agent that composed neither is simply an agent that cannot.
         """
-        members = {r["capability"] for r in bindings(self.store.query(_family_q(family)))}
+        members = {r["capability"] for r in bindings(self.beliefs.query(_family_q(family)))}
         return next((m for m in self.modules if m.CAPABILITY in members), None)
 
-    def desires(self, now: datetime | None = None) -> list[Desire]:
+    def pursuing(self, now: datetime | None = None) -> list[Desire]:
         """Everything this agent is pursuing, hottest first, whoever sourced it.
 
         Assembled from the modules that hold wants rather than asked of one, because since the

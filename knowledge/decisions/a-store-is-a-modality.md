@@ -61,7 +61,7 @@ precedents generalised, because modality *determines* lifecycle:
 | menu | memory | its rebuild alone, from premises | every rebuild — a conclusion is recomputed, never edited |
 | intentions | volume | the keeper | nothing — a commitment survives a restart |
 | history | volume ring | the runtime, append-only | the ring's own bound; Influx keeps the rest |
-| hypotheses | memory, per pass | the planner | the end of the pass |
+| the [imaginarium](/domain/imaginarium.md) | memory, per pass | the planner | the end of the pass |
 
 **`ag:BeliefsGraph` retires, with the modality graph classes.** Everything in the beliefs
 store is a belief; a class that names one graph inside it "the beliefs graph" asserts nothing.
@@ -145,6 +145,18 @@ write paths and convenience, and the ruling is that the axis is not to be bent f
 3. **`agora-ask` names a modality.** A required argument, not a default — the same rule as
    "there is no default world", for the same reason: a fallback answers a question the asker
    did not ask. A question spanning modalities is several asks, and that cost is accepted.
+
+A fourth ruling followed from the third, when the first implementation grew a `Mind` object
+to hold the stores: **the collection has no name, because nothing addresses it.** An agent
+holds its MODALITIES — `agent.beliefs`, `agent.desires`, the rest of the table — and each
+modality is a class that OWNS its store: what kind of store, whether it persists, and whether
+anything may write it are that class's decisions, invisible to the agent and to every module.
+Separation of concerns, ruled explicitly: the belief modality chose a writable volume-backed
+store, the desire modality chose a rebuilt in-memory one exposing no writer, and the agent
+cannot tell. `agora-ask` names a modality, a module names the one it means, and ruling 3 is
+precisely what removed the one caller a union would have had. A holder no question needs is
+a namespace, not a concept, and the dictionary takes no page for it. "The mind" stays what
+it always was in these records: the sitting's phrase for the frame, not a component.
 
 ## The sort, term by term
 

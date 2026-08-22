@@ -88,16 +88,16 @@ class HostingModule(Module):
         self.beliefs = agent.beliefs.read(HOSTING_BLOCK)
         self.markets = self.me.hosted_markets
         self.participants = {
-            m.uri: participants(agent.store.query, m) for m in self.markets
+            m.uri: participants(agent.beliefs.query, m) for m in self.markets
         }
         # Derived at genesis from the world, so it is read once rather than per round. A
         # participant absent from this map has no stated ceiling and is not checked; see #270.
         self.ceilings = {
-            m.uri: allocation_ceilings(agent.store.query, m) for m in self.markets
+            m.uri: allocation_ceilings(agent.beliefs.query, m) for m in self.markets
         }
         self.event_topics = {}  # topic -> market
         for market in self.markets:
-            for row in bindings(agent.store.query(_event_topics_q(market.uri))):
+            for row in bindings(agent.beliefs.query(_event_topics_q(market.uri))):
                 self.event_topics[row["eventTopic"]] = market
 
         # Empty when no valuation of the venue's good meets any participant's stake — a
@@ -109,7 +109,7 @@ class HostingModule(Module):
         # the two.
         self.about = {}
         for market in self.markets:
-            rows = bindings(agent.store.query(_ABOUT_Q % (market.uri, market.uri)))
+            rows = bindings(agent.beliefs.query(_ABOUT_Q % (market.uri, market.uri)))
             self.about[market.uri] = {r["property"] for r in rows}
 
         # My witness on each venue's source, where I have one (#the-planner): the sensor I
@@ -119,7 +119,7 @@ class HostingModule(Module):
         # constitutional ceiling rather than a stock anyone watches.
         self.stock_property = {}
         for market in self.markets:
-            rows = bindings(agent.store.query(f"""
+            rows = bindings(agent.beliefs.query(f"""
 SELECT ?p WHERE {{
   <{self.me.uri}> sensing:polls ?s .
   ?s sensing:monitors <{market.resource}> ; sosa:observes ?p }} LIMIT 1"""))
@@ -433,7 +433,7 @@ SELECT ?p WHERE {{
         # takes the BROKER out of the trust boundary: the ACL becomes defence in depth, not
         # the proof. No published key means the pre-#144 era, and the ACL stands alone as it
         # always did.
-        rows = bindings(self.agent.store.query(_KEY_Q % (presenter, "signingKey")))
+        rows = bindings(self.agent.beliefs.query(_KEY_Q % (presenter, "signingKey")))
         if rows:
             sig = claim.get("sig", "")
             payload = {k: v for k, v in claim.items() if k != "sig"}
@@ -522,7 +522,7 @@ SELECT ?p WHERE {{
         payload = {"auction_id": auction_id, "jti": claim.jti, "sub": claim.sub,
                    "scope": claim.scope, "amount_l": claim.amount_l,
                    "debit": claim.debit}
-        rows = bindings(self.agent.store.query(_KEY_Q % (claim.sub, "sealingKey")))
+        rows = bindings(self.agent.beliefs.query(_KEY_Q % (claim.sub, "sealingKey")))
         if rows:
             sealed = signing.seal(signing.sealing_public_from_b64(rows[0]["key"]),
                                   signing.canonical(payload))

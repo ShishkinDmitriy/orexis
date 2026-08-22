@@ -30,13 +30,13 @@ def _gardener(monkeypatch, moisture):
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
-    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    desire = next(g for g in agent.pursuing() if g.observed_property == MOISTURE)
     return agent, Planner(agent, deducer, agent.me), desire
 
 
 def _trace(agent, query=None):
     """Everything in the trace graph, as (subject, predicate, object) rows."""
-    return bindings((query or agent.store.query_union)(f"""
+    return bindings((query or agent.beliefs.query_union)(f"""
 SELECT ?s ?p ?o WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?s ?p ?o }} }}"""))
 
 
@@ -52,7 +52,7 @@ def test_the_sovereign_can_ask_what_it_considered_and_why_it_declined(monkeypatc
     plan = planner.plan(desire)
     assert plan.outcome == search.NOT_BETTER
 
-    rows = bindings(agent.store.query_union(f"""
+    rows = bindings(agent.beliefs.query_union(f"""
 SELECT ?verdict ?means ?wouldReach ?standsAt WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
   ?d a <{KERNEL}Deliberation> ; <{KERNEL}standsAt> ?standsAt ;
      <{KERNEL}considered> ?c .
@@ -81,7 +81,7 @@ def test_a_lever_taken_says_so_and_names_the_thing_that_would_act(monkeypatch):
     plan = planner.plan(desire)
     assert plan.steps, "dry, with a pump: there is a plan"
 
-    rows = bindings(agent.store.query_union(f"""
+    rows = bindings(agent.beliefs.query_union(f"""
 SELECT ?means ?via ?depth ?verdict WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
   ?d <{KERNEL}chose> ?c .
   ?c <{KERNEL}wouldTake> ?means ; <{KERNEL}through> ?via ;
@@ -127,7 +127,7 @@ def test_a_restart_does_not_inherit_the_last_process_s_thinking(monkeypatch):
     planner.plan(desire)
     assert _trace(agent), "a pass was recorded"
 
-    reborn = build_agent("gardener", agent.store, monkeypatch)
+    reborn = build_agent("gardener", agent.beliefs, monkeypatch)
     deliberation = next(m for m in reborn.modules if m.name == "deliberation")
     deliberation.start()
     assert _trace(reborn) == [], "a new process starts with no opinion about the old world"
@@ -143,11 +143,11 @@ def test_what_it_weighed_is_private(monkeypatch):
     agent, planner, desire = _gardener(monkeypatch, DRY)
     planner.plan(desire)
 
-    assert DELIBERATION_GRAPH not in agent.store.public_graphs()
-    assert bindings(agent.store.query(
+    assert DELIBERATION_GRAPH not in agent.beliefs.public_graphs()
+    assert bindings(agent.beliefs.query(
         f"SELECT ?s WHERE {{ ?s a <{KERNEL}Deliberation> }}")) == [], \
         "a public query must not reach what an agent thought about doing"
-    assert _trace(agent, agent.store.query_union), \
+    assert _trace(agent, agent.beliefs.query_union), \
         "and the sovereign, who asks over the union, must"
 
 

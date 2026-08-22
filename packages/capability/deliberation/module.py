@@ -137,10 +137,10 @@ class ReflexModule(Module):
         """Every desire this agent holds, with the move I propose for it — or None.
 
         Here because deciding what can be done is exactly what a deliberator is, and because
-        the kernel may not name a capability's family: `agent.desires()` merges what the modules
+        the kernel may not name a capability's family: `agent.pursuing()` merges what the modules
         want, and this is the only place that can say whether anything answers.
         """
-        return [(desire, self.propose_for(desire)) for desire in self.agent.desires()]
+        return [(desire, self.propose_for(desire)) for desire in self.agent.pursuing()]
 
     def start(self) -> None:
         """Drop whatever the last process was thinking.
@@ -150,7 +150,7 @@ class ReflexModule(Module):
         readings nobody has taken since — the same hazard as a trace outliving its pass, one
         lifecycle up. Cheap: the graph holds one pass per desire and most agents hold a handful.
         """
-        self.agent.store.clear_graph(DELIBERATION_GRAPH)
+        self.agent.beliefs.clear_graph(DELIBERATION_GRAPH)
 
     def series(self) -> list[tuple[str, dict, dict]]:
         """The ranking, as figures — and the split that stops it misleading.
@@ -203,7 +203,7 @@ class ReflexModule(Module):
         #  one fact. Six fields because a planner has six answers where returning a move or
         #  None had two, and the pair worth watching is `no candidate` against `exhausted`:
         #  one says equip me, the other says my doses are too coarse.
-        verdicts = trace.outcomes(self.agent.store.query_union)
+        verdicts = trace.outcomes(self.agent.beliefs.query_union)
         rows.append(("agent_deliberation", {}, {
             outcome.replace(" ", "_"): float(verdicts.get(outcome, 0))
             for outcome in (search.SATISFIED, search.IMPROVED, search.NOTHING,
@@ -220,7 +220,7 @@ class ReflexModule(Module):
         #  reached (#258); both are closed. `blind` above zero is a package that never stated
         #  what its lever does. A number that shows a known defect is worth more than one that
         #  says things are fine.
-        rows.append(("agent_planning", {}, trace.effort(self.agent.store.query_union)))
+        rows.append(("agent_planning", {}, trace.effort(self.agent.beliefs.query_union)))
         return rows
 
     def propose_for(self, desire: Desire) -> str | None:
@@ -271,7 +271,7 @@ class ReflexModule(Module):
         #  debt is visible, rankable, and still not actionable until it is presented.
         if not desire.pursuable:
             return None
-        for row in menu_of(self.agent.store.query, self.me.uri):
+        for row in menu_of(self.agent.beliefs.query, self.me.uri):
             if not row.is_chosen and row.for_agent == desire.owed_to:
                 return row.means
         return None
@@ -358,7 +358,7 @@ class ReflexModule(Module):
         # honoured rows because it cannot express them, not because they are nobody's to
         # decide; the filter lifts when a member can pursue a desire that is a diff rather
         # than a distance — the widening a-plan-is-a-path-of-graph-diffs records.
-        for row in sorted((r for r in menu_of(self.agent.store.query, self.me.uri)
+        for row in sorted((r for r in menu_of(self.agent.beliefs.query, self.me.uri)
                            if r.observed_property == observed_property and r.direction
                            and r.is_chosen),
                           key=lambda r: _RUNG.get(r.means, len(_RUNG))):
@@ -376,7 +376,7 @@ class ReflexModule(Module):
         An agent bidding in no market gets None here and proposes nothing, which was already
         true — a direction with no venue behind it was the menu offering a move with no lever.
         """
-        rows = bindings(self.agent.store.query(
+        rows = bindings(self.agent.beliefs.query(
             _DIRECTION_Q % (self.me.uri, observed_property)))
         return rows[0]["direction"] if rows else None
 
@@ -436,7 +436,7 @@ class PlanningModule(ReflexModule):
 
     def _my_shop_needs(self, observed_property: str) -> float | None:
         """The lot my downstream venue owes — None when this property is not my shop's stock."""
-        rows = bindings(self.agent.store.query(_SHOP_Q % (
+        rows = bindings(self.agent.beliefs.query(_SHOP_Q % (
             self.me.uri, self.me.uri, observed_property,
             self.agent.beliefs.graph, self.me.uri)))
         return float(rows[0]["q"]) if rows else None
@@ -448,7 +448,7 @@ class PlanningModule(ReflexModule):
         else's gap has no chain to offer, and says so rather than inventing one. Runs the
         shipped `plan.rq`, the same text the sovereign can put over the ask channel.
         """
-        rows = bindings(self.agent.store.query(
+        rows = bindings(self.agent.beliefs.query(
             PLAN_QUERY.replace("$me", f"<{self.me.uri}>")))
         return [Affordance(means=r["means"], observed_property=r["property"],
                            via=r["via"], direction=r.get("direction"))

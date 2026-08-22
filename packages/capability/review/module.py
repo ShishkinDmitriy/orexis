@@ -138,7 +138,7 @@ class ReviewModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.summaries = Summaries(agent.store, agent.id)
+        self.summaries = Summaries(agent.beliefs, agent.id)
         self.rules = loader.review_rules()
         self.revisions = self.declined = self.refused = 0
         # The floor between two arisings. Required now, not optional: an agent holding this
@@ -217,8 +217,8 @@ class ReviewModule(Module):
         separate predicates because a mandate is a governance fact and this is a fact about a
         board, and a revision refused by one should not read as refused by the other.
         """
-        out = world_ranges(self.agent.store.query)
-        for row in bindings(self.agent.store.query(f"""
+        out = world_ranges(self.agent.beliefs.query)
+        for row in bindings(self.agent.beliefs.query(f"""
 SELECT ?term ?below ?above WHERE {{
   <{self.agent.me.uri}> review:commits|review:limitedTo ?c . ?c review:onTerm ?term .
   OPTIONAL {{ ?c review:notBelow ?below }} OPTIONAL {{ ?c review:notAbove ?above }} }}""")):
@@ -236,7 +236,7 @@ SELECT ?term ?below ?above WHERE {{
         return out
 
     def current(self, belief_term: str) -> float | None:
-        rows = bindings(self.agent.store.query(f"""
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
   <{self.agent.me.uri}> <{belief_term}> ?v }} }} LIMIT 1"""))
         return float(rows[0]["v"]) if rows else None
@@ -273,9 +273,9 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
             lines.append(f"""
   [] a review:Range ; review:onTerm <{r.term}> ;
      review:notBelow {decimal(r.floor)} ; review:notAbove {decimal(r.ceiling)} .""")
-        self.agent.store.put_graph(graph, "")
+        self.agent.beliefs.put_graph(graph, "")
         if lines:
-            self.agent.store.update(
+            self.agent.beliefs.update(
                 f"INSERT DATA {{ GRAPH <{graph}> {{ {''.join(lines)} }} }}")
         return len(lines)
 
@@ -292,7 +292,7 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
                      .replace(EVIDENCE, evidence_graph(self.agent.id))
                      .replace(BELIEFS, beliefs_graph(self.agent.id)))
             try:
-                rows = bindings(self.agent.store.query(query))
+                rows = bindings(self.agent.beliefs.query(query))
             except Exception as exc:
                 # A rule that will not run is a broken package, not a broken agent.
                 log.error("%s: %s would not run: %s", self.agent.id, path.name, exc)
@@ -350,7 +350,7 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         graph = beliefs_graph(self.agent.id)
         self._write(graph, room.term, value)
         try:
-            validate_agent(self.agent.store, self.agent.id, self.agent.me.uri,
+            validate_agent(self.agent.beliefs, self.agent.id, self.agent.me.uri,
                            self.agent.me.capabilities)
         except BeliefsInvalid as exc:
             self._write(graph, room.term, was)
@@ -375,7 +375,7 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         return True
 
     def _write(self, graph: str, belief_term: str, value) -> None:
-        self.agent.store.update(f"""
+        self.agent.beliefs.update(f"""
 DELETE {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> ?old }} }}
 INSERT {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> {_literal(value)} }} }}
 WHERE  {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> ?old }} }}""")
@@ -398,7 +398,7 @@ WHERE  {{ GRAPH <{graph}> {{ <{self.agent.me.uri}> <{belief_term}> ?old }} }}"""
     def _remember(self, belief_term: str, was, now, outcome: str, why: str) -> None:
         at = datetime.now(timezone.utc)
         due = at + timedelta(seconds=self.horizon_s())
-        self.agent.store.update(f"""
+        self.agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
   [] a review:Revision ;
      review:revisedTerm <{belief_term}> ;
@@ -421,7 +421,7 @@ INSERT DATA {{ GRAPH <{revisions_graph(self.agent.id)}> {{
     def _due(self) -> set[str]:
         """Terms whose last decision is not yet worth revisiting."""
         now = datetime.now(timezone.utc).isoformat()
-        return {r["term"] for r in bindings(self.agent.store.query(f"""
+        return {r["term"] for r in bindings(self.agent.beliefs.query(f"""
 SELECT DISTINCT ?term WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
   ?r a review:Revision ; review:revisedTerm ?term ; review:dueAt ?due .
   FILTER(?due > "{now}"^^xsd:dateTime) }} }}"""))}
@@ -433,7 +433,7 @@ SELECT DISTINCT ?term WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
         soon; it does not set the schedule, because only the decision knows when its own effect
         could show.
         """
-        rows = bindings(self.agent.store.query(f"""
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT (MIN(?due) AS ?soonest) WHERE {{ GRAPH <{revisions_graph(self.agent.id)}> {{
   ?r a review:Revision ; review:dueAt ?due }} }}"""))
         soonest = rows[0].get("soonest") if rows else None

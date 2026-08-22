@@ -130,7 +130,7 @@ class Module:
         whichever of its modules hold wants, because no single module can see all of them any
         more. Desire contributes stakes and owing contributes debts, and an agent may have
         either without the other — a plant wants for itself and owes nobody, a pure seller owes
-        and wants nothing for itself. Ranking them against each other is `agent.desires()`, which
+        and wants nothing for itself. Ranking them against each other is `agent.pursuing()`, which
         is where a currency common to both belongs.
         """
         return []

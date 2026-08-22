@@ -113,7 +113,7 @@ class ActuationModule(Module):
         dose goes to what it acts for. Falls back to the name itself, because a world may
         author a claim's sub as a subject directly and the coincidence path must keep working.
         """
-        rows = bindings(self.agent.store.query(
+        rows = bindings(self.agent.beliefs.query(
             f'SELECT ?sid WHERE {{ ?a ag:localId "{winner_id}" ; ag:actsFor ?s . '
             f'?s ag:localId ?sid }} LIMIT 1'))
         return rows[0]["sid"] if rows else winner_id
@@ -180,7 +180,7 @@ class ActuationModule(Module):
                               f"am short of, so show me",
                               expected_delta=self._expected_delta(observed_property, litres, value),
                               lands_after_s=effects.lands_after(
-                                  self.agent.store, _ACTUATE, me=f"<{self.me.uri}>",
+                                  self.agent.beliefs, _ACTUATE, me=f"<{self.me.uri}>",
                                   subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
 
     def dose_for(self, observed_property: str, value: float) -> float | None:
@@ -225,7 +225,7 @@ class ActuationModule(Module):
         freshest-regardless-of-age honesty, the same None-means-blind for a mains-like
         source nobody watches.
         """
-        rows = bindings(self.agent.store.query(f"""
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?source ?p WHERE {{
   <{self.me.uri}> ag:actsFor ?subject ; actuation:hasActuator ?lever ;
       sensing:polls ?s .
@@ -255,7 +255,7 @@ SELECT ?source ?p WHERE {{
         exact-crossing verdict, exactly as it did when the conversion belief was missing.
         """
         added, _ = effects.apply(
-            self.agent.store, _ACTUATE,
+            self.agent.beliefs, _ACTUATE,
             me=f"<{self.me.uri}>", subject=f"<{self.me.acts_for}>",
             property=f"<{observed_property}>", sensed=f"<{SENSED_GRAPH}>",
             beliefs=f"<{self.agent.beliefs.graph}>",
@@ -270,7 +270,7 @@ SELECT ?source ?p WHERE {{
         return None
 
     def _conversion_for(self, observed_property: str) -> float | None:
-        rows = bindings(self.agent.store.query(_CONVERSION_Q % (
+        rows = bindings(self.agent.beliefs.query(_CONVERSION_Q % (
             self.me.uri, self.me.uri, observed_property,
             self.agent.beliefs.graph, self.me.uri)))
         return float(rows[0]["v"]) if rows and rows[0].get("v") is not None else None
@@ -299,7 +299,7 @@ SELECT ?source ?p WHERE {{
         # which is what a lever with no stated timing deserves.
         if device.status_topic:
             lands = effects.lands_after(
-                self.agent.store, _ACTUATE, me=f"<{self.me.uri}>",
+                self.agent.beliefs, _ACTUATE, me=f"<{self.me.uri}>",
                 subject=f"<{self._subject_of(claim.sub)}>", litres=repr(float(claim.amount_l)))
             self.pending[cmd.jti] = (
                 time.monotonic() + (cmd.seconds if lands is None else lands) + self.grace_s,

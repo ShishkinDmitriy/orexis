@@ -52,6 +52,6 @@ CONSULTING = term("Consulting")  # asks something else — RESERVED, nothing imp
 # here would be a second menu, free to disagree with the one the agent acts on.
 DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
 
-# The graph class. A TERM, not an instance: `agent.store` is asked which graphs are of this
+# The graph class. A TERM, not an instance: `agent.beliefs` is asked which graphs are of this
 # class, so a second source of desire is a vocabulary edit and touches no Python here.
 CONSTRAINT_GRAPH = KERNEL + "ConstraintGraph"  # where the bounds land: the kernel's graph

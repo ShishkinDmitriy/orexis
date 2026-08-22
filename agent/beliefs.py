@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from typing import get_type_hints
 
 from .ontology import SENSED_GRAPH, beliefs_graph
-from .store import QueryFn, bindings
+from .store import bindings
 
 
 class BeliefError(RuntimeError):
@@ -114,13 +114,41 @@ SELECT {" ".join("?" + v for v in terms)} WHERE {{ GRAPH <{graph}> {{
 
 
 class Beliefs:
-    """Read-only view of ONE agent's private graph. It can reach no other agent's beliefs."""
+    """The belief modality: ONE agent's belief base, owned — the store, and the typed reads.
 
-    def __init__(self, query: QueryFn, agent_id: str, agent_uri: str):
-        self.query = query
+    A modality is a class that owns its store, and the agent never learns what kind
+    (a-store-is-a-modality). This one's choices: the store genesis built into the agent's
+    volume, WRITABLE at runtime — believing is recording and receiving, so update stays on
+    the surface — and, until the sibling stores land (#299), the home of record every other
+    modality is rebuilt from. The whole store surface is forwarded, because during that
+    migration the belief base still fronts graphs that are not yet elsewhere; what this class
+    adds of its own is the typed reads below, and the isolation stands as it always did: the
+    store is this process's alone, so no other agent's beliefs are reachable to forward.
+
+    The constructor takes the store and the ONE identifier a process is legitimately handed —
+    its own local id, rule 1's single stated exception — and discovers everything else,
+    URI included, from the store: the world says `?a ag:localId "<id>"`, and the URI is the
+    answer, not an argument. An empty volume at birth is why the id cannot be discovered too;
+    by the time this class exists, birth has run and the lookup cannot miss.
+    """
+
+    def __init__(self, store, agent_id: str):
+        self._store = store
         self.agent_id = agent_id
-        self.agent_uri = agent_uri
         self.graph = beliefs_graph(agent_id)
+        rows = bindings(store.query(
+            f'SELECT ?a WHERE {{ ?a ag:localId "{agent_id}" }} LIMIT 1'))
+        if not rows:
+            raise BeliefError(
+                f"no agent with localId '{agent_id}' in this store — "
+                "was the world loaded before the modality was built?")
+        self.agent_uri = rows[0]["a"]
+
+    def __getattr__(self, name):
+        return getattr(self._store, name)
+
+    def __len__(self) -> int:
+        return len(self._store)
 
     def read(self, block: Block):
         """Fill one capability's block, or refuse to start and say exactly what is missing."""
