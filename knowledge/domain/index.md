@@ -9,6 +9,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [agent](/domain/agent.md) - The general principal: certified identity, wallet, stake. Plant agent and supplier specialise it.
 * [plant-agent](/domain/plant-agent.md) - A self-interested plant: desire, wallet, a stance of its own. Judges its own band, asserts its own readings.
 * [supplier](/domain/supplier.md) - Strategic seller downstream, genuine buyer upstream, the barrel between. Actuates its own valves; cannot mint.
+* [host](/domain/host.md) - Whoever convenes a venue and runs its rounds. A role a supplier or a dealer plays; which side hosts is structural, never measured.
+
+* [sovereign](/domain/sovereign.md) - Whoever ratified a world. A role, not an identity, and outside the society: it may ask a running agent, never reach into one.
+
 * [dealer](/domain/dealer.md) - An intermediary that buys from the N and sells to the M, holds stock and earns the spread. The stock decouples its two markets.
 
 # Market
