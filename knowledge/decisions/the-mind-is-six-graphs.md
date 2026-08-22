@@ -10,9 +10,20 @@ description: >-
   graph holds is a CONSTRAINT nobody chose, and the graph called beliefs holds no beliefs at
   all — only picks. Birth authors picks and nothing else; amendment is an event a versioned
   world makes visible; history is a ring with Influx behind it.
-status: accepted
+status: superseded-in-part
+superseded-by: a-store-is-a-modality
 timestamp: 2026-08-19T13:31:09Z
 ---
+
+> **Superseded in part.** The modalities stand — is, may be, would like, could do, doing,
+> did — and so does everything this record found by naming them: the region is a constraint,
+> the beliefs graph holds picks, norms unify, birth authors picks and nothing else. What
+> moved is the CARRIER:
+> [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) makes each modality a STORE
+> with its own persistence, and inside a store the graphs say only who put the fact there —
+> so the three axes below become two levels, and the visibility axis folds into arrival
+> (there was never a shared store, and "public" always meant genesis-authored). Read the
+> table of six as the map of the mind; read "graph" in it as "store" going forward.
 
 # The mind is six graphs, and a graph is classified on three axes
 
