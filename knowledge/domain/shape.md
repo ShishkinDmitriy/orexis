@@ -3,7 +3,7 @@ type: Domain Concept
 title: Shape
 description: >-
   SHACL, and the one language this project says both "you may not" and "I want" in — the
-  difference is SEVERITY, not structure. A violation refuses; `ag:ShouldBecome` is a want, and a
+  difference is SEVERITY, not structure. A violation refuses; `ag:ShouldBecome` is a desire, and a
   reader that treated them alike would stop a world onboarding because a plant is thirsty. The
   severity split is ours: the spec defines conformance as no results AT ALL, so a warning would
   block exactly as hard as a violation and be pointless to write. Validated in two places by who
@@ -21,7 +21,7 @@ for two things that look like opposites and are structurally identical — **wha
 A [desire](/domain/desire.md) compiles to shapes. A constitutional constraint is a shape. An
 agent's own capability requirements are shapes. One language, one engine, one report.
 
-# Severity is what tells a bound from a want
+# Severity is what tells a bound from a desire
 
 The structure does not differ; the severity does.
 
@@ -78,7 +78,7 @@ it into the agent's graph, **shapes arrive in the DATA as well as in the shapes 
 anything in the data typed `sh:NodeShape` joins the shapes being validated with, and the severity
 decides which kind it is.
 
-A validator reading only the files would see a want as inert triples. That is why "what am I
+A validator reading only the files would see a desire as inert triples. That is why "what am I
 pursuing" is an ordinary query over ordinary triples rather than a second format.
 
 # Related

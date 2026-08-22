@@ -32,6 +32,8 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [aim](/domain/aim.md) - The point an agent picks inside its region. Its own, and a first pick rather than a bound — so constrain well, do not guess well.
 
+* [goal](/domain/goal.md) - One thing wanted and how badly, in the shape a deliberator ranges over. A stake and a duty are the same type on purpose.
+
 * [urgency](/domain/urgency.md) - One scalar from 0 to 1 that makes unlike wants comparable. Several sources, one meaning; not knowing is maximal.
 
 * [obligation](/domain/obligation.md) - A desire the agent did not source. Whom it may owe is topology; what it owes now is private runtime state.

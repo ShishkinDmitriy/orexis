@@ -31,7 +31,7 @@ class Goal:
     fern a litre" finally rank against each other.
     """
 
-    uri: str  # the want's own node: a shape this agent holds, or an obligation
+    uri: str  # the goal's own node: a shape this agent holds, or an obligation
     urgency: float  # 0 = content, 1 = at the edge of what it can bear or of its deadline
 
     # A stake's two: what is wanted, and what it currently reads. `value` is None when nothing
@@ -51,7 +51,7 @@ class Goal:
     # for a stake — a plant does not ask.
     pursuable: bool = True
 
-    #  What state the want is in, in its own kind's vocabulary: `met`, `unmet` or `unmeasured`
+    #  What state the goal is in, in its own kind's vocabulary: `met`, `unmet` or `unmeasured`
     #  for a stake, `standing` or `demanded` for a duty. Carried rather than inferred from
     #  urgency, and that distinction is not academic — urgency is 0 only exactly at a region's
     #  centre, so "urgency > 0" counts a barrel sitting comfortably inside 1-5 as unmet. It

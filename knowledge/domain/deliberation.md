@@ -197,7 +197,7 @@ done over again to describe deliberation. Planning to decide happens on a readin
 report happens on the tick; nothing shares the answer between them. That is not a defect in the
 figures, it is what the figures found.
 
-**All zero means nothing was deliberated**, not that planning is free: a want nobody has read is
+**All zero means nothing was deliberated**, not that planning is free: a goal nobody has read is
 answered by Observe before any search runs, so an agent at rest reports zeros honestly.
 
 # The members, and which of them exist
@@ -296,7 +296,7 @@ free to deliberate over claims is a host that can defect politely, one "None is 
 time. The fear was answered rather than ignored, and the answer is that **enforcement was never
 the deliberation**. The dose still opens against a claim the pump's firmware verifies, clearing
 still validated the trade, the ACL still bounds who may speak. What deliberation controls is
-only whether the agent *tries* — so making the duty a want converts an invisible non-event into
+only whether the agent *tries* — so making the duty a goal converts an invisible non-event into
 a hot unpursued goal, which is evidence instead of silence. See
 [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md).
 

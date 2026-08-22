@@ -54,7 +54,7 @@ distance is worth, is [gap](/domain/gap.md)'s.
 `goals.rq` is the question a sovereign and a model actually ask, shipped beside `gap.rq`: every
 want this agent holds, hottest first, whoever sourced it. A stake and a duty appear in one list
 because urgency is the common currency — a litre owed and a pot drying rank against each other
-instead of running down two paths that never meet — and each row says what state its want is in:
+instead of running down two paths that never meet — and each row says what state its goal is in:
 a stake is `met`, `unmet`, `stale` or `unmeasured`, a duty `standing`, `demanded` or
 `settled`.
 
@@ -84,7 +84,7 @@ Three deliberate differences from the diff above:
   value to the bounds, which is the same answer, and reading it off a validation report waits for
   something that produces one in the hot path.
 - **A count is about wanting, not about distance.** `unmet` means the reading sits outside the
-  region, and `unactionable` means a want nothing can be done about — both read off the row's
+  region, and `unactionable` means a goal nothing can be done about — both read off the row's
   `state`. The first cut inferred them from urgency, which is zero only at a region's exact
   centre, so a barrel resting comfortably inside 1–5 reported one unmet and one unactionable
   goal and a calm society graphed as a stuck one. Ten minutes on the bench found it.

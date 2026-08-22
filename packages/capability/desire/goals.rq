@@ -36,11 +36,11 @@
 # themselves — is not the one list this exists to give. `tests/test_goals.py` fails if the two
 # ever disagree, which is the same guard `urgency` has had since it was written.
 
-SELECT ?want ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?claim
+SELECT ?goal ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?claim
        ?at ?expires WHERE {
   {
-    $me ag:holds ?want ; ag:actsFor ?subject .
-    ?want ssn:forProperty ?property ; sh:property ?below , ?above .
+    $me ag:holds ?goal ; ag:actsFor ?subject .
+    ?goal ssn:forProperty ?property ; sh:property ?below , ?above .
     ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
            sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
     ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
@@ -110,8 +110,8 @@ SELECT ?want ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?cl
     #  Guarded against the properties the stake branch already answers for, so a want with a
     #  region and a want with an instrument do not both arrive as separate goals about one
     #  property. A region reports its own staleness; this covers what a region does not reach.
-    $me ag:holds ?want .
-    ?want ag:violationIs ag:Stale ;
+    $me ag:holds ?goal .
+    ?goal ag:violationIs ag:Stale ;
           ssn:forProperty ?property ;
           prov:wasDerivedFrom ?instrument .
     ?instrument sensing:monitors ?subject ; sosa:observes ?property .
@@ -142,16 +142,16 @@ SELECT ?want ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?cl
     #  default union of public graphs. It is a placeholder rather than an IRI because a graph
     #  IRI is an INSTANCE, and code may not name one.
     GRAPH $owed {
-      ?want a ag:Obligation ; ag:owedTo ?owedTo ; ag:forClaim ?claim ;
+      ?goal a ag:Obligation ; ag:owedTo ?owedTo ; ag:forClaim ?claim ;
             ag:presented ?presented ; ag:owedAt ?at .
-      OPTIONAL { ?want ag:expiresAt ?expires }
+      OPTIONAL { ?goal ag:expiresAt ?expires }
       #  A paid debt is HISTORY, not a goal, and this question is "what am I pursuing". The
       #  ledger keeps every one of them — a debt paid and a debt forgotten must not look alike
       #  — and `owed()` is where to ask. Live on the bench the supplier answered this query
       #  with 134 rows, 133 of them settled, and the sovereign channel truncates its answers:
       #  a host that had traded for long enough would have pushed its own stake off the end of
       #  the list it was asked for.
-      FILTER NOT EXISTS { ?want ag:dischargedAt ?paid } }
+      FILTER NOT EXISTS { ?goal ag:dischargedAt ?paid } }
     BIND("duty" AS ?kind)
     #  ?urgency is deliberately UNBOUND on this branch, and the reason is the engine rather
     #  than the design. A duty's room is TIME — the fraction of the claim's redeem window that

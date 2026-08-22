@@ -240,7 +240,7 @@ def goals_of(query, agent_uri: str, agent_id: str,
     out = []
     for row in bindings(query(substituted)):
         if row["kind"] == "stake":
-            out.append(Goal(uri=row["want"], urgency=float(row["urgency"]),
+            out.append(Goal(uri=row["goal"], urgency=float(row["urgency"]),
                             observed_property=row["property"], state=row["state"],
                             value=float(row["value"]) if row.get("value") else None))
             continue
@@ -248,7 +248,7 @@ def goals_of(query, agent_uri: str, agent_id: str,
         #  what happened and carries the deadline; one reader, one now, so a debt cannot be
         #  maximally hot and still count as open because two clocks disagreed.
         lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
-        out.append(Goal(uri=row["want"], urgency=_duty_urgency(row, now),
+        out.append(Goal(uri=row["goal"], urgency=_duty_urgency(row, now),
                         claim=row["claim"], owed_to=row["owedTo"],
                         state="lapsed" if lapsed else row["state"],
                         pursuable=row["state"] == "demanded" and not lapsed))

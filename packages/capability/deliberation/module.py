@@ -183,6 +183,12 @@ class ReflexModule(Module):
         for goal, _ in pursued:
             about = (goal.owed_to.rsplit("#", 1)[-1] if goal.is_duty
                      else goal.uri.rsplit("#", 1)[-1])
+            #  `agent_want` and its tag KEEP THE RETIRED WORD, deliberately. The noun "want"
+            #  gave way to "goal" everywhere else when the vocabulary was ruled on
+            #  (domain/goal.md), and a measurement name is the one place the rename costs more
+            #  than it buys: it is an external surface with history behind it, so renaming
+            #  splits every series at the cutover and leaves a dashboard reading half of one.
+            #  The word is wrong and the continuity is worth more.
             rows.append(("agent_want", {"want": f"duty.{about}" if goal.is_duty else about},
                          {"urgency": float(goal.urgency)}))
 

@@ -23,6 +23,19 @@ edge of what the subject survives.
 one definition. That is not a coincidence to be maintained: it is why a planner scoring worlds and
 a bidder sizing a bid steer by the same number.
 
+# A deficit is not a gap, and the difference is a drowning plant
+
+A gap is **signed and general** — it says how far outside the region something sits and *which
+way*. A **deficit** is the below-side only: `deficit = aim - value`, and at or above the aim there
+is no deficit at all, which is exactly what makes a content agent cede rather than bid.
+
+So **a plant above its region has a gap and no deficit.** That is not a curiosity: it is the
+drowning case, where every naive sizing produces a negative pour and both the actor and the
+planner have to refuse it — [deliberation](/domain/deliberation.md) has why.
+
+The two words are not interchangeable and neither is redundant. Use *gap* unless you mean the
+shortfall specifically.
+
 # It is a verdict, not a fact
 
 Computed on every asking, stored nowhere. **The same number is a crisis for one agent and nothing
