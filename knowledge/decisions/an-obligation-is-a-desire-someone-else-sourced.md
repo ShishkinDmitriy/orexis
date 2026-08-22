@@ -168,10 +168,11 @@ facts were sayable in authored and entailed terms (`market:matchesBy`, `market:o
   fact (the society's contract, ratified)? The mandate pattern says the sovereign should bound
   it and the agent pick inside — which would make "how social am I" a revisable belief inside a
   ratified band.
-- **What a claim-sourced desire says exactly.** "Valve X open for three seconds" is an ACT, and
-  desires here are states — so the honest form is the state the act brings about (this claim
-  redeemed, that pot dosed), with the act remaining the affordance. Getting this wrong would
-  put an action in the desire and lose the layer the whole architecture rests on.
+- ~~**What a claim-sourced desire says exactly.**~~ CLOSED by
+  [#255](https://github.com/ShishkinDmitriy/agora/issues/255), the way the note said it had to
+  be: the state is *this claim discharged* — a pattern over the record the planner's met-test
+  asks of whatever world it judges — and the act stayed an affordance (`ag:Apply`, whose
+  effect rule now states what serving makes true, sized from the record's own `ag:amountL`).
 - **What becomes of the honoured row.** ANSWERED: disclosure survived, the filter did not, and
   the row gained a job nobody had planned for it — it is how a duty finds the lever that serves
   its counterparty. The reflex still passes over honoured rows when it is steering a PROPERTY,

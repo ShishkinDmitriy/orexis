@@ -4,6 +4,8 @@
 @prefix sosa:      <http://www.w3.org/ns/sosa/> .
 @prefix market:    <http://example.org/agora/market#> .
 @prefix actuation: <http://example.org/agora/actuation#> .
+@prefix ssn:        <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 
 #################  What BUYING would make true  #################
 #
@@ -137,4 +139,85 @@ market:AcquireEffect
                      ?p ?o
             }
             FILTER($litres > 0)
+        }""" .
+
+
+#################  What SERVING a presented claim makes true  #################
+#
+#  The rule #255 was missing, and the mirror of Acquire's: a host that HONOURS discharges the
+#  debt and drains its vessel by the amount the record says it owes. The PREMISE is the vessel
+#  holding enough — `?level >= ?litres` — and a premise that does not hold binds NOTHING, so
+#  serving from a dry vessel predicts no change, the world keeps its parent's signature, and
+#  the search discards the step as somewhere already reached. That silence is the whole
+#  mechanism: the step that IS reachable from there is Acquire, whose effect raises the very
+#  level this premise reads — so "refill, then serve" emerges as a two-step plan from two
+#  rules that never mention each other, which is what a-plan-is-a-path-of-graph-diffs promised
+#  chaining would be.
+#
+#  THE AMOUNT HAS ONE SOURCE: the obligation record, written when the claim was issued
+#  (`ag:amountL`). An obligation recorded before the amount existed simply never binds here —
+#  unplannable, still servable by the honoured row, which is the graceful arrival every
+#  widening in this repo is held to.
+
+market:ApplyEffect
+    a sh:SPARQLRule ;
+    ag:effectOf ag:Apply ;
+    rdfs:label "what serving a presented claim makes true" ;
+
+    sh:construct """
+        CONSTRUCT {
+            ?obl ag:dischargedAt ?now .
+            ?obs a sosa:Observation ;
+                 sosa:hasFeatureOfInterest ?vessel ;
+                 sosa:observedProperty ?levelProp ;
+                 sosa:resultTime ?now ;
+                 sosa:hasSimpleResult ?left .
+        } WHERE {
+            GRAPH $owed { ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
+                          FILTER NOT EXISTS { ?obl ag:dischargedAt ?done } }
+            $me market:hosts ?venue ; actuation:hasActuator ?lever .
+            ?lever actuation:drawsFrom ?vessel .
+            ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
+            GRAPH $sensed { ?cur sosa:hasFeatureOfInterest ?vessel ;
+                                 sosa:observedProperty ?levelProp ;
+                                 sosa:hasSimpleResult ?level }
+            FILTER(?level >= ?litres)
+            BIND(?level - ?litres AS ?left)
+            BIND(BNODE() AS ?obs)
+            BIND(NOW() AS ?now)
+        }""" ;
+
+    #  WHEN IT LANDS: the valve's own open-seconds for the recorded amount, the identical
+    #  arithmetic the dose and the bid state, off the same public device facts — a deadline
+    #  computed anywhere else would be a second claim about when the world should answer.
+    ag:landsAfter """
+        SELECT ?seconds WHERE {
+            GRAPH $owed { ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres }
+            $me market:hosts ?venue ; actuation:hasActuator ?lever .
+            ?lever actuation:maxDoseMl ?cap ;
+                   actuation:mlPerSecond ?rate .
+            FILTER(?rate > 0)
+            BIND(IF(?litres * 1000 < ?cap, ?litres * 1000, ?cap) AS ?ml)
+            BIND(?ml / ?rate AS ?seconds)
+        }""" ;
+
+    #  BY OBSERVATION, from the host's own side: the valve reports that it opened, but what
+    #  this rule PREDICTS is the vessel's level, and only the next reading of it says the
+    #  water left. The buyer's side confirms itself on the buyer's own arc, exactly as
+    #  AcquireEffect argues from the other end of the same pipe.
+    ag:confirmedBy ag:ByObservation ;
+
+    #  The vessel reading it replaces — and ONLY when the premise held, by the same guard:
+    #  a dry vessel must not lose its standing reading to a serve that never happened.
+    ag:retracts """
+        CONSTRUCT { ?obs ?p ?o } WHERE {
+            GRAPH $owed { ?obl a ag:Obligation ; ag:forClaim $claim ; ag:amountL ?litres .
+                          FILTER NOT EXISTS { ?obl ag:dischargedAt ?done } }
+            $me market:hosts ?venue ; actuation:hasActuator ?lever .
+            ?lever actuation:drawsFrom ?vessel .
+            ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
+            GRAPH $sensed { ?obs sosa:hasFeatureOfInterest ?vessel ;
+                                 sosa:observedProperty ?levelProp ; ?p ?o .
+                            ?obs sosa:hasSimpleResult ?level }
+            FILTER(?level >= ?litres)
         }""" .

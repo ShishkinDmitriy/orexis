@@ -42,7 +42,7 @@ from . import signature, trace
 from agent.desire import Desire
 from agent.imaginarium import Imaginarium
 from agent.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
-                            SENSED_GRAPH, beliefs_graph)
+                            SENSED_GRAPH, beliefs_graph, obligations_graph)
 from agent.validate import conforms, graph_from
 
 log = logging.getLogger("search")
@@ -156,11 +156,17 @@ class Planner:
         return region.urgency(value)
 
     def _value_in(self, world, desire: Desire) -> float | None:
-        """What this property reads in the world given — the predicted one, in a simulation."""
+        """What this desire's property reads in the world given."""
+        if desire.observed_property is None:
+            return None
+        return self._value_of(world, desire.observed_property)
+
+    def _value_of(self, world, observed_property: str) -> float | None:
+        """What one property reads in the world given — the predicted one, in a simulation."""
         sosa = _SOSA
         subject = rdflib.URIRef(self.me.acts_for) if self.me.acts_for else None
         for obs in world.subjects(sosa.observedProperty,
-                                  rdflib.URIRef(desire.observed_property)):
+                                  rdflib.URIRef(observed_property)):
             if subject is not None and (obs, sosa.hasFeatureOfInterest, subject) not in world:
                 continue
             for value in world.objects(obs, sosa.hasSimpleResult):
@@ -186,8 +192,11 @@ class Planner:
         """
         shape = self._shape_of(desire, world)
         if shape is None:
-            #  A want with no shape to check — a duty, whose state is a fact in a ledger rather
-            #  than a pattern over readings. Its own state says whether it stands.
+            #  A duty's goal state is a PATTERN over the record, not a distance (#255): this
+            #  claim discharged, in whatever world is being judged — which is what lets a
+            #  possible world where Apply ran count as satisfying, and the world in hand not.
+            if desire.is_duty:
+                return (URIRef(desire.uri), _AG.dischargedAt, None) in world
             return desire.is_met
         _, results, _ = shacl_validate(world, shacl_graph=shape, inference="none", advanced=True)
         return not list(results.subjects(RDF.type, _SH.ValidationResult))
@@ -395,10 +404,17 @@ class Planner:
         from .module import menu_of
 
         for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union):
-            if not row.is_chosen:
-                continue
-            if desire.observed_property and row.observed_property != desire.observed_property:
-                continue
+            if desire.is_duty:
+                #  A duty may be served by its counterparty's honoured row, or approached
+                #  through this agent's own levers — refilling the vessel is an Acquire on its
+                #  own stake, and that is the whole of why a duty is in the search (#255).
+                if not (row.is_chosen or row.for_agent == desire.owed_to):
+                    continue
+            else:
+                if not row.is_chosen:
+                    continue
+                if desire.observed_property and row.observed_property != desire.observed_property:
+                    continue
             if effects.rule_for(self.agent.beliefs, row.means) is None:
                 #  A lever whose package never said what it does. It still works — the reflex
                 #  can take it — but nothing can simulate it, and a planner that guessed would
@@ -419,7 +435,8 @@ class Planner:
         exactly what it always did, and every deeper node forks from it.
         """
         self.imaginarium = Imaginarium(
-            self.agent.beliefs, beliefs_graph(self.agent.id), SENSED_GRAPH)
+            self.agent.beliefs, beliefs_graph(self.agent.id), SENSED_GRAPH,
+            obligations_graph(self.agent.id))
         #  What this agent PURSUES, snapshotted for the pass: the desire modality's triples as
         #  one rdflib graph, because pySHACL wants rdflib and a cbd walks blank nodes. Small —
         #  a few hundred triples — and per pass for the same reason the imaginarium is.
@@ -460,7 +477,7 @@ class Planner:
         """
         try:
             added, retracted = effects.apply(self.imaginarium, row.means,
-                                             **self._bind(desire, node, row.means))
+                                             **self._bind(desire, node, row))
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.means, exc)
             return None
@@ -474,7 +491,7 @@ class Planner:
                      graph=self.imaginarium.reached(node.graph, taken, added, retracted),
                      taken=taken, urgency=self._urgency_in(world, desire), diff=diff)
 
-    def _bind(self, desire: Desire | None, node=None, means: str | None = None) -> dict:
+    def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
 
         `node` is where the step is being taken FROM, and passing it is what makes depth 2
@@ -498,24 +515,34 @@ class Planner:
         one reached is the act the actor would actually take next — which is the whole of what
         makes "too small to finish in one" a plannable situation rather than an unreachable one.
         """
+        means = row.means if row is not None else None
         prop = desire.observed_property if desire else None
         value = desire.value if desire else None
+        if prop is None and desire is not None and desire.is_duty and row is not None:
+            #  A duty names no property, but the LEVER does (#255): the refill is an Acquire
+            #  on this agent's own stake, and its rule binds the row's property and predicts
+            #  from where that property stands in the node's world.
+            prop = row.observed_property
         if node is not None and prop is not None:
-            here = self._value_in(node.world, desire)
+            here = self._value_of(node.world, prop)
             if here is not None:
                 value = here
         return {
             "me": f"<{self.me.uri}>",
+            #  A duty's rules read the record: WHICH claim, and WHERE the debts are kept —
+            #  the one graph name built from the one id the rules allow building from.
+            "claim": f'"{desire.claim}"' if desire and desire.claim else '"urn:nobody"',
+            "owed": f"<{obligations_graph(self.agent.id)}>",
             "subject": f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>",
             "property": f"<{prop}>" if prop else "<urn:nothing>",
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
             "sensed": f"<{node.graph if node is not None else SENSED_GRAPH}>",
             "value": value if value is not None else 0,
-            "litres": self._dose(desire, value, means) if desire else 0.0,
+            "litres": self._dose(desire, value, means, prop) if desire else 0.0,
         }
 
     def _dose(self, desire: Desire, value: float | None = None,
-              means: str | None = None) -> float:
+              means: str | None = None, observed_property: str | None = None) -> float:
         """How much this act would move — ASKED OF WHOEVER WOULD TAKE IT, never computed here.
 
         Each lever's owner sizes its own act, and the two owners size differently: an actuator
@@ -538,15 +565,16 @@ class Planner:
         other, rather than by an exception.
         """
         value = desire.value if value is None else value
-        if desire.observed_property is None or value is None:
+        observed_property = observed_property or desire.observed_property
+        if observed_property is None or value is None:
             return 0.0
         if means == _ACQUIRE:
             bidding = self.agent.provider(_BIDDING)
-            litres = (bidding.qty_for(desire.observed_property, value)
+            litres = (bidding.qty_for(observed_property, value)
                       if bidding is not None else None)
         elif means == _ACTUATE:
             actuation = self.agent.provider(_ACTUATION)
-            litres = (actuation.dose_for(desire.observed_property, value)
+            litres = (actuation.dose_for(observed_property, value)
                       if actuation is not None else None)
         else:
             return 0.0
@@ -562,11 +590,16 @@ class Planner:
 
     def _beliefs(self):
         return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
-                          beliefs_graph(self.agent.id), SENSED_GRAPH)
+                          beliefs_graph(self.agent.id), SENSED_GRAPH,
+                          #  The debts too (#255): a duty's met-test is a pattern over the
+                          #  record, and the world Apply's effect discharges an obligation in
+                          #  must hold the obligation to discharge.
+                          obligations_graph(self.agent.id))
 
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
+_AG = rdflib.Namespace("http://example.org/agora#")
 _ACTUATION = "http://example.org/agora/actuation#Actuation"
 #  Sizing is asked of whichever module OWNS the lever, so the means and the family that carries
 #  it are both named here. Spelled out rather than imported: `intention/terms.py` and

@@ -178,3 +178,11 @@ def beliefs_graph(agent_id: str) -> str:
     the graph classes above load-bearing rather than documentation.
     """
     return _BELIEFS + agent_id
+
+
+def obligations_graph(agent_id: str) -> str:
+    """The record of ONE agent's debts — kernel-named since `ag:ObligationsGraph` became a
+    kernel record class (#312): the desire modality projects it, the planner's imaginarium
+    copies it, and an effect rule may read it, none of which should import a package for a
+    name built from the one id the rules allow building from."""
+    return GRAPH_PREFIX + "obligations/" + agent_id

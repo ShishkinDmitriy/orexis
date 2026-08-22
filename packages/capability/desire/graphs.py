@@ -5,15 +5,14 @@ because a region is arithmetic over ranges the world states; an obligation is ne
 ACCUMULATES at runtime, and every public graph is replaced from the ratified files at boot,
 so a public obligation would be forgotten every restart — which is exactly the defect this
 persistence exists to end. Disclosure comes the way an intention's does: the sovereign asks.
+
+The NAME moved to the kernel with the record class (`ag:ObligationsGraph`, #312): the
+imaginarium copies this graph and an effect rule reads it, and neither may import a package.
+This module re-exports it so the package's own callers keep their door.
 """
 
 from __future__ import annotations
 
-from agent.ontology import GRAPH_PREFIX
+from agent.ontology import obligations_graph
 
-_OBLIGATIONS = GRAPH_PREFIX + "obligations/"
-
-
-def obligations_graph(agent_id: str) -> str:
-    """What this agent owes, standing and discharged. Its own, and only its own."""
-    return _OBLIGATIONS + agent_id
+__all__ = ["obligations_graph"]
