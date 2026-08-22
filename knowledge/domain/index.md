@@ -56,7 +56,6 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [gap](/domain/gap.md) - The signed, normalised distance from what is sensed to what is wanted. A verdict, computed always and stored never; no reading yields no row.
 
 * [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: in memory for one plan, a graph per search node, required to be lost.
-* [mind](/domain/mind.md) - What an agent holds, organised by modality: its stores as one named whole, which the sovereign's ask addresses.
 
 # Doing
 

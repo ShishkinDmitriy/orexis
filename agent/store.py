@@ -228,7 +228,7 @@ class Store:
         agent answering its sovereign answers about its WHOLE self — beliefs, record,
         evidence, revisions — not only the public knowledge an ordinary query reads, and
         making the sovereign spell each private graph IRI would be rule 1's own trap
-        (a graph IRI is an instance). And the mind's own build (agent/mind.py), whose
+        (a graph IRI is an instance). And the desires store's build (agent/desire.py), whose
         question — what are this store's graphs — is about the whole store for the same
         reason. Still read-only by construction: this is the same
         query API, which structurally cannot execute an update.

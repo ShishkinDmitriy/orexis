@@ -67,3 +67,60 @@ class Desire:
     @property
     def is_duty(self) -> bool:
         return self.claim is not None
+
+
+#  --- the desires store -----------------------------------------------------------------------
+#
+#  In this file and not one of its own, because the two things here are one subject: the
+#  desire is the kernel's shape for a want, and the desires store is where an agent's wants
+#  live — a store per modality, per a-store-is-a-modality. An agent HOLDS stores; there is no
+#  object between it and them, by the sovereign's ruling: nothing ever addresses the
+#  collection — `agora-ask` names a modality and a module asks for the store it means — and a
+#  holder no question needs is a namespace, not a concept.
+
+from .ontology import AG
+from .store import Store, bindings
+
+#  The two modality classes whose instances are wants. ConstraintGraph is a want's boundary
+#  rather than a want — but gap, menu and validation all read the two together, and the record
+#  files both under the desires store because what MAY be and what is PURSUED are the two
+#  halves of one question no belief answers.
+_DESIRE_MODALITIES_Q = f"""
+SELECT DISTINCT ?g WHERE {{
+  {{ ?g a <{AG}DesireGraph> }} UNION {{ ?g a <{AG}ConstraintGraph> }}
+}}"""
+
+
+def desire_graphs(source: Store) -> list[str]:
+    """Every graph the catalog types with a desire modality, public or this agent's own.
+
+    Asked with the union default, because "what are this store's graphs" is a question about
+    the whole store — the classification of an agent's own graphs is deliberately outside the
+    public default, and listing names here would be rule 1's trap.
+    """
+    return sorted(r["g"] for r in bindings(source.query_union(_DESIRE_MODALITIES_Q)))
+
+
+class Desires(Store):
+    """The desires store: a copy of the desire-modality graphs, alive until the next rebuild.
+
+    A `Store` for the same reason the imaginarium is one: an ordinary query means the same
+    thing here as anywhere, and a store constructed with no path is memory with nothing to
+    clean up. What differs is the lifecycle — the imaginarium is dropped with a plan, this is
+    replaced by a rebuild (`Agent.rebuild_desires`, the ONLY way it ever changes) — and who
+    may write, which for this store is nobody: the runtime is handed `store.ReadOnly`.
+
+    Rebuilt from the belief base, which remains the graphs' home of record while the reader
+    migration lands: genesis derives into it, a volume persists it, and this copy is the read
+    surface. What selects a graph is what it IS — `ag:DesireGraph` or `ag:ConstraintGraph`,
+    asserted in the public catalog for the shared graphs and in the classification graph for
+    the agent's own — so a package that declares a new desire-modality graph is copied
+    without the kernel learning its name. The picks ride along already: `ag:BeliefsGraph` is
+    typed `ag:DesireGraph`, which the sovereign's ruling made literal.
+    """
+
+    def __init__(self, source: Store):
+        super().__init__()
+        for iri in desire_graphs(source):
+            for quad in source.quads(iri):
+                self._store.add(quad)

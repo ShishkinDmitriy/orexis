@@ -34,12 +34,12 @@ import signal
 
 import paho.mqtt.client as mqtt
 
-from . import config, genesis, loader, mind
+from . import config, genesis, loader
 from .beliefs import Beliefs
-from .desire import Desire
+from .desire import Desire, Desires
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
-from .store import bindings
+from .store import ReadOnly, bindings
 from .watchdog import BusWatchdog
 from .validate import validate_agent
 from .world import MessageBus, Self, World, load_bus, load_self, load_world
@@ -84,11 +84,12 @@ class Agent:
         self.bus: MessageBus = load_bus(self.store.query)  # discovered, not configured
         self.me: Self = load_self(self.store.query, agent_id)
         self.beliefs = Beliefs(self.store.query, agent_id, self.me.uri)
-        # The mind's stores beyond the belief base — today the desires store: what this agent
-        # pursues, as a store of its own, rebuilt from the belief base's derivations and never
-        # written (a-store-is-a-modality). The handle is the read half only, so a module that
-        # tried to write would fail at the call site.
-        self.mind = mind.Mind(self.store)
+        # The desires store: what this agent pursues, as a store of its own, rebuilt from the
+        # belief base's derivations and never written (a-store-is-a-modality). An agent HOLDS
+        # its stores directly — the belief base above, this one, and the rest of the record's
+        # table as #299 lands them; there is no object between, by the sovereign's ruling.
+        # The handle is the read half only, so a write attempt fails at the call site.
+        self.desires_store = ReadOnly(Desires(self.store))
 
         # Built before the modules, because Observations counts into it and a module builds one
         # of those. Counting only — nothing is reported until run() starts it.
@@ -137,6 +138,15 @@ class Agent:
         """
         members = {r["capability"] for r in bindings(self.store.query(_family_q(family)))}
         return next((m for m in self.modules if m.CAPABILITY in members), None)
+
+    def rebuild_desires(self) -> None:
+        """Recompute the desires store from its premises — the ONLY way it ever changes.
+
+        Called after anything that moves a premise: a re-derivation, an endowment, a recorded
+        re-pick. A fresh copy rather than an edit, so a want whose premise has ceased is
+        absent afterwards without anyone having retracted it (#263's discipline, structural).
+        """
+        self.desires_store = ReadOnly(Desires(self.store))
 
     def desires(self, now: datetime | None = None) -> list[Desire]:
         """Everything this agent is pursuing, hottest first, whoever sourced it.

@@ -1,5 +1,8 @@
 """The desires store: what an agent pursues, as a store of its own (a-store-is-a-modality).
 
+An agent HOLDS its stores — `agent.store`, `agent.desires_store`, the rest as #299 lands —
+with no object between, by the sovereign's ruling: nothing ever addresses the collection.
+
 Part 1 of #298: the store exists, is built at boot from the graphs the catalog types with a
 desire modality, is read-only to everything the runtime holds, and is rebuilt — never edited —
 when a premise moves. The reader migration (the split queries #296 measured) is the rest.
@@ -9,7 +12,6 @@ from __future__ import annotations
 
 import pytest
 
-from agent import mind
 from agent.ontology import (AG, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from agent.store import ReadOnly, bindings
 
@@ -31,7 +33,7 @@ def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
     day one."""
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
 
-    graphs = _graphs_in(agent.mind.desires)
+    graphs = _graphs_in(agent.desires_store)
     assert any("constraint" in g for g in graphs), "the derived regions are wants"
     assert beliefs_graph("gardener") in graphs, "the picks are wants, by the ruling"
     assert WORLD_GRAPH not in graphs, "topology is a belief, not a want"
@@ -43,7 +45,7 @@ def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):
     belief base in the room — the shapes half of every split #296 measured."""
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
 
-    rows = bindings(agent.mind.desires.query_union(f"""
+    rows = bindings(agent.desires_store.query_union(f"""
         SELECT ?low ?high WHERE {{
           ?region ssn:forProperty <{MOISTURE}> ; sh:property ?below , ?above .
           ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
@@ -61,10 +63,10 @@ def test_nothing_an_agent_runs_can_write_into_it(monkeypatch):
     discipline someone forgot to follow."""
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
 
-    assert isinstance(agent.mind.desires, ReadOnly)
+    assert isinstance(agent.desires_store, ReadOnly)
     for writer in ("update", "clear_graph", "load_file", "put_graph", "endow_graph"):
         with pytest.raises(AttributeError):
-            getattr(agent.mind.desires, writer)
+            getattr(agent.desires_store, writer)
 
 
 def test_recomputation_is_the_only_write_path(monkeypatch):
@@ -73,7 +75,7 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
     retracted the old state and nothing edited the new one in place."""
     st = genesis_store(world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    before = agent.mind.desires
+    before = agent.desires_store
 
     constraint = next(g for g in _graphs_in(before) if "constraint" in g)
     marker = f"<{AG}test_premise> a <{AG}Modality> ."
@@ -81,6 +83,6 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
 
     ask = f"ASK {{ <{AG}test_premise> ?p ?o }}"
     assert not before.query_union(ask)["boolean"], "a copy must not see later writes"
-    agent.mind.rebuild_desires()
-    assert agent.mind.desires.query_union(ask)["boolean"], \
+    agent.rebuild_desires()
+    assert agent.desires_store.query_union(ask)["boolean"], \
         "a rebuild reads the premises as they now stand"
