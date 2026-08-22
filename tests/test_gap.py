@@ -304,7 +304,7 @@ def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):
     Shipped wrong and caught on the bench inside ten minutes: `unmet` was "urgency > 0", which
     is false only at the exact centre of a region, and `unactionable` was "no move proposed",
     which is equally true of an agent that needs no move. The supplier — barrel at 1.97, well
-    inside 1-5, urgency 0.003 — reported one unmet and one unactionable goal, so a calm society
+    inside 1-5, urgency 0.003 — reported one unmet and one unactionable desire, so a calm society
     graphed as a stuck one. That is the failure the panel exists to prevent, arriving through
     the panel itself.
 
@@ -313,13 +313,13 @@ def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):
     """
     fern = build_agent("fern", genesis_store({("fern", MOISTURE): 0.52,
                                               ("fern", TEMPERATURE): 21.0}), monkeypatch)
-    goals = fern.goals()
-    assert all(g.is_met for g in goals), "0.52 in 0.45-0.65 and 21 in 18-24 are both met"
-    assert any(g.urgency > 0 for g in goals), \
+    desires = fern.desires()
+    assert all(g.is_met for g in desires), "0.52 in 0.45-0.65 and 21 in 18-24 are both met"
+    assert any(g.urgency > 0 for g in desires), \
         "and still off-centre — which is what made the old definition look right"
 
     reflex = next(m for m in fern.modules if m.name == "deliberation")
     _, _, fields = next(row for row in reflex.series() if row[0] == "agent_goals")
     assert fields["unmet"] == 0.0
     assert fields["unactionable"] == 0.0, "content is not stuck"
-    assert fields["goals"] == 2.0, "the wants are still counted — they are simply satisfied"
+    assert fields["desires"] == 2.0, "the wants are still counted — they are simply satisfied"

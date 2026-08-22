@@ -7,7 +7,7 @@ that the outcome improves anything.
 
 The loop is short because the pieces existed before it. `agent.effects` runs a means' rule and
 hands back what it would add and retract, so a possible world is `(beliefs − retracts) + adds`
-and nothing is written. The goal is a shape, so "would this work" is a validation. The menu is a
+and nothing is written. The desire is a shape, so "would this work" is a validation. The menu is a
 query, so "would this lever even exist afterwards" is the same query run against the simulated
 world — which is the whole of chaining, with no precondition language of its own.
 
@@ -39,7 +39,7 @@ from rdflib import RDF, URIRef
 from agent import effects
 
 from . import trace
-from agent.goal import Goal
+from agent.desire import Desire
 from agent.imaginarium import Imaginarium
 from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.validate import conforms, graph_from
@@ -49,10 +49,10 @@ log = logging.getLogger("search")
 #  Why a pass ended, and they are not interchangeable. The two failures in particular: NOTHING
 #  proposed anything (equip me), against EXHAUSTED, where levers exist and no bounded sequence
 #  of them lands inside the region (my doses are too coarse, or my region is too tight for them).
-SATISFIED = "satisfied"      # a world where the goal is met
+SATISFIED = "satisfied"      # a world where the desire is met
 IMPROVED = "improved"        # not met, but nearer than doing nothing
 NOTHING = "no candidate"     # no lever this agent holds points at this want
-EXHAUSTED = "exhausted"      # levers exist; none reaches the goal within the depth allowed
+EXHAUSTED = "exhausted"      # levers exist; none reaches the desire within the depth allowed
 NOT_BETTER = "not better"    # every world reachable is as bad as this one, or worse
 REFUSED = "refused"          # the world it would reach is one the society would not accept
 
@@ -117,9 +117,12 @@ class Planner:
     #  afternoon planning while its plant died.
     MAX_DEPTH = 2
 
-    def __init__(self, agent, desire, me):
+    def __init__(self, agent, deducer, me):
         self.agent = agent
-        self.desire = desire
+        #  The DESIRE CAPABILITY's provider, named for what it does rather than for what it
+        #  produces — `self.desire` collided with the Desire objects this class ranges over the
+        #  moment the noun was ruled on, which is the ambiguity the ruling exists to remove.
+        self.deducer = deducer
         self.me = me
         #  Alive only during a pass. Between passes there is no imaginarium, which is the point:
         #  a hypothesis explored against a world that has moved is not a hypothesis, so the
@@ -128,8 +131,8 @@ class Planner:
 
     # --- what a world is worth ---------------------------------------------------------------
 
-    def _urgency_in(self, world, goal: Goal) -> float:
-        """How bad this goal is, in the world given. Lower is better; 1.0 is the worst there is.
+    def _urgency_in(self, world, desire: Desire) -> float:
+        """How bad this desire is, in the world given. Lower is better; 1.0 is the worst there is.
 
         The number is the REGION's own, asked of the same `Region.urgency` every consumer uses,
         so a plan is scored by the measure the agent already steers by. Counting violations
@@ -138,22 +141,22 @@ class Planner:
         scoring by count would refuse every dose too small to finish the job — and refuse the
         second one for the same reason, having never taken the first.
         """
-        if goal.observed_property is None:      # a duty, or any want with no measure
-            return 0.0 if self._met_in(world, goal) else 1.0
-        region = self.desire.regions.get(goal.observed_property)
-        value = self._value_in(world, goal)
+        if desire.observed_property is None:      # a duty, or any want with no measure
+            return 0.0 if self._met_in(world, desire) else 1.0
+        region = self.deducer.regions.get(desire.observed_property)
+        value = self._value_in(world, desire)
         if region is None:
             return 1.0
         if value is None:
             return 1.0                          # not knowing is maximal, as it is everywhere
         return region.urgency(value)
 
-    def _value_in(self, world, goal: Goal) -> float | None:
+    def _value_in(self, world, desire: Desire) -> float | None:
         """What this property reads in the world given — the predicted one, in a simulation."""
         sosa = _SOSA
         subject = rdflib.URIRef(self.me.acts_for) if self.me.acts_for else None
         for obs in world.subjects(sosa.observedProperty,
-                                  rdflib.URIRef(goal.observed_property)):
+                                  rdflib.URIRef(desire.observed_property)):
             if subject is not None and (obs, sosa.hasFeatureOfInterest, subject) not in world:
                 continue
             for value in world.objects(obs, sosa.hasSimpleResult):
@@ -163,39 +166,39 @@ class Planner:
                     return None
         return None
 
-    def _met_in(self, world, goal: Goal) -> bool:
-        """Whether the goal's OWN shape is satisfied in this world.
+    def _met_in(self, world, desire: Desire) -> bool:
+        """Whether the desire's OWN shape is satisfied in this world.
 
         Its own and no others, which is what makes a pass affordable. Measured on the bench:
-        validating one goal's shape costs 0.083s, and validating everything the packages ship
+        validating one desire's shape costs 0.083s, and validating everything the packages ship
         costs 1.73s — twenty times more, for an answer about rules no effect here can have
         broken. A depth-2 pass would have taken twenty-two seconds instead of under two.
         Legality is asked once, of the winner, in `_offer`.
 
         UNFOCUSED, and that is not a detail either: pySHACL answers qualified value shapes
-        wrong under `focus_nodes` — measured both ways round — and every goal shape here is
+        wrong under `focus_nodes` — measured both ways round — and every desire shape here is
         qualified. A candidate judged with a focus would be judged by the wrong answer, with
         nothing to show that it had been.
         """
-        shape = self._shape_of(goal, world)
+        shape = self._shape_of(desire, world)
         if shape is None:
             #  A want with no shape to check — a duty, whose state is a fact in a ledger rather
             #  than a pattern over readings. Its own state says whether it stands.
-            return goal.is_met
+            return desire.is_met
         _, results, _ = shacl_validate(world, shacl_graph=shape, inference="none", advanced=True)
         return not list(results.subjects(RDF.type, _SH.ValidationResult))
 
-    def _shape_of(self, goal: Goal, world):
-        """The goal's shape, with everything hanging off it, or None if it has none."""
-        node = URIRef(goal.uri)
+    def _shape_of(self, desire: Desire, world):
+        """The desire's shape, with everything hanging off it, or None if it has none."""
+        node = URIRef(desire.uri)
         if (node, RDF.type, _SH.NodeShape) not in world:
             return None
         return world.cbd(node)
 
     # --- the search --------------------------------------------------------------------------
 
-    def plan(self, goal: Goal) -> Plan:
-        """The best bounded sequence of levers for one goal, or the reason there is none.
+    def plan(self, desire: Desire) -> Plan:
+        """The best bounded sequence of levers for one desire, or the reason there is none.
 
         Every candidate weighed is remembered as it is weighed, and the pass is written down
         when it ends (#256) — otherwise all of this dies in-process as a single log line, and
@@ -209,35 +212,35 @@ class Planner:
         node's graph has a lifecycle of its own, because there is nothing left to have one in.
         """
         try:
-            return self._search(goal)
+            return self._search(desire)
         finally:
             self.imaginarium = None
 
-    def _search(self, goal: Goal) -> Plan:
+    def _search(self, desire: Desire) -> Plan:
         """The pass itself. Separate only so `plan` can guarantee the discard above."""
         #  Timed from HERE, which is inside the pass and outside the trace write below: a
         #  caller timing `plan()` would be timing the recording as well, and reporting the
         #  observer's cost as the observed's.
         self._started = time.monotonic()
-        here = self._begin(goal)
+        here = self._begin(desire)
         base = here.world
         #  CLEARED AT THE START, which is the difference between a graph that holds one pass
         #  and one that holds two. It also means a pass that raises leaves no trace claiming
         #  to describe a decision nobody reached.
-        trace.clear(self.agent.store, self.agent.id, goal.uri)
-        if self._met_in(base, goal):
-            return self._record(goal, Plan(SATISFIED, (), here.urgency, here.urgency),
+        trace.clear(self.agent.store, self.agent.id, desire.uri)
+        if self._met_in(base, desire):
+            return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
 
         best, saw_candidate = here, False
         self._skipped = False
         self._weighed = []
-        seen = {self._signature(base, goal)}
+        seen = {self._signature(base, desire)}
         frontier = [here]
         for depth in range(self.MAX_DEPTH):
             nxt = []
             for node in frontier:
-                for row in self._candidates(node, goal):
+                for row in self._candidates(node, desire):
                     saw_candidate = True
                     #  A world is identified by the means that reached it, in order. Comparing
                     #  graphs would be the thorough answer and an unaffordable one; comparing
@@ -245,7 +248,7 @@ class Planner:
                     #  were somewhere new, which is all cycle detection is for here.
                     #  Steps are ROWS, not means: a plan is a path through the affordance
                     #  graph, and which lever a step goes through is half of what it says.
-                    step = self._step_from(node, row, goal)
+                    step = self._step_from(node, row, desire)
                     if step is None:
                         self._weighed.append((depth, row, None, trace.UNSIMULATED))
                         continue
@@ -261,19 +264,19 @@ class Planner:
                     #  naming a graph per node could quietly have broken. `seen` is global
                     #  across the search, so two paths arriving at the same value collide and
                     #  the second is pruned — two names, one world, still one entry.
-                    where = self._signature(step.world, goal)
+                    where = self._signature(step.world, desire)
                     if where in seen:
                         self._weighed.append((depth, row, step.urgency, trace.SEEN))
                         continue
                     seen.add(where)
                     if step.urgency < best.urgency:
                         best = step
-                    if self._met_in(step.world, goal):
+                    if self._met_in(step.world, desire):
                         self._weighed.append((depth, row, step.urgency, trace.MET))
                         return self._record(
-                            goal,
+                            desire,
                             self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency),
-                                        goal, step.world),
+                                        desire, step.world),
                             here.urgency)
                     self._weighed.append(
                         (depth, row, step.urgency,
@@ -296,7 +299,7 @@ class Planner:
                     #  a fact that can disagree with it.
                     #
                     #  WHAT THIS RESTS ON, so the next person can see it break: `_signature` is
-                    #  the goal's own value, and a look does not move it. #258 asks whether a
+                    #  the desire's own value, and a look does not move it. #258 asks whether a
                     #  signature should carry where a plan IS rather than only that number — and
                     #  a signature that noticed a fresher `sosa:resultTime` would make "look,
                     #  then look" a new world every time. Chaining past a look becomes a real
@@ -307,36 +310,36 @@ class Planner:
                 break
 
         if not saw_candidate:
-            return self._record(goal, Plan(NOTHING, (), here.urgency, here.urgency,
+            return self._record(desire, Plan(NOTHING, (), here.urgency, here.urgency,
                                            self._skipped), here.urgency)
         if best is here:
-            return self._record(goal, Plan(NOT_BETTER, (), here.urgency, here.urgency,
+            return self._record(desire, Plan(NOT_BETTER, (), here.urgency, here.urgency,
                                            self._skipped), here.urgency)
         if best.urgency >= here.urgency:
-            return self._record(goal, Plan(NOT_BETTER, (), here.urgency, best.urgency,
+            return self._record(desire, Plan(NOT_BETTER, (), here.urgency, best.urgency,
                                            self._skipped), here.urgency)
-        return self._record(goal, self._offer(
-            Plan(EXHAUSTED if not self._met_in(best.world, goal) else SATISFIED,
-                 best.taken, here.urgency, best.urgency), goal, best.world), here.urgency)
+        return self._record(desire, self._offer(
+            Plan(EXHAUSTED if not self._met_in(best.world, desire) else SATISFIED,
+                 best.taken, here.urgency, best.urgency), desire, best.world), here.urgency)
 
-    def _record(self, goal, plan, stands_at):
+    def _record(self, desire, plan, stands_at):
         """Write the pass down and hand back the plan unchanged.
 
         Threaded through the returns rather than wrapped around `plan()` so that the EARLY ones
-        are recorded too — a goal already satisfied and a goal nothing points at are the two
+        are recorded too — a desire already satisfied and a desire nothing points at are the two
         answers a reader most wants and the two a wrapper would have missed. The same threading
         is why the clock is read here: every return passes through, so no exit is untimed.
         """
-        trace.write(self.agent.store, self.agent.id, goal, plan,
+        trace.write(self.agent.store, self.agent.id, desire, plan,
                     getattr(self, "_weighed", []), stands_at,
                     time.monotonic() - self._started)
         return plan
 
-    def _offer(self, plan: Plan, goal: Goal, world) -> Plan:
+    def _offer(self, plan: Plan, desire: Desire, world) -> Plan:
         """A plan, once it has been checked for legality — and only the winner is checked.
 
         Validating every candidate against the whole rulebook was the obvious reading and costs
-        twenty times what the goal check does: measured on the bench, 1.73s against 0.083s, so a
+        twenty times what the desire check does: measured on the bench, 1.73s against 0.083s, so a
         pass at depth 2 would take twenty-two seconds instead of under two. The guarantee does
         not need it. What must be true is that the agent never COMMITS to reaching an
         illegitimate world, and the plan it commits to is one — so the expensive question is
@@ -360,7 +363,7 @@ class Planner:
         log.warning("the world this plan would reach is one the society refuses — not taken")
         return Plan(REFUSED, (), plan.urgency_now, plan.urgency_after)
 
-    def _candidates(self, node, goal: Goal):
+    def _candidates(self, node, desire: Desire):
         """The levers worth simulating from here — the menu, re-run in the world reached.
 
         THE MENU IS THE PRECONDITION LANGUAGE, which is why chaining needs none of its own: a
@@ -384,7 +387,7 @@ class Planner:
         for row in menu_of(self.agent.store.query, self.me.uri):
             if not row.is_chosen:
                 continue
-            if goal.observed_property and row.observed_property != goal.observed_property:
+            if desire.observed_property and row.observed_property != desire.observed_property:
                 continue
             if effects.rule_for(self.agent.store, row.means) is None:
                 #  A lever whose package never said what it does. It still works — the reflex
@@ -396,7 +399,7 @@ class Planner:
                 continue
             yield row
 
-    def _begin(self, goal: Goal) -> _Node:
+    def _begin(self, desire: Desire) -> _Node:
         """This plan's imaginarium, and the root node standing in the world the agent is in.
 
         The imaginarium is built per PLAN and dropped with it — see `plan`, which does that in a
@@ -408,9 +411,9 @@ class Planner:
         self.imaginarium = Imaginarium(
             self.agent.store, beliefs_graph(self.agent.id), SENSED_GRAPH)
         base = self._beliefs()
-        return _Node(world=base, graph=SENSED_GRAPH, urgency=self._urgency_in(base, goal))
+        return _Node(world=base, graph=SENSED_GRAPH, urgency=self._urgency_in(base, desire))
 
-    def _step_from(self, node, row, goal: Goal):
+    def _step_from(self, node, row, desire: Desire):
         """The node one step on from here, or None where the rule would not run.
 
         The diff is computed ONCE and lands in both halves of what a node is: the imaginarium
@@ -421,7 +424,7 @@ class Planner:
         """
         try:
             added, retracted = effects.apply(self.imaginarium, row.means,
-                                             **self._bind(goal, node, row.means))
+                                             **self._bind(desire, node, row.means))
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.means, exc)
             return None
@@ -429,9 +432,9 @@ class Planner:
         world = effects.applied(node.world, added, retracted)
         return _Node(world=world,
                      graph=self.imaginarium.reached(node.graph, taken, added, retracted),
-                     taken=taken, urgency=self._urgency_in(world, goal))
+                     taken=taken, urgency=self._urgency_in(world, desire))
 
-    def _bind(self, goal: Goal | None, node=None, means: str | None = None) -> dict:
+    def _bind(self, desire: Desire | None, node=None, means: str | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
 
         `node` is where the step is being taken FROM, and passing it is what makes depth 2
@@ -442,7 +445,7 @@ class Planner:
         before, the retraction found the observation still on disk and predicted a reading that
         landed BESIDE the previous step's instead of replacing it.
 
-        Bound from the goal alone — which is how this was first written —
+        Bound from the desire alone — which is how this was first written —
         every step is predicted from the reading the agent actually holds, so a second dose
         computes `0.04 + 0.21/conversion` exactly as the first did, lands on the world the
         first one reached, and is discarded by cycle detection as somewhere already seen.
@@ -455,10 +458,10 @@ class Planner:
         one reached is the act the actor would actually take next — which is the whole of what
         makes "too small to finish in one" a plannable situation rather than an unreachable one.
         """
-        prop = goal.observed_property if goal else None
-        value = goal.value if goal else None
+        prop = desire.observed_property if desire else None
+        value = desire.value if desire else None
         if node is not None and prop is not None:
-            here = self._value_in(node.world, goal)
+            here = self._value_in(node.world, desire)
             if here is not None:
                 value = here
         return {
@@ -468,21 +471,21 @@ class Planner:
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
             "sensed": f"<{node.graph if node is not None else SENSED_GRAPH}>",
             "value": value if value is not None else 0,
-            "litres": self._dose(goal, value, means) if goal else 0.0,
+            "litres": self._dose(desire, value, means) if desire else 0.0,
         }
 
-    def _signature(self, world, goal: Goal):
+    def _signature(self, world, desire: Desire):
         """What makes this world different from another, for planning purposes.
 
-        The value the goal is about, rounded — cheap, and enough. Graph isomorphism would be
+        The value the desire is about, rounded — cheap, and enough. Graph isomorphism would be
         the thorough answer and is not affordable here; comparing the number the plan is trying
         to move catches the oscillation this exists to stop, and two worlds that agree on it
         are worth the same to a search that scores by urgency.
         """
-        value = self._value_in(world, goal)
+        value = self._value_in(world, desire)
         return None if value is None else round(value, 6)
 
-    def _dose(self, goal: Goal, value: float | None = None,
+    def _dose(self, desire: Desire, value: float | None = None,
               means: str | None = None) -> float:
         """How much this act would move — ASKED OF WHOEVER WOULD TAKE IT, never computed here.
 
@@ -505,16 +508,16 @@ class Planner:
         later — so an unsized lever arrives at "this does not help" by the same road as every
         other, rather than by an exception.
         """
-        value = goal.value if value is None else value
-        if goal.observed_property is None or value is None:
+        value = desire.value if value is None else value
+        if desire.observed_property is None or value is None:
             return 0.0
         if means == _ACQUIRE:
             bidding = self.agent.provider(_BIDDING)
-            litres = (bidding.qty_for(goal.observed_property, value)
+            litres = (bidding.qty_for(desire.observed_property, value)
                       if bidding is not None else None)
         elif means == _ACTUATE:
             actuation = self.agent.provider(_ACTUATION)
-            litres = (actuation.dose_for(goal.observed_property, value)
+            litres = (actuation.dose_for(desire.observed_property, value)
                       if actuation is not None else None)
         else:
             return 0.0

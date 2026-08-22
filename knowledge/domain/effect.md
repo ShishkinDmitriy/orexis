@@ -14,8 +14,8 @@ description: >-
 # What it is
 
 An [affordance](/domain/affordance.md) row says a [lever](/domain/lever.md) is available. It does
-not say what pulling it would achieve — and a goal that is a shape needs exactly that, because
-matching a goal to a lever means asking what the lever would make true.
+not say what pulling it would achieve — and a desire that is a shape needs exactly that, because
+matching a desire to a lever means asking what the lever would make true.
 
 So a package ships `effects.ttl` beside its `affordances.rq`, found the same way and named by
 nothing: one `sh:SPARQLRule` per [means](/domain/means.md), loaded into the effect graph at

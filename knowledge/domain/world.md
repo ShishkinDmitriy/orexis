@@ -88,7 +88,7 @@ with no edit to the agent, because there is nothing about the agent to edit. See
 
 The market rows are the **weakest** of these, and worth naming as such: `market:bidsIn` says "is a
 bidder" in other words, where `sensing:senseMode` states a physical fact about hardware. Deriving
-market roles from declared *goals* instead is an open seam — see below.
+market roles from declared *desires* instead is an open seam — see below.
 
 ## 2. Every wire name is stated
 
@@ -355,7 +355,7 @@ only an explicit re-birth discards them.
 # Seams left open
 
 - **Market roles are declared, not derived.** `market:bidsIn` and `market:hosts` are the two weakest
-  rows in the derivation table. Stating an agent's *goal* — keep this plant alive, steward this
+  rows in the derivation table. Stating an agent's *desire* — keep this plant alive, steward this
   source — and deriving both market capabilities from that would make them as honest as
   sensing and actuation already are, and would also yield who the counterparties are without
   anyone listing them.

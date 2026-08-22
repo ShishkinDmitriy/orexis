@@ -720,7 +720,7 @@ def test_a_debt_to_a_stranger_is_refused_before_it_is_a_want(host, caplog):
     assert "does not declare" in caplog.text
 
 
-# --- step 9: a debt is a goal, and a deadline is what makes it hot ----------
+# --- step 9: a debt is a desire, and a deadline is what makes it hot ----------
 
 def _win_a_claim(host):
     """One full round, ending with fern holding a claim this host owes. Returns the jti."""
@@ -786,11 +786,11 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
     stock_reading(host, 3.0)  # 1-5 is the barrel's region, so this is a small gap
     owed_at = datetime.fromisoformat(ledger_of(host).owed()[0]["at"])
 
-    goals = host.goals(now=owed_at + timedelta(seconds=800))
-    assert goals, "an agent with a stake and a debt wants something"
-    assert goals[0].is_duty, "a debt near its deadline outranks a barrel that is merely low"
-    assert any(not g.is_duty for g in goals), "and the stake is still on the list, not replaced"
-    assert goals == sorted(goals, key=lambda g: -g.urgency)
+    desires = host.desires(now=owed_at + timedelta(seconds=800))
+    assert desires, "an agent with a stake and a debt wants something"
+    assert desires[0].is_duty, "a debt near its deadline outranks a barrel that is merely low"
+    assert any(not g.is_duty for g in desires), "and the stake is still on the list, not replaced"
+    assert desires == sorted(desires, key=lambda g: -g.urgency)
 
 
 def test_a_claim_presented_after_its_window_is_refused_and_the_debt_stands(host, caplog):
@@ -821,14 +821,14 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
 
     That moment is the vessel's own reading, which is where the deferred round already waits.
     A society whose redemption is a handler cannot express 'I am out of stock'; one whose
-    redemption is a decision reports it as a hot unpursued goal, and converts an invisible
+    redemption is a decision reports it as a hot unpursued desire, and converts an invisible
     non-event into evidence.
     """
     import logging
 
     jti = _win_a_claim(host)
     deliberator = host.provider("http://example.org/agora/deliberation#DeliberationCapability")
-    real, deliberator.propose_for = deliberator.propose_for, lambda goal: None
+    real, deliberator.propose_for = deliberator.propose_for, lambda desire: None
 
     with caplog.at_level(logging.WARNING):
         host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
@@ -864,9 +864,9 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     owed = ledger.owed()
     assert len(owed) == 1 and owed[0]["to"].endswith("#supplier")
 
-    assert city.goals(), "and its debts are goals like anyone else's"
-    assert all(g.is_duty for g in city.goals()), "all of them owed, none of them its own"
+    assert city.desires(), "and its debts are desires like anyone else's"
+    assert all(g.is_duty for g in city.desires()), "all of them owed, none of them its own"
 
     ledger.discharge("j-city-1")
     assert ledger.owed() == [], "paid"
-    assert city.goals() == [], "and a pure seller with nothing outstanding wants nothing at all"
+    assert city.desires() == [], "and a pure seller with nothing outstanding wants nothing at all"

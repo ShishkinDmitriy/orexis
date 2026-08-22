@@ -29,9 +29,9 @@ def _gardener(monkeypatch, moisture):
     monkeypatch.setenv("AGORA_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(m for m in agent.modules if m.name == "desire")
-    goal = next(g for g in agent.goals() if g.observed_property == MOISTURE)
-    return agent, Planner(agent, desire, agent.me), goal
+    deducer = next(m for m in agent.modules if m.name == "desire")
+    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    return agent, Planner(agent, deducer, agent.me), desire
 
 
 def _trace(agent, query=None):
@@ -48,8 +48,8 @@ def test_the_sovereign_can_ask_what_it_considered_and_why_it_declined(monkeypatc
     a drowning plant. The planner declines by building the world and finding it no better, and
     before this that decision was a single log line nobody outside the process could reach.
     """
-    agent, planner, goal = _gardener(monkeypatch, WET)
-    plan = planner.plan(goal)
+    agent, planner, desire = _gardener(monkeypatch, WET)
+    plan = planner.plan(desire)
     assert plan.outcome == search.NOT_BETTER
 
     rows = bindings(agent.store.query_union(f"""
@@ -77,8 +77,8 @@ def test_a_lever_taken_says_so_and_names_the_thing_that_would_act(monkeypatch):
     """PROV to what generated it, which the record asks for by name. A trace that said only
     `Actuate` would not answer "through which valve" — and an agent with two pumps is the case
     where that question stops being rhetorical."""
-    agent, planner, goal = _gardener(monkeypatch, DRY)
-    plan = planner.plan(goal)
+    agent, planner, desire = _gardener(monkeypatch, DRY)
+    plan = planner.plan(desire)
     assert plan.steps, "dry, with a pump: there is a plan"
 
     rows = bindings(agent.store.query_union(f"""
@@ -96,16 +96,16 @@ SELECT ?means ?via ?depth ?verdict WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
 def test_the_graph_holds_one_pass_and_not_two(monkeypatch):
     """The condition the exception was granted on. A trace that accumulates is a conclusion
     sitting beside beliefs it can contradict, which is the whole reason possible worlds are
-    computed and dropped — so planning the same goal twice must REPLACE, not add.
+    computed and dropped — so planning the same desire twice must REPLACE, not add.
 
     Asserted on the candidates and not only on the pass node, because the failure that would
     actually happen is orphans: the pass node is one subject and overwriting it is easy, while
     the candidates hang off it and would be left behind by a clear that only took the head.
     """
-    agent, planner, goal = _gardener(monkeypatch, DRY)
-    planner.plan(goal)
+    agent, planner, desire = _gardener(monkeypatch, DRY)
+    planner.plan(desire)
     after_one = _trace(agent)
-    planner.plan(goal)
+    planner.plan(desire)
     after_two = _trace(agent)
 
     passes = [r for r in after_two if r["o"] == f"{KERNEL}Deliberation"]
@@ -123,8 +123,8 @@ def test_a_restart_does_not_inherit_the_last_process_s_thinking(monkeypatch):
     differ per interpreter, the clear would match nothing, and every restart would orphan a
     trace instead of replacing it.
     """
-    agent, planner, goal = _gardener(monkeypatch, DRY)
-    planner.plan(goal)
+    agent, planner, desire = _gardener(monkeypatch, DRY)
+    planner.plan(desire)
     assert _trace(agent), "a pass was recorded"
 
     reborn = build_agent("gardener", agent.store, monkeypatch)
@@ -140,8 +140,8 @@ def test_what_it_weighed_is_private(monkeypatch):
     default union is built from, and — the one that would actually bite — an ordinary
     `store.query` must not see it. The second is what a rival's query would be.
     """
-    agent, planner, goal = _gardener(monkeypatch, DRY)
-    planner.plan(goal)
+    agent, planner, desire = _gardener(monkeypatch, DRY)
+    planner.plan(desire)
 
     assert DELIBERATION_GRAPH not in agent.store.public_graphs()
     assert bindings(agent.store.query(

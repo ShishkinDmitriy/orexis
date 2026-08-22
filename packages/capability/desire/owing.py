@@ -19,12 +19,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from agent.goal import Goal
+from agent.desire import Desire
 from agent.module import Module
 from agent.store import bindings
 
 from .graphs import obligations_graph
-from .module import goals_of
+from .module import desires_of
 from .terms import KERNEL, OWING
 
 
@@ -123,8 +123,8 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
   {extra}
   FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
 
-    def duties(self, now: datetime | None = None) -> list[Goal]:
-        """What this agent owes, as goals — hottest first, and hot means CLOSE TO EXPIRY.
+    def duties(self, now: datetime | None = None) -> list[Desire]:
+        """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.
 
         A stake's urgency is distance scaled by the survival envelope; a duty has no envelope,
         so its room is time: the fraction of the redeem window that has run. At issue nothing
@@ -141,14 +141,14 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
         """
         return self.wants(now)
 
-    def wants(self, now: datetime | None = None) -> list[Goal]:
+    def wants(self, now: datetime | None = None) -> list[Desire]:
         """MY contribution to what this agent is pursuing: its debts, and no stakes.
 
         The other half of the choir hook `DesireModule.wants()` answers — and the half the city
         had no way to contribute before, which is the whole of #233. One shipped query still
         defines both; each module takes its own kind out of it.
         """
-        return [g for g in goals_of(self.agent.store.query, self.me.uri, self.agent.id, now)
+        return [g for g in desires_of(self.agent.store.query, self.me.uri, self.agent.id, now)
                 if g.is_duty]
 
     def series(self) -> list[tuple[str, dict, dict]]:

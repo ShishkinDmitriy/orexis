@@ -54,7 +54,7 @@ absence of a row is what makes the first intention always to *look*.
 Everywhere else in the design the same choice is made the same way: `urgency(None)` is 1.0, not
 0.0 — **not knowing is maximal**. An unmeasured want is about HAVING LOOKED rather than about
 holding a good value, which is why a predicted reading with no value satisfies a range shape
-vacuously and why judging *goal achieved* is the planner's job rather than the shape's.
+vacuously and why judging *desire achieved* is the planner's job rather than the shape's.
 
 # Who notices one
 

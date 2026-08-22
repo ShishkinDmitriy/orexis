@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from .goal import Goal
+from .desire import Desire
 
 import json
 import logging
@@ -123,14 +123,14 @@ class Module:
         """
         return None
 
-    def wants(self, now: "datetime | None" = None) -> list["Goal"]:
+    def wants(self, now: "datetime | None" = None) -> list["Desire"]:
         """What this module contributes to what the agent is pursuing. Empty by default.
 
-        A choir hook, like `annotate` and `series`: goals are the AGENT's, assembled from
+        A choir hook, like `annotate` and `series`: desires are the AGENT's, assembled from
         whichever of its modules hold wants, because no single module can see all of them any
         more. Desire contributes stakes and owing contributes debts, and an agent may have
         either without the other — a plant wants for itself and owes nobody, a pure seller owes
-        and wants nothing for itself. Ranking them against each other is `agent.goals()`, which
+        and wants nothing for itself. Ranking them against each other is `agent.desires()`, which
         is where a currency common to both belongs.
         """
         return []

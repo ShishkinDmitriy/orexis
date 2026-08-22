@@ -6,7 +6,7 @@ description: Hard, non-negotiable constraints enforced by code, not persuasion.
 
 # What it is
 
-The "court". The separation of what's **negotiable** (politics — each agent's soft goal,
+The "court". The separation of what's **negotiable** (politics — each agent's soft desire,
 argued and traded) from what's **non-negotiable** (the constitution — hard safety/physical
 constraints). No agent, vote, or clever LLM argument overrides it; it is checked
 independently before any action fires.

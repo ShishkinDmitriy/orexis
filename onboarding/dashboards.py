@@ -78,7 +78,7 @@ FIELD = "value"
 AGENT_MEASUREMENT = "agent_health"
 #  One row per WANT — tagged by the want itself, not by a property, because a
 #  property cannot name a freshness want (per instrument) or a duty (per
-#  counterparty). Written by whoever sees every goal, which is the deliberator.
+#  counterparty). Written by whoever sees every desire, which is the deliberator.
 WANT_MEASUREMENT = "agent_want"
 #  What a planning pass cost and what it did with each lever. Written by the
 #  deliberator from its own trace, so a dashboard and an `agora-ask` of the same
@@ -340,14 +340,14 @@ def _levers_panel(buckets: dict, y: int, panel_id: int) -> dict:
     confirmation that things are fine:
 
     - `cycles` climbing while depth stays at 1 says the search keeps arriving back where it
-      started (#258 — the cycle signature is the goal's own value, so a step that moves nothing
+      started (#258 — the cycle signature is the desire's own value, so a step that moves nothing
       else is indistinguishable from having gone nowhere);
     - `blind` above zero is a package that never stated what its lever does, so the pass could
       not claim it looked at everything and deferred to the reflex;
     - `unsimulated` is a rule that RAISED, which is an error rather than a shrug;
     - `better` flat at zero while `worse` climbs is an agent whose levers exist and never help.
 
-    Counts per pass rather than rates, because the trace holds one pass per goal and is cleared
+    Counts per pass rather than rates, because the trace holds one pass per desire and is cleared
     at the start of the next: each point is what the last pass did, not a total since boot.
     """
     fields = ("worlds", "better", "worse", "cycles", "unsimulated", "blind")
@@ -357,7 +357,7 @@ def _levers_panel(buckets: dict, y: int, panel_id: int) -> dict:
         "type": "timeseries",
         "title": "What the planner did with each lever",
         "description": (
-            "Per pass, not since boot — the trace holds the last pass per goal and is cleared "
+            "Per pass, not since boot — the trace holds the last pass per desire and is cleared "
             "at the start of the next. `cycles` high with depth pinned at 1 is #258; `blind` "
             "above zero is a lever whose package never said what it does, which is why a "
             "partial plan defers to the reflex instead of reporting that nothing helps; "
@@ -485,8 +485,8 @@ def render_health(world: str) -> dict:
          "times running. The false-knowledge flag — see #131. What to do about it is a "
          "decision, which is why this flags and nothing auto-retracts."),
         ("Seconds spent planning", PLANNING_MEASUREMENT, "seconds", "timeseries", "s", 12, 7,
-         "What a reporting tick's planning cost, summed over every goal. Worth watching for a "
-         "reason that is not performance: reporting an agent's state RE-PLANS every goal it "
+         "What a reporting tick's planning cost, summed over every desire. Worth watching for a "
+         "reason that is not performance: reporting an agent's state RE-PLANS every desire it "
          "holds, so this is the price of being asked what you want, paid on top of the "
          "planning done to decide. Divide by `worlds` beside it before blaming the shape "
          "checker — a pass that built ten worlds and one that built one are not comparable. "
@@ -495,7 +495,7 @@ def render_health(world: str) -> dict:
         ("Depth reached", PLANNING_MEASUREMENT, "deepest", "timeseries", "short", 12, 7,
          "Steps in the longest path the search considered. PINNED AT 1 is the signature of two "
          "recorded limits at once (#254, #258): a rule's CONSTRUCTs run against the store "
-         "rather than the world, and the cycle signature is the goal's own value, so a step "
+         "rather than the world, and the cycle signature is the desire's own value, so a step "
          "that moves nothing else looks like somewhere already reached. Above 1 means a chain "
          "was genuinely tried. Zero means nothing was weighed at all."),
         ("Desires held", AGENT_MEASUREMENT, "desires", "stat", "short", 12, 5,

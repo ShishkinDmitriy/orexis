@@ -25,6 +25,55 @@ What this capability adds is the DEDUCING: it is granted by a stake, `ag:actsFor
 states what it needs. An agent advancing nobody's interest wants nothing, which is why the sensing
 world's agent has three sensors and no desires at all.
 
+# Two sources, one currency
+
+A desire is either a **stake** — a property of the subject this agent acts for, wanted inside a
+[region](/domain/region.md) — or a **duty**, an [obligation](/domain/obligation.md) someone else
+holds against it.
+
+They are deliberately the same type. An agent's whole conduct is things it wants, pursued through
+[affordances](/domain/affordance.md), and a deliberator that had to ask which kind it was holding
+would be the second decision path this design exists to avoid.
+
+**Urgency is unit-free in both cases, and that is the whole point of the type.** A stake's comes
+from the survival envelope — how much room is left before the subject ends; a duty's from the
+redeem window — how much time is left before the claim expires. The two become comparable without
+either knowing how the other was computed.
+
+# The kind is read, never flagged
+
+A stake carries what is wanted and what it currently reads. A duty carries the claim it came from
+and whom it is owed to. **A stake has neither, which is what `is_duty` reads** — there is no kind
+field, because a flag that can disagree with the data beside it is a flag that eventually does.
+
+# State is carried, not inferred
+
+A desire states its own condition in its kind's vocabulary: `met`, `unmet` or `unmeasured` for a
+stake; `standing` or `demanded` for a duty.
+
+**Carried rather than derived from urgency, and the distinction is not academic.** Urgency is 0
+only exactly at a region's centre, so "urgency > 0" counts a barrel sitting comfortably inside its
+range as unmet. It read that way on the bench for about ten minutes and made a calm society look
+stuck.
+
+A duty is never *met*. It is discharged — and a discharged debt is history rather than something still wanted.
+
+# Wanted is not the same as actionable
+
+`pursuable` is separate from urgency, and a duty nobody has presented is the case that needs it: it
+stands, it may be hot, and it still must not be acted on. The holder is waiting for its own watch
+to be live, and **a host that doses early spends the water where nothing is looking.**
+
+Always true for a stake — a plant does not ask.
+
+# It lives in the kernel, and the capability does not
+
+`agent/desire.py` holds the TYPE, outside any package, because a desire is a mental state and
+those are the kernel's — the same reason obligations and intentions are. Two packages need it and
+neither may import the other: this capability produces desires,
+[deliberation](/domain/deliberation.md) consumes them, and the only thing they are allowed to
+share is a kernel word.
+
 # What the rest of the society asks it
 
 Four questions, and none of the askers imports this package — they arrive through the hooks
@@ -51,10 +100,10 @@ distance is worth, is [gap](/domain/gap.md)'s.
 
 # What am I pursuing — the whole list, with status
 
-`goals.rq` is the question a sovereign and a model actually ask, shipped beside `gap.rq`: every
+`desires.rq` is the question a sovereign and a model actually ask, shipped beside `gap.rq`: every
 want this agent holds, hottest first, whoever sourced it. A stake and a duty appear in one list
 because urgency is the common currency — a litre owed and a pot drying rank against each other
-instead of running down two paths that never meet — and each row says what state its goal is in:
+instead of running down two paths that never meet — and each row says what state its desire is in:
 a stake is `met`, `unmet`, `stale` or `unmeasured`, a duty `standing`, `demanded` or
 `settled`.
 
@@ -84,10 +133,10 @@ Three deliberate differences from the diff above:
   value to the bounds, which is the same answer, and reading it off a validation report waits for
   something that produces one in the hot path.
 - **A count is about wanting, not about distance.** `unmet` means the reading sits outside the
-  region, and `unactionable` means a goal nothing can be done about — both read off the row's
+  region, and `unactionable` means a desire nothing can be done about — both read off the row's
   `state`. The first cut inferred them from urgency, which is zero only at a region's exact
   centre, so a barrel resting comfortably inside 1–5 reported one unmet and one unactionable
-  goal and a calm society graphed as a stuck one. Ten minutes on the bench found it.
+  desire and a calm society graphed as a stuck one. Ten minutes on the bench found it.
 - **Whether anything can be DONE is not in the query.** That is the deliberator's answer — the
   menu is the union of what every loaded package contributes, and a copy of it inside a desire
   query would be free to disagree with the one the agent acts on. `pursued()` annotates each row

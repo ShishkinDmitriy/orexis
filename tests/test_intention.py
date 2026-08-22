@@ -288,7 +288,7 @@ def test_the_tick_survives_an_agent_that_has_seen_things(make):
     keeper.deliberate_on_gaps()  # must not raise — that is the whole test
 
 
-# --- a commitment names the goal it serves (step 3) -------------------------
+# --- a commitment names the desire it serves (step 3) -------------------------
 
 APPLY = "http://example.org/agora#Apply"
 
@@ -307,23 +307,23 @@ def test_two_debts_about_one_property_no_longer_collide(make):
     to_fern = "http://example.org/agora#obligation.fern-claim"
     to_tomato = "http://example.org/agora#obligation.tomato-claim"
 
-    assert keeper.adopt(APPLY, MOIST, "owed to fern", goal=to_fern)
-    assert keeper.adopt(APPLY, MOIST, "owed to tomato", goal=to_tomato), \
+    assert keeper.adopt(APPLY, MOIST, "owed to fern", desire=to_fern)
+    assert keeper.adopt(APPLY, MOIST, "owed to tomato", desire=to_tomato), \
         "a second debt about the same property is a second debt, not the same impulse"
     assert len(keeper.standing(means=APPLY, observed_property=MOIST)) == 2
 
-    keeper.satisfy(APPLY, MOIST, "fern's dose went out", goal=to_fern)
+    keeper.satisfy(APPLY, MOIST, "fern's dose went out", desire=to_fern)
     left = keeper.standing(means=APPLY, observed_property=MOIST)
     assert len(left) == 1, "paying one debt must not discharge the other"
 
 
-def test_a_commitment_without_a_goal_is_keyed_as_it_always_was(make):
-    """The compatibility half: the first three means predate goals having names, and a ledger
-    full of rows that could not have answered the question must stay readable — so a goalless
-    row is absorbed and resolved by the old key, and a goal-shaped question still finds it."""
+def test_a_commitment_without_a_desire_is_keyed_as_it_always_was(make):
+    """The compatibility half: the first three means predate desires having names, and a ledger
+    full of rows that could not have answered the question must stay readable — so a desireless
+    row is absorbed and resolved by the old key, and a desire-shaped question still finds it."""
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
     keeper.adopt(OBSERVE, MOIST, "the old way")
     assert keeper.adopt(OBSERVE, MOIST, "again, within patience") is None
     assert len(keeper.standing(means=OBSERVE, observed_property=MOIST,
-                               goal="http://example.org/agora#bounds.fern.SoilMoisture")) == 1
+                               desire="http://example.org/agora#bounds.fern.SoilMoisture")) == 1

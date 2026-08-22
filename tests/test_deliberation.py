@@ -70,18 +70,18 @@ def test_not_seeing_means_look(make):
     """The oldest rule in the reflex, now asked in the words it means (#240).
 
     It used to be `propose(property, None) == OBSERVE` — a first line that read a missing value
-    as ignorance. The behaviour is unchanged and the QUESTION is different: a goal says which
+    as ignorance. The behaviour is unchanged and the QUESTION is different: a desire says which
     epistemic failure it is, so "never read" and "the caller passed no number" stop being the
     same sentinel. Both epistemic states are asserted, because they are repaired by the same
     move for the same reason and a rule that covered only one would leave stale readings
     unwatched.
     """
-    from agent.goal import Goal
+    from agent.desire import Desire
 
     decider = decider_of(make("fern"))
-    never_read = Goal(uri="urn:w", urgency=1.0, observed_property=MOISTURE,
+    never_read = Desire(uri="urn:w", urgency=1.0, observed_property=MOISTURE,
                       value=None, state="unmeasured")
-    too_old = Goal(uri="urn:w", urgency=1.0, observed_property=MOISTURE,
+    too_old = Desire(uri="urn:w", urgency=1.0, observed_property=MOISTURE,
                    value=0.30, state="stale")
     assert decider.propose_for(never_read) == OBSERVE
     assert decider.propose_for(too_old) == OBSERVE, \
@@ -123,7 +123,7 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
     #  the one this scenario happens to use would pass while saying less than it claims, and
     #  would break silently the next time a caller changed which question it asks.
     monkeypatch.setattr(decider_of(fern), "propose", lambda prop, value: None)
-    monkeypatch.setattr(decider_of(fern), "propose_for", lambda goal: None)
+    monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
 
@@ -138,7 +138,7 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     #  the one this scenario happens to use would pass while saying less than it claims, and
     #  would break silently the next time a caller changed which question it asks.
     monkeypatch.setattr(decider_of(fern), "propose", lambda prop, value: None)
-    monkeypatch.setattr(decider_of(fern), "propose_for", lambda goal: None)
+    monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert fern.bidding().pending is None
     # and no observe intention was adopted — nothing committed to a wait nobody is waiting on
@@ -329,7 +329,7 @@ def test_the_provider_hands_actors_the_planner(make):
 
 
 def test_the_planner_pursues_the_lot_past_the_aim(make, monkeypatch):
-    """The one deduced goal past the region: the hosted lot must be serveable. With the aim
+    """The one deduced desire past the region: the hosted lot must be serveable. With the aim
     satisfied (value above it) the reflex says nothing — and the planner still says ACQUIRE
     while the vessel holds less than the lot its shop owes, because every downstream buyer's
     Acquire silently preconditions stock >= lot. Aim moved to 1.0 for the test so the two
@@ -412,7 +412,7 @@ def test_a_buyer_honours_nothing(make):
     assert all(r.is_chosen for r in menu_of(fern.store.query, fern.me.uri))
 
 
-# --- step 9: a goal, not a property and a value -----------------------------
+# --- step 9: a desire, not a property and a value -----------------------------
 
 def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     """`propose_for` takes the WANT, so a duty reaches deliberation as what it is.
@@ -422,15 +422,15 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     counterparty. A host with two buyers must not serve one's claim through the other's valve,
     which is why the match is on the agent and not on the mode alone.
     """
-    from agent.goal import Goal
+    from agent.desire import Desire
 
     supplier = make("supplier")
-    duty = Goal(uri="urn:o", urgency=0.9, claim="j-1",
+    duty = Desire(uri="urn:o", urgency=0.9, claim="j-1",
                 owed_to="http://example.org/agora/world/simulation#fern_agent")
     assert supplier.provider(_DELIBERATION).propose_for(duty) == \
         "http://example.org/agora#Apply"
 
-    stranger = Goal(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
+    stranger = Desire(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
     assert supplier.provider(_DELIBERATION).propose_for(stranger) is None, \
         "a debt no lever of mine can reach proposes nothing — and stays owed"
 
@@ -441,24 +441,24 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
     strength of urgency alone would spend the water where nothing is looking — and a debt
     approaching its deadline that nobody has presented is exactly the case where the two
     answers differ."""
-    from agent.goal import Goal
+    from agent.desire import Desire
 
     supplier = make("supplier")
-    standing = Goal(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
+    standing = Desire(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
                     owed_to="http://example.org/agora/world/simulation#fern_agent")
     assert supplier.provider(_DELIBERATION).propose_for(standing) is None
 
 
 def test_a_stake_reaches_the_same_door_and_behaves_exactly_as_before(make):
-    """The widening must not move the reflex. A goal with a property and a value is the old
+    """The widening must not move the reflex. A desire with a property and a value is the old
     question in the new shape, and it has to answer identically — the regression this design
     is most exposed to is a rewrite that quietly changes what a thirsty agent does."""
-    from agent.goal import Goal
+    from agent.desire import Desire
 
     fern = make("fern")
     reflex = fern.provider(_DELIBERATION)
     for value in (0.30, 0.55, 0.80):
-        stake = Goal(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
+        stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
         assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value)
 
 
@@ -514,7 +514,7 @@ def test_a_pass_reports_what_it_cost_and_what_it_could_not_see(make):
 
     assert planning["seconds"] > 0, "a pass that took no time did not happen"
     assert planning["blind"] == 0, \
-        "since #268 every lever on fern's menu states its effect, so no goal is passed over"
+        "since #268 every lever on fern's menu states its effect, so no desire is passed over"
     assert planning["deepest"] <= 1, \
         "depth beyond one step is nominal today (#254, #258) — if this rises, those were fixed"
     assert set(trace.FIELD.values()) <= set(planning), \

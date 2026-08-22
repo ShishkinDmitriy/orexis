@@ -33,14 +33,14 @@
 #
 # The stake branch's arithmetic is `gap.rq`'s, repeated. That is a real cost and it is paid on
 # purpose: SPARQL has no include, and the alternative — two queries the reader must union
-# themselves — is not the one list this exists to give. `tests/test_goals.py` fails if the two
+# themselves — is not the one list this exists to give. `tests/test_desires.py` fails if the two
 # ever disagree, which is the same guard `urgency` has had since it was written.
 
-SELECT ?goal ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?claim
+SELECT ?desire ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?claim
        ?at ?expires WHERE {
   {
-    $me ag:holds ?goal ; ag:actsFor ?subject .
-    ?goal ssn:forProperty ?property ; sh:property ?below , ?above .
+    $me ag:holds ?desire ; ag:actsFor ?subject .
+    ?desire ssn:forProperty ?property ; sh:property ?below , ?above .
     ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
            sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
     ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
@@ -102,16 +102,16 @@ SELECT ?goal ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?cl
     #  KNOWING, where there is nothing to know it ABOUT. An agent may poll an instrument
     #  pointed at something it holds no region in — the loner's gardener watches a water butt
     #  it does not act for — and it still wants that reading current: it went to the trouble of
-    #  polling the thing. The stake branch above cannot produce this goal, because it starts
-    #  from a region, and `notices()` used to cover exactly this ground before goals replaced
+    #  polling the thing. The stake branch above cannot produce this desire, because it starts
+    #  from a region, and `notices()` used to cover exactly this ground before desires replaced
     #  it. Without this branch the butt would have a freshness SHAPE that fires and no GOAL
     #  anyone pursues, which is the worst of both.
     #
     #  Guarded against the properties the stake branch already answers for, so a want with a
-    #  region and a want with an instrument do not both arrive as separate goals about one
+    #  region and a want with an instrument do not both arrive as separate desires about one
     #  property. A region reports its own staleness; this covers what a region does not reach.
-    $me ag:holds ?goal .
-    ?goal ag:violationIs ag:Stale ;
+    $me ag:holds ?desire .
+    ?desire ag:violationIs ag:Stale ;
           ssn:forProperty ?property ;
           prov:wasDerivedFrom ?instrument .
     ?instrument sensing:monitors ?subject ; sosa:observes ?property .
@@ -142,22 +142,22 @@ SELECT ?goal ?kind ?property ?value ?low ?high ?urgency ?side ?state ?owedTo ?cl
     #  default union of public graphs. It is a placeholder rather than an IRI because a graph
     #  IRI is an INSTANCE, and code may not name one.
     GRAPH $owed {
-      ?goal a ag:Obligation ; ag:owedTo ?owedTo ; ag:forClaim ?claim ;
+      ?desire a ag:Obligation ; ag:owedTo ?owedTo ; ag:forClaim ?claim ;
             ag:presented ?presented ; ag:owedAt ?at .
-      OPTIONAL { ?goal ag:expiresAt ?expires }
-      #  A paid debt is HISTORY, not a goal, and this question is "what am I pursuing". The
+      OPTIONAL { ?desire ag:expiresAt ?expires }
+      #  A paid debt is HISTORY, not a desire, and this question is "what am I pursuing". The
       #  ledger keeps every one of them — a debt paid and a debt forgotten must not look alike
       #  — and `owed()` is where to ask. Live on the bench the supplier answered this query
       #  with 134 rows, 133 of them settled, and the sovereign channel truncates its answers:
       #  a host that had traded for long enough would have pushed its own stake off the end of
       #  the list it was asked for.
-      FILTER NOT EXISTS { ?goal ag:dischargedAt ?paid } }
+      FILTER NOT EXISTS { ?desire ag:dischargedAt ?paid } }
     BIND("duty" AS ?kind)
     #  ?urgency is deliberately UNBOUND on this branch, and the reason is the engine rather
     #  than the design. A duty's room is TIME — the fraction of the claim's redeem window that
     #  has run — and this store will not do the arithmetic: `duration / duration` and
     #  `duration * number` both bind NOTHING here, silently, while `dateTime + duration` and
-    #  comparing two durations work. Measured, all four (tests/test_goals.py pins it, so the
+    #  comparing two durations work. Measured, all four (tests/test_desires.py pins it, so the
     #  day the engine grows the operation the guard says so rather than this comment rotting).
     #
     #  A column that quietly reads 0.0 for every debt in the society is exactly the failure

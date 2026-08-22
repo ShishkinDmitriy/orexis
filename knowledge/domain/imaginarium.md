@@ -38,7 +38,7 @@ world = copy_of(base)                            # applied to the HYPOTHESIS
 The retraction re-asked the belief base, found the observation still sitting on disk, and never
 saw what the previous step added. The second dose's predicted reading landed *beside* the first's
 instead of replacing it — two `sosa:hasSimpleResult` on one node, the reader taking whichever it
-found. Depth beyond one was nominal for any goal about a measured value, which is most of them.
+found. Depth beyond one was nominal for any desire about a measured value, which is most of them.
 See [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md).
 
 **No rule changed to fix it.** `$sensed` was already a substituted parameter, and every shipped
@@ -120,7 +120,7 @@ have tripled a pass on a four-core Pi to save twenty thousand triples of memory.
 # The seam it does not close
 
 A node's world is read by two things that want different shapes, and now two engines. Rules want
-named graphs in the imaginarium; the goal check runs pySHACL and wants one flat rdflib graph. So a
+named graphs in the imaginarium; the desire check runs pySHACL and wants one flat rdflib graph. So a
 node is a **pair** — the shared invariant snapshot and its own readings — and the flat view is
 materialised from that pair. That materialisation is the piece of work this design does not
 remove, and it is where the rdflib cost reappears, bounded: pySHACL was always going to run on

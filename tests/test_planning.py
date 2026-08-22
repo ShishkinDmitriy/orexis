@@ -38,9 +38,9 @@ def _gardener(monkeypatch, moisture):
     monkeypatch.setenv("AGORA_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(m for m in agent.modules if m.name == "desire")
-    goal = next(g for g in agent.goals() if g.observed_property == MOISTURE)
-    return agent, Planner(agent, desire, agent.me).plan(goal), goal
+    deducer = next(m for m in agent.modules if m.name == "desire")
+    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    return agent, Planner(agent, deducer, agent.me).plan(desire), desire
 
 
 def test_a_lever_that_would_overshoot_is_refused_by_simulating_it(monkeypatch):
@@ -55,9 +55,9 @@ def test_a_lever_that_would_overshoot_is_refused_by_simulating_it(monkeypatch):
     the world the dose would make, scores it, finds it no better than the one it is in, and
     declines. `not better` is the finding, and it is a DECISION rather than an absence of one.
     """
-    _, plan, goal = _gardener(monkeypatch, WET)
+    _, plan, desire = _gardener(monkeypatch, WET)
 
-    assert goal.state == "unmet"
+    assert desire.state == "unmet"
     assert plan.outcome == search.NOT_BETTER
     assert plan.steps == ()
     assert plan.urgency_after >= plan.urgency_now
@@ -76,7 +76,7 @@ def test_a_dose_that_reaches_the_region_is_planned(monkeypatch):
     assert plan.urgency_after < plan.urgency_now
 
 
-def test_a_goal_already_met_plans_nothing(monkeypatch):
+def test_a_desire_already_met_plans_nothing(monkeypatch):
     _, plan, _ = _gardener(monkeypatch, CONTENT)
 
     assert plan.outcome == search.SATISFIED and plan.steps == ()
@@ -110,14 +110,14 @@ def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch
               % (EFFECTS_GRAPH, EFFECTS_GRAPH))
 
     fern = build_agent("fern", st, monkeypatch)
-    desire = next(m for m in fern.modules if m.name == "desire")
-    goal = next(g for g in fern.goals() if g.observed_property == MOISTURE)
+    deducer = next(m for m in fern.modules if m.name == "desire")
+    desire = next(g for g in fern.desires() if g.observed_property == MOISTURE)
 
-    plan = Planner(fern, desire, fern.me).plan(goal)
+    plan = Planner(fern, deducer, fern.me).plan(desire)
     assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
 
     reflex = fern.provider("http://example.org/agora/deliberation#DeliberationCapability")
-    assert reflex.propose_for(goal) == reflex.propose(MOISTURE, 0.30), \
+    assert reflex.propose_for(desire) == reflex.propose(MOISTURE, 0.30), \
         "a thirsty plant must still buy — the search defers where it cannot see"
 
 
@@ -159,7 +159,7 @@ def test_a_planning_pass_costs_about_a_second(monkeypatch):
     """The assumption most likely to sink this, pinned as a number rather than a hope.
 
     A pySHACL run per candidate on a Raspberry Pi is what the record warned about, and the
-    measurement is why the goal shape is validated ALONE: one goal's shape costs 0.083s where
+    measurement is why the desire shape is validated ALONE: one desire's shape costs 0.083s where
     everything the packages ship costs 1.73s, twenty times more, for an answer about rules no
     effect could have broken. Legality is asked once, of the winner.
 
@@ -189,33 +189,33 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     monkeypatch.setenv("AGORA_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(m for m in agent.modules if m.name == "desire")
-    planner = Planner(agent, desire, agent.me)
-    goal = next(g for g in agent.goals() if g.observed_property == MOISTURE)
+    deducer = next(m for m in agent.modules if m.name == "desire")
+    planner = Planner(agent, deducer, agent.me)
+    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
 
-    here = planner._begin(goal)
-    row = next(iter(planner._candidates(here, goal)))
-    step = planner._step_from(here, row, goal)
+    here = planner._begin(desire)
+    row = next(iter(planner._candidates(here, desire)))
+    step = planner._step_from(here, row, desire)
 
-    assert planner._value_in(here.world, goal) == DRY
-    moved = planner._value_in(step.world, goal)
+    assert planner._value_in(here.world, desire) == DRY
+    moved = planner._value_in(step.world, desire)
     assert moved > DRY, "the dose moved the world it was simulated into"
 
     #  The MEANS is passed because sizing is dispatched to whoever would take the act (#268):
     #  an actuator sizes a dose, a bidder sizes a bid, and a planner asks neither for the
     #  other's. Both production call sites pass it; a bare `_bind` sizes nothing on purpose.
     actuate = "http://example.org/agora#Actuate"
-    assert planner._bind(goal, here, actuate)["value"] == DRY
-    assert planner._bind(goal, step, actuate)["value"] == moved, \
+    assert planner._bind(desire, here, actuate)["value"] == DRY
+    assert planner._bind(desire, step, actuate)["value"] == moved, \
         "a step taken from here must be predicted from HERE, not from where the agent stands"
-    assert planner._bind(goal, step, actuate)["sensed"] != planner._bind(
-        goal, here, actuate)["sensed"], \
+    assert planner._bind(desire, step, actuate)["sensed"] != planner._bind(
+        desire, here, actuate)["sensed"], \
         "and it must ASK about here too — a rule reads the readings its own node reached"
 
     asked = []
     monkeypatch.setattr(agent.provider("http://example.org/agora/actuation#Actuation"),
                         "dose_for", lambda prop, value: asked.append(value) or 0.06)
-    planner._bind(goal, step, actuate)
+    planner._bind(desire, step, actuate)
     assert asked == [moved], "the dose is sized from the world the step starts in"
 
 
@@ -238,10 +238,10 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     monkeypatch.setenv("AGORA_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
     fern = build_agent("fern", st, monkeypatch)
-    desire = next(m for m in fern.modules if m.name == "desire")
-    goal = next(g for g in fern.goals() if g.observed_property == MOISTURE)
+    deducer = next(m for m in fern.modules if m.name == "desire")
+    desire = next(g for g in fern.desires() if g.observed_property == MOISTURE)
 
-    plan = Planner(fern, desire, fern.me).plan(goal)
+    plan = Planner(fern, deducer, fern.me).plan(desire)
 
     assert not plan.partial, "every lever on this menu states its effect"
     assert [s.means for s in plan.steps] == ["http://example.org/agora#Acquire"], \
@@ -262,7 +262,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     Caught by the equivalence this design is most exposed to: the reflex cedes at the aim and
     the planner did not.
     """
-    from agent.goal import Goal
+    from agent.desire import Desire
 
     monkeypatch.setenv("AGORA_WORLD", "simulation")
     fern = build_agent("fern", genesis_store(), monkeypatch)
@@ -271,7 +271,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     #  fern aims at 0.55. Below it the two agree to buy; at and above it they agree to cede,
     #  and the second half is what the guard restores.
     for value in (0.30, 0.55, 0.80):
-        stake = Goal(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
+        stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
         assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value), \
             f"planner and reflex disagree at {value}"
 
@@ -291,9 +291,9 @@ def _thirsty_with_a_nearly_empty_butt(monkeypatch):
     st = genesis_store({("zz", MOISTURE): DRY, ("water_butt", STORED): NEARLY_EMPTY},
                        world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(m for m in agent.modules if m.name == "desire")
-    goal = next(g for g in agent.goals() if g.observed_property == MOISTURE)
-    return agent, Planner(agent, desire, agent.me), goal
+    deducer = next(m for m in agent.modules if m.name == "desire")
+    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    return agent, Planner(agent, deducer, agent.me), desire
 
 
 def _readings_of(world, subject, prop):
@@ -320,8 +320,8 @@ def test_a_second_dose_is_predicted_from_what_the_first_one_left(monkeypatch):
     The butt is nearly empty, so no single dose closes the gap — which is the only arrangement
     in which a second step's baseline is observable at all.
     """
-    agent, planner, goal = _thirsty_with_a_nearly_empty_butt(monkeypatch)
-    plan = planner.plan(goal)
+    agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    plan = planner.plan(desire)
 
     assert [s.means for s in plan.steps] == [ACTUATE, ACTUATE], \
         "two doses, because one cannot pour more than the butt holds"
@@ -341,14 +341,14 @@ def test_the_world_a_plan_reaches_holds_ONE_reading_per_subject_and_property(mon
     about: the value in it must be the one that step predicted, and there must be nothing else
     beside it.
     """
-    agent, planner, goal = _thirsty_with_a_nearly_empty_butt(monkeypatch)
-    plan = planner.plan(goal)
+    agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    plan = planner.plan(desire)
 
     assert len(plan.steps) == 2, \
         "a one-step plan cannot show this — the second step is where the two readings met"
-    node = planner._begin(goal)
+    node = planner._begin(desire)
     for step in plan.steps:
-        node = planner._step_from(node, step, goal)
+        node = planner._step_from(node, step, desire)
 
     readings = _readings_of(node.world, agent.me.acts_for, MOISTURE)
     assert len(readings) == 1, \
@@ -367,26 +367,26 @@ def test_legality_is_judged_on_the_world_the_plan_would_actually_reach(monkeypat
     Caught by looking at what `conforms` is handed, because a legality check that is quietly
     about the wrong world passes exactly as loudly as one about the right world.
     """
-    agent, planner, goal = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     judged = []
     monkeypatch.setattr(search, "conforms",
                         lambda world, focus=None: judged.append(world) or (True, ""))
 
-    plan = planner.plan(goal)
+    plan = planner.plan(desire)
 
     assert len(plan.steps) == 2 and len(judged) == 1, "the winner is checked, once"
     readings = _readings_of(judged[0], agent.me.acts_for, MOISTURE)
-    assert len(readings) == 1 and readings[0] == pytest.approx(_last_predicted(planner, goal,
+    assert len(readings) == 1 and readings[0] == pytest.approx(_last_predicted(planner, desire,
                                                                               plan)), \
         "the society judged a world the plan would not have reached"
 
 
-def _last_predicted(planner, goal, plan) -> float:
+def _last_predicted(planner, desire, plan) -> float:
     """What the plan's final step predicts, replayed step by step from the root."""
-    node = planner._begin(goal)
+    node = planner._begin(desire)
     for step in plan.steps:
-        node = planner._step_from(node, step, goal)
-    return planner._value_in(node.world, goal)
+        node = planner._step_from(node, step, desire)
+    return planner._value_in(node.world, desire)
 
 
 def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
@@ -399,11 +399,11 @@ def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
     contents, because a hypothesis graph left behind in the belief base is litter that outlives
     the premise it was concluded from.
     """
-    agent, planner, goal = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     before = agent.store.get_graph(SENSED_GRAPH)
     names = set(agent.store.graph_names())
 
-    plan = planner.plan(goal)
+    plan = planner.plan(desire)
 
     assert len(plan.steps) == 2, "a search that never went deep would assert nothing here"
     assert agent.store.get_graph(SENSED_GRAPH) == before, "readings the agent never took"
@@ -415,7 +415,7 @@ def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
 def test_two_paths_to_the_same_world_still_collide(monkeypatch):
     """Cycle detection stays keyed on the WORLD, which naming a graph per node could have broken.
 
-    `seen` holds the value the goal is about, and it is global across the search rather than per
+    `seen` holds the value the desire is about, and it is global across the search rather than per
     branch — so two paths arriving at the same value collide and the second is pruned. A node
     now carries a graph name derived from its path, and keying on THAT would have turned cycle
     detection into a per-branch check silently, since two names for one world would each look
@@ -424,8 +424,8 @@ def test_two_paths_to_the_same_world_still_collide(monkeypatch):
     Looking is the case that proves it: Observe predicts the value it found, so its world is the
     world it started in, under a different name. It must still be seen.
     """
-    agent, planner, goal = _thirsty_with_a_nearly_empty_butt(monkeypatch)
-    planner.plan(goal)
+    agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    planner.plan(desire)
 
     looks = [(row.means, verdict) for _, row, _, verdict in planner._weighed
              if row.means == OBSERVE]
@@ -451,7 +451,7 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     will say. Both worlds then read None and collide — which is the case a reader would most
     expect to escape, and the reason it is the one asserted here.
 
-    If this fails, the thing to look at is `_signature`. It is the goal's own value, and a look
+    If this fails, the thing to look at is `_signature`. It is the desire's own value, and a look
     does not move it; #258 asks whether a signature should carry where a plan IS, and a
     signature noticing a fresher `sosa:resultTime` would make "look, then look" a new world
     every time. Chaining past a look becomes a real question again exactly there.
@@ -459,11 +459,11 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     monkeypatch.setenv("AGORA_WORLD", "loner")
     st = genesis_store({("water_butt", STORED): NEARLY_EMPTY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(m for m in agent.modules if m.name == "desire")
-    goal = next(g for g in agent.goals() if g.observed_property == MOISTURE)
-    planner = Planner(agent, desire, agent.me)
+    deducer = next(m for m in agent.modules if m.name == "desire")
+    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    planner = Planner(agent, deducer, agent.me)
 
-    plan = planner.plan(goal)
+    plan = planner.plan(desire)
 
     looked = [v for _, row, _, v in planner._weighed if row.means == OBSERVE]
     assert looked == [trace.SEEN], \

@@ -34,7 +34,7 @@ KERNEL = "http://example.org/agora#"
 #  pass's own outcome makes, one scale down. "Worse" and "already seen" are different findings:
 #  the first says this lever does not help from here, the second says the search has been here
 #  before and expanding it again would spend the depth budget going nowhere.
-MET = "meets the goal"
+MET = "meets the desire"
 BETTER = "better than standing still"
 WORSE = "no better than standing still"
 SEEN = "a world already reached"
@@ -53,31 +53,31 @@ FIELD = {
 }
 
 
-def _uri(agent_id: str, goal_uri: str) -> str:
-    """One node per (agent, goal), so planning the same goal twice replaces rather than adds.
+def _uri(agent_id: str, desire_uri: str) -> str:
+    """One node per (agent, desire), so planning the same desire twice replaces rather than adds.
 
-    Minted from the goal's own IRI on the channel precedent — a derived instance computed from
+    Minted from the desire's own IRI on the channel precedent — a derived instance computed from
     a given string, so a second pass lands on the same node and the DELETE below finds it.
 
     DETERMINISTIC ACROSS PROCESSES, which `hash()` is not: Python salts it per interpreter, so
     a node minted in one run would be unfindable in the next, the clear would match nothing,
     and every restart would orphan a trace that outlived the pass it described — the one thing
-    this graph must never do. The goal's local name is already unique per agent (a want is
-    minted per agent and property), and quoting the whole IRI covers a goal shaped otherwise.
+    this graph must never do. The desire's local name is already unique per agent (a want is
+    minted per agent and property), and quoting the whole IRI covers a desire shaped otherwise.
     """
-    tail = goal_uri.rsplit("#", 1)[-1] if "#" in goal_uri else quote(goal_uri, safe="")
+    tail = desire_uri.rsplit("#", 1)[-1] if "#" in desire_uri else quote(desire_uri, safe="")
     return f"{KERNEL}deliberation.{agent_id}.{quote(tail, safe='')}"
 
 
-def clear(store, agent_id: str, goal_uri: str) -> None:
-    """Drop the previous pass for this goal, at the START of the next one.
+def clear(store, agent_id: str, desire_uri: str) -> None:
+    """Drop the previous pass for this desire, at the START of the next one.
 
     At the start and not the end, which is the difference between a graph that holds one pass
-    and a graph that holds two. Clearing when a pass finishes would leave the trace of a goal
+    and a graph that holds two. Clearing when a pass finishes would leave the trace of a desire
     whose planning crashed sitting beside beliefs it can contradict — and the crash is exactly
     the case somebody would be reading the trace to understand.
     """
-    node = _uri(agent_id, goal_uri)
+    node = _uri(agent_id, desire_uri)
     store.update(f"""
         DELETE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?c ?cp ?co . <{node}> ?p ?o }} }}
         WHERE  {{ GRAPH <{DELIBERATION_GRAPH}> {{
@@ -85,7 +85,7 @@ def clear(store, agent_id: str, goal_uri: str) -> None:
                     OPTIONAL {{ <{node}> <{KERNEL}considered> ?c . ?c ?cp ?co }} }} }}""")
 
 
-def write(store, agent_id: str, goal, plan, considered, stands_at: float,
+def write(store, agent_id: str, desire, plan, considered, stands_at: float,
           took_s: float = 0.0) -> None:
     """Record one pass: what was weighed, what each would have reached, and what was taken.
 
@@ -94,14 +94,14 @@ def write(store, agent_id: str, goal, plan, considered, stands_at: float,
     the same posture `reporting` takes towards the series store.
     """
     try:
-        _write(store, agent_id, goal, plan, considered, stands_at, took_s)
+        _write(store, agent_id, desire, plan, considered, stands_at, took_s)
     except Exception as exc:                      # noqa: BLE001 - see the docstring
         log.warning("could not record what was considered: %s", exc)
 
 
-def _write(store, agent_id: str, goal, plan, considered, stands_at: float,
+def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
            took_s: float) -> None:
-    node = _uri(agent_id, goal.uri)
+    node = _uri(agent_id, desire.uri)
     chosen = plan.steps[0].means if plan.steps else None
     rows = []
     for i, (depth, row, urgency, verdict) in enumerate(considered):
@@ -127,7 +127,7 @@ def _write(store, agent_id: str, goal, plan, considered, stands_at: float,
                 break
     store.update(f"""INSERT DATA {{ GRAPH <{DELIBERATION_GRAPH}> {{
     <{node}> a <{KERNEL}Deliberation> ;
-        <{KERNEL}deliberatedOn> <{goal.uri}> ;
+        <{KERNEL}deliberatedOn> <{desire.uri}> ;
         <{KERNEL}verdict> "{plan.outcome}" ;
         <{KERNEL}standsAt> {stands_at:.6f} ;
         <{KERNEL}tookSeconds> {took_s:.6f} ;
@@ -137,7 +137,7 @@ def _write(store, agent_id: str, goal, plan, considered, stands_at: float,
 
 
 def outcomes(query) -> dict[str, int]:
-    """How many goals ended in each verdict on their last pass — the aggregate, for the series.
+    """How many desires ended in each verdict on their last pass — the aggregate, for the series.
 
     Read from the trace rather than counted in the module, so the number a dashboard shows and
     the answer a sovereign gets are the same fact. This is a READER, which is the one thing
@@ -152,7 +152,7 @@ SELECT ?verdict (COUNT(?d) AS ?n) WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
 
 
 def effort(query) -> dict[str, float]:
-    """What the last pass over every goal COST, and what the search did with each lever.
+    """What the last pass over every desire COST, and what the search did with each lever.
 
     Read from the trace for the same reason `outcomes` is: the pass already happened, and
     re-running it to gather figures would double the cost the figures report. Everything here
@@ -161,19 +161,19 @@ def effort(query) -> dict[str, float]:
     Each field is diagnostic of something recorded and otherwise invisible, which is the whole
     reason to have them rather than a general count:
 
-    - `seconds` is what a reporting tick's planning costs, summed over goals. `series()` calls
-      `pursued()`, which re-plans every goal, so this is the price of being asked what you want
+    - `seconds` is what a reporting tick's planning costs, summed over desires. `series()` calls
+      `pursued()`, which re-plans every desire, so this is the price of being asked what you want
       — and if it dominates an agent's cost then the instrumentation is the workload.
     - `deepest` is how many steps the longest path considered had. **Pinned at 1 is the
       signature of two recorded limits at once** — a rule's CONSTRUCTs run against the store
-      rather than the world, and the cycle signature is the goal's own value, so a step that
+      rather than the world, and the cycle signature is the desire's own value, so a step that
       moves nothing else is discarded as somewhere already reached.
     - `worlds` is how many simulations were built: the cost driver, and what to divide
       `seconds` by before blaming the shape checker.
     - `cycles` climbing while `deepest` stays at 1 says the search keeps arriving back where it
       started rather than being unable to go further.
     - `unsimulated` counts levers whose rule raised — an error, not a shrug.
-    - `blind` counts goals where some lever had no stated effect at all, so the pass could not
+    - `blind` counts desires where some lever had no stated effect at all, so the pass could not
       claim it looked at everything. That is a package that never said what its lever does, and
       it is why a partial plan defers to the reflex rather than reporting that nothing helps.
     """
