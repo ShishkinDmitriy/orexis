@@ -101,8 +101,9 @@ distance is worth, is [gap](/domain/gap.md)'s.
 
 # What am I pursuing — the whole list, with status
 
-`desires.rq` is the question a sovereign and a model actually ask, shipped beside `gap.rq`: every
-want this agent holds, hottest first, whoever sourced it. A stake and a duty appear in one list
+`desires_of` answers the question a sovereign and a model actually ask — every want this agent
+holds, hottest first, whoever sourced it — by joining `wants.rq` (the desire modality's half)
+with `readings.rq` (the belief modality's), the judging done where the clock is. A stake and a duty appear in one list
 because urgency is the common currency — a litre owed and a pot drying rank against each other
 instead of running down two paths that never meet — and each row says what state its desire is in:
 a stake is `met`, `unmet`, `stale` or `unmeasured`, a duty `standing`, `demanded` or

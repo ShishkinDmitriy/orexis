@@ -15,17 +15,21 @@ from packages.capability.desire import gaps_of, regions_of
 
 from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store
 
+
+def _gaps(st, uri):
+    """Both handles from one genesis store — the same content the two modalities split."""
+    return gaps_of(st.query_union, st.query, uri)
+
 FERN = "http://example.org/agora/world/simulation#fern_agent"
 SUPPLIER = "http://example.org/agora/world/simulation#supplier"
 
 
 def test_the_query_and_the_module_are_one_definition(query_with_readings):
-    """|gap| is `urgency`, by construction: gap.rq is the definition and Region reads the same
-    numbers, so the two must agree to the store's own precision. If they ever diverge, one of
-    them has been edited alone — and every consumer of the query is now judging differently
-    from the agent being judged."""
-    q = query_with_readings({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
-    gaps, regions = gaps_of(q, FERN), regions_of(q, FERN)
+    """|gap| is `urgency`, by construction — and since the split, by construction in the
+    literal sense: `gaps_of` computes the gap FROM `Region.urgency`, so this holds the sign
+    convention and the join to the same numbers every other consumer reads."""
+    st = genesis_store({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
+    gaps, regions = _gaps(st, FERN), regions_of(st.query, FERN)
     assert set(gaps) == {MOISTURE, TEMPERATURE}
     for prop, gap in gaps.items():
         assert abs(gap.gap) == round(regions[prop].urgency(gap.value), 6) or \
@@ -36,7 +40,7 @@ def test_the_gap_is_signed_and_the_sign_says_which_way_out(query_with_readings):
     """0.30 moisture is below fern's region (0.45-0.65) and 33 degrees is above its band
     (18-24): one gap negative, one positive. The sign is what a planner steers by — a band
     says IN TROUBLE, the gap says which direction relief lies in."""
-    gaps = gaps_of(query_with_readings(
+    gaps = _gaps(genesis_store(
         {("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0}), FERN)
     assert gaps[MOISTURE].gap < 0 < gaps[TEMPERATURE].gap
 
@@ -44,27 +48,26 @@ def test_the_gap_is_signed_and_the_sign_says_which_way_out(query_with_readings):
 def test_at_the_survival_bound_the_gap_is_exactly_one(query_with_readings):
     """The normalisation: fern survives 0.20-0.85 moisture, so 0.20 is the whole of the dry
     room spent — and past it is not more than everything."""
-    at_floor = gaps_of(query_with_readings({("fern", MOISTURE): 0.20}), FERN)
+    at_floor = _gaps(genesis_store({("fern", MOISTURE): 0.20}), FERN)
     assert at_floor[MOISTURE].gap == -1.0
-    past_it = gaps_of(query_with_readings({("fern", MOISTURE): 0.05}), FERN)
+    past_it = _gaps(genesis_store({("fern", MOISTURE): 0.05}), FERN)
     assert past_it[MOISTURE].gap == -1.0
 
 
-def test_unmeasured_is_not_satisfied(query):
+def test_unmeasured_is_not_satisfied():
     """At birth there is a desired state and no observations, so the diff is EMPTY — not zero.
 
     This is the fact the whole roadmap leans on: a gap of 0 would read as "all is well" and an
     absent row reads as "go and look", and the first intention is always to look. A defaulted
     zero here would quietly retire the reason the society polls at all.
     """
-    assert gaps_of(query, FERN) == {}
+    assert _gaps(genesis_store(), FERN) == {}
 
 
 def test_an_agent_with_no_desire_has_no_gap(query_with_readings):
     """The supplier observes nothing and wants nothing — no regions, no rows, and nothing here
     invents a stake for it. Handed readings about somebody else's plant, still nothing."""
-    q = query_with_readings({("fern", MOISTURE): 0.05})
-    assert gaps_of(q, SUPPLIER) == {}
+    assert _gaps(genesis_store({("fern", MOISTURE): 0.05}), SUPPLIER) == {}
 
 
 def test_the_agent_reports_its_worst_gap(monkeypatch, query_with_readings):
@@ -243,7 +246,7 @@ def test_an_unmet_want_is_not_printed_as_a_finding():
     if claimed := re.search(r"Results \((\d+)\):", report):
         assert int(claimed.group(1)) == shown, "the header must count what the body shows"
 
-    assert gaps_of(dry.query, FERN)[MOISTURE].gap < 0, \
+    assert _gaps(dry, FERN)[MOISTURE].gap < 0, \
         "the store must still report the gap the report no longer prints"
 
 

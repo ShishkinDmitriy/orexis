@@ -1,10 +1,10 @@
 """An agent's own beliefs — read per capability, from its own graph and nowhere else.
 
 What is here is the *reader*, which is the same for every capability. What each capability
-actually believes is declared in its own package (`capabilities/<name>/beliefs.py`) as a
-`Block`: a dataclass and the terms that fill it. So this file does not grow when a capability
-is added, and a module cannot accidentally depend on another's terms, because it never sees
-them.
+runs on is declared in its own package as `Picks` — a dataclass and the terms that fill it,
+one entry per pick (knowledge/domain/pick.md): a point the agent chose inside its mandate,
+which #297 sorted as a want. So this file does not grow when a capability is added, and a
+module cannot accidentally depend on another's terms, because it never sees them.
 
 **There are no defaults.** If a belief is missing the agent refuses to start, naming the term
 and the graph. A silent fallback would be a policy decision made in code — exactly what this
@@ -41,11 +41,11 @@ _CASTS = {
 
 
 @dataclass(frozen=True)
-class Block:
+class Picks:
     """One capability's private parameters: the shape, and the terms that fill it.
 
     Declared next to the module that reads it. The cast for each field is taken from the
-    dataclass annotation, so a block states its types once rather than twice.
+    dataclass annotation, so the picks state their types once rather than twice.
     """
 
     capability: str  # the term, so a missing belief names the capability that wanted it
@@ -62,7 +62,7 @@ class Block:
         missing = [f for f in self.terms if f not in hints]
         if missing:
             raise BeliefError(
-                f"{self.cls.__name__} has no field for {', '.join(missing)} — the block and "
+                f"{self.cls.__name__} has no field for {', '.join(missing)} — the picks and "
                 "the dataclass disagree"
             )
         return {field: _CASTS[hints[field]] for field in self.terms}
@@ -103,7 +103,7 @@ def _parse_reading(results: dict) -> Reading | None:
     return Reading(value=float(rows[0]["value"]), result_time=_parse_datetime(rows[0].get("ts")))
 
 
-def _block_query(agent_uri: str, graph: str, terms: dict[str, str]) -> str:
+def _picks_query(agent_uri: str, graph: str, terms: dict[str, str]) -> str:
     lines = "\n".join(
         f"  OPTIONAL {{ <{agent_uri}> <{term}> ?{var} }}" for var, term in terms.items()
     )
@@ -150,42 +150,32 @@ class Beliefs:
     def __len__(self) -> int:
         return len(self._store)
 
-    def read(self, block: Block):
-        """Fill one capability's block, or refuse to start and say exactly what is missing."""
-        rows = bindings(self.query(_block_query(self.agent_uri, self.graph, block.terms)))
-        row = rows[0] if rows else {}
-        casts = block.casts()
-        out, missing = {}, []
-        for field, term in block.terms.items():
-            raw = row.get(field)
-            if raw is None:
-                missing.append(term)
-            else:
-                out[field] = casts[field](raw)
-        if missing:
-            raise BeliefError(
-                f"{self.agent_id} composed {block.capability} but its beliefs graph "
-                f"<{self.graph}> is missing {', '.join(missing)} — run agora-validate"
-            )
-        return block.cls(**out)
+    def read(self, picks: Picks):
+        """Fill one capability's picks, or refuse to start and say exactly what is missing.
 
-    def read_optional(self, block: Block):
-        """Fill a block, or None if the agent said nothing about it at all.
+        Kept on the belief modality although a parameter is a PICK — a want, by #297's sort —
+        because the belief base is the pick RECORD: what was authored at birth and what review
+        has since re-picked, persistent in the volume. The desire modality serves the same
+        picks from its rebuilt copy, and modules read THERE; this reader remains for the
+        record's own consumers — validation, review's revert — and as the machinery both
+        share.
+        """
+        return read_picks(self.query, self.agent_uri, self.graph, self.agent_id, picks)
 
-        This is NOT a relaxation of the rule above. A block that is wholly absent is a decision
-        stated by omission — the same way a beliefs file with no `market:Bidding` block says this
+    def read_optional(self, picks: Picks):
+        """The picks, or None if the agent said nothing about it at all.
+
+        This is NOT a relaxation of the rule above. Picks wholly absent are is a decision
+        stated by omission — the same way a beliefs file with no `market:Bidding` entries says this
         agent holds no stake — and the caller is expected to do nothing rather than to invent a
-        value. A block that is PARTIALLY present is still an error and still refuses, because
+        value. Picks PARTIALLY present are still an error and still refuse, because
         half an answer is an authoring slip rather than a choice.
 
-        Only for blocks whose absence is meaningful and harmless. A capability's parameters are
+        Only for picks whose absence is meaningful and harmless. A capability's parameters are
         neither: an agent missing those must not start.
         """
-        rows = bindings(self.query(_block_query(self.agent_uri, self.graph, block.terms)))
-        row = rows[0] if rows else {}
-        if not any(row.get(field) is not None for field in block.terms):
-            return None
-        return self.read(block)
+        return read_picks_optional(self.query, self.agent_uri, self.graph,
+                                   self.agent_id, picks)
 
     def current_reading(self, subject_uri: str, observed_property: str) -> Reading | None:
         """The latest observation of one property of a subject, with the time it was taken.
@@ -214,3 +204,33 @@ SELECT ?value ?ts WHERE {{
     OPTIONAL {{ ?obs sosa:resultTime ?ts }}
   }}
 }} ORDER BY DESC(?ts) LIMIT 1"""))
+
+
+def read_picks(query, agent_uri: str, graph: str, agent_id: str, picks: Picks):
+    """The picks machinery both modalities share: fill a dataclass or name what is missing."""
+    rows = bindings(query(_picks_query(agent_uri, graph, picks.terms)))
+    row = rows[0] if rows else {}
+    casts = picks.casts()
+    out, missing = {}, []
+    for field, term in picks.terms.items():
+        raw = row.get(field)
+        if raw is None:
+            missing.append(term)
+        else:
+            out[field] = casts[field](raw)
+    if missing:
+        raise BeliefError(
+            f"{agent_id} composed {picks.capability} but its beliefs graph "
+            f"<{graph}> is missing {', '.join(missing)} — run agora-validate"
+        )
+    return picks.cls(**out)
+
+
+def read_picks_optional(query, agent_uri: str, graph: str, agent_id: str, picks: Picks):
+    """A block, or None where the agent said nothing about it at all — see
+    `Beliefs.read_optional` for why partial presence still refuses."""
+    rows = bindings(query(_picks_query(agent_uri, graph, picks.terms)))
+    row = rows[0] if rows else {}
+    if not any(row.get(field) is not None for field in picks.terms):
+        return None
+    return read_picks(query, agent_uri, graph, agent_id, picks)

@@ -13,15 +13,16 @@ description: >-
 
 # What it is
 
-A **gap** is the diff between desired and sensed, for one property of one subject. It is asked as
-SPARQL — `gap.rq` joins the public regions against the agent's own sensed graph — and yields, per
-property, a **signed** distance normalised by the survival room on the side the value sits on: 0
-at the [region](/domain/desire.md)'s edge, the sign saying which way out, and |gap| = 1 at the
-edge of what the subject survives.
+A **gap** is the diff between desired and sensed, for one property of one subject. Since the
+dataset split ([a-store-is-a-modality](/decisions/a-store-is-a-modality.md), #298) it is asked
+in two halves — `wants.rq` of the desire modality, `readings.rq` of the belief modality — and
+joined by `gaps_of`, yielding, per property, a **signed** distance normalised by the survival
+room on the side the value sits on: 0 at the [region](/domain/desire.md)'s edge, the sign
+saying which way out, and |gap| = 1 at the edge of what the subject survives.
 
-**|gap| is `urgency`, by construction**, and the package's tests hold the query and the module to
-one definition. That is not a coincidence to be maintained: it is why a planner scoring worlds and
-a bidder sizing a bid steer by the same number.
+**|gap| is `urgency`, by construction** — literally now: the arithmetic that was once repeated
+between a query and the module lives only in `Region`, so a planner scoring worlds and a
+bidder sizing a bid steer by the same number because it is computed in one place.
 
 # A deficit is not a gap, and the difference is a drowning plant
 

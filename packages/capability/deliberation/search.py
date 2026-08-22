@@ -192,11 +192,18 @@ class Planner:
         return not list(results.subjects(RDF.type, _SH.ValidationResult))
 
     def _shape_of(self, desire: Desire, world):
-        """The desire's shape, with everything hanging off it, or None if it has none."""
+        """The desire's shape, with everything hanging off it, or None if it has none.
+
+        Asked of the DESIRE MODALITY, not of the world being judged (#298): what is pursued
+        and what is are different stores now, and validation was always two graphs — the
+        world is the data, the shape is the question. `world` stays a parameter because the
+        met-check is about it, and the shapes snapshot is per pass (`_begin`), so a rebuild
+        mid-search cannot hand two depths two different wants.
+        """
         node = URIRef(desire.uri)
-        if (node, RDF.type, _SH.NodeShape) not in world:
+        if (node, RDF.type, _SH.NodeShape) not in self._shapes:
             return None
-        return world.cbd(node)
+        return self._shapes.cbd(node)
 
     # --- the search --------------------------------------------------------------------------
 
@@ -386,7 +393,7 @@ class Planner:
         """
         from .module import menu_of
 
-        for row in menu_of(self.agent.beliefs.query, self.me.uri):
+        for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union):
             if not row.is_chosen:
                 continue
             if desire.observed_property and row.observed_property != desire.observed_property:
@@ -412,6 +419,11 @@ class Planner:
         """
         self.imaginarium = Imaginarium(
             self.agent.beliefs, beliefs_graph(self.agent.id), SENSED_GRAPH)
+        #  What this agent PURSUES, snapshotted for the pass: the desire modality's triples as
+        #  one rdflib graph, because pySHACL wants rdflib and a cbd walks blank nodes. Small —
+        #  a few hundred triples — and per pass for the same reason the imaginarium is.
+        self._shapes = effects.applied((), self.agent.desires.construct(
+            "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"), ())
         base = self._beliefs()
         #  The base's canonical facts, once per pass: `advance` needs them to tell a fact
         #  restored from a fact introduced, which is what lets a path that returns to the base

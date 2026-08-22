@@ -29,7 +29,7 @@ rules.ru. See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-st
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent.desire import Desire
@@ -48,8 +48,8 @@ _SENSING = "http://example.org/agora/sensing#SensingCapability"
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
 # file's own header. Read once at import: a malformed query is then an error the moment the
 # package loads rather than the first time somebody asks.
-GAP_QUERY = (Path(__file__).parent / "gap.rq").read_text()
-DESIRES_QUERY = (Path(__file__).parent / "desires.rq").read_text()
+WANTS_QUERY = (Path(__file__).parent / "wants.rq").read_text()
+READINGS_QUERY = (Path(__file__).parent / "readings.rq").read_text()
 
 # My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
 # graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
@@ -199,60 +199,157 @@ class Gap:
         return ((now or datetime.now(timezone.utc)) - self.at).total_seconds()
 
 
-def gaps_of(query, agent_uri: str) -> dict[str, Gap]:
+def gaps_of(desires, beliefs, agent_uri: str) -> dict[str, Gap]:
     """The desired/sensed diff for one agent, property -> gap. Computed, never stored.
 
     A gap is a VERDICT — the same number is a crisis for one agent and nothing for another — so
     like a band it is recomputed on every asking and no graph holds it. What may be persisted is
     a summary of its history, which is review's pattern and not this function's business.
 
-    A property with no observation yet is absent rather than zero: at birth every desire is
-    unmeasured, and unmeasured must not read as satisfied.
+    Two handles since the dataset split (#298): `desires` answers what is WANTED and `beliefs`
+    what IS, and the join is here — `wants.rq` and `readings.rq` are the two texts, and the
+    arithmetic that used to be repeated between the queries and the module lives once, in
+    `Region`. A property with no observation yet is absent rather than zero: at birth every
+    desire is unmeasured, and unmeasured must not read as satisfied.
     """
-    substituted = (GAP_QUERY
-                   .replace("$me", f"<{agent_uri}>")
-                   .replace("$sensed", f"<{SENSED_GRAPH}>"))
-    return {row["property"]: Gap(
-        observed_property=row["property"],
-        value=float(row["value"]),
-        low=float(row["low"]), high=float(row["high"]),
-        gap=float(row["gap"]),
-        at=datetime.fromisoformat(row["at"]) if row.get("at") else None,
-        region=row.get("region"),
-    ) for row in bindings(query(substituted))}
+    subjects = _subjects_of(beliefs, agent_uri)
+    known, _ = _known(beliefs)
+    out: dict[str, Gap] = {}
+    for row in _wants(desires, agent_uri, agent_id=None):
+        if row["kind"] != "stake":
+            continue
+        item = next((known[(s, row["property"])] for s in subjects
+                     if (s, row["property"]) in known), None)
+        if item is None or item.value is None:
+            continue
+        region = _region_of(row)
+        urgency = region.urgency(item.value)
+        gap = 0.0 if item.value == region.centre else             (urgency if item.value > region.centre else -urgency)
+        out[row["property"]] = Gap(
+            observed_property=row["property"], value=item.value,
+            low=region.low, high=region.high, gap=gap,
+            at=item.at, region=row.get("desire"),
+        )
+    return out
 
 
-def desires_of(query, agent_uri: str, agent_id: str,
+def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
              now: datetime | None = None) -> list[Desire]:
-    """Everything an agent is pursuing, hottest first — from the shipped `desires.rq`.
+    """Everything an agent is pursuing, hottest first — its stakes and its debts in one list.
 
-    A free function for the same reason `gaps_of` is: what a world implies about an agent
-    should be askable without building one. The query is the DEFINITION — the sovereign can
-    run the very text this runs — and the only arithmetic left in Python is the one thing the
-    store's engine will not do, which is dividing one duration by another.
+    Both sources appear because an obligation is a desire someone else sourced and urgency is
+    the common currency — a litre owed and a pot drying rank against each other rather than
+    running down two paths that never meet. Two handles since the dataset split (#298):
+    `wants.rq` asks the desire modality what is pursued, `readings.rq` asks the belief
+    modality what is known, and the judging — distance, staleness, lapse — happens here,
+    where the clock is. One clock, deliberately: the deadline and the urgency used to be
+    judged by two (the store's NOW and Python's), and two clocks that normally agree are
+    still two clocks.
+
+    A want whose reading is missing or too old is maximally urgent: not knowing whether the
+    pot is dying outranks knowing it is uncomfortable, which is why the first intention is
+    always to look. Staleness is judged against the horizon `publish_horizon` wrote — a store
+    with none published does not judge staleness at all, the honest outcome of not knowing
+    what rhythm is being kept.
     """
     now = now or datetime.now(timezone.utc)
-    substituted = (DESIRES_QUERY
-                   .replace("$me", f"<{agent_uri}>")
-                   .replace("$sensed", f"<{SENSED_GRAPH}>")
-                   .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>")
-                   .replace("$owed", f"<{obligations_graph(agent_id)}>"))
+    subjects = _subjects_of(beliefs, agent_uri)
+    known, by_instrument = _known(beliefs)
     out = []
-    for row in bindings(query(substituted)):
-        if row["kind"] == "stake":
-            out.append(Desire(uri=row["desire"], urgency=float(row["urgency"]),
-                            observed_property=row["property"], state=row["state"],
-                            value=float(row["value"]) if row.get("value") else None))
+    for row in _wants(desires, agent_uri, agent_id):
+        if row["kind"] == "duty":
+            #  Lapsed is judged HERE, against the same clock the urgency uses — one reader,
+            #  one now, so a debt cannot be maximally hot and still count as open because two
+            #  clocks disagreed.
+            demanded = row.get("presented") == "true"
+            lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
+            out.append(Desire(uri=row["desire"], urgency=_duty_urgency(row, now),
+                            claim=row["claim"], owed_to=row["owedTo"],
+                            state="lapsed" if lapsed else
+                                  ("demanded" if demanded else "standing"),
+                            pursuable=demanded and not lapsed))
             continue
-        #  Lapsed is judged HERE, against the same clock the urgency uses. The query records
-        #  what happened and carries the deadline; one reader, one now, so a debt cannot be
-        #  maximally hot and still count as open because two clocks disagreed.
-        lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
-        out.append(Desire(uri=row["desire"], urgency=_duty_urgency(row, now),
-                        claim=row["claim"], owed_to=row["owedTo"],
-                        state="lapsed" if lapsed else row["state"],
-                        pursuable=row["state"] == "demanded" and not lapsed))
+        if row["kind"] == "freshness":
+            item = by_instrument.get((row.get("instrument"), row["property"]))
+        else:
+            item = next((known[(s, row["property"])] for s in subjects
+                         if (s, row["property"]) in known), None)
+        value = item.value if item else None
+        stale = _is_stale(item, now)
+        if row["kind"] == "freshness":
+            #  Nothing to be far FROM, so the only urgencies are the epistemic ones: knowing
+            #  nothing, or knowing something too old to be about now.
+            urgency = 1.0 if value is None or stale else 0.0
+            state = "unmeasured" if value is None else ("stale" if stale else "met")
+        else:
+            region = _region_of(row)
+            if value is None:
+                urgency, state = 1.0, "unmeasured"
+            elif stale:
+                #  A stale want is as urgent as an unread one, and for the same reason: the
+                #  number in hand is not evidence about now. Scaling it by the distance the
+                #  LAST reading showed would rank an agent by something it no longer knows.
+                urgency, state = 1.0, "stale"
+            else:
+                urgency = region.urgency(value)
+                state = "unmet" if value < region.low or value > region.high else "met"
+        out.append(Desire(uri=row["desire"], urgency=urgency, state=state,
+                        observed_property=row["property"], value=value))
     return sorted(out, key=lambda g: -g.urgency)
+
+
+@dataclass(frozen=True)
+class _Known:
+    """One current reading and how it may be judged: the value, when it was taken, and the
+    staleness horizon whoever monitors that pair published."""
+
+    value: float | None
+    at: datetime | None
+    horizon: float | None
+
+
+def _wants(desires, agent_uri: str, agent_id: str | None) -> list[dict]:
+    """The desire modality's rows — `wants.rq`, with the duty branch reaching this agent's
+    obligations graph only when an id is given to name it by."""
+    text = WANTS_QUERY.replace("$me", f"<{agent_uri}>")
+    text = text.replace("$owed", f"<{obligations_graph(agent_id)}>" if agent_id
+                        else "<urn:nobody:owes>")
+    return bindings(desires(text))
+
+
+def _known(beliefs) -> tuple[dict, dict]:
+    """The belief modality's rows — `readings.rq` — keyed twice: by (subject, property) for
+    the stakes, and by (instrument, property) for the freshness wants, whose subject only the
+    belief side knows."""
+    text = (READINGS_QUERY.replace("$sensed", f"<{SENSED_GRAPH}>")
+            .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>"))
+    by_pair, by_instrument = {}, {}
+    for r in bindings(beliefs(text)):
+        item = _Known(value=float(r["value"]) if r.get("value") else None,
+                      at=datetime.fromisoformat(r["at"]) if r.get("at") else None,
+                      horizon=float(r["horizon"]) if r.get("horizon") else None)
+        by_pair[(r["subject"], r["property"])] = item
+        if r.get("instrument"):
+            by_instrument[(r["instrument"], r["property"])] = item
+    return by_pair, by_instrument
+
+
+def _subjects_of(beliefs, agent_uri: str) -> list[str]:
+    return [r["s"] for r in bindings(beliefs(
+        f"SELECT ?s WHERE {{ <{agent_uri}> ag:actsFor ?s }}"))]
+
+
+def _region_of(row: dict) -> Region:
+    floor, ceiling = row.get("floor"), row.get("ceiling")
+    return Region(observed_property=row["property"],
+                  low=float(row["low"]), high=float(row["high"]),
+                  floor=float(floor) if floor is not None else None,
+                  ceiling=float(ceiling) if ceiling is not None else None)
+
+
+def _is_stale(item, now: datetime) -> bool:
+    return (item is not None and item.horizon is not None and item.at is not None
+            and item.at + timedelta(seconds=item.horizon) < now)
 
 
 def _duty_urgency(row: dict, now: datetime) -> float:
@@ -309,8 +406,8 @@ class DesireModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.regions = regions_of(agent.beliefs.query, self.me.uri)
-        self._aims = aims_of(agent.beliefs.query, agent.id, self.me.uri)
+        self.regions = regions_of(agent.desires.query_union, self.me.uri)
+        self._aims = aims_of(agent.desires.query_union, agent.id, self.me.uri)
         self.log.info("wants %s", ", ".join(
             f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
             for p, r in sorted(self.regions.items())) or "nothing")
@@ -340,7 +437,7 @@ class DesireModule(Module):
         """An aim is a belief, so a review may move it — within the region, which is the same
         check boot makes. Re-read rather than patched, because the revision names a term and an
         aim is a structure: simplest correct answer is to ask the graph again."""
-        self._aims = aims_of(self.agent.beliefs.query, self.agent.id, self.me.uri)
+        self._aims = aims_of(self.agent.desires.query_union, self.agent.id, self.me.uri)
 
     # --- what I contribute to my siblings, through the contract every module has ---
 
@@ -402,7 +499,7 @@ class DesireModule(Module):
         more", which a deliberator needs precisely because nothing else will mention it. Rows
         carry `at`, and `current()` is the same diff with my own freshness rule applied.
         """
-        return gaps_of(self.agent.beliefs.query, self.me.uri)
+        return gaps_of(self.agent.desires.query_union, self.agent.beliefs.query, self.me.uri)
 
     def current(self) -> dict[str, Gap]:
         """The diff I would act on: every row still inside my own freshness rule.
@@ -454,7 +551,8 @@ class DesireModule(Module):
         those is the others' business. `desires_of` reads the whole shipped query and each module
         takes its own kind, so there is still one text and one definition.
         """
-        return [g for g in desires_of(self.agent.beliefs.query, self.me.uri, self.agent.id, now)
+        return [g for g in desires_of(self.agent.desires.query_union,
+                                    self.agent.beliefs.query, self.me.uri, self.agent.id, now)
                 if not g.is_duty]
 
     def series(self) -> list[tuple[str, dict, dict]]:

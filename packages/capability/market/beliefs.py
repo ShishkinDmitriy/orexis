@@ -12,13 +12,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agent.beliefs import Block
+from agent.beliefs import Picks
 
 from .terms import BIDDING, HOSTING, term
 
 BANDS = ("LOW", "OK", "HIGH")
 
-# See the note inside BIDDING_BLOCK: the domain coupling is this package's, stated here.
+# See the note inside BIDDING_PICKS: the domain coupling is this package's, stated here.
 _WATER = "http://example.org/agora/water#"
 
 
@@ -56,7 +56,7 @@ class HostingBeliefs:
     cooldown_s: int
 
 
-BIDDING_BLOCK = Block(
+BIDDING_PICKS = Picks(
     capability=BIDDING,
     cls=BiddingBeliefs,
     terms={
@@ -76,7 +76,7 @@ BIDDING_BLOCK = Block(
     },
 )
 
-HOSTING_BLOCK = Block(
+HOSTING_PICKS = Picks(
     capability=HOSTING,
     cls=HostingBeliefs,
     terms={

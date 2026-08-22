@@ -32,9 +32,12 @@ SELECT DISTINCT ?means ?property ?via ?direction ?mode WHERE {
   # and all three are wants. Matching a severity therefore matches three times per property,
   # and every lever would be offered three times. The row is about the property; which side
   # of it is unmet is the GOAL's business, not the menu's.
-  $me ag:holds ?region ; ag:actsFor ?subject .
-  ?region ssn:forProperty ?property ;
-          sh:property/sh:severity ag:ShouldBecome .
+  # The properties this agent holds desires in arrive as $properties, asked of the DESIRE
+  # MODALITY by the collector (a-store-is-a-modality, #298): the walk below is belief — wiring
+  # and topology — and the shape patterns that used to sit here were the one desire-shaped
+  # thing in it. An agent with no wants gets an empty VALUES and no rows, exactly as before.
+  VALUES ?property { $properties }
+  $me ag:actsFor ?subject .
   $me market:bidsIn ?via .
   ?via market:marketFor ?src .
   ?src market:supplies ?good .

@@ -24,7 +24,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from agent.beliefs import Block
+from agent.beliefs import Picks
 from agent.module import Module, Timer
 from agent.store import bindings
 
@@ -67,7 +67,7 @@ class KeepingBeliefs:
     patience_s: int
 
 
-KEEPING_BLOCK = Block(
+KEEPING_PICKS = Picks(
     capability=KEEPING,
     cls=KeepingBeliefs,
     terms={"patience_s": PATIENCE_S},
@@ -109,7 +109,7 @@ class IntentionModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.beliefs = agent.beliefs.read(KEEPING_BLOCK)
+        self.beliefs = agent.desires.read(KEEPING_PICKS)
         self.graph = intentions_graph(agent.id)
         self._tick: Timer | None = None
 

@@ -34,6 +34,9 @@ class FakeAgent:
                        actuators=(valve,))
         self.sent = []
         self.beliefs = _Beliefs(dose_grace_s)
+        # The module reads its block from the desire modality now; the stub serves both
+        # surfaces, which is exactly what one fake covering two handles should look like.
+        self.desires = self.beliefs
 
     def publish(self, topic, payload, retain=False):
         self.sent.append((topic, payload))

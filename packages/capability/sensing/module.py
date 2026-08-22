@@ -49,7 +49,7 @@ from agent.observation import Observations
 from agent.ontology import INSTRUMENTS_GRAPH
 from agent.store import bindings
 
-from .beliefs import ALARM_BLOCK, LISTENING_BLOCK, SUBSCRIBING_BLOCK
+from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .terms import LISTENING, PUSH, SCHEDULED, STALE_AFTER_S, SUBSCRIBING
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
@@ -329,11 +329,11 @@ class SubscribingModule(SensingModule):
     name = "subscribing"
 
     def __init__(self, agent):
-        self.beliefs = agent.beliefs.read(SUBSCRIBING_BLOCK)
+        self.beliefs = agent.desires.read(SUBSCRIBING_PICKS)
         # The jolt threshold is the agent's own pick, not the family's figure — it has to be,
         # because a review rewrites the agent's graph and nothing else. Optional, and absence
         # is a statement: no pick means band-only alarms.
-        self.alarm_beliefs = agent.beliefs.read_optional(ALARM_BLOCK)
+        self.alarm_beliefs = agent.desires.read_optional(ALARM_PICKS)
         super().__init__(agent)
         self.min_sleep_s, self.max_sleep_s, self.relax_factor = self._bounds()
         # The interval in force, which the freshness rule reads, and the whole last message,
@@ -693,16 +693,16 @@ class SubscribingModule(SensingModule):
         # `slowSleepS` in their own namespace, and the stripped form cannot tell them apart —
         # so a revision of somebody else's belief would have been taken up as this module's.
         # A block's terms are full IRIs, so there is nothing to strip.
-        if belief_term in ALARM_BLOCK.terms.values():
+        if belief_term in ALARM_PICKS.terms.values():
             # A re-picked jolt threshold, and the re-aim below re-arms every watched channel
             # with the new delta — the whole reason the pick is a belief and not a compile-time
             # figure: correcting the estimate reaches the board on its next wake, not at the
             # next reflash.
-            self.alarm_beliefs = self.agent.beliefs.read_optional(ALARM_BLOCK)
-        elif belief_term not in SUBSCRIBING_BLOCK.terms.values():
+            self.alarm_beliefs = self.agent.desires.read_optional(ALARM_PICKS)
+        elif belief_term not in SUBSCRIBING_PICKS.terms.values():
             return
         else:
-            self.beliefs = self.agent.beliefs.read(SUBSCRIBING_BLOCK)
+            self.beliefs = self.agent.desires.read(SUBSCRIBING_PICKS)
         for sensor in self.sensors:
             reading = self.agent.beliefs.current_reading(sensor.subject, sensor.observes)
             if reading is not None:
@@ -725,7 +725,7 @@ class ListeningModule(SensingModule):
     name = "listening"
 
     def __init__(self, agent):
-        self.beliefs = agent.beliefs.read(LISTENING_BLOCK)
+        self.beliefs = agent.desires.read(LISTENING_PICKS)
         super().__init__(agent)
 
     def stale_after_s(self, subject_uri: str, observed_property: str) -> int:

@@ -68,7 +68,7 @@ from agent.ontology import beliefs_graph
 from agent.store import bindings, decimal
 from agent.validate import BeliefsInvalid, validate_agent
 
-from .beliefs import REVIEW_BLOCK
+from .beliefs import REVIEW_PICKS
 from .graphs import evidence_graph, revisions_graph
 from .summary import Summaries
 from .terms import RECKONING
@@ -145,7 +145,7 @@ class ReviewModule(Module):
         # module was granted a mandate, and one that may re-pick must say how often it will look.
         # Absence used to mean "never review", which put a public ability's switch in a private
         # file — the mandate is the switch now, and it is in the world where a shape can see it.
-        self.interval_s = agent.beliefs.read(REVIEW_BLOCK).interval_s
+        self.interval_s = agent.desires.read(REVIEW_PICKS).interval_s
         self._timer: threading.Timer | None = None
         self._stopped = False
 
@@ -363,6 +363,10 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         self.revisions += 1
         self._remember(room.term, was, value, "taken", "the evidence no longer supports it")
         log.info("%s: <%s> %s -> %s", self.agent.id, room.term, was, value)
+        # The ruling's write path, in order: the re-pick is RECORDED above (the belief base is
+        # the pick record), and the desires store is RECOMPUTED here — recomputation is the
+        # only way that modality ever changes, and it must happen before any module re-reads.
+        self.agent.desires.rebuild()
         # Modules read their block once, into a frozen dataclass. A revision nothing tells them
         # about would not take effect until the next restart, which makes the whole mechanism
         # look broken rather than absent.
