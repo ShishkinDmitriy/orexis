@@ -95,10 +95,13 @@ arrives at "this does not help". Measured with the guard removed, on three world
 first look with nothing sensed: Observe is pruned as a world already reached, every time. A
 second statement of a fact the effect already settles is a fact that can disagree with it.
 
-What that rests on is `_signature`, which is the desire's own value, and a look does not move it.
-[#258](https://github.com/ShishkinDmitriy/agora/issues/258) asks whether a signature should
-carry where a plan IS rather than only that number — and a signature noticing a fresher
-`sosa:resultTime` would make "look, then look" a new world every time. Chaining past a look
+What that rests on is the signature's canonical form.
+[#258](https://github.com/ShishkinDmitriy/agora/issues/258) made the signature carry where a
+plan IS — the world's net diff against the base, in canonical facts — and a look still nets to
+nothing there: an observation canonicalises to its upsert key and its value, never its
+`sosa:resultTime`, and a valueless first look states no fact at all (see
+`packages/capability/deliberation/signature.py`). A signature that counted a fresher timestamp
+as somewhere new would make "look, then look" a new world every time. Chaining past a look
 becomes a real question again exactly there, and nowhere earlier.
 
 **What limits depth now is the menu, not the machinery.** Fixing the baseline makes depth 2
@@ -184,10 +187,12 @@ happened; measuring by re-planning would double the cost it reports. Reading the
 which is a tenth of one per cent of a pass.
 
 **Three of the fields exist to make a recorded limit visible rather than to confirm health**, and
-that is the argument for having them at all. `deepest` pinned at 1 is two limits at once — a
-rule's CONSTRUCTs run against the store rather than the world, and the cycle signature is the
-desire's own value, so a step that moves nothing else is indistinguishable from having gone
-nowhere. `cycles` climbing beside it says which of the two is biting. `blind` above zero is a
+that is the argument for having them at all. `deepest` pinned at 1 was two limits at once — a
+rule's CONSTRUCTs running against the store rather than the world, and a cycle signature that
+was only the desire's own value, so a step that moved nothing else was indistinguishable from
+having gone nowhere. Both are closed (#254, #258); if it pins again, `cycles` climbing beside
+it says the search keeps arriving back at worlds already reached rather than being unable to
+go further. `blind` above zero is a
 package that never said what its lever does, which is why a partial plan defers to the reflex
 instead of reporting that nothing helps.
 

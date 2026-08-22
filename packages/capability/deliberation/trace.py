@@ -164,10 +164,12 @@ def effort(query) -> dict[str, float]:
     - `seconds` is what a reporting tick's planning costs, summed over desires. `series()` calls
       `pursued()`, which re-plans every desire, so this is the price of being asked what you want
       — and if it dominates an agent's cost then the instrumentation is the workload.
-    - `deepest` is how many steps the longest path considered had. **Pinned at 1 is the
-      signature of two recorded limits at once** — a rule's CONSTRUCTs run against the store
-      rather than the world, and the cycle signature is the desire's own value, so a step that
-      moves nothing else is discarded as somewhere already reached.
+    - `deepest` is how many steps the longest path considered had. **Pinned at 1 was the
+      signature of two recorded limits at once** — a rule's CONSTRUCTs running against the
+      store rather than the world (#254), and a cycle signature that was only the desire's own
+      value, so a step that moved nothing else was discarded as somewhere already reached
+      (#258). Both are closed; if it pins again, look at what the menu offers before what the
+      machinery allows.
     - `worlds` is how many simulations were built: the cost driver, and what to divide
       `seconds` by before blaming the shape checker.
     - `cycles` climbing while `deepest` stays at 1 says the search keeps arriving back where it

@@ -214,11 +214,12 @@ class ReflexModule(Module):
         #  change must not do.
         #
         #  Three of these exist to make a RECORDED LIMIT visible rather than to confirm health.
-        #  `deepest` pinned at 1 is two of them at once: a rule's CONSTRUCTs run against the
-        #  store rather than the world, and the cycle signature is the desire's own value, so a
-        #  step that moves nothing else looks like somewhere already reached. `blind` above zero
-        #  is a package that never stated what its lever does. A number that shows a known
-        #  defect is worth more than one that says things are fine.
+        #  `deepest` pinned at 1 was two of them at once — a rule's CONSTRUCTs running against
+        #  the store rather than the world (#254), and a cycle signature that was only the
+        #  desire's own value, so a step that moved nothing else looked like somewhere already
+        #  reached (#258); both are closed. `blind` above zero is a package that never stated
+        #  what its lever does. A number that shows a known defect is worth more than one that
+        #  says things are fine.
         rows.append(("agent_planning", {}, trace.effort(self.agent.store.query_union)))
         return rows
 
