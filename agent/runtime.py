@@ -34,7 +34,7 @@ import signal
 
 import paho.mqtt.client as mqtt
 
-from . import config, genesis, loader
+from . import config, genesis, loader, mind
 from .beliefs import Beliefs
 from .desire import Desire
 from .metrics import Metrics
@@ -84,6 +84,11 @@ class Agent:
         self.bus: MessageBus = load_bus(self.store.query)  # discovered, not configured
         self.me: Self = load_self(self.store.query, agent_id)
         self.beliefs = Beliefs(self.store.query, agent_id, self.me.uri)
+        # The mind's stores beyond the belief base — today the desires store: what this agent
+        # pursues, as a store of its own, rebuilt from the belief base's derivations and never
+        # written (a-store-is-a-modality). The handle is the read half only, so a module that
+        # tried to write would fail at the call site.
+        self.mind = mind.Mind(self.store)
 
         # Built before the modules, because Observations counts into it and a module builds one
         # of those. Counting only — nothing is reported until run() starts it.
