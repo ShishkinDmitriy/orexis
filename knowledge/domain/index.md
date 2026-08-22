@@ -78,6 +78,8 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Structure — how the project is put together
 
+* [modality](/domain/modality.md) - What a fact asserts, as opposed to what it is about. The mind's axis: one class per modality, each owning its store.
+
 * [capability](/domain/capability.md) - A named ability with interchangeable implementations. Granted by its own premise, deduced at genesis, and never hand-declared.
 
 * [choir](/domain/choir.md) - The kernel asks every module, whoever holds an opinion answers, and the asker never learns who — provider's complement, and silence is not zero.
