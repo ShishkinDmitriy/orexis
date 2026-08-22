@@ -415,8 +415,9 @@ def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
 def test_two_paths_to_the_same_world_still_collide(monkeypatch):
     """Cycle detection stays keyed on the WORLD, which naming a graph per node could have broken.
 
-    `seen` holds the value the desire is about, and it is global across the search rather than per
-    branch — so two paths arriving at the same value collide and the second is pruned. A node
+    `seen` holds each world's net diff against the base, and it is global across the search
+    rather than per branch — so two paths arriving at the same world collide and the second is
+    pruned. A node
     now carries a graph name derived from its path, and keying on THAT would have turned cycle
     detection into a per-branch check silently, since two names for one world would each look
     new.
@@ -451,10 +452,12 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     will say. Both worlds then read None and collide — which is the case a reader would most
     expect to escape, and the reason it is the one asserted here.
 
-    If this fails, the thing to look at is `_signature`. It is the desire's own value, and a look
-    does not move it; #258 asks whether a signature should carry where a plan IS, and a
-    signature noticing a fresher `sosa:resultTime` would make "look, then look" a new world
-    every time. Chaining past a look becomes a real question again exactly there.
+    If this fails, the thing to look at is `signature.py`. Since #258 the signature is the
+    world's net diff in canonical facts, and in canonical form a look nets to nothing: an
+    observation is its upsert key and its value, never its `sosa:resultTime`, and a valueless
+    first look states no fact at all. A signature that noticed a fresher timestamp would make
+    "look, then look" a new world every time; chaining past a look becomes a real question
+    again exactly there.
     """
     monkeypatch.setenv("AGORA_WORLD", "loner")
     st = genesis_store({("water_butt", STORED): NEARLY_EMPTY}, world="loner")
@@ -470,3 +473,99 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
         "a look with nothing to carry forward reached somewhere new — it must not"
     assert not any(step.means == OBSERVE for step in plan.steps[:-1]), \
         "a plan chained past a sensing action"
+
+
+def test_a_step_that_moves_something_else_is_not_mistaken_for_a_cycle(monkeypatch):
+    """The whole of #258, as one assertion per direction.
+
+    The old signature was the goal's own value, so a world differing in anything EXCEPT that
+    number was indistinguishable from where you started — and the step that makes a chain a
+    chain is exactly one that does not move the goal's number yet. You buy the water first
+    precisely because buying it does not wet the soil, and under the old signature that step
+    died as a false cycle at depth 1, in the one place nobody would look for it.
+
+    So Actuate's effect is hijacked here to do what an Acquire with a claim will do: add a
+    fact that is not a reading and move no number. The world it reaches must count as
+    somewhere NEW — and taking the same step again from there must still be pruned, because
+    a world that already holds the claim is not moved by adding it twice.
+    """
+    import pyoxigraph as ox
+
+    agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
+    claim = ox.Triple(ox.NamedNode(GARDENER),
+                      ox.NamedNode("http://example.org/agora/market#holdsClaim"),
+                      ox.NamedNode("urn:test:claim"))
+    real = effects.apply
+
+    def hijacked(store, means, **bind):
+        if means == ACTUATE:
+            return [claim], []
+        return real(store, means, **bind)
+
+    monkeypatch.setattr(effects, "apply", hijacked)
+    planner.plan(desire)
+
+    doses = {depth: verdict for depth, row, _, verdict in planner._weighed
+             if row.means == ACTUATE}
+    assert doses[0] != trace.SEEN, \
+        "a step that adds a claim without moving the goal's number was discarded as a cycle"
+    assert doses[1] == trace.SEEN, \
+        "adding the claim a second time reaches the world that already holds it"
+
+
+def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeypatch):
+    """+3 then −3 is still collapsed — as the world REACHED, never as the diffs accumulated.
+
+    The two runs mint different blank nodes and different `resultTime`s, and the value comes
+    back with floating-point noise, because that is what the effect rules actually do: every
+    predicted observation is `BNODE()` stamped `NOW()`, and SPARQL arithmetic does not promise
+    bit-identical round trips. If any of that counted as somewhere new, cycle detection would
+    be decorative — so this is the test that says an observation is its upsert key and its
+    value, and its identity and its timestamp are not part of where a plan stands.
+    """
+    from packages.capability.deliberation import signature
+
+    sosa = rdflib.Namespace("http://www.w3.org/ns/sosa/")
+    zz = rdflib.URIRef("http://example.org/agora/world/loner#zz")
+    prop = rdflib.URIRef(MOISTURE)
+
+    def observation(node, value, when):
+        g = rdflib.Graph()
+        g.add((node, rdflib.RDF.type, sosa.Observation))
+        g.add((node, sosa.hasFeatureOfInterest, zz))
+        g.add((node, sosa.observedProperty, prop))
+        g.add((node, sosa.hasSimpleResult,
+               value if isinstance(value, rdflib.Literal) else rdflib.Literal(value)))
+        g.add((node, sosa.resultTime, rdflib.Literal(when)))
+        return g
+
+    base = observation(rdflib.URIRef("http://example.org/agora#obs_zz_SoilMoisture"),
+                       rdflib.Literal("0.30", datatype=rdflib.XSD.decimal), "t0")
+    up = observation(rdflib.BNode(), 0.33, "t1")
+    back = observation(rdflib.BNode(), 0.33 - 0.03, "t2")   # 0.30000000000000004
+
+    base_facts = signature.facts(base)
+    there = signature.advance(signature.EMPTY,
+                              signature.facts(up), signature.facts(base), base_facts)
+    assert there != signature.EMPTY, "a dose reaches somewhere new"
+    home = signature.advance(there,
+                             signature.facts(back), signature.facts(up), base_facts)
+    assert home == signature.EMPTY, \
+        "+3 then −3 nets to nothing, whatever nodes and timestamps the runs minted"
+
+
+def test_two_mintings_of_the_same_claim_are_the_same_place():
+    """A blank node is its content, not its identity — or every world would be novel."""
+    from packages.capability.deliberation import signature
+
+    holds = rdflib.URIRef("http://example.org/agora/market#holdsClaim")
+    litres = rdflib.URIRef("http://example.org/agora/market#litres")
+
+    def minted():
+        g = rdflib.Graph()
+        c = rdflib.BNode()
+        g.add((rdflib.URIRef(GARDENER), holds, c))
+        g.add((c, litres, rdflib.Literal(2.0)))
+        return g
+
+    assert signature.facts(minted()) == signature.facts(minted())

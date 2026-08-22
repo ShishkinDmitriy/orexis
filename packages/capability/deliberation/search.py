@@ -38,7 +38,7 @@ from rdflib import RDF, URIRef
 
 from agent import effects
 
-from . import trace
+from . import signature, trace
 from agent.desire import Desire
 from agent.imaginarium import Imaginarium
 from agent.ontology import SENSED_GRAPH, beliefs_graph
@@ -101,6 +101,9 @@ class _Node:
     graph: str = SENSED_GRAPH                     # this node's readings, in the imaginarium
     taken: tuple = field(default_factory=tuple)   # the means applied to get here, in order
     urgency: float = 1.0
+    #  The net diff against the base world, in canonical facts — where this node IS, for cycle
+    #  detection. The root stands nowhere but the world itself, so its diff is empty.
+    diff: tuple = signature.EMPTY
 
 
 class Planner:
@@ -235,17 +238,13 @@ class Planner:
         best, saw_candidate = here, False
         self._skipped = False
         self._weighed = []
-        seen = {self._signature(base, desire)}
+        seen = {here.diff}
         frontier = [here]
         for depth in range(self.MAX_DEPTH):
             nxt = []
             for node in frontier:
                 for row in self._candidates(node, desire):
                     saw_candidate = True
-                    #  A world is identified by the means that reached it, in order. Comparing
-                    #  graphs would be the thorough answer and an unaffordable one; comparing
-                    #  the path is enough to stop +3 then −3 from being explored as though it
-                    #  were somewhere new, which is all cycle detection is for here.
                     #  Steps are ROWS, not means: a plan is a path through the affordance
                     #  graph, and which lever a step goes through is half of what it says.
                     step = self._step_from(node, row, desire)
@@ -262,9 +261,9 @@ class Planner:
                     #
                     #  KEYED ON THE WORLD AND NEVER ON THE GRAPH NAME, which is the one thing
                     #  naming a graph per node could quietly have broken. `seen` is global
-                    #  across the search, so two paths arriving at the same value collide and
+                    #  across the search, so two paths arriving at the same world collide and
                     #  the second is pruned — two names, one world, still one entry.
-                    where = self._signature(step.world, desire)
+                    where = step.diff
                     if where in seen:
                         self._weighed.append((depth, row, step.urgency, trace.SEEN))
                         continue
@@ -298,12 +297,15 @@ class Planner:
                     #  reached, every time. A second statement of a fact the effect settles is
                     #  a fact that can disagree with it.
                     #
-                    #  WHAT THIS RESTS ON, so the next person can see it break: `_signature` is
-                    #  the desire's own value, and a look does not move it. #258 asks whether a
-                    #  signature should carry where a plan IS rather than only that number — and
-                    #  a signature that noticed a fresher `sosa:resultTime` would make "look,
-                    #  then look" a new world every time. Chaining past a look becomes a real
-                    #  question again exactly there, and nowhere earlier.
+                    #  WHAT THIS RESTS ON, so the next person can see it break: the signature
+                    #  is the world's net diff in CANONICAL facts (#258), and in canonical form
+                    #  a look nets to nothing — an observation is its upsert key and its value,
+                    #  never its `sosa:resultTime`, so predicting the value you already hold is
+                    #  standing still, and a first look's valueless reading states no fact at
+                    #  all. The day a fresher timestamp counts as somewhere new, "look, then
+                    #  look" becomes a new world every time; chaining past a look becomes a
+                    #  real question again exactly there, and nowhere earlier. See
+                    #  `signature.py`.
                     nxt.append(step)
             frontier = nxt
             if not frontier:
@@ -411,6 +413,10 @@ class Planner:
         self.imaginarium = Imaginarium(
             self.agent.store, beliefs_graph(self.agent.id), SENSED_GRAPH)
         base = self._beliefs()
+        #  The base's canonical facts, once per pass: `advance` needs them to tell a fact
+        #  restored from a fact introduced, which is what lets a path that returns to the base
+        #  world return to the EMPTY diff instead of accumulating noise.
+        self._base_facts = signature.facts(base)
         return _Node(world=base, graph=SENSED_GRAPH, urgency=self._urgency_in(base, desire))
 
     def _step_from(self, node, row, desire: Desire):
@@ -430,9 +436,16 @@ class Planner:
             return None
         taken = node.taken + (row,)
         world = effects.applied(node.world, added, retracted)
+        #  Where this node stands, advanced by the same diff that built the world above —
+        #  `applied` against nothing converts the step's triples into the small graphs the
+        #  canonical form is read from.
+        diff = signature.advance(node.diff,
+                                 signature.facts(effects.applied((), added, ())),
+                                 signature.facts(effects.applied((), retracted, ())),
+                                 self._base_facts)
         return _Node(world=world,
                      graph=self.imaginarium.reached(node.graph, taken, added, retracted),
-                     taken=taken, urgency=self._urgency_in(world, desire))
+                     taken=taken, urgency=self._urgency_in(world, desire), diff=diff)
 
     def _bind(self, desire: Desire | None, node=None, means: str | None = None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.
@@ -473,17 +486,6 @@ class Planner:
             "value": value if value is not None else 0,
             "litres": self._dose(desire, value, means) if desire else 0.0,
         }
-
-    def _signature(self, world, desire: Desire):
-        """What makes this world different from another, for planning purposes.
-
-        The value the desire is about, rounded — cheap, and enough. Graph isomorphism would be
-        the thorough answer and is not affordable here; comparing the number the plan is trying
-        to move catches the oscillation this exists to stop, and two worlds that agree on it
-        are worth the same to a search that scores by urgency.
-        """
-        value = self._value_in(world, desire)
-        return None if value is None else round(value, 6)
 
     def _dose(self, desire: Desire, value: float | None = None,
               means: str | None = None) -> float:

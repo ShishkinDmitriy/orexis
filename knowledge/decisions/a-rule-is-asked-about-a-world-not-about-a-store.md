@@ -131,9 +131,10 @@ node's graph has no lifecycle of its own and no step has to remember to drop one
 of the store being separate, and it is most of why separate is the right call rather than a
 temporary graph in the agent's own store: a crash mid-plan leaves nothing behind to find.
 
-**Cycle detection stays keyed on the WORLD, never on the name.** `seen` holds signatures — the
-rounded value the goal is about — and it is global across the search rather than per branch, so
-two different paths that arrive at the same value collide and the second is pruned. Naming
+**Cycle detection stays keyed on the WORLD, never on the name.** `seen` holds signatures — since
+[#258](https://github.com/ShishkinDmitriy/agora/issues/258), each world's net diff against the
+base in canonical facts — and it is global across the search rather than per branch, so two
+different paths that arrive at the same world collide and the second is pruned. Naming
 graphs after paths must not quietly turn that into per-branch detection: two names, one world,
 still one entry in `seen`.
 
@@ -250,10 +251,12 @@ sensed at all: Observe is pruned as *a world already reached*, every time, and d
 is the argument this project makes everywhere else about capabilities being deduced rather than
 hand-declared, arriving at a means. So the guard is gone and no vocabulary was added.
 
-What that rests on is stated where it can be seen to break. `_signature` is the goal's own
-value, and a look does not move it; [#258](https://github.com/ShishkinDmitriy/agora/issues/258)
-asks whether a signature should carry where a plan IS, and one noticing a fresher
-`sosa:resultTime` would make "look, then look" a new world every time. Chaining past a look
+What that rests on is stated where it can be seen to break.
+[#258](https://github.com/ShishkinDmitriy/agora/issues/258) made the signature the world's net
+diff in canonical facts, and in canonical form a look nets to nothing: an observation is its
+upsert key and its value, never its `sosa:resultTime`, and a valueless first look states no fact
+at all — see `packages/capability/deliberation/signature.py`. A signature that counted a fresher timestamp as
+somewhere new would make "look, then look" a new world every time. Chaining past a look
 becomes a live question exactly there and nowhere earlier — the trigger, written down.
 
 ## The seams held
@@ -375,7 +378,8 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   that won is holding the world the plan would reach, so the legality check takes it as an
   argument and replays nothing. A seam that turns out to be one line of the design's own logic
   is worth leaving visible rather than editing away.
-- **Nothing here fixes cycle detection's signature.**
-  [#258](https://github.com/ShishkinDmitriy/agora/issues/258) asks where a plan *is* using a
-  number only some plans move; a correct baseline makes that question answerable rather than
-  answering it.
+- ~~**Nothing here fixes cycle detection's signature.**~~ CLOSED by
+  [#258](https://github.com/ShishkinDmitriy/agora/issues/258): the signature is the world's net
+  diff against the base, in canonical facts, so a step that moves something other than the
+  goal's number — a claim acquired, stock transferred — is somewhere new rather than a false
+  cycle. The correct baseline this record built is exactly what made that answerable.

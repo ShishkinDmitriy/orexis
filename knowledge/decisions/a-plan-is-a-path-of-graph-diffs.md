@@ -48,7 +48,8 @@ next widening is a lookup rather than a re-derivation.
   what an action does not mention does not change; a graph diff over a store that other
   processes write does not get that for free.
   [#258](https://github.com/ShishkinDmitriy/agora/issues/258) — cycle detection asking "where am
-  I" with a number only some plans move — is a frame problem in the small, and the depth-2
+  I" with a number only some plans move, closed by making the signature the world's net diff —
+  was a frame problem in the small, and the depth-2
   limitation recorded above (a rule's CONSTRUCTs run against the STORE, so the second step never
   sees what the first added to the WORLD) is the same thing again.
 
@@ -311,8 +312,15 @@ Three requirements follow, none of which a planner written for the reflex's worl
 
 - **Cycle detection.** +3 then −3 returns to the starting world. A search that does not notice
   will spend its whole depth budget going nowhere. Worlds here are belief plus a small diff, so
-  comparing the applied effects is enough; graph isomorphism is not needed and would not be
-  affordable.
+  comparing the NET diff of the world reached is enough — never the diffs accumulated along the
+  path, or an oscillation that nets to nothing would look novel. Graph isomorphism is not needed
+  and would not be affordable; what is needed instead is a CANONICAL form, because every effect
+  mints its predicted observation with `BNODE()` and stamps it `NOW()`, so raw triples never
+  collide at all. An observation canonicalises to its upsert key and its value — identity and
+  `sosa:resultTime` are not part of where a plan stands — and any other blank node to its
+  content ([#258](https://github.com/ShishkinDmitriy/agora/issues/258), which is what lets a
+  step that moves something other than the goal's number count as somewhere new; see
+  `packages/capability/deliberation/signature.py`).
 - **Depth exhaustion is an ANSWER, not a failure.** "No bounded plan reaches this goal" is a
   distinct outcome from "no lever repairs this violation", and the two must reach the report as
   different things or the sovereign is told to buy a fan when the problem is dose size.
@@ -360,10 +368,12 @@ question whose answer is the same for every lever here, so the guard matched all
 nothing was ever added to the next depth, and the search never went past one step at all (#254).
 Removing it changes no behaviour: Observe's effect predicts the value it found, so the world it
 reaches has its parent's signature and the cycle check discards it, exactly as a zero-size bid
-is discarded. What that rests on is `_signature` being the goal's value; if
-[#258](https://github.com/ShishkinDmitriy/agora/issues/258) makes a signature carry where a plan
-IS, a fresher `sosa:resultTime` would make each look a new world and this becomes a live
-question again.
+is discarded. What that rests on is the canonical form:
+[#258](https://github.com/ShishkinDmitriy/agora/issues/258) made the signature carry where a
+plan IS — the world's net diff — and a look still nets to nothing there, because an observation
+canonicalises to its upsert key and its value and a valueless first look states no fact at all.
+A signature that counted a fresher `sosa:resultTime` as somewhere new would make each look a
+new world, and this becomes a live question again.
 
 That also disposes of a nonsense the search would otherwise produce — "look, then water" scored
 as a two-step plan whose second step was chosen against a value nobody had yet seen.
