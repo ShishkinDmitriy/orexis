@@ -183,7 +183,7 @@ class Metrics:
             # an agent's belief base holds one current observation per subject however long it
             # runs — a rising line here means something started appending instead, and that is
             # exactly the failure this number exists to make visible.
-            "belief_triples": len(self.agent.store),
+            "belief_triples": len(self.agent.beliefs),
             "mqtt_connected": 1 if self.mqtt_connected else 0,
             "mqtt_reconnects": max(self.mqtt_reconnects, 0),
             # Both were being swallowed by `Observations` and only logged. A dashboard that is

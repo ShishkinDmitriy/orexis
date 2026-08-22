@@ -135,7 +135,7 @@ def test_the_dose_the_actuator_expects_is_the_dose_its_rule_predicts(monkeypatch
 
     litres = float(gardener.sent.to("actuators/pump/command")[0]["ml"]) / 1000.0
     predicted, _ = effects.apply(
-        gardener.store, ACTUATE, me=f"<{actuation.me.uri}>",
+        gardener.beliefs, ACTUATE, me=f"<{actuation.me.uri}>",
         subject=f"<{actuation.me.acts_for}>", property=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
         litres=repr(litres), value="0.1")
@@ -198,7 +198,7 @@ def test_the_deadline_and_the_command_cannot_be_two_different_durations(monkeypa
         cmd, _ = actuation.command_for(
             Claim(sub="gardener", scope="actuate:self", amount_l=litres, debit=0.0,
                   auction_id="a", jti=f"j{litres}"))
-        stated = _lands(agent.store, litres, agent.me.uri, subject)
+        stated = _lands(agent.beliefs, litres, agent.me.uri, subject)
         assert stated is not None, "a device with a calibration can always be timed"
         assert abs(stated - cmd.seconds) < 0.01, (
             f"{litres}L: the wire says {cmd.seconds}s and the rule says {stated}s")

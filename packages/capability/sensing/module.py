@@ -139,7 +139,7 @@ class SensingModule(Module):
             if self._published.get(aimed.uri) == horizon:
                 continue
             self._published[aimed.uri] = horizon
-            self.agent.store.update(f"""
+            self.agent.beliefs.update(f"""
                 DELETE {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
                     <{aimed.uri}> <{STALE_AFTER_S}> ?was }} }}
                 WHERE  {{ GRAPH <{INSTRUMENTS_GRAPH}> {{
@@ -383,7 +383,7 @@ class SubscribingModule(SensingModule):
         return int(cadence) + self.beliefs.grace_s
 
     def _bounds(self) -> tuple[int, int, float]:
-        rows = bindings(self.agent.store.query(_BOUNDS_Q))
+        rows = bindings(self.agent.beliefs.query(_BOUNDS_Q))
         if not rows:
             raise RuntimeError("the ontology states no cadence bounds — re-run agora-seed")
         # A relax factor at or below 1 could never release at all, which is a vocabulary slip

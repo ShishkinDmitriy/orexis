@@ -230,7 +230,7 @@ class Planner:
         #  CLEARED AT THE START, which is the difference between a graph that holds one pass
         #  and one that holds two. It also means a pass that raises leaves no trace claiming
         #  to describe a decision nobody reached.
-        trace.clear(self.agent.store, self.agent.id, desire.uri)
+        trace.clear(self.agent.beliefs, self.agent.id, desire.uri)
         if self._met_in(base, desire):
             return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
@@ -332,7 +332,7 @@ class Planner:
         answers a reader most wants and the two a wrapper would have missed. The same threading
         is why the clock is read here: every return passes through, so no exit is untimed.
         """
-        trace.write(self.agent.store, self.agent.id, desire, plan,
+        trace.write(self.agent.beliefs, self.agent.id, desire, plan,
                     getattr(self, "_weighed", []), stands_at,
                     time.monotonic() - self._started)
         return plan
@@ -386,12 +386,12 @@ class Planner:
         """
         from .module import menu_of
 
-        for row in menu_of(self.agent.store.query, self.me.uri):
+        for row in menu_of(self.agent.beliefs.query, self.me.uri):
             if not row.is_chosen:
                 continue
             if desire.observed_property and row.observed_property != desire.observed_property:
                 continue
-            if effects.rule_for(self.agent.store, row.means) is None:
+            if effects.rule_for(self.agent.beliefs, row.means) is None:
                 #  A lever whose package never said what it does. It still works — the reflex
                 #  can take it — but nothing can simulate it, and a planner that guessed would
                 #  be inventing the consequence it is supposed to be checking. Remembered
@@ -411,14 +411,14 @@ class Planner:
         exactly what it always did, and every deeper node forks from it.
         """
         self.imaginarium = Imaginarium(
-            self.agent.store, beliefs_graph(self.agent.id), SENSED_GRAPH)
+            self.agent.beliefs, beliefs_graph(self.agent.id), SENSED_GRAPH)
         base = self._beliefs()
         #  The base's canonical facts, once per pass: `advance` needs them to tell a fact
         #  restored from a fact introduced, which is what lets a path that returns to the base
         #  world return to the EMPTY diff instead of accumulating noise. Read as the store's
         #  own quads — the same graphs `_beliefs` flattens — because the signature works in
         #  pyoxigraph terms and the rdflib copy exists only for pySHACL.
-        store = self.agent.store
+        store = self.agent.beliefs
         self._base_facts = signature.facts(
             quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id), SENSED_GRAPH]
             for quad in store.quads(iri))
@@ -536,7 +536,7 @@ class Planner:
         return float(litres) if litres and litres > 0 else 0.0
 
     def _beliefs(self):
-        return graph_from(self.agent.store, *self.agent.store.public_graphs(),
+        return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
                           beliefs_graph(self.agent.id), SENSED_GRAPH)
 
 

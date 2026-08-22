@@ -746,7 +746,7 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
     p.ingest(east, 0.30, now - timedelta(seconds=60))
     p.ingest(west, 0.55, now)
 
-    rows = bindings(fern.store.query(
+    rows = bindings(fern.beliefs.query(
         "SELECT ?obs WHERE { GRAPH <%s> { ?obs a sosa:Observation ; "
         "sosa:observedProperty <%s> ; sosa:hasSimpleResult ?v } }"
         % (SENSED_GRAPH, MOISTURE)))
@@ -769,7 +769,7 @@ def test_a_device_that_speaks_for_itself_lands_in_phenomenon_time(fern):
     sensed = arrived - timedelta(seconds=42)
     p.observations.record(p.log, s, 0.41, at=arrived, phenomenon_at=sensed)
 
-    rows = bindings(fern.store.query(f"""
+    rows = bindings(fern.beliefs.query(f"""
 SELECT ?rt ?pt WHERE {{ GRAPH <{SENSED_GRAPH}> {{
   ?obs sosa:observedProperty <{MOISTURE}> ;
        sosa:resultTime ?rt .
@@ -813,7 +813,7 @@ def test_a_repicked_jolt_threshold_rearms_the_watch(monkeypatch):
     assert fern.sent.to(s.command_topic)[-1]["alarm"]["/moisture"][2] == pytest.approx(0.05)
 
     delta = sensing_term("alarmDeltaFraction")
-    fern.store.update(f"""
+    fern.beliefs.update(f"""
 DELETE {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}
 INSERT {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> 0.5 }} }}
 WHERE  {{ GRAPH <{beliefs_graph(fern.id)}> {{ ?a <{delta}> ?old }} }}""")
@@ -833,7 +833,7 @@ def test_an_agent_with_no_pick_commands_band_only_alarms(monkeypatch):
     from agent.ontology import beliefs_graph
 
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
-    fern.store.update(f"""
+    fern.beliefs.update(f"""
 DELETE WHERE {{ GRAPH <{beliefs_graph(fern.id)}> {{
   ?a <{sensing_term("alarmDeltaFraction")}> ?old }} }}""")
     assert fern.beliefs.read_optional(ALARM_BLOCK) is None

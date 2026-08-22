@@ -190,7 +190,7 @@ class IntentionModule(Module):
                           f"outwaited: stood {standing.age_s(now):.0f}s against a patience "
                           f"of {self.beliefs.patience_s}s, superseded by a new adoption")
         uri = f"{NS}intent_{self.agent.id}_{uuid.uuid4().hex[:8]}"
-        self.agent.store.update(f"""
+        self.agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
     {f'<{kernel("pursues")}> <{desire}> ;' if desire else ""}
@@ -235,7 +235,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def _resolve(self, standing: Standing, outcome: str, because: str) -> None:
         now = datetime.now(timezone.utc).isoformat()
-        self.agent.store.update(f"""
+        self.agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{standing.uri}> <{kernel("resolvedAt")}> "{now}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
           <{kernel("outcome")}> {_literal(outcome)} ;
@@ -296,7 +296,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             self.log.warning("cannot expect an end for %s — no baselined reading to leave from",
                              observed_property)
             return False
-        rows = bindings(self.agent.store.query(_DIRECTION_Q % observed_property))
+        rows = bindings(self.agent.beliefs.query(_DIRECTION_Q % observed_property))
         if not rows:
             self.log.warning("cannot expect an end for %s — the domain states no direction",
                              observed_property)
@@ -309,7 +309,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         delta = (f"""
     <{EXPECTS_DELTA}> "{expected_delta}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;"""
                  if expected_delta else "")
-        self.agent.store.update(f"""
+        self.agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{intention_uri}>{delta}
     <{EXPECTS_VALUE_TO}> <{direction}> ;
@@ -354,7 +354,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     def open_expectations(self, observed_property: str | None = None) -> list[OpenExpectation]:
         """Every watch still on: expectation adopted, end not yet verified."""
         prop = f"FILTER(?property = <{observed_property}>)" if observed_property else ""
-        rows = bindings(self.agent.store.query(f"""
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline ?delta WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{kernel("by")}> ?means ;
@@ -416,7 +416,7 @@ SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline ?delta WHE
 
     def _verdict(self, watch: OpenExpectation, met: bool, because: str) -> None:
         now = datetime.now(timezone.utc).isoformat()
-        self.agent.store.update(f"""
+        self.agent.beliefs.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{watch.uri}> <{END_MET}> "{'true' if met else 'false'}"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
                 <{END_VERIFIED_AT}> "{now}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
@@ -435,11 +435,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 watch.observed_property.rsplit("#", 1)[-1], self._suspect_after())
 
     def _suspect_after(self) -> int:
-        rows = bindings(self.agent.store.query(_SUSPECT_Q))
+        rows = bindings(self.agent.beliefs.query(_SUSPECT_Q))
         return int(rows[0]["n"]) if rows else 3
 
     def _met_fraction(self) -> float:
-        rows = bindings(self.agent.store.query(_MET_FRACTION_Q))
+        rows = bindings(self.agent.beliefs.query(_MET_FRACTION_Q))
         return float(rows[0]["f"]) if rows else 0.25
 
     def _is_suspect(self, means: str, observed_property: str) -> bool:
@@ -448,7 +448,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         Consecutive rather than cumulative, so one success resets the count: an affordance
         that mostly pays is noisy, not false.
         """
-        rows = bindings(self.agent.store.query(f"""
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
   ?i <{kernel("by")}> <{means}> ;
      <http://www.w3.org/ns/ssn/forProperty> <{observed_property}> ;
@@ -460,7 +460,7 @@ SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
 
     def suspects(self) -> list[tuple[str, str]]:
         """Every (means, property) pair currently suspect. What review and the report read."""
-        pairs = {(r["means"], r["property"]) for r in bindings(self.agent.store.query(f"""
+        pairs = {(r["means"], r["property"]) for r in bindings(self.agent.beliefs.query(f"""
 SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
   ?i <{kernel("by")}> ?means ;
      <http://www.w3.org/ns/ssn/forProperty> ?property ;
@@ -514,7 +514,7 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
             clauses.append(
                 f'OPTIONAL {{ ?i <{kernel("pursues")}> ?desire }} '
                 f'FILTER(!BOUND(?desire) || ?desire = <{desire}>)')
-        rows = bindings(self.agent.store.query(
+        rows = bindings(self.agent.beliefs.query(
             "SELECT ?i ?means ?property ?at WHERE { GRAPH <%s> { %s } }"
             % (self.graph, " ".join(clauses))))
         return [Standing(uri=r["i"], means=r["means"], observed_property=r["property"],
@@ -533,7 +533,7 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
         question is asked of the LEDGER, any outcome: the newest same-means same-property
         intention, standing or resolved, younger than my patience, absorbs the impulse.
         """
-        latest = bindings(self.agent.store.query(
+        latest = bindings(self.agent.beliefs.query(
             "SELECT ?at WHERE { GRAPH <%s> { ?i a <%s> ; <%s> <%s> ; "
             "<http://www.w3.org/ns/ssn/forProperty> <%s> ; <%s> ?at } } "
             "ORDER BY DESC(?at) LIMIT 1"
@@ -560,7 +560,7 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
         # The end-verdicts, counted from the ledger. `expectations_unmet` climbing while
         # `satisfied` outcomes accumulate is the false-knowledge signature in series form;
         # `affordances_suspect` above zero is the flag itself.
-        rows = bindings(self.agent.store.query(f"""
+        rows = bindings(self.agent.beliefs.query(f"""
 SELECT ?met (COUNT(?i) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
   ?i <{END_MET}> ?met }} }} GROUP BY ?met"""))
         counts = {r["met"]: int(r["n"]) for r in rows}

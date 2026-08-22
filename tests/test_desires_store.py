@@ -1,6 +1,6 @@
 """The desires store: what an agent pursues, as a store of its own (a-store-is-a-modality).
 
-An agent HOLDS its stores — `agent.store`, `agent.desires`, the rest as #299 lands —
+An agent HOLDS its stores — `agent.beliefs`, `agent.desires`, the rest as #299 lands —
 with no object between, by the sovereign's ruling: nothing ever addresses the collection.
 
 Part 1 of #298: the store exists, is built at boot from the graphs the catalog types with a
@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from agent.ontology import (AG, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph)
-from agent.store import ReadOnly, bindings
+from agent.store import bindings
 
 from conftest import build_agent, genesis_store
 
@@ -58,31 +58,33 @@ def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):
 
 
 def test_nothing_an_agent_runs_can_write_into_it(monkeypatch):
-    """#298's second done-when, enforced by the handle: the read half has no update, no
-    clear and no load — misuse fails at the call site as `AttributeError`, not as a
-    discipline someone forgot to follow."""
+    """#298's second done-when, enforced by the modality's own surface: read-only is the
+    desire modality's DECISION, so the class exposes queries and no writer — misuse fails at
+    the call site as `AttributeError`, not as a discipline someone forgot to follow."""
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
 
-    assert isinstance(agent.desires, ReadOnly)
     for writer in ("update", "clear_graph", "load_file", "put_graph", "endow_graph"):
         with pytest.raises(AttributeError):
             getattr(agent.desires, writer)
 
 
 def test_recomputation_is_the_only_write_path(monkeypatch):
-    """A premise moves, the store is REBUILT, and the change appears — while the old handle's
-    copy never saw it, which is what 'a copy, alive until the next rebuild' means. Nothing
-    retracted the old state and nothing edited the new one in place."""
+    """A premise moves, the modality is REBUILT, and the change appears — while a read
+    surface captured before the rebuild still answers from the old copy, which is what 'a
+    copy, alive until the next rebuild' means. Nothing retracted the old state and nothing
+    edited the new one in place."""
     st = genesis_store(world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    before = agent.desires
+    stale = agent.desires.query_union   # the surface as it stands before the premise moves
 
-    constraint = next(g for g in _graphs_in(before) if "constraint" in g)
+    constraint = next(g for g in _graphs_in(agent.desires) if "constraint" in g)
     marker = f"<{AG}test_premise> a <{AG}Modality> ."
     st.update(f"INSERT DATA {{ GRAPH <{constraint}> {{ {marker} }} }}")
 
     ask = f"ASK {{ <{AG}test_premise> ?p ?o }}"
-    assert not before.query_union(ask)["boolean"], "a copy must not see later writes"
-    agent.rebuild_desires()
+    assert not agent.desires.query_union(ask)["boolean"], "a copy must not see later writes"
+    agent.desires.rebuild()
     assert agent.desires.query_union(ask)["boolean"], \
         "a rebuild reads the premises as they now stand"
+    assert not stale(ask)["boolean"], \
+        "the copy a rebuild replaced is unchanged — replaced, never edited"
