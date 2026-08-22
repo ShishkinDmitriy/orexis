@@ -220,7 +220,7 @@ class BiddingModule(Module):
             return None
         if value is not None:
             return deliberator.propose(self.about, value)
-        desire = next((g for g in self.agent.desires()
+        desire = next((g for g in self.agent.pursuing()
                      if not g.is_duty and g.observed_property == self.about), None)
         if desire is None:
             #  No want in this property at all: nothing to steer toward, and the old code

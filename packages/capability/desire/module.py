@@ -448,7 +448,7 @@ class DesireModule(Module):
     def wants(self, now: datetime | None = None) -> list[Desire]:
         """MY contribution to what this agent is pursuing: its stakes, and no duties.
 
-        The choir hook for desires (`agent.desires()` merges every module's). Split from the debts
+        The choir hook for desires (`agent.pursuing()` merges every module's). Split from the debts
         when the ledger became its own capability: an agent may hold stakes and owe nothing, owe
         and hold no stake — `world/simulation`'s city is exactly that — or both, and none of
         those is the others' business. `desires_of` reads the whole shipped query and each module

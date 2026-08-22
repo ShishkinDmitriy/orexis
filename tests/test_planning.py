@@ -39,7 +39,7 @@ def _gardener(monkeypatch, moisture):
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
-    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    desire = next(g for g in agent.pursuing() if g.observed_property == MOISTURE)
     return agent, Planner(agent, deducer, agent.me).plan(desire), desire
 
 
@@ -111,7 +111,7 @@ def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch
 
     fern = build_agent("fern", st, monkeypatch)
     deducer = next(m for m in fern.modules if m.name == "desire")
-    desire = next(g for g in fern.desires() if g.observed_property == MOISTURE)
+    desire = next(g for g in fern.pursuing() if g.observed_property == MOISTURE)
 
     plan = Planner(fern, deducer, fern.me).plan(desire)
     assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
@@ -191,7 +191,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
     planner = Planner(agent, deducer, agent.me)
-    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    desire = next(g for g in agent.pursuing() if g.observed_property == MOISTURE)
 
     here = planner._begin(desire)
     row = next(iter(planner._candidates(here, desire)))
@@ -239,7 +239,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     st = genesis_store({("fern", MOISTURE): 0.30})
     fern = build_agent("fern", st, monkeypatch)
     deducer = next(m for m in fern.modules if m.name == "desire")
-    desire = next(g for g in fern.desires() if g.observed_property == MOISTURE)
+    desire = next(g for g in fern.pursuing() if g.observed_property == MOISTURE)
 
     plan = Planner(fern, deducer, fern.me).plan(desire)
 
@@ -292,7 +292,7 @@ def _thirsty_with_a_nearly_empty_butt(monkeypatch):
                        world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
-    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    desire = next(g for g in agent.pursuing() if g.observed_property == MOISTURE)
     return agent, Planner(agent, deducer, agent.me), desire
 
 
@@ -463,7 +463,7 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     st = genesis_store({("water_butt", STORED): NEARLY_EMPTY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
-    desire = next(g for g in agent.desires() if g.observed_property == MOISTURE)
+    desire = next(g for g in agent.pursuing() if g.observed_property == MOISTURE)
     planner = Planner(agent, deducer, agent.me)
 
     plan = planner.plan(desire)

@@ -149,7 +149,7 @@ class IntentionModule(Module):
         #  question the deliberator answered by a special case reading None as ignorance. Both
         #  ends of that arrangement are gone: an epistemic want is a want like any other now,
         #  it says which failure it is, and the ordinary door takes it.
-        for desire in self.agent.desires():
+        for desire in self.agent.pursuing():
             if desire.is_duty or desire.state not in ("unmeasured", "stale"):
                 continue
             move = deliberator.propose_for(desire)

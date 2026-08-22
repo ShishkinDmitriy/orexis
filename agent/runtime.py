@@ -89,7 +89,7 @@ class Agent:
         # its stores directly — the belief base above, this one, and the rest of the record's
         # table as #299 lands them; there is no object between, by the sovereign's ruling.
         # The handle is the read half only, so a write attempt fails at the call site.
-        self.desires_store = ReadOnly(Desires(self.store))
+        self.desires = ReadOnly(Desires(self.store))
 
         # Built before the modules, because Observations counts into it and a module builds one
         # of those. Counting only — nothing is reported until run() starts it.
@@ -146,9 +146,9 @@ class Agent:
         re-pick. A fresh copy rather than an edit, so a want whose premise has ceased is
         absent afterwards without anyone having retracted it (#263's discipline, structural).
         """
-        self.desires_store = ReadOnly(Desires(self.store))
+        self.desires = ReadOnly(Desires(self.store))
 
-    def desires(self, now: datetime | None = None) -> list[Desire]:
+    def pursuing(self, now: datetime | None = None) -> list[Desire]:
         """Everything this agent is pursuing, hottest first, whoever sourced it.
 
         Assembled from the modules that hold wants rather than asked of one, because since the

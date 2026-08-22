@@ -864,9 +864,9 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     owed = ledger.owed()
     assert len(owed) == 1 and owed[0]["to"].endswith("#supplier")
 
-    assert city.desires(), "and its debts are desires like anyone else's"
-    assert all(g.is_duty for g in city.desires()), "all of them owed, none of them its own"
+    assert city.pursuing(), "and its debts are desires like anyone else's"
+    assert all(g.is_duty for g in city.pursuing()), "all of them owed, none of them its own"
 
     ledger.discharge("j-city-1")
     assert ledger.owed() == [], "paid"
-    assert city.desires() == [], "and a pure seller with nothing outstanding wants nothing at all"
+    assert city.pursuing() == [], "and a pure seller with nothing outstanding wants nothing at all"

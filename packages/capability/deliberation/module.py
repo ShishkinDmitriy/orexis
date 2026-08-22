@@ -137,10 +137,10 @@ class ReflexModule(Module):
         """Every desire this agent holds, with the move I propose for it — or None.
 
         Here because deciding what can be done is exactly what a deliberator is, and because
-        the kernel may not name a capability's family: `agent.desires()` merges what the modules
+        the kernel may not name a capability's family: `agent.pursuing()` merges what the modules
         want, and this is the only place that can say whether anything answers.
         """
-        return [(desire, self.propose_for(desire)) for desire in self.agent.desires()]
+        return [(desire, self.propose_for(desire)) for desire in self.agent.pursuing()]
 
     def start(self) -> None:
         """Drop whatever the last process was thinking.
