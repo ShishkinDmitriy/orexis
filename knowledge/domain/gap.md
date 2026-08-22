@@ -58,7 +58,7 @@ vacuously and why judging *desire achieved* is the planner's job rather than the
 
 # Who notices one
 
-Noticing is the choir. `Module.notices()` sits beside `annotate`, `urgency` and `quiet`, and each
+Noticing is the [choir](/domain/choir.md). `Module.notices()` sits beside its other hooks, and each
 module reports the (subject, property) pairs it can see are unknown or too stale to act on —
 sensing's are the archetype. What happens next is the keeper's, and
 [intention](/domain/intention.md) has it.

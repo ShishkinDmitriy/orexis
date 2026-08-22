@@ -58,7 +58,7 @@ package's tests hold the query and the module to the same answer.
 
 # It is contributed, not only computed
 
-`Module.urgency()` is a choir hook, beside `annotate`, `notices`, `series` and `quiet`. Any module
+`Module.urgency()` is a [choir](/domain/choir.md) hook. Any module
 may raise the urgency of a (subject, property) it can see something about, and the agent takes the
 highest. So a capability that knows a reason to hurry does not need a path into the deliberator —
 it answers when asked.

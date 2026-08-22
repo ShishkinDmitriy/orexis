@@ -179,7 +179,7 @@ which is correct for an interval and wrong once anything travels with it: a pot 
 to LOW *inside one cadence band* would have kept the old colour indefinitely — the state most
 worth seeing, displayed as the state before it. The comparison is now the whole message.
 
-The verdict is collected the way every cross-capability opinion is, through the choir — whose
+The verdict is collected the way every cross-capability opinion is, through the [choir](/domain/choir.md) — whose
 answer it is, and why an agent with no stake has none to give, is [band](/domain/band.md)'s. What
 matters here is that this capability passes it on without reading it, and the transport driver
 below never learns what one is.

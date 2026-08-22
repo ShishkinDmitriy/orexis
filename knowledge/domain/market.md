@@ -17,7 +17,7 @@ still a market; there is simply no auction happening in it.
 This page said the opposite until recently — that a market "is not a standing thing" — while
 `market:Market` was declared in `world.ttl` with three MQTT topics on it. Both were called *market*
 and they were opposites, which is worth recording rather than quietly fixing: the confusion sent
-two separate design attempts to the wrong premise, because a fact about the venue and a fact
+two separate design attempts to the wrong premise, because a fact about the [venue](/domain/venue.md) and a fact
 about the round genuinely belong in different places. **Structure is the market's; the terms of a
 given auction are its host's** (see
 [bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md)). What an auction *is* is
