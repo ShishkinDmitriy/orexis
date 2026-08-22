@@ -31,10 +31,10 @@ ag:WorldVersionShape a sh:NodeShape ;
     sh:targetClass ag:WorldVersion ;
     sh:property [ sh:path ag:versionNumber ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ] .
 
-ag:BeliefsGraphShape a sh:NodeShape ;
-    rdfs:comment "A beliefs graph belongs to exactly one agent — that is the write boundary." ;
-    sh:targetClass ag:BeliefsGraph ;
-    sh:property [ sh:path ag:beliefsOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ag:Agent ] .
+ag:OwnedGraphShape a sh:NodeShape ;
+    rdfs:comment "A graph that names an owner names exactly one agent — the write boundary. Targeted on the property since ag:BeliefsGraph retired: presence is guaranteed by the rule that mints the row, and a class existing only to be a shape's target is the class this replaced." ;
+    sh:targetSubjectsOf ag:beliefsOf ;
+    sh:property [ sh:path ag:beliefsOf ; sh:maxCount 1 ; sh:class ag:Agent ] .
 
 #################  Devices that are not there  #################################################
 #

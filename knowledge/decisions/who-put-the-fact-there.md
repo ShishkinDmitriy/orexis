@@ -333,7 +333,7 @@ described automatically now, and a graph a **world file** declares still is not.
   the part that makes it worth doing.
 - **A hand-written graph catalog still sits in every `world.ttl`.** `<…/graph/world> a
   ag:WorldGraph` and two siblings, restated per world, covering three of the five and read by
-  nothing except `ag:BeliefsGraphShape` — which needs the beliefs entries, since `ag:beliefsOf`
+  nothing except the owned-graph shape (`ag:OwnedGraphShape`, once `ag:BeliefsGraphShape`) — which needs the beliefs entries, since `ag:beliefsOf`
   carries information nothing else has. It is the partial answer that existed before this record
   and it was missed on the first pass. Left alone deliberately: it is ratified content, removing
   it is a world-file change with its own review, and a computed description now stands beside it.
