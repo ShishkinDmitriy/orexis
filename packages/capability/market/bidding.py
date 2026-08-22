@@ -204,7 +204,7 @@ class BiddingModule(Module):
         It used to: `propose` read None as ignorance and answered Observe, and this module
         leaned on that when an offer arrived with no reading it trusts. But None also meant
         "the caller has no number", and one sentinel answering two questions is a sentinel
-        that will eventually answer the wrong one. A goal says which of the two epistemic
+        that will eventually answer the wrong one. A desire says which of the two epistemic
         failures it is — never read, or read too long ago — so the question is asked properly
         and this module keeps the same behaviour for a better reason.
 
@@ -213,20 +213,20 @@ class BiddingModule(Module):
         one just read — not one fetched back out of the store, because that would make the
         answer depend on whether the observation had been written yet, an ordering no caller
         can see. With nothing in hand it is "what should I do about not knowing", and only a
-        goal can say which kind of not-knowing it is.
+        desire can say which kind of not-knowing it is.
         """
         deliberator = self.agent.provider(DELIBERATION)
         if deliberator is None:
             return None
         if value is not None:
             return deliberator.propose(self.about, value)
-        goal = next((g for g in self.agent.goals()
+        desire = next((g for g in self.agent.desires()
                      if not g.is_duty and g.observed_property == self.about), None)
-        if goal is None:
+        if desire is None:
             #  No want in this property at all: nothing to steer toward, and the old code
             #  reached the same answer through an aim it could not find.
             return None
-        return deliberator.propose_for(goal)
+        return deliberator.propose_for(desire)
 
     def _unseal(self, doc: dict) -> dict:
         """Open a sealed claim (#145), or pass a plaintext one through untouched.

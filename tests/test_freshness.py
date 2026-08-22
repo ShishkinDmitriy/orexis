@@ -1,6 +1,6 @@
 """A reading that stopped being evidence is a want of its own (#240).
 
-The first end-to-end case for goals as graphs: a want nobody can read, repaired by looking and
+The first end-to-end case for desires as graphs: a want nobody can read, repaired by looking and
 by nothing else. Three things have to hold together — the horizon is published so a SHAPE can
 read what only Python could compute, the want reports `stale` where the region reports met or
 unmet, and the reflex's `value is None` special case is gone with its behaviour intact.
@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 import rdflib
 from pyshacl import validate as shacl_validate
 
-from packages.capability.desire import goals_of
+from packages.capability.desire import desires_of
 
 from conftest import MOISTURE, build_agent, genesis_store
 
@@ -72,11 +72,11 @@ def test_a_reading_past_the_horizon_is_stale_where_a_fresh_one_is_met(monkeypatc
     look again, and its urgency is the maximum for the same reason an unread property's is.
     """
     agent, st = _fern(monkeypatch, value=0.55)
-    fresh = {g.observed_property: g for g in goals_of(st.query, FERN, "fern")}
+    fresh = {g.observed_property: g for g in desires_of(st.query, FERN, "fern")}
     assert fresh[MOISTURE].state == "met" and fresh[MOISTURE].urgency == 0.0
 
     _age_the_reading(st)
-    stale = {g.observed_property: g for g in goals_of(st.query, FERN, "fern")}
+    stale = {g.observed_property: g for g in desires_of(st.query, FERN, "fern")}
     assert stale[MOISTURE].state == "stale"
     assert stale[MOISTURE].urgency == 1.0, \
         "not knowing is not knowing — scaling it by a distance the agent no longer trusts " \
@@ -89,7 +89,7 @@ def test_stale_and_unmeasured_are_told_apart(monkeypatch):
     and let the answer go cold — the same repair, and not the same situation."""
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
-    by_state = {g.state for g in goals_of(st.query, FERN, "fern") if not g.is_duty}
+    by_state = {g.state for g in desires_of(st.query, FERN, "fern") if not g.is_duty}
     assert by_state == {"stale", "unmeasured"}, \
         "moisture was read and went cold; temperature was never read at all"
 
@@ -160,7 +160,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_watched(mo
     `world/loner`'s gardener polls a water butt it does not act for: it holds a region in the
     zz plant's moisture and none in the butt's level. Freshness was first derived from the
     SUBJECT's stated ranges, matching the region's premise — which left the butt with no want,
-    and since the keeper pursues goals rather than sweeping noticed gaps, nothing would have
+    and since the keeper pursues desires rather than sweeping noticed gaps, nothing would have
     watched it at all. `notices()` covered every sensor, and what replaces it must cover the
     same ground.
 

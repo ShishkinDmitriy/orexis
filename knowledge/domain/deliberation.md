@@ -14,16 +14,16 @@ a family now: a deliberator is asked `propose(property, freshest value or None)`
 with a move — `Observe`, `Acquire` — or with None, **which is a decision, not an absence of
 one**: the actors treat it exactly as they treat their own cooldowns.
 
-`propose_for(goal)` is the same question asked properly. A property and a value can only ever
+`propose_for(desire)` is the same question asked properly. A property and a value can only ever
 express a stake, and an agent also wants things that are not distances — "this claim redeemed"
-is a state, wanted, with a deadline. A goal carries either shape and one urgency, so a duty is
+is a state, wanted, with a deadline. A desire carries either shape and one urgency, so a duty is
 ranked against a thirst rather than running down a second path that never meets the first.
 
 **And it is where not-seeing is answered** (#240). `propose` used to open with
 `if value is None: return OBSERVE` — a first line that read a missing number as ignorance. It
 said the right thing for the wrong reason, because None meant two things: *never read*, and
 *the caller has no number to hand you*. The keeper exploited the second to ask the first,
-sweeping noticed gaps and passing None deliberately to mean "should I look?". A goal says which
+sweeping noticed gaps and passing None deliberately to mean "should I look?". A desire says which
 epistemic failure it is — `unmeasured` or `stale` — so the question is now asked in the words it
 means, both are answered by the same move, and the bare-value door steers only. One sentinel
 answering two questions is a sentinel that eventually answers the wrong one.
@@ -57,7 +57,7 @@ Three things bound it, and each exists because building it found the failure:
   at its aim. The actor has always refused this; the refusal has to live on both sides.
 
 - **A step is simulated from where it is TAKEN.** The bindings a rule is filled with were first
-  computed from the goal and reused at every depth, so a second dose predicted what the first had
+  computed from the desire and reused at every depth, so a second dose predicted what the first had
   and landed on the world the first one reached — discarded by cycle detection as somewhere
   already seen. The loop ran twice and the search was depth 1, for every means that moves a
   measured property.
@@ -94,7 +94,7 @@ arrives at "this does not help". Measured with the guard removed, on three world
 first look with nothing sensed: Observe is pruned as a world already reached, every time. A
 second statement of a fact the effect already settles is a fact that can disagree with it.
 
-What that rests on is `_signature`, which is the goal's own value, and a look does not move it.
+What that rests on is `_signature`, which is the desire's own value, and a look does not move it.
 [#258](https://github.com/ShishkinDmitriy/agora/issues/258) asks whether a signature should
 carry where a plan IS rather than only that number — and a signature noticing a fresher
 `sosa:resultTime` would make "look, then look" a new world every time. Chaining past a look
@@ -105,7 +105,7 @@ honest; it does not make depth 3 useful, because what decides that is whether th
 — [the-ladder-of-means](../decisions/the-ladder-of-means.md)' question rather than this one's.
 
 **Legality is checked once, on the winner.** Validating every candidate against everything the
-packages ship costs 1.73s against the goal shape's 0.083s — twenty times more, for an answer
+packages ship costs 1.73s against the desire shape's 0.083s — twenty times more, for an answer
 about rules no effect could have broken — and a depth-2 pass would take twenty-two seconds
 instead of under two. What must be true is that the agent never COMMITS to reaching a world the
 society refuses, so the expensive question is asked of the world it actually intends.
@@ -117,13 +117,13 @@ recovered from outside: pyoxigraph holds an exclusive lock on the belief base, s
 can open the store to re-run the search and see what it saw. That is the same fact `agora-ask`
 exists for, arriving at the planner.
 
-So a pass writes itself down. Per goal, into `graph/deliberation`, replaced at the start of the
+So a pass writes itself down. Per desire, into `graph/deliberation`, replaced at the start of the
 next pass:
 
 ```sparql
-SELECT ?goal ?verdict ?standsAt ?means ?via ?wouldReach ?why WHERE {
+SELECT ?desire ?verdict ?standsAt ?means ?via ?wouldReach ?why WHERE {
   GRAPH <http://example.org/agora/graph/deliberation> {
-    ?d a ag:Deliberation ; ag:deliberatedOn ?goal ; ag:verdict ?verdict ;
+    ?d a ag:Deliberation ; ag:deliberatedOn ?desire ; ag:verdict ?verdict ;
        ag:standsAt ?standsAt ; ag:considered ?c .
     ?c ag:wouldTake ?means ; ag:through ?via ; ag:verdict ?why .
     OPTIONAL { ?c ag:wouldReach ?wouldReach } } }
@@ -132,7 +132,7 @@ SELECT ?goal ?verdict ?standsAt ?means ?via ?wouldReach ?why WHERE {
 Asked of the loner's gardener, wet at 0.42:
 
 ```
-goal bounds.gardener.SoilMoisture   pass: not better   at 0.88
+desire bounds.gardener.SoilMoisture   pass: not better   at 0.88
   considered Observe  via moisture_probe  would reach 0.88  — a world already reached
   considered Actuate  via pump            would reach 1.00  — no better than standing still
 ```
@@ -151,7 +151,7 @@ Three things it must not become:
 
 - **A second pass replaces the first**, candidates and all. An orphaned candidate is a trace
   outliving the pass it described, which is the hazard the computed-not-stored rule exists to
-  prevent — and the node is minted deterministically from the goal's IRI precisely so a restart
+  prevent — and the node is minted deterministically from the desire's IRI precisely so a restart
   can find and replace it. `hash()` would not do: Python salts it per interpreter, so every boot
   would orphan a trace instead of replacing one.
 - **A restart inherits nothing.** The world moved while the agent was not running.
@@ -177,7 +177,7 @@ that slowed the thing it observes would be a poor trade.
 `agent_planning` carries the other half of the same trace: how long the pass took
 (`ag:tookSeconds`, the one figure the trace could not already answer), how many worlds it built,
 how deep it reached, and what it did with each lever — `met`, `better`, `worse`, `cycles`,
-`unsimulated`, and `blind` for the goals where some lever had no stated effect at all. Read back
+`unsimulated`, and `blind` for the desires where some lever had no stated effect at all. Read back
 out of the trace rather than counted a second time, so the pass being measured is the pass that
 happened; measuring by re-planning would double the cost it reports. Reading them costs **0.4ms**,
 which is a tenth of one per cent of a pass.
@@ -185,19 +185,19 @@ which is a tenth of one per cent of a pass.
 **Three of the fields exist to make a recorded limit visible rather than to confirm health**, and
 that is the argument for having them at all. `deepest` pinned at 1 is two limits at once — a
 rule's CONSTRUCTs run against the store rather than the world, and the cycle signature is the
-goal's own value, so a step that moves nothing else is indistinguishable from having gone
+desire's own value, so a step that moves nothing else is indistinguishable from having gone
 nowhere. `cycles` climbing beside it says which of the two is biting. `blind` above zero is a
 package that never said what its lever does, which is why a partial plan defers to the reflex
 instead of reporting that nothing helps.
 
 **And the figure that surfaced something uncomfortable: a reporting tick IS a planning pass.**
-`series()` calls `pursued()`, which re-plans every goal the agent holds, so essentially the whole
-cost of reporting an agent's state — measured at ~0.4s for a fern with two goals — is deliberation
+`series()` calls `pursued()`, which re-plans every desire the agent holds, so essentially the whole
+cost of reporting an agent's state — measured at ~0.4s for a fern with two desires — is deliberation
 done over again to describe deliberation. Planning to decide happens on a reading; planning to
 report happens on the tick; nothing shares the answer between them. That is not a defect in the
 figures, it is what the figures found.
 
-**All zero means nothing was deliberated**, not that planning is free: a want nobody has read is
+**All zero means nothing was deliberated**, not that planning is free: a desire nobody has read is
 answered by Observe before any search runs, so an agent at rest reports zeros honestly.
 
 # The members, and which of them exist
@@ -238,7 +238,7 @@ NOT be allowed to do is fixed before it exists, which is the point of declaring 
 - **`deliberation:Planning`** — the reflex one level up (#205): bounded search over menu
   rows, depth 2 and no deeper, granted by the DEALER premise — acting for a source you offer,
   refillable from a source another offers: levers that compose. It subsumes the reflex and
-  adds exactly one deduced goal past the region: the hosted lot must be serveable, every
+  adds exactly one deduced desire past the region: the hosted lot must be serveable, every
   downstream buyer's silent Acquire precondition. Its plan — acquire upstream, then offer
   downstream — is data twice over: `plan_for` in code and `plan.rq` on the ask channel, one
   text, two readers. A planner always also derives Reflex (the premises nest); a pinned test
@@ -296,8 +296,8 @@ free to deliberate over claims is a host that can defect politely, one "None is 
 time. The fear was answered rather than ignored, and the answer is that **enforcement was never
 the deliberation**. The dose still opens against a claim the pump's firmware verifies, clearing
 still validated the trade, the ACL still bounds who may speak. What deliberation controls is
-only whether the agent *tries* — so making the duty a want converts an invisible non-event into
-a hot unpursued goal, which is evidence instead of silence. See
+only whether the agent *tries* — so making the duty a desire converts an invisible non-event into
+a hot unpursued desire, which is evidence instead of silence. See
 [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md).
 
 What it bought: this used to answer only *what could I do about MY gaps*, so an ability that

@@ -149,28 +149,28 @@ class IntentionModule(Module):
         #  question the deliberator answered by a special case reading None as ignorance. Both
         #  ends of that arrangement are gone: an epistemic want is a want like any other now,
         #  it says which failure it is, and the ordinary door takes it.
-        for goal in self.agent.goals():
-            if goal.is_duty or goal.state not in ("unmeasured", "stale"):
+        for desire in self.agent.desires():
+            if desire.is_duty or desire.state not in ("unmeasured", "stale"):
                 continue
-            move = deliberator.propose_for(goal)
+            move = deliberator.propose_for(desire)
             if move != OBSERVE:
                 continue
-            observed_property = goal.observed_property
+            observed_property = desire.observed_property
             adopted = self.adopt(OBSERVE, observed_property,
-                                 f"{goal.state} — noticed, not asked for")
+                                 f"{desire.state} — noticed, not asked for")
             if adopted and (sensing := self.agent.provider(_SENSING)) is not None:
                 sensing.sense_now()
 
     # --- the ledger, written -------------------------------------------------------------
 
     def adopt(self, means: str, observed_property: str, because: str,
-              goal: str | None = None) -> str | None:
-        """Commit to one means toward one goal. Returns the intention's IRI, or None.
+              desire: str | None = None) -> str | None:
+        """Commit to one means toward one desire. Returns the intention's IRI, or None.
 
-        `goal` is which end this serves — the bounds an agent is held to, or the obligation a
-        claim raised. Optional, because the first three means predate goals having names; a
+        `desire` is which end this serves — the bounds an agent is held to, or the obligation a
+        claim raised. Optional, because the first three means predate desires having names; a
         commitment without one is keyed as it always was. WITH one, two commitments about the
-        same property but different goals are distinct: a dealer owing water to fern and to
+        same property but different desires are distinct: a dealer owing water to fern and to
         tomato holds two Apply rows that would otherwise be indistinguishable, so satisfying
         one would satisfy both and the patience would absorb the second impulse as the first.
 
@@ -183,7 +183,7 @@ class IntentionModule(Module):
         """
         now = datetime.now(timezone.utc)
         for standing in self.standing(means=means, observed_property=observed_property,
-                                      goal=goal):
+                                      desire=desire):
             if standing.age_s(now) <= self.beliefs.patience_s:
                 return None
             self._resolve(standing, "dropped",
@@ -193,7 +193,7 @@ class IntentionModule(Module):
         self.agent.store.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
-    {f'<{kernel("pursues")}> <{goal}> ;' if goal else ""}
+    {f'<{kernel("pursues")}> <{desire}> ;' if desire else ""}
     <{kernel("by")}> <{means}> ;
     <http://www.w3.org/ns/ssn/forProperty> <{observed_property}> ;
     <{kernel("adoptedAt")}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
@@ -205,26 +205,26 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         return uri
 
     def satisfy(self, means: str, observed_property: str, because: str,
-                goal: str | None = None) -> list[str]:
-        """The world answered: whatever stood for this means and goal is done.
+                desire: str | None = None) -> list[str]:
+        """The world answered: whatever stood for this means and desire is done.
 
         Returns the resolved rows' IRIs, because resolving the MEANS is where an expectation
         about the END begins — the caller hands them straight to `expect`.
 
-        Naming the goal is what keeps one debt from discharging another: without it, a dose
+        Naming the desire is what keeps one debt from discharging another: without it, a dose
         that answered fern's claim would resolve tomato's too, since both are Apply rows about
         soil moisture. Omitted, it resolves every row for the means and property, which is
-        what every caller predating goals meant and still means.
+        what every caller predating desires meant and still means.
         """
         resolved = []
         for standing in self.standing(means=means, observed_property=observed_property,
-                                      goal=goal):
+                                      desire=desire):
             self._resolve(standing, "satisfied", because)
             resolved.append(standing.uri)
         return resolved
 
     def drop(self, means: str, observed_property: str, because: str,
-             goal: str | None = None) -> None:
+             desire: str | None = None) -> None:
         """The commitment died without being met, and the reason is the record.
 
         A commitment abandoned without a reason is indistinguishable from one forgotten, which
@@ -497,7 +497,7 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
     # --- the ledger, read ----------------------------------------------------------------
 
     def standing(self, means: str | None = None, observed_property: str | None = None,
-                 goal: str | None = None) -> list[Standing]:
+                 desire: str | None = None) -> list[Standing]:
         """What stands: adopted and not resolved. The question a deliberator asks first."""
         clauses = [f"?i a <{kernel('Intention')}> ; <{kernel('by')}> ?means ; "
                    f"<http://www.w3.org/ns/ssn/forProperty> ?property ; "
@@ -507,13 +507,13 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
             clauses.append(f"FILTER(?means = <{means}>)")
         if observed_property:
             clauses.append(f"FILTER(?property = <{observed_property}>)")
-        if goal:
-            #  A goal NARROWS: rows that name this goal, plus rows that name none, because a
-            #  commitment adopted before goals had names is still about something and must
+        if desire:
+            #  A desire NARROWS: rows that name this desire, plus rows that name none, because a
+            #  commitment adopted before desires had names is still about something and must
             #  not be orphaned by a question it could not have answered.
             clauses.append(
-                f'OPTIONAL {{ ?i <{kernel("pursues")}> ?goal }} '
-                f'FILTER(!BOUND(?goal) || ?goal = <{goal}>)')
+                f'OPTIONAL {{ ?i <{kernel("pursues")}> ?desire }} '
+                f'FILTER(!BOUND(?desire) || ?desire = <{desire}>)')
         rows = bindings(self.agent.store.query(
             "SELECT ?i ?means ?property ?at WHERE { GRAPH <%s> { %s } }"
             % (self.graph, " ".join(clauses))))

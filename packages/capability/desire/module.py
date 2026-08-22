@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from agent.goal import Goal
+from agent.desire import Desire
 from agent.module import Module
 from agent.ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
@@ -49,7 +49,7 @@ _SENSING = "http://example.org/agora/sensing#SensingCapability"
 # file's own header. Read once at import: a malformed query is then an error the moment the
 # package loads rather than the first time somebody asks.
 GAP_QUERY = (Path(__file__).parent / "gap.rq").read_text()
-GOALS_QUERY = (Path(__file__).parent / "goals.rq").read_text()
+DESIRES_QUERY = (Path(__file__).parent / "desires.rq").read_text()
 
 # My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
 # graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
@@ -188,7 +188,7 @@ class Gap:
     high: float
     gap: float
     at: datetime | None = None
-    #  The shape this diff is against, so a goal built from it can name its own node rather
+    #  The shape this diff is against, so a desire built from it can name its own node rather
     #  than rebuilding the IRI — a want minted by a rule is found by asking, never by spelling.
     region: str | None = None
 
@@ -222,9 +222,9 @@ def gaps_of(query, agent_uri: str) -> dict[str, Gap]:
     ) for row in bindings(query(substituted))}
 
 
-def goals_of(query, agent_uri: str, agent_id: str,
-             now: datetime | None = None) -> list[Goal]:
-    """Everything an agent is pursuing, hottest first — from the shipped `goals.rq`.
+def desires_of(query, agent_uri: str, agent_id: str,
+             now: datetime | None = None) -> list[Desire]:
+    """Everything an agent is pursuing, hottest first — from the shipped `desires.rq`.
 
     A free function for the same reason `gaps_of` is: what a world implies about an agent
     should be askable without building one. The query is the DEFINITION — the sovereign can
@@ -232,7 +232,7 @@ def goals_of(query, agent_uri: str, agent_id: str,
     store's engine will not do, which is dividing one duration by another.
     """
     now = now or datetime.now(timezone.utc)
-    substituted = (GOALS_QUERY
+    substituted = (DESIRES_QUERY
                    .replace("$me", f"<{agent_uri}>")
                    .replace("$sensed", f"<{SENSED_GRAPH}>")
                    .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>")
@@ -240,7 +240,7 @@ def goals_of(query, agent_uri: str, agent_id: str,
     out = []
     for row in bindings(query(substituted)):
         if row["kind"] == "stake":
-            out.append(Goal(uri=row["want"], urgency=float(row["urgency"]),
+            out.append(Desire(uri=row["desire"], urgency=float(row["urgency"]),
                             observed_property=row["property"], state=row["state"],
                             value=float(row["value"]) if row.get("value") else None))
             continue
@@ -248,7 +248,7 @@ def goals_of(query, agent_uri: str, agent_id: str,
         #  what happened and carries the deadline; one reader, one now, so a debt cannot be
         #  maximally hot and still count as open because two clocks disagreed.
         lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
-        out.append(Goal(uri=row["want"], urgency=_duty_urgency(row, now),
+        out.append(Desire(uri=row["desire"], urgency=_duty_urgency(row, now),
                         claim=row["claim"], owed_to=row["owedTo"],
                         state="lapsed" if lapsed else row["state"],
                         pursuable=row["state"] == "demanded" and not lapsed))
@@ -445,16 +445,16 @@ class DesireModule(Module):
             out["worst_gap"] = round(max(abs(g.gap) for g in current.values()), 3)
         return out
 
-    def wants(self, now: datetime | None = None) -> list[Goal]:
+    def wants(self, now: datetime | None = None) -> list[Desire]:
         """MY contribution to what this agent is pursuing: its stakes, and no duties.
 
-        The choir hook for goals (`agent.goals()` merges every module's). Split from the debts
+        The choir hook for desires (`agent.desires()` merges every module's). Split from the debts
         when the ledger became its own capability: an agent may hold stakes and owe nothing, owe
         and hold no stake — `world/simulation`'s city is exactly that — or both, and none of
-        those is the others' business. `goals_of` reads the whole shipped query and each module
+        those is the others' business. `desires_of` reads the whole shipped query and each module
         takes its own kind, so there is still one text and one definition.
         """
-        return [g for g in goals_of(self.agent.store.query, self.me.uri, self.agent.id, now)
+        return [g for g in desires_of(self.agent.store.query, self.me.uri, self.agent.id, now)
                 if not g.is_duty]
 
     def series(self) -> list[tuple[str, dict, dict]]:

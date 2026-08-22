@@ -1,12 +1,12 @@
 """What an agent is trying to bring about, in the one shape a deliberator ranges over.
 
-Here and not in a package because a goal is a MENTAL STATE, and those are the kernel's — the
+Here and not in a package because a desire is a MENTAL STATE, and those are the kernel's — the
 same reason `ag:Obligation` and `ag:Intention` moved into the agora namespace when the mind
 was named (the-mind-is-six-graphs). Two packages need this type and neither may import the
-other: `desire` produces goals, `deliberation` consumes them, and the only thing they are
+other: `desire` produces desires, `deliberation` consumes them, and the only thing they are
 allowed to share is a kernel word.
 
-**Two sources, one currency.** A goal is either a stake — a property of the subject this agent
+**Two sources, one currency.** A desire is either a stake — a property of the subject this agent
 acts for, wanted inside a region — or a duty, a claim someone else holds against it. They are
 deliberately the same type: an agent's whole conduct is wants it pursues through affordances,
 and a deliberator that had to ask which kind it was holding would be the second decision path
@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class Goal:
+class Desire:
     """One thing wanted, and how badly.
 
     `urgency` is unit-free in both cases and that is the whole point of the type: a stake's
@@ -31,7 +31,7 @@ class Goal:
     fern a litre" finally rank against each other.
     """
 
-    uri: str  # the want's own node: a shape this agent holds, or an obligation
+    uri: str  # the desire's own node: a shape this agent holds, or an obligation
     urgency: float  # 0 = content, 1 = at the edge of what it can bear or of its deadline
 
     # A stake's two: what is wanted, and what it currently reads. `value` is None when nothing
@@ -51,7 +51,7 @@ class Goal:
     # for a stake — a plant does not ask.
     pursuable: bool = True
 
-    #  What state the want is in, in its own kind's vocabulary: `met`, `unmet` or `unmeasured`
+    #  What state the desire is in, in its own kind's vocabulary: `met`, `unmet` or `unmeasured`
     #  for a stake, `standing` or `demanded` for a duty. Carried rather than inferred from
     #  urgency, and that distinction is not academic — urgency is 0 only exactly at a region's
     #  centre, so "urgency > 0" counts a barrel sitting comfortably inside 1-5 as unmet. It
@@ -61,7 +61,7 @@ class Goal:
     @property
     def is_met(self) -> bool:
         """Nothing is wanted here right now. False for a duty, which is never *met* — it is
-        discharged, and a discharged debt is history rather than a goal."""
+        discharged, and a discharged debt is history rather than a desire."""
         return self.state == "met"
 
     @property

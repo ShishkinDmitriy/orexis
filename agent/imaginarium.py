@@ -5,7 +5,7 @@ SPARQL query. A query reads ONE store, so the question "what would be true here"
 only if there is a store in which *here* is what is true. There was not: `agent/effects.py`
 computed each step honestly and asked the belief base for the next one, so the first step was
 right and every step after it was predicted from the reading on disk. Depth beyond 1 was
-nominal for any goal about a measured value, which is most of them.
+nominal for any desire about a measured value, which is most of them.
 
 So the rules are run against a SECOND pyoxigraph store, in memory for the life of one plan —
 the **imaginarium**, in the sovereign's word, and the word says the thing that matters: what is

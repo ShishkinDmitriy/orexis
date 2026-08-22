@@ -22,7 +22,7 @@ That is the whole job: **a common currency, so the hottest want wins.**
 
 # It has several sources and one meaning
 
-| the want | where its urgency comes from |
+| the desire | where its urgency comes from |
 |---|---|
 | a measured property outside its region | \|gap\| — the normalised distance, by construction |
 | a duty owed to a peer | the room left before its deadline |

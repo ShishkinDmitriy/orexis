@@ -9,7 +9,7 @@ description: >-
   `affordances.rq`, so a new way of acting is a new directory rather than an edit to a
   registry. The menu is the union of those rows, and it is also the precondition language —
   a row whose premises cannot hold does not exist, so chaining needs no separate `requires`.
-  The row that is ABSENT is a finding too: a want with no lever is legitimate and legible.
+  The row that is ABSENT is a finding too: a desire with no lever is legitimate and legible.
 ---
 
 # What it is

@@ -36,7 +36,7 @@ import paho.mqtt.client as mqtt
 
 from . import config, genesis, loader
 from .beliefs import Beliefs
-from .goal import Goal
+from .desire import Desire
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
@@ -133,7 +133,7 @@ class Agent:
         members = {r["capability"] for r in bindings(self.store.query(_family_q(family)))}
         return next((m for m in self.modules if m.CAPABILITY in members), None)
 
-    def goals(self, now: datetime | None = None) -> list[Goal]:
+    def desires(self, now: datetime | None = None) -> list[Desire]:
         """Everything this agent is pursuing, hottest first, whoever sourced it.
 
         Assembled from the modules that hold wants rather than asked of one, because since the
@@ -142,7 +142,7 @@ class Agent:
         ranking is what makes the two comparable — urgency is unit-free on both sides, so a
         litre owed and a pot drying finally rank against each other.
         """
-        return sorted((goal for m in self.modules for goal in m.wants(now)),
+        return sorted((desire for m in self.modules for desire in m.wants(now)),
                       key=lambda g: -g.urgency)
 
     def annotations(self, subject_uri: str, observed_property: str, value: float) -> dict:

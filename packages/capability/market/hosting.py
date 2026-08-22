@@ -208,9 +208,9 @@ SELECT ?p WHERE {{
             # shape — a commitment held until the world can honour it — and it is worth
             # noticing that the duty case needed no new machinery, only a want to point at.
             if (ledger := self.agent.provider(OWING)) is not None:
-                for goal in ledger.duties():
-                    if goal.pursuable and goal.claim in self.held:
-                        self._pursue(goal.claim,
+                for desire in ledger.duties():
+                    if desire.pursuable and desire.claim in self.held:
+                        self._pursue(desire.claim,
                                      f"my vessel reports {value:.3f} — trying again")
             if market.uri not in self.deferred:
                 # An owed round survives the process that owed it (#206): the deferral used
@@ -234,7 +234,7 @@ SELECT ?p WHERE {{
             trigger = self.deferred.pop(market.uri)
             if keeper := self._keeper():
                 keeper.satisfy(OFFER, self.stock_property[market.uri],
-                               "the refill landed — the owed round opens", goal=market.uri)
+                               "the refill landed — the owed round opens", desire=market.uri)
             self.log.info("the refill landed (%.3f) — opening the round deferred for %s: "
                           "step two of acquire-then-offer", value, trigger)
             self.announce(market, trigger=trigger)
@@ -281,12 +281,12 @@ SELECT ?p WHERE {{
                 # see. Deciding is still nobody's here — physics deferred the round, and the
                 # keeper only remembers that it is owed.
                 if keeper := self._keeper():
-                    #  The venue IS the goal here: a host of two venues owes two rounds, and
+                    #  The venue IS the desire here: a host of two venues owes two rounds, and
                     #  keying by property alone would make paying one look like paying both.
                     keeper.adopt(OFFER, self.stock_property[market.uri],
                                  f"{trigger} is LOW and my vessel is dry — a round is owed "
                                  f"on {market.local_id} the moment the refill lands",
-                                 goal=market.uri)
+                                 desire=market.uri)
                 self.log.info("%s is LOW but my vessel is dry — deferring the round: "
                               "acquire upstream, then offer (the depth-2 plan, distributed)",
                               trigger)
@@ -476,7 +476,7 @@ SELECT ?p WHERE {{
         does not redeem *on presentation* — it asks its deliberator about a GOAL, exactly as it
         would about a pot drying, and acts on the answer. A society where a claim is honoured
         by a handler cannot express a host that is out of stock; one where it is honoured by a
-        decision reports that as a hot unpursued goal, which is the posture this project takes
+        decision reports that as a hot unpursued desire, which is the posture this project takes
         towards everything it cannot prevent.
 
         The guarantee that was never deliberation's is untouched: the dose still opens against
@@ -494,15 +494,15 @@ SELECT ?p WHERE {{
         ledger = self.agent.provider(OWING)
         deliberator = self.agent.provider(DELIBERATION)
         if ledger is not None and deliberator is not None:
-            goal = next((g for g in ledger.duties() if g.claim == jti), None)
-            if goal is None:
+            desire = next((g for g in ledger.duties() if g.claim == jti), None)
+            if desire is None:
                 return
-            if deliberator.propose_for(goal) is None:
+            if deliberator.propose_for(desire) is None:
                 # Hot, owed, and unpursued. It stays in `held`, so the moment the answer
                 # changes — stock arrives, a lever comes back — the sweep below serves it.
                 self.log.warning(
                     "claim %s stands unserved (urgency %.2f, owed to %s): %s proposed no move",
-                    jti, goal.urgency, goal.owed_to.rsplit("#", 1)[-1], deliberator.name)
+                    jti, desire.urgency, desire.owed_to.rsplit("#", 1)[-1], deliberator.name)
                 return
         del self.held[jti]
         self.log.info("serving claim %s (%.3f L) — %s", jti, claim.amount_l, why)

@@ -8,7 +8,7 @@ capability no module provides only produces a startup warning. Adding it is a cl
 of `PROVIDES`; no other package moves.
 """
 
-from .module import (DesireModule, Gap, Region, aims_of, gaps_of, goals_of,
+from .module import (DesireModule, Gap, Region, aims_of, gaps_of, desires_of,
                      regions_of)
 from .owing import OwingModule
 from .terms import CONSULTING, DEDUCING, DESIRE, OWING
@@ -20,5 +20,5 @@ PROVIDES = (DesireModule, OwingModule)
 
 __all__ = ["PROVIDES", "DesireModule", "OwingModule", "Gap", "Region", "aims_of",
            "gaps_of",
-           "goals_of", "regions_of",
+           "desires_of", "regions_of",
            "DESIRE", "DEDUCING", "CONSULTING", "OWING"]

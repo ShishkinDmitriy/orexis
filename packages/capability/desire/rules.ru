@@ -131,7 +131,7 @@ WHERE  {
     #  THE PREMISE IS THE INSTRUMENT, not the stake, and the difference is not academic: the
     #  loner's gardener polls a water butt it does not act for. Tying this to the subject's
     #  stated ranges — the region's premise — left the butt's level with no freshness want, and
-    #  since the keeper now pursues goals rather than sweeping noticed gaps, nothing would have
+    #  since the keeper now pursues desires rather than sweeping noticed gaps, nothing would have
     #  watched it at all. `notices()` covered every sensor, and the want that replaces it must
     #  cover exactly the same ground.
     #
@@ -197,7 +197,7 @@ WHERE  {
 #  refuses to let it start. Silence here is deliberate — a rule cannot report, and an
 #  intersection quietly rounded into a point would be the worst of the three outcomes.
 #  The bounds node is NAMED, not blank (step 2 of the-mind-is-six-graphs): a blank node is a
-#  thing nothing can reference, and an intention must be able to say which goal it serves.
+#  thing nothing can reference, and an intention must be able to say which desire it serves.
 #  Minted as a function of the agent and the property, on the channel precedent — a derived
 #  instance computed from given strings, so any package recomputing it lands on the same node
 #  without reading another rule's conclusions. And it carries WHERE IT CAME FROM: the ranges

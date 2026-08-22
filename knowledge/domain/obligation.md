@@ -7,13 +7,13 @@ description: >-
   caused it, whether it has been demanded, and when it was discharged; kept after payment,
   because a debt paid and a debt forgotten must not look alike. Two levels, and the split is the
   point: whom I MAY owe is topology, derived from the wiring exactly as the broker ACL is, so a
-  debt to an agent the world does not declare is refused before it becomes a want. What I owe NOW
+  debt to an agent the world does not declare is refused before it becomes a desire. What I owe NOW
   is runtime state, private, and disclosed the way everything private is — the sovereign asks.
 ---
 
 # What it is
 
-An **obligation** is a want that arrived from outside. When the society issues a
+An **obligation** is a desire that arrived from outside. When the society issues a
 [claim](/domain/claim.md) against this agent's hardware, the agent **owes** — and that owing is
 recorded as a first-class thing rather than inferred from the claim whenever somebody looks.
 
@@ -36,7 +36,7 @@ somebody.
 
 **Whom I may owe is topology.** It is derived from the wiring that says who may present to this
 agent — exactly as the broker ACL is derived — so a debt to an agent the world does not declare is
-**refused before it becomes a want**. There is no runtime check for a bogus creditor, because a
+**refused before it becomes a desire**. There is no runtime check for a bogus creditor, because a
 bogus creditor cannot produce an obligation in the first place.
 
 **What I owe now is runtime state.** Private, like the intention ledger, and disclosed the same

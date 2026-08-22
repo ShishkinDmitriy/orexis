@@ -24,7 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from agent import loader
-from agent.goal import Goal
+from agent.desire import Desire
 from agent.module import Module
 from agent.ontology import DELIBERATION_GRAPH
 from agent.store import bindings
@@ -133,14 +133,14 @@ class ReflexModule(Module):
     CAPABILITY = REFLEX
     name = "deliberation"
 
-    def pursued(self) -> list[tuple[Goal, str | None]]:
-        """Every goal this agent holds, with the move I propose for it — or None.
+    def pursued(self) -> list[tuple[Desire, str | None]]:
+        """Every desire this agent holds, with the move I propose for it — or None.
 
         Here because deciding what can be done is exactly what a deliberator is, and because
-        the kernel may not name a capability's family: `agent.goals()` merges what the modules
+        the kernel may not name a capability's family: `agent.desires()` merges what the modules
         want, and this is the only place that can say whether anything answers.
         """
-        return [(goal, self.propose_for(goal)) for goal in self.agent.goals()]
+        return [(desire, self.propose_for(desire)) for desire in self.agent.desires()]
 
     def start(self) -> None:
         """Drop whatever the last process was thinking.
@@ -148,7 +148,7 @@ class ReflexModule(Module):
         A trace describes a pass over a world, and the world moved while this agent was not
         running. Keeping one across a restart would leave the graph holding a decision about
         readings nobody has taken since — the same hazard as a trace outliving its pass, one
-        lifecycle up. Cheap: the graph holds one pass per goal and most agents hold a handful.
+        lifecycle up. Cheap: the graph holds one pass per desire and most agents hold a handful.
         """
         self.agent.store.clear_graph(DELIBERATION_GRAPH)
 
@@ -163,8 +163,13 @@ class ReflexModule(Module):
         """
         pursued = self.pursued()
         wanting = [(g, move) for g, move in pursued if not g.is_met]
+        #  `agent_goals`, like `agent_want` below, KEEPS THE RETIRED WORD. The noun gave way to
+        #  `desire` when the vocabulary was ruled on (domain/desire.md), and a measurement name
+        #  is the one surface where the rename costs more than it buys: it has history behind it
+        #  in the series store, so renaming splits every series at the cutover and leaves a
+        #  dashboard reading half of one.
         rows = [("agent_goals", {}, {
-            "goals": float(len(pursued)),
+            "desires": float(len(pursued)),
             "unmet": float(len(wanting)),
             "unactionable": float(sum(1 for _, move in wanting if move is None)),
             "hottest": max((g.urgency for g, _ in pursued), default=0.0),
@@ -180,14 +185,20 @@ class ReflexModule(Module):
         #  round, so tagging by it would mint a new series every time the society traded and
         #  make the store's cardinality grow with its history — the cost of a dashboard nobody
         #  could then load. Whom I owe is a handful of agents and says the thing worth seeing.
-        for goal, _ in pursued:
-            about = (goal.owed_to.rsplit("#", 1)[-1] if goal.is_duty
-                     else goal.uri.rsplit("#", 1)[-1])
-            rows.append(("agent_want", {"want": f"duty.{about}" if goal.is_duty else about},
-                         {"urgency": float(goal.urgency)}))
+        for desire, _ in pursued:
+            about = (desire.owed_to.rsplit("#", 1)[-1] if desire.is_duty
+                     else desire.uri.rsplit("#", 1)[-1])
+            #  `agent_want` and its tag KEEP THE RETIRED WORD, deliberately. The noun "want"
+            #  gave way to "desire" everywhere else when the vocabulary was ruled on
+            #  (domain/desire.md), and a measurement name is the one place the rename costs more
+            #  than it buys: it is an external surface with history behind it, so renaming
+            #  splits every series at the cutover and leaves a dashboard reading half of one.
+            #  The word is wrong and the continuity is worth more.
+            rows.append(("agent_want", {"want": f"duty.{about}" if desire.is_duty else about},
+                         {"urgency": float(desire.urgency)}))
 
         #  HOW IT DECIDED, not just what it wants (#256). `pursued()` above has just re-planned
-        #  every goal, so the trace holds this tick's verdicts — read from there rather than
+        #  every desire, so the trace holds this tick's verdicts — read from there rather than
         #  counted here, so the figure a dashboard shows and the answer `agora-ask` gives are
         #  one fact. Six fields because a planner has six answers where returning a move or
         #  None had two, and the pair worth watching is `no candidate` against `exhausted`:
@@ -198,33 +209,33 @@ class ReflexModule(Module):
             for outcome in (search.SATISFIED, search.IMPROVED, search.NOTHING,
                             search.EXHAUSTED, search.NOT_BETTER, search.REFUSED)}))
         #  WHAT IT COST, from the same pass and not a second one. `pursued()` above re-planned
-        #  every goal this agent holds, so these are that work's own figures — asking again to
+        #  every desire this agent holds, so these are that work's own figures — asking again to
         #  measure would double the cost being measured, which is the one thing an observability
         #  change must not do.
         #
         #  Three of these exist to make a RECORDED LIMIT visible rather than to confirm health.
         #  `deepest` pinned at 1 is two of them at once: a rule's CONSTRUCTs run against the
-        #  store rather than the world, and the cycle signature is the goal's own value, so a
+        #  store rather than the world, and the cycle signature is the desire's own value, so a
         #  step that moves nothing else looks like somewhere already reached. `blind` above zero
         #  is a package that never stated what its lever does. A number that shows a known
         #  defect is worth more than one that says things are fine.
         rows.append(("agent_planning", {}, trace.effort(self.agent.store.query_union)))
         return rows
 
-    def propose_for(self, goal: Goal) -> str | None:
+    def propose_for(self, desire: Desire) -> str | None:
         """The move for one GOAL, whoever sourced it — the deliberator's real question.
 
         `propose` asks about a property and a value, which can only ever express a stake. This
         takes the want itself, so a duty reaches deliberation as what it is: a thing wanted,
         ranked in the same currency, pursued through an affordance like anything else. It is
         the widening the obligation record predicted — "the filter lifts when a member can
-        pursue a goal that is a diff rather than a distance".
+        pursue a desire that is a diff rather than a distance".
 
         A duty's means is not deduced here and could not be: it is the HONOURED row for that
         counterparty, which the market's own `honoured.rq` derives from the delivery chain.
         None where no lever answers — a debt to somebody my hardware cannot reach — and that
         None is the point. It used to be an exception thrown deep inside actuation; now it is
-        a goal that stays hot, stays owed, and shows up in the ledger unpaid, which is this
+        a desire that stays hot, stays owed, and shows up in the ledger unpaid, which is this
         project's posture towards everything it cannot prevent: leave evidence.
         """
         #  NOT KNOWING is its own want, and the answer to it is always the same move. A want
@@ -235,11 +246,11 @@ class ReflexModule(Module):
         #  `propose` that ran before anything was asked. It said the same thing and could not
         #  say WHY: a value of None meant both "never read" and "the caller did not tell me",
         #  and the keeper exploited the second to ask "should I look at this?" by passing None
-        #  deliberately. A goal carries its own state, so the question is now asked in the
+        #  deliberately. A desire carries its own state, so the question is now asked in the
         #  words it means.
-        if goal.state in ("unmeasured", "stale"):
+        if desire.state in ("unmeasured", "stale"):
             return OBSERVE
-        if not goal.is_duty:
+        if not desire.is_duty:
             #  SIMULATE FIRST, where the levers say what they do. Asking whether a lever points
             #  the right way is not the same as asking whether taking it leaves this agent
             #  better off, and only the second question refuses to water a plant that is
@@ -250,21 +261,21 @@ class ReflexModule(Module):
             #  no effect rule cannot be simulated, and most of them have none. So this changes
             #  behaviour for exactly the agents whose packages have said what their levers do,
             #  and changes nothing for the rest — which is how a widening should arrive.
-            answered, move = self._simulated(goal)
+            answered, move = self._simulated(desire)
             if answered:
                 return move
-            return self.propose(goal.observed_property, goal.value)
+            return self.propose(desire.observed_property, desire.value)
         #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
         #  that doses early spends the water where nothing is looking (#132) — so a standing
         #  debt is visible, rankable, and still not actionable until it is presented.
-        if not goal.pursuable:
+        if not desire.pursuable:
             return None
         for row in menu_of(self.agent.store.query, self.me.uri):
-            if not row.is_chosen and row.for_agent == goal.owed_to:
+            if not row.is_chosen and row.for_agent == desire.owed_to:
                 return row.means
         return None
 
-    def _simulated(self, goal: Goal) -> tuple[bool, str | None]:
+    def _simulated(self, desire: Desire) -> tuple[bool, str | None]:
         """`(answered, move)` — what the search says, and whether it said anything at all.
 
         A PAIR because there are three answers and only two would fit in one: take this move,
@@ -273,15 +284,15 @@ class ReflexModule(Module):
         lever nobody pulls — the search would decline for want of a rule and the agent would
         read it as a decision not to act.
         """
-        desire = self.agent.provider(_DESIRE)
-        plan = Planner(self.agent, desire, self.me).plan(goal)
+        deducer = self.agent.provider(_DESIRE)
+        plan = Planner(self.agent, deducer, self.me).plan(desire)
         if plan.outcome == search.NOTHING:
             return False, None               # nothing to simulate; let the reflex answer
         if plan.outcome == search.SATISFIED and not plan.steps:
             return False, None               # already met; the reflex will also propose nothing
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
-                          goal.observed_property.rsplit("#", 1)[-1] if goal.observed_property
+                          desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
                           else "a duty", plan.outcome, plan.urgency_now, plan.urgency_after)
             return True, plan.first
         #  A SEARCH OVER PART OF THE MENU CANNOT SAY "NOTHING HELPS". Some lever had no stated
@@ -293,7 +304,7 @@ class ReflexModule(Module):
         #  A world reachable and not worth reaching. THIS is the decision the reflex could not
         #  make, and returning None here is the whole point rather than a failure to answer.
         self.log.info("%s: %s — no move improves on doing nothing",
-                      goal.observed_property.rsplit("#", 1)[-1] if goal.observed_property
+                      desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
                       else "a duty", plan.outcome)
         return True, None
 
@@ -323,7 +334,7 @@ class ReflexModule(Module):
         cannot know which way — refusing is honest where guessing would be the hardcoded sign
         sneaking back in as a default.
         """
-        #  A value of None no longer means "look" — `propose_for` answers that, from a goal
+        #  A value of None no longer means "look" — `propose_for` answers that, from a desire
         #  that says which of the two epistemic failures it is. Here it means only that the
         #  caller has no reading to steer by, and steering is all this member does.
         if value is None:
@@ -342,9 +353,9 @@ class ReflexModule(Module):
         # Chosen rows only, and the reason is narrower than it first looked. An obligation
         # IS a want (ag:Obligation, #218 remade) and is meant to reach deliberation —
         # but this member steers a PROPERTY toward an aim, and a duty is not a property-gap:
-        # it is "this claim discharged", a graph-shaped goal. So the reflex passes over
+        # it is "this claim discharged", a graph-shaped desire. So the reflex passes over
         # honoured rows because it cannot express them, not because they are nobody's to
-        # decide; the filter lifts when a member can pursue a goal that is a diff rather
+        # decide; the filter lifts when a member can pursue a desire that is a diff rather
         # than a distance — the widening a-plan-is-a-path-of-graph-diffs records.
         for row in sorted((r for r in menu_of(self.agent.store.query, self.me.uri)
                            if r.observed_property == observed_property and r.direction
@@ -395,10 +406,10 @@ OFFER = _INTENTION_NS + "Offer"
 
 
 class PlanningModule(ReflexModule):
-    """The dealer's member: the reflex plus one deduced goal, and the plan said out loud.
+    """The dealer's member: the reflex plus one deduced desire, and the plan said out loud.
 
     Depth 2 and no deeper, by construction: the search space is the two venues the grant's
-    premise names, not open-ended STRIPS. What it adds to the reflex is exactly one goal past
+    premise names, not open-ended STRIPS. What it adds to the reflex is exactly one desire past
     the region — MY HOSTED LOT MUST BE SERVEABLE. Every downstream buyer's Acquire silently
     preconditions stock >= lot ("refilling makes lotCapacity > 0 true" is the planning
     record's own sentence), and the reflex would only pursue the vessel's aim; a dealer whose
