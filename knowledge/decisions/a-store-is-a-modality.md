@@ -57,7 +57,8 @@ precedents generalised, because modality *determines* lifecycle:
 | store | persists | written by | reset by |
 |---|---|---|---|
 | beliefs | volume | endowed at birth; records and receives at runtime | nothing — `rebirth` only |
-| desires | memory | genesis and re-derivation; runtime is read-only | every boot, from files and premises |
+| desires | memory | its rebuild alone — from files, premises, and the recorded picks; runtime is read-only | every boot and every re-derivation |
+| menu | memory | its rebuild alone, from premises | every rebuild — a conclusion is recomputed, never edited |
 | intentions | volume | the keeper | nothing — a commitment survives a restart |
 | history | volume ring | the runtime, append-only | the ring's own bound; Influx keeps the rest |
 | hypotheses | memory, per pass | the planner | the end of the pass |
@@ -120,23 +121,66 @@ and every crossing already has a native shape in the house:
   decimals) but not staleness, which is two comparisons. Neither can turn a 3x win into the
   pass-scale loss the fallback was reserved for.
 
-## Three rulings this record does not make
+## Three rulings, made by the sovereign (2026-08-22)
 
-Each is marked here with a recommendation, and the sovereign decides:
+Each was drafted here with a recommendation the other way, and the sovereign ruled all three
+in the same direction — **modality purity, strictly**. A pick is a want, so it lives with
+wants; the menu is a modality (*could do*), so it is a store like the others; a mind
+addressable by modality is asked by modality. The draft's counter-arguments were about
+write paths and convenience, and the ruling is that the axis is not to be bent for either.
 
-1. **Where the picks live.** A pick is desire-like in what it asserts and belief-like in who
-   may write it — it is the one want the agent legitimately moves, inside its mandate.
-   Recommendation: the desires store holds only what the agent may NOT author — the mandate,
-   the derived regions, the obligations — and the picks stay in the beliefs store as the
-   agent's own recorded choices, legitimate exactly while `validate_agent` passes against the
-   desires store. The write boundary, not the assertion, is what the store split exists to
-   enforce.
-2. **Whether the menu is a store at all.** Six-graphs' own seam flagged it as the one graph
-   with no independent existence. Recommendation: it stays unmaterialised — recomputed per
-   ask, as today — and gets no store, because a pure conclusion needs no container.
-3. **What `agora-ask` addresses.** The sovereign asks a mind, not a shard. Recommendation:
-   the ask surface presents the union — each store answers and the answers merge — with a
-   per-modality address as an optimisation if the union proves slow.
+1. **The picks live in the desires store.** What preserves "read-only to the runtime" is the
+   write PATH, not an exception: a re-pick is RECORDED — review writes the revision where the
+   agent's own acts are written, which persists in a volume — and the desires store is then
+   **recomputed**, its build reading the latest recorded picks among its premises. No module
+   ever holds a writable desires handle; *recomputation is the only write path* survives the
+   ruling intact, and birth becomes the first entry in the pick record, which is what
+   six-graphs' "birth authors picks and nothing else" already said. A pick's legitimacy is
+   unchanged: `validate_agent` against the mandate, at the rebuild.
+2. **The menu is an in-memory store.** Materialised from premises, never persisted, so a
+   model and the sovereign read what the agent could do as data. What guards the staleness
+   this record's draft feared is the lifecycle: rebuilt with the same discipline as the
+   desires store — a conclusion is recomputed, never edited — and holding no row anything
+   is allowed to write.
+3. **`agora-ask` names a modality.** A required argument, not a default — the same rule as
+   "there is no default world", for the same reason: a fallback answers a question the asker
+   did not ask. A question spanning modalities is several asks, and that cost is accepted.
+
+## The sort, term by term
+
+What [#297](https://github.com/ShishkinDmitriy/agora/issues/297) asked for: every term
+authored into `graph/beliefs/<agent>` across the shipped worlds, classified by what its
+triple asserts. The test that decides each row: **can the world contradict it?** A belief can
+be WRONG — a later reading, a ledger, a drained pot can refute it. A pick can only be
+ill-chosen; nothing in the world makes 600 seconds of patience false. Falsifiable goes to
+beliefs; unfalsifiable is a want about conduct or the world, and by ruling 1 every want is
+the desires store's.
+
+| term | asserts | store |
+|---|---|---|
+| `ag:aims` (with `ssn:forProperty`, `schema:value`) | the point steered for — a want about the world | desires |
+| `sensing:fastSleepS`, `sensing:slowSleepS` | the cadences it wants kept | desires |
+| `sensing:readingGraceS`, `sensing:maxReadingAgeS` | how long silence is tolerated | desires |
+| `sensing:alarmDeltaFraction` | what counts as a jolt | desires |
+| `intention:patienceS` | how long a commitment absorbs a second impulse | desires |
+| `actuation:doseGraceS` | slack granted past a dose's open-seconds | desires |
+| `reporting:metricsIntervalS` | how often it wants to say how it is | desires |
+| `review:reviewIntervalS` | the floor on how often it reconsiders | desires |
+| `market:bidWindowS`, `market:roundCooldownS` | the host's chosen schedule | desires |
+| `market:offerQuantityL`, `market:reservePricePerL` | what the host chooses to offer and refuse | desires |
+| `water:maxValuePerL` | willingness to pay at peak urgency | desires |
+| `water:litresPerFraction`, `water:litresPerStoredLitre` | what a dose DOES to the property — falsifiable by the next reading | beliefs |
+| `market:hasEndowment` | what it holds — falsifiable by the ledger | beliefs |
+
+Two consequences, for [#298](https://github.com/ShishkinDmitriy/agora/issues/298):
+
+- **Endowment follows modality.** An amendment that grants a capability authors that
+  capability's never-held terms — and under the split, each lands in the store its row above
+  names, not uniformly in beliefs.
+- **No local name changes**, so the by-local-name migration mapping
+  ([a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md))
+  has nothing to carry for the sort itself; what moves is which store a volume's triples are
+  loaded into at boot, which is #298's build to write.
 
 ## Seams left open
 
