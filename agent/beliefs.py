@@ -136,8 +136,12 @@ class Beliefs:
         self._store = store
         self.agent_id = agent_id
         self.graph = beliefs_graph(agent_id)
+        #  `a ag:Agent` is load-bearing, not decoration: a plant, a sensor and a valve carry
+        #  `ag:localId` too, and a world names its subject after its agent — so the bare
+        #  pattern matches two things and LIMIT 1 picks by the store's internal order, which
+        #  a change to load order silently flips. It did: every pick read asked the PLANT.
         rows = bindings(store.query(
-            f'SELECT ?a WHERE {{ ?a ag:localId "{agent_id}" }} LIMIT 1'))
+            f'SELECT ?a WHERE {{ ?a a ag:Agent ; ag:localId "{agent_id}" }} LIMIT 1'))
         if not rows:
             raise BeliefError(
                 f"no agent with localId '{agent_id}' in this store — "

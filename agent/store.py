@@ -280,16 +280,30 @@ class Store:
         Every existing `.ttl` is valid TriG unchanged — Turtle is a syntactic subset — and
         `to_graph` is the destination for the document's *default* graph only, so a file with no
         `GRAPH` block behaves exactly as it did. A file that grows one puts those triples where
-        it says, which is what a world will need when genesis starts writing values it picked
-        beside the ranges the sovereign stated.
+        it says — which is how a world states a root desire (#298): a named block, and beside
+        it the typing that makes the catalog call the graph what it is.
 
-        Note what that does NOT clear: a graph named inside the file is not removed here, because
-        this method is told one name. Nothing declares one yet; see the decision record.
+        **A graph the file names is REPLACED, exactly as the named one is.** The first draft
+        cleared only `graph_iri` and said so; the day a world actually declared a block, that
+        gap became an amendment bug — a ratification that dropped a desire would have left it
+        readable forever, because loading is additive and a quad store keeps what nobody
+        removes. So the document is parsed apart first, and every graph it names is cleared
+        before its quads land: what a world's files say is what the store holds, for the named
+        blocks as for the world graph itself.
         """
         graph = ox.NamedNode(graph_iri)
-        self._store.remove_graph(graph)
-        self._store.load(
-            ttl, format=ox.RdfFormat.TRIG if dataset else ox.RdfFormat.TURTLE, to_graph=graph)
+        if dataset:
+            parsed = ox.Store()
+            parsed.load(ttl, format=ox.RdfFormat.TRIG)
+            for named in parsed.named_graphs():
+                self._store.remove_graph(named)
+            self._store.remove_graph(graph)
+            for quad in parsed:
+                self._store.add(quad if not isinstance(quad.graph_name, ox.DefaultGraph)
+                                else ox.Quad(quad.subject, quad.predicate, quad.object, graph))
+        else:
+            self._store.remove_graph(graph)
+            self._store.load(ttl, format=ox.RdfFormat.TURTLE, to_graph=graph)
         self._public = None
 
     def endow_graph(self, graph_iri: str, ttl: str) -> list[str]:

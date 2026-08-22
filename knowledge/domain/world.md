@@ -359,7 +359,11 @@ only an explicit re-birth discards them.
   rows in the derivation table. Stating an agent's *desire* — keep this plant alive, steward this
   source — and deriving both market capabilities from that would make them as honest as
   sensing and actuation already are, and would also yield who the counterparties are without
-  anyone listing them.
+  anyone listing them. The STATING half has its mechanism now: a world file is TriG, so it may
+  carry a named desire-graph block and, beside it, the typing that lets the catalog call the
+  graph what it is — the root desire of
+  [a-store-is-a-modality](/decisions/a-store-is-a-modality.md), replaced from the files on
+  every boot. Deriving the roles from what is stated remains open.
 - **Derivation is materialised, not maintained.** Rules run at seed time and write triples into
   `:world`; removing a wire does not retract the capability until the world is re-seeded.
 - **No cross-world check.** Nothing verifies that two worlds sharing device ids agree about

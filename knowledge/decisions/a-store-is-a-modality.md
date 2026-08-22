@@ -212,6 +212,12 @@ Two consequences, for [#298](https://github.com/ShishkinDmitriy/agora/issues/298
 2. Sort the beliefs graph's contents by what each term asserts —
    [#297](https://github.com/ShishkinDmitriy/agora/issues/297).
 3. The desires store, read-only to the runtime, with the query splits above —
-   [#298](https://github.com/ShishkinDmitriy/agora/issues/298).
+   [#298](https://github.com/ShishkinDmitriy/agora/issues/298). DONE, in three PRs: the store
+   (#304, with the modality classes), the readers (#306, with `Picks` named for what it holds),
+   and the root desire — a world states it as a TriG block plus the typing that lets the
+   catalog call the graph what it is, and an amendment that drops it drops it everywhere,
+   because `put_graph` now replaces every graph a file names. Endowment needed no code: a
+   granted pick lands in the record, and the store is built after endowment and rebuilt on
+   every premise move — a re-pick, an obligation transition, boot.
 4. Intentions and history in stores of their own; the modality graph classes retire —
    [#299](https://github.com/ShishkinDmitriy/agora/issues/299).

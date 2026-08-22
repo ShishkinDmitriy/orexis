@@ -88,3 +88,59 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
         "a rebuild reads the premises as they now stand"
     assert not stale(ask)["boolean"], \
         "the copy a rebuild replaced is unchanged — replaced, never edited"
+
+
+ROOT = "http://example.org/agora/world/loner#everything_tended_stays_alive"
+GARDENER = "http://example.org/agora/world/loner#gardener"
+ASSERTED_GRAPH = "http://example.org/agora/graph/desire/asserted"
+
+
+def test_a_world_can_state_a_root_desire_and_an_amendment_can_retire_it(monkeypatch, tmp_path):
+    """#264's ask, by the desires-store mechanism, plus the half that made it honest.
+
+    A world file is TriG, so a world states a root desire by naming the graph it lands in and
+    typing it in the same file — the catalog then calls it a desire graph arrived-by-Asserted,
+    and the desires-store build copies it without any code learning the name. The second half
+    is the amendment: a ratification that drops the desire must drop it EVERYWHERE, which is
+    what `put_graph` clearing every file-named graph before reloading bought — loading is
+    additive, and a quad store keeps what nobody removes.
+    """
+    import shutil
+
+    from agent import genesis
+    from agent.store import Store
+
+    src = genesis.world_dir("loner")
+    dst = tmp_path / "asserted"
+    shutil.copytree(src, dst)
+    (dst / "desire.ttl").write_text(f"""@prefix ag: <http://example.org/agora#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<{ASSERTED_GRAPH}> a ag:DesireGraph ; ag:arrivedBy ag:Asserted .
+
+GRAPH <{ASSERTED_GRAPH}> {{
+  <{GARDENER}> ag:holds <{ROOT}> .
+  <{ROOT}> a sh:NodeShape ;
+      rdfs:comment "everything the gardener tends stays alive — the sentence somebody ratified" .
+}}
+""")
+    st = Store()
+    genesis.refresh_public(st, dst)
+    genesis.birth(st, dst, "gardener")
+    agent = build_agent("gardener", st, monkeypatch)
+
+    ask = f"ASK {{ <{GARDENER}> ag:holds <{ROOT}> }}"
+    assert agent.desires.query_union(ask)["boolean"], \
+        "the root desire must reach the desire modality"
+    assert st.query(f"ASK {{ <{ASSERTED_GRAPH}> a ag:DesireGraph ; "
+                    f"ag:arrivedBy ag:Asserted }}")["boolean"], \
+        "and the catalog says what the graph is and who put it there"
+
+    # The amendment: the sovereign stops stating it, and the want is no longer implied —
+    # nothing retracted it, it is simply absent from what the files now ratify.
+    (dst / "desire.ttl").unlink()
+    genesis.refresh_public(st, dst)
+    agent.desires.rebuild()
+    assert not agent.desires.query_union(ask)["boolean"], \
+        "a want the ratification dropped must not survive it"
