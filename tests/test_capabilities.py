@@ -188,7 +188,10 @@ def test_swapping_the_board_does_not_touch_the_agent():
     """Nothing about fern_agent was edited — only the device it is wired to."""
     me = load_self(query_fn(_world_with_push_sensor()), "fern")
     assert me.can(BIDDING)  # its market wiring is untouched
-    assert [s.local_id for s in me.sensors] == ["air_temp_fern", "moisture_sensor_fern"]
+    #  A SET, not a sequence: the claim is that the wiring is untouched, and the row order a
+    #  store returns is the engine's own — a load-order change flipped it once and only this
+    #  assertion noticed, which was this test asserting more than it meant.
+    assert sorted(s.local_id for s in me.sensors) == ["air_temp_fern", "moisture_sensor_fern"]
 
 
 # --- the same hardware, a different world ----------------------------------
