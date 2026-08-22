@@ -63,6 +63,8 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Sensing
 
+* [band](/domain/band.md) - One of three zones a region divides a property into. A verdict, not a measurement, and never stored.
+
 * [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
 
 * [reading](/domain/reading.md) - The value an observation carries, and the only fact in a belief base that is somebody else's word. It ages; it never expires.

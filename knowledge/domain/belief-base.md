@@ -61,8 +61,9 @@ below on why the graph, not the provenance triple, carries the trust):
   reads all of it. It exists so the wiring is stated **once** instead of being repeated in
   every agent's beliefs. Written by genesis, not sensed. Nothing interpretive lives here —
   no targets, no bands, no cadence, no prices. See [world-graph](/decisions/world-graph.md).
-- `:beliefs/<agent>` — one agent's **private opinion**: its aim (`ag:aims`), its comfort
-  limits (`bandLow`/`bandHigh`), its sensing cadence and freshness limit, its value curve.
+- `:beliefs/<agent>` — one agent's **private opinion**: its aim (`ag:aims`), its sensing cadence
+  and freshness limit, its value curve. Its comfort limits are NOT here — those are the region
+  its subject states, deduced and public.
   Per-agent, not shared; two agents may hold different numbers about the same plant and
   neither is wrong.
 - `:sensed` — current *state*: what each sensor read, stamped `underWorldVersion` and carrying
@@ -126,11 +127,12 @@ there is no witness — each plant asserts its own state, and measurement stays 
 judgment by living in a different graph:
 - `:sensed` — the agent's **sensor data** (`hasSimpleResult 0.18`), `prov:wasGeneratedBy` the
   plant. What it read.
-- `:beliefs/<agent>` — the agent's **judgments and dispositions** (its band limits, target,
-  valuation, and later its learning). What it concludes and what it wants.
+- `:beliefs/<agent>` — the agent's **judgments and dispositions** (its aim, its valuation, its
+  cadences, and later its learning). What it concludes and what it wants. Its band LIMITS are not
+  here and have not been since the region was deduced rather than authored — see
+  [band](/domain/band.md), which is the page that tells a stale mention from a live one.
 
-So "fern *read* 0.18" and "fern *thinks* 0.35 is too dry" stay distinct, auditable facts. The
-band itself is never stored at all — it is recomputed from the two whenever it is needed.
+So "fern *read* 0.18" and "fern *thinks* 0.35 is too dry" stay distinct, auditable facts.
 Re-introducing a witness (a signing sensor) for an adversarial society moves the provenance
 back to the device; the graphs are unchanged.
 

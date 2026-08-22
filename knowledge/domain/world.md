@@ -109,7 +109,7 @@ thinks, and no other agent can read it — enforced, not polite
 | | where | why |
 |---|---|---|
 | wiring, calibration, capacity | `world.ttl` | physical, public, stated once |
-| target, band, endowment, price ceiling | `beliefs/<agent>.ttl` | desire — a fern and a succulent may disagree and neither is wrong |
+| aim, endowment, price ceiling | `beliefs/<agent>.ttl` | desire — a fern and a succulent may disagree and neither is wrong |
 | sleep intervals, freshness limit | `beliefs/<agent>.ttl` | how closely *this* agent chooses to watch |
 
 If two agents could reasonably disagree about it, it is a belief.
@@ -117,7 +117,7 @@ If two agents could reasonably disagree about it, it is a belief.
 Beliefs then divide again, and the two shipped worlds show it: the same agent has
 `sensing:slowSleepS` 600 in `simulation` and 10 in `sensing`, because the **circumstance** differs, not
 because it wants anything different. Operational beliefs (cadence, freshness) track the kind of
-world; stake beliefs (target, band, endowment, price) are the agent's own and derivable from
+world; stake beliefs (aim, endowment, price) are the agent's own and derivable from
 nothing. See [genesis-process](/domain/genesis-process.md) §"Where opening beliefs come from".
 
 # Authoring a world
