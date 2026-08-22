@@ -347,12 +347,16 @@ services:
       - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro
       - ./secrets/city.sign.key:/app/world/secrets/city.sign.key:ro
       - ./secrets/city.seal.key:/app/world/secrets/city.seal.key:ro
-      # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
-      # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
-      # ride along with it. Their old root paths survived as empty husks — git does not track
-      # an empty directory, so `git mv` left them behind and mounting them silently succeeded.
-      - ../../vocabulary:/app/vocabulary:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
+      # two the Containerfile copies, and keeping the pair in step is the lesson this block
+      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
+      # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
+      # next restart, which arrived with a host logout weeks after the tree moved. A mount
+      # resolves when a container is CREATED, so a stale one keeps running until the day it
+      # cannot.
       - ../../agent:/app/agent:ro
+      - ../../packages:/app/packages:ro
 
   agent-fern:
     image: agora:local
@@ -401,12 +405,16 @@ services:
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro
       - ./secrets/fern.sign.key:/app/world/secrets/fern.sign.key:ro
       - ./secrets/fern.seal.key:/app/world/secrets/fern.seal.key:ro
-      # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
-      # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
-      # ride along with it. Their old root paths survived as empty husks — git does not track
-      # an empty directory, so `git mv` left them behind and mounting them silently succeeded.
-      - ../../vocabulary:/app/vocabulary:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
+      # two the Containerfile copies, and keeping the pair in step is the lesson this block
+      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
+      # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
+      # next restart, which arrived with a host logout weeks after the tree moved. A mount
+      # resolves when a container is CREATED, so a stale one keeps running until the day it
+      # cannot.
       - ../../agent:/app/agent:ro
+      - ../../packages:/app/packages:ro
 
   agent-succulent:
     image: agora:local
@@ -455,12 +463,16 @@ services:
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro
       - ./secrets/succulent.sign.key:/app/world/secrets/succulent.sign.key:ro
       - ./secrets/succulent.seal.key:/app/world/secrets/succulent.seal.key:ro
-      # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
-      # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
-      # ride along with it. Their old root paths survived as empty husks — git does not track
-      # an empty directory, so `git mv` left them behind and mounting them silently succeeded.
-      - ../../vocabulary:/app/vocabulary:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
+      # two the Containerfile copies, and keeping the pair in step is the lesson this block
+      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
+      # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
+      # next restart, which arrived with a host logout weeks after the tree moved. A mount
+      # resolves when a container is CREATED, so a stale one keeps running until the day it
+      # cannot.
       - ../../agent:/app/agent:ro
+      - ../../packages:/app/packages:ro
 
   agent-supplier:
     image: agora:local
@@ -512,12 +524,16 @@ services:
       - ./secrets/clearing.key:/app/world/secrets/clearing.key:ro
       - ./secrets/supplier.sign.key:/app/world/secrets/supplier.sign.key:ro
       - ./secrets/supplier.seal.key:/app/world/secrets/supplier.seal.key:ro
-      # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
-      # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
-      # ride along with it. Their old root paths survived as empty husks — git does not track
-      # an empty directory, so `git mv` left them behind and mounting them silently succeeded.
-      - ../../vocabulary:/app/vocabulary:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
+      # two the Containerfile copies, and keeping the pair in step is the lesson this block
+      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
+      # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
+      # next restart, which arrived with a host logout weeks after the tree moved. A mount
+      # resolves when a container is CREATED, so a stale one keeps running until the day it
+      # cannot.
       - ../../agent:/app/agent:ro
+      - ../../packages:/app/packages:ro
 
   agent-tomato:
     image: agora:local
@@ -566,12 +582,16 @@ services:
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro
       - ./secrets/tomato.sign.key:/app/world/secrets/tomato.sign.key:ro
       - ./secrets/tomato.seal.key:/app/world/secrets/tomato.seal.key:ro
-      # The trees, mounted so a code change needs a restart rather than a rebuild. Two, not
-      # four: capabilities/ and transports/ moved INSIDE agent/ with the flat layout and now
-      # ride along with it. Their old root paths survived as empty husks — git does not track
-      # an empty directory, so `git mv` left them behind and mounting them silently succeeded.
-      - ../../vocabulary:/app/vocabulary:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
+      # two the Containerfile copies, and keeping the pair in step is the lesson this block
+      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
+      # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
+      # next restart, which arrived with a host logout weeks after the tree moved. A mount
+      # resolves when a container is CREATED, so a stale one keeps running until the day it
+      # cannot.
       - ../../agent:/app/agent:ro
+      - ../../packages:/app/packages:ro
 
 volumes:
   agora-simulation-mosquitto:
