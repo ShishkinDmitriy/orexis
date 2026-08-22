@@ -26,7 +26,7 @@ import logging
 import sys
 
 from agent import genesis
-from agent.ontology import PROVENANCE_GRAPH, beliefs_graph
+from agent.ontology import PROVENANCE_GRAPH
 from agent.store import Store
 from agent.validate import conforms, graph_from
 
@@ -63,8 +63,21 @@ def validate_world(world: str) -> bool:
     # them, so `ag:PublicGraphShape` can fire. This check runs UNFOCUSED, over the whole
     # world, which is the only place a shape about graphs could ever fire: an agent's own
     # startup check is focused on its own node and would skip it silently.
-    data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH,
-                      *(beliefs_graph(a) for a in everyone))
+    #
+    # Each agent's WANTS arrive through its desire modality (#312): genesis derives none, so
+    # the sovereign's check builds per agent exactly what the agent's own boot builds, and
+    # judges the world against it. The pick records travel the same road and only that road —
+    # flattened beside their projections they would split every blank-node aim in two.
+    data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
+    from agent import effects
+    from agent.beliefs import Beliefs
+    from agent.desire import Desires
+
+    for a in everyone:
+        wants = Desires(Beliefs(st, a))
+        for triple in wants.construct(
+                "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
+            data.add(effects._triple(triple))
     ok, report = conforms(data)
     print(report)
 

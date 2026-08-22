@@ -109,10 +109,18 @@ def test_a_ferns_desire_will_not_do_for_a_zamioculcas(zz_world):
     st = _store(zz_world)
     genesis.birth(st, zz_world, "fern")
     data = rdflib.Graph()
-    for iri in list(st.public_graphs()) + [beliefs_graph("fern")]:
+    for iri in st.public_graphs():
         ttl = st.get_graph(iri)
         if ttl.strip():
             data.parse(data=ttl, format="turtle")
+    # The wants and the pick record arrive through the desire modality (#312) — the aim this
+    # test is about is a pick, and the region it violates is derived, so both come from the
+    # one build the boot would make.
+    from agent import effects
+    from conftest import desires_build
+    for triple in desires_build(st, "fern").construct(
+            "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
+        data.add(effects._triple(triple))
 
     ok, report = conforms(data)
     assert not ok

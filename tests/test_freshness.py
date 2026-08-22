@@ -15,7 +15,7 @@ from pyshacl import validate as shacl_validate
 
 from packages.capability.desire import desires_of
 
-from conftest import MOISTURE, build_agent, genesis_store
+from conftest import desires_build, MOISTURE, build_agent, genesis_store
 
 FERN = "http://example.org/agora/world/simulation#fern_agent"
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
@@ -72,11 +72,11 @@ def test_a_reading_past_the_horizon_is_stale_where_a_fresh_one_is_met(monkeypatc
     look again, and its urgency is the maximum for the same reason an unread property's is.
     """
     agent, st = _fern(monkeypatch, value=0.55)
-    fresh = {g.observed_property: g for g in desires_of(st.query_union, st.query, FERN, "fern")}
+    fresh = {g.observed_property: g for g in desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern")}
     assert fresh[MOISTURE].state == "met" and fresh[MOISTURE].urgency == 0.0
 
     _age_the_reading(st)
-    stale = {g.observed_property: g for g in desires_of(st.query_union, st.query, FERN, "fern")}
+    stale = {g.observed_property: g for g in desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern")}
     assert stale[MOISTURE].state == "stale"
     assert stale[MOISTURE].urgency == 1.0, \
         "not knowing is not knowing — scaling it by a distance the agent no longer trusts " \
@@ -89,7 +89,7 @@ def test_stale_and_unmeasured_are_told_apart(monkeypatch):
     and let the answer go cold — the same repair, and not the same situation."""
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
-    by_state = {g.state for g in desires_of(st.query_union, st.query, FERN, "fern") if not g.is_duty}
+    by_state = {g.state for g in desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern") if not g.is_duty}
     assert by_state == {"stale", "unmeasured"}, \
         "moisture was read and went cold; temperature was never read at all"
 
@@ -107,8 +107,12 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
 
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
-    data = graph_from(st, *st.public_graphs(), beliefs_graph("fern"), SENSED_GRAPH,
+    data = graph_from(st, *st.public_graphs(), SENSED_GRAPH,
                       INSTRUMENTS_GRAPH)
+    from agent import effects
+    for triple in desires_build(st, "fern").construct(
+            "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
+        data.add(effects._triple(triple))
 
     ok, _ = conforms(data, focus=FERN)
     assert ok, "a want must never refuse a boot — the agent has to run to repair it"
@@ -140,7 +144,8 @@ def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
     from agent.store import bindings
 
     st = genesis_store(world="loner")
-    rows = bindings(st.query("""
+    wants = desires_build(st, "gardener")
+    rows = bindings(wants.query_union("""
         SELECT ?property WHERE {
           ?agent <http://example.org/agora#holds> ?shape .
           ?shape <http://example.org/agora#violationIs> <http://example.org/agora#Stale> ;

@@ -34,9 +34,10 @@ def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
     agent = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
 
     graphs = _graphs_in(agent.desires)
-    assert any("constraint" in g for g in graphs), "the derived regions are wants"
-    assert beliefs_graph("gardener") in graphs, "the picks are wants, by the ruling"
-    assert WORLD_GRAPH not in graphs, "topology is a belief, not a want"
+    assert any(g.endswith("desire/derived") for g in graphs), \
+        "the regions are DERIVED here now — genesis derives no wants (#312)"
+    assert beliefs_graph("gardener") in graphs, "the pick record is projected: picks are wants"
+    assert WORLD_GRAPH not in graphs, "topology is a premise, dropped after the derivation"
     assert SENSED_GRAPH not in graphs, "a reading is a belief, not a want"
 
 
@@ -77,9 +78,8 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
     agent = build_agent("gardener", st, monkeypatch)
     stale = agent.desires.query_union   # the surface as it stands before the premise moves
 
-    constraint = next(g for g in _graphs_in(agent.desires) if "constraint" in g)
     marker = f"<{AG}test_premise> a <{AG}Modality> ."
-    st.update(f"INSERT DATA {{ GRAPH <{constraint}> {{ {marker} }} }}")
+    st.update(f"INSERT DATA {{ GRAPH <{beliefs_graph('gardener')}> {{ {marker} }} }}")
 
     ask = f"ASK {{ <{AG}test_premise> ?p ?o }}"
     assert not agent.desires.query_union(ask)["boolean"], "a copy must not see later writes"
@@ -117,8 +117,6 @@ def test_a_world_can_state_a_root_desire_and_an_amendment_can_retire_it(monkeypa
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<{ASSERTED_GRAPH}> a ag:DesireGraph ; ag:arrivedBy ag:Asserted .
-
 GRAPH <{ASSERTED_GRAPH}> {{
   <{GARDENER}> ag:holds <{ROOT}> .
   <{ROOT}> a sh:NodeShape ;
@@ -133,9 +131,8 @@ GRAPH <{ASSERTED_GRAPH}> {{
     ask = f"ASK {{ <{GARDENER}> ag:holds <{ROOT}> }}"
     assert agent.desires.query_union(ask)["boolean"], \
         "the root desire must reach the desire modality"
-    assert st.query(f"ASK {{ <{ASSERTED_GRAPH}> a ag:DesireGraph ; "
-                    f"ag:arrivedBy ag:Asserted }}")["boolean"], \
-        "and the catalog says what the graph is and who put it there"
+    assert st.query(f"ASK {{ <{ASSERTED_GRAPH}> ag:arrivedBy ag:Asserted }}")["boolean"], \
+        "and the kernel's own declaration says who put it there — a world file needs no typing line"
 
     # The amendment: the sovereign stops stating it, and the want is no longer implied —
     # nothing retracted it, it is simply absent from what the files now ratify.

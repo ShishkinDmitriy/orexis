@@ -14,8 +14,10 @@ from agent.store import bindings
 
 from conftest import genesis_store
 
-MODALITIES = {"BeliefGraph", "ConstraintGraph", "DesireGraph",
-              "MenuGraph", "IntentionGraph", "HistoryGraph"}
+#  The desire modality's graph classes (DesireGraph, ConstraintGraph, BoundsGraph) retired
+#  with #312: its carrier is a STORE, and inside a store the graphs say only who put the fact
+#  there. The classes below remain graph vocabulary until their modalities' stores land.
+MODALITIES = {"BeliefGraph", "MenuGraph", "IntentionGraph", "HistoryGraph"}
 ARRIVALS = {"Asserted", "Derived", "Entailed", "Recorded", "Received"}
 
 
@@ -40,18 +42,31 @@ def test_every_public_graph_declares_a_modality_and_an_arrival():
     st = genesis_store()
     for graph in st.public_graphs():
         kinds = types_of(st, graph)
+        if graph.endswith("desire/asserted"):
+            #  The one public graph whose modality is a STORE (#312): the desire modality has
+            #  no graph class to declare, so this one says only who put the fact there —
+            #  which is the whole ruling, arrived at its first instance.
+            assert arrival_of(st, graph) == {"Asserted"}
+            continue
         assert kinds & MODALITIES, f"{graph} declares no modality — only {sorted(kinds)}"
         assert arrival_of(st, graph) & ARRIVALS, f"{graph} does not say how it arrived"
 
 
-def test_the_region_graph_is_a_constraint():
-    """The finding that named the axis: the region is the plant's operating range intersected
-    with the instrument's, deduced by a rule, unmovable by the agent and refused at boot if
-    violated. Whatever the capability computing it is called, that is a constraint."""
+def test_the_regions_live_in_the_desire_modality_and_nowhere_else():
+    """The finding that named the axis survives its carrier twice over: the region is deduced,
+    unmovable by the agent, refused at boot if violated — and since #312 it exists only where
+    the desire modality derives it. Genesis writes no constraint graph at all; a region in the
+    belief base would be the home-of-record copy the record retired."""
+    from conftest import desires_build
+
     st = genesis_store()
-    kinds = types_of(st, "http://example.org/agora/graph/constraint")
-    assert "ConstraintGraph" in kinds
-    assert "DesireGraph" not in kinds, "the region is not anybody's want"
+    assert "http://example.org/agora/graph/constraint" not in set(st.graph_names()), \
+        "genesis must derive no wants — the modality's build is the one place they come to exist"
+    wants = desires_build(st, "fern")
+    assert wants.query_union(
+        "ASK { ?region <http://example.org/agora#violationIs> "
+        "<http://example.org/agora#Below> }")["boolean"], \
+        "and the build must hold the derived regions"
 
 
 def test_an_agents_own_graphs_classify_themselves(tmp_path, monkeypatch):
@@ -67,13 +82,13 @@ def test_an_agents_own_graphs_classify_themselves(tmp_path, monkeypatch):
     st = genesis_store()
     genesis.classify_own_graphs(st, "fern")
     resolved = {r["g"] for r in bindings(st.query(
-        f"SELECT ?g WHERE {{ ?g a <{AG}DesireGraph> }}"))}
+        f"SELECT ?g WHERE {{ ?g a <{AG}PickRecordGraph> }}"))}
     assert beliefs_graph("fern") in resolved, (
         "an unscoped, instance-free query must find what this agent's graphs are")
     kinds = types_of(st, beliefs_graph("fern"))
-    assert "DesireGraph" in kinds, (
-        "the graph called `beliefs` holds the aim and the settings — picks, every one, and "
-        "not a single belief")
+    assert "PickRecordGraph" in kinds, (
+        "the graph called `beliefs` is the RECORD of picking — what birth authored and review "
+        "re-picked — typed for what it IS since the modality classes retired (#312)")
     assert arrival_of(st, beliefs_graph("fern")) == {"Asserted"}
 
 

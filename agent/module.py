@@ -123,7 +123,7 @@ class Module:
         """
         return None
 
-    def wants(self, now: "datetime | None" = None) -> list["Desire"]:
+    def desires(self, now: "datetime | None" = None) -> list["Desire"]:
         """What this module contributes to what the agent is pursuing. Empty by default.
 
         A choir hook, like `annotate` and `series`: desires are the AGENT's, assembled from

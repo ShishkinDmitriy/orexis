@@ -216,15 +216,16 @@ ag:Modality a owl:Class ; rdfs:label "Modality" ;
 ag:BeliefGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Belief graph" ;
     rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs`, which holds picks and no beliefs at all — that misnaming is what naming the axis exposed." .
 
-ag:BoundsGraph a owl:Class ; rdfs:subClassOf ag:ConstraintGraph ; rdfs:label "Bounds graph" ;
-    rdfs:comment "The one constraint graph a rule WRITES: the bounds deduced from the ranges a subject states. A subclass rather than the modality itself, because a write must land somewhere definite and the modality has several instances — an agent's obligations are constraints too, and became visible as such the moment classifications moved somewhere readable. `graph_of_class` refuses ambiguity loudly rather than choosing, which is how that showed up: as a refusal to start rather than as facts in a graph nobody named." .
 
-ag:ConstraintGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Constraint graph" ;
+
+
+ag:PickRecordGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Pick record graph" ;
+    ag:graphPrefix "http://example.org/agora/graph/beliefs/" ;
+    rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is ag:beliefsOf, unchanged." .
+
+ag:ObligationsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Obligations record graph" ;
     ag:graphPrefix "http://example.org/agora/graph/obligations/" ;
-    rdfs:comment "What MAY be: bounds this agent cannot move and is refused for violating. A species' operating and survival ranges, an instrument's working range, the constitution's ceilings, the sovereign's mandates, and a peer's claim — one kind of thing, differing only in who stated it and whether there is anyone to be wronged." .
-
-ag:DesireGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Desire graph" ;
-    rdfs:comment "What the agent PURSUES: its aim in a property, its picks about its own conduct, and the goals a claim sourced. Everything here is ordered — which is where character will live — and everything here is the agent's, chosen inside constraints it did not choose." .
+    rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected, and the prefix moved here when ag:ConstraintGraph retired (#312)." .
 
 ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
     rdfs:comment """What the agent COULD do: the affordance rows, what others may demand of it, and what taking any of it would MAKE TRUE.
@@ -367,7 +368,7 @@ ag:ProvenanceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Provenan
 
 ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
     rdfs:label "beliefs of" ;
-    rdfs:comment "Which agent owns this graph — the write boundary, made explicit. The domain is ag:Graph since ag:BeliefsGraph retired (#299): the whole store is beliefs, so a class naming one graph inside it 'the beliefs graph' asserted nothing — what the graph at .../graph/beliefs/<id> actually holds is the PICK RECORD, typed ag:DesireGraph because a pick is a want, and this property still says whose it is." .
+    rdfs:comment "Which agent owns this graph — the write boundary, made explicit. The domain is ag:Graph since ag:BeliefsGraph retired (#299): the whole store is beliefs, so a class naming one graph inside it 'the beliefs graph' asserted nothing — what the graph at .../graph/beliefs/<id> actually holds is the PICK RECORD, typed ag:PickRecordGraph for what it IS, and this property still says whose it is." .
 
 ##  The instances. Data, not terms — code names the classes above and finds these by asking.
 ##  Three world graphs and two ontology graphs, because the role is what a graph HOLDS and how
@@ -393,9 +394,11 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 
 ##  Where an agent says what its OWN graphs are. A per-agent graph cannot be declared in a
 ##  T-Box — it does not exist until its agent does — so the agent classifies its own at boot,
-##  and it has to land somewhere READABLE: a modality-scoped query says `?d a ag:DesireGraph`
-##  and must resolve it without naming any graph instance, which is the rule that keeps a
-##  query from silently reading part of the truth.
+##  and it has to land somewhere READABLE — a reader asks what a graph IS and must resolve
+##  it without naming any graph instance, which is the rule that keeps a query from silently
+##  reading part of the truth. (The example this comment carried, a modality-scoped
+##  `?d a ag:DesireGraph`, retired with the modality classes: the desire modality is a STORE
+##  now, and inside a store the graphs say only who put the fact there — #312.)
 ##
 ##  Public and belief-modality, because a classification is a fact about what a graph IS —
 ##  and the static graphs above have always been classified in the ontology graph, which is
@@ -405,17 +408,13 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 <http://example.org/agora/graph/classification>    a ag:PublicGraph , ag:BeliefGraph ;
     ag:arrivedBy ag:Recorded .
 
-##  The bounds a subject's stated ranges put on whoever acts for it: an operating region to
-##  hold a property inside, and the survival envelope outside which the subject ends. Derived
-##  by the desire package's rule, declared HERE like the derived world graph, because a graph
-##  is the kernel's furniture whoever fills it — and a rule targets `ag:ConstraintGraph`
-##  directly now, since `graph_of_class` refuses ambiguity loudly rather than guessing.
-##
-##  It was `graph/desire` and typed a region graph, which was wrong twice: the name followed
-##  the capability that computes it, and the content is not anybody's want. An agent holding
-##  bounds and no aim pursues NOTHING — the running proof that a bound motivates nobody.
-<http://example.org/agora/graph/constraint>        a ag:BoundsGraph , ag:PublicGraph ;
-    ag:arrivedBy ag:Derived .
+##  Where a world states a root desire: a TriG block in the world's own files, replaced from
+##  them on every boot exactly as the world graph is, projected into the desire modality by
+##  its build. Declared here so the ghost walk keeps it and so a world file needs no typing
+##  line — naming the graph is enough, and a world may name instances.
+<http://example.org/agora/graph/desire/asserted>   a ag:PublicGraph ;
+    ag:arrivedBy ag:Asserted .
+
 
 
 #  `ag:Bounds`, `ag:boundedBy`, `ag:toleratedMin` and `ag:toleratedMax` were here and are GONE.

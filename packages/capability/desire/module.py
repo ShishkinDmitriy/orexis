@@ -48,7 +48,7 @@ _SENSING = "http://example.org/agora/sensing#SensingCapability"
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
 # file's own header. Read once at import: a malformed query is then an error the moment the
 # package loads rather than the first time somebody asks.
-WANTS_QUERY = (Path(__file__).parent / "wants.rq").read_text()
+DESIRES_QUERY = (Path(__file__).parent / "desires.rq").read_text()
 READINGS_QUERY = (Path(__file__).parent / "readings.rq").read_text()
 
 # My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
@@ -207,7 +207,7 @@ def gaps_of(desires, beliefs, agent_uri: str) -> dict[str, Gap]:
     a summary of its history, which is review's pattern and not this function's business.
 
     Two handles since the dataset split (#298): `desires` answers what is WANTED and `beliefs`
-    what IS, and the join is here — `wants.rq` and `readings.rq` are the two texts, and the
+    what IS, and the join is here — `desires.rq` and `readings.rq` are the two texts, and the
     arithmetic that used to be repeated between the queries and the module lives once, in
     `Region`. A property with no observation yet is absent rather than zero: at birth every
     desire is unmeasured, and unmeasured must not read as satisfied.
@@ -215,7 +215,7 @@ def gaps_of(desires, beliefs, agent_uri: str) -> dict[str, Gap]:
     subjects = _subjects_of(beliefs, agent_uri)
     known, _ = _known(beliefs)
     out: dict[str, Gap] = {}
-    for row in _wants(desires, agent_uri, agent_id=None):
+    for row in _desired(desires, agent_uri, agent_id=None):
         if row["kind"] != "stake":
             continue
         item = next((known[(s, row["property"])] for s in subjects
@@ -240,7 +240,7 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
     Both sources appear because an obligation is a desire someone else sourced and urgency is
     the common currency — a litre owed and a pot drying rank against each other rather than
     running down two paths that never meet. Two handles since the dataset split (#298):
-    `wants.rq` asks the desire modality what is pursued, `readings.rq` asks the belief
+    `desires.rq` asks the desire modality what is pursued, `readings.rq` asks the belief
     modality what is known, and the judging — distance, staleness, lapse — happens here,
     where the clock is. One clock, deliberately: the deadline and the urgency used to be
     judged by two (the store's NOW and Python's), and two clocks that normally agree are
@@ -256,7 +256,7 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
     subjects = _subjects_of(beliefs, agent_uri)
     known, by_instrument = _known(beliefs)
     out = []
-    for row in _wants(desires, agent_uri, agent_id):
+    for row in _desired(desires, agent_uri, agent_id):
         if row["kind"] == "duty":
             #  Lapsed is judged HERE, against the same clock the urgency uses — one reader,
             #  one now, so a debt cannot be maximally hot and still count as open because two
@@ -308,10 +308,10 @@ class _Known:
     horizon: float | None
 
 
-def _wants(desires, agent_uri: str, agent_id: str | None) -> list[dict]:
-    """The desire modality's rows — `wants.rq`, with the duty branch reaching this agent's
+def _desired(desires, agent_uri: str, agent_id: str | None) -> list[dict]:
+    """The desire modality's rows — `desires.rq`, with the duty branch reaching this agent's
     obligations graph only when an id is given to name it by."""
-    text = WANTS_QUERY.replace("$me", f"<{agent_uri}>")
+    text = DESIRES_QUERY.replace("$me", f"<{agent_uri}>")
     text = text.replace("$owed", f"<{obligations_graph(agent_id)}>" if agent_id
                         else "<urn:nobody:owes>")
     return bindings(desires(text))
@@ -542,7 +542,7 @@ class DesireModule(Module):
             out["worst_gap"] = round(max(abs(g.gap) for g in current.values()), 3)
         return out
 
-    def wants(self, now: datetime | None = None) -> list[Desire]:
+    def desires(self, now: datetime | None = None) -> list[Desire]:
         """MY contribution to what this agent is pursuing: its stakes, and no duties.
 
         The choir hook for desires (`agent.pursuing()` merges every module's). Split from the debts

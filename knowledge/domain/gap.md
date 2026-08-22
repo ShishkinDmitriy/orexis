@@ -15,7 +15,7 @@ description: >-
 
 A **gap** is the diff between desired and sensed, for one property of one subject. Since the
 dataset split ([a-store-is-a-modality](/decisions/a-store-is-a-modality.md), #298) it is asked
-in two halves — `wants.rq` of the desire modality, `readings.rq` of the belief modality — and
+in two halves — `desires.rq` of the desire modality, `readings.rq` of the belief modality — and
 joined by `gaps_of`, yielding, per property, a **signed** distance normalised by the survival
 room on the side the value sits on: 0 at the [region](/domain/desire.md)'s edge, the sign
 saying which way out, and |gap| = 1 at the edge of what the subject survives.

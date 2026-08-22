@@ -1,5 +1,5 @@
-# Derivation: which pick record belongs to which agent — typed ag:DesireGraph,
-# because a pick is a want and ag:BeliefsGraph retired (#299).
+# Derivation: which pick record belongs to which agent — typed by what it IS, a
+# record (#312): the desire modality projects it by name, so no modality typing remains.
 #
 # This used to be written out by hand, once per agent, in every world — four lines of
 # `<…/graph/beliefs/fern> a ag:BeliefsGraph ; ag:beliefsOf ag:fern_agent .` that had to be kept
@@ -16,7 +16,7 @@
 PREFIX ag:   <http://example.org/agora#>
 
 INSERT { GRAPH $derived {
-    ?graph a ag:DesireGraph ; ag:beliefsOf ?agent } }
+    ?graph a ag:PickRecordGraph ; ag:beliefsOf ?agent } }
 $given
 WHERE  {
     ?agent a ag:Agent ; ag:localId ?id .

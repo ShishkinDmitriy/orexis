@@ -1,6 +1,6 @@
 """What an agent is pursuing, hottest first — the split pair and its one join (#234, #298).
 
-`wants.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
+`desires.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
 is the join — the arithmetic lives once, in `Region` and `_duty_urgency`. These pin the
 states, the ranking, and the duty fraction that was always Python's because the store's
 engine will not divide durations.
@@ -14,7 +14,7 @@ import pyoxigraph as ox
 
 from packages.capability.desire import gaps_of, desires_of
 
-from conftest import MOISTURE, TEMPERATURE, genesis_store
+from conftest import MOISTURE, TEMPERATURE, desires_build, genesis_store
 
 FERN = "http://example.org/agora/world/simulation#fern_agent"
 
@@ -24,7 +24,7 @@ def _desires(readings, agent="fern", **kw):
 
     st = genesis_store(readings)
     genesis.birth(st, genesis.world_dir("simulation"), agent)
-    return st, desires_of(st.query_union, st.query, FERN, agent, **kw)
+    return st, desires_of(desires_build(st, agent).query_union, st.query, FERN, agent, **kw)
 
 
 def test_the_query_and_the_module_agree_with_the_diff(query_with_readings):
@@ -36,7 +36,7 @@ def test_the_query_and_the_module_agree_with_the_diff(query_with_readings):
     one. A copy that dropped the sign handling would agree on one of them and not the other.
     """
     st, desires = _desires({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
-    diffs = gaps_of(st.query_union, st.query, FERN)
+    diffs = gaps_of(desires_build(st, "fern").query_union, st.query, FERN)
 
     stakes = {g.observed_property: g for g in desires if not g.is_duty}
     assert set(stakes) == set(diffs), "the same wants, whichever text is run"
@@ -58,7 +58,7 @@ def test_a_want_nobody_has_read_is_the_hottest_goal_and_not_a_missing_one(monkey
     assert moisture.value is None
     assert moisture.urgency == 1.0
     assert desires[0] is moisture, "and it sorts to the top, where a deliberator will meet it"
-    assert gaps_of(st.query_union, st.query, FERN).get(MOISTURE) is None, \
+    assert gaps_of(desires_build(st, "fern").query_union, st.query, FERN).get(MOISTURE) is None, \
         "while the diff still reports nothing, which is right for a diff"
 
 
@@ -97,7 +97,7 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them():
             <http://example.org/agora#expiresAt> "{(owed + timedelta(seconds=900)).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
 
     def duty_at(offset_s):
-        desires = desires_of(st.query_union, st.query, FERN, "fern",
+        desires = desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern",
                              now=owed + timedelta(seconds=offset_s))
         return next(g for g in desires if g.is_duty)
 

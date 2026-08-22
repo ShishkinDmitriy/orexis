@@ -123,18 +123,30 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
         everyone = [genesis.agent_id_of(p) for p in sorted(path.glob(genesis.BELIEFS_GLOB))]
         for agent_id in everyone:
             genesis.birth(st, path, agent_id)
-        return st, (*st.public_graphs(), PROVENANCE_GRAPH,
-                    *(beliefs_graph(a) for a in everyone))
+        return st, everyone
 
-    st, graphs = built()
-    assert conforms(graph_from(st, *graphs))[0], "the shipped world should validate"
+    def judged(st, everyone):
+        """Exactly what agora-validate judges since #312: the wants and the pick records
+        arrive through each agent's desire modality, and only through it."""
+        from agent import effects
+        from conftest import desires_build
 
-    st, graphs = built()
+        data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
+        for a in everyone:
+            for triple in desires_build(st, a).construct(
+                    "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
+                data.add(effects._triple(triple))
+        return data
+
+    st, everyone = built()
+    assert conforms(judged(st, everyone))[0], "the shipped world should validate"
+
+    st, everyone = built()
     st.update(f"""
 DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:notAbove ?a }} }}
 INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:notAbove 99999 }} }}
 WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:onTerm ?t ; review:notAbove ?a }} }}""")
-    assert not conforms(graph_from(st, *graphs))[0]
+    assert not conforms(judged(st, everyone))[0]
 
 
 def test_a_mandate_never_widens_what_the_constitution_allows(fern):
@@ -254,7 +266,8 @@ def test_a_revision_the_shapes_refuse_is_put_back(fern):
     assert fern.reviewing().current(SLOW) == AUTHORED
     assert fern.reviewing().refused == 1
     # And it is still startable, which is what reverting exists to preserve.
-    validate_agent(fern.beliefs, fern.id, fern.me.uri, fern.me.capabilities)
+    validate_agent(fern.beliefs, fern.id, fern.me.uri, fern.me.capabilities,
+                   desires=fern.desires)
 
 
 # --- memory, which is also the schedule ---------------------------------------------------------

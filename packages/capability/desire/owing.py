@@ -146,12 +146,12 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
         whether the window is still open — and it is deliberately not folded into urgency,
         because a debt this agent can see expiring while nobody has presented is worth seeing.
         """
-        return self.wants(now)
+        return self.desires(now)
 
-    def wants(self, now: datetime | None = None) -> list[Desire]:
+    def desires(self, now: datetime | None = None) -> list[Desire]:
         """MY contribution to what this agent is pursuing: its debts, and no stakes.
 
-        The other half of the choir hook `DesireModule.wants()` answers — and the half the city
+        The other half of the choir hook `DesireModule.desires()` answers — and the half the city
         had no way to contribute before, which is the whole of #233. One shipped query still
         defines both; each module takes its own kind out of it.
         """
@@ -163,7 +163,7 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
         """What I owe, as figures. A host straining under debts it cannot serve used to look
         exactly like a calm one on every panel — and a host with no stake of its own reported
         nothing at all, because the module that would have said so was never composed."""
-        duties = self.wants()
+        duties = self.desires()
         return [("agent_debts", {}, {
             "owed": float(len(duties)),
             "demanded": float(sum(1 for g in duties if g.pursuable)),

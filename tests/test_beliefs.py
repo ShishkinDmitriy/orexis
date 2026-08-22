@@ -15,12 +15,13 @@ from packages.capability.desire import aims_of, regions_of
 from packages.capability.market.beliefs import BIDDING_PICKS, HOSTING_PICKS
 from packages.capability.sensing.beliefs import SUBSCRIBING_PICKS
 
-from conftest import MOISTURE, TEMPERATURE, genesis_store
+from conftest import MOISTURE, TEMPERATURE, desires_build, genesis_store
 
 
-def regions(query, agent_uri):
-    """What one agent wants, as its own module reads it — deduced, not believed."""
-    return regions_of(query, agent_uri)
+def regions(agent_id, agent_uri):
+    """What one agent wants, read the way its own module reads it: from the desire modality,
+    which derives them — deduced, not believed, and since #312 not in the belief base at all."""
+    return regions_of(desires_build(genesis_store(), agent_id).query_union, agent_uri)
 
 FERN = "http://example.org/agora/world/simulation#fern_agent"
 FERN_URI = "http://example.org/agora/world/simulation#fern"  # the plant, not the agent that acts for it
@@ -88,8 +89,8 @@ def test_slower_agent_tolerates_older_data(query):
 # region is deduced from what each plant states it needs, and neither agent could have picked it.
 
 def test_the_same_reading_is_trouble_for_one_and_not_the_other(query):
-    fern = regions(query, FERN)[MOISTURE]
-    succ = regions(query, SUCCULENT)[MOISTURE]
+    fern = regions("fern", FERN)[MOISTURE]
+    succ = regions("succulent", SUCCULENT)[MOISTURE]
     assert fern.band(0.30) == "LOW"
     assert succ.band(0.30) != "LOW"
     assert succ.low < fern.low        # a succulent sits drier, and its plant says so publicly
@@ -99,7 +100,7 @@ def test_a_region_is_the_two_ranges_its_plant_states(query):
     """Nothing in a beliefs file could have produced these numbers: world.ttl says fern grows in
     0.45-0.65 and survives 0.20-0.85, and the region is that pair intersected with every other
     range that applies — which today is none, so it is that pair exactly."""
-    moisture = regions(query, FERN)[MOISTURE]
+    moisture = regions("fern", FERN)[MOISTURE]
     assert (moisture.low, moisture.high) == (0.45, 0.65)
     assert (moisture.floor, moisture.ceiling) == (0.20, 0.85)
 
@@ -107,8 +108,8 @@ def test_a_region_is_the_two_ranges_its_plant_states(query):
 def test_an_agent_wants_one_thing_per_property_its_plant_states(query):
     """`market:aboutProperty` occurring once used to mean an agent could want exactly one thing.
     Fern's plant states two ranges, so fern holds two regions, in two different units."""
-    assert set(regions(query, FERN)) == {MOISTURE, TEMPERATURE}
-    assert set(regions(query, SUCCULENT)) == {MOISTURE}
+    assert set(regions("fern", FERN)) == {MOISTURE, TEMPERATURE}
+    assert set(regions("succulent", SUCCULENT)) == {MOISTURE}
 
 
 # --- isolation and failure -------------------------------------------------
