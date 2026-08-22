@@ -40,7 +40,8 @@ def _credentials(world: str) -> tuple[str, str]:
     return values["MQTT_USERNAME"].strip(), values["MQTT_PASSWORD"].strip()
 
 
-def ask(world: str, agent_id: str, sparql: str, timeout_s: float = 10.0) -> dict:
+def ask(world: str, agent_id: str, modality: str, sparql: str,
+        timeout_s: float = 10.0) -> dict:
     """One question, one answer, as a dict — the CLI prints it, a test asserts on it."""
     port = int(ratified.rows(ratified.dataset(world), _PORTS_Q)[0]["port"])
     user, password = _credentials(world)
@@ -53,7 +54,8 @@ def ask(world: str, agent_id: str, sparql: str, timeout_s: float = 10.0) -> dict
 
     def on_connect(c, *_):
         c.subscribe(sovereign.result_topic(agent_id))
-        c.publish(sovereign.query_topic(agent_id), sparql)
+        c.publish(sovereign.query_topic(agent_id),
+                  json.dumps({"modality": modality, "sparql": sparql}))
 
     def on_message(c, _userdata, message):
         nonlocal answer
@@ -82,11 +84,14 @@ def main() -> None:
         description="Put one SPARQL question to one running agent, over its world's bus.")
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("agent", help="the agent's id, e.g. fern")
+    p.add_argument("modality", help="which of the mind's stores to ask — beliefs or desires, "
+                                    "more as they land. Required: there is no default "
+                                    "modality, as there is no default world")
     p.add_argument("sparql", help="a SELECT — updates are refused by the engine itself")
     p.add_argument("--timeout", type=float, default=10.0)
     args = p.parse_args()
 
-    answer = ask(args.world, args.agent, args.sparql, args.timeout)
+    answer = ask(args.world, args.agent, args.modality, args.sparql, args.timeout)
     if "error" in answer:
         print(f"refused: {answer['error']}", file=sys.stderr)
         raise SystemExit(1)

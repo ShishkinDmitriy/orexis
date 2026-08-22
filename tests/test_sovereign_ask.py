@@ -8,6 +8,8 @@ cannot execute an update.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from agent import sovereign
@@ -25,6 +27,12 @@ def reporter_of(agent):
     return next(m for m in agent.modules if m.name == "reporting")
 
 
+def _ask(agent, sparql, modality="beliefs"):
+    return reporter_of(agent).handle(
+        sovereign.query_topic(agent.id),
+        json.dumps({"modality": modality, "sparql": sparql}).encode())
+
+
 def _answer(agent):
     replies = agent.sent.to(sovereign.result_topic(agent.id))
     assert replies, "the agent must answer on its own result topic"
@@ -36,9 +44,7 @@ def _answer(agent):
 
 
 def test_a_select_is_answered_from_the_live_store(fern):
-    took = reporter_of(fern).handle(
-        sovereign.query_topic(fern.id),
-        b"SELECT ?v WHERE { ?a <http://example.org/agora/sensing#slowSleepS> ?v }")
+    took = _ask(fern, "SELECT ?v WHERE { ?a <http://example.org/agora/sensing#slowSleepS> ?v }")
     assert took
     answer = _answer(fern)
     assert answer["rows"] and answer["rows"][0]["v"] == "600", \
@@ -48,9 +54,7 @@ def test_a_select_is_answered_from_the_live_store(fern):
 def test_an_update_is_refused_by_the_engine_not_a_filter(fern):
     before = fern.beliefs.query(
         "SELECT ?v WHERE { ?a <http://example.org/agora/sensing#slowSleepS> ?v }")
-    reporter_of(fern).handle(
-        sovereign.query_topic(fern.id),
-        b'INSERT DATA { <http://example.org/x> <http://example.org/y> "stolen" }')
+    _ask(fern, 'INSERT DATA { <http://example.org/x> <http://example.org/y> "stolen" }')
     answer = _answer(fern)
     assert "error" in answer, "an update must come back as the engine's own refusal"
     assert fern.beliefs.query(
@@ -58,18 +62,53 @@ def test_an_update_is_refused_by_the_engine_not_a_filter(fern):
 
 
 def test_a_question_for_another_agent_is_not_taken(fern):
-    took = reporter_of(fern).handle(sovereign.query_topic("tomato"), b"SELECT * WHERE {?s ?p ?o}")
+    took = reporter_of(fern).handle(
+        sovereign.query_topic("tomato"),
+        json.dumps({"modality": "beliefs", "sparql": "SELECT * WHERE {?s ?p ?o}"}).encode())
     assert not took
     assert not fern.sent.to(sovereign.result_topic("tomato")), \
         "an agent must never speak on another's channel"
 
 
 def test_a_flood_of_rows_is_capped_not_streamed(fern):
-    reporter_of(fern).handle(sovereign.query_topic(fern.id),
-                             b"SELECT ?s ?p ?o WHERE { ?s ?p ?o }")
+    _ask(fern, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }")
     answer = _answer(fern)
     assert len(answer["rows"]) <= reporter_of(fern).ANSWER_ROWS
     assert answer.get("truncated"), "a whole belief base exceeds the cap and must say so"
+
+
+def test_the_sovereign_asks_a_modality_and_the_desires_answer(fern):
+    """The third ruling of a-store-is-a-modality, on the wire: the ask names a modality, and
+    the desire modality answers about wants — here, the region deduced from fern's plant —
+    through the same read-only channel."""
+    _ask(fern, """SELECT ?low WHERE {
+        <http://example.org/agora/world/simulation#fern_agent>
+            <http://example.org/agora#holds> ?region .
+        ?region <http://www.w3.org/ns/ssn/forProperty>
+                <http://example.org/agora/water#SoilMoisture> ;
+                <http://www.w3.org/ns/shacl#property> ?below .
+        ?below <http://example.org/agora#violationIs> <http://example.org/agora#Below> ;
+               <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low
+    }""", modality="desires")
+    answer = _answer(fern)
+    assert answer["rows"] and float(answer["rows"][0]["low"]) == 0.45, \
+        "the want fern's plant implies, asked of the store that owns wants"
+
+
+def test_a_question_naming_no_modality_is_refused_with_the_road_spelled_out(fern):
+    """No default, deliberately — the same rule as no default world: a fallback answers a
+    question the asker did not ask. The refusal says how to ask, not merely no."""
+    reporter_of(fern).handle(sovereign.query_topic(fern.id), b"SELECT * WHERE { ?s ?p ?o }")
+    answer = _answer(fern)
+    assert "error" in answer and "no default modality" in answer["error"]
+
+
+def test_a_modality_the_mind_lacks_is_refused_naming_what_exists(fern):
+    _ask(fern, "SELECT * WHERE { ?s ?p ?o }", modality="dreams")
+    answer = _answer(fern)
+    assert "error" in answer
+    assert "beliefs" in answer["error"] and "desires" in answer["error"], \
+        "the refusal must name the modalities this mind has"
 
 
 def test_the_acl_admits_exactly_one_asker_per_channel():
