@@ -148,12 +148,15 @@ write paths and convenience, and the ruling is that the axis is not to be bent f
 
 A fourth ruling followed from the third, when the first implementation grew a `Mind` object
 to hold the stores: **the collection has no name, because nothing addresses it.** An agent
-HOLDS its stores — the belief base, the desires store, the rest of the table — each one just
-a triple store, each asked for directly; `agora-ask` names a modality, a module names the
-store it means, and ruling 3 is precisely what removed the one caller a union would have had.
-A holder no question needs is a namespace, not a concept, and the dictionary takes no page
-for it. "The mind" stays what it always was in these records: the sitting's phrase for the
-frame, not a component.
+holds its MODALITIES — `agent.beliefs`, `agent.desires`, the rest of the table — and each
+modality is a class that OWNS its store: what kind of store, whether it persists, and whether
+anything may write it are that class's decisions, invisible to the agent and to every module.
+Separation of concerns, ruled explicitly: the belief modality chose a writable volume-backed
+store, the desire modality chose a rebuilt in-memory one exposing no writer, and the agent
+cannot tell. `agora-ask` names a modality, a module names the one it means, and ruling 3 is
+precisely what removed the one caller a union would have had. A holder no question needs is
+a namespace, not a concept, and the dictionary takes no page for it. "The mind" stays what
+it always was in these records: the sitting's phrase for the frame, not a component.
 
 ## The sort, term by term
 

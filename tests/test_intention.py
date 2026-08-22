@@ -95,7 +95,7 @@ def test_a_wait_the_auction_outlives_is_dropped_with_the_reason(make):
     assert keeper.standing(means=OBSERVE) == []
     # the resolution carries why — a commitment abandoned without a reason is one forgotten
     from agent.store import bindings
-    rows = bindings(fern.store.query(
+    rows = bindings(fern.beliefs.query(
         "SELECT ?why WHERE { GRAPH <%s> { ?i ag:outcome \"dropped\" ; "
         "ag:becauseOf ?why } }" % intentions_graph("fern")))
     assert any("auction closed first" in r["why"] for r in rows)
@@ -146,7 +146,7 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
     assert [s.uri for s in standing] == [second]
 
     from agent.store import bindings
-    rows = bindings(fern.store.query(
+    rows = bindings(fern.beliefs.query(
         "SELECT ?why WHERE { GRAPH <%s> { <%s> ag:outcome \"dropped\" ; "
         "ag:becauseOf ?why } }" % (intentions_graph("fern"), first)))
     assert any("outwaited" in r["why"] for r in rows)
@@ -163,9 +163,9 @@ def test_intentions_are_nobody_elses_to_read(make):
     An unqualified pattern — what any peer's query amounts to — finds nothing."""
     fern = make("fern", _reading(0.10))
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
-    assert intentions_graph("fern") not in fern.store.public_graphs()
+    assert intentions_graph("fern") not in fern.beliefs.public_graphs()
     from agent.store import bindings
-    assert bindings(fern.store.query(
+    assert bindings(fern.beliefs.query(
         "SELECT ?i WHERE { ?i a ag:Intention }")) == []
 
 

@@ -369,26 +369,3 @@ class Store:
 
     def __len__(self) -> int:
         return len(self._store)
-
-
-class ReadOnly:
-    """The read half of a store — the handle a caller gets when writing is not a thing it may do.
-
-    Built for the desires store, whose record says "recomputation is the only write path"
-    (a-store-is-a-modality): the store is rebuilt from its premises and nothing runtime-side
-    may edit it, and the surest form of "may not" is a handle with no update, no clear and no
-    load to call — misuse fails as `AttributeError` at the call site, not as a discipline
-    someone forgot. Delegation rather than inheritance on purpose: a subclass would inherit
-    every writer it exists to withhold.
-    """
-
-    def __init__(self, store: Store):
-        self.query = store.query
-        self.query_union = store.query_union
-        self.construct = store.construct
-        self.quads = store.quads
-        self.public_graphs = store.public_graphs
-        self._len = store.__len__
-
-    def __len__(self) -> int:
-        return self._len()

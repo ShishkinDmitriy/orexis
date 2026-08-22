@@ -309,8 +309,8 @@ class DesireModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.regions = regions_of(agent.store.query, self.me.uri)
-        self._aims = aims_of(agent.store.query, agent.id, self.me.uri)
+        self.regions = regions_of(agent.beliefs.query, self.me.uri)
+        self._aims = aims_of(agent.beliefs.query, agent.id, self.me.uri)
         self.log.info("wants %s", ", ".join(
             f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
             for p, r in sorted(self.regions.items())) or "nothing")
@@ -340,7 +340,7 @@ class DesireModule(Module):
         """An aim is a belief, so a review may move it — within the region, which is the same
         check boot makes. Re-read rather than patched, because the revision names a term and an
         aim is a structure: simplest correct answer is to ask the graph again."""
-        self._aims = aims_of(self.agent.store.query, self.agent.id, self.me.uri)
+        self._aims = aims_of(self.agent.beliefs.query, self.agent.id, self.me.uri)
 
     # --- what I contribute to my siblings, through the contract every module has ---
 
@@ -402,7 +402,7 @@ class DesireModule(Module):
         more", which a deliberator needs precisely because nothing else will mention it. Rows
         carry `at`, and `current()` is the same diff with my own freshness rule applied.
         """
-        return gaps_of(self.agent.store.query, self.me.uri)
+        return gaps_of(self.agent.beliefs.query, self.me.uri)
 
     def current(self) -> dict[str, Gap]:
         """The diff I would act on: every row still inside my own freshness rule.
@@ -454,7 +454,7 @@ class DesireModule(Module):
         those is the others' business. `desires_of` reads the whole shipped query and each module
         takes its own kind, so there is still one text and one definition.
         """
-        return [g for g in desires_of(self.agent.store.query, self.me.uri, self.agent.id, now)
+        return [g for g in desires_of(self.agent.beliefs.query, self.me.uri, self.agent.id, now)
                 if not g.is_duty]
 
     def series(self) -> list[tuple[str, dict, dict]]:

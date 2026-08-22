@@ -52,7 +52,7 @@ def feed(agent, values, sensor=None):
 
 
 def window(agent) -> int:
-    rows = bindings(agent.store.query(
+    rows = bindings(agent.beliefs.query(
         "SELECT ?n WHERE { GRAPH ?g { sensing:SensingCapability sensing:reviewWindow ?n } }"))
     return int(rows[0]["n"])
 
@@ -62,11 +62,11 @@ def window(agent) -> int:
 def test_a_revisable_term_is_discovered_from_the_t_box_not_from_python(fern):
     """No registry and no import: the reviewer asks the merged ontology what may be re-picked,
     so a capability nobody here has read is reviewable on the same terms as this one."""
-    assert SLOW in world_ranges(fern.store.query)
+    assert SLOW in world_ranges(fern.beliefs.query)
 
 
 def test_the_world_range_comes_from_the_constitution(fern):
-    room = world_ranges(fern.store.query)[SLOW]
+    room = world_ranges(fern.beliefs.query)[SLOW]
     assert (room.floor, room.ceiling) == (10.0, 900.0)
 
 
@@ -75,7 +75,7 @@ def test_the_jolt_threshold_is_revisable_on_the_same_terms(fern):
     Python knowing its name: constitution from the family's figures, narrowed by the mandate.
     Revisable because the first 0.25 was an estimate measured on nothing, and correcting an
     estimate must cost a retained command, never a reflash."""
-    room = world_ranges(fern.store.query)[DELTA]
+    room = world_ranges(fern.beliefs.query)[DELTA]
     assert (room.floor, room.ceiling) == (0.05, 0.5)
     narrowed = fern.reviewing().ranges()[DELTA]
     assert (narrowed.floor, narrowed.ceiling) == (DELTA_FINE, DELTA_COARSE)
@@ -144,7 +144,7 @@ def test_a_mandate_never_widens_what_the_constitution_allows(fern):
     the society allows and never widen it. `ag:MandateWithinTheConstitutionShape` refuses this at
     validation; the intersection here is the second line of defence, for a world already running.
     """
-    fern.store.update(f"""
+    fern.beliefs.update(f"""
 DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:notAbove ?a }} }}
 INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:notAbove 99999 }} }}
 WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?c review:onTerm <{SLOW}> ; review:notAbove ?a }} }}""")
@@ -193,7 +193,7 @@ def _evidence(agent, spreads):
     """
     agent.reviewing().publish_evidence(agent.reviewing().ranges())
     n = window(agent) + 2
-    agent.store.update("INSERT DATA { GRAPH <%s> { %s } }" % (
+    agent.beliefs.update("INSERT DATA { GRAPH <%s> { %s } }" % (
         evidence_graph(agent.id),
         "".join(f'[] a review:Evidence ; review:sampleSpread "{s:.6f}"^^xsd:decimal ; '
                 f'review:sampleCount {n} . ' for s in spreads)))
@@ -254,7 +254,7 @@ def test_a_revision_the_shapes_refuse_is_put_back(fern):
     assert fern.reviewing().current(SLOW) == AUTHORED
     assert fern.reviewing().refused == 1
     # And it is still startable, which is what reverting exists to preserve.
-    validate_agent(fern.store, fern.id, fern.me.uri, fern.me.capabilities)
+    validate_agent(fern.beliefs, fern.id, fern.me.uri, fern.me.capabilities)
 
 
 # --- memory, which is also the schedule ---------------------------------------------------------
@@ -304,25 +304,25 @@ def test_a_review_writes_only_its_own_beliefs_and_never_the_world_or_the_record(
     """The graph types made load-bearing. A review reads the world as constraint and `:sensed`
     as evidence, and changes neither — which is what the tripartite split is FOR."""
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
-    before = (fern.store.get_graph(WORLD_GRAPH), fern.store.get_graph(SENSED_GRAPH))
+    before = (fern.beliefs.get_graph(WORLD_GRAPH), fern.beliefs.get_graph(SENSED_GRAPH))
 
     fern.reviewing().review()
 
     assert fern.reviewing().current(SLOW) == CEILING, "it should have changed something"
-    assert (fern.store.get_graph(WORLD_GRAPH), fern.store.get_graph(SENSED_GRAPH)) == before
+    assert (fern.beliefs.get_graph(WORLD_GRAPH), fern.beliefs.get_graph(SENSED_GRAPH)) == before
 
 
 def test_a_review_touches_no_other_agents_beliefs(fern):
     """It cannot reach one — but the fixture births every agent in the world, so unlike a
     deployed store this one actually contains somebody else's to reach for."""
-    other = fern.store.get_graph(beliefs_graph("tomato"))
+    other = fern.beliefs.get_graph(beliefs_graph("tomato"))
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
     fern.reviewing().review()
-    assert fern.store.get_graph(beliefs_graph("tomato")) == other
+    assert fern.beliefs.get_graph(beliefs_graph("tomato")) == other
 
 
 def _decisions(agent) -> list[dict]:
-    return bindings(agent.store.query(f"""
+    return bindings(agent.beliefs.query(f"""
 SELECT ?term ?from ?to ?why ?outcome ?at ?due WHERE {{ GRAPH <{revisions_graph(agent.id)}> {{
   ?r a review:Revision ; review:revisedTerm ?term ; review:fromValue ?from ; review:toValue ?to ;
      review:becauseOf ?why ; review:outcome ?outcome ; review:atTime ?at ; review:dueAt ?due }} }}"""))

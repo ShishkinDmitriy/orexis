@@ -151,8 +151,8 @@ def test_a_summary_is_not_part_of_the_sensed_record(fern):
     sensed record' untestable."""
     sensor = fern.subscribing().sensors[0]
     fern.reviewing().summaries.record(sensor.subject, sensor.observes, 0.5)
-    assert "ObservationSummary" not in fern.store.get_graph(SENSED_GRAPH)
-    assert "ObservationSummary" in fern.store.get_graph(summaries_graph("fern"))
+    assert "ObservationSummary" not in fern.beliefs.get_graph(SENSED_GRAPH)
+    assert "ObservationSummary" in fern.beliefs.get_graph(summaries_graph("fern"))
 
 
 def test_the_ingest_path_summarises_every_reading(fern):

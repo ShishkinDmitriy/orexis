@@ -63,7 +63,7 @@ class BusWatchdog:
         self.agent = agent
         self._timer: Timer | None = None
         self._quiet: set[str] = set()  # what has already been said, so it is said once
-        rows = bindings(agent.store.query(_RESIGN_Q))
+        rows = bindings(agent.beliefs.query(_RESIGN_Q))
         if not rows:
             raise RuntimeError("the ontology states no ag:resignAfterS — re-run agora-seed")
         self.resign_after_s = int(rows[0]["s"])

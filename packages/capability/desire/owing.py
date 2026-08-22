@@ -37,7 +37,7 @@ class OwingModule(Module):
     def _uri_of(self, agent_id: str) -> str | None:
         """The counterparty's node, from the one thing a claim carries: its id. Public wiring,
         so a debt names an agent the world declares and never a string somebody sent me."""
-        rows = bindings(self.agent.store.query(
+        rows = bindings(self.agent.beliefs.query(
             f'SELECT ?a WHERE {{ ?a a <http://example.org/agora#Agent> ; '
             f'<http://example.org/agora#localId> "{agent_id}" }} LIMIT 1'))
         return rows[0]["a"] if rows else None
@@ -75,10 +75,10 @@ class OwingModule(Module):
                       f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
         uri = f"{KERNEL}obligation.{claim_jti}"
         graph = obligations_graph(self.agent.id)
-        if bindings(self.agent.store.query(
+        if bindings(self.agent.beliefs.query(
                 f"SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} LIMIT 1")):
             return None
-        self.agent.store.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
+        self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
             <{uri}> a <{KERNEL}Obligation> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
                 <{KERNEL}owedTo> <{to_agent}> ;
@@ -96,7 +96,7 @@ class OwingModule(Module):
         here is a step rather than a curve until claims may be held over time.
         """
         graph = obligations_graph(self.agent.id)
-        self.agent.store.update(f"""
+        self.agent.beliefs.update(f"""
             DELETE {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> ?was }} }}
             INSERT {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> true }} }}
             WHERE  {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" ;
@@ -107,7 +107,7 @@ class OwingModule(Module):
         a debt forgotten must not look alike, which is the same reason a resolved intention
         stays in its ledger."""
         graph = obligations_graph(self.agent.id)
-        self.agent.store.update(f"""INSERT {{ GRAPH <{graph}> {{
+        self.agent.beliefs.update(f"""INSERT {{ GRAPH <{graph}> {{
                 ?o <{KERNEL}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
             WHERE {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" .
                      FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }}""")
@@ -115,7 +115,7 @@ class OwingModule(Module):
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
         extra = f'?o <{KERNEL}presented> true .' if presented_only else ""
-        return bindings(self.agent.store.query(f"""
+        return bindings(self.agent.beliefs.query(f"""
 SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
   ?o a <{KERNEL}Obligation> ; <{KERNEL}owedTo> ?to ; <{KERNEL}forClaim> ?jti ;
      <{KERNEL}presented> ?presented ; <{KERNEL}owedAt> ?at .
@@ -148,7 +148,7 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
         had no way to contribute before, which is the whole of #233. One shipped query still
         defines both; each module takes its own kind out of it.
         """
-        return [g for g in desires_of(self.agent.store.query, self.me.uri, self.agent.id, now)
+        return [g for g in desires_of(self.agent.beliefs.query, self.me.uri, self.agent.id, now)
                 if g.is_duty]
 
     def series(self) -> list[tuple[str, dict, dict]]:

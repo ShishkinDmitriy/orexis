@@ -62,7 +62,7 @@ class BeliefBaseUpkeep:
 
     def __init__(self, agent):
         self.agent = agent
-        rows = bindings(agent.store.query(_RATIO_Q))
+        rows = bindings(agent.beliefs.query(_RATIO_Q))
         if not rows:
             raise RuntimeError(
                 "the ontology states no ag:maxBytesPerTriple — this build's vocabulary is older "
@@ -78,10 +78,10 @@ class BeliefBaseUpkeep:
         world to read it and throw it away — has nothing to compact and no ratio to report, and
         reporting a number for it would put a meaningless line on every dashboard.
         """
-        path = getattr(self.agent.store, "path", None)
+        path = getattr(self.agent.beliefs, "path", None)
         if not path:
             return None
-        held = len(self.agent.store)
+        held = len(self.agent.beliefs)
         if held <= 0:
             return None
         size = tree_bytes(path)
@@ -98,7 +98,7 @@ class BeliefBaseUpkeep:
             return False
         started = time.monotonic()
         try:
-            self.agent.store.optimize()
+            self.agent.beliefs.optimize()
         except Exception as exc:
             # Counted nowhere. A compaction that failed leaves the store exactly as it was, and
             # the next tick will see the same ratio and try again — the retry IS the record.

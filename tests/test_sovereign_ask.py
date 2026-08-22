@@ -46,14 +46,14 @@ def test_a_select_is_answered_from_the_live_store(fern):
 
 
 def test_an_update_is_refused_by_the_engine_not_a_filter(fern):
-    before = fern.store.query(
+    before = fern.beliefs.query(
         "SELECT ?v WHERE { ?a <http://example.org/agora/sensing#slowSleepS> ?v }")
     reporter_of(fern).handle(
         sovereign.query_topic(fern.id),
         b'INSERT DATA { <http://example.org/x> <http://example.org/y> "stolen" }')
     answer = _answer(fern)
     assert "error" in answer, "an update must come back as the engine's own refusal"
-    assert fern.store.query(
+    assert fern.beliefs.query(
         "SELECT ?v WHERE { ?a <http://example.org/agora/sensing#slowSleepS> ?v }") == before
 
 

@@ -400,14 +400,14 @@ def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
     the premise it was concluded from.
     """
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
-    before = agent.store.get_graph(SENSED_GRAPH)
-    names = set(agent.store.graph_names())
+    before = agent.beliefs.get_graph(SENSED_GRAPH)
+    names = set(agent.beliefs.graph_names())
 
     plan = planner.plan(desire)
 
     assert len(plan.steps) == 2, "a search that never went deep would assert nothing here"
-    assert agent.store.get_graph(SENSED_GRAPH) == before, "readings the agent never took"
-    assert set(agent.store.graph_names()) - names <= {DELIBERATION_GRAPH}, \
+    assert agent.beliefs.get_graph(SENSED_GRAPH) == before, "readings the agent never took"
+    assert set(agent.beliefs.graph_names()) - names <= {DELIBERATION_GRAPH}, \
         "a possible world escaped into the store that keeps things"
     assert planner.imaginarium is None, "the imaginarium outlived the plan"
 

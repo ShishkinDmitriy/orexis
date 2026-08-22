@@ -56,7 +56,7 @@ class StoringModule(Module):
         try:
             # The union view, not the public one: the sovereign asks about the WHOLE
             # agent, and its private graphs are exactly what cannot be seen elsewhere.
-            rows = bindings(self.agent.store.query_union(payload.decode("utf-8")))
+            rows = bindings(self.agent.beliefs.query_union(payload.decode("utf-8")))
             answer: dict = {"rows": rows[: self.ANSWER_ROWS]}
             if len(rows) > self.ANSWER_ROWS:
                 answer["truncated"] = len(rows)
@@ -120,7 +120,7 @@ class StoringModule(Module):
                             metrics.reading_age_s(local_id),
                             metrics.cadence_acked_s(local_id))
                  for local_id in sorted(metrics.sensors_seen())},
-                belief_bytes=tree_bytes(getattr(self.agent.store, "path", None)),
+                belief_bytes=tree_bytes(getattr(self.agent.beliefs, "path", None)),
                 tagged=[row for m in self.agent.modules for m_row in [m.series()]
                         for row in m_row],
             )

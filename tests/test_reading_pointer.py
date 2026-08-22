@@ -279,7 +279,7 @@ def test_an_observation_says_which_procedure_made_it(monkeypatch):
     # `:sensed` is the agent's own graph and not one of the public five, so it is NAMED here.
     # The rule against wrapping a SELECT in a GRAPH clause is about the public graphs, where
     # narrowing silently drops facts that live in a sibling; this one has to be asked for.
-    rows = bindings(agent.store.query(f"""
+    rows = bindings(agent.beliefs.query(f"""
         PREFIX sosa: <http://www.w3.org/ns/sosa/>
         SELECT ?proc WHERE {{ GRAPH <{SENSED_GRAPH}> {{
           ?obs a sosa:Observation ; sosa:usedProcedure ?proc }} }}"""))

@@ -431,7 +431,7 @@ def describe() -> str:
 #
 # So it is read rather than registered, off the `@prefix` lines of the ontology that declares
 # the terms. Nothing is listed and nothing is imported: this runs before any capability's Python
-# and must, because `agent.store` needs the prefixes and half the capabilities import it.
+# and must, because `agent.beliefs` needs the prefixes and half the capabilities import it.
 _NAMESPACE_BASE = "http://example.org/agora"
 _PREFIX_LINE = re.compile(
     rf"@prefix\s+([A-Za-z][\w.-]*):\s*<({re.escape(_NAMESPACE_BASE)}[^>]*)>")

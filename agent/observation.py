@@ -50,7 +50,7 @@ class Observations:
             config.env("INFLUX_ORG", "agora"),
             bucket,
         )
-        self.sensed = SensedWriter(agent.store)
+        self.sensed = SensedWriter(agent.beliefs)
 
     def close(self) -> None:
         self.influx.close()

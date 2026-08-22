@@ -329,7 +329,7 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
     assert keeper.expect(uri, MOISTURE, "50 seconds of pouring", expected_delta=0.1,
                          lands_after_s=50.0)
 
-    rows = bindings(gardener.store.query(f"""
+    rows = bindings(gardener.beliefs.query(f"""
 SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - (50.0 + seeing)) < 2.0, (
@@ -353,7 +353,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
     before = datetime.now(timezone.utc).timestamp()
     assert keeper.expect(uri, MOISTURE, "bought from someone else's valve", expected_delta=0.1)
 
-    rows = bindings(gardener.store.query(f"""
+    rows = bindings(gardener.beliefs.query(f"""
 SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - keeper.beliefs.patience_s) < 2.0

@@ -636,7 +636,7 @@ def test_an_owed_round_survives_the_process_that_owed_it(host, make):
     host.deliver("readings/fern", low_event())
     assert [s for s in keeper_of(host).standing() if s.means.endswith("Offer")]
 
-    reborn = make("supplier", host.store)  # same store: the volume the ledger lives in
+    reborn = make("supplier", host.beliefs)  # same store: the volume the ledger lives in
     assert reborn.sent.to(market_of(reborn).offer_topic) == []
     stock_reading(reborn, 3.0)
     assert offer_from(reborn)["quantity_l"] == 2.0, \
@@ -683,7 +683,7 @@ def test_a_debt_outlives_the_process_that_incurred_it(host, make):
                   "max_qty_l": 0.5, "max_price_per_l": 0.9, "balance": 100.0})
     host.hosting().close()
 
-    reborn = make("supplier", host.store)
+    reborn = make("supplier", host.beliefs)
     assert len(ledger_of(reborn).owed()) == 1, "the ledger remembers what the dict forgot"
 
 
@@ -702,7 +702,7 @@ def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
     assert ledger_of(host).owed() == [], "paid — nothing stands"
     from packages.capability.desire.graphs import obligations_graph
     from agent.store import bindings
-    kept = bindings(host.store.query(
+    kept = bindings(host.beliefs.query(
         "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/agora#dischargedAt> ?d } }"
         % obligations_graph("supplier")))
     assert kept, "and the record of having paid it stays"

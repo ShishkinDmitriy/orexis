@@ -393,7 +393,7 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
     range rather than at one value, because a filter that leaks at one sign is a filter that
     leaks."""
     supplier = make("supplier")
-    rows = menu_of(supplier.store.query, supplier.me.uri)
+    rows = menu_of(supplier.beliefs.query, supplier.me.uri)
     duties = [r for r in rows if not r.is_chosen]
     assert duties, "the conduct surface includes what it honours"
 
@@ -409,7 +409,7 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
 def test_a_buyer_honours_nothing(make):
     """Fern holds no venue and no valve: everything on its menu is its own to choose."""
     fern = make("fern")
-    assert all(r.is_chosen for r in menu_of(fern.store.query, fern.me.uri))
+    assert all(r.is_chosen for r in menu_of(fern.beliefs.query, fern.me.uri))
 
 
 # --- step 9: a desire, not a property and a value -----------------------------
@@ -536,10 +536,10 @@ def test_the_figures_do_not_cost_what_they_report(make):
     fern = make("fern", genesis_store({"fern": 0.10}))
     next(m for m in fern.modules if m.name == "deliberation").series()   # fill the trace
 
-    trace.effort(fern.store.query_union)                                 # warm
+    trace.effort(fern.beliefs.query_union)                                 # warm
     started = time.monotonic()
     for _ in range(5):
-        trace.effort(fern.store.query_union)
+        trace.effort(fern.beliefs.query_union)
     each = (time.monotonic() - started) / 5
 
     assert each < 0.05, f"reading the figures took {each*1000:.0f}ms — it should be under 1ms"
