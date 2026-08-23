@@ -45,7 +45,6 @@
 #define ULP_MEM_LOW   0    // the too-wet count
 #define ULP_MEM_HIGH  1    // the too-dry count
 #define ULP_MEM_LOOKS 2    // consecutive breaching looks so far (#180)
-#define ULP_MEM_CKGEN 5    // what the ULP reads back for CKGEN_I2C_PU after writing it
 #define ULP_MEM_LAST  4    // the ADC sample the ULP itself last saw — the only way to find out
                            // whether the coprocessor's view of the probe matches the CPU's
 #define ULP_MEM_TICKS 3    // looks taken since the last arm — diagnostic only, never read by
@@ -200,7 +199,6 @@ void armUlpWatch(float nowFrac) {
   if (rtc_magic != 0x0BE71CE5) {          // power-on: RTC memory is whatever it was
     rtc_magic = 0x0BE71CE5;
     RTC_SLOW_MEM[ULP_MEM_TICKS] = RTC_SLOW_MEM[ULP_MEM_LOOKS] = RTC_SLOW_MEM[ULP_MEM_LAST] = 0;
-    RTC_SLOW_MEM[ULP_MEM_CKGEN] = 0;
 #if ULP_VERBOSE
     Serial.println("first boot — ULP counters zeroed, nothing to report yet");
 #endif
@@ -240,29 +238,14 @@ void armUlpWatch(float nowFrac) {
   else Serial.println("ulp_adc_init: ESP_OK");
 #endif
 
-  // HAND ADC1 BACK TO THE COPROCESSOR — and do it explicitly, because adc1_ulp_enable() alone
-  // did not survive Arduino's analogRead() on this build. The symptom was decisive rather than
-  // subtle: the ULP recorded a constant 4095 while the CPU read 3020 on the same pin, which is
-  // what a SAR that never converts returns.
-  //
-  // analogRead() drives ADC1 through the software-force path. SENS_MEAS1_START_FORCE means "a
-  // conversion starts when a register is written", and SENS_SAR1_EN_PAD_FORCE means "the pad is
-  // whichever a register names" — so while both are set, the ULP's I_ADC can neither choose
-  // GPIO34 nor start a reading, and it sees full scale forever. SENS_SAR1_DIG_FORCE would hand
-  // the same ADC to the digital controller, which is a third claimant on one peripheral.
-  CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_START_FORCE_M);
-  CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_SAR1_EN_PAD_FORCE_M);
-  CLEAR_PERI_REG_MASK(SENS_SAR_READ_CTRL_REG,   SENS_SAR1_DIG_FORCE_M);
-  // Force the SAR powered instead of leaving it to the FSM, which drops it in deep sleep — the
-  // other way to arrive at a constant full-scale reading, and indistinguishable from the first.
-  SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR_V, 3, SENS_FORCE_XPD_SAR_S);
+  // FOUR REGISTER-LEVEL "FIXES" LIVED HERE, and every one was measured on the bench to make no
+  // difference: clearing analogRead's software-force bits, forcing SENS_FORCE_XPD_SAR,
+  // RTC_CNTL_CKGEN_I2C_PU, and the analog bias pair — plus, briefly, an always-on CK8M that was
+  // itself a defect. None of them was the problem. The coprocessor simply did not own ADC1, and
+  // no amount of powering a peripheral helps while someone else holds it. Deleted rather than
+  // kept, because a wrong explanation sitting in a file is worse than none:
+  // see knowledge/decisions/two-owners-of-one-peripheral.md.
 
-  // Whether the ULP's numbers land on the CPU's scale is a SEPARATE question from whether it
-  // converts at all, and it hangs on this bit: analogRead() sets SENS_SAR1_DATA_INV so its own
-  // readings come out the right way up. Left as analogRead() set it, deliberately — if the next
-  // run shows the ULP recording about 1075 where the CPU reads 3020, that is 4095 minus the
-  // reading and this bit is why. Fixing it before knowing would be guessing at a second fault
-  // while the first is still open.
 #if ULP_VERBOSE
   Serial.printf("ADC1 handed to ULP (DATA_INV %s)\n",
                 REG_GET_BIT(SENS_SAR_READ_CTRL_REG, SENS_SAR1_DATA_INV_M) ? "set" : "clear");
@@ -285,43 +268,6 @@ void armUlpWatch(float nowFrac) {
   // this, but "supposed to" is what we are currently testing.
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_ON);
 
-  // THE FIX, half one. rtc_sleep_init() clears RTC_CNTL_CKGEN_I2C_PU on the way into deep sleep
-  // — it is the analog clock generator's config bus, and the SAR cannot convert without it — and
-  // NOTHING turns it back on afterwards. That is why one deep sleep left the coprocessor hung
-  // forever, awake included: every later arm handed the ULP an ADC that could not answer, and
-  // I_ADC waited for a conversion that never completed. The register dump showed this as the one
-  // field that differed across a sleep, with every other bit we set still intact.
-  SET_PERI_REG_MASK(RTC_CNTL_ANA_CONF_REG, RTC_CNTL_CKGEN_I2C_PU_M);
-  SET_PERI_REG_MASK(RTC_CNTL_OPTIONS0_REG, RTC_CNTL_BIAS_FORCE_NOSLEEP_M);
-  SET_PERI_REG_MASK(RTC_CNTL_OPTIONS0_REG, RTC_CNTL_BIAS_I2C_FORCE_PU_M);
-
-  // KEEP THE 8 MHz RC OSCILLATOR ALIVE ACROSS DEEP SLEEP. This is the difference between awake
-  // and asleep, and it fits every symptom at once: the SAR ADC and the ULP core both clock from
-  // CK8M, and deep sleep powers it down and gates it. The ULP timer is supposed to spin it back
-  // up per run and wait RTC_CNTL_CK8M_WAIT for it to settle — which is why the coprocessor still
-  // runs at all, just rarely, and samples a converter that has no stable clock yet and returns
-  // full scale. Awake, CK8M is already up, and everything works; that is exactly what the
-  // self-test showed.
-  //
-  // It is not free: an always-on CK8M costs a few hundred microamps, which is the same order as
-  // the whole vigil. If this proves to be the fix, the cheaper follow-up is FORCE_NOGATING with
-  // a shortened CK8M_WAIT rather than a permanent power-up — but correctness first, and the
-  // battery table in the README will need revisiting either way.
-#if FORCE_CK8M
-  SET_PERI_REG_MASK(RTC_CNTL_CLK_CONF_REG, RTC_CNTL_CK8M_FORCE_PU_M);
-  SET_PERI_REG_MASK(RTC_CNTL_CLK_CONF_REG, RTC_CNTL_CK8M_FORCE_NOGATING_M);
-#endif
-  // rtc_sleep_init() overwrites this from its own config on the way down, so it is set as close
-  // to the sleep as the arm path allows and may simply not stick. The tick rate will say.
-  REG_SET_FIELD(RTC_CNTL_TIMER1_REG, RTC_CNTL_CK8M_WAIT, 5);
-
-  // The persistence counter (#180), same as the governed node's: one breaching look is an
-  // ADC glitch, N consecutive are the news. Reset on any in-window look. The governed copy
-  // (firmware/moisture-sensor/src/ulp_watch.cpp) carries the full guide to reading this
-  // machine — four 16-bit registers, RTC_SLOW_MEM as the only durable state, I_SUBR's
-  // borrow flag as the register-vs-register compare and M_BGE/JUMPR as the R0-vs-immediate
-  // one — and it holds here line for line. The two VIGIL_ rows are this firmware's only
-  // addition: a register write, no branch, no cost to the compare that surrounds it.
 #if ULP_MINIMAL_TEST
   // THE BISECT, in levels, because the real program adds three things to a bare counter and any
   // one of them could be what dies in deep sleep. Each level adds exactly one. Flash, sleep once,
@@ -336,23 +282,7 @@ void armUlpWatch(float nowFrac) {
   // this firmware added most recently. Level 3 isolates the ADC with no branches around it.
 #if ULP_MINIMAL_TEST >= 3
   const ulp_insn_t program[] = {
-      // THE FIX, half two. Deep sleep clears CKGEN_I2C_PU after any CPU code has run, so the
-      // ULP powers the analog config bus back up itself, first thing, every look — and waits
-      // for it to settle before asking the SAR for anything. Cheap: two instructions and ~125us
-      // of an interval measured in seconds.
       I_MOVI(R3, 0),
-      // The analog BIAS, not the analog clock. CKGEN_I2C_PU proved settable from here and
-      // changed nothing, which says the SAR's problem is not its config bus. Deep sleep also
-      // drops the bias into a low-current sleep mode — that is most of where the microamps come
-      // from — and a converter with no bias reference returns full scale, which is exactly the
-      // 4095 we keep reading. These two force it awake for the duration of the look.
-      I_WR_REG_BIT(RTC_CNTL_OPTIONS0_REG, RTC_CNTL_BIAS_FORCE_NOSLEEP_S, 1),
-      I_WR_REG_BIT(RTC_CNTL_OPTIONS0_REG, RTC_CNTL_BIAS_I2C_FORCE_PU_S, 1),
-      I_WR_REG_BIT(RTC_CNTL_ANA_CONF_REG, RTC_CNTL_CKGEN_I2C_PU_S, 1),
-      I_DELAY(60000),                  // ~7.5ms at 8MHz, vs 125us before: if the bus simply
-                                       // needs longer to settle, this is generous enough to say
-      I_RD_REG(RTC_CNTL_ANA_CONF_REG, RTC_CNTL_CKGEN_I2C_PU_S, RTC_CNTL_CKGEN_I2C_PU_S),
-      I_ST(R0, R3, ULP_MEM_CKGEN),     // did the WRITE take, as the ULP itself sees it?
       I_ADC(R0, 0, ULP_ADC_CHANNEL),
       I_ST(R0, R3, ULP_MEM_LAST),
       I_LD(R1, R3, ULP_MEM_TICKS),
@@ -382,12 +312,6 @@ void armUlpWatch(float nowFrac) {
   Serial.printf("*** ULP_MINIMAL_TEST level %d — not the real watcher ***\n", ULP_MINIMAL_TEST);
 #else
   const ulp_insn_t program[] = {
-      // THE FIX, half two. Deep sleep clears CKGEN_I2C_PU after any CPU code has run, so the
-      // ULP powers the analog config bus back up itself, first thing, every look — and waits
-      // for it to settle before asking the SAR for anything. Cheap: two instructions and ~125us
-      // of an interval measured in seconds.
-      I_WR_REG_BIT(RTC_CNTL_ANA_CONF_REG, RTC_CNTL_CKGEN_I2C_PU_S, 1),
-      I_DELAY(1000),
       I_ADC(R0, 0, ULP_ADC_CHANNEL),   // R0 = one 12-bit sample
       I_MOVI(R3, 0),                   // base address for every load/store
       I_ST(R0, R3, ULP_MEM_LAST),      // what the COPROCESSOR saw, not what the CPU saw
@@ -505,10 +429,6 @@ void ulpReport(const char *when) {
                 (unsigned)(RTC_SLOW_MEM[ULP_MEM_TICKS] & 0xFFFF),
                 (unsigned)(RTC_SLOW_MEM[ULP_MEM_LOOKS] & 0xFFFF),
                 (unsigned)(RTC_SLOW_MEM[ULP_MEM_LAST]  & 0xFFFF));
-#if ULP_VERBOSE
-  Serial.printf("ULP @%s: ckgen readback %u\n",
-                when, (unsigned)(RTC_SLOW_MEM[ULP_MEM_CKGEN] & 0xFFFF));
-#endif
 }
 
 void ulpSelfTest(int seconds) {

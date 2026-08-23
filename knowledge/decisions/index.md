@@ -110,7 +110,9 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [pins-and-wires](/decisions/pins-and-wires.md) - A pin is metal, a role is abstract, and the wire is what people get wrong — which makes a rail fault refusable.
 * [wokwi-drafts-it-the-world-ratifies-it](/decisions/wokwi-drafts-it-the-world-ratifies-it.md) - Importing a diagram drafts a stand and never becomes its source; bidirectional sync was refused, not deferred.
 * [one-agent-many-sensors](/decisions/one-agent-many-sensors.md) - Three of four combinations work, measured rather than assumed. Both failures come from a second kind of sensor on one subject.
-* [the-alarm-answers-to-the-last-report](/decisions/the-alarm-answers-to-the-last-report.md) - The deviation limit measures from the last value that left the board, re-anchored only by a successful publish.
+* [the-alarm-answers-to-the-last-report](/decisions/the-alarm-answers-to-the-last-report.md) - SUPERSEDED IN PART — the deviation limit measures from the last value that left the board. The anchor holds; the band half does not.
+* [the-sentinel-alarms-on-movement](/decisions/the-sentinel-alarms-on-movement.md) - The heartbeat says where the value is and the ULP says that it moved; the operating range sizes the trigger rather than being watched.
+* [two-owners-of-one-peripheral](/decisions/two-owners-of-one-peripheral.md) - Arduino held ADC1 and the ULP enable call returned success anyway, so the handover is now a sequence rather than a setting.
 * [a-stand-in-reports-what-its-world-says-it-does](/decisions/a-stand-in-reports-what-its-world-says-it-does.md) - A simulated device reports a value per property at the pointers its world declares, each drifting in its own range.
 * [a-panel-is-a-sensor-not-an-agent](/decisions/a-panel-is-a-sensor-not-an-agent.md) - A panel is keyed on the sensor, because a sensor observes one property and states one unit.
 * [a-name-does-not-expire](/decisions/a-name-does-not-expire.md) - A DHCP lease is a fact with an expiry date. The world states a hostname, and no firmware code changed.

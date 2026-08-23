@@ -20,9 +20,10 @@ them here: one flashed image, one set of promises, however many boards run it.""
         [ a owl:Restriction ; owl:onProperty mc:firmware ;
           owl:hasValue "moisture-sentinel" ] ,
         #  Unlike the governed node, the alarm promise is UNCONDITIONAL here: a sentinel's
-        #  whole reason to exist is the baked band its ULP watches, so every board of this
-        #  kind implements the procedure — on the class, because there is no flashing this
-        #  firmware without it.
+        #  whole reason to exist is the vigil its ULP keeps, so every board of this kind
+        #  implements the procedure — on the class, because there is no flashing this
+        #  firmware without it. What that vigil WATCHES changed (movement, not the world's
+        #  range); that there is one did not, which is why this restriction still stands.
         [ a owl:Restriction ; owl:onProperty ssn:implements ;
           owl:hasValue sensing:AlarmProcedure ] ;
-    rdfs:comment "A board that answers to the world alone: it takes no orders — no command channel, nothing to parse — so its agent derives Listening and can only receive. The ULP watches a band compiled in from the world's own operating range (both limits, HI/LO and deviation), a crossing wakes it to speak within a second, and a slow heartbeat generated under its agent's freshness rule keeps silence distinguishable from death." .
+    rdfs:comment "A board that answers to nobody: it takes no orders — no command channel, nothing to parse — so its agent derives Listening and can only receive. Its ULP watches for MOVEMENT, the last published value plus or minus a deviation limit, and wakes it to speak when the reading leaves that window; a slow heartbeat generated under its agent's freshness rule keeps silence distinguishable from death. It does NOT watch the world's operating range, though the range still sizes the deviation limit — see knowledge/decisions/the-sentinel-alarms-on-movement.md for why watching it made a thirsty pot wake the radio every patrol forever." .

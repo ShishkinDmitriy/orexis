@@ -230,6 +230,11 @@ the deviation limit measures FROM, and why slow drift belongs to the cadence rat
 is its own record:
 [the-alarm-answers-to-the-last-report](/decisions/the-alarm-answers-to-the-last-report.md).
 
+> Since [the-sentinel-alarms-on-movement](/decisions/the-sentinel-alarms-on-movement.md) this
+> describes the GOVERNED node only. A sentinel carries the deviation limit alone: it watches
+> movement and not the range, because a board that cannot be told anything alarmed every
+> patrol for as long as a pot sat outside its band.
+
 What the promise buys, mechanically: the thresholds are the agent's region edges (desire's
 `bounds`, collected like urgency), so the board literally watches its agent's desire while both
 sleep; silence between heartbeats means "nothing crossed" — information — and a alarm-armed
