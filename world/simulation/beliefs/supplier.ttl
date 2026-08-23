@@ -42,7 +42,7 @@
 #   twitches. Its reflex proposes now (arc 4): the refill venue carries a direction for
 #   StoredLitres, so a stock below the aim is an ACQUIRE — the same four lines that move a
 #   fern, one level up the supply chain.
-:supplier intention:patienceS 300 .
+:supplier ag:patienceS 300 .
 
 ##  desire — the pick inside the region the barrel states (arc 2). Three litres: enough
 #   slack to serve several rounds, comfortably above the stated reserve. Private where the

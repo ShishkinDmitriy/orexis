@@ -121,7 +121,22 @@ def referenced_terms() -> dict[str, set[str]]:
         for iri in _resolve(text, _prefixes_of(text)):
             note(iri, path)
 
-    for path in sorted(loader.PACKAGES_ROOT.rglob("*.py")):
+    #  BOTH trees. This scanned `packages/` alone, which was true when every term-naming module
+    #  lived there — and quietly stopped being true when the mind came into the kernel: the
+    #  deliberator, the keeper, the menu and the planner all name IRIs, and none of them was
+    #  ever read here. A dangling-term report that cannot see two thousand lines of terms is a
+    #  report that says what it looked at, not what is true.
+    #  ONE file is exempt, and it is the only one whose CONTENT is retired IRIs: the migration
+    #  map records what a term used to be spelled, so every left-hand side in it is by
+    #  definition declared nowhere. Scanning it reports the map's own purpose as six defects.
+    #  Named rather than pattern-matched, because an exemption that can be met by accident is
+    #  a hole in exactly the guard that caught this widening's first real find.
+    RETIRED_BY_DESIGN = {"vocabulary.py"}
+
+    for path in sorted(loader.KERNEL.path.rglob("*.py")) + \
+                sorted(loader.PACKAGES_ROOT.rglob("*.py")):
+        if path.name in RETIRED_BY_DESIGN:
+            continue
         text = path.read_text()
         for iri in _resolve(text, {}):
             note(iri, path)

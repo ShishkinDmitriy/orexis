@@ -1,8 +1,10 @@
-"""The one graph this capability owns, named from the one identifier a process is given.
+"""The private graphs a mind keeps, named from the one identifier a process is given.
 
-Here rather than in `agent/ontology.py` for the reason that file states about itself: everything
-in it is true of *every* capability, and this is true of one. A graph an agent without a stake
-and a lever never has is not kernel furniture.
+This lived in the intention package and said it was here "rather than in `agent/ontology.py`"
+because a graph an agent without a stake and a lever never has is not kernel furniture. Every
+agent keeps a ledger now — commitment is not plug-in-able — so the reason has expired and the
+file has moved. It stays apart from `ontology.py` for that file's own stated reason: what is in
+there is a TERM, and a graph IRI is an instance built from an agent's own id.
 
 NOT public, and the absence is the design: an intention disclosed is strategy leaked. The bid is
 the public face of an intention to acquire — the market sees what you do, never what you are

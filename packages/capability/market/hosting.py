@@ -44,7 +44,7 @@ from .beliefs import HOSTING_PICKS
 #  a package may not import another's Python.
 _APPLY = "http://example.org/orexis#Apply"
 from .terms import (ACTUATION, HOSTING, BID_MATCHING,
-                    INTENTION, OFFER, OWING)
+                    OFFER, OWING)
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -146,7 +146,7 @@ SELECT ?p WHERE {{
 
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None keeps the old behaviour whole."""
-        return self.agent.provider(INTENTION)
+        return self.agent.keeper
 
     def subscriptions(self) -> list[str]:
         topics = list(self.event_topics)

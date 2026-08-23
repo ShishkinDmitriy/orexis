@@ -133,3 +133,27 @@ ag:EffectRuleAccountsForItsTimingShape a sh:NodeShape ;
     sh:property [ sh:path ag:confirmedBy ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:class ag:ConfirmationRoute ;
                   sh:message "an effect must say how it would be confirmed — by construction, by report, by observation, or not at all; silence would leave a planner waiting for a message nobody will send" ] .
+
+
+#################  Keeping commitments  #################
+
+ag:KeeperShape a sh:NodeShape ;
+    rdfs:comment """An agent that advances somebody's interest must say how patient it is — the patience is the whole of what makes a commitment mean something, and its bounds are constitutional: below the floor the agent re-decides constantly and has retired the point of committing, above the ceiling it will honour a dead commitment for a day.
+
+TARGETED ON THE STAKE, and the narrowing is deliberate. This was `intention:KeeperShape`, scoped by `ag:hasCapability intention:Keeping`, and that grant's premise was a stake AND a lever. The lever half cannot be said here without the kernel naming `market:bidsIn`, `actuation:hasActuator` and `sensing:polls` — three packages the kernel would then depend on, which is the layering this whole arrangement exists to keep one-way. A lever is an INSTANCE anyway, the `via` of a menu row derived from each package's own affordances.rq, so there is no term to target on even if the dependency were acceptable.
+
+What that costs: an agent with a stake and no lever would now be required to state a patience it never spends. No world has one — the case is hypothetical in the record that drew the premise — and if one appears it carries a number it does not use, which is cheaper than a kernel that breaks when a package is removed.""" ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/orexis#actsFor> ?subject .
+                ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange>/<http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
+                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                           <https://schema.org/minValue> ?min ;
+                           <https://schema.org/maxValue> ?max .
+            }
+        """ ] ;
+    sh:property [ sh:path ag:patienceS ;
+                  sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ;
+                  sh:minInclusive 10 ; sh:maxInclusive 86400 ;
+                  sh:message "an agent with a stake must state its patience, within the constitutional bounds the kernel declares" ] .

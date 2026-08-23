@@ -51,7 +51,7 @@ There is no pattern to fit a new capability into. **The premise lives in the cap
 | **wiring** | `sensing`, `actuation`, `market` | equipment, or a position in a market |
 | **latitude** | `review:Reckoning` | a mandate whose ends differ — settings you are permitted to move |
 | **a stake** | `desire:Deducing` | `ag:actsFor` a subject that states what it needs |
-| **a stake AND a lever** | `intention:Keeping`, `deliberation:Reflex` | wanting without means is a wish; means without wants decide nothing |
+| ~~a stake AND a lever~~ | ~~`intention:Keeping`, `deliberation:Reflex`~~ | **GONE.** Both were the mind, and a mind is not plug-in-able: committing and deciding are the kernel's, granted by nothing |
 | **universally** | `reporting` | granted by a rule and insisted on by a shape |
 
 When you add one, ask what makes *yours* meaningful rather than which of these it resembles. The

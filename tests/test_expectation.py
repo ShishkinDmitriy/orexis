@@ -15,10 +15,10 @@ from dataclasses import replace
 
 import pytest
 
-from packages.capability.intention.terms import ACQUIRE, ACTUATE as _ACTUATE
+from agent.keeper import ACQUIRE, ACTUATE as _ACTUATE
 
 from agent.store import bindings
-from packages.capability.intention.terms import DEADLINE_AT
+from agent.keeper import DEADLINE_AT
 
 from conftest import MOISTURE, build_agent, genesis_store
 
@@ -176,7 +176,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     acknowledged at the fast cadence is proof the board heard the tightening, and THAT is when
     the claim goes out, the Apply resolves, and the expectation opens with a baseline the hold
     did not age."""
-    from packages.capability.intention.terms import APPLY
+    from agent.keeper import APPLY
 
     market = market_of(thirsty)
     keeper = keeper_of(thirsty)

@@ -39,7 +39,7 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from .beliefs import BIDDING_PICKS
-from .terms import (ACQUIRE, APPLY, BIDDING, DESIRE, INTENTION, OBSERVE,
+from .terms import (ACQUIRE, APPLY, BIDDING, DESIRE, OBSERVE,
                     SENSING)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
@@ -280,7 +280,7 @@ class BiddingModule(Module):
         the reflexes here until deliberation is its own capability. See
         knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
         """
-        return self.agent.provider(INTENTION)
+        return self.agent.keeper
 
     def _my_aim(self) -> float | None:
         """The point I am steering the priced property toward — desire's, asked for at bid time.

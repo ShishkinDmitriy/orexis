@@ -404,7 +404,8 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     """
     from .ontology import AG, CLASSIFICATION_GRAPH
     from packages.capability.desire.graphs import obligations_graph
-    from packages.capability.intention.graphs import intentions_graph
+
+    from .graphs import intentions_graph
 
     # Both classes where they differ, because a reader must ASK what a graph is rather than
     # walk a subclass path (one-graph-both-engines-read), and the closure cannot help here:

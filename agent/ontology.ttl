@@ -687,6 +687,8 @@ ag:dischargedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range 
 ag:Intention a owl:Class ; rdfs:label "Intention" ;
     rdfs:comment """One commitment: reduce the gap in one property, by one means, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
 
+
+
 The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason. A dropped intention keeps its `becauseOf`, because a commitment abandoned without a reason is indistinguishable from one forgotten.""" .
 
 ag:pursues a owl:ObjectProperty ; rdfs:domain ag:Intention ;
@@ -764,3 +766,30 @@ ag:endMet a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:boo
 ag:endVerifiedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "end verified at" .
 
+
+#################  What this society tolerates of a commitment  #################
+#
+#  Three figures that were `intention:IntentionCapability`'s, carried on the FAMILY because a
+#  family was the only thing there to carry them. There is no family — every agent keeps a
+#  ledger, so keeping is not one way of having an ability — and they hang on the class itself,
+#  which is what they were always about: what counts as the world answering, and how long
+#  a commitment may absorb a repeat impulse.
+
+ag:metFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    rdfs:label "met fraction" ;
+    rdfs:comment "The fraction of an expected delta that counts as the world answering (#165). What this society accepts as evidence, not how the code is written. A quarter — generous to partially-absorbed doses, far above any instrument's grain. Chosen against the OTHER failure too: a margin so strict that honest doses read unmet would feed suspectAfter and mark truthful affordances false." .
+
+ag:suspectAfter a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "suspect after" ;
+    rdfs:comment "How many consecutive unmet expectations for one (means, property) pair make the affordance suspect. A fact about what this society tolerates before it stops trusting a claim, not about how the code is written." .
+
+ag:patienceS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "patience seconds" ;
+    rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second impulse to do the same thing is ABSORBED — that is the amortisation, and with a consulted deliberator it is the cost model. Past it, a new adoption supersedes the old, which is recorded as dropped with the reason. An OPINION, so it is each agent's own belief and review may move it; the bounds beside it are constitutional." .
+
+ag:minPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "minimum patience" .
+ag:maxPatienceS a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    rdfs:label "maximum patience" .
+
+ag:Intention ag:metFraction 0.25 ; ag:suspectAfter 3 ; ag:minPatienceS 10 ; ag:maxPatienceS 86400 .

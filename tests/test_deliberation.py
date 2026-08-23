@@ -369,7 +369,7 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
     toy.write_text("""
 SELECT ?means ?property ?via ?direction WHERE {
   VALUES ?property { $properties }
-  BIND(intention:Consult AS ?means)
+  BIND(ag:Consult AS ?means)
   BIND($me AS ?via)
 }""")
     real = loader.affordance_files()

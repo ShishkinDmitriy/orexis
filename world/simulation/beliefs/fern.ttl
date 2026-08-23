@@ -66,4 +66,4 @@
 #   adoption may supersede it. The ledger records what this agent does either way; the patience
 #   is what makes "already doing something about it" a fact with teeth. Two minutes: several
 #   auction rounds, and far past any one bid window.
-:fern_agent intention:patienceS 120 .
+:fern_agent ag:patienceS 120 .

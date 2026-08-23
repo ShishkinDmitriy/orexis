@@ -39,6 +39,7 @@ from .beliefs import Beliefs
 from .deliberator import Deliberator
 from .desire import Desire, Desires
 from .intentions import Intentions
+from .keeper import Keeper
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
@@ -152,7 +153,13 @@ class Agent:
         # `provider()` still cannot return it: it matches on `CAPABILITY`, which is `""` here,
         # because the deliberator is not something a world grants.
         self.deliberator = Deliberator(self)
-        self.modules.append(self.deliberator)
+
+        # And the KEEPER, for the same reason and with a sharper version of it: the intention
+        # STORE three dozen lines above was already built for every agent, while the thing that
+        # writes it was a grant. A modality nobody may write is not a modality.
+        self.keeper = Keeper(self)
+
+        self.modules += [self.deliberator, self.keeper]
 
     # --- how one capability reaches another, without knowing its name ---
 

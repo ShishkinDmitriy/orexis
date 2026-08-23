@@ -13,7 +13,6 @@ from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_self, load_world
 from packages.capability.actuation import ACTUATION
 from packages.capability.desire import DEDUCING
-from packages.capability.intention import KEEPING
 from packages.capability.market import BIDDING, HOSTING, PAY_AS_BID
 from packages.capability.sensing import LISTENING, SUBSCRIBING
 from packages.capability.reporting import STORING
@@ -40,7 +39,7 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
     granted by the same fact and separate because their replaceable parts differ.
     """
     assert me("fern").capabilities == {
-        SUBSCRIBING, BIDDING, RECKONING, STORING, DEDUCING, KEEPING}
+        SUBSCRIBING, BIDDING, RECKONING, STORING, DEDUCING}
 
 
 def test_a_mandate_whose_ends_meet_grants_nothing(me):
@@ -61,7 +60,7 @@ def test_a_mandate_whose_ends_meet_grants_nothing(me):
     # between a MANDATORY capability and a granted one. Reporting is not conditional on
     # latitude, because an agent permitted to fall silent cannot be told from a dead one; the
     # ability to re-pick is, because with nowhere to go there is nothing to re-pick.
-    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING, DEDUCING, KEEPING}
+    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING, DEDUCING}
 
 
 def test_supplier_gets_hosting_actuation_and_matching(me):
@@ -72,18 +71,17 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     prices, is a separate ability, because there is more than one defensible answer and which
     one is in force changes what a rational bidder should offer.
     """
-    from packages.capability.intention import KEEPING
     from packages.capability.sensing.terms import LISTENING
 
-    #  Plus what the barrel arcs earned: LISTENING (arc 1 — it sees its stock), since it
-    #  acts for a barrel that states its needs (arc 2), DEDUCING, KEEPING and REFLEX — the
-    #  stake met the valves it already held, and stake plus means is the shared premise —
-    #  and since the city exists (arc 4), BIDDING: the city's pipe reaches its barrel, so
-    #  the dealer's buy side derives from the plumbing exactly as a fern's does.
-    #  And PLANNING (arc 5): the dealer premise — acting for a source it offers, refillable
-    #  from a source another offers — is levers that compose, and depth-2 deliberation is
-    #  meaningful for exactly that shape. It keeps Reflex too: the premises nest, both are
-    #  true abilities, and a pinned test holds `provider` to handing actors the planner.
+    #  Plus what the barrel arcs earned: LISTENING (arc 1 — it sees its stock) and, since it
+    #  acts for a barrel that states its needs (arc 2), DEDUCING; and since the city exists
+    #  (arc 4), BIDDING — the city's pipe reaches its barrel, so the dealer's buy side derives
+    #  from the plumbing exactly as a fern's does.
+    #
+    #  KEEPING and REFLEX were in this set and are not capabilities any more, nor is arc 5's
+    #  PLANNING: committing and deciding are the kernel's, granted by nothing, and the dealer's
+    #  depth turned out to be a clause rather than a member. What the dealer premise still buys
+    #  is pinned in test_deliberation, against the fact instead of the grant.
     #  And OWING (#233), whose premise is not the stake the others share: a venue it opened
     #  and a valve drawing from that venue's source, which is "others may demand this lever".
     #  The city has it WITHOUT Deducing, which is the whole reason it is a capability of its
@@ -91,7 +89,7 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     from packages.capability.desire.terms import OWING
 
     assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING, LISTENING,
-                                           DEDUCING, KEEPING, BIDDING, OWING}
+                                           DEDUCING, BIDDING, OWING}
 
 
 def test_only_a_lever_others_may_demand_earns_a_ledger(me):

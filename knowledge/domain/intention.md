@@ -1,9 +1,11 @@
 ---
-type: Capability
+type: Domain Concept
 title: Intention
-term: [http://example.org/orexis#Intention, http://example.org/orexis/intention#IntentionCapability]
+term: http://example.org/orexis#Intention
 description: >-
-  BDI's third letter — a commitment to reduce a named gap by a named means, persisting until
+  BDI's third letter, and the KERNEL's — every agent keeps a ledger, because a mind is not
+  plug-in-able and the intention STORE was already built for every agent while the thing that
+  writes it was a grant. A commitment to reduce a named gap by a named means, persisting until
   satisfied, dropped or outwaited rather than being re-decided on every sensing. Kept in a
   private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat
   impulses is each agent's own belief — and it asks the LEDGER, any outcome, not only what
@@ -107,7 +109,7 @@ Two consequences ride on the watch:
 
 # The patience
 
-The one piece of policy the keeper owns. Within `intention:patienceS` — each agent's own belief,
+The one piece of policy the keeper owns. Within `ag:patienceS` — each agent's own belief,
 bounded by the family's constitutional floor and ceiling like a cadence — a second impulse to
 adopt the same commitment is **absorbed**: `adopt` returns None and the caller treats it as its
 own cooldown. Past it, a new adoption **supersedes**: the old one is resolved as dropped with

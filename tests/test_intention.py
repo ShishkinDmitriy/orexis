@@ -18,8 +18,8 @@ from dataclasses import replace
 import pytest
 
 from agent.world import load_self
-from packages.capability.intention import intentions_graph
-from packages.capability.intention.terms import ACQUIRE, KEEPING, OBSERVE
+from agent.graphs import intentions_graph
+from agent.keeper import ACQUIRE, OBSERVE
 
 from conftest import MOISTURE, build_agent, genesis_store
 
@@ -39,36 +39,38 @@ def market_of(agent):
     return agent.me.markets[0]
 
 
-# --- who keeps, and who has nothing to keep ---------------------------------
+# --- who keeps, and what became of "who has nothing to keep" -----------------
 
-def test_a_stake_and_a_lever_grant_keeping():
-    """Fern wants (its plant states ranges) and can act (a market, a schedulable board)."""
-    q = genesis_store().query
-    assert KEEPING in load_self(q, "fern").capabilities
-    assert KEEPING in load_self(q, "succulent").capabilities
+def test_every_agent_keeps_a_ledger_and_the_stake_is_what_needs_a_patience(make):
+    """`intention:Keeping` was granted by a stake AND a lever, and two tests stood here to prove
+    each half. The grant is gone: `Agent.__init__` already built an intention STORE for every
+    agent while the thing that WRITES it was a grant, and a modality nobody may write is not a
+    modality. Commitment is not plug-in-able.
 
+    What survives is the SHAPE, and it is narrower on purpose. `ag:KeeperShape` targets the
+    stake alone — an agent that advances somebody's interest must state a patience within the
+    constitutional bounds. The lever half could not follow it into the kernel without the kernel
+    naming three packages' predicates, and a lever is an instance anyway.
 
-def test_no_stake_means_nothing_to_commit_to():
-    """A commitment is to reduce a named gap, and an agent without one keeps no ledger. The
-    supplier used to be this test's example — levers everywhere, no stake — until arc 2 gave
-    it the barrel's want and its valves became a lever's other half. The sensing world's fern
-    still shows the fact cleanly (sensors and no wants), and the supplier now shows it only
-    when its stake is taken away."""
-    assert KEEPING in load_self(genesis_store().query, "supplier").capabilities
-    assert KEEPING not in load_self(
-        genesis_store(world="sensing").query, "fern").capabilities
+    So: everyone keeps, and the stake is what obliges you to say how patiently."""
+    from agent.validate import validate_agent
 
-    from agent import genesis, loader
-    from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+    fern = make("fern")
+    assert fern.keeper is not None
+    assert any(m.name == "intention" for m in fern.modules)
 
-    st = genesis_store()
-    st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-        <http://example.org/orexis/world/simulation#supplier>
-            <http://example.org/orexis#actsFor> ?o }} }}""")
-    st.clear_graph(WORLD_DERIVED_GRAPH)
-    for rule in loader.rule_files():
-        st.update(genesis.substitute(rule.read_text(), st))
-    assert KEEPING not in load_self(st.query, "supplier").capabilities
+    #  The shape still bites where it always did: a stake with a patience outside the bounds
+    #  is refused, which is the piece a beliefs file can actually get wrong.
+    fern.beliefs.update(f"""DELETE {{ GRAPH <{fern.beliefs.graph}> {{
+        <{fern.me.uri}> <http://example.org/orexis#patienceS> ?p }} }}
+      INSERT {{ GRAPH <{fern.beliefs.graph}> {{
+        <{fern.me.uri}> <http://example.org/orexis#patienceS> 2 }} }}
+      WHERE  {{ GRAPH <{fern.beliefs.graph}> {{
+        <{fern.me.uri}> <http://example.org/orexis#patienceS> ?p }} }}""")
+    fern.desires.rebuild()
+    with pytest.raises(Exception):
+        validate_agent(fern.beliefs, "fern", fern.me.uri, fern.me.capabilities,
+                       desires=fern.desires)
 
 
 # --- the two writers that exist, writing ------------------------------------
@@ -262,17 +264,32 @@ def test_only_the_keeper_writes_the_intentions_graph():
     """The boundary, pinned as source: gaps() notices and propose() decides, but the ledger
     has ONE writer. A module reaching for the intentions graph by name would be a second
     keeper — the welded chain returning with a pen — and this scan is what makes that a
-    failing test instead of a review comment."""
-    from pathlib import Path
+    failing test instead of a review comment.
 
+    IT SCANNED ONLY `packages/`, and the kernel had held a second pen the whole time:
+    `agent/intentions.py` names the graph to migrate a pre-split volume's ledger into the
+    modality's own room, and `agent/genesis.py` names it to classify it. Both are legitimate
+    and neither is a keeper — but the guard could not see them, because it looked only at the
+    tree the pen was not in. Now it scans BOTH trees and the exemptions are named with reasons,
+    which is the difference between a boundary and a boundary nobody checked half of."""
     from agent import loader
 
+    #  Named one by one, with the reason each is allowed to hold the pen. An exemption that
+    #  could be met by accident is a hole; these are three files and three arguments.
+    ALLOWED = {
+        "keeper.py":     "the keeper itself — the one writer this test exists to protect",
+        "graphs.py":     "mints the IRI; naming a graph is what this file is for",
+        "intentions.py": "the MODALITY: it owns the store and moves a pre-split volume's rows "
+                         "into the room of its own, once. It writes the container, never a row",
+        "genesis.py":    "classifies the graph in the provenance graph — a statement ABOUT it",
+    }
     offenders = []
-    for path in sorted(loader.PACKAGES_ROOT.rglob("*.py")):
-        if "capability/intention" in str(path):
+    for path in sorted(loader.KERNEL.path.rglob("*.py")) + \
+                sorted(loader.PACKAGES_ROOT.rglob("*.py")):
+        if path.name in ALLOWED:
             continue
         if "intentions_graph" in path.read_text():
-            offenders.append(str(path))
+            offenders.append(str(path.relative_to(loader.REPO_ROOT)))
     assert not offenders, f"a second pen on the ledger: {offenders}"
 
 

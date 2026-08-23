@@ -207,15 +207,48 @@ _QUOTES_THE_OLD_SPELLINGS = {
 }
 
 
+_AG = "http://example.org/orexis#"
+
+
 def _kernel_terms() -> set[str]:
-    """What the kernel actually declares, read rather than listed.
+    """What the kernel actually declares — PARSED, not grepped.
 
     Asked of the loader rather than spelled as a path: the kernel's vocabulary has moved once
     already (`packages/core/orexis/` -> `agent/`), and a hardcoded path is how a guard like this
     one goes quiet — it would read an empty file, declare nothing, and pass every case below.
+
+    And parsed rather than pattern-matched, which is the other half and was learnt the hard way.
+    This read `^ag:(\w+)` off the file's TEXT, so a block of Turtle sitting INSIDE an
+    `rdfs:comment` literal counted as declarations: the lines begin at column zero and look
+    exactly right. That is not hypothetical — five terms were inserted into the middle of
+    `ag:Intention`'s comment, the file parsed, the suite went green, and the terms were prose.
+    A reader that greps cannot tell a declaration from a description of one, which is the same
+    objection AGENTS.md already records against the vendored OKF check.
     """
-    return set(re.findall(r"^ag:([A-Za-z][A-Za-z0-9]*)\b",
-                          loader.KERNEL.file(loader.ONTOLOGY).read_text(), re.M))
+    import rdflib
+
+    g = rdflib.Graph()
+    g.parse(loader.KERNEL.file(loader.ONTOLOGY), format="turtle")
+    return {str(s)[len(_AG):] for s in g.subjects() if str(s).startswith(_AG)}
+
+
+def test_the_vocabulary_declares_what_it_appears_to_declare():
+    """Every `ag:Term` at the start of a line is a term the PARSER sees too.
+
+    The specific shape of the bug above, named so it cannot come back quietly: Turtle nested in
+    a literal is invisible to rdflib and indistinguishable to a regex. Anything the text offers
+    as a declaration must survive parsing, or it is documentation wearing a declaration's
+    clothes.
+    """
+    text = loader.KERNEL.file(loader.ONTOLOGY).read_text()
+    looks_declared = set(re.findall(r"^ag:([A-Za-z][A-Za-z0-9]*)\b", text, re.M))
+    really_declared = _kernel_terms()
+    assert looks_declared, "the declaration pattern stopped matching — this guard is vacuous"
+    swallowed = sorted(looks_declared - really_declared)
+    assert not swallowed, (
+        f"{swallowed} are written as declarations but the parser does not see them — almost "
+        "certainly inside an rdfs:comment literal, where Turtle is just text"
+    )
 
 
 def test_the_kernel_vocabulary_is_still_found():

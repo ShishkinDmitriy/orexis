@@ -1,5 +1,16 @@
-"""intention:Keeping — the ledger of what this agent is committed to, and the patience that
-makes a commitment mean something.
+"""The keeper: the ledger of what this agent is committed to, and the patience that makes a
+commitment mean something.
+
+**The kernel's, and granted by nothing.** This was Keeping, a member of a family
+whose premise was a stake AND a lever. What that could never explain is why `Agent.__init__`
+already built an intention STORE for every agent regardless: the modality was unconditional and
+the thing that writes it was a grant. Commitment is not plug-in-able, so both are the kernel's.
+
+The family's second member was sketched and never written — something that weighs a commitment
+against what has changed since it was made, the open-minded commitment of the BDI literature.
+That remains a real alternative, and it is a PICK when someone builds it, not a grant: how
+stubborn to be is already each agent's own belief, and which rule decides to drop belongs beside
+it rather than in the world graph.
 
 **This existed before it had a name, as module state.** `bidding.pending` was an intention to
 observe; a bid awaiting its claim was an intention to acquire; both lived in Python attributes
@@ -24,14 +35,50 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from agent.beliefs import Picks
-from agent.module import Module, Timer
-from agent.store import bindings
+from .beliefs import BeliefError, Picks
+from .module import Module, Timer
+from .store import bindings
 
 from .graphs import intentions_graph
-from .terms import (kernel, APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEADLINE_AT, END_MET,
-                    END_VERIFIED_AT, EXPECTS_DELTA, EXPECTS_VALUE_TO, KEEPING, NS, OBSERVE,
-                    PATIENCE_S, term)
+from .ontology import AG
+
+#  What an intention is made of — the mind's own words, and they were the kernel's already
+#  (the-mind-is-six-graphs). What has joined them is the four figures the KEEPING member used to
+#  own privately: a patience, a suspicion threshold and the bounds on the patience. They are the
+#  kernel's now for the same reason the class is — every agent keeps a ledger, so a figure that
+#  governs keeping is not one package's private setting.
+INTENTION_CLASS = AG + "Intention"
+BY = AG + "by"
+PURSUES = AG + "pursues"
+ADOPTED_AT = AG + "adoptedAt"
+RESOLVED_AT = AG + "resolvedAt"
+OUTCOME = AG + "outcome"
+BECAUSE_OF = AG + "becauseOf"
+
+# The means — what kind of act the commitment is to.
+OBSERVE = AG + "Observe"
+ACTUATE = AG + "Actuate"
+ACQUIRE = AG + "Acquire"
+APPLY = AG + "Apply"
+
+# The commitment policy — the belief, not the mechanism.
+PATIENCE_S = AG + "patienceS"
+
+# The expectation — the END, judged apart from the means.
+EXPECTS_VALUE_TO = AG + "expectsValueTo"
+BASELINE_VALUE = AG + "baselineValue"
+BASELINE_AT = AG + "baselineAt"
+EXPECTS_DELTA = AG + "expectsDelta"
+DEADLINE_AT = AG + "deadlineAt"
+END_MET = AG + "endMet"
+END_VERIFIED_AT = AG + "endVerifiedAt"
+SUSPECT_AFTER = AG + "suspectAfter"
+MET_FRACTION = AG + "metFraction"
+
+
+def kernel(name: str) -> str:
+    """A mind state, by local name."""
+    return AG + name
 
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
@@ -48,26 +95,30 @@ SELECT ?direction WHERE {
 # patience bounds: what this society tolerates before it stops trusting a claim.
 _SUSPECT_Q = """
 SELECT ?n WHERE {
-  GRAPH ?g { intention:IntentionCapability intention:suspectAfter ?n }
+  GRAPH ?g { ag:Intention ag:suspectAfter ?n }
 } LIMIT 1"""
 
-# The fraction of an expected delta that counts as the world answering (#165) — the family's
-# figure, beside suspectAfter, because what a society accepts as evidence is its own to state.
+# The fraction of an expected delta that counts as the world answering (#165). Carried by
+# `ag:Intention` itself now that there is no family to hang it on — what a society accepts as
+# evidence is a fact about intentions, not about one way of keeping them.
 _MET_FRACTION_Q = """
 SELECT ?f WHERE {
-  GRAPH ?g { intention:IntentionCapability intention:metFraction ?f }
+  GRAPH ?g { ag:Intention ag:metFraction ?f }
 } LIMIT 1"""
 
 
 @dataclass(frozen=True)
 class KeepingBeliefs:
-    """intention:Keeping — the commitment policy, which is the agent's own opinion."""
+    """The commitment policy, which is the agent's own opinion."""
 
     patience_s: int
 
 
+#  `capability` only names whoever wanted the pick, for the error a missing one raises. There
+#  is no capability here any more, so it names the thing itself: an agent that keeps commitments
+#  and states no patience is missing something `ag:Intention` needs, not something it was granted.
 KEEPING_PICKS = Picks(
-    capability=KEEPING,
+    capability=INTENTION_CLASS,
     cls=KeepingBeliefs,
     terms={"patience_s": PATIENCE_S},
 )
@@ -100,17 +151,49 @@ class OpenExpectation:
     expected_delta: float | None = None  # how far the act should move it, when the actor knows
 
 
-class IntentionModule(Module):
+class Keeper(Module):
     """The keeper. Speaks to no topic; its callers are its siblings, through the agent."""
 
-    CAPABILITY = KEEPING
     name = "intention"
 
     def __init__(self, agent):
         super().__init__(agent)
-        self.beliefs = agent.desires.read(KEEPING_PICKS)
         self.graph = intentions_graph(agent.id)
         self._tick: Timer | None = None
+        self._picks = None
+
+    @property
+    def beliefs(self) -> KeepingBeliefs:
+        """The commitment policy, read on FIRST USE and not at construction.
+
+        This was read in `__init__`, which was right while keeping was a capability: an agent
+        that had been granted it had also been given a patience, and a missing one was a
+        genesis error worth refusing to boot over. Every agent has a keeper now, and reading
+        eagerly turned "this agent states no patience" into "this agent cannot start" — which
+        killed `world/sensing`'s stakeless agent and every minimal fixture in the suite.
+
+        Lazy is not a softening of the check, and this is the part worth being careful about.
+        `ag:KeeperShape` still REFUSES to let an agent with a stake boot without a patience
+        inside the constitutional bounds, so nothing that commits can reach this without one.
+        What lazy buys is that an agent with nothing to commit about never asks — the same rule
+        the deliberator's `series()` follows, one level down: the need follows the fact rather
+        than the grant. An agent with neither a stake nor a patience that somehow reaches a
+        commitment still raises here, naming the missing term, exactly as before.
+        """
+        if self._picks is None:
+            self._picks = self.agent.desires.read(KEEPING_PICKS)
+        return self._picks
+
+    @beliefs.setter
+    def beliefs(self, picks: KeepingBeliefs) -> None:
+        """Install a policy directly, skipping the read.
+
+        A setter because the attribute WAS one, and two callers legitimately assign it: a test
+        pinning behaviour at a chosen patience, and any future `on_belief_revised` taking up a
+        re-picked one. Making it lazy must not quietly turn an assignment into an AttributeError
+        at the one moment a revision lands.
+        """
+        self._picks = picks
 
     def start(self) -> None:
         # The non-market entry into deliberation (#208): on my own patience clock, collect
@@ -118,7 +201,15 @@ class IntentionModule(Module):
         # patience is the rate bound by construction — an impulse younger than it is absorbed
         # by adopt() anyway, so ticking faster would only ask questions whose answers are
         # already standing.
-        self._tick = Timer(float(self.beliefs.patience_s), self.deliberate_on_gaps)
+        #  No patience, no clock. An agent that states none has no stake (the shape guarantees
+        #  the converse), so there are no gaps for this tick to collect and nothing it could
+        #  commit — starting a timer to ask would be a thread per agent to answer "nothing".
+        try:
+            interval = float(self.beliefs.patience_s)
+        except BeliefError:
+            self.log.debug("no patience stated and no stake to spend it on — the tick stays off")
+            return
+        self._tick = Timer(interval, self.deliberate_on_gaps)
         self._tick.start()
 
     def stop(self) -> None:
@@ -186,7 +277,7 @@ class IntentionModule(Module):
             self._resolve(standing, "dropped",
                           f"outwaited: stood {standing.age_s(now):.0f}s against a patience "
                           f"of {self.beliefs.patience_s}s, superseded by a new adoption")
-        uri = f"{NS}intent_{self.agent.id}_{uuid.uuid4().hex[:8]}"
+        uri = f"{AG}intent_{self.agent.id}_{uuid.uuid4().hex[:8]}"
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
