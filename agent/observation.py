@@ -55,6 +55,32 @@ class Observations:
     def close(self) -> None:
         self.influx.close()
 
+    def record_prior(self, log, sensor, value: float, at: datetime) -> None:
+        """A sample the device took EARLIER, placed at the instant it was actually taken.
+
+        The series store only, deliberately, and the asymmetry with `record` is the whole point.
+        A crossing report carries the last value the device saw while the world was still quiet,
+        which exists to fix a lie the store tells on its own: two points half an hour apart are
+        interpolated into a gradual ramp, so a jump that took twenty-five seconds is drawn as a
+        slow soak, and every query over that window reads the same falsehood.
+
+        It is NOT a belief and does not go to the sensed store. What the agent believes is what
+        it last heard; this is evidence about the SHAPE of a change it has already been told
+        about, arriving in the same breath. Writing it as a current observation would make an
+        older value overwrite a newer one — the store upserts one observation per
+        subject-property — and would re-trigger everything downstream of a reading for a value
+        the agent already superseded. No verdict, no announcement, no re-aim: just the point
+        that makes the picture true.
+        """
+        try:
+            self.influx.write_reading(sensor.subject_id, sensor.local_id, value,
+                                      _short(sensor.observes), at)
+            log.info("%s: %.3f at %s — the last quiet look before the crossing",
+                     sensor.local_id, value, at.isoformat(timespec="seconds"))
+        except Exception as exc:
+            log.error("influx write failed for the prior sample: %s", exc)
+            self.agent.metrics.influx_failed()
+
     def record(self, log, sensor, value: float, at: datetime | None = None,
                phenomenon_at: datetime | None = None) -> None:
         """Keep it, assert it, announce it, and notice it.

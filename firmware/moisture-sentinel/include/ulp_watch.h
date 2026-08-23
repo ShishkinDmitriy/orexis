@@ -23,5 +23,9 @@ void ulpReport(const char *when);
 // Dump the ADC/RTC registers the ULP depends on. Diff boot against arm to see what sleep did.
 void ulpDumpAdcRegs(const char *when);
 
+// The last sample taken while the value was still inside the window, and how long before the
+// wake it was taken. False when the window broke on its first look and there is no such sample.
+bool priorQuietSample(float *frac, uint32_t *ageAtWakeS);
+
 bool wokeByAlarm();
 void noteReported(float frac);   // the deviation limit drifts from what was last heard

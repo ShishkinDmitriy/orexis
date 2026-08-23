@@ -210,11 +210,30 @@ void setup() {
   if (network) {
     mqtt.setServer(MQTT_HOST, MQTT_PORT);
     if (connectMqtt()) {
-      char payload[128];
+      char payload[192];
       if (crossing) {
-        snprintf(payload, sizeof(payload),
-                 "{\"moisture\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",
-                 lastFrac, SENSOR_ID);
+        // An alarm carries the PRIOR QUIET SAMPLE, and it is the difference between a graph
+        // that tells the truth and one that does not. Two points half an hour apart — 0.15 and
+        // 1.00 — are drawn as a straight line by every consumer, which claims a gradual
+        // half-hour soak where there was a 25-second jump. The board knows better: it took
+        // ~120 looks in that window and every one before the breach was in-window. So it says
+        // so, and the agent can place that point at its own instant.
+        //
+        // `prev` mirrors the reading's own shape, so the same pointer reaches it one level
+        // down: a sensor reading `/moisture` finds its prior at `/prev/moisture`.
+        float prevFrac; uint32_t prevAge;
+        if (priorQuietSample(&prevFrac, &prevAge)) {
+          snprintf(payload, sizeof(payload),
+                   "{\"moisture\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\","
+                   "\"prev\":{\"moisture\":%.3f,\"age_s\":%lu}}",
+                   lastFrac, SENSOR_ID, prevFrac,
+                   (unsigned long)(prevAge + millis() / 1000));  // age at THIS instant, not at
+                                                                 // the wake: connecting took time
+        } else {
+          snprintf(payload, sizeof(payload),
+                   "{\"moisture\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",
+                   lastFrac, SENSOR_ID);
+        }
       } else {
         snprintf(payload, sizeof(payload), "{\"moisture\":%.3f,\"sensor\":\"%s\"}",
                  lastFrac, SENSOR_ID);
