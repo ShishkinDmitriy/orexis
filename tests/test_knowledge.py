@@ -260,29 +260,12 @@ def test_no_document_names_a_path_that_is_not_there():
 # --- the one table that claims to be checkable -------------------------------------------------
 
 
-def test_the_deliberation_table_matches_what_is_built():
-    """`domain/deliberation.md` says which members exist so nobody has to read the records to
-    find out. The table is only worth having if it cannot drift."""
-    from agent import loader
-
-    package = next(p for p in loader.of_kind("capability") if p.name == "deliberation")
-    built = {str(cls.CAPABILITY).rsplit("#", 1)[-1] for cls in package.provides()}
-    declared = set(
-        re.findall(r"^:(\w+) a :\w*Capability", (package.path / "ontology.ttl").read_text(), re.M)
-    )
-    table = (BUNDLE / "domain" / "deliberation.md").read_text()
-    rows = dict(re.findall(r"^\| `deliberation:(\w+)` \|[^|]*\| \*\*(yes|no)\*\*", table, re.M))
-
-    assert declared, "no members declared — the ontology pattern stopped matching"
-    assert rows, "no member table found in domain/deliberation.md"
-    assert set(rows) == declared, (
-        f"the table lists {sorted(rows)}; the ontology declares {sorted(declared)}"
-    )
-    assert {m for m, v in rows.items() if v == "yes"} == built, (
-        f"the table says {sorted(m for m, v in rows.items() if v == 'yes')} are built; "
-        f"PROVIDES says {sorted(built)}"
-    )
-
+#  `test_the_deliberation_table_matches_what_is_built` stood here. It held
+#  `domain/deliberation.md`'s member table to the deliberation package's `PROVIDES`, and both
+#  ends of it are gone: there is no package, and the two built members turned out to be one
+#  class with a conditional clause rather than two ways of having an ability. A guard whose
+#  subject no longer exists is deleted rather than loosened — the page now argues why the
+#  family folded, which is a claim about the past that nothing can drift from.
 
 # --- the terms a document cites ----------------------------------------------------------------
 

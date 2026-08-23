@@ -44,10 +44,12 @@ def test_supplier_runs_the_dealers_full_stack(agent):
         "hosting", "actuation", "pay-as-bid", "reporting", "listening",
         # `owing` beside `desire` and not inside it (#233): the ledger is granted by a lever
         # others may demand, the region by a stake, and the supplier is the agent that has both.
-        "desire", "owing", "intention", "deliberation", "bidding",
-        # arc 5: the planner runs BESIDE the reflex — both premises hold, both modules
-        # build, and provider() hands actors the planner (pinned in test_deliberation)
-        "planning"}
+        # `deliberation` is the KERNEL's and every agent has it, so it appears here for the
+        # same reason it appears in every other agent's list. Arc 5's `planning` does not:
+        # the planner was a member that subclassed the reflex and added one clause inert for
+        # everyone else, so it is a clause and not a module. What it protects is pinned in
+        # test_deliberation, against the fact rather than against who was handed which module.
+        "desire", "owing", "intention", "deliberation", "bidding"}
 
 
 def test_the_supplier_listens_to_its_stock_and_schedules_nothing(agent):

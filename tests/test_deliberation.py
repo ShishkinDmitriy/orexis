@@ -13,9 +13,8 @@ from __future__ import annotations
 import pytest
 
 from agent.world import load_self
-from packages.capability.deliberation import menu_of
-from packages.capability.deliberation.module import ACQUIRE, OBSERVE
-from packages.capability.deliberation.terms import REFLEX
+from agent.menu import menu_of
+from agent.deliberator import ACQUIRE, OBSERVE
 
 from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build
 
@@ -35,33 +34,31 @@ def market_of(agent):
 
 # --- who decides, and who has nothing to decide -----------------------------
 
-def test_a_stake_and_a_lever_grant_reflex():
-    """The same premise as keeping, deliberately: deciding and committing are meaningful under
-    exactly the same conditions. They stay two capabilities because the replaceable parts
-    differ — how commitments are kept could change without changing how decisions are reached,
-    and the other way round is the case the family exists for.
+def test_every_agent_deliberates_including_one_with_nothing_to_decide(make):
+    """What the `deliberation:Reflex` GRANT used to say, and why it no longer says it.
 
-    Both flavours of lever now demonstrate the premise: fern's is a market position, the
-    supplier's the valves it always held — which became a lever's other half the day the
-    stake arrived (arc 2). The levers-without-stake counterexample the supplier used to be
-    died with that stake, so the missing-stake half is shown by taking it away."""
-    q = genesis_store().query
-    assert REFLEX in load_self(q, "fern").capabilities
-    assert REFLEX in load_self(q, "supplier").capabilities
-    assert REFLEX not in load_self(genesis_store(world="sensing").query, "fern").capabilities
+    The premise was a stake AND a lever, so an agent with neither — world/sensing's, which
+    records and wants nothing — was granted no deliberation and built no module. That was
+    never defensible beside the two lines above it in `Agent.__init__`: `Desires` and
+    `Intentions` are built for every agent unconditionally, because a mind is not
+    plug-in-able. The deliberator now joins them.
 
-    from agent import genesis, loader
-    from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
+    The reading the grant used to carry is preserved and moved onto the FACT: an agent with
+    nothing to pursue proposes nothing and REPORTS nothing, so the absence of its figures
+    still says something true — it just says it about what is true of the agent now rather
+    than about what its world provisioned once. See `Deliberator.series`.
+    """
+    fern = make("fern")
+    assert fern.deliberator is not None, "the kernel builds one for every agent"
+    assert any(m.name == "deliberation" for m in fern.modules), \
+        "and it joins the choir, so start/stop/series reach it like any other member"
 
-    st = genesis_store()
-    st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-        <http://example.org/orexis/world/simulation#supplier>
-            <http://example.org/orexis#actsFor> ?o }} }}""")
-    st.clear_graph(WORLD_DERIVED_GRAPH)
-    for rule in loader.rule_files():
-        st.update(genesis.substitute(rule.read_text(), st))
-    assert REFLEX not in load_self(st.query, "supplier").capabilities, \
-        "means without wants have nothing to decide — the premise needs both halves"
+    #  The reading that used to be carried by the ABSENCE of the module: nothing pursued,
+    #  nothing reported. Monkeypatched rather than built from world/sensing, because what is
+    #  under test is the deliberator's own rule and not that world's wiring.
+    fern.deliberator.pursued = lambda: []
+    assert fern.deliberator.series() == [], \
+        "nothing to decide is not zero things decided — an agent with no wants files no figures"
 
 
 # --- the reflex, which is the old chain verbatim ----------------------------
@@ -307,26 +304,27 @@ def test_two_denominations_make_two_rows_and_never_four(make):
 STORED = "http://example.org/orexis/water#StoredLitres"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
 _DESIRE = "http://example.org/orexis/desire#DesireCapability"
-_DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
 
 
-def test_the_dealer_derives_planning_and_nobody_else_does(make):
-    """The grant's premise is levers that compose: acting for a source you offer, refillable
-    from a source another offers. The supplier is that shape; a fern offers nothing and the
-    city acts for nothing, so depth-2 deliberation arises exactly once in this world."""
-    supplier = make("supplier")
-    assert any(m.name == "planning" for m in supplier.modules)
+def test_the_dealers_clause_answers_for_the_dealer_and_nobody_else(make):
+    """What the Planning GRANT used to say, said about the fact instead.
+
+    There was a `deliberation:Planning` member derived from levers that compose — acting for a
+    source you offer, refillable from a source another offers — and a `deliberation:Reflex` it
+    SUBCLASSED. The subclass called `super().propose()` first and added one clause; that clause
+    asks `_my_shop_needs`, which answers only for a property that is this agent's own vessel's
+    stock. A member that contains the other, whose extra branch is inert for every other agent,
+    is not an interchangeable implementation — so they are one class and the world derives
+    neither.
+
+    What must still be true is exactly what the grant protected: the clause fires for the
+    dealer and is silent for everyone else. That is a property of the data now rather than of
+    who was handed which module, which is why this asks the clause directly."""
+    assert make("supplier").deliberator._my_shop_needs(STORED) is not None, \
+        "the dealer acts for a vessel it offers — its shop owes a lot"
     for other in ("fern", "city"):
-        assert not any(m.name == "planning" for m in make(other).modules), other
-
-
-def test_the_provider_hands_actors_the_planner(make):
-    """A planner always also derives Reflex (its premise subsumes the reflex's), so two
-    family members run in one agent — and which one answers the actors must be a fact, not
-    the accident of IRI sort order. This is the pin: if a rename ever flips the build order,
-    this fails instead of the dealer quietly losing its depth."""
-    supplier = make("supplier")
-    assert supplier.provider(_DELIBERATION).name == "planning"
+        assert make(other).deliberator._my_shop_needs(STORED) is None, \
+            f"{other} has no shop, so the dealer's clause must not answer for it"
 
 
 def test_the_planner_pursues_the_lot_past_the_aim(make, monkeypatch):
@@ -337,7 +335,7 @@ def test_the_planner_pursues_the_lot_past_the_aim(make, monkeypatch):
     members genuinely disagree: value 1.5 is comfortable for the reflex and too empty to
     trade from."""
     supplier = make("supplier")
-    planner = supplier.provider(_DELIBERATION)
+    planner = supplier.deliberator
     monkeypatch.setattr(supplier.provider(_DESIRE), "aim", lambda p: 1.0)
     assert planner.propose(STORED, 1.5) == ACQUIRE, \
         "stock 1.5 < lot 2.0 — the shop cannot serve, so the dealer buys"
@@ -350,10 +348,10 @@ def test_the_plan_is_two_rows_through_two_venues(make):
     menu-row-shaped steps through the two venues the grant's premise names, and the minted
     market IRIs recomputed exactly as every rule recomputes them."""
     supplier = make("supplier")
-    steps = supplier.provider(_DELIBERATION).plan_for(STORED)
+    steps = supplier.deliberator.plan_for(STORED)
     assert [(s.means.rsplit("#", 1)[-1], s.via.rsplit(".", 1)[-1]) for s in steps] == [
         ("Acquire", "city_mains"), ("Offer", "barrel1")]
-    assert supplier.provider(_DELIBERATION).plan_for(MOISTURE) == [], \
+    assert supplier.deliberator.plan_for(MOISTURE) == [], \
         "a planner asked about somebody else's gap has no chain to offer, and says so"
 
 
@@ -397,8 +395,7 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
     duties = [r for r in rows if not r.is_chosen]
     assert duties, "the conduct surface includes what it honours"
 
-    deliberator = supplier.provider(
-        "http://example.org/orexis/deliberation#DeliberationCapability")
+    deliberator = supplier.deliberator
     duty_means = {r.means for r in duties}
     for row in duties:
         for value in (0.0, 0.5, 5.0, 50.0):
@@ -427,11 +424,11 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     supplier = make("supplier")
     duty = Desire(uri="urn:o", urgency=0.9, claim="j-1",
                 owed_to="http://example.org/orexis/world/simulation#fern_agent")
-    assert supplier.provider(_DELIBERATION).propose_for(duty) == \
+    assert supplier.deliberator.propose_for(duty) == \
         "http://example.org/orexis#Apply"
 
     stranger = Desire(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
-    assert supplier.provider(_DELIBERATION).propose_for(stranger) is None, \
+    assert supplier.deliberator.propose_for(stranger) is None, \
         "a debt no lever of mine can reach proposes nothing — and stays owed"
 
 
@@ -446,7 +443,7 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
     supplier = make("supplier")
     standing = Desire(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
                     owed_to="http://example.org/orexis/world/simulation#fern_agent")
-    assert supplier.provider(_DELIBERATION).propose_for(standing) is None
+    assert supplier.deliberator.propose_for(standing) is None
 
 
 def test_a_stake_reaches_the_same_door_and_behaves_exactly_as_before(make):
@@ -456,7 +453,7 @@ def test_a_stake_reaches_the_same_door_and_behaves_exactly_as_before(make):
     from agent.desire import Desire
 
     fern = make("fern")
-    reflex = fern.provider(_DELIBERATION)
+    reflex = fern.deliberator
     for value in (0.30, 0.55, 0.80):
         stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
         assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value)
@@ -501,7 +498,7 @@ def test_a_pass_reports_what_it_cost_and_what_it_could_not_see(make):
     whole of what #268 changed: a search that passed over Acquire could not claim to see the
     menu, and the pass now does.
     """
-    from packages.capability.deliberation import trace
+    from agent import trace
 
     #  WITH A READING, because an agent that has never looked does not plan: `propose_for`
     #  answers an unmeasured or stale want with Observe before any search runs (#240). So an
@@ -531,7 +528,7 @@ def test_the_figures_do_not_cost_what_they_report(make):
     """
     import time
 
-    from packages.capability.deliberation import trace
+    from agent import trace
 
     fern = make("fern", genesis_store({"fern": 0.10}))
     next(m for m in fern.modules if m.name == "deliberation").series()   # fill the trace

@@ -43,7 +43,7 @@ from .beliefs import HOSTING_PICKS
 #  honoured.rq binds it, and `intention/terms.py` holds the same string for the same reason —
 #  a package may not import another's Python.
 _APPLY = "http://example.org/orexis#Apply"
-from .terms import (ACTUATION, DELIBERATION, HOSTING, BID_MATCHING,
+from .terms import (ACTUATION, HOSTING, BID_MATCHING,
                     INTENTION, OFFER, OWING)
 
 
@@ -497,8 +497,8 @@ SELECT ?p WHERE {{
         if claim is None:
             return
         ledger = self.agent.provider(OWING)
-        deliberator = self.agent.provider(DELIBERATION)
-        if ledger is not None and deliberator is not None:
+        deliberator = self.agent.deliberator
+        if ledger is not None:
             desire = next((g for g in ledger.duties() if g.claim == jti), None)
             if desire is None:
                 return

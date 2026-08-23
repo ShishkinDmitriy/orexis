@@ -255,7 +255,7 @@ What that rests on is stated where it can be seen to break.
 [#258](https://github.com/ShishkinDmitriy/orexis/issues/258) made the signature the world's net
 diff in canonical facts, and in canonical form a look nets to nothing: an observation is its
 upsert key and its value, never its `sosa:resultTime`, and a valueless first look states no fact
-at all — see `packages/capability/deliberation/signature.py`. A signature that counted a fresher timestamp as
+at all — see `agent/signature.py`. A signature that counted a fresher timestamp as
 somewhere new would make "look, then look" a new world every time. Chaining past a look
 becomes a live question exactly there and nowhere earlier — the trigger, written down.
 

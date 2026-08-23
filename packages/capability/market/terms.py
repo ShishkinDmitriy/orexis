@@ -67,8 +67,6 @@ DESIRE = DESIRE_NS + "DesireCapability"  # whoever holds the ends — the aim a 
 OWING = DESIRE_NS + "Owing"
 INTENTION_NS = "http://example.org/orexis/intention#"
 INTENTION = INTENTION_NS + "IntentionCapability"  # whoever keeps commitments, if anything does
-DELIBERATION_NS = "http://example.org/orexis/deliberation#"
-DELIBERATION = DELIBERATION_NS + "DeliberationCapability"  # whoever decides the whether
 # The three means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
 # when the keeper records it, so they are the intention package's individuals referenced by IRI.
 OBSERVE = KERNEL + "Observe"

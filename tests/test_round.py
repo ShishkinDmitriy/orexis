@@ -827,7 +827,7 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
     import logging
 
     jti = _win_a_claim(host)
-    deliberator = host.provider("http://example.org/orexis/deliberation#DeliberationCapability")
+    deliberator = host.deliberator
     real, deliberator.propose_for = deliberator.propose_for, lambda desire: None
 
     with caplog.at_level(logging.WARNING):
@@ -879,8 +879,6 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
     somewhere already reached — and the step that IS reachable is Acquire, whose effect raises
     the very level Apply reads. Two rules that never mention each other, one two-step plan.
     """
-    from packages.capability.deliberation import DELIBERATION
-
     valve = _win_for_fern(host)
     stock_reading(host, 0.3)                     # less than the 0.5 L the claim asks
     market = market_of(host)
@@ -891,7 +889,7 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
         "a pour from a vessel known too low discharges nothing — the claim is held, not spent"
 
     duty = next(g for g in host.pursuing() if g.is_duty)
-    move = host.provider(DELIBERATION).propose_for(duty)
+    move = host.deliberator.propose_for(duty)
     assert move == "http://example.org/orexis#Acquire", \
         "the plan's first step is the refill — the search found the chain the reflex never could"
 
@@ -900,8 +898,6 @@ def test_a_host_holding_enough_serves_the_presented_claim_by_the_same_search(hos
     """The wet twin: with the vessel above the owed amount, Apply's premise binds, the
     one-step plan discharges the duty in its possible world, and the search proposes the
     serve itself — the same machinery, no special case."""
-    from packages.capability.deliberation import DELIBERATION
-
     valve = _win_for_fern(host)
     stock_reading(host, 3.0)
     market = market_of(host)

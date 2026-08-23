@@ -227,6 +227,37 @@ ag:ObligationsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Obligat
     ag:graphPrefix "http://example.org/orexis/graph/obligations/" ;
     rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected, and the prefix moved here when ag:ConstraintGraph retired (#312)." .
 
+#################  What kind of menu row this is  #################
+#
+#  A menu row says what happens THROUGH an agent, and there are two kinds. A CHOSEN row is an
+#  option: mine, at my discretion. An HONOURED row is a lever others may demand — disclosed so
+#  an agent's conduct surface is legible whole, which the desire-scoped menu could not do: an
+#  ability that serves others was a true fact living nowhere queryable.
+#
+#  DISCLOSURE, not exemption. What an obligation makes an agent do arrives as a WANT — a desire
+#  it did not source, with provenance saying whose it is — so duties and wants share one
+#  currency and one decision path. See
+#  knowledge/decisions/an-obligation-is-a-desire-someone-else-sourced.md.
+#
+#  THE KERNEL'S, and these words have now made the same move twice for the same reason. They
+#  were written in the market package and left it because "a mode is a fact about a menu row,
+#  and the menu is the deliberation package's". The menu is the kernel's, so they follow it
+#  again — and the argument is stronger the second time: sensing, actuation and market EACH
+#  bind `Chosen` or `Honoured` in their own `affordances.rq` to describe their own rows. Three
+#  packages needing a word to say what they themselves offer is the test the-mind-is-six-graphs
+#  set, and it is the test `ag:Intention` passed.
+
+ag:Mode a owl:Class ; rdfs:label "Mode" ;
+    rdfs:comment "Whether a row is mine to choose or a lever others may demand. Two individuals and no third: a row nobody may ask for and nobody may decline is not an affordance, it is a description." .
+ag:Chosen a ag:Mode ; rdfs:label "chosen" ;
+    rdfs:comment "At my discretion — the rows the deliberator ranges over." .
+ag:Honoured a ag:Mode ; rdfs:label "honoured" ;
+    rdfs:comment "A lever a valid presentation may demand. The deliberator passes over these — not because a duty is nobody's to decide, but because it steers a property toward an aim and a duty is a graph-shaped goal it cannot express." .
+
+ag:mode a owl:ObjectProperty ; rdfs:range ag:Mode ;
+    rdfs:label "mode" ;
+    rdfs:comment "Which kind of row this is. Absent means chosen, so a branch written before the distinction keeps its meaning — but the shipped ones say it out loud." .
+
 ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
     rdfs:comment """What the agent COULD do: the affordance rows, what others may demand of it, and what taking any of it would MAKE TRUE.
 

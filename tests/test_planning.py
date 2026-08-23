@@ -21,8 +21,8 @@ import rdflib
 
 from agent import effects
 from agent.ontology import DELIBERATION_GRAPH, SENSED_GRAPH
-from packages.capability.deliberation import search, trace
-from packages.capability.deliberation.search import Planner
+from agent import planner as search, trace
+from agent.planner import Planner
 
 from conftest import build_agent, genesis_store
 
@@ -116,7 +116,7 @@ def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch
     plan = Planner(fern, deducer, fern.me).plan(desire)
     assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
 
-    reflex = fern.provider("http://example.org/orexis/deliberation#DeliberationCapability")
+    reflex = fern.deliberator
     assert reflex.propose_for(desire) == reflex.propose(MOISTURE, 0.30), \
         "a thirsty plant must still buy — the search defers where it cannot see"
 
@@ -265,7 +265,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     fern = build_agent("fern", genesis_store(), monkeypatch)
-    reflex = fern.provider("http://example.org/orexis/deliberation#DeliberationCapability")
+    reflex = fern.deliberator
 
     #  fern aims at 0.55. Below it the two agree to buy; at and above it they agree to cede,
     #  and the second half is what the guard restores.
@@ -524,7 +524,7 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
     """
     import pyoxigraph as ox
 
-    from packages.capability.deliberation import signature
+    from agent import signature
 
     sosa = "http://www.w3.org/ns/sosa/"
     xsd = "http://www.w3.org/2001/XMLSchema#"
@@ -563,7 +563,7 @@ def test_two_mintings_of_the_same_claim_are_the_same_place():
     """A blank node is its content, not its identity — or every world would be novel."""
     import pyoxigraph as ox
 
-    from packages.capability.deliberation import signature
+    from agent import signature
 
     holds = ox.NamedNode("http://example.org/orexis/market#holdsClaim")
     litres = ox.NamedNode("http://example.org/orexis/market#litres")

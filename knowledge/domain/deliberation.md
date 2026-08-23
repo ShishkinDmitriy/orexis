@@ -1,8 +1,15 @@
 ---
-type: Capability
+type: Component
 title: Deliberation
-term: http://example.org/orexis/deliberation#DeliberationCapability
-description: The whether, extracted into a family — given the gap and the standing commitments, name the next move; the acting modules carry it out. Reflex is the old welded chain as the first member, deterministic and free; Consulting is the declared, unimplemented seat for a model, constrained before it exists — a move from the vocabulary's menu, never free text-to-action, with the bid number staying deterministic and the keeper's patience bounding how often it is consulted.
+description: >-
+  The whether — given the gap and the standing commitments, name the next move; the acting
+  modules carry it out. The KERNEL's and granted by nothing, because a mind is not
+  plug-in-able: every agent builds one, and an agent with nothing to pursue proposes nothing
+  and reports nothing rather than reporting zeros. It was a family of three, and the two
+  built members did not survive their own evidence — Planning subclassed Reflex, called it
+  first, and added one clause inert for any agent without a shop. Asking a model what next
+  remains a real alternative and becomes a PICK an agent may revise, not a capability its
+  world derives.
 ---
 
 # What it is
@@ -100,7 +107,7 @@ What that rests on is the signature's canonical form.
 plan IS — the world's net diff against the base, in canonical facts — and a look still nets to
 nothing there: an observation canonicalises to its upsert key and its value, never its
 `sosa:resultTime`, and a valueless first look states no fact at all (see
-`packages/capability/deliberation/signature.py`). A signature that counted a fresher timestamp
+`agent/signature.py`). A signature that counted a fresher timestamp
 as somewhere new would make "look, then look" a new world every time. Chaining past a look
 becomes a real question again exactly there, and nowhere earlier.
 
@@ -206,28 +213,42 @@ figures, it is what the figures found.
 **All zero means nothing was deliberated**, not that planning is free: a desire nobody has read is
 answered by Observe before any search runs, so an agent at rest reports zeros honestly.
 
-# The members, and which of them exist
+# One deliberator, and the member that was a clause
 
-Two of the three are built. The table is the whole answer to "which rungs can I rely on" —
-`PROVIDES` in `packages/capability/deliberation/__init__.py` is the ground truth, and
-`tests/test_knowledge.py` holds this table to it.
+There was a family of three: `Reflex` (the welded chain, depth 1), `Planning` (bounded search,
+depth 2, granted by the dealer premise) and `Consulting` (one model call, declared and reserved).
+Two were built, and the two that were built are one class now.
 
-| member | what it is | built? |
-|---|---|---|
-| `deliberation:Reflex` | the welded chain, depth 1 | **yes** — `ReflexModule` |
-| `deliberation:Planning` | bounded search, depth 2, granted by the dealer premise | **yes** — `PlanningModule` |
-| `deliberation:Consulting` | one model call, emitting a move from the menu | **no** — declared and reserved |
+**The family did not survive its own evidence.** `PlanningModule` SUBCLASSED `ReflexModule`,
+called `super().propose()` first, and added a single clause asking `_my_shop_needs` — which
+answers only for a property that is the agent's own vessel's stock, and returns None for every
+other agent. A member that contains the other, whose extra branch is inert everywhere else, is
+not an interchangeable implementation of an ability; it is one deliberator with a clause most
+agents do not reach. Rule 2's test is whether the HOW could differ, and here it could not: it
+differed by a condition on the data, which is a branch.
+
+What the Planning grant protected is still protected, against the fact instead of the grant —
+see `test_the_dealers_clause_answers_for_the_dealer_and_nobody_else`. And the merge had one
+sharp edge worth recording: the reflex's early returns meant *the gap says nothing*, not *stop*,
+because `super().propose()` returning None fell through to the shop. Inlining them would have
+left a dealer with no aim quietly refusing to refill.
+
+**Consulting stays a seam, and a better-placed one.** Asking a model what next is a genuine
+alternative — it is why the extraction happened at all — but WHICH deliberator answers is a
+choice, and this project puts choices in beliefs rather than in grants. It becomes a pick an
+agent's review may move inside its mandate, not something its world derives once at genesis.
+Everything [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) fixes about it stands.
 
 The same asymmetry runs through the rest of the amortisation ladder, and it is worth seeing in
 one place before reading the records that argue each rung:
 
 | rung | where it lives | built? | record |
 |---|---|---|---|
-| look / act / buy | `deliberation:Reflex` | **yes** | [the-ladder-of-means](/decisions/the-ladder-of-means.md) |
+| look / act / buy | the deliberator's gap clause | **yes** | [the-ladder-of-means](/decisions/the-ladder-of-means.md) |
 | commit once, keep it | `intention:Keeping` | **yes** | [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) |
-| plan two levels | `deliberation:Planning` | **yes** | [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) |
+| plan two levels | the deliberator's shop clause | **yes** | [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) |
 | re-pick your own settings | `review:Reckoning` | **yes** | [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) |
-| ask a model what next | `deliberation:Consulting` | **no** | [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md), [a-consulted-answer-is-a-premise](/decisions/a-consulted-answer-is-a-premise.md) |
+| ask a model what next | a pick, unbuilt | **no** | [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md), [a-consulted-answer-is-a-premise](/decisions/a-consulted-answer-is-a-premise.md) |
 | ask a model to re-pick | `review:Consulting` | **no** | [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) |
 | compile it into a habit | — | **no**, not even declared | [a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md) |
 

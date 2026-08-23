@@ -315,12 +315,9 @@ def test_the_plan_query_leans_on_the_stores_prefixes_like_the_rest():
     """`plan.rq` (#206) rides `store.query` from two directions — the planner's `plan_for`
     and the sovereign's ask channel — so the same two rules hold: no prefix declarations of
     its own, and only declared ones used."""
-    from pathlib import Path
+    from agent import deliberator
 
-    import packages.capability.deliberation as deliberation
-
-    path = Path(deliberation.__file__).parent / "plan.rq"
-    text = path.read_text()
+    text = deliberator.PLAN_QUERY
     assert "PREFIX " not in text.upper(), "plan.rq declares its own prefixes"
     used = {m.group(1) for m in _PREFIXED.finditer(text)}
     undeclared = used - store.DECLARED - {"http", "https", "urn"}

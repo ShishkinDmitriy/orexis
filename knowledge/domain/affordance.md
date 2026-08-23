@@ -58,7 +58,7 @@ is no row. So "is this act available?" and "does this row exist?" are the same q
 **chaining is the same query re-run in the simulated world**: an effect that makes a missing row
 appear is the step before it.
 
-`packages/capability/deliberation/search.py` therefore consults no declaration of what a lever
+`agent/planner.py` therefore consults no declaration of what a lever
 repairs. Simulation is the authority either way: trying a lever that turns out not to help costs
 one validation; trusting a declaration that turns out to be wrong costs a plant.
 

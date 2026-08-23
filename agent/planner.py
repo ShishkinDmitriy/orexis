@@ -36,14 +36,12 @@ import rdflib
 from pyshacl import validate as shacl_validate
 from rdflib import RDF, URIRef
 
-from agent import effects
-
-from . import signature, trace
-from agent.desire import Desire
-from agent.imaginarium import Imaginarium
-from agent.ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
+from . import effects, signature, trace
+from .desire import Desire
+from .imaginarium import Imaginarium
+from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             SENSED_GRAPH, beliefs_graph, obligations_graph)
-from agent.validate import conforms, graph_from
+from .validate import conforms, graph_from
 
 log = logging.getLogger("search")
 
@@ -401,7 +399,7 @@ class Planner:
         and simulation is the authority either way. Trying a lever that turns out not to help
         costs one validation; trusting a declaration that turns out to be wrong costs a plant.
         """
-        from .module import menu_of
+        from .menu import menu_of
 
         for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union):
             if desire.is_duty:

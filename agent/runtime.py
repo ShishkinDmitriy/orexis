@@ -36,6 +36,7 @@ import paho.mqtt.client as mqtt
 
 from . import config, genesis, loader
 from .beliefs import Beliefs
+from .deliberator import Deliberator
 from .desire import Desire, Desires
 from .intentions import Intentions
 from .metrics import Metrics
@@ -134,6 +135,24 @@ class Agent:
         # And noticing I am cut off (#53) — kernel for the same reason, on a clock of its own
         # because paho's network thread is one of the things it watches. Nothing starts here.
         self.watchdog = BusWatchdog(self)
+
+        # The WHETHER. Unconditional, like the modalities above and for the same reason: a mind
+        # is not plug-in-able. It was a capability granted by a stake and a lever, which made
+        # having one conditional on the world having said so — while `Desires` and `Intentions`
+        # were already built for every agent three lines up. That split could not be defended
+        # once it was written down in one place.
+        #
+        # An agent with no stake and no lever gets a deliberator that answers None to
+        # everything and reports nothing, which is the honest shape of "there is nothing here
+        # to decide" — see `Deliberator.series`.
+        #
+        # It joins `self.modules` as well as being held by name, because everything the choir
+        # does — start, stop, series, the hooks — iterates that list, and a kernel member that
+        # needed its own line in each loop would be the same module list maintained twice.
+        # `provider()` still cannot return it: it matches on `CAPABILITY`, which is `""` here,
+        # because the deliberator is not something a world grants.
+        self.deliberator = Deliberator(self)
+        self.modules.append(self.deliberator)
 
     # --- how one capability reaches another, without knowing its name ---
 

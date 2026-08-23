@@ -39,7 +39,7 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from .beliefs import BIDDING_PICKS
-from .terms import (ACQUIRE, APPLY, BIDDING, DELIBERATION, DESIRE, INTENTION, OBSERVE,
+from .terms import (ACQUIRE, APPLY, BIDDING, DESIRE, INTENTION, OBSERVE,
                     SENSING)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
@@ -215,9 +215,7 @@ class BiddingModule(Module):
         can see. With nothing in hand it is "what should I do about not knowing", and only a
         desire can say which kind of not-knowing it is.
         """
-        deliberator = self.agent.provider(DELIBERATION)
-        if deliberator is None:
-            return None
+        deliberator = self.agent.deliberator
         if value is not None:
             return deliberator.propose(self.about, value)
         desire = next((g for g in self.agent.pursuing()
@@ -380,7 +378,7 @@ class BiddingModule(Module):
         # No reading it trusts — so ask whoever deliberates what to do about not seeing. The
         # reflex says look, which is what this module always did; the point of asking anyway is
         # that a member with more context could say otherwise, without this line changing.
-        if self.agent.provider(DELIBERATION) is not None                 and self._next_move() != OBSERVE:
+        if self._next_move() != OBSERVE:
             self.log.info("auction %s: deliberation chose not to look — sitting out",
                           auction_id)
             self.pending = None
@@ -456,7 +454,7 @@ class BiddingModule(Module):
         # module used to compute for itself — below the aim, pursue; otherwise nothing — so the
         # behaviour is unchanged and the DECIDER is replaceable. An agent with no deliberator
         # falls through to the old welded logic: value_bid still cedes at-or-above the aim.
-        if self.agent.provider(DELIBERATION) is not None                 and self._next_move(moisture) != ACQUIRE:
+        if self._next_move(moisture) != ACQUIRE:
             self.log.info("auction %s: moisture %.3f — deliberation chose not to pursue",
                           auction_id, moisture)
             return

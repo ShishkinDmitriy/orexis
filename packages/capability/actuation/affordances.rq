@@ -47,5 +47,5 @@ SELECT DISTINCT ?means ?property ?via ?direction ?mode WHERE {
              market:aboutProperty ?property ;
              market:direction ?direction .
   BIND(ag:Actuate AS ?means)
-  BIND(deliberation:Chosen AS ?mode)
+  BIND(ag:Chosen AS ?mode)
 }
