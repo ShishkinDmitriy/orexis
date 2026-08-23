@@ -677,6 +677,12 @@ This is what gives an obligation its urgency, and the reason it had to exist as 
 
 The alternatives were measured against this and both are recorded as the risk in an-obligation-is-a-desire-someone-else-sourced: a duty pinned at maximum is the honoured mode returning by another name, since it outranks a plant that is dying, and a duty with no heat at all is an agent that quietly defects while its ledger looks tidy.""" .
 
+ag:amountL a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:decimal ;
+    rdfs:label "amount owed, litres" ;
+    rdfs:comment """How much the claim is for, where the good is measured. Written by the ledger when a claim is recorded and read by the market's Apply and Offer effect rules, which will not discharge an obligation whose amount they cannot see.
+
+DECLARED LATE. This term was in use — one writer, three SHACL rules reading it — and no ontology declared it, for months. It worked because both ends spell it the same way by hand, which is precisely the accident `every-term-in-its-own-house` warns about: an IRI nothing declares is not an error, it is a pattern that matches nothing, and here it matched because nobody had typed it wrong yet. It surfaced when the concatenation that built it was renamed and the guard could finally see the sixth form.""" .
+
 ag:dischargedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range xsd:dateTime ;
     rdfs:label "discharged at" ;
     rdfs:comment "Absent while it stands. The same two-timestamps-and-a-reason shape an intention and a revision already have, because a debt paid and a debt forgotten must never look alike." .

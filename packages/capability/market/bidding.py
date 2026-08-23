@@ -39,7 +39,7 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from .beliefs import BIDDING_PICKS
-from .terms import (ACQUIRE, APPLY, BIDDING, DESIRE, OBSERVE,
+from .terms import (ACQUIRE, APPLY, BIDDING, OBSERVE,
                     SENSING)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
@@ -290,7 +290,7 @@ class BiddingModule(Module):
         deficit below an aim, and with no aim there is no deficit — only a number somebody would
         have had to invent.
         """
-        desire = self.agent.provider(DESIRE)
+        desire = self.agent.deducer
         if desire is None:
             return None
         return desire.aim(self.about)

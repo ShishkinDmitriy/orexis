@@ -138,14 +138,15 @@ def test_the_gardener_derives_no_market_pair():
     """The world's whole claim, as a capability set: stake, sight, lever, memory — and no
     Bidding, no Hosting, because nothing here is anyone else's.
 
-    `Reflex` and `Keeping` were in this set and are not capabilities any more: deciding and
-    committing are the kernel's, granted by nothing, because a mind is not plug-in-able. What the gardener DELIBERATES is
+    `Reflex`, `Keeping` and `Deducing` were in this set and are not capabilities any more:
+    deciding, committing and wanting are the kernel's, granted by nothing, because a mind is
+    not plug-in-able. What the gardener DELIBERATES is
     unchanged and is tested elsewhere; what this asserts is only what its world grants it."""
     from agent.world import load_self
 
     caps = {c.rsplit("#", 1)[-1] for c in
             load_self(genesis_store(world="loner").query, "gardener").capabilities}
-    assert caps == {"Subscribing", "Listening", "Storing", "Deducing",
+    assert caps == {"Subscribing", "Listening", "Storing",
                     "Actuation"}, "both clocks in one agent since the butt got its witness"
 
 

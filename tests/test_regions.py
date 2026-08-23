@@ -1,15 +1,23 @@
 """What a region means, tested where it lives.
 
-Arithmetic only — no world, no store, no fixtures. This package carries these because a region's
-behaviour is the package's own claim: how a reading is banded, and how urgency scales by the
-envelope. The tests that need a ratified world (that fern deduces two regions, that a bidder's
-target answers to one) are the integration suite's, in `tests/`, because they are about the world
-and not about this file. See knowledge/decisions/a-package-may-test-itself.md.
+Arithmetic only — no world, no store, no fixtures: how a reading is banded, and how urgency
+scales by the envelope.
+
+**These lived in `packages/capability/desire/`**, carried by the package because a region's
+behaviour was that package's own claim — the arrangement
+[a-package-may-test-itself](/knowledge/decisions/a-package-may-test-itself.md) argues for. There
+is no desire package: wanting is the kernel's, and the arithmetic is `agent/regions.py`. So they
+come to `tests/` with it, and the record's principle is untouched — a package still tests itself;
+this is simply no longer a package's claim.
+
+They very nearly went with the directory. Deleting the package deleted its test file, the suite
+stayed green at 1302, and nothing said six tests had stopped existing. The collected-id diff is
+what noticed, which is the third time in this series it has caught what a green run could not.
 """
 
 from __future__ import annotations
 
-from .module import Region
+from agent.regions import Region
 
 # A Zamioculcas, in the figures its own package states: the region it grows in, and a survival
 # envelope that is NOT symmetric around it. That asymmetry is the reason the envelope is carried

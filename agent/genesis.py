@@ -402,8 +402,7 @@ def classify_own_graphs(st: Store, agent_id: str) -> None:
     function of the vocabulary, so a graph whose modality is refined by an amendment says the
     new thing on the next boot without a migration.
     """
-    from .ontology import AG, CLASSIFICATION_GRAPH
-    from packages.capability.desire.graphs import obligations_graph
+    from .ontology import AG, CLASSIFICATION_GRAPH, obligations_graph
 
     from .graphs import intentions_graph
 

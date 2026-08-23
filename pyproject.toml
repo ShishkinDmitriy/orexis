@@ -127,6 +127,22 @@ source_modules = ["agent"]
 forbidden_modules = ["onboarding"]
 
 [[tool.importlinter.contracts]]
+# THE ONE THIS SERIES EARNED. The kernel is what LOADS packages; it must never reach into one.
+# This could not be stated before, and the violations were not theoretical: `agent/desire.py`
+# and `agent/genesis.py` imported `packages.capability.desire.graphs` — a module that did
+# nothing but re-export `agent.ontology.obligations_graph`, so the kernel was importing a
+# package to get its own function back. `agent/intentions.py` imported the intention package
+# to name the ledger graph. Nothing forbade any of it, and nothing noticed.
+#
+# With the mind in the kernel there is nothing left to reach for, so the rule can be a contract
+# instead of a habit. What it protects is the claim the whole arrangement rests on: every
+# package is optional, which is only true if the kernel never needs one.
+name = "The kernel loads packages and never reaches into one"
+type = "forbidden"
+source_modules = ["agent"]
+forbidden_modules = ["packages"]
+
+[[tool.importlinter.contracts]]
 # A capability that imported onboarding would put credential-minting code on the far side of a
 # boundary the image is built to keep it out of.
 name = "No package reaches for them either"

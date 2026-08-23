@@ -70,6 +70,61 @@ def test_the_agent_image_carries_no_operator_code(forbidden):
     )
 
 
+def test_the_kernel_stands_alone_with_no_packages_at_all(tmp_path, monkeypatch):
+    """An empty `packages/` is a complete build — the claim every other rule here rests on.
+
+    "A package is optional" was said long before it was true. Two things made it false at once:
+    the base vocabulary WAS a package (`packages/core/orexis/`, a family of exactly one that
+    nothing could remove), and the kernel imported three of them — for the mind, which is not
+    plug-in-able and had no business being a grant. Both are fixed, so the sentence can be a
+    test rather than an aspiration.
+
+    What is asserted is the KERNEL's self-sufficiency, not that a useful society needs nothing:
+    every shipped world names `water:`, `mqtt:` and `part:` terms and would not validate here.
+    The claim is narrower and load-bearing — the thing that LOADS packages does not need one.
+    """
+    from agent import loader
+
+    caches = (loader.packages, loader.prefixes, loader.registry,
+              loader.ontology_files if hasattr(loader.ontology_files, "cache_clear") else None)
+    monkeypatch.setattr(loader, "PACKAGES_ROOT", tmp_path / "nothing-here")
+    for cache in caches:
+        if cache is not None and hasattr(cache, "cache_clear"):
+            cache.cache_clear()
+    try:
+        found = loader.packages()
+        assert found == (loader.KERNEL,), (
+            f"with no packages the build should be the kernel alone, got {[p.name for p in found]}")
+        assert loader.registry() == {}, "no packages, no capabilities to implement"
+        assert loader.prefixes().get("ag"), "the kernel still declares its own namespace"
+
+        #  And it is a WORKING build, not just a non-empty list: the kernel ships all four of
+        #  the things a package may ship, and the vocabulary it declares is really there.
+        assert loader.shapes_files() == (loader.KERNEL.file(loader.SHAPES),), \
+            "with no packages, the only shapes are the kernel's own"
+        assert loader.rule_files() == (loader.KERNEL.file(loader.RULES),), \
+            "and the only derivation"
+
+        import rdflib
+        g = rdflib.Graph()
+        g.parse(loader.KERNEL.file(loader.ONTOLOGY), format="turtle")
+        assert (rdflib.URIRef("http://example.org/orexis#Agent"), None, None) in g, \
+            "the kernel declares what an agent IS without help from anything"
+
+        #  `ontology_files()` may still yield more than the kernel's, and that is right rather
+        #  than a leak: a FIRMWARE directory is a third T-Box source (#175), discovered beside
+        #  the packages and not one of them. So the assertion is about packages, not about
+        #  everything the loader reads.
+        from_packages = [f for f in loader.ontology_files()
+                         if not str(f).startswith(str(loader.REPO_ROOT / "firmware"))]
+        assert from_packages == [loader.KERNEL.file(loader.ONTOLOGY)], \
+            f"a package ontology survived an empty packages tree: {from_packages}"
+    finally:
+        for cache in caches:
+            if cache is not None and hasattr(cache, "cache_clear"):
+                cache.cache_clear()
+
+
 def test_the_image_copies_only_what_an_agent_runs():
     """The positive half. Forbidding one name only catches the tree we thought of; this
     catches the next one, which is the one that will actually be added."""
@@ -440,7 +495,11 @@ def test_the_docs_only_name_terms_that_exist(doc):
     # it vanished from the text — without caring how a file chooses to write itself.
     inverse = {iri: label for label, iri in loader.prefixes().items()}
     declared = set()
-    for path in loader.ontology_files():
+    #  Shapes as well as ontologies. A SHAPE is a declared thing and prose may legitimately
+    #  name one — AGENTS.md cites `ag:KeeperShape` to say what a stake still decides. While the
+    #  shapes lived in packages this cost nothing to miss, because the docs happened not to name
+    #  one; the kernel's shapes are named in the entry documents now.
+    for path in loader.ontology_files() + loader.shapes_files():
         g = rdflib.Graph()
         g.parse(path, format="turtle")
         for triple in g:

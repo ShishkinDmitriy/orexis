@@ -10,6 +10,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 
 # Principles that cut across everything
 
+* [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md) - Wanting, committing and deciding are the kernel's: their stores were built for every agent while the code reading them was a grant.
 * [the-society-is-named-for-its-appetite](/decisions/the-society-is-named-for-its-appetite.md) - The project is named Orexis — Aristotle's desire-that-moves-to-action — because the BDI mind is the kernel and the auction is a replaceable part.
 * [control-the-derivative-not-the-value](/decisions/control-the-derivative-not-the-value.md) - Nothing here controls a step: a cadence not a reading, a mandate not a belief, an affordance not an action.
 * [agent-centric-epistemics](/decisions/agent-centric-epistemics.md) - Judgment, private data and initiative belong to the agent; infra is thin honest mechanism.

@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 import rdflib
 from pyshacl import validate as shacl_validate
 
-from packages.capability.desire import desires_of
+from agent.regions import desires_of
 
 from conftest import desires_build, MOISTURE, build_agent, genesis_store
 

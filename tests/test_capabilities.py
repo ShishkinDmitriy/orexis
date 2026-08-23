@@ -12,7 +12,6 @@ from agent import genesis, loader
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_self, load_world
 from packages.capability.actuation import ACTUATION
-from packages.capability.desire import DEDUCING
 from packages.capability.market import BIDDING, HOSTING, PAY_AS_BID
 from packages.capability.sensing import LISTENING, SUBSCRIBING
 from packages.capability.reporting import STORING
@@ -39,7 +38,7 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
     granted by the same fact and separate because their replaceable parts differ.
     """
     assert me("fern").capabilities == {
-        SUBSCRIBING, BIDDING, RECKONING, STORING, DEDUCING}
+        SUBSCRIBING, BIDDING, RECKONING, STORING}
 
 
 def test_a_mandate_whose_ends_meet_grants_nothing(me):
@@ -60,7 +59,7 @@ def test_a_mandate_whose_ends_meet_grants_nothing(me):
     # between a MANDATORY capability and a granted one. Reporting is not conditional on
     # latitude, because an agent permitted to fall silent cannot be told from a dead one; the
     # ability to re-pick is, because with nowhere to go there is nothing to re-pick.
-    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING, DEDUCING}
+    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING}
 
 
 def test_supplier_gets_hosting_actuation_and_matching(me):
@@ -74,7 +73,7 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     from packages.capability.sensing.terms import LISTENING
 
     #  Plus what the barrel arcs earned: LISTENING (arc 1 — it sees its stock) and, since it
-    #  acts for a barrel that states its needs (arc 2), DEDUCING; and since the city exists
+    #  acts for a barrel that states its needs (arc 2); and since the city exists
     #  (arc 4), BIDDING — the city's pipe reaches its barrel, so the dealer's buy side derives
     #  from the plumbing exactly as a fern's does.
     #
@@ -82,17 +81,16 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     #  PLANNING: committing and deciding are the kernel's, granted by nothing, and the dealer's
     #  depth turned out to be a clause rather than a member. What the dealer premise still buys
     #  is pinned in test_deliberation, against the fact instead of the grant.
-    #  And OWING (#233), whose premise is not the stake the others share: a venue it opened
-    #  and a valve drawing from that venue's source, which is "others may demand this lever".
-    #  The city has it WITHOUT Deducing, which is the whole reason it is a capability of its
-    #  own — see test_only_a_lever_others_may_demand_earns_a_ledger below.
-    from packages.capability.desire.terms import OWING
-
+    #  DEDUCING and OWING were here and are not capabilities any more: wanting and owing are
+    #  the mind's, and the mind is the kernel's. What #233's split was really about — the city
+    #  owes and wants nothing, a plant wants and owes nothing — is asserted against the data in
+    #  test_the_city_owes_without_wanting_and_a_plant_wants_without_owing below.
+    
     assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING, LISTENING,
-                                           DEDUCING, BIDDING, OWING}
+                                           BIDDING}
 
 
-def test_only_a_lever_others_may_demand_earns_a_ledger(me):
+def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     """The split #233 asked for, stated as the two agents that separate it.
 
     The city keeps a ledger and deduces nothing: it acts for a mains that states a capacity and
@@ -102,12 +100,33 @@ def test_only_a_lever_others_may_demand_earns_a_ledger(me):
 
     Both directions asserted, because a premise that is too WIDE is as wrong as one too narrow
     and only one of those is visible from the agent that was broken.
-    """
-    from packages.capability.desire.terms import OWING
 
-    assert OWING in me("city").capabilities
-    assert DEDUCING not in me("city").capabilities, "a mains states no ranges — it wants nothing"
-    assert OWING not in me("fern").capabilities, "a plant holds no lever anyone may demand"
+    `desire:Owing` and `desire:Deducing` were the two capabilities this separated, and neither
+    is one now — wanting and owing are the mind's, and every agent has a mind. The SPLIT is
+    unchanged and still worth asserting; what changed is that it is a fact about each agent's
+    data rather than about what its world granted. The city holds no region because its mains
+    states no ranges; the fern's menu holds no honoured row because nobody may demand its
+    lever. Those were always the facts underneath the two grants.
+    """
+    from agent.menu import menu_of
+    from agent.regions import regions_of
+
+    from conftest import desires_build
+
+    st = genesis_store()
+    uri = lambda who: load_self(st.query, who).uri
+
+    def honoured(who):
+        return [r for r in menu_of(st.query, uri(who), desires_build(st, who).query_union)
+                if not r.is_chosen]
+
+    assert not regions_of(desires_build(st, "city").query_union, uri("city")), \
+        "a mains states no ranges — the city wants nothing for itself"
+    assert regions_of(desires_build(st, "fern").query_union, uri("fern")), \
+        "a plant states ranges, so it holds regions of its own"
+
+    assert honoured("city"), "the city hosts a venue and holds the valve that serves it"
+    assert not honoured("fern"), "a plant holds no lever anyone may demand"
 
 
 def test_only_a_host_matches(me):

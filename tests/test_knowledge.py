@@ -220,6 +220,10 @@ def test_no_document_names_a_path_that_is_not_there():
         # point is that this path does not exist, and a day it does is a day to reread that
         # section rather than to edit this list.
         "agent/kernel/",
+        # domain/package: the same argument one tree over. The kernel is not a FAMILY, and the
+        # evidence offered is that `packages/kernel/` is not a directory anyone can add a
+        # sibling to. Its absence is the sentence.
+        "packages/kernel/",
         # repository-layout: the two-distribution layout, past tense — "used a `src` layout and
         # were pip-installed separately".
         "onboarding/src/onboarding/",
@@ -296,8 +300,11 @@ def _declared() -> set[str]:
     """
     from agent import loader
 
+    #  ALL of the kernel's TTL, not just its ontology. A SHAPE is declared in `shapes.ttl` and a
+    #  page may legitimately name one — `ag:KeeperShape` does — and while the shapes lived in
+    #  packages the `packages/**` glob swept them up for free. It does not any more.
     names: set[str] = set()
-    for ttl in [loader.KERNEL.file(loader.ONTOLOGY)] + \
+    for ttl in sorted(loader.KERNEL.path.glob("*.ttl")) + \
                list((REPO_ROOT / "packages").rglob("*.ttl")) + \
                list((REPO_ROOT / "world").rglob("*.ttl")):
         text = ttl.read_text()

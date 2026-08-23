@@ -11,7 +11,7 @@ import pytest
 from agent import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
 from agent.beliefs import BeliefError, Beliefs, Reading
-from packages.capability.desire import aims_of, regions_of
+from agent.regions import aims_of, regions_of
 from packages.capability.market.beliefs import BIDDING_PICKS, HOSTING_PICKS
 from packages.capability.sensing.beliefs import SUBSCRIBING_PICKS
 

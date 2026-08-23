@@ -1,7 +1,6 @@
 ---
-type: Capability
+type: Domain Concept
 title: Desire
-term: http://example.org/orexis/desire#DesireCapability
 description: What an agent is trying to bring about — for each property its subject states a need in, the region to hold that property inside and the envelope outside which the subject ends. Deduced at genesis by intersecting every operating range that applies, never authored; the band and the urgency every other capability reads come from here.
 ---
 
@@ -10,21 +9,29 @@ description: What an agent is trying to bring about — for each property its su
 BDI's middle letter. Belief has a whole store — see [belief-base](/domain/belief-base.md) — and
 desire is what the agent is trying to bring about with it.
 
-The capability produces two things and holds a third. It deduces a [region](/domain/region.md) per
+BDI's middle letter is the KERNEL's, granted by nothing — [capability](/domain/capability.md)
+records why a stake stopped being a premise, and
+[the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md) has the argument. What
+matters here is the consequence: every agent holds a desire store, and what differs between them
+is whether their subject states anything to want.
+
+The deducer produces two things and holds a third. It deduces a [region](/domain/region.md) per
 property its subject needs, with an envelope beside it; the agent then picks an
 [aim](/domain/aim.md) inside each; and it answers *what am I pursuing* across both of those and
 the [obligations](/domain/obligation.md) it did not source.
 
 # It is deduced, not authored
 
-Nothing writes a desire. `packages/capability/desire/rules.ru` computes one at genesis from what
+Nothing writes a desire. `agent/desires.ru` computes one from what
 the subject and its instruments state, and the result is a [region](/domain/region.md) — that page
 has the intersection, the two kinds of bearer, and why a graph found by TYPE rather than by name
 is what makes a second source of desire possible.
 
-What this capability adds is the DEDUCING: it is granted by a stake, `ag:actsFor` a subject that
-states what it needs. An agent advancing nobody's interest wants nothing, which is why the sensing
-world's agent has three sensors and no desires at all.
+What the deducer adds is the DEDUCING. It used to be granted by a stake — `ag:actsFor` a subject
+that states what it needs — and the stake still decides everything except whether the module
+exists: an agent advancing nobody's interest states no ranges, so it holds no region, and the
+desire shapes that target a stake never reach it. The sensing world's agent has three sensors and
+no desires at all, exactly as before, by the fact rather than by a grant.
 
 # Two sources, one currency
 

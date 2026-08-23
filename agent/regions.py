@@ -1,48 +1,30 @@
-"""desire:Deducing — the region this agent is trying to hold, one per property it has a stake in.
+"""What an agent wants, as arithmetic: the region, the gap, and the wants it ranks.
 
-**This is the middle letter of BDI, and it is the one the project had least of.** Belief had a
-whole store, and desire was three decimals in a beliefs file: a target and two band edges,
-denominated in soil moisture and in nothing else. So an agent could want exactly one thing, and
-the air temperature and humidity this society senses fed nothing that could want anything.
+**The kernel's.** This was the desire package's, granted to an agent that acts for a subject
+stating what it needs — and the store those wants live in was built for every agent regardless,
+by `Agent.__init__`, three lines above the modules. The same contradiction the keeper and the
+deliberator each turned out to have: a modality for everyone, a reader for some. A mind is not
+plug-in-able.
 
-What it holds now is a REGION per property — where to keep it — and the ENVELOPE outside it,
-where the subject does not merely sit badly but ends. Both are deduced, at genesis, by
-`rules.ru`, from ranges the world already states. Nothing here is authored, and that is the
-point: `water:hasTarget 0.55` was one decimal in a private file against which `0.95` would have
-validated exactly as well, and the region is what a pick like that answers to.
+What is HERE is the arithmetic, which has one form: intersecting stated ranges, measuring the
+signed distance to an aim, ranking a stake against a duty in one unit-free currency. What is
+NOT here is the question the capability was actually named for — where a region COMES from.
+Working it out from the ranges the world states is one answer and asking something else is
+another, and that seam is real; it is a pick now rather than a grant, like the deliberator's.
 
-**Three questions this module answers for its siblings, and none of them imports it.**
-
-    band(property, value)     LOW / OK / HIGH — the verdict that travels in an announcement
-    urgency(property, value)  0.0 to 1.0 — what sensing turns into a cadence
-    region(property)          the numbers themselves, for whoever needs to aim rather than judge
-
-They used to come from `market:Bidding`, which meant an agent had to be a BIDDER to have an
-opinion about its own state — and could only have one, about the one property a bid is priced
-in. A stake is not a market position. An agent that acts for a plant in a world with no economy
-at all still knows when that plant is in trouble; it simply has nobody to ask for help.
-
-Vocabulary: packages/capability/desire/ontology.ttl. Rules: its shapes.ttl. Derivation: its
-rules.ru. See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.
+See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 
-from agent.desire import Desire
-from agent.module import Module
-from agent.ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
-from agent.store import bindings
+from .desire import Desire
+from .ontology import AG, INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph, obligations_graph
+from .store import bindings
 
-from .graphs import obligations_graph
-from .terms import DEDUCING, KERNEL, NS
-
-# What this package asks OF others, by family — their namespaces, never their Python. The
-# freshness rule lives with whoever holds the clock, and this module asks it exactly as
-# bidding does.
 _SENSING = "http://example.org/orexis/sensing#SensingCapability"
 
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
@@ -397,179 +379,3 @@ def regions_of(query, agent_uri: str) -> dict[str, Region]:
         )
     return out
 
-
-class DesireModule(Module):
-    """The agent's ends, and the only module entitled to say what a reading MEANS."""
-
-    CAPABILITY = DEDUCING
-    name = "desire"
-
-    def __init__(self, agent):
-        super().__init__(agent)
-        self.regions = regions_of(agent.desires.query_union, self.me.uri)
-        self._aims = aims_of(agent.desires.query_union, agent.id, self.me.uri)
-        self.log.info("wants %s", ", ".join(
-            f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
-            for p, r in sorted(self.regions.items())) or "nothing")
-
-    # --- what any sibling may ask of me ---
-
-    def region(self, observed_property: str) -> Region | None:
-        """My region in one property, or None if I hold no desire in it.
-
-        The seam every other capability reaches me through. `agent.provider(DESIRE)` finds
-        whoever wants, and this says what it wants — so a bid, a dose or a cadence can be
-        computed against my ends without anything importing this package.
-        """
-        return self.regions.get(observed_property)
-
-    def aim(self, observed_property: str) -> float | None:
-        """The point I am steering this property toward, or None if I picked none.
-
-        The pick inside the region — private, mine, and the value `water:hasTarget` used to be.
-        A consumer that requires one (a bidder pricing a deficit) treats None as its own
-        refusal; nothing here defaults to the region's centre, because a fabricated preference
-        is still a fabricated belief.
-        """
-        return self._aims.get(observed_property)
-
-    def on_belief_revised(self, belief_term: str, value) -> None:
-        """An aim is a belief, so a review may move it — within the region, which is the same
-        check boot makes. Re-read rather than patched, because the revision names a term and an
-        aim is a structure: simplest correct answer is to ask the graph again."""
-        self._aims = aims_of(self.agent.desires.query_union, self.agent.id, self.me.uri)
-
-    # --- what I contribute to my siblings, through the contract every module has ---
-
-    def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
-        """A desire is in one property of the one subject I advance. Both have to match.
-
-        The subject test is what keeps me quiet about somebody else's pot; the property test is
-        what keeps me from judging a temperature against a moisture region. Handed either, the
-        honest answer is no opinion, and saying so is the difference between silence and a
-        confident wrong verdict — 21.0 read as a moisture fraction lands far above any region and
-        scores as perfectly comfortable.
-        """
-        return subject_uri == self.me.acts_for and observed_property in self.regions
-
-    def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
-        """My verdict on my own subject, for my agent's public announcement.
-
-        A band and never a number: a listener learns that I am in trouble, not how wet I am. The
-        message carries the property alongside it (see `agent/observation.py`), so an agent that
-        now holds several desires announces several verdicts and each one says what it is about.
-        """
-        if not self._is_mine(subject_uri, observed_property):
-            return {}
-        return {"band": self.regions[observed_property].band(value)}
-
-    def bounds(self, subject_uri: str, observed_property: str) -> tuple[float, float] | None:
-        """My region's edges — what a crossing-watching board is told to announce on leaving
-        (#151). The REGION and not the survival envelope, deliberately: waking at the edge of
-        comfort is what makes the announcement early enough to act on, and the envelope is
-        where acting has already half-failed.
-        """
-        if subject_uri != self.me.acts_for:
-            return None
-        region = self.regions.get(observed_property)
-        return (region.low, region.high) if region else None
-
-    def urgency(self, subject_uri: str, observed_property: str,
-                value: float | None) -> float | None:
-        """How close this puts me to trouble. Sensing turns it into a cadence.
-
-        Asked with None, the question is the urgency of NOT KNOWING (#137), and the answer is
-        maximal: not knowing whether the pot is dying is at least as urgent as knowing it is
-        uncomfortable, and the region cannot say otherwise without a number to judge. The first
-        current reading ends this answer — ignorance decays into whatever the gap then says —
-        which is "the first intention is always Observe" in its cadence-shaped form.
-        """
-        if not self._is_mine(subject_uri, observed_property):
-            return None
-        if value is None:
-            return 1.0
-        return self.regions[observed_property].urgency(value)
-
-    # --- the diff, asked of me rather than recomputed by whoever wants it ---
-
-    def gaps(self) -> dict[str, Gap]:
-        """Where every property I want stands against where I want it — stale rows included.
-
-        Included on purpose: a stale row is "last I looked I was dry, and I cannot see any
-        more", which a deliberator needs precisely because nothing else will mention it. Rows
-        carry `at`, and `current()` is the same diff with my own freshness rule applied.
-        """
-        return gaps_of(self.agent.desires.query_union, self.agent.beliefs.query, self.me.uri)
-
-    def current(self) -> dict[str, Gap]:
-        """The diff I would act on: every row still inside my own freshness rule.
-
-        The rule is sensing's — the cadence I commanded plus my grace, per property — asked
-        through the provider exactly as bidding asks it, because a reading past what I allow
-        for the rhythm I myself set is a sensor gone quiet, not a measurement. Issue #124's
-        case in one sentence: a dead probe's last observation is upserted, never expires, and
-        without this filter kept presenting a comfortable pot for however long the probe stayed
-        dead. With no sensing at all nothing wrote these observations either, so every row
-        passes vacuously and honestly.
-        """
-        sensing = self.agent.provider(_SENSING)
-        if sensing is None:
-            return self.gaps()
-        out = {}
-        for prop, gap in self.gaps().items():
-            age = gap.age_s()
-            if age is not None and age > sensing.stale_after_s(self.me.acts_for, prop):
-                continue
-            out[prop] = gap
-        return out
-
-    def reports(self) -> dict:
-        """What this agent wants, how much of that it can currently see, and the worst of it.
-
-        `desires` belongs in the health series because an agent whose regions silently went to
-        zero — a world amended, a range withdrawn — is running and doing nothing, which is the
-        failure that looks most like working. `desires_measured` counts the regions with a
-        CURRENT reading behind them, so blind and gone-quiet finally have a line: the two
-        numbers diverging is a desire this agent cannot see, whether because no instrument
-        exists or because one died. `worst_gap` is computed over the current rows only — a
-        frozen last reading must not present as a live verdict — so on a dead sensor it
-        disappears rather than reassures, and `reading_age_s` on the same dashboard says why.
-        """
-        out: dict = {"desires": len(self.regions)}
-        current = self.current()
-        out["desires_measured"] = len(current)
-        if current:
-            out["worst_gap"] = round(max(abs(g.gap) for g in current.values()), 3)
-        return out
-
-    def desires(self, now: datetime | None = None) -> list[Desire]:
-        """MY contribution to what this agent is pursuing: its stakes, and no duties.
-
-        The choir hook for desires (`agent.pursuing()` merges every module's). Split from the debts
-        when the ledger became its own capability: an agent may hold stakes and owe nothing, owe
-        and hold no stake — `world/simulation`'s city is exactly that — or both, and none of
-        those is the others' business. `desires_of` reads the whole shipped query and each module
-        takes its own kind, so there is still one text and one definition.
-        """
-        return [g for g in desires_of(self.agent.desires.query_union,
-                                    self.agent.beliefs.query, self.me.uri, self.agent.id, now)
-                if not g.is_duty]
-
-    def series(self) -> list[tuple[str, dict, dict]]:
-        """WHERE the want sits, not merely that it exists (#61's argument, extended from the
-        revisable picks to the deduced regions) — one row per property, the property as a TAG
-        on the sovereign's own suggestion: `desired_low` grouped by `property` is one generic
-        panel for any number of wants, where a suffixed field name is a string a dashboard can
-        only match. Into this agent's OWN bucket — the operator sees them, rivals do not. A
-        region that quietly moved (a world amended, an instrument narrowed, a flowering season
-        ratified) and an aim drifting inside it are exactly the lines a sovereign wants."""
-        rows = []
-        for prop, region in sorted(self.regions.items()):
-            local = prop.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
-            fields = {"desired_low": region.low, "desired_high": region.high}
-            aim = self.aim(prop)
-            if aim is not None:
-                fields["aim"] = aim
-            rows.append(("agent_desire", {"property": local}, fields))
-
-        return rows

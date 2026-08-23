@@ -36,10 +36,12 @@ import paho.mqtt.client as mqtt
 
 from . import config, genesis, loader
 from .beliefs import Beliefs
+from .deducer import Deducer
 from .deliberator import Deliberator
 from .desire import Desire, Desires
 from .intentions import Intentions
 from .keeper import Keeper
+from .owing import Owing
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
@@ -159,7 +161,14 @@ class Agent:
         # writes it was a grant. A modality nobody may write is not a modality.
         self.keeper = Keeper(self)
 
-        self.modules += [self.deliberator, self.keeper]
+        # The DEDUCER and the LEDGER OF DEBTS, completing the mind. Both were capabilities —
+        # one granted by a stake, one by a lever others may demand — and both read a store the
+        # kernel had already built for every agent. What an agent WANTS is the last of the six
+        # modalities to stop being optional.
+        self.deducer = Deducer(self)
+        self.owing = Owing(self)
+
+        self.modules += [self.deliberator, self.keeper, self.deducer, self.owing]
 
     # --- how one capability reaches another, without knowing its name ---
 

@@ -180,18 +180,22 @@ distinct. So "deduced at genesis" is the rule; "computed from the wiring" is how
 work for the one family whose hardware forces the answer.
 
 **Each capability is granted by whatever fact makes it meaningful, and that fact is its own.** The
-premise lives in the capability's `rules.ru`, and there is no pattern to fit a new one into. Three
-are granted by wiring — `actuation:hasActuator`, `market:bidsIn`/`market:hosts`, `sensing:polls` and a sense mode —
-because they are about equipment or a position in a market. `review:Reckoning` is granted by
-**latitude**: revising your own settings means nothing without settings you are permitted to move,
-so an `review:commits` mandate whose ends differ is its premise. `desire:Deducing` is granted by
-a **stake**: `ag:actsFor` a subject that states what it needs — an agent advancing nobody's
-interest wants nothing, which is why `world/sensing`'s agent has three sensors and records.
-`intention:Keeping` and `deliberation:Reflex` are granted by a **stake AND a lever** — wanting
-without means is a wish, means without wants have nothing to decide — and they share that premise
-while staying two capabilities, because how commitments are kept and how decisions are reached
-are separately replaceable. When you add one, ask what makes *yours* meaningful rather than which
-of these it resembles. See
+premise lives in the capability's `rules.ru`, and there is no pattern to fit a new one into. What
+is left after the mind came home is two kinds of premise and no third. **Equipment or a position
+in a market**: `actuation:hasActuator`, `market:bidsIn`/`market:hosts`, `sensing:polls` and a
+sense mode. **Latitude**: `review:Reckoning`, because revising your own settings means nothing
+without settings you are permitted to move, so an `review:commits` mandate whose ends differ is
+its premise. When you add one, ask what makes *yours* meaningful rather than which of these it
+resembles.
+
+**A stake is NOT a premise for a capability, and neither is a stake and a lever.** Three
+capabilities were granted that way — wanting, committing, deciding — and all three are gone:
+they were the mind, every agent has one, and the STORES they read were already built for every
+agent unconditionally. A modality nobody may write is not a modality. What a stake still decides
+is which SHAPES apply — `ag:KeeperShape` and the desire shapes target `ag:actsFor` a subject that
+states what it needs — so `world/sensing`'s agent still holds no region and states no patience,
+by the fact rather than by a grant. See
+[the-mind-is-not-a-package](knowledge/decisions/the-mind-is-not-a-package.md),
 [self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md),
 [desire-is-deduced-from-the-ranges-the-world-states](knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
 and [an-intention-is-an-amortised-deliberation](knowledge/decisions/an-intention-is-an-amortised-deliberation.md).

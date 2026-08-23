@@ -40,10 +40,14 @@ merely sorts after the named ones.
 
 | family | borne by | what having one means |
 |---|---|---|
-| `core` | — | the base vocabulary, merged first |
 | `capability` | an **agent** | `ag:hasCapability` on the agent |
 | `transport`, `codec`, `scaling` | a **binding** | a predicate on the **sensor** |
 | `part`, `plant`, `bus`, `tool` | nothing — knowledge only | a model others are instances of |
+
+There was a `core` family and it held one member, forever: the base vocabulary every other
+package layers on and nothing can remove. That is not a package, it is the base, and it lives in
+`agent/` beside the code that reads it. Every family left is one an agent can hold **zero**
+members of, which is what "a package is optional" always meant and now says.
 
 The split that matters is **bearer**, not importance: a codec family is a capability by the
 definition in rule 2, it is simply not something an *agent* has. See
@@ -70,17 +74,33 @@ What belongs here is the consequence for the tree: nothing about a directory say
 it carries, so `PROVIDES` in `__init__.py` is the only registration, and a directory with none is
 knowledge and nothing else.
 
-# `agent/` is the kernel that loads them, not their home
+# `agent/` is the kernel: it loads packages, and it is not one
+
+The kernel is the one thing **not discovered**, because it is what discovers — a record the
+loader prepends rather than a directory it finds. It carries the same four filenames a package
+carries (`ontology.ttl`, `shapes.ttl`, `rules.ru`, and Python), so every reader reaches it
+without knowing it is special; what it is not is a FAMILY, since `packages/kernel/` is not a
+directory anyone can add a sibling to.
 
 Capability Python used to live under `agent/`, so the tree itself showed which of it a runtime
 loads. **It does not show that now** — `packages/capability/market/` and `packages/part/dht11/`
 look identical. The contracts carry the boundary alone:
 
-- `lint-imports` holds `packages` away from `onboarding`, and onboarding away from nothing;
+- `lint-imports` holds `packages` away from `onboarding`, onboarding away from nothing, and —
+  since the mind came home — **`agent` away from `packages`**: the kernel loads them and never
+  reaches into one. That contract could not be stated while three capability packages held the
+  mind, and the violations were not theoretical;
 - the `Containerfile` decides what reaches an image by naming two trees and not a third, with
   `tests/test_layout.py` failing if a `COPY onboarding/` appears.
 
 Both were always the real enforcement. The layout was a reminder, and the reminder is gone.
+
+**And "optional" is now a test rather than a sentence.**
+`test_the_kernel_stands_alone_with_no_packages_at_all` builds with `packages/` absent and gets
+the kernel alone — a working one. Narrower than it sounds and deliberately: every shipped world
+names `water:`, `mqtt:` and `part:` terms and would not validate. The claim is that the thing
+which loads packages does not need one. See
+[the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md).
 
 # How it got here
 
