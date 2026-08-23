@@ -65,8 +65,11 @@
 // the NEXT wakeup, so the program chooses its own next interval from the path it took:
 // in-window ends by asking for the patrol rate, a breach ends by asking for the confirm rate.
 #ifndef WATCH_PATROL_S
-#define WATCH_PATROL_S 60      // between looks when nothing is wrong
-#endif
+#define WATCH_PATROL_S 15      // between looks when nothing is wrong. Fifteen and not sixty
+#endif                         // because looking is very nearly free — see the energy model in
+                               // knowledge/decisions/the-vigil-costs-standing-not-looking.md:
+                               // one radio wake buys about 1.1 million looks, so halving or
+                               // quartering this period is invisible against the heartbeat.
 #ifndef WATCH_CONFIRM_S
 #define WATCH_CONFIRM_S 10     // between a suspicious look and the one that settles it
 #endif
