@@ -19,19 +19,18 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from agent.desire import Desire
-from agent.module import Module
-from agent.store import bindings
-
-from .graphs import obligations_graph
-from .module import desires_of
-from .terms import KERNEL, OWING
+from .desire import Desire
+from .module import Module
+from .ontology import AG, obligations_graph
+from .store import bindings
 
 
-class OwingModule(Module):
+from .regions import desires_of
+
+
+class Owing(Module):
     """What I owe, kept where a restart cannot lose it. Speaks to no topic."""
 
-    CAPABILITY = OWING
     name = "owing"
 
     def _uri_of(self, agent_id: str) -> str | None:
@@ -72,24 +71,24 @@ class OwingModule(Module):
         #  the pour from the record rather than from a module's memory (#255). Optional for
         #  the one market shape with no quantity; an obligation without it stays servable by
         #  the direct row and unplannable, which is the graceful half of the widening.
-        amount = (f' <{KERNEL}amountL> {amount_l} ;' if amount_l is not None else "")
+        amount = (f' <{AG}amountL> {amount_l} ;' if amount_l is not None else "")
         expiry = ""
         if expires_at is not None:
-            expiry = (f' ;\n                <{KERNEL}expiresAt> '
+            expiry = (f' ;\n                <{AG}expiresAt> '
                       f'"{datetime.fromtimestamp(expires_at, timezone.utc).isoformat()}"'
                       f'^^<http://www.w3.org/2001/XMLSchema#dateTime>')
-        uri = f"{KERNEL}obligation.{claim_jti}"
+        uri = f"{AG}obligation.{claim_jti}"
         graph = obligations_graph(self.agent.id)
         if bindings(self.agent.beliefs.query(
                 f"SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{uri}> ?p ?o }} }} LIMIT 1")):
             return None
         self.agent.beliefs.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
-            <{uri}> a <{KERNEL}Obligation> ;
+            <{uri}> a <{AG}Obligation> ;
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
-                <{KERNEL}owedTo> <{to_agent}> ;
-                <{KERNEL}forClaim> "{claim_jti}" ;
-                <{KERNEL}presented> false ;{amount}
-                <{KERNEL}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
+                <{AG}owedTo> <{to_agent}> ;
+                <{AG}forClaim> "{claim_jti}" ;
+                <{AG}presented> false ;{amount}
+                <{AG}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
         #  A debt arriving at runtime is a want arriving at runtime: the record above is the
         #  belief base's, and the desire modality is RECOMPUTED to hold it — the same
         #  record-then-rebuild order a re-pick follows, because recomputation is the only way
@@ -107,10 +106,10 @@ class OwingModule(Module):
         """
         graph = obligations_graph(self.agent.id)
         self.agent.beliefs.update(f"""
-            DELETE {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> ?was }} }}
-            INSERT {{ GRAPH <{graph}> {{ ?o <{KERNEL}presented> true }} }}
-            WHERE  {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" ;
-                                         <{KERNEL}presented> ?was }} }}""")
+            DELETE {{ GRAPH <{graph}> {{ ?o <{AG}presented> ?was }} }}
+            INSERT {{ GRAPH <{graph}> {{ ?o <{AG}presented> true }} }}
+            WHERE  {{ GRAPH <{graph}> {{ ?o <{AG}forClaim> "{claim_jti}" ;
+                                         <{AG}presented> ?was }} }}""")
         self.agent.desires.rebuild()   # standing became demanded — the want moved
 
     def discharge(self, claim_jti: str) -> None:
@@ -119,21 +118,21 @@ class OwingModule(Module):
         stays in its ledger."""
         graph = obligations_graph(self.agent.id)
         self.agent.beliefs.update(f"""INSERT {{ GRAPH <{graph}> {{
-                ?o <{KERNEL}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
-            WHERE {{ GRAPH <{graph}> {{ ?o <{KERNEL}forClaim> "{claim_jti}" .
-                     FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }}""")
+                ?o <{AG}dischargedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
+            WHERE {{ GRAPH <{graph}> {{ ?o <{AG}forClaim> "{claim_jti}" .
+                     FILTER NOT EXISTS {{ ?o <{AG}dischargedAt> ?done }} }} }}""")
         self.agent.desires.rebuild()   # a paid debt is history, and the want is no longer implied
 
     def owed(self, presented_only: bool = False) -> list[dict]:
         """What still stands, newest first — what an agent owes, askable by the sovereign."""
-        extra = f'?o <{KERNEL}presented> true .' if presented_only else ""
+        extra = f'?o <{AG}presented> true .' if presented_only else ""
         return bindings(self.agent.beliefs.query(f"""
 SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(self.agent.id)}> {{
-  ?o a <{KERNEL}Obligation> ; <{KERNEL}owedTo> ?to ; <{KERNEL}forClaim> ?jti ;
-     <{KERNEL}presented> ?presented ; <{KERNEL}owedAt> ?at .
-  OPTIONAL {{ ?o <{KERNEL}expiresAt> ?expires }}
+  ?o a <{AG}Obligation> ; <{AG}owedTo> ?to ; <{AG}forClaim> ?jti ;
+     <{AG}presented> ?presented ; <{AG}owedAt> ?at .
+  OPTIONAL {{ ?o <{AG}expiresAt> ?expires }}
   {extra}
-  FILTER NOT EXISTS {{ ?o <{KERNEL}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
+  FILTER NOT EXISTS {{ ?o <{AG}dischargedAt> ?done }} }} }} ORDER BY DESC(?at)"""))
 
     def duties(self, now: datetime | None = None) -> list[Desire]:
         """What this agent owes, as desires — hottest first, and hot means CLOSE TO EXPIRY.

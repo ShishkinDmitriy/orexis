@@ -38,7 +38,6 @@ from .planner import Planner
 from .store import bindings
 
 # What this package asks OF others, by family — their namespaces, never their Python.
-_DESIRE = "http://example.org/orexis/desire#DesireCapability"
 
 # The moves. The intention package's individuals, referenced by IRI: a move IS what the keeper
 # records when the actor carries it out, so naming anything else would put a translation table
@@ -258,7 +257,7 @@ class Deliberator(Module):
         lever nobody pulls — the search would decline for want of a rule and the agent would
         read it as a decision not to act.
         """
-        deducer = self.agent.provider(_DESIRE)
+        deducer = self.agent.deducer
         plan = Planner(self.agent, deducer, self.me).plan(desire)
         if plan.outcome == planner.NOTHING:
             return False, None               # nothing to simulate; let the reflex answer
@@ -337,10 +336,7 @@ class Deliberator(Module):
         #  A value of None no longer means "look" — `propose_for` answers that, from a desire
         #  that says which of the two epistemic failures it is. Here it means only that the
         #  caller has no reading to steer by, and steering is all this member does.
-        desire = self.agent.provider(_DESIRE)
-        if desire is None:
-            return None
-        aim = desire.aim(observed_property)
+        aim = self.agent.deducer.aim(observed_property)
         if aim is None:
             return None
         # MENU-DRIVEN since #190: every move the reflex can propose is a row, literally —

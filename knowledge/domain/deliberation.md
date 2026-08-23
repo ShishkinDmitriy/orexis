@@ -245,7 +245,7 @@ one place before reading the records that argue each rung:
 | rung | where it lives | built? | record |
 |---|---|---|---|
 | look / act / buy | the deliberator's gap clause | **yes** | [the-ladder-of-means](/decisions/the-ladder-of-means.md) |
-| commit once, keep it | `intention:Keeping` | **yes** | [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) |
+| commit once, keep it | the keeper | **yes** | [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) |
 | plan two levels | the deliberator's shop clause | **yes** | [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) |
 | re-pick your own settings | `review:Reckoning` | **yes** | [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) |
 | ask a model what next | a pick, unbuilt | **no** | [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md), [a-consulted-answer-is-a-premise](/decisions/a-consulted-answer-is-a-premise.md) |

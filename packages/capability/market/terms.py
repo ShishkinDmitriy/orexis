@@ -59,16 +59,12 @@ SENSING = ontology.SENSING + "SensingCapability"  # whoever can look, however it
 ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if this agent can at all
 # The mind's STATES are kernel words; the FAMILIES that arrive at them are not.
 KERNEL = "http://example.org/orexis#"
-DESIRE_NS = "http://example.org/orexis/desire#"
-DESIRE = DESIRE_NS + "DesireCapability"  # whoever holds the ends — the aim a bid prices toward
 #  Whoever keeps the debts. Its OWN family, because owing is granted by holding a lever
 #  others may demand and not by having a stake — a host with no interest of its own still
 #  owes what its market allocated (#233).
-OWING = DESIRE_NS + "Owing"
-INTENTION_NS = "http://example.org/orexis/intention#"
-INTENTION = INTENTION_NS + "IntentionCapability"  # whoever keeps commitments, if anything does
 # The three means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
-# when the keeper records it, so they are the intention package's individuals referenced by IRI.
+# when the keeper records it, and they are the kernel's individuals referenced by IRI — as is
+# the keeper itself now, reached as `agent.keeper` rather than asked for by family.
 OBSERVE = KERNEL + "Observe"
 ACQUIRE = KERNEL + "Acquire"
 APPLY = KERNEL + "Apply"      # real since #132: holding a claim until the watch is live

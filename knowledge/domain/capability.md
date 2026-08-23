@@ -50,13 +50,22 @@ There is no pattern to fit a new capability into. **The premise lives in the cap
 |---|---|---|
 | **wiring** | `sensing`, `actuation`, `market` | equipment, or a position in a market |
 | **latitude** | `review:Reckoning` | a mandate whose ends differ — settings you are permitted to move |
-| **a stake** | `desire:Deducing` | `ag:actsFor` a subject that states what it needs |
-| **a stake AND a lever** | `intention:Keeping`, `deliberation:Reflex` | wanting without means is a wish; means without wants decide nothing |
 | **universally** | `reporting` | granted by a rule and insisted on by a shape |
 
-When you add one, ask what makes *yours* meaningful rather than which of these it resembles. The
-two that share a premise stay two capabilities, because how commitments are kept and how decisions
-are reached are separately replaceable — which is the family test again.
+When you add one, ask what makes *yours* meaningful rather than which of these it resembles.
+
+**Two premises left this table and the reason is worth keeping.** A **stake** granted
+`desire:Deducing`, and a **stake AND a lever** granted `intention:Keeping` and
+`deliberation:Reflex`. All three were the mind — wanting, committing, deciding — and a mind is not
+plug-in-able: the stores those modules read were built for every agent unconditionally while the
+code that reads them was a grant, and a modality nobody may write is not a modality. They are the
+kernel's now, granted by nothing.
+
+A stake has not stopped mattering; it stopped being a *grant*. It decides which SHAPES apply —
+`ag:KeeperShape` and the desire shapes target `ag:actsFor` a subject that states what it needs —
+so an agent with nothing to advance for still holds no region and states no patience. What
+changed is that this is now a fact about the agent rather than a thing its world handed it. See
+[the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md).
 
 # Deduced at genesis, never hand-declared
 

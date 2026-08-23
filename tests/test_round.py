@@ -700,7 +700,7 @@ def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
 
     host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
     assert ledger_of(host).owed() == [], "paid — nothing stands"
-    from packages.capability.desire.graphs import obligations_graph
+    from agent.ontology import obligations_graph
     from agent.store import bindings
     kept = bindings(host.beliefs.query(
         "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/orexis#dischargedAt> ?d } }"
@@ -856,7 +856,10 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     about which agents compose what.
     """
     city = make("city")
-    assert not [m for m in city.modules if m.name == "desire"], \
+    #  Still no stake: a mains states no ranges, so the city holds no region. It used to have no
+    #  desire MODULE, because wanting was a grant; every agent has a deducer now and the claim
+    #  is asserted where it was always true — in what the agent actually wants.
+    assert not city.deducer.gaps(), \
         "still no stake — a mains that states no ranges wants nothing, and that stays true"
     ledger = ledger_of(city)
 

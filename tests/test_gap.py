@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 
-from packages.capability.desire import gaps_of, regions_of
+from agent.regions import gaps_of, regions_of
 
 from conftest import MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
@@ -311,8 +311,12 @@ def test_the_ranking_reaches_the_dashboards_with_the_split_that_matters(monkeypa
     assert fields["hottest"] == 1.0, "past the survival ceiling is as bad as it gets"
     assert fields["unactionable"] >= 1, \
         "wet is unmet and unactionable — the whole point of the column"
-    assert not [m for m in fern.modules if m.name == "owing"], \
-        "a plant holds no lever anyone may demand, so it keeps no ledger at all"
+    #  A plant holds no lever anyone may demand, so its ledger is EMPTY. It used to have no
+    #  ledger at all — `desire:Owing` was a grant — and the claim underneath is unchanged: what
+    #  a fern owes is nothing. Asserted against the debts now rather than against the module,
+    #  because every agent keeps a ledger and only some of them ever write one.
+    assert not fern.owing.duties(), \
+        "a plant holds no lever anyone may demand, so it owes nothing"
 
 
 def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):

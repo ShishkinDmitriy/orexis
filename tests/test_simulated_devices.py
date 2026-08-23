@@ -72,10 +72,11 @@ def test_the_simulated_world_derives_what_a_wired_one_does():
     assert wired <= simulated, (
         f"the wired fern derives {wired - simulated} that the simulated one does not — "
         f"the simulation has stopped standing in for hardware")
-    #  `Reflex` was in this difference and is not a capability any more — deliberating is the
-    #  kernel's, granted by nothing. The stake still buys the simulated fern three grants the
-    #  wired one lacks; it just no longer buys a fourth that every agent now has.
-    assert simulated - wired == {"Bidding", "Deducing", "Keeping"}, \
+    #  `Reflex`, `Keeping` and `Deducing` were all in this difference and none is a capability
+    #  any more — deciding, committing and wanting are the kernel's, granted by nothing. What a
+    #  stake still buys is the SHAPES it must satisfy and the regions it holds, not a module;
+    #  the one grant left in the difference is the market position.
+    assert simulated - wired == {"Bidding"}, \
         "the simulated world differs by something other than its fern having a stake"
 
 

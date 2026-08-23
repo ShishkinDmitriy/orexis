@@ -303,7 +303,6 @@ def test_two_denominations_make_two_rows_and_never_four(make):
 
 STORED = "http://example.org/orexis/water#StoredLitres"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
-_DESIRE = "http://example.org/orexis/desire#DesireCapability"
 
 
 def test_the_dealers_clause_answers_for_the_dealer_and_nobody_else(make):
@@ -336,7 +335,7 @@ def test_the_planner_pursues_the_lot_past_the_aim(make, monkeypatch):
     trade from."""
     supplier = make("supplier")
     planner = supplier.deliberator
-    monkeypatch.setattr(supplier.provider(_DESIRE), "aim", lambda p: 1.0)
+    monkeypatch.setattr(supplier.deducer, "aim", lambda p: 1.0)
     assert planner.propose(STORED, 1.5) == ACQUIRE, \
         "stock 1.5 < lot 2.0 — the shop cannot serve, so the dealer buys"
     assert planner.propose(STORED, 2.5) is None, \
@@ -369,7 +368,7 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
     toy.write_text("""
 SELECT ?means ?property ?via ?direction WHERE {
   VALUES ?property { $properties }
-  BIND(intention:Consult AS ?means)
+  BIND(ag:Consult AS ?means)
   BIND($me AS ?via)
 }""")
     real = loader.affordance_files()

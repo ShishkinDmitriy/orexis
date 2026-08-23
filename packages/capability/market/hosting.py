@@ -44,7 +44,7 @@ from .beliefs import HOSTING_PICKS
 #  a package may not import another's Python.
 _APPLY = "http://example.org/orexis#Apply"
 from .terms import (ACTUATION, HOSTING, BID_MATCHING,
-                    INTENTION, OFFER, OWING)
+                    OFFER)
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -146,7 +146,7 @@ SELECT ?p WHERE {{
 
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None keeps the old behaviour whole."""
-        return self.agent.provider(INTENTION)
+        return self.agent.keeper
 
     def subscriptions(self) -> list[str]:
         topics = list(self.event_topics)
@@ -212,7 +212,7 @@ SELECT ?p WHERE {{
             # here, on the reading, exactly as the deferred round does. The two are the same
             # shape — a commitment held until the world can honour it — and it is worth
             # noticing that the duty case needed no new machinery, only a want to point at.
-            if (ledger := self.agent.provider(OWING)) is not None:
+            if (ledger := self.agent.owing) is not None:
                 for desire in ledger.duties():
                     if desire.pursuable and desire.claim in self.held:
                         self._pursue(desire.claim,
@@ -413,10 +413,10 @@ SELECT ?p WHERE {{
         # claim that sourced it, whether or not the holder ever presents. What it buys
         # immediately is durability: `held` above dies with the process, and a restarted host
         # used to forget every claim it had issued.
-        #  Asked for by OWING and no longer by DESIRE (#233). A host with no stake of its
+        #  The LEDGER OF DEBTS and not the deducer (#233). A host with no stake of its
         #  own — the city, acting for a mains that states no ranges — used to reach this line,
         #  find no desire module, and record nothing at all while issuing claims all day.
-        if (ledger := self.agent.provider(OWING)) is not None:
+        if (ledger := self.agent.owing) is not None:
             for claim in result.claims:
                 ledger.owe(claim.sub, claim.jti, expires_at=claim.exp, amount_l=claim.amount_l)
 
@@ -468,7 +468,7 @@ SELECT ?p WHERE {{
             return
         # Asked for: the obligation steps from owed to demanded. What happens next is a
         # DECISION and not a handler any more — the whole of step 9. See below.
-        ledger = self.agent.provider(OWING)
+        ledger = self.agent.owing
         if ledger is not None:
             ledger.demanded(jti)
         self._pursue(jti, f"{presenter} presented it")
@@ -496,7 +496,7 @@ SELECT ?p WHERE {{
         claim = self.held.get(jti)
         if claim is None:
             return
-        ledger = self.agent.provider(OWING)
+        ledger = self.agent.owing
         deliberator = self.agent.deliberator
         if ledger is not None:
             desire = next((g for g in ledger.duties() if g.claim == jti), None)

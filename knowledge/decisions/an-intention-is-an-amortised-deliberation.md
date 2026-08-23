@@ -15,6 +15,13 @@ status: accepted
 timestamp: 2026-08-14T00:00:00Z
 ---
 
+> **AMENDED: it is not a capability any more.** The reasoning below stands and produced what the
+> code does; what changed is WHERE it lives. Wanting, committing and deciding are the kernel's,
+> granted by nothing, because the stores they read were built for every agent unconditionally
+> while the code reading them was a grant. See
+> [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md).
+
+
 # The question
 
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)

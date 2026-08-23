@@ -25,8 +25,12 @@ def test_plant_agent_runs_sensing_and_bidding(agent):
     not a wire and not a market position. The supplier gained the same the day it started
     acting for its barrel — the distinction is the stake, not which side of the market.
     """
+    #  `desire`, `intention`, `deliberation` and `owing` are the MIND, which every agent has:
+    #  they are the kernel's, granted by nothing. What is fern's own is `subscribing` (a
+    #  scheduled board), `bidding` (a market position), `review` (latitude) and `reporting`.
     assert {m.name for m in agent("fern").modules} == {
-        "subscribing", "bidding", "desire", "intention", "deliberation", "review", "reporting"}
+        "subscribing", "bidding", "review", "reporting",
+        "desire", "intention", "deliberation", "owing"}
 
 
 def test_supplier_runs_the_dealers_full_stack(agent):

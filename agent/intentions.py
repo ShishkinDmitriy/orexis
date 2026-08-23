@@ -44,7 +44,7 @@ class Intentions:
 
     def _adopt(self, beliefs) -> None:
         """Move a pre-split volume's ledger into the modality's own room, once."""
-        from packages.capability.intention.graphs import intentions_graph
+        from .graphs import intentions_graph
         if len(self._own):
             return
         iri = intentions_graph(beliefs.agent_id)

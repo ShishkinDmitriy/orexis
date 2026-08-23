@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 
 import pyoxigraph as ox
 
-from packages.capability.desire import gaps_of, desires_of
+from agent.regions import gaps_of, desires_of
 
 from conftest import MOISTURE, TEMPERATURE, desires_build, genesis_store
 
@@ -82,7 +82,7 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them():
     what the choice was made about: cool at issue, maximal at the deadline.
     """
     from agent import genesis
-    from packages.capability.desire.graphs import obligations_graph
+    from agent.ontology import obligations_graph
 
     st = genesis_store({("fern", MOISTURE): 0.55})
     genesis.birth(st, genesis.world_dir("simulation"), "fern")

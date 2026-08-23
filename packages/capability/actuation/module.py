@@ -40,8 +40,6 @@ from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION
 
 # What this package asks OF others, by family or by IRI — namespaces, never Python.
-_DESIRE = "http://example.org/orexis/desire#DesireCapability"
-_INTENTION = "http://example.org/orexis/intention#IntentionCapability"
 _ACTUATE = "http://example.org/orexis#Actuate"
 
 # My own conversion belief for a SELF-dose (#190), keyed by the valuation term the resource
@@ -152,7 +150,7 @@ class ActuationModule(Module):
         litres = self.dose_for(observed_property, value)
         if litres is None or litres <= EPS:
             return
-        keeper = self.agent.provider(_INTENTION)
+        keeper = self.agent.keeper
         if keeper is not None:
             from datetime import datetime, timezone
             now = datetime.now(timezone.utc)
@@ -194,7 +192,7 @@ class ActuationModule(Module):
         None where the agent cannot size a dose at all — no aim to steer toward, no stated
         conversion, or a vessel it has watched run dry.
         """
-        desire = self.agent.provider(_DESIRE)
+        desire = self.agent.deducer
         aim = desire.aim(observed_property) if desire is not None else None
         conversion = self._conversion_for(observed_property)
         if aim is None or conversion is None:

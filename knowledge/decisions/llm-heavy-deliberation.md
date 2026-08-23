@@ -6,6 +6,15 @@ status: accepted
 timestamp: 2026-08-01T00:00:00Z
 ---
 
+> **The seat moved, and everything this record fixes about it stands.** `deliberation:Consulting`
+> was a member of a family, selected by a grant; deliberating is the kernel's now, so WHICH
+> deliberator answers is a PICK an agent's review may move inside its mandate. That is where a
+> choice belongs here. The constraints below — a move from the vocabulary's menu and never free
+> text-to-action, a deterministic bid number, the keeper's patience bounding how often it is
+> consulted — are unchanged, and the term is undeclared until someone builds it. See
+> [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md).
+
+
 # Context
 
 Two options for where deliberation lives: LLM-thin/classical-BDI (symbolic plan selection,

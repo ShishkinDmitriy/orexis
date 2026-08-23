@@ -104,7 +104,7 @@ class _Derivation(Store):
     """
 
     def __init__(self, beliefs):
-        from packages.capability.desire.graphs import obligations_graph
+        from .ontology import obligations_graph
 
         super().__init__()
         publics = list(beliefs.public_graphs())

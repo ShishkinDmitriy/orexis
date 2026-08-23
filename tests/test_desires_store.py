@@ -157,7 +157,7 @@ def test_a_commitment_survives_a_restart_in_its_own_room(monkeypatch, tmp_path):
     from agent.beliefs import Beliefs
     from agent.intentions import Intentions
     from agent.store import Store
-    from packages.capability.intention.graphs import intentions_graph
+    from agent.graphs import intentions_graph
 
     state = tmp_path / "state"
     world = genesis.world_dir("loner")
