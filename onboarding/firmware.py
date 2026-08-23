@@ -311,11 +311,11 @@ SELECT ?f WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmDeltaFraction> ?f
 #define ADC_DRY {int(row['rawDry'])}
 #define ADC_WET {int(row['rawWet'])}
 
-// The watched band: the WORLD's statement of what this pot needs, not any agent's desire —
-// a sentinel answers to the ratified range, which is also what makes its promise legible to
-// everyone who can read the world.
-#define WAKE_BAND_LOW {lo}
-#define WAKE_BAND_HIGH {hi}
+// NOT the band. A sentinel's ULP watches MOVEMENT — the last published value plus or minus
+// WAKE_DELTA — and does not compare against the operating range at all; watching it made a pot
+// outside its range wake the radio every patrol, forever. The range is still read here, because
+// it is what SIZES the deviation limit below. See
+// knowledge/decisions/the-sentinel-alarms-on-movement.md.
 
 // Fitted under the polling agent's sensing:maxReadingAgeS ({max_age}s) with room to spare:
 // a heartbeat the agent would call stale would make a healthy sentinel read as a dead one.

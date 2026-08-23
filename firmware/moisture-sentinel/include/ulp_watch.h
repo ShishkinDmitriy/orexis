@@ -1,9 +1,27 @@
-// The ULP watcher (#151) — the sentinel's variant: the band is COMPILED IN from the world's
-// operating range (WAKE_BAND_LOW/HIGH in config.h), because a board that takes no orders can
-// still keep a promise the world wrote. See ulp_watch.cpp for the machinery and the derivation
-// of the one-second internal cadence.
+// The ULP watcher (#151) — the sentinel's variant, now a pure DEVIATION alarm: the ULP watches
+// the last published value plus/minus WAKE_DELTA and wakes the radio when the reading leaves
+// it. The operating range is not watched; it only sized WAKE_DELTA, upstream at generation.
+// See ulp_watch.cpp for that argument and for the two-rate patrol/confirm machinery.
 #pragma once
 
-void armUlpWatch();
+// The reference for the deviation window: what was last published if anything has been, and
+// this reading otherwise. See ulp_watch.cpp for why the operating range is not consulted.
+void armUlpWatch(float nowFrac);
+// Stay awake and report what the coprocessor is doing, second by second. Diagnostic only.
+void ulpSelfTest(int seconds);
+
+// Print the ULP's counters without touching them or the ADC. Safe at the top of setup().
+// Hand the vigil lamp's pin back to the digital matrix so analogWrite can drive it. The next
+// armUlpWatch() reclaims it for the coprocessor.
+void vigilLampRelease();
+
+// Stop the ULP timer. MUST be called before the CPU uses ADC1, or the two fight over the unit.
+void ulpStop();
+
+void ulpReport(const char *when);
+
+// Dump the ADC/RTC registers the ULP depends on. Diff boot against arm to see what sleep did.
+void ulpDumpAdcRegs(const char *when);
+
 bool wokeByAlarm();
 void noteReported(float frac);   // the deviation limit drifts from what was last heard

@@ -103,6 +103,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [the-wire-is-ours-and-it-has-two-levels](/decisions/the-wire-is-ours-and-it-has-two-levels.md) - A transport and an encoding vary independently: the credential is the connection's, the encoding is the stream's.
 * [a-board-is-a-platform](/decisions/a-board-is-a-platform.md) - The board three sensors share is a sosa:Platform hosting its parts, and mc:carries was sosa:hosts all along.
 * [a-board-says-what-it-can-honour](/decisions/a-board-says-what-it-can-honour.md) - A device states a frequency it can keep, so an agent cannot commit to a cadence its board would never honour.
+* [firmware-repeats-rather-than-shares](/decisions/firmware-repeats-rather-than-shares.md) - A shared library is a shared reflash, and what looks duplicated is the mechanism while the meaning differs per board.
 * [a-firmware-describes-itself](/decisions/a-firmware-describes-itself.md) - `firmware/<name>/ontology.ttl` is a T-Box source: the flashed image's own facts, entailed onto every typed board.
 * [a-part-is-described-once-and-fitted-many-times](/decisions/a-part-is-described-once-and-fitted-many-times.md) - We ship a package for a model, so datasheet facts are stated on classes and reach devices by entailment.
 * [a-species-is-described-once-and-planted-many-times](/decisions/a-species-is-described-once-and-planted-many-times.md) - A species is a model and the pots are units, so planting one is one triple.
@@ -110,7 +111,9 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [pins-and-wires](/decisions/pins-and-wires.md) - A pin is metal, a role is abstract, and the wire is what people get wrong — which makes a rail fault refusable.
 * [wokwi-drafts-it-the-world-ratifies-it](/decisions/wokwi-drafts-it-the-world-ratifies-it.md) - Importing a diagram drafts a stand and never becomes its source; bidirectional sync was refused, not deferred.
 * [one-agent-many-sensors](/decisions/one-agent-many-sensors.md) - Three of four combinations work, measured rather than assumed. Both failures come from a second kind of sensor on one subject.
-* [the-alarm-answers-to-the-last-report](/decisions/the-alarm-answers-to-the-last-report.md) - The deviation limit measures from the last value that left the board, re-anchored only by a successful publish.
+* [the-alarm-answers-to-the-last-report](/decisions/the-alarm-answers-to-the-last-report.md) - SUPERSEDED IN PART — the deviation limit measures from the last value that left the board. The anchor holds; the band half does not.
+* [the-sentinel-alarms-on-movement](/decisions/the-sentinel-alarms-on-movement.md) - The heartbeat says where the value is and the ULP says that it moved; the operating range sizes the trigger rather than being watched.
+* [two-owners-of-one-peripheral](/decisions/two-owners-of-one-peripheral.md) - Arduino held ADC1 and the ULP enable call returned success anyway, so the handover is now a sequence rather than a setting.
 * [a-stand-in-reports-what-its-world-says-it-does](/decisions/a-stand-in-reports-what-its-world-says-it-does.md) - A simulated device reports a value per property at the pointers its world declares, each drifting in its own range.
 * [a-panel-is-a-sensor-not-an-agent](/decisions/a-panel-is-a-sensor-not-an-agent.md) - A panel is keyed on the sensor, because a sensor observes one property and states one unit.
 * [a-name-does-not-expire](/decisions/a-name-does-not-expire.md) - A DHCP lease is a fact with an expiry date. The world states a hostname, and no firmware code changed.

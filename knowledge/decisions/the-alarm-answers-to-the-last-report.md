@@ -5,9 +5,20 @@ description: The deviation limit measures from the last value that LEFT the boar
   only by a successful publish — so slow drift is the cadence's story, the between-reports jolt
   is the alarm's, and the band edge catches what creeps. Which watcher pays for vigilance is
   decided by the same evidence, the opposite way round.
-status: accepted
+status: superseded-in-part
+superseded-by: the-sentinel-alarms-on-movement
 timestamp: 2026-08-15T21:19:41Z
 ---
+
+> **Superseded in part** by
+> [the-sentinel-alarms-on-movement](/decisions/the-sentinel-alarms-on-movement.md). The anchor
+> argument below still holds everywhere and is the substrate for both firmwares: the deviation
+> limit measures from the last value that LEFT the board. What does not hold is the third
+> bullet — "the band catches what creeps" — for the SENTINEL, which no longer watches the
+> operating range at all. On the bench the band half alarmed hardest exactly when it had least
+> to say: a pot outside its range breached every look, so the board woke the radio every patrol
+> forever, and the intersection with the deviation window went empty. The governed node, whose
+> band arrives from an agent that can retract it, is unaffected and still watches both.
 
 # The alarm answers to the last report
 
@@ -39,7 +50,9 @@ alarm, and that is not a hole but the division of labour:
   month-long dry-down still alarms at the edge however gently it got there.
 
 The picture an agent holds is therefore never staler than min(cadence, time for the signal to
-move delta), and never blind past the band.
+move delta), and — on the governed node — never blind past the band. A sentinel is: it watches
+movement alone, and a creep that never exceeds delta between reports reaches its agent as
+ordinary readings rather than as an alarm.
 
 One property fell out for free: a failed publish skips `noteReported`, the anchor stays stale,
 and the next look very probably alarms again — a crude retry that costs no code and no state.
