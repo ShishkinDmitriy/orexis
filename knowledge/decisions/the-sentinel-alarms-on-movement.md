@@ -63,6 +63,29 @@ anyone — a deviation in raw counts means the same thing whatever `ADC_DRY`/`AD
 sits well with moving the interpretation to the agent
 ([#26](https://github.com/ShishkinDmitriy/orexis/issues/26)).
 
+# The clamp is in fractions and the comparison is in counts
+
+The sentence above — "clamped to the physical 0..1 of a saturation fraction" — is true and was a
+trap, because **a fraction is defined by the calibration and the ULP is not**. `1.0` means "as wet
+as `ADC_WET`", not "as wet as it gets", and real water is wetter than a calibration point. So a
+probe in a glass reads about 1100 counts where `ADC_WET` is 1300; the CPU clamps the fraction to
+1.000 and hides it, while the coprocessor — comparing raw counts, knowing nothing of clamping —
+sees a sample below its wet threshold and breaches on every look.
+
+On the bench that was an alarm every ~23 seconds for as long as the probe stayed in the water:
+re-arm, immediate breach, confirm, wake, publish, repeat. The series store shows it plainly —
+four sends 23 seconds apart where the heartbeat had been landing every twenty minutes. The dry
+end is the same defect mirrored, for a pot drier than `ADC_DRY`.
+
+The fix is to open an edge that has reached a physical limit rather than pin it to the calibration
+point: no 12-bit sample exceeds 4095 and none is below 0, so an open edge cannot fire. The window
+in water becomes "alarm if it gets drier", which is exactly the remaining news.
+
+Worth naming as a class, because this project will meet it again: **whenever a value crosses
+between units, a clamp applied in one of them is invisible in the other.** The same seam is why
+[#26](https://github.com/ShishkinDmitriy/orexis/issues/26) wants the interpretation moved to the
+agent — a deviation expressed in raw counts needs no calibration to agree with anyone.
+
 # Two rates, because patrolling and confirming are different jobs
 
 Not part of the same decision, but landed with it and cheap to state. The ULP now chooses its own

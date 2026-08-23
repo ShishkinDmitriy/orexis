@@ -190,11 +190,25 @@ void armUlpWatch(float nowFrac) {
   // around something is better than a board that cannot alarm until it has managed to speak.
   float ref = (rtc_last_reported >= 0) ? rtc_last_reported : nowFrac;
   float lo = ref - WAKE_DELTA, hi = ref + WAKE_DELTA;
+  // THE CLAMP IS IN FRACTIONS AND THE COMPARISON IS IN COUNTS, and reconciling the two is this
+  // firmware's job. A fraction is defined by the calibration: 1.0 means "as wet as ADC_WET", not
+  // "as wet as it gets". Water is wetter than a calibration point — the probe reads about 1100
+  // where ADC_WET is 1300 — so readMoisture() clamps to 1.000 and hides it, while the ULP, which
+  // compares raw counts and knows nothing of clamping, sees a sample below the wet threshold and
+  // breaches on every look. Seen on the bench as an alarm every ~23 seconds for as long as the
+  // probe stayed in the glass: re-arm, immediate breach, confirm, wake, publish, repeat. The dry
+  // end is the same defect mirrored, for a pot drier than ADC_DRY.
+  //
+  // So an edge that has reached a PHYSICAL limit is opened to the hardware limit rather than
+  // pinned to the calibration point. An open edge cannot fire: no 12-bit sample exceeds 4095,
+  // and none is below 0.
+  bool openDry = (lo <= 0.0f);   // the window already includes "drier than calibration knows"
+  bool openWet = (hi >= 1.0f);   // ... and likewise wetter
   if (lo < 0.0f) lo = 0.0f;
   if (hi > 1.0f) hi = 1.0f;
 
-  RTC_SLOW_MEM[ULP_MEM_HIGH] = fracToRaw(lo);   // drier than the tightened floor
-  RTC_SLOW_MEM[ULP_MEM_LOW]  = fracToRaw(hi);   // wetter than the tightened ceiling
+  RTC_SLOW_MEM[ULP_MEM_HIGH] = openDry ? 4095 : fracToRaw(lo);  // drier than the floor
+  RTC_SLOW_MEM[ULP_MEM_LOW]  = openWet ? 0    : fracToRaw(hi);  // wetter than the ceiling
   // Every word the ULP writes carries its PC in bits 31:21 and the address register in 17:16
   // (see I_ST in ulp.h), so a CPU-side read is meaningless without this mask. Reading one raw
   // is how "2746843456 looks" happened.
