@@ -93,6 +93,6 @@ was, and the [claim](/domain/claim.md)'s replay check is keyed on it because a c
 once per auction rather than once per bidding pass.
 
 The one name still spelled the old way is `market:roundCooldownS`, deliberately: it is a persisted
-belief, and renaming one is what [#87](https://github.com/ShishkinDmitriy/agora/issues/87) exists
+belief, and renaming one is what [#87](https://github.com/ShishkinDmitriy/orexis/issues/87) exists
 to make safe. See
 [a-round-is-an-iteration-not-the-auction](/decisions/a-round-is-an-iteration-not-the-auction.md).

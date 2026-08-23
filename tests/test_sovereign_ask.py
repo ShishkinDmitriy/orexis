@@ -1,7 +1,7 @@
 """The sovereign may ask, and the agent answers about itself — disclosure, not access.
 
 The channel agent/sovereign.py declares, exercised end to end short of a broker: the
-responder in reporting, the grants in agora-mqtt, and the one property that makes the whole
+responder in reporting, the grants in orexis-mqtt, and the one property that makes the whole
 thing safe to exist — read-only by construction, because pyoxigraph's query API structurally
 cannot execute an update.
 """
@@ -39,12 +39,12 @@ def _answer(agent):
     raw = replies[-1]
     assert isinstance(raw, dict), (
         "the answer must be handed to Agent.publish as a DICT — publish serialises, and a "
-        "pre-dumped string double-encodes (found by the first live agora-ask)")
+        "pre-dumped string double-encodes (found by the first live orexis-ask)")
     return raw
 
 
 def test_a_select_is_answered_from_the_live_store(fern):
-    took = _ask(fern, "SELECT ?v WHERE { ?a <http://example.org/agora/sensing#slowSleepS> ?v }")
+    took = _ask(fern, "SELECT ?v WHERE { ?a <http://example.org/orexis/sensing#slowSleepS> ?v }")
     assert took
     answer = _answer(fern)
     assert answer["rows"] and answer["rows"][0]["v"] == "600", \
@@ -53,12 +53,12 @@ def test_a_select_is_answered_from_the_live_store(fern):
 
 def test_an_update_is_refused_by_the_engine_not_a_filter(fern):
     before = fern.beliefs.query(
-        "SELECT ?v WHERE { ?a <http://example.org/agora/sensing#slowSleepS> ?v }")
+        "SELECT ?v WHERE { ?a <http://example.org/orexis/sensing#slowSleepS> ?v }")
     _ask(fern, 'INSERT DATA { <http://example.org/x> <http://example.org/y> "stolen" }')
     answer = _answer(fern)
     assert "error" in answer, "an update must come back as the engine's own refusal"
     assert fern.beliefs.query(
-        "SELECT ?v WHERE { ?a <http://example.org/agora/sensing#slowSleepS> ?v }") == before
+        "SELECT ?v WHERE { ?a <http://example.org/orexis/sensing#slowSleepS> ?v }") == before
 
 
 def test_a_question_for_another_agent_is_not_taken(fern):
@@ -82,14 +82,14 @@ def test_the_sovereign_asks_a_modality_and_the_desires_answer(fern):
     the desire modality answers about wants — here, the region deduced from fern's plant —
     through the same read-only channel."""
     _ask(fern, """SELECT ?low WHERE {
-        <http://example.org/agora/world/simulation#fern_agent>
-            <http://example.org/agora#holds> ?region .
+        <http://example.org/orexis/world/simulation#fern_agent>
+            <http://example.org/orexis#holds> ?region .
         ?region <http://www.w3.org/ns/ssn/forProperty>
-                <http://example.org/agora/water#SoilMoisture> ;
+                <http://example.org/orexis/water#SoilMoisture> ;
                 <http://www.w3.org/ns/shacl#property> ?below .
         ?below <http://www.w3.org/ns/shacl#severity>
-               <http://example.org/agora#ShouldBecome> ;
-               <http://example.org/agora#violationIs> <http://example.org/agora#Below> ;
+               <http://example.org/orexis#ShouldBecome> ;
+               <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
                <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low
     }""", modality="desires")
     answer = _answer(fern)

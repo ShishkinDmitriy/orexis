@@ -1,7 +1,7 @@
 """What an agent is trying to bring about, in the one shape a deliberator ranges over.
 
 Here and not in a package because a desire is a MENTAL STATE, and those are the kernel's — the
-same reason `ag:Obligation` and `ag:Intention` moved into the agora namespace when the mind
+same reason `ag:Obligation` and `ag:Intention` moved into the orexis namespace when the mind
 was named (the-mind-is-six-graphs). Two packages need this type and neither may import the
 other: `desire` produces desires, `deliberation` consumes them, and the only thing they are
 allowed to share is a kernel word.
@@ -75,7 +75,7 @@ class Desire:
 #  desire is the kernel's shape for a want, and the desire modality is where an agent's wants
 #  live — a class per modality, each owning a store the agent never sees, per
 #  a-store-is-a-modality. The agent holds the MODALITIES and nothing holds the collection, by
-#  the sovereign's ruling: nothing ever addresses it — `agora-ask` names a modality and a
+#  the sovereign's ruling: nothing ever addresses it — `orexis-ask` names a modality and a
 #  module asks for the one it means — and a holder no question needs is a namespace, not a
 #  concept.
 

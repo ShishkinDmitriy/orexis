@@ -12,10 +12,10 @@ timestamp: 2026-08-17T11:03:04Z
 # The sovereign may ask, and the agent answers about itself
 
 [agent-centric-epistemics](/decisions/agent-centric-epistemics.md) has said "observe via
-sovereign" since the founding records. This is the via: `agora-ask <world> <agent> '<SPARQL>'`
+sovereign" since the founding records. This is the via: `orexis-ask <world> <agent> '<SPARQL>'`
 publishes the question on `agents/<id>/sovereign/query`, the agent answers on its result
 topic, and the broker's ACL is the whole of the admission control — a `sovereign` principal
-per world, minted by `agora-mqtt` like every other credential, held in the world's secrets
+per world, minted by `orexis-mqtt` like every other credential, held in the world's secrets
 directory and **never mounted into any container**.
 
 Three properties carry the design:
@@ -63,8 +63,8 @@ measurement recorded in its comment.
 - **No signature on the question.** The ACL is the admission control; a signed question
   (verifiable by the agent like an actuator verifies a claim) would defend against a
   compromised broker, and belongs with the same hardening pass as revocation
-  ([#28](https://github.com/ShishkinDmitriy/agora/issues/28),
-  [#29](https://github.com/ShishkinDmitriy/agora/issues/29)).
+  ([#28](https://github.com/ShishkinDmitriy/orexis/issues/28),
+  [#29](https://github.com/ShishkinDmitriy/orexis/issues/29)).
 - **Answers are capped, not paged.** A truncated answer says how many rows matched; a
   sovereign who wants a million rows has the volume, offline.
 - **One agent per question.** A fan-out ("ask every agent") is a loop in the CLI the day it

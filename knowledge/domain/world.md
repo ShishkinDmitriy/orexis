@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: World (a ratified genesis output)
-term: http://example.org/agora#World
+term: http://example.org/orexis#World
 description: What a world is made of — public topology plus one private beliefs file per agent — the three rules for authoring one, and what genesis derives rather than accepts. Several worlds coexist; which one is seeded decides what each agent becomes.
 ---
 
@@ -17,8 +17,8 @@ Worlds are whole, not layered. `world/` holds one directory per world, each seed
 own; there is no base that variants extend.
 
 ```bash
-agora-validate simulation  # plants, a market, a supplier, valves — devices stood in for
-agora-validate sensing     # one subject, one real board, one agent
+orexis-validate simulation  # plants, a market, a supplier, valves — devices stood in for
+orexis-validate sensing     # one subject, one real board, one agent
 ```
 
 | | holds | derivation produces |
@@ -135,16 +135,16 @@ Say you want `orchard/` — two trees on a shared tank, no market yet.
    wiring will give it. Unsure which? Seed and read what derivation decided.
 4. **Register each beliefs graph** in the catalog inside `world.ttl`:
    `<.../graph/beliefs/fern> a ag:DesireGraph ; ag:beliefsOf ag:fern_agent .`
-5. **Validate, and read what it derived.** `agora-validate orchard` builds the world from the
+5. **Validate, and read what it derived.** `orexis-validate orchard` builds the world from the
    files and prints `tree_north  Subscribing`. An agent that derived nothing has wiring
    implying no ability — usually a missing `sensing:senseMode`, or a device that is not a kind of
    anything the rules recognise.
-6. **Validate.** `agora-validate` is capability-aware: a shape applies to an agent only if that
+6. **Validate.** `orexis-validate` is capability-aware: a shape applies to an agent only if that
    agent derived the capability it belongs to. It catches a subscribing agent with no interval,
    an interval outside the constitutional bounds, a listening agent that stated one anyway, a
    band whose floor is above its ceiling, a device on a bus with no channel, and an agent with
    no capability at all.
-7. **Bring it to life.** `agora-compose orchard` writes the compose file *from the world*, one
+7. **Bring it to life.** `orexis-compose orchard` writes the compose file *from the world*, one
    container per agent — nothing lists them, and nothing needs provisioning first.
 
 A new world is covered by the test suite automatically: the shape tests glob `genesis/*/` and
@@ -167,7 +167,7 @@ Nothing here is true of every world at once, so nothing may assume one. Every co
 world as a required argument, and `genesis.current_world()` refuses rather than guessing:
 
 ```
-no world: set AGORA_WORLD_DIR (a mounted world) or AGORA_WORLD (a name).
+no world: set OREXIS_WORLD_DIR (a mounted world) or OREXIS_WORLD (a name).
 Available: sensing, simulation
 ```
 
@@ -179,7 +179,7 @@ misconfigured agent on the same topics as the real one, and two agents ingesting
 readings looks like doubled data rather than like a missing variable — a failure that has cost
 real time here twice.
 
-An agent never sets either variable itself. Its container is given `AGORA_WORLD_DIR` pointing at
+An agent never sets either variable itself. Its container is given `OREXIS_WORLD_DIR` pointing at
 the one world mounted into it, which is also why it never learns that other worlds exist.
 
 # A stand-in is steered on the same topic a board is commanded on
@@ -239,11 +239,11 @@ hardware need different devices, which is a genesis decision and not an infra on
 
 # Deployment — one container per agent
 
-`agora-compose <world>` reads the same `world.ttl` and writes `compose.yaml` beside it — a world
+`orexis-compose <world>` reads the same `world.ttl` and writes `compose.yaml` beside it — a world
 is one self-contained directory: its topology, its agents' opening beliefs, and the file that
 runs them. It emits: a
 `seed` service that runs to completion, then one container per agent, each told only its own
-`AGORA_AGENT_ID`. It is generated, never hand-edited — the roster is the ratified world, so a
+`OREXIS_AGENT_ID`. It is generated, never hand-edited — the roster is the ratified world, so a
 second list would be a second thing to drift.
 
 Three details are load-bearing rather than packaging taste:
@@ -267,7 +267,7 @@ Three details are load-bearing rather than packaging taste:
 The source trees are mounted read-only, so a code change needs a restart rather than a rebuild.
 
 ```bash
-agora-compose simulation
+orexis-compose simulation
 cd world/simulation && podman compose up -d
 ```
 
@@ -325,7 +325,7 @@ interval its agent gives it over the retained command, exactly as a deep-sleepin
 `sensing:PushProcedure` means it keeps its own clock and takes no orders. So the simulation exercises the
 retained-cadence mechanism, which the old one never touched at all.
 
-Before it: a separate `agora-sim` process told by an environment variable which subjects to
+Before it: a separate `orexis-sim` process told by an environment variable which subjects to
 pretend to be. Getting that variable wrong put two publishers on one topic and both readings
 were ingested — a failure that cost hours here more than once, and one the model could not warn
 about because the model did not know simulation existed. It knows now.

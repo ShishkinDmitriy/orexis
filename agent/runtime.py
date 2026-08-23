@@ -1,6 +1,6 @@
 """One agent, one process. It is given its own id and discovers everything else.
 
-  AGORA_AGENT_ID=fern agora-agent
+  OREXIS_AGENT_ID=fern orexis-agent
 
 Startup builds its own belief base and then reads it:
 
@@ -60,7 +60,7 @@ def _family_q(family: str) -> str:
     returned itself. Stating it is the same answer without depending on a property path's
     reflexivity to carry a case nobody had written down.
 
-    The subclass walk itself is gone. `agora/inference.py` asserts what the vocabulary entails
+    The subclass walk itself is gone. `orexis/inference.py` asserts what the vocabulary entails
     before anything reads it, so a capability under a sub-family already carries the parent's
     type here.
     """
@@ -83,7 +83,7 @@ class Agent:
         # concerns a-store-is-a-modality rules. Nothing else can reach it either: the
         # isolation is structural, one process, one volume.
         st = st or genesis.open_belief_base(
-            genesis.current_world(), agent_id, config.env("AGORA_STORE"))
+            genesis.current_world(), agent_id, config.env("OREXIS_STORE"))
         self.world: World = load_world(st.query)
         self.bus: MessageBus = load_bus(st.query)  # discovered, not configured
         self.me: Self = load_self(st.query, agent_id)
@@ -96,7 +96,7 @@ class Agent:
         # commitment survives a restart, so it persists where the imaginarium never does. A
         # pathless mind (every test agent) has no rooms and the ledger stays beside the
         # beliefs, exactly as pre-split volumes kept it; the surface is the boundary.
-        self.intentions = Intentions(config.env("AGORA_STORE") if st_given is None else None,
+        self.intentions = Intentions(config.env("OREXIS_STORE") if st_given is None else None,
                                      self.beliefs)
 
         # Built before the modules, because Observations counts into it and a module builds one
@@ -320,7 +320,7 @@ class Agent:
         if not username:
             raise RuntimeError(
                 "no MQTT_USERNAME in the environment — this agent has no credential for the "
-                "bus. Run `agora-mqtt <world>` and regenerate the compose file.")
+                "bus. Run `orexis-mqtt <world>` and regenerate the compose file.")
         cert, key, ca = (config.env("MQTT_CERT"), config.env("MQTT_KEY"), config.env("MQTT_CA"))
         if self.bus.tls_port and cert and key and ca:
             # Prove who I am with the certificate onboarding issued me. Its CN *is* the username
@@ -339,7 +339,7 @@ class Agent:
                 # fatal — the password door is still open and the ACL is the same — but it is
                 # a downgrade nobody asked for, so it is said out loud.
                 log.warning("%s: the world states a TLS port but I hold no certificate — "
-                            "connecting by password. Re-run `agora-onboard`.", self.id)
+                            "connecting by password. Re-run `orexis-onboard`.", self.id)
         # Block them FIRST, then wait. Two reasons, and the second is the one that bit:
         #
         #   - `sigwait` requires it. Its own contract is that the signals be blocked in every
@@ -393,11 +393,11 @@ def main() -> None:
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)-7s %(name)s: %(message)s"
     )
-    agent_id = config.env("AGORA_AGENT_ID")
+    agent_id = config.env("OREXIS_AGENT_ID")
     if not agent_id:
         raise SystemExit(
-            "AGORA_AGENT_ID is required — an agent process is one agent, and its id is the "
-            "only thing it is told. Try: AGORA_AGENT_ID=fern agora-agent"
+            "OREXIS_AGENT_ID is required — an agent process is one agent, and its id is the "
+            "only thing it is told. Try: OREXIS_AGENT_ID=fern orexis-agent"
         )
     Agent(agent_id).run()
 

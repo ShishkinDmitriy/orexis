@@ -1,13 +1,13 @@
-@prefix sentinel: <http://example.org/agora/firmware/moisture-sentinel#> .
-@prefix : <http://example.org/agora/firmware/moisture-sentinel#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix mc:   <http://example.org/agora/microcontroller#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix sentinel: <http://example.org/orexis/firmware/moisture-sentinel#> .
+@prefix : <http://example.org/orexis/firmware/moisture-sentinel#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix mc:   <http://example.org/orexis/microcontroller#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<http://example.org/agora/firmware/moisture-sentinel> a owl:Ontology ;
+<http://example.org/orexis/firmware/moisture-sentinel> a owl:Ontology ;
     rdfs:label "The sentinel — what a board running this firmware IS" ;
     rdfs:comment """The second firmware's self-description (#175); see the governed node's for
 the pattern. The temperaments differ in every fact stated here, which is the point of stating

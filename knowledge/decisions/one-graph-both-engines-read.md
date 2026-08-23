@@ -15,7 +15,7 @@ Two engines read this society's graphs and they did not agree about what it says
 steps. `pyoxigraph`, which every query at runtime goes through, infers nothing at all. **A world
 could therefore validate against a relationship the code would never observe.**
 
-[#27](https://github.com/ShishkinDmitriy/agora/issues/27) recorded this as *"the runtime does no
+[#27](https://github.com/ShishkinDmitriy/orexis/issues/27) recorded this as *"the runtime does no
 inference"*, and that framing is not quite right. Counted before changing anything:
 
 - **six** queries carried `rdfs:subClassOf*` property paths by hand — `runtime.py`'s `_family_q`,
@@ -38,7 +38,7 @@ subclass would have validated perfectly and returned nothing.
 # Decision
 
 **Materialise a restricted closure into the store at genesis, and turn validation's own inference
-off.** `agora/inference.py` runs inside `refresh_public`, after the files are loaded and *before*
+off.** `orexis/inference.py` runs inside `refresh_public`, after the files are loaded and *before*
 each package's `rules.ru`, so a derivation rule may ask what a thing **is** rather than spelling
 out how to find out.
 

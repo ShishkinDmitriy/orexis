@@ -161,7 +161,7 @@ class BiddingModule(Module):
         if not rows or rows[0].get("v") is None:
             raise RuntimeError(
                 f"{self.agent.id} bids in a venue priced in <{self.about}> but holds no "
-                f"<{self._valuation_term}> belief — run agora-validate")
+                f"<{self._valuation_term}> belief — run orexis-validate")
         return float(rows[0]["v"])
 
     def qty_for(self, observed_property: str, value: float) -> float | None:

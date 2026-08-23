@@ -1,14 +1,14 @@
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
-@prefix : <http://example.org/agora/microcontroller#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
+@prefix : <http://example.org/orexis/microcontroller#> .
 
-<http://example.org/agora/microcontroller> a owl:Ontology ;
+<http://example.org/orexis/microcontroller> a owl:Ontology ;
     rdfs:label "Microcontrollers and wiring" ;
     rdfs:comment """Boards, the peripherals mounted on them, the pins both have, and the wires between. Split out of the core because a society and a solder joint are different subjects that were sharing a file — the core says what an agent IS, this says what is soldered. Generic to microcontrollers rather than to this bench: nothing here knows what a plant is, and nothing knows which board.
 

@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: What an agent says about itself
-term: http://example.org/agora/reporting#ReportingCapability
+term: http://example.org/orexis/reporting#ReportingCapability
 description: The figures an agent is uniquely placed to report — belief base size, reading freshness, and the write failures that were previously only logged. Counting is the kernel's because it could not be done differently; where the account GOES is a mandatory capability, granted to every agent and insisted on by a shape. The interval is required, because an agent permitted to be silent cannot be told from a dead one.
 ---
 
@@ -103,7 +103,7 @@ without re-ratifying a world, so that stays a loud warning.
 
 # The dashboard
 
-`agora-dashboards <world>` generates a second dashboard per world, `health.json`, derived from
+`orexis-dashboards <world>` generates a second dashboard per world, `health.json`, derived from
 the **roster** rather than the wiring — every agent, not only the ones that observe, because a
 market host owns a belief base and can go quiet exactly as loudly as a sensing agent can.
 

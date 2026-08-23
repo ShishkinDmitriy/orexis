@@ -71,7 +71,7 @@ ratified fact and may cost a restart, because ratification is rare and sovereign
 
 ## 3. One Fuseki per world
 
-A new world is a new container; nothing existing restarts or notices. `agora-acl` becomes
+A new world is a new container; nothing existing restarts or notices. `orexis-acl` becomes
 per-world again. Costs **237 MB × worlds** — 711 MB for three, on 10.5 GB available. Affordable,
 and the only option whose cost grows with something you add deliberately and rarely.
 
@@ -85,7 +85,7 @@ the second is admissible. Beliefs that vanished on restart would make every star
 re-birth, resetting the agent to whatever the sovereign last authored — the exact collapse
 [agent](/domain/agent.md) §Lifecycle exists to prevent. Start and stop are pause and resume, so
 revision has to survive them or a belief is configuration again. In practice: a RocksDB store on
-a per-agent named volume, which `agora-compose` can emit as one line per service.
+a per-agent named volume, which `orexis-compose` can emit as one line per service.
 
 The count is highest and the machinery is lowest, because it stops being a *server*:
 `pyoxigraph` is a library, like SQLite. No port, no process, no container, and **no ACL
@@ -95,7 +95,7 @@ with agents rather than worlds.
 
 Two things make this more attractive than it first looks:
 
-- **SHACL is not a blocker.** It never runs in the store — `agora-validate` fetches graphs over
+- **SHACL is not a blocker.** It never runs in the store — `orexis-validate` fetches graphs over
   GSP and runs `pyshacl` in Python. A store without SHACL costs nothing.
 - **Nothing queries beliefs and world together.** Every query in the codebase targets one named
   graph; the only join is in `validate.py`, in rdflib, after fetching each separately.
@@ -120,7 +120,7 @@ for.
 
 # Built
 
-Implemented. Fuseki, `agora-seed`, `agora-acl`, the store credentials and the access registry
+Implemented. Fuseki, `orexis-seed`, `orexis-acl`, the store credentials and the access registry
 are gone; `infra/fuseki/` no longer exists. Three things only became clear by building it:
 
 - **The derivation rules survived unchanged**, which the earlier rejection of "a dataset per
@@ -182,7 +182,7 @@ under a world it no longer knows is the thing to prevent; being briefly absent i
 
 # Where validation belongs
 
-`agora-validate` currently reads **every** agent's beliefs as admin. That is the one thing
+`orexis-validate` currently reads **every** agent's beliefs as admin. That is the one thing
 option 4 breaks — and it is worth asking whether it was in the right place to begin with.
 
 Split it by what is being checked:

@@ -1,7 +1,7 @@
 ---
 type: Capability
 title: Intention
-term: [http://example.org/agora#Intention, http://example.org/agora/intention#IntentionCapability]
+term: [http://example.org/orexis#Intention, http://example.org/orexis/intention#IntentionCapability]
 description: >-
   BDI's third letter — a commitment to reduce a named gap by a named means, persisting until
   satisfied, dropped or outwaited rather than being re-decided on every sensing. Kept in a

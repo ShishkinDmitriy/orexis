@@ -19,7 +19,7 @@ from agent.store import bindings
 from conftest import WORLDS_ROOT, genesis_store
 from test_shapes import _conforms, _flatten
 
-AG = "http://example.org/agora#"
+AG = "http://example.org/orexis#"
 
 _CAPS_Q = f"""
 SELECT ?id ?cap WHERE {{ 
@@ -80,7 +80,7 @@ def test_the_simulated_world_derives_what_a_wired_one_does():
 
 def _mutate_simulation(update: str) -> rdflib.Graph:
     st = genesis_store(world="simulation")
-    st.update("PREFIX ag: <http://example.org/agora#>\n" + update)
+    st.update("PREFIX ag: <http://example.org/orexis#>\n" + update)
     return _flatten(st, WORLDS_ROOT / "simulation")
 
 
@@ -92,8 +92,8 @@ def test_a_stand_in_that_is_on_no_bus_is_refused():
     """Without mqtt:onBus it gets no credential and no container, so it would never publish —
     and a sensor that is permanently silent reads exactly like hardware that is not there."""
     assert not _conforms(_mutate_simulation(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:onBus ?b }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:onBus ?b }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#moisture_sensor_fern> mqtt:onBus ?b }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#moisture_sensor_fern> mqtt:onBus ?b }} }}"""))
 
 
 def test_an_initial_value_outside_the_range_is_refused():
@@ -122,7 +122,7 @@ def test_a_tick_of_zero_seconds_is_refused():
 # broker. These are about the simulated world catching up.
 
 def test_a_stand_in_may_share_a_neighbours_wire_without_a_bus_of_its_own():
-    """`<http://example.org/agora/world/simulation#air_temp_fern>` states no mqtt:onBus, and the shipped world conforms.
+    """`<http://example.org/orexis/world/simulation#air_temp_fern>` states no mqtt:onBus, and the shipped world conforms.
 
     A second credential for a client that never connects is exactly what the hardware world
     refuses, and demanding one here would have forced the simulation to model something real
@@ -131,7 +131,7 @@ def test_a_stand_in_may_share_a_neighbours_wire_without_a_bus_of_its_own():
     st = genesis_store(world="simulation")
     rows = bindings(st.query(f"""
         SELECT ?id WHERE {{ ?s <{AG}localId> ?id ; <{AG}simulatedBy> ?m .
-                            FILTER NOT EXISTS {{ ?s <http://example.org/agora/mqtt#onBus> ?b }} }}"""))
+                            FILTER NOT EXISTS {{ ?s <http://example.org/orexis/mqtt#onBus> ?b }} }}"""))
     assert [r["id"] for r in rows] == ["air_temp_fern"], \
         "the world that this test is about no longer has a stand-in sharing a wire"
 
@@ -140,8 +140,8 @@ def test_a_stand_in_with_no_bus_and_no_publishing_peer_is_refused():
     """The rule the old one stated, kept: reachable, or permanently silent — and permanently
     silent reads exactly like hardware that is not there."""
     assert not _conforms(_mutate_simulation(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:onBus ?b }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:onBus ?b }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#moisture_sensor_fern> mqtt:onBus ?b }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#moisture_sensor_fern> mqtt:onBus ?b }} }}"""))
 
 
 def test_an_initial_value_outside_a_models_own_range_is_refused():
@@ -159,7 +159,7 @@ def test_a_temperature_is_not_refused_for_not_being_a_fraction():
     the old shape refused it, because it held every model to 0..1."""
     st = genesis_store(world="simulation")
     rows = bindings(st.query(f"""
-        SELECT ?initial WHERE {{ <http://example.org/agora/world/simulation#air_temp_fern> <{AG}simulatedBy> ?m .
+        SELECT ?initial WHERE {{ <http://example.org/orexis/world/simulation#air_temp_fern> <{AG}simulatedBy> ?m .
                                  ?m <{AG}modelInitialValue> ?initial }}"""))
     assert rows, "air_temp_fern states no initial value; this test has lost its subject"
     assert float(rows[0]["initial"]) == 21.0
@@ -168,7 +168,7 @@ def test_a_temperature_is_not_refused_for_not_being_a_fraction():
 def test_a_second_sensor_on_an_existing_topic_mints_no_principal():
     """The payload grew; the channel did not. A stand-in that publishes nothing of its own is
     a value inside its neighbour's process, not a client — so it gets no credential, exactly as
-    `<http://example.org/agora/world/simulation#air_temp_fern>` gets none on the real board."""
+    `<http://example.org/orexis/world/simulation#air_temp_fern>` gets none on the real board."""
     from onboarding import mqtt as mqtt_admin
 
     agents, devices = mqtt_admin.grants("simulation")
@@ -274,7 +274,7 @@ def test_the_meddler_is_its_own_service_with_its_own_credential():
 
     compose = render("simulation")
     assert "sim-meddler:" in compose
-    assert "agora-meddler:local" in compose
+    assert "orexis-meddler:local" in compose
     assert '"rain/fern"' in compose and '"rain/tomato"' in compose
     assert 'MEDDLER_MEAN_DAYS: "2"' in compose
     assert "mqtt-meddler.env" in compose
@@ -307,18 +307,18 @@ def test_a_sensing_element_claiming_its_own_clock_is_refused():
     clock of its own to state. Before #96 it could claim Push while its board claimed Scheduled
     — one firmware deriving two contradictory capabilities — with no shape spanning them."""
     assert not _conforms(_mutate_simulation(f"""
-        PREFIX sensing: <http://example.org/agora/sensing#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-          <http://example.org/agora/world/simulation#air_temp_fern> sensing:senseMode sensing:PushProcedure }} }} WHERE {{ }}"""))
+          <http://example.org/orexis/world/simulation#air_temp_fern> sensing:senseMode sensing:PushProcedure }} }} WHERE {{ }}"""))
 
 
 def test_a_speaking_device_that_states_no_clock_is_refused():
     """Every capability its agents derive follows from the mode — a device without one leaves
     them silently capability-less, which is the composition-of-correct-silences #103 mapped."""
     assert not _conforms(_mutate_simulation(f"""
-        PREFIX sensing: <http://example.org/agora/sensing#>
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> sensing:senseMode ?m }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> sensing:senseMode ?m }} }}"""))
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:senseMode ?m }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:senseMode ?m }} }}"""))
 
 
 def test_a_scheduled_device_without_a_command_channel_is_refused():
@@ -326,9 +326,9 @@ def test_a_scheduled_device_without_a_command_channel_is_refused():
     channel to accept it on. The peripheral that used to escape this check cannot exist now —
     it cannot bear a mode at all — so the device is the whole of the question."""
     assert not _conforms(_mutate_simulation(f"""
-        PREFIX mqtt: <http://example.org/agora/mqtt#>
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:commandTopic ?c }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#moisture_sensor_fern> mqtt:commandTopic ?c }} }}"""))
+        PREFIX mqtt: <http://example.org/orexis/mqtt#>
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#moisture_sensor_fern> mqtt:commandTopic ?c }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#moisture_sensor_fern> mqtt:commandTopic ?c }} }}"""))
 
 
 def test_a_peripheral_inherits_its_boards_clock():

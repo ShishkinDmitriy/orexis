@@ -92,13 +92,13 @@ From the Pi, without the market or any other agent running:
 
 ```bash
 mosquitto_sub -h localhost -t 'sensors/fern/#' -v    # is it publishing at all?
-agora-compose sensing                                # one agent, sensing only
+orexis-compose sensing                                # one agent, sensing only
 cd ../../world/sensing && podman compose up -d
 ```
 
 `world/sensing` is the smallest ratified world: one subject, one board, one agent, no
 market. The agent logs the interval it set, and the line appears in Grafana
-(`localhost:3000`, "Agora — Moisture"). Two things to eyeball in the raw payloads: the
+(`localhost:3000`, "Orexis — Moisture"). Two things to eyeball in the raw payloads: the
 `"sensor"` field must match the sensor's `ag:localId` in the world, and a value pinned at
 exactly `0.000` or `1.000` means `ADC_DRY`/`ADC_WET` are wrong.
 

@@ -1,16 +1,16 @@
-"""agora-onboard — everything between a ratified world and a society that can be started.
+"""orexis-onboard — everything between a ratified world and a society that can be started.
 
-  agora-onboard society
+  orexis-onboard society
 
 **Genesis ends with a world; it does not end with a society.** A world says what exists and how
 it is wired, and that is a complete description of nothing running. Between it and a first
 `podman compose up` there is a phase with no name until now, made of three tools that each read
 the same `world.ttl` and grant exactly what its wiring implies:
 
-  agora-influx <world>    a bucket per agent, and a token that opens only it
-  agora-mqtt <world>      a credential per principal, and the broker ACL, derived
-  agora-compose <world>   the roster, as services
-  agora-dashboards <w>    what this world observes, as a Grafana folder
+  orexis-influx <world>    a bucket per agent, and a token that opens only it
+  orexis-mqtt <world>      a credential per principal, and the broker ACL, derived
+  orexis-compose <world>   the roster, as services
+  orexis-dashboards <w>    what this world observes, as a Grafana folder
 
 Calling that phase **onboarding** is not decoration. It names the moment an agent stops being a
 description and acquires the means to act: an account of its own on the series store, a
@@ -31,7 +31,7 @@ lifecycle table in knowledge/domain/agent.md.
 
 **Order matters, and only in one place.** Validation comes first because onboarding a world that
 does not hold together mints credentials for agents that will refuse to start. The other three
-are independent — but `agora-mqtt` reloads the broker at the end, so it is last among the two
+are independent — but `orexis-mqtt` reloads the broker at the end, so it is last among the two
 provisioners, and compose is written last because it is the thing you then run.
 
 See knowledge/domain/onboarding.md.
@@ -58,7 +58,7 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     if check and not validate.validate_world(world):
         # Onboarding an inconsistent world is worse than refusing: it mints real credentials for
         # agents that will fail their own startup validation, and leaves them lying around.
-        raise SystemExit(f"agora-onboard: world {world!r} does not hold together — nothing granted")
+        raise SystemExit(f"orexis-onboard: world {world!r} does not hold together — nothing granted")
 
     log.info("onboarding %s", world)
     influx.provision(world, rotate=rotate)
@@ -78,7 +78,7 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
-        prog="agora-onboard",
+        prog="orexis-onboard",
         description="Grant a ratified world its credentials and its compose file, all derived "
                     "from that world's own wiring.",
     )

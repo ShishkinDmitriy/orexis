@@ -19,14 +19,14 @@ from packages.capability.deliberation.search import Planner
 
 from conftest import build_agent, genesis_store
 
-MOISTURE = "http://example.org/agora/water#SoilMoisture"
-KERNEL = "http://example.org/agora#"
+MOISTURE = "http://example.org/orexis/water#SoilMoisture"
+KERNEL = "http://example.org/orexis#"
 #  zz states 0.1–0.3 and survives 0.02–0.45; the gardener aims at the centre.
 WET, DRY = 0.42, 0.04
 
 
 def _gardener(monkeypatch, moisture):
-    monkeypatch.setenv("AGORA_WORLD", "loner")
+    monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
@@ -41,7 +41,7 @@ SELECT ?s ?p ?o WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{ ?s ?p ?o }} }}"""))
 
 
 def test_the_sovereign_can_ask_what_it_considered_and_why_it_declined(monkeypatch):
-    """The question the issue exists for, asked the way `agora-ask` would ask it.
+    """The question the issue exists for, asked the way `orexis-ask` would ask it.
 
     A gardener at 0.42 is above its region and holds one lever, a pump that raises moisture.
     The reflex would take it — direction matches sign, aim sits above the reading, both true of
@@ -159,7 +159,7 @@ def test_the_verdicts_reach_the_series_so_a_dashboard_can_watch(monkeypatch):
     Six fields because a planner has six answers where returning a move or None had two — and
     the pair that matters most is `no candidate` against `exhausted`, since one says equip me
     and the other says my doses are too coarse. Counted from the TRACE rather than tallied in
-    the module, so the figure a dashboard shows and the answer `agora-ask` gives cannot drift.
+    the module, so the figure a dashboard shows and the answer `orexis-ask` gives cannot drift.
     """
     agent, _, _ = _gardener(monkeypatch, WET)
     deliberation = next(m for m in agent.modules if m.name == "deliberation")

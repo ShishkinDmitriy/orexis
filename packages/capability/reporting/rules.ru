@@ -28,8 +28,8 @@
 # directly, the same way review's does; what would SELECT between two once both exist is an open
 # seam and the last piece to add, not the first.
 
-PREFIX reporting: <http://example.org/agora/reporting#>
-PREFIX ag: <http://example.org/agora#>
+PREFIX reporting: <http://example.org/orexis/reporting#>
+PREFIX ag: <http://example.org/orexis#>
 
 INSERT { GRAPH $derived {
     ?agent ag:hasCapability reporting:Storing } }

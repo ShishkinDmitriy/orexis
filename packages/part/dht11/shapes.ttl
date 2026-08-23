@@ -1,9 +1,9 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix dht11: <http://example.org/agora/dht11#> .
-@prefix onewire: <http://example.org/agora/onewire#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix dht11: <http://example.org/orexis/dht11#> .
+@prefix onewire: <http://example.org/orexis/onewire#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 
 ag:Dht11Shape a sh:NodeShape ;

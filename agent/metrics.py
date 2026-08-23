@@ -205,7 +205,7 @@ class Metrics:
         write amplification, and neither number alone shows it. Now that the ratio triggers a
         compaction, the compaction count is what tells a reader why the bytes line has teeth in
         it, and `belief_revisions` is what tells them an agent is no longer running exactly the
-        beliefs its author wrote. See agora/upkeep.py and capabilities/review/.
+        beliefs its author wrote. See orexis/upkeep.py and capabilities/review/.
 
         **Two sources, because they are two different things now.** Compaction is every agent's
         and comes off the kernel; the revision counts come off a module an agent may not have.

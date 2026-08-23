@@ -1,7 +1,7 @@
 [project]
-name = "agora"
+name = "orexis"
 version = "0.1.0"
-description = "Agora — a market society of agents that bid for a scarce resource"
+description = "Orexis — a market society of agents that bid for a scarce resource"
 requires-python = ">=3.10"
 
 # One distribution, where there used to be two. The split expressed an intent it did not
@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# wireviz is a DEV dependency and not a runtime one: agora-wireviz only writes YAML,
+# wireviz is a DEV dependency and not a runtime one: orexis-wireviz only writes YAML,
 # and nothing in agent/ or the other generators imports it. It is here because the
 # tests feed the generated harness to wireviz itself — the only check worth trusting
 # for an output format nobody here can eyeball, since it is easy to emit YAML that
@@ -30,28 +30,28 @@ dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4", "pyyaml>=6", "pytest-xdi
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.
-agora-agent = "agent.runtime:main"
+orexis-agent = "agent.runtime:main"
 
 # ONBOARDING — everything between a ratified world and a society that can be started. The
 # umbrella runs the four below; they stay separately callable because rotating one service's
 # credentials should not touch the other's.
-agora-onboard = "onboarding.onboard:main"
-agora-validate = "onboarding.validate:main"
-agora-influx = "onboarding.influx:main"
-agora-mqtt = "onboarding.mqtt:main"
-agora-compose = "onboarding.compose:main"
-agora-dashboards = "onboarding.dashboards:main"
-agora-wokwi = "onboarding.wokwi:main"
-agora-wireviz = "onboarding.wireviz:main"
+orexis-onboard = "onboarding.onboard:main"
+orexis-validate = "onboarding.validate:main"
+orexis-influx = "onboarding.influx:main"
+orexis-mqtt = "onboarding.mqtt:main"
+orexis-compose = "onboarding.compose:main"
+orexis-dashboards = "onboarding.dashboards:main"
+orexis-wokwi = "onboarding.wokwi:main"
+orexis-wireviz = "onboarding.wireviz:main"
 # A board's config.h is a per-instance deployment fact, and every value in it is already
 # stated by the world. Regenerating beats retrieving the board.
-agora-firmware = "onboarding.firmware:main"
+orexis-firmware = "onboarding.firmware:main"
 # Once per world, before it is onboarded. An agent may LOAD its two keys; it may not mint them.
-agora-keygen = "onboarding.keygen:main"
-agora-ask = "onboarding.ask:main"
+orexis-keygen = "onboarding.keygen:main"
+orexis-ask = "onboarding.ask:main"
 # INFRA, not onboarding: the services' own identities and whom the broker trusts. Its lifecycle
 # is the infrastructure's — possibly another host, certainly another schedule.
-agora-infra-certs = "onboarding.infra_certs:main"
+orexis-infra-certs = "onboarding.infra_certs:main"
 
 [build-system]
 requires = ["setuptools>=68"]

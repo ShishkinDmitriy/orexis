@@ -12,14 +12,14 @@
 # never where. The grant rules stayed in `rules.ru` — a grant is a fact about the AGENT and
 # is genesis's to derive; what the agent wants is the modality's.
 
-PREFIX desire: <http://example.org/agora/desire#>
-PREFIX market: <http://example.org/agora/market#>
-PREFIX actuation: <http://example.org/agora/actuation#>
-PREFIX sensing: <http://example.org/agora/sensing#>
+PREFIX desire: <http://example.org/orexis/desire#>
+PREFIX market: <http://example.org/orexis/market#>
+PREFIX actuation: <http://example.org/orexis/actuation#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
 PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX ag:   <http://example.org/agora#>
+PREFIX ag:   <http://example.org/orexis#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>
@@ -91,7 +91,7 @@ WHERE  {
     #  Keyed by the SENSOR, not by the property: one agent may poll two instruments reading the
     #  same property of different subjects — the loner's gardener does not, but the dealer's
     #  shape of world does, and a name that collided would silently merge two wants into one.
-    BIND(IRI(CONCAT("http://example.org/agora#fresh.", ENCODE_FOR_URI(?who), ".",
+    BIND(IRI(CONCAT("http://example.org/orexis#fresh.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?sensor), "#")))) AS ?fresh)
     BIND(CONCAT(?name, " was last read longer ago than ", ?who,
                 " trusts a reading of it — the number is no longer evidence about now")
@@ -102,7 +102,7 @@ WHERE  {
       "<http://www.w3.org/ns/sosa/observedProperty> <", STR(?property), "> ; ",
       "<http://www.w3.org/ns/sosa/resultTime> ?at ; ",
       "<http://www.w3.org/ns/sosa/hasSimpleResult> ?value . ",
-      "<", STR(?sensor), "> <http://example.org/agora/sensing#staleAfterS> ?horizon . ",
+      "<", STR(?sensor), "> <http://example.org/orexis/sensing#staleAfterS> ?horizon . ",
       "FILTER(?at + STRDT(CONCAT(\"PT\", STR(?horizon), \"S\"), ",
       "<http://www.w3.org/2001/XMLSchema#dayTimeDuration>) < NOW()) }") AS ?staleQuery)
 } ;
@@ -275,9 +275,9 @@ WHERE  {
     #  After the subqueries, because a BIND sees only what its own group has bound so far —
     #  the scope rule plan.rq met the hard way (#206).
     $me ag:localId ?who .
-    BIND(IRI(CONCAT("http://example.org/agora#bounds.", ENCODE_FOR_URI(?who), ".",
+    BIND(IRI(CONCAT("http://example.org/orexis#bounds.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?bounds)
-    BIND(IRI(CONCAT("http://example.org/agora#envelope.", ENCODE_FOR_URI(?who), ".",
+    BIND(IRI(CONCAT("http://example.org/orexis#envelope.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?envelope)
 
     #  The messages, with the property and the numbers IN them. A shape is minted per (agent,

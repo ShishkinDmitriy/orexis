@@ -1,7 +1,7 @@
 ---
 type: Capability
 title: Desire
-term: http://example.org/agora/desire#DesireCapability
+term: http://example.org/orexis/desire#DesireCapability
 description: What an agent is trying to bring about — for each property its subject states a need in, the region to hold that property inside and the envelope outside which the subject ends. Deduced at genesis by intersecting every operating range that applies, never authored; the band and the urgency every other capability reads come from here.
 ---
 
@@ -155,7 +155,7 @@ Three deliberate differences from the diff above:
 **The horizon is published, not recomputed.** `stale_after_s` works it out from the rhythm in
 force — the board's own acknowledgement where it gives one, the agent's intent where it does
 not — and none of that was ever written down: both were dicts on a module, lost at every restart
-and invisible to `agora-ask`. A shape cannot run a method, so freshness would have needed either
+and invisible to `orexis-ask`. A shape cannot run a method, so freshness would have needed either
 a second copy of that fallback chain in SPARQL, free to drift, or a baked constant, wrong the
 moment urgency re-commands the cadence. The agent writes the ANSWER instead, per sensor, into its
 instruments graph; everything reads what was written, and nothing can disagree with it.
@@ -178,7 +178,7 @@ desire in a property the agent polls no sensor for — warns at the gate (the mi
 and shows at runtime as `desires` and `desires_measured` diverging. That warning has no shape
 of its own: it is an `sh:sparql` constraint sitting inside `desire:BeyondSurvivalShape`, whose
 name and comment describe a survival check that moved into the deduction and is no longer
-there ([#275](https://github.com/ShishkinDmitriy/agora/issues/275)). An earlier version of this
+there ([#275](https://github.com/ShishkinDmitriy/orexis/issues/275)). An earlier version of this
 page called it `desire:UnwatchedDesireShape`, which is the name it deserves and not a name that
 exists.
 

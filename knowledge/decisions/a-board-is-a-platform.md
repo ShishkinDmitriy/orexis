@@ -20,7 +20,7 @@ or string equality between sensors computed in Python:
 | one message carrying several values | emergent, unmodelled |
 
 And it let a real contradiction through: two sensors on one stream may be given two different
-codecs and `agora-validate` accepts it, because the per-sensor shape asks for one codec *per
+codecs and `orexis-validate` accepts it, because the per-sensor shape asks for one codec *per
 sensor* and nothing can ask for one *per stream*.
 
 # Decision — the standard term, not a new one
@@ -160,9 +160,9 @@ a fact about equipment, and a fact can be worth stating for what it rules out.
   knowing meanwhile — **`ag:esp32_fern` already mints a credential with no grants at all**,
   because `hardware.ttl` states `mqtt:onBus` on it and onboarding reads the whole world. One board,
   two principals: one real and mislabelled as a peripheral, one empty and correctly named. Filed
-  as [#81](https://github.com/ShishkinDmitriy/agora/issues/81).
+  as [#81](https://github.com/ShishkinDmitriy/orexis/issues/81).
 - **The wake interval still groups by comparing command-topic strings.**
-  [#78](https://github.com/ShishkinDmitriy/agora/issues/78) now has a bearer in every world rather
+  [#78](https://github.com/ShishkinDmitriy/orexis/issues/78) now has a bearer in every world rather
   than only the wired one: a wake is one connection waking, so the question is the principal's.
 - **Hosting is stated, not enforced by a shape.** A test holds the society and the wiring
   together; nothing refuses a *world* whose sensor is hosted by nothing. That would be a shape,

@@ -36,10 +36,10 @@ from .terms import (kernel, APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEAD
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
 # sensing is asked to look once so the baseline is the freshest thing on record.
-_SENSING = "http://example.org/agora/sensing#SensingCapability"
-_DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
-_RAISES = "http://example.org/agora/market#Raises"
-_LOWERS = "http://example.org/agora/market#Lowers"
+_SENSING = "http://example.org/orexis/sensing#SensingCapability"
+_DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
+_RAISES = "http://example.org/orexis/market#Raises"
+_LOWERS = "http://example.org/orexis/market#Lowers"
 _DIRECTION_Q = """
 SELECT ?direction WHERE {
   ?term market:aboutProperty <%s> ; market:direction ?direction

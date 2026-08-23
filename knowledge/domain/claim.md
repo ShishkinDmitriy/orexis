@@ -78,7 +78,7 @@ roster publishes keys:
   it. The co-signature chain stays about the *actuation command*, unchanged.
 
 Both interoperate with the pre-key era through the attested roster (`ag:signingKey` /
-`ag:sealingKey` in the world, written by `agora-keygen`): no published key, no demand — a world
+`ag:sealingKey` in the world, written by `orexis-keygen`): no published key, no demand — a world
 onboarded before keygen learned agents behaves exactly as it always did.
 
 # Why it exists even for immediate watering

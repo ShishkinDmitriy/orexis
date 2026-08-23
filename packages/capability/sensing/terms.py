@@ -9,7 +9,7 @@ never the right place for it. `tests/test_layout.py` holds `NS` and the `@prefix
 
 from __future__ import annotations
 
-NS = "http://example.org/agora/sensing#"
+NS = "http://example.org/orexis/sensing#"
 
 
 def term(name: str) -> str:

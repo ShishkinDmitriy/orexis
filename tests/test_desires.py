@@ -16,7 +16,7 @@ from packages.capability.desire import gaps_of, desires_of
 
 from conftest import MOISTURE, TEMPERATURE, desires_build, genesis_store
 
-FERN = "http://example.org/agora/world/simulation#fern_agent"
+FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
 
 def _desires(readings, agent="fern", **kw):
@@ -88,13 +88,13 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them():
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
     owed = datetime(2026, 8, 20, 12, 0, tzinfo=timezone.utc)
     st.update(f"""INSERT DATA {{ GRAPH <{obligations_graph("fern")}> {{
-        <http://example.org/agora#obligation.j1> a <http://example.org/agora#Obligation> ;
-            <http://example.org/agora#owedTo>
-                <http://example.org/agora/world/simulation#tomato_agent> ;
-            <http://example.org/agora#forClaim> "j1" ;
-            <http://example.org/agora#presented> true ;
-            <http://example.org/agora#owedAt> "{owed.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-            <http://example.org/agora#expiresAt> "{(owed + timedelta(seconds=900)).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+        <http://example.org/orexis#obligation.j1> a <http://example.org/orexis#Obligation> ;
+            <http://example.org/orexis#owedTo>
+                <http://example.org/orexis/world/simulation#tomato_agent> ;
+            <http://example.org/orexis#forClaim> "j1" ;
+            <http://example.org/orexis#presented> true ;
+            <http://example.org/orexis#owedAt> "{owed.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+            <http://example.org/orexis#expiresAt> "{(owed + timedelta(seconds=900)).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
 
     def duty_at(offset_s):
         desires = desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern",

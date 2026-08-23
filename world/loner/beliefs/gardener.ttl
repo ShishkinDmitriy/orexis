@@ -1,13 +1,13 @@
-@prefix : <http://example.org/agora/world/loner#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix water: <http://example.org/agora/water#> .
-@prefix desire: <http://example.org/agora/desire#> .
-@prefix intention: <http://example.org/agora/intention#> .
-@prefix actuation: <http://example.org/agora/actuation#> .
-@prefix reporting: <http://example.org/agora/reporting#> .
+@prefix : <http://example.org/orexis/world/loner#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix desire: <http://example.org/orexis/desire#> .
+@prefix intention: <http://example.org/orexis/intention#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 
 #  The gardener's PRIVATE beliefs. No market blocks at all — it buys nothing and sells
 #  nothing, which is what this world exists to show: an agent can want, watch, decide,

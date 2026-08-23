@@ -55,8 +55,8 @@ def test_a_stake_and_a_lever_grant_reflex():
 
     st = genesis_store()
     st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-        <http://example.org/agora/world/simulation#supplier>
-            <http://example.org/agora#actsFor> ?o }} }}""")
+        <http://example.org/orexis/world/simulation#supplier>
+            <http://example.org/orexis#actsFor> ?o }} }}""")
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
         st.update(genesis.substitute(rule.read_text(), st))
@@ -169,7 +169,7 @@ def test_the_sign_is_read_off_the_domain_not_hardcoded(make):
 
     ds = genesis_store()
     ds.update(f"""
-        PREFIX market: <http://example.org/agora/market#>
+        PREFIX market: <http://example.org/orexis/market#>
         DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Raises }} }}
         INSERT {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Lowers }} }}
         WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Raises }} }}""")
@@ -186,7 +186,7 @@ def test_no_stated_direction_means_no_pursuit(make):
 
     ds = genesis_store()
     ds.update(f"""
-        PREFIX market: <http://example.org/agora/market#>
+        PREFIX market: <http://example.org/orexis/market#>
         DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction ?d }} }}
         WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction ?d }} }}""")
     decider = decider_of(build_agent_quiet(make, ds))
@@ -226,7 +226,7 @@ def test_the_dealers_menu_gained_its_lever(make):
     was the honest one; the row it waited for is derived now, direction and all, and the
     Observe row stands beside it exactly as a fern's does."""
     st = genesis_store()
-    rows = menu_of(st.query, "http://example.org/agora/world/simulation#supplier", desires_build(st, "supplier").query_union)
+    rows = menu_of(st.query, "http://example.org/orexis/world/simulation#supplier", desires_build(st, "supplier").query_union)
     assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
             for r in rows if r.is_chosen] == [("Acquire", "StoredLitres", "Raises"),
@@ -238,7 +238,7 @@ def test_the_dealers_menu_gained_its_lever(make):
     assert len(honoured) == 3, "one duty per valve it holds for its buyers"
 
 
-FERN = "http://example.org/agora/world/simulation#fern_agent"
+FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
 
 def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
@@ -252,8 +252,8 @@ def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
 
     st = genesis_store()
     st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-        <http://example.org/agora/world/simulation#valve_fern>
-            <http://example.org/agora/actuation#actuates> ?pot }} }}""")
+        <http://example.org/orexis/world/simulation#valve_fern>
+            <http://example.org/orexis/actuation#actuates> ?pot }} }}""")
     rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union)
     assert not any(r.means == ACQUIRE for r in rows), (
         "an unplumbed market must yield no Acquire row")
@@ -278,20 +278,20 @@ def test_two_denominations_make_two_rows_and_never_four(make):
     """
     from agent.ontology import WORLD_GRAPH
 
-    ns = "http://example.org/agora/world/simulation#"
-    market = "http://example.org/agora/market#"
+    ns = "http://example.org/orexis/world/simulation#"
+    market = "http://example.org/orexis/market#"
     st = genesis_store()
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
         <{ns}dry_air> a <{market}Good> .
         <{ns}minutesPerFraction>
             <{market}ofGood> <{ns}dry_air> ;
-            <{market}aboutProperty> <http://example.org/agora/water#SoilMoisture> ;
+            <{market}aboutProperty> <http://example.org/orexis/water#SoilMoisture> ;
             <{market}direction> <{market}Lowers> .
         <{ns}fan_bank> <{market}supplies> <{ns}dry_air> .
         <{ns}fan_market> a <{market}Market> ; <{market}marketFor> <{ns}fan_bank> .
         <{ns}fanco> <{market}hosts> <{ns}fan_market> ;
-            <http://example.org/agora/actuation#hasActuator> <{ns}fan1> .
-        <{ns}fan1> <http://example.org/agora/actuation#actuates> <{ns}fern> .
+            <http://example.org/orexis/actuation#hasActuator> <{ns}fan1> .
+        <{ns}fan1> <http://example.org/orexis/actuation#actuates> <{ns}fern> .
         <{ns}fern_agent> <{market}bidsIn> <{ns}fan_market> .
     }} }}""")
     acquire = [r for r in menu_of(st.query, FERN, desires_build(st, "fern").query_union)
@@ -304,10 +304,10 @@ def test_two_denominations_make_two_rows_and_never_four(make):
 
 # --- the Planning member (arc 5) --------------------------------------------
 
-STORED = "http://example.org/agora/water#StoredLitres"
-SUPPLIER = "http://example.org/agora/world/simulation#supplier"
-_DESIRE = "http://example.org/agora/desire#DesireCapability"
-_DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
+STORED = "http://example.org/orexis/water#StoredLitres"
+SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
+_DESIRE = "http://example.org/orexis/desire#DesireCapability"
+_DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
 
 
 def test_the_dealer_derives_planning_and_nobody_else_does(make):
@@ -398,7 +398,7 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
     assert duties, "the conduct surface includes what it honours"
 
     deliberator = supplier.provider(
-        "http://example.org/agora/deliberation#DeliberationCapability")
+        "http://example.org/orexis/deliberation#DeliberationCapability")
     duty_means = {r.means for r in duties}
     for row in duties:
         for value in (0.0, 0.5, 5.0, 50.0):
@@ -426,9 +426,9 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
 
     supplier = make("supplier")
     duty = Desire(uri="urn:o", urgency=0.9, claim="j-1",
-                owed_to="http://example.org/agora/world/simulation#fern_agent")
+                owed_to="http://example.org/orexis/world/simulation#fern_agent")
     assert supplier.provider(_DELIBERATION).propose_for(duty) == \
-        "http://example.org/agora#Apply"
+        "http://example.org/orexis#Apply"
 
     stranger = Desire(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
     assert supplier.provider(_DELIBERATION).propose_for(stranger) is None, \
@@ -445,7 +445,7 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
 
     supplier = make("supplier")
     standing = Desire(uri="urn:o", urgency=0.99, claim="j-3", pursuable=False,
-                    owed_to="http://example.org/agora/world/simulation#fern_agent")
+                    owed_to="http://example.org/orexis/world/simulation#fern_agent")
     assert supplier.provider(_DELIBERATION).propose_for(standing) is None
 
 

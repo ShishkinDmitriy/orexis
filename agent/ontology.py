@@ -5,7 +5,7 @@ lives in. A term that belongs to one capability — `sensing:Subscribing`, `mark
 named by that capability's own package, so this file never grows when one is added. That is the
 whole reason it is this short.
 
-**Fourteen terms in `packages/core/agora` still make that claim false, and they are named rather
+**Fourteen terms in `packages/core/orexis` still make that claim false, and they are named rather
 than implied**: the eleven of the simulated world — the device model plus its clock and its
 weather (`ag:timeScale`, `ag:strayDoseMeanDays`, `ag:rainTopic`) — which only `world/simulation`
 uses and which want a simulation package that does not exist; and `ag:ComputeHost`, `ag:runsOn`
@@ -24,7 +24,7 @@ identifier a process is given: its own agent id.
 
 **Graph IRIs used to be listed here as though they were terms, and they are not.**
 `ag:WorldGraph` is the term; `…/graph/world` is a particular graph, no more a term than
-`ag:fern_agent` is. The instances now live in `packages/core/agora/ontology.ttl`, typed by class,
+`ag:fern_agent` is. The instances now live in `packages/core/orexis/ontology.ttl`, typed by class,
 and `store.public_graphs()` asks the store which ones they are — so a query means "public
 knowledge" without any Python knowing what that consists of, and a sixth public graph is a
 vocabulary edit that touches no code.
@@ -41,7 +41,7 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
-AG = "http://example.org/agora#"
+AG = "http://example.org/orexis#"
 # **A package owns its namespace, and this is only the kernel's.** `ag:` is what every agent
 # has; `capabilities/market` keeps `market:`, and the hardware modules have kept `mc:`,
 # `onewire:` and the rest since pins-and-wires. A package names its own terms through its own
@@ -59,13 +59,13 @@ AG = "http://example.org/agora#"
 # The hardware constants stay here because the trees under `vocabulary/` ship no Python at all,
 # so there is no `terms.py` of their own to hold them — the one asymmetry left, and it follows
 # from a vocabulary package being pure knowledge rather than from anything about namespaces.
-MC = "http://example.org/agora/microcontroller#"
-ONEWIRE = "http://example.org/agora/onewire#"
-I2C = "http://example.org/agora/i2c#"
-DHT11 = "http://example.org/agora/dht11#"
-RGBLED = "http://example.org/agora/rgb-led#"
-PROBE = "http://example.org/agora/moisture-probe#"
-ESP32 = "http://example.org/agora/esp32#"
+MC = "http://example.org/orexis/microcontroller#"
+ONEWIRE = "http://example.org/orexis/onewire#"
+I2C = "http://example.org/orexis/i2c#"
+DHT11 = "http://example.org/orexis/dht11#"
+RGBLED = "http://example.org/orexis/rgb-led#"
+PROBE = "http://example.org/orexis/moisture-probe#"
+ESP32 = "http://example.org/orexis/esp32#"
 
 # And the packages the SOVEREIGN's tooling reads across. `onboarding/` builds full IRIs by
 # interpolation rather than by prefix, because it queries the ratified files directly and not
@@ -78,11 +78,11 @@ ESP32 = "http://example.org/agora/esp32#"
 # These are NOT a prefix registry — `agent.loader` reads those off each ontology. They are the
 # handful of namespaces one tree names in the other's terms, and a package listed here still
 # owns its own vocabulary.
-MARKET = "http://example.org/agora/market#"
-MQTT = "http://example.org/agora/mqtt#"
-SENSING = "http://example.org/agora/sensing#"
-ACTUATION = "http://example.org/agora/actuation#"
-REVIEW = "http://example.org/agora/review#"
+MARKET = "http://example.org/orexis/market#"
+MQTT = "http://example.org/orexis/mqtt#"
+SENSING = "http://example.org/orexis/sensing#"
+ACTUATION = "http://example.org/orexis/actuation#"
+REVIEW = "http://example.org/orexis/review#"
 # WATER left this list with #148: the kernel now names no domain — the one capability block
 # that is deliberately domain-coupled (market's bidding beliefs) carries the literal itself,
 # the way every cross-package reference already does.
@@ -117,7 +117,7 @@ CAPABILITY = term("Capability")  # the root every capability term is a kind of
 # somebody wrote, and amending the two has utterly different blast radius.
 #
 # See knowledge/decisions/who-put-the-fact-there.md.
-_GRAPH = "http://example.org/agora/graph/"
+_GRAPH = "http://example.org/orexis/graph/"
 ONTOLOGY_GRAPH = _GRAPH + "ontology"  # the T-Box as the packages assert it
 ONTOLOGY_ENTAILED_GRAPH = _GRAPH + "ontology/entailed"  # what that vocabulary implies
 WORLD_GRAPH = _GRAPH + "world"  # topology, as the sovereign ratified it
@@ -137,7 +137,7 @@ DESIRE_ASSERTED_GRAPH = _GRAPH + "desire/asserted"
 # What the five above ARE, in PROV-O, so the store can say it rather than this file's comments.
 # Rename every graph to `g1`..`g5` and a reader could still work out which hold computed facts:
 # that is the test this graph exists to pass, and the reason the names above are a convenience
-# rather than the record. See agora/provenance.py.
+# rather than the record. See orexis/provenance.py.
 #  What every MEANS makes true, loaded from the packages at genesis (#238). Public, because
 #  a planner reads it on every pass and a model must be able to see the whole tool list;
 #  asserted from files, so it is replaced at each boot rather than accumulated.

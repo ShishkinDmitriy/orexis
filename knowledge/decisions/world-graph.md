@@ -31,7 +31,7 @@ something else).
 | **holds** | topology + physical facts | desire, limits, cadence, valuation |
 | **visible to** | everyone | that agent only |
 | **authored by** | the sovereign, at genesis | the agent (seeded at genesis) |
-| **versioned** | yes (`agora:versionNumber`) | no — it changes as the agent learns |
+| **versioned** | yes (`orexis:versionNumber`) | no — it changes as the agent learns |
 | **kind of claim** | fact | opinion |
 
 The world graph exists **so the wiring is stated once** instead of being repeated inside every
@@ -61,9 +61,9 @@ The T-Box gains `ag:Agent`, `sensing:Sensor` (`sosa:Sensor`), `actuation:Actuato
 into capability modules renamed them to the transport-neutral forms used above. See
 [capability-modules](/decisions/capability-modules.md).) Two consequences worth naming:
 
-**An agent is no longer a plant.** `Plant` used to be a subclass of `Agent`, so `agora:fern`
-was both the thing measured and the thing bidding. Now `agora:fern` is a
-`sosa:FeatureOfInterest` with no stake, and `agora:fern_agent` acts *for* it. Observations are
+**An agent is no longer a plant.** `Plant` used to be a subclass of `Agent`, so `orexis:fern`
+was both the thing measured and the thing bidding. Now `orexis:fern` is a
+`sosa:FeatureOfInterest` with no stake, and `orexis:fern_agent` acts *for* it. Observations are
 about the plant; wallets and bids belong to the agent. The conflation was harmless while each
 plant had exactly one agent, and would have become confusing the moment it didn't.
 
@@ -96,7 +96,7 @@ That is the whole configuration story now.
 
 # The same term in two graphs, meaning two different things
 
-`agora:litresPerFraction` appears on a *plant* in `:world` (how much water that pot actually
+`orexis:litresPerFraction` appears on a *plant* in `:world` (how much water that pot actually
 takes) and on an *agent* in its beliefs (how much it **believes** its pot takes — which is
 what its bid is computed from). They coincide today. An agent that learns would revise its own
 copy, and being wrong about it would cost it money. Modelling the belief separately from the
@@ -115,7 +115,7 @@ ratify, write — only the ratified artifact's format changed.
 - **SHACL now checks the constitution, not just the record.** Because limits are triples, the
   shapes can enforce that a band is actually a band (`bandLow sh:lessThan bandHigh`), that an
   agent watches *more* closely when thirsty (`fastSleepS sh:lessThanOrEquals slowSleepS`), and
-  that nobody sleeps past the cadence ceiling (`sh:maxInclusive 900`). `agora-validate` is now
+  that nobody sleeps past the cadence ceiling (`sh:maxInclusive 900`). `orexis-validate` is now
   a genuine constitutional check, and the shipped `world/` is validated in CI-able tests.
 - **Re-genesis replaces editing.** Changing the wiring means editing `world.ttl` and bumping
   `versionNumber`; every fact recorded afterwards is stamped with it.

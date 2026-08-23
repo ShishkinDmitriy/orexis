@@ -107,7 +107,7 @@ in that band. **An instrument may narrow a desire and may never create one.**
 Nothing states an instrument range today, so that branch is inert and was shipped anyway — the
 day a part's datasheet range lands in a world, every agent watching through that part narrows
 with no edit to the rule. It does not make
-[#111](https://github.com/ShishkinDmitriy/agora/issues/111) redundant: silently narrowing a
+[#111](https://github.com/ShishkinDmitriy/orexis/issues/111) redundant: silently narrowing a
 badly-specified rig is not the same as refusing it, and the sovereign should still refuse.
 
 ## The survival range is what makes urgency mean anything
@@ -193,7 +193,7 @@ what is cleared before a recompute, and what the provenance graph must account f
 
 # What this closes
 
-[#110](https://github.com/ShishkinDmitriy/agora/issues/110) in full, including the slice it
+[#110](https://github.com/ShishkinDmitriy/orexis/issues/110) in full, including the slice it
 called cheapest: *"a desire in a property no market relieves is still worth holding — it changes
 urgency, and therefore polling cadence, without anyone bidding."* `world/simulation`'s fern now
 states an air-temperature range as well as a moisture one, holds two regions, and lets whichever
@@ -220,4 +220,4 @@ is more urgent set how closely its board is watched. Nothing bids on air tempera
   on a region — the obvious next reader of `desire:Deducing` — is not written.
 - **The instrument branch is inert.** No part states `ssn-system:hasOperatingRange`; the DHT11
   states `MeasurementRange` instead. Whether those are the same claim is
-  [#100](https://github.com/ShishkinDmitriy/agora/issues/100)'s territory, not this record's.
+  [#100](https://github.com/ShishkinDmitriy/orexis/issues/100)'s territory, not this record's.

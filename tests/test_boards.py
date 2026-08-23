@@ -29,7 +29,7 @@ from agent.ontology import MC, ONTOLOGY_GRAPH
 # only inside the files.
 BOARDS = {d.parent.name: d for d in sorted((REPO_ROOT / "packages" / "part").glob("*/wokwi"))
           if (d / "board.json").exists()}
-WOKWI = "http://example.org/agora/wokwi#"
+WOKWI = "http://example.org/orexis/wokwi#"
 
 _MAPPING_Q = f"""
 SELECT ?part ?name ?role WHERE {{ 

@@ -1,22 +1,22 @@
-@prefix mqtt: <http://example.org/agora/mqtt#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-@prefix dht11: <http://example.org/agora/dht11#> .
-@prefix : <http://example.org/agora/dht11#> .
-@prefix wokwi: <http://example.org/agora/wokwi#> .
-@prefix onewire: <http://example.org/agora/onewire#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
+@prefix dht11: <http://example.org/orexis/dht11#> .
+@prefix : <http://example.org/orexis/dht11#> .
+@prefix wokwi: <http://example.org/orexis/wokwi#> .
+@prefix onewire: <http://example.org/orexis/onewire#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
-<http://example.org/agora/dht11> a owl:Ontology ;
+<http://example.org/orexis/dht11> a owl:Ontology ;
     rdfs:label "DHT11 temperature and humidity sensor" ;
     rdfs:comment """One part, its own package, layered on the microcontroller vocabulary and on one-wire. This is the shape every concrete peripheral should take: what it IS, how many legs it has and what they are for, and the shapes that refuse it wired wrong. Adding a part is adding a directory.""" .
 

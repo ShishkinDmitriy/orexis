@@ -64,5 +64,5 @@ choosing to own the consequence.
 - **The DHCP reservation is still worth making.** This removes the world's dependence on the lease;
   it does not stop the lease moving, and something else on that network may care.
 - **Nothing notices a silent sensor.** Seventeen hours passed with no reading and no complaint.
-  That is [#53](https://github.com/ShishkinDmitriy/agora/issues/53), and this is the first time it
+  That is [#53](https://github.com/ShishkinDmitriy/orexis/issues/53), and this is the first time it
   has actually cost something.

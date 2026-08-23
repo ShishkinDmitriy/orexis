@@ -1,11 +1,11 @@
-@prefix deliberation: <http://example.org/agora/deliberation#> .
-@prefix : <http://example.org/agora/deliberation#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix deliberation: <http://example.org/orexis/deliberation#> .
+@prefix : <http://example.org/orexis/deliberation#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 
-<http://example.org/agora/deliberation> a owl:Ontology ;
-    rdfs:label "Agora deliberation" ;
+<http://example.org/orexis/deliberation> a owl:Ontology ;
+    rdfs:label "Orexis deliberation" ;
     rdfs:comment """The WHETHER, extracted. Whether to look and whether to pursue used to be welded into the bidder — a reading arrived and value_bid's cede was the whole of deciding — which meant the one place this project intends to seat a model had no seam to drop into. It is a family now: given where the agent stands against what it wants (the gap) and what it is already doing (the standing intentions), a deliberator names the next move, and the acting modules carry it out.
 
 **What stays out is everything but the whether.** The HOW is the actor's — a bid's quantity and price are deterministic code, per knowledge/decisions/deterministic-bid.md, whoever said to bid. The KEEPING is intention's: a deliberator may read what stands and never writes the ledger, because deciding and remembering what was decided are different abilities. And a HOST's trigger is not here at all: a host has no gap — its "whether to sell" is the strategic-supplier seam, a stake in the market rather than in a subject.

@@ -1,8 +1,8 @@
 @prefix sh:      <http://www.w3.org/ns/shacl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ag:      <http://example.org/agora#> .
+@prefix ag:      <http://example.org/orexis#> .
 @prefix sosa:    <http://www.w3.org/ns/sosa/> .
-@prefix sensing: <http://example.org/agora/sensing#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 
 #################  What LOOKING makes true  #################
 #

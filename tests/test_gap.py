@@ -34,8 +34,8 @@ def _gaps(st, uri, agent_id="fern"):
     readings from the store (#312)."""
     return gaps_of(desires_build(st, agent_id).query_union, st.query, uri)
 
-FERN = "http://example.org/agora/world/simulation#fern_agent"
-SUPPLIER = "http://example.org/agora/world/simulation#supplier"
+FERN = "http://example.org/orexis/world/simulation#fern_agent"
+SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
 
 
 def test_the_query_and_the_module_are_one_definition(query_with_readings):
@@ -160,9 +160,9 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
 
     unwired = genesis_store()
     unwired.update(f"""
-        PREFIX ag: <http://example.org/agora#>
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/agora/world/simulation#fern_agent>
-            <http://example.org/agora/sensing#polls> <http://example.org/agora/world/simulation#air_temp_fern> }} }}
+        PREFIX ag: <http://example.org/orexis#>
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#fern_agent>
+            <http://example.org/orexis/sensing#polls> <http://example.org/orexis/world/simulation#air_temp_fern> }} }}
         WHERE {{}}""")
     for rule in loader.rule_files():
         unwired.update(genesis.substitute(rule.read_text(), unwired))
@@ -230,7 +230,7 @@ def test_an_unmet_want_is_not_printed_as_a_finding():
     """A report is what a person reads when something is wrong, and a want is not that.
 
     Once a desire compiled to SHACL, every property nobody has read yet produced a result —
-    which at genesis is every property — and `agora-validate` printed a wall of them about a
+    which at genesis is every property — and `orexis-validate` printed a wall of them about a
     world it was accepting. The verdict was never affected; the noise was, and noise in a gate
     teaches people to skip the gate.
 

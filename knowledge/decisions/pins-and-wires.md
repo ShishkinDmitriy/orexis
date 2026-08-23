@@ -8,7 +8,7 @@ timestamp: 2026-08-07T00:00:00Z
 
 # Two subjects were sharing a file
 
-`packages/core/agora/ontology.ttl` had grown to 205 lines holding agents, capabilities, the world
+`packages/core/orexis/ontology.ttl` had grown to 205 lines holding agents, capabilities, the world
 and its versions, named graphs, simulated devices, boards, pins, pin roles, and the three
 peripherals that happen to be on this bench. Two of those are the same subject and the rest are
 not: **what a society IS** and **what is screwed to the windowsill** change for different
@@ -20,7 +20,7 @@ It now splits along the seam the loader already provided — a directory under `
 package, found by looking and never listed, exactly like a capability:
 
 ```
-packages/core/agora/            agents, capabilities, world, hosts, naming, graphs   (205 -> ~115)
+packages/core/orexis/            agents, capabilities, world, hosts, naming, graphs   (205 -> ~115)
 packages/part/microcontroller/  boards, peripherals, pins, wires, roles       mc:
 packages/bus/onewire/          a protocol                                    onewire:
 packages/bus/i2c/              a protocol                                    i2c:
@@ -101,7 +101,7 @@ hand.
 
 # It is also now runnable
 
-`agora-wokwi <world>` writes `world/<world>/wokwi/diagram.json` — the stand as a
+`orexis-wokwi <world>` writes `world/<world>/wokwi/diagram.json` — the stand as a
 [wokwi.com](https://wokwi.com) project. Every part, every wire, coloured by what it carries.
 
 Two other renderings were tried and dropped, and the reasons are the useful part. **Grafana's
@@ -153,7 +153,7 @@ one, which is why trusting the author to remember was not an option.
 
 # What became checkable
 
-Three faults that the old model could not express, now refusable by `agora-validate`:
+Three faults that the old model could not express, now refusable by `orexis-validate`:
 
 - **A leg no wire reaches.** Previously impossible to state — a pin *was* its connection, so an
   unconnected leg was invisible rather than wrong. A floating ground is the commonest reason a

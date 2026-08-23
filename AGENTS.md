@@ -1,4 +1,4 @@
-# Working on Agora
+# Working on Orexis
 
 A society of self-interested agents that bid for a scarce resource. The v1 domain is plant
 watering, but the domain is a plug-in — plant/water language is the example, not the
@@ -255,25 +255,25 @@ stops being theoretical.
 ```bash
 source .venv/bin/activate
 
-agora-validate <world> # build the world from its files and hold it to every package's shapes
-agora-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.
-  agora-influx <world>      #   a bucket per agent, and a token that opens only it
-  agora-mqtt <world>        #   a credential per principal, and the broker ACL, derived
-  agora-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
-  agora-dashboards <world>  #   a Grafana folder per world, from what its agents observe
-agora-firmware <world>      # a board's config.h, from the world it belongs to
-agora-wokwi <world>         # world/<world>/wokwi/ — its hardware as a wokwi.com project, which RUNS
-agora-wokwi <world> --import d.json  # the other way: DRAFT a hardware.ttl from a drawing
-agora-wireviz <world>       # world/<world>/wiring.yaml — the wiring as a WireViz harness
-agora-wireviz <world> --import w.yaml   # and the same, drafted back from one
-agora-keygen <world>        # once per world, before it is onboarded
-agora-ask <world> <agent> <modality> 'SPARQL'  # the sovereign asks a RUNNING agent — naming
+orexis-validate <world> # build the world from its files and hold it to every package's shapes
+orexis-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.
+  orexis-influx <world>      #   a bucket per agent, and a token that opens only it
+  orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived
+  orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
+  orexis-dashboards <world>  #   a Grafana folder per world, from what its agents observe
+orexis-firmware <world>      # a board's config.h, from the world it belongs to
+orexis-wokwi <world>         # world/<world>/wokwi/ — its hardware as a wokwi.com project, which RUNS
+orexis-wokwi <world> --import d.json  # the other way: DRAFT a hardware.ttl from a drawing
+orexis-wireviz <world>       # world/<world>/wiring.yaml — the wiring as a WireViz harness
+orexis-wireviz <world> --import w.yaml   # and the same, drafted back from one
+orexis-keygen <world>        # once per world, before it is onboarded
+orexis-ask <world> <agent> <modality> 'SPARQL'  # the sovereign asks a RUNNING agent — naming
                        # WHICH of its mind's stores (beliefs, desires; more as they land),
                        # required like the world is: no default modality. Read-only by
                        # construction. See decisions/the-sovereign-may-ask.md.
-agora-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
+orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent
-podman build -t agora:local .                 # only when a dependency changes
+podman build -t orexis:local .                 # only when a dependency changes
 pytest -q              # BOTH roots: tests/ and any a package carries. No infra needed.
                        # NOT `pytest tests` — a package's own tests are invisible to that,
                        # and to a bare `pytest` if testpaths does not name packages.
@@ -282,7 +282,7 @@ pytest infra -q -n0    # 8 more, against the RUNNING broker and store — see be
 lint-imports           # the layering: onboarding may import agent, never the reverse
 ```
 
-`agora-validate` and `pytest` are the two gates, and both must pass before a change is done.
+`orexis-validate` and `pytest` are the two gates, and both must pass before a change is done.
 `pytest infra` is a third thing, run deliberately, and it is not part of them — and it must
 be run `-n0`, because `addopts` carries `-n auto` for everything else and those eight tests
 cannot share a broker. They refuse rather than letting you find out: see
@@ -299,7 +299,7 @@ change. Both files report the version they ran against and assert nothing about 
 
 **Onboarding is the phase between a ratified world and a running society** — see
 [onboarding](knowledge/domain/onboarding.md). Its three generators all read the same `world.ttl`
-and grant exactly what its wiring implies, so adding an agent and re-running `agora-onboard` is
+and grant exactly what its wiring implies, so adding an agent and re-running `orexis-onboard` is
 the whole of deploying one. They stay separately callable because rotating one service's
 credentials should not touch the other's.
 
@@ -307,7 +307,7 @@ credentials should not touch the other's.
 calls a function**, not by file: `validate_agent` stays in `agent` because an agent checks
 itself at boot, while `validate_world` moved because only the sovereign asks it; `sign` and
 `verify_command` stay because an actuator co-signs, while `create_keypair` moved — an agent that
-could mint a society's keys could sign for it. `agora-influx` reads the admin token, which opens
+could mint a society's keys could sign for it. `orexis-influx` reads the admin token, which opens
 every bucket and which no agent may ever hold, so the surest guarantee is that the code using it
 is absent from the image.
 
@@ -315,8 +315,8 @@ is absent from the image.
 out of an agent image is the `Containerfile` not naming it — `tests/test_layout.py` fails if a
 `COPY onboarding/` appears — and `lint-imports` holds the direction: onboarding may import
 agent, agent may never import onboarding. Two pyprojects used to look like that boundary while
-enforcing none of it. `agora-influx` and `agora-mqtt`
-need infra up; `agora-mqtt` must run before the broker will start at all, since its ACL is
+enforcing none of it. `orexis-influx` and `orexis-mqtt`
+need infra up; `orexis-mqtt` must run before the broker will start at all, since its ACL is
 generated and mosquitto now refuses anonymous clients. It then **reloads** the broker itself
 (SIGHUP, not a restart — connected agents keep their sessions), so adding an agent or a world
 still interrupts nothing.

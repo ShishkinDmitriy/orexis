@@ -1,7 +1,7 @@
-# One image, every agent. Which agent a container IS comes from AGORA_AGENT_ID at run time —
+# One image, every agent. Which agent a container IS comes from OREXIS_AGENT_ID at run time —
 # the same single identifier a process has always been given. Nothing is baked in per agent.
 #
-#   podman build -t agora:local .
+#   podman build -t orexis:local .
 #
 # THE COPY LIST IS THE BOUNDARY. There is one distribution now, so nothing about pip keeps the
 # operator's tools out of an agent: `onboarding/` is absent because it is not named below, and
@@ -37,7 +37,7 @@ RUN pip install -e .
 #
 # Note what is NOT here: world/. A world is MOUNTED, one per container, so the image is
 # world-agnostic — the same image is every agent of every world, and which one it is comes from
-# AGORA_AGENT_ID and the world mounted beside it.
+# OREXIS_AGENT_ID and the world mounted beside it.
 COPY agent/    agent/
 COPY packages/ packages/
 
@@ -51,8 +51,8 @@ COPY firmware/ firmware/
 # An agent runs as nobody in particular. Its belief base is a file in its own volume, which
 # nothing outside this container can name — that is the isolation, and it needs no credential
 # and no access registry, because there is no shared store to be let into.
-RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin agora \
- && chown -R agora:agora /app
-USER agora
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin orexis \
+ && chown -R orexis:orexis /app
+USER orexis
 
 # No default command: the compose file says whether this container seeds or is an agent.

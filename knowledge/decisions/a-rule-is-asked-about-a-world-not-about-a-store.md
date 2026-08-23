@@ -37,7 +37,7 @@ of the two limits found by building.
 
 # What the rules actually read, which is what decides it
 
-[#254](https://github.com/ShishkinDmitriy/agora/issues/254) offered two shapes and said that
+[#254](https://github.com/ShishkinDmitriy/orexis/issues/254) offered two shapes and said that
 choosing between them is the work. It is, and the choice falls out of a measurement neither
 option assumed. Every shipped effect rule, by the graphs its two queries touch:
 
@@ -132,7 +132,7 @@ of the store being separate, and it is most of why separate is the right call ra
 temporary graph in the agent's own store: a crash mid-plan leaves nothing behind to find.
 
 **Cycle detection stays keyed on the WORLD, never on the name.** `seen` holds signatures — since
-[#258](https://github.com/ShishkinDmitriy/agora/issues/258), each world's net diff against the
+[#258](https://github.com/ShishkinDmitriy/orexis/issues/258), each world's net diff against the
 base in canonical facts — and it is global across the search rather than per branch, so two
 different paths that arrive at the same world collide and the second is pruned. Naming
 graphs after paths must not quietly turn that into per-branch detection: two names, one world,
@@ -252,7 +252,7 @@ is the argument this project makes everywhere else about capabilities being dedu
 hand-declared, arriving at a means. So the guard is gone and no vocabulary was added.
 
 What that rests on is stated where it can be seen to break.
-[#258](https://github.com/ShishkinDmitriy/agora/issues/258) made the signature the world's net
+[#258](https://github.com/ShishkinDmitriy/orexis/issues/258) made the signature the world's net
 diff in canonical facts, and in canonical form a look nets to nothing: an observation is its
 upsert key and its value, never its `sosa:resultTime`, and a valueless first look states no fact
 at all — see `packages/capability/deliberation/signature.py`. A signature that counted a fresher timestamp as
@@ -332,7 +332,7 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) already draws.
 
   It is violated today, in exactly one place, and it is already filed as
-  [#264](https://github.com/ShishkinDmitriy/agora/issues/264): `ag:aims` is a WANT and it lives
+  [#264](https://github.com/ShishkinDmitriy/orexis/issues/264): `ag:aims` is a WANT and it lives
   in `graph/beliefs/<agent>`, beside `patienceS`, `fastSleepS` and `maxValuePerL`, which are
   settings. Under a store per modality that triple could not be written at all — an aim is not a
   belief and there would be nowhere to put it. A defect becomes an unrepresentable state, which
@@ -379,7 +379,7 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   argument and replays nothing. A seam that turns out to be one line of the design's own logic
   is worth leaving visible rather than editing away.
 - ~~**Nothing here fixes cycle detection's signature.**~~ CLOSED by
-  [#258](https://github.com/ShishkinDmitriy/agora/issues/258): the signature is the world's net
+  [#258](https://github.com/ShishkinDmitriy/orexis/issues/258): the signature is the world's net
   diff against the base, in canonical facts, so a step that moves something other than the
   goal's number — a claim acquired, stock transferred — is somewhere new rather than a false
   cycle. The correct baseline this record built is exactly what made that answerable.

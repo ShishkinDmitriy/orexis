@@ -30,8 +30,8 @@ tools that read the ratified world and grant exactly what its wiring implies.
 
 Two tools, not one, because they are two backing services and either could be replaced:
 
-    agora-influx <world>    a bucket per agent, and a token that opens only it
-    agora-mqtt <world>      a credential per principal, and the broker ACL, derived
+    orexis-influx <world>    a bucket per agent, and a token that opens only it
+    orexis-mqtt <world>      a credential per principal, and the broker ACL, derived
 
 ## The ACL is the wiring
 
@@ -48,7 +48,7 @@ topics that capability needs:
 | `mqtt:eventTopic E` | write E |
 
 Read that against `packages/capability/market/bidding.py` and `hosting.py` and it is the same set of
-topics they subscribe and publish. This is the same move `agora-compose` makes for the roster:
+topics they subscribe and publish. This is the same move `orexis-compose` makes for the roster:
 derived, never hand-maintained, because a second list is a second thing to drift.
 
 The simulated-device row is the one that had to be *found* rather than reasoned out. A real
@@ -141,7 +141,7 @@ decision is built on.
   [two-worlds-were-one](two-worlds-were-one.md).
 - **A missed grant is silent.** Mosquitto accepts a SUBSCRIBE it will not honour and simply never
   delivers, so an under-derived ACL looks like an agent that has gone quiet rather than an error.
-  Hence the test, rather than trust — and hence `agora-mqtt` reloading the broker itself rather
+  Hence the test, rather than trust — and hence `orexis-mqtt` reloading the broker itself rather
   than leaving it as a step to forget.
 - **The tests split by what they are a contract with.** `tests/test_isolation.py` is a
   unit test of what the tools *derive* from a world, needs nothing running, and stays in the gate
@@ -165,7 +165,7 @@ decision is built on.
   agent off the bus rather than merely barring its return. That weakens the case for the dynamic
   security plugin considerably: eviction was the one thing it was wanted for.
 - **Adding an agent or a world restarts nothing.** The broker must *reread* its two files, which
-  is a SIGHUP, not a restart: connected agents keep their sessions. `agora-mqtt` sends it. This
+  is a SIGHUP, not a restart: connected agents keep their sessions. `orexis-mqtt` sends it. This
   preserves what [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) was
   built for — that adding the 21st world does not disturb the other 20.
 - **The broker config path is constrained by the host**, in a way worth writing down because it
@@ -185,12 +185,12 @@ process too. The profile grants:
     file @{etc_ro}/mosquitto/* r,          # ONE level, and no deeper
     file @{etc_ro}/mosquitto/conf.d/** r,
 
-Which explains everything that looked inexplicable: the baked `conf.d/agora.conf` works, a file
+Which explains everything that looked inexplicable: the baked `conf.d/orexis.conf` works, a file
 mosquitto writes itself in `/tmp` does not, and Alpine's `/mosquitto/config/` was outside the
 profile by *any* means — bind mount, baked layer or otherwise. It was never the libc.
 
 So the generated `passwd` and `acl.conf` are mounted **directly in `/etc/mosquitto/`** and not in
-a subdirectory of it. `/etc/mosquitto/agora/passwd` is two levels deep and is refused however
+a subdirectory of it. `/etc/mosquitto/orexis/passwd` is two levels deep and is refused however
 correct its permissions are. Note also that `password_file` must be world-readable (0644): the
 broker runs as an unprivileged user in a container that maps the host user to root. It holds
 PBKDF2 hashes; the plaintext stays 0600 in the per-principal files.
@@ -233,9 +233,9 @@ conmon before the name could be reused. That is gone.
 
 - **Two tools, because there could be other backing services.** When a second history store or a
   second transport appears, the admin half belongs beside its driver — `history/<name>/` mirroring
-  `transports/<name>/`, discovered by `agora.loader` like everything else. Deliberately not built
+  `transports/<name>/`, discovered by `orexis.loader` like everything else. Deliberately not built
   now: there is one of each, and a package tree with one member is a guess about the future.
-- **A device's credential is minted here but flashed by hand.** `agora-mqtt` will not rotate a
+- **A device's credential is minted here but flashed by hand.** `orexis-mqtt` will not rotate a
   device password, because rotating it silently strands hardware that is not in front of you.
 - **Nothing stops two worlds sharing a bus on purpose.** It means topic overlap can never be an
   error, only a choice; the operator is the only party who can see both worlds and judge. No
@@ -297,7 +297,7 @@ speak may be Ed25519.**
 
 Rotating the installation CA to change this replaced the broker's certificate too, which every
 agent verifies — so every agent had to be restarted to read the new `ca.crt`. That is the cost
-recorded in `agora-infra-certs --rotate`, observed rather than predicted.
+recorded in `orexis-infra-certs --rotate`, observed rather than predicted.
 
 # The CA is files and a function, not a service
 
@@ -331,7 +331,7 @@ The first is that the installation key would then be able to mint an identity in
 one key that can speak for every society, which is the same collapse the per-world signing keys
 already refuse. The second is that creating a world's authority would need that key present, so
 onboarding a world could no longer happen on a host that infra is not on. That is the separation
-`agora-infra-certs` exists to keep.
+`orexis-infra-certs` exists to keep.
 
 The cost is honest and worth stating plainly: **a new world requires a broker restart**, because
 the trust bundle changes and SIGHUP does not reload TLS material. Adding an *agent* to an

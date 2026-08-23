@@ -35,8 +35,8 @@ implementing session do it.
 
 You may run read-only commands to ground what you claim — and you should, because a claim you have
 not checked is worth less than no claim. Measure rather than assert. Run the gates if a conclusion
-depends on them. Never build an image, start or stop a container, or run `agora-onboard`,
-`agora-mqtt`, `agora-influx`, `agora-compose` or `pytest infra`: they mint credentials, write files
+depends on them. Never build an image, start or stop a container, or run `orexis-onboard`,
+`orexis-mqtt`, `orexis-influx`, `orexis-compose` or `pytest infra`: they mint credentials, write files
 or reload a live broker, and the bench has three worlds running.
 
 # How to be useful

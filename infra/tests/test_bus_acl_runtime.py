@@ -1,6 +1,6 @@
 """What a running broker does when the ACL underneath it changes.
 
-Everything else in this suite is about what `agora-mqtt` *derives*. This file is about what the
+Everything else in this suite is about what `orexis-mqtt` *derives*. This file is about what the
 broker then *enforces*, at runtime, against a client that is already connected — which is a
 different question and cannot be answered by reading the generated files. It is the question an
 operator actually has: I added an agent and reloaded; did anything change for the ones already
@@ -11,7 +11,7 @@ not the code: it is a contract with a particular broker, and it is meaningless w
 running. So `pytest backend -q` does not collect it and stays the fast, infra-free gate it has
 always been. Run these deliberately:
 
-    cd infra && podman compose up -d && agora-mqtt <world>
+    cd infra && podman compose up -d && orexis-mqtt <world>
     pytest infra -q
 
 They still **skip** rather than fail when the broker or the credentials are absent, so pointing
@@ -71,7 +71,7 @@ def bus():
     host, port = _bus()
     d = mqtt_admin.mosquitto_dir(WORLD)
     if not (d / "passwd").exists() or not (d / "acl.conf").exists():
-        pytest.skip(f"no broker files for {WORLD} — run `agora-mqtt {WORLD}` first")
+        pytest.skip(f"no broker files for {WORLD} — run `orexis-mqtt {WORLD}` first")
     if not _reachable(host, port):
         # One broker per world, so this is that world's broker rather than shared infra:
         # `cd world/<w> && podman compose up -d`.
@@ -263,7 +263,7 @@ def test_rotating_a_password_evicts_the_connected_client(bus, probe):
     a principal out of its *next* connection and leaves the session it already holds alone. That
     guess is wrong: on reload, mosquitto re-checks connected clients against the new password file
     and disconnects the ones that no longer match. Written as a test because it was measured, and
-    because it decides how much `agora-mqtt --rotate` is actually worth — a rotated agent really
+    because it decides how much `orexis-mqtt --rotate` is actually worth — a rotated agent really
     is off the bus, not merely barred from returning.
 
     Note what this does NOT weaken: the two tests above reload the same broker without

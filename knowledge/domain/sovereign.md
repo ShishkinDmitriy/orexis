@@ -1,7 +1,7 @@
 ---
 type: Role
 title: Sovereign
-term: http://example.org/agora#Sovereign
+term: http://example.org/orexis#Sovereign
 description: >-
   Whoever ratified a world — authored its files and stands behind them. A ROLE and not an
   identity: `ag:Sovereign` is a `prov:Role`, there is no sovereign agent and there must not be,
@@ -31,7 +31,7 @@ drawn by **who calls a function** rather than by subject matter: an agent valida
 boot, so that code stays; only the sovereign validates a *world*, so that code moved. An agent may
 load its two keys; it may not mint them.
 
-**The surest guarantee is that the code is absent from the image.** `agora-influx` reads an admin
+**The surest guarantee is that the code is absent from the image.** `orexis-influx` reads an admin
 token that opens every bucket and that no agent may ever hold — so what keeps it out of an agent
 is the `Containerfile` not naming the tree, asserted by a test, and `lint-imports` holding the
 direction: onboarding may import agent, agent may never import onboarding.
@@ -54,14 +54,14 @@ An agent's belief base is a file inside that agent's container, and pyoxigraph h
 lock on it — so nothing outside the process can open it, not even the person who authored the
 world.
 
-The answer is `agora-ask`: **one SPARQL question per message**, over the world's own bus, gated to
+The answer is `orexis-ask`: **one SPARQL question per message**, over the world's own bus, gated to
 a single principal by the broker ACL, answered by the agent from its live store across everything
 it holds. That is **disclosure, not access** — the agent answers about itself rather than being
 read — and it is **read-only by construction**, because the query API structurally cannot execute
 an update.
 
 This is also why the planner writes down what it considered: a reader outside the process cannot
-re-run a search to see what it saw, and that limit is the same fact `agora-ask` exists for.
+re-run a search to see what it saw, and that limit is the same fact `orexis-ask` exists for.
 
 # What it is not
 

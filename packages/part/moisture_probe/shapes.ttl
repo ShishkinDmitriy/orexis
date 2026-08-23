@@ -1,9 +1,9 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix probe: <http://example.org/agora/moisture-probe#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix probe: <http://example.org/orexis/moisture-probe#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
 
 ag:CapacitiveMoistureProbeShape a sh:NodeShape ;
     rdfs:comment "A probe with no calibration reports a fraction computed from numbers nobody measured, which is worse than reporting nothing: the reading looks ordinary and is wrong by an unknown amount. Dry must read HIGHER than wet — that is what capacitive means here, and inverting them silently inverts the plant's whole world." ;
@@ -16,7 +16,7 @@ ag:CapacitiveMoistureProbeShape a sh:NodeShape ;
         sh:message "this probe reads higher wet than dry, which inverts the scale — check rawDry and rawWet are not swapped" ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/agora/moisture-probe#rawDry> ?dry ;
-                      <http://example.org/agora/moisture-probe#rawWet> ?value .
+                $this <http://example.org/orexis/moisture-probe#rawDry> ?dry ;
+                      <http://example.org/orexis/moisture-probe#rawWet> ?value .
                 FILTER(?value >= ?dry)
             }""" ] .

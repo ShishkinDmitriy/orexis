@@ -1,14 +1,14 @@
-@prefix review: <http://example.org/agora/review#> .
-@prefix : <http://example.org/agora/review#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix review: <http://example.org/orexis/review#> .
+@prefix : <http://example.org/orexis/review#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
-<http://example.org/agora/review> a owl:Ontology ;
-    rdfs:label "Agora self-review" ;
+<http://example.org/orexis/review> a owl:Ontology ;
+    rdfs:label "Orexis self-review" ;
     rdfs:comment """An agent re-picking a belief, inside the room it was given. A belief is not a constant: it is a POINT CHOSEN INSIDE A RANGE, because a computer needs one value to act on. So genesis picks one and the agent lives with it — and what genesis wrote is the first pick, not a bound. Treating it as a bound confuses a choice with a constraint, and leaves the author's real job, saying how much room the agent has, unwritten.""" .
 
 #################  The capability  #################
@@ -91,7 +91,7 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 #  and a separate argument.)
 
 :SummariesGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Summaries graph" ;
-    ag:graphPrefix "http://example.org/agora/graph/summaries/" ;
+    ag:graphPrefix "http://example.org/orexis/graph/summaries/" ;
     rdfs:comment "What ONE agent's readings came to. Apart from :sensed on purpose, and the separation is what makes the write boundary checkable: :sensed is the measurement record, written by whatever observed and never by a review, while a summary is the agent's own derived account of its own past. In one graph, 'a review does not touch the sensed record' would have been untestable — and an invariant nothing can check is a comment." .
 
 :ObservationSummary a owl:Class ; rdfs:label "Observation summary" ;
@@ -117,7 +117,7 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 #################  What a review saw, derived at each arising  #################
 
 :EvidenceGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Evidence graph" ;
-    ag:graphPrefix "http://example.org/agora/graph/evidence/" ;
+    ag:graphPrefix "http://example.org/orexis/graph/evidence/" ;
     rdfs:comment "The reviewer's own scratch: statistics derived from the summaries, plus the range each revisable term may move in. Rebuilt at every arising and never read by anything else, so a rule can be plain SPARQL over well-known terms instead of arithmetic." .
 
 :Evidence a owl:Class ; rdfs:label "Evidence" ;
@@ -137,7 +137,7 @@ DERIVED, never stated. `capabilities/sensing/rules.ru` computes it from the sens
 #################  What it decided, and when to look again  #################
 
 :RevisionsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Revisions graph" ;
-    ag:graphPrefix "http://example.org/agora/graph/revisions/" ;
+    ag:graphPrefix "http://example.org/orexis/graph/revisions/" ;
     rdfs:comment "What ONE agent has decided about itself. Append-only, and apart from the beliefs graph so that the beliefs graph still holds exactly one value per term — which is what every capability's shapes are written against. Deliberately NOT validated: it is the record of a decision, not a belief anyone acts on." .
 
 :Revision a owl:Class ; rdfs:label "Revision" ;

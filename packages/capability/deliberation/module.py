@@ -34,14 +34,14 @@ from .search import Planner
 from .terms import PLANNING, REFLEX
 
 # What this package asks OF others, by family — their namespaces, never their Python.
-_DESIRE = "http://example.org/agora/desire#DesireCapability"
+_DESIRE = "http://example.org/orexis/desire#DesireCapability"
 
 # The moves. The intention package's individuals, referenced by IRI: a move IS what the keeper
 # records when the actor carries it out, so naming anything else would put a translation table
 # between deciding and remembering.
 # The means are the kernel's words (the-mind-is-six-graphs): a move IS what the keeper
 # records, and four packages name these, which is what makes them lingua franca.
-_INTENTION_NS = "http://example.org/agora#"
+_INTENTION_NS = "http://example.org/orexis#"
 OBSERVE = _INTENTION_NS + "Observe"
 ACTUATE = _INTENTION_NS + "Actuate"
 ACQUIRE = _INTENTION_NS + "Acquire"
@@ -62,8 +62,8 @@ _RUNG = {ACTUATE: 0, ACQUIRE: 1}
 # move" has no answer the moment a fan market lowers what a water market raises — whichever
 # term the store returned first would steer the reflex, silently. Asked through my venue, the
 # answer is which way MY lever moves it, which is the only question a reflex ever had.
-_RAISES = "http://example.org/agora/market#Raises"
-_LOWERS = "http://example.org/agora/market#Lowers"
+_RAISES = "http://example.org/orexis/market#Raises"
+_LOWERS = "http://example.org/orexis/market#Lowers"
 _DIRECTION_Q = """
 SELECT ?direction WHERE {
   <%s> market:bidsIn ?m .
@@ -73,7 +73,7 @@ SELECT ?direction WHERE {
 } LIMIT 1"""
 
 
-_CHOSEN = "http://example.org/agora/deliberation#Chosen"
+_CHOSEN = "http://example.org/orexis/deliberation#Chosen"
 
 
 @dataclass(frozen=True)
@@ -210,7 +210,7 @@ class ReflexModule(Module):
 
         #  HOW IT DECIDED, not just what it wants (#256). `pursued()` above has just re-planned
         #  every desire, so the trace holds this tick's verdicts — read from there rather than
-        #  counted here, so the figure a dashboard shows and the answer `agora-ask` gives are
+        #  counted here, so the figure a dashboard shows and the answer `orexis-ask` gives are
         #  one fact. Six fields because a planner has six answers where returning a move or
         #  None had two, and the pair worth watching is `no candidate` against `exhausted`:
         #  one says equip me, the other says my doses are too coarse.
@@ -419,7 +419,7 @@ SELECT ?q WHERE {
   ?vessel <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
   ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
   ?cond <http://www.w3.org/ns/ssn/forProperty> <%s> .
-  GRAPH <%s> { <%s> <http://example.org/agora/market#offerQuantityL> ?q }
+  GRAPH <%s> { <%s> <http://example.org/orexis/market#offerQuantityL> ?q }
 } LIMIT 1"""
 
 # The dealer's plan ships as SPARQL beside the menu contributions (#206), so the sovereign

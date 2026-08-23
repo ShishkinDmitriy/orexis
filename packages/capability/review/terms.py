@@ -11,7 +11,7 @@ exactly as it asks for whoever perceives.
 
 from __future__ import annotations
 
-NS = "http://example.org/agora/review#"
+NS = "http://example.org/orexis/review#"
 
 
 def term(name: str) -> str:

@@ -83,7 +83,7 @@ The cost was not aesthetic. The same five were written out in three places — `
 `provenance.py`, and by hand in every rule — so **a capability author maintained a copy of a
 registry**, correctly, per rule, or the derivation silently returned nothing.
 
-So the instances moved into `packages/core/agora/ontology.ttl`, typed by class, and code asks:
+So the instances moved into `packages/core/orexis/ontology.ttl`, typed by class, and code asks:
 
 - `ag:PublicGraph` is the term. `store.public_graphs()` returns whatever is an instance of it.
 - A rule writes `$given` and `$derived`; the loader substitutes. No `rules.ru` names a graph.
@@ -113,7 +113,7 @@ Every world used to carry `<…/graph/beliefs/fern> a ag:BeliefsGraph ; ag:belie
 once per agent, beside the roster it restated. A second list is a second thing to drift, and this
 one drifted silently — nothing failed if an agent was added and its line was not.
 
-It is a function of the roster, so `packages/core/agora/rules.ru` derives it, building the IRI from
+It is a function of the roster, so `packages/core/orexis/rules.ru` derives it, building the IRI from
 the agent's own `ag:localId` exactly as `ontology.beliefs_graph()` does. That also closes the seam
 an earlier pass recorded, where a computed description stood beside a hand-written one.
 
@@ -122,7 +122,7 @@ an earlier pass recorded, where a computed description stood beside a hand-writt
 The chain does not stop at the file. It was going to — on the reasoning that the sovereign is
 outside the model and naming one would be a fiction — and that was wrong. **The sovereign is not
 outside the model; it is unnamed in three places where it already exists**: Grafana's admin
-login, the installation CA that `agora-infra-certs` runs, and `agora-keygen`, which already mints
+login, the installation CA that `orexis-infra-certs` runs, and `orexis-keygen`, which already mints
 named keypairs into a world's `secrets/`.
 
 But there is no *sovereign identity* either, and modelling one would be the real mistake. An
@@ -136,7 +136,7 @@ person. PROV-O models exactly this, and naming a role is what it expects a domai
     [ a prov:Association ; prov:agent <…/user/…> ; prov:hadRole ag:Sovereign ] .
 ```
 
-`ag:Sovereign a prov:Role` is the one term added, in `packages/core/agora/ontology.ttl` — the kernel,
+`ag:Sovereign a prov:Role` is the one term added, in `packages/core/orexis/ontology.ttl` — the kernel,
 because a world's ratification is true of every world and `ag:World` already lives there. **There
 is no `ag:Sovereign` agent and there must not be**; a test refuses one, because the moment the
 role is also an identity, "who is the sovereign" becomes permanent and a second user cannot
@@ -169,7 +169,7 @@ stronger. That is worth having — legible, queryable, and a shape can reason ab
 not be mistaken for proof, and the distinction belongs where somebody deciding whether to trust it
 will read it.
 
-Closing it needs no new design: `agora-keygen <world> sovereign` already mints a named keypair
+Closing it needs no new design: `orexis-keygen <world> sovereign` already mints a named keypair
 with no code changes, and [thin-trusted-infra](thin-trusted-infra.md) already points at signed
 artifacts as the direction. Deliberately not done here — a signature that nothing verifies is
 worse than an honest claim, and verification is its own pass.
@@ -190,7 +190,7 @@ waiting to be told. A shape catches an incomplete description; a test catches a 
 **Out of `PUBLIC_GRAPHS`, deliberately.** Putting it in would make `?g prov:wasGeneratedBy ?a`
 work as an ordinary pattern, which is tempting — and it would merge statements *about* the graphs
 into the same default graph as facts *in* the world. That use/mention confusion is not
-theoretical: `agora-wokwi` really does ask `?device a ?class`, and it would start returning
+theoretical: `orexis-wokwi` really does ask `?device a ?class`, and it would start returning
 activities. Every graph IRI would become a subject in a society that otherwise contains only
 things a society has.
 
@@ -244,7 +244,7 @@ now builds a `Store`, runs `refresh_public`, and pours the result into an rdflib
 That was not tidiness. The two had already diverged: after the closure was materialised, the
 rdflib side had none of its own, so a device typed as a *kind* of actuator was not observably an
 actuator there. `roster()` stopped deriving `actuation:Actuation` for the supplier, and the next
-`agora-compose` would have written a compose file with the signing keys silently unmounted — the
+`orexis-compose` would have written a compose file with the signing keys silently unmounted — the
 supplier unable to co-sign a dose, and every claim redemption failing. Nothing noticed, because
 `compose.yaml` is committed and regenerating it is not a gate.
 
@@ -291,7 +291,7 @@ treatment if that ever changes.
   oxigraph's fixed-point decimal canonicalises it. The value is identical and every consumer
   parses a number (`SIM_LITRES_PER_FRACTION` is read with `_float`), but a generated file's *text*
   changed, which is worth knowing before someone diffs one and goes looking for a bug.
-- **A generated artefact stopped depending on unspecified result order.** `agora-wireviz` emitted
+- **A generated artefact stopped depending on unspecified result order.** `orexis-wireviz` emitted
   wires in whatever order the store scanned; five graphs changed it, and the committed harness
   went out of step. The query now says `ORDER BY`. Same wires, same pairings — `connections:`
   permutes with `colors:` — but the order is specified rather than incidental.
@@ -329,7 +329,7 @@ described automatically now, and a graph a **world file** declares still is not.
   `provenance.py` learned about it, which is the same seam as the one above seen from the other
   end.
 - **Nothing is signed, so attribution is testimony.** See the section above: closing it is
-  `agora-keygen <world> sovereign`, which already works, plus verification — and verification is
+  `orexis-keygen <world> sovereign`, which already works, plus verification — and verification is
   the part that makes it worth doing.
 - **A hand-written graph catalog still sits in every `world.ttl`.** `<…/graph/world> a
   ag:WorldGraph` and two siblings, restated per world, covering three of the five and read by

@@ -1,16 +1,16 @@
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-@prefix probe: <http://example.org/agora/moisture-probe#> .
-@prefix : <http://example.org/agora/moisture-probe#> .
-@prefix wokwi: <http://example.org/agora/wokwi#> .
+@prefix probe: <http://example.org/orexis/moisture-probe#> .
+@prefix : <http://example.org/orexis/moisture-probe#> .
+@prefix wokwi: <http://example.org/orexis/wokwi#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
-@prefix water: <http://example.org/agora/water#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
 
-<http://example.org/agora/moisture-probe> a owl:Ontology ;
+<http://example.org/orexis/moisture-probe> a owl:Ontology ;
     rdfs:label "Capacitive soil moisture probe" ;
     rdfs:comment """One part, its own package. Three legs — an analog output, power and ground — and two calibration numbers that belong to the individual probe rather than to the model.""" .
 

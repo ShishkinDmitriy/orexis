@@ -42,7 +42,7 @@ from .beliefs import HOSTING_PICKS
 #  The serving means, spelled rather than imported: the kernel owns the term and market's own
 #  honoured.rq binds it, and `intention/terms.py` holds the same string for the same reason —
 #  a package may not import another's Python.
-_APPLY = "http://example.org/agora#Apply"
+_APPLY = "http://example.org/orexis#Apply"
 from .terms import (ACTUATION, DELIBERATION, HOSTING, BID_MATCHING,
                     INTENTION, OFFER, OWING)
 

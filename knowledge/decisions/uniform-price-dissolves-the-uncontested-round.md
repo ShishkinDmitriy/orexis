@@ -60,7 +60,7 @@ accepted**, for two reasons:
 
 # Why this dissolves #50 instead of fixing it
 
-[#50](https://github.com/ShishkinDmitriy/agora/issues/50) records that an uncontested round is
+[#50](https://github.com/ShishkinDmitriy/orexis/issues/50) records that an uncontested round is
 priced as if contested: under pay-as-bid every winner pays its own bid, so a bidder with no rival
 is charged for urgency that moved no allocation. Its proposed fix is a branch — detect
 `sum(max_qty_l) <= quantity_l` at `close()`, and allocate at the reserve instead.

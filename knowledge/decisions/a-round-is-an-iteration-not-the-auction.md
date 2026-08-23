@@ -108,7 +108,7 @@ is exactly what a late bid looks like.
 **`market:roundCooldownS` is untouched**, and it is the one name here that is genuinely about
 auctions rather than bidding passes. It stayed because it is a *persisted belief*, stated in each
 supplier's beliefs file and therefore living in a volume — renaming one is the hazard
-[#87](https://github.com/ShishkinDmitriy/agora/issues/87) exists to make safe, and arming that
+[#87](https://github.com/ShishkinDmitriy/orexis/issues/87) exists to make safe, and arming that
 trap to fix a name would have been the wrong order. It should be `auctionCooldownS` once a volume
 can survive a rename.
 

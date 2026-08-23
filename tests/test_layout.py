@@ -35,7 +35,7 @@ CONTAINERFILE = REPO_ROOT / "Containerfile"
 #  .containerignore exception narrows the COPY to them; the test below holds both halves.
 ALLOWED_TREES = {"agent", "packages", "firmware"}
 
-# Never in an agent image. `agora-influx` reads the admin token, which opens every bucket in the
+# Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 # store and which no agent may ever hold; the surest guarantee is that the code using it is
 # absent. See knowledge/domain/onboarding.md.
 FORBIDDEN_TREES = {"onboarding"}
@@ -145,14 +145,14 @@ def test_an_agent_is_given_the_society_and_not_the_hardware():
     from agent import genesis
 
     HARDWARE_NAMESPACES = (
-        "http://example.org/agora/microcontroller#",
-        "http://example.org/agora/esp32#",
-        "http://example.org/agora/wokwi#",
-        "http://example.org/agora/dht11#",
-        "http://example.org/agora/rgb-led#",
-        "http://example.org/agora/moisture-probe#",
-        "http://example.org/agora/onewire#",
-        "http://example.org/agora/i2c#",
+        "http://example.org/orexis/microcontroller#",
+        "http://example.org/orexis/esp32#",
+        "http://example.org/orexis/wokwi#",
+        "http://example.org/orexis/dht11#",
+        "http://example.org/orexis/rgb-led#",
+        "http://example.org/orexis/moisture-probe#",
+        "http://example.org/orexis/onewire#",
+        "http://example.org/orexis/i2c#",
     )
 
     for world in genesis.worlds():
@@ -369,7 +369,7 @@ def test_the_compose_file_does_not_mount_hardware_at_an_agent():
         for name in genesis.HARDWARE_FILES:
             assert f"/{name}:" not in compose.read_text(), (
                 f"{world}/compose.yaml mounts {name} into an agent — regenerate with "
-                f"`agora-compose {world}`")
+                f"`orexis-compose {world}`")
 
 
 def test_a_packages_python_namespace_is_the_one_its_ontology_declares():
@@ -505,7 +505,7 @@ def test_onboarding_names_no_domain():
     from pathlib import Path
 
     for path in sorted(Path("onboarding").glob("*.py")):
-        assert "example.org/agora/water" not in path.read_text(), \
+        assert "example.org/orexis/water" not in path.read_text(), \
             f"{path} names the water domain — a generator must survive the domain swap"
 
 
@@ -521,7 +521,7 @@ def test_the_kernel_names_no_domain():
     for path in sorted(Path("agent").glob("*.py")):
         for n, line in enumerate(path.read_text().splitlines(), 1):
             code = line.split("#")[0]
-            assert "example.org/agora/water" not in code, \
+            assert "example.org/orexis/water" not in code, \
                 f"{path}:{n} names the water domain — the kernel must survive the domain swap"
 
 
@@ -535,9 +535,9 @@ def test_the_kernel_namespace_holds_no_individuals():
     the files. Parse-based, so a spelling choice can never fool it."""
     import rdflib
 
-    AG = "http://example.org/agora#"
+    AG = "http://example.org/orexis#"
     core = rdflib.Graph()
-    core.parse(REPO_ROOT / "packages" / "core" / "agora" / "ontology.ttl", format="turtle")
+    core.parse(REPO_ROOT / "packages" / "core" / "orexis" / "ontology.ttl", format="turtle")
     declared = {str(n) for t in core for n in t
                 if isinstance(n, rdflib.URIRef) and str(n).startswith(AG)}
 
@@ -565,9 +565,9 @@ def test_the_kernel_namespace_holds_no_individuals():
     the files. Parse-based, so a spelling choice can never fool it."""
     import rdflib
 
-    AG = "http://example.org/agora#"
+    AG = "http://example.org/orexis#"
     core = rdflib.Graph()
-    core.parse(REPO_ROOT / "packages" / "core" / "agora" / "ontology.ttl", format="turtle")
+    core.parse(REPO_ROOT / "packages" / "core" / "orexis" / "ontology.ttl", format="turtle")
     declared = {str(n) for t in core for n in t
                 if isinstance(n, rdflib.URIRef) and str(n).startswith(AG)}
 

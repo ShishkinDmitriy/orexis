@@ -39,11 +39,11 @@ log = logging.getLogger("effects")
 #  is a rule nothing will ever ask for.
 _RULE_Q = """
 SELECT ?rule ?construct ?retracts ?lands ?confirmed WHERE { GRAPH <%s> {
-  ?rule <http://example.org/agora#effectOf> <%s> ;
+  ?rule <http://example.org/orexis#effectOf> <%s> ;
         <http://www.w3.org/ns/shacl#construct> ?construct .
-  OPTIONAL { ?rule <http://example.org/agora#retracts> ?retracts }
-  OPTIONAL { ?rule <http://example.org/agora#landsAfter> ?lands }
-  OPTIONAL { ?rule <http://example.org/agora#confirmedBy> ?confirmed } } } LIMIT 1"""
+  OPTIONAL { ?rule <http://example.org/orexis#retracts> ?retracts }
+  OPTIONAL { ?rule <http://example.org/orexis#landsAfter> ?lands }
+  OPTIONAL { ?rule <http://example.org/orexis#confirmedBy> ?confirmed } } } LIMIT 1"""
 
 
 def rule_for(store, means: str) -> dict | None:

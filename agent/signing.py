@@ -5,7 +5,7 @@ command must carry a token signed by the **host** (match_sig) and **clearing** (
 pump verifies both before opening. Crypto proportional to irreversibility. See
 knowledge/domain/executor.md, knowledge/decisions/authn-authz-capabilities.md.
 
-Keys live in a gitignored `world/<name>/secrets/` (run `agora-keygen <world>` once). v1 in-process simplification:
+Keys live in a gitignored `world/<name>/secrets/` (run `orexis-keygen <world>` once). v1 in-process simplification:
 the settlement service holds both signing keys; a separately-hosted supplier signing its own
 match is a v2 refinement.
 """
@@ -90,7 +90,7 @@ def verify_command(payload: dict, host_pub, clearing_pub) -> bool:
 
 # --- identity keys: every agent, not only host and clearing (#144) --------------------------
 #
-# The same PEM contract as above, one pair per agent, minted by `agora-keygen` beside the
+# The same PEM contract as above, one pair per agent, minted by `orexis-keygen` beside the
 # world's own. The PUBLIC halves are published in the world graph (base64 of the raw 32 bytes,
 # `ag:signingKey` / `ag:sealingKey`), because a verifier cannot read another agent's secrets —
 # that is the isolation — and the world is the one place every member already reads.
@@ -145,7 +145,7 @@ def load_sealing_private(name: str) -> X25519PrivateKey:
 # SIGN and do not encrypt, which is why sealing has its own pair: same curve family, different
 # operation, and conflating them is the mistake this comment exists to head off.
 
-_SEAL_INFO = b"agora-seal-v1"
+_SEAL_INFO = b"orexis-seal-v1"
 
 
 def seal(recipient: X25519PublicKey, plaintext: bytes) -> str:

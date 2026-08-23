@@ -69,7 +69,7 @@ bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[
 - **pointer** — which value in that document is this sensor's. **This record.**
 - **calibration** — what the raw value means. Today the board publishes an already-scaled
   fraction; moving that work into the agent is
-  [#26](https://github.com/ShishkinDmitriy/agora/issues/26).
+  [#26](https://github.com/ShishkinDmitriy/orexis/issues/26).
 
 **Amended.** This record called the third stage a *transducer*; the word is now **calibration**,
 because a transducer is the physical device that converts one form of energy to another and this

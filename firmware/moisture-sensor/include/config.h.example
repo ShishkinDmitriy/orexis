@@ -12,11 +12,11 @@
 // --- Who this board is on the bus ---
 // The broker no longer accepts anonymous clients: every principal connects as itself and may
 // say and hear exactly what the world wires it to. Copy these two values out of
-// world/<world>/secrets/mqtt-<DEVICE_ID>.env, which `agora-mqtt <world>` generated for THIS
+// world/<world>/secrets/mqtt-<DEVICE_ID>.env, which `orexis-mqtt <world>` generated for THIS
 // board IN THAT WORLD. A board belongs to one world: it is flashed with one host and port, so
 // it reaches exactly one broker, and each world mints its own password for it. Moving a board
 // between worlds means taking the credential AND the port from the other world and reflashing.
-// Changing a board's identity here means re-running `agora-mqtt` and reflashing.
+// Changing a board's identity here means re-running `orexis-mqtt` and reflashing.
 #define MQTT_USER "moisture_sensor_fern"
 #define MQTT_PASS "paste-from-world/<world>/secrets/mqtt-<device>.env"
 

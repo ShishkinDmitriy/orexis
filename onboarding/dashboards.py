@@ -1,6 +1,6 @@
 """A Grafana dashboard per world, derived from that world's wiring.
 
-  agora-dashboards society
+  orexis-dashboards society
 
 The same move as everything else onboarding does: the world already says which agents exist,
 what each observes, and therefore which bucket holds it. A dashboard listing those by hand is a
@@ -38,7 +38,7 @@ from agent.ontology import AG, SENSING, SOSA, WORLD_GRAPH
 SSN_SYSTEM = "http://www.w3.org/ns/ssn/systems/"
 SSN = "http://www.w3.org/ns/ssn/"
 SCHEMA = "https://schema.org/"
-SCALING = "http://example.org/agora/scaling#"
+SCALING = "http://example.org/orexis/scaling#"
 
 from .influx import bucket_name
 
@@ -81,7 +81,7 @@ AGENT_MEASUREMENT = "agent_health"
 #  counterparty). Written by whoever sees every desire, which is the deliberator.
 WANT_MEASUREMENT = "agent_want"
 #  What a planning pass cost and what it did with each lever. Written by the
-#  deliberator from its own trace, so a dashboard and an `agora-ask` of the same
+#  deliberator from its own trace, so a dashboard and an `orexis-ask` of the same
 #  agent are reading one fact.
 PLANNING_MEASUREMENT = "agent_planning"
 SENSOR_MEASUREMENT = "agent_sensor_health"
@@ -294,7 +294,7 @@ def _urgency_panel(buckets: dict, y: int, panel_id: int) -> dict:
                        "  |> aggregateWindow(every: v.windowPeriod, fn: last, "
                        "createEmpty: false)\n"
                        #  The tag is the want's own node name so it can be pasted straight
-                       #  into an `agora-ask` — and a derived want is minted as
+                       #  into an `orexis-ask` — and a derived want is minted as
                        #  `bounds.<who>.<property>`, so the agent sits in the MIDDLE of it and
                        #  a legend would say fern twice. Removed for DISPLAY only; what is
                        #  stored stays the name the graph knows it by.
@@ -426,12 +426,12 @@ def render_health(world: str) -> dict:
     """How the agents of this world are, as opposed to what they measured.
 
     Derived from the roster exactly as the readings dashboard is derived from the wiring — so an
-    agent added to world.ttl appears here on the next `agora-onboard` with nothing to remember.
+    agent added to world.ttl appears here on the next `orexis-onboard` with nothing to remember.
     """
     rows = ratified.rows(ratified.dataset(world), _ROSTER_Q)
     agents = sorted({r["agentId"] for r in rows})
     if not agents:
-        raise SystemExit(f"agora-dashboards: world {world!r} declares no agents")
+        raise SystemExit(f"orexis-dashboards: world {world!r} declares no agents")
     buckets = {a: bucket_name(world, a) for a in agents}
 
     # Ordered by what you would look at when something is wrong, top first.
@@ -540,9 +540,9 @@ def render_health(world: str) -> dict:
     ]
 
     return {
-        "uid": f"agora-{world}-health"[:40],
-        "title": f"Agora — {world} health",
-        "tags": ["agora", world, "health"],
+        "uid": f"orexis-{world}-health"[:40],
+        "title": f"Orexis — {world} health",
+        "tags": ["orexis", world, "health"],
         "timezone": "browser",
         "schemaVersion": 39,
         "refresh": "1m",
@@ -576,7 +576,7 @@ def render(world: str) -> dict:
     ds = ratified.dataset(world)
     sensors = ratified.rows(ds, _SENSORS_Q)
     if not sensors:
-        raise SystemExit(f"agora-dashboards: nothing in world {world!r} observes anything")
+        raise SystemExit(f"orexis-dashboards: nothing in world {world!r} observes anything")
     ranges = _ranges_by_subject(ds)
 
     panels, y, pid = [], 0, 1
@@ -596,9 +596,9 @@ def render(world: str) -> dict:
         y += 8
 
     return {
-        "uid": f"agora-{world}"[:40],
-        "title": f"Agora — {world}",
-        "tags": ["agora", world],
+        "uid": f"orexis-{world}"[:40],
+        "title": f"Orexis — {world}",
+        "tags": ["orexis", world],
         "timezone": "browser",
         "schemaVersion": 39,
         "refresh": "30s",
@@ -613,7 +613,7 @@ def generate(world: str) -> None:
     # Two dashboards, because they answer different questions and are looked at at different
     # times: one is what the plants are doing, the other is whether the society reporting it is
     # still working. Mixing them would put a flat-zero failure count next to a moisture curve.
-    for name, doc in (("agora.json", render(world)), ("health.json", render_health(world))):
+    for name, doc in (("orexis.json", render(world)), ("health.json", render_health(world))):
         out = out_dir / name
         out.write_text(json.dumps(doc, indent=2) + "\n")
         out.chmod(0o644)
@@ -623,7 +623,7 @@ def generate(world: str) -> None:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
-        prog="agora-dashboards",
+        prog="orexis-dashboards",
         description="Generate this world's Grafana dashboard from its own wiring.",
     )
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))

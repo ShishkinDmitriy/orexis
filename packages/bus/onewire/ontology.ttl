@@ -1,12 +1,12 @@
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
-@prefix onewire: <http://example.org/agora/onewire#> .
-@prefix : <http://example.org/agora/onewire#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix onewire: <http://example.org/orexis/onewire#> .
+@prefix : <http://example.org/orexis/onewire#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 
-<http://example.org/agora/onewire> a owl:Ontology ;
+<http://example.org/orexis/onewire> a owl:Ontology ;
     rdfs:label "One-wire" ;
     rdfs:comment """A protocol, not a device: one line carrying both directions in turn. Its own package because several unrelated parts speak it and none of them owns it — a DHT does, a DS18B20 does, and neither should have to import the other to say so.
 

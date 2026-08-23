@@ -1,7 +1,7 @@
-@prefix : <http://example.org/agora/world/simulation#> .
-@prefix actuation: <http://example.org/agora/actuation#> .
-@prefix reporting: <http://example.org/agora/reporting#> .
-@prefix market: <http://example.org/agora/market#> .
+@prefix : <http://example.org/orexis/world/simulation#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
+@prefix market: <http://example.org/orexis/market#> .
 
 #  The city's PRIVATE beliefs — a seller's terms, and nothing else.
 #
@@ -23,5 +23,5 @@
 #   the water.
 :city actuation:doseGraceS 10 .
 
-##  How often it says how it is. Omit and the agent reports nothing; see agora/metrics.py.
+##  How often it says how it is. Omit and the agent reports nothing; see orexis/metrics.py.
 :city reporting:metricsIntervalS 60 .

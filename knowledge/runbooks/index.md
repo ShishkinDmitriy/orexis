@@ -11,12 +11,12 @@ How to actually operate a society: bring one into existence, run it, and take it
 
 # A note on commands
 
-There is no `agora-up`, no `agora-down`, no `agora-restart`. Running a society is
+There is no `orexis-up`, no `orexis-down`, no `orexis-restart`. Running a society is
 `podman compose` (or `docker compose`) — a tool you already know, with verbs you already know,
 that behaves the same here as everywhere else.
 
-The only agora-specific commands are the ones that **produce** something from the world:
-`agora-onboard`, and `agora-validate` to check the result. Once they have run, you are holding
+The only orexis-specific commands are the ones that **produce** something from the world:
+`orexis-onboard`, and `orexis-validate` to check the result. Once they have run, you are holding
 an ordinary compose project. There is still nothing to **seed** — an agent builds its own belief
 base at boot — but there is something to **provision**, and that is what onboarding is: a bucket
 and a token per agent, a bus credential and an ACL per principal, every one of them derived from

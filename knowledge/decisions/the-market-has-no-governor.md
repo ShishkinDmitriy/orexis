@@ -140,8 +140,8 @@ would break it without any of them misbehaving, and doing better than one is con
 different project. So: Notarius yes, as the appointed, accountable co-signer; the ledger
 remains the one irreducible trusted thing, exactly where thin-trusted-infra left it. What
 cashing in the notary's self-incriminating evidence requires is revocation, which is already
-the open flank ([#28](https://github.com/ShishkinDmitriy/agora/issues/28),
-[#29](https://github.com/ShishkinDmitriy/agora/issues/29)).
+the open flank ([#28](https://github.com/ShishkinDmitriy/orexis/issues/28),
+[#29](https://github.com/ShishkinDmitriy/orexis/issues/29)).
 
 # Seams left open
 
@@ -164,7 +164,7 @@ the open flank ([#28](https://github.com/ShishkinDmitriy/agora/issues/28),
 - **Two dealers on one good** — the derivation already grants a venue to any stock plus
   consent, but no world yet demonstrates competing dealers, and the chooser this forces — a
   bidder facing two venues on one property — is the same cluster as the venue-denomination tie
-  ([#198](https://github.com/ShishkinDmitriy/agora/issues/198)).
+  ([#198](https://github.com/ShishkinDmitriy/orexis/issues/198)).
 - **The bilateral floor** — no vocabulary yet says "this pair trades without a venue";
   below-dealer thinness stays undescribed until a world is that thin.
 - **The Notarius appointment** — clearing's validating half as a society member: an

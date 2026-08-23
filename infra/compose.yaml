@@ -1,4 +1,4 @@
-name: agora
+name: orexis
 
 # Infra for v1: the series (Influx) and Grafana for eyeballing it.
 #
@@ -44,9 +44,9 @@ services:
     ports: ["8086:8086"]
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:-agora}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:-orexis}
       # The org must be born holding something, and this is NOT where readings go: every agent
-      # writes to a bucket of its own, minted by `agora-influx`. This one exists so setup mode
+      # writes to a bucket of its own, minted by `orexis-influx`. This one exists so setup mode
       # has an answer, and stays empty.
       DOCKER_INFLUXDB_INIT_BUCKET: genesis
     # The admin username, password and token — the only credential that opens every bucket.

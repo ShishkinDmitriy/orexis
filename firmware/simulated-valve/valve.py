@@ -22,8 +22,8 @@ process saying so on `ag:statusTopic` — which is why it publishes there after 
 stays silent when it refuses. `firmware/pump-valve` has always published a status "so the
 executor knows water actually flowed"; this does the same thing for the same reason.
 
-The verification below duplicates `agora.signing.verify_command` rather than importing it: this
-image holds `cryptography` and `paho` and not the agora package, which is the point of it being
+The verification below duplicates `orexis.signing.verify_command` rather than importing it: this
+image holds `cryptography` and `paho` and not the orexis package, which is the point of it being
 its own image. `backend/tests/test_simulated_valve.py` holds the two implementations to the same
 answers, so the copy cannot drift in silence.
 """
@@ -59,7 +59,7 @@ def _float(name: str, default: float) -> float:
 
 
 def canonical(payload: dict) -> bytes:
-    """Byte-for-byte what agora.signing.canonical produces. Held to it by a test."""
+    """Byte-for-byte what orexis.signing.canonical produces. Held to it by a test."""
     return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
 
 
@@ -110,7 +110,7 @@ class SimulatedValve:
 
         self.client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
-            client_id=f"agora-valve-{self.valve_id}-{random.randint(0, 1 << 24):06x}")
+            client_id=f"orexis-valve-{self.valve_id}-{random.randint(0, 1 << 24):06x}")
         self.client.username_pw_set(_env("MQTT_USERNAME"), _env("MQTT_PASSWORD"))
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message

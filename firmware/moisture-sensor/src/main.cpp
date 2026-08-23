@@ -1,4 +1,4 @@
-// Agora — ESP32 soil-moisture sensor node (sensing:ScheduledProcedure -> the agent holds ag:Subscribing).
+// Orexis — ESP32 soil-moisture sensor node (sensing:ScheduledProcedure -> the agent holds ag:Subscribing).
 //
 // Inverted from a fixed-interval pusher: the *agent* owns the interval (policy), the board
 // keeps to it (mechanism: sense + sleep). Each wake it reads, publishes, briefly listens for a
@@ -45,7 +45,7 @@
 // the derivation of its one-second internal cadence from the worst credible slew.
 #include "ulp_watch.h"
 
-// The topics come from config.h, which `agora-firmware` generates from the world's own
+// The topics come from config.h, which `orexis-firmware` generates from the world's own
 // ag:readingTopic and ag:commandTopic. They used to be built here as "sensors/" PLANT_ID
 // "/moisture" — which assumed a topic SHAPE the world states explicitly, and would have gone
 // quietly wrong the day a world named a topic differently.
@@ -421,7 +421,7 @@ static const char *mqttError(int state) {
 }
 
 static bool connectMqtt() {
-  String clientId = String("agora-sensor-") + SENSOR_ID + "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
+  String clientId = String("orexis-sensor-") + SENSOR_ID + "-" + String((uint32_t)ESP.getEfuseMac(), HEX);
   unsigned attempt = 0;
   while (!mqtt.connected()) {
     // The board connects AS ITSELF. The broker refuses anonymous clients and holds an ACL
@@ -463,7 +463,7 @@ void setup() {
 
   // Say what this build actually is. Checking a board against the world is otherwise
   // guesswork, and the ids here must match genesis/<world>/world.ttl exactly.
-  Serial.printf("\nagora moisture sensor\n  sensor    %s\n"
+  Serial.printf("\norexis moisture sensor\n  sensor    %s\n"
                 "  broker    %s:%d\n  publishes %s\n  listens   %s\n",
                 SENSOR_ID, MQTT_HOST, MQTT_PORT, MOISTURE_TOPIC, CMD_TOPIC);
 

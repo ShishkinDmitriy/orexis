@@ -141,7 +141,7 @@ names it: pay-as-bid, uniform price.
 - **The scope boundary is now written down twice** — in `market:BidMatchingCapability`'s comment and in
   `domain/bid-matching.md`. Unstated scope is what a ubiquitous language exists to prevent, and *we
   do not model the bidding procedure* had never been said anywhere.
-- **The gates are unmoved.** `agora-validate` on all three worlds, `pytest tests`, `lint-imports`
+- **The gates are unmoved.** `orexis-validate` on all three worlds, `pytest tests`, `lint-imports`
   and `./tools/validate-okf.sh knowledge` pass exactly as before, which is the evidence that this
   was a vocabulary change and not a refactor wearing one's clothes.
 

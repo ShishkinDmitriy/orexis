@@ -8,7 +8,7 @@ packages' namespaces, so a volume written before it holds `ag:hasTarget` where t
 `water:hasTarget`. The pattern matches nothing, and an agent with no target cannot bid.
 
 **Nothing could see it.** Every test builds a fresh store from the current files, so a test never
-meets a volume older than the code; `agora-validate` reads the world files, which the sweep
+meets a volume older than the code; `orexis-validate` reads the world files, which the sweep
 rewrote. Both gates were green while every deployed agent was one restart from silence. It is the
 same shape as the four silent breakages that sweep found, one step further out: a fact living
 somewhere no gate reads.
@@ -52,7 +52,7 @@ log = logging.getLogger("vocabulary")
 
 # Every namespace this project owns starts here; everything else in a store — `sosa:`, `prov:`,
 # `xsd:` — is somebody else's and not ours to hold to our own T-Box.
-PROJECT = "http://example.org/agora"
+PROJECT = "http://example.org/orexis"
 
 # What the vocabulary says about itself. A term is anything the T-Box makes a statement about:
 # the packages declare `owl:Class` and `owl:ObjectProperty` and hang labels and comments on them,
@@ -99,12 +99,12 @@ def declared(st) -> set[str]:
 #  heuristic that picks a namespace — would be this module guessing at meaning, which is the
 #  one thing its own error message refuses to do.
 MOVED = {
-    **{f"http://example.org/agora/intention#{n}": f"http://example.org/agora#{n}"
+    **{f"http://example.org/orexis/intention#{n}": f"http://example.org/orexis#{n}"
        for n in ("Intention", "by", "Means", "Observe", "Acquire", "Apply", "Actuate", "Offer",
                  "adoptedAt", "resolvedAt", "outcome", "becauseOf", "expectsValueTo",
                  "baselineValue", "baselineAt", "deadlineAt", "expectsDelta", "endMet",
                  "endVerifiedAt")},
-    **{f"http://example.org/agora/desire#{n}": f"http://example.org/agora#{n}"
+    **{f"http://example.org/orexis/desire#{n}": f"http://example.org/orexis#{n}"
        for n in ("Aim", "aims", "Obligation", "owedTo", "forClaim", "presented", "owedAt",
                  "dischargedAt")},
     #  `toleratedMin` and `toleratedMax` were here and are not, because they went nowhere: the
@@ -117,9 +117,9 @@ MOVED = {
     #  volume migrated yesterday holds `ag:boundedBy`, one migrated today holds neither, and
     #  both must land on what the vocabulary says now. A migration table is a record of where
     #  things went, not of how they travelled.
-    "http://example.org/agora/desire#Desire": "http://www.w3.org/ns/shacl#NodeShape",
-    "http://example.org/agora/desire#desires": "http://example.org/agora#holds",
-    "http://example.org/agora#boundedBy": "http://example.org/agora#holds",
+    "http://example.org/orexis/desire#Desire": "http://www.w3.org/ns/shacl#NodeShape",
+    "http://example.org/orexis/desire#desires": "http://example.org/orexis#holds",
+    "http://example.org/orexis#boundedBy": "http://example.org/orexis#holds",
 }
 
 
@@ -281,7 +281,7 @@ def check(st, migrating: bool = False) -> None:
         "this belief base was authored against a vocabulary this code no longer speaks, and "
         "reading it would silently find nothing:\n"
         + _describe(found)
-        + "\n\nSet AGORA_MIGRATE_BELIEFS=1 to rewrite them in place, which changes how a value "
+        + "\n\nSet OREXIS_MIGRATE_BELIEFS=1 to rewrite them in place, which changes how a value "
           "is spelled and never which value it is. `rebirth` would also clear this, and would "
-          "throw away everything the agent revised for itself — see agora/vocabulary.py."
+          "throw away everything the agent revised for itself — see orexis/vocabulary.py."
     )

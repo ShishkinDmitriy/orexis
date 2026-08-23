@@ -1,8 +1,8 @@
-@prefix mqtt: <http://example.org/agora/mqtt#> .
-@prefix actuation: <http://example.org/agora/actuation#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -12,8 +12,8 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that actuates must own the hardware it drives. Winning a claim is not this capability — redeeming one is." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
-            SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
-                                       <http://example.org/agora/actuation#Actuation> }
+            SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
+                                       <http://example.org/orexis/actuation#Actuation> }
         """ ] ;
     sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class sosa:Actuator , ag:Device ;
                   sh:message "an agent that actuates must own at least one actuator" ] ;

@@ -71,7 +71,7 @@ def test_attention_without_a_stake_falls_back_to_the_slow_cadence(fern):
     """Urgency is supplied by whoever holds a band. Asked about a subject it has no stake in,
     the agent has no opinion — and an agent with no opinion does not watch closely."""
     p = fern.subscribing()
-    assert p.cadence_for("http://example.org/agora#someone_elses_plant", MOISTURE, 0.0) == \
+    assert p.cadence_for("http://example.org/orexis#someone_elses_plant", MOISTURE, 0.0) == \
         p.beliefs.slow_sleep_s
 
 
@@ -716,25 +716,25 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
 
     st = genesis_store()
     st.update(f"""
-        PREFIX ag: <http://example.org/agora#>
+        PREFIX ag: <http://example.org/orexis#>
         PREFIX sosa: <http://www.w3.org/ns/sosa/>
-        PREFIX sensing: <http://example.org/agora/sensing#>
-        PREFIX mqtt: <http://example.org/agora/mqtt#>
-        PREFIX scaling: <http://example.org/agora/scaling#>
-        PREFIX water: <http://example.org/agora/water#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX mqtt: <http://example.org/orexis/mqtt#>
+        PREFIX scaling: <http://example.org/orexis/scaling#>
+        PREFIX water: <http://example.org/orexis/water#>
         PREFIX unit: <http://qudt.org/vocab/unit/>
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:fern_east a sosa:Sample ; sosa:isSampleOf <http://example.org/agora/world/simulation#fern> .
-            ag:fern_west a sosa:Sample ; sosa:isSampleOf <http://example.org/agora/world/simulation#fern> .
-            <http://example.org/agora/world/simulation#moisture_sensor_fern> sensing:samples ag:fern_east .
+            ag:fern_east a sosa:Sample ; sosa:isSampleOf <http://example.org/orexis/world/simulation#fern> .
+            ag:fern_west a sosa:Sample ; sosa:isSampleOf <http://example.org/orexis/world/simulation#fern> .
+            <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples ag:fern_east .
             ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
-                mqtt:onBus <http://example.org/agora/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ;
-                sensing:monitors <http://example.org/agora/world/simulation#fern> ; sensing:samples ag:fern_west ;
+                mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ;
+                sensing:monitors <http://example.org/orexis/world/simulation#fern> ; sensing:samples ag:fern_west ;
                 sosa:observes water:SoilMoisture ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/second_probe_fern/reading" ;
                 mqtt:commandTopic "sensors/second_probe_fern/command" .
-            <http://example.org/agora/world/simulation#fern_agent> sensing:polls ag:second_probe_fern .
+            <http://example.org/orexis/world/simulation#fern_agent> sensing:polls ag:second_probe_fern .
         }} }} WHERE {{}}""")
     fern = build_agent("fern", st, monkeypatch)
     p = fern.subscribing()

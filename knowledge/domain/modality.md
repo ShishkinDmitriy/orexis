@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Modality
-term: http://example.org/agora#Modality
+term: http://example.org/orexis#Modality
 description: >-
   What a triple's content asserts about its subject — is, may be, would like, could do,
   doing, did, would-be-if — where the subject, the property and the unit stay the same.
@@ -30,14 +30,14 @@ The concept has not changed; where it lives has.
 axes classifying graphs. [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) moved
 it down a level: the **store** does the asserting, and a graph inside one says only who put
 the fact there. In code a modality is a **class that owns its store** — `Beliefs`,
-`Desires`, the rest as [#299](https://github.com/ShishkinDmitriy/agora/issues/299) lands —
+`Desires`, the rest as [#299](https://github.com/ShishkinDmitriy/orexis/issues/299) lands —
 deciding for itself what kind of store, whether it persists, and whether anything may write
 it. The agent holds the modalities; nothing holds or addresses their collection, by the
 fourth ruling.
 
 # The address a question needs
 
-`agora-ask` names a modality, required, with no default — the third ruling, which is "there
+`orexis-ask` names a modality, required, with no default — the third ruling, which is "there
 is no default world" said of a mind — and a module asks for the modality it means
 (`agent.desires.read`, `agent.beliefs.current_reading`). What makes the address necessary is
 the first paragraph: a question that did not say which assertion it meant would be answered

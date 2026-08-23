@@ -115,7 +115,7 @@ share one record and the last writer wins, which is what "these are one object" 
 has to JUDGE that two probes sit in two patches rather than one, and no shape can make that
 judgement — which is why the sample is optional and the default is unchanged.
 
-So `agora-validate` says so at **`sh:Warning`** rather than `sh:Violation` — two sensors
+So `orexis-validate` says so at **`sh:Warning`** rather than `sh:Violation` — two sensors
 observing one property of one subject may mean two subjects, and the world still conforms. That
 is an honest use of validation: it carries the judgement without refusing a world whose author
 simplified on purpose. The day zone-level watering is wanted, the tool has already pointed at the
@@ -138,7 +138,7 @@ hidden — the full report, warnings included, is what the caller prints.
 
 It also cost a duplicate. `tests/test_shapes.py` had its own copy of the pySHACL call, which was
 harmless while the two agreed and stopped being harmless the moment they diverged: the tests
-failed a world `agora-validate` accepted. It now calls the real function. Two ways to decide
+failed a world `orexis-validate` accepted. It now calls the real function. Two ways to decide
 whether a world holds is one too many, and the one that ships is the one to test.
 
 # Mixed sense modes: the capabilities split, the sensors do not

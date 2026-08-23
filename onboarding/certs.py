@@ -7,7 +7,7 @@ authenticate into the other. A single installation CA would make `society-fern` 
 world-qualified username already prevents.
 
 **Why the CN is the username, exactly.** Mosquitto's `use_identity_as_username true` takes the
-certificate's CN and uses it as the username for authorisation — so the ACL `agora-mqtt` already
+certificate's CN and uses it as the username for authorisation — so the ACL `orexis-mqtt` already
 derives from the wiring keeps working untouched, and there is no second mapping to drift. A
 certificate is a *different way of proving who you are*, not a different notion of who you are.
 
@@ -28,7 +28,7 @@ in `infra/`. Clients verify the broker, and the broker
 serves every world — so its identity belongs to the *installation*, not to any world, and its
 Those serve every world at once, so their identity belongs to the installation and their
 lifecycle is the infrastructure's — possibly another host, certainly another schedule. See
-`onboarding/infra_certs.py` (`agora-infra-certs`).
+`onboarding/infra_certs.py` (`orexis-infra-certs`).
 
 Nothing crosses between the two any more. When the broker was shared it needed a bundle of every
 world's authority, rebuilt and reloaded whenever a world appeared; a broker that belongs to one
@@ -36,7 +36,7 @@ world trusts exactly one authority and never learns the others exist.
 
 Certificates expire, which passwords did not. That is a real gain — it is the first thing here
 that can be revoked — and a real new failure mode: an agent whose certificate lapsed stops
-connecting and looks exactly like a process that went quiet. Re-running `agora-onboard` reissues
+connecting and looks exactly like a process that went quiet. Re-running `orexis-onboard` reissues
 anything within `RENEW_BEFORE_DAYS` of expiry, so the routine cure is the routine command.
 """
 
@@ -196,7 +196,7 @@ def issue_for_world(world: str, agent_ids, rotate: bool = False,
     from .mqtt import agent_username
 
     secrets = world_dir(world) / "secrets"
-    ca = _ca(secrets, f"agora {world} CA", rotate)
+    ca = _ca(secrets, f"orexis {world} CA", rotate)
     if broker_host and _leaf(secrets, "broker", broker_host, ca, server=True, rotate=rotate):
         # Signed by the world, for the world. An agent verifies its broker with the same
         # authority that vouches for the agent — one trust root per society, both directions.

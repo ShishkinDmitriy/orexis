@@ -23,7 +23,7 @@ from agent.store import Store, bindings
 from agent.store import PREFIXES
 from agent.validate import conforms
 
-ZZ = "http://example.org/agora/zamioculcas#ZamioculcasZamiifolia"
+ZZ = "http://example.org/orexis/zamioculcas#ZamioculcasZamiifolia"
 
 # The fern's block exactly as world/simulation/world.ttl states it. Matched in full and asserted
 # present, so that editing that world fails this loudly instead of silently testing nothing —
@@ -85,7 +85,7 @@ def test_one_triple_plants_it_and_the_species_supplies_the_rest():
 
         rows = bindings(_store(w).query(PREFIXES + """
             SELECT ?kind ?property ?min ?max WHERE {
-              <http://example.org/agora/world/simulation#fern> ?rel ?range .
+              <http://example.org/orexis/world/simulation#fern> ?rel ?range .
               VALUES ?rel { ssn-system:hasOperatingRange ssn-system:hasSurvivalRange }
               ?range a ?kind ; ssn-system:inCondition ?c .
               ?c ssn:forProperty ?property ; schema:minValue ?min ; schema:maxValue ?max }"""))
@@ -136,9 +136,9 @@ def test_it_cannot_thrive_where_it_would_not_survive():
 
     # a pot of it, and the operating ceiling pushed past the survival ceiling
     data.parse(format="turtle", data="""
-        @prefix ag: <http://example.org/agora#> .
-        @prefix water: <http://example.org/agora/water#> .
-        @prefix zz: <http://example.org/agora/zamioculcas#> .
+        @prefix ag: <http://example.org/orexis#> .
+        @prefix water: <http://example.org/orexis/water#> .
+        @prefix zz: <http://example.org/orexis/zamioculcas#> .
         @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
         ag:pot a water:Plant ;
             ag:localId "pot" ; water:litresPerFraction 2.0 ;
@@ -150,12 +150,12 @@ def test_it_cannot_thrive_where_it_would_not_survive():
     # About the POT alone. A hand-built graph is not a world, and validating it whole would ask
     # after a supplier's capabilities and a market — none of which this is about. `conforms` takes
     # a focus for exactly this reason; see agent/validate.py.
-    pot = "http://example.org/agora#pot"
+    pot = "http://example.org/orexis#pot"
     assert conforms(data, focus=pot)[0], conforms(data, focus=pot)[1]
 
     # push the moisture operating ceiling to 0.60, above the 0.45 where rot starts
     for condition in data.objects(
-            rdflib.URIRef("http://example.org/agora/zamioculcas#IndoorOperatingRange"),
+            rdflib.URIRef("http://example.org/orexis/zamioculcas#IndoorOperatingRange"),
             rdflib.URIRef("http://www.w3.org/ns/ssn/systems/inCondition")):
         prop = data.value(condition, rdflib.URIRef("http://www.w3.org/ns/ssn/forProperty"))
         if str(prop).endswith("SoilMoisture"):

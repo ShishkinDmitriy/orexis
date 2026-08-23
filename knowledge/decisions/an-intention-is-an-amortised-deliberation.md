@@ -27,7 +27,7 @@ a happy absence. It is a gap, and this record says why and what to do about it.
 
 # The mapping, honestly
 
-| BDI | agora | state |
+| BDI | orexis | state |
 |---|---|---|
 | **Beliefs** | the store: public graphs, private beliefs, `:sensed` | done |
 | **Desires** | the region shapes an agent `ag:holds`, plus the aim inside one | region done; aim still `water:hasTarget` |

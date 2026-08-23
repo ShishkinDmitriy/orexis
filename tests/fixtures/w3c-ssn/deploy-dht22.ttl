@@ -9,14 +9,14 @@
 # Nothing here restates a fact their file already carries. The frequency floor, the accuracy, the
 # operating range and the sub-system structure all come from them, untouched.
 
-@prefix ag:         <http://example.org/agora#> .
+@prefix ag:         <http://example.org/orexis#> .
 # The subject is the SITE's — a deployment file is our half, and the world owns
 # its individuals, so the pot is named in the world's namespace, not the vocabulary's.
-@prefix world:      <http://example.org/agora/world/sensing#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix mqtt:       <http://example.org/agora/mqtt#> .
-@prefix scaling:    <http://example.org/agora/scaling#> .
-@prefix water:      <http://example.org/agora/water#> .
+@prefix world:      <http://example.org/orexis/world/sensing#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix mqtt:       <http://example.org/orexis/mqtt#> .
+@prefix scaling:    <http://example.org/orexis/scaling#> .
+@prefix water:      <http://example.org/orexis/water#> .
 @prefix unit:       <http://qudt.org/vocab/unit/> .
 @prefix sosa:       <http://www.w3.org/ns/sosa/> .
 @prefix dht22:      <http://example.org/data/DHT22/4578#> .

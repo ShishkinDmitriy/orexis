@@ -26,16 +26,16 @@ from packages.capability.deliberation.search import Planner
 
 from conftest import build_agent, genesis_store
 
-MOISTURE = "http://example.org/agora/water#SoilMoisture"
-GARDENER = "http://example.org/agora/world/loner#gardener"
-ACTUATE = "http://example.org/agora#Actuate"
-OBSERVE = "http://example.org/agora#Observe"
+MOISTURE = "http://example.org/orexis/water#SoilMoisture"
+GARDENER = "http://example.org/orexis/world/loner#gardener"
+ACTUATE = "http://example.org/orexis#Actuate"
+OBSERVE = "http://example.org/orexis#Observe"
 #  zz states 0.1–0.3, survives 0.02–0.45, and the gardener aims at the centre.
 WET, DRY, CONTENT = 0.42, 0.04, 0.20
 
 
 def _gardener(monkeypatch, moisture):
-    monkeypatch.setenv("AGORA_WORLD", "loner")
+    monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
@@ -72,7 +72,7 @@ def test_a_dose_that_reaches_the_region_is_planned(monkeypatch):
     _, plan, _ = _gardener(monkeypatch, DRY)
 
     assert plan.outcome == search.SATISFIED
-    assert [s.means for s in plan.steps] == ["http://example.org/agora#Actuate"]
+    assert [s.means for s in plan.steps] == ["http://example.org/orexis#Actuate"]
     assert plan.urgency_after < plan.urgency_now
 
 
@@ -103,7 +103,7 @@ def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch
     """
     from agent.ontology import EFFECTS_GRAPH
 
-    monkeypatch.setenv("AGORA_WORLD", "simulation")
+    monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
     st.update("""DELETE { GRAPH <%s> { ?rule ag:effectOf ag:Acquire } }
                  WHERE  { GRAPH <%s> { ?rule ag:effectOf ag:Acquire } }"""
@@ -116,7 +116,7 @@ def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch
     plan = Planner(fern, deducer, fern.me).plan(desire)
     assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
 
-    reflex = fern.provider("http://example.org/agora/deliberation#DeliberationCapability")
+    reflex = fern.provider("http://example.org/orexis/deliberation#DeliberationCapability")
     assert reflex.propose_for(desire) == reflex.propose(MOISTURE, 0.30), \
         "a thirsty plant must still buy — the search defers where it cannot see"
 
@@ -129,7 +129,7 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     predicted reading written into the sensed graph would be indistinguishable from a real one
     the moment anybody asked.
     """
-    monkeypatch.setenv("AGORA_WORLD", "loner")
+    monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     from agent.ontology import SENSED_GRAPH, beliefs_graph
@@ -137,8 +137,8 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
 
     before = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), SENSED_GRAPH)
     world = effects.world_after(
-        before, st, "http://example.org/agora#Actuate",
-        me=f"<{GARDENER}>", subject="<http://example.org/agora/world/loner#zz>",
+        before, st, "http://example.org/orexis#Actuate",
+        me=f"<{GARDENER}>", subject="<http://example.org/orexis/world/loner#zz>",
         property=f"<{MOISTURE}>", litres=0.3, value=DRY,
         beliefs=f"<{beliefs_graph('gardener')}>")
 
@@ -186,7 +186,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     which `dose_for` sizes from where the property stands and which is therefore the act the
     actor would take NEXT rather than a repeat of the first.
     """
-    monkeypatch.setenv("AGORA_WORLD", "loner")
+    monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
@@ -212,7 +212,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
         "and it must ASK about here too — a rule reads the readings its own node reached"
 
     asked = []
-    monkeypatch.setattr(agent.provider("http://example.org/agora/actuation#Actuation"),
+    monkeypatch.setattr(agent.provider("http://example.org/orexis/actuation#Actuation"),
                         "dose_for", lambda prop, value: asked.append(value) or 0.06)
     planner._bind(desire, step, row)
     assert asked == [moved], "the dose is sized from the world the step starts in"
@@ -234,7 +234,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     does not help. That is worse than the blindness: a partial plan defers to the reflex, but a
     confident "nothing is better" overrides it and stops the plant bidding.
     """
-    monkeypatch.setenv("AGORA_WORLD", "simulation")
+    monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
     fern = build_agent("fern", st, monkeypatch)
     deducer = next(m for m in fern.modules if m.name == "desire")
@@ -243,7 +243,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     plan = Planner(fern, deducer, fern.me).plan(desire)
 
     assert not plan.partial, "every lever on this menu states its effect"
-    assert [s.means for s in plan.steps] == ["http://example.org/agora#Acquire"], \
+    assert [s.means for s in plan.steps] == ["http://example.org/orexis#Acquire"], \
         "the lever that waters this plant is the one the search found"
     assert plan.urgency_after < plan.urgency_now, \
         "and the world it reaches is better than standing still — `better` was zero before"
@@ -263,9 +263,9 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     """
     from agent.desire import Desire
 
-    monkeypatch.setenv("AGORA_WORLD", "simulation")
+    monkeypatch.setenv("OREXIS_WORLD", "simulation")
     fern = build_agent("fern", genesis_store(), monkeypatch)
-    reflex = fern.provider("http://example.org/agora/deliberation#DeliberationCapability")
+    reflex = fern.provider("http://example.org/orexis/deliberation#DeliberationCapability")
 
     #  fern aims at 0.55. Below it the two agree to buy; at and above it they agree to cede,
     #  and the second half is what the guard restores.
@@ -281,12 +281,12 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
 #  no single dose can close the gap. That is the situation depth 2 exists for — "my doses are
 #  too coarse" is the finding the record calls EXHAUSTED — and it is the only situation in which
 #  a second step's baseline can be observed at all.
-STORED = "http://example.org/agora/water#StoredLitres"
+STORED = "http://example.org/orexis/water#StoredLitres"
 NEARLY_EMPTY = 0.05
 
 
 def _thirsty_with_a_nearly_empty_butt(monkeypatch):
-    monkeypatch.setenv("AGORA_WORLD", "loner")
+    monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY, ("water_butt", STORED): NEARLY_EMPTY},
                        world="loner")
     agent = build_agent("gardener", st, monkeypatch)
@@ -458,7 +458,7 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     "look, then look" a new world every time; chaining past a look becomes a real question
     again exactly there.
     """
-    monkeypatch.setenv("AGORA_WORLD", "loner")
+    monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("water_butt", STORED): NEARLY_EMPTY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     deducer = next(m for m in agent.modules if m.name == "desire")
@@ -492,7 +492,7 @@ def test_a_step_that_moves_something_else_is_not_mistaken_for_a_cycle(monkeypatc
 
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     claim = ox.Triple(ox.NamedNode(GARDENER),
-                      ox.NamedNode("http://example.org/agora/market#holdsClaim"),
+                      ox.NamedNode("http://example.org/orexis/market#holdsClaim"),
                       ox.NamedNode("urn:test:claim"))
     real = effects.apply
 
@@ -528,7 +528,7 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
 
     sosa = "http://www.w3.org/ns/sosa/"
     xsd = "http://www.w3.org/2001/XMLSchema#"
-    zz = ox.NamedNode("http://example.org/agora/world/loner#zz")
+    zz = ox.NamedNode("http://example.org/orexis/world/loner#zz")
     prop = ox.NamedNode(MOISTURE)
 
     def observation(node, value, datatype, when):
@@ -543,7 +543,7 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
                       ox.Literal(when, datatype=ox.NamedNode(xsd + "dateTime"))),
         ]
 
-    base = observation(ox.NamedNode("http://example.org/agora#obs_zz_SoilMoisture"),
+    base = observation(ox.NamedNode("http://example.org/orexis#obs_zz_SoilMoisture"),
                        "0.30", "decimal", "2026-01-01T00:00:00Z")
     up = observation(ox.BlankNode(), "0.33", "double", "2026-01-01T00:01:00Z")
     back = observation(ox.BlankNode(), repr(0.33 - 0.03),   # 0.30000000000000004
@@ -565,8 +565,8 @@ def test_two_mintings_of_the_same_claim_are_the_same_place():
 
     from packages.capability.deliberation import signature
 
-    holds = ox.NamedNode("http://example.org/agora/market#holdsClaim")
-    litres = ox.NamedNode("http://example.org/agora/market#litres")
+    holds = ox.NamedNode("http://example.org/orexis/market#holdsClaim")
+    litres = ox.NamedNode("http://example.org/orexis/market#litres")
     double = ox.NamedNode("http://www.w3.org/2001/XMLSchema#double")
 
     def minted():

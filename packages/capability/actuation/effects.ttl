@@ -1,9 +1,9 @@
 @prefix sh:        <http://www.w3.org/ns/shacl#> .
 @prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ag:        <http://example.org/agora#> .
+@prefix ag:        <http://example.org/orexis#> .
 @prefix sosa:      <http://www.w3.org/ns/sosa/> .
-@prefix market:    <http://example.org/agora/market#> .
-@prefix actuation: <http://example.org/agora/actuation#> .
+@prefix market:    <http://example.org/orexis/market#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
 
 #################  What a DOSE makes true  #################
 #

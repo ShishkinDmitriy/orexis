@@ -115,9 +115,9 @@ the host and no host privilege is gained.
 
 Who exists — and therefore who needs a credential and which graphs they may read — is stated
 in `genesis/world.ttl`. Hand-maintaining a second list inside a Fuseki config would be exactly
-the drift this architecture exists to remove, so `agora-acl` **generates** the assembler from
+the drift this architecture exists to remove, so `orexis-acl` **generates** the assembler from
 the world, and each agent's credential is created once and kept in `keys/fuseki/` beside the
-signing keys. Add a plant to the world, re-run `agora-acl`, restart Fuseki: it is authorised.
+signing keys. Add a plant to the world, re-run `orexis-acl`, restart Fuseki: it is authorised.
 
 An agent process reads its own credential and connects as itself. If the credential is
 missing it falls back to admin **and says so loudly**, because that is precisely the

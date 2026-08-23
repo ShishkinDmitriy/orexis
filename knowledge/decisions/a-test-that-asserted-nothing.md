@@ -10,14 +10,14 @@ timestamp: 2026-08-12T00:00:00Z
 
 An empty result set is not an error. A loop over one runs its body zero times, so every assertion
 inside is skipped and the test passes — **indistinguishable from a test that checked a hundred
-things**. Both gates are blind to it by construction: `agora-validate` reads worlds, not tests, and
+things**. Both gates are blind to it by construction: `orexis-validate` reads worlds, not tests, and
 pytest reports a passing test identically whether it asserted a thousand times or none.
 
 Four instances, all found by hand:
 
 | | |
 |---|---|
-| the privacy query, dead four PRs | [#79](https://github.com/ShishkinDmitriy/agora/issues/79) |
+| the privacy query, dead four PRs | [#79](https://github.com/ShishkinDmitriy/orexis/issues/79) |
 | the cadence guard, dead four PRs | a rename moved `sensing:seconds` out from under its query |
 | a glob emptied twice by moving files | fixed locally in `test_store.py` |
 | 143 cases lost in the layout move | the glob did not empty, it stopped covering what it was named for |

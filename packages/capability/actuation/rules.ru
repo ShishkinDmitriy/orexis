@@ -4,9 +4,9 @@
 # of holding the hardware. A plant agent wins claims and still cannot open a valve, because
 # it owns none.
 
-PREFIX actuation: <http://example.org/agora/actuation#>
+PREFIX actuation: <http://example.org/orexis/actuation#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX ag:   <http://example.org/agora#>
+PREFIX ag:   <http://example.org/orexis#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 #  The WHERE reads what is GIVEN — the sovereign's world and what the vocabulary entails of it —

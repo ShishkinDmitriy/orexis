@@ -61,22 +61,22 @@ asked for is the *target*, and it must sit inside that region or the agent will 
 Register each in the catalog inside `world.ttl`:
 
 ```turtle
-<http://example.org/agora/graph/beliefs/fern> a ag:DesireGraph ; ag:beliefsOf :fern_agent .
+<http://example.org/orexis/graph/beliefs/fern> a ag:DesireGraph ; ag:beliefsOf :fern_agent .
 ```
 
 **A world's individuals live in the world's own namespace, not in `ag:`.** Declare it once at
-the top of every file in the world — `@prefix : <http://example.org/agora/world/<name>#> .` —
+the top of every file in the world — `@prefix : <http://example.org/orexis/world/<name>#> .` —
 and write your agents, sensors, subjects and pins unprefixed: `:fern_agent`, `:local_bus`.
 `ag:` is the vocabulary's; a test refuses a world that puts an individual there. The same
 declaration goes in each `beliefs/<agent>.ttl`, whose subject is that same `:fern_agent`.
 
 # 4. Validate, and read what it derived
 
-There is nothing to seed. `agora-validate` builds the world exactly as an agent would — from
+There is nothing to seed. `orexis-validate` builds the world exactly as an agent would — from
 the files, in memory — and holds it to every package's shapes.
 
 ```bash
-agora-validate <name>   # exits non-zero on any violation
+orexis-validate <name>   # exits non-zero on any violation
 ```
 
 ```
@@ -100,10 +100,10 @@ no channel, and an agent with no capability at all.
 # 5. Deploy
 
 ```bash
-agora-onboard <name>      # ONBOARDING — validate, then grant all three:
-#   agora-influx <name>     #   a bucket per agent, and a token that opens only it
-#   agora-mqtt <name>       #   a credential per principal, and the broker ACL, derived
-#   agora-compose <name>    #   writes world/<name>/compose.yaml from that world's roster
+orexis-onboard <name>      # ONBOARDING — validate, then grant all three:
+#   orexis-influx <name>     #   a bucket per agent, and a token that opens only it
+#   orexis-mqtt <name>       #   a credential per principal, and the broker ACL, derived
+#   orexis-compose <name>    #   writes world/<name>/compose.yaml from that world's roster
 cd world/<name> && podman compose up -d
 ```
 
@@ -122,7 +122,7 @@ Then [run-a-world](/runbooks/run-a-world.md).
 | symptom | cause |
 |---|---|
 | `derived <agent> -> ` nothing | wiring implies no ability; check `sensing:senseMode` and that devices are typed |
-| `agora-validate` fails on a missing belief | the wiring derived a capability whose block you did not write |
+| `orexis-validate` fails on a missing belief | the wiring derived a capability whose block you did not write |
 | agent refuses to start, `BeliefsInvalid` | the same thing, caught at startup by the agent itself |
 | agent boots, no readings | the board's `PLANT_ID` and the world's `mqtt:readingTopic` disagree |
 | `no world called '<name>'` | the directory needs a `world.ttl`; the error lists what it found |

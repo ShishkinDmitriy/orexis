@@ -11,7 +11,7 @@ same one and is the authority. See knowledge/decisions/a-package-owns-its-namesp
 from __future__ import annotations
 
 # Where this package's terms live. Held against `ontology.ttl` by `tests/test_layout.py`.
-NS = "http://example.org/agora/scaling#"
+NS = "http://example.org/orexis/scaling#"
 
 
 def term(name: str) -> str:

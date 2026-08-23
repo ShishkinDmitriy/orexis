@@ -1,12 +1,12 @@
-@prefix ag:     <http://example.org/agora#> .
-@prefix mc:     <http://example.org/agora/microcontroller#> .
-@prefix wokwi:  <http://example.org/agora/wokwi#> .
-@prefix : <http://example.org/agora/wokwi#> .
+@prefix ag:     <http://example.org/orexis#> .
+@prefix mc:     <http://example.org/orexis/microcontroller#> .
+@prefix wokwi:  <http://example.org/orexis/wokwi#> .
+@prefix : <http://example.org/orexis/wokwi#> .
 @prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:    <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
 
-<http://example.org/agora/wokwi> a owl:Ontology ;
+<http://example.org/orexis/wokwi> a owl:Ontology ;
     rdfs:label "Wokwi" ;
     rdfs:comment """How a part is DRAWN, and simulated, at wokwi.com. Enough to generate a diagram.json from the wiring the world already states, so the picture is derived rather than maintained — and so the same statements that refuse a bad pin also produce a board you can run the firmware on.
 

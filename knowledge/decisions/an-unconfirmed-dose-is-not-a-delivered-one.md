@@ -30,7 +30,7 @@ asked.
 
 `_on_message` returned as soon as a module's `handle` came back true. That read as an
 optimisation and was a defect — a second module subscribed to the same topic never saw the
-message at all — and it is exactly what [#51](https://github.com/ShishkinDmitriy/agora/issues/51)
+message at all — and it is exactly what [#51](https://github.com/ShishkinDmitriy/orexis/issues/51)
 fixed one level down, where `SensingModule.handle` returned after the first *sensor* owning a
 topic and a board's second channel went unread.
 
@@ -65,7 +65,7 @@ distinction being drawn.
 
 # It stays spent, which is the opposite of what the issue proposed
 
-[#36](https://github.com/ShishkinDmitriy/agora/issues/36) asked for *"at minimum log it; better,
+[#36](https://github.com/ShishkinDmitriy/orexis/issues/36) asked for *"at minimum log it; better,
 do not treat the claim as spent."* The better option is the wrong one, for two reasons.
 
 **The device refuses replays itself.** `firmware/simulated-valve` keeps its own spent set and

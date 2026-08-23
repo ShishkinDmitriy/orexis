@@ -124,7 +124,7 @@ class StoringModule(Module):
 
         self._writer = InfluxWriter(
             config.env("INFLUX_URL", "http://localhost:8086"), token,
-            config.env("INFLUX_ORG", "agora"), bucket)
+            config.env("INFLUX_ORG", "orexis"), bucket)
         self._timer = Timer(self.beliefs.interval_s, self.report)
         self._timer.start()
         self.log.info("reporting on itself every %ss", self.beliefs.interval_s)

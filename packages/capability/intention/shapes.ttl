@@ -1,5 +1,5 @@
-@prefix intention: <http://example.org/agora/intention#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix intention: <http://example.org/orexis/intention#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -14,8 +14,8 @@ intention:KeeperShape a sh:NodeShape ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora#hasCapability>
-                      <http://example.org/agora/intention#Keeping> .
+                ?this <http://example.org/orexis#hasCapability>
+                      <http://example.org/orexis/intention#Keeping> .
             }
         """ ] ;
     sh:property [ sh:path intention:patienceS ;

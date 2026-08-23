@@ -37,10 +37,10 @@ ratified files and the derivation rules, at boot and again whenever re-derivatio
 the runtime holds a read-only handle. Three standing rules stop being rules:
 
 - *desires are never retracted, only recomputed*
-  ([#263](https://github.com/ShishkinDmitriy/agora/issues/263)) — recomputation is the only
+  ([#263](https://github.com/ShishkinDmitriy/orexis/issues/263)) — recomputation is the only
   write path that exists;
 - *an asserted want is written from files and never by the agent*
-  ([#264](https://github.com/ShishkinDmitriy/agora/issues/264)) — the self-satisfaction
+  ([#264](https://github.com/ShishkinDmitriy/orexis/issues/264)) — the self-satisfaction
   loophole closes because there is no handle to open it with;
 - the violation [aim](/domain/aim.md) files — a want living among settings, excused because
   one dataset made it merely untidy — becomes unwritable instead of filed.
@@ -64,16 +64,16 @@ precedents generalised, because modality *determines* lifecycle:
 | the [imaginarium](/domain/imaginarium.md) | memory, per pass | the planner | the end of the pass |
 
 **The modality graph classes are retired — ALL of them, by
-[#312](https://github.com/ShishkinDmitriy/agora/issues/312)**: `ag:BeliefsGraph` first, then
+[#312](https://github.com/ShishkinDmitriy/orexis/issues/312)**: `ag:BeliefsGraph` first, then
 `ag:DesireGraph`, `ag:ConstraintGraph` and `ag:BoundsGraph` when the copy they selected
 dissolved — genesis derives no wants, the modality's own build runs the packages' `desires.ru`
 against the world and the records on every rebuild, and the belief base keeps records only,
 typed for what they are (`ag:PickRecordGraph`, `ag:ObligationsGraph`). That build is also
-[#263](https://github.com/ShishkinDmitriy/agora/issues/263)'s mechanism: re-derivation during
+[#263](https://github.com/ShishkinDmitriy/orexis/issues/263)'s mechanism: re-derivation during
 a life is any rebuild, and a want whose premise has ceased is no longer implied. Everything
 in the beliefs
 store is a belief; a class that names one graph inside it "the beliefs graph" asserts nothing.
-[#65](https://github.com/ShishkinDmitriy/agora/issues/65) asked for a rename; deletion answers
+[#65](https://github.com/ShishkinDmitriy/orexis/issues/65) asked for a rename; deletion answers
 it more strongly. The graph classes that survive are the arrival ones — and the reader
 discipline survives with them: ask the store what graphs it holds, never count them.
 
@@ -96,7 +96,7 @@ and every crossing already has a native shape in the house:
   `VALUES` block by the same collector that already substitutes `$me`.
 - **Effect rules already take their inputs as parameters.** `GRAPH $beliefs { … ?conversion }`
   becomes `$conversion`, the move
-  [#247](https://github.com/ShishkinDmitriy/agora/issues/247) made for `$value` when the
+  [#247](https://github.com/ShishkinDmitriy/orexis/issues/247) made for `$value` when the
   baseline stopped being a store lookup — and for the same reason: a rule is a function of
   its inputs.
 - **Intention never joins belief; it copies.** An expectation copies its baseline into its own
@@ -111,7 +111,7 @@ and every crossing already has a native shape in the house:
   term: what a term asserts decides which store holds it, and nothing may stay filed as
   "untidy but excused".
 - **The migration is the largest since the package tree.** Genesis, endowment, compaction,
-  rebirth, `agora-ask`, every module's store handle and the test fixtures all assume one
+  rebirth, `orexis-ask`, every module's store handle and the test fixtures all assume one
   store. The order of work below keeps both gates green at every step; no step lands half.
 - **The split queries are MEASURED, and the split is faster than the join.** On the Pi,
   against `world/simulation`'s fern with a prototype desires store of 545 quads beside a
@@ -150,7 +150,7 @@ write paths and convenience, and the ruling is that the axis is not to be bent f
    this record's draft feared is the lifecycle: rebuilt with the same discipline as the
    desires store — a conclusion is recomputed, never edited — and holding no row anything
    is allowed to write.
-3. **`agora-ask` names a modality.** A required argument, not a default — the same rule as
+3. **`orexis-ask` names a modality.** A required argument, not a default — the same rule as
    "there is no default world", for the same reason: a fallback answers a question the asker
    did not ask. A question spanning modalities is several asks, and that cost is accepted.
 
@@ -161,14 +161,14 @@ modality is a class that OWNS its store: what kind of store, whether it persists
 anything may write it are that class's decisions, invisible to the agent and to every module.
 Separation of concerns, ruled explicitly: the belief modality chose a writable volume-backed
 store, the desire modality chose a rebuilt in-memory one exposing no writer, and the agent
-cannot tell. `agora-ask` names a modality, a module names the one it means, and ruling 3 is
+cannot tell. `orexis-ask` names a modality, a module names the one it means, and ruling 3 is
 precisely what removed the one caller a union would have had. A holder no question needs is
 a namespace, not a concept, and the dictionary takes no page for it. "The mind" stays what
 it always was in these records: the sitting's phrase for the frame, not a component.
 
 ## The sort, term by term
 
-What [#297](https://github.com/ShishkinDmitriy/agora/issues/297) asked for: every term
+What [#297](https://github.com/ShishkinDmitriy/orexis/issues/297) asked for: every term
 authored into `graph/beliefs/<agent>` across the shipped worlds, classified by what its
 triple asserts. The test that decides each row: **can the world contradict it?** A belief can
 be WRONG — a later reading, a ledger, a drained pot can refute it. A pick can only be
@@ -192,7 +192,7 @@ the desires store's.
 | `water:litresPerFraction`, `water:litresPerStoredLitre` | what a dose DOES to the property — falsifiable by the next reading | beliefs |
 | `market:hasEndowment` | what it holds — falsifiable by the ledger | beliefs |
 
-Two consequences, for [#298](https://github.com/ShishkinDmitriy/agora/issues/298):
+Two consequences, for [#298](https://github.com/ShishkinDmitriy/orexis/issues/298):
 
 - **Endowment follows modality.** An amendment that grants a capability authors that
   capability's never-held terms — and under the split, each lands in the store its row above
@@ -215,12 +215,12 @@ Two consequences, for [#298](https://github.com/ShishkinDmitriy/agora/issues/298
 ## The order of work
 
 1. Measure the split-query shapes on the Pi before anything moves —
-   [#296](https://github.com/ShishkinDmitriy/agora/issues/296). DONE: every split faster
+   [#296](https://github.com/ShishkinDmitriy/orexis/issues/296). DONE: every split faster
    than the join it replaces; the table above. Verdict: proceed.
 2. Sort the beliefs graph's contents by what each term asserts —
-   [#297](https://github.com/ShishkinDmitriy/agora/issues/297).
+   [#297](https://github.com/ShishkinDmitriy/orexis/issues/297).
 3. The desires store, read-only to the runtime, with the query splits above —
-   [#298](https://github.com/ShishkinDmitriy/agora/issues/298). DONE, in three PRs: the store
+   [#298](https://github.com/ShishkinDmitriy/orexis/issues/298). DONE, in three PRs: the store
    (#304, with the modality classes), the readers (#306, with `Picks` named for what it holds),
    and the root desire — a world states it as a TriG block plus the typing that lets the
    catalog call the graph what it is, and an amendment that drops it drops it everywhere,
@@ -228,4 +228,4 @@ Two consequences, for [#298](https://github.com/ShishkinDmitriy/agora/issues/298
    granted pick lands in the record, and the store is built after endowment and rebuilt on
    every premise move — a re-pick, an obligation transition, boot.
 4. Intentions and history in stores of their own; the modality graph classes retire —
-   [#299](https://github.com/ShishkinDmitriy/agora/issues/299).
+   [#299](https://github.com/ShishkinDmitriy/orexis/issues/299).

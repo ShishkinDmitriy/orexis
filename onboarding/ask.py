@@ -1,9 +1,9 @@
-"""agora-ask — the sovereign puts one SPARQL question to one running agent.
+"""orexis-ask — the sovereign puts one SPARQL question to one running agent.
 
-  agora-ask simulation fern 'SELECT ?p ?v WHERE { ?s ?p ?v } LIMIT 5'
+  orexis-ask simulation fern 'SELECT ?p ?v WHERE { ?s ?p ?v } LIMIT 5'
 
 `agent-centric-epistemics` says observe VIA the sovereign, and this is the via: the question
-goes over the world's own bus on the sovereign principal's credential (minted by `agora-mqtt`,
+goes over the world's own bus on the sovereign principal's credential (minted by `orexis-mqtt`,
 held in world/<world>/secrets/, never mounted into any container), the broker's ACL admits it
 to exactly the per-agent question topics, and the AGENT answers about itself from its live
 store. Nothing here opens a volume or reaches around an isolation boundary — the belief base
@@ -34,7 +34,7 @@ log = logging.getLogger("ask")
 def _credentials(world: str) -> tuple[str, str]:
     path = device_credential_file(world, sovereign.SOVEREIGN)
     if not path.exists():
-        raise SystemExit(f"no sovereign credential for {world!r} — run `agora-mqtt {world}`")
+        raise SystemExit(f"no sovereign credential for {world!r} — run `orexis-mqtt {world}`")
     values = dict(line.split("=", 1) for line in path.read_text().splitlines()
                   if "=" in line)
     return values["MQTT_USERNAME"].strip(), values["MQTT_PASSWORD"].strip()
@@ -80,7 +80,7 @@ def ask(world: str, agent_id: str, modality: str, sparql: str,
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
-        prog="agora-ask",
+        prog="orexis-ask",
         description="Put one SPARQL question to one running agent, over its world's bus.")
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("agent", help="the agent's id, e.g. fern")

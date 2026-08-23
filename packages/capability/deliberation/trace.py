@@ -4,7 +4,7 @@ A `Plan` carries the outcome, the steps and the urgency on both sides, and every
 to die in-process as one log line. The material was never missing — the exposure was, and it
 could not be added from outside: pyoxigraph holds an exclusive lock on the belief base, so
 nothing else can open the store to re-run the search and see what it saw. That is the same fact
-`agora-ask` exists for, arriving at the planner.
+`orexis-ask` exists for, arriving at the planner.
 
 **This is the record's one exception, taken on purpose.** Possible worlds are computed and
 dropped, because a stored conclusion can outlive the premise it came from — except where a
@@ -28,7 +28,7 @@ from agent.ontology import DELIBERATION_GRAPH
 
 log = logging.getLogger("trace")
 
-KERNEL = "http://example.org/agora#"
+KERNEL = "http://example.org/orexis#"
 
 #  Why a candidate did not become the plan — the same six-answers-instead-of-two argument the
 #  pass's own outcome makes, one scale down. "Worse" and "already seen" are different findings:

@@ -1,14 +1,14 @@
-@prefix : <http://example.org/agora/world/simulation#> .
-@prefix review: <http://example.org/agora/review#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix water: <http://example.org/agora/water#> .
-@prefix mqtt: <http://example.org/agora/mqtt#> .
-@prefix actuation: <http://example.org/agora/actuation#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix : <http://example.org/orexis/world/simulation#> .
+@prefix review: <http://example.org/orexis/review#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix market: <http://example.org/agora/market#> .
-@prefix scaling: <http://example.org/agora/scaling#> .
+@prefix market: <http://example.org/orexis/market#> .
+@prefix scaling: <http://example.org/orexis/scaling#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -73,7 +73,7 @@
     #  And someone with a watering can wanders through about every other simulated day,
     #  per pot: the third-party impulse of #151, made routine rather than hypothetical.
     ag:strayDoseMeanDays 2 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 :version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 

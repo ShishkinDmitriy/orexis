@@ -117,7 +117,7 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
     path = genesis.world_dir("simulation")
 
     def built():
-        """Exactly what `agora-validate` builds: the public graphs plus everyone's beliefs."""
+        """Exactly what `orexis-validate` builds: the public graphs plus everyone's beliefs."""
         st = Store()
         genesis.refresh_public(st, path)
         everyone = [genesis.agent_id_of(p) for p in sorted(path.glob(genesis.BELIEFS_GLOB))]
@@ -126,7 +126,7 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
         return st, everyone
 
     def judged(st, everyone):
-        """Exactly what agora-validate judges since #312: the wants and the pick records
+        """Exactly what orexis-validate judges since #312: the wants and the pick records
         arrive through each agent's desire modality, and only through it."""
         from agent import effects
         from conftest import desires_build
@@ -396,7 +396,7 @@ def _sensing_with(update: str = ""):
     return st
 
 
-_ONE = """  <http://example.org/agora/world/sensing#{sensor}> ssn-system:hasSystemCapability [
+_ONE = """  <http://example.org/orexis/world/sensing#{sensor}> ssn-system:hasSystemCapability [
       a ssn-system:SystemCapability ;
       ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value {seconds} ; schema:unitCode unit:SEC ] ] ."""
 
@@ -406,9 +406,9 @@ def _states(**floors: int) -> str:
     two of them concatenated is a syntax error rather than two statements."""
     body = "\n".join(_ONE.format(sensor=s, seconds=n) for s, n in floors.items())
     return f"""
-PREFIX ag: <http://example.org/agora#>
+PREFIX ag: <http://example.org/orexis#>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
-PREFIX sensing: <http://example.org/agora/sensing#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
 INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
 {body}
 }} }}"""

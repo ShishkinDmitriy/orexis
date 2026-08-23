@@ -126,7 +126,7 @@ measures anything; the ascent is a reading of ledgers that already exist.
   already mostly provides). Building Habitual before Consulting would be compiling a
   four-line computation into a four-entry table.
 - **The stability judgment is review's evidence machinery**, and sharpening it is the same
-  seam as [#60](https://github.com/ShishkinDmitriy/agora/issues/60) (reflection wakes on a
+  seam as [#60](https://github.com/ShishkinDmitriy/orexis/issues/60) (reflection wakes on a
   timer): "the environment has been stable" and "there is something to reflect on" are one
   question asked in two tenses.
 - **What a habit may say is the mandate's business**: a compiled dose bounded by the same

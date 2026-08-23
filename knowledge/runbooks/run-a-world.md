@@ -7,7 +7,7 @@ description: Deploy, up, down, logs, and what to do after a code change. One con
 # The shape of it
 
 ```
-agora-compose <world>   ─┤ produce things from the world      (agora-specific)
+orexis-compose <world>   ─┤ produce things from the world      (orexis-specific)
                          │
 podman compose up -d    ─┤ run them                            (ordinary compose)
 podman compose logs -f   │
@@ -15,7 +15,7 @@ podman compose down     ─┘
 ```
 
 Everything after the generators is a plain compose project. There is deliberately no
-`agora-up` or `agora-down` — see [runbooks](/runbooks/) on why not.
+`orexis-up` or `orexis-down` — see [runbooks](/runbooks/) on why not.
 
 # Once, per machine
 
@@ -27,7 +27,7 @@ world and stays up across them.
 cp infra/.env.example infra/.env             # where the series store is — URL and org, no secret
 cp infra/admin.env.example infra/secrets/admin.env   # the admin token. Fill it in; never committed
 cd infra && podman compose up -d influxdb grafana    # the broker needs its ACL first, below
-agora-keygen <world>          # that world's host + clearing signing keys, once
+orexis-keygen <world>          # that world's host + clearing signing keys, once
 ```
 
 `infra/.env` holds **only** the URL and the org, because the generated compose files hand that
@@ -47,7 +47,7 @@ the worlds' wiring, so at least one world must be provisioned before it will sta
 are missing, podman creates directories in their place and mosquitto exits reading its config.
 
 ```bash
-agora-mqtt <world>            # credentials + the ACL, derived. Do this first
+orexis-mqtt <world>            # credentials + the ACL, derived. Do this first
 cd infra && podman compose up -d
 ss -lntp | grep 1883          # expect 0.0.0.0:1883
 ```
@@ -56,7 +56,7 @@ A **host** mosquitto left over from an earlier setup will hold that port and win
 cadences live in whichever broker published them, so they do not follow you across the switch —
 each agent re-publishes one after its next reading.
 
-**Reloading it does not restart it, and `agora-mqtt` does the reload itself** — so the paragraph
+**Reloading it does not restart it, and `orexis-mqtt` does the reload itself** — so the paragraph
 below is background, not a step you have to perform.
 
 Getting a signal to the broker took two goes, and the shape of the answer is worth keeping. PID 1
@@ -76,11 +76,11 @@ Both halves were necessary:
   clean exit 0, which is what lets mosquitto flush its persistence file instead of losing
   retained cadences.
 
-`agora-mqtt` sends the reload from the host to that container's broker child either way — that
+`orexis-mqtt` sends the reload from the host to that container's broker child either way — that
 path works whether or not the profile is loaded, which is why it was chosen. By hand it is:
 
 ```bash
-pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' agora_mosquitto_1)
+pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' orexis_mosquitto_1)
 ```
 
 Making PID 1 a root shell fixed something else that had been wasting time: `podman stop` could
@@ -88,7 +88,7 @@ not reach an unprivileged PID 1 either, so the container wedged in `Stopping` an
 on its conmon before the name could be reused. It stops cleanly now.
 
 **One caveat, seen once and not explained.** A broker instance that had been running for hours
-under repeated manual signalling stopped honouring SIGHUP: `agora-mqtt` reported a reload, the
+under repeated manual signalling stopped honouring SIGHUP: `orexis-mqtt` reported a reload, the
 files on disk were right, and a newly added principal was refused until the container was
 restarted — at which point three reload cycles in a row worked again. If a freshly provisioned
 agent is refused and everything on disk looks correct, restart the broker before looking further.
@@ -99,12 +99,12 @@ being evidence of anything — check by connecting, not by reading the log.
 # Deploy a world
 
 ```bash
-agora-onboard simulation      # validate, then all three below
+orexis-onboard simulation      # validate, then all three below
 
 # or separately, when you want only one of them:
-#   agora-influx simulation     # a bucket per agent, and a token that opens only it
-#   agora-mqtt simulation       # a credential per principal, and the broker ACL, derived
-#   agora-compose simulation    # writes world/simulation/compose.yaml FROM the world.ttl beside it
+#   orexis-influx simulation     # a bucket per agent, and a token that opens only it
+#   orexis-mqtt simulation       # a credential per principal, and the broker ACL, derived
+#   orexis-compose simulation    # writes world/simulation/compose.yaml FROM the world.ttl beside it
 ```
 
 All three read the same `world.ttl` and grant exactly what its wiring implies, so adding an
@@ -116,13 +116,13 @@ running, keep their beliefs and keep their credentials, because every grant is p
 nothing is re-issued that already exists. Adding a bucket restarts nothing.
 
 **The one shared thing that must hear about it is the broker**, since one broker serves every
-world and `agora-mqtt` rewrites `passwd` and `acl.conf` across all of them. Mosquitto reads both
-only at startup — but `agora-mqtt` **reloads it for you**, and a reload is not a restart:
+world and `orexis-mqtt` rewrites `passwd` and `acl.conf` across all of them. Mosquitto reads both
+only at startup — but `orexis-mqtt` **reloads it for you**, and a reload is not a restart:
 connected agents keep their sessions and nothing is interrupted. You will see it say so:
 
 ```
 wrote infra/mosquitto/passwd and infra/mosquitto/acl.conf (15 principals)
-reloaded agora_mosquitto_1 — connected agents kept their sessions
+reloaded orexis_mosquitto_1 — connected agents kept their sessions
 ```
 
 If no broker is running it says that instead, and the files are simply read when it next starts.
@@ -177,7 +177,7 @@ Rebuild only when a **dependency** changes (`pyproject.toml`) or you added a fil
 image copies rather than mounts:
 
 ```bash
-podman build -t agora:local .
+podman build -t orexis:local .
 podman compose up -d --force-recreate
 ```
 
@@ -190,26 +190,26 @@ version upgrade changes any of it.
 
 |  | the bus (mosquitto) | the series store (InfluxDB) |
 |---|---|---|
-| **grant** more | edit `world.ttl`, `agora-mqtt <w>` — reaches a connected agent that subscribed *before* the grant existed; no reconnect | `agora-influx <w>` mints the bucket and token; the agent must be recreated to be handed them |
-| **revoke** | edit `world.ttl`, `agora-mqtt <w>` — delivery stops at once, and the agent is **not** disconnected | delete the token; refused on its very next request |
-| **rotate** credential | `agora-mqtt <w> --rotate` — **evicts** the session it invalidates | `agora-influx <w> --rotate` — old token refused at once |
+| **grant** more | edit `world.ttl`, `orexis-mqtt <w>` — reaches a connected agent that subscribed *before* the grant existed; no reconnect | `orexis-influx <w>` mints the bucket and token; the agent must be recreated to be handed them |
+| **revoke** | edit `world.ttl`, `orexis-mqtt <w>` — delivery stops at once, and the agent is **not** disconnected | delete the token; refused on its very next request |
+| **rotate** credential | `orexis-mqtt <w> --rotate` — **evicts** the session it invalidates | `orexis-influx <w> --rotate` — old token refused at once |
 
 **Revoking is immediate on both, and neither needs a restart.** Mosquitto re-checks the ACL on
 every *delivery*, not just at subscribe — which is also why an agent may subscribe `#` and still
 receive only its own topics. Influx checks the token on every request. The bus needs its SIGHUP,
-which `agora-mqtt` sends for you; the store needs nothing at all.
+which `orexis-mqtt` sends for you; the store needs nothing at all.
 
 **Rotation is a revocation, not a re-key.** Both credentials are handed to a container as an
 `env_file` when it is *created*, and the agent holds them in memory. So rotating takes that agent
 off the service and does not give it the new credential — it must be recreated to pick it up:
 
 ```bash
-agora-mqtt <w> --rotate && agora-influx <w> --rotate
+orexis-mqtt <w> --rotate && orexis-influx <w> --rotate
 cd world/<w> && podman compose up -d          # recreates the agents, with the new credentials
 ```
 
 Which is the right shape for the emergency it exists for: rotate to *stop* an agent, recreate to
-let it back. `agora-mqtt --rotate` never touches a **device** password, because that one is
+let it back. `orexis-mqtt --rotate` never touches a **device** password, because that one is
 flashed into a board that may not be in front of you.
 
 # Switching worlds — nothing is lost
@@ -225,7 +225,7 @@ Nothing to seed, and nothing shared to overwrite: each agent's belief base is it
 so worlds cannot touch each other at all.
 
 ```bash
-agora-validate simulation && agora-validate sensing   # checked from the files, no store needed
+orexis-validate simulation && orexis-validate sensing   # checked from the files, no store needed
 ```
 
 **Two worlds may run at once only if their devices differ.** `simulation` and `sensing` share
@@ -235,7 +235,7 @@ prevents this; it is your job to know.
 
 # Unattended, across reboots
 
-There are no agora services. Every agent already declares `restart: unless-stopped`, so the
+There are no orexis services. Every agent already declares `restart: unless-stopped`, so the
 only thing missing after a reboot is something to start them again — and podman ships that:
 
 ```bash
@@ -284,7 +284,7 @@ needs no hardware at all. `sensing` is the world with a real board. See
 | symptom | cause |
 |---|---|
 | agent refuses to start, `BeliefsInvalid` | its opening beliefs do not satisfy the shapes for the capabilities the world derived for it. The report names the shape; fix `world/<name>/beliefs/<agent>.ttl` |
-| agent logs `born` on every start | it is not keeping its volume — check the `agora-<world>-<agent>` volume is mounted at `/app/state` |
+| agent logs `born` on every start | it is not keeping its volume — check the `orexis-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
 | agent cannot reach the broker | the world says `mqtt:brokerHost "localhost"`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |

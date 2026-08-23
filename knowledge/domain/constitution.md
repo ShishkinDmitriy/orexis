@@ -22,12 +22,12 @@ independently before any action fires.
 # How it's enforced
 
 As **SHACL shapes / rule-engine checks** over the RDF belief base — validates or doesn't,
-with no argument. The first shapes exist (each package's `shapes.ttl`, run together by `agora-validate`):
+with no argument. The first shapes exist (each package's `shapes.ttl`, run together by `orexis-validate`):
 every observation must be complete and world-versioned, and — under
 [trusted-agent-mode](/decisions/trusted-agent-mode.md) — **self-asserted** (authored by the
 plant itself; a signing sensor re-adds an independent witness in adversarial mode). The
 allocation constraints are Python in `agent/clearing.py` rather than SHACL, and **both are now
-live**: total ≤ tank, and a per-participant **allocation ceiling** ([#270](https://github.com/ShishkinDmitriy/agora/issues/270)).
+live**: total ≤ tank, and a per-participant **allocation ceiling** ([#270](https://github.com/ShishkinDmitriy/orexis/issues/270)).
 
 The ceiling is **structural, and that is what makes it safe to compute**. It is the span of what
 the participant's subject survives, in litres — bone dry to the wet cliff — derived at genesis

@@ -10,7 +10,7 @@ timestamp: 2026-08-09T00:00:00Z
 
 Two unrelated observations turned out to be the same question.
 
-The first is [issue #45](https://github.com/ShishkinDmitriy/agora/issues/45): a belief base grows
+The first is [issue #45](https://github.com/ShishkinDmitriy/orexis/issues/45): a belief base grows
 about 4 MB a day per agent while its triple count never moves. It is an LSM tree, every reading
 is a DELETE followed by an INSERT, and compaction is size-triggered — so a few hundred triples
 never approach any threshold and nothing is ever reclaimed. The remedy is one call. What made it
@@ -199,7 +199,7 @@ That composition is the whole reason it is safe to let an agent slow itself down
 
 # Belief-base upkeep is kernel, not a capability
 
-`agora/metrics.py` already argued this: every agent has a belief base whatever else it can do,
+`orexis/metrics.py` already argued this: every agent has a belief base whatever else it can do,
 capabilities are derived from wiring, and a rule granting a "maintain yourself" capability would
 have to fire for everybody — which is the kernel wearing a disguise. Compaction is the same. What
 *is* capability-shaped is reviewing something an agent **chose**; keeping your own house is not a
@@ -246,6 +246,6 @@ choice.
   procedures instead of decisions — and how such a rule would be ratified is undecided.
 - **Evidence is not scoped by sense mode.** A moving thermometer would tighten the cadence of a
   moisture probe on the same agent. No ratified world has that shape yet; see
-  [#51](https://github.com/ShishkinDmitriy/agora/issues/51).
+  [#51](https://github.com/ShishkinDmitriy/orexis/issues/51).
 - **The reviewer arises on a clock, not on surprise.** A decision's due-date paces it, but nothing
   wakes an agent because something contradicted what it believed.

@@ -16,9 +16,9 @@ from agent.store import bindings
 
 from conftest import MOISTURE, build_agent, genesis_store
 
-OBSERVE = "http://example.org/agora#Observe"
-ACTUATE = "http://example.org/agora#Actuate"
-_AG = "http://example.org/agora#"
+OBSERVE = "http://example.org/orexis#Observe"
+ACTUATE = "http://example.org/orexis#Actuate"
+_AG = "http://example.org/orexis#"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 RESULT_TIME = "http://www.w3.org/ns/sosa/resultTime"
 
@@ -71,8 +71,8 @@ def test_looking_refreshes_the_reading_and_carries_its_value_unchanged():
     """
     st = _loner({("zz", MOISTURE): 0.10})
     added, retracted = effects.apply(
-        st, OBSERVE, me="<http://example.org/agora/world/loner#gardener>",
-        subject="<http://example.org/agora/world/loner#zz>", property=f"<{MOISTURE}>",
+        st, OBSERVE, me="<http://example.org/orexis/world/loner#gardener>",
+        subject="<http://example.org/orexis/world/loner#zz>", property=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>")
 
     assert _values(added) == ["0.1"], "looking tells you what IS, and changes nothing"
@@ -89,8 +89,8 @@ def test_the_retraction_takes_the_whole_node_the_writer_would_replace():
     """
     st = _loner({("zz", MOISTURE): 0.10})
     _, retracted = effects.apply(
-        st, OBSERVE, me="<http://example.org/agora/world/loner#gardener>",
-        subject="<http://example.org/agora/world/loner#zz>", property=f"<{MOISTURE}>",
+        st, OBSERVE, me="<http://example.org/orexis/world/loner#gardener>",
+        subject="<http://example.org/orexis/world/loner#zz>", property=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>")
 
     held = {(t.subject.value, t.predicate.value) for t in retracted}
@@ -106,8 +106,8 @@ def test_a_means_no_package_described_simply_has_no_effect():
     obligation, which is the registry this layout exists to avoid."""
     st = _loner({("zz", MOISTURE): 0.10})
 
-    assert effects.rule_for(st, "http://example.org/agora#Offer") is None
-    assert effects.apply(st, "http://example.org/agora#Offer") == ([], [])
+    assert effects.rule_for(st, "http://example.org/orexis#Offer") is None
+    assert effects.apply(st, "http://example.org/orexis#Offer") == ([], [])
 
 
 # --- the number that must not fork ---------------------------------------------------------
@@ -211,10 +211,10 @@ def test_a_dose_is_timed_by_the_valve_and_not_by_whose_pot_it_fills():
     about the VALVE."""
     st = genesis_store({})
     genesis.birth(st, genesis.world_dir("simulation"), "supplier")
-    supplier = "http://example.org/agora/world/simulation#supplier"
+    supplier = "http://example.org/orexis/world/simulation#supplier"
 
     for pot in ("fern", "tomato", "succulent"):
-        stated = _lands(st, 0.3, supplier, f"http://example.org/agora/world/simulation#{pot}")
+        stated = _lands(st, 0.3, supplier, f"http://example.org/orexis/world/simulation#{pot}")
         assert stated is not None, f"the host's valve on {pot} is a valve it can time"
         assert stated > 0
 
@@ -225,7 +225,7 @@ def test_looking_lands_at_once_because_looking_changes_nothing():
     KNOWLEDGE, which is what the confirmation route says instead."""
     st = genesis_store({})
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
-    fern = "http://example.org/agora/world/simulation#fern"
+    fern = "http://example.org/orexis/world/simulation#fern"
     assert effects.lands_after(st, f"{_AG}Observe", me=f"<{fern}_agent>",
                                subject=f"<{fern}>") == 0.0
 

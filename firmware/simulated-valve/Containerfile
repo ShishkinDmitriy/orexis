@@ -15,7 +15,7 @@
 #     image contexts anyway — correctly, since the agent image must not carry firmware and
 #     firmware must not carry the agent.
 #
-#   podman build --network=host -t agora-valve:local firmware/simulated-valve
+#   podman build --network=host -t orexis-valve:local firmware/simulated-valve
 
 FROM docker.io/library/python:3.12-alpine
 

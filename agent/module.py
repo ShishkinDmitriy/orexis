@@ -65,7 +65,7 @@ class Module:
 
         Note what is NOT here: a hook for contributing what to review. That is declared in the
         package's `ontology.ttl` and asked of it in its `review.rq`, so a capability needs no
-        Python at all to be reviewable. See agora/review.py.
+        Python at all to be reviewable. See orexis/review.py.
         """
 
     def start(self) -> None:

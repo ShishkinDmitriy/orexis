@@ -32,7 +32,7 @@ def host(make, tmp_path, monkeypatch):
     """
     from onboarding.keygen import create_keypair
 
-    monkeypatch.setenv("AGORA_WORLD_DIR", str(tmp_path))
+    monkeypatch.setenv("OREXIS_WORLD_DIR", str(tmp_path))
     (tmp_path / "secrets").mkdir()
     for name in ("host", "clearing"):
         create_keypair(name)
@@ -57,7 +57,7 @@ def low_event(agent_id="fern", value=0.05, observed_property=MOISTURE):
     has named the property since a subject with two sensors started announcing two values on one
     topic; the host reads it.
     """
-    return {"agent": agent_id, "subject": f"http://example.org/agora#{agent_id}",
+    return {"agent": agent_id, "subject": f"http://example.org/orexis#{agent_id}",
             "property": observed_property, "value": value, "band": "LOW"}
 
 
@@ -254,8 +254,8 @@ def test_a_bidder_whose_domain_prices_no_property_refuses_to_start(make):
 
     ds = genesis_store()
     ds.update(f"""DELETE WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-        <http://example.org/agora/water#litresPerFraction>
-        <http://example.org/agora/market#aboutProperty> ?p }} }}""")
+        <http://example.org/orexis/water#litresPerFraction>
+        <http://example.org/orexis/market#aboutProperty> ?p }} }}""")
 
     with pytest.raises(RuntimeError, match="aboutProperty"):
         make("fern", ds)
@@ -511,7 +511,7 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
     ttl = world / "world.ttl"
     ttl.write_text(ttl.read_text().replace("market:matchesBy market:PayAsBid", "market:matchesBy market:UniformPrice"))
 
-    monkeypatch.setenv("AGORA_WORLD_DIR", str(world))
+    monkeypatch.setenv("OREXIS_WORLD_DIR", str(world))
     for name in ("host", "clearing"):
         create_keypair(name)
 
@@ -539,7 +539,7 @@ def test_a_winner_named_unlike_its_subject_still_gets_its_dose(make, tmp_path, m
 
     from agent.clearing import Claim
 
-    monkeypatch.setenv("AGORA_WORLD_DIR", str(tmp_path))
+    monkeypatch.setenv("OREXIS_WORLD_DIR", str(tmp_path))
     (tmp_path / "secrets").mkdir()
     for name in ("host", "clearing"):
         create_keypair(name)
@@ -590,7 +590,7 @@ def test_a_blind_host_sells_as_it_always_did(make, tmp_path, monkeypatch):
     keeps the old behaviour unchanged, which is what keeps this a widening."""
     from onboarding.keygen import create_keypair
 
-    monkeypatch.setenv("AGORA_WORLD_DIR", str(tmp_path))
+    monkeypatch.setenv("OREXIS_WORLD_DIR", str(tmp_path))
     (tmp_path / "secrets").mkdir()
     for name in ("host", "clearing"):
         create_keypair(name)
@@ -601,7 +601,7 @@ def test_a_blind_host_sells_as_it_always_did(make, tmp_path, monkeypatch):
     assert len(offers) == 1 and offers[0]["quantity_l"] == 3.0
 
 
-STORED = "http://example.org/agora/water#StoredLitres"
+STORED = "http://example.org/orexis/water#StoredLitres"
 
 
 # --- the owed round is a commitment the ledger sees (#206) ------------------
@@ -703,7 +703,7 @@ def test_paying_the_debt_discharges_it_and_the_ledger_keeps_the_record(host):
     from packages.capability.desire.graphs import obligations_graph
     from agent.store import bindings
     kept = bindings(host.beliefs.query(
-        "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/agora#dischargedAt> ?d } }"
+        "SELECT ?d WHERE { GRAPH <%s> { ?o <http://example.org/orexis#dischargedAt> ?d } }"
         % obligations_graph("supplier")))
     assert kept, "and the record of having paid it stays"
 
@@ -827,7 +827,7 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
     import logging
 
     jti = _win_a_claim(host)
-    deliberator = host.provider("http://example.org/agora/deliberation#DeliberationCapability")
+    deliberator = host.provider("http://example.org/orexis/deliberation#DeliberationCapability")
     real, deliberator.propose_for = deliberator.propose_for, lambda desire: None
 
     with caplog.at_level(logging.WARNING):
@@ -892,7 +892,7 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
 
     duty = next(g for g in host.pursuing() if g.is_duty)
     move = host.provider(DELIBERATION).propose_for(duty)
-    assert move == "http://example.org/agora#Acquire", \
+    assert move == "http://example.org/orexis#Acquire", \
         "the plan's first step is the refill — the search found the chain the reflex never could"
 
 

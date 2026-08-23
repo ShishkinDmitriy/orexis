@@ -20,8 +20,8 @@
 # capability nothing provides would only produce a startup warning. What would SELECT between
 # the two once both exist is an open seam — the rule is the last piece to add, not the first.
 
-PREFIX review: <http://example.org/agora/review#>
-PREFIX ag: <http://example.org/agora#>
+PREFIX review: <http://example.org/orexis/review#>
+PREFIX ag: <http://example.org/orexis#>
 
 #  ROOM means room. A mandate whose ends meet grants nothing: it is how an author says a figure
 #  is not up for review — by leaving nowhere to go rather than by a flag somewhere saying not to

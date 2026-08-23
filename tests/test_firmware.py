@@ -1,4 +1,4 @@
-"""agora-firmware — a board's config.h is derived from the world, never typed.
+"""orexis-firmware — a board's config.h is derived from the world, never typed.
 
 These are about the QUERY and what it emits, not about flashing anything. The generator reads
 credentials that are gitignored and writes a file carrying a password, so the tests drive the
@@ -62,11 +62,11 @@ def test_a_board_with_no_led_still_generates():
     ds.update(f"""
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?d <http://www.w3.org/ns/ssn/deployedSystem> ?led }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?d <http://www.w3.org/ns/ssn/deployedSystem> ?led .
-                  ?led a <http://example.org/agora/rgb-led#RgbLed> }} }}""")
+                  ?led a <http://example.org/orexis/rgb-led#RgbLed> }} }}""")
     ds.update(f"""
         DELETE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?b <http://www.w3.org/ns/sosa/hosts> ?led }} }}
         WHERE  {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{ ?b <http://www.w3.org/ns/sosa/hosts> ?led }}
-                  GRAPH <{WORLD_GRAPH}> {{ ?led a <http://example.org/agora/rgb-led#RgbLed> }} }}""")
+                  GRAPH <{WORLD_GRAPH}> {{ ?led a <http://example.org/orexis/rgb-led#RgbLed> }} }}""")
 
     rows = ratified.rows(ds, _BOARDS_Q)
     assert len(rows) == 1, "losing the LED must not lose the board"

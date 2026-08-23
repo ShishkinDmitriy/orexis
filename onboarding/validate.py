@@ -1,6 +1,6 @@
-"""agora-validate — hold a whole ratified world to every package's shapes, before anything runs.
+"""orexis-validate — hold a whole ratified world to every package's shapes, before anything runs.
 
-  agora-validate society
+  orexis-validate society
 
 **This is the sovereign's check, not an agent's.** An agent validates *itself* at boot and
 refuses to start if its own beliefs do not hold — that is `agent.validate.validate_agent`, and it
@@ -8,7 +8,7 @@ belongs in the runtime because the consequence is not running. This one asks a d
 question: does the world I just authored hold together *at all*, for every agent in it, before I
 grant anything or start anything?
 
-So it lives here. It runs before onboarding, and `agora-onboard` runs it first for a reason worth
+So it lives here. It runs before onboarding, and `orexis-onboard` runs it first for a reason worth
 stating: onboarding an inconsistent world mints real credentials for agents that will then fail
 their own startup validation, and leaves them lying around.
 
@@ -92,7 +92,7 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
-        prog="agora-validate",
+        prog="orexis-validate",
         description="Validate one ratified world and the opening beliefs it authors.",
     )
     p.add_argument("world",

@@ -157,8 +157,8 @@ that issue's business.
 and restated because it is the neighbouring question: `ssn:hasSubSystem` from board to part
 requires knowing the mounting is permanent, and nothing in the graph says whether it is.
 
-[#88]: https://github.com/ShishkinDmitriy/agora/pull/88
-[#96]: https://github.com/ShishkinDmitriy/agora/issues/96
-[#98]: https://github.com/ShishkinDmitriy/agora/issues/98
-[#101]: https://github.com/ShishkinDmitriy/agora/issues/101
-[#103]: https://github.com/ShishkinDmitriy/agora/issues/103
+[#88]: https://github.com/ShishkinDmitriy/orexis/pull/88
+[#96]: https://github.com/ShishkinDmitriy/orexis/issues/96
+[#98]: https://github.com/ShishkinDmitriy/orexis/issues/98
+[#101]: https://github.com/ShishkinDmitriy/orexis/issues/101
+[#103]: https://github.com/ShishkinDmitriy/orexis/issues/103

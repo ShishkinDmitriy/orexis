@@ -19,7 +19,7 @@ from packages.capability.review.summary import RING, Summaries
 
 from conftest import MOISTURE, WORLDS_ROOT, build_agent
 
-FERN = "http://example.org/agora#fern"
+FERN = "http://example.org/orexis#fern"
 
 
 @pytest.fixture

@@ -475,7 +475,7 @@ def test_a_dictionary_term_is_a_declared_one():
                 wrong.append(f"{rel}: {iri} is in no namespace the store binds")
                 continue
             owners.setdefault(iri, []).append(page.name)
-            if str(NAMESPACES[prefix]).startswith("http://example.org/agora"):
+            if str(NAMESPACES[prefix]).startswith("http://example.org/orexis"):
                 if iri not in declared:
                     wrong.append(f"{rel}: {iri} is not declared by any project ontology")
             elif prefix in vendored:

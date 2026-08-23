@@ -1,13 +1,13 @@
-@prefix governed: <http://example.org/agora/firmware/moisture-sensor#> .
-@prefix : <http://example.org/agora/firmware/moisture-sensor#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
+@prefix governed: <http://example.org/orexis/firmware/moisture-sensor#> .
+@prefix : <http://example.org/orexis/firmware/moisture-sensor#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
-@prefix mc:   <http://example.org/agora/microcontroller#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix mc:   <http://example.org/orexis/microcontroller#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<http://example.org/agora/firmware/moisture-sensor> a owl:Ontology ;
+<http://example.org/orexis/firmware/moisture-sensor> a owl:Ontology ;
     rdfs:label "The governed node — what a board running this firmware IS" ;
     rdfs:comment """A firmware describes itself (#175), so a world does not have to. This is
 a-part-is-described-once-and-fitted-many-times applied to code instead of silicon: which

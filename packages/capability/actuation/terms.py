@@ -9,7 +9,7 @@ would conform while the agent read nothing.
 
 from __future__ import annotations
 
-NS = "http://example.org/agora/actuation#"
+NS = "http://example.org/orexis/actuation#"
 
 
 def term(name: str) -> str:

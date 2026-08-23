@@ -1,4 +1,4 @@
-"""agora-wireviz — the wiring documented as a harness, and drafted back from one.
+"""orexis-wireviz — the wiring documented as a harness, and drafted back from one.
 
 WireViz's vocabulary is connectors with named pins and cables with coloured wires, which is
 what `mc:Pin`, `mc:Wire` and `mc:colour` already are. Nothing is flattened or invented in
@@ -157,4 +157,4 @@ def test_the_committed_harness_is_in_step_with_the_world():
     regenerates and compares."""
     committed = (world_dir("sensing") / "wiring.yaml").read_text()
     assert render("sensing") == committed, (
-        "world/sensing/wiring.yaml is out of step — run `agora-wireviz sensing`")
+        "world/sensing/wiring.yaml is out of step — run `orexis-wireviz sensing`")

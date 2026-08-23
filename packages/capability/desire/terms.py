@@ -12,7 +12,7 @@ exactly as it asks for whoever perceives.
 
 from __future__ import annotations
 
-NS = "http://example.org/agora/desire#"
+NS = "http://example.org/orexis/desire#"
 
 
 def term(name: str) -> str:
@@ -22,7 +22,7 @@ def term(name: str) -> str:
 # The mind's STATES live in the kernel now: they are the lingua franca four packages
 # already had to name, and `ag:IntentionGraph` holding `intention:Intention` was a split
 # brain. What stays here is the HOW — this family, its members, and its own figures.
-KERNEL = "http://example.org/agora#"
+KERNEL = "http://example.org/orexis#"
 
 
 def kernel(name: str) -> str:
@@ -50,7 +50,7 @@ CONSULTING = term("Consulting")  # asks something else — RESERVED, nothing imp
 # What this package ASKS OF others, by family — their namespace, never their Python. Deciding
 # whether anything can be done about a want is the deliberator's, and a copy of that reasoning
 # here would be a second menu, free to disagree with the one the agent acts on.
-DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
+DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
 
 # The graph class. A TERM, not an instance: `agent.beliefs` is asked which graphs are of this
 # class, so a second source of desire is a vocabulary edit and touches no Python here.

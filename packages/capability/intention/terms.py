@@ -12,7 +12,7 @@ commitments, exactly as it asks for whoever wants or perceives.
 
 from __future__ import annotations
 
-NS = "http://example.org/agora/intention#"
+NS = "http://example.org/orexis/intention#"
 
 
 def term(name: str) -> str:
@@ -22,7 +22,7 @@ def term(name: str) -> str:
 # The mind's STATES live in the kernel now: they are the lingua franca four packages
 # already had to name, and `ag:IntentionGraph` holding `intention:Intention` was a split
 # brain. What stays here is the HOW — this family, its members, and its own figures.
-KERNEL = "http://example.org/agora#"
+KERNEL = "http://example.org/orexis#"
 
 
 def kernel(name: str) -> str:

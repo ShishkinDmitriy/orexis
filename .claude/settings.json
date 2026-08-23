@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(agora-validate *)",
+      "Bash(orexis-validate *)",
       "Bash(pytest tests *)",
       "Bash(podman ps *)",
       "Bash(podman logs *)",
@@ -12,7 +12,7 @@
       "Bash(dpkg -l *)",
       "Bash(podman images *)",
       "Bash(podman volume inspect *)",
-      "Bash(.venv/bin/agora-validate *)",
+      "Bash(.venv/bin/orexis-validate *)",
       "Bash(.venv/bin/pytest tests *)",
       "Bash(./tools/validate-okf.sh *)",
       "Bash(lint-imports)",

@@ -27,7 +27,7 @@ suggestion that `packages/part/dht11/` should be restructured to match a capabil
 | | capability | vocabulary package |
 |---|---|---|
 | how it is found | `loader.packages()` — "found by looking. Nothing is named" | the same call, same rule |
-| `ontology.ttl`, `shapes.ttl`, `rules.ru`, `review.rq` | any subset | the same subset — `packages/core/agora/` carries a `rules.ru` |
+| `ontology.ttl`, `shapes.ttl`, `rules.ru`, `review.rq` | any subset | the same subset — `packages/core/orexis/` carries a `rules.ru` |
 | its own namespace | declared in its ontology | the same, and `loader.prefixes()` picked up `zz:` with no registry edit |
 | Python | `__init__.py` with `PROVIDES` | **none** |
 
@@ -143,4 +143,4 @@ real probe.
 - **One species, and no second to generalise from.** Whether every species wants its own package
   or a `species.ttl` per world is a question a second one will answer better than argument.
 - **The agent cannot want most of what the species states.** Temperature and humidity ranges are
-  now expressible and no agent can hold a desire in them — [#110](https://github.com/ShishkinDmitriy/agora/issues/110).
+  now expressible and no agent can hold a desire in them — [#110](https://github.com/ShishkinDmitriy/orexis/issues/110).

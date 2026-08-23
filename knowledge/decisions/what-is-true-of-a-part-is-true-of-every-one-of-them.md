@@ -33,7 +33,7 @@ which is **punning** — treating a class as an individual. Legal RDF, and it sa
 
 So the number had to be written a second time, by hand, onto each sensor in the society, and a test
 had to hold the two to agreeing because nothing else could. That is
-[#59](https://github.com/ShishkinDmitriy/agora/issues/59), and it was recorded as *"said twice, and
+[#59](https://github.com/ShishkinDmitriy/orexis/issues/59), and it was recorded as *"said twice, and
 held to agreeing"* — accurate, and one level short of the cause.
 
 # The idea was to describe at class level, and plain OWL was enough for it
@@ -72,7 +72,7 @@ when it is about the members. It is nearly always the second.
 became `dht11:ContinuousOperationCapability` — named for its **condition**, because that is the
 axis a second one would differ along. SSN puts *"under the defined Conditions"* into the definition
 of `Frequency` itself, so *ten seconds on mains* and *fifteen minutes on battery*
-([#78](https://github.com/ShishkinDmitriy/agora/issues/78)) are two capabilities of one device that
+([#78](https://github.com/ShishkinDmitriy/orexis/issues/78)) are two capabilities of one device that
 would then need telling apart by name. The naming already anticipates the second.
 
 This is the same shape the W3C's own worked DHT22 example takes, which names
@@ -147,7 +147,7 @@ The others are not the same kind of fact, which is the bound worth stating rathe
 | what it says | classes | why a restriction would be wrong or pointless |
 |---|---|---|
 | what every instance can honour | `dht11:Dht11` | this one — the reader needs it on an instance |
-| `mc:modelName`, `wokwi:part`, `wokwi:pin` | `dht11:Dht11`, `esp32:DevKitC`, `probe:CapacitiveMoistureProbe`, `rgbled:RgbLed` | read *as* class facts. `agora-wokwi` and `agora-firmware` hold the class in hand and want the part's drawing, not each instance's copy of it |
+| `mc:modelName`, `wokwi:part`, `wokwi:pin` | `dht11:Dht11`, `esp32:DevKitC`, `probe:CapacitiveMoistureProbe`, `rgbled:RgbLed` | read *as* class facts. `orexis-wokwi` and `orexis-firmware` hold the class in hand and want the part's drawing, not each instance's copy of it |
 | a family's parameter | `sensing:SensingCapability` (`minSleepS`, `maxSleepS`, `reviewWindow`), `ag:BeliefBase` (`maxBytesPerTriple`) | not "true of every instance" — a default the vocabulary states once and readers ask the *family* for |
 
 So the mechanism generalises to every future part with a datasheet, and to nothing else currently
@@ -157,7 +157,7 @@ class-level facts to justify it.
 # It found a dead guard, which is the more useful finding
 
 `test_the_society_repeats_every_limit_the_wiring_states` **had asserted nothing since
-[PR #95](https://github.com/ShishkinDmitriy/agora/pull/95)**, which renamed `sensing:seconds` to
+[PR #95](https://github.com/ShishkinDmitriy/orexis/pull/95)**, which renamed `sensing:seconds` to
 schema.org's `value`/`unitCode` pair ([one-word-for-one-relation](one-word-for-one-relation.md)).
 The guard still asked for the old term, found it nowhere, and passed every run since by having
 nothing to compare. Measured on the commit before this one: **zero parts reached an assertion.**
@@ -189,7 +189,7 @@ arriving from a different direction. A renamed term empties a scan exactly as a 
 
 # Seams left open
 
-- **The projection into the society is still by hand.** `agora-onboard` could write what the
+- **The projection into the society is still by hand.** `orexis-onboard` could write what the
   sovereign entails onto each sensor a part is composed of, and does not — that is a generator, and
   a generated society file would change what "the world is the files" means. The guard is what
   stands in for it.
@@ -197,7 +197,7 @@ arriving from a different direction. A renamed term empties a scan exactly as a 
   have nothing to materialise.
 - **A restriction cannot carry a blank node.** The condition and the frequency hanging off
   `dht11:ContinuousOperationCapability` are still anonymous, which is fine while nothing else refers
-  to them; a second condition per [#78](https://github.com/ShishkinDmitriy/agora/issues/78) makes
+  to them; a second condition per [#78](https://github.com/ShishkinDmitriy/orexis/issues/78) makes
   naming them worth doing.
 - **Nothing stops a part class from asserting a value that contradicts its own subclass.** OWL would
   call that unsatisfiable and no reasoner here runs; two restrictions on one property simply both

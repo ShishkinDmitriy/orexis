@@ -29,13 +29,13 @@ SELECT ?step ?means ?property ?via ?direction WHERE {
     ?upstream ag:localId ?id .
     BIND(1 AS ?step)
     BIND(ag:Acquire AS ?means)
-    BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?id))) AS ?via)
+    BIND(IRI(CONCAT("http://example.org/orexis#market.", ENCODE_FOR_URI(?id))) AS ?via)
   } UNION {
     ?vessel ag:localId ?id .
     BIND(2 AS ?step)
     BIND(ag:Offer AS ?means)
     BIND(market:Lowers AS ?direction)
-    BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?id))) AS ?via)
+    BIND(IRI(CONCAT("http://example.org/orexis#market.", ENCODE_FOR_URI(?id))) AS ?via)
   }
 }
 ORDER BY ?step

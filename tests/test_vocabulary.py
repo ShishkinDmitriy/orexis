@@ -132,7 +132,7 @@ def test_boot_refuses_and_says_which_terms():
         vocabulary.check(st)
     message = str(exc.value)
     assert "slowSleepS" in message and "sensing#slowSleepS" in message
-    assert "AGORA_MIGRATE_BELIEFS" in message
+    assert "OREXIS_MIGRATE_BELIEFS" in message
 
 
 # --- and the way forward --------------------------------------------------------------------
@@ -191,7 +191,7 @@ def test_an_aged_volume_refuses_to_open(tmp_path, monkeypatch):
     Written to disk and reopened, because the failure is about a volume surviving a restart —
     an in-memory store cannot be older than the code that made it.
     """
-    monkeypatch.delenv("AGORA_MIGRATE_BELIEFS", raising=False)
+    monkeypatch.delenv("OREXIS_MIGRATE_BELIEFS", raising=False)
     path = str(tmp_path / "beliefs")
     world = WORLDS_ROOT / "simulation"
 
@@ -213,7 +213,7 @@ def test_and_opens_when_asked_to_migrate(tmp_path, monkeypatch):
     aged.put_graph(beliefs_graph("fern"), BEFORE_THE_SWEEP)
     del aged
 
-    monkeypatch.setenv("AGORA_MIGRATE_BELIEFS", "1")
+    monkeypatch.setenv("OREXIS_MIGRATE_BELIEFS", "1")
     st = genesis.open_belief_base(world, "fern", path)
     rows = bindings(st.query(
         "SELECT ?v WHERE { GRAPH <%s> { ?a sensing:slowSleepS ?v } }" % beliefs_graph("fern")))
@@ -227,7 +227,7 @@ def test_a_package_to_package_move_is_migrated_by_the_same_lookup():
     so a term may move house twice and a volume from either era still follows."""
     st = genesis_store(world="simulation")
     st.put_graph(beliefs_graph("fern"), f"""
-@prefix old: <http://example.org/agora/perception#> .
+@prefix old: <http://example.org/orexis/perception#> .
 @prefix ag: <{AG}> .
 
 ag:fern_agent old:fastSleepS 30 ; old:slowSleepS 600 ; old:readingGraceS 45 .
@@ -252,15 +252,15 @@ def test_a_term_that_changed_namespace_and_name_still_migrates(tmp_path):
     MOVE is data — a decision made once, written down, and preferred over the inference."""
     st = genesis_store(world="simulation")
     st.put_graph(beliefs_graph("fern"), f"""
-@prefix old: <http://example.org/agora/desire#> .
-@prefix older: <http://example.org/agora/intention#> .
-<http://example.org/agora/world/simulation#fern_agent>
-    old:desires <http://example.org/agora#r> ;
+@prefix old: <http://example.org/orexis/desire#> .
+@prefix older: <http://example.org/orexis/intention#> .
+<http://example.org/orexis/world/simulation#fern_agent>
+    old:desires <http://example.org/orexis#r> ;
     older:outcome "dropped" .""")
     found = vocabulary.stale(st)
     successors = found[beliefs_graph("fern")]
-    assert successors["http://example.org/agora/desire#desires"] == AG + "holds"
-    assert successors["http://example.org/agora/intention#outcome"] == AG + "outcome"
+    assert successors["http://example.org/orexis/desire#desires"] == AG + "holds"
+    assert successors["http://example.org/orexis/intention#outcome"] == AG + "outcome"
 
 
 def test_a_graph_nothing_declares_any_more_is_dropped(tmp_path, monkeypatch):
@@ -272,8 +272,8 @@ def test_a_graph_nothing_declares_any_more_is_dropped(tmp_path, monkeypatch):
     from agent import genesis
 
     st = genesis_store(world="simulation")
-    ghost = "http://example.org/agora/graph/desire"
-    st.put_graph(ghost, "<http://x#a> <http://example.org/agora/desire#desires> <http://x#b> .")
+    ghost = "http://example.org/orexis/graph/desire"
+    st.put_graph(ghost, "<http://x#a> <http://example.org/orexis/desire#desires> <http://x#b> .")
     assert ghost in st.graph_names()
 
     dropped = genesis.drop_ghost_graphs(st, "fern")

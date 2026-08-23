@@ -1,6 +1,6 @@
-@prefix desire: <http://example.org/agora/desire#> .
-@prefix : <http://example.org/agora/desire#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix desire: <http://example.org/orexis/desire#> .
+@prefix : <http://example.org/orexis/desire#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
@@ -9,8 +9,8 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
-<http://example.org/agora/desire> a owl:Ontology ;
-    rdfs:label "Agora desire" ;
+<http://example.org/orexis/desire> a owl:Ontology ;
+    rdfs:label "Orexis desire" ;
     rdfs:comment """What an agent is trying to bring about: for each property it has a stake in, the **region** it will try to keep that property inside, and how far outside is fatal rather than merely wrong.
 
 This is BDI's middle letter, and it was the letter this project had least of. Belief had a whole store; desire was three decimals in a beliefs file — a target and two band edges — denominated in soil moisture and in nothing else, so an agent could want exactly one thing and the temperature and humidity it sensed fed nothing that could want anything.

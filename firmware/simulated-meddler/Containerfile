@@ -5,7 +5,7 @@
 # waters itself, which is exactly the confusion this container exists to rule out. What it may
 # do is one WRITE grant per rain topic; what it holds is paho and this file.
 #
-#   podman build -t agora-meddler:local firmware/simulated-meddler
+#   podman build -t orexis-meddler:local firmware/simulated-meddler
 
 FROM docker.io/library/python:3.12-alpine
 

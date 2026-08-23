@@ -1,6 +1,6 @@
 # A stand-in for a sensor, and nothing else.
 #
-# This used to run on `agora:local` — 230 MB of pyoxigraph, pyshacl, rdflib, an Influx client and
+# This used to run on `orexis:local` — 230 MB of pyoxigraph, pyshacl, rdflib, an Influx client and
 # a signing library, to publish one number every couple of minutes. The simulator imports the
 # standard library and paho, and that is the whole of it.
 #
@@ -13,7 +13,7 @@
 # is excluded from it by .containerignore anyway — correctly, since the agent image must not
 # carry the simulator and the reverse is now true too.
 #
-#   podman build -t agora-simulator:local firmware/simulated-sensor
+#   podman build -t orexis-simulator:local firmware/simulated-sensor
 
 FROM docker.io/library/python:3.12-alpine
 

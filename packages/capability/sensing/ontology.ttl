@@ -1,7 +1,7 @@
-@prefix review: <http://example.org/agora/review#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix : <http://example.org/agora/sensing#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix review: <http://example.org/orexis/review#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix : <http://example.org/orexis/sensing#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
@@ -10,8 +10,8 @@
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix schema: <https://schema.org/> .
 
-<http://example.org/agora/sensing> a owl:Ontology ;
-    rdfs:label "Agora sensing" ;
+<http://example.org/orexis/sensing> a owl:Ontology ;
+    rdfs:label "Orexis sensing" ;
     rdfs:comment """Sensing: what an agent can KNOW and DECIDE about a subject's state. Split by WHO HOLDS THE CLOCK, and deliberately independent of how a device is reached — a scheduled board on a bus and one on a GPIO pin present the same ability and the same choices, so the capability is the same and only the BINDING differs (see mqtt.ttl). The line: a capability distinguishes what an agent must decide; a binding distinguishes how a device is spoken to.""" .
 
 #################  The capabilities  #################
@@ -82,7 +82,7 @@
 # whether what makes it apply arrives with the IRI or has to be restated. `mc:carries
 # rdfs:subPropertyOf sosa:hosts` is the same move from the other direction.
 #
-# HERE rather than in `packages/core/agora/`, though the subject is a class this package does not
+# HERE rather than in `packages/core/orexis/`, though the subject is a class this package does not
 # own: the axiom is only load-bearing because sensors have capabilities, and sensing is where
 # a sensor is. A package restates what it needs to be true; the kernel would be asserting it on
 # behalf of a package that may not be installed.
@@ -172,7 +172,7 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 :AlarmProcedure a sosa:Procedure ; rdfs:label "Alarm procedure" ;
     rdfs:comment "Watch commanded thresholds while asleep; wake and publish when the value crosses one. Held on the SENSOR whose value is watched, with ssn:implements — per channel, because which values a board can watch is a hardware fact per channel: an ESP32's ULP reaches the analog probe and can never speak the DHT's protocol. A real board's promise arrives ENTAILED from its firmware class (#181) — the flashed image watches unconditionally, only the connecting device is typed, so the analog channel promises and the DHT channels stay honest by absence — and the wiring holds it to the silicon: the board class states which pin roles its sleep-watcher reaches (mc:watcherReachesRole) and mc:WatchedChannelWiringShape refuses a promise wired past that reach. A stand-in states its promises by hand, having no pins and no watcher. The board wakes when ANY of its watched channels crosses. A shape requires the implementing sensor to ride a Scheduled device with a command channel, because the bands arrive the way the cadence does — one retained map, a band per watched pointer." .
 
-:senseMode a owl:ObjectProperty ; rdfs:domain <http://example.org/agora#Device> ; rdfs:range :SenseMode ;
+:senseMode a owl:ObjectProperty ; rdfs:domain <http://example.org/orexis#Device> ; rdfs:range :SenseMode ;
     rdfs:label "sense mode" ;
     rdfs:comment "Whose fact this is decided #96: the DEVICE's — the board that sleeps, wakes and keeps the interval — never the sensing element's. Three sensors on one board used to state it three times with no shape spanning them, so one could claim Scheduled while its neighbour claimed Push: a physical impossibility that would have derived both Subscribing and Listening for one agent from one firmware. Stated once on the connecting device now, and a bearer shape (transport/mqtt) refuses it anywhere else." .
 
@@ -200,7 +200,7 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 #  compare a `sosa:resultTime` against a number in the graph, and cannot run the Python that
 #  works the number out. The cadence in force is the board's own acknowledgement where it gives
 #  one and the agent's intent where it does not, and NEITHER was ever written down — both were
-#  dicts on a module, lost at every restart and invisible to `agora-ask`. So a shape had two
+#  dicts on a module, lost at every restart and invisible to `orexis-ask`. So a shape had two
 #  ways to get the number and both were wrong: recompute the fallback chain in SPARQL, which is
 #  a second definition free to drift, or bake a constant that is stale the moment the cadence
 #  is re-commanded — and it is re-commanded whenever urgency moves.

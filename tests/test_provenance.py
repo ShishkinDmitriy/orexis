@@ -137,7 +137,7 @@ def test_every_public_graph_accounts_for_itself(world):
         "?g a prov:Entity ; ?p ?o FILTER(?p IN (prov:wasDerivedFrom, prov:wasGeneratedBy))")}
     public = set(st.public_graphs())
     assert public <= described, (
-        f"undescribed: {public - described} — add it to agora/provenance.py")
+        f"undescribed: {public - described} — add it to orexis/provenance.py")
 
 
 def test_the_graph_names_could_be_opaque_and_nothing_would_be_lost():
@@ -186,7 +186,7 @@ def test_a_graph_that_explains_nothing_is_refused():
     say so — a constitution nobody tests is a comment with extra syntax."""
     st = _public("simulation")
     st.update(f"""INSERT DATA {{ GRAPH <{PROVENANCE_GRAPH}> {{
-        <http://example.org/agora/graph/mystery> a prov:Entity }} }}""")
+        <http://example.org/orexis/graph/mystery> a prov:Entity }} }}""")
     data = graph_from(st, *st.public_graphs(), PROVENANCE_GRAPH)
     ok, report = conforms(data)
     assert not ok and "mystery" in report
@@ -207,14 +207,14 @@ def test_a_sixth_public_graph_needs_no_python():
     before = set(st.public_graphs())
 
     st.update(f"""INSERT DATA {{ GRAPH <{ONTOLOGY_GRAPH}> {{
-        <http://example.org/agora/graph/sixth> a ag:PublicGraph }} }}""")
-    st.update("""INSERT DATA { GRAPH <http://example.org/agora/graph/sixth> {
-        <http://example.org/agora/world/simulation#fern_agent> ag:somethingNew "yes" } }""")
+        <http://example.org/orexis/graph/sixth> a ag:PublicGraph }} }}""")
+    st.update("""INSERT DATA { GRAPH <http://example.org/orexis/graph/sixth> {
+        <http://example.org/orexis/world/simulation#fern_agent> ag:somethingNew "yes" } }""")
 
-    assert set(st.public_graphs()) - before == {"http://example.org/agora/graph/sixth"}
+    assert set(st.public_graphs()) - before == {"http://example.org/orexis/graph/sixth"}
     # And an unqualified pattern reads it, which is the whole point: a reader asks what the
     # society knows and never learns which graph the answer came from.
-    assert bindings(st.query('SELECT ?v WHERE { <http://example.org/agora/world/simulation#fern_agent> ag:somethingNew ?v }'))
+    assert bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> ag:somethingNew ?v }'))
 
 
 def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
@@ -248,7 +248,7 @@ def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
 
     # And no rule names a graph, which is what the placeholder exists to make possible. What is
     # checked is a `GRAPH <…>` clause with a literal IRI in it, not the mere appearance of the
-    # graph namespace: `packages/core/agora/rules.ru` MINTS a beliefs graph IRI by CONCAT from an
+    # graph namespace: `packages/core/orexis/rules.ru` MINTS a beliefs graph IRI by CONCAT from an
     # agent's own localId, which is the one identifier the rules allow a process to build from,
     # and forbidding that would forbid the roster.
     for path in loader.rule_files():
@@ -276,11 +276,11 @@ def test_a_graph_typed_privately_stays_out_of_the_default_graph():
     invisible until someone says what it is.
     """
     st = _public("simulation")
-    st.update("""INSERT DATA { GRAPH <http://example.org/agora/graph/private> {
-        <http://example.org/agora/world/simulation#fern_agent> ag:aSecret "shh" } }""")
-    assert "http://example.org/agora/graph/private" not in st.public_graphs()
-    assert not bindings(st.query('SELECT ?v WHERE { <http://example.org/agora/world/simulation#fern_agent> ag:aSecret ?v }'))
-    assert _in_graph(st, "http://example.org/agora/graph/private", "?s ag:aSecret ?v")
+    st.update("""INSERT DATA { GRAPH <http://example.org/orexis/graph/private> {
+        <http://example.org/orexis/world/simulation#fern_agent> ag:aSecret "shh" } }""")
+    assert "http://example.org/orexis/graph/private" not in st.public_graphs()
+    assert not bindings(st.query('SELECT ?v WHERE { <http://example.org/orexis/world/simulation#fern_agent> ag:aSecret ?v }'))
+    assert _in_graph(st, "http://example.org/orexis/graph/private", "?s ag:aSecret ?v")
 
 
 def test_provenance_is_not_in_the_default_graph():
@@ -288,7 +288,7 @@ def test_provenance_is_not_in_the_default_graph():
 
     These are statements ABOUT the graphs, not facts IN the world. Merged into the default graph
     they would answer open patterns that mean something else entirely — `?device a ?class`, which
-    `agora-wokwi` really asks, would start returning activities — and every graph IRI would become
+    `orexis-wokwi` really asks, would start returning activities — and every graph IRI would become
     a subject in a society that otherwise contains only things a society has.
     """
     st = _public("simulation")
@@ -305,7 +305,7 @@ def test_a_file_is_identified_the_same_wherever_the_tree_sits(world):
         _public(world), PROVENANCE_GRAPH, f"<{WORLD_GRAPH}> prov:wasDerivedFrom ?f")}
     assert derived
     for iri in derived:
-        assert iri.startswith("http://example.org/agora/file/world/"), iri
+        assert iri.startswith("http://example.org/orexis/file/world/"), iri
         assert "/home/" not in iri and "/app/" not in iri
 
 
@@ -320,7 +320,7 @@ def test_the_ratified_world_records_who_ratified_it_and_in_what_capacity(world):
         ?act prov:qualifiedAssociation [ prov:agent ?user ; prov:hadRole ?role ] .""")
     assert rows, "the ratified graph names nobody"
     assert rows[0]["role"] == AG + "Sovereign"
-    assert rows[0]["user"].startswith("http://example.org/agora/user/")
+    assert rows[0]["user"].startswith("http://example.org/orexis/user/")
 
 
 def test_there_is_no_sovereign_agent_only_a_sovereign_role():
@@ -385,7 +385,7 @@ def test_both_engines_derive_the_same_world(world):
     **This caught a live one.** After the closure was materialised, `agent/ratified.py` still
     re-ran the derivation rules on rdflib — which had no closure of its own, so a device typed as
     a KIND of actuator was not observably an actuator there. `roster()` therefore stopped
-    deriving `actuation:Actuation` for the supplier, and `agora-compose` would have written a compose
+    deriving `actuation:Actuation` for the supplier, and `orexis-compose` would have written a compose
     file with the signing keys silently unmounted: the supplier could no longer co-sign a dose,
     and every claim redemption would have failed. Nothing noticed, because compose.yaml is
     committed and regenerating it is not a gate.

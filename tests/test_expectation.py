@@ -321,7 +321,7 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
     gardener = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.10}, world="loner"),
                            monkeypatch)
     keeper = keeper_of(gardener)
-    sensing = gardener.provider("http://example.org/agora/sensing#SensingCapability")
+    sensing = gardener.provider("http://example.org/orexis/sensing#SensingCapability")
     seeing = float(sensing.stale_after_s(gardener.me.acts_for, MOISTURE))
 
     uri = keeper.adopt(_ACTUATE, MOISTURE, "a dose is on its way")

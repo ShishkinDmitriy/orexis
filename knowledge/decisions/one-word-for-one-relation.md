@@ -136,7 +136,7 @@ agent's dealings with them.** Of 27 terms across `sensing` and `actuation`, thre
   states a conclusion without its premise. Deployment is where *for a particular purpose* and a
   lifetime would live — this board, in this pot, from this date.
 - **`sosa:Actuation` is available for a thing we do not model.** A dose that happened has no node;
-  [#36](https://github.com/ShishkinDmitriy/agora/issues/36)'s pending set is in memory. If a
+  [#36](https://github.com/ShishkinDmitriy/orexis/issues/36)'s pending set is in memory. If a
   redemption ever becomes a fact in the graph, SOSA already has the class for it.
 - **`ssn-system:ActuationRange` fits `maxDoseMl` and was not taken.** It is *the set of values the
   Actuator can return as the Result of an Actuation*, which a dose ceiling is and a flow rate is

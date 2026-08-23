@@ -23,7 +23,7 @@ from packages.capability.intention.terms import ACQUIRE, KEEPING, OBSERVE
 
 from conftest import MOISTURE, build_agent, genesis_store
 
-FERN = "http://example.org/agora#fern_agent"
+FERN = "http://example.org/orexis#fern_agent"
 
 
 @pytest.fixture
@@ -63,8 +63,8 @@ def test_no_stake_means_nothing_to_commit_to():
 
     st = genesis_store()
     st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-        <http://example.org/agora/world/simulation#supplier>
-            <http://example.org/agora#actsFor> ?o }} }}""")
+        <http://example.org/orexis/world/simulation#supplier>
+            <http://example.org/orexis#actsFor> ?o }} }}""")
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
         st.update(genesis.substitute(rule.read_text(), st))
@@ -213,8 +213,8 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
 
 # --- gap-driven deliberation (#208) -----------------------------------------
 
-TEMP = "http://example.org/agora/water#AirTemperature"
-MOIST = "http://example.org/agora/water#SoilMoisture"
+TEMP = "http://example.org/orexis/water#AirTemperature"
+MOIST = "http://example.org/orexis/water#SoilMoisture"
 
 
 def test_sensing_notices_what_it_has_never_seen(make):
@@ -290,7 +290,7 @@ def test_the_tick_survives_an_agent_that_has_seen_things(make):
 
 # --- a commitment names the desire it serves (step 3) -------------------------
 
-APPLY = "http://example.org/agora#Apply"
+APPLY = "http://example.org/orexis#Apply"
 
 
 def test_two_debts_about_one_property_no_longer_collide(make):
@@ -304,8 +304,8 @@ def test_two_debts_about_one_property_no_longer_collide(make):
     """
     supplier = make("supplier")
     keeper = next(m for m in supplier.modules if m.name == "intention")
-    to_fern = "http://example.org/agora#obligation.fern-claim"
-    to_tomato = "http://example.org/agora#obligation.tomato-claim"
+    to_fern = "http://example.org/orexis#obligation.fern-claim"
+    to_tomato = "http://example.org/orexis#obligation.tomato-claim"
 
     assert keeper.adopt(APPLY, MOIST, "owed to fern", desire=to_fern)
     assert keeper.adopt(APPLY, MOIST, "owed to tomato", desire=to_tomato), \
@@ -326,4 +326,4 @@ def test_a_commitment_without_a_desire_is_keyed_as_it_always_was(make):
     keeper.adopt(OBSERVE, MOIST, "the old way")
     assert keeper.adopt(OBSERVE, MOIST, "again, within patience") is None
     assert len(keeper.standing(means=OBSERVE, observed_property=MOIST,
-                               desire="http://example.org/agora#bounds.fern.SoilMoisture")) == 1
+                               desire="http://example.org/orexis#bounds.fern.SoilMoisture")) == 1
