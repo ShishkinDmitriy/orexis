@@ -54,9 +54,15 @@ before any capability's Python.
 **The external vocabularies stay in the kernel.** `rdfs:`, `owl:`, `xsd:`, `sosa:`, `prov:`, `rdf:`
 are standardised and stable, and a package that could rebind `rdfs:` could make `rdfs:subClassOf`
 mean what it liked — the walk [one-graph-both-engines-read](one-graph-both-engines-read.md)
-materialises and every shape leans on. `ag:` is *not* in that list: it arrives from
-`packages/core/orexis/ontology.ttl` like any other package's, because the base vocabulary is a package
-and hard-coding it would have made it an exception for no reason but habit.
+materialises and every shape leans on. `ag:` is *not* in that list: it is READ off the ontology
+that declares it, exactly as a package's is, and hard-coding it would have made it an exception
+for no reason but habit.
+
+**AMENDED in one word.** This said `ag:` arrives "like any other package's, because the base
+vocabulary is a package". It is not one any more — it is the kernel, `agent/ontology.ttl`, not
+discovered but prepended. The mechanism is untouched and is the part that mattered: the prefix is
+read from the ontology rather than registered anywhere, so nothing here changed but the file's
+address.
 
 **A label bound to two namespaces is refused.** It is the quietest bug available — both spellings
 are valid SPARQL, so one package's query would read another's terms and no engine could tell

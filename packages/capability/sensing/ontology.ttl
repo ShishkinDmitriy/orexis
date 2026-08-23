@@ -82,7 +82,7 @@
 # whether what makes it apply arrives with the IRI or has to be restated. `mc:carries
 # rdfs:subPropertyOf sosa:hosts` is the same move from the other direction.
 #
-# HERE rather than in `packages/core/orexis/`, though the subject is a class this package does not
+# HERE rather than in the kernel's `agent/ontology.ttl`, though the subject is a class this package does not
 # own: the axiom is only load-bearing because sensors have capabilities, and sensing is where
 # a sensor is. A package restates what it needs to be true; the kernel would be asserting it on
 # behalf of a package that may not be installed.

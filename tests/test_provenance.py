@@ -248,7 +248,7 @@ def test_a_rule_names_the_class_of_graph_it_writes_to_and_never_the_graph():
 
     # And no rule names a graph, which is what the placeholder exists to make possible. What is
     # checked is a `GRAPH <…>` clause with a literal IRI in it, not the mere appearance of the
-    # graph namespace: `packages/core/orexis/rules.ru` MINTS a beliefs graph IRI by CONCAT from an
+    # graph namespace: the kernel's `agent/rules.ru` MINTS a beliefs graph IRI by CONCAT from an
     # agent's own localId, which is the one identifier the rules allow a process to build from,
     # and forbidding that would forbid the roster.
     for path in loader.rule_files():

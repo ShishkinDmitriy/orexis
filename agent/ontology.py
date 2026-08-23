@@ -5,8 +5,8 @@ lives in. A term that belongs to one capability — `sensing:Subscribing`, `mark
 named by that capability's own package, so this file never grows when one is added. That is the
 whole reason it is this short.
 
-**Fourteen terms in `packages/core/orexis` still make that claim false, and they are named rather
-than implied**: the eleven of the simulated world — the device model plus its clock and its
+**Fourteen terms in the kernel's own `agent/ontology.ttl` still make that claim false, and they
+are named rather than implied**: the eleven of the simulated world — the device model plus its clock and its
 weather (`ag:timeScale`, `ag:strayDoseMeanDays`, `ag:rainTopic`) — which only `world/simulation`
 uses and which want a simulation package that does not exist; and `ag:ComputeHost`, `ag:runsOn`
 and `ag:lanHost`, which only `world/sensing` states. See
@@ -24,7 +24,7 @@ identifier a process is given: its own agent id.
 
 **Graph IRIs used to be listed here as though they were terms, and they are not.**
 `ag:WorldGraph` is the term; `…/graph/world` is a particular graph, no more a term than
-`ag:fern_agent` is. The instances now live in `packages/core/orexis/ontology.ttl`, typed by class,
+`ag:fern_agent` is. The instances now live in `agent/ontology.ttl`, typed by class,
 and `store.public_graphs()` asks the store which ones they are — so a query means "public
 knowledge" without any Python knowing what that consists of, and a sixth public graph is a
 vocabulary edit that touches no code.

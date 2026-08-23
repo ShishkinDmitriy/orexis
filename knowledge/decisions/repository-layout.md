@@ -94,8 +94,15 @@ them as peers would suggest the trunk is replaceable.
 
 It would also have cost every capability, every transport and all of onboarding an extra level —
 `from agent.kernel.ontology import term` against `from agent.ontology import term` — and
-reintroduced the word `kernel` with a new meaning days after `packages/core/orexis` freed it, making
-every older reference ambiguous about which kernel it meant.
+reintroduced the word `kernel` with a new meaning days after the base vocabulary's move to
+`packages/core/orexis/` freed it, making every older reference ambiguous about which kernel it
+meant.
+
+The argument above has outlived its example and got stronger. *A kernel is what those discovered
+trees import* — and the base vocabulary has since come back into `agent/`, so the kernel is now
+literally the one thing not discovered. `agent/kernel/` is still not wanted, for the reason
+stated: `agent/` **is** the kernel, and a subdirectory of that name would say it is only part
+of one.
 
 # Naming
 
@@ -108,10 +115,16 @@ is the same redundancy as `onboarding/src/onboarding`. The known cost is that on
 correct. The import contract states the rule explicitly, so the name surprises and the contract
 does not.
 
-`packages/core/orexis` and `packages/plant/water` rather than `kernel/` and `domain/water/`: those two were
-the only trees with no Python at all, which is exactly what they have in common. There are now
-more of them than two — the stand, a package per protocol, a package per part — and that is the
-same rule applied further: see [pins-and-wires](/decisions/pins-and-wires.md).
+`packages/core/orexis` and `packages/plant/water` rather than `kernel/` and `domain/water/`: at the
+time those two were the only trees with no Python at all, which is exactly what they had in
+common. There are now more of them than two — the stand, a package per protocol, a package per
+part — and that is the same rule applied further: see
+[pins-and-wires](/decisions/pins-and-wires.md).
+
+**The first half did not survive.** `packages/core/orexis` was the base vocabulary, and having no
+Python turned out not to be what it had in common with `plant/water` at all: `water` is a domain
+a world may swap, and the base is what every swap is expressed in. It is `agent/`'s now, and its
+Python — `terms.py`'s equivalent — was always next door.
 
 # Seams left open
 
