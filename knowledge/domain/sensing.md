@@ -1,7 +1,7 @@
 ---
 type: Capability
 title: Sensing — sensing as the agent's initiative
-term: http://example.org/agora/sensing#SensingCapability
+term: http://example.org/orexis/sensing#SensingCapability
 description: Sensing splits by who holds the clock — Polling (the agent asks each time, reserved), Subscribing (the agent states an interval, the device keeps it), Listening (the device announces). The agent owns when it looks, the board owns what it reads.
 ---
 
@@ -310,7 +310,7 @@ belief. The crossing promise is what makes a generous freshness rule safe: silen
 A world that deploys a sentinel and keeps a twelve-minute freshness rule has bought the watcher
 and declined the savings. Both firmwares are supported on equal terms — the governed node where
 the agent must steer attention, the sentinel where the world's own events are the story — and
-`agora-firmware` dispatches on `mc:firmware` alone.
+`orexis-firmware` dispatches on `mc:firmware` alone.
 
 # Seams left open
 

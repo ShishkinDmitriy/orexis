@@ -31,9 +31,9 @@
 # clearing checks nothing for it. `world/sensing`'s agents are exactly this: they act for
 # subjects with no survival range, and a ceiling of 0.0 would refuse every trade they are in.
 
-PREFIX water:  <http://example.org/agora/water#>
-PREFIX market: <http://example.org/agora/market#>
-PREFIX ag:     <http://example.org/agora#>
+PREFIX water:  <http://example.org/orexis/water#>
+PREFIX market: <http://example.org/orexis/market#>
+PREFIX ag:     <http://example.org/orexis#>
 PREFIX ssn:    <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>

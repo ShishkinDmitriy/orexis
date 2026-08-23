@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Means
-term: http://example.org/agora#Means
+term: http://example.org/orexis#Means
 description: >-
   The KIND of an act, and a T-Box term — `ag:Observe`, `ag:Actuate`, `ag:Acquire`, `ag:Apply`,
   `ag:Offer`. Not the instrument it goes through, which is the lever, and not what taking it

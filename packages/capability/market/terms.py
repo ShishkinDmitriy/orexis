@@ -24,7 +24,7 @@ from agent import ontology
 # authority — `agent.loader` reads it from there, which is how `market:` reaches a query. This
 # constant is so Python can name a term without parsing Turtle, and the two are held together by
 # `tests/test_layout.py`.
-NS = "http://example.org/agora/market#"
+NS = "http://example.org/orexis/market#"
 
 
 def term(name: str) -> str:
@@ -53,21 +53,21 @@ MATCHES_BY = term("matchesBy")
 # the mistake to avoid — it compiles silently, names a term nobody declares, and
 # `agent.provider` then finds nobody. `test_round.py::test_winning_opens_the_valve` caught
 # exactly that when actuation took a namespace of its own.
-ACTUATION_NS = "http://example.org/agora/actuation#"
+ACTUATION_NS = "http://example.org/orexis/actuation#"
 
 SENSING = ontology.SENSING + "SensingCapability"  # whoever can look, however it looks
 ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if this agent can at all
 # The mind's STATES are kernel words; the FAMILIES that arrive at them are not.
-KERNEL = "http://example.org/agora#"
-DESIRE_NS = "http://example.org/agora/desire#"
+KERNEL = "http://example.org/orexis#"
+DESIRE_NS = "http://example.org/orexis/desire#"
 DESIRE = DESIRE_NS + "DesireCapability"  # whoever holds the ends — the aim a bid prices toward
 #  Whoever keeps the debts. Its OWN family, because owing is granted by holding a lever
 #  others may demand and not by having a stake — a host with no interest of its own still
 #  owes what its market allocated (#233).
 OWING = DESIRE_NS + "Owing"
-INTENTION_NS = "http://example.org/agora/intention#"
+INTENTION_NS = "http://example.org/orexis/intention#"
 INTENTION = INTENTION_NS + "IntentionCapability"  # whoever keeps commitments, if anything does
-DELIBERATION_NS = "http://example.org/agora/deliberation#"
+DELIBERATION_NS = "http://example.org/orexis/deliberation#"
 DELIBERATION = DELIBERATION_NS + "DeliberationCapability"  # whoever decides the whether
 # The three means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
 # when the keeper records it, so they are the intention package's individuals referenced by IRI.

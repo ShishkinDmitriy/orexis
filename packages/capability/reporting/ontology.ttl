@@ -1,12 +1,12 @@
-@prefix reporting: <http://example.org/agora/reporting#> .
-@prefix : <http://example.org/agora/reporting#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
+@prefix : <http://example.org/orexis/reporting#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
-<http://example.org/agora/reporting> a owl:Ontology ;
-    rdfs:label "Agora self-reporting" ;
+<http://example.org/orexis/reporting> a owl:Ontology ;
+    rdfs:label "Orexis self-reporting" ;
     rdfs:comment """What an agent says about itself, and where it says it. The figures are each ones only the agent can state — nothing else can count the triples in a belief base it cannot reach, and nothing else knows how long a reading has been late, because a gap is only visible from the end that was waiting. See knowledge/domain/agent-metrics.md.""" .
 
 #################  The capability  #################

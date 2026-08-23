@@ -18,7 +18,7 @@ agent/                       the runtime, and the model it reads
 packages/capability/<name>/   what an agent can DO — discovered
 packages/transport/<name>/     how a device is REACHED — discovered
 onboarding/                  the sovereign's tools
-packages/core/agora/            the society kernel everything layers on
+packages/core/orexis/            the society kernel everything layers on
 packages/part/microcontroller/  boards, peripherals, pins, wires
 vocabulary/<part>/           one concrete part, or one protocol — dht11, onewire, rgb-led
 packages/plant/water/            what this society is about
@@ -26,7 +26,7 @@ tests/  firmware/  infra/  world/  knowledge/
 ```
 
 Six Python trees, one convention. It used to be two: `capabilities/`, `transports/` and `domain/`
-were flat packages imported from the repo root, while `backend/src/agora/` and
+were flat packages imported from the repo root, while `backend/src/orexis/` and
 `onboarding/src/onboarding/` used a `src` layout and were pip-installed separately.
 
 # Why flat, when `src/` is the recommendation
@@ -42,7 +42,7 @@ cannot tell which rule is in force without checking.
 
 # Why one distribution, when the boundary is real
 
-The boundary is real: **an agent image must not contain credential-minting code.** `agora-influx`
+The boundary is real: **an agent image must not contain credential-minting code.** `orexis-influx`
 reads an admin token that opens every bucket, and no agent may hold it.
 
 But two distributions were not what enforced it. The agent never installs from an index and never
@@ -94,7 +94,7 @@ them as peers would suggest the trunk is replaceable.
 
 It would also have cost every capability, every transport and all of onboarding an extra level —
 `from agent.kernel.ontology import term` against `from agent.ontology import term` — and
-reintroduced the word `kernel` with a new meaning days after `packages/core/agora` freed it, making
+reintroduced the word `kernel` with a new meaning days after `packages/core/orexis` freed it, making
 every older reference ambiguous about which kernel it meant.
 
 # Naming
@@ -102,13 +102,13 @@ every older reference ambiguous about which kernel it meant.
 `backend` described nothing — and by the time it was renamed it was actively wrong, since the
 onboarding tools had already moved out and what remained was precisely what an agent runs.
 
-`agent` rather than `agora` because the whole project is agora; a component inside it called agora
+`agent` rather than `orexis` because the whole project is orexis; a component inside it called orexis
 is the same redundancy as `onboarding/src/onboarding`. The known cost is that onboarding imports
 `from agent.ontology import …`, which reads like a layering smell even though the direction is
 correct. The import contract states the rule explicitly, so the name surprises and the contract
 does not.
 
-`packages/core/agora` and `packages/plant/water` rather than `kernel/` and `domain/water/`: those two were
+`packages/core/orexis` and `packages/plant/water` rather than `kernel/` and `domain/water/`: those two were
 the only trees with no Python at all, which is exactly what they have in common. There are now
 more of them than two — the stand, a package per protocol, a package per part — and that is the
 same rule applied further: see [pins-and-wires](/decisions/pins-and-wires.md).
@@ -117,7 +117,7 @@ same rule applied further: see [pins-and-wires](/decisions/pins-and-wires.md).
 
 - **One image for every agent.** Everything else an agent gets is derived from its wiring — bucket,
   token, credential, certificate, belief base, mounted files, signing keys. The image is handed to
-  all identically, though `agora-compose` already computes each agent's capability set. This costs
+  all identically, though `orexis-compose` already computes each agent's capability set. This costs
   nothing today: capabilities are a few KB, and the trees are mounted read-only over the image so
   adding one needs a restart rather than a build. **The trigger is the first capability that
   declares its own dependency** — a library installed at build time lands in every agent's image,
@@ -140,7 +140,7 @@ Asked by the sovereign after the menu became package-contributed: should this us
 package manager, given that some capabilities — Consulting first — will have dependencies of
 their own, an LLM among them? Two answers, split by what the dependency IS.
 
-**A Python library lands as an extra in the ONE pyproject** (`agora[consulting]`), the
+**A Python library lands as an extra in the ONE pyproject** (`orexis[consulting]`), the
 mechanism wireviz already uses; the Containerfile decides which extras an image carries.
 Not per-package pyprojects and not entry-points: the first is the boundary-that-enforced-
 nothing this record already removed, and the second is a registry in metadata against the
@@ -154,7 +154,7 @@ the gates still run — so a runtime imports only what its own grants reach, an 
 scoped to the agents granted that capability, and no package needs to hand-guard anything.
 Before it, one missing extra would have crashed every agent in the society at import time.
 
-**And the soft layer got its linker (#210)**: at the head of `agora-validate`, every
+**And the soft layer got its linker (#210)**: at the head of `orexis-validate`, every
 project-namespace IRI the loaded packages reference is subtracted from what the loaded
 ontologies and shapes declare, and a dangling reference refuses the world by name — a check,
 never a resolver. Its first run over the shipped tree caught `ag:modelDryRate` in

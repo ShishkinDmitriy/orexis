@@ -1,7 +1,7 @@
 ---
 type: Process
 title: Bid matching
-term: http://example.org/agora/market#BidMatchingCapability
+term: http://example.org/orexis/market#BidMatchingCapability
 description: Turning a lot and a set of bids into a proposed allocation with prices — an allocation rule and a payment rule together. The host declares how it matches and the offer announces it; pay-as-bid and uniform price share the first and differ in the second, and each costs the bidder something different. Deliberately narrower than an auction format, and qualified because bare matching collides with matching a capability to a provider.
 ---
 
@@ -146,7 +146,7 @@ construction.
 
 So the two members still disagree exactly on the contested path, which is their reason to be
 two, and switching a world between them remains one edit. Why pay-as-bid branches rather than
-the world switching: [#50](https://github.com/ShishkinDmitriy/agora/issues/50) and
+the world switching: [#50](https://github.com/ShishkinDmitriy/orexis/issues/50) and
 [uniform-price-dissolves-the-uncontested-round](/decisions/uniform-price-dissolves-the-uncontested-round.md).
 
 # Where it lives

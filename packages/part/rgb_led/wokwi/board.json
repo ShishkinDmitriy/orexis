@@ -2,7 +2,7 @@
   "name": "KY-016 RGB LED",
   "version": 1,
   "description": "Joy-IT KY-016 three-colour LED module, common cathode",
-  "author": "agora",
+  "author": "orexis",
   "width": 14.63,
   "height": 32.21,
   "chips": [

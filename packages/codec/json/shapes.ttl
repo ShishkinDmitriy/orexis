@@ -1,10 +1,10 @@
-@prefix review: <http://example.org/agora/review#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix mqtt: <http://example.org/agora/mqtt#> .
+@prefix review: <http://example.org/orexis/review#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix sh:    <http://www.w3.org/ns/shacl#> .
-@prefix ag:    <http://example.org/agora#> .
+@prefix ag:    <http://example.org/orexis#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix codec: <http://example.org/agora/codec#> .
+@prefix codec: <http://example.org/orexis/codec#> .
 
 codec:ChannelIsDecodedByExactlyOneShape a sh:NodeShape ;
     rdfs:comment "Every stream is decoded by exactly one codec, checked on the DERIVED fact rather than on what any world stated — so it holds a world to the outcome of its own derivation instead of to its wording. This is the shape the encoding moved onto a channel FOR. While the fact sat on each sensor, three sensors sharing one topic carried three copies of it and nothing compared them: giving two of them different encodings validated clean, and the disagreement would have surfaced as one board's readings decoding through the wrong format at the first message. A stream has one format or the world is wrong about it. Two ways to fail, and both are now refusable: NONE means the derivation did not run, and TWO means two devices on one topic disagree — including the quiet case, where one states CBOR and another states nothing and is therefore saying JSON." ;

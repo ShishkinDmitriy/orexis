@@ -9,7 +9,7 @@ timestamp: 2026-08-08T00:00:00Z
 # Drawing is a better way in than typing Turtle
 
 Writing a stand by hand means naming every leg and every wire in a text file, with nothing
-checking that the thing described is the thing on the desk until `agora-validate` runs. Drawing
+checking that the thing described is the thing on the desk until `orexis-validate` runs. Drawing
 it is better at exactly that step: real part graphics, drag and drop, and a tool that already
 knows a `wokwi-dht22` has an `SDA`.
 
@@ -48,7 +48,7 @@ worse than usual. When the two disagree, the lossy side would have to win on the
 and lose on the ones it does not — which is not a merge rule anyone can hold in their head at
 the moment it matters, which is always during a change.
 
-It would also cost the checking. `agora-validate` refuses a 5 V rail feeding a 3.3 V input,
+It would also cost the checking. `orexis-validate` refuses a 5 V rail feeding a 3.3 V input,
 a driven leg on an input-only pin, a leg no wire reaches. Wokwi will draw all three quite
 happily. A world synced from a drawing is a world whose shapes have nothing to refuse, because
 whatever was drawn is by definition what the world now says.
@@ -60,7 +60,7 @@ re-reads.
 
 # The same holds for WireViz, and it drafts better
 
-`agora-wireviz --import` reads a harness back by the same rule, and the asymmetry falls out
+`orexis-wireviz --import` reads a harness back by the same rule, and the asymmetry falls out
 differently. A harness is meant to be TYPED, so it carries the names you chose and the models you
 wrote — a Wokwi diagram gave back `sen1` and nothing else. What it cannot say is what a part IS:
 `type: KY-015 (DHT11)` is free text, and picking `dht11:Dht11` out of it would be guessing.
@@ -93,7 +93,7 @@ the class — which is [#55]. Once that lands, a harness plus the vocabulary IS 
 **That is deliberately not the same as the harness becoming the source.** `hardware.ttl` stays
 authoritative and `wiring.yaml` stays a view: author in YAML if you like, generate, read the
 diff, commit both. The moment the YAML is the truth we are back to two sources with no merge
-rule, and `agora-validate` is back to having nothing to refuse — which is the argument above,
+rule, and `orexis-validate` is back to having nothing to refuse — which is the argument above,
 and it does not weaken because the import got better.
 
 ## Identifiers come from the authoring file, which is a new way to be wrong

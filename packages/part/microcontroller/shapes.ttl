@@ -1,9 +1,9 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 
 # The ESP32's rules, not RDF's. Every one of these is a mistake that costs an afternoon: a board
@@ -37,7 +37,7 @@ ag:BoardPinShape a sh:NodeShape ;
         sh:message "GPIO 6-11 are wired to the SPI flash; driving one prevents the board booting at all" ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/agora/microcontroller#gpio> ?value .
+                $this <http://example.org/orexis/microcontroller#gpio> ?value .
                 FILTER(?value >= 6 && ?value <= 11)
             }""" ] .
 
@@ -48,19 +48,19 @@ ag:WiredPinShape a sh:NodeShape ;
         sh:message "an analog input on an ADC2 line (0,2,4,12-15,25-27) reads rubbish whenever WiFi is up — and returns plausible numbers rather than an error. Use ADC1: 32,33,34,35,36,39" ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/agora/microcontroller#joins> ?leg, ?line .
-                ?leg  <http://example.org/agora/microcontroller#pinRole> <http://example.org/agora/microcontroller#AnalogInPinRole> .
-                ?line <http://example.org/agora/microcontroller#gpio> ?value .
+                $this <http://example.org/orexis/microcontroller#joins> ?leg, ?line .
+                ?leg  <http://example.org/orexis/microcontroller#pinRole> <http://example.org/orexis/microcontroller#AnalogInPinRole> .
+                ?line <http://example.org/orexis/microcontroller#gpio> ?value .
                 FILTER(?value IN (0, 2, 4, 12, 13, 14, 15, 25, 26, 27))
             }""" ] ;
     sh:sparql [
         sh:message "GPIO 34-39 are input-only on this family and cannot drive anything" ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/agora/microcontroller#joins> ?leg, ?line .
-                ?leg  <http://example.org/agora/microcontroller#pinRole> ?role .
-                ?role a <http://example.org/agora/microcontroller#OutputRole> .
-                ?line <http://example.org/agora/microcontroller#gpio> ?value .
+                $this <http://example.org/orexis/microcontroller#joins> ?leg, ?line .
+                ?leg  <http://example.org/orexis/microcontroller#pinRole> ?role .
+                ?role a <http://example.org/orexis/microcontroller#OutputRole> .
+                ?line <http://example.org/orexis/microcontroller#gpio> ?value .
                 FILTER(?value >= 34)
             }""" ] .
 
@@ -71,13 +71,13 @@ ag:OneGpioOneLegShape a sh:NodeShape ;
         sh:message "two legs are wired to the same GPIO line" ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/agora/microcontroller#gpio> ?line .
-                ?wa <http://example.org/agora/microcontroller#joins> $this, ?a .
-                ?wb <http://example.org/agora/microcontroller#joins> $this, ?b .
-                ?a <http://example.org/agora/microcontroller#pinRole> ?ra .
-                ?b <http://example.org/agora/microcontroller#pinRole> ?rb .
-                FILTER(?ra != <http://example.org/agora/microcontroller#PowerPinRole>)
-                FILTER(?ra != <http://example.org/agora/microcontroller#GroundPinRole>)
+                $this <http://example.org/orexis/microcontroller#gpio> ?line .
+                ?wa <http://example.org/orexis/microcontroller#joins> $this, ?a .
+                ?wb <http://example.org/orexis/microcontroller#joins> $this, ?b .
+                ?a <http://example.org/orexis/microcontroller#pinRole> ?ra .
+                ?b <http://example.org/orexis/microcontroller#pinRole> ?rb .
+                FILTER(?ra != <http://example.org/orexis/microcontroller#PowerPinRole>)
+                FILTER(?ra != <http://example.org/orexis/microcontroller#GroundPinRole>)
                 FILTER(?a != $this && ?b != $this && STR(?a) < STR(?b))
             }""" ] .
 
@@ -88,19 +88,19 @@ ag:PoweredPeripheralShape a sh:NodeShape ;
         sh:message "this device's power leg is on a rail that does not match the logic voltage of the board it signals into — its pull-up will idle the data line above what that input tolerates" ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/agora/microcontroller#hasPin> ?vcc, ?signal .
-                ?vcc <http://example.org/agora/microcontroller#pinRole> <http://example.org/agora/microcontroller#PowerPinRole> .
-                ?signal <http://example.org/agora/microcontroller#pinRole> ?role .
-                ?role a <http://example.org/agora/microcontroller#PinRole> .
-                FILTER(?role != <http://example.org/agora/microcontroller#PowerPinRole>)
-                FILTER(?role != <http://example.org/agora/microcontroller#GroundPinRole>)
+                $this <http://example.org/orexis/microcontroller#hasPin> ?vcc, ?signal .
+                ?vcc <http://example.org/orexis/microcontroller#pinRole> <http://example.org/orexis/microcontroller#PowerPinRole> .
+                ?signal <http://example.org/orexis/microcontroller#pinRole> ?role .
+                ?role a <http://example.org/orexis/microcontroller#PinRole> .
+                FILTER(?role != <http://example.org/orexis/microcontroller#PowerPinRole>)
+                FILTER(?role != <http://example.org/orexis/microcontroller#GroundPinRole>)
 
-                ?pw <http://example.org/agora/microcontroller#joins> ?vcc, ?rail .
-                ?rail <http://example.org/agora/microcontroller#railVolts> ?value .
+                ?pw <http://example.org/orexis/microcontroller#joins> ?vcc, ?rail .
+                ?rail <http://example.org/orexis/microcontroller#railVolts> ?value .
 
-                ?sw <http://example.org/agora/microcontroller#joins> ?signal, ?line .
-                ?board <http://example.org/agora/microcontroller#hasPin> ?line ;
-                       <http://example.org/agora/microcontroller#logicVolts> ?logic .
+                ?sw <http://example.org/orexis/microcontroller#joins> ?signal, ?line .
+                ?board <http://example.org/orexis/microcontroller#hasPin> ?line ;
+                       <http://example.org/orexis/microcontroller#logicVolts> ?logic .
                 FILTER(?rail != ?vcc && ?line != ?signal)
                 FILTER(?value != ?logic)
             }""" ] .
@@ -112,11 +112,11 @@ ag:MountedPeripheralShape a sh:NodeShape ;
         sh:message "this peripheral has a leg that no wire reaches" ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/agora/microcontroller#hasPin> ?value .
-                FILTER NOT EXISTS { ?w <http://example.org/agora/microcontroller#joins> ?value }
-                FILTER NOT EXISTS { ?value <http://example.org/agora/microcontroller#pinRole>
-                    <http://example.org/agora/microcontroller#NotConnectedPinRole> }
-                FILTER NOT EXISTS { ?value <http://example.org/agora/microcontroller#unused>
+                $this <http://example.org/orexis/microcontroller#hasPin> ?value .
+                FILTER NOT EXISTS { ?w <http://example.org/orexis/microcontroller#joins> ?value }
+                FILTER NOT EXISTS { ?value <http://example.org/orexis/microcontroller#pinRole>
+                    <http://example.org/orexis/microcontroller#NotConnectedPinRole> }
+                FILTER NOT EXISTS { ?value <http://example.org/orexis/microcontroller#unused>
                     true }
             }""" ] .
 
@@ -143,7 +143,7 @@ ag:CarriedPeripheralShape a sh:NodeShape ;
         sh:message "this peripheral has legs but no board carries it — check the identifier matches the one the world uses" ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/agora/microcontroller#hasPin> ?pin .
+                $this <http://example.org/orexis/microcontroller#hasPin> ?pin .
                 FILTER NOT EXISTS {
                     ?board <http://www.w3.org/ns/sosa/hosts> $this
                 }
@@ -170,25 +170,25 @@ way, because validation runs against the materialised store.""" ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://www.w3.org/ns/ssn/implements>
-                      <http://example.org/agora/sensing#AlarmProcedure> .
-                { ?this <http://example.org/agora/microcontroller#hasPin> ?leg }
+                      <http://example.org/orexis/sensing#AlarmProcedure> .
+                { ?this <http://example.org/orexis/microcontroller#hasPin> ?leg }
                 UNION
                 { ?part <http://www.w3.org/ns/ssn/hasSubSystem> ?this ;
-                        <http://example.org/agora/microcontroller#hasPin> ?leg }
+                        <http://example.org/orexis/microcontroller#hasPin> ?leg }
             }""" ] ;
     sh:sparql [
         sh:message "this channel promises announce-on-crossing, but no sleep-watcher on the board it is wired to reaches its signal pin's role — the promise would be kept by nothing" ;
         sh:select """
             SELECT $this WHERE {
                 FILTER NOT EXISTS {
-                    { $this <http://example.org/agora/microcontroller#hasPin> ?leg }
+                    { $this <http://example.org/orexis/microcontroller#hasPin> ?leg }
                     UNION
                     { ?part <http://www.w3.org/ns/ssn/hasSubSystem> $this ;
-                            <http://example.org/agora/microcontroller#hasPin> ?leg }
-                    ?leg <http://example.org/agora/microcontroller#pinRole> ?role .
-                    ?wire <http://example.org/agora/microcontroller#joins> ?leg , ?pin .
+                            <http://example.org/orexis/microcontroller#hasPin> ?leg }
+                    ?leg <http://example.org/orexis/microcontroller#pinRole> ?role .
+                    ?wire <http://example.org/orexis/microcontroller#joins> ?leg , ?pin .
                     FILTER(?pin != ?leg)
-                    ?board <http://example.org/agora/microcontroller#hasPin> ?pin ;
-                           <http://example.org/agora/microcontroller#watcherReachesRole> ?role .
+                    ?board <http://example.org/orexis/microcontroller#hasPin> ?pin ;
+                           <http://example.org/orexis/microcontroller#watcherReachesRole> ?role .
                 }
             }""" ] .

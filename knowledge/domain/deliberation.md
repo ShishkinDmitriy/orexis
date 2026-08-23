@@ -1,7 +1,7 @@
 ---
 type: Capability
 title: Deliberation
-term: http://example.org/agora/deliberation#DeliberationCapability
+term: http://example.org/orexis/deliberation#DeliberationCapability
 description: The whether, extracted into a family — given the gap and the standing commitments, name the next move; the acting modules carry it out. Reflex is the old welded chain as the first member, deterministic and free; Consulting is the declared, unimplemented seat for a model, constrained before it exists — a move from the vocabulary's menu, never free text-to-action, with the bid number staying deterministic and the keeper's patience bounding how often it is consulted.
 ---
 
@@ -96,7 +96,7 @@ first look with nothing sensed: Observe is pruned as a world already reached, ev
 second statement of a fact the effect already settles is a fact that can disagree with it.
 
 What that rests on is the signature's canonical form.
-[#258](https://github.com/ShishkinDmitriy/agora/issues/258) made the signature carry where a
+[#258](https://github.com/ShishkinDmitriy/orexis/issues/258) made the signature carry where a
 plan IS — the world's net diff against the base, in canonical facts — and a look still nets to
 nothing there: an observation canonicalises to its upsert key and its value, never its
 `sosa:resultTime`, and a valueless first look states no fact at all (see
@@ -118,7 +118,7 @@ society refuses, so the expensive question is asked of the world it actually int
 
 Every one of those decisions used to die in-process as a single log line, and it could not be
 recovered from outside: pyoxigraph holds an exclusive lock on the belief base, so nothing else
-can open the store to re-run the search and see what it saw. That is the same fact `agora-ask`
+can open the store to re-run the search and see what it saw. That is the same fact `orexis-ask`
 exists for, arriving at the planner.
 
 So a pass writes itself down. Per desire, into `graph/deliberation`, replaced at the start of the
@@ -126,7 +126,7 @@ next pass:
 
 ```sparql
 SELECT ?desire ?verdict ?standsAt ?means ?via ?wouldReach ?why WHERE {
-  GRAPH <http://example.org/agora/graph/deliberation> {
+  GRAPH <http://example.org/orexis/graph/deliberation> {
     ?d a ag:Deliberation ; ag:deliberatedOn ?desire ; ag:verdict ?verdict ;
        ag:standsAt ?standsAt ; ag:considered ?c .
     ?c ag:wouldTake ?means ; ag:through ?via ; ag:verdict ?why .

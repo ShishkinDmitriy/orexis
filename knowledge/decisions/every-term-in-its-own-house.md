@@ -30,7 +30,7 @@ mandates that only an agent with room to move holds. This is the other half of t
 # Decision — five namespaces, and the kernel means what it says
 
 `review:`, `sensing:`, `water:`, `mqtt:` and `actuation:`, each at
-`http://example.org/agora/<name>#`. Nothing else changed: **grants byte-identical across all
+`http://example.org/orexis/<name>#`. Nothing else changed: **grants byte-identical across all
 three worlds, compose and firmware regenerate unchanged**, and the six comment lines that do
 move are the compose generator naming the sense modes in its own output.
 
@@ -48,8 +48,8 @@ sees:
 | | form | where |
 |---|---|---|
 | 1 | `sensing:polls` | SPARQL text, Turtle |
-| 2 | `<http://example.org/agora#statusTopic>` | hardcoded in a `sh:sparql` |
-| 3 | `"http://example.org/agora#SoilMoisture"` | a Python string constant |
+| 2 | `<http://example.org/orexis#statusTopic>` | hardcoded in a `sh:sparql` |
+| 3 | `"http://example.org/orexis#SoilMoisture"` | a Python string constant |
 | 4 | `<{AG}readingTopic>` | interpolated in the sovereign's tooling |
 | 5 | `AG + "Sensor"` | concatenated |
 | 6 | `term("slowSleepS")` | the kernel builder, imported into a package or a test |
@@ -57,7 +57,7 @@ sees:
 
 **Six of them fail silently.** An IRI no ontology declares is not an error in SPARQL — it is a
 pattern that matches nothing, and a query returns fewer rows rather than raising. Four bit
-during this sweep: `agora-firmware` stopped finding a board, a simulated actuator stopped being
+during this sweep: `orexis-firmware` stopped finding a board, a simulated actuator stopped being
 asked for its status topic, a won claim stopped opening a valve, and the supplier stopped
 being mounted its signing keys.
 
@@ -76,7 +76,7 @@ protected, not that both kinds were.
 ## So there is a test for it now
 
 `tests/test_store.py::test_no_source_names_a_moved_term_in_the_kernel_namespace` scans every
-source tree for a full IRI in `ag:` whose local name `packages/core/agora` does not declare. It is
+source tree for a full IRI in `ag:` whose local name `packages/core/orexis` does not declare. It is
 the same shape as the prefix scan beside it, and for the same reason: the harness was more
 forgiving than the store, so the class could not be caught by testing behaviour.
 
@@ -92,14 +92,14 @@ lowercase word or carries an underscore. Verified by reintroducing the real defe
 
 Adding an `ACTUATION` namespace constant to `onboarding/compose.py` shadowed a module-level
 `ACTUATION = AG + "Actuation"` already there, so every `<{ACTUATION}actuates>` expanded to
-`…agora#Actuationactuates`. Those patterns sit in `OPTIONAL` clauses, so the query still
+`…orexis#Actuationactuates`. Those patterns sit in `OPTIONAL` clauses, so the query still
 returned rows; the capability test silently stopped being true, and a supplier that cannot
-co-sign a trade was one regenerate away from shipping — with `pytest` and `agora-validate` both
+co-sign a trade was one regenerate away from shipping — with `pytest` and `orexis-validate` both
 green.
 
 **Only regenerating the generators' output caught it.** That is the argument for treating
 generated artefacts as a gate rather than a by-product, which is the lesson
-[#62](https://github.com/ShishkinDmitriy/agora/pull/62) taught and the reason this sweep
+[#62](https://github.com/ShishkinDmitriy/orexis/pull/62) taught and the reason this sweep
 regenerated at all.
 
 # The audit half: what a standard already says
@@ -115,12 +115,12 @@ the next person does not re-derive it:
 | `sensing:senseMode` values | `sosa:Procedure` | Pull, Push and Scheduled are procedures by SOSA's own definition. A cheap alignment, untaken — it belongs with whatever next touches [who-holds-the-clock](who-holds-the-clock.md) |
 | `review:Revision`, `fromValue`, `atTime` | `prov:wasRevisionOf`, `prov:atTime` | PROV models a revision as provenance. Real overlap, not a synonym, and unexamined |
 | `review:Commitment` | `vf:Commitment` | **a name collision, not an alignment.** Ours is a governance mandate — the room an agent may move in. REA's is a promised economic flow. Same word, different concept. Acted on since: the class is renamed `review:Mandate` — see [a-mandate-is-not-a-commitment](a-mandate-is-not-a-commitment.md) |
-| `actuation:mlPerSecond`, `maxDoseMl` | `ssn-system:ActuationRange` | [#84](https://github.com/ShishkinDmitriy/agora/issues/84) |
+| `actuation:mlPerSecond`, `maxDoseMl` | `ssn-system:ActuationRange` | [#84](https://github.com/ShishkinDmitriy/orexis/issues/84) |
 | the wire — topics, codec, channel, principal | — | ours by decision; the SSN spec has no guidance on transmission |
 
 # What is still in the kernel and should not be
 
-Answering the question this sweep was supposed to answer. `packages/core/agora` declares 34 terms
+Answering the question this sweep was supposed to answer. `packages/core/orexis` declares 34 terms
 and **eleven are not true of every agent**:
 
 - **The simulated device model — seven terms** *(eleven since the scenario grew: the physics

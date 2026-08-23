@@ -1,25 +1,25 @@
-@prefix : <http://example.org/agora/world/sensing#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix mqtt: <http://example.org/agora/mqtt#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix : <http://example.org/orexis/world/sensing#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix dht11: <http://example.org/agora/dht11#> .
-@prefix onewire: <http://example.org/agora/onewire#> .
-@prefix probe: <http://example.org/agora/moisture-probe#> .
-@prefix rgbled: <http://example.org/agora/rgb-led#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
-@prefix governed: <http://example.org/agora/firmware/moisture-sensor#> .
+@prefix dht11: <http://example.org/orexis/dht11#> .
+@prefix onewire: <http://example.org/orexis/onewire#> .
+@prefix probe: <http://example.org/orexis/moisture-probe#> .
+@prefix rgbled: <http://example.org/orexis/rgb-led#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
+@prefix governed: <http://example.org/orexis/firmware/moisture-sensor#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix water: <http://example.org/agora/water#> .
+@prefix water: <http://example.org/orexis/water#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-@prefix esp32: <http://example.org/agora/esp32#> .
-@prefix wokwi: <http://example.org/agora/wokwi#> .
+@prefix esp32: <http://example.org/orexis/esp32#> .
+@prefix wokwi: <http://example.org/orexis/wokwi#> .
 
 # The hardware this world runs on: what is physically here and how it is wired.
 #
@@ -30,7 +30,7 @@
 # rather than being described twice.
 #
 # What this is FOR, beyond documentation: the shapes in kernel/shapes.ttl hold it to the
-# ESP32's actual rules, so `agora-validate` refuses a pin that cannot work before anything is
+# ESP32's actual rules, so `orexis-validate` refuses a pin that cannot work before anything is
 # soldered or flashed.
 
 ##########  What runs the society  ##########
@@ -95,7 +95,7 @@
     #  speak. A Berlin windowsill, indoors: mild and heated. The shape holds every deployed
     #  sensor's stated MeasurementRange to CONTAIN this envelope — which is exactly the check
     #  the terrace question exposed as missing: a DHT11 (0..50 °C, 20..90 %RH) passes here and
-    #  would refuse an outdoor envelope, from its own datasheet figures, at agora-validate
+    #  would refuse an outdoor envelope, from its own datasheet figures, at orexis-validate
     #  time instead of at the first frost.
     ssn-system:inCondition
         [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;

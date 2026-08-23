@@ -1,13 +1,13 @@
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-@prefix market: <http://example.org/agora/market#> .
-@prefix : <http://example.org/agora/market#> .
+@prefix market: <http://example.org/orexis/market#> .
+@prefix : <http://example.org/orexis/market#> .
 
-<http://example.org/agora/market> a owl:Ontology ;
-    rdfs:label "Agora market" ;
+<http://example.org/orexis/market> a owl:Ontology ;
+    rdfs:label "Orexis market" ;
     rdfs:comment """The auction: a venue, a host that announces offers, bidders that answer, claims that come back, and the matching that turns the bids into an allocation with prices. What a bid is WORTH is domain-specific and lives in the domain module; how a round is conducted is here. THREE capabilities compose independently — an agent may bid, host, or do both, and a host also has whichever matching its world put in force. Matching is a family with interchangeable members where bidding and hosting are single abilities; it shares this package because a directory is a package and not a capability, and the seam it needs is `PROVIDES` and a term, not a directory boundary.""" .
 
 #################  Capabilities  #################

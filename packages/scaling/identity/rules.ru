@@ -16,10 +16,10 @@
 # IS, which no derivation could work out — a fraction and a temperature are both bare decimals,
 # and only the world can say which this one is.
 
-PREFIX sensing: <http://example.org/agora/sensing#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX ag:          <http://example.org/agora#>
-PREFIX scaling: <http://example.org/agora/scaling#>
+PREFIX ag:          <http://example.org/orexis#>
+PREFIX scaling: <http://example.org/orexis/scaling#>
 
 #  Follows a stated curve -> that member calibrates it.
 INSERT { GRAPH $derived {

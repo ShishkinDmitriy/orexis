@@ -1,13 +1,13 @@
-@prefix : <http://example.org/agora/world/loner#> .
-@prefix zz: <http://example.org/agora/zamioculcas#> .
-@prefix water: <http://example.org/agora/water#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix actuation: <http://example.org/agora/actuation#> .
-@prefix mqtt: <http://example.org/agora/mqtt#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix : <http://example.org/orexis/world/loner#> .
+@prefix zz: <http://example.org/orexis/zamioculcas#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix scaling: <http://example.org/agora/scaling#> .
+@prefix scaling: <http://example.org/orexis/scaling#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
 
 #  The loner — the ladder's second rung as a whole world (#190). Named by the sovereign for
@@ -37,7 +37,7 @@
 
 :world a ag:World ; ag:currentVersion :version_1 ;
     ag:timeScale 144 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/agora/user/dimonina> ; prov:hadRole ag:Sovereign ] .
+    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 :version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
 ##########  The plant — one triple, and the species does the rest  ##########

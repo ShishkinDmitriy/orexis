@@ -14,7 +14,7 @@ timestamp: 2026-08-14T19:36:12Z
 
 # Context
 
-The incident is [#53](https://github.com/ShishkinDmitriy/agora/issues/53)'s measurements: an
+The incident is [#53](https://github.com/ShishkinDmitriy/orexis/issues/53)'s measurements: an
 agent's MQTT session ended and never came back, and for 48 hours every surface a person would
 look at said the system was healthy — the container `Up 2 days`, the broker never restarted,
 the board publishing on schedule, the agent's log quiet. Nothing was ingested. The disconnect

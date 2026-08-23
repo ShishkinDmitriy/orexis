@@ -19,9 +19,9 @@ from agent.ontology import (ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_g
 
 from conftest import MOISTURE, genesis_store
 
-GARDENER = "http://example.org/agora/world/loner#gardener"
-ZZ = "http://example.org/agora/world/loner#zz"
-ACTUATE = "http://example.org/agora#Actuate"
+GARDENER = "http://example.org/orexis/world/loner#gardener"
+ZZ = "http://example.org/orexis/world/loner#zz"
+ACTUATE = "http://example.org/orexis#Actuate"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 
 
@@ -67,7 +67,7 @@ def test_a_node_forks_its_parents_readings_and_leaves_them_alone():
     added, retracted = _dose(im, SENSED_GRAPH)
 
     class _Row:                                  # what `_Node.taken` holds: means and lever
-        means, via = ACTUATE, "http://example.org/agora/world/loner#pump"
+        means, via = ACTUATE, "http://example.org/orexis/world/loner#pump"
 
     child = im.reached(SENSED_GRAPH, (_Row(),), added, retracted)
 
@@ -87,7 +87,7 @@ def test_nothing_imagined_reaches_the_store_it_was_imagined_from():
     added, retracted = _dose(im, SENSED_GRAPH)
 
     class _Row:
-        means, via = ACTUATE, "http://example.org/agora/world/loner#pump"
+        means, via = ACTUATE, "http://example.org/orexis/world/loner#pump"
 
     im.reached(SENSED_GRAPH, (_Row(),), added, retracted)
 

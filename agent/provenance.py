@@ -50,12 +50,12 @@ from .ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, EFFECTS_GRAP
 # `file:` on purpose: an absolute path bakes one machine into the store, and the world sits at
 # `/app/world/` in a container and `world/<name>/` on a host — so the same world would describe
 # itself differently depending on where it was built, and two agents could not be compared.
-_FILE = "http://example.org/agora/file/"
-_ACTIVITY = "http://example.org/agora/activity/"
+_FILE = "http://example.org/orexis/file/"
+_ACTIVITY = "http://example.org/orexis/activity/"
 
 # The two things that compute a graph. Named so the graphs they produce can point at them, and
 # so `prov:used` can say what each one read.
-CLOSURE = _ACTIVITY + "closure"  # agora/inference.py
+CLOSURE = _ACTIVITY + "closure"  # orexis/inference.py
 DERIVATION = _ACTIVITY + "derivation"  # every package's rules.ru
 RATIFICATION = _ACTIVITY + "ratification"  # a user authored the world files
 CLASSIFICATION = _ACTIVITY + "classification"  # the agent said what its own graphs are
@@ -110,7 +110,7 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
 
     lines = [
         "@prefix prov: <http://www.w3.org/ns/prov#> .",
-        "@prefix ag:   <http://example.org/agora#> .",
+        "@prefix ag:   <http://example.org/orexis#> .",
         "",
         "# --- asserted: read from files, and the chain stops there (see the module note) ---",
         f"<{ONTOLOGY_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {ontology_files} .",

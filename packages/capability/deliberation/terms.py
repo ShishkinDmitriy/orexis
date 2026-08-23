@@ -12,7 +12,7 @@ decides, exactly as it asks for whoever wants, keeps or perceives.
 
 from __future__ import annotations
 
-NS = "http://example.org/agora/deliberation#"
+NS = "http://example.org/orexis/deliberation#"
 
 
 def term(name: str) -> str:

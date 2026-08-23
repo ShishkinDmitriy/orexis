@@ -37,7 +37,7 @@ applied to code instead of silicon: one image, one set of promises, however many
 
 The sensing world's board now states neither fact. `world.ttl` types the connecting device
 `governed:Node`; the mode and the firmware name follow, the runtime and the shapes read the
-conclusions, and `agora-firmware` reaches the name through the hosting the deployment already
+conclusions, and `orexis-firmware` reaches the name through the hosting the deployment already
 produces (`?board sosa:hosts ?bearer . ?bearer mc:firmware ?fw` — either spelling satisfies
 the query, so a world stating the string directly stays legal).
 
@@ -75,6 +75,6 @@ instructable shape rightly refuses it — the class describes the SPEAKING role.
   carries is the image's fact too, but channels are world instances; describing them needs
   classes the world instantiates per channel, which is a second step this record does not
   take.
-- **wokwi/wireviz still read what they read.** The generator's union covers `agora-firmware`;
+- **wokwi/wireviz still read what they read.** The generator's union covers `orexis-firmware`;
   the drawing generators were not swept and keep working off the hardware description, which
   states no firmware fact at all.

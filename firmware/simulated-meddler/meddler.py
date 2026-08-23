@@ -64,7 +64,7 @@ class Meddler:
                              "world that wants no meddling states no ag:strayDoseMeanDays")
         self.rng = random.Random()
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,
-                                  client_id=f"agora-meddler-{self.rng.randint(0, 1 << 24):06x}")
+                                  client_id=f"orexis-meddler-{self.rng.randint(0, 1 << 24):06x}")
         self.client.username_pw_set(_env("MQTT_USERNAME"), _env("MQTT_PASSWORD"))
         self._stop = threading.Event()
         # One independent clock per pot: kindness is not coordinated.

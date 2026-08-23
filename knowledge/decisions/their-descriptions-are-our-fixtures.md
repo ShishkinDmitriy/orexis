@@ -26,7 +26,7 @@ and held to every shape this project owns.
 `tests/fixtures/w3c-ssn/` holds `dht22.ttl` and `dht22-deployment.ttl` from
 [`w3c/sdw`](https://github.com/w3c/sdw), byte-identical to upstream and checkably so: the git blob
 hash of each equals the blob SHA GitHub reports. `tests/test_w3c_descriptions.py` builds a world
-around them through the same path `agora-validate` uses.
+around them through the same path `orexis-validate` uses.
 
 **Through the real path, not over a bare graph.** Validating the fixture as a standalone graph
 reports two violations about scaling curves that no deployment ever sees, because neither the

@@ -1,14 +1,14 @@
-@prefix water: <http://example.org/agora/water#> .
-@prefix : <http://example.org/agora/water#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix : <http://example.org/orexis/water#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-@prefix market: <http://example.org/agora/market#> .
+@prefix market: <http://example.org/orexis/market#> .
 
-<http://example.org/agora/water> a owl:Ontology ;
-    rdfs:label "Agora water domain" ;
+<http://example.org/orexis/water> a owl:Ontology ;
+    rdfs:label "Orexis water domain" ;
     rdfs:comment """The v1 domain, a PLUG-IN. Everything above this file is domain-neutral: agents, capabilities, polling, markets, actuation. This module says what is being sensed and allocated here and what a bid MEANS in this domain. Water is what is ALLOCATED; what is sensed is wider and grew as the bench did — soil moisture, air temperature, air humidity, illuminance. A property earns its place here by being something a plant cares about, not by being water. Swap this file and the society still runs.""" .
 
 #################  The things  #################

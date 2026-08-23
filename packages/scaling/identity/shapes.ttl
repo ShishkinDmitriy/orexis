@@ -1,9 +1,9 @@
-@prefix sensing: <http://example.org/agora/sensing#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix sh:          <http://www.w3.org/ns/shacl#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix ag:          <http://example.org/agora#> .
+@prefix ag:          <http://example.org/orexis#> .
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix scaling: <http://example.org/agora/scaling#> .
+@prefix scaling: <http://example.org/orexis/scaling#> .
 
 scaling:SensorIsScaledByExactlyOneShape a sh:NodeShape ;
     rdfs:comment "Every sensor's raw values are turned into quantities by exactly one scaling, checked on the DERIVED fact. The failure this refuses is quiet in a way the codec one is not: two scalings would not produce a parse error or an empty reading, they would produce a NUMBER — a plausible one, recorded as a measurement, differing from the truth by whatever the losing curve would have done. A reading that is merely wrong is the worst kind to leave to iteration order." ;

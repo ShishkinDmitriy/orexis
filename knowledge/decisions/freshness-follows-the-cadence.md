@@ -69,7 +69,7 @@ Changing `sensing:maxReadingAgeS` to `sensing:readingGraceS` is a schema change,
 term, the new code required the new one, and each refused to start:
 
 ```
-fern composed sensing:Subscribing but its beliefs graph is missing sensing:readingGraceS — run agora-validate
+fern composed sensing:Subscribing but its beliefs graph is missing sensing:readingGraceS — run orexis-validate
 ```
 
 That refusal is correct — it is the self-check doing its job rather than an agent running on beliefs

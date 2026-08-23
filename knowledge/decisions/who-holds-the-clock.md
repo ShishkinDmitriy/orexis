@@ -84,7 +84,7 @@ as today's `sensing:PolledProcedure`, which is the reserved third mode.
 
 **"Agent sets, device keeps" was unqualified for as long as this record existed**, and a device
 that cannot keep what it is given is the whole of
-[#59](https://github.com/ShishkinDmitriy/agora/issues/59). A board now states the smallest gap it
+[#59](https://github.com/ShishkinDmitriy/orexis/issues/59). A board now states the smallest gap it
 will honour and the agent cannot commit to less — see
 [a-board-says-what-it-can-honour](a-board-says-what-it-can-honour.md). It does not change which
 capability a sense mode grants: how a device is DRIVEN and what it can DO are different facts, and

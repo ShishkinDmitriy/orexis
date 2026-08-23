@@ -43,7 +43,7 @@ from .terms import DELIBERATION, DEDUCING, KERNEL, NS
 # What this package asks OF others, by family — their namespaces, never their Python. The
 # freshness rule lives with whoever holds the clock, and this module asks it exactly as
 # bidding does.
-_SENSING = "http://example.org/agora/sensing#SensingCapability"
+_SENSING = "http://example.org/orexis/sensing#SensingCapability"
 
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
 # file's own header. Read once at import: a malformed query is then an error the moment the

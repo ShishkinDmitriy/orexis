@@ -1,9 +1,9 @@
-@prefix : <http://example.org/agora/world/sensing#> .
-@prefix review: <http://example.org/agora/review#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix reporting: <http://example.org/agora/reporting#> .
-@prefix ag: <http://example.org/agora#> .
-@prefix market: <http://example.org/agora/market#> .
+@prefix : <http://example.org/orexis/world/sensing#> .
+@prefix review: <http://example.org/orexis/review#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
+@prefix ag: <http://example.org/orexis#> .
+@prefix market: <http://example.org/orexis/market#> .
 
 #  This agent's PRIVATE beliefs — and there is only one block, because it composed only one
 #  capability.
@@ -28,7 +28,7 @@
                                        # the pick waits for them rather than appearing mid-life
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
-#   Omit this line and the agent reports nothing; see agora/metrics.py.
+#   Omit this line and the agent reports nothing; see orexis/metrics.py.
 :fern_agent reporting:metricsIntervalS 60 .
 
 ##  Self-review — how often at the very least.

@@ -45,7 +45,7 @@ A **package** is a directory, and the tree it sits in says what kind it is:
 
 | | |
 |---|---|
-| `packages/core/<name>/` | what terms MEAN. `agora` is the base everything layers on |
+| `packages/core/<name>/` | what terms MEAN. `orexis` is the base everything layers on |
 | `packages/capability/<name>/` | what an agent can **do**. The extendable axis |
 | `packages/transport/<name>/` | how a device is **reached**. Deliberately not a capability |
 | `packages/part/`, `plant/`, `bus/`, `tool/` | the things a world names, and the vocabularies they layer on |
@@ -81,7 +81,7 @@ a transport grants no capability — which is the whole point of it not being on
 `packages/capability/actuation/` has no `beliefs.py`, because it decides nothing: it reads the
 device's own calibration from the world and obeys.
 
-`agora.loader` finds all of this by looking. There is no list of capabilities anywhere in the
+`orexis.loader` finds all of this by looking. There is no list of capabilities anywhere in the
 codebase — not in the seeder, not in the validator, not in the runtime, not in the tests.
 
 # Consequences that were the point
@@ -131,13 +131,13 @@ move cost nothing — sensing still asks whoever will answer, and never learned 
 See
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 
-**Belief blocks moved to their capabilities.** `agora.beliefs` keeps the *reader* — the block
+**Belief blocks moved to their capabilities.** `orexis.beliefs` keeps the *reader* — the block
 query, the no-defaults error, the freshness rule — because that is identical for every
 capability. What each one believes is a `Block` declared next to the module that reads it, and
 the cast for each field is taken from the dataclass annotation, so a block states its types
 once instead of twice.
 
-**`verify_command` moved to the kernel** (`agora.signing`). It is the *device's* half of
+**`verify_command` moved to the kernel** (`orexis.signing`). It is the *device's* half of
 actuation: a simulator or a firmware stub must be able to check a co-signed command without
 loading the module that issued it.
 
@@ -149,9 +149,9 @@ part that reads the vocabulary and holds a capability.
 
 # Cost, stated plainly
 
-The package trees sit at the repo root and are put on `sys.path` by `agora.loader` on import.
+The package trees sit at the repo root and are put on `sys.path` by `orexis.loader` on import.
 That is a real mechanism with a real cost: capability code is not part of the installed
-`agora` distribution, so a capability cannot yet be shipped independently of the repo. The
+`orexis` distribution, so a capability cannot yet be shipped independently of the repo. The
 trade was deliberate — the ontology stays a first-class, top-level artifact rather than being
 buried under a Python `src/` tree, and the four files of a capability stay side by side. The
 path is appended rather than prepended, so an installed distribution always wins and a new

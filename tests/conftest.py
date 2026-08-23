@@ -28,12 +28,12 @@ WORLDS_ROOT = REPO_ROOT / "world"
 GENESIS_DIR = WORLDS_ROOT / "simulation"   # the world most tests are about
 
 # The property the water domain is about, spelled out because a reading is now keyed by it.
-MOISTURE = "http://example.org/agora/water#SoilMoisture"
+MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 # Two more, for the tests that are about a subject with more than one property. HUMIDITY is
 # the pointed one: it is a fraction, so a reading of it is indistinguishable from a soil
 # moisture by inspection, and a bidder handed one will act on it.
-TEMPERATURE = "http://example.org/agora/water#AirTemperature"
-HUMIDITY = "http://example.org/agora/water#AirHumidity"
+TEMPERATURE = "http://example.org/orexis/water#AirTemperature"
+HUMIDITY = "http://example.org/orexis/water#AirHumidity"
 
 
 @pytest.fixture(autouse=True)
@@ -45,8 +45,8 @@ def name_the_world(monkeypatch):
     the simulation, and anything under test that resolves signing keys finds them through it. The
     line above said so already; this makes the code hear it.
     """
-    monkeypatch.setenv("AGORA_WORLD", GENESIS_DIR.name)
-    # And run KEYLESS, whatever this machine's worlds carry. `agora-keygen` writes a real
+    monkeypatch.setenv("OREXIS_WORLD", GENESIS_DIR.name)
+    # And run KEYLESS, whatever this machine's worlds carry. `orexis-keygen` writes a real
     # keys.ttl into the repo's world directories (gitignored, present wherever an operator has
     # onboarded), and `world_files` sweeps every .ttl — so on an operator's machine claims
     # seal, presentations demand signatures, and any test reading a plaintext payload fails
@@ -76,7 +76,7 @@ def genesis_store(readings: dict[str, float] | None = None,
     if readings:
         # The subject lives in the WORLD's namespace since a world took its individuals out
         # of ag: — a seeded reading must point where the world's fern actually is.
-        ns = f"http://example.org/agora/world/{world}#"
+        ns = f"http://example.org/orexis/world/{world}#"
         ts = (result_time or datetime.now(timezone.utc)).isoformat()
         st.update("INSERT DATA { GRAPH <%s> {\n%s\n} }" % (SENSED_GRAPH, "\n".join(
             f"""  {observation_uri(pid, prop)} a sosa:Observation ;
@@ -159,11 +159,11 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
             pass
 
     if monkeypatch is not None:
-        # one place for every capability that records — see agora/observation.py
+        # one place for every capability that records — see orexis/observation.py
         monkeypatch.setattr(observation, "InfluxWriter", NoInflux)
         monkeypatch.setattr(runtime.mqtt, "Client", lambda *a, **k: _FakeClient())
         # What a deployed agent is handed: its OWN bucket and a token that opens only it,
-        # mounted into its container by `agora-influx`. Set here rather than defaulted in the
+        # mounted into its container by `orexis-influx`. Set here rather than defaulted in the
         # code, because a fallback to a shared bucket is exactly the isolation failure the
         # per-agent credential exists to prevent — so the agent refuses to run without one,
         # and the fixture has to say what it was given like any other deployment would.

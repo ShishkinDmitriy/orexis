@@ -60,12 +60,12 @@ def test_the_regions_live_in_the_desire_modality_and_nowhere_else():
     from conftest import desires_build
 
     st = genesis_store()
-    assert "http://example.org/agora/graph/constraint" not in set(st.graph_names()), \
+    assert "http://example.org/orexis/graph/constraint" not in set(st.graph_names()), \
         "genesis must derive no wants — the modality's build is the one place they come to exist"
     wants = desires_build(st, "fern")
     assert wants.query_union(
-        "ASK { ?region <http://example.org/agora#violationIs> "
-        "<http://example.org/agora#Below> }")["boolean"], \
+        "ASK { ?region <http://example.org/orexis#violationIs> "
+        "<http://example.org/orexis#Below> }")["boolean"], \
         "and the build must hold the derived regions"
 
 

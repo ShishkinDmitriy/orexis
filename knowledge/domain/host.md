@@ -1,7 +1,7 @@
 ---
 type: Role
 title: Host
-term: http://example.org/agora/market#hosts
+term: http://example.org/orexis/market#hosts
 description: >-
   Whoever convenes a venue and runs its rounds — announces terms, collects bids, computes the
   match, and owes the dose to whoever wins. A ROLE rather than a kind of agent: a supplier hosts,

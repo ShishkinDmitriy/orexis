@@ -26,7 +26,7 @@ _KEYWORDS = ("SELECT ", "INSERT ", "DELETE ", "CONSTRUCT ", "ASK ")
 
 # Every tree that may contain a SPARQL query, as a NAMED group. Twice now, moving files has
 # silently emptied one of these globs and taken cases off this guard without failing anything:
-# once when the onboarding tools left the agora package, and again when the repo went flat.
+# once when the onboarding tools left the orexis package, and again when the repo went flat.
 # A guard that quietly stops guarding is worse than none, so each group is asserted non-empty
 # below rather than trusted.
 _GROUPS = {
@@ -137,8 +137,8 @@ def test_a_prefix_meaning_two_things_is_refused(tmp_path, monkeypatch):
     silently read the other's terms and no engine could tell anyone.
     """
     a, b = tmp_path / "a.ttl", tmp_path / "b.ttl"
-    a.write_text("@prefix dup: <http://example.org/agora/one#> .\n")
-    b.write_text("@prefix dup: <http://example.org/agora/two#> .\n")
+    a.write_text("@prefix dup: <http://example.org/orexis/one#> .\n")
+    b.write_text("@prefix dup: <http://example.org/orexis/two#> .\n")
     monkeypatch.setattr(loader, "ontology_files", lambda: (a, b))
     loader.prefixes.cache_clear()
     try:
@@ -165,7 +165,7 @@ def test_an_external_vocabulary_is_not_a_packages_to_move(monkeypatch):
 #
 #     <{AG}bidsIn>                interpolated in the sovereign's tooling
 #     AG + "Sensor"               concatenated
-#     "http://example.org/agora#SoilMoisture"   a plain constant
+#     "http://example.org/orexis#SoilMoisture"   a plain constant
 #     term("slowSleepS")          the kernel builder, imported into a package or a test
 #
 # Every one compiles. Every one names something no ontology declares once the term moves, and a
@@ -175,7 +175,7 @@ def test_an_external_vocabulary_is_not_a_packages_to_move(monkeypatch):
 # guard did not fire because a second query kept the dict non-empty.
 # The three forms that spell the kernel namespace outright, whatever the file.
 _KERNEL_IRI = re.compile(
-    r'(?:\{AG\}|AG \+ "|"http://example\.org/agora#)([A-Za-z][A-Za-z0-9]*)')
+    r'(?:\{AG\}|AG \+ "|"http://example\.org/orexis#)([A-Za-z][A-Za-z0-9]*)')
 # And the fourth, which is only the kernel's when the KERNEL's builder is the one in scope. A
 # package's own `terms.py` defines a `term()` into its own namespace and every capability
 # imports that one — same call, different answer, which is precisely the confusion this sweep
@@ -208,22 +208,22 @@ _QUOTES_THE_OLD_SPELLINGS = {
 
 
 def _kernel_terms() -> set[str]:
-    """What `packages/core/agora` actually declares, read rather than listed."""
-    text = (loader.REPO_ROOT / "packages/core/agora/ontology.ttl").read_text()
+    """What `packages/core/orexis` actually declares, read rather than listed."""
+    text = (loader.REPO_ROOT / "packages/core/orexis/ontology.ttl").read_text()
     return set(re.findall(r"^ag:([A-Za-z][A-Za-z0-9]*)\b", text, re.M))
 
 
 def test_the_kernel_vocabulary_is_still_found():
     """The guard on the guard, again: an empty set would make the scan below vacuous."""
-    assert len(_kernel_terms()) > 20, "packages/core/agora declares almost nothing — has it moved?"
+    assert len(_kernel_terms()) > 20, "packages/core/orexis declares almost nothing — has it moved?"
 
 
 @pytest.mark.parametrize("path", _ALL_TREES, ids=lambda p: p.name)
 def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
-    """A full IRI in `ag:` must name something `packages/core/agora` declares.
+    """A full IRI in `ag:` must name something `packages/core/orexis` declares.
 
     Instances are exempt and are the reason this is a name check rather than a ban: a world's
-    `<http://example.org/agora/world/simulation#moisture_sensor_fern>` is a thing, not a term, and lives in `ag:` correctly. So the rule
+    `<http://example.org/orexis/world/simulation#moisture_sensor_fern>` is a thing, not a term, and lives in `ag:` correctly. So the rule
     is not "never spell out the kernel namespace" — it is that when you do, the local name has
     to be one the kernel actually has.
     """
@@ -239,15 +239,15 @@ def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
     for name in names:
         if name in kernel or name in _NOT_A_TERM:
             continue
-        # An INSTANCE is a single lowercase word or has an underscore — `<http://example.org/agora/world/simulation#fern>`,
-        # `<http://example.org/agora/world/simulation#moisture_sensor_fern>`. A TERM is Capitalised or camelCase. That is a convention
+        # An INSTANCE is a single lowercase word or has an underscore — `<http://example.org/orexis/world/simulation#fern>`,
+        # `<http://example.org/orexis/world/simulation#moisture_sensor_fern>`. A TERM is Capitalised or camelCase. That is a convention
         # rather than a rule, which is why the message says what to do if it guesses wrong.
         if "_" in name or name.islower():
             continue
         offenders.append(name)
     assert not offenders, (
         f"{path.name} names {sorted(offenders)} in the kernel namespace, and "
-        "packages/core/agora declares no such term — whichever package owns it has a namespace "
+        "packages/core/orexis declares no such term — whichever package owns it has a namespace "
         "of its own, and this pattern will match nothing rather than fail"
     )
 
@@ -274,7 +274,7 @@ def test_an_ontology_gives_its_own_terms_the_default_prefix():
         onts = list(g.subjects(rdflib.RDF.type, rdflib.OWL.Ontology))
         if len(onts) != 1:
             continue
-        if str(onts[0]) == "http://example.org/agora/core":
+        if str(onts[0]) == "http://example.org/orexis/core":
             # The kernel is the deliberate exception: ag: is the one namespace every world
             # and every package speaks, so 'unprefixed means mine' would be a false signal —
             # and the kernel-term census two tests up reads its spellings as written.

@@ -65,7 +65,7 @@ class BusWatchdog:
         self._quiet: set[str] = set()  # what has already been said, so it is said once
         rows = bindings(agent.beliefs.query(_RESIGN_Q))
         if not rows:
-            raise RuntimeError("the ontology states no ag:resignAfterS — re-run agora-seed")
+            raise RuntimeError("the ontology states no ag:resignAfterS — re-run orexis-seed")
         self.resign_after_s = int(rows[0]["s"])
 
     def start(self) -> None:

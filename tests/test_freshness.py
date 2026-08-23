@@ -17,7 +17,7 @@ from packages.capability.desire import desires_of
 
 from conftest import desires_build, MOISTURE, build_agent, genesis_store
 
-FERN = "http://example.org/agora/world/simulation#fern_agent"
+FERN = "http://example.org/orexis/world/simulation#fern_agent"
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
 
@@ -147,12 +147,12 @@ def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
     wants = desires_build(st, "gardener")
     rows = bindings(wants.query_union("""
         SELECT ?property WHERE {
-          ?agent <http://example.org/agora#holds> ?shape .
-          ?shape <http://example.org/agora#violationIs> <http://example.org/agora#Stale> ;
+          ?agent <http://example.org/orexis#holds> ?shape .
+          ?shape <http://example.org/orexis#violationIs> <http://example.org/orexis#Stale> ;
                  <http://www.w3.org/ns/ssn/forProperty> ?property }"""))
     wanted = {r["property"].rsplit("#", 1)[-1] for r in rows}
     polled = {r["p"].rsplit("#", 1)[-1] for r in bindings(st.query("""
-        SELECT ?p WHERE { ?agent <http://example.org/agora/sensing#polls> ?s .
+        SELECT ?p WHERE { ?agent <http://example.org/orexis/sensing#polls> ?s .
                           ?s <http://www.w3.org/ns/sosa/observes> ?p }"""))}
     assert wanted, "the gardener polls sensors, so it wants their readings fresh"
     assert wanted == polled, \

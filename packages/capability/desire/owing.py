@@ -38,8 +38,8 @@ class OwingModule(Module):
         """The counterparty's node, from the one thing a claim carries: its id. Public wiring,
         so a debt names an agent the world declares and never a string somebody sent me."""
         rows = bindings(self.agent.beliefs.query(
-            f'SELECT ?a WHERE {{ ?a a <http://example.org/agora#Agent> ; '
-            f'<http://example.org/agora#localId> "{agent_id}" }} LIMIT 1'))
+            f'SELECT ?a WHERE {{ ?a a <http://example.org/orexis#Agent> ; '
+            f'<http://example.org/orexis#localId> "{agent_id}" }} LIMIT 1'))
         return rows[0]["a"] if rows else None
 
     def owe(self, to_agent_id: str, claim_jti: str,

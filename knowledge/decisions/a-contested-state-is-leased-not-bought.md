@@ -79,7 +79,7 @@ recorded because owing is granted by holding a lever others may demand.
 That is exactly `world/simulation`'s city, which was broken until this morning for precisely
 this reason — the ledger lived inside a capability granted by having a stake, so the one agent
 whose failure to deliver would leave no evidence was the one best placed to fail
-([#233](https://github.com/ShishkinDmitriy/agora/issues/233)). The door makes it a class with two
+([#233](https://github.com/ShishkinDmitriy/orexis/issues/233)). The door makes it a class with two
 members rather than a peculiarity of the mains, which is the usual sign that a split was cut in
 the right place.
 
@@ -134,10 +134,10 @@ Two wants already disappear this way, which is the precedent to build on rather 
 a duty lapses when its claim's window closes, and a freshness want exists only where an instrument
 does. A seasonal or diurnal want is the same shape with a clock in the premise instead of a claim
 or a sensor. What is missing is only that the region derivation runs once and never again — see
-[#263](https://github.com/ShishkinDmitriy/agora/issues/263).
+[#263](https://github.com/ShishkinDmitriy/orexis/issues/263).
 
 **And the world's legitimacy must stay time-independent even where a state's is not.** If
-`agora-validate` consulted the clock, a world that passes at noon would fail at midnight and the
+`orexis-validate` consulted the clock, a world that passes at noon would fail at midnight and the
 gate would stop being a gate. Validation holds a world to EVERY circumstance it states; only the
 runtime asks what time it is.
 

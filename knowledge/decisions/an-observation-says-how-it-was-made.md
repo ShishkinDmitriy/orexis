@@ -207,7 +207,7 @@ and then `"pushprocedure"`, breaking a device twice more in the same silent way.
 - **The mode is still the sensor's, and it describes a board.** Its own definition says *"this is
   what a deep-sleeping battery board is"*, and all three of the fern board's sensors state it
   independently — so an observation cites a fact copied three times. That is
-  [#96](https://github.com/ShishkinDmitriy/agora/issues/96); when the mode moves to the board, an
+  [#96](https://github.com/ShishkinDmitriy/orexis/issues/96); when the mode moves to the board, an
   observation will cite the board's procedure, which is more accurate still, since the firmware
   holds the clock and the sensing element does not.
 - ~~**`ssn:implements` is the standard relation and we do not use it.**~~ **Half-closed, and the

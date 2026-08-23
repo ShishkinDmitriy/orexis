@@ -42,7 +42,7 @@ def dataset(world: str) -> rdflib.Dataset:
     This used to be a second implementation: rdflib parsed the same files and re-ran the same
     `rules.ru`, which is two engines deriving separately and hoping to agree. They did not. The
     closure was never run on this side at all, so a world whose sensor is typed as a *kind* of
-    sensor derived its capabilities inside an agent and not in `agora-compose` — the same fault
+    sensor derived its capabilities inside an agent and not in `orexis-compose` — the same fault
     issue #27 was opened for, surviving in the half of the system #27 did not look at.
 
     It also sidesteps an rdflib behaviour worth knowing: **`USING` there attempts to dereference

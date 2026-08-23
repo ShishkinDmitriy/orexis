@@ -58,7 +58,7 @@ expectation, made from outside this project rather than from inside it.
 not mine". A pot-local pump drawing from a shared barrel is a lever the agent owns on a
 resource it does not, and opening it without a claim would take from the commons without
 bidding — precisely what the market referees. So the Acquire walk
-(see the menu, [#189](https://github.com/ShishkinDmitriy/agora/pull/189)) follows the LEVER
+(see the menu, [#189](https://github.com/ShishkinDmitriy/orexis/pull/189)) follows the LEVER
 chain to the pot, and the Actuate premise must additionally follow the RESOURCE chain to the
 source: `actuation:drawsFrom` a source no market offers as its lot. Two different walks,
 because ownership of the pipe and ownership of what flows through it are different facts.
@@ -86,8 +86,8 @@ level instrument make any theft that somehow happened VISIBLE and attributable (
 minus sold is an auditable difference — theft here is evidence-producing, not merely hard);
 and the adversarial setting has a physical mirror of the co-signature, a supplier-held gate
 valve in series at the source, so a dose needs both parties' actuators to agree. What is
-honestly open: revocation ([#28](https://github.com/ShishkinDmitriy/agora/issues/28),
-[#29](https://github.com/ShishkinDmitriy/agora/issues/29)), and carrying the sim valves'
+honestly open: revocation ([#28](https://github.com/ShishkinDmitriy/orexis/issues/28),
+[#29](https://github.com/ShishkinDmitriy/orexis/issues/29)), and carrying the sim valves'
 verification into the real pump firmware when the terrace actuator is built.
 
 **And when the firmware is not yours?** Asked next, and the answer is not "keep hardware dumb"

@@ -2,7 +2,7 @@
 okf_version: "0.1"
 ---
 
-# Agora — Agent Society
+# Orexis — Agent Society
 
 A multi-agent resource-allocation system: self-interested agents bid in an iterative
 auction for a scarce resource from a limited supply, under a hard trust/constitution

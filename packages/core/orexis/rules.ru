@@ -13,12 +13,12 @@
 # `$given` and `$derived` are substituted by the loader (see genesis.substitute): a rule says
 # what it concludes and never names a graph.
 
-PREFIX ag:   <http://example.org/agora#>
+PREFIX ag:   <http://example.org/orexis#>
 
 INSERT { GRAPH $derived {
     ?graph a ag:PickRecordGraph ; ag:beliefsOf ?agent } }
 $given
 WHERE  {
     ?agent a ag:Agent ; ag:localId ?id .
-    BIND(IRI(CONCAT("http://example.org/agora/graph/beliefs/", ?id)) AS ?graph)
+    BIND(IRI(CONCAT("http://example.org/orexis/graph/beliefs/", ?id)) AS ?graph)
 }

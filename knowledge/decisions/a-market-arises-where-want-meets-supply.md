@@ -43,7 +43,7 @@ unchanged — the same triples land in the derived graph with honest provenance
 self-assembles the moment its wiring exists: a `:city_mains` source plumbed to the barrel,
 owned by a city agent that states its matching rule, meeting the want the stake arc created.
 Metered mains IS a market relationship, which is why the refill buys rather than Actuates;
-the Actuate rung ([#190](https://github.com/ShishkinDmitriy/agora/issues/190)) stays for a
+the Actuate rung ([#190](https://github.com/ShishkinDmitriy/orexis/issues/190)) stays for a
 genuinely-owned source — a rain-fed cistern, where the water really is free.
 
 This also improves the planning arc: the depth-2 plan becomes **buy upstream to sell

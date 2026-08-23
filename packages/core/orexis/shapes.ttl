@@ -1,13 +1,13 @@
-@prefix mqtt: <http://example.org/agora/mqtt#> .
-@prefix actuation: <http://example.org/agora/actuation#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 
 # Rules for the society kernel. Each ontology module ships its own shapes file next to it;
-# together they are the constitution as code. Validated with `agora-validate`.
+# together they are the constitution as code. Validated with `orexis-validate`.
 
 ag:AgentShape a sh:NodeShape ;
     rdfs:comment "Every agent is named and does at least one thing. An agent with no capability is a process with nothing to run." ;
@@ -39,7 +39,7 @@ ag:OwnedGraphShape a sh:NodeShape ;
 #################  Devices that are not there  #################################################
 #
 # These are the ESP32's rules, not RDF's. They are here because a world states its wiring and
-# `agora-validate` is the last moment anyone reads it before a board is flashed and buried in a
+# `orexis-validate` is the last moment anyone reads it before a board is flashed and buried in a
 # pot. Each one has cost somebody an afternoon at least once.
 #
 # SPARQL constraints spell IRIs out in full: this runs on pyshacl, and a prefix that is declared
@@ -52,7 +52,7 @@ ag:PublicGraphShape a sh:NodeShape ;
         [ sh:path prov:wasDerivedFrom ; sh:minCount 1 ; sh:nodeKind sh:IRI ]
         [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ]
     ) ;
-    sh:message "a public graph must record what it was derived from or what generated it — see agora/provenance.py" .
+    sh:message "a public graph must record what it was derived from or what generated it — see orexis/provenance.py" .
 
 ag:SimulatedDeviceShape a sh:NodeShape ;
     rdfs:comment """A device that is stood in for must still be reachable like a real one, or the failure is a sensor that is simply, permanently silent — which reads exactly like hardware that is not there. Which it is not.
@@ -65,11 +65,11 @@ What makes it reachable is no longer only its own credential. A KY-015 reports t
         sh:message "a simulated device must be reachable: on a bus of its own, or sharing the reading topic of a device that is — otherwise nothing would ever publish for it" ;
         sh:select """
             SELECT $this WHERE {
-                FILTER NOT EXISTS { $this <http://example.org/agora/mqtt#onBus> ?bus }
+                FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#onBus> ?bus }
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora/mqtt#readingTopic> ?topic .
-                    ?peer <http://example.org/agora/mqtt#readingTopic> ?topic ;
-                          <http://example.org/agora/mqtt#onBus> ?peerBus .
+                    $this <http://example.org/orexis/mqtt#readingTopic> ?topic .
+                    ?peer <http://example.org/orexis/mqtt#readingTopic> ?topic ;
+                          <http://example.org/orexis/mqtt#onBus> ?peerBus .
                 }
             }""" ] .
 
@@ -81,8 +81,8 @@ ag:SimulatedActuatorShape a sh:NodeShape ;
         sh:message "a simulated actuator must state mqtt:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/agora#simulatedBy> ?model .
-                FILTER NOT EXISTS { $this <http://example.org/agora/mqtt#statusTopic> ?t }
+                $this <http://example.org/orexis#simulatedBy> ?model .
+                FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#statusTopic> ?t }
             }""" ] .
 
 ag:DeviceModelShape a sh:NodeShape ;
@@ -100,13 +100,13 @@ An initial value used to be held to 0..1, on the reasoning that it is a fraction
         sh:message "an initial value must lie inside the range this model states — 45 where 0.45 was meant would clamp and read as a permanently soaking pot" ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/agora#modelInitialValue> ?initial .
-                OPTIONAL { $this <http://example.org/agora#modelMinValue> ?min }
-                OPTIONAL { $this <http://example.org/agora#modelMaxValue> ?max }
+                $this <http://example.org/orexis#modelInitialValue> ?initial .
+                OPTIONAL { $this <http://example.org/orexis#modelMinValue> ?min }
+                OPTIONAL { $this <http://example.org/orexis#modelMaxValue> ?max }
                 OPTIONAL {
-                    ?d <http://example.org/agora#simulatedBy> $this ;
-                       <http://example.org/agora/sensing#monitors> ?subject .
-                    ?subject <http://example.org/agora#modelMaxValue> ?subjectMax
+                    ?d <http://example.org/orexis#simulatedBy> $this ;
+                       <http://example.org/orexis/sensing#monitors> ?subject .
+                    ?subject <http://example.org/orexis#modelMaxValue> ?subjectMax
                 }
                 BIND(COALESCE(?max, ?subjectMax, 1.0) AS ?high)
                 BIND(COALESCE(?min, 0.0) AS ?low)

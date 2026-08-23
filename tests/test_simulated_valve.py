@@ -196,8 +196,8 @@ def test_a_replayed_claim_dispenses_once(monkeypatch, keys):
     assert len(valve.client.published) == 1
 
 
-def test_the_firmware_never_imports_agora():
-    """Its image holds cryptography and paho. Importing agora would put the belief base, the
+def test_the_firmware_never_imports_orexis():
+    """Its image holds cryptography and paho. Importing orexis would put the belief base, the
     SHACL machinery and a 230 MB dependency set on a device."""
     source = VALVE_PY.read_text()
     assert "import agent" not in source

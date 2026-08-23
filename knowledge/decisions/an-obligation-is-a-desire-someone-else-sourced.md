@@ -21,7 +21,7 @@ with PROV about why this desire exists. It could be sourced by the agent itself 
 from another agent — my obligations. Also we can add urgency for desire graphs, to choose the
 hottest one."*
 
-[#218](https://github.com/ShishkinDmitriy/agora/issues/218) put the distinction on the LEVER —
+[#218](https://github.com/ShishkinDmitriy/orexis/issues/218) put the distinction on the LEVER —
 a menu row was `Chosen` or `Honoured`, and the deliberator filtered duties out. This puts it on
 the GOAL, which is deeper and simpler: there is one kind of row (what is possible) and one kind
 of motivation (a want, with a source), and an agent's whole conduct is desires it pursues
@@ -169,7 +169,7 @@ facts were sayable in authored and entailed terms (`market:matchesBy`, `market:o
   it and the agent pick inside — which would make "how social am I" a revisable belief inside a
   ratified band.
 - ~~**What a claim-sourced desire says exactly.**~~ CLOSED by
-  [#255](https://github.com/ShishkinDmitriy/agora/issues/255), the way the note said it had to
+  [#255](https://github.com/ShishkinDmitriy/orexis/issues/255), the way the note said it had to
   be: the state is *this claim discharged* — a pattern over the record the planner's met-test
   asks of whatever world it judges — and the act stayed an affordance (`ag:Apply`, whose
   effect rule now states what serving makes true, sized from the record's own `ag:amountL`).

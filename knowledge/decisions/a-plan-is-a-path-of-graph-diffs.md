@@ -36,7 +36,7 @@ next widening is a lookup rather than a re-derivation.
 - **PDDL** is what STRIPS became: a standard language for exactly the action schemas above,
   with typed parameters, conditional effects and numeric fluents. The CONSTRUCT-per-means below
   is a PDDL effect schema written in SPARQL, and the reason to know that is
-  [#268](https://github.com/ShishkinDmitriy/agora/issues/268) — Acquire has no effect rule, so
+  [#268](https://github.com/ShishkinDmitriy/orexis/issues/268) — Acquire has no effect rule, so
   the planner is blind to how every plant actually acts. That is a missing effect schema, and
   PDDL has a settled answer for the shape of one.
 - **HTN planning** decomposes a task into a fixed method rather than searching, which is what
@@ -47,7 +47,7 @@ next widening is a lookup rather than a re-derivation.
 - **The frame problem** is the one to know about before it bites. Classical planning assumes
   what an action does not mention does not change; a graph diff over a store that other
   processes write does not get that for free.
-  [#258](https://github.com/ShishkinDmitriy/agora/issues/258) — cycle detection asking "where am
+  [#258](https://github.com/ShishkinDmitriy/orexis/issues/258) — cycle detection asking "where am
   I" with a number only some plans move, closed by making the signature the world's net diff —
   was a frame problem in the small, and the depth-2
   limitation recorded above (a rule's CONSTRUCTs run against the STORE, so the second step never
@@ -105,7 +105,7 @@ precondition observable. Depth 2 suffices; that is the scale to build for.
 
 ## The path in, when it is wanted
 
-1. **Effects join the menu row** — [#127](https://github.com/ShishkinDmitriy/agora/issues/127)
+1. **Effects join the menu row** — [#127](https://github.com/ShishkinDmitriy/orexis/issues/127)
    gave direction; the row grows its add/delete template, owned where direction is owned: the
    lever's meaning states what applying it makes true.
 2. **Goal patterns are deduced** from the same statements the regions come from — a region
@@ -318,7 +318,7 @@ Three requirements follow, none of which a planner written for the reflex's worl
   mints its predicted observation with `BNODE()` and stamps it `NOW()`, so raw triples never
   collide at all. An observation canonicalises to its upsert key and its value — identity and
   `sosa:resultTime` are not part of where a plan stands — and any other blank node to its
-  content ([#258](https://github.com/ShishkinDmitriy/agora/issues/258), which is what lets a
+  content ([#258](https://github.com/ShishkinDmitriy/orexis/issues/258), which is what lets a
   step that moves something other than the goal's number count as somewhere new; see
   `packages/capability/deliberation/signature.py`).
 - **Depth exhaustion is an ANSWER, not a failure.** "No bounded plan reaches this goal" is a
@@ -369,7 +369,7 @@ nothing was ever added to the next depth, and the search never went past one ste
 Removing it changes no behaviour: Observe's effect predicts the value it found, so the world it
 reaches has its parent's signature and the cycle check discards it, exactly as a zero-size bid
 is discarded. What that rests on is the canonical form:
-[#258](https://github.com/ShishkinDmitriy/agora/issues/258) made the signature carry where a
+[#258](https://github.com/ShishkinDmitriy/orexis/issues/258) made the signature carry where a
 plan IS — the world's net diff — and a look still nets to nothing there, because an observation
 canonicalises to its upsert key and its value and a valueless first look states no fact at all.
 A signature that counted a fresher `sosa:resultTime` as somewhere new would make each look a
@@ -401,7 +401,7 @@ note beside it saying why the planner will never produce it.
 `Acquire → Apply`, and it is a DUTY.** For a while `propose_for` routed a duty to the honoured
 row serving its counterparty and never to the planner — the one chain in the shipped worlds with
 a true dependency was the one the planner was not allowed to see. Closed by
-[#255](https://github.com/ShishkinDmitriy/agora/issues/255): a duty simulates first, its met-test
+[#255](https://github.com/ShishkinDmitriy/orexis/issues/255): a duty simulates first, its met-test
 is the discharged-pattern over the record, and `market:ApplyEffect` states what serving makes
 true with the vessel's level as its premise — a premise that cannot bind predicts nothing, so a
 dry serve is discarded as somewhere already reached and the step that IS reachable is the

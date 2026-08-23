@@ -14,9 +14,9 @@ from packages.capability.deliberation.module import ACTUATE, ACQUIRE, OBSERVE
 
 from conftest import build_agent, genesis_store, desires_build
 
-MOIST = "http://example.org/agora/water#SoilMoisture"
-GARDENER = "http://example.org/agora/world/loner#gardener"
-_DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
+MOIST = "http://example.org/orexis/water#SoilMoisture"
+GARDENER = "http://example.org/orexis/world/loner#gardener"
+_DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ def make(monkeypatch):
 def gardener(make, tmp_path, monkeypatch):
     from onboarding.keygen import create_keypair
 
-    monkeypatch.setenv("AGORA_WORLD_DIR", str(tmp_path))
+    monkeypatch.setenv("OREXIS_WORLD_DIR", str(tmp_path))
     (tmp_path / "secrets").mkdir()
     for name in ("host", "clearing"):
         create_keypair(name)
@@ -58,8 +58,8 @@ def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
 
     st = genesis_store(world="loner")
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
-        <{GARDENER}> <http://example.org/agora/market#matchesBy>
-            <http://example.org/agora/market#PayAsBid> }} }}""")
+        <{GARDENER}> <http://example.org/orexis/market#matchesBy>
+            <http://example.org/orexis/market#PayAsBid> }} }}""")
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
         st.update(genesis.substitute(rule.read_text(), st))
@@ -74,12 +74,12 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
     own on a resource you do not is exactly what the market referees."""
     from agent.ontology import WORLD_GRAPH
 
-    ns = "http://example.org/agora/world/simulation#"
+    ns = "http://example.org/orexis/world/simulation#"
     st = genesis_store()
     st.update(f"""INSERT DATA {{ GRAPH <{WORLD_GRAPH}> {{
-        <{ns}fern_agent> <http://example.org/agora/actuation#hasActuator> <{ns}fern_pump> .
-        <{ns}fern_pump> <http://example.org/agora/actuation#actuates> <{ns}fern> ;
-            <http://example.org/agora/actuation#drawsFrom> <{ns}barrel1> .
+        <{ns}fern_agent> <http://example.org/orexis/actuation#hasActuator> <{ns}fern_pump> .
+        <{ns}fern_pump> <http://example.org/orexis/actuation#actuates> <{ns}fern> ;
+            <http://example.org/orexis/actuation#drawsFrom> <{ns}barrel1> .
     }} }}""")
     rows = [r for r in menu_of(st.query, ns + "fern_agent", desires_build(st, "fern").query_union)
             if r.observed_property == MOIST]
@@ -161,7 +161,7 @@ def test_a_satisfied_actuate_still_absorbs_the_next_impulse(gardener, monkeypatc
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
         "the ledger remembers what the standing list forgot"
     assert keeper.within_patience(
-        "http://example.org/agora#Actuate", MOIST)
+        "http://example.org/orexis#Actuate", MOIST)
 
 
 def test_the_dose_is_capped_by_what_the_vessel_holds(gardener):

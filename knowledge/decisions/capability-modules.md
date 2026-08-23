@@ -81,7 +81,7 @@ an `actuation:Valve` without naming it, and a new kind of actuator works the day
 
 # One process per agent
 
-`AGORA_AGENT_ID=fern agora-agent`. The process reads the world (*what am I?*), its own beliefs
+`OREXIS_AGENT_ID=fern orexis-agent`. The process reads the world (*what am I?*), its own beliefs
 (*what do I want?*), and loads exactly the modules its capabilities name. Nothing in it can
 reach another agent's graph.
 
@@ -114,7 +114,7 @@ validated world, so the check is a backstop rather than a burden.
 
 # Consequences
 
-- **`agora-validate` became a real constitutional check.** Bands must be bands, cadence must
+- **`orexis-validate` became a real constitutional check.** Bands must be bands, cadence must
   watch more closely when thirsty, nobody may sleep past the ceiling, every device must state
   where it is reachable — and each rule applies only to the agents it concerns.
 - **Deployment is one unit per agent.** More units, but a crashed fern cannot take tomato with

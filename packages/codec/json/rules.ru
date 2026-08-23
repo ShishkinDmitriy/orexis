@@ -22,10 +22,10 @@
 # world. That is the intended reading: two devices disagreeing about the format of one stream is
 # the error, however quietly one of them disagrees.
 
-PREFIX sensing: <http://example.org/agora/sensing#>
-PREFIX mqtt: <http://example.org/agora/mqtt#>
-PREFIX ag:    <http://example.org/agora#>
-PREFIX codec: <http://example.org/agora/codec#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
+PREFIX mqtt: <http://example.org/orexis/mqtt#>
+PREFIX ag:    <http://example.org/orexis#>
+PREFIX codec: <http://example.org/orexis/codec#>
 
 #  Says what it sends -> that member decodes every stream it is on.
 INSERT { GRAPH $derived {
@@ -35,7 +35,7 @@ WHERE  {
     ?device codec:encoding ?encoding . ?encoding a codec:Encoding .
     { ?device mqtt:readingTopic ?topic } UNION { ?device mqtt:commandTopic ?topic }
     UNION { ?device mqtt:statusTopic ?topic }
-    BIND(IRI(CONCAT("http://example.org/agora#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
+    BIND(IRI(CONCAT("http://example.org/orexis#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
 } ;
 
 #  Says nothing -> JSON, which is what every board in every shipped world sends. The default
@@ -48,5 +48,5 @@ WHERE  {
     { ?device mqtt:readingTopic ?topic } UNION { ?device mqtt:commandTopic ?topic }
     UNION { ?device mqtt:statusTopic ?topic }
     FILTER NOT EXISTS { ?device codec:encoding ?stated }
-    BIND(IRI(CONCAT("http://example.org/agora#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
+    BIND(IRI(CONCAT("http://example.org/orexis#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
 }

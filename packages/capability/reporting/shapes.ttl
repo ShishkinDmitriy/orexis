@@ -1,6 +1,6 @@
-@prefix reporting: <http://example.org/agora/reporting#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -25,8 +25,8 @@ Targeted through the capability rather than at ag:Agent directly, so the shape s
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora#hasCapability> ?cap .
-                ?cap a <http://example.org/agora/reporting#ReportingCapability> .
+                ?this <http://example.org/orexis#hasCapability> ?cap .
+                ?cap a <http://example.org/orexis/reporting#ReportingCapability> .
             }
         """ ] ;
     sh:property [ sh:path reporting:metricsIntervalS ; sh:minCount 1 ; sh:maxCount 1 ;

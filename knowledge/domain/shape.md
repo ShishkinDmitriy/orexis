@@ -40,7 +40,7 @@ over**.
 
 The same choice is what keeps wants out of the verdict. Once desires compiled to SHACL, every
 report grew one block per property nobody had read yet — which at genesis is all of them — and
-`agora-validate` printed forty lines about a world it was accepting. A [gap](/domain/gap.md) is
+`orexis-validate` printed forty lines about a world it was accepting. A [gap](/domain/gap.md) is
 not a finding about the world; asking for one is a query, not a validation.
 
 # Two places, decided by who owns the data

@@ -50,7 +50,7 @@ The one thing this may write is its own beliefs graph. It reads the world as con
 
 **Belief-base upkeep is not here.** Compacting a bloated store is not a choice an agent makes,
 so it stayed in the kernel on its own clock when this became optional — otherwise an agent with
-no mandate would silently stop compacting and undo the fix for #45. See `agora/upkeep.py`.
+no mandate would silently stop compacting and undo the fix for #45. See `orexis/upkeep.py`.
 
 See knowledge/decisions/self-review-is-a-capability.md.
 """

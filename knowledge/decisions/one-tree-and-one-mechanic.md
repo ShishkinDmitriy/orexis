@@ -41,7 +41,7 @@ part, a protocol and an export target, indistinguishable — while a capability 
 **One tree, `packages/<family>/<name>/`, and the family is the parent directory.**
 
 ```
-packages/core/agora            packages/capability/market
+packages/core/orexis            packages/capability/market
 packages/bus/onewire           packages/transport/mqtt
 packages/part/dht11            packages/codec/json
 packages/plant/zamioculcas     packages/scaling/identity
@@ -105,7 +105,7 @@ green at both numbers.
 emptied a glob twice; this time the glob did not empty, it merely stopped covering what it was
 named for. Found by diffing collected test ids against the pre-move tree — 861 before, 869 after,
 nothing missing — which is a check nothing performs automatically. See
-[#106](https://github.com/ShishkinDmitriy/agora/issues/106).
+[#106](https://github.com/ShishkinDmitriy/orexis/issues/106).
 
 # Seams left open
 

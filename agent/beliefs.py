@@ -226,7 +226,7 @@ def read_picks(query, agent_uri: str, graph: str, agent_id: str, picks: Picks):
     if missing:
         raise BeliefError(
             f"{agent_id} composed {picks.capability} but its beliefs graph "
-            f"<{graph}> is missing {', '.join(missing)} — run agora-validate"
+            f"<{graph}> is missing {', '.join(missing)} — run orexis-validate"
         )
     return picks.cls(**out)
 

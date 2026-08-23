@@ -1,7 +1,7 @@
-"""agora-infra-certs — identities for the services, and whom the broker trusts. An INFRA step.
+"""orexis-infra-certs — identities for the services, and whom the broker trusts. An INFRA step.
 
-  agora-infra-certs                    # certificates for the shared services
-  agora-infra-certs --host pi.local    # the name clients will actually verify
+  orexis-infra-certs                    # certificates for the shared services
+  orexis-infra-certs --host pi.local    # the name clients will actually verify
 
 **Separate from onboarding on purpose.** Onboarding grants a *world's* agents the means to act;
 this grants the *installation's* broker an identity. They are different lifecycles: infra may be
@@ -13,7 +13,7 @@ false as soon as the broker is not on this machine.
 So there are two directions of trust, and they are established by two commands:
 
   clients verify a SERVICE     installation CA -> broker.crt, grafana.crt   this command
-  broker verifies its CLIENTS  each world CA   -> agent certificates        agora-mqtt <world>
+  broker verifies its CLIENTS  each world CA   -> agent certificates        orexis-mqtt <world>
 
 The only thing that crosses is one **public** file per world, `world/<w>/secrets/ca.crt`. On a
 single host this command reads it directly; on a split deployment it has to be delivered, and
@@ -54,7 +54,7 @@ def issue(host: str = DEFAULT_HOST, rotate: bool = False) -> None:
     """
     # Browser-facing: grafana is opened in one, and the broker shares this authority — a
     # browser verifying grafana must verify a signature made by this key.
-    ca = _ca(INFRA_SECRETS, "agora installation CA", rotate, browser_facing=True)
+    ca = _ca(INFRA_SECRETS, "orexis installation CA", rotate, browser_facing=True)
     for service, published in (("grafana", GRAFANA_DIR),):
         if _leaf(INFRA_SECRETS, service, host, ca, server=True, rotate=rotate,
                  browser_facing=True):
@@ -70,7 +70,7 @@ def issue(host: str = DEFAULT_HOST, rotate: bool = False) -> None:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
-        prog="agora-infra-certs",
+        prog="orexis-infra-certs",
         description="Issue the infrastructure's server certificates and assemble the "
                     "authorities the broker trusts. Not onboarding — run it where infra runs.",
     )

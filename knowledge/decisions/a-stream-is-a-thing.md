@@ -94,7 +94,7 @@ stated as a number: three sensors, two streams.
 
 # What did not happen: the credential stayed where it was
 
-[#81](https://github.com/ShishkinDmitriy/agora/issues/81) — the ESP32 authenticating as its own
+[#81](https://github.com/ShishkinDmitriy/orexis/issues/81) — the ESP32 authenticating as its own
 soil probe while its own credential sits unused — was attempted here and **reverted**, because it
 collides with a property this project already holds.
 
@@ -137,7 +137,7 @@ the prerequisite for #81, and it is not a decision to take inside a change about
   same board differently is a difference worth having. Until that is answered the ESP32 keeps
   authenticating as its probe and keeps a second credential with no grants.
 - **`_aimed_with` still compares topic strings.** It could ask the channel now, in every world
-  rather than only the wired one — [#78](https://github.com/ShishkinDmitriy/agora/issues/78) —
+  rather than only the wired one — [#78](https://github.com/ShishkinDmitriy/orexis/issues/78) —
   and was left alone because the wake policy it implements is the subject of that issue and
   changing both at once would make neither reviewable.
 - **A channel is derived by the MQTT package**, so the class lives with the transport whose

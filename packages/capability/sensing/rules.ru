@@ -17,18 +17,18 @@
 # Whether a given binding is COMPLETE (a pull sensor on a bus needs a command channel) is a
 # question for that transport's shapes, not for this rule.
 
-PREFIX sensing: <http://example.org/agora/sensing#>
-PREFIX mqtt: <http://example.org/agora/mqtt#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
+PREFIX mqtt: <http://example.org/orexis/mqtt#>
 PREFIX unit: <http://qudt.org/vocab/unit/>
 PREFIX schema: <https://schema.org/>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX review: <http://example.org/agora/review#>
+PREFIX review: <http://example.org/orexis/review#>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
-PREFIX ag:   <http://example.org/agora#>
+PREFIX ag:   <http://example.org/orexis#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 #  Both rules ask what a thing IS, literally — no `rdfs:subClassOf*` walk, because the
-#  vocabulary's entailments are asserted before any rule runs (agora/inference.py). What they
+#  vocabulary's entailments are asserted before any rule runs (orexis/inference.py). What they
 #  cannot do is name one graph: `sensing:polls` is the sovereign's and `a sensing:Sensor` may be entailed,
 #  so the two facts live apart and a single `GRAPH` clause would match neither pair. `$given`
 #  becomes the `USING` clauses that merge what is GIVEN — asserted and entailed — and

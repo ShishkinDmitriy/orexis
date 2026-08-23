@@ -1,12 +1,12 @@
-"""agora-compose — write the compose file for a world, from the world.
+"""orexis-compose — write the compose file for a world, from the world.
 
-  agora-compose society        -> world/society/compose.yaml
+  orexis-compose society        -> world/society/compose.yaml
 
 A world is self-contained: its topology, its agents' opening beliefs and the compose file that
 runs it all live in one directory. The roster is not typed here and not typed by you: it is
 read from `world/<name>/world.ttl`,
 the same file the belief base is seeded from. Adding an agent to the world and regenerating is
-the whole of deploying one. This is the same move `agora-acl` already makes for the store's
+the whole of deploying one. This is the same move `orexis-acl` already makes for the store's
 access list — derived, never hand-maintained, because a second list is a second thing to drift.
 
 **One container per agent, and that is not packaging taste.** An agent's belief base is a file
@@ -42,7 +42,7 @@ from agent.genesis import world_dir, worlds
 
 log = logging.getLogger("compose")
 
-IMAGE = "agora:local"
+IMAGE = "orexis:local"
 
 _ROSTER_Q = f"""
 SELECT ?id ?cap WHERE {{ 
@@ -66,7 +66,7 @@ def _bus_ports(world: str) -> tuple[int, int | None]:
     """The ports this world states. Two worlds are two brokers, so they must differ."""
     rows = ratified.rows(ratified.dataset(world), _BUS_PORTS_Q)
     if not rows:
-        raise SystemExit(f"agora-compose: world {world!r} declares no mqtt:MessageBus")
+        raise SystemExit(f"orexis-compose: world {world!r} declares no mqtt:MessageBus")
     tls = rows[0].get("tlsPort")
     return int(rows[0]["port"]), int(tls) if tls else None
 
@@ -130,14 +130,14 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
     return f"""
   agent-{agent_id}:
     image: {IMAGE}
-    command: ["agora-agent"]
+    command: ["orexis-agent"]
     environment:
-      AGORA_AGENT_ID: "{agent_id}"
+      OREXIS_AGENT_ID: "{agent_id}"
       # Where to keep its belief base. A named volume, because beliefs must survive a
       # restart — otherwise every start would be a partial re-birth.
-      AGORA_STORE: "/app/state"
+      OREXIS_STORE: "/app/state"
       # the ratified world, mounted below. The agent reads files, not a service.
-      AGORA_WORLD_DIR: "/app/world"
+      OREXIS_WORLD_DIR: "/app/world"
       # Where the three files mounted below live. The agent connects with the certificate when
       # the world states a TLS port and it holds one.
       MQTT_CERT: "/app/world/secrets/agent.crt"
@@ -147,7 +147,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       # where the series store is, and the org — safe for every agent to hold
       - ../../infra/.env
       # this agent's own bucket and a token that opens only it, and its own broker
-      # credential. Minted by `agora-influx` and `agora-mqtt` from this world; mounted into
+      # credential. Minted by `orexis-influx` and `orexis-mqtt` from this world; mounted into
       # THIS container and no other, which is what makes the isolation structural rather
       # than a promise. Run both tools before `up`, or these files do not exist.
       - ./secrets/influx-{agent_id}.env
@@ -159,7 +159,7 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
     restart: unless-stopped
     volumes:
       # its own belief base, and nobody else can name it
-      - agora-{world}-{agent_id}:/app/state
+      - orexis-{world}-{agent_id}:/app/state
       # the ratified world, at a fixed path — so the agent is told only its own id and never
       # learns that other worlds exist. Only the topology and ITS OWN opening beliefs: an
       # agent has no business reading what anyone else was authored to want.
@@ -337,7 +337,7 @@ def _meddler(world: str, rows: list[dict]) -> str:
   sim-meddler:
     build:
       context: ../../firmware/simulated-meddler
-    image: agora-meddler:local
+    image: orexis-meddler:local
     environment:
       MEDDLER_TOPICS: '{topics}'
       MEDDLER_MEAN_DAYS: "{row["strayDays"]}"{scale}
@@ -351,7 +351,7 @@ def _meddler(world: str, rows: list[dict]) -> str:
 
 
 def _persist_looks(world: str) -> int:
-    """The constitutional debounce (#180), read from the merged T-Box the way agora-firmware
+    """The constitutional debounce (#180), read from the merged T-Box the way orexis-firmware
     reads it for the boards: a stand-in must rehearse the same N consecutive looks, or the
     simulation promises a faster messenger than any real pot has."""
     from agent.ontology import SENSING
@@ -405,7 +405,7 @@ def _simulator(world: str, rows: list[dict]) -> str:
       # its own directory: it needs one file, and the repo root is excluded from image
       # contexts anyway — the agent image must not carry the simulator, nor it the agent
       context: ../../firmware/simulated-sensor
-    image: agora-simulator:local
+    image: orexis-simulator:local
     environment:
       SIM_SENSOR_ID: "{sim_id}"
       SIM_READING_TOPIC: "{row['readingTopic']}"
@@ -419,7 +419,7 @@ def _simulator(world: str, rows: list[dict]) -> str:
       MQTT_HOST: "localhost"
       MQTT_PORT: "{int(row['port'])}"{optional}
     env_file:
-      # its own credential, minted by `agora-mqtt` exactly as a board's is — the broker has no
+      # its own credential, minted by `orexis-mqtt` exactly as a board's is — the broker has no
       # way to tell a stand-in from hardware, which is the point
       - ./secrets/mqtt-{sim_id}.env
     network_mode: host
@@ -456,7 +456,7 @@ def _valve(world: str, row: dict) -> str:
       # its own directory: the repo root is excluded from image contexts, and firmware must not
       # carry the agent any more than the agent carries firmware
       context: ../../firmware/simulated-valve
-    image: agora-valve:local
+    image: orexis-valve:local
     environment:
       VALVE_ID: "{valve_id}"
       VALVE_COMMAND_TOPIC: "{row['commandTopic']}"
@@ -469,7 +469,7 @@ def _valve(world: str, row: dict) -> str:
       MQTT_HOST: "localhost"
       MQTT_PORT: "{int(row['port'])}"
     env_file:
-      # its own credential, minted by `agora-mqtt` exactly as a real valve's would be
+      # its own credential, minted by `orexis-mqtt` exactly as a real valve's would be
       - ./secrets/mqtt-{valve_id}.env
     network_mode: host
     restart: unless-stopped
@@ -501,24 +501,24 @@ def _broker(world: str, plain: int, tls: int | None) -> str:
     build:
       context: ../../infra/mosquitto
       dockerfile: Containerfile
-    image: agora-mosquitto:local
+    image: orexis-mosquitto:local
     ports: {ports}
     restart: unless-stopped
     volumes:
-      # generated by `agora-mqtt {world}` from this world's wiring and its stated ports
-      - ./mosquitto/agora.conf:/etc/mosquitto/conf.d/agora.conf:ro
+      # generated by `orexis-mqtt {world}` from this world's wiring and its stated ports
+      - ./mosquitto/orexis.conf:/etc/mosquitto/conf.d/orexis.conf:ro
       - ./mosquitto/passwd:/etc/mosquitto/passwd:ro
       - ./mosquitto/acl.conf:/etc/mosquitto/acl.conf:ro{tls_mounts}
       # retained cadences outlive a restart: a sleeping board must still receive the interval
       # its agent set before the broker bounced
-      - agora-{world}-mosquitto:/var/lib/mosquitto
+      - orexis-{world}-mosquitto:/var/lib/mosquitto
 """
 
 
 def render(world: str) -> str:
     who = roster(world)
     if not who:
-        raise SystemExit(f"agora-compose: world {world!r} declares no agents")
+        raise SystemExit(f"orexis-compose: world {world!r} declares no agents")
 
     plain, tls = _bus_ports(world)
     # One row per value, grouped back into one container per device: the query cannot return a
@@ -533,9 +533,9 @@ def render(world: str) -> str:
         _valve(world, row) for row in sorted(valves, key=lambda r: r["id"])) + (
         _meddler(world, meddler) if meddler else "") + "".join(
         _service(a, caps, world) for a, caps in who.items())
-    volumes = f"  agora-{world}-mosquitto:\n" + "".join(
-        f"  agora-{world}-{a}:\n" for a in who)
-    return f"""# GENERATED by `agora-compose {world}` from the world.ttl beside it — do not edit.
+    volumes = f"  orexis-{world}-mosquitto:\n" + "".join(
+        f"  orexis-{world}-{a}:\n" for a in who)
+    return f"""# GENERATED by `orexis-compose {world}` from the world.ttl beside it — do not edit.
 #
 # The roster is the ratified world. Add an agent there, regenerate, and it is deployed; there
 # is no second list to keep in step. Run from this directory:
@@ -552,7 +552,7 @@ def render(world: str) -> str:
 # cannot disturb another world, and adding a world restarts nothing. Two worlds may run at once
 # — but only if their DEVICES differ, since two agents on one topic both ingest.
 
-name: agora-{world}
+name: orexis-{world}
 
 # podman-compose puts every service in one pod by default, and a pod cannot combine with the
 # per-service user-namespace mapping below ("--userns and --pod cannot be set together"). The
@@ -590,7 +590,7 @@ def generate(world: str) -> Path:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
-        prog="agora-compose",
+        prog="orexis-compose",
         description="Generate the compose file for a world, from that world's roster.",
     )
     p.add_argument("world",

@@ -14,11 +14,11 @@
 # schedulable sensor (Observe — a board that can be ASKED to look; a push board looks on its own
 # clock and offers nothing to commit to).
 
-PREFIX intention: <http://example.org/agora/intention#>
-PREFIX sensing: <http://example.org/agora/sensing#>
-PREFIX actuation: <http://example.org/agora/actuation#>
-PREFIX market: <http://example.org/agora/market#>
-PREFIX ag:   <http://example.org/agora#>
+PREFIX intention: <http://example.org/orexis/intention#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
+PREFIX actuation: <http://example.org/orexis/actuation#>
+PREFIX market: <http://example.org/orexis/market#>
+PREFIX ag:   <http://example.org/orexis#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>

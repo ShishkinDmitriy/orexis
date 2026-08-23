@@ -1,12 +1,12 @@
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
-@prefix rgbled: <http://example.org/agora/rgb-led#> .
-@prefix : <http://example.org/agora/rgb-led#> .
-@prefix wokwi: <http://example.org/agora/wokwi#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix rgbled: <http://example.org/orexis/rgb-led#> .
+@prefix : <http://example.org/orexis/rgb-led#> .
+@prefix wokwi: <http://example.org/orexis/wokwi#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
 
-<http://example.org/agora/rgb-led> a owl:Ontology ;
+<http://example.org/orexis/rgb-led> a owl:Ontology ;
     rdfs:label "RGB LED" ;
     rdfs:comment """One part, its own package. Four legs: three driven and one common return.""" .
 

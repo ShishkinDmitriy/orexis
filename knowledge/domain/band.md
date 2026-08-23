@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Band
-term: http://example.org/agora/water#Band
+term: http://example.org/orexis/water#Band
 description: >-
   One of the three zones a region divides a property into — LOW, OK, HIGH — and the agent's
   verdict about its own subject rather than a fact about the number. Desire-relative by

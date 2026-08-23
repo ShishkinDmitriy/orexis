@@ -156,7 +156,7 @@ reference counting, no pinning, no unbounded graph.
 
 ## The mind's STATES are the kernel's; the ways of reaching them are the packages'
 
-Asked by the sovereign once the axes existed: if this is the core of Agora, should it be in
+Asked by the sovereign once the axes existed: if this is the core of Orexis, should it be in
 the `ag:` namespace? The first answer drawn here was "the frame yes, the contents no" — and
 the sovereign's follow-up corrected it, rightly. Two arguments settle it the other way:
 

@@ -116,13 +116,13 @@ def current_world() -> Path:
     """
     from . import config
 
-    explicit = config.env("AGORA_WORLD_DIR")
+    explicit = config.env("OREXIS_WORLD_DIR")
     if explicit:
         return Path(explicit)
-    named = config.env("AGORA_WORLD")
+    named = config.env("OREXIS_WORLD")
     if not named:
         raise SystemExit(
-            "no world: set AGORA_WORLD_DIR (a mounted world) or AGORA_WORLD (a name). "
+            "no world: set OREXIS_WORLD_DIR (a mounted world) or OREXIS_WORLD (a name). "
             "Available: " + (", ".join(worlds()) or "none on disk")
         )
     return world_dir(named)
@@ -265,7 +265,7 @@ def refresh_public(st: Store, world: Path) -> None:
     The entailments come first, and the order is the point: a derivation rule may then ask what
     a thing IS rather than spelling out a subclass path, because by the time it runs the answer
     is asserted. Both are materialisation, one step apart — what the vocabulary implies, then
-    what the wiring implies. See agora/inference.py.
+    what the wiring implies. See orexis/inference.py.
 
     **Each of the three lands somewhere different**, which is the whole of issue #58: the files
     go to the asserted graphs, the closure to the entailed ones, the rules to the derived one.
@@ -302,7 +302,7 @@ def refresh_public(st: Store, world: Path) -> None:
     for rule in loader.rule_files():
         st.update(substitute(rule.read_text(), st))
     # Last, because it describes the result: which graph holds what, in PROV-O, so the
-    # store answers that rather than this file's comments. See agora/provenance.py.
+    # store answers that rather than this file's comments. See orexis/provenance.py.
     provenance.describe(st, world, targets)
 
 
@@ -457,7 +457,7 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     wrote it — that is what makes beliefs the agent's rather than the sovereign's — so it can be
     older than the terms the code now asks for, and reading it would find nothing rather than
     fail. Last, because it is about what is in the store once everything that writes has run.
-    See agora/vocabulary.py and issue #87.
+    See orexis/vocabulary.py and issue #87.
     """
     st = Store(_belief_room(path))
     refresh_public(st, world)
@@ -469,7 +469,7 @@ def open_belief_base(world: Path, agent_id: str, path: str | None = None,
     # longer speaks, and refusing to boot over facts nobody declares any more would be
     # refusing over litter.
     drop_ghost_graphs(st, agent_id)
-    vocabulary.check(st, migrating=bool(config.env("AGORA_MIGRATE_BELIEFS")))
+    vocabulary.check(st, migrating=bool(config.env("OREXIS_MIGRATE_BELIEFS")))
     # Endowment comes AFTER the vocabulary check, deliberately: an aged volume's old
     # spellings would read as never-held pairs, and endowing before migrating re-authored a
     # belief the migration was about to convert — the same value twice, found by the

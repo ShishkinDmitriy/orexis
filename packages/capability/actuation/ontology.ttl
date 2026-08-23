@@ -1,13 +1,13 @@
-@prefix actuation: <http://example.org/agora/actuation#> .
-@prefix : <http://example.org/agora/actuation#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix : <http://example.org/orexis/actuation#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
-<http://example.org/agora/actuation> a owl:Ontology ;
-    rdfs:label "Agora actuation" ;
+<http://example.org/orexis/actuation> a owl:Ontology ;
+    rdfs:label "Orexis actuation" ;
     rdfs:comment """Touching the physical world. Held by the RESOURCE OWNER, not by the agent that won — a claim is a claim on the owner, redeemed by it. Dosing is a fact about the hardware and is stated on the device, so recalibrating is a genesis edit rather than a code change.""" .
 
 :Actuation a ag:Capability ; rdfs:label "Actuation" ;

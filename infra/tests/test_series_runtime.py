@@ -1,7 +1,7 @@
 """What a running series store does with a token scoped to one bucket.
 
 The twin of `test_bus_acl_runtime.py`, for the other shared service.
-`backend/tests/test_isolation.py` checks what `agora-influx` *decides* — a bucket each, names
+`backend/tests/test_isolation.py` checks what `orexis-influx` *decides* — a bucket each, names
 that cannot collide across worlds. This file checks what InfluxDB then *enforces*, which is the
 part the whole design rests on and which no amount of reading the credential files can establish.
 That split is why it lives here and not with the unit tests: it is a contract with this
@@ -9,7 +9,7 @@ infrastructure, and it says nothing at all without a store running.
 
 The claim under test is the one in the decision record: an agent may read and write its own
 history and is refused its neighbour's. That is a property of Influx's permission model, not of
-anything Agora computes, so it belongs here and it is worth re-proving whenever the store is
+anything Orexis computes, so it belongs here and it is worth re-proving whenever the store is
 upgraded — change the image in `infra/compose.yaml`, re-run this file, and see.
 
 Run it deliberately, with infra up:
@@ -45,7 +45,7 @@ def admin():
         token = influx_admin._admin_token()
     except influx_admin.AdminError as exc:
         pytest.skip(str(exc))
-    url, org = env("INFLUX_URL", "http://localhost:8086"), env("INFLUX_ORG", "agora")
+    url, org = env("INFLUX_URL", "http://localhost:8086"), env("INFLUX_ORG", "orexis")
     client = InfluxDBClient(url=url, token=token, org=org)
     try:
         if not client.ping():
@@ -62,7 +62,7 @@ def admin():
 
 class Grant:
     """One throwaway bucket and a token that opens only it — an agent's whole relationship
-    with the store, in the shape `agora-influx` creates it."""
+    with the store, in the shape `orexis-influx` creates it."""
 
     def __init__(self, bucket, token):
         self.bucket = bucket
@@ -77,11 +77,11 @@ def grants(admin):
     made, url = [], env("INFLUX_URL", "http://localhost:8086")
 
     def mint() -> Grant:
-        name = f"agora-test-{uuid.uuid4().hex[:10]}"
+        name = f"orexis-test-{uuid.uuid4().hex[:10]}"
         bucket = buckets_api.create_bucket(bucket_name=name, org_id=organisation.id)
         resource = PermissionResource(id=bucket.id, org_id=organisation.id, type="buckets")
         auth = auth_api.create_authorization(authorization=Authorization(
-            org_id=organisation.id, description=f"agora test {name}",
+            org_id=organisation.id, description=f"orexis test {name}",
             permissions=[Permission(action="read", resource=resource),
                          Permission(action="write", resource=resource)]))
         made.append((bucket, auth))
@@ -166,7 +166,7 @@ def test_an_agent_is_refused_its_neighbours_bucket(admin, grants):
 def test_revoking_a_token_takes_effect_at_once(admin, grants):
     """No reload, no restart, and no grace period — unlike the bus, which needs a SIGHUP.
 
-    Influx checks the token on every request, so `agora-influx --rotate` (which replaces the
+    Influx checks the token on every request, so `orexis-influx --rotate` (which replaces the
     authorization) locks the old credential out immediately. What it does NOT do is re-key a
     running agent: the agent was handed its token in an env_file at container creation and holds
     it in memory, so a rotation takes that agent off the store until it is recreated. Rotation is
@@ -179,7 +179,7 @@ def test_revoking_a_token_takes_effect_at_once(admin, grants):
         assert _read(agent, mine.bucket) == [0.5]
 
         held = next(a for a in client.authorizations_api().find_authorizations()
-                    if a.description == f"agora test {mine.bucket}")
+                    if a.description == f"orexis test {mine.bucket}")
         client.authorizations_api().delete_authorization(held)
 
         with pytest.raises(Exception) as refused:

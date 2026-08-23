@@ -32,7 +32,7 @@ from agent import loader
 
 # The project's namespace root. A constant in a LINTER, not in agent code: the check must
 # say whose terms it polices, exactly as the prefix guard names store.PREFIXES.
-PROJECT_ROOT_NS = "http://example.org/agora"
+PROJECT_ROOT_NS = "http://example.org/orexis"
 
 _FULL_IRI = re.compile(r"<(" + re.escape(PROJECT_ROOT_NS) + r"[^>\s]*)>")
 _BARE_IRI = re.compile(r'"(' + re.escape(PROJECT_ROOT_NS) + r'[^"\s<>]*)"')

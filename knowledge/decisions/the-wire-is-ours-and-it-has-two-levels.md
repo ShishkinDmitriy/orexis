@@ -63,7 +63,7 @@ So the relation between the axes is **constraint, not determination**. Physical 
 tells you what *could* share a message: one radio can only send one at a time. What *does* share
 one is a fact about the binding, and a board with one radio could publish on three topics without
 contradicting anything physical. That is why the topic question in
-[#51](https://github.com/ShishkinDmitriy/agora/issues/51) was not derivable from the hardware and
+[#51](https://github.com/ShishkinDmitriy/orexis/issues/51) was not derivable from the hardware and
 had to be settled against the credential model instead.
 
 # Decision — the credential is the principal's, the encoding is the stream's
@@ -93,7 +93,7 @@ symptom.
 The shape of the answer is already visible in the code. `onboarding/mqtt.py` holds
 `Principal.grants` as `set[(read|write, topic)]` — **a set of directed channels.** The ACL is not a
 list of permissions bolted onto a connection; it is that connection's stream list, written in the
-form mosquitto wants. Which makes [#81](https://github.com/ShishkinDmitriy/agora/issues/81)'s
+form mosquitto wants. Which makes [#81](https://github.com/ShishkinDmitriy/orexis/issues/81)'s
 *"a peripheral's topics roll up into its board's grants"* a consequence rather than a rule.
 
 The concept is not new either. `onboarding/mqtt.py` has carried it since
@@ -162,10 +162,10 @@ principal, and its sensors' topics are its grants.
 - **The blocker dissolves rather than resolving.** Moving the codec needs no answer to *what is a
   platform without hardware*, because a platform was never the right bearer.
 - **The platform layer keeps its own work.** Physical decomposition is what
-  [#59](https://github.com/ShishkinDmitriy/agora/issues/59) needs for a board's honourable
+  [#59](https://github.com/ShishkinDmitriy/orexis/issues/59) needs for a board's honourable
   interval range, and what gives the DHT11's two channels a parent. It is not diminished by not
   carrying the wire.
-- **[#78](https://github.com/ShishkinDmitriy/agora/issues/78) gets a bearer too.** A wake is one
+- **[#78](https://github.com/ShishkinDmitriy/orexis/issues/78) gets a bearer too.** A wake is one
   connection waking, so `_aimed_with` comparing command-topic strings could ask the principal
   instead — in every world, not only the wired one.
 - **A third kind of node joins the model**, after the agent and the sensor. Worth watching that it
@@ -181,7 +181,7 @@ principal, and its sensors' topics are its grants.
   rather than resolved.
 - **The firmware's identity is wrong and unfixed.** Filed rather than folded in, because changing
   which principal a board connects as rewrites its credential and its ACL — the regression class
-  that [#62](https://github.com/ShishkinDmitriy/agora/pull/62) belongs to — and needs a reflash to
+  that [#62](https://github.com/ShishkinDmitriy/orexis/pull/62) belongs to — and needs a reflash to
   match.
 - **The procedural axis stays unadopted.** `ssn:System` and `ssn:hasSubSystem` are the right terms
   the day something needs them, and `sensing:senseMode`'s values are `sosa:Procedure`s by definition —

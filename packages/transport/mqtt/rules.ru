@@ -15,8 +15,8 @@
 # would collide with a topic containing a literal `.` and the collision would silently MERGE two
 # streams. A derived node has to be stable and distinct; nothing looks one up by name.
 
-PREFIX mqtt: <http://example.org/agora/mqtt#>
-PREFIX ag: <http://example.org/agora#>
+PREFIX mqtt: <http://example.org/orexis/mqtt#>
+PREFIX ag: <http://example.org/orexis#>
 
 #  Where a device SENDS: what it read, or what it did.
 INSERT { GRAPH $derived {
@@ -25,7 +25,7 @@ INSERT { GRAPH $derived {
 $given
 WHERE  {
     { ?device mqtt:readingTopic ?topic } UNION { ?device mqtt:statusTopic ?topic }
-    BIND(IRI(CONCAT("http://example.org/agora#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
+    BIND(IRI(CONCAT("http://example.org/orexis#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
 } ;
 
 #  Where a device RECEIVES: a cadence for a sensor, a dose for a valve.
@@ -35,5 +35,5 @@ INSERT { GRAPH $derived {
 $given
 WHERE  {
     ?device mqtt:commandTopic ?topic .
-    BIND(IRI(CONCAT("http://example.org/agora#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
+    BIND(IRI(CONCAT("http://example.org/orexis#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
 }

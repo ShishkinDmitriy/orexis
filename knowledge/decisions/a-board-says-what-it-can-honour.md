@@ -25,7 +25,7 @@ The world says how a device is **driven** — `sensing:senseMode`, from which it
 capability is derived — and never what it can **do**. So an agent could be committed to a
 ten-second cadence a board would not keep, `stale_after_s` would compute freshness from the
 interval it *asked* for, and every reading would arrive later than expected: **a healthy board
-reading as a quiet one**, which is [#53](https://github.com/ShishkinDmitriy/agora/issues/53)
+reading as a quiet one**, which is [#53](https://github.com/ShishkinDmitriy/orexis/issues/53)
 reached from the other direction.
 
 # The term already existed, and its definition is why
@@ -41,7 +41,7 @@ reads as a floor and maps onto `review:notBelow` with nothing to convert. And **
 Conditions" is in the definition itself**, which is why a capability is qualified by an
 `ssn-system:Condition` rather than being one number with a caveat: *ten seconds on mains* and
 *fifteen minutes on battery* are two capabilities of one device, and
-[#78](https://github.com/ShishkinDmitriy/agora/issues/78)'s whole argument is that the right wake
+[#78](https://github.com/ShishkinDmitriy/orexis/issues/78)'s whole argument is that the right wake
 depends on the power budget.
 
 The prose specification truncates before this term in every rendering tried. It came from the
@@ -79,7 +79,7 @@ So:
 `mc:carries rdfs:subPropertyOf sosa:hosts` was the same move from the other direction, and this is
 the second instance — enough to call it the shape rather than the exception.
 
-It is restated in `packages/capability/sensing/ontology.ttl`, not in `packages/core/agora/`, though the
+It is restated in `packages/capability/sensing/ontology.ttl`, not in `packages/core/orexis/`, though the
 subject is a class this package does not own. The axiom is load-bearing only because sensors have
 capabilities, and sensing is where a sensor is; the kernel would be asserting it on behalf of a
 package that may not be installed.
@@ -153,8 +153,8 @@ terms nothing uses is how a vocabulary rots:
 
 | issue | terms |
 |---|---|
-| [#78](https://github.com/ShishkinDmitriy/agora/issues/78) — the wake a shared channel resolves to | `ssn-system:OperatingPowerRange`, `BatteryLifetime` — *"Total useful life of a System's battery in the specified Conditions"* |
-| [#26](https://github.com/ShishkinDmitriy/agora/issues/26) — interpreting raw counts | `MeasurementRange` (*"the set of values the Sensor can return"*), `Accuracy`, `Resolution`, `Drift` (*"a continuous or incremental change in the reported values over time for an unchanging Property"*), `MaintenanceSchedule` |
+| [#78](https://github.com/ShishkinDmitriy/orexis/issues/78) — the wake a shared channel resolves to | `ssn-system:OperatingPowerRange`, `BatteryLifetime` — *"Total useful life of a System's battery in the specified Conditions"* |
+| [#26](https://github.com/ShishkinDmitriy/orexis/issues/26) — interpreting raw counts | `MeasurementRange` (*"the set of values the Sensor can return"*), `Accuracy`, `Resolution`, `Drift` (*"a continuous or incremental change in the reported values over time for an unchanging Property"*), `MaintenanceSchedule` |
 
 `Drift` is the one to notice: it is the reason a calibration is re-run, so #26's calibration mode
 has a term for *why* before it has one for *how*.
@@ -176,7 +176,7 @@ has a term for *why* before it has one for *how*.
   and nothing here is battery-powered.
 - **The carry is per-agent, not per-sensor.** An agent polling a fast board and a slow one is held
   to the slow one for *both*, because a cadence is a property of the wake and
-  [#78](https://github.com/ShishkinDmitriy/agora/issues/78) owns whether one board may wake apart
+  [#78](https://github.com/ShishkinDmitriy/orexis/issues/78) owns whether one board may wake apart
   from another.
 - **Nothing checks a floor against reality.** A world may state that a board honours ten minutes
   when it honours ten seconds; the society believes it, exactly as it believes a topic.

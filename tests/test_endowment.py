@@ -14,12 +14,12 @@ from agent import genesis
 from agent.ontology import beliefs_graph
 from agent.store import Store, bindings
 
-NS = "http://example.org/agora/world/simulation#"
-MARKET = "http://example.org/agora/market#"
-DESIRE = "http://example.org/agora#"
-PROLOG = """@prefix : <http://example.org/agora/world/simulation#> .
-@prefix market: <http://example.org/agora/market#> .
-@prefix ag:   <http://example.org/agora#> .
+NS = "http://example.org/orexis/world/simulation#"
+MARKET = "http://example.org/orexis/market#"
+DESIRE = "http://example.org/orexis#"
+PROLOG = """@prefix : <http://example.org/orexis/world/simulation#> .
+@prefix market: <http://example.org/orexis/market#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
 """
@@ -67,7 +67,7 @@ def test_a_structure_arrives_whole(tmp_path):
     assert genesis.birth(st, world, "dealer")
 
     world_with(tmp_path, """:dealer market:hasEndowment 50.0 ;
-        ag:aims [ ssn:forProperty <http://example.org/agora/water#StoredLitres> ;
+        ag:aims [ ssn:forProperty <http://example.org/orexis/water#StoredLitres> ;
                       schema:value 3.0 ] .""")
     assert genesis.endow(st, world, "dealer") == [DESIRE + "aims"]
     rows = bindings(st.query(f"""

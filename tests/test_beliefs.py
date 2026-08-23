@@ -23,11 +23,11 @@ def regions(agent_id, agent_uri):
     which derives them — deduced, not believed, and since #312 not in the belief base at all."""
     return regions_of(desires_build(genesis_store(), agent_id).query_union, agent_uri)
 
-FERN = "http://example.org/agora/world/simulation#fern_agent"
-FERN_URI = "http://example.org/agora/world/simulation#fern"  # the plant, not the agent that acts for it
-SUCCULENT = "http://example.org/agora/world/simulation#succulent_agent"
-SUPPLIER = "http://example.org/agora/world/simulation#supplier"
-CITY = "http://example.org/agora/world/simulation#city"
+FERN = "http://example.org/orexis/world/simulation#fern_agent"
+FERN_URI = "http://example.org/orexis/world/simulation#fern"  # the plant, not the agent that acts for it
+SUCCULENT = "http://example.org/orexis/world/simulation#succulent_agent"
+SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
+CITY = "http://example.org/orexis/world/simulation#city"
 
 
 @pytest.fixture
@@ -141,7 +141,7 @@ def test_a_missing_belief_is_an_error_not_a_default(query):
     #
     # A literal, not a kernel constant: `ontology.WATER` left with #148 — the kernel names no
     # domain — so the test names the domain the way the one deliberately-coupled block does.
-    assert "http://example.org/agora/water#maxValuePerL" in str(exc.value)
+    assert "http://example.org/orexis/water#maxValuePerL" in str(exc.value)
     assert "city" in str(exc.value)
 
 
@@ -164,12 +164,12 @@ def _reading(age_s):
 
 def test_reads_its_subject(query_with_readings):
     b = Beliefs(genesis_store({"fern": 0.18}), "fern")
-    reading = b.current_reading("http://example.org/agora/world/simulation#fern", MOISTURE)
+    reading = b.current_reading("http://example.org/orexis/world/simulation#fern", MOISTURE)
     assert reading.value == 0.18 and reading.is_fresh(120)
 
 
 def test_no_reading_yet_is_none(fern):
-    assert fern.current_reading("http://example.org/agora/world/simulation#fern", MOISTURE) is None
+    assert fern.current_reading("http://example.org/orexis/world/simulation#fern", MOISTURE) is None
 
 
 def test_two_properties_of_one_subject_both_survive(query_with_readings):

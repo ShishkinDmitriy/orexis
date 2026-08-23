@@ -19,7 +19,7 @@ from .terms import BIDDING, HOSTING, term
 BANDS = ("LOW", "OK", "HIGH")
 
 # See the note inside BIDDING_PICKS: the domain coupling is this package's, stated here.
-_WATER = "http://example.org/agora/water#"
+_WATER = "http://example.org/orexis/water#"
 
 
 @dataclass(frozen=True)

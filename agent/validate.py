@@ -13,7 +13,7 @@ Where each check lives follows from who owns the data:
 - **the ratified world** is checked centrally, against the files, because there is one world
   and it is public. That is the sovereign's check on their own authorship.
 
-  agora-validate [world]
+  orexis-validate [world]
 
 See knowledge/decisions/where-the-belief-base-lives.md.
 """
@@ -64,7 +64,7 @@ _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 #  filter hid exactly the results it exists to preserve, and four tests caught it.
 _RESULT = re.compile(r"(?=(?:Constraint Violation|Validation Result) in )")
 _SHOULD_BECOME_FORMS = ("Severity: ag:ShouldBecome",
-                        "Severity: <http://example.org/agora#ShouldBecome>")
+                        "Severity: <http://example.org/orexis#ShouldBecome>")
 
 
 def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
@@ -87,7 +87,7 @@ def conforms(data: rdflib.Graph, focus: str | None = None) -> tuple[bool, str]:
     **`inference` is off, and that is the point rather than an economy.** It used to be `"rdfs"`,
     which let pyshacl entail what the vocabulary implies — and the runtime entailed nothing, so a
     world could satisfy a shape about a relationship the code would never observe. That is now
-    asserted once, into the store, by `agora/inference.py`, and the caller passes the graph that
+    asserted once, into the store, by `orexis/inference.py`, and the caller passes the graph that
     holds it. Two engines, one closure, and `tests/test_inference.py` fails if they ever diverge.
 
     The caller must therefore include the ONTOLOGY graph in `data`. Adding the files on top is
@@ -138,7 +138,7 @@ def _without_wants(report: str) -> str:
 
     A want is a shape and an unmet want is a result, so once desires compiled to SHACL every
     report grew one block per property nobody has read yet — which at genesis is all of them.
-    `agora-validate` printed forty lines about a world it was accepting. The gap is not a
+    `orexis-validate` printed forty lines about a world it was accepting. The gap is not a
     finding about the world: it is the state of one, and `gap.rq` is where to ask for it.
 
     Violations and warnings stay, header and all. The count is rewritten so it agrees with
@@ -168,11 +168,11 @@ def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
     """
     held = rdflib.Graph()
     for shape in data.objects(rdflib.URIRef(agent_uri),
-                              rdflib.URIRef("http://example.org/agora#holds")):
+                              rdflib.URIRef("http://example.org/orexis#holds")):
         held += data.cbd(shape)
     #  A graph carved out of another keeps its spellings. pySHACL renders the report through
     #  the shapes graph's namespaces, so without this the second pass printed
-    #  `<http://example.org/agora#ShouldBecome>` where the first printed `ag:ShouldBecome` —
+    #  `<http://example.org/orexis#ShouldBecome>` where the first printed `ag:ShouldBecome` —
     #  one severity in two spellings, in one report, for no reason a reader could see.
     for prefix, namespace in data.namespaces():
         held.bind(prefix, namespace)

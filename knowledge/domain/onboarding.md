@@ -20,27 +20,27 @@ to run in. That is what the word means for a person joining anything — not dec
 may do, which was settled earlier, but handing them the keys that let them do it.
 
 ```bash
-agora-onboard <world>
+orexis-onboard <world>
 ```
 
 # What it grants
 
 | tool | grants | derived from |
 |---|---|---|
-| `agora-influx` | a bucket per agent, and a token that opens only it | who the agents are |
-| `agora-mqtt` | a credential per principal, the broker ACL, **and a certificate per agent** | what each agent is wired to |
-| `agora-compose` | the roster, as services | the roster, and who actuates |
-| `agora-dashboards` | a Grafana folder per world: what was measured, and how the agents are | what each agent observes, and the roster |
-| `agora-firmware` | a board's `config.h` | the broker, the ids and topics, the pins, the calibration, the credential |
+| `orexis-influx` | a bucket per agent, and a token that opens only it | who the agents are |
+| `orexis-mqtt` | a credential per principal, the broker ACL, **and a certificate per agent** | what each agent is wired to |
+| `orexis-compose` | the roster, as services | the roster, and who actuates |
+| `orexis-dashboards` | a Grafana folder per world: what was measured, and how the agents are | what each agent observes, and the roster |
+| `orexis-firmware` | a board's `config.h` | the broker, the ids and topics, the pins, the calibration, the credential |
 
-`agora-onboard` runs the first four, after `agora-validate` — which itself begins with the
+`orexis-onboard` runs the first four, after `orexis-validate` — which itself begins with the
 LINK step (#210): every project-namespace IRI the loaded packages reference must be declared
 by some loaded ontology, or the world is refused naming the dangling term. A reference to a
 term nobody declares matches nothing, and an empty result is not an error — the linker is
 what makes that silence a gate instead of a hazard. They remain separately callable,
 because rotating one service's credentials should not touch the other's.
 
-`agora-firmware` is deliberately **not** in the umbrella. It writes into a firmware project rather
+`orexis-firmware` is deliberately **not** in the umbrella. It writes into a firmware project rather
 than granting anything, and it is only useful when a board is in front of you — onboarding a world
 should not touch a source tree you are about to build from.
 
@@ -56,14 +56,14 @@ the single source, and anything that could drift from it is computed instead of 
 
 Validation comes first for a reason worth stating. Onboarding a world that does not hold
 together mints real credentials for agents that will then refuse to start, and leaves them lying
-around — so `agora-onboard` refuses rather than grants.
+around — so `orexis-onboard` refuses rather than grants.
 
 # Two ways to prove who you are, one way to be authorised
 
 Agents connect on `mqtt:brokerTlsPort` with a **client certificate**; boards connect on
 `mqtt:brokerPort` with a **password**. Same bus, same topics, and — this is the point — the same
 generated ACL. Mosquitto's `use_identity_as_username true` takes the certificate's CN as the
-username, and `agora-mqtt` issues each agent a certificate whose CN *is* the world-qualified
+username, and `orexis-mqtt` issues each agent a certificate whose CN *is* the world-qualified
 username it already derived. So a certificate is a different way of proving who you are, not a
 different notion of who you are, and there is no second mapping to drift.
 
@@ -93,7 +93,7 @@ a world was born.
 certificate issued by one must not authenticate into the other, the same argument that gives each
 world its own signing keys. The broker's own identity belongs to neither — it serves every world
 — so it is signed by an installation CA, and issuing it is a **separate command with a separate
-lifecycle**, `agora-broker-cert`. Infra may be deployed at another time on another host by
+lifecycle**, `orexis-broker-cert`. Infra may be deployed at another time on another host by
 someone holding none of these worlds; onboarding a world must not require write access to it. The
 only thing crossing that line is one public file per world, its `ca.crt`.
 
@@ -101,10 +101,10 @@ only thing crossing that line is one public file per world, its `ca.crt`.
 
 A dashboard listing agents by hand is a second list to drift, and it had already drifted: the one
 shipped here queried a bucket named `sensors`, which has not existed since each agent got one of
-its own. It is derived now — a panel per watcher, against the bucket `agora-influx` actually
+its own. It is derived now — a panel per watcher, against the bucket `orexis-influx` actually
 created.
 
-Two dashboards, not one: `agora.json` is what the plants are doing, `health.json` is whether the
+Two dashboards, not one: `orexis.json` is what the plants are doing, `health.json` is whether the
 society reporting it is still working — see [agent-metrics](/domain/agent-metrics.md). They are
 separate because a flat-zero write-failure count next to a moisture curve reads as noise until
 the moment it is the only thing that matters.
@@ -118,9 +118,9 @@ service read access to every world's private keys.
 
 ## A board is told the same things the agents are
 
-`agora-firmware` generates a board's `config.h` from the world: the broker and port from
+`orexis-firmware` generates a board's `config.h` from the world: the broker and port from
 `mqtt:MessageBus`, the ids and topics from the society, the pin and the calibration from the stand,
-the credential from `agora-mqtt`, the cadence bounds from the ontology. Every one of those was
+the credential from `orexis-mqtt`, the cadence bounds from the ontology. Every one of those was
 already written down; the header was a second copy, and the expensive kind — correcting it means
 retrieving the board.
 
@@ -168,7 +168,7 @@ See the lifecycle table in [agent](/domain/agent.md).
 
 `onboarding/` is a package of its own, installed separately, and **not** in the agent image.
 
-The reason is the admin token. `agora-influx` reads it from `infra/secrets/`, and it opens every
+The reason is the admin token. `orexis-influx` reads it from `infra/secrets/`, and it opens every
 bucket in the store — it is the one credential no agent may ever hold. The belief base is
 private to its agent because nothing else can reach it, and the same argument applies here: the
 surest way for an agent never to hold the admin token is for the code that uses it to be absent
@@ -184,7 +184,7 @@ tool that mints credentials for all of them.
 
 Not by file, because three modules serve both sides. By **who calls it**:
 
-| stays in `agora` (the agent runs it) | moved to `onboarding` (only the sovereign runs it) |
+| stays in `orexis` (the agent runs it) | moved to `onboarding` (only the sovereign runs it) |
 |---|---|
 | `genesis.open_belief_base`, `current_world` — an agent builds its belief base at boot | |
 | `validate.validate_agent` — an agent checks *itself* and refuses to start | `validate_world` — does this world hold together *at all*, before anything starts |
@@ -195,7 +195,7 @@ can do nothing else with them; an agent that could *mint* a society's keys could
 society — authorise a match it never won, and validate its own claim. Same argument as the
 admin token, one level down.
 
-`conforms` and `graph_from` are public in `agora.validate` because both checks run the same
+`conforms` and `graph_from` are public in `orexis.validate` because both checks run the same
 machinery over the same graphs. Two ways to decide whether beliefs hold would be one too many.
 
 See [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
@@ -208,14 +208,14 @@ See [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
   anything holding an old one is locked out until restarted with the new. There is no staged
   rotation.
 - **Certificates expire; passwords did not.** That is a new failure mode: an agent whose certificate lapsed stops connecting and looks
-  exactly like a process that went quiet. Re-running `agora-onboard` reissues anything within 30
+  exactly like a process that went quiet. Re-running `orexis-onboard` reissues anything within 30
   days of expiry, so the routine cure is the routine command — but nothing warns you first.
 - **A board belongs to one world.** Its credential lives in `world/<w>/secrets/`, like an
   agent's, because a board is flashed with one host and port and so connects to exactly one
   world's broker. A board serving two worlds holds two credentials and is re-flashed to move —
   it was already being re-flashed with that world's port. This was the last secret spanning
   worlds; nothing in `infra/` is world-specific any more.
-- **A board is configured but still flashed by hand.** `agora-firmware <world>` writes its
+- **A board is configured but still flashed by hand.** `orexis-firmware <world>` writes its
   `config.h` from the world, so nothing in it is typed twice — but getting it onto the board is
   still `pio run -t upload` with the board in front of you. That is the remaining manual step,
   and it is hardware's nature rather than a gap here.

@@ -1,11 +1,11 @@
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
-@prefix i2c: <http://example.org/agora/i2c#> .
-@prefix : <http://example.org/agora/i2c#> .
-@prefix mc: <http://example.org/agora/microcontroller#> .
+@prefix i2c: <http://example.org/orexis/i2c#> .
+@prefix : <http://example.org/orexis/i2c#> .
+@prefix mc: <http://example.org/orexis/microcontroller#> .
 
-<http://example.org/agora/i2c> a owl:Ontology ;
+<http://example.org/orexis/i2c> a owl:Ontology ;
     rdfs:label "I2C" ;
     rdfs:comment """A protocol. Two lines, one of them bidirectional, shared by any number of devices — which is why it is a package of its own rather than a property of whichever part happens to use it first. Nothing on the bench speaks it yet; the vocabulary is here because it was already in the core, and moving it out is what made the core stop being a list of everything.""" .
 

@@ -3,11 +3,11 @@
 # An agent plumbed into a market is a bidder there; the one that owns the venue hosts it.
 # Neither is a declaration — both are consequences of how the world is wired.
 
-PREFIX review: <http://example.org/agora/review#>
-PREFIX sensing: <http://example.org/agora/sensing#>
-PREFIX ag:   <http://example.org/agora#>
+PREFIX review: <http://example.org/orexis/review#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
+PREFIX ag:   <http://example.org/orexis#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX market: <http://example.org/agora/market#>
+PREFIX market: <http://example.org/orexis/market#>
 
 #  `$given` becomes the `USING` clauses naming every public graph, and `$derived` the graph
 #  conclusions land in — substituted by the loader, because a rule should say what it concludes
@@ -97,7 +97,7 @@ WHERE  {
     OPTIONAL { ?source market:redeemWindowS ?window }
     ?owner market:matchesBy ?matching .
     ?matching a market:BidMatchingCapability .
-    BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?srcId))) AS ?market)
+    BIND(IRI(CONCAT("http://example.org/orexis#market.", ENCODE_FOR_URI(?srcId))) AS ?market)
     BIND(CONCAT(?srcId, "_market") AS ?marketId)
     BIND(CONCAT("market/", ?srcId, "/offer")  AS ?offer)
     BIND(CONCAT("market/", ?srcId, "/bid")    AS ?bid)
@@ -131,13 +131,13 @@ WHERE  {
     ?owner market:matchesBy ?matching .
     ?matching a market:BidMatchingCapability .
     ?source market:supplies ?good .
-    ?valve <http://example.org/agora/actuation#drawsFrom> ?source ;
-           <http://example.org/agora/actuation#actuates> ?pot .
+    ?valve <http://example.org/orexis/actuation#drawsFrom> ?source ;
+           <http://example.org/orexis/actuation#actuates> ?pot .
     ?buyer ag:actsFor ?pot .
     ?pot <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
     ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
     ?cond <http://www.w3.org/ns/ssn/forProperty> ?prop .
     ?valuation market:ofGood ?good ; market:aboutProperty ?prop .
     FILTER(?buyer != ?owner)
-    BIND(IRI(CONCAT("http://example.org/agora#market.", ENCODE_FOR_URI(?srcId))) AS ?market)
+    BIND(IRI(CONCAT("http://example.org/orexis#market.", ENCODE_FOR_URI(?srcId))) AS ?market)
 }

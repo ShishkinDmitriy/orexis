@@ -1,5 +1,5 @@
-@prefix desire: <http://example.org/agora/desire#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix desire: <http://example.org/orexis/desire#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -16,8 +16,8 @@ That failure is the one this whole design is most exposed to, because its sympto
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora#hasCapability>
-                      <http://example.org/agora/desire#Deducing> .
+                ?this <http://example.org/orexis#hasCapability>
+                      <http://example.org/orexis/desire#Deducing> .
             }
         """ ] ;
     sh:property [ sh:path ag:holds ; sh:minCount 1 ;
@@ -30,7 +30,7 @@ Every figure here was computed, so this is arithmetic rather than authorship —
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?agent <http://example.org/agora#holds> ?this .
+                ?agent <http://example.org/orexis#holds> ?this .
                 ?this a <http://www.w3.org/ns/shacl#NodeShape> .
             }
         """ ] ;
@@ -81,24 +81,24 @@ Every figure here was computed, so this is arithmetic rather than authorship —
                 $this <http://www.w3.org/ns/ssn/forProperty> ?property ;
                       <http://www.w3.org/ns/shacl#property> ?below , ?above .
                 ?below <http://www.w3.org/ns/shacl#severity>
-                       <http://example.org/agora#ShouldBecome> ;
-                       <http://example.org/agora#violationIs> <http://example.org/agora#Below> ;
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
                        <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
                 ?above <http://www.w3.org/ns/shacl#severity>
-                       <http://example.org/agora#ShouldBecome> ;
-                       <http://example.org/agora#violationIs> <http://example.org/agora#Above> ;
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
                        <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
                 OPTIONAL {
-                    ?agent <http://example.org/agora#holds> $this , ?envelope .
+                    ?agent <http://example.org/orexis#holds> $this , ?envelope .
                     ?envelope <http://www.w3.org/ns/ssn/forProperty> ?property ;
                               <http://www.w3.org/ns/shacl#property> ?underFloor , ?overCeiling .
                     ?underFloor <http://www.w3.org/ns/shacl#severity>
                                 <http://www.w3.org/ns/shacl#Warning> ;
-                                <http://example.org/agora#violationIs> <http://example.org/agora#Below> ;
+                                <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
                                 <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?floor .
                     ?overCeiling <http://www.w3.org/ns/shacl#severity>
                                  <http://www.w3.org/ns/shacl#Warning> ;
-                                 <http://example.org/agora#violationIs> <http://example.org/agora#Above> ;
+                                 <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
                                  <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?ceiling }
                 FILTER(   ?low > ?high
                        || (BOUND(?floor)   && ?low  < ?floor)
@@ -127,10 +127,10 @@ desire:AimShape a sh:NodeShape ;
         sh:message "an aim names a property this agent holds no region in — a pick with nothing to pick inside is a number with nothing behind it" ;
         sh:select """
             SELECT $this ?property WHERE {
-                $this <http://example.org/agora#aims> ?aim .
+                $this <http://example.org/orexis#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora#holds> ?shape .
+                    $this <http://example.org/orexis#holds> ?shape .
                     ?shape <http://www.w3.org/ns/ssn/forProperty> ?property .
                 }
             }""" ] ;
@@ -138,19 +138,19 @@ desire:AimShape a sh:NodeShape ;
         sh:message "the aim sits outside the region this agent deduced for that property — a desire is a pick within a range, not a number of its own" ;
         sh:select """
             SELECT $this ?value WHERE {
-                $this <http://example.org/agora#aims> ?aim .
+                $this <http://example.org/orexis#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
                      <https://schema.org/value> ?value .
-                $this <http://example.org/agora#holds> ?shape .
+                $this <http://example.org/orexis#holds> ?shape .
                 ?shape <http://www.w3.org/ns/ssn/forProperty> ?property ;
                        <http://www.w3.org/ns/shacl#property> ?below , ?above .
                 ?below <http://www.w3.org/ns/shacl#severity>
-                       <http://example.org/agora#ShouldBecome> ;
-                       <http://example.org/agora#violationIs> <http://example.org/agora#Below> ;
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
                        <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
                 ?above <http://www.w3.org/ns/shacl#severity>
-                       <http://example.org/agora#ShouldBecome> ;
-                       <http://example.org/agora#violationIs> <http://example.org/agora#Above> ;
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
                        <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
                 FILTER(?value < ?low || ?value > ?high)
             }""" ] ;
@@ -158,7 +158,7 @@ desire:AimShape a sh:NodeShape ;
         sh:message "two aims for one property — an agent steering one property toward two points is not steering" ;
         sh:select """
             SELECT $this ?property WHERE {
-                $this <http://example.org/agora#aims> ?one , ?other .
+                $this <http://example.org/orexis#aims> ?one , ?other .
                 ?one   <http://www.w3.org/ns/ssn/forProperty> ?property .
                 ?other <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER(?one != ?other)
@@ -182,8 +182,8 @@ desire:BeyondSurvivalShape a sh:NodeShape ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora#hasCapability>
-                      <http://example.org/agora/desire#Deducing> .
+                ?this <http://example.org/orexis#hasCapability>
+                      <http://example.org/orexis/desire#Deducing> .
             }
         """ ] ;
     #  The hand-written "a reading sits outside the survival envelope" check was HERE and is gone.
@@ -196,12 +196,12 @@ desire:BeyondSurvivalShape a sh:NodeShape ;
         sh:message "a desire in a property this agent polls no sensor for — the region is real, and the agent will never see a reading to hold it to" ;
         sh:select """
             SELECT $this ?property WHERE {
-                $this <http://example.org/agora#actsFor> ?subject ;
-                      <http://example.org/agora#holds> ?region .
+                $this <http://example.org/orexis#actsFor> ?subject ;
+                      <http://example.org/orexis#holds> ?region .
                 ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/agora/sensing#polls> ?sensor .
-                    ?sensor <http://example.org/agora/sensing#monitors> ?subject ;
+                    $this <http://example.org/orexis/sensing#polls> ?sensor .
+                    ?sensor <http://example.org/orexis/sensing#monitors> ?subject ;
                             <http://www.w3.org/ns/sosa/observes> ?property .
                 }
             }""" ] .

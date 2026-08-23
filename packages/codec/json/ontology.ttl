@@ -1,13 +1,13 @@
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix mqtt: <http://example.org/agora/mqtt#> .
-@prefix ag:    <http://example.org/agora#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix ag:    <http://example.org/orexis#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
-@prefix codec: <http://example.org/agora/codec#> .
-@prefix : <http://example.org/agora/codec#> .
+@prefix codec: <http://example.org/orexis/codec#> .
+@prefix : <http://example.org/orexis/codec#> .
 
-<http://example.org/agora/codec> a owl:Ontology ;
-    rdfs:label "Agora codecs" ;
+<http://example.org/orexis/codec> a owl:Ontology ;
+    rdfs:label "Orexis codecs" ;
     rdfs:comment """How bytes become a DOCUMENT — the first of the three stages a reading passes through, the others being the pointer that says which value in that document is a given sensor's and the calibration that turns a raw number into a quantity. A family with interchangeable members, borne by a BINDING rather than by an agent: which format a device speaks is something only the device can say, so it is stated on the device and the member serving it is DERIVED at genesis onto the CHANNEL that device sends on, rather than onto anyone's capabilities. The stream and not the sensor, because three sensors sharing one topic would otherwise carry three copies of one fact with nothing comparing them, and because a command channel has no sensor at all. Same mechanism as a capability and the same premise-then-conclusion discipline; what differs is the bearer and the predicate, not when it is decided. See knowledge/decisions/bytes-become-a-quantity-in-stages.md.""" .
 
 #################  The family  #################

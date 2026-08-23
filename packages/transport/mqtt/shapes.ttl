@@ -1,7 +1,7 @@
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix mqtt: <http://example.org/agora/mqtt#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -22,8 +22,8 @@ mqtt:MqttSensorShape a sh:NodeShape ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora/mqtt#onBus> ?bus ;
-                      <http://example.org/agora/sensing#monitors> ?subject .
+                ?this <http://example.org/orexis/mqtt#onBus> ?bus ;
+                      <http://example.org/orexis/sensing#monitors> ?subject .
             }
         """ ] ;
     sh:property [ sh:path mqtt:readingTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
@@ -39,8 +39,8 @@ mqtt:SpeakingDeviceShape a sh:NodeShape ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora/mqtt#onBus> ?bus ;
-                      <http://example.org/agora/mqtt#readingTopic> ?stream .
+                ?this <http://example.org/orexis/mqtt#onBus> ?bus ;
+                      <http://example.org/orexis/mqtt#readingTopic> ?stream .
             }
         """ ] ;
     sh:property [ sh:path sensing:senseMode ; sh:minCount 1 ; sh:maxCount 1 ; sh:class sensing:SenseMode ;
@@ -51,10 +51,10 @@ mqtt:InstructableSensorShape a sh:NodeShape ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                VALUES ?mode { <http://example.org/agora/sensing#PolledProcedure>
-                               <http://example.org/agora/sensing#ScheduledProcedure> }
-                ?this <http://example.org/agora/sensing#senseMode> ?mode ;
-                      <http://example.org/agora/mqtt#onBus> ?bus .
+                VALUES ?mode { <http://example.org/orexis/sensing#PolledProcedure>
+                               <http://example.org/orexis/sensing#ScheduledProcedure> }
+                ?this <http://example.org/orexis/sensing#senseMode> ?mode ;
+                      <http://example.org/orexis/mqtt#onBus> ?bus .
             }
         """ ] ;
     sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
@@ -65,8 +65,8 @@ mqtt:MqttActuatorShape a sh:NodeShape ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?this <http://example.org/agora/mqtt#onBus> ?bus ;
-                      <http://example.org/agora/actuation#actuates> ?subject .
+                ?this <http://example.org/orexis/mqtt#onBus> ?bus ;
+                      <http://example.org/orexis/actuation#actuates> ?subject .
             }
         """ ] ;
     sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
@@ -77,26 +77,26 @@ mqtt:AlarmChannelShape a sh:NodeShape ;
         sh:select """
             SELECT ?this WHERE {
                 ?this <http://www.w3.org/ns/ssn/implements>
-                      <http://example.org/agora/sensing#AlarmProcedure> .
+                      <http://example.org/orexis/sensing#AlarmProcedure> .
             }
         """ ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a watched channel must ride either a Scheduled device with the command channel its bands arrive on, or a Push device whose band is compiled in — nothing here is either" ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/agora/mqtt#readingTopic> ?stream .
+                $this <http://example.org/orexis/mqtt#readingTopic> ?stream .
                 FILTER NOT EXISTS {
-                    ?device <http://example.org/agora/mqtt#readingTopic> ?stream ;
-                            <http://example.org/agora/mqtt#onBus> ?bus ;
-                            <http://example.org/agora/sensing#senseMode>
-                              <http://example.org/agora/sensing#ScheduledProcedure> ;
-                            <http://example.org/agora/mqtt#commandTopic> ?cmd .
+                    ?device <http://example.org/orexis/mqtt#readingTopic> ?stream ;
+                            <http://example.org/orexis/mqtt#onBus> ?bus ;
+                            <http://example.org/orexis/sensing#senseMode>
+                              <http://example.org/orexis/sensing#ScheduledProcedure> ;
+                            <http://example.org/orexis/mqtt#commandTopic> ?cmd .
                 }
                 FILTER NOT EXISTS {
-                    ?pushDevice <http://example.org/agora/mqtt#readingTopic> ?stream ;
-                                <http://example.org/agora/mqtt#onBus> ?pushBus ;
-                                <http://example.org/agora/sensing#senseMode>
-                                  <http://example.org/agora/sensing#PushProcedure> .
+                    ?pushDevice <http://example.org/orexis/mqtt#readingTopic> ?stream ;
+                                <http://example.org/orexis/mqtt#onBus> ?pushBus ;
+                                <http://example.org/orexis/sensing#senseMode>
+                                  <http://example.org/orexis/sensing#PushProcedure> .
                 }
             }
         """ ] .

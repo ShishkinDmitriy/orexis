@@ -80,7 +80,7 @@ tempted by the symmetry with `review:Reckoning`.
 - **A silent agent and a dead one must stay distinguishable.** Health telemetry is the only thing
   that can tell them apart. An agent that could lose the ability to say it is unwell is precisely
   the one you most need to hear from.
-- **[#53](https://github.com/ShishkinDmitriy/agora/issues/53)** — *an agent can lose its broker
+- **[#53](https://github.com/ShishkinDmitriy/orexis/issues/53)** — *an agent can lose its broker
   session for days and nothing says so* — would become permanently unfixable for exactly the
   agents that cannot speak for themselves.
 - **A merged record already depends on it.**
@@ -156,7 +156,7 @@ latitude has **re-picked** something, and that value exists nowhere but inside i
 *which value it settled on* is therefore meaningless without a settled value, invisible from
 outside, and granted by exactly the premise `review:Reckoning` is granted by.
 
-That is [#61](https://github.com/ShishkinDmitriy/agora/issues/61) — *nothing outside an agent can
+That is [#61](https://github.com/ShishkinDmitriy/orexis/issues/61) — *nothing outside an agent can
 see which value it settled on*. *(Closed since, and the split above is exactly how: the
 `picked_<package>_<term>` fields are contributed by the REVIEW module through `reports()` — the
 latitude-granted module, so the fields exist on exactly the agents whose values could be

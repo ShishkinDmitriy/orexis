@@ -1,12 +1,12 @@
-@prefix ag:     <http://example.org/agora#> .
-@prefix mc:     <http://example.org/agora/microcontroller#> .
-@prefix esp32:  <http://example.org/agora/esp32#> .
-@prefix : <http://example.org/agora/esp32#> .
-@prefix wokwi:  <http://example.org/agora/wokwi#> .
+@prefix ag:     <http://example.org/orexis#> .
+@prefix mc:     <http://example.org/orexis/microcontroller#> .
+@prefix esp32:  <http://example.org/orexis/esp32#> .
+@prefix : <http://example.org/orexis/esp32#> .
+@prefix wokwi:  <http://example.org/orexis/wokwi#> .
 @prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:    <http://www.w3.org/2002/07/owl#> .
 
-<http://example.org/agora/esp32> a owl:Ontology ;
+<http://example.org/orexis/esp32> a owl:Ontology ;
     rdfs:label "ESP32" ;
     rdfs:comment """One family of board. A stub: it names the DevKit and says how it draws, and does NOT yet describe its header — the pin positions, which of them can be driven, which sit on ADC1. Those are still literals inside the microcontroller shapes, which is the open seam this package exists to eventually close.
 

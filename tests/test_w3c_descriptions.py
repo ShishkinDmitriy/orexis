@@ -60,7 +60,7 @@ def _repaired(name: str) -> str:
 
 
 def _world_with(tmp_path, **files: str):
-    """`world/sensing` plus some extra Turtle, built the way `agora-validate` builds a world.
+    """`world/sensing` plus some extra Turtle, built the way `orexis-validate` builds a world.
 
     Through the real path on purpose. The derivation runs, so a sensor gets its codec and its
     scaling, and `agent/inference.py`'s closure runs, so the legacy schema.org bridge takes
@@ -227,10 +227,10 @@ def test_the_legacy_schema_org_spelling_is_what_their_frequency_uses(tmp_path):
 
 _SSN = rdflib.Namespace("http://www.w3.org/ns/ssn/")
 _SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
-_DHT11 = rdflib.Namespace("http://example.org/agora/dht11#")
-_ONEWIRE = rdflib.Namespace("http://example.org/agora/onewire#")
-_MQTT = rdflib.Namespace("http://example.org/agora/mqtt#")
-_MC = rdflib.Namespace("http://example.org/agora/microcontroller#")
+_DHT11 = rdflib.Namespace("http://example.org/orexis/dht11#")
+_ONEWIRE = rdflib.Namespace("http://example.org/orexis/onewire#")
+_MQTT = rdflib.Namespace("http://example.org/orexis/mqtt#")
+_MC = rdflib.Namespace("http://example.org/orexis/microcontroller#")
 _OWL = rdflib.Namespace("http://www.w3.org/2002/07/owl#")
 _DCTERMS = rdflib.Namespace("http://purl.org/dc/terms/")
 

@@ -228,9 +228,9 @@ more than before.
   stated at the class since the package was written. Fitness for a place is therefore already
   graph-visible — `packages/part/bme280/` was added as the outdoor-worthy counterpart, on this
   record's template — and the check is WRITTEN now
-  ([#111](https://github.com/ShishkinDmitriy/agora/issues/111), closed): a deployment states
+  ([#111](https://github.com/ShishkinDmitriy/orexis/issues/111), closed): a deployment states
   its site's ambient envelope in the same Condition idiom the parts speak, and
   `sensing:DeployedWithinItsRangeShape` refuses a world whose instrument cannot contain it —
   the DHT11 passes the windowsill and refuses the terrace, from its own datasheet figures, at
-  agora-validate time. The seam that remains is UNITS: an envelope in an alien unit is skipped
+  orexis-validate time. The seam that remains is UNITS: an envelope in an alien unit is skipped
   rather than compared, a documented choice with its own test.

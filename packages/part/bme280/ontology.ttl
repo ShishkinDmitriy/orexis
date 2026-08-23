@@ -1,17 +1,17 @@
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
-@prefix bme280: <http://example.org/agora/bme280#> .
-@prefix : <http://example.org/agora/bme280#> .
-@prefix i2c:  <http://example.org/agora/i2c#> .
-@prefix mc:   <http://example.org/agora/microcontroller#> .
+@prefix bme280: <http://example.org/orexis/bme280#> .
+@prefix : <http://example.org/orexis/bme280#> .
+@prefix i2c:  <http://example.org/orexis/i2c#> .
+@prefix mc:   <http://example.org/orexis/microcontroller#> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 
-<http://example.org/agora/bme280> a owl:Ontology ;
+<http://example.org/orexis/bme280> a owl:Ontology ;
     rdfs:label "BME280 environmental sensor" ;
     rdfs:comment """The outdoor-worthy air sensor, added the day the terrace was proposed and the DHT11's own ontology answered why it could not go: a MeasurementRange of 0-50 degrees and 20-90 percent is a part that cannot even report a frost or a fog, and the figures were already in the graph — #111 now checks them against every deployment's stated envelope, so the refusal that was folklore is a validation result. This part's figures are a different animal: the whole outdoor envelope, from a manufacturer that specifies it.
 

@@ -31,7 +31,7 @@ cleanly, and it bids on a desire it cannot see.
 
 **Every test builds a fresh store from the current files.** `genesis_store()` starts empty and
 authors from whatever the vocabulary says today, so no test has ever met a volume older than the
-code it is running. `agora-validate` reads the world files, which the sweep itself rewrote and
+code it is running. `orexis-validate` reads the world files, which the sweep itself rewrote and
 which are therefore internally consistent.
 
 Neither gate can see persisted state, and persisted state is the whole design: this project's
@@ -104,7 +104,7 @@ base at all. A rename should not cost an agent its second thoughts.
 So migration rewrites **how a value is spelled and never which value it is.** `0.55` was this
 agent's, and it stays `0.55`.
 
-It is a flag — `AGORA_MIGRATE_BELIEFS=1` — and not a side effect, for exactly the reason
+It is a flag — `OREXIS_MIGRATE_BELIEFS=1` — and not a side effect, for exactly the reason
 `rebirth` is a flag: *"doing it by accident is the bug this separation prevents."* A persistent
 store rewritten by the mere act of starting is a thing nobody asked for.
 
@@ -143,5 +143,5 @@ themselves are wrong, and rewriting it here would hide that.
   against a real migration.** They are private and persistent, so they are in scope by
   construction; no volume has yet held a stale term in one.
 - **The gates still cannot see a volume.** This adds a check at boot, not a gate. Nothing in
-  `pytest tests` or `agora-validate` reads persisted state, and the next fact that lives only in
+  `pytest tests` or `orexis-validate` reads persisted state, and the next fact that lives only in
   a volume will be just as invisible as this one was.

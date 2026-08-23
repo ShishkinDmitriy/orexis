@@ -73,11 +73,11 @@ def test_the_other_worlds_get_them_too():
 
 # --- an explicit statement beats the default, and the rule decides it ------
 
-AIR = ("<http://example.org/agora/world/sensing#air_temp_fern>", "<http://example.org/agora/world/sensing#air_humidity_fern>")
-BOARD = ("<http://example.org/agora/world/sensing#moisture_sensor_fern>",) + AIR
+AIR = ("<http://example.org/orexis/world/sensing#air_temp_fern>", "<http://example.org/orexis/world/sensing#air_humidity_fern>")
+BOARD = ("<http://example.org/orexis/world/sensing#moisture_sensor_fern>",) + AIR
 
 
-def _world_stating(premise: str, obj: str, subjects=("<http://example.org/agora/world/sensing#moisture_sensor_fern>",)):
+def _world_stating(premise: str, obj: str, subjects=("<http://example.org/orexis/world/sensing#moisture_sensor_fern>",)):
     """The sensing world with one premise added to some devices, re-derived.
 
     `subjects` exists because the two families have different bearers. A curve is the SENSOR's,

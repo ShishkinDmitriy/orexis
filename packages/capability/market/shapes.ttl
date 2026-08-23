@@ -1,8 +1,8 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix market: <http://example.org/agora/market#> .
+@prefix market: <http://example.org/orexis/market#> .
 
 # Rules for the Market module. Bidding and Hosting are separate capabilities with separate
 # rules, so an agent that only bids is never asked for a reserve price.
@@ -11,8 +11,8 @@ market:BiddingAgentShape a sh:NodeShape ;
     rdfs:comment "An agent that bids must have a venue to bid in and a wallet to bid with. What it will PAY is domain-specific and checked by the domain's shapes." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
-            SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
-                                       <http://example.org/agora/market#Bidding> }
+            SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
+                                       <http://example.org/orexis/market#Bidding> }
         """ ] ;
     sh:property [ sh:path market:bidsIn ; sh:minCount 1 ; sh:class market:Market ;
                   sh:message "a bidder must participate in a market" ] ;
@@ -24,8 +24,8 @@ market:HostingAgentShape a sh:NodeShape ;
     rdfs:comment "A host must run a venue and state its terms: what it puts up, the floor it will not sell below, how long it waits for bids, and how often it will open a round at all." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
-            SELECT ?this WHERE { ?this <http://example.org/agora#hasCapability>
-                                       <http://example.org/agora/market#Hosting> }
+            SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
+                                       <http://example.org/orexis/market#Hosting> }
         """ ] ;
     sh:property [ sh:path market:hosts ; sh:minCount 1 ; sh:class market:Market ] ;
     sh:property [ sh:path market:offerQuantityL ; sh:minCount 1 ; sh:maxCount 1 ;

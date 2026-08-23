@@ -13,7 +13,7 @@ Because actuation is physically irreversible, this board is dumb but *guarded*
 
 - **Commands only from a co-signed token** — the valve must open only on a command signed by
   **both host (`match_sig`) and clearing (`val_sig`)** (Ed25519). The Python sim-pump already
-  verifies this (`agora.executor.verify_command`); **this firmware does not yet** — it's the
+  verifies this (`orexis.executor.verify_command`); **this firmware does not yet** — it's the
   one guard still on the trusted-LAN assumption. Port: verify two Ed25519 signatures over the
   canonical command (mbedTLS has Ed25519), with the host + clearing public keys flashed in.
 
@@ -60,4 +60,4 @@ mosquitto_sub -t 'actuators/#' -v          # see executor commands + status
 mosquitto_pub -t actuators/fern/valve -m '{"jti":"t1","plant":"fern","seconds":3}'
 ```
 
-The `agora-round` command publishes real valve commands after clearing goes green.
+The `orexis-round` command publishes real valve commands after clearing goes green.

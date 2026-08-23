@@ -46,7 +46,7 @@ Three consequences, in order of how much they change:
 because the direction is hardcoded. Over affordance facts it becomes *gap in property P, plus a
 lever the graph says moves P the right way → the move* — still deterministic, still no model in
 the loop, and now correct for a lever nobody hardcoded. This is the substrate, and it is
-[#127](https://github.com/ShishkinDmitriy/agora/issues/127): the graph must state which
+[#127](https://github.com/ShishkinDmitriy/orexis/issues/127): the graph must state which
 direction a lever moves a property, so the menu is *derived* rather than written into a prompt.
 
 **Consultation happens at the rate the world surprises, not the rate sensors tick.** The
@@ -97,7 +97,7 @@ nothing an agent believes privately reaches another agent's store.
 
 # Seams left open
 
-- **The affordance vocabulary itself** — [#127](https://github.com/ShishkinDmitriy/agora/issues/127),
+- **The affordance vocabulary itself** — [#127](https://github.com/ShishkinDmitriy/orexis/issues/127),
   the emitted issue, now CLOSED: the domain states its direction once (`market:Raises` on the
   valuation term, demanded by a shape), the Reflex reads the sign instead of hardcoding it, and
   the menu is derived. Strengthened past the issue on the sovereign's ask — the Acquire row is

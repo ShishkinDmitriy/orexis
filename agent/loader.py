@@ -2,7 +2,7 @@
 
 A **package** is one self-contained thing the society is made of, and it is a directory:
 
-    vocabulary/<name>/       what terms MEAN. Pure knowledge, no Python at all — `agora` is the
+    vocabulary/<name>/       what terms MEAN. Pure knowledge, no Python at all — `orexis` is the
                              base everything layers on, `water` is what this society is about.
                              At the repo ROOT, because onboarding validates and derives from it
                              too: it is the one tree both sides genuinely share.
@@ -86,12 +86,12 @@ CALIBRATIONS = "scaling"
 BOUND_KINDS = (TRANSPORTS, CODECS, CALIBRATIONS)
 
 # The base vocabulary, merged before anything else.
-BASE = "agora"
+BASE = "orexis"
 
 # The order the T-Box is merged in. RDF is order-independent, so this buys determinism in logs
 # and diffs, not correctness. What it must NOT lose is that the base vocabulary comes first:
 # every other package layers on those terms, and reading a merge that puts them last is reading
-# it backwards. `core/agora` is sorted to the front explicitly rather than by luck of the
+# it backwards. `core/orexis` is sorted to the front explicitly rather than by luck of the
 # alphabet — it happens to sort before `plant/water`, and that is not a thing to rely on.
 KINDS = (CORE, BUS, PART, PLANT, TOOL, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
 
@@ -100,7 +100,7 @@ SHAPES = "shapes.ttl"
 RULES = "rules.ru"
 DESIRES_RULES = "desires.ru"
 # What a package would like its agents to reconsider about themselves. A SPARQL SELECT binding
-# ?term and ?value, run by the reviewer — never an update, and never Python. See agora/review.py.
+# ?term and ?value, run by the reviewer — never an update, and never Python. See orexis/review.py.
 REVIEW = "review.rq"
 AFFORDANCES = "affordances.rq"
 # What applying one of this package's levers MAKES TRUE — SHACL-AF rules, as RDF.
@@ -277,7 +277,7 @@ def review_rules() -> tuple[Path, ...]:
     return files(REVIEW)
 
 
-_ONTOLOGY_IRI = re.compile(r"<(http://example\.org/agora[^>\s]*)>\s+a\s+owl:Ontology")
+_ONTOLOGY_IRI = re.compile(r"<(http://example\.org/orexis[^>\s]*)>\s+a\s+owl:Ontology")
 
 
 @lru_cache(maxsize=1)
@@ -303,7 +303,7 @@ def _provider_in(package: "Package", capability: str) -> type | None:
     """The class in one package that implements one term — importing that package and no other.
 
     An ImportError is the DECLARED degrade path (#216): a package whose optional extra is not
-    installed — `agora[consulting]` and its model client — leaves its capability unprovided
+    installed — `orexis[consulting]` and its model client — leaves its capability unprovided
     for the agents that were granted it, and costs nothing at all to the agents that were
     not. Before this, one missing extra crashed every agent in the society at import time,
     including those that had never heard of the capability.
@@ -441,7 +441,7 @@ def describe() -> str:
 # So it is read rather than registered, off the `@prefix` lines of the ontology that declares
 # the terms. Nothing is listed and nothing is imported: this runs before any capability's Python
 # and must, because `agent.beliefs` needs the prefixes and half the capabilities import it.
-_NAMESPACE_BASE = "http://example.org/agora"
+_NAMESPACE_BASE = "http://example.org/orexis"
 _PREFIX_LINE = re.compile(
     rf"@prefix\s+([A-Za-z][\w.-]*):\s*<({re.escape(_NAMESPACE_BASE)}[^>]*)>")
 

@@ -385,7 +385,7 @@ class SubscribingModule(SensingModule):
     def _bounds(self) -> tuple[int, int, float]:
         rows = bindings(self.agent.beliefs.query(_BOUNDS_Q))
         if not rows:
-            raise RuntimeError("the ontology states no cadence bounds — re-run agora-seed")
+            raise RuntimeError("the ontology states no cadence bounds — re-run orexis-seed")
         # A relax factor at or below 1 could never release at all, which is a vocabulary slip
         # and not a policy anyone can mean; treated as "no slew" rather than as a frozen board.
         relax = float(rows[0].get("relax") or 0.0)

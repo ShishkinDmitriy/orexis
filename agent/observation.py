@@ -35,7 +35,7 @@ class Observations:
         self.me = agent.me
         self.log = agent.log if hasattr(agent, "log") else None
         # The bucket and the token have NO defaults, and that is the point. They are this
-        # agent's alone, minted by `agora-influx` and mounted into its container only; falling
+        # agent's alone, minted by `orexis-influx` and mounted into its container only; falling
         # back to a shared bucket would quietly undo the isolation at exactly the moment the
         # credential failed to arrive. The URL and org may default — they say where the store
         # is, which is not a privilege. See knowledge/decisions/series-and-bus-isolation.md.
@@ -43,11 +43,11 @@ class Observations:
         if not bucket or not token:
             raise RuntimeError(
                 "no INFLUX_BUCKET/INFLUX_TOKEN in the environment — this agent has no series "
-                "store of its own. Run `agora-influx <world>` and regenerate the compose file.")
+                "store of its own. Run `orexis-influx <world>` and regenerate the compose file.")
         self.influx = InfluxWriter(
             config.env("INFLUX_URL", "http://localhost:8086"),
             token,
-            config.env("INFLUX_ORG", "agora"),
+            config.env("INFLUX_ORG", "orexis"),
             bucket,
         )
         self.sensed = SensedWriter(agent.beliefs)

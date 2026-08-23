@@ -1,4 +1,4 @@
-// Agora — ESP32 pump/valve node (the actuation edge).
+// Orexis — ESP32 pump/valve node (the actuation edge).
 //
 // A *guarded* MQTT subscriber. On an executor command it opens the valve for a bounded
 // time, then closes. It is dumb and stake-free, but because actuation is irreversible it
@@ -104,7 +104,7 @@ static void connectWifi() {
 static void connectMqtt() {
   while (!mqtt.connected()) {
     closeValve("mqtt-wait"); // fail-safe
-    String clientId = String("agora-pump-") + PLANT_ID + "-" +
+    String clientId = String("orexis-pump-") + PLANT_ID + "-" +
                       String((uint32_t)ESP.getEfuseMac(), HEX);
     Serial.print("MQTT...");
     // As itself: the broker refuses anonymous clients, and the ACL lets this valve hear its

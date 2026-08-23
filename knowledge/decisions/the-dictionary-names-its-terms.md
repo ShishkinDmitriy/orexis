@@ -37,7 +37,7 @@ stays conformant for any consumer.
 **The value is a full IRI, never `prefix:Name`.** The first cut wrote `ag:Agent`, and the
 review caught what that is: a name resolvable only where the ontologies that declare the
 prefixes live. An OKF bundle is the unit of distribution — tarball `knowledge/` alone and a
-prefixed name is an opaque string, where `http://example.org/agora#Agent` is still the term.
+prefixed name is an opaque string, where `http://example.org/orexis#Agent` is still the term.
 OKF's own `resource` field is the precedent for a full URI in frontmatter; `term:` stays a
 producer key rather than reusing it because `resource` is singular and a page may bind two.
 

@@ -12,7 +12,7 @@ from agent.store import bindings
 
 from conftest import genesis_store
 
-AG = "http://example.org/agora#"
+AG = "http://example.org/orexis#"
 
 _CHANNELS = f"""
 SELECT DISTINCT ?topic ?channel WHERE {{

@@ -33,8 +33,8 @@ def test_a_typo_is_caught_and_named(tmp_path, monkeypatch):
     real = loader.affordance_files()
     monkeypatch.setattr(loader, "affordance_files", lambda: real + (toy,))
     broken = linker.dangling()
-    assert "http://example.org/agora/market#ofGoods" in broken
-    assert any("affordances.rq" in f for f in broken["http://example.org/agora/market#ofGoods"])
+    assert "http://example.org/orexis/market#ofGoods" in broken
+    assert any("affordances.rq" in f for f in broken["http://example.org/orexis/market#ofGoods"])
 
 
 def test_a_tolerated_non_reference_stays_tolerated(tmp_path, monkeypatch):
@@ -42,8 +42,8 @@ def test_a_tolerated_non_reference_stays_tolerated(tmp_path, monkeypatch):
     a bare namespace (a constant), a minted-IRI base (a function of an id, trailing dot the
     tell), and prose in a docstring that merely mentions a keyword."""
     toy = tmp_path / "affordances.rq"
-    toy.write_text('SELECT ?m WHERE { ?v ?p "http://example.org/agora/market#" , '
-                   '"http://example.org/agora#market." }')
+    toy.write_text('SELECT ?m WHERE { ?v ?p "http://example.org/orexis/market#" , '
+                   '"http://example.org/orexis#market." }')
     real = loader.affordance_files()
     monkeypatch.setattr(loader, "affordance_files", lambda: real + (toy,))
     assert linker.dangling() == {}

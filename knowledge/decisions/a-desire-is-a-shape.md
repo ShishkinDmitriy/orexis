@@ -126,7 +126,7 @@ Three things the design had wrong or unsaid, found by writing it:
   the discriminator — and it is the better question anyway. A lever is worth listing because
   there is something the agent WANTS about that property, not because the property has an edge
   past which its subject dies.
-- **A want is a result, so a report stopped being a list of defects.** `agora-validate` printed
+- **A want is a result, so a report stopped being a list of defects.** `orexis-validate` printed
   forty lines about a world it was accepting: at genesis nothing has been observed, so every
   region reports a gap. The gap is the state of a world, not a finding about one, and `gap.rq`
   is where to ask for it — so `ag:ShouldBecome` results are filtered out of the report a person

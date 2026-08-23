@@ -68,7 +68,7 @@ too, where a rule spelling `0..1` could not look.
 `_SIM_DOSE_Q` keyed on `ag:simulatedBy` alone, so the second sensor on a board minted a principal
 of its own holding a single dose grant — for a client that never connects. Measured before it was
 fixed, then guarded on `mqtt:onBus`: **the grant belongs to whatever connects.** That is
-[#81](https://github.com/ShishkinDmitriy/agora/issues/81) one level down, and it is the third time
+[#81](https://github.com/ShishkinDmitriy/orexis/issues/81) one level down, and it is the third time
 this project has found a credential attached to something that does not open a socket.
 
 # What running it proved that the tests could not

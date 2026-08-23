@@ -1,15 +1,15 @@
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix water: <http://example.org/agora/water#> .
-@prefix mqtt: <http://example.org/agora/mqtt#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix mqtt: <http://example.org/orexis/mqtt#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 
-<http://example.org/agora/core> a owl:Ontology ;
-    rdfs:label "Agora core" ;
+<http://example.org/orexis/core> a owl:Ontology ;
+    rdfs:label "Orexis core" ;
     rdfs:comment """The society kernel: agents, the capabilities they compose, and the versioned world they share. Everything else is a MODULE layered on this — the microcontrollers it runs on, the protocols their parts speak, the parts themselves, the capabilities, and the domain. Code may reference the terms defined here; it may never reference an instance.
 
 What is NOT here any more is everything physical. `packages/part/microcontroller` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
@@ -119,7 +119,7 @@ ag:localId a owl:DatatypeProperty ; rdfs:range xsd:string ;
 #  ability whose HOW could differ. Reviewing can be done by rule or by asking a model; compacting
 #  cannot be done two ways. Keeping your own house is not a choice, so it is kernel — and it has
 #  a clock no capability owns, because an agent granted no room to review itself must still
-#  compact. See agora/upkeep.py and issue #45.
+#  compact. See orexis/upkeep.py and issue #45.
 
 ag:BeliefBase a owl:Class ; rdfs:label "Belief base" ;
     rdfs:comment "The store one agent keeps everything it knows in — the world it was given, what it has sensed, and its own beliefs. A class rather than a graph, because it is the whole store and not one graph inside it: what the agent BELIEVES is the sum of them. Named so that facts true of every agent's store have somewhere to be stated that no capability owns." .
@@ -138,7 +138,7 @@ ag:Agent ag:resignAfterS 600 .
 
 #################  Identity keys — published, because a verifier cannot read secrets  #########
 #
-#  The public halves of each agent's keypairs (#144, #145), written by `agora-keygen` into a
+#  The public halves of each agent's keypairs (#144, #145), written by `orexis-keygen` into a
 #  generated `keys.ttl` beside the world's ratified files. Public by nature and in the world
 #  because the world is the one place every member already reads: the host verifying a
 #  presentation cannot read the presenter's secrets — that is the isolation — so the roster is
@@ -220,11 +220,11 @@ ag:BeliefGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Belief graph
 
 
 ag:PickRecordGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Pick record graph" ;
-    ag:graphPrefix "http://example.org/agora/graph/beliefs/" ;
+    ag:graphPrefix "http://example.org/orexis/graph/beliefs/" ;
     rdfs:comment "ONE agent's record of picking: what birth authored and review has since re-picked, one value per term, plus the belief-proper terms (conversions, the wallet) the #297 sort left beside them. A RECORD class, not a modality — the desire modality derives its wants and projects this record in as a premise-and-content, so what used to need a modality typing to be copied is now read by name, the one construction from an agent's own id the rules allow. The write boundary is ag:beliefsOf, unchanged." .
 
 ag:ObligationsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Obligations record graph" ;
-    ag:graphPrefix "http://example.org/agora/graph/obligations/" ;
+    ag:graphPrefix "http://example.org/orexis/graph/obligations/" ;
     rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected, and the prefix moved here when ag:ConstraintGraph retired (#312)." .
 
 ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
@@ -233,7 +233,7 @@ ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
 A ROW is derived and never authored — it is a conclusion whose premises are stored, so an authored row could outlive its premise, and that is the one hazard this modality must never reintroduce. A RULE about a means is asserted, from the file of the package that owns the lever, and is in no danger of outliving anything because it is a schema rather than a conclusion. Both are the same modality and they differ in ARRIVAL, which is what `ag:arrivedBy` is for: the two axes were separated precisely so a class would not have to encode how its facts got there.""" .
 
 ag:IntentionGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Intention graph" ;
-    ag:graphPrefix "http://example.org/agora/graph/intentions/" ;
+    ag:graphPrefix "http://example.org/orexis/graph/intentions/" ;
     rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
 
 ag:PossibleGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Possible graph" ;
@@ -275,7 +275,7 @@ ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph
 #  "an assertion about what is" are answers to different questions.
 
 ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "World graph" ;
-    rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see agora/provenance.py." .
+    rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see orexis/provenance.py." .
 ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:label "Sensed graph" ;
     rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
 ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
@@ -290,7 +290,7 @@ ag:DeliberationGraph a owl:Class ; rdfs:subClassOf ag:PossibleGraph ; rdfs:label
 
 THIS IS THE RECORD'S ONE EXCEPTION, TAKEN DELIBERATELY AND NOT AN EXEMPTION FROM THE RULE. Possible worlds are computed and dropped, because a stored conclusion can outlive the premise it came from — except where a reader outside the process needs one, and then it is materialised into a graph of its own class, cleared at the start of every pass, carrying PROV to what generated it, never public and never in belief. All four hold here. See a-plan-is-a-path-of-graph-diffs, "Possible worlds are computed, not kept".
 
-The reader who needs it cannot get it any other way: pyoxigraph holds an exclusive lock on the belief base, so nothing outside the process can re-run the search to see what it saw. That is the same fact `agora-ask` exists for.
+The reader who needs it cannot get it any other way: pyoxigraph holds an exclusive lock on the belief base, so nothing outside the process can re-run the search to see what it saw. That is the same fact `orexis-ask` exists for.
 
 NOT PUBLIC, and the reason is not tidiness. Which levers an agent weighed and rejected is a disclosure nobody decided to make, and a rival reading it would learn what its neighbour can nearly do.
 
@@ -375,22 +375,22 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 ##  a fact got there is a separate question — which each instance now answers with ag:arrivedBy
 ##  rather than by having its arrival encoded in its name.
 
-<http://example.org/agora/graph/ontology>          a ag:OntologyGraph ; ag:arrivedBy ag:Asserted .
-<http://example.org/agora/graph/ontology/entailed> a ag:OntologyGraph ; ag:arrivedBy ag:Entailed .
-<http://example.org/agora/graph/world>             a ag:WorldGraph ;    ag:arrivedBy ag:Asserted .
-<http://example.org/agora/graph/world/derived>     a ag:WorldGraph ;    ag:arrivedBy ag:Derived .
-<http://example.org/agora/graph/world/entailed>    a ag:WorldGraph ;    ag:arrivedBy ag:Entailed .
-<http://example.org/agora/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
+<http://example.org/orexis/graph/ontology>          a ag:OntologyGraph ; ag:arrivedBy ag:Asserted .
+<http://example.org/orexis/graph/ontology/entailed> a ag:OntologyGraph ; ag:arrivedBy ag:Entailed .
+<http://example.org/orexis/graph/world>             a ag:WorldGraph ;    ag:arrivedBy ag:Asserted .
+<http://example.org/orexis/graph/world/derived>     a ag:WorldGraph ;    ag:arrivedBy ag:Derived .
+<http://example.org/orexis/graph/world/entailed>    a ag:WorldGraph ;    ag:arrivedBy ag:Entailed .
+<http://example.org/orexis/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
 ##  A BELIEF and not a reading: what the agent holds about the instruments it polls. It
 ##  arrives `ag:Recorded` because the agent writes it down as it goes, the way it records
 ##  its own classification — not asserted from a file, not derived by a rule, and not
 ##  received from anyone. Private: nobody else needs to know what rhythm I am running,
 ##  and the horizon it yields is mine to judge readings by.
-<http://example.org/agora/graph/instruments>       a ag:BeliefGraph ;  ag:arrivedBy ag:Recorded .
-<http://example.org/agora/graph/effects>            a ag:EffectGraph ;  ag:arrivedBy ag:Asserted .
-<http://example.org/agora/graph/provenance>        a ag:ProvenanceGraph .
+<http://example.org/orexis/graph/instruments>       a ag:BeliefGraph ;  ag:arrivedBy ag:Recorded .
+<http://example.org/orexis/graph/effects>            a ag:EffectGraph ;  ag:arrivedBy ag:Asserted .
+<http://example.org/orexis/graph/provenance>        a ag:ProvenanceGraph .
 ##  One pass per goal and no more: written at the start of each, replacing what was there.
-<http://example.org/agora/graph/deliberation>      a ag:DeliberationGraph ; ag:arrivedBy ag:Derived .
+<http://example.org/orexis/graph/deliberation>      a ag:DeliberationGraph ; ag:arrivedBy ag:Derived .
 
 ##  Where an agent says what its OWN graphs are. A per-agent graph cannot be declared in a
 ##  T-Box — it does not exist until its agent does — so the agent classifies its own at boot,
@@ -405,14 +405,14 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 ##  public too. Putting the per-agent ones in `provenance` (which is deliberately outside the
 ##  default union, to keep mentions of graphs from answering questions about devices) was the
 ##  inconsistency, and it showed up the first time a scoped query could not see them.
-<http://example.org/agora/graph/classification>    a ag:PublicGraph , ag:BeliefGraph ;
+<http://example.org/orexis/graph/classification>    a ag:PublicGraph , ag:BeliefGraph ;
     ag:arrivedBy ag:Recorded .
 
 ##  Where a world states a root desire: a TriG block in the world's own files, replaced from
 ##  them on every boot exactly as the world graph is, projected into the desire modality by
 ##  its build. Declared here so the ghost walk keeps it and so a world file needs no typing
 ##  line — naming the graph is enough, and a world may name instances.
-<http://example.org/agora/graph/desire/asserted>   a ag:PublicGraph ;
+<http://example.org/orexis/graph/desire/asserted>   a ag:PublicGraph ;
     ag:arrivedBy ag:Asserted .
 
 

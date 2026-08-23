@@ -64,7 +64,7 @@ Standard usage separates them, and so should we:
 
 So `scaling:TwoPoint` **consumes** a calibration; it is not one. A calibration is obtained once
 and then held; a scaling runs on every message. Naming the stage *calibration* would have left
-the procedure — [#26](https://github.com/ShishkinDmitriy/agora/issues/26)'s calibration mode,
+the procedure — [#26](https://github.com/ShishkinDmitriy/orexis/issues/26)'s calibration mode,
 where an agent walks someone through the dry and wet references — with no word of its own, in a
 project that keeps one word per concept.
 
@@ -119,7 +119,7 @@ capability. Nothing searches.
 **What deriving buys, against a `claims()` search at boot.** The first cut of this had each class
 answer a claim test at startup, mirroring how a transport picks a driver. Three things that cost:
 
-- a world could name a codec no build implements and `agora-validate` would pass — you found out
+- a world could name a codec no build implements and `orexis-validate` would pass — you found out
   from a log line after the society was up;
 - nothing could inspect a sensor's pipeline, because it existed only as the outcome of a Python
   loop over whichever classes a build imported;
@@ -148,7 +148,7 @@ would make declaring a seam impossible.
 The half that is not arithmetic, and the one that bites first.
 
 A raw value is a bare number; a **quantity** is a number with a unit. Since
-[#51](https://github.com/ShishkinDmitriy/agora/issues/51) one store holds soil moisture `0.183`,
+[#51](https://github.com/ShishkinDmitriy/orexis/issues/51) one store holds soil moisture `0.183`,
 air humidity `0.46` and air temperature `21.4` — three numbers in two dimensions, two of which look
 identical. The convention lived in prose, in `packages/plant/water`: *"the whole private valuation is
 denominated in soil moisture."*
@@ -165,7 +165,7 @@ hand-materialised closure gains no axioms to cover. `unit:` sits in the kernel p
 package's to bind — one that could rebind `unit:` could quietly redirect every unit in the society.
 
 **Nothing was converted and no number moved.** Identity stays identity. This declares what the
-numbers already meant, which is what turns [#26](https://github.com/ShishkinDmitriy/agora/issues/26)
+numbers already meant, which is what turns [#26](https://github.com/ShishkinDmitriy/orexis/issues/26)
 into a conversion between *stated* units rather than a guess.
 
 # Consequences
@@ -194,7 +194,7 @@ coarse. The three stages do **not** share a bearer:
 
 `codec:decodedBy` is derived onto each sensor, so three sensors sharing one reading topic carry
 three copies of one fact — and nothing stops them disagreeing. **Measured:** giving two sensors on
-one topic two different codecs is accepted by `agora-validate` today. The per-sensor shape asks
+one topic two different codecs is accepted by `orexis-validate` today. The per-sensor shape asks
 for exactly one codec per sensor; nothing can ask for one per stream, because the stream is not a
 thing in the model.
 
@@ -206,12 +206,12 @@ use here for `sosa:observes`.
 
 Once it exists, four facts currently expressed as string equality between sensors become
 properties of one node: the codec, the wake interval
-([#78](https://github.com/ShishkinDmitriy/agora/issues/78)), the broker credential that
+([#78](https://github.com/ShishkinDmitriy/orexis/issues/78)), the broker credential that
 `mqtt:onBus` puts on one peripheral standing in for its board, and the single outbound command
 message that carries several values. That last one is also where the unused `encode()` gets a
 caller, since actuation is this pipeline reversed.
 
-Filed as [#79](https://github.com/ShishkinDmitriy/agora/issues/79). It is left out of this change
+Filed as [#79](https://github.com/ShishkinDmitriy/orexis/issues/79). It is left out of this change
 deliberately: introducing a platform touches every world's topology, and doing it inside a change
 about package layout would make neither reviewable.
 
@@ -242,7 +242,7 @@ premise-then-conclusion discipline, and the pointer staying a function.
   re-decides from `mqtt:onBus` and `mqtt:readingTopic` — facts already in the graph — what genesis could
   have written down once. Two of the three binding-borne trees now derive their member and one does
   not. It was left alone deliberately: converting it touches the working read path for every sensor
-  in every world, and [#76](https://github.com/ShishkinDmitriy/agora/pull/76) had just changed that
+  in every world, and [#76](https://github.com/ShishkinDmitriy/orexis/pull/76) had just changed that
   method. It should move, and this record says so rather than leaving the inconsistency to be
   discovered.
 - **A unit is optional.** `world/sensing` states three; the other two worlds state none, and the

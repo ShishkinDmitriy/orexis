@@ -3,7 +3,7 @@
 The BDI figures say THAT something happened — `worst_gap` climbing, `intentions_standing`
 saw-toothing — and the annotations say WHAT the agent thought it was doing, in the prose its
 ledger wrote for exactly this reader. Derived from the roster like every panel, so an agent
-added to world.ttl gets its stream on the next `agora-onboard` with nothing to remember.
+added to world.ttl gets its stream on the next `orexis-onboard` with nothing to remember.
 """
 
 from __future__ import annotations

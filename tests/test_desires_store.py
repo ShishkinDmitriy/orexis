@@ -17,7 +17,7 @@ from agent.store import bindings
 
 from conftest import build_agent, genesis_store
 
-MOISTURE = "http://example.org/agora/water#SoilMoisture"
+MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 
 
 def _graphs_in(desires) -> set[str]:
@@ -90,9 +90,9 @@ def test_recomputation_is_the_only_write_path(monkeypatch):
         "the copy a rebuild replaced is unchanged — replaced, never edited"
 
 
-ROOT = "http://example.org/agora/world/loner#everything_tended_stays_alive"
-GARDENER = "http://example.org/agora/world/loner#gardener"
-ASSERTED_GRAPH = "http://example.org/agora/graph/desire/asserted"
+ROOT = "http://example.org/orexis/world/loner#everything_tended_stays_alive"
+GARDENER = "http://example.org/orexis/world/loner#gardener"
+ASSERTED_GRAPH = "http://example.org/orexis/graph/desire/asserted"
 
 
 def test_a_world_can_state_a_root_desire_and_an_amendment_can_retire_it(monkeypatch, tmp_path):
@@ -113,7 +113,7 @@ def test_a_world_can_state_a_root_desire_and_an_amendment_can_retire_it(monkeypa
     src = genesis.world_dir("loner")
     dst = tmp_path / "asserted"
     shutil.copytree(src, dst)
-    (dst / "desire.ttl").write_text(f"""@prefix ag: <http://example.org/agora#> .
+    (dst / "desire.ttl").write_text(f"""@prefix ag: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -167,7 +167,7 @@ def test_a_commitment_survives_a_restart_in_its_own_room(monkeypatch, tmp_path):
     genesis.refresh_public(st, world)
     genesis.birth(st, world, "gardener")
     st.update(f"""INSERT DATA {{ GRAPH <{intentions_graph("gardener")}> {{
-        <urn:test:i1> a <http://example.org/agora#Intention> }} }}""")
+        <urn:test:i1> a <http://example.org/orexis#Intention> }} }}""")
     del st
 
     # first boot with rooms: layout migrates, the modality adopts the ledger

@@ -72,7 +72,7 @@ the only sense the system needs.
 
 1. **It parses, and every wire name is stated.** The transport's own shapes catch a device that
    cannot be reached.
-2. **Derivation produces the abilities the sovereign expected.** Run `agora-validate` and read
+2. **Derivation produces the abilities the sovereign expected.** Run `orexis-validate` and read
    what it printed — an agent that came out with nothing has wiring implying no ability, almost
    always a missing `sensing:senseMode`. This is the step where a misunderstanding surfaces
    cheaply. What the command does and how to read it is [world](/domain/world.md)'s.
@@ -158,7 +158,7 @@ running. What turns it into a society that can be started is a separate phase wi
 [onboarding](/domain/onboarding.md):
 
 ```bash
-agora-onboard <world>     # validate, then grant: a bucket and token per agent, a bus
+orexis-onboard <world>     # validate, then grant: a bucket and token per agent, a bus
                           # credential and ACL per principal, and the compose file
 ```
 
@@ -166,7 +166,7 @@ Every one of those is **derived** from the wiring this session produced, so onbo
 nothing and can be re-run freely — see [onboarding](/domain/onboarding.md), which is the phase
 this session hands off to.
 
-`agora-compose` is the part of it that reads the roster out of `world.ttl` and writes one service
+`orexis-compose` is the part of it that reads the roster out of `world.ttl` and writes one service
 per agent, handing each the only instance identifier it will ever be given: its own id. The
 roster *is* the ratified world, so a different world brings up a different society with no edit
 anywhere.
@@ -177,7 +177,7 @@ is a boundary rather than packaging taste.
 
 Firmware is the exception and the contrast is the point: a board is hardware, flashed by hand —
 and since the broker stopped accepting anonymous clients, a board must also be given the
-credential `agora-mqtt` minted for it before it can connect at all.
+credential `orexis-mqtt` minted for it before it can connect at all.
 What genesis decides is what an **agent** is — which is why the same board is a watcher in one
 world and a bidder in another. See [world](/domain/world.md).
 

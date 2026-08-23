@@ -599,11 +599,11 @@ class Planner:
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
-_AG = rdflib.Namespace("http://example.org/agora#")
-_ACTUATION = "http://example.org/agora/actuation#Actuation"
+_AG = rdflib.Namespace("http://example.org/orexis#")
+_ACTUATION = "http://example.org/orexis/actuation#Actuation"
 #  Sizing is asked of whichever module OWNS the lever, so the means and the family that carries
 #  it are both named here. Spelled out rather than imported: `intention/terms.py` and
 #  `market/terms.py` hold the same strings, and a package may not import another's Python.
-_ACTUATE = "http://example.org/agora#Actuate"
-_ACQUIRE = "http://example.org/agora#Acquire"
-_BIDDING = "http://example.org/agora/market#Bidding"
+_ACTUATE = "http://example.org/orexis#Actuate"
+_ACQUIRE = "http://example.org/orexis#Acquire"
+_BIDDING = "http://example.org/orexis/market#Bidding"

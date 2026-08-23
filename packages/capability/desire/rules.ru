@@ -18,14 +18,14 @@
 # implements it, and granting a capability no module provides would only produce a warning at
 # startup. What would SELECT between the two once both exist is an open seam.
 
-PREFIX desire: <http://example.org/agora/desire#>
-PREFIX market: <http://example.org/agora/market#>
-PREFIX actuation: <http://example.org/agora/actuation#>
-PREFIX sensing: <http://example.org/agora/sensing#>
+PREFIX desire: <http://example.org/orexis/desire#>
+PREFIX market: <http://example.org/orexis/market#>
+PREFIX actuation: <http://example.org/orexis/actuation#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
 PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX ag:   <http://example.org/agora#>
+PREFIX ag:   <http://example.org/orexis#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>

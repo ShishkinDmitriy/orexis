@@ -260,7 +260,7 @@ class SimulatedSensor:
         self._advanced_at = time.monotonic()
 
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,
-                                  client_id=f"agora-sim-{self.sensor_id}-{random.randint(0, 1 << 24):06x}")
+                                  client_id=f"orexis-sim-{self.sensor_id}-{random.randint(0, 1 << 24):06x}")
         self.client.username_pw_set(_env("MQTT_USERNAME"), _env("MQTT_PASSWORD"))
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message

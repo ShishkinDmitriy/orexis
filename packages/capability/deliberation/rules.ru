@@ -14,11 +14,11 @@
 # would SELECT between reflex and a model once both exist is an open seam — the rule is the
 # last piece to add, not the first.
 
-PREFIX deliberation: <http://example.org/agora/deliberation#>
-PREFIX sensing: <http://example.org/agora/sensing#>
-PREFIX actuation: <http://example.org/agora/actuation#>
-PREFIX market: <http://example.org/agora/market#>
-PREFIX ag:   <http://example.org/agora#>
+PREFIX deliberation: <http://example.org/orexis/deliberation#>
+PREFIX sensing: <http://example.org/orexis/sensing#>
+PREFIX actuation: <http://example.org/orexis/actuation#>
+PREFIX market: <http://example.org/orexis/market#>
+PREFIX ag:   <http://example.org/orexis#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>

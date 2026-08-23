@@ -92,7 +92,7 @@ gap below, which is a defect **in** pay-as-bid rather than a reason to prefer an
 [market](../domain/market.md) says the supplier should simply **dispense** in that case. Nothing
 implements it, and nothing can implement it *before* a round, for the reason above: demand is
 unknown until bids are in. It could be implemented *after* — the bids are in hand and the total
-is known at `close()`. That is a real and closable gap, filed as [#50](https://github.com/ShishkinDmitriy/agora/issues/50) rather than argued here.
+is known at `close()`. That is a real and closable gap, filed as [#50](https://github.com/ShishkinDmitriy/orexis/issues/50) rather than argued here.
 
 # What an iterative auction would buy, and cost
 

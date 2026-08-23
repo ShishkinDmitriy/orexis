@@ -1,4 +1,4 @@
-"""agora-wokwi — the stand as a Wokwi project, drawn from the world and never by hand.
+"""orexis-wokwi — the stand as a Wokwi project, drawn from the world and never by hand.
 
 A hand-maintained wiring diagram is wrong the first time a jumper moves, and wrong SILENTLY,
 which is worse than not having one. These check the generated one says what the world says,
@@ -197,7 +197,7 @@ def test_the_committed_picture_is_in_step_with_the_world():
     """
     committed = json.loads((world_dir("sensing") / "wokwi" / "diagram.json").read_text())
     assert committed == render("sensing"), (
-        "world/sensing/wokwi/diagram.json is out of step — run `agora-wokwi sensing`")
+        "world/sensing/wokwi/diagram.json is out of step — run `orexis-wokwi sensing`")
 
 
 def test_a_dragged_part_keeps_where_you_put_it(tmp_path, monkeypatch):
@@ -276,7 +276,7 @@ def test_what_wokwi_cannot_say_is_marked_and_not_guessed(drafted):
     """The draft is deliberately unvalidatable.
 
     A diagram carries no calibration, no rails, no topics and no name a person would recognise.
-    Emitting a plausible value for those would produce a draft that PASSES agora-validate, which
+    Emitting a plausible value for those would produce a draft that PASSES orexis-validate, which
     is the one nobody re-reads — so each is an explicit marker instead.
     """
     assert "### TODO ###" in drafted

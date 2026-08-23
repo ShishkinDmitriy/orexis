@@ -1,14 +1,14 @@
-@prefix intention: <http://example.org/agora/intention#> .
-@prefix : <http://example.org/agora/intention#> .
-@prefix desire: <http://example.org/agora/desire#> .
-@prefix ag:   <http://example.org/agora#> .
+@prefix intention: <http://example.org/orexis/intention#> .
+@prefix : <http://example.org/orexis/intention#> .
+@prefix desire: <http://example.org/orexis/desire#> .
+@prefix ag:   <http://example.org/orexis#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
-<http://example.org/agora/intention> a owl:Ontology ;
-    rdfs:label "Agora intention" ;
+<http://example.org/orexis/intention> a owl:Ontology ;
+    rdfs:label "Orexis intention" ;
     rdfs:comment """BDI's third letter: a commitment to reduce a named gap by a named means, which persists until it is resolved rather than being re-decided on every sensing.
 
 **An intention is an amortised deliberation.** The sharpest lesson in the BDI literature is that intentions exist to SAVE deliberation — an agent that re-decides on every reading is a reflex machine wearing a planner's name — and here that is a cost model rather than philosophy: deliberation is about to include an LLM call, and the commitment is what makes one affordable. This package is the substrate that makes that persistence a FACT with a lifecycle instead of a scatter of module state: `bidding.pending`, a held claim and a commanded cadence were all intentions before this package named them.

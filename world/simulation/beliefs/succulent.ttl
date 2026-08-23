@@ -1,14 +1,14 @@
-@prefix : <http://example.org/agora/world/simulation#> .
-@prefix intention: <http://example.org/agora/intention#> .
+@prefix : <http://example.org/orexis/world/simulation#> .
+@prefix intention: <http://example.org/orexis/intention#> .
 @prefix schema: <https://schema.org/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
-@prefix desire: <http://example.org/agora/desire#> .
-@prefix review: <http://example.org/agora/review#> .
-@prefix sensing: <http://example.org/agora/sensing#> .
-@prefix water: <http://example.org/agora/water#> .
-@prefix reporting: <http://example.org/agora/reporting#> .
-@prefix ag: <http://example.org/agora#> .
-@prefix market: <http://example.org/agora/market#> .
+@prefix desire: <http://example.org/orexis/desire#> .
+@prefix review: <http://example.org/orexis/review#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix water: <http://example.org/orexis/water#> .
+@prefix reporting: <http://example.org/orexis/reporting#> .
+@prefix ag: <http://example.org/orexis#> .
+@prefix market: <http://example.org/orexis/market#> .
 
 #  Succulent's agent's PRIVATE beliefs. Note how far these diverge from fern's: it wants a
 #  fifth of the moisture, shrugs at readings that would have fern bidding hard, and is
@@ -30,7 +30,7 @@
     water:maxValuePerL 0.80 .
 
 ##  How often it says how it is — belief base size, reading freshness, silent write failures.
-#   Omit this line and the agent reports nothing; see agora/metrics.py.
+#   Omit this line and the agent reports nothing; see orexis/metrics.py.
 :succulent_agent reporting:metricsIntervalS 60 .
 
 ##  Self-review — how often at the very least.

@@ -19,7 +19,7 @@ Swapping greedy pay-as-bid for uniform-price meant editing that file. The seam w
 
 A claimed seam is worse than an acknowledged gap because it is cited:
 [the-lot-is-the-hosts-standing-offer](the-lot-is-the-hosts-standing-offer.md) and
-[#50](https://github.com/ShishkinDmitriy/agora/issues/50) both park the pay-as-bid-versus-uniform-price
+[#50](https://github.com/ShishkinDmitriy/orexis/issues/50) both park the pay-as-bid-versus-uniform-price
 argument as *a separate argument*, on the assumption that there is somewhere to have it.
 
 # First: a market is structure, an auction is a process

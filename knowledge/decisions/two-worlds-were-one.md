@@ -16,7 +16,7 @@ The first two were near-duplicates, and the measurement is the argument:
 - **all four belief files were byte-identical**;
 - after normalising the `sim/` topic prefix and the device-id naming, **~45 lines of ~230
   differed**, and every one of them was a simulated-device declaration (`ag:simulatedBy`, five
-  `ag:model*` parameters) or the air sensor added by [#88](https://github.com/ShishkinDmitriy/agora/pull/88).
+  `ag:model*` parameters) or the air sensor added by [#88](https://github.com/ShishkinDmitriy/orexis/pull/88).
 
 Two worlds that differ only in whether their devices are stood in for are one world with a flag
 spelled as a directory.
@@ -64,7 +64,7 @@ Dropping it needed the prefix to be doing no real work. It was not:
 - **`onboarding/compose.py` keys off `ag:simulatedBy`**, not off ids or topics, so container
   names and `SIM_*` environment followed the rename without a line changing. Verified by
   regenerating rather than assumed.
-- **Dashboards use the Influx measurement and its tags**, never a topic; **`agora-firmware
+- **Dashboards use the Influx measurement and its tags**, never a topic; **`orexis-firmware
   simulation` emits nothing**, because no board in that world states `mc:firmware`; **`infra/tests`
   mint their own probe topics.**
 
@@ -129,13 +129,13 @@ saving and a much smaller claim, and the test is named for what it checks now.
 # Seams left open
 
 - **Nothing in the repository describes a market world with real devices.** `society` was the
-  only one, and it is gone. The wiring vocabulary and `agora-firmware` are exercised by `sensing`
+  only one, and it is gone. The wiring vocabulary and `orexis-firmware` are exercised by `sensing`
   alone, which has no market — so nothing checks that a market world's devices could be flashed.
 - **The generated secrets for `simulation` are stale.** Device credentials are named after device
-  ids, so `mqtt-sensor_fern.env` is now `mqtt-moisture_sensor_fern.env`; `agora-mqtt simulation`
+  ids, so `mqtt-sensor_fern.env` is now `mqtt-moisture_sensor_fern.env`; `orexis-mqtt simulation`
   has to run before that world starts again. Nothing warns — the world simply fails to
   authenticate, which is the shape of failure
-  [#87](https://github.com/ShishkinDmitriy/agora/issues/87) exists to make loud for belief bases
+  [#87](https://github.com/ShishkinDmitriy/orexis/issues/87) exists to make loud for belief bases
   and does not cover for credentials.
 - **Simulated traffic is no longer self-describing.** Recorded above as the price of the property;
   if it turns out to matter, the answer is a per-world broker banner rather than a topic prefix,

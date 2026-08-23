@@ -6,7 +6,7 @@ description: A society lives in four places with four different lifetimes, and c
 
 # Why this needs a page at all
 
-`podman compose down` is not "stop agora". It removes the containers **that one compose file
+`podman compose down` is not "stop orexis". It removes the containers **that one compose file
 declares**, and nothing else — which is correct behaviour, and still surprising, because a
 society is not only its processes.
 
@@ -60,7 +60,7 @@ In this order, because each layer is independent:
 for w in world/*/; do (cd "$w" && podman compose down); done
 
 # 2. host processes — compose never knew about these
-pkill -f "agora.runtime|agora-agent"
+pkill -f "orexis.runtime|orexis-agent"
 
 # 3. infra, if you want the broker, the store and the dashboards down too
 cd infra && podman compose down
@@ -74,7 +74,7 @@ Check nothing is left:
 
 ```bash
 podman ps
-pgrep -af agora | grep -v conmon
+pgrep -af orexis | grep -v conmon
 ```
 
 # The broker stops, and reloads, because PID 1 is a shell
@@ -92,7 +92,7 @@ ends up unprivileged either way. `infra/mosquitto/entrypoint.sh` is the fix — 
 PID 1 that runs the broker as a child and forwards signals to it. The broker still drops to
 `user mosquitto`, so nothing faces the network as root.
 
-That is what makes `agora-mqtt` cost a reload rather than a restart.
+That is what makes `orexis-mqtt` cost a reload rather than a restart.
 
 # Clear standing instructions on the broker
 
@@ -145,7 +145,7 @@ volume belonging to that agent alone.
 | you want | do |
 |---|---|
 | pause a society | `cd world/<name> && podman compose down` |
-| swap worlds | `down`, `agora-onboard <other>`, `up` — see [run-a-world](/runbooks/run-a-world.md) |
+| swap worlds | `down`, `orexis-onboard <other>`, `up` — see [run-a-world](/runbooks/run-a-world.md) |
 | stop everything | all worlds down, then `pkill`, then infra down |
 | a device is obeying a world that is gone | clear its retained `cmd` topic |
 | start completely fresh | the above, then `cd infra && podman compose down -v`, then genesis from scratch |

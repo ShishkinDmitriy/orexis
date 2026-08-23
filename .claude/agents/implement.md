@@ -16,7 +16,7 @@ and the reasoning usually lives in a linked record under `knowledge/decisions/`.
 
 # The gates, all of them, before you commit
 
-    .venv/bin/agora-validate sensing        and society and simulation
+    .venv/bin/orexis-validate sensing        and society and simulation
     .venv/bin/pytest tests -q
     ./tools/validate-okf.sh knowledge
 
@@ -28,7 +28,7 @@ there.
 arbitrary code execution, so they can never be allowlisted and every one of them stops and waits.
 The allowlist covers the gates and the whole `git`/`gh pr` path deliberately, so a change that is
 only code, tests and knowledge can go from branch to open PR without a human in the loop. What it
-does not cover — containers, `agora-*` generators, `mosquitto_pub`, `pytest infra` — is what
+does not cover — containers, `orexis-*` generators, `mosquitto_pub`, `pytest infra` — is what
 touches the shared bench, and stopping there is the point rather than an obstacle.
 
 # Four things learned the hard way

@@ -40,10 +40,10 @@ from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION
 
 # What this package asks OF others, by family or by IRI — namespaces, never Python.
-_DELIBERATION = "http://example.org/agora/deliberation#DeliberationCapability"
-_DESIRE = "http://example.org/agora/desire#DesireCapability"
-_INTENTION = "http://example.org/agora/intention#IntentionCapability"
-_ACTUATE = "http://example.org/agora#Actuate"
+_DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
+_DESIRE = "http://example.org/orexis/desire#DesireCapability"
+_INTENTION = "http://example.org/orexis/intention#IntentionCapability"
+_ACTUATE = "http://example.org/orexis#Actuate"
 
 # My own conversion belief for a SELF-dose (#190), keyed by the valuation term the resource
 # chain names: my actuator draws from my own source, the source's class states its good, and
@@ -99,7 +99,7 @@ class ActuationModule(Module):
             self.host_key = signing.load_private("host")
             self.clearing_key = signing.load_private("clearing")
         except Exception:
-            self.log.warning("no signing keys (run agora-keygen) — devices will reject commands")
+            self.log.warning("no signing keys (run orexis-keygen) — devices will reject commands")
 
     def _subject_of(self, winner_id: str) -> str:
         """The winner's SUBJECT — where its dose goes. A claim names the buying AGENT.

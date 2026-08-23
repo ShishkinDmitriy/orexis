@@ -22,7 +22,7 @@ move is water arriving at percolation speed, a crossing persists once it happens
 period therefore bounds detection **latency**, never detection probability.
 
 Declare a board with `mc:firmware "moisture-sentinel"`, mark its channel
-`ssn:implements sensing:AlarmProcedure`, run `agora-firmware <world>`, and flash:
+`ssn:implements sensing:AlarmProcedure`, run `orexis-firmware <world>`, and flash:
 
 ```bash
 pio run -t upload      # from this directory

@@ -15,7 +15,7 @@ timestamp: 2026-08-10T00:00:00Z
 Two things were true at once and should not have been.
 
 **Every package already declared a namespace of its own.** `packages/capability/market/ontology.ttl` opens
-`<http://example.org/agora/market> a owl:Ontology`, and so does every other package — review,
+`<http://example.org/orexis/market> a owl:Ontology`, and so does every other package — review,
 sensing, actuation, the mqtt transport. The trees under `vocabulary/` went further and put their
 *terms* there too: `mc:`, `onewire:`, `i2c:`, `probe:`, since
 [pins-and-wires](pins-and-wires.md). So the convention existed, was in use, and was documented.
@@ -55,7 +55,7 @@ before any capability's Python.
 are standardised and stable, and a package that could rebind `rdfs:` could make `rdfs:subClassOf`
 mean what it liked — the walk [one-graph-both-engines-read](one-graph-both-engines-read.md)
 materialises and every shape leans on. `ag:` is *not* in that list: it arrives from
-`packages/core/agora/ontology.ttl` like any other package's, because the base vocabulary is a package
+`packages/core/orexis/ontology.ttl` like any other package's, because the base vocabulary is a package
 and hard-coding it would have made it an exception for no reason but habit.
 
 **A label bound to two namespaces is refused.** It is the quietest bug available — both spellings
@@ -124,7 +124,7 @@ else's belief would have been taken up as this module's. Compared whole now.
 
 **`onboarding/mqtt.py` derives the broker ACL from `bidsIn` and `hosts`.** A missed rename there
 un-grants every market topic and nothing fails: the generators are not run by either gate, which is
-exactly how [PR #62](https://github.com/ShishkinDmitriy/agora/pull/62) shipped a live regression in
+exactly how [PR #62](https://github.com/ShishkinDmitriy/orexis/pull/62) shipped a live regression in
 the supplier's signing keys. So the grants and the compose files were regenerated and diffed rather
 than assumed.
 

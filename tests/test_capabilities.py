@@ -146,7 +146,7 @@ def test_plant_agent_cannot_actuate(me):
 def _world_with_push_sensor():
     """Swap fern's board for one that pushes on its own clock, and re-derive.
 
-    EVERY sensor fern polls, not one named one. This used to edit `<http://example.org/agora/world/simulation#moisture_sensor_fern>`
+    EVERY sensor fern polls, not one named one. This used to edit `<http://example.org/orexis/world/simulation#moisture_sensor_fern>`
     alone, which was the whole of fern's wiring when the world it ran against had one sensor per
     agent. It has two now — a probe and a thermometer sharing the board's one message — and
     switching only the probe leaves the thermometer scheduled, so the agent keeps `Subscribing`
@@ -166,7 +166,7 @@ def _world_with_push_sensor():
         DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?s sensing:senseMode sensing:ScheduledProcedure }} }}
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?s sensing:senseMode sensing:PushProcedure }} }}
         WHERE  {{ GRAPH <{WORLD_GRAPH}> {{
-                 <http://example.org/agora/world/simulation#fern_agent> sensing:polls ?s .
+                 <http://example.org/orexis/world/simulation#fern_agent> sensing:polls ?s .
                  ?s sensing:senseMode sensing:ScheduledProcedure }} }}
     """)
     st.clear_graph(WORLD_DERIVED_GRAPH)
@@ -319,7 +319,7 @@ def test_a_package_whose_import_fails_costs_only_the_agents_granted_it(tmp_path,
     """The declared degrade path, synthesised: a package whose optional extra is missing.
 
     Before #216 the loader imported every package to build the registry, so ONE missing
-    dependency — `agora[consulting]` and its model client — crashed every agent in the
+    dependency — `orexis[consulting]` and its model client — crashed every agent in the
     society at import time, including the ones never granted the capability. Now a
     capability names its owning package by NAMESPACE (no Python read to find out), so the
     failure is scoped: the granted agent gets the honest "nothing provides it" path, and
@@ -331,7 +331,7 @@ def test_a_package_whose_import_fails_costs_only_the_agents_granted_it(tmp_path,
     pkg.mkdir(parents=True)
     (pkg / "ontology.ttl").write_text(
         "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n"
-        "<http://example.org/agora/oracular> a owl:Ontology .\n")
+        "<http://example.org/orexis/oracular> a owl:Ontology .\n")
     (pkg / "__init__.py").write_text("import definitely_not_installed  # the missing extra\n")
 
     real = loader.of_kind
@@ -339,7 +339,7 @@ def test_a_package_whose_import_fails_costs_only_the_agents_granted_it(tmp_path,
         loader.Package(path=pkg, kind="capability", name="oracular"),))
     loader._namespace_owners.cache_clear()
 
-    consulting = "http://example.org/agora/oracular#Consulting"
+    consulting = "http://example.org/orexis/oracular#Consulting"
     assert loader.registry_for({consulting}) == {}, "granted: unprovided, and no crash"
     assert set(loader.registry_for({SUBSCRIBING})) == {SUBSCRIBING}, \
         "ungranted: the broken package is never even imported"

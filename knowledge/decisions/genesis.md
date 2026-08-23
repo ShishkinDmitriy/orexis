@@ -54,7 +54,7 @@ model-driven claim reduced to something you can check by re-seeding.
 
 # Agents are born from the world
 
-Nothing lists the agents to run. `agora-compose <world>` reads `?a a ag:Agent` out of the world
+Nothing lists the agents to run. `orexis-compose <world>` reads `?a a ag:Agent` out of the world
 and writes one container per answer, each told the single thing an agent is ever told: its own
 id. The roster *is* the ratified world, so adding an agent is adding it to `world.ttl` — no
 unit file, no launcher edit, and no place for a list to drift from the model. The compose file
@@ -146,7 +146,7 @@ amendments append a version, the version chain never mutates, and the "current" 
 projection of the latest. Rollback is a *forward* amendment (re-ratify an old version as the
 new current), never an edit of the past.
 
-v1: an `agora:versionNumber` bumped by hand in `world/<name>/world.ttl` when the sovereign edits
+v1: an `orexis:versionNumber` bumped by hand in `world/<name>/world.ttl` when the sovereign edits
 it and re-seeds; every recorded observation is stamped with it. Archiving prior versions and
 the diff/migration tooling are v2/v3.
 

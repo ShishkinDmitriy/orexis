@@ -3,7 +3,7 @@
 # These are the four checks AGENTS.md calls the gates, and they were being run by hand on every
 # change — on a Raspberry Pi, where the suite takes the better part of a minute and the person or
 # agent running it pays for reading the output. None of them need hardware, a broker, or a store:
-# `agora-validate` builds a world in memory, the tests build their belief bases in memory, and the
+# `orexis-validate` builds a world in memory, the tests build their belief bases in memory, and the
 # other two read files. So they belong here.
 #
 # What is deliberately NOT here, and still has to be done by hand on the bench:
@@ -51,11 +51,11 @@ jobs:
       #
       # The world is still named on failure, which is why the loop groups and annotates rather
       # than just running: a red X should say WHICH world, not send you into a log.
-      - name: agora-validate every world
+      - name: orexis-validate every world
         run: |
           for w in $(python -c "from agent import genesis; print(' '.join(genesis.worlds()))"); do
-            echo "::group::agora-validate $w"
-            agora-validate "$w" || { echo "::error::$w failed validation"; exit 1; }
+            echo "::group::orexis-validate $w"
+            orexis-validate "$w" || { echo "::error::$w failed validation"; exit 1; }
             echo "::endgroup::"
           done
 

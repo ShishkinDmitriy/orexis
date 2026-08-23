@@ -12,7 +12,7 @@
 #     privileges itself, so PID 1 ends up unprivileged either way. Measured, not assumed.
 #   - Running the broker as root would be a real regression for a network-facing process. So
 #     mosquitto drops privileges exactly as before, via `user mosquitto` in the config
-#     `agora-mqtt <world>` generates.
+#     `orexis-mqtt <world>` generates.
 #
 # root shell as PID 1, unprivileged broker as its child: signals land, and nothing listens on
 # the network as root. See knowledge/decisions/series-and-bus-isolation.md.
@@ -39,7 +39,7 @@ fi
 /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf &
 broker=$!
 
-# HUP is the one that matters: `agora-mqtt` regenerates passwd and acl.conf, and mosquitto
+# HUP is the one that matters: `orexis-mqtt` regenerates passwd and acl.conf, and mosquitto
 # rereads both on this signal WITHOUT dropping a single connected client.
 reload() {
     echo "entrypoint: SIGHUP -> reloading mosquitto ($broker)"

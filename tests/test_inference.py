@@ -2,7 +2,7 @@
 
 Two engines read this society's graphs. `pyshacl` used to entail what the vocabulary implies and
 `pyoxigraph` entailed nothing, so a world could satisfy a shape about a relationship the code
-would never observe. `agora/inference.py` now asserts the entailments once, into the store, and
+would never observe. `orexis/inference.py` now asserts the entailments once, into the store, and
 validation runs with inference OFF against that same graph.
 
 The interesting test here is not that the closure computes something. It is that **nothing has
@@ -27,11 +27,11 @@ from agent.ontology import (SOSA, AG, MC, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAP
                             WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 from agent.store import Store, bindings
 
-MC = "http://example.org/agora/microcontroller#"
-ONEWIRE = "http://example.org/agora/onewire#"
-DHT11 = "http://example.org/agora/dht11#"
-AG = "http://example.org/agora#"
-SENSING_WORLD = "http://example.org/agora/world/sensing#"
+MC = "http://example.org/orexis/microcontroller#"
+ONEWIRE = "http://example.org/orexis/onewire#"
+DHT11 = "http://example.org/orexis/dht11#"
+AG = "http://example.org/orexis#"
+SENSING_WORLD = "http://example.org/orexis/world/sensing#"
 
 
 def _public(world: str = "sensing") -> Store:
@@ -60,7 +60,7 @@ def test_a_world_instance_is_typed_by_what_its_class_is_under():
     """The probe is declared a `probe:CapacitiveMoistureProbe` in the stand and a `sosa:Sensor` in
     the society. Being observably a Sensor to the RUNTIME is what let the derivation rules stop
     joining the ontology to walk a subclass path."""
-    types = _types_of(_public(), WORLD_ENTAILED_GRAPH, "http://example.org/agora/world/sensing#moisture_sensor_fern")
+    types = _types_of(_public(), WORLD_ENTAILED_GRAPH, "http://example.org/orexis/world/sensing#moisture_sensor_fern")
     assert MC + "Peripheral" in types
 
 
@@ -100,13 +100,13 @@ def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
     # levels, because stating only one of them was what made the old class-level triples look
     # sufficient — `dht11:Dht11 ssn:implements dht11:CombinedRead` reads as though a device does
     # something, and the only subject it ever gave that predicate was the class itself.
-    assert reached.get("http://example.org/agora/world/sensing#air_sensor_fern") == {DHT11 + "CombinedRead", ONEWIRE + "Transaction"}
-    assert reached.get("http://example.org/agora/world/sensing#air_temp_fern") == {DHT11 + "TemperatureRead"}
-    assert reached.get("http://example.org/agora/world/sensing#air_humidity_fern") == {DHT11 + "HumidityRead"}
+    assert reached.get("http://example.org/orexis/world/sensing#air_sensor_fern") == {DHT11 + "CombinedRead", ONEWIRE + "Transaction"}
+    assert reached.get("http://example.org/orexis/world/sensing#air_temp_fern") == {DHT11 + "TemperatureRead"}
+    assert reached.get("http://example.org/orexis/world/sensing#air_humidity_fern") == {DHT11 + "HumidityRead"}
 
     # And the datasheet figures the sub-sensor types carry, which no world repeats.
-    for device, capability in (("http://example.org/agora/world/sensing#air_temp_fern", DHT11 + "TemperatureSensorCapability"),
-                               ("http://example.org/agora/world/sensing#air_humidity_fern", DHT11 + "HumiditySensorCapability")):
+    for device, capability in (("http://example.org/orexis/world/sensing#air_temp_fern", DHT11 + "TemperatureSensorCapability"),
+                               ("http://example.org/orexis/world/sensing#air_humidity_fern", DHT11 + "HumiditySensorCapability")):
         caps = {r["c"] for r in bindings(st.query(
             f"SELECT ?c WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{"
             f" <{device}> ssn-system:hasSystemCapability ?c }} }}"))}
@@ -116,7 +116,7 @@ def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
     # is typed governed:Node, and the alarm promise arrives through the same hasValue closure
     # the datasheet figures ride — one mechanism, two describers.
     from agent.ontology import SENSING
-    assert reached.get("http://example.org/agora/world/sensing#moisture_sensor_fern") == {SENSING + "AlarmProcedure"}
+    assert reached.get("http://example.org/orexis/world/sensing#moisture_sensor_fern") == {SENSING + "AlarmProcedure"}
     assert len(reached) == 4, f"walked the vocabulary and reached {len(reached)} devices"
 
 
@@ -185,7 +185,7 @@ def test_pyshacl_agrees_with_the_materialised_closure(world):
     Validation ships with `inference="none"` because the store already carries the entailments.
     That is only safe while pyshacl's own RDFS reasoner would reach the same verdict — so run it
     both ways over the same graph and require the same answer. A failure here means pyshacl
-    entails something `agora/inference.py` does not, which is exactly the two-engine disagreement
+    entails something `orexis/inference.py` does not, which is exactly the two-engine disagreement
     #27 was opened about, and it is worth catching as a test rather than as a 3am surprise.
     """
     st = _public(world)
@@ -209,7 +209,7 @@ def test_pyshacl_agrees_with_the_materialised_closure(world):
         verdicts[mode] = conforms
     assert verdicts["none"] == verdicts["rdfs"], (
         f"{world}: pyshacl reaches a different verdict with its own reasoner than against the "
-        "materialised closure — agora/inference.py no longer covers what the shapes rely on")
+        "materialised closure — orexis/inference.py no longer covers what the shapes rely on")
 
 
 # --- nobody should need to infer by hand again -----------------------------------------------
@@ -292,7 +292,7 @@ def test_no_query_walks_a_subclass_path_by_hand(path):
                  "rdfs:subPropertyOf*", "rdfs:subPropertyOf+"):
         assert walk not in text, (
             f"{path.name} walks {walk} by hand. Entailments are materialised at genesis — ask "
-            "what a thing IS. If the closure does not cover your case, widen agora/inference.py "
+            "what a thing IS. If the closure does not cover your case, widen orexis/inference.py "
             "rather than working around it here.")
 
 
@@ -304,7 +304,7 @@ def test_hosting_is_entailed_from_the_deployment():
 
     st = genesis_store(world="sensing")
     rows = bindings(st.query("""
-SELECT ?hosted WHERE { <http://example.org/agora/world/sensing#esp32_fern>
+SELECT ?hosted WHERE { <http://example.org/orexis/world/sensing#esp32_fern>
   <http://www.w3.org/ns/sosa/hosts> ?hosted }"""))
     hosted = {r["hosted"].rsplit("#", 1)[-1] for r in rows}
     assert {"moisture_sensor_fern", "status_led_fern", "air_sensor_fern"} <= hosted
@@ -312,5 +312,5 @@ SELECT ?hosted WHERE { <http://example.org/agora/world/sensing#esp32_fern>
     from agent.ontology import WORLD_ENTAILED_GRAPH
     entailed = bindings(st.query(f"""
 SELECT ?hosted WHERE {{ GRAPH <{WORLD_ENTAILED_GRAPH}> {{
-  <http://example.org/agora/world/sensing#esp32_fern> <http://www.w3.org/ns/sosa/hosts> ?hosted }} }}"""))
+  <http://example.org/orexis/world/sensing#esp32_fern> <http://www.w3.org/ns/sosa/hosts> ?hosted }} }}"""))
     assert len(entailed) >= 3, "the chain's conclusion must land in world/entailed"

@@ -1,7 +1,7 @@
 ---
 type: Component
 title: Belief base
-term: http://example.org/agora#BeliefBase
+term: http://example.org/orexis#BeliefBase
 description: One belief base per agent, not one shared store — named-graph layout, SOSA observations, provenance, and the split between the series and the graph.
 ---
 
@@ -53,7 +53,7 @@ cited" is a mechanical membership check (PROV-O then records *which* witness ins
 below on why the graph, not the provenance triple, carries the trust):
 
 - `:ontology` — the shared **T-Box**, merged from every package's `ontology.ttl`
-  (`packages/core/agora/` and every `packages/<family>/<name>/`): classes and properties (World,
+  (`packages/core/orexis/` and every `packages/<family>/<name>/`): classes and properties (World,
   Agent, Sensor, Valve, Plant, Band, servedBy…). The vocabulary agents read from context.
 - `:world` — the sovereign-authored **topology**, and *only* topology: which agent acts for
   which plant, which sensors it is wired to (`polls` — the access grant), which valve
@@ -95,8 +95,8 @@ the intention modality's own room of the volume (`<state>/intentions`, beside
 `<state>/belief-base`) — a pathless test mind keeps it here, exactly as pre-split volumes
 did.
 
-The graphs themselves are **typed, self-describing resources** (`:world a agora:WorldGraph`,
-`:beliefs/fern a agora:DesireGraph ; agora:beliefsOf agora:fern_agent` — the pick record, typed by its modality since `ag:BeliefsGraph` retired) — a graph catalog,
+The graphs themselves are **typed, self-describing resources** (`:world a orexis:WorldGraph`,
+`:beliefs/fern a orexis:DesireGraph ; orexis:beliefsOf orexis:fern_agent` — the pick record, typed by its modality since `ag:BeliefsGraph` retired) — a graph catalog,
 not magic strings. Topology (durable, authored) is kept out of `:sensed` (sensed, overwritten)
 and out of the belief graphs (opinion, revisable): three origins, three kinds of graph. See
 [genesis](/decisions/genesis.md) and [world-graph](/decisions/world-graph.md).
@@ -198,7 +198,7 @@ the wiring once.
 # SOSA
 
 Observations use SOSA on the sensor edge, and the devices themselves are SOSA too:
-`agora:Sensor` is a `sosa:Sensor`, `agora:Valve` a `sosa:Actuator`, and a plant a
+`orexis:Sensor` is a `sosa:Sensor`, `orexis:Valve` a `sosa:Actuator`, and a plant a
 `sosa:FeatureOfInterest`. The political vocabulary (wallet, bid, desire, cadence) stays in a
 lean custom ontology — SOSA models observation, not negotiation. See
 [sensing](/domain/sensing.md).
