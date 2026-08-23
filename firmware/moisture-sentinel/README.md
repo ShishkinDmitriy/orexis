@@ -56,8 +56,23 @@ about a hundred minutes of watching — speaking is the cost, watching is noise.
 | governed @ slow 600 s + watch | 144 | 40 | ~7 weeks |
 | governed, realistic (bursts, verification) | 180–240 | 50–65 | ~5 weeks |
 | sentinel, heartbeat 600 s | ~146 | 40 | ~7 weeks |
-| **sentinel, heartbeat 1 h** | ~26 | **10** | **~6 months** |
+| **sentinel, heartbeat 20 min** (current) | 72 | **21.6** | **~3 months** |
+| sentinel, heartbeat 40 min | 36 | 12.6 | ~5 months |
+| sentinel, heartbeat 1 h | ~26 | 10 | ~6 months |
 | sentinel, heartbeat 4 h | ~8 | 6 | ~11 months |
+
+**The patrol period is not in that table, because it does not belong there.** A look costs about
+2 × 10⁻⁷ mAh — start the oscillator, ~25 instructions, one conversion — so the vigil's 150 µA is
+almost entirely the RTC peripheral domain standing powered for the SAR, and only ~0.8 µA of it is
+looking, even at one look per second. **One radio wake buys roughly 1.1 million looks.** Patrolling
+every 15 s instead of every 60 s costs about a thousandth of a mAh per day: an hour of life over a
+three-month cell. So `WATCH_PATROL_S` is chosen for detection latency alone, and it is 15.
+
+What a faster patrol *can* cost is indirect — it notices more transients, and each extra alarm is a
+full 0.25 mAh wake, about 1.7 hours of standing vigil. If it ever hurts, that is the mechanism, and
+`WAKE_DELTA` is the knob rather than the period. The derivation is in
+[the-vigil-costs-standing-not-looking](../../knowledge/decisions/the-vigil-costs-standing-not-looking.md),
+including which of these numbers are measured and which are estimated.
 
 **The battery is spent by the agent's epistemology, not by the firmware.** The sentinel's
 heartbeat is generated under the polling agent's `sensing:maxReadingAgeS`, so the same board is
@@ -65,5 +80,7 @@ either no better than the governed node or four times better depending on that o
 crossing promise is what makes a generous one safe: silence means *nothing crossed*, freshness
 work moves off the heartbeat onto the ULP, and the heartbeat only proves liveness. A world that
 deploys a sentinel and keeps a twelve-minute freshness rule has bought the watcher and declined
-the savings. Past ~4 h the vigil itself dominates (~3.6 of 6 mAh), which is where the
-energy-budget seam's real question — pricing the watching — begins.
+the savings. Past ~4 h the vigil itself dominates (~3.6 of 6 mAh) — and *that* is now the whole of
+the energy-budget seam #151 left open: the watching has been priced, it is standing cost rather
+than sampling cost, and the only way left to reduce it is to stop holding the RTC domain powered
+between looks.
