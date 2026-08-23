@@ -38,6 +38,11 @@ from agent.store import bindings
 from agent.world import allocation_ceilings, participants
 
 from .beliefs import HOSTING_PICKS
+
+#  The serving means, spelled rather than imported: the kernel owns the term and market's own
+#  honoured.rq binds it, and `intention/terms.py` holds the same string for the same reason —
+#  a package may not import another's Python.
+_APPLY = "http://example.org/agora#Apply"
 from .terms import (ACTUATION, DELIBERATION, HOSTING, BID_MATCHING,
                     INTENTION, OFFER, OWING)
 
@@ -413,7 +418,7 @@ SELECT ?p WHERE {{
         #  find no desire module, and record nothing at all while issuing claims all day.
         if (ledger := self.agent.provider(OWING)) is not None:
             for claim in result.claims:
-                ledger.owe(claim.sub, claim.jti, expires_at=claim.exp)
+                ledger.owe(claim.sub, claim.jti, expires_at=claim.exp, amount_l=claim.amount_l)
 
     def on_redeem(self, presenter: str, claim: dict) -> None:
         """A holder presented its claim: verify it is theirs, then actuate. Single-use.
@@ -497,12 +502,22 @@ SELECT ?p WHERE {{
             desire = next((g for g in ledger.duties() if g.claim == jti), None)
             if desire is None:
                 return
-            if deliberator.propose_for(desire) is None:
+            move = deliberator.propose_for(desire)
+            if move is None:
                 # Hot, owed, and unpursued. It stays in `held`, so the moment the answer
                 # changes — stock arrives, a lever comes back — the sweep below serves it.
                 self.log.warning(
                     "claim %s stands unserved (urgency %.2f, owed to %s): %s proposed no move",
                     jti, desire.urgency, desire.owed_to.rsplit("#", 1)[-1], deliberator.name)
+                return
+            if move != _APPLY:
+                # The plan's FIRST step is not the serve (#255): a host owing water it does
+                # not hold plans the refill, and pouring now would spend a dry vessel's
+                # standing into a claim it cannot discharge. The claim stays held — the
+                # refill landing is exactly the reading the sweep below re-serves on.
+                self.log.info(
+                    "claim %s waits on the plan's first step (%s) — held, not poured",
+                    jti, move.rsplit("#", 1)[-1])
                 return
         del self.held[jti]
         self.log.info("serving claim %s (%.3f L) — %s", jti, claim.amount_l, why)

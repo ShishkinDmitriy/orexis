@@ -43,7 +43,7 @@ class OwingModule(Module):
         return rows[0]["a"] if rows else None
 
     def owe(self, to_agent_id: str, claim_jti: str,
-            expires_at: float | None = None) -> str | None:
+            expires_at: float | None = None, amount_l: float | None = None) -> str | None:
         """Record what the society just made this agent owe. Returns the obligation's IRI.
 
         Raised when a claim is ISSUED, not when it is presented: the debt exists from the
@@ -68,6 +68,11 @@ class OwingModule(Module):
         #  with no expiry leaves the triple out, and the obligation is simply never hot: that
         #  is a market with no redeem channel, where the dose went out on issue and there was
         #  never a wait to be late for.
+        #  The amount, recorded so the effect rule that says what SERVING makes true can size
+        #  the pour from the record rather than from a module's memory (#255). Optional for
+        #  the one market shape with no quantity; an obligation without it stays servable by
+        #  the direct row and unplannable, which is the graceful half of the widening.
+        amount = (f' <{KERNEL}amountL> {amount_l} ;' if amount_l is not None else "")
         expiry = ""
         if expires_at is not None:
             expiry = (f' ;\n                <{KERNEL}expiresAt> '
@@ -83,7 +88,7 @@ class OwingModule(Module):
                 <http://www.w3.org/ns/prov#wasDerivedFrom> "{claim_jti}" ;
                 <{KERNEL}owedTo> <{to_agent}> ;
                 <{KERNEL}forClaim> "{claim_jti}" ;
-                <{KERNEL}presented> false ;
+                <{KERNEL}presented> false ;{amount}
                 <{KERNEL}owedAt> "{datetime.now(timezone.utc).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime>{expiry} }} }}""")
         #  A debt arriving at runtime is a want arriving at runtime: the record above is the
         #  belief base's, and the desire modality is RECOMPUTED to hold it — the same

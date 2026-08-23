@@ -201,21 +201,20 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     moved = planner._value_in(step.world, desire)
     assert moved > DRY, "the dose moved the world it was simulated into"
 
-    #  The MEANS is passed because sizing is dispatched to whoever would take the act (#268):
-    #  an actuator sizes a dose, a bidder sizes a bid, and a planner asks neither for the
-    #  other's. Both production call sites pass it; a bare `_bind` sizes nothing on purpose.
-    actuate = "http://example.org/agora#Actuate"
-    assert planner._bind(desire, here, actuate)["value"] == DRY
-    assert planner._bind(desire, step, actuate)["value"] == moved, \
+    #  The ROW is passed because sizing dispatches on its means (#268) — an actuator sizes a
+    #  dose, a bidder sizes a bid — and because a duty borrows the row's property when it has
+    #  none of its own (#255). A bare `_bind` sizes nothing on purpose.
+    assert planner._bind(desire, here, row)["value"] == DRY
+    assert planner._bind(desire, step, row)["value"] == moved, \
         "a step taken from here must be predicted from HERE, not from where the agent stands"
-    assert planner._bind(desire, step, actuate)["sensed"] != planner._bind(
-        desire, here, actuate)["sensed"], \
+    assert planner._bind(desire, step, row)["sensed"] != planner._bind(
+        desire, here, row)["sensed"], \
         "and it must ASK about here too — a rule reads the readings its own node reached"
 
     asked = []
     monkeypatch.setattr(agent.provider("http://example.org/agora/actuation#Actuation"),
                         "dose_for", lambda prop, value: asked.append(value) or 0.06)
-    planner._bind(desire, step, actuate)
+    planner._bind(desire, step, row)
     assert asked == [moved], "the dose is sized from the world the step starts in"
 
 

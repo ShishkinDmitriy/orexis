@@ -282,6 +282,20 @@ class ReflexModule(Module):
         #  debt is visible, rankable, and still not actionable until it is presented.
         if not desire.pursuable:
             return None
+        #  SIMULATE FIRST, exactly as a stake does (#255): the search sees the honoured row
+        #  AND this agent's own levers, so a host owing water it does not hold plans the
+        #  refill — Acquire raises the level Apply's premise reads, and "refill, then serve"
+        #  falls out of two rules that never mention each other. A search that answered and
+        #  found no move is the evidence the issue demands: the duty stays hot, stays owed,
+        #  and is not pursued into a world where serving discharges nothing.
+        answered, move = self._simulated(desire)
+        if answered and move:
+            return move
+        #  The search speaks for a duty only when it FOUND a path — a vessel nobody has read
+        #  binds no premise, and a premise that cannot bind proves nothing about serving. So
+        #  anything short of a plan falls through to the pre-#255 road, unchanged: the
+        #  honoured row for this counterparty, and the actuation boundary judges the vessel
+        #  when it pours.
         for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union):
             if not row.is_chosen and row.for_agent == desire.owed_to:
                 return row.means

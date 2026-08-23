@@ -870,3 +870,45 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     ledger.discharge("j-city-1")
     assert ledger.owed() == [], "paid"
     assert city.pursuing() == [], "and a pure seller with nothing outstanding wants nothing at all"
+
+
+def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
+    """#255's done-when, in the world that motivated it: refill-then-deliver is the one chain
+    with a real dependency, and it is a DUTY. The barrel holds less than the claim asks; the
+    Apply effect's premise cannot bind, so serving predicts nothing and is discarded as
+    somewhere already reached — and the step that IS reachable is Acquire, whose effect raises
+    the very level Apply reads. Two rules that never mention each other, one two-step plan.
+    """
+    from packages.capability.deliberation import DELIBERATION
+
+    valve = _win_for_fern(host)
+    stock_reading(host, 0.3)                     # less than the 0.5 L the claim asks
+    market = market_of(host)
+    claim = host.sent.to(f"{market.claim_topic}/fern")[-1]
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": claim["jti"], "sub": "fern"})
+
+    assert host.sent.to(valve.command_topic) == [], \
+        "a pour from a vessel known too low discharges nothing — the claim is held, not spent"
+
+    duty = next(g for g in host.pursuing() if g.is_duty)
+    move = host.provider(DELIBERATION).propose_for(duty)
+    assert move == "http://example.org/agora#Acquire", \
+        "the plan's first step is the refill — the search found the chain the reflex never could"
+
+
+def test_a_host_holding_enough_serves_the_presented_claim_by_the_same_search(host):
+    """The wet twin: with the vessel above the owed amount, Apply's premise binds, the
+    one-step plan discharges the duty in its possible world, and the search proposes the
+    serve itself — the same machinery, no special case."""
+    from packages.capability.deliberation import DELIBERATION
+
+    valve = _win_for_fern(host)
+    stock_reading(host, 3.0)
+    market = market_of(host)
+    claim = host.sent.to(f"{market.claim_topic}/fern")[-1]
+    host.deliver(f"{market.redeem_topic}/fern", {"jti": claim["jti"], "sub": "fern"})
+
+    assert host.sent.to(valve.command_topic), "holding enough, the presentation pours"
+
+    duty = [g for g in host.pursuing() if g.is_duty and g.claim == claim["jti"]]
+    assert duty == [], "and the discharged debt is history, not a desire"
