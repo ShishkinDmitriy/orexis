@@ -221,14 +221,14 @@ void setup() {
         //
         // `prev` mirrors the reading's own shape, so the same pointer reaches it one level
         // down: a sensor reading `/moisture` finds its prior at `/prev/moisture`.
+        // The age comes off the RTC clock at THIS instant, so it already includes the time
+        // spent connecting — and, across a failed attempt, the sleeps since. Nothing to add.
         float prevFrac; uint32_t prevAge;
         if (priorQuietSample(&prevFrac, &prevAge)) {
           snprintf(payload, sizeof(payload),
                    "{\"moisture\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\","
                    "\"prev\":{\"moisture\":%.3f,\"age_s\":%lu}}",
-                   lastFrac, SENSOR_ID, prevFrac,
-                   (unsigned long)(prevAge + millis() / 1000));  // age at THIS instant, not at
-                                                                 // the wake: connecting took time
+                   lastFrac, SENSOR_ID, prevFrac, (unsigned long)prevAge);
         } else {
           snprintf(payload, sizeof(payload),
                    "{\"moisture\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",

@@ -41,6 +41,11 @@
 #include "soc/rtc_io_reg.h"
 #include "soc/sens_reg.h"
 #include <esp_sleep.h>
+// The RTC counter, which runs through deep sleep — the only clock here that does. millis() and
+// esp_timer restart on every wake, so neither can measure how long a board has been failing to
+// publish. A private header, used deliberately: the public alternatives either reset on wake or
+// need wall time this board has no way to obtain.
+#include "esp_private/esp_clk.h"
 
 #include "config.h"
 #include "ulp_watch.h"
@@ -171,7 +176,21 @@ static uint16_t fracToRaw(float frac) {
 
 RTC_DATA_ATTR static float rtc_last_reported = -1.0f;
 
-void noteReported(float frac) { rtc_last_reported = frac; }
+// A PRIOR OUTLIVES A FAILED PUBLISH. The bench found this: a crossing wake that could not reach
+// the broker slept, re-armed — which resets the last-quiet-look to none — and woke again on a
+// window that was already broken at its first look. So the retry carried no prior at all, even
+// though the board still knew perfectly well what it had seen and when. The fact had not
+// expired; it had only got older.
+//
+// Held across sleeps in RTC memory and cleared only by a publish that SUCCEEDED, because a
+// successful report re-anchors the window and any earlier crossing is then superseded.
+RTC_DATA_ATTR static float    rtc_prior_frac  = -1.0f;   // negative: none held
+RTC_DATA_ATTR static uint64_t rtc_prior_at_us = 0;       // RTC-clock instant of that quiet look
+
+void noteReported(float frac) {
+  rtc_last_reported = frac;
+  rtc_prior_frac = -1.0f;   // the report landed; the window re-anchors and the prior is spent
+}
 
 void armUlpWatch(float nowFrac) {
   // A DEVIATION alarm, and only that. The window is the last value the agent HEARD, plus and
@@ -226,10 +245,13 @@ void armUlpWatch(float nowFrac) {
   } else {
     // ONE line, kept at normal verbosity: it is the whole health of the watcher. Zero looks
     // means the coprocessor stopped, which is silent in every other way.
-    Serial.printf("ULP: %u looks, %u breaching, last sample %u\n",
+    // The RTC clock is the assumption this firmware's prior-ageing rests on, so it is reported
+    // rather than trusted: it must keep climbing across a deep sleep, where millis() restarts.
+    Serial.printf("ULP: %u looks, %u breaching, last sample %u  (rtc %lus)\n",
                   (unsigned)(RTC_SLOW_MEM[ULP_MEM_TICKS] & 0xFFFF),
                   (unsigned)(RTC_SLOW_MEM[ULP_MEM_LOOKS] & 0xFFFF),
-                  (unsigned)(RTC_SLOW_MEM[ULP_MEM_LAST]  & 0xFFFF));
+                  (unsigned)(RTC_SLOW_MEM[ULP_MEM_LAST]  & 0xFFFF),
+                  (unsigned long)(esp_clk_rtc_time() / 1000000ULL));
   }
   RTC_SLOW_MEM[ULP_MEM_TICKS] = 0;
   RTC_SLOW_MEM[ULP_MEM_LOOKS] = 0;              // every arming starts the vigil over
@@ -478,7 +500,24 @@ void ulpSelfTest(int seconds) {
   }
 }
 
-bool priorQuietSample(float *frac, uint32_t *ageAtWakeS) {
+static bool latchQuietSample(float *frac, uint32_t *ageS, uint64_t now);
+
+bool priorQuietSample(float *frac, uint32_t *ageS) {
+  // A prior already held from an attempt that failed to publish outranks a fresh look: it is
+  // the older, truer corner, and its age has simply grown while the radio was losing.
+  uint64_t now = esp_clk_rtc_time();
+  if (rtc_prior_frac >= 0.0f) {
+    uint64_t age = (now > rtc_prior_at_us) ? (now - rtc_prior_at_us) / 1000000ULL : 0;
+    // A prior older than a couple of heartbeats is no longer evidence about the SHAPE of this
+    // crossing — it is just an old reading, and the interpolation it would fix has long since
+    // been overwritten by beats in between. Dropped rather than reported stale.
+    if (age > (uint64_t)HEARTBEAT_S * 2) { rtc_prior_frac = -1.0f; }
+    else { *frac = rtc_prior_frac; *ageS = (uint32_t)age; return true; }
+  }
+  return latchQuietSample(frac, ageS, now);
+}
+
+static bool latchQuietSample(float *frac, uint32_t *ageS, uint64_t now) {
   // What the coprocessor saw on its last in-window look, and how long before the wake that was.
   // The arithmetic is exact rather than estimated: a quiet look sets the patrol rate, the look
   // after it breached and switched to the confirm rate, and every look from there was a confirm
@@ -488,8 +527,11 @@ bool priorQuietSample(float *frac, uint32_t *ageAtWakeS) {
   float f = (ADC_DRY - (float)raw) / (float)(ADC_DRY - ADC_WET);
   if (f < 0.0f) f = 0.0f;
   if (f > 1.0f) f = 1.0f;
+  uint32_t age = (uint32_t)WATCH_PATROL_S + (uint32_t)(WAKE_PERSIST_LOOKS - 1) * WATCH_CONFIRM_S;
+  rtc_prior_frac  = f;
+  rtc_prior_at_us = (now > (uint64_t)age * 1000000ULL) ? now - (uint64_t)age * 1000000ULL : 0;
   *frac = f;
-  *ageAtWakeS = (uint32_t)WATCH_PATROL_S + (uint32_t)(WAKE_PERSIST_LOOKS - 1) * WATCH_CONFIRM_S;
+  *ageS = age;
   return true;
 }
 
