@@ -8,7 +8,9 @@ description: >-
   CROSSINGS are retained and flushed on the next successful connect. Alarms and not readings,
   because an alarm is rare by construction and a heartbeat backlog is unbounded and mostly
   redundant. Backfill must stay distinguishable from live, or the history claims knowledge
-  nobody had.
+  nobody had. The binary codec, when it comes, is CBOR and not Kaitai — correcting this record's
+  own first answer, since Kaitai emits no C++ writer and so leaves the layout declared twice
+  regardless.
 status: accepted
 timestamp: 2026-08-24T00:40:00Z
 ---
@@ -95,21 +97,39 @@ family was built to allow and would incidentally demonstrate the interchangeabil
 currently asserted rather than shown. Building the codec first would be optimising a wire format
 that is still moving.
 
-# Kaitai rather than CBOR, when it comes
+# CBOR rather than Kaitai, and the reasoning that first said otherwise
 
-CBOR is the cheaper proof and that record says so — a mature decoder, no code generation, and it
-yields the maps and arrays a pointer already walks.
+This section argued for Kaitai and was wrong, on a fact worth recording because it is the kind
+that sounds right: **a `.ksy` is one declaration, and the compiler generates both parsers from
+it.** It does not. Kaitai's serialization support is Java and Python only — there is no C++
+writer, and the ESP32 is the side doing the writing.
 
-For a packed event ring the argument goes the other way, and for this project's own reason. Hand-
-packed binary means **the same struct declared twice in two languages** — a writer in C++ and an
-unpacker in Python, drifting silently the first time a field moves or a width changes. That is the
-second-list failure this repository refuses everywhere else, and it is worse here than usual
-because the two copies live on opposite sides of a radio and a reflash. A `.ksy` is one
-declaration, and the compiler generates both parsers from it.
+So what Kaitai would actually give is a generated Python *reader* and a hand-written C++ *packer*
+that must match it: still two declarations of one layout, on opposite sides of a radio and a
+reflash, drifting the first time a width changes. That was the entire argument for preferring it,
+and it survives only half.
 
-`codec:Kaitai` has been declared and unimplemented since the codec family was written, with a
-comment predicting exactly this: *a Kaitai spec yields a tree, so `mqtt:readingPointer` addresses
-into it unchanged, and no other stage moves.* This is the case it was declared for.
+Two further costs, glossed the first time. `kaitai-struct-compiler` is a JVM tool, which is real
+weight in a repository whose gates are `pytest` and a shell script and which wants CI
+([#47](https://github.com/ShishkinDmitriy/orexis/issues/47)). And the size advantage is narrower
+than it sounds: for `[value, prior, instant]`, CBOR with arrays is about twelve bytes an event
+against eight packed, so sixteen events is 192 bytes against 128 — **both inside PubSubClient's
+256-byte default**, which means the packet ceiling does not decide it either.
+
+**So `codec:Cbor`**, which is what [bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md)
+already called the cheapest proof: a pip install, no code generation, no JVM, and it decodes to
+exactly the maps and arrays a pointer already walks, so the pointer stage does not move at all.
+
+**And the drift is guarded by a test, not by a generator.** Neither codec emits a C++ writer, so
+both leave a hand-packed encoder that can disagree with its decoder. What catches that is a
+round-trip: capture a real payload off the device, parse it with the agent's own decoder, assert
+the fields. That is worth more than the code generation was ever going to buy, works whatever the
+encoding, and is the guard that should have been proposed in the first place.
+
+`codec:Kaitai` stays declared and unimplemented. Its comment is still right about the design — a
+spec yields a tree and no other stage moves — and it remains the correct answer for a device
+speaking a protocol somebody else defined, where the layout is a given rather than ours to choose.
+It is the wrong answer for a format we author on both ends.
 
 # Seams left open
 
