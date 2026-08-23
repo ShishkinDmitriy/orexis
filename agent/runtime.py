@@ -353,7 +353,7 @@ class Agent:
         #
         # Set before the modules start, so their threads inherit the mask and this thread is the
         # one that receives it.
-        signal.pthread_sigmask(signal.SIG_PICKS, {signal.SIGINT, signal.SIGTERM})
+        signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGINT, signal.SIGTERM})
 
         self.mqtt.username_pw_set(username, config.env("MQTT_PASSWORD"))
         self.mqtt.connect(self.bus.host, port)
