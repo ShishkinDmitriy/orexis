@@ -304,9 +304,7 @@ def _declared() -> set[str]:
     #  page may legitimately name one — `ag:KeeperShape` does — and while the shapes lived in
     #  packages the `packages/**` glob swept them up for free. It does not any more.
     names: set[str] = set()
-    for ttl in sorted(loader.KERNEL.path.glob("*.ttl")) + \
-               list((REPO_ROOT / "packages").rglob("*.ttl")) + \
-               list((REPO_ROOT / "world").rglob("*.ttl")):
+    for ttl in list(loader.sources("*.ttl")) + list((REPO_ROOT / "world").rglob("*.ttl")):
         text = ttl.read_text()
         names |= set(re.findall(r"^:(\w+)\b", text, re.M))
         names |= {local for _, local in _TERM.findall(text)}

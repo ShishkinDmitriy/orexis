@@ -1,9 +1,15 @@
 """The kernel vocabulary — prefixes and graph names, and deliberately nothing else.
 
-Everything here is true of *every* capability: how a term is spelled, and which graph a fact
-lives in. A term that belongs to one capability — `sensing:Subscribing`, `market:Bidding` — is
-named by that capability's own package, so this file never grows when one is added. That is the
-whole reason it is this short.
+Everything here is true of every agent: how a term is spelled, and which graph a fact lives in.
+A term that belongs to one capability — `sensing:Subscribing`, `market:Bidding` — is named by
+that capability's own package, so this file never grows when one is added. That is the whole
+reason it is this short.
+
+It used to say "true of every CAPABILITY", which was the honest wording while wanting, keeping
+and deciding were capabilities. They are not: a mind is not plug-in-able, so the states a mind
+contains are here and every agent has them, granted by nothing. What a capability is remains what
+it always was — an ability with interchangeable implementations, which after the dissolution means
+equipment or a mandate. See knowledge/decisions/the-mind-is-not-a-package.md.
 
 **Fourteen terms in the kernel's own `agent/ontology.ttl` still make that claim false, and they
 are named rather than implied**: the eleven of the simulated world — the device model plus its clock and its
@@ -12,7 +18,7 @@ uses and which want a simulation package that does not exist; and `ag:ComputeHos
 and `ag:lanHost`, which only `world/sensing` states. See
 knowledge/decisions/every-term-in-its-own-house.md.
 
-`ag:SelfReporting` was an eleventh and has left, to `capabilities/reporting/`. It was declared a
+`ag:SelfReporting` was one more and has left, to `packages/capability/reporting/`. It was declared a
 capability and granted by nothing; it is granted by a rule now, insisted on by a shape, and named
 in its own namespace. See knowledge/decisions/telemetry-is-a-mandatory-capability.md.
 
@@ -42,10 +48,18 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 AG = "http://example.org/orexis#"
-# **A package owns its namespace, and this is only the kernel's.** `ag:` is what every agent
-# has; `capabilities/market` keeps `market:`, and the hardware modules have kept `mc:`,
-# `onewire:` and the rest since pins-and-wires. A package names its own terms through its own
-# `terms.py`, not through `term()` here.
+# **The kernel's namespace, and the kernel is `agent/`.** `ag:` is the base every package layers
+# on: what an agent IS, what a graph is, and — since the mind came home — what a mind CONTAINS.
+# A package names its own terms through its own `terms.py`; `market:`, `sensing:` and the
+# hardware modules' `mc:`, `onewire:` and the rest have done so since pins-and-wires.
+#
+# **The label is a leftover that turned out to be right.** `ag` was short for *agora*, the
+# project's first name. The rename to Orexis took the IRI — this is `…/orexis#` — and kept the
+# label, on the argument that it "reads as well for agent as it ever did for agora". That was a
+# little generous at the time, since the vocabulary lived in `packages/core/orexis/` and `agent/`
+# was merely the loader. It is exact now: the kernel's directory is `agent/` and the kernel's
+# namespace is `ag:`, and they name the same thing. Nobody needs the history to read it.
+# See knowledge/decisions/the-society-is-named-for-its-appetite.md.
 #
 # This used to say the hardware layer could afford separate namespaces *precisely because no
 # runtime code names those terms* — that `term()` and `store.PREFIXES` were therefore untouched,
@@ -56,9 +70,10 @@ AG = "http://example.org/orexis#"
 # declares it, so the prefix arrives with the package. See
 # knowledge/decisions/a-package-owns-its-namespace.md.
 #
-# The hardware constants stay here because the trees under `vocabulary/` ship no Python at all,
-# so there is no `terms.py` of their own to hold them — the one asymmetry left, and it follows
-# from a vocabulary package being pure knowledge rather than from anything about namespaces.
+# The hardware constants stay here because `packages/part/` and `packages/bus/` ship no Python at
+# all, so there is no `terms.py` of their own to hold them — the one asymmetry left, and it
+# follows from a knowledge-only package being knowledge rather than from anything about
+# namespaces. (`vocabulary/` was the tree's name two layouts ago; the packages are one tree now.)
 MC = "http://example.org/orexis/microcontroller#"
 ONEWIRE = "http://example.org/orexis/onewire#"
 I2C = "http://example.org/orexis/i2c#"

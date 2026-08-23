@@ -220,8 +220,11 @@ _QUERY_SOURCES = {
     # matched plenty of files — so the non-empty guard below stayed green while 143 parametrised
     # cases quietly stopped running, every one of them a capability's SPARQL. Non-empty is not
     # the same as complete, and this is what that looks like.
-    "agent": sorted(Path(genesis.__file__).parent.rglob("*.py")),
-    "packages": sorted(loader.PACKAGES_ROOT.rglob("*.py")),
+    # PARTITIONED from `loader.sources()`, not globbed. The two names stay, because a group that
+    # goes empty should say WHICH tree moved — but the union is the loader's, so a tree nobody
+    # here has heard of is covered rather than silently outside both globs.
+    "agent": [p for p in loader.sources("*.py") if "packages" not in p.parts],
+    "packages": [p for p in loader.sources("*.py") if "packages" in p.parts],
     # BOTH trees, and that is the third lesson from the same glob. This said "every `.ru` and
     # `.rq` belongs to a PACKAGE" and globbed `packages/` alone — true when it was written, and
     # false the moment the kernel took its own `rules.ru` back into `agent/`. The file dropped
@@ -230,8 +233,8 @@ _QUERY_SOURCES = {
     #
     # So the union, rather than a tree: a query file is scanned because it is a query file, not
     # because of which side of the kernel boundary it happens to sit on today.
-    "rules": sorted(loader.KERNEL.path.glob("*.ru")) + sorted(loader.PACKAGES_ROOT.rglob("*.ru")),
-    "review": sorted(loader.KERNEL.path.glob("*.rq")) + sorted(loader.PACKAGES_ROOT.rglob("*.rq")),
+    "rules": list(loader.sources("*.ru")),
+    "review": list(loader.sources("*.rq")),
     "onboarding": sorted(loader.REPO_ROOT.glob("onboarding/*.py")),
 }
 

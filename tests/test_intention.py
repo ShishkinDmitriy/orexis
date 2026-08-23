@@ -284,8 +284,7 @@ def test_only_the_keeper_writes_the_intentions_graph():
         "genesis.py":    "classifies the graph in the provenance graph — a statement ABOUT it",
     }
     offenders = []
-    for path in sorted(loader.KERNEL.path.rglob("*.py")) + \
-                sorted(loader.PACKAGES_ROOT.rglob("*.py")):
+    for path in loader.sources("*.py"):
         if path.name in ALLOWED:
             continue
         if "intentions_graph" in path.read_text():

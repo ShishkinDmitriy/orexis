@@ -70,6 +70,62 @@ def test_the_agent_image_carries_no_operator_code(forbidden):
     )
 
 
+#  A vocabulary of files the loader already knows how to find, and the accessor that answers
+#  for each. Globbing a tree for one of these is re-deriving what the loader assembles — which
+#  is the mistake this guard exists to refuse.
+_LOADER_ANSWERS = {
+    "*.ttl": "loader.sources('*.ttl'), or ontology_files() / shapes_files() for the two kinds",
+    "*.ru":  "loader.sources('*.ru'), or rule_files() for the derivations",
+    "*.rq":  "loader.sources('*.rq'), or review_rules() / affordance_files() / honoured_files()",
+    "*.py":  "loader.sources('*.py')",
+}
+
+
+@pytest.mark.parametrize("tree", ["tests", "onboarding"])
+def test_no_scan_rederives_what_the_loader_already_assembles(tree):
+    """Ask the loader what to scan. Never glob a package tree for it.
+
+    THE PATTERN BEHIND FIVE DEFECTS, made a rule. Every guard in this repo that reads source
+    text has to decide which files to read, and five of them decided by globbing
+    `packages/**` — correct while every module lived there, and silently wrong the day the mind
+    came into the kernel. They did not fail. They NARROWED, and narrowing is invisible: a glob
+    can be asserted non-empty, and four of these had exactly that assertion beside them, passing
+    the whole time.
+
+    What it cost: one parametrised case lost from the subclass-path scan; the kernel's whole
+    vocabulary dropped from two term censuses; every IRI in `agent/*.py` unread by the linker.
+    Two real defects hid in the gap — `ag:amountL`, undeclared and in use for months, and five
+    terms of a change sitting inside an `rdfs:comment` as prose, which the suite passed over.
+
+    So the rule is not "remember to include the kernel". It is that a scan does not get to
+    decide which trees exist — `loader.sources()` does, and it is one place to fix when the
+    layout moves again. See knowledge/decisions/the-mind-is-not-a-package.md.
+
+    Scoped to the file kinds the loader has an answer for. A glob for something else — a
+    `wokwi/` directory, a world's TriG — is nobody's business but the test's.
+    """
+    offenders = []
+    for path in sorted((REPO_ROOT / tree).rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        for n, line in enumerate(path.read_text().splitlines(), 1):
+            code = line.split("#")[0]
+            #  A GLOB of the package tree, not a mention of it. `loader.sources()` partitioned by
+            #  `"packages" in p.parts` is the fix and names both — the defect is reaching for the
+            #  directory yourself, which is what `.glob(` / `.rglob(` on that path means.
+            if ".glob(" not in code and ".rglob(" not in code:
+                continue
+            if "PACKAGES_ROOT" not in code and '"packages"' not in code and "'packages'" not in code:
+                continue
+            for pattern, answer in _LOADER_ANSWERS.items():
+                if f'"{pattern}"' in code or f"'{pattern}'" in code:
+                    offenders.append(
+                        f"{path.relative_to(REPO_ROOT)}:{n} globs the package tree for "
+                        f"{pattern} — ask {answer}")
+    assert not offenders, (
+        "a scan re-deriving what the loader assembles:\n  " + "\n  ".join(offenders))
+
+
 def test_the_kernel_stands_alone_with_no_packages_at_all(tmp_path, monkeypatch):
     """An empty `packages/` is a complete build — the claim every other rule here rests on.
 
