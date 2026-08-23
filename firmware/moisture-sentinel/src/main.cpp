@@ -44,7 +44,11 @@
 #define HEARTBEAT_S 600         // generated from the polling agent's own freshness rule
 #endif
 #ifndef MQTT_TRIES
-#define MQTT_TRIES 10
+// THREE, not ten. A failed wake is the expensive one: ten attempts at ~11s each is 110 seconds
+// of radio at ~100mA — about 3 mAh against 0.25 for a wake that works, so two failures cost
+// more than a whole day of heartbeats. A board that cannot reach the broker should sleep and
+// try on its own clock rather than hold the radio open arguing with the network.
+#define MQTT_TRIES 3
 #endif
 #ifndef WIFI_TIMEOUT_MS
 #define WIFI_TIMEOUT_MS 20000
