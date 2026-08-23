@@ -8,9 +8,10 @@ description: >-
   CROSSINGS are retained and flushed on the next successful connect. Alarms and not readings,
   because an alarm is rare by construction and a heartbeat backlog is unbounded and mostly
   redundant. Backfill must stay distinguishable from live, or the history claims knowledge
-  nobody had. The binary codec, when it comes, is CBOR and not Kaitai — correcting this record's
-  own first answer, since Kaitai emits no C++ writer and so leaves the layout declared twice
-  regardless.
+  nobody had. Which binary codec depends on the direction — CBOR here, because the board writes
+  and the agent reads and Kaitai serialises only from Java and Python; Kaitai for a command
+  channel, where it generates both ends. Either way the guard is a round-trip test, not a
+  generator.
 status: accepted
 timestamp: 2026-08-24T00:40:00Z
 ---
@@ -97,39 +98,51 @@ family was built to allow and would incidentally demonstrate the interchangeabil
 currently asserted rather than shown. Building the codec first would be optimising a wire format
 that is still moving.
 
-# CBOR rather than Kaitai, and the reasoning that first said otherwise
+# Which codec, and why the answer depends on the direction
 
-This section argued for Kaitai and was wrong, on a fact worth recording because it is the kind
-that sounds right: **a `.ksy` is one declaration, and the compiler generates both parsers from
-it.** It does not. Kaitai's serialization support is Java and Python only — there is no C++
-writer, and the ESP32 is the side doing the writing.
+This section has been wrong twice, in opposite directions, which is itself the useful part: the
+two facts that decide it look like they contradict each other and do not.
 
-So what Kaitai would actually give is a generated Python *reader* and a hand-written C++ *packer*
-that must match it: still two declarations of one layout, on opposite sides of a radio and a
-reflash, drifting the first time a width changes. That was the entire argument for preferring it,
-and it survives only half.
+**Kaitai is language-neutral for PARSING** — "write once, use in all supported languages", twelve
+of them including C++/STL. **Kaitai's SERIALIZATION is Java and Python only**, at the time of
+writing, with other targets promised. Both are true. They are about different features, and which
+one governs depends on who writes the bytes.
 
-Two further costs, glossed the first time. `kaitai-struct-compiler` is a JVM tool, which is real
-weight in a repository whose gates are `pytest` and a shell script and which wants CI
-([#47](https://github.com/ShishkinDmitriy/orexis/issues/47)). And the size advantage is narrower
-than it sounds: for `[value, prior, instant]`, CBOR with arrays is about twelve bytes an event
-against eight packed, so sixteen events is 192 bytes against 128 — **both inside PubSubClient's
-256-byte default**, which means the packet ceiling does not decide it either.
+| path | writes | reads | what Kaitai generates |
+|---|---|---|---|
+| the sentinel's telemetry | C++ (board) | Python (agent) | the reader only |
+| a governed node's commands | Python (agent) | C++ (board) | **both ends** |
 
-**So `codec:Cbor`**, which is what [bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md)
-already called the cheapest proof: a pip install, no code generation, no JVM, and it decodes to
-exactly the maps and arrays a pointer already walks, so the pointer stage does not move at all.
+So for **this** change — a board packing an event ring for an agent to read — Kaitai generates the
+half we were getting for free anyway and leaves the C++ encoder hand-written. `codec:Cbor` reaches
+the same place with less machinery: a pip install, no code generation, and it decodes to exactly
+the maps and arrays a pointer already walks, so the pointer stage does not move at all. That is
+what [bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md) meant by
+the cheapest proof.
 
-**And the drift is guarded by a test, not by a generator.** Neither codec emits a C++ writer, so
-both leave a hand-packed encoder that can disagree with its decoder. What catches that is a
-round-trip: capture a real payload off the device, parse it with the agent's own decoder, assert
-the fields. That is worth more than the code generation was ever going to buy, works whatever the
-encoding, and is the guard that should have been proposed in the first place.
+For the **command** direction the answer inverts and Kaitai wins outright, today, with no missing
+half: the agent serialises in Python and the board parses in generated C++. The governed node has
+exactly that channel. Nothing in this change touches it, but the next person to reach for a binary
+command format should not re-derive this table.
 
-`codec:Kaitai` stays declared and unimplemented. Its comment is still right about the design — a
-spec yields a tree and no other stage moves — and it remains the correct answer for a device
-speaking a protocol somebody else defined, where the layout is a given rather than ours to choose.
-It is the wrong answer for a format we author on both ends.
+# What a .ksy buys even where it cannot generate everything
+
+Worth stating because the first version of this section dismissed it. A spec is not only a code
+generator. Where one side is generated and the other hand-written, the `.ksy` is still the single
+authoritative statement of the layout, the generated side cannot drift from it by construction,
+and the hand-written side can be **held to it** by a round trip. That is strictly better than two
+independently hand-written halves, and it is the argument that survives the missing C++ writer.
+
+The JVM objection raised against it does not survive scrutiny either: `kaitai-struct-compiler` is
+a build-time dependency, generated code is checked in, and CI never sees it.
+
+# The guard is a test, whichever codec wins
+
+The part that matters more than the choice. **Neither** codec emits a C++ writer, so both leave a
+hand-packed encoder that can disagree with its decoder. What catches that is a round trip: capture
+a real payload off the device, parse it with the agent's own decoder, assert the fields. It works
+whatever the encoding, it costs a test rather than a toolchain, and it should have been the first
+proposal rather than the third.
 
 # Seams left open
 
