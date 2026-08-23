@@ -8,10 +8,9 @@ description: >-
   CROSSINGS are retained and flushed on the next successful connect. Alarms and not readings,
   because an alarm is rare by construction and a heartbeat backlog is unbounded and mostly
   redundant. Backfill must stay distinguishable from live, or the history claims knowledge
-  nobody had. Which binary codec depends on the direction — CBOR here, because the board writes
-  and the agent reads and Kaitai serialises only from Java and Python; Kaitai for a command
-  channel, where it generates both ends. Either way the guard is a round-trip test, not a
-  generator.
+  nobody had. The binary codec is left open with three candidates weighed — Kaitai, CBOR and
+  Zserio — because what separates them is which side of the wire gets generated, and the board
+  is the side that writes. Either way the guard is a round-trip test, not a generator.
 status: accepted
 timestamp: 2026-08-24T00:40:00Z
 ---
@@ -98,51 +97,74 @@ family was built to allow and would incidentally demonstrate the interchangeabil
 currently asserted rather than shown. Building the codec first would be optimising a wire format
 that is still moving.
 
-# Which codec, and why the answer depends on the direction
+# Which codec — three candidates, and the axis that separates them
 
-This section has been wrong twice, in opposite directions, which is itself the useful part: the
-two facts that decide it look like they contradict each other and do not.
+Deliberately not settled here, because the sequencing above says the codec comes last and because
+this section has now been rewritten three times on facts about dependencies rather than on
+anything about this project. What is settled is the QUESTION to ask, which is not "which format is
+most compact" but **which side of the wire gets generated**.
 
-**Kaitai is language-neutral for PARSING** — "write once, use in all supported languages", twelve
-of them including C++/STL. **Kaitai's SERIALIZATION is Java and Python only**, at the time of
-writing, with other targets promised. Both are true. They are about different features, and which
-one governs depends on who writes the bytes.
+The board writes and the agent reads. So what matters is whether a schema produces a C++ *writer*,
+and the answer is not what the marketing implies for any of them.
 
-| path | writes | reads | what Kaitai generates |
-|---|---|---|---|
-| the sentinel's telemetry | C++ (board) | Python (agent) | the reader only |
-| a governed node's commands | Python (agent) | C++ (board) | **both ends** |
+| | C++ writer generated | Python reader generated | bit packing | evidence |
+|---|---|---|---|---|
+| **Kaitai Struct** | **no** | yes | yes | its C++ runtime has 25 `read_*` and **0** `write_*`; serialization is Java and Python only |
+| **CBOR** | n/a — hand-written | n/a — generic decoder | no, byte-aligned | a decoder is a pip install; nothing is generated either way |
+| **Zserio** | **yes** | yes | yes, plus delta-packed arrays | its `BitStreamWriter.h` has 25 `write*` methods |
 
-So for **this** change — a board packing an event ring for an agent to read — Kaitai generates the
-half we were getting for free anyway and leaves the C++ encoder hand-written. `codec:Cbor` reaches
-the same place with less machinery: a pip install, no code generation, and it decodes to exactly
-the maps and arrays a pointer already walks, so the pointer stage does not move at all. That is
-what [bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md) meant by
-the cheapest proof.
+**Kaitai is language-neutral for PARSING** — twelve targets including C++/STL, and its user guide
+describes `ksc` as translating a spec "into parsing libraries". Its serialization is a later,
+partial rollout: Java and Python today, others promised, and no work in flight on the C++ runtime.
+So for the direction this change needs it generates the half that was cheap anyway. **It inverts
+for a command channel** — agent serialises in Python, board parses in generated C++, both ends
+generated, nothing missing. The governed node has exactly that channel, and whoever reaches for a
+binary command format should start there rather than re-deriving this table.
 
-For the **command** direction the answer inverts and Kaitai wins outright, today, with no missing
-half: the agent serialises in Python and the board parses in generated C++. The governed node has
-exactly that channel. Nothing in this change touches it, but the next person to reach for a binary
-command format should not re-derive this table.
+**CBOR is the least machinery for the least benefit.** No code generation, no build step, and it
+decodes to exactly the maps and arrays a pointer already walks, so the pointer stage does not move
+at all. It is also byte-aligned and self-describing, so it is the largest of the three on the wire
+— about twelve bytes an event against eight hand-packed.
 
-# What a .ksy buys even where it cannot generate everything
+**Zserio is the one built for this shape.** It is a serialization framework rather than a parser
+generator, so writing was never an afterthought; it emits C++ and Python from one schema; and its
+**packed arrays apply delta compression to integer elements**, which is close to ideal for a ring
+of clustered readings with marching timestamps. Its C++ generator targets C++11 with allocator and
+polymorphic-allocator support and an explicit functional-safety section — a runtime written by
+people shipping into embedded, not a desktop library being squeezed onto one.
 
-Worth stating because the first version of this section dismissed it. A spec is not only a code
-generator. Where one side is generated and the other hand-written, the `.ksy` is still the single
-authoritative statement of the layout, the generated side cannot drift from it by construction,
-and the hand-written side can be **held to it** by a round trip. That is strictly better than two
-independently hand-written halves, and it is the argument that survives the missing C++ writer.
+# What is not known, and would decide it
 
-The JVM objection raised against it does not survive scrutiny either: `kaitai-struct-compiler` is
-a build-time dependency, generated code is checked in, and CI never sees it.
+Three measurements, none of them arguments, and the reason no choice is recorded:
 
-# The guard is a test, whichever codec wins
+- **Flash cost of the Zserio runtime plus generated code**, against a firmware already at 72%. This
+  is the one that could plausibly rule it out, and it is an hour's work rather than a debate.
+- **Exception behaviour on Arduino-ESP32.** Zserio documents exception handling under functional
+  safety; the Arduino core's settings vary. A compile test answers it early.
+- **Whether the wire shape has stopped moving.** Choosing a codec for a format still being designed
+  is optimising the wrong thing, which is why this is step three and not step one.
 
-The part that matters more than the choice. **Neither** codec emits a C++ writer, so both leave a
-hand-packed encoder that can disagree with its decoder. What catches that is a round trip: capture
-a real payload off the device, parse it with the agent's own decoder, assert the fields. It works
-whatever the encoding, it costs a test rather than a toolchain, and it should have been the first
-proposal rather than the third.
+# The guard is a test, whichever wins
+
+The part worth more than the choice. Only Zserio generates both halves; with Kaitai or CBOR a
+hand-packed encoder can silently disagree with its decoder, and the two copies sit on opposite
+sides of a radio and a reflash. What catches that is a round trip — capture a real payload off the
+device, parse it with the agent's own decoder, assert the fields. It costs a test rather than a
+toolchain, works whatever the encoding, and is the thing to build first even if the codec is never
+chosen.
+
+# A note on how this section was arrived at
+
+Recorded because the process was more instructive than the conclusion. Three codecs were
+recommended in one evening, and the first two recommendations each fell to a fact about the
+dependency — not to a change of mind about the design. Kaitai was argued for on "one schema
+generates both parsers", which is false for C++ and was checkable in a minute by counting methods
+in its runtime header. CBOR was then argued for absolutely, which overcorrected past a real case
+(the command direction) where Kaitai wins outright.
+
+**The general lesson: for a dependency, check the artifact rather than the claim.** The runtime
+headers settled in two commands what the documentation, the marketing page and three rounds of
+reasoning could not.
 
 # Seams left open
 
