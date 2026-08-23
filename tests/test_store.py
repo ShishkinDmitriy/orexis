@@ -208,19 +208,24 @@ _QUOTES_THE_OLD_SPELLINGS = {
 
 
 def _kernel_terms() -> set[str]:
-    """What `packages/core/orexis` actually declares, read rather than listed."""
-    text = (loader.REPO_ROOT / "packages/core/orexis/ontology.ttl").read_text()
-    return set(re.findall(r"^ag:([A-Za-z][A-Za-z0-9]*)\b", text, re.M))
+    """What the kernel actually declares, read rather than listed.
+
+    Asked of the loader rather than spelled as a path: the kernel's vocabulary has moved once
+    already (`packages/core/orexis/` -> `agent/`), and a hardcoded path is how a guard like this
+    one goes quiet — it would read an empty file, declare nothing, and pass every case below.
+    """
+    return set(re.findall(r"^ag:([A-Za-z][A-Za-z0-9]*)\b",
+                          loader.KERNEL.file(loader.ONTOLOGY).read_text(), re.M))
 
 
 def test_the_kernel_vocabulary_is_still_found():
     """The guard on the guard, again: an empty set would make the scan below vacuous."""
-    assert len(_kernel_terms()) > 20, "packages/core/orexis declares almost nothing — has it moved?"
+    assert len(_kernel_terms()) > 20, "the kernel declares almost nothing — has it moved?"
 
 
 @pytest.mark.parametrize("path", _ALL_TREES, ids=lambda p: p.name)
 def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
-    """A full IRI in `ag:` must name something `packages/core/orexis` declares.
+    """A full IRI in `ag:` must name something the kernel declares.
 
     Instances are exempt and are the reason this is a name check rather than a ban: a world's
     `<http://example.org/orexis/world/simulation#moisture_sensor_fern>` is a thing, not a term, and lives in `ag:` correctly. So the rule
@@ -247,7 +252,7 @@ def test_no_source_names_a_moved_term_in_the_kernel_namespace(path):
         offenders.append(name)
     assert not offenders, (
         f"{path.name} names {sorted(offenders)} in the kernel namespace, and "
-        "packages/core/orexis declares no such term — whichever package owns it has a namespace "
+        "the kernel declares no such term — whichever package owns it has a namespace "
         "of its own, and this pattern will match nothing rather than fail"
     )
 
@@ -310,12 +315,9 @@ def test_the_plan_query_leans_on_the_stores_prefixes_like_the_rest():
     """`plan.rq` (#206) rides `store.query` from two directions — the planner's `plan_for`
     and the sovereign's ask channel — so the same two rules hold: no prefix declarations of
     its own, and only declared ones used."""
-    from pathlib import Path
+    from agent import deliberator
 
-    import packages.capability.deliberation as deliberation
-
-    path = Path(deliberation.__file__).parent / "plan.rq"
-    text = path.read_text()
+    text = deliberator.PLAN_QUERY
     assert "PREFIX " not in text.upper(), "plan.rq declares its own prefixes"
     used = {m.group(1) for m in _PREFIXED.finditer(text)}
     undeclared = used - store.DECLARED - {"http", "https", "urn"}

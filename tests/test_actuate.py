@@ -9,14 +9,13 @@ deciding, committing and acting runs with no economy at all.
 
 import pytest
 
-from packages.capability.deliberation import menu_of
-from packages.capability.deliberation.module import ACTUATE, ACQUIRE, OBSERVE
+from agent.menu import menu_of
+from agent.deliberator import ACTUATE, ACQUIRE, OBSERVE
 
 from conftest import build_agent, genesis_store, desires_build
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
-_DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
 
 
 @pytest.fixture
@@ -91,7 +90,7 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
 # --- the reflex prefers the cheaper rung ------------------------------------
 
 def test_the_reflex_proposes_actuate_below_the_aim(gardener):
-    deliberator = gardener.provider(_DELIBERATION)
+    deliberator = gardener.deliberator
     assert deliberator.propose(MOIST, 0.10) == ACTUATE
     assert deliberator.propose(MOIST, 0.25) is None, "above the aim, nothing — as ever"
     #  Not seeing is answered through the desire door now (#240), because a bare None meant two
@@ -136,13 +135,17 @@ def test_an_unanswered_self_dose_blocks_the_next(gardener):
 
 
 def test_the_gardener_derives_no_market_pair():
-    """The world's whole claim, as a capability set: stake, sight, lever, memory, reflex —
-    and no Bidding, no Hosting, because nothing here is anyone else's."""
+    """The world's whole claim, as a capability set: stake, sight, lever, memory — and no
+    Bidding, no Hosting, because nothing here is anyone else's.
+
+    `Reflex` was in this set and is not a capability any more: deliberating is the kernel's,
+    granted by nothing, because a mind is not plug-in-able. What the gardener DELIBERATES is
+    unchanged and is tested elsewhere; what this asserts is only what its world grants it."""
     from agent.world import load_self
 
     caps = {c.rsplit("#", 1)[-1] for c in
             load_self(genesis_store(world="loner").query, "gardener").capabilities}
-    assert caps == {"Subscribing", "Listening", "Storing", "Keeping", "Deducing", "Reflex",
+    assert caps == {"Subscribing", "Listening", "Storing", "Keeping", "Deducing",
                     "Actuation"}, "both clocks in one agent since the butt got its witness"
 
 

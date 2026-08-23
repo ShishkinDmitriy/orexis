@@ -38,5 +38,5 @@ SELECT ?means ?property ?via ?direction ?mode ?buyer WHERE {
              market:aboutProperty ?property ;
              market:direction ?direction .
   BIND(ag:Apply AS ?means)
-  BIND(deliberation:Honoured AS ?mode)
+  BIND(ag:Honoured AS ?mode)
 }

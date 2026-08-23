@@ -83,7 +83,7 @@ The cost was not aesthetic. The same five were written out in three places — `
 `provenance.py`, and by hand in every rule — so **a capability author maintained a copy of a
 registry**, correctly, per rule, or the derivation silently returned nothing.
 
-So the instances moved into `packages/core/orexis/ontology.ttl`, typed by class, and code asks:
+So the instances moved into the kernel's ontology (`agent/ontology.ttl`), typed by class, and code asks:
 
 - `ag:PublicGraph` is the term. `store.public_graphs()` returns whatever is an instance of it.
 - A rule writes `$given` and `$derived`; the loader substitutes. No `rules.ru` names a graph.
@@ -113,7 +113,7 @@ Every world used to carry `<…/graph/beliefs/fern> a ag:BeliefsGraph ; ag:belie
 once per agent, beside the roster it restated. A second list is a second thing to drift, and this
 one drifted silently — nothing failed if an agent was added and its line was not.
 
-It is a function of the roster, so `packages/core/orexis/rules.ru` derives it, building the IRI from
+It is a function of the roster, so the kernel's `agent/rules.ru` derives it, building the IRI from
 the agent's own `ag:localId` exactly as `ontology.beliefs_graph()` does. That also closes the seam
 an earlier pass recorded, where a computed description stood beside a hand-written one.
 
@@ -136,7 +136,7 @@ person. PROV-O models exactly this, and naming a role is what it expects a domai
     [ a prov:Association ; prov:agent <…/user/…> ; prov:hadRole ag:Sovereign ] .
 ```
 
-`ag:Sovereign a prov:Role` is the one term added, in `packages/core/orexis/ontology.ttl` — the kernel,
+`ag:Sovereign a prov:Role` is the one term added, in `agent/ontology.ttl` — the kernel,
 because a world's ratification is true of every world and `ag:World` already lives there. **There
 is no `ag:Sovereign` agent and there must not be**; a test refuses one, because the moment the
 role is also an identity, "who is the sovereign" becomes permanent and a second user cannot

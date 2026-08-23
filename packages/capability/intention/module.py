@@ -37,7 +37,6 @@ from .terms import (kernel, APPLY, BASELINE_AT, BASELINE_VALUE, BECAUSE_OF, DEAD
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
 # sensing is asked to look once so the baseline is the freshest thing on record.
 _SENSING = "http://example.org/orexis/sensing#SensingCapability"
-_DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
 _RAISES = "http://example.org/orexis/market#Raises"
 _LOWERS = "http://example.org/orexis/market#Lowers"
 _DIRECTION_Q = """
@@ -141,9 +140,7 @@ class IntentionModule(Module):
         convene from this side (the-lot-is-the-hosts-standing-offer's seam), and the acting
         modules adopt their own when the market knocks.
         """
-        deliberator = self.agent.provider(_DELIBERATION)
-        if deliberator is None:
-            return
+        deliberator = self.agent.deliberator
         #  GOALS, not notices, and not a sentinel (#240). This used to walk the choir's noticed
         #  gaps and ask `propose(property, None)` — where None meant "should I look?", a
         #  question the deliberator answered by a special case reading None as ignorance. Both

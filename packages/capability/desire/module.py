@@ -38,7 +38,7 @@ from agent.ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from .graphs import obligations_graph
-from .terms import DELIBERATION, DEDUCING, KERNEL, NS
+from .terms import DEDUCING, KERNEL, NS
 
 # What this package asks OF others, by family — their namespaces, never their Python. The
 # freshness rule lives with whoever holds the clock, and this module asks it exactly as

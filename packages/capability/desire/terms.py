@@ -50,7 +50,6 @@ CONSULTING = term("Consulting")  # asks something else — RESERVED, nothing imp
 # What this package ASKS OF others, by family — their namespace, never their Python. Deciding
 # whether anything can be done about a want is the deliberator's, and a copy of that reasoning
 # here would be a second menu, free to disagree with the one the agent acts on.
-DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
 
 # The graph class. A TERM, not an instance: `agent.beliefs` is asked which graphs are of this
 # class, so a second source of desire is a vocabulary edit and touches no Python here.

@@ -40,7 +40,6 @@ from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION
 
 # What this package asks OF others, by family or by IRI — namespaces, never Python.
-_DELIBERATION = "http://example.org/orexis/deliberation#DeliberationCapability"
 _DESIRE = "http://example.org/orexis/desire#DesireCapability"
 _INTENTION = "http://example.org/orexis/intention#IntentionCapability"
 _ACTUATE = "http://example.org/orexis#Actuate"
@@ -148,8 +147,7 @@ class ActuationModule(Module):
             return
         if self.me.actuator_for(self._subject_of(self.me.agent_id)) is None:
             return
-        deliberator = self.agent.provider(_DELIBERATION)
-        if deliberator is None or deliberator.propose(observed_property, value) != _ACTUATE:
+        if self.agent.deliberator.propose(observed_property, value) != _ACTUATE:
             return
         litres = self.dose_for(observed_property, value)
         if litres is None or litres <= EPS:

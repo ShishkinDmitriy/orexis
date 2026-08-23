@@ -35,5 +35,5 @@ SELECT DISTINCT ?means ?property ?via ?direction ?mode WHERE {
   ?via sensing:monitors ?subject ;
        sosa:observes ?property .
   BIND(ag:Observe AS ?means)
-  BIND(deliberation:Chosen AS ?mode)
+  BIND(ag:Chosen AS ?mode)
 }

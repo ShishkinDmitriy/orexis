@@ -1,21 +1,30 @@
-"""Discovery. There is no list of capabilities anywhere — there are directories.
+"""Discovery. There is no list of packages anywhere — there are directories, and one kernel.
 
-A **package** is one self-contained thing the society is made of, and it is a directory:
+A **package** is one self-contained thing the society is made of, and it is a directory under
+`packages/<family>/<name>/`:
 
-    vocabulary/<name>/       what terms MEAN. Pure knowledge, no Python at all — `orexis` is the
-                             base everything layers on, `water` is what this society is about.
-                             At the repo ROOT, because onboarding validates and derives from it
-                             too: it is the one tree both sides genuinely share.
-    packages/capability/<n>/  what an agent can DO. The extendable axis.
+    packages/capability/<n>/   what an agent can DO. The extendable axis.
     packages/transport/<n>/    how a device is REACHED.
     packages/codec/<n>/        how its bytes become a DOCUMENT.
-    packages/scaling/<n>/  how a raw value becomes a QUANTITY, with a unit.
+    packages/scaling/<n>/      how a raw value becomes a QUANTITY, with a unit.
+    packages/part/, plant/,
+             bus/, tool/       the things a world names, and the vocabularies they layer on
 
-All four of those live INSIDE `agent/` because only an agent runtime loads their Python.
-Onboarding reads their `ontology.ttl`, `shapes.ttl` and `rules.ru` — which it finds here,
-wherever they sit — and never imports a module from any of them.
+**The kernel is not one of them, because it is what finds them.** `agent/` carries its own
+`ontology.ttl`, `shapes.ttl` and `rules.ru` beside the Python that reads them, and it is
+prepended to `packages()` as a record rather than discovered by walking a tree. That is not the
+two-tree arrangement `one-tree-and-one-mechanic` collapsed: those were two systems that looked
+alike and were discovered differently. A tree and its loader are not two trees.
 
-**The trees are one mechanism split by BEARER, not by importance.** Every one of them is a
+It used to be `packages/core/orexis/` — a family with exactly one member, forever, that every
+other package layers on and that nothing can remove. That is not a package, it is the base, and
+`kind="core"` classified nothing. Now every family left is one an agent can hold zero members
+of, which is what "a package is optional" was always supposed to mean.
+
+Onboarding reads every package's `ontology.ttl`, `shapes.ttl` and `rules.ru` through here —
+the kernel's included — and never imports a module from any of them.
+
+**The families are one mechanism split by BEARER, not by importance.** Every one of them is a
 family with interchangeable members registered by `PROVIDES`, which is what rule 2 calls a
 capability. What differs is what carries the conclusion: `ag:hasCapability` on an AGENT for the
 first, a predicate on the SENSOR for the rest. Both are derived at genesis from a premise the
@@ -68,7 +77,9 @@ PACKAGES_ROOT = REPO_ROOT / PACKAGES
 # The families. NOT a registry — `packages()` finds whatever directories are there, and this
 # tuple only fixes the order they merge in. A family invented tomorrow is picked up without
 # editing anything; it merely sorts after these.
-CORE = "core"
+#
+# `core` was here and is gone: it held exactly one member, forever, and a family of one
+# classifies nothing. The base vocabulary is the KERNEL now, prepended rather than found.
 BUS = "bus"
 PART = "part"
 PLANT = "plant"
@@ -91,9 +102,12 @@ BASE = "orexis"
 # The order the T-Box is merged in. RDF is order-independent, so this buys determinism in logs
 # and diffs, not correctness. What it must NOT lose is that the base vocabulary comes first:
 # every other package layers on those terms, and reading a merge that puts them last is reading
-# it backwards. `core/orexis` is sorted to the front explicitly rather than by luck of the
-# alphabet — it happens to sort before `plant/water`, and that is not a thing to rely on.
-KINDS = (CORE, BUS, PART, PLANT, TOOL, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
+# it backwards.
+#
+# That used to be arranged by sorting `core/orexis` to the front, with a comment warning that
+# it "happens to sort before `plant/water`, and that is not a thing to rely on". Nothing is
+# relied on now: the kernel is not in the tree, so it cannot be sorted wrong.
+KINDS = (BUS, PART, PLANT, TOOL, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
 
 ONTOLOGY = "ontology.ttl"
 SHAPES = "shapes.ttl"
@@ -112,9 +126,19 @@ HONOURED = "honoured.rq"
 class Package:
     """One directory, and whichever of the four parts it chose to have."""
 
-    kind: str  # vocabulary | capabilities | transports
+    kind: str  # capability | transport | part | plant | … — or `kernel`, which is not a family
     name: str
     path: Path
+    #  Set only for the kernel, whose Python is `agent` and not `packages.<family>.<name>`.
+    #  A field rather than a subclass because everything else about the kernel — its four
+    #  filenames, how they are read, where it sorts — is a package's exactly.
+    module: str | None = None
+
+    @property
+    def is_kernel(self) -> bool:
+        """The one record not found by walking. It provides no capability; it provides the
+        vocabulary every capability is declared against, and the code that loads them."""
+        return self.kind == KERNEL_KIND
 
     @property
     def import_name(self) -> str:
@@ -124,7 +148,7 @@ class Package:
         import — `provides()` checks for an `__init__.py` before asking, so a knowledge-only
         package is never imported rather than being a special case here.
         """
-        return f"{PACKAGES}.{self.kind}.{self.name}"
+        return self.module or f"{PACKAGES}.{self.kind}.{self.name}"
 
     def file(self, filename: str) -> Path | None:
         candidate = self.path / filename
@@ -135,10 +159,23 @@ class Package:
 
         A package with no `__init__.py` is knowledge only, and that is a legitimate kind of
         package: the domain contributes vocabulary and no behaviour.
+
+        The kernel answers nothing here, and the guard is explicit rather than incidental:
+        `agent/__init__.py` exists, so without it this would import the runtime looking for a
+        `PROVIDES` the kernel must never have. A capability is something an agent MAY hold, and
+        the kernel is what every agent IS.
         """
-        if not (self.path / "__init__.py").exists():
+        if self.is_kernel or not (self.path / "__init__.py").exists():
             return ()
         return tuple(getattr(importlib.import_module(self.import_name), "PROVIDES", ()))
+
+
+# The kernel, as a record. It carries the same four filenames a package carries, so every
+# reader below — `files()`, `prefixes()`, genesis's rule substitution, onboarding's validation —
+# reaches it without knowing it is special. What it is NOT is a family: `packages/kernel/` is not
+# a directory anyone can add a sibling to, which is exactly the difference from `core`.
+KERNEL_KIND = "kernel"
+KERNEL = Package(kind=KERNEL_KIND, name=BASE, path=AGENT_ROOT, module=__package__)
 
 
 def _put_repo_root_on_path() -> None:
@@ -165,12 +202,20 @@ def packages() -> tuple[Package, ...]:
     `kind="vocabulary"`, which could not tell them apart, and a capability was a different tree
     entirely because its Python needed a home. One tree now, and `kind` means something.
 
-    Families sort by KINDS and then alphabetically, so the base vocabulary is merged first and
-    everything else is deterministic. A family nobody thought of is still found: it sorts after
-    the known ones instead of being ignored, which is the behaviour a registry could not give.
+    The KERNEL comes first and is not found — it is prepended. Everything else layers on its
+    terms, so it must merge first, and making that a fact of construction rather than of sort
+    order is the point: a thing outside the tree cannot be sorted wrong.
+
+    Families sort by KINDS and then alphabetically, so the merge is deterministic. A family
+    nobody thought of is still found: it sorts after the known ones instead of being ignored,
+    which is the behaviour a registry could not give.
+
+    **An empty `packages/` — or none at all — leaves the kernel, and that is a complete
+    build.** Not a degenerate case to guard against: it is the claim that every package is
+    optional, stated as the value this function returns.
     """
     if not PACKAGES_ROOT.is_dir():
-        return ()
+        return (KERNEL,)
 
     def visible(path):
         return sorted(p for p in path.iterdir()
@@ -182,7 +227,7 @@ def packages() -> tuple[Package, ...]:
                          key=lambda p: (order.get(p.name, len(order)), p.name)):
         for path in sorted(visible(family), key=lambda p: (p.name != BASE, p.name)):
             found.append(Package(kind=family.name, name=path.name, path=path))
-    return tuple(found)
+    return (KERNEL,) + tuple(found)
 
 
 def of_kind(kind: str) -> tuple[Package, ...]:

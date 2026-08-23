@@ -76,7 +76,8 @@ protected, not that both kinds were.
 ## So there is a test for it now
 
 `tests/test_store.py::test_no_source_names_a_moved_term_in_the_kernel_namespace` scans every
-source tree for a full IRI in `ag:` whose local name `packages/core/orexis` does not declare. It is
+source tree for a full IRI in `ag:` whose local name the kernel's `agent/ontology.ttl` does not
+declare. It is
 the same shape as the prefix scan beside it, and for the same reason: the harness was more
 forgiving than the store, so the class could not be caught by testing behaviour.
 
@@ -120,7 +121,8 @@ the next person does not re-derive it:
 
 # What is still in the kernel and should not be
 
-Answering the question this sweep was supposed to answer. `packages/core/orexis` declares 34 terms
+Answering the question this sweep was supposed to answer. The kernel — `agent/ontology.ttl`, then
+at `packages/core/orexis/` — declared 34 terms at the time
 and **eleven are not true of every agent**:
 
 - **The simulated device model — seven terms** *(eleven since the scenario grew: the physics

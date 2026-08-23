@@ -53,7 +53,7 @@ cited" is a mechanical membership check (PROV-O then records *which* witness ins
 below on why the graph, not the provenance triple, carries the trust):
 
 - `:ontology` — the shared **T-Box**, merged from every package's `ontology.ttl`
-  (`packages/core/orexis/` and every `packages/<family>/<name>/`): classes and properties (World,
+  (the kernel's own `agent/ontology.ttl` and every `packages/<family>/<name>/`): classes and properties (World,
   Agent, Sensor, Valve, Plant, Band, servedBy…). The vocabulary agents read from context.
 - `:world` — the sovereign-authored **topology**, and *only* topology: which agent acts for
   which plant, which sensors it is wired to (`polls` — the access grant), which valve

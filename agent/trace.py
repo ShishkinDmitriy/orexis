@@ -24,7 +24,7 @@ import logging
 from datetime import datetime, timezone
 from urllib.parse import quote
 
-from agent.ontology import DELIBERATION_GRAPH
+from .ontology import DELIBERATION_GRAPH
 
 log = logging.getLogger("trace")
 

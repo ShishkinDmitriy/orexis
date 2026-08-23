@@ -233,6 +233,15 @@ def test_no_document_names_a_path_that_is_not_there():
         # domain/world: a runbook step. `world/orchard/` is what the reader is being told to
         # CREATE, so its absence is the precondition.
         "world/orchard/world.ttl",
+        # The base vocabulary lived here until it came into `agent/` — a family of exactly one
+        # is not a family. Five records narrate that arrangement in the past tense: the table
+        # row capability-packages struck through, the term count every-term-in-its-own-house
+        # took at the time, pins-and-wires' 205-line file, the naming section of
+        # repository-layout, and the rename sweep in the-society-is-named-for-its-appetite.
+        "packages/core/<name>/",
+        "packages/core/orexis",
+        "packages/core/orexis/",
+        "packages/core/orexis/ontology.ttl",
     }
     docs = concepts()
     missing = []
@@ -251,29 +260,12 @@ def test_no_document_names_a_path_that_is_not_there():
 # --- the one table that claims to be checkable -------------------------------------------------
 
 
-def test_the_deliberation_table_matches_what_is_built():
-    """`domain/deliberation.md` says which members exist so nobody has to read the records to
-    find out. The table is only worth having if it cannot drift."""
-    from agent import loader
-
-    package = next(p for p in loader.of_kind("capability") if p.name == "deliberation")
-    built = {str(cls.CAPABILITY).rsplit("#", 1)[-1] for cls in package.provides()}
-    declared = set(
-        re.findall(r"^:(\w+) a :\w*Capability", (package.path / "ontology.ttl").read_text(), re.M)
-    )
-    table = (BUNDLE / "domain" / "deliberation.md").read_text()
-    rows = dict(re.findall(r"^\| `deliberation:(\w+)` \|[^|]*\| \*\*(yes|no)\*\*", table, re.M))
-
-    assert declared, "no members declared — the ontology pattern stopped matching"
-    assert rows, "no member table found in domain/deliberation.md"
-    assert set(rows) == declared, (
-        f"the table lists {sorted(rows)}; the ontology declares {sorted(declared)}"
-    )
-    assert {m for m, v in rows.items() if v == "yes"} == built, (
-        f"the table says {sorted(m for m, v in rows.items() if v == 'yes')} are built; "
-        f"PROVIDES says {sorted(built)}"
-    )
-
+#  `test_the_deliberation_table_matches_what_is_built` stood here. It held
+#  `domain/deliberation.md`'s member table to the deliberation package's `PROVIDES`, and both
+#  ends of it are gone: there is no package, and the two built members turned out to be one
+#  class with a conditional clause rather than two ways of having an ability. A guard whose
+#  subject no longer exists is deleted rather than loosened — the page now argues why the
+#  family folded, which is a claim about the past that nothing can drift from.
 
 # --- the terms a document cites ----------------------------------------------------------------
 
@@ -291,13 +283,22 @@ _TERM = re.compile(r"\b([a-z][a-z0-9]*):([A-Za-z]\w*)\b")
 
 
 def _declared() -> set[str]:
-    """Every local name any project TTL declares — packages and the ratified worlds both.
+    """Every local name any project TTL declares — the kernel, the packages, and the ratified
+    worlds.
 
     Worlds are included because a domain page legitimately names an individual as an example,
     and an individual is declared by the world that holds it rather than by an ontology.
+
+    The kernel is reached through the loader rather than through a path. It used to be
+    `packages/core/orexis/` and is `agent/` now, so a `packages/**` glob alone would stop
+    covering it — silently as far as this function is concerned, and loudly one line later,
+    since every `ag:` term a page names would read as undeclared.
     """
+    from agent import loader
+
     names: set[str] = set()
-    for ttl in list((REPO_ROOT / "packages").rglob("*.ttl")) + \
+    for ttl in [loader.KERNEL.file(loader.ONTOLOGY)] + \
+               list((REPO_ROOT / "packages").rglob("*.ttl")) + \
                list((REPO_ROOT / "world").rglob("*.ttl")):
         text = ttl.read_text()
         names |= set(re.findall(r"^:(\w+)\b", text, re.M))
@@ -434,10 +435,15 @@ def _bound_terms(meta: dict) -> list[str]:
 def test_a_dictionary_term_is_a_declared_one():
     import rdflib
 
+    from agent import loader
     from agent.store import NAMESPACES
 
-    ontologies = list((REPO_ROOT / "packages").rglob("ontology.ttl")) + \
-                 list((REPO_ROOT / "firmware").glob("*/ontology.ttl"))
+    #  Asked of the loader, not globbed. This was `packages/**/ontology.ttl` plus a firmware
+    #  glob — the same list the loader already assembles, maintained twice — and when the kernel
+    #  left `packages/core/orexis/` for `agent/` the glob went on matching twenty files while
+    #  covering none of `ag:`. Non-empty is not complete, and the two asserts at the foot of this
+    #  function would both have passed.
+    ontologies = list(loader.ontology_files())
     project = rdflib.Graph()
     for ttl in ontologies:
         project.parse(ttl)

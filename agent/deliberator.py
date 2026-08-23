@@ -1,37 +1,41 @@
-"""deliberation:Reflex — the welded chain, extracted unchanged into the seam a model will use.
+"""The deliberator: given where the agent stands against what it wants, the next move.
 
-**This module is the old bidder's whether, and nothing else.** Pursue what sits below the aim;
-look when you cannot see; otherwise, nothing. It decides no quantity, no price, no cadence and
-no announcement — the HOW stays with the actors, and the bid number in particular stays
-deterministic wherever the whether comes from (knowledge/decisions/deterministic-bid.md).
+**This is the mind's WHETHER, and it is the kernel's because a mind is not plug-in-able.** It
+was `deliberation:Reflex` and `deliberation:Planning`, two members of a family, and the family
+does not survive its own evidence: `PlanningModule` subclassed `ReflexModule`, called
+`super().propose()` first, and added one branch whose `_my_shop_needs` returns None for any
+agent that is not a dealer. A member that literally CONTAINS the other, with its extra branch
+inert everywhere else, is not an interchangeable implementation — it is one deliberator with a
+clause most agents do not reach. They are one class now, and no shipped behaviour moved.
 
-Why extracting a three-line reflex was worth a package: the caller now asks
-`agent.provider(DELIBERATION)` and cannot tell WHO answered. `deliberation:Consulting` — one
-model call over the beliefs, the T-Box, the gap and the standing intentions, emitting a move
-from the vocabulary's menu — drops into this seam without touching a line of any actor, which
-is the property the whole roadmap was run to buy. The proof the seam is load-bearing is in the
-tests: silence the deliberator and a thirsty bidder with a fresh reading in hand submits
-nothing, because the whether genuinely is not the bidder's any more.
+**Consulting survives as a seam, and a better one.** Asking a model what next is a genuine
+alternative — it is the reason the extraction happened at all — but WHICH deliberator answers
+is a choice, and this project puts choices in beliefs rather than in grants: it becomes a pick
+(`ag:deliberatesBy`) that an agent's review can move inside whatever room its mandate leaves,
+not a capability its world derives for it once at genesis. Everything
+knowledge/decisions/llm-heavy-deliberation.md fixes about it stands unchanged: a move from this
+vocabulary's menu and never free text-to-action, the bid number stays deterministic, and the
+keeper's patience bounds how often it is consulted.
 
-Vocabulary: packages/capability/deliberation/ontology.ttl. Derivation: its rules.ru. No beliefs
-and no shapes, and both omissions are statements: a reflex holds no opinion a shape could check —
-the aim it steers by is desire's, already shaped — and a member with parameters to hold would
-bring its own block. See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
+**What stays out is everything but the whether.** The HOW is the actor's — a bid's quantity and
+price are deterministic code, per knowledge/decisions/deterministic-bid.md, whoever said to bid.
+The KEEPING is the ledger's: a deliberator reads what stands and never writes it, because
+deciding and remembering what was decided are different things.
+
+See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pathlib import Path
 
-from agent import loader
-from agent.desire import Desire
-from agent.module import Module
-from agent.ontology import DELIBERATION_GRAPH
-from agent.store import bindings
-
-from . import search, trace
-from .search import Planner
-from .terms import PLANNING, REFLEX
+from . import planner, trace
+from .desire import Desire
+from .menu import Affordance, menu_of
+from .module import Module
+from .ontology import AG, DELIBERATION_GRAPH
+from .planner import Planner
+from .store import bindings
 
 # What this package asks OF others, by family — their namespaces, never their Python.
 _DESIRE = "http://example.org/orexis/desire#DesireCapability"
@@ -41,10 +45,9 @@ _DESIRE = "http://example.org/orexis/desire#DesireCapability"
 # between deciding and remembering.
 # The means are the kernel's words (the-mind-is-six-graphs): a move IS what the keeper
 # records, and four packages name these, which is what makes them lingua franca.
-_INTENTION_NS = "http://example.org/orexis#"
-OBSERVE = _INTENTION_NS + "Observe"
-ACTUATE = _INTENTION_NS + "Actuate"
-ACQUIRE = _INTENTION_NS + "Acquire"
+OBSERVE = AG + "Observe"
+ACTUATE = AG + "Actuate"
+ACQUIRE = AG + "Acquire"
 
 # The ladder's order IS the preference (#190): act with what is yours before buying what is
 # not — each rung costlier and more social than the last. Disjoint per source by
@@ -73,77 +76,11 @@ SELECT ?direction WHERE {
 } LIMIT 1"""
 
 
-_CHOSEN = "http://example.org/orexis/deliberation#Chosen"
 
-
-@dataclass(frozen=True)
-class Affordance:
-    """One row of the menu: a means, the property it is about, the lever, — for a means that
-    moves anything — which way it moves it, and whether it is mine to CHOOSE or to HONOUR.
-
-    The mode is the #218 half: a chosen row is an option a deliberator ranges over; an
-    honoured row is a duty exercised on a valid presentation and never proposed. Absent
-    means chosen, so a branch written before the distinction keeps its meaning.
-    """
-
-    means: str
-    observed_property: str
-    via: str
-    direction: str | None = None
-    mode: str = _CHOSEN
-    #  Whom an honoured row serves — the counterparty entitled to demand this lever. Absent on
-    #  a chosen row, which serves nobody but the agent itself. It is what lets a DUTY find its
-    #  means: an obligation names who it is owed to, and the row that answers is the one
-    #  honoured for exactly that agent.
-    for_agent: str | None = None
-
-    @property
-    def is_chosen(self) -> bool:
-        return self.mode == _CHOSEN
-
-
-_DESIRED_Q = """SELECT DISTINCT ?property WHERE {
-  <%s> ag:holds ?region .
-  ?region ssn:forProperty ?property ; sh:property/sh:severity ag:ShouldBecome }"""
-
-
-def menu_of(query, agent_uri: str, desires) -> list[Affordance]:
-    """What one agent could do, about what, through which lever — derived, never written.
-
-    The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
-    row here is a move nothing should propose. Free function for the same reason `gaps_of` is —
-    a test about what a world implies should not have to build an agent to ask.
-
-    THE UNION OF WHAT THE LOADED PACKAGES CONTRIBUTE (#207): each package may ship an
-    `affordances.rq` — its rows, its preconditions as its own walk — and this collects them,
-    so the menu's KINDS stop being a registry in this package's directory. Sensing ships the
-    Observe branch, the market ships Acquire, and a new way of acting is a new directory:
-    ontology as the tool's schema, affordances.rq as its availability, a module as its
-    implementation — or no module at all, where execution reduces to an existing actor.
-    Sorted here because ORDER BY lived in the one big query; per-file order is no order.
-    """
-    #  The desired properties, asked of the desire modality once and injected into every
-    #  walk: a row is wiring x want, and since the dataset split (#298) the want half lives
-    #  in a store of its own. An empty block is legal SPARQL and yields no rows — an agent
-    #  with no desires has no menu, exactly as when the shape pattern sat in each file.
-    props = " ".join(f"<{r['property']}>" for r in bindings(desires(_DESIRED_Q % agent_uri)))
-    rows = []
-    for path in loader.affordance_files() + loader.honoured_files():
-        q = (path.read_text().replace("$me", f"<{agent_uri}>")
-             .replace("$properties", props))
-        rows += [Affordance(means=r["means"], observed_property=r["property"], via=r["via"],
-                            direction=r.get("direction"), mode=r.get("mode") or _CHOSEN,
-                            for_agent=r.get("buyer"))
-                 for r in bindings(query(q))]
-    return sorted(rows, key=lambda a: (a.observed_property, a.means, a.mode))
-
-
-class ReflexModule(Module):
+class Deliberator(Module):
     """The decider. Speaks to no topic; its callers are its siblings, through the agent."""
 
-    CAPABILITY = REFLEX
     name = "deliberation"
-
     def pursued(self) -> list[tuple[Desire, str | None]]:
         """Every desire this agent holds, with the move I propose for it — or None.
 
@@ -173,6 +110,17 @@ class ReflexModule(Module):
         by the one module that sees both.
         """
         pursued = self.pursued()
+        #  NOTHING TO DECIDE IS NOT ZERO THINGS DECIDED. An agent with no stake — world/sensing's
+        #  records and wants nothing — used to contribute no rows here because it was granted no
+        #  deliberation capability at all, and `Module.reports` says outright that the ABSENCE of
+        #  a module's lines is itself a reading. Dissolving the capability into the kernel would
+        #  have silently turned that reading into a row of zeros on every dashboard.
+        #
+        #  So absence follows the FACT rather than the grant: no wants, no rows. It says the same
+        #  thing the missing capability used to say, and says it about what is true of the agent
+        #  now rather than about what its world provisioned for it once.
+        if not pursued:
+            return []
         wanting = [(g, move) for g, move in pursued if not g.is_met]
         #  `agent_goals`, like `agent_want` below, KEEPS THE RETIRED WORD. The noun gave way to
         #  `desire` when the vocabulary was ruled on (domain/desire.md), and a measurement name
@@ -217,8 +165,8 @@ class ReflexModule(Module):
         verdicts = trace.outcomes(self.agent.beliefs.query_union)
         rows.append(("agent_deliberation", {}, {
             outcome.replace(" ", "_"): float(verdicts.get(outcome, 0))
-            for outcome in (search.SATISFIED, search.IMPROVED, search.NOTHING,
-                            search.EXHAUSTED, search.NOT_BETTER, search.REFUSED)}))
+            for outcome in (planner.SATISFIED, planner.IMPROVED, planner.NOTHING,
+                            planner.EXHAUSTED, planner.NOT_BETTER, planner.REFUSED)}))
         #  WHAT IT COST, from the same pass and not a second one. `pursued()` above re-planned
         #  every desire this agent holds, so these are that work's own figures — asking again to
         #  measure would double the cost being measured, which is the one thing an observability
@@ -312,9 +260,9 @@ class ReflexModule(Module):
         """
         deducer = self.agent.provider(_DESIRE)
         plan = Planner(self.agent, deducer, self.me).plan(desire)
-        if plan.outcome == search.NOTHING:
+        if plan.outcome == planner.NOTHING:
             return False, None               # nothing to simulate; let the reflex answer
-        if plan.outcome == search.SATISFIED and not plan.steps:
+        if plan.outcome == planner.SATISFIED and not plan.steps:
             return False, None               # already met; the reflex will also propose nothing
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
@@ -337,10 +285,36 @@ class ReflexModule(Module):
     def propose(self, observed_property: str, value: float | None) -> str | None:
         """Given where this property stands, the next move — or None, which is a decision.
 
-        `value` is the freshest reading the caller trusts, and None means it holds none it
-        does: the reflex answer to not seeing is to look, which is the boot-order fact the
-        decision record is built on — at birth there is a desired state, no observations, and
-        the first intention is always Observe.
+        TWO CLAUSES, and the order is the one the two members had. The gap's sign answers
+        first; the dealer's shop answers only if it did not. That sequencing is load-bearing
+        and was nearly lost in merging them: `PlanningModule.propose` called `super().propose()`
+        and then ran its own clause, so the reflex's three early returns — no reading, no
+        desire module, no aim — meant "the gap says nothing", NOT "stop". Inlining the reflex
+        body here would have turned each of them into a return that skips the shop, and a
+        dealer whose aim was unset would have stopped refilling. Hence `_by_gap`.
+        """
+        if value is None:
+            return None
+        if (move := self._by_gap(observed_property, value)) is not None:
+            return move
+        #  THE DEALER'S CLAUSE, and it is inert for everyone else. `_my_shop_needs` answers
+        #  only for a property that is this agent's own vessel's stock, so a fern reaches this
+        #  line, gets None, and falls through exactly as the reflex always did. It was
+        #  `deliberation:Planning` overriding `propose` to call `super()` and then run this;
+        #  one class expresses the same thing without asking a world to choose between a
+        #  member and the member that contains it.
+        needed = self._my_shop_needs(observed_property)
+        if (needed is not None and value < needed
+                and self._direction_of(observed_property) == _RAISES):
+            return ACQUIRE
+        return None
+
+    def _by_gap(self, observed_property: str, value: float) -> str | None:
+        """The gap's sign against the aim — the whole of what `deliberation:Reflex` was.
+
+        None here means THE GAP SAYS NOTHING, not that deliberation is over: `propose` runs the
+        dealer's clause afterwards. That distinction is the one thing the merge had to keep, and
+        it is why this is a helper rather than the first half of one function.
 
         With a reading in hand, the whole reflex is the gap's sign against the AIM — the pick,
         not the region's edge, because pursuing only past the band edge would leave the agent
@@ -363,8 +337,6 @@ class ReflexModule(Module):
         #  A value of None no longer means "look" — `propose_for` answers that, from a desire
         #  that says which of the two epistemic failures it is. Here it means only that the
         #  caller has no reading to steer by, and steering is all this member does.
-        if value is None:
-            return None
         desire = self.agent.provider(_DESIRE)
         if desire is None:
             return None
@@ -405,60 +377,6 @@ class ReflexModule(Module):
             _DIRECTION_Q % (self.me.uri, observed_property)))
         return rows[0]["direction"] if rows else None
 
-
-# The dealer's shop, asked from inside: the lot my downstream venue owes, IF the property in
-# hand is my own vessel's stock. Both joins are the Planning grant's premises re-asked —
-# I act for a vessel I offer, the property is one its stated ranges name — plus my own
-# offerQuantityL belief, read from my private graph exactly as the bidder reads its
-# conversion: a lot is a HOSTING belief, and this package may name the term's IRI but never
-# import the market's Python.
-_SHOP_Q = """
-SELECT ?q WHERE {
-  <%s> ag:actsFor ?vessel .
-  ?vessel market:offeredBy <%s> .
-  ?vessel <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
-  ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
-  ?cond <http://www.w3.org/ns/ssn/forProperty> <%s> .
-  GRAPH <%s> { <%s> <http://example.org/orexis/market#offerQuantityL> ?q }
-} LIMIT 1"""
-
-# The dealer's plan ships as SPARQL beside the menu contributions (#206), so the sovereign
-# may run the very text the planner runs — one file, two readers, no drift.
-from pathlib import Path
-
-PLAN_QUERY = (Path(__file__).parent / "plan.rq").read_text()
-
-OFFER = _INTENTION_NS + "Offer"
-
-
-class PlanningModule(ReflexModule):
-    """The dealer's member: the reflex plus one deduced desire, and the plan said out loud.
-
-    Depth 2 and no deeper, by construction: the search space is the two venues the grant's
-    premise names, not open-ended STRIPS. What it adds to the reflex is exactly one desire past
-    the region — MY HOSTED LOT MUST BE SERVEABLE. Every downstream buyer's Acquire silently
-    preconditions stock >= lot ("refilling makes lotCapacity > 0 true" is the planning
-    record's own sentence), and the reflex would only pursue the vessel's aim; a dealer whose
-    aim sat below its lot would honestly keep a vessel too empty to trade from. The plan
-    itself — acquire upstream, then offer downstream — is exposed as data (`plan_for`) for
-    the same reason the menu is: the Consulting member's prompt substrate, and the
-    sovereign's inspection, without a line of prose maintained anywhere.
-    """
-
-    CAPABILITY = PLANNING
-    name = "planning"
-
-    def propose(self, observed_property: str, value: float | None) -> str | None:
-        move = super().propose(observed_property, value)
-        if move is not None:
-            return move
-        if value is None:
-            return None
-        needed = self._my_shop_needs(observed_property)
-        if needed is not None and value < needed                 and self._direction_of(observed_property) == _RAISES:
-            return ACQUIRE
-        return None
-
     def _my_shop_needs(self, observed_property: str) -> float | None:
         """The lot my downstream venue owes — None when this property is not my shop's stock."""
         rows = bindings(self.agent.beliefs.query(_SHOP_Q % (
@@ -479,3 +397,26 @@ class PlanningModule(ReflexModule):
                            via=r["via"], direction=r.get("direction"))
                 for r in sorted(rows, key=lambda r: r["step"])
                 if r["property"] == observed_property]
+
+
+# The dealer's shop, asked from inside: the lot my downstream venue owes, IF the property in
+# hand is my own vessel's stock. Both joins are the Planning grant's premises re-asked —
+# I act for a vessel I offer, the property is one its stated ranges name — plus my own
+# offerQuantityL belief, read from my private graph exactly as the bidder reads its
+# conversion: a lot is a HOSTING belief, and this package may name the term's IRI but never
+# import the market's Python.
+_SHOP_Q = """
+SELECT ?q WHERE {
+  <%s> ag:actsFor ?vessel .
+  ?vessel market:offeredBy <%s> .
+  ?vessel <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
+  ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
+  ?cond <http://www.w3.org/ns/ssn/forProperty> <%s> .
+  GRAPH <%s> { <%s> <http://example.org/orexis/market#offerQuantityL> ?q }
+} LIMIT 1"""
+
+# The dealer's plan ships as SPARQL beside the menu contributions (#206), so the sovereign
+# may run the very text the planner runs — one file, two readers, no drift.
+PLAN_QUERY = (Path(__file__).parent / "plan.rq").read_text()
+
+OFFER = AG + "Offer"

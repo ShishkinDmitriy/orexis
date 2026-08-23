@@ -45,7 +45,7 @@ A **package** is a directory, and the tree it sits in says what kind it is:
 
 | | |
 |---|---|
-| `packages/core/<name>/` | what terms MEAN. `orexis` is the base everything layers on |
+| ~~`packages/core/<name>/`~~ | **GONE.** The base vocabulary was a family of exactly one, forever, that every other package layers on and nothing can remove. That is not a package; it is the base, and it lives in `agent/` beside the code that reads it |
 | `packages/capability/<name>/` | what an agent can **do**. The extendable axis |
 | `packages/transport/<name>/` | how a device is **reached**. Deliberately not a capability |
 | `packages/part/`, `plant/`, `bus/`, `tool/` | the things a world names, and the vocabularies they layer on |

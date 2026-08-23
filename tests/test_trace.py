@@ -14,8 +14,8 @@ from __future__ import annotations
 
 from agent.ontology import DELIBERATION_GRAPH
 from agent.store import bindings
-from packages.capability.deliberation import search, trace
-from packages.capability.deliberation.search import Planner
+from agent import planner as search, trace
+from agent.planner import Planner
 
 from conftest import build_agent, genesis_store
 

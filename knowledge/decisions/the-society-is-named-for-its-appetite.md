@@ -50,7 +50,8 @@ above: once the auction was recognised as the replaceable part, only mind-side n
 
 Everything, deliberately — a half-rename leaves two names to explain forever. The repository,
 the distribution name, every `orexis-*` command, every `OREXIS_*` environment variable, the
-container image tags, the core package directory `packages/core/orexis/`, and the ontology
+container image tags, the base vocabulary's directory (`packages/core/orexis/` at the time,
+`agent/` since), and the ontology
 namespace: `http://example.org/orexis#` and each package's namespace under it. The prefix
 label `ag:` stays — it is a local binding, every query and rule already speaks it, and it
 reads as well for *agent* as it ever did for *agora*.
