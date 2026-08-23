@@ -86,6 +86,38 @@ between units, a clamp applied in one of them is invisible in the other.** The s
 [#26](https://github.com/ShishkinDmitriy/orexis/issues/26) wants the interpretation moved to the
 agent — a deviation expressed in raw counts needs no calibration to agree with anyone.
 
+# Silence is information, and the series store cannot hold it
+
+The design's own claim is that **silence means nothing crossed** — that is what makes a generous
+heartbeat safe. A time-series store cannot represent that. Two points half an hour apart, 0.15 and
+1.00, are interpolated by every consumer into a straight line, so a graph and every query over
+that window report a gradual half-hour soak where there was a jump of twenty-five seconds. The
+information the design earns is converted into a falsehood by the act of storing it.
+
+The device knows which it was. At a fifteen-second patrol it took about a hundred and twenty looks
+in that window, and every one before the breach was in-window. So **a crossing report carries the
+last quiet sample and its age**, the agent places that point at the instant it was taken, and the
+corner lands where it belongs: flat until T−25s, then near-vertical.
+
+Three details make it cheap rather than clever. The ULP already runs an in-window path on every
+quiet look — resetting the counter — so remembering the sample there is one store instruction. The
+age is exact rather than estimated: a quiet look sets the patrol rate and the breach that follows
+switches to the confirm rate, so the last quiet sample is one patrol plus (N−1) confirms before the
+alarm. And `prev` mirrors the reading's own shape, so a sensor that reads `/moisture` finds its
+prior at `/prev/moisture` — which is what keeps a shared topic working, three sensors each finding
+their own.
+
+**The prior is written to the series and NOT to the belief base**, and the asymmetry is the point.
+What an agent believes is what it last heard; this is evidence about the SHAPE of a change it has
+already been told about. Recording it as a current observation would let an older value overwrite
+a newer one — the sensed store upserts one observation per subject-property — and would re-trigger
+everything downstream of a reading for a value the agent has already superseded.
+
+What this does NOT do is let the device assert the quiet interval itself. It repairs the edge of
+each gap, not the gap. A board that could say "in-window from T₁ to T₂" would make silence a claim
+rather than a hole, and that needs a vocabulary term and an agent that records a span rather than
+a point.
+
 # Two rates, because patrolling and confirming are different jobs
 
 Not part of the same decision, but landed with it and cheap to state. The ULP now chooses its own

@@ -40,11 +40,12 @@ Derivation: capabilities/sensing/rules.ru. See knowledge/domain/sensing.md.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import timedelta, datetime, timezone
 
 from agent.scaling import scaling_for
 from agent.driver import driver_for
 from agent.module import Module
+from agent import pointer
 from agent.observation import Observations
 from agent.ontology import INSTRUMENTS_GRAPH
 from agent.store import bindings
@@ -216,7 +217,48 @@ class SensingModule(Module):
                                  sensor.reading_pointer or "/value", topic)
             else:
                 self.ingest(sensor, value, at)
+                self.record_prior_if_any(sensor, doc, at)
         return mine
+
+    def record_prior_if_any(self, sensor, doc, at: datetime) -> None:
+        """A crossing report may carry the last value seen while the world was still quiet.
+
+        The series store cannot say "nothing happened", so it interpolates: a heartbeat at 0.15
+        and an alarm half an hour later at 1.00 are drawn as a straight line, and every consumer
+        reads a gradual soak where there was a jump of twenty-five seconds. The device knows
+        which it was — it looked a hundred times in that window and every look but the last two
+        was in-window — and an alarm says so. Recording it puts the corner where it belongs.
+
+        The prior sits at the READING'S OWN POINTER one level down, so a sensor that reads
+        `/moisture` finds its prior at `/prev/moisture` and a shared topic keeps working: three
+        sensors on one message each find their own, exactly as they do for the live value.
+        Absent for a heartbeat, and absent when the window broke on the device's first look —
+        there is no prior sample then, and inventing one would be worse than the interpolation.
+        """
+        if not isinstance(doc, dict) or doc.get("wake") != "alarm":
+            return
+        prev = doc.get("prev")
+        if not isinstance(prev, dict):
+            return
+        age = prev.get("age_s")
+        if not isinstance(age, (int, float)):
+            return
+        try:
+            raw = pointer.resolve(sensor.reading_pointer or "/value", prev)
+        except (pointer.PointerError, TypeError, ValueError):
+            # A prior that cannot be read is simply absent, exactly as the live value would be.
+            # resolve() RAISES on a missing key rather than returning None, and treating it as a
+            # falsy result would have let the exception out of handle() and dropped the whole
+            # message — including the alarm the prior was only ever decorating.
+            return
+        if raw is None:
+            return
+        scaling = self.scalings[sensor.uri]
+        value = None if scaling is None else scaling.apply(sensor, raw)
+        if value is None:
+            return
+        self.observations.record_prior(self.log, sensor, value,
+                                       at - timedelta(seconds=float(age)))
 
     def ingest(self, sensor, value: float, at: datetime | None = None) -> None:
         """Record what the sensor read, then re-aim if this capability can.

@@ -48,6 +48,7 @@
 #define ULP_MEM_LOW   0    // the too-wet count
 #define ULP_MEM_HIGH  1    // the too-dry count
 #define ULP_MEM_LOOKS 2    // consecutive breaching looks so far (#180)
+#define ULP_MEM_LASTOK 6   // the last sample taken while the value was still INSIDE the window
 #define ULP_MEM_LAST  4    // the ADC sample the ULP itself last saw — the only way to find out
                            // whether the coprocessor's view of the probe matches the CPU's
 #define ULP_MEM_TICKS 3    // looks taken since the last arm — diagnostic only, never read by
@@ -232,6 +233,9 @@ void armUlpWatch(float nowFrac) {
   }
   RTC_SLOW_MEM[ULP_MEM_TICKS] = 0;
   RTC_SLOW_MEM[ULP_MEM_LOOKS] = 0;              // every arming starts the vigil over
+  // 0xFFFF is "no quiet look yet", and cannot collide with a reading: the ADC is 12-bit.
+  // Re-armed each time, so the prior sample always belongs to the window it broke.
+  RTC_SLOW_MEM[ULP_MEM_LASTOK] = 0xFFFF;
 
   ulp_adc_cfg_t adcCfg = {
       .adc_n    = ADC_UNIT_1,
@@ -345,6 +349,13 @@ void armUlpWatch(float nowFrac) {
       I_SUBR(R2, R0, R1),              // sample - low; borrow => sample < low (too wet)
       M_BXF(1),
       VIGIL_DARK()                     // in window: nothing to say, so say nothing
+      I_ST(R0, R3, ULP_MEM_LASTOK),    // ... but remember WHAT was seen, and that it was quiet.
+                                       // This is the evidence a crossing needs: the series
+                                       // store cannot record "nothing happened", so it draws a
+                                       // straight line from the last heartbeat to the alarm and
+                                       // claims a half-hour ramp where there was a 25-second
+                                       // jump. One store on a path that already runs, and the
+                                       // board can say when the change actually began.
       I_MOVI(R1, 0),                   // in window: the vigil starts over
       I_ST(R1, R3, ULP_MEM_LOOKS),
       I_SLEEP_CYCLE_SEL(ULP_TIMER_PATROL),   // nothing wrong: go back to the slow patrol
@@ -465,6 +476,21 @@ void ulpSelfTest(int seconds) {
                   (unsigned)(RTC_SLOW_MEM[ULP_MEM_LAST]  & 0xFFFF),
                   (unsigned)(RTC_SLOW_MEM[ULP_MEM_LOOKS] & 0xFFFF));
   }
+}
+
+bool priorQuietSample(float *frac, uint32_t *ageAtWakeS) {
+  // What the coprocessor saw on its last in-window look, and how long before the wake that was.
+  // The arithmetic is exact rather than estimated: a quiet look sets the patrol rate, the look
+  // after it breached and switched to the confirm rate, and every look from there was a confirm
+  // apart. So the last quiet sample is one patrol plus (N-1) confirms before the alarm.
+  uint32_t raw = RTC_SLOW_MEM[ULP_MEM_LASTOK] & 0xFFFF;
+  if (raw == 0xFFFF) return false;      // the window broke on its very first look
+  float f = (ADC_DRY - (float)raw) / (float)(ADC_DRY - ADC_WET);
+  if (f < 0.0f) f = 0.0f;
+  if (f > 1.0f) f = 1.0f;
+  *frac = f;
+  *ageAtWakeS = (uint32_t)WATCH_PATROL_S + (uint32_t)(WAKE_PERSIST_LOOKS - 1) * WATCH_CONFIRM_S;
+  return true;
 }
 
 bool wokeByAlarm() {

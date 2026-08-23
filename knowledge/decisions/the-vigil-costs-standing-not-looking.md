@@ -62,6 +62,7 @@ the radio** and 3.6 is standing vigil. Halving the heartbeat rate roughly double
 | heartbeat | wakes/day | mAh/day | 2000 mAh cell |
 |---|---|---|---|
 | 20 min | 72 | 21.6 | ~93 days |
+| 30 min | 48 | 15.6 | ~128 days |
 | 40 min | 36 | 12.6 | ~159 days |
 | 1 h | 24 | 9.6 | ~209 days |
 

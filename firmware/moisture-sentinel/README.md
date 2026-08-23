@@ -56,7 +56,8 @@ about a hundred minutes of watching — speaking is the cost, watching is noise.
 | governed @ slow 600 s + watch | 144 | 40 | ~7 weeks |
 | governed, realistic (bursts, verification) | 180–240 | 50–65 | ~5 weeks |
 | sentinel, heartbeat 600 s | ~146 | 40 | ~7 weeks |
-| **sentinel, heartbeat 20 min** (current) | 72 | **21.6** | **~3 months** |
+| sentinel, heartbeat 20 min | 72 | 21.6 | ~3 months |
+| **sentinel, heartbeat 30 min** | 48 | **15.6** | **~4 months** |
 | sentinel, heartbeat 40 min | 36 | 12.6 | ~5 months |
 | sentinel, heartbeat 1 h | ~26 | 10 | ~6 months |
 | sentinel, heartbeat 4 h | ~8 | 6 | ~11 months |
