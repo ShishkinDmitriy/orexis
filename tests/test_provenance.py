@@ -414,8 +414,11 @@ _SOURCES = {
     # `packages/` as its own group. The kernel's rglob used to reach capability Python because
     # capabilities were subpackages of `agent`; after the move it still matched plenty of files,
     # so the non-empty guard stayed green while every capability's SPARQL silently left the scan.
-    "agent": sorted(p for p in Path(genesis.__file__).parent.rglob("*.py")),
-    "packages": sorted(loader.PACKAGES_ROOT.rglob("*.py")),
+    # PARTITIONED from `loader.sources()`, not globbed. The two names stay, because a group that
+    # goes empty should say WHICH tree moved — but the union is the loader's, so a tree nobody
+    # here has heard of is covered rather than silently outside both globs.
+    "agent": [p for p in loader.sources("*.py") if "packages" not in p.parts],
+    "packages": [p for p in loader.sources("*.py") if "packages" in p.parts],
     "onboarding": sorted(Path(genesis.__file__).parent.parent.glob("onboarding/*.py")),
 }
 

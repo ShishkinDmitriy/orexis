@@ -316,6 +316,28 @@ def honoured_files() -> tuple[Path, ...]:
     return files(HONOURED)
 
 
+def sources(pattern: str = "*.py") -> tuple[Path, ...]:
+    """Every file of one kind across the trees a runtime loads — the KERNEL's and the packages'.
+
+    The accessors above answer for files the loader gives MEANING to: an ontology, a shapes file,
+    a rule. This one answers for files it merely contains, which is what a scan wants — the guards
+    that hold this codebase to its own rules read source text, and "all the source there is" had
+    no name.
+
+    It has one now because not having one cost five guards. Each hand-rolled the union, and four
+    hand-rolled it as `PACKAGES_ROOT.rglob(...)` alone — correct when every module lived under
+    `packages/`, and silently wrong the day the mind came into the kernel. They did not fail:
+    they NARROWED, which nothing can see. A glob can be asserted non-empty and four of them were,
+    passing the whole time.
+
+    So: ask here rather than glob a tree. A tree is a layout, and layouts move.
+    """
+    found = [p for p in KERNEL.path.rglob(pattern) if "__pycache__" not in p.parts]
+    if PACKAGES_ROOT.is_dir():
+        found += [p for p in PACKAGES_ROOT.rglob(pattern) if "__pycache__" not in p.parts]
+    return tuple(sorted(found))
+
+
 def review_rules() -> tuple[Path, ...]:
     """Every package's review rule, if it has one. Most do not, and that is a statement:
     a capability with nothing worth reconsidering says so by shipping no file."""

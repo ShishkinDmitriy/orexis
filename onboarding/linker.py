@@ -133,8 +133,7 @@ def referenced_terms() -> dict[str, set[str]]:
     #  a hole in exactly the guard that caught this widening's first real find.
     RETIRED_BY_DESIGN = {"vocabulary.py"}
 
-    for path in sorted(loader.KERNEL.path.rglob("*.py")) + \
-                sorted(loader.PACKAGES_ROOT.rglob("*.py")):
+    for path in loader.sources("*.py"):
         if path.name in RETIRED_BY_DESIGN:
             continue
         text = path.read_text()

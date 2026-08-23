@@ -178,6 +178,38 @@ Both widened here, and both found something the moment they could see:
   definition an IRI nothing declares — which would have broken `tests/test_linker.py`. Exempt by
   name with a reason, never by a pattern something could meet by accident.
 
+# The five survivors were checked, and the family earns its keep
+
+Asked once the mind was out: if three capabilities were really the kernel, is `capability` a
+container for one idea? No — and the test that separates them is worth having written down,
+because it is not the one that looks obvious.
+
+It is **not** "is it universal". `reporting` is granted to every agent by a rule whose WHERE
+clause is `?agent a ag:Agent` — a premise that asks nothing — and it is still a capability.
+[telemetry-is-a-mandatory-capability](telemetry-is-a-mandatory-capability.md) settled that
+exact question and its argument holds: mandatory and uniform are different, counting stays in
+the kernel because counting could not differ, and `reporting:Announcing` is a second member with
+an independent failure mode — a bucket that has gone and a bus that has gone fail separately,
+and a member reporting over the bus cannot report having lost the bus.
+
+The test that actually separates them is **whether the kernel already assumed the thing**:
+
+| | granted by | does the kernel assume it? |
+|---|---|---|
+| `sensing`, `actuation`, `market` | equipment, a market position | no — an agent without an actuator cannot actuate, and nothing in the kernel pretends otherwise |
+| `review` | a mandate whose ends differ | no — an agent given no room holds no revisable pick |
+| `reporting` | nothing; every agent | the COUNTING, yes — and that half is already kernel, deliberately. The shipping is not |
+| ~~`desire`, `intention`, `deliberation`~~ | a stake, a stake and a lever | **YES**, and that was the defect: the stores were built for every agent before any grant was read |
+
+The mind failed because its stores were unconditional while its readers were granted, so an
+agent could hold a modality nobody could write. No survivor has that shape. `reporting` comes
+closest and is the one that already made the split on purpose, in the right place.
+
+`actuation` is a family of one and stays one: what makes it a capability is not a second member
+but that its premise is genuinely absent for most agents. A family of one whose premise is a
+tautology would be the thing to fold — and `reporting` is not that either, because its second
+member is argued rather than imagined.
+
 # Seams left open
 
 - **`agent/` is large**, and that was accepted rather than overlooked: cohesion was the point,
