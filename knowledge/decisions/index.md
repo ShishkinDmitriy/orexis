@@ -103,6 +103,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [the-wire-is-ours-and-it-has-two-levels](/decisions/the-wire-is-ours-and-it-has-two-levels.md) - A transport and an encoding vary independently: the credential is the connection's, the encoding is the stream's.
 * [a-board-is-a-platform](/decisions/a-board-is-a-platform.md) - The board three sensors share is a sosa:Platform hosting its parts, and mc:carries was sosa:hosts all along.
 * [a-board-says-what-it-can-honour](/decisions/a-board-says-what-it-can-honour.md) - A device states a frequency it can keep, so an agent cannot commit to a cadence its board would never honour.
+* [firmware-repeats-rather-than-shares](/decisions/firmware-repeats-rather-than-shares.md) - A shared library is a shared reflash, and what looks duplicated is the mechanism while the meaning differs per board.
 * [a-firmware-describes-itself](/decisions/a-firmware-describes-itself.md) - `firmware/<name>/ontology.ttl` is a T-Box source: the flashed image's own facts, entailed onto every typed board.
 * [a-part-is-described-once-and-fitted-many-times](/decisions/a-part-is-described-once-and-fitted-many-times.md) - We ship a package for a model, so datasheet facts are stated on classes and reach devices by entailment.
 * [a-species-is-described-once-and-planted-many-times](/decisions/a-species-is-described-once-and-planted-many-times.md) - A species is a model and the pots are units, so planting one is one triple.

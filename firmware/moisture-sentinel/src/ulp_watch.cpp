@@ -1,6 +1,9 @@
 // The sentinel's ULP watcher (#151), in its own unit so main.cpp stays about the wake cycle.
 // Mirrors firmware/moisture-sensor/src/ulp_watch.cpp — projects are deliberately
-// self-contained, so the machinery is repeated rather than shared.
+// self-contained, so the machinery is repeated rather than shared. That is a decision with
+// reasons and a stated expiry, not a habit: knowledge/decisions/firmware-repeats-rather-than-shares.md.
+// Note the price it has already cost once — the ADC handover below was fixed HERE and the
+// identical defect is still latent in the governed node's copy (#322).
 //
 // TWO RATES, and they answer different questions. PATROL (WATCH_PATROL_S) is how often the ULP
 // asks "has anything changed"; CONFIRM (WATCH_CONFIRM_S) is how long it waits before deciding
