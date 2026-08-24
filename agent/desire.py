@@ -45,6 +45,19 @@ class Desire:
     claim: str | None = None
     owed_to: str | None = None
 
+    # An EPISTEMIC want's one: the instrument whose reading is wanted current. Present exactly
+    # where the want is about knowing rather than about a number, which is what `is_epistemic`
+    # reads — the same discipline as `is_duty` above, and for the same reason: it is not a flag
+    # saying what kind this is, it is the premise, and a want derived from an instrument is a
+    # want about that instrument by construction.
+    #
+    # It is here because two wants can now be about ONE property — fern holds a region in its
+    # moisture AND wants its probe to have spoken recently — and everything that used to ask
+    # "the want about this property" had exactly one answer and now has two. Whose the
+    # instrument IS stays out of the kernel: this is an IRI handed over, and the capability
+    # that derived the want is the one that knows what to do with it.
+    instrument: str | None = None
+
     # Whether anything is being asked of this agent YET. A duty nobody has presented stands and
     # may be hot, and still must not be acted on: the holder is waiting for its own watch to be
     # live, and a host that doses early spends the water where nothing is looking. Always true
@@ -52,7 +65,10 @@ class Desire:
     pursuable: bool = True
 
     #  What state the desire is in, in its own kind's vocabulary: `met`, `unmet` or `unmeasured`
-    #  for a stake, `standing` or `demanded` for a duty. Carried rather than inferred from
+    #  for a stake, `met`, `stale` or `unmeasured` for an epistemic want — where it is read off
+    #  the MEASURE, so a want scored maximal can never report as met, which it did while the
+    #  label came from a staleness test that declines to judge at all without a published
+    #  horizon — and `standing` or `demanded` for a duty. Carried rather than inferred from
     #  urgency, and that distinction is not academic — urgency is 0 only exactly at the point
     #  being steered for, so "urgency > 0" counts a barrel sitting comfortably inside 1-5 as
     #  unmet. It read that way on the bench for about ten minutes and made a calm society look
@@ -78,6 +94,16 @@ class Desire:
     @property
     def is_duty(self) -> bool:
         return self.claim is not None
+
+    @property
+    def is_epistemic(self) -> bool:
+        """Is this a want about my KNOWLEDGE of something rather than about the thing?
+
+        The two are repaired by different means — no lever moves a number you cannot see —
+        and, since a property may carry one of each, whoever asks "what should I do about
+        this property" has to say which of the two it means. An actuator means the number.
+        """
+        return self.instrument is not None
 
 
 #  --- the desire modality ---------------------------------------------------------------------

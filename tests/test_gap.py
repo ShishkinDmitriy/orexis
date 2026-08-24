@@ -348,4 +348,9 @@ def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):
     _, _, fields = next(row for row in reflex.series() if row[0] == "agent_goals")
     assert fields["unmet"] == 0.0
     assert fields["unactionable"] == 0.0, "content is not stuck"
-    assert fields["desires"] == 2.0, "the wants are still counted — they are simply satisfied"
+    #  FOUR, and the extra two are what this change added to every sensing agent: a region
+    #  want and a freshness want per property, because knowing the number and the number
+    #  being right are two things a pot can be short of. Both are met here — the readings are
+    #  inside their regions and both arrived a moment ago — so the counts that matter are
+    #  still zero, which is the property this test is really about.
+    assert fields["desires"] == 4.0, "the wants are still counted — they are simply satisfied"

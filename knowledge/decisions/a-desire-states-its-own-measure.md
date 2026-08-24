@@ -169,10 +169,15 @@ unchanged — measurement names never split series.
   MARKET package's `measures.ttl`, by this same mechanic, the day the engine divides durations
   — so the kernel's measure story stays uniform, never knowing any measure's content, only how
   to evaluate one.
-- **A freshness want states no measure.** It has no distance to scale — a boolean and an age,
+- **A freshness want states no measure.** ~~It has no distance to scale — a boolean and an age,
   both judged where the clock is — so its urgency stays the kernel's (1.0 unmeasured or stale,
-   0.0 otherwise). It is reified like the region (node, met-shape, label), so one mechanism
-  reads both; the measure it does not carry is part of the epistemic seam below.
+   0.0 otherwise).~~ **It states one now**, in sensing's own `measures.ttl`, by the same
+  mechanic and for the reason this bullet did not see: the numbers were the same either way,
+  but a measure the kernel computes is one the PLANNER cannot ask of a world nobody is in yet,
+  so every candidate scored the flat 1.0 and no look could be preferred to standing still. It
+  is reified like the region (node, met-shape, label), so one mechanism reads both. Which kind
+  of want it is is read off the INSTRUMENT it names rather than off a flag, and the values are
+  still boolean — the gradient waits on the price of looking, which nothing charges yet.
 
 # Seams left open
 
@@ -191,11 +196,16 @@ unchanged — measurement names never split series.
   [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md), which set
   the deletion as its own acceptance test; a seam that has been closed is left here struck
   through rather than removed, because the two phases only make sense read together.
-- **Epistemic wants through the search.** A freshness goal has a met-shape and no measure, so
+- **Epistemic wants through the search.** ~~A freshness goal has a met-shape and no measure, so
   the planner still scores it by the not-knowing constant rather than by anything a candidate
   world could improve — Observe reaches it through the state machinery, not through
-  satisficing. Routing it through the measure needs the staleness clock question answered
-  (the store's NOW against the reader's), and is not needed by anything shipped.
+  satisficing.~~ **DONE.** The want moved into sensing, declared its measure there, and the
+  state machinery it used to reach Observe through is deleted. The clock question this seam
+  said had to be answered first was not the obstacle: the measure runs against whichever world
+  is being judged, on the same store the horizon is published into, so the store's NOW and the
+  reader's are one clock by construction. What actually blocked it was cycle detection pruning
+  the one lever that repairs a freshness goal. See
+  [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md).
 - **The region shape's Below/Above split retiring `market:direction`.** The parent record
   already argues it: Raises repairs the Below violation, Lowers repairs Above, and the one-bit
   effect hardcoded into the reflex becomes a match between two shapes. Phase B has happened and

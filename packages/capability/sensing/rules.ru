@@ -59,6 +59,30 @@ WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; mqtt:readingTopi
          ?device mqtt:readingTopic ?stream ; mqtt:onBus ?bus ;
                  sensing:senseMode sensing:PushProcedure } ;
 
+#  Keeps to an interval it is given -> the agent may also ASK, and that is a different fact
+#  from being allowed to read it.
+#
+#  `sensing:polls` is the access grant and it is granted for both clocks alike, because
+#  receiving is reading. What varies is whether traffic can go the other way: a device keeping
+#  a schedule it was handed can be interrupted with a `sense` nudge, best-effort; a device
+#  keeping its own clock has nothing that would hear one. `affordances.rq` offers Observe off
+#  THIS rather than off `polls`, so a listening agent's menu does not carry a lever that does
+#  nothing when pulled — which is what it carried until now: the row existed, the keeper
+#  adopted the intention, `sense_now()` returned having done nothing, and the commitment stood
+#  until patience outwaited it. Silent, and repeating for ever.
+#
+#  ONE MODE, matching the one grant above it, and the pairing is why they sit together.
+#  `sensing:PolledProcedure` belongs here too by its nature — a device reachable at any moment
+#  is the one that can best be asked — and it is deliberately absent for the same reason no
+#  rule grants `sensing:Polling`: nothing implements the asking, so the row would be a lever
+#  whose executor does not exist. The two lines land together or not at all.
+INSERT { GRAPH $derived {
+    ?agent sensing:mayAsk ?sensor } }
+$given
+WHERE  { ?agent sensing:polls ?sensor . ?sensor a sosa:Sensor ; mqtt:readingTopic ?stream .
+         ?device mqtt:readingTopic ?stream ; mqtt:onBus ?bus ;
+                 sensing:senseMode sensing:ScheduledProcedure } ;
+
 #  What the EQUIPMENT allows, carried from the sensor to the agent that polls it.
 #
 #  An agent cannot ask its sensors what they can do — `ranges()` narrows a belief it holds, and

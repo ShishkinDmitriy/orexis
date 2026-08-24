@@ -210,7 +210,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
     Two handles since the dataset split (#298): `desires` answers what is WANTED and `beliefs`
     what IS, and the join is here — `desires.rq` and `readings.rq` are the two texts. The
     MAGNITUDE is nobody's arithmetic here: `measure` is the choir road the deducer hands in
-    (see `_stake_urgency`), so the diff and the ranking cannot disagree because both ask the
+    (see `_measured_urgency`), so the diff and the ranking cannot disagree because both ask the
     same capability the same question. `agent_id` names the pick record the sign's aim is read
     from. A property with no observation yet is absent rather than zero: at birth every desire
     is unmeasured, and unmeasured must not read as satisfied.
@@ -227,7 +227,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
         if item is None or item.value is None:
             continue
         region = _region_of(row)
-        urgency = _stake_urgency(measure, row, item.value)
+        urgency = _measured_urgency(measure, row, item.value)
         #  The SIGN is judged against the same point the measure judges distance from: the
         #  aim, or the centre while none is picked. Signed against the centre it disagreed
         #  with its own magnitude the moment a pick moved off-centre.
@@ -241,8 +241,14 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
     return out
 
 
-def _stake_urgency(measure, row: dict, value: float) -> float:
-    """A stake's urgency: whichever capability measures such wants, asked through `measure`.
+def _measured_urgency(measure, row: dict, value: float | None) -> float:
+    """One want's urgency: whichever capability measures such wants, asked through `measure`.
+
+    It was `_stake_urgency` while a stake was the only kind anything declared a measure for.
+    Freshness has one now — sensing's, since the want became sensing's — and it takes the same
+    road, which is the point of the road: the kernel asks, a capability answers, and this
+    function does not learn which kind it just asked about. `value` may be None, because the
+    question *how urgent is not knowing* is exactly the one a freshness want asks.
 
     `measure` is the choir road, handed in by the deducer — `(desire, value) -> float | None`,
     behind which `Agent.desire_urgency` asks every module and sensing answers for
@@ -252,14 +258,21 @@ def _stake_urgency(measure, row: dict, value: float) -> float:
     the number judged and the number on the row are one fact from one read.
 
     A want nothing measures scores 1.0, logged — the defined fallback: not knowing how bad is
-    maximal, exactly as not knowing at all is.
+    maximal, exactly as not knowing at all is. Logged only where a measure was actually ASKED:
+    a caller that hands none in is not asking about these wants at all (the debts reader wants
+    the duty rows and computes the rest to throw away), and warning there says a package is
+    missing when nothing is.
     """
+    #  The INSTRUMENT rides along, because it is what tells the answerer which kind of want
+    #  this is. A row that binds none is a stake and the want it makes says so by omission.
     answer = measure(Desire(uri=row["desire"], urgency=1.0,
-                            observed_property=row["property"], value=value),
+                            observed_property=row["property"], value=value,
+                            instrument=row.get("instrument")),
                      value) if measure else None
     if answer is None:
-        log.warning("nothing loaded measures a want about %s — urgency reads 1.0",
-                    row["property"])
+        if measure is not None:
+            log.warning("nothing loaded measures a want about %s — urgency reads 1.0",
+                        row["property"])
         return 1.0
     return answer
 
@@ -309,11 +322,27 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
         value = item.value if item else None
         stale = _is_stale(item, now)
         if row["kind"] == "freshness":
-            #  Nothing to be far FROM, so the only urgencies are the epistemic ones: knowing
-            #  nothing, or knowing something too old to be about now. No declared measure —
-            #  routing epistemic wants through the measure machinery is a recorded seam.
-            urgency = 1.0 if value is None or stale else 0.0
-            state = "unmeasured" if value is None else ("stale" if stale else "met")
+            #  MEASURED like everything else since the want moved into sensing, where the
+            #  reading and the horizon both live. The number it comes back with is the one
+            #  this branch used to compute — maximal while nothing current is known, zero
+            #  otherwise — and the difference is that the planner can now ask the same
+            #  question of a world nobody is in yet, which is what lets a look be preferred
+            #  to standing still instead of being recognised by a special case.
+            #
+            #  The STATE stays here, because it is a different question and one this side
+            #  holds the clock for: which of the two ways of not knowing this is. The measure
+            #  reads the same published horizon, so the two cannot disagree about whether a
+            #  reading is current — one fact, two readers, rather than two definitions.
+            urgency = _measured_urgency(measure, row, value)
+            #  READ OFF THE MEASURE, so the label and the number cannot part company. It used
+            #  to come off `_is_stale`, which declines to judge at all where no horizon has
+            #  been published — so a want the measure scored maximal reported `met`, which is
+            #  the disagreement the reification was supposed to have ended. Anything the
+            #  measure does not call current is not current; WHICH kind of not-current it is
+            #  is the reading's to say, and that distinction is worth keeping because the two
+            #  are different faults (never looked, against looked and let it go cold).
+            state = "met" if urgency < 1.0 else \
+                ("unmeasured" if value is None else "stale")
         else:
             region = _region_of(row)
             if value is None:
@@ -331,10 +360,13 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
                 #  the measure is anchored at the aim the two genuinely differ —
                 #  met-and-urgent is an agent inside its region and off its pick, a true
                 #  situation, not a contradiction.
-                urgency = _stake_urgency(measure, row, value)
+                urgency = _measured_urgency(measure, row, value)
                 state = "unmet" if value < region.low or value > region.high else "met"
         out.append(Desire(uri=row["desire"], urgency=urgency, state=state,
-                        observed_property=row["property"], value=value))
+                        observed_property=row["property"], value=value,
+                        #  Only a freshness row binds one, which is what makes it the
+                        #  discriminator rather than a decoration.
+                        instrument=row.get("instrument")))
     return sorted(out, key=lambda g: -g.urgency)
 
 

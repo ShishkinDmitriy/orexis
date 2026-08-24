@@ -150,7 +150,16 @@ moisture.
   plain scheduled board's silence means only "not due yet".
 - **Sense** (`sense:true`) is a *best-effort nudge* — it lands only if the board happens to be
   awake between publishing and being released, and is **never retained** (a retained `sense`
-  would re-fire on every wake, forever).
+  would re-fire on every wake, forever). Best-effort is not the same as impossible: a listening
+  agent has no channel for it at all, which is what `sensing:mayAsk` records and why the Observe
+  row exists only where it holds.
+
+  **An agent holding both clocks holds two of these modules**, and each owns its own sensors —
+  `world/loner`'s gardener subscribes to a probe and listens to a float switch. Whoever wants a
+  nudge sent must ask ALL of them (`Agent.providers`), because the singular door returns
+  whichever module comes first and a nudge sent to the listener is a nudge sent to an empty
+  method. The gardener committed to looking at its probe and nothing left the process, every
+  patience period, with every module behaving exactly as written.
 
 **The wake ends with a release, not a timer (#152).** After publishing, the board waits for
 the agent's answer to *that reading* — the agent answers every one, and the answer carries the
@@ -208,6 +217,28 @@ exactly what naming the transport in the capability would have made impossible.
 Adding a transport is therefore small: a driver, its terms, and its completeness rules. No
 new capability, no belief changes.
 
+# It wants its own readings current, and says so as a want
+
+Since [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md)
+this package derives a [desire](/domain/desire.md) of its own, one per sensor it polls: *a
+reading of this property, made by this instrument, exists and was taken recently enough to be
+about now*. Its premise is the instrument, which is why it is here rather than in the kernel —
+the kernel derives the region from what a subject's ranges state, and could only state this one
+by spelling `sensing:staleAfterS` into a query string.
+
+Three things follow from where it lives. The horizon it is judged against is the one
+`publish_horizon` writes, so nothing recomputes it. Its MEASURE is declared beside it in
+`measures.ttl`, so a candidate world can be scored on it. And what repairs it is Observe, whose
+effect predicts a reading stamped now and MADE BY that instrument — the clause that keeps this
+a want about knowing, because every lever that moves a number states the move as a predicted
+reading, and only a look states who saw it.
+
+**Only where the agent can ask.** The Observe row hangs off `sensing:mayAsk`, derived from the
+device's sense mode beside the capability itself: a board keeping a schedule it was given can be
+interrupted, a board keeping its own cannot be addressed at all. A listener's freshness want
+therefore has no lever, stands hot, and is reported as one — the record beside this section has
+what that costs and why it is better than the silence it replaced.
+
 # It measures how badly an observation-backed want is unmet
 
 Since [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md), this
@@ -221,6 +252,19 @@ subject; the kernel holds
 no measure vocabulary, no measure graph, no evaluator, and learns the answer only as the
 hook's return value. The choir `urgency` hook below is the same contribution asked about one
 number.
+
+**Two measures now, and the second closes the seam the first left.** The freshness want above
+carries one too: inside its horizon the reading is evidence and scores zero, outside it — or
+with no reading, or with no horizon published to judge one by — it is maximal. Age-against-
+horizon is the natural continuous form and this deliberately is not it, because a graded
+freshness urgency is nonzero the moment a reading is a second old and a look always reaches
+zero, so every deliberation tick would find looking an improvement and wake the board on the
+agent's patience clock rather than on its cadence. The region want gets a deadband for free —
+near the aim the dose sizes to nothing, so the effect predicts no change — and a look has no
+analogue for that, because a look always fully refreshes whatever it is worth. What would
+supply one is the price of looking, which the seam below has wanted since v1 and nothing yet
+charges. With a cost to weigh against, the gradient becomes rankable and this measure can grow
+one.
 
 # Cadence is desire-relative, like the band
 

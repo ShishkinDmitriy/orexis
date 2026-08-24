@@ -39,7 +39,11 @@ def test_the_query_and_the_module_agree_with_the_diff(query_with_readings, monke
     _, fern = _fern({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0}, monkeypatch)
     desires, diffs = fern.deducer.desires(), fern.deducer.gaps()
 
-    stakes = {g.observed_property: g for g in desires if not g.is_duty}
+    #  STAKES, which now needs saying: a property carries an epistemic want beside its region,
+    #  and a dict keyed on the property alone quietly kept whichever came last. The diff is
+    #  about numbers, so the wants it must agree with are the ones about numbers.
+    stakes = {g.observed_property: g for g in desires
+              if not g.is_duty and not g.is_epistemic}
     assert set(stakes) == set(diffs), "the same wants, whichever text is run"
     for prop, gap in diffs.items():
         assert abs(stakes[prop].urgency - abs(gap.gap)) < 1e-9

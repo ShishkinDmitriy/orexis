@@ -171,40 +171,33 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # renamed into a namespace nothing declares, which is what a removed package looks like to a
     # shape.
 
-    # 1 — THE JUDGE, and the only one of the nine that fails silently. The freshness want's
-    # met-test names the horizon in a REQUIRED triple pattern, so the term decides pass or fail:
-    # spelled right, one stale observation yields a violation (the want is unmet); spelled wrong,
-    # the query returns no rows and pySHACL reports conformance — the want reads MET, for ever,
-    # with nothing red anywhere. `agent/readings.rq:23` reads the same term prefixed, where this
-    # scan cannot see it. Removed by #342.
-    ("agent/desires.ru", "sensing#staleAfterS"): (
-        1, "debt, FIRST (judge, #342): the freshness want builds its constraint as a STRING, so "
-           "the horizon term is spelled out where no prefix reaches — and if it stops resolving "
-           "the query returns no rows, which pySHACL reports as MET"),
-
-    # 2 and 3 — SPELLINGS: prefix declarations that no triple in their own file uses. `market:`
-    # and `actuation:` are named by no pattern in desires.ru (only `sensing:` is, at ll. 98, 99,
-    # 286, 299), and the kernel ontology writes `sensing:` only in a `#` comment and inside an
-    # rdfs:comment string. Nothing depends on them, so they are the cheapest rows here: delete
-    # the line and nothing else moves. Removed by #343.
-    ("agent/desires.ru", "market#"): (
-        1, "debt, cheap (spelling, #343): PREFIX line of the desire derivation, used by no "
-           "pattern in the file"),
-    ("agent/desires.ru", "actuation#"): (
-        1, "debt, cheap (spelling, #343): PREFIX line of the same rule, likewise unused"),
+    # 1 THROUGH 4 ARE PAID, and by one change rather than four: `agent/desires.ru`'s whole
+    # relationship with `sensing:` was the FRESHNESS WANT, and that want is derived by
+    # `packages/capability/sensing/desires.ru` now (#331). Its premise is an instrument, which
+    # is that package's fact, so the horizon term is spelled where it is owned and the three
+    # prefix lines had nothing left to bind. Worth reading in the order this list put them:
+    #
+    #   1, THE JUDGE (#342) — the met-test named the horizon in a REQUIRED triple pattern, so
+    #     the term decided pass or fail: spelled wrong, the query returned no rows and pySHACL
+    #     reported conformance, and the want read MET for ever with nothing red anywhere. It is
+    #     dissolved rather than moved. The shape now says what the agent WANTS — a reading of
+    #     this exists, made by this instrument, taken within the horizon — so a term that stops
+    #     resolving takes the inner pattern with it, the NOT EXISTS holds, and the want reports
+    #     UNMET. Which is the direction #337's ruling asks for, arrived at by stating the goal
+    #     positively rather than by guarding the borrowing.
+    #   2 and 3, SPELLINGS (#343) — `market:` and `actuation:` were named by no pattern in the
+    #     file, and went with the rule that had left them behind. `agent/ontology.ttl`'s
+    #     `sensing:` is the one of the three still standing; it is unrelated to the want.
+    #   4, THE SELECTOR — `sensing:polls` and `sensing:monitors` in the rule's WHERE, which is
+    #     exactly the "somewhere for the knowledge to go" this entry said it was waiting for.
+    #     The mind's own derivation is no longer the thing reaching into a capability's
+    #     vocabulary for its premise; the capability derives the want its equipment implies.
+    #
+    # `agent/readings.rq:23` still reads `sensing:staleAfterS` prefixed, where this scan cannot
+    # see it, and #344 is the check that would.
     ("agent/ontology.ttl", "sensing#"): (
         1, "debt, cheap (spelling, #343): prefix declaration; the kernel ontology uses sensing: "
            "in prose only, so no triple needs it"),
-
-    # 4 — a SELECTOR, and the one the kernel cannot drop without somewhere for the knowledge to
-    # go. `sensing:` is the prefix desires.ru actually uses, all of it in the rule's WHERE: no
-    # sensing package, no sensor to poll, so the freshness want is simply not derived. Loud in
-    # the sense that nothing false is concluded — and still debt, because the mind's own
-    # derivation should not be reaching into a capability's vocabulary to find its premise.
-    ("agent/desires.ru", "sensing#"): (
-        1, "debt, later (selector): PREFIX line serving the freshness want's premise and the "
-           "region intersection — wants the premise to arrive some way that is not sensing's "
-           "own predicate"),
 
     # 5 and 6 — the shapes. Both measured, both loud, both still debt:
     #   l.108, a WIDENER inside DeviceModelShape's OPTIONAL — without it COALESCE falls back to

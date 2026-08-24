@@ -42,14 +42,40 @@ sensing:ObserveEffect
     #  an agent that could never take it, and the row decides whether it is available NOW.
     sh:condition sensing:PollsSomethingShape ;
 
+    #  WHO MADE IT is part of what a look makes true, and leaving it out was what let a
+    #  DOSE satisfy an epistemic want. Every real observation carries `sosa:madeBySensor` —
+    #  `sensed_writer` writes it unconditionally — and the freshness want asks for one made
+    #  by the instrument it is about, so the two halves have to agree: a rule that reuses the
+    #  stored node retracts all of its triples first, so a predicted look that did not
+    #  re-state the sensor would come back having ERASED it, and the want would read unmet in
+    #  the world its own repair reached.
+    #
+    #  It is also what tells the two kinds of prediction apart. A dose predicts a value and
+    #  says nothing about who saw it, because nobody has: watering a plant does not produce a
+    #  reading. Without this line the market's Acquire — whose effect also mints an
+    #  observation, since predicting a value is the only way to state a change — satisfied
+    #  "something read this recently" exactly as well as looking did, and satisfied it FIRST,
+    #  `ag:Acquire` sorting before `ag:Observe`. A thirsty plant would have answered a stale
+    #  reading by buying water.
+    #
+    #  The sensor is joined rather than passed: a rule's arguments are the want's, and which
+    #  instrument serves a (subject, property) is the wiring's to say. `sensing:mayAsk` and
+    #  not `sensing:polls`, so a device that takes no orders predicts nothing — the same
+    #  fact the affordance row is built on, stated where a rule can see it. Two probes on one
+    #  pair would bind twice and predict two readings; that wiring is a warning at validation
+    #  already (one-agent-many-sensors) and no shipped world has it.
     sh:construct """
         CONSTRUCT {
             ?obs a sosa:Observation ;
                  sosa:hasFeatureOfInterest $subject ;
                  sosa:observedProperty $property ;
+                 sosa:madeBySensor ?sensor ;
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?value .
         } WHERE {
+            $me sensing:mayAsk ?sensor .
+            ?sensor sensing:monitors $subject ;
+                    sosa:observes $property .
             OPTIONAL { GRAPH $sensed {
                 ?seen sosa:hasFeatureOfInterest $subject ;
                       sosa:observedProperty $property .

@@ -40,7 +40,8 @@ from . import effects, signature, trace
 from .desire import Desire
 from .imaginarium import Imaginarium
 from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
-                            SENSED_GRAPH, beliefs_graph, obligations_graph)
+                            INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph,
+                            obligations_graph)
 from .validate import conforms, graph_from
 
 log = logging.getLogger("search")
@@ -162,12 +163,12 @@ class Planner:
             return answer
         if desire.observed_property is None:      # a duty: met-or-not over the record
             return 0.0 if self._met_in(world, desire) else 1.0
-        #  A want no module measures: a freshness want (epistemic by design, no distance to
-        #  scale) or a want whose kind nothing loaded answers for. Both score the defined
-        #  fallback — maximal, because not knowing how bad IS how bad — which for the
-        #  freshness case is exactly what the region-less lookup always gave. The deliberator
-        #  never sends a measure-less non-duty here (it defers to the reflex), so this line
-        #  serves the duty-met path above and the freshness want alone.
+        #  A want whose kind nothing loaded answers for, scoring the defined fallback:
+        #  maximal, because not knowing how bad IS how bad. It used to serve the freshness
+        #  want too — epistemic wants had no declared measure, so every candidate world
+        #  scored 1.0 and no look could be preferred to standing still. Sensing declares one
+        #  now, so what is left here is a want in a society composed without whoever measures
+        #  it, which `orexis-validate` refuses for a stake and cannot for anything else.
         return 1.0
 
     def _value_in(self, world, desire: Desire) -> float | None:
@@ -311,19 +312,45 @@ class Planner:
                     #  across the search, so two paths arriving at the same world collide and
                     #  the second is pruned — two names, one world, still one entry.
                     where = step.diff
-                    if where in seen:
-                        self._weighed.append((depth, row, step.urgency, trace.SEEN))
-                        continue
-                    seen.add(where)
-                    if step.urgency < best.urgency:
-                        best = step
-                    if self._met_in(step.world, desire):
+                    novel = where not in seen
+                    if novel:
+                        seen.add(where)
+                        if step.urgency < best.urgency:
+                            best = step
+                    #  MET IS ASKED BEFORE THE PRUNE, and only for a want that is not met
+                    #  ALREADY. Cycle detection is about EXPANSION — do not spend the depth
+                    #  budget on a world you have stood in — and a step that repairs the want
+                    #  is not a place to expand from, it is the answer. Pruning it first
+                    #  answered a question nobody asked.
+                    #
+                    #  It matters because of what the signature deliberately leaves out. An
+                    #  observation canonicalises to its upsert key and its VALUE, never its
+                    #  `sosa:resultTime`, so a look nets to nothing and the world it reaches
+                    #  carries its parent's signature — which is exactly right for "look, then
+                    #  water" and exactly wrong for a want whose whole content is that
+                    #  something was read RECENTLY. The one lever that repairs freshness was
+                    #  being discarded as somewhere already reached before anything asked
+                    #  whether it repaired anything. The record that built the signature named
+                    #  this as the day the question comes back; it came back from the other
+                    #  side, and the fix is here rather than in the canonical form, because
+                    #  putting the timestamp in would make every look a new world and "look,
+                    #  then look, then look" a three-step plan.
+                    #
+                    #  `met_now` guards it, and the guard is not caution: with the want
+                    #  already met, a look leaves it met, so without this every calm agent
+                    #  would answer "look" on every tick — a step that changes nothing
+                    #  reported as achieving something. Met and still urgent is steering
+                    #  toward the pick, and steering is what `best` below is for.
+                    if (novel or not met_now) and self._met_in(step.world, desire):
                         self._weighed.append((depth, row, step.urgency, trace.MET))
                         return self._record(
                             desire,
                             self._offer(Plan(SATISFIED, step.taken, here.urgency, step.urgency),
                                         desire, step.world),
                             here.urgency)
+                    if not novel:
+                        self._weighed.append((depth, row, step.urgency, trace.SEEN))
+                        continue
                     self._weighed.append(
                         (depth, row, step.urgency,
                          trace.BETTER if step.urgency < here.urgency else trace.WORSE))
@@ -471,6 +498,15 @@ class Planner:
         """
         self.imaginarium = Imaginarium(
             self.agent.beliefs, beliefs_graph(self.agent.id), SENSED_GRAPH,
+            #  THE INSTRUMENTS, because a want may be about the reading rather than about
+            #  the number in it, and the horizon that decides whether a reading is still
+            #  evidence is written here and nowhere else. Without it the freshness measure
+            #  found no horizon in any candidate world and answered maximal for all of
+            #  them, so no look could ever look better than standing still — the silent
+            #  empty-result failure this file's own docstring warns about, arriving through
+            #  a graph nobody had copied. Read-only like everything else copied in: no
+            #  effect touches it, and a plan cannot re-command a cadence.
+            INSTRUMENTS_GRAPH,
             obligations_graph(self.agent.id))
         #  What this agent PURSUES, snapshotted for the pass: the desire modality's triples as
         #  one rdflib graph, because pySHACL wants rdflib and a cbd walks blank nodes. Small —
@@ -497,7 +533,8 @@ class Planner:
         #  pyoxigraph terms and the rdflib copy exists only for pySHACL.
         store = self.agent.beliefs
         self._base_facts = signature.facts(
-            quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id), SENSED_GRAPH]
+            quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id),
+                             SENSED_GRAPH, INSTRUMENTS_GRAPH]
             for quad in store.quads(iri))
         return _Node(world=base, graph=SENSED_GRAPH,
                      urgency=self._urgency_in(base, SENSED_GRAPH, desire))
@@ -629,6 +666,12 @@ class Planner:
     def _beliefs(self):
         return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
                           beliefs_graph(self.agent.id), SENSED_GRAPH,
+                          #  The instruments, for the same reason `validate_agent` flattens
+                          #  them: the freshness want's met-test reads the horizon this agent
+                          #  published, and a shape whose pattern reaches a graph nobody
+                          #  copied does not fail — it finds nothing, reports nothing, and
+                          #  the want reads as met for ever.
+                          INSTRUMENTS_GRAPH,
                           #  The debts too (#255): a duty's met-test is a pattern over the
                           #  record, and the world Apply's effect discharges an obligation in
                           #  must hold the obligation to discharge.

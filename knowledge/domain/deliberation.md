@@ -27,16 +27,22 @@ redeemed" is a state, wanted, with a deadline. A desire carries either shape and
 so a duty is ranked against a thirst rather than running down a second path that never meets
 the first. There is a second door, `propose_about(property)`, and it is a lookup rather than a
 second question: an actor holding a fresh reading asks what to do about that property, and the
-want it names is found and put through the same road.
+want it names is found and put through the same road. **That lookup now has to choose**, because
+a property carries two wants — the region it should sit in, and that its instrument has spoken
+recently — and it chooses by a rule rather than by a ranking: an unmet epistemic want answers
+first, since no lever moves a number you cannot see, and once the reading is current the stake
+answers on its merits.
 
-**And it is where not-seeing is answered** (#240). The old bare-value door opened with
-`if value is None: return OBSERVE` — a first line that read a missing number as ignorance. It
-said the right thing for the wrong reason, because None meant two things: *never read*, and
-*the caller has no number to hand you*. The keeper exploited the second to ask the first,
-sweeping noticed gaps and passing None deliberately to mean "should I look?". A desire says which
-epistemic failure it is — `unmeasured` or `stale` — so the question is now asked in the words it
-means, and both are answered by the same move, before any search runs. One sentinel
-answering two questions is a sentinel that eventually answers the wrong one.
+**And not-seeing is no longer answered HERE at all** (#331). Two hardcodes said it in turn:
+`if value is None: return OBSERVE`, and then `if desire.state in ("unmeasured", "stale"):
+return OBSERVE`, which said the same thing in the words it meant and still said it by hand.
+Both are gone. Knowing is a WANT — this reading exists, and it was taken recently enough to be
+about now — whose met-shape a look repairs, so the search finds Observe by the road it finds
+everything else, and the oldest rule in deliberation is stated nowhere and holds anyway. That
+was the plan record's own acceptance test for the widening: a special case that survives beside
+the machinery means the machinery did not absorb it. See
+[a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md),
+which is what had to be true of the menu first.
 
 # Deciding by simulating it
 
@@ -119,6 +125,15 @@ nothing there: an observation canonicalises to its upsert key and its value, nev
 `agent/signature.py`). A signature that counted a fresher timestamp
 as somewhere new would make "look, then look" a new world every time. Chaining past a look
 becomes a real question again exactly there, and nowhere earlier.
+
+**And a want ABOUT the look needed that arrangement not to prune the answer.** Freshness is a
+goal a look reaches and nothing else does, so the one lever that repairs it is the one whose
+world has its parent's signature — pruned, under the old order, before anything asked whether
+it repaired anything. What changed is the ORDER and not the signature: a step is asked whether
+it MEETS an unmet want before `seen` decides whether to expand from it, because cycle detection
+is about where to spend the remaining depth and a step that answers the question is not a place
+to search onward from. A look still extends the frontier nowhere, so "look, then water" is as
+impossible as it was.
 
 **What limits depth now is the menu, not the machinery.** Fixing the baseline makes depth 2
 honest; it does not make depth 3 useful, because what decides that is whether the levers compose
@@ -220,8 +235,10 @@ done over again to describe deliberation. Planning to decide happens on a readin
 report happens on the tick; nothing shares the answer between them. That is not a defect in the
 figures, it is what the figures found.
 
-**All zero means nothing was deliberated**, not that planning is free: a desire nobody has read is
-answered by Observe before any search runs, so an agent at rest reports zeros honestly.
+**All zero means nothing was deliberated**, not that planning is free. It reads differently
+since the epistemic want went through the search: nothing is answered before a search runs any
+more, so an agent that has never looked plans and its trace says `satisfied` on a one-step plan
+to look, where it used to file nothing at all.
 
 # One road, and the two that were folded into it
 

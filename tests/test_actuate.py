@@ -106,10 +106,18 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     assert deliberator.propose_for(
         Desire(uri="urn:w", urgency=0.1, observed_property=MOIST, value=0.25)) is None, \
         "above the aim, nothing — as ever"
-    #  Not seeing is answered before any search runs (#240), because a bare None meant two
-    #  things — never read, and the caller has no number — and only one of them means look.
-    assert deliberator.propose_for(
-        Desire(uri="urn:w", urgency=1.0, observed_property=MOIST, state="unmeasured")) == OBSERVE
+    #  NOT SEEING is answered by the search like everything else, and it is a different WANT
+    #  rather than a state this one is in. It used to be asserted of a made-up desire carrying
+    #  `state="unmeasured"`, which the deliberator read before any search ran; there is no such
+    #  branch now, so the question has to be asked of the want that actually means it — the
+    #  agent's own freshness want for the probe, which no reading has yet answered. A made-up
+    #  region want with no reading correctly gets NOTHING: looking does not put a number
+    #  inside a region, and nothing else the gardener holds moves a number it cannot see.
+    epistemic = next(d for d in gardener.pursuing()
+                     if d.is_epistemic and d.observed_property == MOIST)
+    assert deliberator.propose_for(epistemic) == OBSERVE
+    assert deliberator.propose_about(MOIST) == OBSERVE, \
+        "and the actors' door says the same while the reading is missing — look, then dose"
 
 
 # --- the self-dose: signed, confirmed, ledgered, watched --------------------

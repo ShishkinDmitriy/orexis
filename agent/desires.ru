@@ -1,10 +1,17 @@
 # Derivation: what this agent WANTS — run by the desires build, never by genesis (#312).
 #
-# The regions, the envelopes and the freshness wants used to be derived at genesis into the
-# belief base's constraint graph, and the desires store copied them. The copy is gone: the
-# desire modality derives its own content on every rebuild — boot, a re-pick, an obligation
-# transition — so a want whose premise has ceased is absent afterwards because the derivation
-# no longer implies it, which is #263's discipline running live rather than once.
+# The regions and the envelopes used to be derived at genesis into the belief base's constraint
+# graph, and the desires store copied them. The copy is gone: the desire modality derives its
+# own content on every rebuild — boot, a re-pick, an obligation transition — so a want whose
+# premise has ceased is absent afterwards because the derivation no longer implies it, which is
+# #263's discipline running live rather than once.
+#
+# THE FRESHNESS WANT USED TO BE HERE and is now `packages/capability/sensing/desires.ru`. The
+# mind is not a package and this file is the proof of it: what an agent wants, what a want is
+# and when one is met stay the kernel's. What moved is one want whose premise is an INSTRUMENT
+# — a fact about equipment, in a package's namespace, which this file could only state by
+# spelling `sensing#staleAfterS` into a query string. The rule collecting the packages' wants
+# is unchanged; there is simply a second file to collect now.
 #
 # `$me` is the one agent this modality belongs to, `$derived` the build's own derived-wants
 # graph and `$given` its premises, substituted by
@@ -13,9 +20,6 @@
 # is genesis's to derive; what the agent wants is the modality's.
 
 PREFIX desire: <http://example.org/orexis/desire#>
-PREFIX market: <http://example.org/orexis/market#>
-PREFIX actuation: <http://example.org/orexis/actuation#>
-PREFIX sensing: <http://example.org/orexis/sensing#>
 PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -24,101 +28,6 @@ PREFIX ag:   <http://example.org/orexis#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>
-
-#  1c. The freshness want: a reading exists, and it is still evidence about NOW (#240).
-#
-#  A SHAPE OF ITS OWN, not a fourth property shape on the region, and the reason is structural
-#  before it is conceptual: `sh:sparql` is a constraint on a NODE shape, and it has to be SPARQL
-#  because SHACL core compares against a literal written in the shape while the horizon moves —
-#  the agent re-commands its cadence whenever urgency does. So it could not have been a
-#  `sh:property` beside the three declarative ones even if that had been wanted.
-#
-#  It is also a different KIND of want, which is the conceptual half. The region is about the
-#  world (is the number where it should be); this is about the agent's knowledge of it (is the
-#  number still worth anything). They are repaired by different means — no lever moves a number
-#  you cannot see — and they must be droppable independently, which the next paragraph needs.
-#
-#  ONLY WHERE A SENSOR EXISTS, which is the decision this rule takes. An epistemic want in a
-#  property nothing measures could never be satisfied: it would sit at maximum urgency for
-#  ever, top every ranking an operator or a model reads, and inflate the `unactionable` count
-#  the dashboards carry — training a reader to ignore the top row, which is the failure that
-#  count exists to prevent. The case is already reported, once, by the shape that says "a
-#  desire in a property this agent polls no sensor for" — `world/loner`'s zz plant states
-#  ranges for light and humidity nothing reads, and gets three such warnings today. A permanent
-#  maximal want would be a second and noisier way of saying what is already said.
-#
-#  The horizon is READ, never recomputed: `stale_after_s` works it out from the rhythm in force
-#  and `publish_horizon` writes it into the instruments graph. A shape that recomputed it would
-#  be a second definition free to drift; one that baked it would be wrong within a tick.
-#  REIFIED like the region below (a-desire-states-its-own-measure): the desire is a node, and
-#  the met-test hangs off it as `ag:metWhen`. What this one does NOT carry is a measure — an
-#  epistemic want has no distance to scale (a boolean and an age, both already judged where the
-#  clock is), and routing freshness goals through the search is the seam the measure record
-#  leaves open. Its urgency stays the kernel's: 1.0 unmeasured or stale, 0.0 otherwise.
-INSERT { GRAPH $derived {
-    $me ag:holds ?fresh .
-    ?fresh a ag:Desire ;
-        ssn:forProperty ?property ;
-        #  BOTH, because a sensor is the reason this want exists and the subject is what it is
-        #  about — and an agent may poll instruments pointed at things it does not act for.
-        prov:wasDerivedFrom ?sensor , ?subject ;
-        ag:violationIs ag:Stale ;
-        rdfs:label ?freshLabel ;
-        ag:metWhen ?freshMet .
-    ?freshMet a sh:NodeShape ;
-        sh:targetNode $me ;
-        ssn:forProperty ?property ;
-        #  ON THE NODE SHAPE, and that is the opposite of where the declarative wants carry it.
-        #  Measured on pySHACL 0.40.1, both ways round: a `sh:sparql` constraint's own
-        #  `sh:severity` is IGNORED and the result comes back `sh:Violation`, while the node
-        #  shape's is honoured; for a core `sh:property` constraint it is the other way about,
-        #  which is why the region's three shapes carry theirs individually. Getting this wrong
-        #  is not cosmetic — a want reported as a violation refuses the agent's boot, which is
-        #  the one thing a want must never do, and it did exactly that before this line moved.
-        sh:severity ag:ShouldBecome ;
-        sh:sparql [
-            #  Kept here too: it is what the spec says, so a conformant engine reads it, and a
-            #  reader of this shape should not have to know our engine's quirk to see the force.
-            sh:severity ag:ShouldBecome ;
-            sh:message ?tooOld ;
-            sh:select ?staleQuery ] } }
-$given
-WHERE  {
-    #  THE PREMISE IS THE INSTRUMENT, not the stake, and the difference is not academic: the
-    #  loner's gardener polls a water butt it does not act for. Tying this to the subject's
-    #  stated ranges — the region's premise — left the butt's level with no freshness want, and
-    #  since the keeper now pursues desires rather than sweeping noticed gaps, nothing would have
-    #  watched it at all. `notices()` covered every sensor, and the want that replaces it must
-    #  cover exactly the same ground.
-    #
-    #  It is also the honest premise on its own terms. Wanting a reading to be current is about
-    #  the instrument and what it is pointed at: if this agent went to the trouble of polling
-    #  something, it wants to know what that thing reads NOW. A stake is what makes the VALUE
-    #  matter; a sensor is what makes the reading knowable, and this want is about knowing.
-    $me a ag:Agent ; ag:localId ?who ; sensing:polls ?sensor .
-    ?sensor sensing:monitors ?subject ; sosa:observes ?property .
-    BIND(STRAFTER(STR(?property), "#") AS ?name)
-    #  Keyed by the SENSOR, not by the property: one agent may poll two instruments reading the
-    #  same property of different subjects — the loner's gardener does not, but the dealer's
-    #  shape of world does, and a name that collided would silently merge two wants into one.
-    BIND(IRI(CONCAT("http://example.org/orexis#fresh.", ENCODE_FOR_URI(?who), ".",
-                    ENCODE_FOR_URI(STRAFTER(STR(?sensor), "#")))) AS ?fresh)
-    BIND(IRI(CONCAT(STR(?fresh), ".met")) AS ?freshMet)
-    BIND(CONCAT(?name, " read recently enough to be evidence about now, through ",
-                STRAFTER(STR(?sensor), "#")) AS ?freshLabel)
-    BIND(CONCAT(?name, " was last read longer ago than ", ?who,
-                " trusts a reading of it — the number is no longer evidence about now")
-         AS ?tooOld)
-    BIND(CONCAT(
-      "SELECT $this ?value WHERE { ",
-      "?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> <", STR(?subject), "> ; ",
-      "<http://www.w3.org/ns/sosa/observedProperty> <", STR(?property), "> ; ",
-      "<http://www.w3.org/ns/sosa/resultTime> ?at ; ",
-      "<http://www.w3.org/ns/sosa/hasSimpleResult> ?value . ",
-      "<", STR(?sensor), "> <http://example.org/orexis/sensing#staleAfterS> ?horizon . ",
-      "FILTER(?at + STRDT(CONCAT(\"PT\", STR(?horizon), \"S\"), ",
-      "<http://www.w3.org/2001/XMLSchema#dayTimeDuration>) < NOW()) }") AS ?staleQuery)
-} ;
 
 #  2. The regions themselves, one per property the subject states a need in.
 #

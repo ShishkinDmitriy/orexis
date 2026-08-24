@@ -29,9 +29,9 @@ business. [#337](https://github.com/ShishkinDmitriy/orexis/issues/337) is that d
 
 and accepts a stated cost to avoid it. Sixty-five lines above, the same file targets
 `actuation:actuates`; two hundred lines below, it joins through `sensing:polls` and
-`sensing:monitors`. `agent/desires.ru` takes three package prefixes and spells a fourth term out
-inside a string. So the file's argument and the file's contents disagreed, and #337 asked which of
-them was wrong.
+`sensing:monitors`. `agent/desires.ru` took three package prefixes and spelled a fourth term out
+inside a string (it takes none now — see the freshness section below). So the file's argument and
+the file's contents disagreed, and #337 asked which of them was wrong.
 
 **The contents were.** The comment states the rule; the rest of the file is behind on it.
 
@@ -130,22 +130,41 @@ ever, with no error anywhere. That is why it is first in the queue, and it is no
 arithmetic: the same term is read a second time from `agent/readings.rq`, prefixed, where the
 ratchet cannot see it at all.
 
+**PAID, and by a change that was not about this** ([#331](https://github.com/ShishkinDmitriy/orexis/issues/331),
+[a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md)):
+the freshness want is derived by `packages/capability/sensing/desires.ru` now, because its premise
+is an instrument and that is sensing's fact, so the horizon term is spelled where it is owned and
+`desires.ru`'s three prefix lines went with the rule that had left them behind. The judge position
+is DISSOLVED rather than moved into the package. The met-test says what the agent wants — a
+reading of this exists, made by this instrument, taken within the horizon — so a term that stops
+resolving takes the inner pattern with it, the NOT EXISTS holds, and the want reports UNMET. That
+is the direction this record asks for, reached by stating the goal positively instead of by
+guarding the borrowing, and it is the general lesson worth taking from the row: a shape that hunts
+for what would disappoint you is satisfied by having nothing at all, which is what makes its
+borrowed terms judges in the first place.
+
 Also measured: every one of the ten *named* package IRIs the kernel spells out today is genuinely
 declared by that package's `ontology.ttl`. Nothing is broken right now, which is the right moment
 to add the check that keeps it that way while the debt is worked off.
 
 # The nine, in the order they should go
 
+> **Rows 1 and 2 are paid, and row 3 is not.** #331 moved the freshness want into sensing, which
+> took `desires.ru`'s four occurrences — the judge and two of the three spellings — with it.
+> `agent/ontology.ttl`'s `sensing:` prefix is untouched and still #343's. Five occurrences remain
+> and the order below is unchanged for them; the table is left whole because the ORDERING is this
+> record's argument and a row struck out still teaches what its position means.
+
 All nine are debt. Eight allowlist keys, nine occurrences, as `tests/test_kernel_namespaces.py`
-counts them. Note what the count is actually seeing in three of these: the ratchet scans
+counted them on the day this was written. Note what the count is actually seeing in three of these: the ratchet scans
 **spelled-out** IRIs, so for `agent/shapes.ttl` it sees the `@prefix actuation:` declaration and
 not the `actuation:actuates` on line 78 that is the real reference. The count and the dependency
 are different objects, which is one reason the count alone could never have ordered this list.
 
 | # | occurrence | position | why it sits here |
 |---|---|---|---|
-| 1 | `desires.ru` `sensing#staleAfterS` ×1 — the required pattern in the built met-test | judge | the want reads met when it cannot be evaluated. [#342](https://github.com/ShishkinDmitriy/orexis/issues/342) |
-| 2 | `desires.ru` `market#` ×1 and `actuation#` ×1 — `PREFIX` lines used by no pattern in the file | spelling | free to remove; nothing depends on them. [#343](https://github.com/ShishkinDmitriy/orexis/issues/343) |
+| ~~1~~ | ~~`desires.ru` `sensing#staleAfterS` ×1 — the required pattern in the built met-test~~ | judge | **PAID (#331)**: the want moved to sensing and the met-test was turned positive, so the term is owned and its absence is loud. [#342](https://github.com/ShishkinDmitriy/orexis/issues/342) |
+| ~~2~~ | ~~`desires.ru` `market#` ×1 and `actuation#` ×1 — `PREFIX` lines used by no pattern in the file~~ | spelling | **PAID (#331)**, with `sensing:` beside them, which #337 filed separately as a selector. [#343](https://github.com/ShishkinDmitriy/orexis/issues/343) |
 | 3 | `ontology.ttl` `sensing#` ×1 — the `@prefix`; `sensing:` appears only in a `#` comment and inside an `rdfs:comment` string | spelling | the same, and the same issue |
 | 4 | `shapes.ttl` `sensing#monitors` ×1 (l.108) — the `OPTIONAL` reaching the monitored subject's max | widener | wants a kernel-owned way to say "the range this thing is measured against"; loud meanwhile |
 | 5 | `shapes.ttl` `sensing#monitors` ×1 (l.376) and `sensing#polls` ×1 (l.375) — the `FILTER NOT EXISTS` behind the no-sensor warning | excuse | the warning is arguably sensing's to raise rather than the kernel's; loud meanwhile |
