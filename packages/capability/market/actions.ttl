@@ -74,11 +74,6 @@ market:Acquiring
     ag:takenBy market:Bidding ;
     rdfs:label "what winning a bid makes true" ;
 
-    #  The node-level half — an agent with no venue and no balance cannot buy anything, whatever
-    #  it is asked about. Which venue reaches THIS subject is the affordance row's walk, exactly
-    #  as `HoldsAnActuatorShape` leaves the valve to the row.
-    sh:condition market:BiddingAgentShape ;
-
     #  THE SAME ARITHMETIC AS A DOSE, and that is the point rather than a coincidence. Water
     #  bought and water poured raise the same property by the same amount; what differs is who
     #  owns the valve and whether anyone had to be paid. So the prediction is `value + litres /
@@ -173,7 +168,6 @@ market:Acquiring
             }
             FILTER($litres > 0)
         }""" .
-
 
 #################  What SERVING a presented claim makes true  #################
 #

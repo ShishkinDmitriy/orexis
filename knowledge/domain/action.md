@@ -23,7 +23,6 @@ says what kind of act; an [affordance](/domain/affordance.md) says it is availab
 market:Acquiring a ag:Action ;
     ag:means      ag:Acquire ;
     ag:available  """SELECT ?property ?via ?direction WHERE { … }""" ;
-    sh:condition  market:BiddingAgentShape ;
     sh:construct  """CONSTRUCT { … } WHERE { … }""" ;
     ag:retracts   """CONSTRUCT { … } WHERE { … }""" ;
     ag:landsAfter """SELECT ?seconds WHERE { … }""" ;
@@ -44,6 +43,16 @@ graph beside the T-Box. Three readers, one join:
 - `effects.rule_for(means)` finds the action by `ag:means` and runs its construct and retraction
   against the [imaginarium](/domain/imaginarium.md);
 - `execution.taken_by(means)` finds the same action and asks `agent.providers` for its taker.
+
+# The precondition is the query, whole
+
+An action carries no `sh:condition`. SHACL-AF has the slot, and the three shipped actions
+carried one for a while — a node-level shape saying "this agent polls something" beside the
+query saying which probe, which subject, which property. Nothing evaluated it: a shape validates
+a focus node and cannot bind the columns a row needs, so it could only ever restate a subset of
+the walk, and a second statement of a precondition nobody reads is one that can disagree with
+the first. What a shape would add — a validation report saying *why* an action is unavailable —
+is real and unbuilt; the day it is wanted, the slot is there.
 
 # What an author writes
 

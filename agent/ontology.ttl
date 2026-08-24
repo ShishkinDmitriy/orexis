@@ -468,9 +468,10 @@ ag:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:range 
 #################  What a lever MAKES TRUE  #################
 #
 #  A means states its effect as a CONSTRUCT: the triples that applying it would add. The
-#  vocabulary is SHACL-AF's — `sh:SPARQLRule`, `sh:condition` for the shape that must hold
-#  before it may run, `sh:construct` for the query as a literal — because a rule with a
-#  condition and a construct IS the action schema this needed, already RDF, already persisted,
+#  vocabulary is SHACL-AF's — `sh:construct` for the query as a literal — because a rule with a
+#  construct IS the action schema this needed (`sh:condition` was carried too, and went: the
+#  precondition is the action's `ag:available` query, whole, and a second statement of it that
+#  nothing evaluated was a statement that could disagree), already RDF, already persisted,
 #  already readable by a model and a sovereign. Nothing was invented here except the one thing
 #  the spec has no word for.
 #

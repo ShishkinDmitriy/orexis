@@ -3,7 +3,7 @@ type: Domain Concept
 title: Effect
 description: >-
   What taking an action would MAKE TRUE, stated on the action's own node in SHACL-AF's words
-  — a condition, a construct for what it adds, and `ag:retracts` for what it
+  — a construct for what it adds, and `ag:retracts` for what it
   removes, which is ours because the standard has no deletion. It is what turns an affordance
   row from "this is available" into something a planner can reason about, and it carries the
   timing (`ag:landsAfter`) and the route by which it becomes knowable (`ag:confirmedBy`) so that
@@ -19,8 +19,8 @@ matching a desire to a lever means asking what the lever would make true.
 
 So the effect sits on the [action](/domain/action.md) node itself, beside the availability
 query and the taker, loaded into the action graph at genesis and found by the action's
-`ag:means`. The vocabulary is SHACL Advanced Features' — `sh:condition` for the shape that must hold
-before it may run, `sh:construct` for the query yielding the triples applying it would add. One
+`ag:means`. The vocabulary is SHACL Advanced Features' — `sh:construct` for the query yielding
+the triples applying it would add. One
 term is ours, `ag:retracts`, because the standard has none: SHACL rules exist to add entailments,
 so nothing in it can say a thing stops being true.
 

@@ -1,10 +1,9 @@
 """What a lever would make true — reading the rules the packages ship, and running one.
 
-A means states its effect as a SHACL-AF `sh:SPARQLRule`: `sh:condition` naming the shape that
-must hold before it may run, `sh:construct` holding the query that yields the triples applying
-it would ADD, and `ag:retracts` — ours, because the standard has none — holding the query that
-yields the triples it REMOVES. The rules live in the effect graph, loaded from every package's
-`effects.ttl` at genesis, so a model or a sovereign can read the whole tool list without a
+An action states its effect in SHACL-AF's words: `sh:construct` holding the query that yields
+the triples applying it would ADD, and `ag:retracts` — ours, because the standard has none — holding the query that
+yields the triples it REMOVES. The actions live in the action graph, loaded from every package's
+`actions.ttl` at genesis, so a model or a sovereign can read the whole tool list without a
 second format existing anywhere.
 
 **The vocabulary is SHACL-AF's; the engine is not.** pySHACL will execute `sh:SPARQLRule`, and
