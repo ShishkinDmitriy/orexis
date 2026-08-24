@@ -90,10 +90,18 @@ look identical. The contracts carry the boundary alone:
   since the mind came home — **`agent` away from `packages`**: the kernel loads them and never
   reaches into one. That contract could not be stated while three capability packages held the
   mind, and the violations were not theoretical;
+- but it binds **Python and nothing else**, and the kernel does reach into a package's
+  *vocabulary*: twenty-one spelled-out IRIs, across its code, its shapes, its ontology's prefix
+  block and the desire derivation. `tests/test_kernel_namespaces.py` is the second contract —
+  each of the twenty-one allowlisted with what will remove it again, a twenty-second failing the
+  suite, and an entry that has stopped occurring failing it too, so the number can only fall
+  (#334);
 - the `Containerfile` decides what reaches an image by naming two trees and not a third, with
   `tests/test_layout.py` failing if a `COPY onboarding/` appears.
 
-Both were always the real enforcement. The layout was a reminder, and the reminder is gone.
+The import contract and the `Containerfile` were always the real enforcement. The layout was a
+reminder, and the reminder is gone. The ratchet is newer than either, and it is there because
+what the kernel imports was watched from the day the mind came home while what it SAYS was not.
 
 **And "optional" is now a test rather than a sentence.**
 `test_the_kernel_stands_alone_with_no_packages_at_all` builds with `packages/` absent and gets
