@@ -39,7 +39,7 @@ chosen row did not. Two terms for a fact one column states is a second owner of 
 |---|---|---|
 | kind | `ag:means` | the [means](/domain/means.md), a kernel word |
 | precondition | `ag:available` | a SELECT binding `?property ?via ?direction`, and `?for_agent` for a duty |
-| effect | `sh:construct`, `ag:retracts`, `ag:landsAfter`, `ag:confirmedBy`, `sh:condition` | unchanged from the effect rule |
+| effect | `sh:construct`, `ag:retracts`, `ag:landsAfter`, `ag:confirmedBy` | unchanged from the effect rule |
 | taker | `ag:takenBy` | the capability whose module carries it out |
 
 The loader finds `actions.ttl` where it found three files; genesis loads it into the **action
@@ -86,6 +86,8 @@ every IRI in every query, because the TTL loop already resolves SPARQL inside li
 - **A stale `graph/effects` in a volume born before this.** Public graphs are rebuilt at boot
   under their current names; the old one is neither classified nor read, so it is inert, and
   `rebirth` drops it. Nothing sweeps it.
-- **`sh:condition` is carried and not evaluated by the planner**, as before: the availability
-  query is the precise precondition and the condition shape is the coarse node-level one. Two
-  statements of one precondition is a seam this fold did not close.
+- ~~`sh:condition` is carried and not evaluated by the planner~~ — closed: it was deleted, with
+  the two condition-only shapes, because a second statement of a precondition nothing reads is
+  one that can disagree with the first. A shape's validation report — *why* an action is
+  unavailable — is the one thing it would add, and it is added the day it is wanted
+  ([action](/domain/action.md)).

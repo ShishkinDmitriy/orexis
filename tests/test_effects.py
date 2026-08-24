@@ -1,8 +1,7 @@
 """What a lever says it makes true, and the one number that must not fork (#238).
 
 An action states its effect on its own node (an-action-is-one-node), which the package ships
-and genesis loads: `sh:condition` for the shape that must hold, `sh:construct` for what applying
-it would add, `ag:retracts` — ours — for what it removes. These hold the rules to what they claim, and hold the ACTUATOR to reading
+and genesis loads: `sh:construct` for what applying it would add, `ag:retracts` — ours — for what it removes. These hold the rules to what they claim, and hold the ACTUATOR to reading
 its expectation out of the same rule a planner will read.
 """
 

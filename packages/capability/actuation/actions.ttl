@@ -66,22 +66,6 @@ actuation:Dosing
     ag:takenBy actuation:Actuation ;
     rdfs:label "what a dose makes true" ;
 
-    #  The node-level half: an agent with no actuator can never dose, whatever it is asked
-    #  about. Which valve, and whether it reaches THIS subject, is the affordance row's walk —
-    #  a shape validates a focus node and has no arguments to be told a property with.
-    sh:condition actuation:HoldsAnActuatorShape ;
-
-    #  `$litres` is the dose and `$value` is where the property stands NOW. Both are given,
-    #  and the base being a parameter rather than a store lookup is a correction the runtime
-    #  forced: an actuator decides on the reading it was just handed, which has not been
-    #  persisted yet at the moment it decides — a rule that read the sensed graph for its base
-    #  predicted from the PREVIOUS reading, or from nothing at all on the first one. It is also
-    #  the right shape for a planner, which holds a value from the world it is simulating and
-    #  not from the one that happens to be stored. What remains read is the conversion, which
-    #  is a belief and genuinely the agent's.
-    #
-    #  So the rule is a function of (value, litres, conversion), and that function is THE
-    #  arithmetic — the one this file exists to keep in a single place.
     sh:construct """
         CONSTRUCT {
             ?obs a sosa:Observation ;
@@ -146,11 +130,3 @@ actuation:Dosing
                      ?p ?o
             }
         }""" .
-
-actuation:HoldsAnActuatorShape
-    a sh:NodeShape ;
-    rdfs:comment "An agent that holds no actuator cannot dose anything, which is the part of Actuate's precondition that is a fact about the agent rather than about a property. The rest is the affordance row's." ;
-    sh:property [
-        sh:path actuation:hasActuator ;
-        sh:minCount 1 ;
-        sh:message "this agent holds no actuator, so dosing is not among its means" ] .

@@ -59,15 +59,6 @@ sensing:Observing
     ag:takenBy sensing:SensingCapability ;
     rdfs:label "what looking makes true" ;
 
-    #  A COARSE gate, and the coarseness is the finding rather than a shortcut. `sh:condition`
-    #  validates a FOCUS NODE, so it can say "this agent polls something" — a fact about the
-    #  agent — and it cannot say "…that watches THIS subject for THIS property", because those
-    #  are the rule's arguments and a shape has no arguments. The precise precondition is the
-    #  affordance row's own walk, which is per (means, property, lever) and exists only when
-    #  every hop holds. So the two are not redundant: the condition refuses a rule outright for
-    #  an agent that could never take it, and the row decides whether it is available NOW.
-    sh:condition sensing:PollsSomethingShape ;
-
     #  WHO MADE IT is part of what a look makes true, and leaving it out was what let a
     #  DOSE satisfy an epistemic want. Every real observation carries `sosa:madeBySensor` —
     #  `sensed_writer` writes it unconditionally — and the freshness want asks for one made
@@ -131,11 +122,3 @@ sensing:Observing
                      ?p ?o
             }
         }""" .
-
-sensing:PollsSomethingShape
-    a sh:NodeShape ;
-    rdfs:comment "An agent that polls nothing can never look, whatever it is asked about — the node-level half of Observe's precondition, and all of it a shape can carry. Targeted at nothing: a condition is evaluated against the node the rule is being considered for, never on its own." ;
-    sh:property [
-        sh:path sensing:polls ;
-        sh:minCount 1 ;
-        sh:message "this agent polls no sensor at all, so looking is not among its means" ] .
