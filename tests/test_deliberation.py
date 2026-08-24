@@ -70,25 +70,52 @@ def test_every_agent_deliberates_including_one_with_nothing_to_decide(make):
 # --- the behaviour the old chain carried, asked of the search ---------------
 
 def test_not_seeing_means_look(make):
-    """The oldest rule in deliberation, asked in the words it means (#240).
+    """The oldest rule in deliberation, and now nothing in deliberation says it.
 
-    It used to be `propose(property, None) == OBSERVE` — a first line that read a missing value
-    as ignorance. The behaviour is unchanged and the QUESTION is different: a desire says which
-    epistemic failure it is, so "never read" and "the caller passed no number" stop being the
-    same sentinel. Both epistemic states are asserted, because they are repaired by the same
-    move for the same reason and a rule that covered only one would leave stale readings
-    unwatched. It answers BEFORE any search runs, which is why an agent at rest plans nothing.
+    Three forms, in order. It was `propose(property, None) == OBSERVE`, a first line reading a
+    missing value as ignorance. Then it was `desire.state in ("unmeasured", "stale") ->
+    OBSERVE`, which said the same thing in the words it meant and still said it by hand. It is
+    now a WANT — this reading exists and was taken recently enough — whose met-shape a look
+    repairs and whose repair the search finds, so the rule is not stated anywhere and holds
+    anyway.
+
+    Both epistemic states are still asserted, because they are the same want short in two
+    ways and a change that covered only one would leave stale readings unwatched. Asked of the
+    agent's OWN want rather than of a constructed one: a want is a shape now, and a shape
+    nobody derived is a want the search has nothing to check.
     """
-    from agent.desire import Desire
-
-    decider = decider_of(make("fern"))
-    never_read = Desire(uri="urn:w", urgency=1.0, observed_property=MOISTURE,
-                      value=None, state="unmeasured")
-    too_old = Desire(uri="urn:w", urgency=1.0, observed_property=MOISTURE,
-                   value=0.30, state="stale")
+    fern = make("fern")
+    decider = decider_of(fern)
+    never_read = next(d for d in fern.pursuing()
+                      if d.is_epistemic and d.observed_property == MOISTURE)
+    assert never_read.state == "unmeasured"
     assert decider.propose_for(never_read) == OBSERVE
+
+    _read(fern, 0.30, age_s=10_000)
+    too_old = next(d for d in fern.pursuing()
+                   if d.is_epistemic and d.observed_property == MOISTURE)
+    assert too_old.state == "stale", "read once, and the answer has gone cold"
     assert decider.propose_for(too_old) == OBSERVE, \
         "a reading that stopped being evidence is repaired by looking, not by watering"
+
+
+def _read(agent, value, age_s=0):
+    """Put one reading of the agent's own moisture in its sensed graph, `age_s` old.
+
+    Written through the production writer rather than by hand, so the observation carries the
+    sensor that made it — which the freshness want asks for, and which is exactly what tells
+    a look apart from a dose's prediction of what a look would find.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from agent.sensed_writer import SensedWriter
+
+    sensor = agent.me.sensors[0]
+    SensedWriter(agent.beliefs).write(
+        subject_uri=sensor.subject, subject_id=sensor.subject.rsplit("#", 1)[-1],
+        value=value, sensor_uri=sensor.uri, observed_property=sensor.observes,
+        author_uri=agent.me.uri, used_procedure=sensor.sense_mode,
+        ts=(datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat())
 
 
 def test_below_the_aim_means_pursue_and_above_means_nothing(make):
@@ -247,14 +274,21 @@ def test_the_dealers_menu_gained_its_lever(make):
     (arc 1), and — since the city exists (arc 4) — holds the LEVER: bidding in the refill
     venue, whose winnings physically reach its barrel through the city's pipe, priced in
     StoredLitres, raising it. This test guarded the seen-but-unmovable reading while that
-    was the honest one; the row it waited for is derived now, direction and all, and the
-    Observe row stands beside it exactly as a fern's does."""
+    was the honest one; the row it waited for is derived now, direction and all.
+
+    AND NO OBSERVE ROW, which is the shipped case of a lever an agent cannot pull. The
+    supplier's one instrument is `barrel1_level`, a float switch that announces — push mode,
+    so the supplier is a LISTENER on it and `sense_now()` is an empty method whose docstring
+    says listening cannot. The row was offered anyway until the mode-conditional affordance:
+    the search proposed a look, the keeper committed to it, nothing left the process, and the
+    intention stood until patience outwaited it and adopted the same nothing again. What the
+    supplier gets now is one lever and an honest silence about the other.
+    """
     st = genesis_store()
     rows = menu_of(st.query, "http://example.org/orexis/world/simulation#supplier", desires_build(st, "supplier").query_union)
     assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
-            for r in rows if r.is_chosen] == [("Acquire", "StoredLitres", "Raises"),
-                                              ("Observe", "StoredLitres", None)]
+            for r in rows if r.is_chosen] == [("Acquire", "StoredLitres", "Raises")]
     #  And beside them, since #218, what the dealer HONOURS: claims presented against the
     #  venue it hosts are redeemed through its valves — one row per lever, never a proposal.
     honoured = [r for r in rows if not r.is_chosen]

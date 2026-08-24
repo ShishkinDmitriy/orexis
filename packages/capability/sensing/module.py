@@ -52,7 +52,8 @@ from agent.ontology import INSTRUMENTS_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
-from .terms import LISTENING, PUSH, SCHEDULED, STALE_AFTER_S, SUBSCRIBING
+from .terms import (FRESHNESS, LISTENING, PUSH, SCHEDULED, STALE_AFTER_S,
+                    SUBSCRIBING)
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
 #  badly an observation-backed want is unmet. OUR file, OUR namespace, OUR code — the kernel
@@ -77,6 +78,29 @@ def _declared_measures() -> tuple[tuple[str, str], ...]:
 
 
 _DECLARED_MEASURES = _declared_measures()
+
+
+def _measure_of_kind(kind: str) -> str:
+    """The declared SELECT for one kind of want, by IRI — and a loud absence.
+
+    The freshness road resolves by KIND rather than by asking a world what a property is, so
+    it looks its text up here. Raising rather than returning None is the point: a declaration
+    silently missing would make every freshness want unmeasurable, which reads as maximally
+    urgent everywhere and looks exactly like a society that has stopped seeing.
+    """
+    for declared, text in _DECLARED_MEASURES:
+        if declared == kind:
+            return text
+    raise KeyError(f"measures.ttl declares no measure of {kind}")
+
+
+#  The want THIS package mints (`desires.ru`) and therefore measures — resolved by the desire's
+#  own type rather than by the property's, because no world holds a type for knowing.
+_FRESHNESS_MEASURE = _measure_of_kind(FRESHNESS)
+
+#  What an instrument watches, asked of the world being judged. Not carried on the want:
+#  a subject is the wiring's to say, and the wiring is public in every world the planner builds.
+_WATCHED_BY = "SELECT ?subject WHERE { %s sensing:monitors ?subject } LIMIT 1"
 
 
 def _declared_measure(query, observed_property: str) -> str | None:
@@ -150,6 +174,9 @@ class SensingModule(Module):
         #  Which declared measure answers for which property — resolved once and kept,
         #  because a property's KIND is public-graph stable and the planner asks per node.
         self._measures: dict[str, str | None] = {}
+        #  And what each instrument watches, for the same reason: wiring is public-graph
+        #  stable and the planner asks the freshness measure once per node.
+        self._watching: dict[str, str] = {}
 
     # --- the measure I declare, answered when the kernel asks (desire_urgency) ---
 
@@ -170,13 +197,31 @@ class SensingModule(Module):
         and the aim is read from $beliefs by the query itself: nothing baked, so a re-pick or
         a re-derivation moves the next answer.
 
-        None — no opinion — for a duty, for a want in a property nobody here holds a region
-        in (an epistemic want has no distance to scale), for a kind my declaration does not
-        cover, and for a measure that raises: a package's bug must not take an agent down,
-        and every ranking caller reads silence as the maximal 1.0.
+        TWO KINDS OF WANT, both mine, and the second arrived when the freshness want moved
+        into this package. A want about a PROPERTY is scored by a reading against the aim; a
+        want about KNOWING is scored by whether anything current is known at all. They are
+        told apart by the INSTRUMENT the want names — the premise my own `desires.ru` derived
+        it from, handed over by whoever is asking — and never by whether a region happens to
+        exist, which is what the region lookup below silently meant while freshness was the
+        kernel's constant: the loner's water butt has no region and neither does a property
+        nothing measures, and those two are not the same situation.
+
+        None — no opinion — for a duty, for a kind my declaration does not cover, and for a
+        measure that raises: a package's bug must not take an agent down, and every ranking
+        caller reads silence as the maximal 1.0.
         """
         if desire.is_duty or desire.observed_property is None:
             return None
+        if (instrument := desire.instrument) is not None:
+            return self._answer(query, _FRESHNESS_MEASURE
+                                #  `$sensor` and not `$instrument`: `$instruments` names the
+                                #  graph, and a parameter that is a prefix of another gets
+                                #  substituted into the middle of it.
+                                .replace("$sensor", f"<{instrument}>")
+                                .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>")
+                                .replace("$subject", self._watched(query, instrument))
+                                .replace("$property", f"<{desire.observed_property}>")
+                                .replace("$sensed", f"<{sensed}>"))
         region = self.agent.deducer.region(desire.observed_property)
         if region is None:
             return None
@@ -196,6 +241,15 @@ class SensingModule(Module):
                 .replace("$outerLow", repr(float(outer_low)))
                 .replace("$outerHigh", repr(float(outer_high)))
                 .replace("$me", f"<{self.me.uri}>"))
+        return self._answer(query, text)
+
+    def _answer(self, query, text: str) -> float | None:
+        """Run one substituted measure against one world, or say nothing.
+
+        Shared by both kinds because the failure story is the same for both: a package's bug
+        must not take an agent down, and a caller reads silence as the maximal 1.0 rather
+        than as no urgency.
+        """
         try:
             rows = bindings(query(text))
         except Exception as exc:
@@ -204,6 +258,20 @@ class SensingModule(Module):
         if not rows or rows[0].get("urgency") is None:
             return None
         return float(rows[0]["urgency"])
+
+    def _watched(self, query, instrument: str) -> str:
+        """What that instrument is pointed at, as a term ready to substitute.
+
+        Read from the world rather than from `me.acts_for`, and that difference is the whole
+        of why the loner's water butt is watched at all: an agent may poll an instrument
+        aimed at something it does not act for, and a measure asking about its own subject
+        would have judged the butt's freshness by the plant's readings.
+        """
+        if instrument not in self._watching:
+            rows = bindings(query(_WATCHED_BY % f"<{instrument}>"))
+            self._watching[instrument] = (f"<{rows[0]['subject']}>" if rows
+                                          else "<urn:nobody>")
+        return self._watching[instrument]
 
     @classmethod
     def measures(cls, query, observed_property: str) -> bool:

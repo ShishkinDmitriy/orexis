@@ -150,14 +150,16 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
         1, "UNCLASSIFIED: the same desire warning, the agent's half of the join"),
     ("agent/ontology.ttl", "sensing#"): (
         1, "UNCLASSIFIED: prefix declaration; the kernel ontology uses sensing: in prose only"),
-    ("agent/desires.ru", "market#"): (
-        1, "UNCLASSIFIED: PREFIX line of the desire derivation, which is the mind's and so the "
-           "kernel's"),
-    ("agent/desires.ru", "actuation#"): (1, "UNCLASSIFIED: PREFIX line of the same rule"),
-    ("agent/desires.ru", "sensing#"): (1, "UNCLASSIFIED: PREFIX line of the same rule"),
-    ("agent/desires.ru", "sensing#staleAfterS"): (
-        1, "UNCLASSIFIED: the freshness want builds its constraint as a STRING, so the horizon "
-           "term is spelled out where no prefix reaches"),
+    #  AND THE DESIRE DERIVATION'S FOUR ARE GONE, which is the second time this list has
+    #  shrunk by a change rather than by an argument. `agent/desires.ru` declared `market:`,
+    #  `actuation:` and `sensing:` and spelled `sensing#staleAfterS` into a query string,
+    #  because the freshness want's met-test had to name the horizon term and no prefix
+    #  reaches inside a literal. The want is derived by `packages/capability/sensing/
+    #  desires.ru` now — its premise is an instrument, which is that package's fact — so the
+    #  term is spelled where it is owned and the three prefixes had nothing left to bind
+    #  (#343's deletions, arriving from the change that made them dead rather than as a sweep).
+    #  What the kernel kept is the whole of the mind: what a want is, when one is met, and the
+    #  region derivation, none of which names a package.
 }
 
 

@@ -47,6 +47,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [a-consulted-answer-is-a-premise](/decisions/a-consulted-answer-is-a-premise.md) - What comes back from a model must be premises rather than steps, so a model never authors an act.
 * [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) - Classical planning lifted to RDF: menu rows are action schemas and the Reflex is a depth-1 planner.
 * [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md) - Effects run against the store, so step two never sees step one. Snapshot per plan and bind the hypothesis in.
+* [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md) - Knowing becomes sensing's own want, repaired through the search; the Observe row exists only where the agent can ask.
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation, so the formal layer becomes load-bearing rather than optional.
 * [deterministic-bid](/decisions/deterministic-bid.md) - The bid number is code; the LLM only produces the justification. Rhetoric cannot move the number.
 * [there-is-no-bdi-ontology](/decisions/there-is-no-bdi-ontology.md) - FIPA, DOLCE, prov:Plan, WoT TD and hmas surveyed and refused: the mind crosses no trust boundary, and BDI's words are already ours.

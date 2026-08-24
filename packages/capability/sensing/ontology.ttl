@@ -96,6 +96,14 @@ sosa:Sensor rdfs:subClassOf ssn:System .
     rdfs:label "monitors" ;
     rdfs:comment "The subject this sensor reads. Pairs with sosa:observes, which says WHICH property." .
 
+#  DERIVED, never authored — `rules.ru` concludes it from the device's own sense mode, exactly
+#  as it concludes which sensing capability the agent gets, and from the same fact. `polls` is
+#  the access grant and says nothing about direction; this says the traffic can go the other
+#  way, which is what an affordance needs to be true before it may offer a look.
+:mayAsk a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Sensor ;
+    rdfs:label "may ask" ;
+    rdfs:comment "The agent can REQUEST a reading of this sensor now, rather than only receive whatever it sends. A subset of what it polls: a device that keeps a clock it was given can be interrupted, and one that keeps its own cannot be addressed at all. Where it is absent the agent is a listener on that instrument, and looking is not among its means — which is what makes the want it cannot repair report as unequipped instead of being committed to and silently dropped." .
+
 #################  How a device is driven — a fact about the hardware  #################
 # The agent's capability is derived from this, so ability can never drift from the device.
 # One sense mode per capability, and the pairing is the whole derivation: what an agent can
@@ -380,4 +388,14 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 
 :measureOf a owl:ObjectProperty ; rdfs:range owl:Class ;
     rdfs:label "measure of" ;
-    rdfs:comment "Which kind of want the subject node's `sh:select` scores — the class of thing the want is about, so `sensing:measureOf sosa:ObservableProperty` reads: a want about an observable property is measured by this SELECT. One binding, ?urgency in 0..1, parameterised by substitution like an effect rule and evaluated against whichever world is being judged." .
+    rdfs:comment "Which kind of want the subject node's `sh:select` scores — the class of thing the want is about, so `sensing:measureOf sosa:ObservableProperty` reads: a want about an observable property is measured by this SELECT. One binding, ?urgency in 0..1, parameterised by substitution like an effect rule and evaluated against whichever world is being judged. Two kinds are named today and they resolve differently: a property's class is asked of the world, and a want's class is asked of the desire modality, because a want about KNOWING is not a want about anything the world holds a type for." .
+
+#  The want `desires.ru` mints, as a class, so the measure beside it has something to be the
+#  measure OF. Sensing's namespace because the want is sensing's: its premise is an instrument
+#  this agent polls, and the kernel could not state it without spelling this package's horizon
+#  term into a query. The KERNEL still says what a want IS — `ag:Desire`, `ag:metWhen`, and
+#  `ag:Stale` for which side of nothing this one is on — and every freshness node carries both
+#  types, which is the ordinary way a package says what kind of a kernel thing it made.
+:Freshness a owl:Class ; rdfs:subClassOf ag:Desire ;
+    rdfs:label "freshness want" ;
+    rdfs:comment "Wanting a reading of one instrument to exist and to have been taken recently enough to be about now. Repaired by looking and by nothing else — no lever moves a number you cannot see — so an agent that cannot ask this instrument for a reading holds a want with no lever, which is a legitimate state and reported as one." .

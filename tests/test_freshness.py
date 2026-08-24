@@ -117,6 +117,18 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
     ok, _ = conforms(data, focus=FERN)
     assert ok, "a want must never refuse a boot — the agent has to run to repair it"
 
+    assert _fires(data), "the shape must actually fire — a want that never reports is not a want"
+
+
+def _fires(data) -> list:
+    """The freshness results this data produces, at the severity a want must carry.
+
+    A want reported as `sh:Violation` refuses the agent's boot, which is the one thing a want
+    must never do — pySHACL ignores `sh:severity` on a `sh:sparql` constraint and honours the
+    NODE shape's, measured both ways round, and this shape carried it in the wrong place once.
+    """
+    from agent.validate import _shapes_and_vocabulary
+
     ontology, _ = _shapes_and_vocabulary()
     mine = rdflib.Graph()
     for shape in set(data.subjects(rdflib.RDF.type, _SH.NodeShape)):
@@ -124,9 +136,46 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
     _, results, _ = shacl_validate(data + ontology, shacl_graph=mine + ontology,
                                    advanced=True, inference="none")
     stale = [r for r in results.subjects(rdflib.RDF.type, _SH.ValidationResult)
-             if "no longer evidence about now" in str(results.value(r, _SH.resultMessage))]
-    assert stale, "the shape must actually fire — a want that never reports is not a want"
+             if "reads now" in str(results.value(r, _SH.resultMessage))]
     assert all(str(results.value(r, _SH.resultSeverity)).endswith("ShouldBecome") for r in stale)
+    return stale
+
+
+def test_a_horizon_nobody_published_leaves_the_want_unmet_not_met(monkeypatch):
+    """The direction a shape about knowledge has to fail in (#342), pinned by taking the
+    horizon away.
+
+    The met-test used to hunt for a reading whose `resultTime` plus the horizon had PASSED,
+    and a shape that looks for a bad reading is satisfied by the absence of any reading — and
+    by the absence of the horizon it would have judged one against. Measured on pySHACL
+    0.40.1 by renaming the term: `conforms` flipped from False to True, so an agent whose
+    sensing module had not yet said what it treats as stale believed every reading current,
+    for ever, with nothing red anywhere.
+
+    Saying what the agent WANTS instead of what would disappoint it fixes both at the root: a
+    fresh reading exists, or it does not. This asserts the case that used to lie — a reading
+    that is current by any reasonable reading of the clock, with no horizon stated at all.
+    """
+    from agent.ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH
+    from agent.validate import graph_from
+    from packages.capability.sensing.terms import STALE_AFTER_S
+    from agent import effects
+
+    agent, st = _fern(monkeypatch, value=0.55)          # horizons published by `start()`
+    st.update(f"DELETE WHERE {{ GRAPH <{INSTRUMENTS_GRAPH}> "
+              f"{{ ?s <{STALE_AFTER_S}> ?h }} }}")
+
+    data = graph_from(st, *st.public_graphs(), SENSED_GRAPH, INSTRUMENTS_GRAPH)
+    for triple in desires_build(st, "fern").construct(
+            "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
+        data.add(effects._triple(triple))
+
+    assert _fires(data), \
+        "with no horizon there is no recent-enough, so nothing is known to be current — a " \
+        "want that reads MET here is a want that can never be short"
+    assert next(d for d in agent.pursuing()
+                if d.is_epistemic and d.observed_property == MOISTURE).urgency == 1.0, \
+        "and the measure fails the same way round, or the search would rank it as content"
 
 
 def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
@@ -159,25 +208,71 @@ def test_a_property_with_no_sensor_holds_no_freshness_want(monkeypatch):
         "and wants freshness in exactly what it can look at — no want it could never satisfy"
 
 
-def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_watched(monkeypatch):
-    """The regression this nearly shipped with, pinned.
+def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_current(monkeypatch):
+    """The regression this nearly shipped with, and the limit that sits beside it.
 
     `world/loner`'s gardener polls a water butt it does not act for: it holds a region in the
     zz plant's moisture and none in the butt's level. Freshness was first derived from the
-    SUBJECT's stated ranges, matching the region's premise — which left the butt with no want,
-    and since the keeper pursues desires rather than sweeping noticed gaps, nothing would have
-    watched it at all. `notices()` covered every sensor, and what replaces it must cover the
-    same ground.
+    SUBJECT's stated ranges, matching the region's premise — which left the butt with no want
+    at all. The premise is the INSTRUMENT, so the want exists, and that half is unchanged.
 
-    Asserted through the keeper, not the query, because the ledger is where the loss would
-    have shown: a commitment to look that stopped being made.
+    What is NOT unchanged is what the gardener does about it, and the change is the point of
+    the mode-conditional affordance. The butt's level is a push device: it announces, and
+    there is nothing to ask. So the want stands, hot, and the search answers NOTHING — no
+    lever this agent holds points at it — which is the sentence that means *equip me*. What
+    happened before was worse than nothing: an Observe intention adopted every patience
+    period, `sense_now()` returning having done nothing, and the commitment outwaited and
+    re-adopted for ever, in silence.
     """
     gardener = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
     keeper = next(m for m in gardener.modules if m.name == "intention")
+    butt = next(d for d in gardener.pursuing()
+                if d.is_epistemic and d.observed_property.endswith("StoredLitres"))
+    assert butt.urgency == 1.0, "the butt is polled, so its level is wanted current"
+
     keeper.deliberate_on_gaps()
 
     watched = {s.observed_property.rsplit("#", 1)[-1] for s in keeper.standing()
                if s.means.endswith("Observe")}
-    assert "StoredLitres" in watched, \
-        "the butt is polled, so its level is wanted current — stake or no stake"
-    assert "SoilMoisture" in watched, "and the plant it does act for, as ever"
+    assert "SoilMoisture" in watched, "the probe can be asked, so the look is committed to"
+    assert "StoredLitres" not in watched, \
+        "and the butt cannot, so nothing is committed to — a lever an agent cannot pull is " \
+        "not a lever, and an intention nothing can carry out is not an intention"
+    #  AND THE NUDGE ACTUALLY LEAVES, which is the other half of the same silence. This agent
+    #  holds two sensing modules, and `provider` returns whichever comes first — the listener,
+    #  here, whose `sense_now` is an empty method. So the look was committed to and nothing
+    #  went out, every patience period, with every module behaving as written.
+    assert any(topic.endswith("moisture_probe/command") and payload == {"sense": True}
+               for topic, payload, _ in gardener.sent), \
+        "the module that CAN ask is the one that has to hear about it"
+    assert gardener.deliberator.propose_for(butt) is None, \
+        "said as a decision rather than as an oversight"
+
+
+def test_a_listener_reports_the_want_it_cannot_repair_as_unequipped(monkeypatch):
+    """The mode-conditional rule's own fixture, which the gardener's butt cannot be.
+
+    The butt is unreachable twice over — a push device, AND pointed at a subject the gardener
+    does not act for, which the Observe row's walk already excludes. So a test written on it
+    passes whether or not the sense mode is consulted. `world/simulation`'s supplier is the
+    clean case: it ACTS FOR the barrel and its only instrument is the float switch, so the
+    row's walk holds at every hop and the sense mode is the only thing standing between it
+    and a lever that does nothing.
+
+    The verdict is NOT_BETTER rather than NOTHING, and the difference between the two agents
+    is worth stating because both are honest. The gardener holds NO lever at all on the
+    butt's level, so its trace says `no candidate` — equip me. The supplier holds one, the
+    Acquire that refills the barrel, and buying water does not tell you how much you have:
+    the lever is weighed, the world it reaches is no better, and the pass says so. Neither
+    reads as a look that happened, which is what the row used to buy.
+    """
+    from agent import planner as search
+    from agent import trace
+
+    supplier = build_agent("supplier", genesis_store(), monkeypatch)
+    want = next(d for d in supplier.pursuing()
+                if d.is_epistemic and d.observed_property.endswith("StoredLitres"))
+
+    assert supplier.deliberator.propose_for(want) is None
+    assert trace.outcomes(supplier.beliefs.query_union) == {search.NOT_BETTER: 1}, \
+        "weighed what it holds and found none of it answers — not: I looked"

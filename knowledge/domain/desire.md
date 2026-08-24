@@ -27,6 +27,15 @@ the subject and its instruments state, and the result is a [region](/domain/regi
 has the intersection, the two kinds of bearer, and why a graph found by TYPE rather than by name
 is what makes a second source of desire possible.
 
+**A package may derive one too, and one does.** The build collects `desires.ru` from every loaded
+package exactly as genesis collects `rules.ru`, and what belongs there is a want whose PREMISE
+belongs there: [sensing](/domain/sensing.md) derives the freshness want, because the fact that
+makes it meaningful is an instrument this agent polls, and the horizon that decides whether a
+reading still counts is that package's own term. The mind stays the kernel's — what a want is,
+when one is met, the region derivation — and this is not an exception to it: the kernel went on
+holding every one of those and stopped spelling another tree's vocabulary into a query string to
+say one thing it could not otherwise say.
+
 What the derivation mints is a NODE (`ag:Desire`) carrying the met-test as a SHACL shape
 (`ag:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
 say how badly it is unmet, not only whether it is. The measure is deliberately NOT the
@@ -60,13 +69,27 @@ either knowing how the other was computed.
 # The kind is read, never flagged
 
 A stake carries what is wanted and what it currently reads. A duty carries the claim it came from
-and whom it is owed to. **A stake has neither, which is what `is_duty` reads** — there is no kind
-field, because a flag that can disagree with the data beside it is a flag that eventually does.
+and whom it is owed to. An **epistemic** want carries the instrument it was derived from.
+**Each kind is known by the premise it has and the others do not, which is what `is_duty` and
+`is_epistemic` read** — there is no kind field, because a flag that can disagree with the data
+beside it is a flag that eventually does.
+
+The third one had to become sayable when a property stopped having one want. Fern holds a
+region in its moisture AND wants its probe to have spoken recently, and those are two things it
+can be short of independently — so everything that used to ask "the want about this property"
+had one answer and now has two, and answering by whichever is hotter would decide between two
+different questions with a number that means the same thing in both.
 
 # State is carried, not inferred
 
 A desire states its own condition in its kind's vocabulary: `met`, `unmet` or `unmeasured` for a
-stake; `standing` or `demanded` for a duty.
+stake; `met`, `stale` or `unmeasured` for an epistemic want; `standing` or `demanded` for a duty.
+
+An epistemic want's state is read off its MEASURE, so the label and the number cannot part
+company: anything the measure does not call current is not current, and which KIND of
+not-current it is — never looked, against looked and let it go cold — is the reading's to say.
+It used to come off a staleness test that declines to judge at all where no horizon has been
+published, so a want the measure scored maximal reported `met`.
 
 **Carried rather than derived from urgency, and the distinction is not academic.** Urgency is 0
 only exactly at the point being steered for, so "urgency > 0" counts a barrel sitting comfortably
@@ -147,10 +170,17 @@ Three deliberate differences from the diff above:
   reported at urgency 1.0, the same as never having looked, and for the same reason: ranking an
   agent by a distance it no longer trusts would rank it by something it does not know. The last
   reading is still carried on the row, because "this is what it said, and that was too long ago"
-  is more useful than silence.
-- **Freshness is about the INSTRUMENT, not the stake.** A want exists for every property this
-  agent polls a sensor for — including one pointed at something it does not act for, which
-  `world/loner`'s gardener does with its water butt. If an agent went to the trouble of polling
+  is more useful than silence. **And it is repaired through the search like anything else**
+  (#331): the want says positively what it wants — a reading of this exists, made by this
+  instrument, taken recently enough — Observe's effect predicts exactly that, and the deliberator
+  states the rule nowhere. Saying it positively is also what makes it fail loudly: a want that
+  hunted for a reading past its horizon was satisfied by having no reading, and by having no
+  horizon to judge one against, which is the same nothing wearing two hats.
+- **Freshness is about the INSTRUMENT, not the stake.** A want exists for every SENSOR this
+  agent polls — including one pointed at something it does not act for, which
+  `world/loner`'s gardener does with its water butt, and including one whose property already
+  carries a region, because knowing the number and the number being right are different things
+  to be short of. If an agent went to the trouble of polling
   something, it wants to know what that reads now; a stake is what makes the VALUE matter, and
   this want is about knowing. And no want exists where there is no sensor: an epistemic want
   nothing could ever satisfy would sit at maximum urgency for ever, top every ranking, and

@@ -29,9 +29,18 @@ SELECT DISTINCT ?means ?property ?via ?direction ?mode WHERE {
   # MODALITY by the collector (a-store-is-a-modality, #298): the walk below is belief — wiring
   # and topology — and the shape patterns that used to sit here were the one desire-shaped
   # thing in it. An agent with no wants gets an empty VALUES and no rows, exactly as before.
+  #  `sensing:mayAsk` and NOT `sensing:polls`, which is what this row hung off until a
+  #  listening agent was followed through the machinery. Both clocks poll; only one can be
+  #  ASKED. A push device takes no orders, so `sense_now()` on that side is an empty method
+  #  whose docstring says so — and the row was offered anyway, so the search proposed a look,
+  #  the keeper committed to it, nothing happened, and the intention stood until patience
+  #  outwaited it and re-adopted the same nothing. A lever an agent cannot pull is not a lever:
+  #  the row is gone, the want stands, and the search answers NOTHING — no lever this agent
+  #  holds points at this want, which is the sentence that means *equip me* rather than *I
+  #  tried*. See knowledge/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md.
   VALUES ?property { $properties }
   $me ag:actsFor ?subject .
-  $me sensing:polls ?via .
+  $me sensing:mayAsk ?via .
   ?via sensing:monitors ?subject ;
        sosa:observes ?property .
   BIND(ag:Observe AS ?means)

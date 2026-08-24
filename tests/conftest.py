@@ -82,10 +82,30 @@ def genesis_store(readings: dict[str, float] | None = None,
             f"""  {observation_uri(pid, prop)} a sosa:Observation ;
                     sosa:hasFeatureOfInterest <{ns}{pid}> ;
                     sosa:observedProperty <{prop}> ;
+                    {_made_by(st, f"{ns}{pid}", prop)}
                     sosa:hasSimpleResult "{value}"^^xsd:decimal ;
                     sosa:resultTime "{ts}"^^xsd:dateTime ."""
             for (pid, prop), value in _by_subject_and_property(readings).items())))
     return st
+
+
+def _made_by(st: Store, subject: str, observed_property: str) -> str:
+    """`sosa:madeBySensor <the instrument this world says watches that pair>`, or nothing.
+
+    A seeded reading has to look like one the production writer would have produced, and this
+    is the clause it was missing: `sensed_writer` states the sensor unconditionally, and the
+    freshness want asks for a reading made by ITS instrument — a want about an observation
+    that names nobody would be satisfied by a prediction of what a dose would do. Discovered
+    from the world rather than passed in, so a test seeds what the wiring implies.
+
+    Empty where the world states no such sensor, which stays a legal thing for a test to seed:
+    a subject nobody watches can still be given a reading, and it will simply satisfy no
+    epistemic want, which is the truth about it.
+    """
+    rows = st.query(
+        f"SELECT ?s WHERE {{ ?s sensing:monitors <{subject}> ; sosa:observes "
+        f"<{observed_property}> }} LIMIT 1")["results"]["bindings"]
+    return f"sosa:madeBySensor <{rows[0]['s']['value']}> ;" if rows else ""
 
 
 def _by_subject_and_property(readings: dict) -> dict[tuple[str, str], float]:
@@ -187,6 +207,17 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     agent.bidding = lambda: agent.module("bidding")
     agent.subscribing = lambda: agent.module("subscribing")
     agent.reviewing = lambda: agent.module("review")
+    #  WHAT IT TREATS AS STALE, which a booted agent always knows and a built one did not.
+    #  `SensingModule.start()` writes the horizon per sensor and nothing else here calls
+    #  `start` — so a fixture agent had none, and the want that asks whether a reading is
+    #  still evidence could not be repaired by looking: with no horizon there is no "recent
+    #  enough" for a predicted reading to be inside, so the search reported that nothing
+    #  helps and a bidder sat every round out. This is the one line of `start` with no
+    #  message on the wire, so it can be run here without the cadence traffic a full start
+    #  would add to every test that reads what was published.
+    for module in agent.modules:
+        if hasattr(module, "publish_horizon"):
+            module.publish_horizon()
     return agent
 
 

@@ -360,6 +360,15 @@ stand, and they are the ones already in the house: `urgency(None)` is 1.0 and th
 is always to look, because the unmeasured want is about HAVING LOOKED, not about knowing a good
 value.
 
+**Two things about that paragraph turned out to be wrong when it was built (#331), and both in
+the safe direction.** The region's "not looked" shape does not read as vacuously satisfied after
+a first look: the Below and Above shapes are `sh:qualifiedMaxCount 0` over readings past an edge,
+a valueless reading vacuously satisfies *past this edge*, and so it trips both — a region want
+is not repaired by looking, which is the right answer for a want about where a number should be.
+And the want that IS about having looked is not the region's unmeasured state at all: it is
+freshness, sensing's own want, whose met-shape a look repairs by construction. What made a first
+look plannable is that want existing, not the region shape being generous.
+
 What follows is a constraint on the planner rather than on the shapes. **A possible world with no
 violations means "nothing I can foresee is wrong", not "the world will be fine"** — so a plan may
 not chain PAST a sensing action. What to do after looking depends on what the look returns, which
@@ -381,6 +390,23 @@ new world, and this becomes a live question again.
 
 That also disposes of a nonsense the search would otherwise produce — "look, then water" scored
 as a two-step plan whose second step was chosen against a value nobody had yet seen.
+
+**The last paragraph's warning came true, from the side it was not watching.** Nobody put a
+timestamp into the signature. What arrived instead was a GOAL whose whole content is that
+something was read recently ([#331](https://github.com/ShishkinDmitriy/orexis/issues/331)), and
+for that goal the one lever that repairs it is exactly the one whose world nets to nothing — so
+the search discarded its own answer as somewhere already reached, before anything asked whether
+it repaired the want. The paragraph was right that this is where the question comes back; it was
+looking at the signature, and the answer is in the loop.
+
+**Cycle detection is about EXPANSION, not about refusing an answer**, and the fix says only that:
+a step is asked whether it MEETS an unmet want before `seen` decides whether to expand from it. A
+step that answers the question is not a place to search onward from. Everything above survives
+unchanged — a look still extends the frontier nowhere, no plan chains past one, and an
+observation still canonicalises to its upsert key and its value. What would have broken it is the
+tempting fix: a fresher `resultTime` counted as somewhere new makes "look, then look, then look"
+a three-step plan. See
+[a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md).
 
 ### `plan.rq` is a narrative, not a path to a goal
 
@@ -480,6 +506,13 @@ Two hardcoded things must DISAPPEAR, not survive beside it:
 1. `if value is None: return OBSERVE` in the reflex — *the first intention is always to look*.
    Under the widening that is a freshness goal, unmet, and Observe is the lever whose effect
    repairs it. The special case should fall out of the machinery rather than be kept for luck.
+   **DONE, and it took two changes and a rewording to get there.** The line survived the
+   reflex's deletion as `if desire.state in ("unmeasured", "stale"): return OBSERVE` — the same
+   claim in the words it meant, still stated by hand — and came out when the freshness want
+   became sensing's, said what it wanted positively, and stopped being pruned by cycle
+   detection before its merits were considered. It is exactly what this bullet predicted:
+   a goal, unmet, and Observe the lever whose effect repairs it. See
+   [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md).
 2. ~~The dealer's hand-written `plan.rq`~~ — **mis-specified, and building it is what showed
    why; see "a narrative, not a path to a goal" below.** Acquire-then-offer should be derived from effects and
    the re-run menu, not stated as a two-step in a file.

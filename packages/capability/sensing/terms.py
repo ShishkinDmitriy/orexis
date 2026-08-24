@@ -37,3 +37,12 @@ PUSH = term("PushProcedure")            # keeps its own clock, takes no orders -
 #  out (#240). One definition and one direction: `stale_after_s` computes it, `publish_horizon`
 #  writes it, and everything else — including the freshness want — reads what was written.
 STALE_AFTER_S = term("staleAfterS")
+
+#  The want this package derives, as a class: knowing what an instrument reads NOW. Named here
+#  because the module resolves the measure for it by this IRI — the one kind of want whose type
+#  is on the want rather than on the thing it is about.
+FRESHNESS = term("Freshness")
+
+#  Derived, and the difference from `polls` is the whole of it: polls is who may READ an
+#  instrument, mayAsk is who may INTERRUPT one. Only the second is a lever.
+MAY_ASK = term("mayAsk")

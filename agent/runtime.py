@@ -180,8 +180,27 @@ class Agent:
         another's Python, so any of them can be removed without breaking the rest. None is a
         normal answer — an agent that composed neither is simply an agent that cannot.
         """
+        return next(iter(self.providers(family)), None)
+
+    def providers(self, family: str) -> list:
+        """ALL of my modules that provide a capability of this family, in module order.
+
+        `provider` above is the ordinary door and answers with one, because most families have
+        one member per agent and a caller wanting "whoever can pour" means whoever that is.
+        The plural exists for the family where an agent legitimately holds TWO — sensing splits
+        by who holds the clock, and `world/loner`'s gardener subscribes to a probe AND listens
+        to a float switch, so it composes both modules and each owns its own sensors.
+
+        Asking the singular there is a silent wrong answer rather than an error: `provider`
+        returns whichever comes first, and a nudge sent to the listening module is a nudge sent
+        to a method whose whole body is a docstring saying listening cannot. The gardener
+        adopted a look at its probe, called that method, and nothing left the process — the
+        intention then stood until patience outwaited it, for ever, with every module behaving
+        exactly as written. Which is why this is a list and not a better tie-break: there is no
+        right one to pick, and the question was never singular.
+        """
         members = {r["capability"] for r in bindings(self.beliefs.query(_family_q(family)))}
-        return next((m for m in self.modules if m.CAPABILITY in members), None)
+        return [m for m in self.modules if m.CAPABILITY in members]
 
     def pursuing(self, now: datetime | None = None) -> list[Desire]:
         """Everything this agent is pursuing, hottest first, whoever sourced it.

@@ -238,16 +238,33 @@ class Keeper(Module):
         #  ends of that arrangement are gone: an epistemic want is a want like any other now,
         #  it says which failure it is, and the ordinary door takes it.
         for desire in self.agent.pursuing():
-            if desire.is_duty or desire.state not in ("unmeasured", "stale"):
+            #  ASKED ABOUT EVERY WANT, and the filter that used to stand here is gone with the
+            #  hardcode it was the other half of. It skipped anything not `unmeasured` or
+            #  `stale`, which was safe only because the deliberator answered those two by a
+            #  special case before any search ran: the tick knew which wants would say OBSERVE
+            #  and asked about no others. Nothing knows that now — a look is proposed because
+            #  a search found it repairs something — so the honest tick asks about everything
+            #  and acts on the one answer it is entitled to carry out.
+            #
+            #  The cost is a plan per want per patience period rather than per unmet-epistemic
+            #  want, which is the same work `series()` already does on the metrics clock.
+            if desire.is_duty:
                 continue
             move = deliberator.propose_for(desire)
             if move != OBSERVE:
                 continue
             observed_property = desire.observed_property
             adopted = self.adopt(OBSERVE, observed_property,
-                                 f"{desire.state} — noticed, not asked for")
-            if adopted and (sensing := self.agent.provider(_SENSING)) is not None:
-                sensing.sense_now()
+                                 f"{desire.state or 'unmet'} — noticed, not asked for")
+            #  EVERY sensing module, not the first. An agent may hold two — the gardener
+            #  subscribes to a probe and listens to a float switch — and `provider` returns
+            #  whichever comes first, which was the listener: the look was committed to, the
+            #  nudge went to a method that cannot nudge, and the intention stood until
+            #  patience outwaited it. Whoever cannot ask does nothing when asked, so sending
+            #  to all of them costs a no-op and buys the one that can.
+            if adopted:
+                for sensing in self.agent.providers(_SENSING):
+                    sensing.sense_now()
 
     # --- the ledger, written -------------------------------------------------------------
 
@@ -409,7 +426,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         self.log.info("expecting %s to move %s from %.3f within %ss: %s",
                       observed_property.rsplit("#", 1)[-1],
                       direction.rsplit("#", 1)[-1], reading.value, round(window), because)
-        if (sensing := self.agent.provider(_SENSING)) is not None:
+        #  All of them, for the reason the gap tick gives: an agent with two clocks has two
+        #  sensing modules, and the one `provider` happens to return may be the one that
+        #  cannot ask.
+        for sensing in self.agent.providers(_SENSING):
             sensing.sense_now()
         return True
 

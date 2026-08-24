@@ -43,16 +43,28 @@ SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument
   }
   UNION
   {
-    #  KNOWING, where there is nothing to know it ABOUT — the loner's gardener watches a
-    #  water butt it does not act for, and still wants that reading current. Guarded against
-    #  the properties the stake branch already answers for, so one property never arrives as
-    #  two desires. Which subject the instrument watches is the belief side's to say.
+    #  KNOWING, which is a want in its own right and not a mood the region want is in. The
+    #  loner's gardener watches a water butt it does not act for and still wants that reading
+    #  current; fern acts for a pot AND wants its probe to have spoken recently, and those are
+    #  two things it can be short of independently.
+    #
+    #  This used to be guarded — freshness only where no region answered for the property —
+    #  because the region want carried the epistemic states itself and one property arriving
+    #  as two desires would have been the same want twice. That reading survives on the region
+    #  (unmeasured and stale are still its states, and still maximal), but it was never the
+    #  thing a lever repairs: the deliberator answered both by a hardcoded OBSERVE that ran
+    #  before any search, so nothing ever had to say WHICH want looking was for. With that
+    #  gone the guard would have left a stale-but-in-range reading with no want anything
+    #  points at — the region shape does not test age — and the agent would have stopped
+    #  looking, quietly. One instrument, one want about it.
+    #
+    #  Which subject the instrument watches is the belief side's to say. ONE row per want:
+    #  the premise is the sensor and only the sensor, which is what sensing's derivation
+    #  writes — it carried the subject too, and every freshness want then arrived twice, the
+    #  second copy keyed on a subject no instruments table has and so permanently unmeasured.
     $me ag:holds ?desire .
     ?desire ag:violationIs ag:Stale ; ssn:forProperty ?property ;
             prov:wasDerivedFrom ?instrument .
-    FILTER NOT EXISTS { $me ag:holds ?region .
-                        ?region ssn:forProperty ?property ;
-                                ag:metWhen/sh:property/ag:violationIs ag:Below }
     BIND("freshness" AS ?kind)
   }
   UNION

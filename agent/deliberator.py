@@ -196,9 +196,23 @@ class Deliberator(Module):
 
         None where nothing is wanted about this property at all, which is not a refusal but an
         absence of a question.
+
+        KNOWING FIRST, then the number, and the order is a rule rather than a ranking. A
+        property carries two wants now — the region it should sit in, and that its instrument
+        has spoken recently — so "the want about this property" has two answers, and taking
+        whichever is HOTTER decides between two different questions by a number that means
+        the same thing in both. No lever moves a number you cannot see, so an unmet epistemic
+        want answers first: an actuator that asks whether to dose a pot nobody has looked at
+        lately is told to look, which is what the deleted `state in (unmeasured, stale)`
+        branch said and the one part of it that was about this door rather than about the
+        search. Once the reading is current the stake answers and the pot is dosed or not on
+        its merits.
         """
-        desire = next((d for d in self.agent.pursuing()
-                       if not d.is_duty and d.observed_property == observed_property), None)
+        mine = [d for d in self.agent.pursuing()
+                if not d.is_duty and d.observed_property == observed_property]
+        desire = (next((d for d in mine if d.is_epistemic and not d.is_met), None)
+                  or next((d for d in mine if not d.is_epistemic), None)
+                  or next(iter(mine), None))
         return self.propose_for(desire) if desire is not None else None
 
     def propose_for(self, desire: Desire) -> str | None:
@@ -216,18 +230,18 @@ class Deliberator(Module):
         a desire that stays hot, stays owed, and shows up in the ledger unpaid, which is this
         project's posture towards everything it cannot prevent: leave evidence.
         """
-        #  NOT KNOWING is its own want, and the answer to it is always the same move. A want
-        #  with no reading behind it, or one whose reading stopped being evidence about now,
-        #  is repaired by looking and by nothing else — no lever moves a number you cannot see.
+        #  NOTHING IS ANSWERED BY HARDCODE HERE ANY MORE, and the line that was is the whole
+        #  of what this change existed to remove.
         #
-        #  This is where `if value is None: return OBSERVE` used to live, as a first line in
-        #  `propose` that ran before anything was asked. It said the same thing and could not
-        #  say WHY: a value of None meant both "never read" and "the caller did not tell me",
-        #  and the keeper exploited the second to ask "should I look at this?" by passing None
-        #  deliberately. A desire carries its own state, so the question is now asked in the
-        #  words it means.
-        if desire.state in ("unmeasured", "stale"):
-            return OBSERVE
+        #  `if desire.state in ("unmeasured", "stale"): return OBSERVE` stood at the top of
+        #  this method — the last descendant of the reflex's `if value is None: return
+        #  OBSERVE`, kept because nothing else could answer it. What made it removable was
+        #  saying the want out loud: freshness is a shape (there exists a reading of this, and
+        #  it was taken recently enough to be about now), Observe's effect predicts a reading
+        #  stamped now, and the search finds that the shape holds in the world a look would
+        #  make. Same first move, reached by the one road. The plan record set exactly this as
+        #  its own acceptance test: a widening that leaves the special case beside it has not
+        #  widened anything.
         if not desire.is_duty:
             #  THE SEARCH, and there is nowhere else to go. Asking whether a lever points the
             #  right way is not the same as asking whether taking it leaves this agent better

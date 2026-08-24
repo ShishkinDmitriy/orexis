@@ -34,6 +34,63 @@
 #  where it does not). The asymmetry is deliberate and old: how bad it is to be 0.05 out
 #  depends on how much room there is in that direction.
 
+#  TWO declarations now, and they resolve by different roads because they are measures of
+#  different KINDS of thing. A region want is about a PROPERTY, and what that property is is a
+#  fact the world holds, so `sosa:ObservableProperty` is asked of whichever world is being
+#  judged. A freshness want is about KNOWING, and no world holds a type for that: the want
+#  names the INSTRUMENT it was derived from, and a want that names one is a want about
+#  knowing, by construction rather than by a flag. One file, one word, one evaluator.
+#
+#  `sensing:Freshness` is a class this package's `desires.ru` puts on every such want, so a
+#  sovereign reading the desire modality sees what kind of thing it is holding and this
+#  declaration has something to be the measure OF. Nothing dispatches on it — the module reads
+#  the instrument the kernel hands over — which is why the type and the behaviour cannot drift
+#  apart into two answers.
+
+sensing:FreshnessMeasure
+    sensing:measureOf sensing:Freshness ;
+    rdfs:label "whether what I know about this instrument is still about now" ;
+    rdfs:comment "Evaluated against whichever world is being judged, exactly as the aim measure is: $sensed names that world's readings, $instruments the graph holding the horizons this agent has published, and $sensor the instrument this want is about. A look reaches 0.0 in the world it would make, which is what lets the search prefer looking over standing still. $sensor rather than $instrument, because a parameter that is a PREFIX of another is substituted into the middle of it — measured, as `GRAPH <…sensor>s {`, which the parser reports as a missing brace fifty characters away." ;
+
+    #  BINARY, and the gradient it does not have is the interesting part. Age-against-horizon
+    #  is the natural continuous measure and this deliberately is not it: a graded freshness
+    #  urgency is nonzero the moment a reading is a second old, and a look always reaches 0.0,
+    #  so every deliberation tick would find looking an improvement and ask for a reading —
+    #  the board woken on the agent's patience clock rather than on its cadence, for ever. The
+    #  deadband a region want gets for free (`dose_for` sizes to ~0 near the aim, so the effect
+    #  predicts no change and the candidate is pruned) has no analogue here, because a look
+    #  always fully refreshes whatever it is worth. What would supply one is the PRICE of
+    #  looking, which this package's seams have wanted since v1 and nothing yet charges: with a
+    #  cost to weigh, a gradient becomes rankable against it and this measure can grow one.
+    #  Until then the honest statement is the one the horizon already makes — inside it the
+    #  reading is evidence, outside it is not.
+    #
+    #  THE FINAL COALESCE IS THE WHOLE ERROR STORY, and it is load-bearing three times over.
+    #  An unbound `?at` (nothing ever read this), an unbound `?horizon` (no rhythm published
+    #  for this sensor yet) and any arithmetic that raises all make the comparison error, and
+    #  an errored expression leaves its variable unbound while keeping the row — so without
+    #  this the column would read empty and every ranking caller would have had to guess. It
+    #  lands on 1.0: not knowing is maximal, as it is everywhere here, and — the half that
+    #  matters most (#342) — a missing horizon reads as maximally urgent rather than as
+    #  perfectly fresh. The met-shape beside it fails the same way round for the same reason.
+    sh:select """
+        SELECT ?urgency WHERE {
+            OPTIONAL { GRAPH $sensed {
+                ?obs sosa:hasFeatureOfInterest $subject ;
+                     sosa:observedProperty $property ;
+                     #  Made by MY instrument, matching the met-shape clause for clause. Both
+                     #  halves have to carry it or the search finds by satisficing what the
+                     #  met-test refuses: a dose's predicted reading would score this want at
+                     #  0.0 and buying would look like a way to find something out.
+                     sosa:madeBySensor $sensor ;
+                     sosa:resultTime ?at } }
+            OPTIONAL { GRAPH $instruments {
+                $sensor sensing:staleAfterS ?horizon } }
+            BIND(COALESCE(IF(?at + STRDT(CONCAT("PT", STR(?horizon), "S"),
+                                         xsd:dayTimeDuration) > NOW(), 0.0, 1.0),
+                          1.0) AS ?urgency)
+        }""" .
+
 sensing:AimDistanceMeasure
     sensing:measureOf sosa:ObservableProperty ;
     rdfs:label "distance from the aim, scaled by the survival room on that side" ;

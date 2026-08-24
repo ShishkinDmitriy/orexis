@@ -569,6 +569,23 @@ def stock_reading(host, litres):
     host.deliver("sensors/barrel1_level/reading", {"value": litres})
 
 
+def _stamp_readings(agent, at):
+    """Move every reading this agent holds to one instant.
+
+    For a test that asks about a moment other than now: a reading has a horizon past which it
+    stops being evidence, so seeding one at real-time and then asking about a moment past that
+    horizon hands the agent a blind spot the test did not mean to create.
+    """
+    from agent.ontology import SENSED_GRAPH
+
+    agent.beliefs.update(f"""
+        WITH <{SENSED_GRAPH}>
+        DELETE {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?was }}
+        INSERT {{ ?o <http://www.w3.org/ns/sosa/resultTime>
+                  "{at.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }}
+        WHERE  {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?was }}""")
+
+
 def test_a_round_is_sized_by_the_vessel_not_the_belief(host):
     """The lot is the host's standing offer; the vessel is physics. Live on the bench, a
     barrel at 0.000 kept selling 2 L lots and the sim valve poured water from nothing —
@@ -795,8 +812,15 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
     _win_a_claim(host)
     stock_reading(host, 3.0)  # 1-5 is the barrel's region, so this is a small gap
     owed_at = datetime.fromisoformat(ledger_of(host).owed()[0]["at"])
+    asked_at = owed_at + timedelta(seconds=800)
+    #  READ AT THE MOMENT BEING ASKED ABOUT. The window is 900s and the supplier trusts a
+    #  reading for 300s, so a fixture that seeds one level and then asks about a moment
+    #  thirteen minutes later is asking about a barrel the agent can no longer see — which is
+    #  maximally urgent for a reason that has nothing to do with ranking against a debt. The
+    #  real float switch reports every thirty seconds, so this is what the agent would hold.
+    _stamp_readings(host, asked_at)
 
-    desires = host.pursuing(now=owed_at + timedelta(seconds=800))
+    desires = host.pursuing(now=asked_at)
     assert desires, "an agent with a stake and a debt wants something"
     assert desires[0].is_duty, "a debt near its deadline outranks a barrel that is merely low"
     assert any(not g.is_duty for g in desires), "and the stake is still on the list, not replaced"
