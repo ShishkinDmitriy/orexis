@@ -140,18 +140,6 @@ class Module:
         """
         return False
 
-    def absorbs(self, row, desire) -> bool:
-        """Whether this step is the same impulse as one I took within my agent's patience.
-
-        Asked by execution BEFORE it commits, and only of the actors the means names. The
-        keeper absorbs a commitment that still STANDS; this is for the act whose commitment
-        does not outlive it — a dose is adopted and satisfied within milliseconds of the
-        command, so nothing ever stands to be absorbed, and without this the gardener pulsed
-        its pump on every second reading all night. Most actors answer False and let the
-        ledger's standing rule be the whole of the patience.
-        """
-        return False
-
     def desires(self, now: "datetime | None" = None) -> list["Desire"]:
         """What this module contributes to what the agent is pursuing. Empty by default.
 

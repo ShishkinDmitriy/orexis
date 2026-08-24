@@ -172,20 +172,21 @@ def test_the_gardener_derives_no_market_pair():
 
 # --- the 584-dose morning (patience reads the ledger; the butt is metered) --
 
-def test_a_satisfied_actuate_still_absorbs_the_next_impulse(gardener, monkeypatch):
+def test_a_dose_in_flight_absorbs_the_next_impulse(gardener, monkeypatch):
     """The flood, pinned: Actuate is adopted and satisfied within milliseconds, so the
     standing-only patience check absorbed nothing and the gardener pulsed its pump every
-    second reading, all night — 584 doses. Patience asks the LEDGER now, any outcome: a
-    recently satisfied impulse to do the same thing is the same impulse."""
+    second reading, all night — 584 doses. The intention is to the END now (#353): it stands
+    from the command until the watch is judged, and while it stands `adopt` absorbs the next
+    impulse by the ordinary rule — no hook, no second read of the ledger."""
     keeper = next(m for m in gardener.modules if m.name == "intention")
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
     assert len(gardener.sent.to("actuators/pump/command")) == 1
     monkeypatch.setattr(keeper, "open_expectations", lambda p: [])  # the watch out of the way
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
-        "the ledger remembers what the standing list forgot"
-    assert keeper.within_patience(
-        "http://example.org/orexis#Actuate", MOIST)
+        "the dose in flight is a commitment, and a commitment absorbs the same impulse"
+    assert keeper.standing(means="http://example.org/orexis#Actuate",
+                           observed_property=MOIST), "it STANDS until the world answers"
 
 
 def test_the_dose_is_capped_by_what_the_vessel_holds(gardener):

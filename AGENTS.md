@@ -131,7 +131,7 @@ record is worse than none, because it is still cited.
    which is what lets imports follow grants: a runtime imports only the packages its own
    capabilities name (#216). Adding one is adding a directory. Packages never
    import each other's Python: ask `agent.provider(family)` or contribute via
-   the choir hooks (`annotate`, `urgency`, `notices`, `series`, `quiet`, `absorbs`, `take`).
+   the choir hooks (`annotate`, `urgency`, `notices`, `series`, `quiet`, `take`).
 
    **`agent/` is the kernel that loads them, not their home.** Capability Python used to live
    under it, so the tree itself showed which of it a runtime loads — it does not show that now.
