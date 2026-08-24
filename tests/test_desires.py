@@ -36,7 +36,7 @@ def test_the_query_and_the_module_agree_with_the_diff(query_with_readings):
     one. A copy that dropped the sign handling would agree on one of them and not the other.
     """
     st, desires = _desires({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
-    diffs = gaps_of(desires_build(st, "fern").query_union, st.query, FERN)
+    diffs = gaps_of(desires_build(st, "fern").query_union, st.query, FERN, "fern")
 
     stakes = {g.observed_property: g for g in desires if not g.is_duty}
     assert set(stakes) == set(diffs), "the same wants, whichever text is run"
@@ -58,7 +58,8 @@ def test_a_want_nobody_has_read_is_the_hottest_goal_and_not_a_missing_one(monkey
     assert moisture.value is None
     assert moisture.urgency == 1.0
     assert desires[0] is moisture, "and it sorts to the top, where a deliberator will meet it"
-    assert gaps_of(desires_build(st, "fern").query_union, st.query, FERN).get(MOISTURE) is None, \
+    assert gaps_of(desires_build(st, "fern").query_union, st.query,
+                   FERN, "fern").get(MOISTURE) is None, \
         "while the diff still reports nothing, which is right for a diff"
 
 
@@ -109,6 +110,72 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them():
         "past the window there is nothing left to spend, however hot it reads"
 
 
+def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_a_rebuild():
+    """The finding a-desire-states-its-own-measure records, pinned from the ranking side.
+
+    The reflex steered toward the AIM while urgency was measured from the region's CENTRE, so
+    the two mechanisms pursued different targets whenever the pick sat off-centre. The desire's
+    declared measure reads the pick out of the belief base AT QUERY TIME — so moving the aim
+    moves the urgency with no desires rebuild, which is what a review's re-pick needs, and the
+    scaling stays asymmetric: the room below the aim is aim-to-floor, above it aim-to-ceiling,
+    so the same 0.10 out reads differently per side. Fern: region 0.45-0.65, survives 0.2-0.85.
+    """
+    from agent.ontology import beliefs_graph
+
+    st = genesis_store({("fern", MOISTURE): 0.55})
+    wants = desires_build(st, "fern")
+
+    def urgency():
+        desires = desires_of(wants.query_union, st.query, FERN, "fern")
+        return next(g for g in desires if g.observed_property == MOISTURE).urgency
+
+    assert urgency() == 0.0, "at the pick (0.55, which is also the centre) nothing is urgent"
+
+    #  The re-pick: the aim moves in the BELIEF BASE alone — the desires store is deliberately
+    #  not rebuilt, because the claim under test is that the measure asks, not that a rebuild
+    #  recompiles.
+    st.update(f"""DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim <https://schema.org/value> ?v }} }}
+                  INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim <https://schema.org/value> 0.65 }} }}
+                  WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
+                      <{FERN}> <http://example.org/orexis#aims> ?aim .
+                      ?aim <http://www.w3.org/ns/ssn/forProperty> <{MOISTURE}> ;
+                           <https://schema.org/value> ?v }} }}""")
+    #  0.55 against an aim of 0.65: distance 0.10, and the room on the LOW side is
+    #  aim - floor = 0.65 - 0.20 = 0.45. Met (inside the region) and still urgent — the
+    #  situation the old centre-anchored number could not express.
+    assert abs(urgency() - 0.10 / 0.45) < 1e-9, \
+        "the urgency must follow the pick the moment the pick moves"
+
+    #  And the other side scales by the other room: reading 0.75 sits ABOVE the 0.65 aim,
+    #  distance 0.10 again, but the room is ceiling - aim = 0.85 - 0.65 = 0.20 — the wet side
+    #  reads sharper than the dry one, which is the asymmetry the envelope exists to buy.
+    st.update(f"""DELETE {{ GRAPH <http://example.org/orexis/graph/sensed> {{ ?o <http://www.w3.org/ns/sosa/hasSimpleResult> ?v }} }}
+                  INSERT {{ GRAPH <http://example.org/orexis/graph/sensed> {{ ?o <http://www.w3.org/ns/sosa/hasSimpleResult> 0.75 }} }}
+                  WHERE  {{ GRAPH <http://example.org/orexis/graph/sensed> {{
+                      ?o <http://www.w3.org/ns/sosa/observedProperty> <{MOISTURE}> ;
+                         <http://www.w3.org/ns/sosa/hasSimpleResult> ?v }} }}""")
+    assert abs(urgency() - 0.10 / 0.20) < 1e-9, \
+        "the same distance out must read differently per side — asymmetric scaling survives"
+
+
+def test_the_measure_answers_one_for_a_world_with_no_reading():
+    """The COALESCE the engine's silent arithmetic demands, exercised through the measure
+    itself: asked of a world holding no observation, the answer is 1.0 and never unbound —
+    an unmeasured want must not read as no urgency, and this store binds NOTHING for
+    arithmetic over an unbound value rather than failing."""
+    from agent.measure import urgency_of
+    from agent.ontology import SENSED_GRAPH, beliefs_graph
+    from agent.regions import measures_of
+
+    st = genesis_store()                      # no readings seeded at all
+    wants = desires_build(st, "fern")
+    measure = measures_of(wants.query_union, FERN)[MOISTURE]
+    assert urgency_of(st.query, measure,
+                      subject="http://example.org/orexis/world/simulation#fern",
+                      observed_property=MOISTURE, sensed=SENSED_GRAPH,
+                      beliefs=beliefs_graph("fern")) == 1.0
+
+
 def test_this_store_still_will_not_divide_one_duration_by_another():
     """The measurement the Python fallback exists for, pinned so it cannot rot.
 
@@ -134,3 +201,27 @@ def test_this_store_still_will_not_divide_one_duration_by_another():
     assert answer("BIND((?e - ?at) * 0.5 AS ?r)") is None
     assert answer("BIND(?at + (?e - ?at) AS ?r)") is not None, "dateTime + duration works"
     assert answer("BIND((?e - ?at) > (?e - ?e) AS ?r)") is not None, "and durations compare"
+
+
+def test_this_store_will_not_divide_an_exact_zero_by_a_decimal():
+    """The measure's arithmetic, pinned the way the duration limit above is — found while
+    building it, not read anywhere.
+
+    pyoxigraph 0.5.9 divides decimals — `0.1 / 0.3` binds — and binds NOTHING for the same
+    expression with a ZERO dividend. No error, no missing row, an unbound column: an agent
+    sitting exactly at its aim would have read as maximally urgent through the measure's own
+    error-COALESCE, which is why the compiled query answers the zero-distance case with an IF
+    before any division. If the first assertion ever fails, the engine has been fixed and the
+    guard in `desires.ru` becomes belt-and-braces rather than load-bearing.
+    """
+    st = ox.Store()
+
+    def answer(bind):
+        rows = list(st.query("SELECT ?r WHERE { %s }" % bind))
+        return rows[0]["r"] if rows else None
+
+    assert answer("BIND(0.0 / 0.3 AS ?r)") is None, \
+        "a zero dividend now divides — the IF guard in the measure is no longer load-bearing"
+    assert answer("BIND(0.1 / 0.3 AS ?r)") is not None, "while a nonzero one always did"
+    assert answer("BIND(IF(0.0 <= 0, 0.0, 0.0 / 0.3) AS ?r)") is not None, \
+        "and the IF short-circuits, which is what makes the guard a guard"

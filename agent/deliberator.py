@@ -261,8 +261,14 @@ class Deliberator(Module):
         plan = Planner(self.agent, deducer, self.me).plan(desire)
         if plan.outcome == planner.NOTHING:
             return False, None               # nothing to simulate; let the reflex answer
-        if plan.outcome == planner.SATISFIED and not plan.steps:
-            return False, None               # already met; the reflex will also propose nothing
+        #  There USED to be a second deferral here: SATISFIED with no steps fell through to
+        #  the reflex, over a comment claiming "the reflex will also propose nothing". It
+        #  proposes plenty — the reflex steers toward the AIM, so a met desire off its pick
+        #  got a dose with no satisficing behind it, which defeated the deadband the search
+        #  provides: near the pick the dose sizes to ~0, the actor's refusal makes the effect
+        #  predict no change, and the candidate is pruned as somewhere already reached. A met
+        #  desire the search answered is now a DECISION (the fall-through below), not a
+        #  hand-off — unless the search was blind to part of the menu, which `partial` says.
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
                           desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
@@ -275,10 +281,13 @@ class Deliberator(Module):
         if plan.partial:
             return False, None
         #  A world reachable and not worth reaching. THIS is the decision the reflex could not
-        #  make, and returning None here is the whole point rather than a failure to answer.
-        self.log.info("%s: %s — no move improves on doing nothing",
-                      desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
-                      else "a duty", plan.outcome)
+        #  make, and returning None here is the whole point rather than a failure to answer —
+        #  a met desire quietly holding near its pick included, which is most passes and not
+        #  worth a log line; the unmet ones still say why nothing was done.
+        if plan.outcome != planner.SATISFIED:
+            self.log.info("%s: %s — no move improves on doing nothing",
+                          desire.observed_property.rsplit("#", 1)[-1]
+                          if desire.observed_property else "a duty", plan.outcome)
         return True, None
 
     def propose(self, observed_property: str, value: float | None) -> str | None:

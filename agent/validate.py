@@ -167,9 +167,17 @@ def _shapes_held_by(data: rdflib.Graph, agent_uri: str) -> rdflib.Graph:
     used for and does not actually give.
     """
     held = rdflib.Graph()
-    for shape in data.objects(rdflib.URIRef(agent_uri),
+    for thing in data.objects(rdflib.URIRef(agent_uri),
                               rdflib.URIRef("http://example.org/orexis#holds")):
-        held += data.cbd(shape)
+        held += data.cbd(thing)
+        #  A held DESIRE is a node carrying its shape (a-desire-states-its-own-measure), so
+        #  the met-test is one `ag:metWhen` hop further and a cbd of the desire alone would
+        #  hand pySHACL a graph with no actual shape in it — silently, which is how this
+        #  file has been wrong before. The desire's own cbd stays in too: pySHACL ignores a
+        #  node it does not recognise as a shape, and the measure text rides along unread.
+        for shape in data.objects(thing,
+                                  rdflib.URIRef("http://example.org/orexis#metWhen")):
+            held += data.cbd(shape)
     #  A graph carved out of another keeps its spellings. pySHACL renders the report through
     #  the shapes graph's namespaces, so without this the second pass printed
     #  `<http://example.org/orexis#ShouldBecome>` where the first printed `ag:ShouldBecome` —

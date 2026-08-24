@@ -30,8 +30,11 @@ MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
 ACTUATE = "http://example.org/orexis#Actuate"
 OBSERVE = "http://example.org/orexis#Observe"
-#  zz states 0.1–0.3, survives 0.02–0.45, and the gardener aims at the centre.
-WET, DRY, CONTENT = 0.42, 0.04, 0.20
+#  zz states 0.1–0.3, survives 0.02–0.45, and the gardener aims at 0.18 — dry-side of centre,
+#  deliberately (see knowledge/domain/aim.md), which is what makes this world the live case of
+#  the aim-vs-centre finding: the measure scores distance from 0.18, so CONTENT is comfortable
+#  and still carries a little urgency, and AT_PICK alone carries none.
+WET, DRY, CONTENT, AT_PICK = 0.42, 0.04, 0.20, 0.18
 
 
 def _gardener(monkeypatch, moisture):
@@ -80,6 +83,37 @@ def test_a_desire_already_met_plans_nothing(monkeypatch):
     _, plan, _ = _gardener(monkeypatch, CONTENT)
 
     assert plan.outcome == search.SATISFIED and plan.steps == ()
+
+
+def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(monkeypatch):
+    """The half a-desire-states-its-own-measure adds: a met desire with urgency still searches.
+
+    zz at 0.12 is INSIDE its region (0.1-0.3) and below the gardener's 0.18 pick, so the shape
+    is met and the measure is not zero — the situation the old root short-circuit collapsed:
+    it returned SATISFIED without searching, the deliberator deferred to the reflex over a
+    comment claiming the reflex would also propose nothing, and the reflex steered to the aim
+    unsatisficed. Now the SEARCH steers to the pick: a dose is proposed, sized and simulated,
+    and the outcome label stays SATISFIED because met is the shape's verdict, not the search's.
+
+    At the pick the deadband arrives from satisficing rather than from a tolerance anybody
+    chose: the dose sizes to ~0, the actor's litres<=EPS refusal makes the effect predict no
+    change, the candidate is pruned as the world already stood in — no move, as a DECISION the
+    deliberator answers (None) rather than a hand-off to the reflex.
+    """
+    agent, plan, desire = _gardener(monkeypatch, 0.12)
+    assert desire.state == "met" and desire.urgency > 0, \
+        "met and urgent must be expressible at once — that is what the measure bought"
+    assert plan.outcome == search.SATISFIED
+    assert [s.means for s in plan.steps] == [ACTUATE], \
+        "inside the region and off the pick, a dose is proposed"
+    assert plan.urgency_after < plan.urgency_now
+    assert agent.deliberator.propose_for(desire) == ACTUATE
+
+    at_pick, plan2, desire2 = _gardener(monkeypatch, AT_PICK)
+    assert desire2.urgency == 0.0
+    assert plan2.outcome == search.SATISFIED and plan2.steps == ()
+    assert at_pick.deliberator.propose_for(desire2) is None, \
+        "at the pick: no move, decided — not deferred to a reflex that might disagree"
 
 
 def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch):

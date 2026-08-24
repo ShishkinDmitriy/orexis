@@ -19,6 +19,7 @@ PREFIX sensing: <http://example.org/orexis/sensing#>
 PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX ag:   <http://example.org/orexis#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
@@ -49,15 +50,24 @@ PREFIX schema: <https://schema.org/>
 #  The horizon is READ, never recomputed: `stale_after_s` works it out from the rhythm in force
 #  and `publish_horizon` writes it into the instruments graph. A shape that recomputed it would
 #  be a second definition free to drift; one that baked it would be wrong within a tick.
+#  REIFIED like the region below (a-desire-states-its-own-measure): the desire is a node, and
+#  the met-test hangs off it as `ag:metWhen`. What this one does NOT carry is a measure — an
+#  epistemic want has no distance to scale (a boolean and an age, both already judged where the
+#  clock is), and routing freshness goals through the search is the seam the measure record
+#  leaves open. Its urgency stays the kernel's: 1.0 unmeasured or stale, 0.0 otherwise.
 INSERT { GRAPH $derived {
     $me ag:holds ?fresh .
-    ?fresh a sh:NodeShape ;
-        sh:targetNode $me ;
+    ?fresh a ag:Desire ;
         ssn:forProperty ?property ;
         #  BOTH, because a sensor is the reason this want exists and the subject is what it is
         #  about — and an agent may poll instruments pointed at things it does not act for.
         prov:wasDerivedFrom ?sensor , ?subject ;
         ag:violationIs ag:Stale ;
+        rdfs:label ?freshLabel ;
+        ag:metWhen ?freshMet .
+    ?freshMet a sh:NodeShape ;
+        sh:targetNode $me ;
+        ssn:forProperty ?property ;
         #  ON THE NODE SHAPE, and that is the opposite of where the declarative wants carry it.
         #  Measured on pySHACL 0.40.1, both ways round: a `sh:sparql` constraint's own
         #  `sh:severity` is IGNORED and the result comes back `sh:Violation`, while the node
@@ -93,6 +103,9 @@ WHERE  {
     #  shape of world does, and a name that collided would silently merge two wants into one.
     BIND(IRI(CONCAT("http://example.org/orexis#fresh.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?sensor), "#")))) AS ?fresh)
+    BIND(IRI(CONCAT(STR(?fresh), ".met")) AS ?freshMet)
+    BIND(CONCAT(?name, " read recently enough to be evidence about now, through ",
+                STRAFTER(STR(?sensor), "#")) AS ?freshLabel)
     BIND(CONCAT(?name, " was last read longer ago than ", ?who,
                 " trusts a reading of it — the number is no longer evidence about now")
          AS ?tooOld)
@@ -170,8 +183,31 @@ WHERE  {
 #  The severity sits on the PROPERTY shape rather than the node shape, because that is the one
 #  that produces the result — put it above and every unmet desire reports as a Violation, which
 #  would refuse to boot any agent whose pot is dry.
+#  REIFIED since a-desire-states-its-own-measure: the DESIRE is a node of its own, and the
+#  met-shape hangs off it (`ag:metWhen`) instead of being it. The shape's content is unchanged
+#  — what changed is that the desire now has room on it for two things a bare shape could not
+#  carry: a label a dashboard or the ask channel can print, and the MEASURE.
+#
+#  The measure is a SPARQL SELECT compiled here, one per desire, with the region's own numbers
+#  baked in — they are this deduction's conclusions, and a rebuild that moves them recompiles
+#  the text. What is NOT baked is the aim: the measure reads `ag:aims` out of $beliefs at query
+#  time, so a review that moves the pick moves the urgency with no rebuild, falling back to the
+#  region's centre only while no aim is picked. Distance is scaled by the survival room on the
+#  side the value sits — the asymmetry Region.urgency always had, kept deliberately: how bad it
+#  is to be 0.05 out depends on how much room there is in that direction, now anchored at the
+#  aim rather than at the geometric centre the centre was only ever standing in for.
+#
+#  COALESCE closes both silent-nothing traps by hand: an unmeasured property, and any
+#  arithmetic error, land on 1.0 — not knowing is maximal, as it is everywhere.
 INSERT { GRAPH $derived {
-    $me ag:holds ?bounds , ?envelope .
+    $me ag:holds ?desire , ?envelope .
+    ?desire a ag:Desire ;
+        ssn:forProperty ?property ;
+        prov:wasDerivedFrom ?subject ;
+        rdfs:label ?label ;
+        rdfs:comment ?describes ;
+        ag:metWhen ?bounds ;
+        ag:measuredBy [ sh:select ?measure ] .
     ?bounds a sh:NodeShape ;
         sh:targetNode $me ;
         ssn:forProperty ?property ;
@@ -275,10 +311,62 @@ WHERE  {
     #  After the subqueries, because a BIND sees only what its own group has bound so far —
     #  the scope rule plan.rq met the hard way (#206).
     $me ag:localId ?who .
+    BIND(IRI(CONCAT("http://example.org/orexis#desire.", ENCODE_FOR_URI(?who), ".",
+                    ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?desire)
     BIND(IRI(CONCAT("http://example.org/orexis#bounds.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?bounds)
     BIND(IRI(CONCAT("http://example.org/orexis#envelope.", ENCODE_FOR_URI(?who), ".",
                     ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?envelope)
+
+    #  The measure's own numbers. The centre is only the FALLBACK target — where an agent that
+    #  has picked nothing would aim — and the outer edges are the survival bounds where the
+    #  world states them, the region's own edges where it does not, exactly the degradation
+    #  Region.urgency always had.
+    BIND((?low + ?high) / 2 AS ?centre)
+    BIND(COALESCE(?floor, ?low) AS ?outerLow)
+    BIND(COALESCE(?ceiling, ?high) AS ?outerHigh)
+
+    #  The aim, if one is already picked — for the LABEL only. The measure never bakes it: it
+    #  reads $beliefs at query time, which is what lets a re-pick move the urgency between
+    #  rebuilds. The label is refreshed on rebuild, which every recorded re-pick triggers.
+    OPTIONAL { $me ag:aims ?aimed . ?aimed ssn:forProperty ?property ; schema:value ?picked }
+    BIND(CONCAT(?name, " inside ", STR(?low), "-", STR(?high),
+                COALESCE(CONCAT(", aiming ", STR(?picked)), ", no aim picked yet"))
+         AS ?label)
+    BIND(CONCAT(?who, " holds ", ?name, " of ", STRAFTER(STR(?subject), "#"),
+                " inside ", STR(?low), "-", STR(?high),
+                "; urgency is the distance from its aim (the centre, ", STR(?centre),
+                ", while none is picked), scaled by the survival room on that side")
+         AS ?describes)
+
+    #  The measure: one SELECT, one binding, ?urgency in 0..1. Full IRIs because the text is a
+    #  literal an engine other than ours may be handed. $sensed, $beliefs, $subject, $property
+    #  and $value are the evaluator's to substitute (agent/measure.py) — the same discipline an
+    #  effect rule's construct keeps — where $value is a caller-supplied number to judge, or
+    #  the live reading in $sensed when the caller supplies none. GRAPH names both private
+    #  graphs explicitly: a reading and an aim are exactly what an unqualified pattern must
+    #  never return, and the evaluator binds them to whichever world is being judged.
+    BIND(CONCAT(
+      "SELECT ?urgency WHERE { ",
+      "OPTIONAL { GRAPH $sensed { ",
+      "?obs <http://www.w3.org/ns/sosa/hasFeatureOfInterest> $subject ; ",
+      "<http://www.w3.org/ns/sosa/observedProperty> $property ; ",
+      "<http://www.w3.org/ns/sosa/hasSimpleResult> ?reading } } ",
+      "OPTIONAL { GRAPH $beliefs { $me <http://example.org/orexis#aims> ?aim . ",
+      "?aim <http://www.w3.org/ns/ssn/forProperty> $property ; ",
+      "<https://schema.org/value> ?picked } } ",
+      "BIND(COALESCE($value, ?reading) AS ?v) ",
+      "BIND(COALESCE(?picked, ", STR(?centre), ") AS ?target) ",
+      "BIND(IF(?v < ?target, ?target - ", STR(?outerLow), ", ",
+      STR(?outerHigh), " - ?target) AS ?room) ",
+      "BIND(IF(?v < ?target, ?target - ?v, ?v - ?target) AS ?distance) ",
+      #  ?distance <= 0 answers FIRST and without dividing, and that ordering is an engine
+      #  fact, not style: pyoxigraph 0.5.9 binds NOTHING for `0.0 / 0.3` — a zero dividend
+      #  fails decimal division that a nonzero one survives — so an agent exactly at its aim
+      #  would have read as maximally urgent through the COALESCE. Measured, and pinned in
+      #  tests/test_desires.py beside the duration limit it rhymes with.
+      "BIND(COALESCE(IF(?distance <= 0, 0.0, IF(?room <= 0, 1.0, ",
+      "IF(?distance / ?room < 1.0, ?distance / ?room, 1.0))), 1.0) AS ?urgency) }") AS ?measure)
 
     #  The messages, with the property and the numbers IN them. A shape is minted per (agent,
     #  property), so a message written here is already about one property and one region — no

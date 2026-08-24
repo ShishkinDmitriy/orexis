@@ -53,10 +53,19 @@ class Desire:
 
     #  What state the desire is in, in its own kind's vocabulary: `met`, `unmet` or `unmeasured`
     #  for a stake, `standing` or `demanded` for a duty. Carried rather than inferred from
-    #  urgency, and that distinction is not academic — urgency is 0 only exactly at a region's
-    #  centre, so "urgency > 0" counts a barrel sitting comfortably inside 1-5 as unmet. It
-    #  read that way on the bench for about ten minutes and made a calm society look stuck.
+    #  urgency, and that distinction is not academic — urgency is 0 only exactly at the point
+    #  being steered for, so "urgency > 0" counts a barrel sitting comfortably inside 1-5 as
+    #  unmet. It read that way on the bench for about ten minutes and made a calm society look
+    #  stuck. The split is now structural: the met-SHAPE governs the state and the MEASURE
+    #  governs the urgency, and they are different questions on the desire's own node.
     state: str | None = None
+
+    #  The measure the desire declares (`ag:measuredBy`, the SELECT text) — carried so the
+    #  planner can ask the SAME question of a candidate world that `desires_of` asked of the
+    #  belief base. None for a duty (its fraction-of-window stays Python's, because this
+    #  engine binds nothing for duration division — the pinned limit in tests/test_desires.py)
+    #  and for a freshness want (epistemic, no distance to scale).
+    measure: str | None = None
 
     @property
     def is_met(self) -> bool:
