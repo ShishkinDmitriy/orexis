@@ -98,16 +98,12 @@ def _occurrences() -> Counter[tuple[str, str]]:
 
 ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
 
-    # KIND 1 — reflex machinery. The direction a lever moves the property it is priced in, and
-    # the dealer's own lot, both read by the reflex path. These leave with the reflex's
-    # retirement, which is the next change after this one: #334's third bullet.
-    ("agent/deliberator.py", "market#Raises"): (
-        1, "reflex: the direction query's two answers, compared by identity"),
-    ("agent/deliberator.py", "market#Lowers"): (
-        1, "reflex: the other half of the same comparison"),
-    ("agent/deliberator.py", "market#offerQuantityL"): (
-        1, "reflex: the dealer's shop query reads a HOSTING belief by IRI, because a package "
-           "may not import the market's Python"),
+    # KIND 1 — reflex machinery, and it has already shrunk once. The deliberator's three
+    # entries — the direction query's two answers and the dealer's shop query — went with the
+    # reflex itself (#339), which is #334's third bullet arriving exactly as this list said it
+    # would. What survives is the KEEPER's copy of the direction, and it is not reflex leftovers:
+    # the verification arc writes the expected direction into the expectation row, so this pair
+    # outlives the deliberator that used to share it and leaves on some other change.
     ("agent/keeper.py", "market#Raises"): (
         1, "reflex: the keeper's copy of the direction, written into the expectation row"),
     ("agent/keeper.py", "market#Lowers"): (
