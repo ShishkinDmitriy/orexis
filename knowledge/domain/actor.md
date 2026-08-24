@@ -54,11 +54,6 @@ pending and otherwise stands ready to answer the next one; actuation sizes a dos
 current reading and commands it; hosting serves the presented claim. The *how* stays where it
 always was — `value_bid`, `dose_for`, `redeem` — and none of them moved.
 
-**A second hook, `absorbs(row, desire)`, is asked before anything is committed.** It exists
-for one actor: a dose is satisfied at the command, so its commitment never stands for the
-keeper to absorb, and the actuator answers from the ledger instead — the guard that closed
-the 584-dose morning, kept where the fact about the act lives.
-
 **False means "not now", never "no".** A bid with no round open, a dose with no fresh reading,
 a serve with no claim in hand: the actor declines, the intention stands, and the trigger that
 changes the answer — an offer, a reading, a presentation — runs execution again, which finds

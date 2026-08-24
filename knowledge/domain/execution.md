@@ -14,13 +14,12 @@ description: >-
 1. **Plan.** `deliberator.decide(desire)` — the search, unchanged, returning its
    [plan](/domain/deliberation.md) as rows. No steps means nothing to execute, and that None is
    the deliberator's decision, not this process's.
-2. **Commit.** First the actors the means names are asked `absorbs(row, desire)` — whether
-   this is an impulse they already answered within patience, which only an act that resolves
-   the instant it is commanded can say. Then the head row goes to the keeper:
-   `adopt(means, property, desire=…, via=lever)`. The [intention](/domain/intention.md)
-   written carries the lever the plan chose. If one already stands within patience, `adopt`
-   returns None and the process ends here — the same impulse, absorbed, and no row written
-   either way.
+2. **Commit.** The head row goes to the keeper: `adopt(means, property, desire=…, via=lever)`.
+   The [intention](/domain/intention.md) written carries the lever the plan chose. If one
+   already stands within patience, `adopt` returns None and the process ends here — the same
+   impulse, absorbed, and no row written. That is the whole of the patience, because every
+   means stands until the world answers
+   ([an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md)).
 3. **Take.** The means' `ag:takenBy` family is asked of the T-Box, `agent.providers(family)` of
    the runtime, and each [actor](/domain/actor.md) is handed the row. At least one True is the
    step taken; all False is logged and the intention stands for the next trigger.

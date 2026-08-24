@@ -61,18 +61,11 @@ def pursue(agent, desire) -> str | None:
     keeper = agent.keeper
     if keeper is None:
         return None
-    #  THE SAME IMPULSE, asked of the ACTORS before anything is written. `adopt` absorbs a
-    #  commitment that STANDS within patience, and that is the whole rule for a means whose
-    #  commitment outlives the act — an Acquire stands from bid to claim, and the round after
-    #  the claim is a new impulse the open expectation (#167) governs, not the patience. A
-    #  means that resolves the instant it is commanded never stands, and the actuator's guard
-    #  for it (the 584-dose morning) reads the ledger rather than the standing set. Which of
-    #  those an act is, is the actor's to say — so it is a hook, and asked here rather than
-    #  after adopting so an absorbed impulse writes no row at all.
-    family = taken_by(agent.beliefs.query, row.means)
-    if family is not None and any(actor.absorbs(row, desire)
-                                  for actor in agent.providers(family)):
-        return None
+    #  THE PATIENCE IS `adopt`'S, whole: a commitment that STANDS within patience absorbs the
+    #  impulse, and every means now stands until the world answers — an Acquire until its
+    #  claim, an Actuate until its watch is judged (#353). There used to be a hook here for
+    #  the one act that resolved at the command; making its intention stand to the END was
+    #  the BDI-shaped fix, and the hook went with it.
     uri = keeper.adopt(row.means, row.observed_property,
                        _because(plan, desire), desire=desire.uri, via=row.via)
     if uri is None:

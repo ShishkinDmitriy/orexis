@@ -519,6 +519,17 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             watch.observed_property.rsplit("#", 1)[-1], because)
         self._tell("end-met" if met else "end-unmet", watch.means,
                    watch.observed_property, because)
+        #  A COMMITMENT THAT STOOD UNTIL THE WORLD ANSWERED is done now, either way. An
+        #  Actuate stands from the command to this verdict (#353) — the intention is to the
+        #  END, and while it stands `adopt` absorbs the next impulse by the ordinary rule,
+        #  which is what the actuator's ledger-reading guard used to do by hand. Satisfied,
+        #  not dropped, whatever the verdict: the act was taken, and satisfied-and-unmet is
+        #  the false-knowledge signature this ledger exists to record. An Acquire was already
+        #  satisfied by its claim and this finds nothing standing.
+        for s in self.standing(means=watch.means, observed_property=watch.observed_property):
+            if s.uri == watch.uri:
+                self._resolve(s, "satisfied",
+                              f"the world answered — end {'met' if met else 'unmet'}")
         if not met and self._is_suspect(watch.means, watch.observed_property):
             self.log.warning(
                 "AFFORDANCE SUSPECT: %s toward %s has not paid %d times running — the graph "
@@ -613,37 +624,6 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
         return [Standing(uri=r["i"], means=r["means"], observed_property=r["property"],
                          adopted_at=datetime.fromisoformat(r["at"]), via=r.get("via"))
                 for r in rows]
-
-    def within_patience(self, means: str, observed_property: str,
-                        desire: str | None = None) -> bool:
-        """Whether a new impulse to do this is THE SAME impulse — the ledger answering.
-
-        The record's sentence — "within your patience, a second impulse to do the same thing
-        is the same impulse" — used to be implemented only for STANDING intentions, because
-        the first three means all span naturally: an Acquire stands from bid to claim. The
-        584-dose morning found the void: an instantly-resolving means (Actuate is adopted
-        and satisfied within milliseconds of commanding) never stands, so `adopt` refused
-        nothing and the gardener pulsed its pump every second reading, all night. So the
-        question is asked of the LEDGER, any outcome: the newest same-means same-property
-        intention, standing or resolved, younger than my patience, absorbs the impulse.
-        """
-        #  NARROWED BY THE DESIRE exactly as `standing` is, and for the same reason: two
-        #  duties about one property are two impulses, and a serve for fern must not be
-        #  absorbed as the same impulse as a serve for tomato. Rows naming no desire still
-        #  count, so a ledger written before desires had names keeps absorbing.
-        narrow = (f'OPTIONAL {{ ?i <{kernel("pursues")}> ?desire }} '
-                  f'FILTER(!BOUND(?desire) || ?desire = <{desire}>)') if desire else ""
-        latest = bindings(self.agent.intentions.query(
-            "SELECT ?at WHERE { GRAPH <%s> { ?i a <%s> ; <%s> <%s> ; "
-            "<http://www.w3.org/ns/ssn/forProperty> <%s> ; <%s> ?at . %s } } "
-            "ORDER BY DESC(?at) LIMIT 1"
-            % (self.graph, kernel("Intention"), kernel("by"), means,
-               observed_property, kernel("adoptedAt"), narrow)))
-        if not latest:
-            return False
-        age = (datetime.now(timezone.utc)
-               - datetime.fromisoformat(latest[0]["at"])).total_seconds()
-        return age <= self.beliefs.patience_s
 
     def reports(self) -> dict:
         """How many commitments stand, and how old the oldest is.

@@ -80,11 +80,11 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
 - **The patience, and who answers it.** `adopt` still absorbs a commitment that STANDS within
   patience, and that is the whole rule for a means whose commitment outlives the act — an
   Acquire stands from bid to claim, and the round after the claim is a new impulse the open
-  expectation (#167) governs. The actuator's guard for the act that resolves at the command
-  (the 584-dose morning) asked the ledger, and it still does, as the actor's own answer to a
-  hook execution asks BEFORE committing: `absorbs(row, desire)`. Generalising that guard to
-  every means was tried first and refused by `test_expectation` — a plant whose dose the world
-  had answered would not have bought in the very next round.
+  expectation (#167) governs. The actuator's guard for the act that resolved at the command
+  (the 584-dose morning) was kept at first as an `absorbs` hook asked before committing;
+  generalising it to every means was refused by `test_expectation`, and the hook itself was
+  retired when the Actuate intention was made to stand until its verdict — see
+  [an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md).
 
 # Seams left open
 

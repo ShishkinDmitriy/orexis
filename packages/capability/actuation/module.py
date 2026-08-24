@@ -155,18 +155,6 @@ class ActuationModule(Module):
 
         execution.pursue_about(self.agent, observed_property)
 
-    def absorbs(self, row, desire) -> bool:
-        """A dose within patience is the same impulse — asked of the LEDGER, any outcome.
-
-        Actuate is satisfied at the command, so it never stands and `adopt` would absorb
-        nothing: the 584-dose morning. `within_patience` reads the newest Actuate row for this
-        property, standing or resolved, which is the guard that closed it — kept here because
-        which acts resolve instantly is a fact about the act, not about the kernel.
-        """
-        keeper = self.agent.keeper
-        return (row.means == _ACTUATE and keeper is not None
-                and keeper.within_patience(_ACTUATE, row.observed_property))
-
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed self-dose: size it from the reading in hand and command it.
 
@@ -200,15 +188,24 @@ class ActuationModule(Module):
                                 amount_l=litres, debit=0.0,
                                 auction_id=f"self-{jti[:8]}", jti=jti))
         if keeper is not None:
-            for u in keeper.satisfy(_ACTUATE, observed_property,
-                                    f"the dose is commanded — {cmd.ml:.0f} ml on its way"):
-                keeper.expect(u, observed_property,
-                              f"self-dosed {litres}L — the graph says this raises what I "
-                              f"am short of, so show me",
-                              expected_delta=self._expected_delta(observed_property, litres, value),
-                              lands_after_s=effects.lands_after(
-                                  self.agent.beliefs, _ACTUATE, me=f"<{self.me.uri}>",
-                                  subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
+            #  THE INTENTION STANDS until the world answers (#353). It is to the END — a wetter
+            #  pot — not to the command, so the watch opens on the standing row and the keeper
+            #  resolves it at the verdict. While it stands, `adopt` absorbs the next impulse by
+            #  the ordinary rule, which is the 584-dose guard with no hook and no second read
+            #  of the ledger. A watch that cannot open (no baseline, no direction) is resolved
+            #  at once: a row that could never be judged must not stand for ever.
+            opened = keeper.expect(
+                intention, observed_property,
+                f"self-dosed {litres}L ({cmd.ml:.0f} ml commanded) — the graph says this "
+                f"raises what I am short of, so show me",
+                expected_delta=self._expected_delta(observed_property, litres, value),
+                lands_after_s=effects.lands_after(
+                    self.agent.beliefs, _ACTUATE, me=f"<{self.me.uri}>",
+                    subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
+            if not opened:
+                keeper.satisfy(_ACTUATE, observed_property,
+                               f"the dose is commanded — {cmd.ml:.0f} ml on its way, and no "
+                               f"watch could be opened on the end")
         return True
 
     def dose_for(self, observed_property: str, value: float) -> float | None:

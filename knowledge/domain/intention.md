@@ -8,10 +8,10 @@ description: >-
   writes it was a grant. A commitment to reduce a named gap by a named means, persisting until
   satisfied, dropped or outwaited rather than being re-decided on every sensing. Kept in a
   private ledger with an adoption, a resolution and a reason; the patience that absorbs repeat
-  impulses is each agent's own belief — and it asks the LEDGER, any outcome, not only what
-  stands: an instantly-resolving means (Actuate is satisfied at the command) never stands, and
-  the standing-only check let a gardener pulse its pump 584 times in a night before the
-  ledger-read closed the void. Since #131 the MEANS and the END are judged apart: an acquire's
+  impulses is each agent's own belief, and it is the STANDING rule alone — every means stands
+  until the world answers, an Actuate from the command to its verdict (#353), where a dose
+  satisfied at the command once stood for nothing and a gardener pulsed its pump 584 times in
+  a night. Since #131 the MEANS and the END are judged apart: an acquire's
   claim opens a watch — baseline copied into the row, promised direction from the domain,
   deadline from the patience — and the verdict lands beside the outcome, so
   satisfied-and-unmet is recordable, the false-knowledge signature. An open watch is maximum
@@ -50,7 +50,7 @@ standing intention is what makes one affordable: committed means not re-consulte
 | `ag:Acquire` | bid for what would reduce a gap | the first bid flies | the claim arrives |
 | `ag:Apply` | spend a held claim against the world | the claim arrives — holding IS the intention | the claim is presented on the redeem channel (watch live, or the bounded wait) |
 | `ag:Offer` | open a round owed on a hosted venue (#206) | a LOW arrives at a dry vessel — the deferral IS the debt | the refill lands and the round opens; recovered from the ledger if the process that owed it died |
-| `ag:Actuate` | move it myself — lever and resource both mine (#190) | the search finds this rung reaches a better world than buying | the self-dose is commanded (co-signed, confirmed like any dose); the expectation carries the end |
+| `ag:Actuate` | move it myself — lever and resource both mine (#190) | the search finds this rung reaches a better world than buying | the watch on the end is judged — met or unmet — the row standing from the command until then (#353); the dose itself co-signed and confirmed like any other |
 
 `Observe` is first for a structural reason: at birth there is a desired state and an empty
 sensed graph, so the first intention is always to look — see
@@ -139,7 +139,7 @@ records.
   standing intention absorbs is re-adoption, not the acts. Its consumers are the health series
   (`intentions_standing`, `oldest_intention_s` — a commitment growing old is an agent whose
   world stopped answering, invisible in every other series precisely because nothing is
-  happening), the operator reading why an agent did what it did — since #125 without SPARQL:
+  happening; a dose in flight counts here since #353, as it should — it IS a commitment), the operator reading why an agent did what it did — since #125 without SPARQL:
   every transition is projected with its `becauseOf` prose into the agent's own bucket and
   drawn as a Grafana annotation over the health series, see
   [agent-metrics](/domain/agent-metrics.md) — and, the one it was built for, a
