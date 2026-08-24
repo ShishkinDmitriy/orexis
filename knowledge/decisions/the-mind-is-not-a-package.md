@@ -99,19 +99,11 @@ the fact underneath outlives it.
 A capability scoped its shapes; with no capability, `ag:KeeperShape` and the desire shapes target
 the **stake alone** — `ag:actsFor` a subject that states what it needs.
 
-The old premises were a stake AND a lever, and **the lever half could not follow**.
-
-**AMENDED — the conclusion holds and this paragraph's reason for it was wrong.** It said that
-saying the lever half would make the kernel name `market:bidsIn`, `actuation:hasActuator` and
-`sensing:polls`, three packages it must not depend on. `agent/shapes.ttl` already targets an
-actuation predicate and joins through two sensing ones, and that is legitimate: a package term
-in a shape's target is a selector, and removing the package empties the target set and the
-population it was checking together. What actually forbids the lever half is that the three
-predicates are an OPEN set — a fourth lever package added without an edit here would silently
-drop its agents out of the requirement, which is an obligation removed rather than a population.
-See [a-borrowed-word-must-fail-loudly](a-borrowed-word-must-fail-loudly.md), which measures all
-nine of the kernel's RDF borrowings. A [lever](/domain/lever.md) is an instance besides: the
-`via` of a menu row derived from each package's own `affordances.rq`, with no term to target on.
+The old premises were a stake AND a lever, and **the lever half could not follow**. Saying it
+requires the kernel to name `market:bidsIn`, `actuation:hasActuator` and `sensing:polls` — three
+packages the kernel would then depend on, which is the layering this whole record exists to keep
+one-way. A [lever](/domain/lever.md) is an instance anyway: the `via` of a menu row derived from
+each package's own `affordances.rq`, with no term to target on.
 
 Cost, stated: an agent with a stake and no lever would now state a patience it never spends. No
 world has one.

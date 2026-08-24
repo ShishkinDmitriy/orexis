@@ -21,9 +21,10 @@ and `*.ttl` — because the objection is about what the kernel SAYS, and the ker
 what it says in RDF. Widening it was not free: it found nine more references, in the kernel's
 shapes, its ontology's prefix block and the desire derivation, which none of the issue's three
 kinds describe. They sat on the list marked unclassified until #337 ruled on them; they are
-kind 4 below, five permitted and four debt, and the rule is
-`knowledge/decisions/a-borrowed-word-must-fail-loudly.md`. Read it before adding an entry: it
-turns on which POSITION a borrowed term occupies, which is not something this scan can see.
+kind 4 below, all nine of them debt like everything else here, ordered by how dangerous each one
+is. The rule is `knowledge/decisions/the-kernel-names-no-package-word.md`, and it has no
+exceptions: the kernel names no package's word, in RDF as in Python, because a package is
+optional and the core depends on none of them.
 
 WHAT IS NOT IN SCOPE, said plainly so a green run is not read as more than it is: the SPELLED-OUT
 IRI, and only that. A kernel query saying `market:bidsIn` with the prefix declared for it is
@@ -33,11 +34,13 @@ surface and a different argument, so this guard does not quietly start making it
 spelled-out form has that the prefixed one does not is silence on the way out: a prefixed name is
 at least text a rename can grep for, while an interpolated IRI goes on matching nothing.
 
-That exclusion still holds, and #337 sharpened why rather than overturning it: counting is the
-wrong instrument for the prefixed form. `agent/readings.rq:23` reads `sensing:staleAfterS`
-prefixed, which is zero occurrences here and the same dependency as the spelled-out one two files
-away — so what the prefixed form needs is a check that the term still RESOLVES against the
-package that declares it, not a bigger number. That is #344, and it is a separate guard.
+That exclusion still holds, and #337 sharpened it rather than overturning it. The rule now covers
+the prefixed form too — it covers every form — but this guard is a COUNT, and a count is the wrong
+instrument for a term that is merely misspelled. `agent/readings.rq:23` reads `sensing:staleAfterS`
+prefixed: zero occurrences here, and the same dependency as the spelled-out one two files away. So
+what the prefixed form needs first is a check that the term still RESOLVES against the package
+declaring it (#344), and widening this scan to `agent/world.py`'s market vocabulary stays the
+larger, later argument.
 
 The trees are asked of `loader.sources()` rather than globbed, for the reason that function
 exists: a glob is a layout, and layouts move. Each kind is asserted non-empty below.
@@ -146,76 +149,90 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # kinds are all Python and none of them covers these, so they sat here marked UNCLASSIFIED
     # until #337 settled what rule the project actually holds:
     #
-    #   knowledge/decisions/a-borrowed-word-must-fail-loudly.md
+    #     knowledge/decisions/the-kernel-names-no-package-word.md
     #
-    # A WORD THE KERNEL BORROWS MUST FAIL LOUDLY. The kernel may name a term another package
-    # declares exactly where losing that package makes the kernel say MORE — refuse more, warn
-    # more, target more — and never where it makes the kernel say less, because less is
-    # indistinguishable from well. Which of those you have depends on the POSITION the term
-    # sits in, not on the file kind, and the record measures all nine on pySHACL: a selector, a
-    # widener and two excuses go the loud way, three prefix lines do nothing at all, and one
-    # makes a want read as met for ever.
+    # THE KERNEL NAMES NO PACKAGE'S WORD. Not in Python, where `lint-imports` has held it since
+    # the mind came home, and not in RDF, where nothing held it at all. A package is optional and
+    # the core depends on none of them, and that claim does not survive being true of imports and
+    # negotiable for vocabulary. So every entry below is debt, exactly like kinds 1-3, and this
+    # list is the tolerated relaxation rather than a set of permissions: it must reach zero, and
+    # #334's last bullet — the ratchet flipping to a prohibition — is unchanged.
     #
-    # So the entries below split two ways, and neither says UNCLASSIFIED any more. PERMITTED
-    # ones have no "what removes it" because nothing removes them — which is the reason #345
-    # exists: #334's plan for this list to EMPTY is no longer reachable, and a list that mixes
-    # permanent leave with debt cannot answer how much is left. What is NOT decided here is the
-    # scan's shape: the ratchet still counts `@prefix actuation:` as one reference and the
-    # `actuation:actuates` on shapes.ttl:78 that justifies it as none, so the count and the
-    # dependency stay different objects on purpose (#344 is the guard for the other form).
+    # THAT RULING OVERTURNED A LOOSER ONE, which is worth knowing because the looser one is the
+    # first thing a reader re-derives. It permitted a borrowing whose absence fails LOUDLY — a
+    # shape that starts refusing more, a warning that starts firing — on the reasoning that only
+    # a SILENT loss is a real dependency. The measurements behind it stand and are in the record.
+    # The permission does not: optionality is the claim the architecture rests on, and a claim
+    # with a carve-out cannot carry it.
+    #
+    # What survived the demotion is the ORDER. The loudness analysis no longer licenses anything;
+    # it says which of these is dangerous and which is merely untidy, so the entries are grouped
+    # first-to-go rather than by file. Measured on pySHACL 0.40.1 with the sensing predicates
+    # renamed into a namespace nothing declares, which is what a removed package looks like to a
+    # shape.
 
-    # PERMITTED — a selector. Removing the actuation package empties the target set of
-    # `ag:SimulatedActuatorShape` and removes every simulated actuator it was checking, in the
-    # same moment. A vacuous check whose subject matter is gone too is not a loosened check.
-    ("agent/shapes.ttl", "actuation#"): (
-        1, "permitted (selector): prefix declaration, used by the shape targeting "
-           "actuation:actuates — its loss empties the target set and the population together"),
-
-    # PERMITTED, and the two occurrences are permitted by different halves of the rule. Both
-    # measured with the sensing predicates renamed into a namespace nothing declares:
-    #   l.108, a WIDENER inside DeviceModelShape's OPTIONAL — without it COALESCE falls back to
-    #     1.0, the ceiling drops, and an initial value of 45.0 that conformed now VIOLATES;
-    #   l.376, an EXCUSE inside FILTER NOT EXISTS — without it the "no sensor for this desire"
-    #     warning fires for every region instead of none.
-    ("agent/shapes.ttl", "sensing#monitors"): (
-        2, "permitted (widener, excuse): a model's initial value is checked against the subject "
-           "it monitors, and a desire warns when no sensor watches the subject — losing either "
-           "makes validation stricter and noisier, never quieter"),
-    ("agent/shapes.ttl", "sensing#polls"): (
-        1, "permitted (excuse): the same desire warning, the agent's half of the join — its "
-           "loss fires the warning rather than suppressing it"),
-
-    # PERMITTED — a selector. `sensing:` is the one prefix `agent/desires.ru` really uses
-    # (ll. 98, 99, 286, 299), all of them in the rule's WHERE: no sensing package, no sensor to
-    # poll, so the freshness want has nothing to be about and correctly is not derived.
-    ("agent/desires.ru", "sensing#"): (
-        1, "permitted (selector): PREFIX line serving the freshness want's premise and the "
-           "region intersection"),
-
-    # DEBT — SPELLING. Three prefix declarations that no triple in their own file uses:
-    # `market:` and `actuation:` are named by no pattern in desires.ru, and the kernel ontology
-    # writes `sensing:` only in a `#` comment and inside an rdfs:comment string. Dead text is
-    # not free here — it makes the kernel look dependent on vocabulary it never touches, and
-    # the ratchet counts it. Removed by #343, which deletes the three lines and these entries.
-    ("agent/ontology.ttl", "sensing#"): (
-        1, "debt (spelling, #343): prefix declaration; the kernel ontology uses sensing: in "
-           "prose only, so no triple needs it"),
-    ("agent/desires.ru", "market#"): (
-        1, "debt (spelling, #343): PREFIX line of the desire derivation, used by no pattern in "
-           "the file"),
-    ("agent/desires.ru", "actuation#"): (
-        1, "debt (spelling, #343): PREFIX line of the same rule, likewise unused"),
-
-    # DEBT, and the only real one of the nine. The freshness want's met-test names the horizon
-    # in a REQUIRED triple pattern, so the term is the JUDGE: measured on pySHACL 0.40.1 against
-    # one stale observation, spelling it right yields a violation (the want is unmet) and
-    # spelling it wrong yields conformance — the want reads MET, for ever, with nothing red.
-    # `agent/readings.rq:23` reads the same term prefixed, where this scan cannot see it.
-    # Removed by #342.
+    # 1 — THE JUDGE, and the only one of the nine that fails silently. The freshness want's
+    # met-test names the horizon in a REQUIRED triple pattern, so the term decides pass or fail:
+    # spelled right, one stale observation yields a violation (the want is unmet); spelled wrong,
+    # the query returns no rows and pySHACL reports conformance — the want reads MET, for ever,
+    # with nothing red anywhere. `agent/readings.rq:23` reads the same term prefixed, where this
+    # scan cannot see it. Removed by #342.
     ("agent/desires.ru", "sensing#staleAfterS"): (
-        1, "debt (judge, #342): the freshness want builds its constraint as a STRING, so the "
-           "horizon term is spelled out where no prefix reaches — and if it stops resolving the "
-           "query returns no rows, which pySHACL reports as MET"),
+        1, "debt, FIRST (judge, #342): the freshness want builds its constraint as a STRING, so "
+           "the horizon term is spelled out where no prefix reaches — and if it stops resolving "
+           "the query returns no rows, which pySHACL reports as MET"),
+
+    # 2 and 3 — SPELLINGS: prefix declarations that no triple in their own file uses. `market:`
+    # and `actuation:` are named by no pattern in desires.ru (only `sensing:` is, at ll. 98, 99,
+    # 286, 299), and the kernel ontology writes `sensing:` only in a `#` comment and inside an
+    # rdfs:comment string. Nothing depends on them, so they are the cheapest rows here: delete
+    # the line and nothing else moves. Removed by #343.
+    ("agent/desires.ru", "market#"): (
+        1, "debt, cheap (spelling, #343): PREFIX line of the desire derivation, used by no "
+           "pattern in the file"),
+    ("agent/desires.ru", "actuation#"): (
+        1, "debt, cheap (spelling, #343): PREFIX line of the same rule, likewise unused"),
+    ("agent/ontology.ttl", "sensing#"): (
+        1, "debt, cheap (spelling, #343): prefix declaration; the kernel ontology uses sensing: "
+           "in prose only, so no triple needs it"),
+
+    # 4 — a SELECTOR, and the one the kernel cannot drop without somewhere for the knowledge to
+    # go. `sensing:` is the prefix desires.ru actually uses, all of it in the rule's WHERE: no
+    # sensing package, no sensor to poll, so the freshness want is simply not derived. Loud in
+    # the sense that nothing false is concluded — and still debt, because the mind's own
+    # derivation should not be reaching into a capability's vocabulary to find its premise.
+    ("agent/desires.ru", "sensing#"): (
+        1, "debt, later (selector): PREFIX line serving the freshness want's premise and the "
+           "region intersection — wants the premise to arrive some way that is not sensing's "
+           "own predicate"),
+
+    # 5 and 6 — the shapes. Both measured, both loud, both still debt:
+    #   l.108, a WIDENER inside DeviceModelShape's OPTIONAL — without it COALESCE falls back to
+    #     1.0, the ceiling drops, and an initial value of 45.0 that conformed now VIOLATES. It
+    #     wants a kernel-owned way to say "the range this thing is measured against";
+    #   ll.375-376, an EXCUSE inside FILTER NOT EXISTS — without it the "no sensor for this
+    #     desire" warning fires for every region instead of none. The warning is arguably
+    #     sensing's to raise rather than the kernel's.
+    ("agent/shapes.ttl", "sensing#monitors"): (
+        2, "debt, later (widener at l.108, excuse at l.376): a model's initial value is checked "
+           "against the subject it monitors, and a desire warns when no sensor watches the "
+           "subject — losing either makes validation stricter and noisier, never quieter"),
+    ("agent/shapes.ttl", "sensing#polls"): (
+        1, "debt, later (excuse): the desire warning's agent half — its loss fires the warning "
+           "rather than suppressing it"),
+
+    # 7 — a SELECTOR, and the one waiting on a package that does not exist. Removing actuation
+    # empties `ag:SimulatedActuatorShape`'s target set and removes every simulated actuator it
+    # was checking, together — so nothing false is concluded, and it is still the kernel holding
+    # a word it did not declare. What it really wants is the simulation package that
+    # every-term-in-its-own-house says has not been written. NOTE THE TRAP for whoever pays this
+    # one down: re-targeting `sosa:Actuator` would turn this scan green while changing nothing,
+    # because a world types its valve as `actuation:Valve` and reaches `sosa:Actuator` only
+    # through the subclass axiom actuation's own ontology declares.
+    ("agent/shapes.ttl", "actuation#"): (
+        1, "debt, later (selector): prefix declaration, used by the shape targeting "
+           "actuation:actuates — its loss empties the target set and the population together, "
+           "and the knowledge wants a simulation package to live in"),
 }
 
 
