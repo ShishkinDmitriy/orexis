@@ -42,7 +42,8 @@ from pathlib import Path
 
 from . import loader
 from .config import REPO_ROOT
-from .ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, EFFECTS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
+from .ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, EFFECTS_GRAPH,
+                       MEASURES_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
                        ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                        WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 
@@ -123,6 +124,12 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
     effect_files = " , ".join(f"<{file_iri(p)}>" for p in loader.effect_files())
     lines.append(f"<{EFFECTS_GRAPH}> a prov:Entity"
                  + (f" ; prov:wasDerivedFrom {effect_files} ." if effect_files else " ."))
+    #  The measures, by the same argument one comment up: how each kind of want is scored is
+    #  asserted from the packages' measures.ttl, and the graph accounts for itself the same
+    #  way — empty and honest about its source where no package states one.
+    measure_files = " , ".join(f"<{file_iri(p)}>" for p in loader.measure_files())
+    lines.append(f"<{MEASURES_GRAPH}> a prov:Entity"
+                 + (f" ; prov:wasDerivedFrom {measure_files} ." if measure_files else " ."))
     if world_files_:
         lines.append(f"<{WORLD_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
         #  The asserted-desire graph is fed by the same ratified files — a world's TriG block

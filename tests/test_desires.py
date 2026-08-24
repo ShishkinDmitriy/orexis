@@ -165,15 +165,58 @@ def test_the_measure_answers_one_for_a_world_with_no_reading():
     arithmetic over an unbound value rather than failing."""
     from agent.measure import urgency_of
     from agent.ontology import SENSED_GRAPH, beliefs_graph
-    from agent.regions import measures_of
+    from agent.regions import measures_of, regions_of
 
     st = genesis_store()                      # no readings seeded at all
     wants = desires_build(st, "fern")
-    measure = measures_of(wants.query_union, FERN)[MOISTURE]
-    assert urgency_of(st.query, measure,
+    measure = measures_of(wants.query_union, st.query, FERN)[MOISTURE]
+    assert urgency_of(st.query, measure, me=FERN,
                       subject="http://example.org/orexis/world/simulation#fern",
                       observed_property=MOISTURE, sensed=SENSED_GRAPH,
-                      beliefs=beliefs_graph("fern")) == 1.0
+                      beliefs=beliefs_graph("fern"),
+                      region=regions_of(wants.query_union, FERN)[MOISTURE]) == 1.0
+
+
+def test_a_want_whose_kind_nothing_measures_scores_a_logged_one():
+    """The defined fallback, pinned: a desire whose KIND no loaded package measures reads
+    urgency 1.0 — not knowing how bad is maximal, consistent with `urgency(None)` — rather
+    than quietly reviving a Python arithmetic beside the declared one. Constructed by
+    emptying the measures graph, the way the partial-plan test removes Acquire's effect
+    rule: the shipped worlds never hit this, and a sibling test holds THAT."""
+    from agent.ontology import MEASURES_GRAPH
+
+    st = genesis_store({("fern", MOISTURE): 0.55})
+    st.update("DELETE WHERE { GRAPH <%s> { ?s ?p ?o } }" % MEASURES_GRAPH)
+    _, desires = (st, desires_of(desires_build(st, "fern").query_union, st.query,
+                                 FERN, "fern"))
+    moisture = next(g for g in desires if g.observed_property == MOISTURE)
+    assert moisture.urgency == 1.0, "unmeasurable must never read as content"
+    assert moisture.state == "met", \
+        "while the met-verdict stays the shape's — the two are different questions"
+    assert moisture.measure is None
+
+
+def test_every_shipped_stake_resolves_a_declared_measure():
+    """The fallback above must be a case no ratified world hits — every desiring agent in the
+    shipped worlds holds stakes in properties whose kind sensing's `measures.ttl` measures,
+    because every stake property is a `sosa:ObservableProperty`. If this fails, a world has
+    grown a want the loaded packages cannot weigh, and that is a genesis conversation rather
+    than a silent 1.0."""
+    from agent.regions import measures_of, regions_of
+    from agent.store import bindings
+
+    checked = 0
+    for world in ("simulation", "loner"):
+        st = genesis_store(world=world)
+        for row in bindings(st.query(
+                'SELECT ?a ?id WHERE { ?a a ag:Agent ; ag:localId ?id }')):
+            wants = desires_build(st, row["id"])
+            regions = regions_of(wants.query_union, row["a"])
+            measures = measures_of(wants.query_union, st.query, row["a"])
+            assert set(regions) == set(measures), \
+                f'{row["id"]} in {world}: a stake with no declared measure'
+            checked += len(regions)
+    assert checked >= 3, "the walk went quiet — no stakes were checked at all"
 
 
 def test_this_store_still_will_not_divide_one_duration_by_another():

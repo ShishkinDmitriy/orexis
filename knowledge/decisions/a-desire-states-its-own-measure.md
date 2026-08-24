@@ -6,11 +6,13 @@ description: >-
   AIM while the planner scored worlds from the region's geometric CENTRE, so they pursued
   different targets whenever the pick sat off-centre, and the shipped loner world sat exactly
   there. Closed by reifying the desire into a node that carries its met-shape (unchanged in
-  content), a declared urgency measure as SPARQL run by our own Python against whichever world
-  is being judged, and a label. The measure reads the aim at query time; the planner no longer
-  short-circuits a met desire; steering toward the pick comes out of satisficing with a
-  natural deadband. The prerequisite for retiring the reflex, which this change deliberately
-  does not touch.
+  content) and a label, with a declared urgency measure as SPARQL run by the kernel's
+  evaluator against whichever world is being judged. On the sovereign's ruling the measure's
+  CONTENT is a capability's, not the kernel's — the core is BDI, so the mind carries the slot
+  and sensing declares the observation-backed measure per KIND, the effects mechanic applied
+  to desire. The measure reads the aim at query time; the planner no longer short-circuits a
+  met desire; steering toward the pick comes out of satisficing with a natural deadband. The
+  prerequisite for retiring the reflex, which this change deliberately does not touch.
 status: accepted
 timestamp: 2026-08-24T12:00:00Z
 ---
@@ -50,33 +52,62 @@ A desire had no node — it WAS a `sh:NodeShape` the agent `ag:holds`
 ([a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md), now superseded in this one part).
 A shape can say when a want is met and nothing else; conformance is boolean while a want has
 distance. So the desire is reified: `ag:Desire` in the kernel's vocabulary, minted by the same
-derivation (`agent/desires.ru`), carrying three things.
+derivation (`agent/desires.ru`), carrying the met-test and a name — and pointing, through its
+KIND, at a measure the kernel never authors.
 
 - **`ag:metWhen`** — the SHACL node shape that is the met-test. Its CONTENT is unchanged from
   when the desire was it; what changed is that it hangs off the desire node rather than being
   it. It governs the outcome LABEL and a duty's discharge, never how hard to try.
-- **`ag:measuredBy`** — a node carrying `sh:select`, SHACL-AF's word for a SPARQL SELECT held
-  as a literal in the graph, the same mechanic a means' effect rule uses for `sh:construct`.
-  Our own Python runs it (`agent/measure.py`), the way `agent/effects.py` runs a construct;
-  pySHACL is never asked to. The contract: one binding, `?urgency`, in 0..1, parameterised by
-  substitution like an effect rule (`$subject`, `$property`, `$sensed`, `$beliefs`, `$value`)
-  and evaluated AGAINST A WORLD — the belief base for the live number, or a candidate possible
-  world inside the planner. One measure, asked of whichever world is being judged.
 - **`rdfs:label` and `rdfs:comment`** — authored by the derivation ("SoilMoisture inside
   0.45-0.65, aiming 0.55"), for dashboards and the sovereign's ask channel, refreshed on every
   rebuild, which every recorded re-pick triggers.
+- **The measure** — a node carrying `sh:select`, SHACL-AF's word for a SPARQL SELECT held as
+  a literal in the graph, the same mechanic a means' effect rule uses for `sh:construct`.
+  Our own Python runs it (`agent/measure.py`), the way `agent/effects.py` runs a construct;
+  pySHACL is never asked to. The contract: one binding, `?urgency`, in 0..1, parameterised by
+  substitution like an effect rule (`$me`, `$subject`, `$property`, `$sensed`, `$beliefs`,
+  `$value`, and the region's numbers) and evaluated AGAINST A WORLD — the belief base for the
+  live number, or a candidate possible world inside the planner. One measure, asked of
+  whichever world is being judged.
 
-The region desire's measure is compiled with the deduction's own numbers baked — the bounds
-are its conclusions, and a rebuild that moves them recompiles the text — and the AIM
-deliberately not baked: the query reads `ag:aims` out of `$beliefs` at query time, so a review
-that moves the pick moves the urgency with no rebuild, falling back to the region's centre
-exactly while no aim is picked. Distance is scaled by the survival room on the side the value
-sits — the asymmetry `Region.urgency` always had, kept and re-anchored: room below the aim is
-aim-to-floor, above it aim-to-ceiling, so being 0.05 out costs what the room in that direction
-says it costs. An unmeasured property COALESCEs to 1.0 explicitly, because this engine binds
-NOTHING for arithmetic over an unbound value, and an unmeasured want must never read as no
-urgency. `Region.urgency` in Python survives as the reference arithmetic and the fallback for
-a want stating no measure; nothing on the live path computes urgency twice.
+## The sovereign's split: the kernel carries the slot, a capability the content
+
+The first cut compiled the measure's SPARQL inside `agent/desires.ru`, per desire, bounds
+baked. The sovereign rejected the placement, not the mechanism: **the core is BDI** — that an
+agent wants, what it wants, when a want is met — and *how badness is measured* is
+planning-domain machinery, a capability's contribution, not the mind's structure. The precedent
+was already in the house: `agent/effects.py` (kernel) runs what `packages/capability/*/
+effects.ttl` (capability) declares, and the kernel never knows any effect's content. Applied
+again:
+
+- **The kernel keeps** `ag:Desire`, `ag:metWhen`, the derivation (the-mind-is-not-a-package is
+  not re-litigated: the want, its shape and its node stay kernel-derived), `ag:measuredBy` as
+  the instance-level override slot several packages may one day speak, and `agent/measure.py`
+  — the evaluator that runs whatever is declared.
+- **Sensing declares the content**, in `packages/capability/sensing/measures.ttl`, loaded at
+  genesis into a measures graph exactly as `effects.ttl` is loaded — an observation-backed
+  want is measured by a reading against the aim, and the reading is sensing's whole subject.
+  The choir's `urgency` hook always listed what modules contribute; this is that instinct as
+  a declaration the store can show a sovereign.
+- **Declared per KIND, not compiled per desire**: `ag:measureOf sosa:ObservableProperty` says
+  "a want about an observable property is measured by this SELECT", and the evaluator resolves
+  a desire to it by asking what its `ssn:forProperty` object IS. Nothing is compiled at
+  derivation any more: the aim is read out of `$beliefs` by the query itself, and the region's
+  numbers arrive as substituted parameters the caller reads off the deduced shapes at query
+  time — the `$litres` discipline, so a re-pick or a re-derivation moves the answer with no
+  text rebuilt. Where an instance states `ag:measuredBy`, the instance wins — which is the
+  seam the planned instance-over-type overrides land in.
+- **The fallback is defined, not implied**: a want whose kind no loaded package measures
+  scores 1.0, logged — not knowing how bad is maximal, consistent with `urgency(None)` — and
+  a test pins both the fallback and that no shipped world hits it, every shipped stake being
+  a `sosa:ObservableProperty`. `Region.urgency` survives as the test-only reference the
+  declared query is held to at the no-pick fallback; nothing on the live path calls it.
+
+Distance is scaled by the survival room on the side the value sits — the asymmetry
+`Region.urgency` always had, kept and re-anchored: room below the aim is aim-to-floor, above
+it aim-to-ceiling, so being 0.05 out costs what the room in that direction says it costs. An
+unmeasured property COALESCEs to 1.0 explicitly, because this engine binds NOTHING for
+arithmetic over an unbound value, and an unmeasured want must never read as no urgency.
 
 ## The planner half: met is the label, urgency is the motive
 
@@ -114,7 +145,10 @@ unchanged — measurement names never split series.
   [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md)
   left it. Baking epochs was considered and refused: the derivation is SPARQL and cannot
   convert a dateTime to a number either, so every road to a declared duty measure runs through
-  the same missing operation.
+  the same missing operation. Its future home is settled by the split above even so: the
+  MARKET package's `measures.ttl`, by this same mechanic, the day the engine divides durations
+  — so the kernel's measure story stays uniform, never knowing any measure's content, only how
+  to evaluate one.
 - **A freshness want states no measure.** It has no distance to scale — a boolean and an age,
   both judged where the clock is — so its urgency stays the kernel's (1.0 unmeasured or stale,
    0.0 otherwise). It is reified like the region (node, met-shape, label), so one mechanism

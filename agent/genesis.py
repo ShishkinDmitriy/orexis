@@ -33,7 +33,8 @@ from pathlib import Path
 
 from . import config, inference, loader, provenance, vocabulary
 from .config import REPO_ROOT
-from .ontology import (DESIRE_ASSERTED_GRAPH, EFFECTS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
+from .ontology import (DESIRE_ASSERTED_GRAPH, EFFECTS_GRAPH, GRAPH_PREFIX, MEASURES_GRAPH,
+                       ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from .store import NAMESPACES, Store, bindings
@@ -284,6 +285,11 @@ def refresh_public(st: Store, world: Path) -> None:
     #  executable text a planner runs, and keeping it in a graph of its own means a package
     #  that grows one is visible as a graph that grew rather than as vocabulary that moved.
     st.put_graph(EFFECTS_GRAPH, "\n".join(p.read_text() for p in loader.effect_files()))
+    #  How each KIND of want is measured, from the packages that own the question — the same
+    #  mechanic one line up, applied to desire instead of the menu. The kernel's derivation
+    #  still mints every want; what it no longer carries is any measure's CONTENT, which is a
+    #  capability's contribution (a-desire-states-its-own-measure, the sovereign's split).
+    st.put_graph(MEASURES_GRAPH, "\n".join(p.read_text() for p in loader.measure_files()))
     #  The asserted-desire graph is REPLACED FROM THE FILES like everything ratified — and
     #  cleared here first, because `put_graph` can only replace graphs the new document still
     #  NAMES: a world that deletes its desire.ttl names nothing, and the dropped want would

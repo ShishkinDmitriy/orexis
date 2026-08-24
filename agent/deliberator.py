@@ -257,6 +257,15 @@ class Deliberator(Module):
         lever nobody pulls — the search would decline for want of a rule and the agent would
         read it as a decision not to act.
         """
+        #  A want nothing MEASURES cannot be ranked, and a search that cannot rank must not
+        #  conclude — the `partial` argument, arriving from the desire side: every candidate
+        #  world would score the flat fallback 1.0, "no move improves" would come out
+        #  confidently, and a conclusion drawn from unrankable worlds would override the
+        #  reflex. The ranking fallback (1.0, logged) is the deducer's business; the DECISION
+        #  falls through to the reflex. A duty is exempt because its metric is met-or-not
+        #  over the record, which needs no measure to rank (#255).
+        if not desire.is_duty and desire.measure is None:
+            return False, None
         deducer = self.agent.deducer
         plan = Planner(self.agent, deducer, self.me).plan(desire)
         if plan.outcome == planner.NOTHING:

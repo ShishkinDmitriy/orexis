@@ -296,15 +296,22 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     the planner did not.
     """
     from agent.desire import Desire
+    from agent.measure import for_property
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
-    fern = build_agent("fern", genesis_store(), monkeypatch)
+    st = genesis_store()
+    fern = build_agent("fern", st, monkeypatch)
     reflex = fern.deliberator
+    #  The measure a real stake carries, resolved the way desires_of resolves it — a
+    #  hand-made Desire without one is a want the planner scores flat at the defined 1.0
+    #  fallback, which is a different test's subject.
+    measure = for_property(st.query, MOISTURE)
 
     #  fern aims at 0.55. Below it the two agree to buy; at and above it they agree to cede,
     #  and the second half is what the guard restores.
     for value in (0.30, 0.55, 0.80):
-        stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
+        stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value,
+                       measure=measure)
         assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value), \
             f"planner and reflex disagree at {value}"
 

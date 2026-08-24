@@ -17,16 +17,19 @@ See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 from .desire import Desire
-from .measure import urgency_of
+from .measure import for_property, urgency_of
 from .ontology import AG, INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph, obligations_graph
 from .store import bindings
 
 _SENSING = "http://example.org/orexis/sensing#SensingCapability"
+
+log = logging.getLogger("desire")
 
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
 # file's own header. Read once at import: a malformed query is then an error the moment the
@@ -125,12 +128,13 @@ class Region:
         """How close this reading puts me to real trouble: 0.0 at the centre, 1.0 at the edge
         of what my subject survives.
 
-        **A REFERENCE, no longer the live definition.** The desire declares its own measure now
-        (`ag:measuredBy`, compiled by `desires.ru` from the same numbers this holds), measured
-        from the AIM at query time with the centre only as the no-pick fallback — so the two
-        agree exactly when no aim is picked, and this is what consumers fall back to only for a
-        want that states no measure. Tests hold the compiled query to this arithmetic at that
-        fallback, which is why it stays rather than being deleted.
+        **A REFERENCE, no longer the live definition.** A want's kind declares its measure now
+        (`ag:measureOf`, sensing's `measures.ttl` for observation-backed wants), measured from
+        the AIM at query time with the centre only as the no-pick fallback — so the two agree
+        exactly when no aim is picked, which is what the tests hold the declared query to.
+        Nothing on the live path calls this any more: a want whose kind nothing measures
+        scores a logged 1.0 rather than falling back here, because a silent second definition
+        is the drift this declaration exists to prevent.
 
         **Measured from a point INSIDE the region and not from the edge**, which is a deliberate
         difference from the band. A step function would tell sensing to relax completely
@@ -213,6 +217,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str) -> dict[str, Gap]:
     subjects = _subjects_of(beliefs, agent_uri)
     known, _ = _known(beliefs)
     aims = aims_of(desires, agent_id, agent_uri)
+    measures: dict = {}
     out: dict[str, Gap] = {}
     for row in _desired(desires, agent_uri, agent_id=None):
         if row["kind"] != "stake":
@@ -222,7 +227,8 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str) -> dict[str, Gap]:
         if item is None or item.value is None:
             continue
         region = _region_of(row)
-        urgency = _stake_urgency(beliefs, row, subject, item.value, agent_id)
+        urgency = _stake_urgency(beliefs, row, subject, item.value, agent_uri, agent_id,
+                                 _measure_for(beliefs, row, measures))
         #  The SIGN is judged against the same point the measure judges distance from: the
         #  aim, or the centre while none is picked. Signed against the centre it disagreed
         #  with its own magnitude the moment a pick moved off-centre.
@@ -237,21 +243,36 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str) -> dict[str, Gap]:
 
 
 def _stake_urgency(beliefs, row: dict, subject: str | None, value: float,
-                   agent_id: str) -> float:
-    """A stake's urgency: its own declared measure, run against the belief base.
+                   agent_uri: str, agent_id: str, measure: str | None) -> float:
+    """A stake's urgency: the measure its kind declares, run against the belief base.
 
     `$value` is the reading the caller already joined, so the number judged and the number on
-    the row are one fact from one read. The fallback for a stake with no measure — an asserted
-    desire in the old bare-shape form — is `Region.urgency`, the reference arithmetic; a
-    measure that raises lands on 1.0, because not knowing is maximal.
+    the row are one fact from one read; the region's numbers ride in as parameters read off
+    the deduced shapes at this same call, so nothing is baked anywhere. A want whose kind no
+    loaded package measures scores 1.0, logged — the defined fallback: not knowing how bad is
+    maximal, exactly as not knowing at all is — and a measure that raises lands there too.
     """
-    measure = row.get("measure")
     if not measure:
-        return _region_of(row).urgency(value)
-    urgency = urgency_of(beliefs, measure, subject=subject,
+        log.warning("no loaded package measures a want about %s — urgency reads 1.0",
+                    row["property"])
+        return 1.0
+    urgency = urgency_of(beliefs, measure, me=agent_uri, subject=subject,
                          observed_property=row["property"], sensed=SENSED_GRAPH,
-                         beliefs=beliefs_graph(agent_id), value=value)
+                         beliefs=beliefs_graph(agent_id), value=value,
+                         region=_region_of(row))
     return 1.0 if urgency is None else urgency
+
+
+def _measure_for(beliefs, row: dict, cache: dict) -> str | None:
+    """The measure for one stake row: its own `ag:measuredBy` where an instance states one
+    (the override slot — nothing derived writes it today), else whatever the loaded packages
+    declare for its property's KIND, resolved once per property per call."""
+    if row.get("measure"):
+        return row["measure"]
+    prop = row["property"]
+    if prop not in cache:
+        cache[prop] = for_property(beliefs, prop)
+    return cache[prop]
 
 
 def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
@@ -276,6 +297,7 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
     now = now or datetime.now(timezone.utc)
     subjects = _subjects_of(beliefs, agent_uri)
     known, by_instrument = _known(beliefs)
+    measures: dict = {}
     out = []
     for row in _desired(desires, agent_uri, agent_id):
         if row["kind"] == "duty":
@@ -314,17 +336,19 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
                 #  LAST reading showed would rank an agent by something it no longer knows.
                 urgency, state = 1.0, "stale"
             else:
-                #  The desire's OWN measure, run against the belief base — the same text the
-                #  planner runs against a candidate world, which is the whole point of it
-                #  being declared. The STATE stays the region's: met is the shape's verdict,
-                #  urgency is the measure's, and since the measure is anchored at the aim the
-                #  two genuinely differ — met-and-urgent is an agent inside its region and
-                #  off its pick, which is a true situation and not a contradiction.
-                urgency = _stake_urgency(beliefs, row, subject, value, agent_id)
+                #  The measure the want's KIND declares, run against the belief base — the
+                #  same text the planner runs against a candidate world, which is the whole
+                #  point of it being declared. The STATE stays the region's: met is the
+                #  shape's verdict, urgency is the measure's, and since the measure is
+                #  anchored at the aim the two genuinely differ — met-and-urgent is an agent
+                #  inside its region and off its pick, a true situation, not a contradiction.
+                urgency = _stake_urgency(beliefs, row, subject, value, agent_uri, agent_id,
+                                         _measure_for(beliefs, row, measures))
                 state = "unmet" if value < region.low or value > region.high else "met"
         out.append(Desire(uri=row["desire"], urgency=urgency, state=state,
                         observed_property=row["property"], value=value,
-                        measure=row.get("measure")))
+                        measure=(_measure_for(beliefs, row, measures)
+                                 if row["kind"] == "stake" else None)))
     return sorted(out, key=lambda g: -g.urgency)
 
 
@@ -409,23 +433,36 @@ def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
                 beliefs=beliefs_graph(agent_id), me=agent_uri)))}
 
 
-#  The measures, keyed by property — read once at a module's construction like the regions
-#  beside them. Only what carries one: a freshness want states no measure and a duty's stays
-#  Python's, so absence here is a statement rather than a gap.
-_MEASURES_Q = """
-SELECT ?property ?measure WHERE {
+#  Which properties this agent holds STAKES in — the same discriminator the menu uses: a
+#  desire whose met-shape carries the ShouldBecome force on a property shape is a region,
+#  where the envelope is a Warning and a freshness want holds `sh:sparql` instead.
+_STAKE_PROPS_Q = """
+SELECT DISTINCT ?property ?measure WHERE {
   <%s> ag:holds ?desire .
-  ?desire ssn:forProperty ?property ; ag:measuredBy/sh:select ?measure }"""
+  ?desire ssn:forProperty ?property ;
+          ag:metWhen/sh:property/sh:severity ag:ShouldBecome .
+  OPTIONAL { ?desire ag:measuredBy/sh:select ?measure } }"""
 
 
-def measures_of(query, agent_uri: str) -> dict[str, str]:
-    """Every declared measure one agent's desires state, property -> SELECT text.
+def measures_of(desires, beliefs, agent_uri: str) -> dict[str, str]:
+    """The measure for each property this agent holds a stake in, property -> SELECT text.
 
-    Read, never computed here: the text was compiled by `desires.ru` at the modality's last
-    rebuild, and this only hands it to whoever evaluates — `agent/measure.py` is the runner.
+    Resolved, never computed here: an instance's own `ag:measuredBy` where one is stated (the
+    override slot — nothing derived writes it today), else whatever the loaded packages
+    declare for the property's KIND (`ag:measureOf`, a capability's `measures.ttl`), asked of
+    public knowledge through the belief store. A property whose kind nothing measures is
+    absent — and logged, because the defined fallback is urgency 1.0 and an operator should
+    hear why an agent went maximally urgent about a comfortable number.
     """
-    return {row["property"]: row["measure"]
-            for row in bindings(query(_MEASURES_Q % agent_uri))}
+    out: dict[str, str] = {}
+    for row in bindings(desires(_STAKE_PROPS_Q % agent_uri)):
+        text = row.get("measure") or for_property(beliefs, row["property"])
+        if text:
+            out[row["property"]] = text
+        else:
+            log.warning("no loaded package measures a want about %s — urgency reads 1.0",
+                        row["property"])
+    return out
 
 
 def regions_of(query, agent_uri: str) -> dict[str, Region]:

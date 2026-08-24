@@ -20,7 +20,8 @@ timestamp: 2026-08-19T21:41:18Z
 > [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md). What does
 > not hold any more is the IDENTITY: a desire is no longer the `sh:NodeShape` itself but a
 > node (`ag:Desire`) CARRYING that shape through `ag:metWhen` — unchanged in content — beside
-> a declared urgency measure and a label, because conformance is boolean while a want has
+> a label, with an urgency measure its KIND declares from a capability's `measures.ttl`,
+> because conformance is boolean while a want has
 > distance, and a bare shape had no room to say how badly it is unmet or where its zero sits
 > (the aim, not the region's centre). Everything else below stands: the met-test IS SHACL and
 > one language says what a graph should look like; force is severity and the graph carries

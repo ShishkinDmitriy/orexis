@@ -157,6 +157,11 @@ DESIRE_ASSERTED_GRAPH = _GRAPH + "desire/asserted"
 #  a planner reads it on every pass and a model must be able to see the whole tool list;
 #  asserted from files, so it is replaced at each boot rather than accumulated.
 EFFECTS_GRAPH = _GRAPH + "effects"
+#  How each KIND of want is measured, loaded from the packages at genesis exactly as the
+#  effects are. Public for the same reason: every consumer of urgency evaluates one of these,
+#  and a sovereign reading the store should see how its agents weigh their wants. The kernel
+#  never knows any measure's content — only this is where declared ones live.
+MEASURES_GRAPH = _GRAPH + "measures"
 #  What the planner considered on its last pass, per desire — the record's one sanctioned
 #  materialisation of a possible world, for the reader who cannot re-run the search from
 #  outside because the belief base is locked by the process holding it. Private, replaced per

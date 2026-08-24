@@ -27,10 +27,13 @@ the subject and its instruments state, and the result is a [region](/domain/regi
 has the intersection, the two kinds of bearer, and why a graph found by TYPE rather than by name
 is what makes a second source of desire possible.
 
-What the derivation mints is a NODE (`ag:Desire`) with three things on it: the met-test as a
-SHACL shape (`ag:metWhen`), the urgency measure as query text (`ag:measuredBy`), and a label a
-dashboard or the ask channel can print — reified so a want can say how badly it is unmet, not
-only whether it is. The argument is
+What the derivation mints is a NODE (`ag:Desire`) carrying the met-test as a SHACL shape
+(`ag:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
+say how badly it is unmet, not only whether it is. The measure's CONTENT is deliberately not
+the derivation's to write: the kernel carries the slot and the evaluator, and the capability
+that owns the question declares the text — [sensing](/domain/sensing.md)'s `measures.ttl` for
+any want about an observed property, resolved by the want's KIND (`ag:measureOf`) at query
+time, with `ag:measuredBy` as the instance-level override slot. The argument is
 [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)'s.
 
 What the deducer adds is the DEDUCING. It used to be granted by a stake — `ag:actsFor` a subject
@@ -102,11 +105,12 @@ every module has (`agent/module.py`) or through `agent.provider(DESIRE)`.
 | `region(property)` | anything that needs the range itself | the numbers |
 | `aim(property)` — the pick inside the region | a bidder, at bid time, for the point a deficit is priced against | None is an answer: with no aim there is no deficit, and the bidder cedes rather than inventing one |
 
-**The band is the region; urgency is the desire's own declared measure, anchored at the
-[aim](/domain/aim.md)** — a SPARQL SELECT the derivation writes onto the desire node
-(`ag:measuredBy`), which reads the pick out of the belief base at query time, falls back to the
-region's centre only while none is picked, and scales by the survival room on the side the value
-sits. So urgency rises *inside* the region rather than waiting for the edge — an agent at the
+**The band is the region; urgency is the measure the want's kind declares, anchored at the
+[aim](/domain/aim.md)** — a SPARQL SELECT [sensing](/domain/sensing.md) ships for
+observation-backed wants (`ag:measureOf`), which reads the pick out of the belief base at query
+time, falls back to the region's centre only while none is picked, and scales by the survival
+room on the side the value sits, the region's numbers arriving as substituted parameters read
+off the deduced shapes. So urgency rises *inside* the region rather than waiting for the edge — an agent at the
 edge of comfortable is already worth watching more closely than one in the middle — and it is
 asymmetric per subject for free, because the room on each side is whatever that subject's two
 ranges leave. One text, run against whichever world is being judged: the belief base for the live

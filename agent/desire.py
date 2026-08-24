@@ -60,11 +60,15 @@ class Desire:
     #  governs the urgency, and they are different questions on the desire's own node.
     state: str | None = None
 
-    #  The measure the desire declares (`ag:measuredBy`, the SELECT text) — carried so the
-    #  planner can ask the SAME question of a candidate world that `desires_of` asked of the
-    #  belief base. None for a duty (its fraction-of-window stays Python's, because this
-    #  engine binds nothing for duration division — the pinned limit in tests/test_desires.py)
-    #  and for a freshness want (epistemic, no distance to scale).
+    #  The measure resolved for this want — its own `ag:measuredBy` where an instance states
+    #  one, else what the loaded packages declare for its KIND (`ag:measureOf`, a capability's
+    #  measures.ttl; sensing's for observation-backed wants) — carried so the planner can ask
+    #  the SAME question of a candidate world that `desires_of` asked of the belief base.
+    #  None for a duty (its fraction-of-window stays Python's, because this engine binds
+    #  nothing for duration division — the pinned limit in tests/test_desires.py; its future
+    #  home is the market's measures.ttl by this same mechanic) and for a freshness want
+    #  (epistemic, no distance to scale) — and for a want whose kind nothing measures, which
+    #  scores a logged 1.0.
     measure: str | None = None
 
     @property

@@ -28,7 +28,8 @@ class Deducer(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.regions = regions_of(agent.desires.query_union, self.me.uri)
-        self._measures = measures_of(agent.desires.query_union, self.me.uri)
+        self._measures = measures_of(agent.desires.query_union, agent.beliefs.query,
+                                     self.me.uri)
         self._aims = aims_of(agent.desires.query_union, agent.id, self.me.uri)
         self.log.info("wants %s", ", ".join(
             f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
@@ -100,13 +101,14 @@ class Deducer(Module):
                 value: float | None) -> float | None:
         """How close this puts me to trouble. Sensing turns it into a cadence.
 
-        THE DESIRE'S OWN MEASURE, since it declares one: the same query the ranking runs and
-        the planner scores candidate worlds with, evaluated here against the belief base with
-        `$value` the caller's number — the choir asks about readings it has not written yet
-        and about PREDICTED ones, so the number judged is a parameter, exactly as an effect
-        rule's is. What shifted with the declaration is the anchor: distance from the AIM,
-        with the centre only the no-pick fallback, so the cadence tightens toward the point
-        the agent actually steers for. Callers changed nothing.
+        THE MEASURE THE WANT'S KIND DECLARES — sensing's own contribution, resolved from its
+        `measures.ttl` rather than known: the same query the ranking runs and the planner
+        scores candidate worlds with, evaluated here against the belief base with `$value`
+        the caller's number — the choir asks about readings it has not written yet and about
+        PREDICTED ones, so the number judged is a parameter, exactly as an effect rule's is.
+        What shifted with the declaration is the anchor: distance from the AIM, with the
+        centre only the no-pick fallback, so the cadence tightens toward the point the agent
+        actually steers for. Callers changed nothing.
 
         Asked with None, the question is the urgency of NOT KNOWING (#137), and the answer is
         maximal: not knowing whether the pot is dying is at least as urgent as knowing it is
@@ -120,11 +122,15 @@ class Deducer(Module):
             return 1.0
         measure = self._measures.get(observed_property)
         if measure:
-            answer = urgency_of(self.agent.beliefs.query, measure, subject=subject_uri,
+            answer = urgency_of(self.agent.beliefs.query, measure, me=self.me.uri,
+                                subject=subject_uri,
                                 observed_property=observed_property, sensed=SENSED_GRAPH,
-                                beliefs=beliefs_graph(self.agent.id), value=value)
+                                beliefs=beliefs_graph(self.agent.id), value=value,
+                                region=self.regions.get(observed_property))
             return 1.0 if answer is None else answer
-        return self.regions[observed_property].urgency(value)
+        #  The defined fallback: a want whose kind no loaded package measures is maximal,
+        #  logged once at construction by `measures_of` — not knowing how bad IS how bad.
+        return 1.0
 
     # --- the diff, asked of me rather than recomputed by whoever wants it ---
 
