@@ -4,6 +4,16 @@
 @prefix sosa:    <http://www.w3.org/ns/sosa/> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 
+#  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
+#    ag:means      the kind of act, a kernel word;
+#    ag:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#                  and ?for_agent where the row is a duty owed to someone; `$me` and
+#                  `$properties` substituted by the collector, prefixes prepended by the store;
+#    sh:construct  its EFFECT, with ag:retracts, ag:landsAfter and ag:confirmedBy beside it;
+#    ag:takenBy    the capability whose module carries it out.
+#  Precondition, effect and taker were three files and a fourth surface; a STRIPS operator is one
+#  thing, and an author adds a way of acting by adding a node here and a `take()` to a module.
+
 #################  What LOOKING makes true  #################
 #
 #  The one effect every agent has, and the one whose limits are worth stating carefully.
@@ -28,9 +38,25 @@
 #  found or a fresh blank node — which costs nothing, because no shape names an observation: they
 #  ask whether one EXISTS with a property and a value, and a blank node exists exactly as well.
 
-sensing:ObserveEffect
-    a sh:SPARQLRule ;
-    ag:effectOf ag:Observe ;
+sensing:Observing
+    a ag:Action ;
+    ag:means ag:Observe ;
+
+    #  AVAILABLE where I may ASK an instrument that monitors my subject for this property —
+    #  `sensing:mayAsk`, not `sensing:polls`, so a device that takes no orders offers no row
+    #  (a-lever-an-agent-cannot-pull-is-not-a-lever). DISTINCT because a region carries three
+    #  property shapes and all three are wants. Reads the whole default graph: wiring is public.
+    ag:available """
+        SELECT DISTINCT ?property ?via ?direction WHERE {
+          VALUES ?property { $properties }
+          $me ag:actsFor ?subject .
+          $me sensing:mayAsk ?via .
+          ?via sensing:monitors ?subject ;
+               sosa:observes ?property .
+        }""" ;
+
+    #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
+    ag:takenBy sensing:SensingCapability ;
     rdfs:label "what looking makes true" ;
 
     #  A COARSE gate, and the coarseness is the finding rather than a shortcut. `sh:condition`

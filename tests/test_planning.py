@@ -142,13 +142,13 @@ def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defe
     cannot see the water lever should conclude and exactly why the world is refused before it
     can run.
     """
-    from agent.ontology import EFFECTS_GRAPH
+    from agent.ontology import ACTIONS_GRAPH
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
-    st.update("""DELETE { GRAPH <%s> { ?rule ag:effectOf ag:Acquire } }
-                 WHERE  { GRAPH <%s> { ?rule ag:effectOf ag:Acquire } }"""
-              % (EFFECTS_GRAPH, EFFECTS_GRAPH))
+    st.update("""DELETE { GRAPH <%s> { ?rule sh:construct ?c } }
+                 WHERE  { GRAPH <%s> { ?rule ag:means ag:Acquire ; sh:construct ?c } }"""
+              % (ACTIONS_GRAPH, ACTIONS_GRAPH))
 
     fern = build_agent("fern", st, monkeypatch)
     deducer = next(m for m in fern.modules if m.name == "desire")

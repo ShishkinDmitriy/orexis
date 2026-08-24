@@ -48,7 +48,7 @@ wants a good price — so it must not be the last word on whether the trade is l
 # What it owes afterwards is a duty, not a decision
 
 A won [claim](/domain/claim.md) is a claim **on the host**, redeemed by presenting it. The lever
-that answers sits on the host's menu as an *honoured* [affordance](/domain/affordance.md) row,
+that answers sits on the host's menu as an [affordance](/domain/affordance.md) row owed to the presenter,
 exercised on a valid presentation and never proposed. Why a duty is nonetheless deliberated about
 at all — and why that does not let a host wriggle out of one — is
 [deliberation](/domain/deliberation.md)'s.

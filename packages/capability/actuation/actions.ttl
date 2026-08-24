@@ -5,6 +5,16 @@
 @prefix market:    <http://example.org/orexis/market#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
 
+#  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
+#    ag:means      the kind of act, a kernel word;
+#    ag:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#                  and ?for_agent where the row is a duty owed to someone; `$me` and
+#                  `$properties` substituted by the collector, prefixes prepended by the store;
+#    sh:construct  its EFFECT, with ag:retracts, ag:landsAfter and ag:confirmedBy beside it;
+#    ag:takenBy    the capability whose module carries it out.
+#  Precondition, effect and taker were three files and a fourth surface; a STRIPS operator is one
+#  thing, and an author adds a way of acting by adding a node here and a `take()` to a module.
+
 #################  What a DOSE makes true  #################
 #
 #  The lever that justified a CONSTRUCT over add/delete patterns, and it is worth being exact
@@ -28,9 +38,32 @@
 #  reason the arithmetic does: a rule states its own premises, which is what makes it a rule
 #  rather than a fragment somebody has to assemble.
 
-actuation:ActuateEffect
-    a sh:SPARQLRule ;
-    ag:effectOf ag:Actuate ;
+actuation:Dosing
+    a ag:Action ;
+    ag:means ag:Actuate ;
+
+    #  AVAILABLE where BOTH chains end at $me (#190, the ladder's second rung): the LEVER chain —
+    #  an actuator I hold, plumbed to my own subject — and the RESOURCE chain — it draws from a
+    #  source that is MINE (market:offeredBy, entailed) AND that no market offers as its lot. The
+    #  NOT EXISTS is the rule that keeps the rung honest: the market is about the resource, not
+    #  the lever, so a pot-local pump on the shared barrel yields Acquire and only Acquire.
+    ag:available """
+        SELECT DISTINCT ?property ?via ?direction WHERE {
+          VALUES ?property { $properties }
+          $me ag:actsFor ?subject .
+          $me actuation:hasActuator ?via .
+          ?via actuation:actuates ?subject ;
+               actuation:drawsFrom ?source .
+          ?source market:offeredBy $me .
+          FILTER NOT EXISTS { ?venue market:marketFor ?source }
+          ?source market:supplies ?good .
+          ?valuation market:ofGood ?good ;
+                     market:aboutProperty ?property ;
+                     market:direction ?direction .
+        }""" ;
+
+    #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
+    ag:takenBy actuation:Actuation ;
     rdfs:label "what a dose makes true" ;
 
     #  The node-level half: an agent with no actuator can never dose, whatever it is asked

@@ -16,7 +16,7 @@ import pytest
 from agent import genesis
 from agent.beliefs import Beliefs
 from agent.desire import Desires
-from agent.ontology import EFFECTS_GRAPH, ONTOLOGY_GRAPH
+from agent.ontology import ACTIONS_GRAPH, ONTOLOGY_GRAPH
 from onboarding.validate import deliberable
 
 from conftest import genesis_store
@@ -71,9 +71,9 @@ def test_a_lever_nothing_states_an_effect_for_is_refused(monkeypatch, caplog):
     state from the runtime side.
     """
     st = build("simulation", monkeypatch)
-    st.update("""DELETE { GRAPH <%s> { ?rule ag:effectOf ag:Acquire } }
-                 WHERE  { GRAPH <%s> { ?rule ag:effectOf ag:Acquire } }"""
-              % (EFFECTS_GRAPH, EFFECTS_GRAPH))
+    st.update("""DELETE { GRAPH <%s> { ?rule sh:construct ?c } }
+                 WHERE  { GRAPH <%s> { ?rule ag:means ag:Acquire ; sh:construct ?c } }"""
+              % (ACTIONS_GRAPH, ACTIONS_GRAPH))
 
     assert not deliberable(st, desires_of(st)), \
         "a world whose water lever states no effect was allowed through"

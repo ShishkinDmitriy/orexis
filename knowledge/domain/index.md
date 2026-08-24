@@ -49,7 +49,9 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [deliberation](/domain/deliberation.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
 
-* [affordance](/domain/affordance.md) - One row of what an agent could do. Derived and never stored, contributed per package, and the reason chaining needs no preconditions.
+* [action](/domain/action.md) - One way of acting as one node: means, precondition, effect, taker. A package adds one node and one `take()`.
+
+* [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
 
 * [means](/domain/means.md) - The KIND of an act, and a term code may name. Five exist and nothing lists them. Where affordance, effect and intention meet.
 

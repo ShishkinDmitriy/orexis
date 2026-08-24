@@ -226,36 +226,9 @@ ag:ObligationsGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Obligat
     ag:graphPrefix "http://example.org/orexis/graph/obligations/" ;
     rdfs:comment "ONE agent's record of debts: claims won against it, presented or not, discharged rows kept because a debt paid and a debt forgotten must not look alike. A RECORD class — the duty-wants the desire modality serves are this record projected, and the prefix moved here when ag:ConstraintGraph retired (#312)." .
 
-#################  What kind of menu row this is  #################
-#
-#  A menu row says what happens THROUGH an agent, and there are two kinds. A CHOSEN row is an
-#  option: mine, at my discretion. An HONOURED row is a lever others may demand — disclosed so
-#  an agent's conduct surface is legible whole, which the desire-scoped menu could not do: an
-#  ability that serves others was a true fact living nowhere queryable.
-#
-#  DISCLOSURE, not exemption. What an obligation makes an agent do arrives as a WANT — a desire
-#  it did not source, with provenance saying whose it is — so duties and wants share one
-#  currency and one decision path. See
-#  knowledge/decisions/an-obligation-is-a-desire-someone-else-sourced.md.
-#
-#  THE KERNEL'S, and these words have now made the same move twice for the same reason. They
-#  were written in the market package and left it because "a mode is a fact about a menu row,
-#  and the menu is the deliberation package's". The menu is the kernel's, so they follow it
-#  again — and the argument is stronger the second time: sensing, actuation and market EACH
-#  bind `Chosen` or `Honoured` in their own `affordances.rq` to describe their own rows. Three
-#  packages needing a word to say what they themselves offer is the test the-mind-is-six-graphs
-#  set, and it is the test `ag:Intention` passed.
-
-ag:Mode a owl:Class ; rdfs:label "Mode" ;
-    rdfs:comment "Whether a row is mine to choose or a lever others may demand. Two individuals and no third: a row nobody may ask for and nobody may decline is not an affordance, it is a description." .
-ag:Chosen a ag:Mode ; rdfs:label "chosen" ;
-    rdfs:comment "At my discretion — the rows the deliberator ranges over." .
-ag:Honoured a ag:Mode ; rdfs:label "honoured" ;
-    rdfs:comment "A lever a valid presentation may demand. The deliberator passes over these — not because a duty is nobody's to decide, but because it steers a property toward an aim and a duty is a graph-shaped goal it cannot express." .
-
-ag:mode a owl:ObjectProperty ; rdfs:range ag:Mode ;
-    rdfs:label "mode" ;
-    rdfs:comment "Which kind of row this is. Absent means chosen, so a branch written before the distinction keeps its meaning — but the shipped ones say it out loud." .
+#  `ag:Mode`, `ag:Chosen` and `ag:Honoured` WERE HERE and are retired (an-action-is-one-node):
+#  whether a row is the agent's own or a duty is whether its `ag:available` query bound
+#  `?for_agent`, and a second term for a fact one column already states was a second owner.
 
 ag:MenuGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Menu graph" ;
     rdfs:comment """What the agent COULD do: the affordance rows, what others may demand of it, and what taking any of it would MAKE TRUE.
@@ -310,7 +283,7 @@ ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:la
     rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
 ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
-ag:EffectGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:MenuGraph ; rdfs:label "Effect graph" ;
+ag:ActionGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:MenuGraph ; rdfs:label "Action graph" ;
     rdfs:comment """What each MEANS makes true — one `sh:SPARQLRule` per lever, loaded from the packages at genesis exactly as the T-Box is, and replaced from those files on every boot.
 
 PUBLIC and not belief. A rule here is a SCHEMA — what applying a lever WOULD do, stated once by the package that owns the lever — and schemas have always lived in the store: that is what the ontology graph is. It is not a belief, because nobody holds it and no agent may revise it; and it is not the menu, which is INSTANCES (this valve, this venue) and stays computed for the reason affordances are never stored — a stored row can outlive the plumbing it was concluded from, and a schema cannot.""" .
@@ -417,7 +390,7 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 ##  received from anyone. Private: nobody else needs to know what rhythm I am running,
 ##  and the horizon it yields is mine to judge readings by.
 <http://example.org/orexis/graph/instruments>       a ag:BeliefGraph ;  ag:arrivedBy ag:Recorded .
-<http://example.org/orexis/graph/effects>            a ag:EffectGraph ;  ag:arrivedBy ag:Asserted .
+<http://example.org/orexis/graph/actions>            a ag:ActionGraph ;  ag:arrivedBy ag:Asserted .
 <http://example.org/orexis/graph/provenance>        a ag:ProvenanceGraph .
 ##  One pass per goal and no more: written at the start of each, replacing what was there.
 <http://example.org/orexis/graph/deliberation>      a ag:DeliberationGraph ; ag:arrivedBy ag:Derived .
@@ -506,7 +479,7 @@ ag:violationIs a owl:ObjectProperty ; rdfs:domain sh:PropertyShape ; rdfs:range 
 #  triples can say that without predicting the number. A CONSTRUCT can, because this project
 #  already computes that prediction for verification.
 
-ag:retracts a owl:DatatypeProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range xsd:string ;
+ag:retracts a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
     rdfs:label "retracts" ;
     rdfs:comment """A CONSTRUCT whose result is the triples this effect REMOVES. Ours, because SHACL-AF has none: its rules exist to add entailments, so the standard has no way to say a thing stops being true. A simulator computes `(beliefs - retracts) + adds`, which keeps the whole operation side-effect free — nothing is deleted anywhere, two graphs are subtracted.
 
@@ -530,7 +503,7 @@ It is not optional, and the reason is arithmetic rather than taste. `sensed_writ
 #  plans against one timeline and verifies against another, and the disagreement surfaces as
 #  false UNMET verdicts — the same failure arriving through the clock instead of the arithmetic.
 
-ag:landsAfter a owl:DatatypeProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range xsd:string ;
+ag:landsAfter a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
     rdfs:label "lands after" ;
     rdfs:comment """A SELECT yielding `?seconds`: how long after the act until the WORLD CHANGE is complete. A query and not a number, because the duration is a function of the act rather than a property of the lever — a valve open for a two-litre dose is open longer than for a half-litre one, and `min(litres, cap) / calibration` is exactly the arithmetic the effect rule already performs. Its parameters are the effect's own, so one text answers for any act it could be asked about.
 
@@ -555,13 +528,12 @@ ag:ByObservation a ag:ConfirmationRoute ; rdfs:label "by observation" ;
 ag:Unconfirmed a ag:ConfirmationRoute ; rdfs:label "unconfirmed" ;
     rdfs:comment "Nothing will ever say. A valve wired with no status channel and a property no sensor watches is a REAL deployment, not an oversight, and the honest response is to say so — an agent that cannot verify should stop acting on the property and restore its observation first, rather than dosing blind, which is exactly how a society floods a plant while every module behaves as written." .
 
-ag:confirmedBy a owl:ObjectProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range ag:ConfirmationRoute ;
+ag:confirmedBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:ConfirmationRoute ;
     rdfs:label "confirmed by" ;
     rdfs:comment "By which route this effect becomes knowable. On the rule, so a planner reading the tool list learns what waiting for this act would even mean before it commits to one." .
 
-ag:effectOf a owl:ObjectProperty ; rdfs:domain sh:SPARQLRule ; rdfs:range ag:Means ;
-    rdfs:label "effect of" ;
-    rdfs:comment "Which means this rule is the effect of. The join a planner walks from a menu row to what taking that row would do — the row names its means, and this names the rule. On the rule rather than on the means, so a package ships one file that adds itself: nothing in the kernel lists which levers have effects, exactly as nothing lists which packages ship affordances." .
+#  `ag:effectOf` WAS HERE. An effect is a part of an ACTION now, and the action names its means
+#  with `ag:means`; see the block beside ag:Means.
 
 ag:holds a owl:ObjectProperty ; rdfs:domain ag:Agent ;
     rdfs:label "holds" ;
@@ -731,9 +703,22 @@ ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Means ;
 
 ag:Means a owl:Class ; rdfs:label "Means" .
 
-ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Means ; rdfs:range ag:Capability ;
+#################  What an action IS  #################
+
+ag:Action a owl:Class ; rdfs:label "Action" ;
+    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md): `ag:means` says what kind of act it is; `ag:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `ag:retracts` are its effect, with `ag:landsAfter` and `ag:confirmedBy` beside them; `ag:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
+
+ag:means a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Means ;
+    rdfs:label "means" ;
+    rdfs:comment "The kind of act this action is. The join everything walks: a menu row carries the means, an intention commits to it, and the action is found from it." .
+
+ag:available a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
+    rdfs:label "available" ;
+    rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
+
+ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capability ;
     rdfs:label "taken by" ;
-    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated by the package that ships the row, in its own ontology, on the kernel's means: `ag:Observe ag:takenBy sensing:SensingCapability`. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute: `ag:Offer` is one on purpose, since no menu row offers it. See knowledge/domain/actor.md.""" .
+    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute: `ag:Offer` is one on purpose, since no menu row offers it. See knowledge/domain/actor.md.""" .
 
 ag:Observe a ag:Means ; rdfs:label "Observe" ;
     rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .

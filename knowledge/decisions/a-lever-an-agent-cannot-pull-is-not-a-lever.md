@@ -24,7 +24,7 @@ The second half is the sharp one, and it was already false on the bench.
 
 ## What was there: a row, an intention, and nothing
 
-`packages/capability/sensing/affordances.rq` emitted the Observe row on `sensing:polls`, which is
+`packages/capability/sensing/actions.ttl` (then `affordances.rq`) emitted the Observe row on `sensing:polls`, which is
 authored for both sense modes — the derivation keys `sensing:Subscribing` and `sensing:Listening`
 off the DEVICE, and both branches read the same triple. `SensingModule.sense_now()`'s base
 implementation is an empty method whose docstring says *ask for a reading now, if my hardware

@@ -236,13 +236,13 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     rides with repair-matching rather than with this test.
     """
     from agent.desire import Desire
-    from agent.ontology import EFFECTS_GRAPH
+    from agent.ontology import ACTIONS_GRAPH
 
     ds = genesis_store()
     ds.update(f"""
-        DELETE {{ GRAPH <{EFFECTS_GRAPH}> {{ ?rule sh:construct ?text }} }}
-        INSERT {{ GRAPH <{EFFECTS_GRAPH}> {{ ?rule sh:construct ?flipped }} }}
-        WHERE  {{ GRAPH <{EFFECTS_GRAPH}> {{ ?rule ag:effectOf ag:Acquire ; sh:construct ?text }}
+        DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule sh:construct ?text }} }}
+        INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule sh:construct ?flipped }} }}
+        WHERE  {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule ag:means ag:Acquire ; sh:construct ?text }}
                   BIND(REPLACE(?text, "(\\\\$value) \\\\+ ", "$1 - ") AS ?flipped) }}""")
     decider = decider_of(make("fern", ds))
     stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=0.10)
@@ -290,10 +290,10 @@ def test_the_dealers_menu_gained_its_lever(make):
     rows = menu_of(st.query, "http://example.org/orexis/world/simulation#supplier", desires_build(st, "supplier").query_union)
     assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
-            for r in rows if r.is_chosen] == [("Acquire", "StoredLitres", "Raises")]
+            for r in rows if r.is_own] == [("Acquire", "StoredLitres", "Raises")]
     #  And beside them, since #218, what the dealer HONOURS: claims presented against the
     #  venue it hosts are redeemed through its valves — one row per lever, never a proposal.
-    honoured = [r for r in rows if not r.is_chosen]
+    honoured = [r for r in rows if not r.is_own]
     assert {r.means.rsplit("#", 1)[-1] for r in honoured} == {"Apply"}
     assert len(honoured) == 3, "one duty per valve it holds for its buyers"
 
@@ -392,22 +392,23 @@ def test_the_plan_is_two_rows_through_two_venues(make):
 # --- the menu is the union of package contributions (#207) ------------------
 
 def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
-    """The tool-plugin claim, proven: a package shipping an `affordances.rq` puts a new KIND
-    of row on the menu with no edit outside its own directory. The toy consults an oracle —
-    a means no shipped package knows — and its row appears beside Observe and Acquire the
-    moment the loader would find its file. Instances were always dynamic (premises in, rows
-    out); this is the kinds joining them."""
+    """The tool-plugin claim, proven: a package shipping an `actions.ttl` puts a new KIND of
+    row on the menu with no edit outside its own directory. The toy consults an oracle — a
+    means no shipped package knows — and its row appears beside Observe and Acquire the moment
+    the loader would find its file. Instances were always dynamic (premises in, rows out);
+    this is the kinds joining them."""
     from agent import loader
 
-    toy = tmp_path / "affordances.rq"
+    toy = tmp_path / "actions.ttl"
     toy.write_text("""
-SELECT ?means ?property ?via ?direction WHERE {
-  VALUES ?property { $properties }
-  BIND(ag:Consult AS ?means)
-  BIND($me AS ?via)
-}""")
-    real = loader.affordance_files()
-    monkeypatch.setattr(loader, "affordance_files", lambda: real + (toy,))
+@prefix ag: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+ag:Consulting a ag:Action ; ag:means ag:Consult ;
+    ag:available \"\"\"SELECT ?property ?via WHERE { VALUES ?property { $properties } BIND($me AS ?via) }\"\"\" ;
+    sh:construct "CONSTRUCT {} WHERE {}" .
+""")
+    real = loader.action_files()
+    monkeypatch.setattr(loader, "action_files", lambda: real + (toy,))
     st = genesis_store()
     rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union)
     kinds = {r.means.rsplit("#", 1)[-1] for r in rows}
@@ -415,7 +416,7 @@ SELECT ?means ?property ?via ?direction WHERE {
     assert {"Observe", "Acquire"} <= kinds, "and the shipped kinds must survive it"
 
 
-# --- the menu's two modes (#218) --------------------------------------------
+# --- whom a row serves (#218) --------------------------------------------
 
 def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     """The sovereign asking what an agent DOES gets its duties beside its options — and asked
@@ -432,7 +433,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
 
     supplier = make("supplier")
     rows = menu_of(supplier.beliefs.query, supplier.me.uri, supplier.desires.query_union)
-    duties = [r for r in rows if not r.is_chosen]
+    duties = [r for r in rows if not r.is_own]
     assert duties, "the conduct surface includes what it honours"
 
     deliberator = supplier.deliberator
@@ -450,7 +451,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
 def test_a_buyer_honours_nothing(make):
     """Fern holds no venue and no valve: everything on its menu is its own to choose."""
     fern = make("fern")
-    assert all(r.is_chosen for r in menu_of(fern.beliefs.query, fern.me.uri, fern.desires.query_union))
+    assert all(r.is_own for r in menu_of(fern.beliefs.query, fern.me.uri, fern.desires.query_union))
 
 
 # --- step 9: a desire, not a property and a value -----------------------------

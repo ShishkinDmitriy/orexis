@@ -60,7 +60,7 @@ def declared_terms() -> set[str]:
     import rdflib
 
     declared: set[str] = set()
-    for path in (*loader.ontology_files(), *loader.shapes_files()):
+    for path in (*loader.ontology_files(), *loader.shapes_files(), *loader.action_files()):
         g = rdflib.Graph()
         g.parse(path, format="turtle")
         for s in g.subjects():
@@ -105,7 +105,7 @@ def referenced_terms() -> dict[str, set[str]]:
             shown = str(path)
         refs.setdefault(iri, set()).add(shown)
 
-    for path in (*loader.ontology_files(), *loader.shapes_files()):
+    for path in (*loader.ontology_files(), *loader.shapes_files(), *loader.action_files()):
         g = rdflib.Graph()
         g.parse(path, format="turtle")
         for triple in g:
@@ -116,7 +116,7 @@ def referenced_terms() -> dict[str, set[str]]:
                     for iri in _resolve(str(node), dict(loader.prefixes())):
                         note(iri, path)
 
-    for path in (*loader.rule_files(), *loader.review_rules(), *loader.affordance_files()):
+    for path in (*loader.rule_files(), *loader.review_rules()):
         text = _strip_comments(path.read_text())
         for iri in _resolve(text, _prefixes_of(text)):
             note(iri, path)

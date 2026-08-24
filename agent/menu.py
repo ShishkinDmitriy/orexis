@@ -17,31 +17,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from . import loader
 from .ontology import AG
 from .store import bindings
-
-#  Whether a row is mine to choose or a lever others may demand — the kernel's words now, and
-#  the menu's own. Absent means chosen, so a branch written before the distinction keeps its
-#  meaning.
-CHOSEN = AG + "Chosen"
-HONOURED = AG + "Honoured"
 
 @dataclass(frozen=True)
 class Affordance:
     """One row of the menu: a means, the property it is about, the lever, — for a means that
     moves anything — which way it moves it, and whether it is mine to CHOOSE or to HONOUR.
 
-    The mode is the #218 half: a chosen row is an option a deliberator ranges over; an
-    honoured row is a duty exercised on a valid presentation and never proposed. Absent
-    means chosen, so a branch written before the distinction keeps its meaning.
+    Whom it serves is the #218 half: a row of my own is an option a deliberator ranges over;
+    one owed to somebody is a duty exercised on a valid presentation and never proposed.
     """
 
     means: str
     observed_property: str
     via: str
     direction: str | None = None
-    mode: str = CHOSEN
     #  Whom an honoured row serves — the counterparty entitled to demand this lever. Absent on
     #  a chosen row, which serves nobody but the agent itself. It is what lets a DUTY find its
     #  means: an obligation names who it is owed to, and the row that answers is the one
@@ -49,8 +40,11 @@ class Affordance:
     for_agent: str | None = None
 
     @property
-    def is_chosen(self) -> bool:
-        return self.mode == CHOSEN
+    def is_own(self) -> bool:
+        """Mine to range over — serves nobody but me. A row that names whom it is owed to is
+        a duty's, exercised for that counterparty and never proposed for my own gap. The one
+        column says it; there is no mode term any more (an-action-is-one-node)."""
+        return self.for_agent is None
 
 
 #  Through `ag:metWhen`, since the desire became a node carrying its shape: the ShouldBecome
@@ -62,6 +56,10 @@ _DESIRED_Q = """SELECT DISTINCT ?property WHERE {
           ag:metWhen/sh:property/sh:severity ag:ShouldBecome }"""
 
 
+_ACTIONS_Q = """SELECT ?means ?available WHERE {
+  ?action a ag:Action ; ag:means ?means ; ag:available ?available }"""
+
+
 def menu_of(query, agent_uri: str, desires) -> list[Affordance]:
     """What one agent could do, about what, through which lever — derived, never written.
 
@@ -69,27 +67,24 @@ def menu_of(query, agent_uri: str, desires) -> list[Affordance]:
     row here is a move nothing should propose. Free function for the same reason `gaps_of` is —
     a test about what a world implies should not have to build an agent to ask.
 
-    THE UNION OF WHAT THE LOADED PACKAGES CONTRIBUTE (#207): each package may ship an
-    `affordances.rq` — its rows, its preconditions as its own walk — and this collects them,
-    so the menu's KINDS stop being a registry in this package's directory. Sensing ships the
-    Observe branch, the market ships Acquire, and a new way of acting is a new directory:
-    ontology as the tool's schema, affordances.rq as its availability, a module as its
-    implementation — or no module at all, where execution reduces to an existing actor.
-    Sorted here because ORDER BY lived in the one big query; per-file order is no order.
+    THE UNION OF WHAT THE LOADED ACTIONS SAY (#207, an-action-is-one-node): every `ag:Action`
+    in the store carries its precondition as `ag:available`, and this runs each one with `$me`
+    and the desired `$properties` filled in. The action's `ag:means` is the row's; a bound
+    `?for_agent` makes the row a duty's. Sensing brings Observe, the market Acquire and the
+    host's Apply, actuation Actuate — and a new way of acting is a node in a new directory,
+    never an edit here. Sorted because per-action order is no order.
     """
     #  The desired properties, asked of the desire modality once and injected into every
     #  walk: a row is wiring x want, and since the dataset split (#298) the want half lives
     #  in a store of its own. An empty block is legal SPARQL and yields no rows — an agent
-    #  with no desires has no menu, exactly as when the shape pattern sat in each file.
+    #  with no desires has no menu.
     props = " ".join(f"<{r['property']}>" for r in bindings(desires(_DESIRED_Q % agent_uri)))
     rows = []
-    for path in loader.affordance_files() + loader.honoured_files():
-        q = (path.read_text().replace("$me", f"<{agent_uri}>")
+    for action in bindings(query(_ACTIONS_Q)):
+        q = (action["available"].replace("$me", f"<{agent_uri}>")
              .replace("$properties", props))
-        rows += [Affordance(means=r["means"], observed_property=r["property"], via=r["via"],
-                            direction=r.get("direction"), mode=r.get("mode") or CHOSEN,
-                            for_agent=r.get("buyer"))
+        rows += [Affordance(means=action["means"], observed_property=r["property"],
+                            via=r["via"], direction=r.get("direction"),
+                            for_agent=r.get("for_agent"))
                  for r in bindings(query(q))]
-    return sorted(rows, key=lambda a: (a.observed_property, a.means, a.mode))
-
-
+    return sorted(rows, key=lambda a: (a.observed_property, a.means, a.for_agent or ""))

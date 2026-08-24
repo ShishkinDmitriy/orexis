@@ -244,7 +244,7 @@ class Deliberator(Module):
         the widening the obligation record predicted — "the filter lifts when a member can
         pursue a desire that is a diff rather than a distance".
 
-        A duty's means is not deduced here and could not be: it is the HONOURED row for that
+        A duty's means is not deduced here and could not be: it is the row OWED to that
         counterparty, which the market's own `honoured.rq` derives from the delivery chain.
         None where no lever answers — a debt to somebody my hardware cannot reach — and that
         None is the point. It used to be an exception thrown deep inside actuation; now it is
@@ -291,11 +291,11 @@ class Deliberator(Module):
         #  binds no premise, and a premise that cannot bind proves nothing about serving. So
         #  anything short of a plan falls through to the pre-#255 road, unchanged: the
         #  honoured row for this counterparty, and the actuation boundary judges the vessel
-        #  when it pours. Handed back as a one-row plan labelled HONOURED, which is not a
+        #  when it pours. Handed back as a one-row plan labelled DUTY, which is not a
         #  search outcome and is not written to the trace: it is the row the duty names.
         for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union):
-            if not row.is_chosen and row.for_agent == desire.owed_to:
-                return planner.Plan(HONOURED, (row,))
+            if row.for_agent == desire.owed_to:
+                return planner.Plan(DUTY, (row,))
         return None
 
     def _planned(self, desire: Desire) -> planner.Plan | None:
@@ -392,7 +392,7 @@ PLAN_QUERY = (Path(__file__).parent / "plan.rq").read_text()
 
 OFFER = AG + "Offer"
 
-#  A duty's fallback plan — the honoured row for its counterparty when the search found no
-#  path. Not one of the planner's outcomes and never in the trace; it labels a row handed to
+#  A duty's fallback plan — the row owed to its counterparty when the search found no path.
+#  Not one of the planner's outcomes and never in the trace; it labels a row handed to
 #  execution so the ledger's prose says where the step came from.
-HONOURED = "honoured"
+DUTY = "duty"

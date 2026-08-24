@@ -29,17 +29,19 @@ import logging
 import pyoxigraph as ox
 import rdflib
 
-from .ontology import EFFECTS_GRAPH
+from .ontology import ACTIONS_GRAPH
 from .store import bindings
 
 log = logging.getLogger("effects")
 
-#  Which rule belongs to which means, and the two queries it carries. Asked of the effect graph
-#  by NAME, because that graph is the one place rules live and a rule for a means nobody loaded
-#  is a rule nothing will ever ask for.
+#  Which ACTION carries this means, and the two queries it carries as its effect. Asked of the
+#  action graph by NAME, because that graph is the one place actions live and an action for a
+#  means nobody loaded is one nothing will ever ask for. An action with no construct states no
+#  effect and is not returned — the gate refuses a world whose menu offers one.
 _RULE_Q = """
 SELECT ?rule ?construct ?retracts ?lands ?confirmed WHERE { GRAPH <%s> {
-  ?rule <http://example.org/orexis#effectOf> <%s> ;
+  ?rule a <http://example.org/orexis#Action> ;
+        <http://example.org/orexis#means> <%s> ;
         <http://www.w3.org/ns/shacl#construct> ?construct .
   OPTIONAL { ?rule <http://example.org/orexis#retracts> ?retracts }
   OPTIONAL { ?rule <http://example.org/orexis#landsAfter> ?lands }
@@ -53,7 +55,7 @@ def rule_for(store, means: str) -> dict | None:
     yet, and a lever whose consequences nobody has written down is still a lever that works —
     it is only one a planner cannot reason about.
     """
-    rows = bindings(store.query(_RULE_Q % (EFFECTS_GRAPH, means)))
+    rows = bindings(store.query(_RULE_Q % (ACTIONS_GRAPH, means)))
     return rows[0] if rows else None
 
 

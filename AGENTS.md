@@ -115,7 +115,7 @@ record is worse than none, because it is still cited.
    [a-package-owns-its-namespace](knowledge/decisions/a-package-owns-its-namespace.md).
 
    **There is ONE package tree and one mechanic.** `packages/<family>/<name>/` holds whichever
-   of `ontology.ttl`, `shapes.ttl`, `rules.ru`, `review.rq` and Python it wants — every one
+   of `ontology.ttl`, `shapes.ttl`, `rules.ru`, `actions.ttl`, `review.rq` and Python it wants — every one
    optional, and an omission is a statement. `packages/part/esp32/` is an ontology and nothing
    else because a board has no behaviour a runtime could load; `packages/capability/market/` has
    all of it. Neither is more of a package than the other, and that is the point: a plant, a

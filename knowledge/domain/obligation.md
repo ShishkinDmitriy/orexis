@@ -53,7 +53,7 @@ clock started.
 # It is actionable because it names a creditor
 
 The counterparty is not decoration on the record — it is the key that finds the lever, through the
-honoured half of the menu. [affordance](/domain/affordance.md) has that mechanism.
+rows of the menu that name whom they serve. [affordance](/domain/affordance.md) has that mechanism.
 
 What it buys is that an agent does not search for a way to pay a debt. It reads one.
 

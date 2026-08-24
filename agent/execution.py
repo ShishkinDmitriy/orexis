@@ -19,8 +19,8 @@ Now every trigger arrives here and none of them decides. `pursue(agent, desire)`
 because the world moves, so a committed tail would be a promise about a future nobody has seen.
 The tail is in the trace for a reader.
 
-**Nothing here names a package.** The link from a row to its code is `ag:takenBy`, stated by
-the package that ships the row — a fact a sovereign can query, where `planner._dose` still
+**Nothing here names a package.** The link from a row to its code is `ag:takenBy`, stated on the action node beside
+the precondition and the effect — a fact a sovereign can query, where `planner._dose` still
 spells the two SIZING families by hand because a bid and a dose are sized by different names. See knowledge/domain/execution.md,
 knowledge/domain/actor.md and knowledge/decisions/an-intention-is-a-plan-committed-to.md.
 """
@@ -36,7 +36,8 @@ log = logging.getLogger("execution")
 
 #  Asked by NAME of the whole default graph — the T-Box is public, and which capability takes
 #  a means is a fact about the vocabulary rather than about any world.
-_TAKEN_BY_Q = f"SELECT ?family WHERE {{ <%s> <{AG}takenBy> ?family }} LIMIT 1"
+_TAKEN_BY_Q = (f"SELECT ?family WHERE {{ ?action <{AG}means> <%s> ; "
+               f"<{AG}takenBy> ?family }} LIMIT 1")
 
 
 def taken_by(query, means: str) -> str | None:

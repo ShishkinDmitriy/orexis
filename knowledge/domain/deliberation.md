@@ -334,8 +334,8 @@ is why a world holding such a lever is refused before it can run.
 
 # What deliberation does with a duty (#218)
 
-Asked about a stake, the search ranges over CHOSEN rows alone and never proposes an honoured
-one — the split itself is [affordance](/domain/affordance.md)'s. What belongs here is why a duty
+Asked about a stake, the search ranges over the agent's OWN rows alone and never proposes one
+owed to somebody — the split itself is [affordance](/domain/affordance.md)'s. What belongs here is why a duty
 is deliberated about at all, since the obvious arrangement is that it is not.
 
 Honouring used to be *never proposed*: the whether was settled elsewhere and by others — the

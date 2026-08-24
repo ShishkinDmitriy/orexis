@@ -7,6 +7,16 @@
 @prefix ssn:        <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 
+#  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
+#    ag:means      the kind of act, a kernel word;
+#    ag:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
+#                  and ?for_agent where the row is a duty owed to someone; `$me` and
+#                  `$properties` substituted by the collector, prefixes prepended by the store;
+#    sh:construct  its EFFECT, with ag:retracts, ag:landsAfter and ag:confirmedBy beside it;
+#    ag:takenBy    the capability whose module carries it out.
+#  Precondition, effect and taker were three files and a fourth surface; a STRIPS operator is one
+#  thing, and an author adds a way of acting by adding a node here and a `take()` to a module.
+
 #################  What BUYING would make true  #################
 #
 #  The lever every plant in this project actually pulls, and the planner could not see it. Only
@@ -36,9 +46,32 @@
 #  What it must NOT do is hide that. The optimism is why `ag:landsAfter` below is generous and
 #  why `ag:confirmedBy` is by OBSERVATION: nothing is true until a reading says so.
 
-market:AcquireEffect
-    a sh:SPARQLRule ;
-    ag:effectOf ag:Acquire ;
+market:Acquiring
+    a ag:Action ;
+    ag:means ag:Acquire ;
+
+    #  AVAILABLE in a market I bid in WHOSE WINNINGS CAN PHYSICALLY REACH MY SUBJECT: the host
+    #  holds an actuator plumbed to my own pot, so opening it puts the good where I am. Deduced
+    #  link by link; only the last — that the good RAISES this property — is stated, once, by
+    #  the domain, because it is physics. The valuation joins through the venue's good (#198):
+    #  property alone put both directions on both rows the day two venues priced one property.
+    ag:available """
+        SELECT DISTINCT ?property ?via ?direction WHERE {
+          VALUES ?property { $properties }
+          $me ag:actsFor ?subject .
+          $me market:bidsIn ?via .
+          ?via market:marketFor ?src .
+          ?src market:supplies ?good .
+          ?host market:hosts ?via ;
+                actuation:hasActuator ?lever .
+          ?lever actuation:actuates ?subject .
+          ?valuation market:ofGood ?good ;
+                     market:aboutProperty ?property ;
+                     market:direction ?direction .
+        }""" ;
+
+    #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
+    ag:takenBy market:Bidding ;
     rdfs:label "what winning a bid makes true" ;
 
     #  The node-level half — an agent with no venue and no balance cannot buy anything, whatever
@@ -159,9 +192,32 @@ market:AcquireEffect
 #  unplannable, still servable by the honoured row, which is the graceful arrival every
 #  widening in this repo is held to.
 
-market:ApplyEffect
-    a sh:SPARQLRule ;
-    ag:effectOf ag:Apply ;
+market:Serving
+    a ag:Action ;
+    ag:means ag:Apply ;
+
+    #  AVAILABLE as a DUTY — ?for_agent bound — for each buyer this venue admits who acts for a
+    #  subject my valve serves: the ACL's shape applied to obligation, so a presentation from
+    #  anyone else is a forgery before it is a duty. The valuation is tied by the RECIPIENT's
+    #  stated need, not the good alone (#198 from the other side): a valve serving a pot must not
+    #  also claim to move that pot's stored litres. Disclosure, not a filter — what an obligation
+    #  makes me do arrives as a want, and the deliberator ranges over it like any other.
+    ag:available """
+        SELECT ?property ?via ?direction ?for_agent WHERE {
+          $me market:hosts ?venue ; actuation:hasActuator ?via .
+          ?venue market:marketFor ?source .
+          ?via actuation:drawsFrom ?source ;
+               actuation:actuates ?subject .
+          ?source market:supplies ?good .
+          ?for_agent market:bidsIn ?venue ; ag:actsFor ?subject .
+          ?subject ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?property .
+          ?valuation market:ofGood ?good ;
+                     market:aboutProperty ?property ;
+                     market:direction ?direction .
+        }""" ;
+
+    #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
+    ag:takenBy market:Hosting ;
     rdfs:label "what serving a presented claim makes true" ;
 
     sh:construct """

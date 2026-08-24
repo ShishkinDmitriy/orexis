@@ -118,7 +118,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
 
     def honoured(who):
         return [r for r in menu_of(st.query, uri(who), desires_build(st, who).query_union)
-                if not r.is_chosen]
+                if not r.is_own]
 
     assert not regions_of(desires_build(st, "city").query_union, uri("city")), \
         "a mains states no ranges — the city wants nothing for itself"
