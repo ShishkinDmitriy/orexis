@@ -60,6 +60,12 @@ The merge had one sharp edge worth recording because it nearly landed: the refle
 `super().propose()` returning None fell through to the shop. Inlining them would have left a
 dealer with no aim quietly refusing to refill.
 
+Both clauses have since been deleted whole. The merge left one class asking two questions, and
+the second — does taking this lever leave me better off — subsumed the first; see
+[a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md), including
+what the shop clause took with it. This record's claim is untouched by that: a family whose
+members contain one another was never a family, and it is now not even two clauses.
+
 ## Consulting is re-seated, not deleted
 
 `desire:Consulting`, `deliberation:Consulting` and the unwritten open-minded keeper were the real

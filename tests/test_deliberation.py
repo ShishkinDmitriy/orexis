@@ -1,11 +1,17 @@
 """Deliberation: the whether, extracted — and provably no longer the bidder's.
 
 Phase 4 of knowledge/decisions/an-intention-is-an-amortised-deliberation.md, and the end of the
-roadmap it opened. The welded chain (below the aim → pursue; cannot see → look) is now the
-Reflex member of a family, asked for through `agent.provider` — so the round tests hold
-untouched, and the one NEW thing to prove is the seam itself: silence the deliberator and a
-thirsty bidder with a fresh reading in hand submits nothing, because the whether genuinely
-moved. That test is the property an LLM member will stand on.
+roadmap it opened. The welded chain (below the aim → pursue; cannot see → look) moved out of
+the bidder, so the round tests hold untouched and the one NEW thing to prove is the seam
+itself: silence the deliberator and a thirsty bidder with a fresh reading in hand submits
+nothing, because the whether genuinely moved. That test is the property an LLM member will
+stand on.
+
+**The chain itself is gone now**, absorbed by the search that used to run in front of it —
+see a-plan-is-a-path-of-graph-diffs.md. So the assertions here are about the BEHAVIOUR the
+reflex used to carry rather than about the reflex: a thirsty plant buys, a sated one does not,
+a duty is never proposed as a choice, and an agent whose search cannot answer proposes
+nothing instead of finding a second road.
 """
 
 from __future__ import annotations
@@ -61,17 +67,17 @@ def test_every_agent_deliberates_including_one_with_nothing_to_decide(make):
         "nothing to decide is not zero things decided — an agent with no wants files no figures"
 
 
-# --- the reflex, which is the old chain verbatim ----------------------------
+# --- the behaviour the old chain carried, asked of the search ---------------
 
 def test_not_seeing_means_look(make):
-    """The oldest rule in the reflex, now asked in the words it means (#240).
+    """The oldest rule in deliberation, asked in the words it means (#240).
 
     It used to be `propose(property, None) == OBSERVE` — a first line that read a missing value
     as ignorance. The behaviour is unchanged and the QUESTION is different: a desire says which
     epistemic failure it is, so "never read" and "the caller passed no number" stop being the
     same sentinel. Both epistemic states are asserted, because they are repaired by the same
     move for the same reason and a rule that covered only one would leave stale readings
-    unwatched.
+    unwatched. It answers BEFORE any search runs, which is why an agent at rest plans nothing.
     """
     from agent.desire import Desire
 
@@ -83,26 +89,47 @@ def test_not_seeing_means_look(make):
     assert decider.propose_for(never_read) == OBSERVE
     assert decider.propose_for(too_old) == OBSERVE, \
         "a reading that stopped being evidence is repaired by looking, not by watering"
-    assert decider.propose(MOISTURE, None) is None, \
-        "and the bare value door steers only — it no longer answers the epistemic question"
 
 
 def test_below_the_aim_means_pursue_and_above_means_nothing(make):
-    """Fern aims at 0.55. The whole reflex is the gap's sign against the AIM — the pick, not
-    the region's edge, because pursuing only past the band would leave the agent permanently
-    short of where it decided to sit."""
+    """Fern aims at 0.55, and steering is toward the PICK rather than the region's edge —
+    pursuing only past the band would leave the agent permanently short of where it decided
+    to sit.
+
+    Asked of the search, which is the only road there is. The chain that used to answer this
+    compared the gap's sign to the lever's stated direction; the search builds the world a
+    purchase would reach and takes it only if that world scores better. The two agree at every
+    value below the aim and at every value above it, which is what made deleting the first one
+    safe — and they disagree exactly where the old answer was wrong, which
+    `tests/test_planning.py` measures on a plant sitting above its region.
+    """
+    from agent.desire import Desire
+
     decider = decider_of(make("fern"))
-    assert decider.propose(MOISTURE, 0.10) == ACQUIRE
-    assert decider.propose(MOISTURE, 0.54) == ACQUIRE
-    assert decider.propose(MOISTURE, 0.55) is None
-    assert decider.propose(MOISTURE, 0.80) is None
+    for value in (0.10, 0.54):
+        stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
+        assert decider.propose_for(stake) == ACQUIRE, f"thirsty at {value} and not buying"
+    for value in (0.55, 0.80):
+        stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
+        assert decider.propose_for(stake) is None, f"content at {value} and buying anyway"
 
 
-def test_a_property_with_no_aim_is_not_pursued(make):
-    """Fern holds a temperature region and picked no temperature aim: an agent that picked no
-    point has decided not to steer that property, and the reflex honours the decision rather
-    than inventing a point to pursue toward. None is a decision, not an absence of one."""
-    assert decider_of(make("fern")).propose(TEMPERATURE, 5.0) is None
+def test_a_property_this_agent_cannot_move_is_not_pursued(make):
+    """Fern can SEE a temperature and holds no lever that changes one, so nothing is proposed
+    about it — a want with no lever, which is legitimate and now legible.
+
+    This used to be asserted about the AIM: fern picks no temperature aim, and the chain
+    refused to steer a property its agent had chosen no point in. That reason has gone with
+    the chain — a declared measure stands the region's CENTRE in where no pick exists, so a
+    search would steer an aimless property if it held a lever for one. It never got the
+    chance even before the deletion, because the search already answered first for every
+    desire it could rank; the reflex's aim clause had been unreachable for a measurable want
+    since simulation landed. What answers now is the honest fact: no lever, no move.
+    """
+    from agent.desire import Desire
+
+    stake = Desire(uri="urn:w", urgency=0.4, observed_property=TEMPERATURE, value=5.0)
+    assert decider_of(make("fern")).propose_for(stake) is None
 
 
 # --- the seam is load-bearing: the whether is not the bidder's --------------
@@ -118,8 +145,9 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
     market = market_of(fern)
     #  Both doors: "silenced" means it answers nothing whatever it is asked. Patching only
     #  the one this scenario happens to use would pass while saying less than it claims, and
-    #  would break silently the next time a caller changed which question it asks.
-    monkeypatch.setattr(decider_of(fern), "propose", lambda prop, value: None)
+    #  would break silently the next time a caller changed which question it asks. They are
+    #  the desire door and the property door now — the bare-value one went with the reflex.
+    monkeypatch.setattr(decider_of(fern), "propose_about", lambda prop: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
@@ -133,8 +161,9 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     market = market_of(fern)
     #  Both doors: "silenced" means it answers nothing whatever it is asked. Patching only
     #  the one this scenario happens to use would pass while saying less than it claims, and
-    #  would break silently the next time a caller changed which question it asks.
-    monkeypatch.setattr(decider_of(fern), "propose", lambda prop, value: None)
+    #  would break silently the next time a caller changed which question it asks. They are
+    #  the desire door and the property door now — the bare-value one went with the reflex.
+    monkeypatch.setattr(decider_of(fern), "propose_about", lambda prop: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert fern.bidding().pending is None
@@ -143,9 +172,11 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     assert keeper.standing() == []
 
 
-def test_with_the_reflex_in_place_the_round_runs_exactly_as_before(make):
-    """The extraction carries the old behaviour: thirsty bids, sated cedes. The round tests
-    hold this in the large; this is the same fact stated where the seam lives."""
+def test_the_round_runs_exactly_as_it_always_did(make):
+    """Thirsty bids, sated cedes — through the extraction, and through the reflex's deletion.
+    The round tests hold this in the large; this is the same fact stated where the seam lives,
+    and it is the one assertion that would have caught the search quietly deciding differently
+    from the chain it replaced."""
     thirsty = make("fern", genesis_store({"fern": 0.10}))
     thirsty.deliver(market_of(thirsty).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert len(thirsty.sent.to(f"{market_of(thirsty).bid_topic}/fern")) == 1
@@ -155,43 +186,39 @@ def test_with_the_reflex_in_place_the_round_runs_exactly_as_before(make):
     assert sated.sent.to(f"{market_of(sated).bid_topic}/fern") == []
 
 
-# --- the direction is the graph's, not the code's (#127) --------------------
+# --- which way a lever moves things is the graph's, not the code's (#127) ---
 
-def test_the_sign_is_read_off_the_domain_not_hardcoded(make):
-    """Flip the domain's statement — say water LOWERS moisture — and the reflex pursues on the
-    other side of the aim, with no code change. This is the whole of what stating the direction
-    bought: a heater against a cold snap is the same rule, and the old `value < aim` was the
-    one piece of "buy water to raise moisture" written nowhere in any graph."""
-    from agent.ontology import ONTOLOGY_GRAPH
+def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
+    """Say that buying water LOWERS the moisture it is priced in, and a thirsty plant stops
+    buying — with no line of Python changed anywhere.
 
-    ds = genesis_store()
-    ds.update(f"""
-        PREFIX market: <http://example.org/orexis/market#>
-        DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Raises }} }}
-        INSERT {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Lowers }} }}
-        WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction market:Raises }} }}""")
-    decider = decider_of(build_agent_quiet(make, ds))
-    assert decider.propose(MOISTURE, 0.10) is None      # below the aim helps nothing now
-    assert decider.propose(MOISTURE, 0.80) == ACQUIRE   # above it is what the lot relieves
+    This is #127's claim, asked where the claim now lives. It used to be asked of
+    `market:direction`, a one-bit fact the chain compared against the gap's sign: flip Raises
+    to Lowers and the reflex pursued on the other side of the aim. The search never reads that
+    bit. What it reads is the EFFECT — the market's own `sh:construct`, which predicts
+    `value + litres/conversion` — so the sign is stated by the package that owns the lever,
+    in RDF, and stated more expressively than one bit ever could: an effect says how far, not
+    merely which way.
 
-
-def test_no_stated_direction_means_no_pursuit(make):
-    """Refusing is honest where guessing would be the hardcoded sign sneaking back in as a
-    default. The shape refuses such a domain at the gate anyway; this is the runtime honouring
-    the same fact if it ever meets it."""
-    from agent.ontology import ONTOLOGY_GRAPH
+    So the fixture flips the arithmetic in the shipped rule rather than the direction term.
+    A plant at 0.10 buys because the world it would reach is wetter; told that buying dries
+    its soil, the same plant finds that world worse than standing still and declines. The bit
+    itself is untouched here, which is the point — it steers nothing now, and its retirement
+    rides with repair-matching rather than with this test.
+    """
+    from agent.desire import Desire
+    from agent.ontology import EFFECTS_GRAPH
 
     ds = genesis_store()
     ds.update(f"""
-        PREFIX market: <http://example.org/orexis/market#>
-        DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction ?d }} }}
-        WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?t market:direction ?d }} }}""")
-    decider = decider_of(build_agent_quiet(make, ds))
-    assert decider.propose(MOISTURE, 0.10) is None
-
-
-def build_agent_quiet(make, ds):
-    return make("fern", ds)
+        DELETE {{ GRAPH <{EFFECTS_GRAPH}> {{ ?rule sh:construct ?text }} }}
+        INSERT {{ GRAPH <{EFFECTS_GRAPH}> {{ ?rule sh:construct ?flipped }} }}
+        WHERE  {{ GRAPH <{EFFECTS_GRAPH}> {{ ?rule ag:effectOf ag:Acquire ; sh:construct ?text }}
+                  BIND(REPLACE(?text, "(\\\\$value) \\\\+ ", "$1 - ") AS ?flipped) }}""")
+    decider = decider_of(make("fern", ds))
+    stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=0.10)
+    assert decider.propose_for(stake) is None, \
+        "a lever the graph says would dry this plant out was pulled anyway"
 
 
 # --- the menu: what I could do, derived -------------------------------------
@@ -299,47 +326,19 @@ def test_two_denominations_make_two_rows_and_never_four(make):
         "a cross-join would put both directions on both venues, four rows for two levers")
 
 
-# --- the Planning member (arc 5) --------------------------------------------
+# --- the dealer's two-step (arc 5) ------------------------------------------
+#
+#  WHAT IS NOT HERE ANY MORE. Two tests stood here about the reflex's one clause past the
+#  region — `_my_shop_needs`, which fired only for an agent whose own vessel's stock was the
+#  property in hand, and made a dealer buy while the barrel held less than the lot it had
+#  promised even where its aim was met. The clause went with the reflex and nothing derives
+#  serveability as a DESIRE, so the search cannot pursue what it is never handed. Inert in
+#  every shipped world (the supplier aims at 3.0 L and offers 2.0 L, so short of the lot is
+#  short of the aim), and live for anyone who authors an aim below their own lot. Recorded in
+#  a-plan-is-a-path-of-graph-diffs.md rather than left as a test nobody could keep green.
 
 STORED = "http://example.org/orexis/water#StoredLitres"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
-
-
-def test_the_dealers_clause_answers_for_the_dealer_and_nobody_else(make):
-    """What the Planning GRANT used to say, said about the fact instead.
-
-    There was a `deliberation:Planning` member derived from levers that compose — acting for a
-    source you offer, refillable from a source another offers — and a `deliberation:Reflex` it
-    SUBCLASSED. The subclass called `super().propose()` first and added one clause; that clause
-    asks `_my_shop_needs`, which answers only for a property that is this agent's own vessel's
-    stock. A member that contains the other, whose extra branch is inert for every other agent,
-    is not an interchangeable implementation — so they are one class and the world derives
-    neither.
-
-    What must still be true is exactly what the grant protected: the clause fires for the
-    dealer and is silent for everyone else. That is a property of the data now rather than of
-    who was handed which module, which is why this asks the clause directly."""
-    assert make("supplier").deliberator._my_shop_needs(STORED) is not None, \
-        "the dealer acts for a vessel it offers — its shop owes a lot"
-    for other in ("fern", "city"):
-        assert make(other).deliberator._my_shop_needs(STORED) is None, \
-            f"{other} has no shop, so the dealer's clause must not answer for it"
-
-
-def test_the_planner_pursues_the_lot_past_the_aim(make, monkeypatch):
-    """The one deduced desire past the region: the hosted lot must be serveable. With the aim
-    satisfied (value above it) the reflex says nothing — and the planner still says ACQUIRE
-    while the vessel holds less than the lot its shop owes, because every downstream buyer's
-    Acquire silently preconditions stock >= lot. Aim moved to 1.0 for the test so the two
-    members genuinely disagree: value 1.5 is comfortable for the reflex and too empty to
-    trade from."""
-    supplier = make("supplier")
-    planner = supplier.deliberator
-    monkeypatch.setattr(supplier.deducer, "aim", lambda p: 1.0)
-    assert planner.propose(STORED, 1.5) == ACQUIRE, \
-        "stock 1.5 < lot 2.0 — the shop cannot serve, so the dealer buys"
-    assert planner.propose(STORED, 2.5) is None, \
-        "stock covers the lot and the aim is met — nothing to do is a decision"
 
 
 def test_the_plan_is_two_rows_through_two_venues(make):
@@ -382,13 +381,19 @@ SELECT ?means ?property ?via ?direction WHERE {
 
 # --- the menu's two modes (#218) --------------------------------------------
 
-def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
-    """The sovereign asking what an agent DOES gets its duties beside its options — and this
-    member proposes none of them, for a narrower reason than the first draft claimed: an
-    obligation IS a want (ag:Obligation) and is meant to reach deliberation, but the
-    reflex steers a PROPERTY toward an aim and a duty is not a property-gap. Asked across the
-    range rather than at one value, because a filter that leaks at one sign is a filter that
-    leaks."""
+def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
+    """The sovereign asking what an agent DOES gets its duties beside its options — and asked
+    about a PROPERTY it holds a stake in, deliberation proposes none of them.
+
+    An obligation IS a want (ag:Obligation) and is meant to reach deliberation, through the
+    door that takes the want itself. What must not happen is a duty answering a question about
+    a stake: the honoured row exists because somebody else holds paper, and serving it is not
+    a move this agent may choose for its own reasons. The search enforces it by filtering to
+    chosen rows for anything that is not a duty — the same filter the chain applied, for the
+    same reason, one road further along.
+    """
+    from agent.desire import Desire
+
     supplier = make("supplier")
     rows = menu_of(supplier.beliefs.query, supplier.me.uri, supplier.desires.query_union)
     duties = [r for r in rows if not r.is_chosen]
@@ -396,9 +401,13 @@ def test_a_duty_is_on_the_menu_and_the_reflex_passes_over_it(make):
 
     deliberator = supplier.deliberator
     duty_means = {r.means for r in duties}
+    #  Across the range rather than at one value, because a filter that leaks at one sign is a
+    #  filter that leaks.
     for row in duties:
         for value in (0.0, 0.5, 5.0, 50.0):
-            assert deliberator.propose(row.observed_property, value) not in duty_means, \
+            stake = Desire(uri="urn:w", urgency=0.5,
+                           observed_property=row.observed_property, value=value)
+            assert deliberator.propose_for(stake) not in duty_means, \
                 "a duty was proposed as if it were a choice"
 
 
@@ -445,17 +454,57 @@ def test_an_unpresented_duty_is_hot_and_still_not_acted_on(make):
     assert supplier.deliberator.propose_for(standing) is None
 
 
-def test_a_stake_reaches_the_same_door_and_behaves_exactly_as_before(make):
-    """The widening must not move the reflex. A desire with a property and a value is the old
-    question in the new shape, and it has to answer identically — the regression this design
-    is most exposed to is a rewrite that quietly changes what a thirsty agent does."""
+def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
+    """There is ONE road, and this is the assertion that says so.
+
+    It replaces an equivalence test — `propose_for` against the bare-value door, at three
+    values — which could only ever say that the two roads agreed. They did. What matters now
+    is that there is no second road to fall back to when the first one comes up empty: a
+    search that finds no candidate returns NOTHING, and the honest answer to that is to
+    propose nothing, not to consult a chain that would have steered by the gap's sign.
+
+    Made to fail by hand: a line standing in for the deleted deferral — return ACQUIRE where
+    the plan comes back NOTHING — turns this red, which is what a guard that has never failed
+    cannot claim about itself.
+    """
+    from agent import planner as search
     from agent.desire import Desire
+    from agent.planner import Planner
 
     fern = make("fern")
-    reflex = fern.deliberator
-    for value in (0.30, 0.55, 0.80):
-        stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
-        assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value)
+    monkeypatch.setattr(Planner, "plan", lambda self, desire: search.Plan(search.NOTHING))
+    thirsty = Desire(uri="urn:want", urgency=1.0, observed_property=MOISTURE, value=0.10)
+    assert fern.deliberator.propose_for(thirsty) is None, \
+        "the search said it had nothing to weigh, and something else answered anyway"
+
+
+def test_a_stake_nothing_measures_is_complained_about_rather_than_decided_quietly(
+        make, caplog):
+    """The other end of the gate `tests/test_validate.py` holds, met at runtime anyway.
+
+    A world with a stake nothing can weigh is refused before it is onboarded — but a society
+    onboarded before the gate existed will start, and its agents will rank every possible
+    world at the same flat 1.0 and conclude that nothing helps. That conclusion is not wrong
+    so much as empty, and an agent reaching it must say so: the deferral it used to make was
+    quiet, and quiet is what turned this into a case nobody had noticed.
+
+    Untyping the property is the same fixture the gate test uses, from the other side.
+    """
+    import logging
+
+    from agent.desire import Desire
+    from agent.ontology import ONTOLOGY_GRAPH
+
+    ds = genesis_store()
+    ds.update(f"""DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}
+                  WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}""")
+    decider = decider_of(make("fern", ds))
+    stake = Desire(uri="urn:w", urgency=1.0, observed_property=MOISTURE, value=0.10)
+
+    with caplog.at_level(logging.ERROR):
+        decider.propose_for(stake)
+    assert "nothing I composed can measure it" in caplog.text, \
+        "an agent ranking unrankable worlds decided in silence"
 
 
 def test_every_want_is_drawn_by_the_one_module_that_sees_them_all(make):

@@ -47,7 +47,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [intention](/domain/intention.md) - A commitment to reduce a named gap by a named means, kept in a private ledger. Granted by a stake AND a lever.
 
-* [deliberation](/domain/deliberation.md) - The whether, extracted: given the gap and what stands, name the next move. Three members, two of them built.
+* [deliberation](/domain/deliberation.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
 
 * [affordance](/domain/affordance.md) - One row of what an agent could do. Derived and never stored, contributed per package, and the reason chaining needs no preconditions.
 

@@ -73,18 +73,73 @@ def validate_world(world: str) -> bool:
     from agent.beliefs import Beliefs
     from agent.desire import Desires
 
+    desires = {a: Desires(Beliefs(st, a)) for a in everyone}
     for a in everyone:
-        wants = Desires(Beliefs(st, a))
-        for triple in wants.construct(
+        for triple in desires[a].construct(
                 "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?g { ?s ?p ?o } }"):
             data.add(effects._triple(triple))
     ok, report = conforms(data)
     print(report)
 
+    #  And the two questions no shape can ask, because both are about what the loaded
+    #  PACKAGES say rather than about what the world's files hold.
+    if not deliberable(st, desires):
+        ok = False
+
     for agent_id, caps in genesis.derived(st):
         marker = "" if agent_id in everyone else "   (no opening beliefs authored)"
         log.info("  %-10s %s%s", agent_id, caps, marker)
     return ok
+
+
+def deliberable(st, desires: dict) -> bool:
+    """Can every agent in this world actually be deliberated FOR? Refuse here if not.
+
+    There is one road through deliberation now — the search — and a search answers by
+    simulating each lever and ranking the world it would reach. Two things have to be true
+    for that to mean anything, and neither is a fact about this world alone: every lever on
+    an agent's menu must have an effect rule to simulate, and every stake it holds must have
+    a measure to rank by. Where one is missing the search does not fail, it CONCLUDES from
+    part of the evidence — a lever nobody could simulate is passed over, and a want nothing
+    measures scores the same flat 1.0 in every candidate world, so "no move improves on doing
+    nothing" comes back with confidence and the agent stops acting.
+
+    Both used to be survivable at runtime because there was a second road: a partial plan and
+    an unmeasured want both deferred to the reflex, which decided by the gap's sign. Deleting
+    the reflex is what makes this a gate. The choice was the sovereign's and it is the same
+    one this project keeps taking — refuse at genesis rather than degrade silently — and it
+    is affordable exactly because both questions are answerable from ratified files: which
+    levers a world implies, and which packages are loaded.
+
+    See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
+    """
+    from agent import effects, loader
+    from agent.menu import menu_of
+    from agent.regions import regions_of
+    from agent.world import load_self
+
+    faults = 0
+    for agent_id, wants in desires.items():
+        me = load_self(st.query, agent_id)
+        for row in menu_of(st.query, me.uri, wants.query_union):
+            if effects.rule_for(st, row.means) is None:
+                faults += 1
+                log.error("%s could take %s through %s, and no loaded package says what that "
+                          "DOES — a search that cannot simulate a lever passes it over, and "
+                          "then concludes from the rest of the menu", agent_id,
+                          row.means.rsplit("#", 1)[-1], row.via.rsplit("#", 1)[-1])
+        #  Asked of the CLASSES this agent's grants would load, never of a built agent: an
+        #  agent needs credentials onboarding has not minted yet, and a gate that had to run
+        #  the runtime would be checking the thing it exists to run before.
+        answering = loader.registry_for(me.capabilities).values()
+        for observed_property in sorted(regions_of(wants.query_union, me.uri)):
+            if any(cls.measures(st.query, observed_property) for cls in answering):
+                continue
+            faults += 1
+            log.error("%s holds a stake in %s and nothing it composed can measure one — "
+                      "every possible world would score alike, and the search would report "
+                      "that nothing helps", agent_id, observed_property.rsplit("#", 1)[-1])
+    return not faults
 
 
 def main() -> None:

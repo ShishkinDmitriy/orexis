@@ -5,11 +5,10 @@ description: >-
   The whether — given the gap and the standing commitments, name the next move; the acting
   modules carry it out. The KERNEL's and granted by nothing, because a mind is not
   plug-in-able: every agent builds one, and an agent with nothing to pursue proposes nothing
-  and reports nothing rather than reporting zeros. It was a family of three, and the two
-  built members did not survive their own evidence — Planning subclassed Reflex, called it
-  first, and added one clause inert for any agent without a shop. Asking a model what next
-  remains a real alternative and becomes a PICK an agent may revise, not a capability its
-  world derives.
+  and reports nothing rather than reporting zeros. ONE road through it — a bounded search
+  that builds the world each lever would make and keeps the one worth reaching. Asking a
+  model what next remains a real alternative and becomes a PICK an agent may revise, not a
+  capability its world derives.
 ---
 
 # What it is
@@ -18,48 +17,54 @@ The **whether**. Whether to look and whether to pursue used to be welded into th
 reading arrived and `value_bid`'s cede was the whole of deciding — which meant the one place
 this project intends to seat a model
 ([llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md)) had no seam to drop into. It is
-a family now: a deliberator is asked `propose(property, freshest value or None)` and answers
-with a move — `Observe`, `Acquire` — or with None, **which is a decision, not an absence of
-one**: the actors treat it exactly as they treat their own cooldowns.
+its own thing now, asked `propose_for(desire)` and answering with a move — `Observe`,
+`Acquire`, `Actuate`, `Apply` — or with None, **which is a decision, not an absence of one**:
+the actors treat it exactly as they treat their own cooldowns.
 
-`propose_for(desire)` is the same question asked properly. A property and a value can only ever
-express a stake, and an agent also wants things that are not distances — "this claim redeemed"
-is a state, wanted, with a deadline. A desire carries either shape and one urgency, so a duty is
-ranked against a thirst rather than running down a second path that never meets the first.
+**The question is a WANT and never a property and a value.** A property and a value can only
+ever express a stake, and an agent also wants things that are not distances — "this claim
+redeemed" is a state, wanted, with a deadline. A desire carries either shape and one urgency,
+so a duty is ranked against a thirst rather than running down a second path that never meets
+the first. There is a second door, `propose_about(property)`, and it is a lookup rather than a
+second question: an actor holding a fresh reading asks what to do about that property, and the
+want it names is found and put through the same road.
 
-**And it is where not-seeing is answered** (#240). `propose` used to open with
+**And it is where not-seeing is answered** (#240). The old bare-value door opened with
 `if value is None: return OBSERVE` — a first line that read a missing number as ignorance. It
 said the right thing for the wrong reason, because None meant two things: *never read*, and
 *the caller has no number to hand you*. The keeper exploited the second to ask the first,
 sweeping noticed gaps and passing None deliberately to mean "should I look?". A desire says which
 epistemic failure it is — `unmeasured` or `stale` — so the question is now asked in the words it
-means, both are answered by the same move, and the bare-value door steers only. One sentinel
+means, and both are answered by the same move, before any search runs. One sentinel
 answering two questions is a sentinel that eventually answers the wrong one.
 
 # Deciding by simulating it
 
-`propose_for` no longer answers only from the gap's sign. Where a lever's package has said what
-that lever DOES, the deliberator builds the world taking it would make — `(beliefs − retracts) +
-adds`, written nowhere — scores that world by the desire's own declared measure, the same text
-every consumer evaluates
+Where a lever's package has said what that lever DOES, the deliberator builds the world taking
+it would make — `(beliefs − retracts) + adds`, written nowhere — scores that world by the
+desire's own declared measure, the same text every consumer evaluates
 ([a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)), and
 takes the move only if the result beats doing nothing. A met desire off its pick still searches:
 met is the outcome's label, urgency is the motive, and near the pick the dose sizes to nothing —
 a deadband nobody chose as a tolerance.
 
-The difference is not academic. A plant sitting ABOVE its region passes every test the reflex
-applies: the pump raises moisture, the aim is above the reading, direction matches sign. Both are
-true of a drowning plant, which is how a society floods one while every module behaves as written.
-Simulation reaches the opposite answer without knowing anything about wetness — it builds the
-world the dose would make, finds it no better, and declines. *Not better* is a decision.
+The difference is not academic, and it is why this is the ONLY road. There used to be a second —
+a chain asking whether a lever POINTS the right way, cheapest rung first — and a plant sitting
+ABOVE its region passes every test that chain applied: the pump raises moisture, the aim is above
+the reading, direction matches sign. Both are true of a drowning plant, which is how a society
+floods one while every module behaves as written. Simulation reaches the opposite answer without
+knowing anything about wetness — it builds the world the dose would make, finds it no better, and
+declines. *Not better* is a decision.
 
-Three things bound it, and each exists because building it found the failure:
+Four things bound it, and each exists because building it found the failure:
 
-- **A search that could not see every lever may not conclude that nothing helps.** Most means
-  have no effect rule, and a plant in `world/simulation` BUYS its water — so a search there sees
-  Observe alone, correctly finds that looking does not wet soil, and would have reported that
-  nothing does. The plant would have stopped bidding. A plan that passed over any lever is
-  marked partial, and a partial plan defers to the reflex.
+- **A search that could not see every lever may not conclude that nothing helps.** A means whose
+  package states no effect cannot be simulated, so it is passed over and the plan is marked
+  PARTIAL — and a plant in `world/simulation` BUYS its water, so a search blind to Acquire finds
+  correctly that looking does not wet soil and reports that nothing does. The plant stops
+  bidding. That used to be survived by handing the question to the chain; it is refused at the
+  gates now, because which levers a world implies is a fact about ratified files
+  ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)).
 - **The dose is asked of the actuator, never computed here.** `dose_for` is the sizing the actor
   would use; a planner that sized its own would simulate an act nobody was going to take. The
   first draft invented half a litre and manufactured a finding — every dose overshot, and the
@@ -77,13 +82,13 @@ Three things bound it, and each exists because building it found the failure:
 **Every lever on a plant's menu states its effect now (#268), and until recently one did not.**
 Only sensing and actuation shipped effect rules, so a plant that BUYS its water had a search
 that saw Observe alone: it correctly found that looking does not wet soil, marked the plan
-partial and deferred. `blind` was 1 for every plant and `better` was zero across three
-societies. The market states what buying does, and the sizing is asked of whoever would take
-the act — the bidder for Acquire, the actuator for Actuate. Asking the actuator about
+partial and handed the question over. `blind` was 1 for every plant and `better` was zero across
+three societies. The market states what buying does, and the sizing is asked of whoever would
+take the act — the bidder for Acquire, the actuator for Actuate. Asking the actuator about
 everything is what made the first attempt worse than the blindness it replaced: a plant that
 holds no valve was sized at nothing, the rule predicted the world the agent already stood in,
-and the search reported that buying does not help. A partial plan defers; a confident one
-overrides the reflex and stops the plant bidding.
+and the search reported that buying does not help — confidently, with nowhere to hand it to and
+nothing to say it was wrong.
 
 **Depth 2 is honest now, and two separate things had to be true for it (#254).**
 
@@ -203,9 +208,10 @@ rule's CONSTRUCTs running against the store rather than the world, and a cycle s
 was only the desire's own value, so a step that moved nothing else was indistinguishable from
 having gone nowhere. Both are closed (#254, #258); if it pins again, `cycles` climbing beside
 it says the search keeps arriving back at worlds already reached rather than being unable to
-go further. `blind` above zero is a
-package that never said what its lever does, which is why a partial plan defers to the reflex
-instead of reporting that nothing helps.
+go further. `blind` above zero is a package that never said what its lever does — a world
+`orexis-validate` refuses, so above zero means a society was started past its gate, and the
+agent logs that it is answering from part of its options rather than quietly finding another
+opinion.
 
 **And the figure that surfaced something uncomfortable: a reporting tick IS a planning pass.**
 `series()` calls `pursued()`, which re-plans every desire the agent holds, so essentially the whole
@@ -217,25 +223,22 @@ figures, it is what the figures found.
 **All zero means nothing was deliberated**, not that planning is free: a desire nobody has read is
 answered by Observe before any search runs, so an agent at rest reports zeros honestly.
 
-# One deliberator, and the member that was a clause
+# One road, and the two that were folded into it
 
-There was a family of three: `Reflex` (the welded chain, depth 1), `Planning` (bounded search,
+There was a family of three: `Reflex` (a welded chain, depth 1), `Planning` (bounded search,
 depth 2, granted by the dealer premise) and `Consulting` (one model call, declared and reserved).
-Two were built, and the two that were built are one class now.
+Two were built; they became one class with two roads through it, and then one road.
 
-**The family did not survive its own evidence.** `PlanningModule` SUBCLASSED `ReflexModule`,
-called `super().propose()` first, and added a single clause asking `_my_shop_needs` — which
-answers only for a property that is the agent's own vessel's stock, and returns None for every
-other agent. A member that contains the other, whose extra branch is inert everywhere else, is
-not an interchangeable implementation of an ability; it is one deliberator with a clause most
-agents do not reach. Rule 2's test is whether the HOW could differ, and here it could not: it
-differed by a condition on the data, which is a branch.
-
-What the Planning grant protected is still protected, against the fact instead of the grant —
-see `test_the_dealers_clause_answers_for_the_dealer_and_nobody_else`. And the merge had one
-sharp edge worth recording: the reflex's early returns meant *the gap says nothing*, not *stop*,
-because `super().propose()` returning None fell through to the shop. Inlining them would have
-left a dealer with no aim quietly refusing to refill.
+**The family did not survive its own evidence, and neither did the second road.** `Planning`
+SUBCLASSED `Reflex` and added one clause inert for any agent without a shop, which is a branch
+rather than an interchangeable implementation — rule 2's test is whether the HOW could differ,
+and here it differed by a condition on the data. That merge left one class asking two
+questions: does this lever point the right way, and does taking it leave me better off. The
+second subsumes the first, so what kept the first alive was the cases the second could not
+answer — a lever with no stated effect, a want with no measure, no lever at all. The first two
+are now refused at genesis and the third proposes nothing, honestly. See
+[a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md), which set
+that deletion as its own acceptance test.
 
 **Consulting stays a seam, and a better-placed one.** Asking a model what next is a genuine
 alternative — it is why the extraction happened at all — but WHICH deliberator answers is a
@@ -248,32 +251,27 @@ one place before reading the records that argue each rung:
 
 | rung | where it lives | built? | record |
 |---|---|---|---|
-| look / act / buy | the deliberator's gap clause | **yes** | [the-ladder-of-means](/decisions/the-ladder-of-means.md) |
+| look / act / buy | the search, at depth 1 | **yes** | [the-ladder-of-means](/decisions/the-ladder-of-means.md) |
 | commit once, keep it | the keeper | **yes** | [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) |
-| plan two levels | the deliberator's shop clause | **yes** | [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) |
+| plan two levels | the same search, at depth 2 | **yes** | [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) |
 | re-pick your own settings | `review:Reckoning` | **yes** | [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) |
 | ask a model what next | a pick, unbuilt | **no** | [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md), [a-consulted-answer-is-a-premise](/decisions/a-consulted-answer-is-a-premise.md) |
 | ask a model to re-pick | `review:Consulting` | **no** | [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) |
 | compile it into a habit | — | **no**, not even declared | [a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md) |
 
 **Declared is not implemented, and that is deliberate** — a term is declared when seating the
-thing is the reason the family exists and the T-Box should say so. What each reserved member will
+thing is the reason the seam exists and the T-Box should say so. What a reserved member will
 NOT be allowed to do is fixed before it exists, which is the point of declaring early.
 
-- **`deliberation:Reflex`** — the old chain, generalised one honest step: cannot see → look;
-  a gap on the side a lever moves → pursue; otherwise nothing. WHICH side is read off the
-  T-Box, not known (#127): the domain states `market:direction` beside the denomination —
-  water Raises moisture — so a heater against a cold snap is the same rule with no code
-  change, and a missing direction means the reflex refuses rather than letting the old
-  hardcoded sign sneak back as a default. Still deterministic, still free.
-- **`deliberation:Planning`** — the reflex one level up (#205): bounded search over menu
-  rows, depth 2 and no deeper, granted by the DEALER premise — acting for a source you offer,
-  refillable from a source another offers: levers that compose. It subsumes the reflex and
-  adds exactly one deduced desire past the region: the hosted lot must be serveable, every
-  downstream buyer's silent Acquire precondition. Its plan — acquire upstream, then offer
-  downstream — is data twice over: `plan_for` in code and `plan.rq` on the ask channel, one
-  text, two readers. A planner always also derives Reflex (the premises nest); a pinned test
-  holds `provider` to handing actors the planner.
+What the two retired terms carried, for a reader meeting the words in an older record.
+`deliberation:Reflex` was *cannot see → look; a gap on the side a lever moves → pursue;
+otherwise nothing*, with WHICH side read off `market:direction` (#127) rather than hardcoded.
+`deliberation:Planning` was the same one level up (#205) — the search, granted by the DEALER
+premise, plus one deduced desire past the region: the hosted lot must be serveable. Both are
+gone; what survives of the second is the search itself, which every agent now runs, and its
+two-step exposition `plan.rq` — a narrative for a reader rather than anything a search
+produces.
+
 - **`deliberation:Consulting`** — RESERVED. One model call over the beliefs, the T-Box, the gap
   and what already stands, emitting a move **from this vocabulary's menu, never free
   text-to-action**. Its constraints are fixed before it exists: the bid *number* stays
@@ -311,15 +309,16 @@ Runs one per candidate, against the [imaginarium](/domain/imaginarium.md). What 
 [effect](/domain/effect.md) IS, what it may claim, and its timing are that page's.
 
 The consequence for this loop: a [means](/domain/means.md) carrying no rule cannot be simulated,
-so the pass is marked PARTIAL and defers to the reflex. Concluding otherwise would be concluding
-from part of the menu, and the row nobody could simulate may be the one that works — measured on
-fern, which buys its water.
+so the pass is marked PARTIAL — a flag that used to route the question elsewhere and now only
+says loudly what happened. Concluding from part of the menu is concluding wrongly, and the row
+nobody could simulate may be the one that works — measured on fern, which buys its water. Which
+is why a world holding such a lever is refused before it can run.
 
 # What deliberation does with a duty (#218)
 
-The reflex filters the menu to CHOSEN rows and never proposes an honoured one — the split
-itself is [affordance](/domain/affordance.md)'s. What belongs here is why a duty is deliberated
-about at all, since the obvious arrangement is that it is not.
+Asked about a stake, the search ranges over CHOSEN rows alone and never proposes an honoured
+one — the split itself is [affordance](/domain/affordance.md)'s. What belongs here is why a duty
+is deliberated about at all, since the obvious arrangement is that it is not.
 
 Honouring used to be *never proposed*: the whether was settled elsewhere and by others — the
 winner's Apply, the auction's allocation, the signature chain — and the fear was that a host

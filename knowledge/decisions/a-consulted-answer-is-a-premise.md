@@ -55,7 +55,9 @@ too.
 ## What you pay for once, you keep
 
 A model call is expensive and a premise is durable. An adopted premise persists as long as it
-holds, so the row it implies persists with it and the reflex exploits it for nothing thereafter.
+holds, so the row it implies persists with it and the search exploits it for nothing thereafter
+(the parent record said "the reflex", and the reflex has since been deleted — what exploits a
+row for free is the deterministic road, whichever one that is).
 That is why this belongs at the moment of being stuck rather than in the loop: the cost is paid
 once per discovery, not once per tick.
 

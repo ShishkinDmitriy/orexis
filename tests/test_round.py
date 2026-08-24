@@ -226,6 +226,15 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
     0.10 read as a moisture fraction is a parched plant — a plausible, actionable number in the
     wrong unit, which is exactly what the market cannot detect, because a bid is private and
     this one is perfectly well-formed.
+
+    THE TWO HALVES ARRIVE DIFFERENTLY, and each by the only honest road available. Fern has no
+    humidity instrument — that is the whole hazard, a number in the wrong unit reaching a
+    module that was waiting for another — so the humidity is handed to the hook directly,
+    which is where the confusion would happen and needs no store behind it. The MOISTURE is
+    delivered on its sensor's own topic, because the bid now depends on what the agent
+    believes rather than on a number passed along with the announcement: `Observations.record`
+    writes the reading and then tells the rest of the agent, and a test that skipped the write
+    would be asking the bidder to act on a reading nobody took.
     """
     from packages.capability.market.terms import BIDDING
 
@@ -236,7 +245,8 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
     bidding.on_reading_recorded(fern.me.acts_for, HUMIDITY, 0.10)
     assert fern.sent.under("market/") == [], "dry air is not a reason to buy water"
 
-    bidding.on_reading_recorded(fern.me.acts_for, MOISTURE, 0.10)
+    probe = next(s for s in fern.me.sensors if s.observes == MOISTURE)
+    fern.deliver(probe.reading_topic, {"moisture": 0.10})
     assert fern.sent.under("market/") != [], "the reading it was actually waiting for"
 
 

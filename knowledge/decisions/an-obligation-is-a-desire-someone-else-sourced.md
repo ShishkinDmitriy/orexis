@@ -89,10 +89,11 @@ guardrail that keeps "a claim raises a desire" from meaning "anyone may raise a 
 me". Whom I may owe stays topology, disclosed by the honoured row and never stored.
 
 The mode survives the reframe as DISCLOSURE rather than exemption: an honoured row says which
-of my levers others may demand and by whom. The reflex still passes over those rows, and the
-reason narrowed usefully — not "a duty is nobody's to decide" but "this member steers a
-property toward an aim, and a duty is a graph-shaped goal it cannot express". That filter
-lifts when a member can pursue a diff rather than a distance.
+of my levers others may demand and by whom. Deliberation still passes over those rows when the
+question is a stake, and the reason narrowed usefully — not "a duty is nobody's to decide" but
+"a stake is a distance and a duty is a graph-shaped goal, and the two are not answered by
+ranging over the same rows". Asked about the duty itself, the honoured rows are exactly what it
+ranges over.
 
 ## What driving acts changed (step 9)
 
@@ -177,6 +178,6 @@ facts were sayable in authored and entailed terms (`market:matchesBy`, `market:o
   effect rule now states what serving makes true, sized from the record's own `ag:amountL`).
 - **What becomes of the honoured row.** ANSWERED: disclosure survived, the filter did not, and
   the row gained a job nobody had planned for it — it is how a duty finds the lever that serves
-  its counterparty. The reflex still passes over honoured rows when it is steering a PROPERTY,
-  which is not a filter but an inability: a duty is not a distance, and that member cannot
-  express one.
+  its counterparty. A pass about a PROPERTY still passes over honoured rows, which is not a
+  filter but the shape of the question: a duty is not a distance, and a search ranging over
+  distances would have nothing to say about one.

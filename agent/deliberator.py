@@ -1,12 +1,22 @@
 """The deliberator: given where the agent stands against what it wants, the next move.
 
 **This is the mind's WHETHER, and it is the kernel's because a mind is not plug-in-able.** It
-was `deliberation:Reflex` and `deliberation:Planning`, two members of a family, and the family
-does not survive its own evidence: `PlanningModule` subclassed `ReflexModule`, called
-`super().propose()` first, and added one branch whose `_my_shop_needs` returns None for any
-agent that is not a dealer. A member that literally CONTAINS the other, with its extra branch
-inert everywhere else, is not an interchangeable implementation — it is one deliberator with a
-clause most agents do not reach. They are one class now, and no shipped behaviour moved.
+was `deliberation:Reflex` and `deliberation:Planning`, two members of a family, then one class
+with two roads through it, and it is one class with ONE road now: every desire is answered by
+the search.
+
+**The reflex is gone, and it was ABSORBED rather than retired.** It asked whether a lever
+points the right way — the gap's sign against the aim, cheapest rung first — and the search
+asks whether taking the lever leaves this agent better off, which is the same question with
+the case that matters added: a plant sitting ABOVE its region passes every test the reflex
+applied, and that is how a society floods one while every module behaves as written. What kept
+the reflex alive after the search subsumed it was three fall-backs, and all three were the
+search saying *I cannot answer* — a lever whose package states no effect, a want nothing
+measures, and no candidate at all. The first two are now refused at the GATES
+(`orexis-validate`), because both are facts about ratified files rather than about a moment;
+the third is a want with no lever, which is legitimate, legible, and answered by proposing
+nothing. A second road kept for the cases the first cannot answer is a second road that
+decides them all silently.
 
 **Consulting survives as a seam, and a better one.** Asking a model what next is a genuine
 alternative — it is the reason the extraction happened at all — but WHICH deliberator answers
@@ -48,32 +58,18 @@ OBSERVE = AG + "Observe"
 ACTUATE = AG + "Actuate"
 ACQUIRE = AG + "Acquire"
 
-# The ladder's order IS the preference (#190): act with what is yours before buying what is
-# not — each rung costlier and more social than the last. Disjoint per source by
-# construction (a source with a shop is contested, so its pump yields no Actuate row; a
-# source without one convenes no venue), but one agent may hold a private bottle AND bid in
-# a market, and then the cheaper rung wins.
-_RUNG = {ACTUATE: 0, ACQUIRE: 1}
+#  WHAT IS NOT HERE ANY MORE: the rung order, the direction terms and the venue join that read
+#  them. Preferring the cheaper rung and matching a lever's stated direction against the gap's
+#  sign were the reflex's whole apparatus, and simulation answers both without being told —
+#  the rung a plan takes is the one whose predicted world scores best, and a lever pointing the
+#  wrong way reaches a world no better than standing still. `market:direction` itself stays: the
+#  keeper's verification arc reads it to know which way a dose should move a reading, and its
+#  retirement rides with repair-matching rather than with this deletion.
 
-# Which way the lot moves what it is priced in — the market vocabulary's terms, read off the
-# T-Box rather than known. Issue #127: the sign used to be hardcoded here as `value < aim`,
-# which was the one piece of "buy water to raise moisture" written nowhere in any graph.
-#
-# Joined THROUGH A VENUE I BID IN (#198), never over the T-Box at large: the direction is a
-# fact about a lever, and the lever I hold is a market. Asked bare, "which way does moisture
-# move" has no answer the moment a fan market lowers what a water market raises — whichever
-# term the store returned first would steer the reflex, silently. Asked through my venue, the
-# answer is which way MY lever moves it, which is the only question a reflex ever had.
-_RAISES = "http://example.org/orexis/market#Raises"
-_LOWERS = "http://example.org/orexis/market#Lowers"
-_DIRECTION_Q = """
-SELECT ?direction WHERE {
-  <%s> market:bidsIn ?m .
-  ?m market:marketFor ?src .
-  ?src market:supplies ?good .
-  ?term market:ofGood ?good ; market:aboutProperty <%s> ; market:direction ?direction
-} LIMIT 1"""
-
+#  The line above is also this file's whole remaining relationship with `market:`. It used to
+#  spell four of that package's IRIs — two directions, a venue join and a hosting belief — and
+#  spells none now, which is the ratchet #334 asks for arriving as a consequence rather than as
+#  a rule anybody had to keep.
 
 
 class Deliberator(Module):
@@ -181,11 +177,34 @@ class Deliberator(Module):
         rows.append(("agent_planning", {}, trace.effort(self.agent.beliefs.query_union)))
         return rows
 
+    def propose_about(self, observed_property: str) -> str | None:
+        """The move for whatever I want about this property — the ACTORS' door.
+
+        A bidder holding a fresh reading and an actuator that has just recorded one both want
+        the same thing: what should I do about this property, now. They used to ask
+        `propose(property, value)` and hand over the number they were holding; the answer came
+        from the reflex, which steered by that number and never looked at the store.
+
+        The number is not a parameter any more, and that is the substantive half of this door
+        replacing that one. A search reads what the agent BELIEVES — its desire carries the
+        value the sensed graph holds — so a caller passing a number would be describing a world
+        the search does not judge. The ordering that makes this safe is production's own:
+        `Observations.record` writes the reading and THEN tells the rest of the agent, so by
+        the time either caller asks, the store holds exactly the number it was handed. A
+        reading whose write failed leaves the want unmeasured, and unmeasured answers Observe —
+        which is the honest move for an agent that does not know what it just failed to record.
+
+        None where nothing is wanted about this property at all, which is not a refusal but an
+        absence of a question.
+        """
+        desire = next((d for d in self.agent.pursuing()
+                       if not d.is_duty and d.observed_property == observed_property), None)
+        return self.propose_for(desire) if desire is not None else None
+
     def propose_for(self, desire: Desire) -> str | None:
         """The move for one GOAL, whoever sourced it — the deliberator's real question.
 
-        `propose` asks about a property and a value, which can only ever express a stake. This
-        takes the want itself, so a duty reaches deliberation as what it is: a thing wanted,
+        It takes the want itself, so a duty reaches deliberation as what it is: a thing wanted,
         ranked in the same currency, pursued through an affordance like anything else. It is
         the widening the obligation record predicted — "the filter lifts when a member can
         pursue a desire that is a diff rather than a distance".
@@ -210,20 +229,16 @@ class Deliberator(Module):
         if desire.state in ("unmeasured", "stale"):
             return OBSERVE
         if not desire.is_duty:
-            #  SIMULATE FIRST, where the levers say what they do. Asking whether a lever points
-            #  the right way is not the same as asking whether taking it leaves this agent
-            #  better off, and only the second question refuses to water a plant that is
-            #  already too wet — the reflex's direction test says Raises, the gap says below
-            #  the aim, and both are true of a drowning plant whose aim sits above it.
+            #  THE SEARCH, and there is nowhere else to go. Asking whether a lever points the
+            #  right way is not the same as asking whether taking it leaves this agent better
+            #  off, and only the second question refuses to water a plant that is already too
+            #  wet — the direction test says Raises, the gap says below the aim, and both are
+            #  true of a drowning plant whose aim sits above it.
             #
-            #  Falls back to the direction test whenever the search cannot answer: a means with
-            #  no effect rule cannot be simulated, and most of them have none. So this changes
-            #  behaviour for exactly the agents whose packages have said what their levers do,
-            #  and changes nothing for the rest — which is how a widening should arrive.
-            answered, move = self._simulated(desire)
-            if answered:
-                return move
-            return self.propose(desire.observed_property, desire.value)
+            #  None here is a DECISION and no longer a hand-off. Every case that used to fall
+            #  through to the reflex is either refused at the gates or genuinely means "nothing
+            #  I hold moves this", which is a true answer worth leaving in the trace.
+            return self._searched(desire)
         #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
         #  that doses early spends the water where nothing is looking (#132) — so a standing
         #  debt is visible, rankable, and still not actionable until it is presented.
@@ -235,8 +250,7 @@ class Deliberator(Module):
         #  falls out of two rules that never mention each other. A search that answered and
         #  found no move is the evidence the issue demands: the duty stays hot, stays owed,
         #  and is not pursued into a world where serving discharges nothing.
-        answered, move = self._simulated(desire)
-        if answered and move:
+        if move := self._searched(desire):
             return move
         #  The search speaks for a duty only when it FOUND a path — a vessel nobody has read
         #  binds no premise, and a premise that cannot bind proves nothing about serving. So
@@ -248,157 +262,66 @@ class Deliberator(Module):
                 return row.means
         return None
 
-    def _simulated(self, desire: Desire) -> tuple[bool, str | None]:
-        """`(answered, move)` — what the search says, and whether it said anything at all.
+    def _searched(self, desire: Desire) -> str | None:
+        """The move the search found for one desire, or None — which is now always a DECISION.
 
-        A PAIR because there are three answers and only two would fit in one: take this move,
-        take none, and "I cannot decide this by simulation". The third must not collapse into
-        the second, or a lever whose package never stated its effect would silently become a
-        lever nobody pulls — the search would decline for want of a rule and the agent would
-        read it as a decision not to act.
+        It used to hand back `(answered, move)`, because there were three answers and only two
+        would fit in one: take this, take nothing, and *I cannot decide this by simulation*.
+        The third is gone rather than collapsed into the second, and the difference is where it
+        went. A lever with no stated effect and a want with no measure are refused by
+        `orexis-validate` before a society is onboarded, so at runtime they are a world that
+        should not have started; NOTHING — no lever this agent holds points at this want — is
+        not a defect at all but a fern wanting a temperature it cannot move, which proposes
+        nothing and says so in its trace.
+
+        WHAT REPLACES THE DEFERRAL IS NOISE, not silence. Both refused conditions are still
+        reachable by a world onboarded before the gate existed, or by one started past it, and
+        an agent meeting either must say so loudly rather than decide quietly on half the
+        evidence.
         """
-        #  A want nothing MEASURES cannot be ranked, and a search that cannot rank must not
-        #  conclude — the `partial` argument, arriving from the desire side: every candidate
-        #  world would score the flat fallback 1.0, "no move improves" would come out
-        #  confidently, and a conclusion drawn from unrankable worlds would override the
-        #  reflex. So the choir is asked FIRST, of the live world: no module answering for
-        #  this desire means the ranking fallback (1.0, logged) is the deducer's business and
-        #  the DECISION falls through to the reflex. A duty is exempt because its metric is
-        #  met-or-not over the record, which needs no measure to rank (#255).
-        if not desire.is_duty and self.agent.desire_urgency(
-                desire, self.agent.beliefs.query, SENSED_GRAPH) is None:
-            return False, None
-        deducer = self.agent.deducer
-        plan = Planner(self.agent, deducer, self.me).plan(desire)
-        if plan.outcome == planner.NOTHING:
-            return False, None               # nothing to simulate; let the reflex answer
-        #  There USED to be a second deferral here: SATISFIED with no steps fell through to
-        #  the reflex, over a comment claiming "the reflex will also propose nothing". It
-        #  proposes plenty — the reflex steers toward the AIM, so a met desire off its pick
-        #  got a dose with no satisficing behind it, which defeated the deadband the search
-        #  provides: near the pick the dose sizes to ~0, the actor's refusal makes the effect
-        #  predict no change, and the candidate is pruned as somewhere already reached. A met
-        #  desire the search answered is now a DECISION (the fall-through below), not a
-        #  hand-off — unless the search was blind to part of the menu, which `partial` says.
+        #  ASKED OF THE LIVE WORLD ONCE, purely to complain. The planner asks the same
+        #  question of every candidate and takes the flat 1.0 when nobody answers — which
+        #  makes every possible world score alike, so "no move improves" comes back with
+        #  confidence from an unrankable comparison. A want with no REGION is the freshness
+        #  case and legitimately unmeasured (it has no distance to scale); a want with one is
+        #  a stake, and a stake nothing measures is what the gate refuses.
+        if (not desire.is_duty and desire.observed_property
+                and self.agent.deducer.region(desire.observed_property) is not None
+                and self.agent.desire_urgency(
+                    desire, self.agent.beliefs.query, SENSED_GRAPH) is None):
+            self.log.error(
+                "%s: I hold a stake here and nothing I composed can measure it — every world "
+                "I could reach scores alike, so I am about to conclude that nothing helps from "
+                "a comparison that means nothing. `orexis-validate` refuses this world.",
+                desire.observed_property.rsplit("#", 1)[-1])
+        plan = Planner(self.agent, self.agent.deducer, self.me).plan(desire)
+        #  A SEARCH OVER PART OF THE MENU CANNOT SAY "NOTHING HELPS", and it no longer has
+        #  anywhere to hand the question to. Some lever had no stated effect and was passed
+        #  over, so the one that works may be the one nobody simulated — fern buys its water,
+        #  and a search blind to Acquire would find that looking does not wet soil and stop
+        #  the plant buying. The gate exists to make this unreachable; if it is reached, the
+        #  agent acts on what it could see and the log says what it could not.
+        if plan.partial:
+            self.log.error(
+                "%s: a lever on my menu states no effect, so I weighed part of my options and "
+                "am answering as if that were all of them. `orexis-validate` refuses this "
+                "world.", desire.observed_property.rsplit("#", 1)[-1]
+                if desire.observed_property else "a duty")
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
                           desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
                           else "a duty", plan.outcome, plan.urgency_now, plan.urgency_after)
-            return True, plan.first
-        #  A SEARCH OVER PART OF THE MENU CANNOT SAY "NOTHING HELPS". Some lever had no stated
-        #  effect and was passed over, so the one that works may be the one nobody simulated —
-        #  fern buys its water, Acquire has no rule, and a search that saw only Observe would
-        #  have found that looking does not wet soil and stopped the plant buying. Defer.
-        if plan.partial:
-            return False, None
-        #  A world reachable and not worth reaching. THIS is the decision the reflex could not
-        #  make, and returning None here is the whole point rather than a failure to answer —
-        #  a met desire quietly holding near its pick included, which is most passes and not
-        #  worth a log line; the unmet ones still say why nothing was done.
+            return plan.first
+        #  A world reachable and not worth reaching, or no lever pointing at this want at all.
+        #  THIS is the decision the reflex could not make, and returning None here is the whole
+        #  point rather than a failure to answer — a met desire quietly holding near its pick
+        #  included, which is most passes and not worth a log line; the unmet ones still say
+        #  why nothing was done.
         if plan.outcome != planner.SATISFIED:
             self.log.info("%s: %s — no move improves on doing nothing",
                           desire.observed_property.rsplit("#", 1)[-1]
                           if desire.observed_property else "a duty", plan.outcome)
-        return True, None
-
-    def propose(self, observed_property: str, value: float | None) -> str | None:
-        """Given where this property stands, the next move — or None, which is a decision.
-
-        TWO CLAUSES, and the order is the one the two members had. The gap's sign answers
-        first; the dealer's shop answers only if it did not. That sequencing is load-bearing
-        and was nearly lost in merging them: `PlanningModule.propose` called `super().propose()`
-        and then ran its own clause, so the reflex's three early returns — no reading, no
-        desire module, no aim — meant "the gap says nothing", NOT "stop". Inlining the reflex
-        body here would have turned each of them into a return that skips the shop, and a
-        dealer whose aim was unset would have stopped refilling. Hence `_by_gap`.
-        """
-        if value is None:
-            return None
-        if (move := self._by_gap(observed_property, value)) is not None:
-            return move
-        #  THE DEALER'S CLAUSE, and it is inert for everyone else. `_my_shop_needs` answers
-        #  only for a property that is this agent's own vessel's stock, so a fern reaches this
-        #  line, gets None, and falls through exactly as the reflex always did. It was
-        #  `deliberation:Planning` overriding `propose` to call `super()` and then run this;
-        #  one class expresses the same thing without asking a world to choose between a
-        #  member and the member that contains it.
-        needed = self._my_shop_needs(observed_property)
-        if (needed is not None and value < needed
-                and self._direction_of(observed_property) == _RAISES):
-            return ACQUIRE
         return None
-
-    def _by_gap(self, observed_property: str, value: float) -> str | None:
-        """The gap's sign against the aim — the whole of what `deliberation:Reflex` was.
-
-        None here means THE GAP SAYS NOTHING, not that deliberation is over: `propose` runs the
-        dealer's clause afterwards. That distinction is the one thing the merge had to keep, and
-        it is why this is a helper rather than the first half of one function.
-
-        With a reading in hand, the whole reflex is the gap's sign against the AIM — the pick,
-        not the region's edge, because pursuing only past the band edge would leave the agent
-        permanently short of where it decided to sit. Asked of desire at every call rather
-        than cached: the aim is a belief, and a review may move it under a running agent.
-
-        WHICH sign means pursue is read off the T-Box, not known (#127): the domain states that
-        applying the lot raises or lowers the property its bids are priced in, and the reflex
-        steers by that — below the aim with a lever that Raises, or above it with one that
-        Lowers, is the move. `value < aim` used to be hardcoded here, which was the one piece
-        of "buy water to raise moisture" written nowhere in any graph; a heater against a cold
-        snap is now the same rule with no code change, which is what stating it bought.
-
-        None three times over, and each is a decision: no aim means nothing to pursue toward
-        (an agent that picked no point has decided not to steer this property); a gap on the
-        side no lever moves means no move helps; and no stated direction means the reflex
-        cannot know which way — refusing is honest where guessing would be the hardcoded sign
-        sneaking back in as a default.
-        """
-        #  A value of None no longer means "look" — `propose_for` answers that, from a desire
-        #  that says which of the two epistemic failures it is. Here it means only that the
-        #  caller has no reading to steer by, and steering is all this member does.
-        aim = self.agent.deducer.aim(observed_property)
-        if aim is None:
-            return None
-        # MENU-DRIVEN since #190: every move the reflex can propose is a row, literally —
-        # the rows for this property, cheapest rung first, and the first whose stated
-        # direction matches the gap's sign is the move. Acquire used to be hardcoded here,
-        # which was right while buying was the only lever that moved anything; the Actuate
-        # rung made "which means" a question, and the menu was already the answer's home.
-        # Chosen rows only, and the reason is narrower than it first looked. An obligation
-        # IS a want (ag:Obligation, #218 remade) and is meant to reach deliberation —
-        # but this member steers a PROPERTY toward an aim, and a duty is not a property-gap:
-        # it is "this claim discharged", a graph-shaped desire. So the reflex passes over
-        # honoured rows because it cannot express them, not because they are nobody's to
-        # decide; the filter lifts when a member can pursue a desire that is a diff rather
-        # than a distance — the widening a-plan-is-a-path-of-graph-diffs records.
-        for row in sorted((r for r in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union)
-                           if r.observed_property == observed_property and r.direction
-                           and r.is_chosen),
-                          key=lambda r: _RUNG.get(r.means, len(_RUNG))):
-            if row.direction == _RAISES and value < aim:
-                return row.means
-            if row.direction == _LOWERS and value > aim:
-                return row.means
-        return None
-
-    def _direction_of(self, observed_property: str) -> str | None:
-        """Which way the lever I could pull moves this property — through a venue I bid in.
-
-        Per call rather than cached, like the aim: the T-Box is replaced on restart, not under
-        a running agent, but a query this small is not worth a second copy of the truth.
-        An agent bidding in no market gets None here and proposes nothing, which was already
-        true — a direction with no venue behind it was the menu offering a move with no lever.
-        """
-        rows = bindings(self.agent.beliefs.query(
-            _DIRECTION_Q % (self.me.uri, observed_property)))
-        return rows[0]["direction"] if rows else None
-
-    def _my_shop_needs(self, observed_property: str) -> float | None:
-        """The lot my downstream venue owes — None when this property is not my shop's stock."""
-        rows = bindings(self.agent.beliefs.query(_SHOP_Q % (
-            self.me.uri, self.me.uri, observed_property,
-            self.agent.beliefs.graph, self.me.uri)))
-        return float(rows[0]["q"]) if rows else None
 
     def plan_for(self, observed_property: str) -> list[Affordance]:
         """The dealer's two-step, as rows: acquire upstream, then offer downstream.
@@ -415,21 +338,17 @@ class Deliberator(Module):
                 if r["property"] == observed_property]
 
 
-# The dealer's shop, asked from inside: the lot my downstream venue owes, IF the property in
-# hand is my own vessel's stock. Both joins are the Planning grant's premises re-asked —
-# I act for a vessel I offer, the property is one its stated ranges name — plus my own
-# offerQuantityL belief, read from my private graph exactly as the bidder reads its
-# conversion: a lot is a HOSTING belief, and this package may name the term's IRI but never
-# import the market's Python.
-_SHOP_Q = """
-SELECT ?q WHERE {
-  <%s> ag:actsFor ?vessel .
-  ?vessel market:offeredBy <%s> .
-  ?vessel <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?range .
-  ?range <http://www.w3.org/ns/ssn/systems/inCondition> ?cond .
-  ?cond <http://www.w3.org/ns/ssn/forProperty> <%s> .
-  GRAPH <%s> { <%s> <http://example.org/orexis/market#offerQuantityL> ?q }
-} LIMIT 1"""
+# WHAT WENT WITH THE REFLEX, and what that costs: the dealer's shop query — the lot my
+# downstream venue owes, if the property in hand is my own vessel's stock. It was the reflex's
+# one clause past the region, and it pursued serveability: buy while the barrel holds less than
+# the lot it has promised, even where the aim is already met. Nothing derives that as a DESIRE,
+# so the search cannot pursue what it is never handed, and the clause was the only carrier.
+#
+# Inert in every shipped world, which is why deleting it moves nothing: `world/simulation`'s
+# supplier aims at 3.0 L and offers a 2.0 L lot, so any stock below the lot is below the aim and
+# the search buys for the ordinary reason. It bites only for an author who picks an aim BELOW
+# the lot they promise — a dealer that would then sit content while unable to serve. Said out
+# loud here rather than left implied: see a-plan-is-a-path-of-graph-diffs.md.
 
 # The dealer's plan ships as SPARQL beside the menu contributions (#206), so the sovereign
 # may run the very text the planner runs — one file, two readers, no drift.

@@ -50,7 +50,7 @@ standing intention is what makes one affordable: committed means not re-consulte
 | `ag:Acquire` | bid for what would reduce a gap | the first bid flies | the claim arrives |
 | `ag:Apply` | spend a held claim against the world | the claim arrives — holding IS the intention | the claim is presented on the redeem channel (watch live, or the bounded wait) |
 | `ag:Offer` | open a round owed on a hosted venue (#206) | a LOW arrives at a dry vessel — the deferral IS the debt | the refill lands and the round opens; recovered from the ledger if the process that owed it died |
-| `ag:Actuate` | move it myself — lever and resource both mine (#190) | the reflex picks the cheaper rung over Acquire | the self-dose is commanded (co-signed, confirmed like any dose); the expectation carries the end |
+| `ag:Actuate` | move it myself — lever and resource both mine (#190) | the search finds this rung reaches a better world than buying | the self-dose is commanded (co-signed, confirmed like any dose); the expectation carries the end |
 
 `Observe` is first for a structural reason: at birth there is a desired state and an empty
 sensed graph, so the first intention is always to look — see

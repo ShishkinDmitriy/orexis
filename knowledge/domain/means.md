@@ -63,6 +63,10 @@ enumerates the set.
 
 **The ladder is their order, not a ranking of quality.** `ag:Actuate` is offered exactly where
 both chains end at the agent — the lever is mine and so is the resource — and `ag:Acquire` where
-the resource is someone else's. A reflex prefers the lower rung because acting with what is yours
-is cheaper than buying what is not, and that preference lives in the menu's order rather than in
-a rule anybody wrote.
+the resource is someone else's. Acting with what is yours is cheaper than buying what is not —
+and nothing states that preference any more. A rung table used to sort the rows cheapest-first,
+and it went with the chain that read it; what chooses between two rungs now is which of them
+reaches the better world. That is a better question and it does not answer this one: two rungs
+reaching the SAME world are separated by whichever the menu returns first, which is alphabetical
+and nobody's ranking. It bites nothing shipped, because the two are disjoint per source by
+construction — a source with a shop is contested, so its pump yields no Actuate row.

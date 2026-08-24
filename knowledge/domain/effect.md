@@ -92,11 +92,13 @@ route; every shipped effect answers `ag:ByObservation`, so every lever ended a p
 never reached its second step. A discriminator whose every answer is the same one is not
 discriminating.
 
-# Most means have no effect, and that is fine
+# Most means have no effect, and that is fine — unless somebody's menu offers it
 
-A lever whose consequences nobody has written down still works — the reflex can take it — it is
-only one a planner cannot reason about. Every caller must take the absence as an ordinary answer,
-because treating it as an error would make shipping a package a two-file obligation.
+A lever whose consequences nobody has written down still works. What it cannot do is be
+simulated, and simulating is now the only way anything gets decided — so the absence is an
+ordinary answer to every caller (treating it as an error would make shipping a package a
+two-file obligation) and a REFUSAL at exactly one place: `orexis-validate` will not pass a
+world in which such a means puts a row on some agent's menu. Most means never do.
 
 What a search must NOT do is conclude from a partial menu. A plan that passed over any lever is
 marked partial and defers, because the lever it could not simulate may be the one that works.

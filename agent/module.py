@@ -201,6 +201,24 @@ class Module:
         """
         return None
 
+    @classmethod
+    def measures(cls, query, observed_property: str) -> bool:
+        """Would I have a measure for a want about this property? The same question as
+        `desire_urgency`, asked of the CLASS and before any agent exists.
+
+        It exists because the sovereign's gate must ask it (`orexis-validate`), and a gate
+        cannot build an agent: an agent holds credentials that onboarding has not minted yet,
+        and building one to interrogate it would put the runtime inside the check that runs
+        before the runtime is allowed to exist. So the class answers from the same declaration
+        the instance reads — one resolution, two callers — and the kernel still holds no
+        measure vocabulary of its own: it asks, and whoever declares one answers.
+
+        `query` is a store's query surface over the ratified world, which is all a KIND test
+        needs. False by default, and False is the honest answer for every module that judges
+        no wants — the choir shape again, with the roll called earlier than usual.
+        """
+        return False
+
     # --- helpers every module wants ---
 
     @staticmethod

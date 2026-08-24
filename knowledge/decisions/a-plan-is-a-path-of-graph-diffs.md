@@ -28,6 +28,10 @@ architecture is already its degenerate case:
 | committed plan step | an intention, lifecycle and patience included |
 | execution monitoring | the verification arc — expected effect vs observed, UNMET and false-knowledge |
 
+That table is where this started, and two of its rows have since been overtaken by the widening
+it argues for: the Reflex is deleted and `market:direction` steers nothing. See "the test is
+met" below, which is where this record says what happened to them.
+
 ## What the field already settled, and what we are deliberately not taking
 
 STRIPS is 1971, and the fifty years after it are worth naming — not to adopt, but so that the
@@ -482,6 +486,56 @@ Two hardcoded things must DISAPPEAR, not survive beside it:
 
 If either survives, this is added machinery rather than a widening, and should be refused on
 those grounds.
+
+### The test is met, and the reflex is the thing that disappeared
+
+Both of the above landed, and then a third thing did — the one the test was really about. **The
+reflex is gone**: `propose`, the gap clause, the direction lookup and the dealer's shop clause,
+and with them the door that took a property and a value. There is one road through deliberation
+and it is the search.
+
+**It was ABSORBED, not retired beside.** That distinction is this section's whole point. The
+reflex asked whether a lever POINTS the right way; the search asks whether taking it leaves the
+agent BETTER OFF, which answers the first question on the way past and answers the case where
+the first is wrong — a plant above its region, which the direction test waters. What kept a
+subsumed mechanism alive for two changes was not disagreement but three silences, all of them
+the search saying *I cannot answer*:
+
+| the search could not answer | why | where it is answered now |
+|---|---|---|
+| a lever with no effect rule (`partial`) | nothing to simulate; concluding from the rest is concluding from part of the menu | refused at genesis |
+| a want with no declared measure | every candidate world scores the flat 1.0, so "nothing improves" comes back from a comparison that means nothing | refused at genesis |
+| no candidate at all (`NOTHING`) | there IS no lever — a fern wanting a temperature it cannot move | proposed nothing, and said so in the trace |
+
+**The genesis gate is what made deletion safe rather than reckless**, and it is affordable for
+the reason the record's own overshoot section gives about a coarse lever: both questions are
+facts about ratified files and loaded packages, not about a moment. `orexis-validate` walks each
+agent's menu and refuses a world where a contributing means has no effect rule, and walks each
+agent's regions and refuses one where a stake resolves no declared measure. The measure half is
+asked of the module CLASS — a gate cannot build an agent, because an agent needs credentials
+onboarding has not minted yet — so the choir's roll is called before anyone is in the room. The
+three shipped worlds pass unchanged; the failing fixtures are built, not borrowed.
+
+At runtime the two refused conditions are not silently survivable and not silently fatal: they
+are logged as errors naming the world as one the gate refuses, and the agent answers from what
+it could see. A society onboarded before the gate existed keeps running and says what is wrong
+with it.
+
+Two things this deletion did NOT take, recorded because a reader will look for them:
+
+- **`market:direction` stays.** Nothing in deliberation reads it now — the sign a lever moves
+  a property in is stated more expressively by the lever's own effect, which predicts a value
+  rather than a direction — but the keeper's verification arc still copies it into an
+  expectation to know which way a dose should show up. Its retirement rides with repair-matching,
+  as the section above already ruled, and that is still one change rather than two.
+- **The dealer's serveability pursuit does not survive**, and this is a loss rather than a
+  simplification. The shop clause made a dealer buy while its barrel held less than the lot it
+  had promised, *even where its aim was met* — the one deduced desire past the region this
+  record's seams list. Nothing derives serveability as a DESIRE, so the search cannot pursue
+  what it is never handed. It is inert in every shipped world (the supplier aims at 3.0 L and
+  offers 2.0 L, so short of the lot is short of the aim) and live for anyone who authors an aim
+  below their own lot. Deriving it as a want is the way back, and it is the shape everything
+  else here already has.
 
 ### And a duty becomes a shape
 

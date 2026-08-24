@@ -79,6 +79,19 @@ def _declared_measures() -> tuple[tuple[str, str], ...]:
 _DECLARED_MEASURES = _declared_measures()
 
 
+def _declared_measure(query, observed_property: str) -> str | None:
+    """The declared measure covering this property's KIND, or None where mine do not cover it.
+
+    The kind test asks the store what the property IS — `sensing:measureOf` names a class, and
+    `a` in a default-union query already sees the materialised closure, so no subclass walk is
+    hand-rolled here. A free function because two callers need it and neither is the other's:
+    a live module resolving a want, and the class answering the sovereign's gate before any
+    module exists.
+    """
+    return next((text for kind, text in _DECLARED_MEASURES
+                 if query(f"ASK {{ <{observed_property}> a <{kind}> }}")["boolean"]), None)
+
+
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future sensing inherits them.
 _BOUNDS_Q = """
@@ -192,18 +205,30 @@ class SensingModule(Module):
             return None
         return float(rows[0]["urgency"])
 
+    @classmethod
+    def measures(cls, query, observed_property: str) -> bool:
+        """The kernel's roll-call, answered before any agent exists — my half of the gate.
+
+        `orexis-validate` refuses a world holding a stake nothing loaded can weigh, because a
+        want with no measure scores the flat 1.0 in every candidate world and a search over
+        worlds that all score the same concludes, confidently, that nothing helps. That used
+        to be caught at runtime by deferring to the reflex; there is no reflex to defer to, so
+        it is caught at the gates instead — and a gate cannot build an agent to ask.
+
+        Same road as the instance's, which is the point of it being a classmethod rather than
+        a second walk: `_declared_measure` is what `desire_urgency` resolves through too.
+        """
+        return _declared_measure(query, observed_property) is not None
+
     def _measure_for(self, query, observed_property: str) -> str | None:
         """The declared measure for this property's KIND, or None where mine do not cover it.
 
-        The kind test asks the store what the property IS — `sensing:measureOf` names a class,
-        and `a` in a default-union query already sees the materialised closure, so no subclass
-        walk is hand-rolled here.
+        Memoised per module because the planner asks per node and a property's kind is
+        public-graph stable; the lookup itself is `_declared_measure`, shared with the
+        class-level roll-call above.
         """
         if observed_property not in self._measures:
-            self._measures[observed_property] = next(
-                (text for kind, text in _DECLARED_MEASURES
-                 if query(f"ASK {{ <{observed_property}> a <{kind}> }}")["boolean"]),
-                None)
+            self._measures[observed_property] = _declared_measure(query, observed_property)
         return self._measures[observed_property]
 
     def stale_after_s(self, subject_uri: str) -> int:

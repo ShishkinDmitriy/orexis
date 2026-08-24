@@ -87,15 +87,27 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
         "owning the pump does not exempt anyone from the auction when the water is common"
 
 
-# --- the reflex prefers the cheaper rung ------------------------------------
+# --- the cheaper rung is the one the search finds ---------------------------
 
-def test_the_reflex_proposes_actuate_below_the_aim(gardener):
-    deliberator = gardener.deliberator
-    assert deliberator.propose(MOIST, 0.10) == ACTUATE
-    assert deliberator.propose(MOIST, 0.25) is None, "above the aim, nothing — as ever"
-    #  Not seeing is answered through the desire door now (#240), because a bare None meant two
-    #  things — never read, and the caller has no number — and only one of them means look.
+def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
+    """The gardener owns its pump, so the move it reaches for is its own valve rather than a
+    venue — the ladder's preference, arrived at by simulation instead of by a rung table.
+
+    It used to be asked of the bare-value door, which sorted the menu cheapest-rung-first and
+    took the first row whose stated direction matched the gap's sign. That door is gone: the
+    rung a plan takes is the one whose predicted world scores best, and above the aim every
+    world a dose reaches is worse than standing still.
+    """
     from agent.desire import Desire
+
+    deliberator = gardener.deliberator
+    assert deliberator.propose_for(
+        Desire(uri="urn:w", urgency=0.6, observed_property=MOIST, value=0.10)) == ACTUATE
+    assert deliberator.propose_for(
+        Desire(uri="urn:w", urgency=0.1, observed_property=MOIST, value=0.25)) is None, \
+        "above the aim, nothing — as ever"
+    #  Not seeing is answered before any search runs (#240), because a bare None meant two
+    #  things — never read, and the caller has no number — and only one of them means look.
     assert deliberator.propose_for(
         Desire(uri="urn:w", urgency=1.0, observed_property=MOIST, state="unmeasured")) == OBSERVE
 

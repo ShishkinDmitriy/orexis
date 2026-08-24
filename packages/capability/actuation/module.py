@@ -145,7 +145,12 @@ class ActuationModule(Module):
             return
         if self.me.actuator_for(self._subject_of(self.me.agent_id)) is None:
             return
-        if self.agent.deliberator.propose(observed_property, value) != _ACTUATE:
+        #  ASKED ABOUT THE PROPERTY, never handed the number. The whether is a search over the
+        #  worlds each lever would reach, scored against what the agent BELIEVES — and the
+        #  reading just recorded is what it believes, because `Observations.record` writes
+        #  before it announces. Handing the value over was the reflex's door and steered by a
+        #  number the search would not have judged.
+        if self.agent.deliberator.propose_about(observed_property) != _ACTUATE:
             return
         litres = self.dose_for(observed_property, value)
         if litres is None or litres <= EPS:

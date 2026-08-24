@@ -116,24 +116,26 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
         "at the pick: no move, decided — not deferred to a reflex that might disagree"
 
 
-def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch):
-    """The finding that would have stopped fern buying water, and the rule it forced.
+def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defer(monkeypatch):
+    """The finding that would have stopped fern buying water, and where it is answered now.
 
-    A plant in `world/simulation` acquires its water, so the lever that works is Acquire. When
-    no package has stated what Acquire does, the search sees Observe alone, correctly finds
-    that looking does not wet soil, and — before this rule existed — reported that nothing
-    helps. The reflex was overridden by a conclusion drawn from part of the menu, and the plant
-    stopped bidding.
+    A plant in `world/simulation` acquires its water, so the lever that works is Acquire. With
+    no package stating what Acquire does, the search sees Observe alone, correctly finds that
+    looking does not wet soil, and reports that nothing helps — and the plant stops bidding.
+    That is not a defect in the search: it is a conclusion drawn from part of the menu, and the
+    part it could not see is the part that mattered.
 
-    A search that passed over any lever marks its plan PARTIAL, and a partial plan may not say
-    "nothing helps". The deliberator defers, and the reflex answers as it always did.
+    For a while the answer was a second road — a plan that passed over any lever was marked
+    PARTIAL and the deliberator handed the question to the reflex. The reflex is gone, so the
+    answer moved to the GATES: `orexis-validate` refuses a world in which a means that
+    contributes an affordance row has no effect rule, which is the condition this test creates
+    by hand. See `tests/test_validate.py`.
 
-    THE MENU IS COMPLETE NOW (#268), so the blind condition is created here rather than found:
-    the rule is removed from the effect graph for the duration. That is the honest way to keep
-    this property under test once the gap it was written about is closed — and it is worth
-    keeping, because #268 measured what a NON-partial wrong answer costs. A plan that
-    confidently finds nothing better does not defer: it returns "do nothing" and overrides the
-    reflex, which is a louder failure than the blindness it replaced.
+    What is asserted here is the runtime half of that ruling. `partial` is still computed and
+    still true, the agent still says loudly that it is answering from part of its options, and
+    it does NOT quietly find a second opinion — it declines, which is what a search that
+    cannot see the water lever should conclude and exactly why the world is refused before it
+    can run.
     """
     from agent.ontology import EFFECTS_GRAPH
 
@@ -149,10 +151,10 @@ def test_a_search_that_could_not_see_every_lever_refuses_to_conclude(monkeypatch
 
     plan = Planner(fern, deducer, fern.me).plan(desire)
     assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
+    assert plan.first is None, "and nothing it COULD see wets soil"
 
-    reflex = fern.deliberator
-    assert reflex.propose_for(desire) == reflex.propose(MOISTURE, 0.30), \
-        "a thirsty plant must still buy — the search defers where it cannot see"
+    assert fern.deliberator.propose_for(desire) is None, \
+        "a search blind to the lever that works must not be second-guessed by another road"
 
 
 def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
@@ -292,22 +294,26 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     as an improvement, because ending ignorance is an improvement (#137), and a content plant
     buys water to discover how wet it is.
 
-    Caught by the equivalence this design is most exposed to: the reflex cedes at the aim and
-    the planner did not.
+    Caught by an equivalence — the reflex ceded at the aim and the planner did not — and kept
+    as the claim rather than the comparison, because the reflex it was compared against has
+    since been deleted. What must be true is the cede itself, on both sides of the aim.
     """
     from agent.desire import Desire
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     fern = build_agent("fern", genesis_store(), monkeypatch)
-    reflex = fern.deliberator
+    decider = fern.deliberator
 
-    #  fern aims at 0.55. Below it the two agree to buy; at and above it they agree to cede,
-    #  and the second half is what the guard restores. A bare Desire suffices: the measure is
-    #  not the want's to carry — sensing answers the choir for any observation-backed stake.
-    for value in (0.30, 0.55, 0.80):
+    #  fern aims at 0.55, and the store holds NO reading — which is the arrangement that makes
+    #  the fabrication possible at all. A bare Desire suffices: the measure is not the want's
+    #  to carry, and sensing answers the choir for any observation-backed stake.
+    stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=0.30)
+    assert decider.propose_for(stake) == "http://example.org/orexis#Acquire", \
+        "below the aim there is a deficit to close, and the search must still close it"
+    for value in (0.55, 0.80):
         stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
-        assert reflex.propose_for(stake) == reflex.propose(MOISTURE, value), \
-            f"planner and reflex disagree at {value}"
+        assert decider.propose_for(stake) is None, \
+            f"a content plant bought water at {value} — a zero-size act made something true"
 
 
 # --- a rule is asked about a WORLD, not about the store (#254) ------------------------------
