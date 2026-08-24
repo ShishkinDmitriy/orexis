@@ -42,7 +42,7 @@ from pathlib import Path
 
 from . import loader
 from .config import REPO_ROOT
-from .ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, EFFECTS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
+from .ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
                        ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                        WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
 
@@ -115,14 +115,14 @@ def _turtle(world: Path, attribution: tuple[str, str] | None = None,
         "# --- asserted: read from files, and the chain stops there (see the module note) ---",
         f"<{ONTOLOGY_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {ontology_files} .",
     ]
-    #  The effect rules, from the packages that own the levers (#238). Asserted from files
+    #  The actions, from the packages that own the acting (#238). Asserted from files
     #  exactly as the vocabulary is, and described here for the same reason: a public graph
     #  that cannot say where it came from is the silence `ag:PublicGraphShape` refuses. A build
-    #  where no package states an effect still has the graph — empty, and honest about being
+    #  where no package states an action still has the graph — empty, and honest about being
     #  derived from nothing rather than absent and unexplained.
-    effect_files = " , ".join(f"<{file_iri(p)}>" for p in loader.effect_files())
-    lines.append(f"<{EFFECTS_GRAPH}> a prov:Entity"
-                 + (f" ; prov:wasDerivedFrom {effect_files} ." if effect_files else " ."))
+    action_files = " , ".join(f"<{file_iri(p)}>" for p in loader.action_files())
+    lines.append(f"<{ACTIONS_GRAPH}> a prov:Entity"
+                 + (f" ; prov:wasDerivedFrom {action_files} ." if action_files else " ."))
     if world_files_:
         lines.append(f"<{WORLD_GRAPH}> a prov:Entity ; prov:wasDerivedFrom {world_files_} .")
         #  The asserted-desire graph is fed by the same ratified files — a world's TriG block

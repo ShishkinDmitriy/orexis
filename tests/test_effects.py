@@ -1,8 +1,8 @@
 """What a lever says it makes true, and the one number that must not fork (#238).
 
-A means states its effect as a SHACL-AF rule the package ships and genesis loads: `sh:condition`
-for the shape that must hold, `sh:construct` for what applying it would add, `ag:retracts` — ours
-— for what it removes. These hold the rules to what they claim, and hold the ACTUATOR to reading
+An action states its effect on its own node (an-action-is-one-node), which the package ships
+and genesis loads: `sh:condition` for the shape that must hold, `sh:construct` for what applying
+it would add, `ag:retracts` — ours — for what it removes. These hold the rules to what they claim, and hold the ACTUATOR to reading
 its expectation out of the same rule a planner will read.
 """
 
@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from agent import effects, genesis
-from agent.ontology import EFFECTS_GRAPH, SENSED_GRAPH, beliefs_graph
+from agent.ontology import ACTIONS_GRAPH, SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from conftest import MOISTURE, build_agent, genesis_store
@@ -35,15 +35,15 @@ def _values(triples, predicate=RESULT):
 
 # --- the rules are found because a package shipped one, not because anything lists them ----
 
-def test_a_package_that_ships_an_effect_file_is_found_without_being_named():
-    """The loader idiom, applied a fourth time. A lever that grows an effect is a file in the
-    package that owns the lever, and nothing in the kernel learns its name — the same claim
-    `affordances.rq` makes, and the reason adding a capability is adding a directory."""
+def test_a_package_that_ships_an_action_file_is_found_without_being_named():
+    """The loader idiom, applied a fourth time. A way of acting is a node in a file in the
+    package that owns the acting, and nothing in the kernel learns its name — the reason
+    adding a capability is adding a directory."""
     from agent import loader
 
-    shipped = {p.parent.name for p in loader.effect_files()}
-    assert {"sensing", "actuation"} <= shipped
-    assert all(p.name == "effects.ttl" for p in loader.effect_files())
+    shipped = {p.parent.name for p in loader.action_files()}
+    assert {"sensing", "actuation", "market"} <= shipped
+    assert all(p.name == "actions.ttl" for p in loader.action_files())
 
 
 def test_the_rules_are_in_the_store_where_a_sovereign_can_read_them():
@@ -237,9 +237,9 @@ def test_every_shipped_effect_says_how_it_would_be_confirmed():
     st = genesis_store({})
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
     rows = bindings(st.query(f"""
-SELECT ?rule ?means ?confirmed WHERE {{ GRAPH <{EFFECTS_GRAPH}> {{
-  ?rule <{_AG}effectOf> ?means .
+SELECT ?rule ?means ?confirmed WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
+  ?rule a <{_AG}Action> ; <{_AG}means> ?means ; <http://www.w3.org/ns/shacl#construct> ?c .
   OPTIONAL {{ ?rule <{_AG}confirmedBy> ?confirmed }} }} }}"""))
-    assert rows, "the packages ship effects, or this test is asking nothing"
+    assert rows, "the packages ship actions, or this test is asking nothing"
     for row in rows:
         assert row.get("confirmed"), f"{row['means']} states no confirmation route"

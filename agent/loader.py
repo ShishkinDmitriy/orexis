@@ -116,10 +116,9 @@ DESIRES_RULES = "desires.ru"
 # What a package would like its agents to reconsider about themselves. A SPARQL SELECT binding
 # ?term and ?value, run by the reviewer — never an update, and never Python. See orexis/review.py.
 REVIEW = "review.rq"
-AFFORDANCES = "affordances.rq"
-# What applying one of this package's levers MAKES TRUE — SHACL-AF rules, as RDF.
-EFFECTS = "effects.ttl"
-HONOURED = "honoured.rq"
+# The ways of acting this package brings — one `ag:Action` node each: precondition, effect,
+# taker. Replaced `affordances.rq`, `honoured.rq` and `effects.ttl` (an-action-is-one-node).
+ACTIONS = "actions.ttl"
 
 
 @dataclass(frozen=True)
@@ -275,45 +274,22 @@ def desires_rule_files() -> tuple[Path, ...]:
     return files(DESIRES_RULES)
 
 
-def affordance_files() -> tuple[Path, ...]:
-    """Every package's menu contribution — the rows its levers put on the table (#207).
+def action_files() -> tuple[Path, ...]:
+    """Every package's ACTIONS — what an agent can do through the things this package knows.
 
-    A package that ships `affordances.rq` states what an agent CAN DO through the things this
-    package knows about, preconditions as its own walk, `$me` substituted by the consumer.
-    The menu is the union of these, so a new KIND of move is a new directory and never an
-    edit to the deliberation package — which used to hold every branch, a registry in the
-    tree whose claim is that adding a package edits nothing. Goes through `store.query` like
-    a review rule, so no file here declares prefixes.
+    One `actions.ttl` per package, one `ag:Action` node per way of acting, carrying its
+    precondition (`ag:available`, a SELECT), its effect (`sh:construct`, `ag:retracts`, the
+    timing and the confirmation route) and its taker (`ag:takenBy`). RDF rather than a query
+    file because a node with a condition and a construct already IS the action schema — it
+    loads into the store at genesis, and a model or a sovereign reads the whole tool list
+    without a second format existing anywhere.
+
+    Found rather than listed, like every file here: a package that grows a way of acting is a
+    directory with this file in it, and nothing in the kernel learns its name. Three files
+    used to say this — availability, duties, effects — and an author adding one way of acting
+    wrote to all of them.
     """
-    return files(AFFORDANCES)
-
-
-def effect_files() -> tuple[Path, ...]:
-    """Every package's statement of what its levers DO (#238).
-
-    A package that ships `effects.ttl` says, per means, what applying it would make true: a
-    `sh:SPARQLRule` with `sh:condition` for the shape that must hold first and `sh:construct`
-    for the triples it would add, plus `ag:retracts` where it replaces something. RDF rather
-    than a query file, because the vocabulary is SHACL-AF's and a rule with a condition and a
-    construct already IS the action schema — so it loads into the store at genesis and a model
-    or a sovereign can read the whole tool list without a second format existing anywhere.
-
-    Found rather than listed, exactly as affordances are: a lever that grows an effect is a
-    file in the package that owns the lever, and nothing here learns its name.
-    """
-    return files(EFFECTS)
-
-
-def honoured_files() -> tuple[Path, ...]:
-    """Every package's HONOURED rows (#218) — what happens through an agent because others
-    hold paper, rather than because it chose.
-
-    A second file rather than a flag inside the first, for the reason the two kinds differ
-    at all: an author writing options should not be one FILTER away from writing duties, and
-    a reader asking "what does this package impose on whoever holds the hardware" should
-    have one file to read.
-    """
-    return files(HONOURED)
+    return files(ACTIONS)
 
 
 def sources(pattern: str = "*.py") -> tuple[Path, ...]:

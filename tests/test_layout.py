@@ -74,9 +74,9 @@ def test_the_agent_image_carries_no_operator_code(forbidden):
 #  for each. Globbing a tree for one of these is re-deriving what the loader assembles — which
 #  is the mistake this guard exists to refuse.
 _LOADER_ANSWERS = {
-    "*.ttl": "loader.sources('*.ttl'), or ontology_files() / shapes_files() for the two kinds",
+    "*.ttl": "loader.sources('*.ttl'), or ontology_files() / shapes_files() / action_files()",
     "*.ru":  "loader.sources('*.ru'), or rule_files() for the derivations",
-    "*.rq":  "loader.sources('*.rq'), or review_rules() / affordance_files() / honoured_files()",
+    "*.rq":  "loader.sources('*.rq'), or review_rules()",
     "*.py":  "loader.sources('*.py')",
 }
 

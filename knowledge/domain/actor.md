@@ -20,14 +20,15 @@ link from a row to its code is a **fact in the graph** rather than a dispatch ta
 # The triple
 
 ```turtle
-ag:Observe  ag:takenBy  sensing:SensingCapability .
-ag:Acquire  ag:takenBy  market:Bidding .
-ag:Actuate  ag:takenBy  actuation:Actuation .
-ag:Apply    ag:takenBy  market:Hosting .
+sensing:Observing   ag:means ag:Observe ; ag:takenBy sensing:SensingCapability .
+market:Acquiring    ag:means ag:Acquire ; ag:takenBy market:Bidding .
+actuation:Dosing    ag:means ag:Actuate ; ag:takenBy actuation:Actuation .
+market:Serving      ag:means ag:Apply   ; ag:takenBy market:Hosting .
 ```
 
-Each is stated in the `ontology.ttl` of the package that ships the matching `affordances.rq` —
-the row and the code that takes it are one directory, deletable together. The object is a
+Each is stated on the [action](/domain/action.md) node itself, beside the precondition and the
+effect it carries out — the row and the code that takes it are one directory, deletable
+together. The object is a
 capability term, so [execution](/domain/execution.md) resolves it exactly as any module reaches
 another: `agent.providers(family)`, through the T-Box, and every member of the family is offered
 the step. That plural is deliberate — the gardener holds two sensing modules and only one can

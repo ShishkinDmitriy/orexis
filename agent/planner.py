@@ -470,10 +470,10 @@ class Planner:
                 #  A duty may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its
                 #  own stake, and that is the whole of why a duty is in the search (#255).
-                if not (row.is_chosen or row.for_agent == desire.owed_to):
+                if not (row.is_own or row.for_agent == desire.owed_to):
                     continue
             else:
-                if not row.is_chosen:
+                if not row.is_own:
                     continue
                 if desire.observed_property and row.observed_property != desire.observed_property:
                     continue

@@ -33,7 +33,7 @@ from pathlib import Path
 
 from . import config, inference, loader, provenance, vocabulary
 from .config import REPO_ROOT
-from .ontology import (DESIRE_ASSERTED_GRAPH, EFFECTS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
+from .ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                        WORLD_DERIVED_GRAPH,
                        WORLD_ENTAILED_GRAPH, WORLD_GRAPH, beliefs_graph)
 from .store import NAMESPACES, Store, bindings
@@ -279,11 +279,12 @@ def refresh_public(st: Store, world: Path) -> None:
     """
     t_box = "\n".join(p.read_text() for p in loader.ontology_files())
     st.put_graph(ONTOLOGY_GRAPH, t_box)
-    #  What each lever MAKES TRUE, from the packages that own the levers (#238). Beside the
-    #  T-Box and not inside it: both are schemas the files assert, but an effect rule is
-    #  executable text a planner runs, and keeping it in a graph of its own means a package
-    #  that grows one is visible as a graph that grew rather than as vocabulary that moved.
-    st.put_graph(EFFECTS_GRAPH, "\n".join(p.read_text() for p in loader.effect_files()))
+    #  The ACTIONS, from the packages that own the acting (#238, an-action-is-one-node): per
+    #  way of acting one node — precondition, effect, taker. Beside the T-Box and not inside
+    #  it: both are schemas the files assert, but an action carries executable text a planner
+    #  runs, and keeping it in a graph of its own means a package that grows one is visible as
+    #  a graph that grew rather than as vocabulary that moved.
+    st.put_graph(ACTIONS_GRAPH, "\n".join(p.read_text() for p in loader.action_files()))
     #  The asserted-desire graph is REPLACED FROM THE FILES like everything ratified — and
     #  cleared here first, because `put_graph` can only replace graphs the new document still
     #  NAMES: a world that deletes its desire.ttl names nothing, and the dropped want would

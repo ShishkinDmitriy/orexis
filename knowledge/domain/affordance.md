@@ -2,12 +2,11 @@
 type: Domain Concept
 title: Affordance
 description: >-
-  One row of what an agent could do — a means, the property it is about, the lever it goes
-  through, which way that moves it, and whether it is the agent's to CHOOSE or to honour on
-  demand. Always DERIVED and never stored, because a stored row can outlive the plumbing it
-  was concluded from; contributed by whichever package owns the lever, as its own
-  `affordances.rq`, so a new way of acting is a new directory rather than an edit to a
-  registry. The menu is the union of those rows, and it is also the precondition language —
+  One row of what an agent could do NOW — an action whose precondition holds: a means, the
+  property it is about, the lever it goes through, which way that moves it, and whom it
+  serves if not the agent itself. Always DERIVED and never stored, because a stored row can
+  outlive the plumbing it was concluded from; each row comes from an action's `ag:available`
+  query, so a new way of acting is a new node rather than an edit to a registry. The menu is the union of those rows, and it is also the precondition language —
   a row whose premises cannot hold does not exist, so chaining needs no separate `requires`.
   The row that is ABSENT is a finding too: a desire with no lever is legitimate and legible.
 ---
@@ -23,8 +22,7 @@ written into it:
 | `observed_property` | what it is about — the property the agent holds a desire in |
 | `via` | the lever it goes through: this probe, this valve, this venue |
 | `direction` | which way it moves the property, or **empty** for a look |
-| `mode` | `Chosen` — mine to range over — or `Owed`, a duty exercised on demand |
-| `for_agent` | on an owed row, whom it is owed to. Absent on a chosen one |
+| `for_agent` | whom the row serves, where it is a duty. Absent on the agent's own rows |
 
 The **menu** is every such row for one agent, and `menu_of` is the whole of it. For the
 simulation's fern: *look at moisture through the probe; look at temperature through the
@@ -44,8 +42,8 @@ valve and an authored row still says you can dose. So the menu is computed on ev
 [menu graph](/decisions/the-mind-is-six-graphs.md) holds rules about means but never rows about
 levers.
 
-The same argument in reverse is why a rule about a means *is* stored — `effects.ttl` is a schema,
-and a schema cannot outlive anything.
+The same argument in reverse is why the [action](/domain/action.md) *is* stored — a node in
+`actions.ttl` is a schema, and a schema cannot outlive anything.
 
 # The menu is the precondition language
 
@@ -64,30 +62,30 @@ one validation; trusting a declaration that turns out to be wrong costs a plant.
 
 # Each package ships its own rows
 
-There is no menu file. Each package that owns a lever ships an `affordances.rq` beside its
-ontology, and `menu_of` collects whatever the loader finds — sensing contributes Observe,
-actuation Actuate, the market Acquire and Offer.
+There is no menu file. Each package that owns a lever ships its [actions](/domain/action.md),
+and `menu_of` runs every action's `ag:available` it finds in the store — sensing contributes
+Observe, actuation Actuate, the market Acquire and the host's Apply.
 
 It began as one `menu.rq` in the deliberation package, which made the menu's KINDS a registry in
 one directory: adding a way of acting meant editing another package's file. The sovereign caught
 the overclaim — *how is it dynamic if the list is hardcoded?* — and the fix was this repo's
-mechanic applied again. **A new way of acting is a new directory**: an ontology for the tool's
-schema, an `affordances.rq` for its availability, a module for its implementation — or no module
-at all, where execution reduces to an actor that already exists.
+mechanic applied again. **A new way of acting is a new directory**: an action node for its
+schema, availability and effect, and a `take()` on the module the node names.
 
 `$me` is the one thing a shipped query cannot know, and it is substituted by whoever collects the
 menu. Everything else is an unqualified pattern, because regions and wiring are public.
 
-# Two modes: what I choose, and what I honour
+# Whom a row serves
 
-A **chosen** row is an option a deliberator ranges over. An **owed** row is a duty: a lever the
-agent must exercise on a valid presentation and must never *propose*. A host holding a claim
-owes the dose; nothing about that is a decision, and a deliberator that ranged over it would be
-choosing whether to keep its word.
+A row of the agent's **own** is an option a deliberator ranges over. A row that names
+`for_agent` is a **duty's**: a lever the agent must exercise on a valid presentation and must
+never *propose* for a gap of its own. A host holding a claim owes the dose; nothing about that
+is a decision, and a deliberator that ranged over it would be choosing whether to keep its word.
 
-`for_agent` is what lets a duty find its means — an obligation names who it is owed to, and the
-row that answers is the one honoured for exactly that agent. Absent mode means chosen, so a
-branch written before the distinction keeps its meaning.
+That one column is the whole of the distinction — there is no mode term
+([an-action-is-one-node](/decisions/an-action-is-one-node.md)). It is also what lets a duty find
+its means: an obligation names who it is owed to, and the row that answers is the one bound to
+exactly that agent.
 
 # The row that is not there
 
@@ -99,7 +97,8 @@ too coarse*, which is a distinction a planner that reported them alike would des
 
 # Related
 
-- [deliberation](/domain/deliberation.md) ranges over the chosen rows, scores them by simulation,
+- [action](/domain/action.md) is the node a row is one instance of — its availability query, run now.
+- [deliberation](/domain/deliberation.md) ranges over the agent's own rows, scores them by simulation,
   and holds what a lever DOES — a row says only that one is available.
 - [desire](/domain/desire.md) is the other half of a decision: a row answers *what could I do*, a
   gap answers *about what*.

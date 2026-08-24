@@ -156,7 +156,7 @@ DESIRE_ASSERTED_GRAPH = _GRAPH + "desire/asserted"
 #  What every MEANS makes true, loaded from the packages at genesis (#238). Public, because
 #  a planner reads it on every pass and a model must be able to see the whole tool list;
 #  asserted from files, so it is replaced at each boot rather than accumulated.
-EFFECTS_GRAPH = _GRAPH + "effects"
+ACTIONS_GRAPH = _GRAPH + "actions"
 #  What the planner considered on its last pass, per desire — the record's one sanctioned
 #  materialisation of a possible world, for the reader who cannot re-run the search from
 #  outside because the belief base is locked by the process holding it. Private, replaced per

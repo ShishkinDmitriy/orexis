@@ -88,20 +88,22 @@ def test_the_bidder_holds_no_opinion_of_its_own(monkeypatch):
 # --- the link from a row to its code is a triple ---------------------------------------------
 
 
-def _project():
+def _actions():
     g = rdflib.Graph()
-    for ttl in loader.ontology_files():
+    for ttl in loader.action_files():
         g.parse(ttl)
     return g
 
 
 def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monkeypatch):
-    """A row shipped with no `ag:takenBy` is an intention nothing can carry out. Every means
-    on any shipped agent's menu names a family, and every agent holding such a row composes a
-    module in that family — which is the whole of 'every affordance is linked to code'."""
-    project = _project()
-    takers = {str(s): str(o) for s, _, o in project.triples((None, TAKEN_BY, None))}
-    assert takers, "no ag:takenBy anywhere — the ontologies stopped stating it"
+    """An action with no `ag:takenBy` is an intention nothing can carry out. Every means on any
+    shipped agent's menu comes from an action naming a family, and every agent holding such a
+    row composes a module in that family — which is the whole of 'every affordance is linked
+    to code'."""
+    actions = _actions()
+    MEANS = rdflib.URIRef("http://example.org/orexis#means")
+    takers = {str(actions.value(a, MEANS)): str(f) for a, f in actions.subject_objects(TAKEN_BY)}
+    assert takers, "no ag:takenBy anywhere — the action files stopped stating it"
     rows_seen = 0
     for world, agent_id in (("simulation", "fern"), ("simulation", "supplier"),
                             ("loner", "gardener")):
@@ -115,7 +117,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
             assert agent.providers(family), \
                 f"{world}/{agent_id}: {row.means} is taken by {family}, which it does not compose"
     assert rows_seen >= 4
-    assert OFFER not in takers, "Offer is on no menu and states no taker, on purpose"
+    assert OFFER not in takers, "Offer is no action and states no taker, on purpose"
 
 
 def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):

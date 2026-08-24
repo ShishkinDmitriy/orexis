@@ -520,14 +520,14 @@ SELECT ?p WHERE {{
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed serve: pour the claim this duty names.
 
-        The actor for `ag:Apply` on the HONOURED row (knowledge/domain/actor.md). A plan
+        The actor for `ag:Apply` on the duty's row (knowledge/domain/actor.md). A plan
         whose head is the refill hands that row to bidding, not here; this answers only a
         serve, and only for a claim still held — a duty whose claim was never presented is
         not this module's to invent.
         """
         if row.means != _APPLY or not desire.claim or desire.claim not in self.held:
             return False
-        self._serve(desire.claim, f"the plan's head — {row.mode.rsplit('#', 1)[-1]}")
+        self._serve(desire.claim, "the plan's head — a duty's row")
         if (keeper := self._keeper()) is not None:
             keeper.satisfy(_APPLY, row.observed_property, "served", desire=desire.uri)
         return True
