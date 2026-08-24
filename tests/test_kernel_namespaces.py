@@ -187,7 +187,8 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #     positively rather than by guarding the borrowing.
     #   2 and 3, SPELLINGS (#343) — `market:` and `actuation:` were named by no pattern in the
     #     file, and went with the rule that had left them behind. `agent/ontology.ttl`'s
-    #     `sensing:` is the one of the three still standing; it is unrelated to the want.
+    #     `sensing:` was the last of the three and is now gone too, which closes #343: it
+    #     declared a prefix the kernel ontology used in prose only, so no triple needed it.
     #   4, THE SELECTOR — `sensing:polls` and `sensing:monitors` in the rule's WHERE, which is
     #     exactly the "somewhere for the knowledge to go" this entry said it was waiting for.
     #     The mind's own derivation is no longer the thing reaching into a capability's
@@ -195,10 +196,6 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #
     # `agent/readings.rq:23` still reads `sensing:staleAfterS` prefixed, where this scan cannot
     # see it, and #344 is the check that would.
-    ("agent/ontology.ttl", "sensing#"): (
-        1, "debt, cheap (spelling, #343): prefix declaration; the kernel ontology uses sensing: "
-           "in prose only, so no triple needs it"),
-
     # 5 and 6 — the shapes. Both measured, both loud, both still debt:
     #   l.108, a WIDENER inside DeviceModelShape's OPTIONAL — without it COALESCE falls back to
     #     1.0, the ceiling drops, and an initial value of 45.0 that conformed now VIOLATES. It
