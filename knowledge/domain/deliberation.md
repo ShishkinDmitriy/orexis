@@ -285,9 +285,9 @@ What the two retired terms carried, for a reader meeting the words in an older r
 otherwise nothing*, with WHICH side read off `market:direction` (#127) rather than hardcoded.
 `deliberation:Planning` was the same one level up (#205) — the search, granted by the DEALER
 premise, plus one deduced desire past the region: the hosted lot must be serveable. Both are
-gone; what survives of the second is the search itself, which every agent now runs, and its
-two-step exposition `plan.rq` — a narrative for a reader rather than anything a search
-produces.
+gone; what survives of the second is the search itself, which every agent now runs. Its
+two-step exposition `plan.rq` survived a while longer as a narrative for a reader, and went
+when the search began finding the same two rows itself.
 
 - **`deliberation:Consulting`** — RESERVED. One model call over the beliefs, the T-Box, the gap
   and what already stands, emitting a move **from this vocabulary's menu, never free

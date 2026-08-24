@@ -134,6 +134,14 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     ("agent/regions.py", "sensing#SensingCapability"): (
         1, "the same lookup, from the regions side"),
 
+    # A migration DESTINATION. `vocabulary.MOVED` records where a retired spelling
+    # went, and the first means to leave the kernel for a package (market:Offer, with
+    # a-round-is-a-fact-and-offering-is-an-action) makes a package word the destination of two
+    # kernel spellings. The map is a record of where things went and cannot avoid naming the
+    # place; it leaves when no volume older than that change can exist to migrate.
+    ("agent/vocabulary.py", "market#Offer"): (
+        2, "migration: where the kernel's Offer went, from two older spellings — removable with the last pre-#363 volume"),
+
     # KIND 3 — `agent/ontology.py`'s namespace constants. Self-aware in place ("these are NOT a
     # prefix registry") and consumed mainly by `onboarding/`, which legitimately knows packages
     # because it reads the ratified files directly rather than through a Store carrying

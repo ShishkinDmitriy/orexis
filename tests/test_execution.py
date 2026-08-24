@@ -21,7 +21,7 @@ ACQUIRE = "http://example.org/orexis#Acquire"
 OBSERVE = "http://example.org/orexis#Observe"
 ACTUATE = "http://example.org/orexis#Actuate"
 APPLY = "http://example.org/orexis#Apply"
-OFFER = "http://example.org/orexis#Offer"
+OFFER = "http://example.org/orexis/market#Offer"
 TAKEN_BY = rdflib.URIRef("http://example.org/orexis#takenBy")
 
 

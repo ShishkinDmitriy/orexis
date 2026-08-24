@@ -719,7 +719,7 @@ ag:available a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:str
 
 ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capability ;
     rdfs:label "taken by" ;
-    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute: `ag:Offer` is one on purpose, since no menu row offers it. See knowledge/domain/actor.md.""" .
+    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
 
 ag:Observe a ag:Means ; rdfs:label "Observe" ;
     rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .
@@ -733,8 +733,12 @@ ag:Apply a ag:Means ; rdfs:label "Apply" ;
 ag:Actuate a ag:Means ; rdfs:label "Actuate" ;
     rdfs:comment "Move a property directly: the lever is mine and the resource is mine, so no negotiation — the ladder's second rung (#190), honest exactly where BOTH chains end at the agent: the lever chain (my actuator, plumbed to my subject) and the resource chain (drawing from a source no market offers as its lot — a pot-local pump on the shared barrel still bids, because the market is about the resource, not the lever). Adopted when the search finds this rung reaches a better world, STANDING from the command until its expectation is judged (#353) — the intention is to the end, a wetter pot, and while it stands the next impulse is absorbed — and satisfied at the verdict, met or unmet; the dose itself is still signed, still confirmed, still watched by an expectation — an unconfirmed self-dose is not a delivered one either, and the REA event stands even though it fulfils no exchange." .
 
-ag:Offer a ag:Means ; rdfs:label "Offer" ;
-    rdfs:comment "The host's move: open a round on a venue it convenes — the sell half of the dealer's acquire-then-offer, named so a PLAN can say its second step in the same vocabulary the keeper records the first in. AN ACTION since a-round-is-a-fact-and-offering-is-an-action: `market:Offering`, available on a venue the host convenes while no round stands, its cooldown has run out and its vessel holds something; its effect is a round. What it serves is a CALL — a participant's LOW made a round wanted — and a dry vessel makes the search plan acquire-upstream-then-Offer where a handler used to defer. Adopted by execution as the plan's head, satisfied when the round opens. The whether-to-sell (the strategic-supplier seam) remains untouched: this makes Offer plannable, not wanted." .
+#  `ag:Offer` WAS HERE and is the market's word now — `market:Offer`, declared beside the
+#  action that carries it. It is the first means to leave: the kernel names it nowhere, so
+#  nothing in `agent/` had to learn a package word for it to go. The other four stay only
+#  because the kernel still names them (the keeper satisfies Observe on a reading; the planner
+#  sizes Acquire and Actuate by their families; the keeper reads Apply's hold), which is the
+#  seam a-round-is-a-fact-and-offering-is-an-action records.
 
 ag:adoptedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "adopted at" .
