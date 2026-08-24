@@ -91,11 +91,14 @@ look identical. The contracts carry the boundary alone:
   reaches into one. That contract could not be stated while three capability packages held the
   mind, and the violations were not theoretical;
 - but it binds **Python and nothing else**, and the kernel does reach into a package's
-  *vocabulary*: twenty-one spelled-out IRIs, across its code, its shapes, its ontology's prefix
-  block and the desire derivation. `tests/test_kernel_namespaces.py` is the second contract —
-  each of the twenty-one allowlisted with what will remove it again, a twenty-second failing the
-  suite, and an entry that has stopped occurring failing it too, so the number can only fall
-  (#334);
+  *vocabulary*, across its code, its shapes, its ontology's prefix block and the desire
+  derivation. `tests/test_kernel_namespaces.py` is the second contract and the count of record —
+  every spelled-out IRI allowlisted, a new one failing the suite, and an entry that has stopped
+  occurring failing it too, so the number can only fall (#334; it was twenty-one keys when the
+  ratchet landed and is eighteen since #339 retired the reflex). **What makes one of them
+  legitimate is the direction it fails in**, not the file kind — see
+  [a-borrowed-word-must-fail-loudly](/decisions/a-borrowed-word-must-fail-loudly.md), which rules
+  on the nine in the kernel's RDF and is why the ratchet's list will not empty;
 - the `Containerfile` decides what reaches an image by naming two trees and not a third, with
   `tests/test_layout.py` failing if a `COPY onboarding/` appears.
 
