@@ -43,6 +43,8 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [desire](/domain/desire.md) - What an agent is trying to bring about, and the capability that deduces it. A stake and a duty are the same type on purpose.
 
+* [root desire](/domain/root-desire.md) - A want quantified over a class, one per premise; the forest above the per-instance, per-property, per-side wants an agent pursues.
+
 * [intention](/domain/intention.md) - A commitment to reduce a named gap by a named means, kept in a private ledger. Granted by a stake AND a lever.
 
 * [deliberation](/domain/deliberation.md) - The whether, extracted: given the gap and what stands, name the next move. Three members, two of them built.

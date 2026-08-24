@@ -33,6 +33,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) - SUPERSEDED IN PART — the modalities and their findings stand; their carrier moved from graph to store.
 * [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) - A modality is a store with its own persistence; graphs inside carry only arrival. The desires store is read-only to the runtime.
 * [a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md) - Store what an agent pursues as SHACL rather than as data, so constraint, desire and obligation are one language.
+* [a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md) - A root desire per premise, decomposed per instance, property and side, materialised with its why; every level must name a consumer.
 * [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md) - Desire is a capability granted by a stake: a region per property, intersected from every range that applies.
 * [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md) - The plant states the range it needs in the world; the agent's target is a pick inside it.
 * [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md) - The distinction belongs on the goal, not the lever: a claim raises a desire whose provenance says whose it is.
