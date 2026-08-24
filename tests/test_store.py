@@ -355,14 +355,3 @@ def test_an_availability_query_leans_on_the_stores_prefixes_like_a_review_rule()
     assert checked >= 4, "the actions stopped carrying availability queries"
 
 
-def test_the_plan_query_leans_on_the_stores_prefixes_like_the_rest():
-    """`plan.rq` (#206) rides `store.query` from two directions — the planner's `plan_for`
-    and the sovereign's ask channel — so the same two rules hold: no prefix declarations of
-    its own, and only declared ones used."""
-    from agent import deliberator
-
-    text = deliberator.PLAN_QUERY
-    assert "PREFIX " not in text.upper(), "plan.rq declares its own prefixes"
-    used = {m.group(1) for m in _PREFIXED.finditer(text)}
-    undeclared = used - store.DECLARED - {"http", "https", "urn"}
-    assert not undeclared, f"plan.rq uses {sorted(undeclared)}"

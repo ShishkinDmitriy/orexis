@@ -21,7 +21,7 @@ sells litres to the plants at its own, the barrel between them.
 The dealer's upstream claim is redeemed **by the dealer itself** — the mains' valve doses its
 own barrel — and its downstream venue mints **fresh claims against its own stock**. The two
 markets never learn of each other; no claim crosses; the plan connecting them lives in one
-agent's head (and since #205 in its `plan.rq`: acquire upstream, then offer downstream). This
+agent's head (and since #359 found by its search: acquire upstream, then offer downstream). This
 is what inventory *is*: absorbing the mismatch in time, quantity and price between the buy
 side and the sell side. The pass-through dealer — no vessel, claim endorsed to a beneficiary
 who is not the winner — is a designed seam with its four-signature chain recorded, built by

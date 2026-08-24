@@ -605,10 +605,11 @@ class Planner:
         means = row.means if row is not None else None
         prop = desire.observed_property if desire else None
         value = desire.value if desire else None
-        if prop is None and desire is not None and desire.is_duty and row is not None:
-            #  A duty names no property, but the LEVER does (#255): the refill is an Acquire
-            #  on this agent's own stake, and its rule binds the row's property and predicts
-            #  from where that property stands in the node's world.
+        if prop is None and row is not None:
+            #  A duty names no property, and neither does a call — but the LEVER does (#255,
+            #  #359): the refill is an Acquire on this agent's own stake, and its rule binds
+            #  the row's property and predicts from where that property stands in the node's
+            #  world. Every want without a property is sized this way.
             prop = row.observed_property
         if node is not None and prop is not None:
             here = self._value_of(node.world, prop)

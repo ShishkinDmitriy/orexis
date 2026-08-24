@@ -72,7 +72,7 @@ things follow without a line of policy:
   that wants water and has no round reads `no candidate`, which is the finding the standing
   Acquire was hiding.
 
-**3. Offering is an action.** `market:Offering a ag:Action ; ag:means ag:Offer`, taken by
+**3. Offering is an action.** `market:Offering a ag:Action ; ag:means market:Offer`, taken by
 `market:Hosting`, in the market's `actions.ttl` beside Acquiring and Serving:
 
 - *available* where `$me market:hosts ?via`, no `market:Round` stands on `?via` — held or
@@ -126,6 +126,11 @@ Three changes, each a PR, in this order because each is the next one's premise:
 
 # Seams left open
 
+- **Four means are still the kernel's.** `Offer` left for the market with this record's third
+  step — the kernel never named it, once the hand-written `plan.rq` went. The other four stay
+  because the kernel does: `keeper.on_reading_recorded` satisfies `ag:Observe` by name, the
+  planner sizes `Acquire` and `Actuate` by their families, the keeper reads `Apply`'s hold for
+  urgency. Each leaves the day that reference becomes a hook.
 - **The lot is still one number.** Offering's effect offers `market:offerQuantityL` capped by
   stock, as `announce` does now. The standing-offer record's first seam is unchanged.
 - **Uniform-price's uncontested round still runs as a ceremony.** A round that is a fact does

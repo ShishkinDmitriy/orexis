@@ -18,6 +18,11 @@
 :Hosting a ag:Capability ; rdfs:label "Hosting" ;
     rdfs:comment "The agent runs rounds in a market: announces the offer, collects bids until the deadline, matches, has the trade validated, and issues claims. The scarce side hosts." .
 
+#################  The host's move, as a MEANS  #################
+
+:Offer a ag:Means ; rdfs:label "Offer" ;
+    rdfs:comment "The host's move: open a round on a venue it convenes. THIS PACKAGE'S word — the first means declared outside the kernel, as means.md always said a package could, because nothing in the kernel ever names it: `market:Offering` is the action that carries it, a call is the want it serves, and hosting is its taker. Adopted by execution as a plan's head, satisfied when the round opens. The whether-to-sell (the strategic-supplier seam) remains untouched: this makes Offer plannable, not wanted." .
+
 #################  The venue  #################
 
 :Market a owl:Class ; rdfs:label "Market" ;

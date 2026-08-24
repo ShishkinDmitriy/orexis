@@ -18,7 +18,7 @@ written into it:
 
 | | |
 |---|---|
-| `means` | the kind of act: `ag:Observe`, `ag:Actuate`, `ag:Acquire`, `ag:Offer` |
+| `means` | the kind of act: `ag:Observe`, `ag:Actuate`, `ag:Acquire`, `market:Offer` |
 | `observed_property` | what it is about — the property the agent holds a desire in |
 | `via` | the lever it goes through: this probe, this valve, this venue |
 | `direction` | which way it moves the property, or **empty** for a look |

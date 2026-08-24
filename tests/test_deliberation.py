@@ -388,18 +388,23 @@ STORED = "http://example.org/orexis/water#StoredLitres"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
 
 
-def test_the_plan_is_two_rows_through_two_venues(make):
-    """The record's sentence made data: acquire upstream, then offer downstream — a path of
-    menu-row-shaped steps through the two venues the grant's premise names, and the minted
-    market IRIs recomputed exactly as every rule recomputes them."""
-    supplier = make("supplier")
-    steps = supplier.deliberator.plan_for(STORED)
-    assert [(s.means.rsplit("#", 1)[-1], s.via.rsplit(".", 1)[-1]) for s in steps] == [
+def test_the_search_finds_the_dealers_two_step_from_two_nodes_that_never_meet(make):
+    """The record's sentence, FOUND rather than written: acquire upstream, then offer
+    downstream. A call on a dry barrel, the city's round open — and the search plans exactly
+    those two rows, because Acquiring's effect raises the stock that Offering's premise reads.
+    `plan.rq` used to narrate this by hand; a narrative beside a search that produces the same
+    thing was the kernel's last reason to spell the market's `Offer`."""
+    from packages.capability.market import calls
+
+    supplier = make("supplier", genesis_store({("barrel1", STORED): 0.0}))
+    open_round_for(supplier, "supplier")                 # the city convenes
+    calls.call(supplier, next(m.uri for m in supplier.hosting().markets), "fern")
+    want = next(d for d in supplier.pursuing() if d.uri.startswith(calls.NS + "call_"))
+    plan = supplier.deliberator.decide(want)
+    assert plan is not None
+    assert [(s.means.rsplit("#", 1)[-1], s.via.rsplit(".", 1)[-1]) for s in plan.steps] == [
         ("Acquire", "city_mains"), ("Offer", "barrel1")]
-    assert supplier.deliberator.plan_for(MOISTURE) == [], \
-        "a planner asked about somebody else's gap has no chain to offer, and says so"
-
-
+    assert plan.urgency_after == 0.0, "and the world it reaches has the round the call wanted"
 # --- the menu is the union of package contributions (#207) ------------------
 
 def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):

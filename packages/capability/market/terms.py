@@ -84,4 +84,4 @@ KERNEL = "http://example.org/orexis#"
 OBSERVE = KERNEL + "Observe"
 ACQUIRE = KERNEL + "Acquire"
 APPLY = KERNEL + "Apply"      # real since #132: holding a claim until the watch is live
-OFFER = KERNEL + "Offer"      # the owed round (#206): deferred for dry stock, opened on refill
+OFFER = term("Offer")          # the host's move — this package's word, since it left the kernel

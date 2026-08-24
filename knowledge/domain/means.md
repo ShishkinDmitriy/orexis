@@ -4,7 +4,7 @@ title: Means
 term: http://example.org/orexis#Means
 description: >-
   The KIND of an act, and a T-Box term — `ag:Observe`, `ag:Actuate`, `ag:Acquire`, `ag:Apply`,
-  `ag:Offer`. Not the instrument it goes through, which is the lever, and not what taking it
+  `market:Offer`. Not the instrument it goes through, which is the lever, and not what taking it
   would make true, which is the effect. A means is what an intention commits to (`ag:by`), what
   an affordance row offers, and what an action declares itself to be (`ag:means`) — three
   unrelated parts of the design joined by one term, which is why it is the noun to be exact
@@ -22,7 +22,7 @@ A **means** is *what kind of act this is*. Five exist, each an `ag:Means` in the
 | `ag:Actuate` | move a property directly, where the lever and the resource are both mine |
 | `ag:Acquire` | obtain what would reduce a gap — here, bid in a market |
 | `ag:Apply` | spend a held claim against the world |
-| `ag:Offer` | the host's move — open a round on a venue it convenes |
+| `market:Offer` | the host's move — open a round on a venue it convenes; the market's own word |
 
 It is a **term**, not an instance, so code may name one. That is the exception rule 1 carves
 out, and it is what lets `search.py` say `_ACTUATE` in Python while never naming a valve.
@@ -57,10 +57,12 @@ same term, and a reader can join them without anything storing a correspondence.
 # Five, and nothing lists them
 
 There is no registry of means, in the same way there is no registry of packages or of
-affordance kinds. Each is declared in the ontology of whoever owns the acting, and a sixth would
-arrive as a declaration plus an action node — [package](/domain/package.md)'s mechanic
-again. The kernel names some of them in Python, but only as terms it was handed: nothing anywhere
-enumerates the set.
+affordance kinds. A means is declared by whoever owns the acting, and a sixth would arrive as
+a declaration plus an action node — [package](/domain/package.md)'s mechanic again. `Offer`
+is declared that way, by the market; the other four are still in the kernel's ontology only
+because the kernel names them in Python (a look satisfied on a reading, a bid and a dose sized
+by family, a hold read for urgency), and each leaves the day that reference becomes a hook.
+Nothing anywhere enumerates the set.
 
 **The ladder is their order, not a ranking of quality.** `ag:Actuate` is offered exactly where
 both chains end at the agent — the lever is mine and so is the resource — and `ag:Acquire` where

@@ -100,7 +100,7 @@ def declared(st) -> set[str]:
 #  one thing its own error message refuses to do.
 MOVED = {
     **{f"http://example.org/orexis/intention#{n}": f"http://example.org/orexis#{n}"
-       for n in ("Intention", "by", "Means", "Observe", "Acquire", "Apply", "Actuate", "Offer",
+       for n in ("Intention", "by", "Means", "Observe", "Acquire", "Apply", "Actuate",
                  "adoptedAt", "resolvedAt", "outcome", "becauseOf", "expectsValueTo",
                  "baselineValue", "baselineAt", "deadlineAt", "expectsDelta", "endMet",
                  "endVerifiedAt")},
@@ -123,6 +123,11 @@ MOVED = {
     #  volume migrated yesterday holds `ag:boundedBy`, one migrated today holds neither, and
     #  both must land on what the vocabulary says now. A migration table is a record of where
     #  things went, not of how they travelled.
+    #  The host's move left the kernel for the market (a-round-is-a-fact-and-offering-is-an-
+    #  action): a ledger holding Offer intentions under either older spelling lands on the
+    #  package's word — the destination, not the step, as the note above says.
+    "http://example.org/orexis/intention#Offer": "http://example.org/orexis/market#Offer",
+    "http://example.org/orexis#Offer": "http://example.org/orexis/market#Offer",
     "http://example.org/orexis/desire#Desire": "http://www.w3.org/ns/shacl#NodeShape",
     "http://example.org/orexis/desire#desires": "http://example.org/orexis#holds",
     "http://example.org/orexis#boundedBy": "http://example.org/orexis#holds",

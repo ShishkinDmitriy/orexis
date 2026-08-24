@@ -37,11 +37,9 @@ See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from . import planner, trace
 from .desire import Desire
-from .menu import Affordance, menu_of
+from .menu import menu_of
 from .module import Module
 from .ontology import AG, DELIBERATION_GRAPH, SENSED_GRAPH, beliefs_graph
 from .planner import Planner
@@ -360,21 +358,6 @@ class Deliberator(Module):
                           if desire.observed_property else "a duty", plan.outcome)
         return None
 
-    def plan_for(self, observed_property: str) -> list[Affordance]:
-        """The dealer's two-step, as rows: acquire upstream, then offer downstream.
-
-        Empty when the property is not the vessel's stock — a planner asked about somebody
-        else's gap has no chain to offer, and says so rather than inventing one. Runs the
-        shipped `plan.rq`, the same text the sovereign can put over the ask channel.
-        """
-        rows = bindings(self.agent.beliefs.query(
-            PLAN_QUERY.replace("$me", f"<{self.me.uri}>")))
-        return [Affordance(means=r["means"], observed_property=r["property"],
-                           via=r["via"], direction=r.get("direction"))
-                for r in sorted(rows, key=lambda r: r["step"])
-                if r["property"] == observed_property]
-
-
 # WHAT WENT WITH THE REFLEX, and what that costs: the dealer's shop query — the lot my
 # downstream venue owes, if the property in hand is my own vessel's stock. It was the reflex's
 # one clause past the region, and it pursued serveability: buy while the barrel holds less than
@@ -387,11 +370,13 @@ class Deliberator(Module):
 # the lot they promise — a dealer that would then sit content while unable to serve. Said out
 # loud here rather than left implied: see a-plan-is-a-path-of-graph-diffs.md.
 
-# The dealer's plan ships as SPARQL beside the menu contributions (#206), so the sovereign
-# may run the very text the planner runs — one file, two readers, no drift.
-PLAN_QUERY = (Path(__file__).parent / "plan.rq").read_text()
-
-OFFER = AG + "Offer"
+#  `plan.rq` and `plan_for` WERE HERE — the dealer's two-step as a hand-written exposition,
+#  "acquire upstream, then offer downstream", kept as a narrative for a reader after the reflex
+#  went. The search FINDS that plan now (a-round-is-a-fact-and-offering-is-an-action): a call on
+#  a dry vessel with an upstream round open plans exactly those two rows from two action nodes
+#  that never mention each other, and the trace shows it. A narrative beside a search that
+#  produces the same thing is a second statement that can disagree — and it was the kernel's
+#  last reason to spell the market's `Offer`.
 
 #  A duty's fallback plan — the row owed to its counterparty when the search found no path.
 #  Not one of the planner's outcomes and never in the trace; it labels a row handed to

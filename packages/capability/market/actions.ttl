@@ -193,7 +193,7 @@ market:Acquiring
 
 market:Offering
     a ag:Action ;
-    ag:means ag:Offer ;
+    ag:means market:Offer ;
 
     #  AVAILABLE on a venue I host, while NO round stands on it (in what I hold, or in the
     #  world a plan is imagining — an Offer already taken in this plan leaves no room for a
