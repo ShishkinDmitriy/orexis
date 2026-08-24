@@ -1,4 +1,3 @@
-@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix water: <http://example.org/orexis/water#> .
 @prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix ag:   <http://example.org/orexis#> .
