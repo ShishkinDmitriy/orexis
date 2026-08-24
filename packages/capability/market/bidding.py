@@ -38,6 +38,7 @@ from agent.module import Module, Timer
 from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
+from . import rounds
 from .beliefs import BIDDING_PICKS
 from .terms import (ACQUIRE, APPLY, BIDDING, OBSERVE,
                     SENSING)
@@ -330,6 +331,17 @@ class BiddingModule(Module):
             return
 
         self.pending = {"auction_id": auction_id, "market": market}
+        #  THE ROUND AS A FACT, in my own graph: what I was told. A bidder is never told a
+        #  round closed — it gets a claim or nothing — so the clock ends the row, and the
+        #  ones already past their close are swept here, on the one event that always comes.
+        rounds.sweep_expired(self.agent)
+        from datetime import timedelta
+
+        rounds.open_round(self.agent, market.uri, auction_id,
+                          float(offer.get("quantity_l") or 0.0),
+                          float(offer.get("reserve_price_per_l") or 0.0),
+                          datetime.now(timezone.utc)
+                          + timedelta(seconds=float(offer.get("closes_in_s") or 0) or 1.0))
         sensing = self.agent.provider(SENSING)
         if sensing is None:
             # bidding while perceiving nothing leaves no reading to cite, so no honest bid
@@ -406,6 +418,7 @@ class BiddingModule(Module):
         if self.pending:
             why = self._why_blind()
             self.log.info("auction %s: sitting out — %s", self.pending["auction_id"], why)
+            rounds.close_round(self.agent, self.pending["auction_id"])
             if keeper := self._keeper():
                 keeper.drop(OBSERVE, self.about, f"the auction closed first: {why}")
             self.pending = None
@@ -515,6 +528,8 @@ class BiddingModule(Module):
     # --- what came back ---
 
     def on_claim(self, market, claim: dict) -> None:
+        if claim.get("auction_id"):
+            rounds.close_round(self.agent, claim["auction_id"])   # over for me: I won
         amount = float(claim.get("amount_l", 0.0))
         debit = float(claim.get("debit", 0.0))
         self.balance -= debit

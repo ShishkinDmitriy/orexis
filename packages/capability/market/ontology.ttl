@@ -165,3 +165,38 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 :matchesBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :BidMatchingCapability ;
     rdfs:label "matches by" ;
     rdfs:comment "How this host matches bids in the auctions it convenes. The host defines the terms of its own auction, so this is the host's fact and not the venue's — and it is PUBLIC, in the world, because a bidder cannot bid well against terms it does not know. Real auctions announce theirs; a sealed-bid first-price auction says so. Named `matchesBy` rather than `clearsBy` deliberately: clearing is a different thing here — the validator that co-signs a trade — and reusing the word would have made a host's allocation read as the notary's business. The capability is DERIVED from this, never declared." .
+
+#################  A round, as a FACT  #################
+#
+#  An open round lived in a dict on the host and in `pending` on the bidder, and on the wire —
+#  nowhere any store could answer for. So the buying action's precondition could only say "I
+#  could buy here", never "I can buy now", and nothing could plan an Offer because nothing
+#  could see one. A round is a belief now, on BOTH sides (a-round-is-a-fact-and-offering-is-an-
+#  action): the host writes one when it announces, the bidder when it hears, each into its own
+#  graph, and each retracts it when the round is over for it. Nothing on the row is not already
+#  on the wire — and two things must NEVER be: the host's `bidWindowS` and `roundCooldownS`, the
+#  private beliefs that keep a bidder from timing its arrival. `closesAt` is what the offer
+#  said; the window is how the host arrived at it.
+
+:Round a owl:Class ; rdfs:label "Round" ;
+    rdfs:comment "One open round on a venue, as the agent holding this row was told it or announced it: the lot, the reserve and when bidding closes. Written on announce (host) or on offer (bidder) into that agent's own graph, retracted at close, and a row past its closesAt is swept on the next ask — so the walk `?venue market:hasRound ?r . ?r market:closesAt ?t FILTER(?t > NOW())` is the whole of 'a round is open'." .
+
+:hasRound a owl:ObjectProperty ; rdfs:domain :Market ; rdfs:range :Round ;
+    rdfs:label "has round" ;
+    rdfs:comment "The venue a round is open on. From the venue to the round, so the buying action's walk — venue, source, good, host, valve — takes one more hop and stops when there is nothing to hop to." .
+
+:roundId a owl:DatatypeProperty ; rdfs:domain :Round ; rdfs:range xsd:string ;
+    rdfs:label "round id" ;
+    rdfs:comment "The auction id on the wire, so a claim or a close can find the row it ends." .
+
+:lotL a owl:DatatypeProperty ; rdfs:domain :Round ; rdfs:range xsd:decimal ;
+    rdfs:label "lot, litres" ;
+    rdfs:comment "What this round offers — the host's standing offer capped by its stock, as announced." .
+
+:reservePerL a owl:DatatypeProperty ; rdfs:domain :Round ; rdfs:range xsd:decimal ;
+    rdfs:label "reserve per litre" ;
+    rdfs:comment "The reserve announced for this round." .
+
+:closesAt a owl:DatatypeProperty ; rdfs:domain :Round ; rdfs:range xsd:dateTime ;
+    rdfs:label "closes at" ;
+    rdfs:comment "When bidding closes — the offer's closes_in_s, as an instant. The one clock a bidder is told; the host's window and cooldown stay its own." .
