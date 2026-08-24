@@ -46,6 +46,15 @@ UNIFORM_PRICE = term("UniformPrice")   # every winner pays the lowest accepted b
 # follows from it and is never declared.
 MATCHES_BY = term("matchesBy")
 
+# A round as a FACT (a-round-is-a-fact-and-offering-is-an-action) — held by host and bidder
+# alike, each in its own graph. See rounds.py for the one writer both sides use.
+ROUND = term("Round")
+HAS_ROUND = term("hasRound")
+ROUND_ID = term("roundId")
+LOT_L = term("lotL")
+RESERVE_PER_L = term("reservePerL")
+CLOSES_AT = term("closesAt")
+
 # --- what this package asks OF others, by family. Their namespaces, not this one's ---
 #
 # Declared as literals rather than imported: capability packages never import each other's

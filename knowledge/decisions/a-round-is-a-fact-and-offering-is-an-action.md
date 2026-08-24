@@ -44,8 +44,8 @@ whose aim sits below its lot stops refilling at its aim.
 # What is decided
 
 **1. A round is a belief, on both sides.** When the host announces, and when a bidder hears,
-each writes into its **own** graph a `market:Round`: on which venue, the lot, the reserve, and
-`closesAt`. Retracted when the round closes — the host on `close()`, the bidder when the claim
+each writes into its **own** graph a `market:Round`: on which venue (`market:hasRound`, venue
+to round), the lot, the reserve, and `closesAt`. Retracted when the round closes — the host on `close()`, the bidder when the claim
 or the close arrives, and either side may sweep a row past its `closesAt` on the next ask.
 Nothing here is disclosure: every field is already on the wire. What must **not** be written
 is the host's `bidWindowS` and `roundCooldownS`, which are private beliefs precisely so that a

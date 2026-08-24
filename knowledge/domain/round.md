@@ -1,6 +1,7 @@
 ---
 type: Process
 title: Round
+term: http://example.org/orexis/market#Round
 description: One iteration of bidding inside an auction — not the auction itself. The auction is the process that allocates a lot; a round is a pass of bidding within it. Exactly one is built, so today an auction has a single round and the two coincide; the iterative flow described here is designed and unbuilt. The word is the standard one from multiple-round auctions.
 ---
 
@@ -25,6 +26,15 @@ That coincidence is why this page said, for a long time, that a round was *"the 
 runs in"* — and then used the word the other way four lines later (*"a new deliberation round
 opens"*). See
 [a-round-is-an-iteration-not-the-auction](/decisions/a-round-is-an-iteration-not-the-auction.md).
+
+# It is a fact, on both sides
+
+Since [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md)
+an open round is a `market:Round` in the belief base of whoever announced or heard it — the
+venue it is on (`market:hasRound`), its lot, its reserve, and `market:closesAt` — retracted when
+it is over for that agent and swept once past its close. It carries what the offer said and
+nothing the offer did not: the host's window and cooldown stay its own. `market/rounds.py` is
+the one writer, and the sovereign may ask a running agent whether a round is open.
 
 # The word is the standard one
 

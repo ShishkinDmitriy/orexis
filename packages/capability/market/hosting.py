@@ -37,6 +37,7 @@ from agent.ontology import WORLD_GRAPH
 from agent.store import bindings
 from agent.world import allocation_ceilings, participants
 
+from . import rounds
 from .beliefs import HOSTING_PICKS
 
 #  The serving means, spelled rather than imported: the kernel owns the term and market's own
@@ -301,6 +302,14 @@ SELECT ?p WHERE {{
         self.last_auction_at = time.monotonic()
         self.open_auction = {"auction_id": auction_id, "market": market, "bids": {},
                              "quantity_l": quantity_l}
+        #  THE ROUND AS A FACT, in my own graph: what I announced, as I announced it — the lot,
+        #  the reserve and the instant bidding closes. Never the window or the cooldown.
+        from datetime import datetime, timedelta, timezone
+
+        rounds.open_round(self.agent, market.uri, auction_id, quantity_l,
+                          self.beliefs.reserve_price_per_l,
+                          datetime.now(timezone.utc)
+                          + timedelta(seconds=float(self.beliefs.bid_window_s)))
         matcher = self.matcher()
         self.log.info("auction %s opened on %s (%s is LOW) — %.2f L, reserve €%.2f, %ss to bid",
                       auction_id, market.local_id, trigger, quantity_l,
@@ -342,6 +351,7 @@ SELECT ?p WHERE {{
         if rnd is None:
             return
         market, auction_id = rnd["market"], rnd["auction_id"]
+        rounds.close_round(self.agent, auction_id)   # over, whatever the bids say below
 
         if not rnd["bids"]:
             self.log.info("auction %s closed with no bids", auction_id)
