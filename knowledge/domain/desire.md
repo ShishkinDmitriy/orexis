@@ -238,3 +238,10 @@ the rows themselves.
 The class was a class from the start because a second source was expected, and
 [obligation](/domain/obligation.md) is it — what the agent owes because the society issued a claim
 against its hardware, scored and pursued by this same machinery.
+
+# The structure above these
+
+Every want here is a node of a derived hierarchy — [root desire](/domain/root-desire.md) has
+the levels above, and
+[a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md)
+the argument.
