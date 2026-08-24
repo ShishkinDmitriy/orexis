@@ -74,9 +74,11 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
   committed, satisfied by the claim — is two desires pursued in the right order rather than one
   plan with a step chosen blind.
 - **The host's trigger.** A host has no gap, and whether to *sell* is the
-  [strategic-supplier](/decisions/strategic-supplier.md) seam. `ag:Offer` is adopted on
-  deferral by hosting as before and carries no `ag:takenBy`, because no menu row offers it: it is
-  a debt physics defers, not a step a plan chooses.
+  [strategic-supplier](/decisions/strategic-supplier.md) seam. (`ag:Offer` was adopted on
+  deferral by hosting and carried no `ag:takenBy` when this was written; since
+  [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md)
+  it is an action serving a [call](/domain/call.md), and the seam is unchanged: plannable is
+  not wanted.)
 - **The patience, and who answers it.** `adopt` still absorbs a commitment that STANDS within
   patience, and that is the whole rule for a means whose commitment outlives the act — an
   Acquire stands from bid to claim, and the round after the claim is a new impulse the open

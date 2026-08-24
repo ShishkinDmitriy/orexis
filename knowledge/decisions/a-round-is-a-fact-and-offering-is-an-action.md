@@ -75,9 +75,10 @@ things follow without a line of policy:
 **3. Offering is an action.** `market:Offering a ag:Action ; ag:means ag:Offer`, taken by
 `market:Hosting`, in the market's `actions.ttl` beside Acquiring and Serving:
 
-- *available* where `$me market:hosts ?via`, no `market:Round` stands on `?via`, the cooldown
-  since the last has elapsed (read from `$beliefs` — the host's own graph, which a rule may
-  name), and the vessel holds at least the lot it would offer;
+- *available* where `$me market:hosts ?via`, no `market:Round` stands on `?via` — held or
+  imagined — the cooldown since the last has elapsed (`market:mayConveneAt`, an instant written
+  at close into the host's own graph, so the private duration is never on a row), and the vessel
+  holds *something* by the host's witness, or the host has none;
 - *effect*: a `market:Round` on `?via` appears; the stock is unchanged, because an offer moves
   no water — the serve does;
 - *lands* at once and is *confirmed by construction*: saying so makes it so, the first
@@ -88,10 +89,14 @@ plans it: Offering's premise needs stock, Acquiring's effect raises stock, and *
 upstream, then offer* falls out of two nodes that never mention each other — the same way
 *refill, then serve* already does for Apply (#255). `announce`'s deferral, the `deferred` dict
 and the reopen-on-reading handler dissolve; the `ag:Offer` intention adopted on deferral is
-simply the plan's head, standing, exactly as any other. This is also #340's answer, arrived at
-from the other end: the dealer refills past its aim **because it has a round to open and cannot
-open it**, not because it holds a separate want for stock. The serveability desire the issue
-proposed is not derived; serveability is Offering's precondition.
+simply the plan's head, standing, exactly as any other.
+
+**What this does NOT close is #340.** The implementing change found that a partial lot is a
+real round — `a-round-is-sized-by-the-vessel` sells 1.5 L from a barrel at 1.5 — so Offering's
+premise is *stock > 0* and not *stock ≥ lot*, and a dealer at 1.5 L against a 2 L lot offers
+1.5 L rather than refilling first. Refilling to hold a full lot is a strategy about *how* to
+sell, which is the strategic-supplier seam; #340 stays open there, with the gate the issue's
+second fix proposes as the cheap guard.
 
 # What is deliberately not decided
 
@@ -99,8 +104,7 @@ proposed is not derived; serveability is Offering's precondition.
 by the demand shock: a participant's `LOW` is the fact that makes a round owed, as a claim is the
 fact that makes a dose owed — a want someone else sourced, in
 [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md)'s
-sense. Deriving that want from the LOW verdict is the implementing change's, and so is its
-**word** — this record does not name it, because a term is defined in the change that uses it.
+sense. The implementing change named it: a [call](/domain/call.md).
 The other three shocks are three more sources of the same want, each a later change. Whether a
 host would *rather* sell — costs, a reserve, a season — remains
 [strategic-supplier](/decisions/strategic-supplier.md)'s seam, untouched: this makes Offer
@@ -117,7 +121,8 @@ Three changes, each a PR, in this order because each is the next one's premise:
 
 1. the round as a belief, both sides, with `market:Round` and its four properties (#357);
 2. Acquiring's availability walks it, and the bidder executes from the offer (#358);
-3. Offering as an action, the LOW-sourced want, the deferral dissolved, #340 closed (#359).
+3. Offering as an action, the LOW-sourced want — a [call](/domain/call.md) — and the deferral
+   dissolved (#359). #340 stays open, for the reason above.
 
 # Seams left open
 

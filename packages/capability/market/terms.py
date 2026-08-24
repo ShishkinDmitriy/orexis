@@ -54,6 +54,13 @@ ROUND_ID = term("roundId")
 LOT_L = term("lotL")
 RESERVE_PER_L = term("reservePerL")
 CLOSES_AT = term("closesAt")
+MAY_CONVENE_AT = term("mayConveneAt")
+
+# A call: the want a participant's LOW sources on a host (knowledge/domain/call.md).
+CALL = term("Call")
+CALLED_ON = term("calledOn")
+CALLED_BY = term("calledBy")
+CALLED_AT = term("calledAt")
 
 # --- what this package asks OF others, by family. Their namespaces, not this one's ---
 #

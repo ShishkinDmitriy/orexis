@@ -105,8 +105,8 @@ def test_a_means_no_package_described_simply_has_no_effect():
     obligation, which is the registry this layout exists to avoid."""
     st = _loner({("zz", MOISTURE): 0.10})
 
-    assert effects.rule_for(st, "http://example.org/orexis#Offer") is None
-    assert effects.apply(st, "http://example.org/orexis#Offer") == ([], [])
+    assert effects.rule_for(st, "http://example.org/nowhere#Consult") is None
+    assert effects.apply(st, "http://example.org/nowhere#Consult") == ([], [])
 
 
 # --- the number that must not fork ---------------------------------------------------------

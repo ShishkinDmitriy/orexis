@@ -30,8 +30,11 @@ market:Acquiring a ag:Action ;
     ag:takenBy    market:Bidding .
 ```
 
-Four ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring` and `market:Serving` —
-the last a duty's, whose availability binds `?for_agent`.
+Five ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering` and
+`market:Serving` — the last a duty's, whose availability binds `?for_agent`. A premise may
+read `$beliefs` (the agent's own graph — an open round) and `$sensed` (the readings of the
+world being asked about, so a row an earlier step made available appears in that step's
+world and not in this one).
 
 # How it is found and read
 

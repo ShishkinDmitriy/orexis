@@ -32,12 +32,13 @@ import json
 from agent import signing
 from agent.auction import run_auction
 from agent.market import EPS, Bid, Limits, MarketState, Offer
+from agent.desire import Desire
 from agent.module import Module, Timer
 from agent.ontology import WORLD_GRAPH
 from agent.store import bindings
 from agent.world import allocation_ceilings, participants
 
-from . import rounds
+from . import calls, rounds
 from .beliefs import HOSTING_PICKS
 
 #  The serving means, spelled rather than imported: the kernel owns the term and market's own
@@ -130,13 +131,12 @@ SELECT ?p WHERE {{
   <{self.me.uri}> sensing:polls ?s .
   ?s sensing:monitors <{market.resource}> ; sosa:observes ?p }} LIMIT 1"""))
             self.stock_property[market.uri] = rows[0]["p"] if rows else None
-        # A LOW I could not serve, per market: the refill-then-sell dependency, held until the
-        # stock arrives. The deferred round is the plan's second step made observable — see
-        # knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md, "the first honest customer".
-        self.deferred: dict[str, str] = {}
-
+        #  `deferred` and `last_auction_at` WERE HERE. A LOW nobody could serve was held in a
+        #  dict and reopened on the next reading; the cooldown was a monotonic clock. Both are
+        #  facts now — a `market:Call` and `market:mayConveneAt` in my own graph — and the
+        #  Offering action's precondition reads them, so a dry vessel is a plan the search
+        #  finds (acquire upstream, then offer) rather than a handler (#359).
         self.open_auction: dict | None = None
-        self.last_auction_at = 0.0
         self._timer: Timer | None = None
         # Issued and not yet presented, by jti (#132). Winning stopped implying actuation: the
         # holder redeems when its watch is live, so the host keeps the claim until it is
@@ -178,72 +178,82 @@ SELECT ?p WHERE {{
         return False
 
     def on_participant_event(self, market, event: dict) -> None:
-        """A participant said it is in trouble. Scarcity is what condenses an auction.
+        """A participant said it is in trouble. That makes a round WANTED — a call (#359).
 
         In trouble ABOUT THE RIGHT THING. An announcement names the property it is about — it has
         since a subject with two sensors started announcing two values on one topic — and a
         participant that is too cold is not a participant this market can help.
+
+        Nothing is decided here. The call is written into my own graph as a want the search
+        ranges over, and execution plans it: Offer where the vessel holds something and my
+        cooldown has run out, acquire upstream then Offer where it is dry, nothing where neither
+        is possible yet — and then the call stays hot, and the next reading or tick tries again.
+        The cooldown, the open round and the dry vessel are the Offering action's premises
+        now, not checks here.
         """
         if event.get("band") != "LOW":
             return
         about = self.about.get(market.uri)
         if about and event.get("property") not in about:
             return
-        now = time.monotonic()
-        if now - self.last_auction_at < self.beliefs.cooldown_s:
-            return  # a flapping participant must not be able to spam the market
-        if self.open_auction is not None:
-            return
-        self.announce(market, trigger=event.get("agent", "?"))
+        calls.call(self.agent, market.uri, event.get("agent", "?"))
+        self._pursue_calls(market)
+
+    def _pursue_calls(self, market=None) -> None:
+        """Every call I hold — on one venue, or all — through execution."""
+        from agent import execution
+
+        for desire in self.desires():
+            if market is None or desire.uri == calls.uri_for(market.uri):
+                execution.pursue(self.agent, desire)
+
+    def desires(self, now=None) -> list[Desire]:
+        """My contribution to what this agent pursues: the calls on the venues I host.
+
+        A call is a want somebody else sourced, like a debt (owing contributes those); it is
+        met exactly when a round stands on its venue, and since a round that opens answers the
+        call by retracting it, every call I hold is unmet. Maximal urgency, and deliberately:
+        a call has no clock running it down, and a host with a stake of its own (the dealer's
+        barrel) ranks its downstream's trouble beside it rather than below it — the strategic
+        question of whether it would RATHER sell is the strategic-supplier seam, not a number
+        invented here.
+        """
+        return [Desire(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
+
+    def desire_urgency(self, desire, query, sensed: str, value=None) -> float | None:
+        """How badly a CALL is unmet, in the world `query` answers about: 0 where a round
+        stands on its venue, 1 where none does. Reads both the graph I hold rounds in and
+        the graph a plan imagines them into, because an Offer's effect lands in the latter.
+        None for anything that is not a call."""
+        if not desire.uri.startswith(f"{calls.NS}call_"):
+            return None
+        from agent.ontology import beliefs_graph
+
+        rows = bindings(query(f"""
+SELECT ?r WHERE {{
+  GRAPH <{beliefs_graph(self.agent.id)}> {{ <{desire.uri}> market:calledOn ?via }}
+  {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ ?via market:hasRound ?r . ?r market:closesAt ?c }}
+    FILTER(?c > NOW()) }}
+  UNION {{ GRAPH <{sensed}> {{ ?via market:hasRound ?r }} }}
+}} LIMIT 1"""))
+        return 0.0 if rows else 1.0
 
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
-        """The refill landed — the deferred sell reopens. The two-step's second step.
+        """My witness reported the vessel: every held claim and every call is tried again.
 
-        A LOW nobody could serve was held in `deferred` instead of being sold as phantom
-        water; the moment my own witness reports the vessel holding anything again, the
-        round it owed opens. The cooldown still applies — a refill is not a licence to spam —
-        and an open round absorbs it exactly as a fresh LOW would.
+        The refill landing is the reading that changes the answer — for a claim held because
+        the vessel was too low, and for a call the search could not plan an Offer for. Neither
+        is decided here; both go through execution, which finds what the new stock allows.
         """
         for market in self.markets:
             if subject_uri != market.resource or observed_property != self.stock_property.get(market.uri):
                 continue
-            # My own vessel just said what it holds, which is the one moment the answer to
-            # "can I serve what I owe" can have changed without anybody speaking to me. A debt
-            # refused for want of stock is not lost and is not retried on a clock: it waits
-            # here, on the reading, exactly as the deferred round does. The two are the same
-            # shape — a commitment held until the world can honour it — and it is worth
-            # noticing that the duty case needed no new machinery, only a want to point at.
             if (ledger := self.agent.owing) is not None:
                 for desire in ledger.duties():
                     if desire.pursuable and desire.claim in self.held:
                         self._pursue(desire.claim,
                                      f"my vessel reports {value:.3f} — trying again")
-            if market.uri not in self.deferred:
-                # An owed round survives the process that owed it (#206): the deferral used
-                # to live in module memory alone, so a restart forgot a commitment the
-                # ledger never saw. A standing Offer for this vessel's stock IS the owed
-                # round, recovered here — at the reading, where the debt becomes payable —
-                # rather than at any lifecycle moment a test or a crash could miss.
-                keeper = self._keeper()
-                if keeper is None or not any(
-                        s.observed_property == observed_property and s.means == OFFER
-                        for s in keeper.standing()):
-                    continue
-                self.deferred[market.uri] = \
-                    "a round owed before this process started — the ledger kept it"
-            if value <= EPS:
-                continue
-            if self.open_auction is not None:
-                continue
-            if time.monotonic() - self.last_auction_at < self.beliefs.cooldown_s:
-                continue
-            trigger = self.deferred.pop(market.uri)
-            if keeper := self._keeper():
-                keeper.satisfy(OFFER, self.stock_property[market.uri],
-                               "the refill landed — the owed round opens", desire=market.uri)
-            self.log.info("the refill landed (%.3f) — opening the round deferred for %s: "
-                          "step two of acquire-then-offer", value, trigger)
-            self.announce(market, trigger=trigger)
+            self._pursue_calls(market)
 
     def matcher(self):
         """Whichever of my capabilities can turn bids into an allocation, or None.
@@ -270,38 +280,22 @@ SELECT ?p WHERE {{
         reading = self.agent.beliefs.current_reading(market.resource, prop)
         return reading.value if reading is not None else None
 
-    def announce(self, market, trigger: str) -> None:
+    def announce(self, market, trigger: str) -> bool:
         quantity_l = self.beliefs.quantity_l
         stock = self._stock_of(market)
         if stock is not None:
             if stock <= EPS:
-                # The dry vessel is the dependency the planning record names: "water fern"
-                # dead-ends here, and the true plan is refill, then sell. The refill is the
-                # stake's own business (the reflex is already pursuing the stock's aim); the
-                # SELL is deferred, and reopens the moment my witness reports the refill —
-                # the two-step, held by the market instead of sold as phantom water.
-                self.deferred[market.uri] = trigger
-                # The owed round is a COMMITMENT, and commitments live in the ledger (#206):
-                # crossing the "host keeps no gap ledger" line knowingly, because a deferral
-                # held only in module memory was a promise a restart forgot and no ask could
-                # see. Deciding is still nobody's here — physics deferred the round, and the
-                # keeper only remembers that it is owed.
-                if keeper := self._keeper():
-                    #  The venue IS the desire here: a host of two venues owes two rounds, and
-                    #  keying by property alone would make paying one look like paying both.
-                    keeper.adopt(OFFER, self.stock_property[market.uri],
-                                 f"{trigger} is LOW and my vessel is dry — a round is owed "
-                                 f"on {market.local_id} the moment the refill lands",
-                                 desire=market.uri)
-                self.log.info("%s is LOW but my vessel is dry — deferring the round: "
-                              "acquire upstream, then offer (the depth-2 plan, distributed)",
-                              trigger)
-                return
+                #  Unreachable through execution — Offering's premise is stock > 0 — and kept
+                #  as the boundary for anyone who calls this directly: a dry vessel announces
+                #  no lot it cannot pour, and the call it would have answered stays standing.
+                self.log.info("%s is LOW but my vessel is dry — no round; the call stands "
+                              "until the refill lands", trigger)
+                return False
             quantity_l = min(quantity_l, stock)
         auction_id = uuid.uuid4().hex[:8]
-        self.last_auction_at = time.monotonic()
         self.open_auction = {"auction_id": auction_id, "market": market, "bids": {},
                              "quantity_l": quantity_l}
+        calls.answer(self.agent, market.uri)   # the round is what the call wanted
         #  THE ROUND AS A FACT, in my own graph: what I announced, as I announced it — the lot,
         #  the reserve and the instant bidding closes. Never the window or the cooldown.
         from datetime import datetime, timedelta, timezone
@@ -329,6 +323,7 @@ SELECT ?p WHERE {{
         })
         self._timer = Timer(self.beliefs.bid_window_s, self.close)
         self._timer.start()
+        return True
 
     # --- collecting ---
 
@@ -352,6 +347,7 @@ SELECT ?p WHERE {{
             return
         market, auction_id = rnd["market"], rnd["auction_id"]
         rounds.close_round(self.agent, auction_id)   # over, whatever the bids say below
+        rounds.convened(self.agent, market.uri, self.beliefs.cooldown_s)   # the next may open then
 
         if not rnd["bids"]:
             self.log.info("auction %s closed with no bids", auction_id)
@@ -535,6 +531,20 @@ SELECT ?p WHERE {{
         serve, and only for a claim still held — a duty whose claim was never presented is
         not this module's to invent.
         """
+        if row.means == OFFER:
+            #  THE HOST'S MOVE, taken: announce on the venue the row names, for the call the
+            #  plan served. `announce` sizes the lot by the vessel and writes the round; the
+            #  call is answered by the round existing. Satisfied at once — the round is the
+            #  end, and it is there by construction.
+            market = next((m for m in self.markets if m.uri == row.via), None)
+            if market is None:
+                return False
+            by = next((c.called_by for c in calls.calls_of(self.agent, market.uri)), "?")
+            if not self.announce(market, trigger=by):
+                return False
+            if (keeper := self._keeper()) is not None:
+                keeper.satisfy(OFFER, row.observed_property, "the round opened", desire=desire.uri)
+            return True
         if row.means != _APPLY or not desire.claim or desire.claim not in self.held:
             return False
         #  A VESSEL I KNOW IS TOO LOW IS NOT POURED FROM. The search used to keep this claim

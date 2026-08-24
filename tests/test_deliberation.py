@@ -297,7 +297,10 @@ def test_the_dealers_menu_gained_its_lever(make):
     rows = menu_of(st.query, "http://example.org/orexis/world/simulation#supplier", desires_build(st, "supplier").query_union, beliefs_graph("supplier"))
     assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
-            for r in rows if r.is_own] == [("Acquire", "StoredLitres", "Raises")]
+            for r in rows if r.is_own] == [("Acquire", "StoredLitres", "Raises"),
+                                            ("Offer", "StoredLitres", None)], \
+        "buy upstream while the city's round is open, and offer downstream (#359) — no direction " \
+        "on the second, because offering moves no water"
     #  And beside them, since #218, what the dealer HONOURS: claims presented against the
     #  venue it hosts are redeemed through its valves — one row per lever, never a proposal.
     honoured = [r for r in rows if not r.is_own]
