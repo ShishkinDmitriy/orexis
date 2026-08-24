@@ -147,7 +147,7 @@ def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defe
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
     st.update("""DELETE { GRAPH <%s> { ?rule sh:construct ?c } }
-                 WHERE  { GRAPH <%s> { ?rule ag:means ag:Acquire ; sh:construct ?c } }"""
+                 WHERE  { GRAPH <%s> { ?rule ag:means market:Acquire ; sh:construct ?c } }"""
               % (ACTIONS_GRAPH, ACTIONS_GRAPH))
 
     fern = build_agent("fern", st, monkeypatch)
@@ -289,7 +289,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     plan = Planner(fern, deducer, fern.me).plan(desire)
 
     assert not plan.partial, "every lever on this menu states its effect"
-    assert [s.means for s in plan.steps] == ["http://example.org/orexis#Acquire"], \
+    assert [s.means for s in plan.steps] == ["http://example.org/orexis/market#Acquire"], \
         "the lever that waters this plant is the one the search found"
     assert plan.urgency_after < plan.urgency_now, \
         "and the world it reaches is better than standing still — `better` was zero before"
@@ -319,7 +319,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     #  the fabrication possible at all. A bare Desire suffices: the measure is not the want's
     #  to carry, and sensing answers the choir for any observation-backed stake.
     stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=0.30)
-    assert decider.propose_for(stake) == "http://example.org/orexis#Acquire", \
+    assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquire", \
         "below the aim there is a deficit to close, and the search must still close it"
     for value in (0.55, 0.80):
         stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)

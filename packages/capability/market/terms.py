@@ -81,6 +81,6 @@ KERNEL = "http://example.org/orexis#"
 # The three means a bidder's acts amount to. MEANS, not capabilities: they name what an act IS
 # when the keeper records it, and they are the kernel's individuals referenced by IRI — as is
 # the keeper itself now, reached as `agent.keeper` rather than asked for by family.
-ACQUIRE = KERNEL + "Acquire"
-APPLY = KERNEL + "Apply"      # real since #132: holding a claim until the watch is live
+ACQUIRE = term("Acquire")         # buying, as a means — this package's word
+APPLY = term("Apply")             # spending a held claim — this package's word
 OFFER = term("Offer")          # the host's move — this package's word, since it left the kernel

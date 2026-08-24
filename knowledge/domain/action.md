@@ -21,7 +21,7 @@ says what kind of act; an [affordance](/domain/affordance.md) says it is availab
 
 ```turtle
 market:Acquiring a ag:Action ;
-    ag:means      ag:Acquire ;
+    ag:means      market:Acquire ;
     ag:available  """SELECT ?property ?via ?direction WHERE { … }""" ;
     sh:construct  """CONSTRUCT { … } WHERE { … }""" ;
     ag:retracts   """CONSTRUCT { … } WHERE { … }""" ;

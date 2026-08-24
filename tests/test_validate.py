@@ -72,7 +72,7 @@ def test_a_lever_nothing_states_an_effect_for_is_refused(monkeypatch, caplog):
     """
     st = build("simulation", monkeypatch)
     st.update("""DELETE { GRAPH <%s> { ?rule sh:construct ?c } }
-                 WHERE  { GRAPH <%s> { ?rule ag:means ag:Acquire ; sh:construct ?c } }"""
+                 WHERE  { GRAPH <%s> { ?rule ag:means market:Acquire ; sh:construct ?c } }"""
               % (ACTIONS_GRAPH, ACTIONS_GRAPH))
 
     assert not deliberable(st, desires_of(st)), \

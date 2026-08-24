@@ -56,8 +56,6 @@ OUTCOME = AG + "outcome"
 BECAUSE_OF = AG + "becauseOf"
 
 # The means — what kind of act the commitment is to.
-ACQUIRE = AG + "Acquire"
-APPLY = AG + "Apply"
 
 # The commitment policy — the belief, not the mechanism.
 PATIENCE_S = AG + "patienceS"
@@ -586,13 +584,10 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
         now = datetime.now(timezone.utc)
         if any(now < w.deadline for w in self.open_expectations(observed_property)):
             return 1.0
-        # A HELD claim is the same need one step earlier (#132): the dose is coming the moment
-        # the watch is live, and the watch becomes live by exactly this urgency reaching the
-        # board. Bounded by the patience like everything the keeper answers, so a claim the
-        # bound will redeem blind anyway cannot hold the fast cadence forever.
-        if any(s.age_s(now) <= self.beliefs.patience_s
-               for s in self.standing(means=APPLY, observed_property=observed_property)):
-            return 1.0
+        #  A HELD claim used to be answered here too — the same need one step earlier (#132)
+        #  — by reading a standing Apply by name, which was the kernel's last hold on that
+        #  word. The bidder holds the claim and answers that urgency itself now, through the
+        #  same choir hook, from the same ledger.
         return None
 
     # --- the ledger, read ----------------------------------------------------------------

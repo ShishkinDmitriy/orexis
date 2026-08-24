@@ -44,8 +44,7 @@ from .beliefs import HOSTING_PICKS
 #  The serving means, spelled rather than imported: the kernel owns the term and market's own
 #  honoured.rq binds it, and `intention/terms.py` holds the same string for the same reason —
 #  a package may not import another's Python.
-_APPLY = "http://example.org/orexis#Apply"
-from .terms import (ACTUATION, HOSTING, BID_MATCHING,
+from .terms import (ACTUATION, APPLY as _APPLY, HOSTING, BID_MATCHING,
                     OFFER)
 
 
@@ -526,7 +525,7 @@ SELECT ?r WHERE {{
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed serve: pour the claim this duty names.
 
-        The actor for `ag:Apply` on the duty's row (knowledge/domain/actor.md). A plan
+        The actor for `market:Apply` on the duty's row (knowledge/domain/actor.md). A plan
         whose head is the refill hands that row to bidding, not here; this answers only a
         serve, and only for a claim still held — a duty whose claim was never presented is
         not this module's to invent.

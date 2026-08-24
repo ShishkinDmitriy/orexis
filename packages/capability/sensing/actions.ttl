@@ -72,7 +72,7 @@ sensing:Observing
     #  reading. Without this line the market's Acquire — whose effect also mints an
     #  observation, since predicting a value is the only way to state a change — satisfied
     #  "something read this recently" exactly as well as looking did, and satisfied it FIRST,
-    #  `ag:Acquire` sorting before `Observe`. A thirsty plant would have answered a stale
+    #  `Acquire` sorting before `Observe`. A thirsty plant would have answered a stale
     #  reading by buying water.
     #
     #  The sensor is joined rather than passed: a rule's arguments are the want's, and which

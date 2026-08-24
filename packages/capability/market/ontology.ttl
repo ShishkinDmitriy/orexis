@@ -18,6 +18,14 @@
 :Hosting a ag:Capability ; rdfs:label "Hosting" ;
     rdfs:comment "The agent runs rounds in a market: announces the offer, collects bids until the deadline, matches, has the trade validated, and issues claims. The scarce side hosts." .
 
+#################  Buying and serving, as MEANS  #################
+
+:Acquire a ag:Means ; rdfs:label "Acquire" ;
+    rdfs:comment "Obtain what would reduce a gap — here, bid in a market. THIS PACKAGE'S word since it left the kernel: `market:Acquiring` is the action, a stake in the good's property the want it serves, bidding its taker. Adopted when the search picks it with a round open, satisfied by the claim, dropped when the round closes without one." .
+
+:Apply a ag:Means ; rdfs:label "Apply" ;
+    rdfs:comment "Spend a held claim against the world. REAL since #132: the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy — never spend a dose you cannot watch land. On the buyer's side adopted when the claim arrives, standing while the holder waits for its watch to be live, satisfied when the claim is presented; on the host's side `market:Serving` is the action, a duty the want, hosting the taker. THIS PACKAGE'S word since it left the kernel; the keeper used to read a standing Apply for the held-claim urgency, and the bidder answers that itself." .
+
 #################  The host's move, as a MEANS  #################
 
 :Offer a ag:Means ; rdfs:label "Offer" ;
