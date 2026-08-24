@@ -33,7 +33,7 @@ Stated once, here, so the next design conversation can cite it instead of redisc
 | the sovereign | the aim | the **region's sources** — plant ranges, ratified once; the pick is never theirs |
 | review | the belief | the **rule for re-picking** — and the mandate bounds how far, which is a bound on the *rate of drift* |
 | intention | the acts | the **patience** — not "act now" but how long a commitment absorbs impulses |
-| the model | the move | the **rules that produce moves** — it writes an affordance; the reflex executes it forever |
+| the model | the move | the **rules that produce moves** — it writes an affordance; the search exploits it forever |
 
 The rows compose into a tower of derivatives: the agent sets the cadence (the rate of
 attention), review moves the cadence *setting* (the rate of change), the mandate bounds review

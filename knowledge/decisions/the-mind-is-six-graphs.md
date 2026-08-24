@@ -78,9 +78,17 @@ survives them:* a region and an aim became SHACL differing in severity, so the p
 constraint graph is not called the desire graph, and that outlived the vocabulary.
 
 The decisive evidence is in the running code rather than in the argument: **an agent holding
-bounds and no aim pursues nothing.** `aim()` returns None, the reflex proposes None, and the
-comment has said so all along — "an agent that picked no point has decided not to steer this
-property." If bounds were an end they would motivate alone. They do not.
+bounds and no aim pursues nothing.** If bounds were an end they would motivate alone. They do
+not.
+
+The claim outlived the clause that used to carry it, and is worth restating in the terms that
+carry it now. It used to be one line — `aim()` returns None, so the reflex proposes None, over
+a comment reading "an agent that picked no point has decided not to steer this property". The
+reflex is gone and the enforcement is distributed, which is if anything the stronger position:
+a bidder holding no aim in the property its bids are priced in is refused by a shape at boot;
+an actuator with no aim sizes every dose at nothing, so the effect predicts the world it is
+already in and the step is discarded; and a property with no lever at all is proposed nothing
+about because there is nothing to propose. Three roads, no motivation on any of them.
 
 What the two pairs of numbers differ in is SEVERITY, not modality: leaving the operating
 region is legitimate and temporary (it is what a gap IS), leaving the survival envelope is the

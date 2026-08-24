@@ -109,6 +109,13 @@ review may move, bounded the way cadences are bounded.
 
 ## 4. Deliberation becomes a family, and Reflex is its first member
 
+*The plan as it was written, and it did not survive contact: the family collapsed into one
+class ([the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md)) and the Reflex
+member was later deleted outright, subsumed by the search
+([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)). What did
+survive is the thing the step was for — the whether is not the bidder's, and an answerer can be
+replaced without touching an actor.*
+
 The welded chain (LOW → announce → bid) is extracted into a capability family — something that
 turns a gap and the standing intentions into the next intention. It passes rule 2's test
 cleanly: the *how* genuinely differs.

@@ -120,7 +120,10 @@ issue's world-modelling, not a mechanism of its own.
   confirmed, expectation-watched, patience-bounded — an unconfirmed self-dose is not a
   delivered one either, and the REA event stands though it fulfils no exchange. The reflex
   became menu-driven to hold the rung ORDER: act with what is yours before buying what is
-  not, so an agent with a private bottle and a market seat takes the cheaper rung. Two pins
+  not, so an agent with a private bottle and a market seat takes the cheaper rung. **That
+  ordering is gone with the reflex** — what chooses between two rungs is which reaches the
+  better world, and the rows are disjoint per source anyway; see
+  [means](/domain/means.md), which owns what a tie does now. Two pins still
   hold the honesty rule from both sides: a pot-local pump on the shared barrel yields
   Acquire and only Acquire, and opening a shop on your own bottle costs you the free rung.
 - **Source contestedness is derived**: "a source no market offers as its lot" is the

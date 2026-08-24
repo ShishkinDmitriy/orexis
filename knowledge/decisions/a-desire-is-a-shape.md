@@ -107,9 +107,11 @@ decides where each belongs:
   its numbers live inside a query string where nothing but the engine can reach them. So these
   are evaluated on the keeper's clock or on demand, never per reading.
 
-That gives the *profile of pursuable goals* a concrete meaning: **a goal the reflex must steer
+That gives the *profile of pursuable goals* a concrete meaning: **a goal something must steer
 by is declarative; a goal that is merely checkable may be anything.** Without the profile an
-agent could hold goals nothing could ever plan for, and the failure would be silence.
+agent could hold goals nothing could ever plan for, and the failure would be silence. (Written
+of the reflex, which read numbers out of a region directly. It survives the reflex intact: the
+declared measure is the thing that reads them now, and it reads them from the same place.)
 
 ## What building it changed
 

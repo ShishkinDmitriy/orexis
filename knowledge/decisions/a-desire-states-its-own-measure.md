@@ -13,7 +13,8 @@ description: >-
   observation-backed measure per KIND from its own file in its own namespace. The measure
   reads the aim at query time; the planner no longer short-circuits a met desire; steering
   toward the pick comes out of satisficing with a natural deadband. The prerequisite for
-  retiring the reflex, which this change deliberately does not touch.
+  retiring the reflex, which this change deliberately did not touch and which phase B has
+  since deleted.
 status: accepted
 timestamp: 2026-08-24T12:00:00Z
 ---
@@ -113,12 +114,13 @@ it for open expectations):
   discipline, so a re-pick or a re-derivation moves the answer with no text rebuilt.
 - **The fallback is defined, not implied, and unchanged in behaviour**: a want no module
   answers for scores 1.0, logged — not knowing how bad is maximal, consistent with
-  `urgency(None)` — and the planner-side rule stays: a search that cannot rank must not
-  conclude, so a measure-less non-duty defers to the reflex. Tests pin the fallback and that
-  no shipped world hits it, every shipped desiring agent holding sensing and every shipped
-  stake being a `sosa:ObservableProperty`. `Region.urgency` survives as the test-only
-  reference the declared query is held to at the no-pick fallback; nothing on the live path
-  calls it.
+  `urgency(None)`. The planner-side rule was *a search that cannot rank must not conclude*, so
+  a measure-less non-duty deferred to the reflex; phase B replaced the deferral with a refusal
+  at genesis, since a stake nothing measures is a fact about a world's files rather than about
+  a moment. Tests pin the fallback and that no shipped world hits it, every shipped desiring
+  agent holding sensing and every shipped stake being a `sosa:ObservableProperty`.
+  `Region.urgency` survives as the test-only reference the declared query is held to at the
+  no-pick fallback; nothing on the live path calls it.
 
 Distance is scaled by the survival room on the side the value sits — the asymmetry
 `Region.urgency` always had, kept and re-anchored: room below the aim is aim-to-floor, above
@@ -137,8 +139,9 @@ from aim − value), the actor's `litres <= EPS` refusal makes the effect predic
 the candidate is pruned as the world already stood in. Off the pick and inside the region, a
 dose is proposed — sized, simulated and checked to improve — where the old path handed the
 same case to the unsatisficed reflex. The deliberator's deferral for SATISFIED-without-steps
-is gone with it; a met desire the search answered is a decision, not a hand-off, unless the
-search was blind to part of the menu (`partial`), which still defers.
+is gone with it; a met desire the search answered is a decision, not a hand-off. The last
+deferral, for a search blind to part of the menu (`partial`), went in phase B — there is
+nothing left to defer TO, and the condition is refused before a society starts.
 
 Consumers kept their call sites: `desires_of`, the gap, the choir's `urgency` hook (sensing's
 cadence, with predicted values arriving as `$value`), and the planner all evaluate the one
@@ -178,12 +181,16 @@ unchanged — measurement names never split series.
   SEVERAL packages must speak, and today one does. The trigger is the second measure-shipping
   package — the market's duty measure, when the engine allows it — and promotion happens
   then, not before.
-- **Phase B: retire the reflex.** Decided and deliberately deferred: delete `propose`,
-  `_by_gap`, `_direction_of` and the rung ladder once the search demonstrably subsumes them,
-  and refuse at genesis an affordance-contributing means with no effect rule — a lever the
-  planner cannot simulate is a lever whose package never said what it does, and `partial`
-  exists only because such levers are still legal. The reflex stays in this change as the
-  control the sovereign compares the search against.
+- **Phase B: retire the reflex.** ~~Decided and deliberately deferred~~ — **DONE**, once this
+  change had been reviewed and the search had been the control's equal at every value anyone
+  compared them at. `propose`, `_by_gap`, `_direction_of`, `_my_shop_needs` and the rung ladder
+  are deleted; `orexis-validate` refuses both conditions that used to need the fallback — an
+  affordance-contributing means with no effect rule, and a stake that resolves no declared
+  measure, the second being this record's own fallback turned into a gate. The argument and
+  what the deletion cost are in
+  [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md), which set
+  the deletion as its own acceptance test; a seam that has been closed is left here struck
+  through rather than removed, because the two phases only make sense read together.
 - **Epistemic wants through the search.** A freshness goal has a met-shape and no measure, so
   the planner still scores it by the not-knowing constant rather than by anything a candidate
   world could improve — Observe reaches it through the state machinery, not through
@@ -191,5 +198,7 @@ unchanged — measurement names never split series.
   (the store's NOW against the reader's), and is not needed by anything shipped.
 - **The region shape's Below/Above split retiring `market:direction`.** The parent record
   already argues it: Raises repairs the Below violation, Lowers repairs Above, and the one-bit
-  effect hardcoded into the reflex becomes a match between two shapes. It waits on phase B,
-  because the reflex is `market:direction`'s last consumer.
+  effect hardcoded into the reflex becomes a match between two shapes. Phase B has happened and
+  the term still stands — deliberation no longer reads it, but the keeper's verification arc
+  copies it into every expectation to know which way a dose should show up, so retiring it is
+  repair-matching's change to make rather than the reflex's to have taken.

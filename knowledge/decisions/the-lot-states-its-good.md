@@ -57,8 +57,10 @@ asked from each side:
   deficit) through its venue plus its subject's ranges — the fixed `litresPerFraction` IRI
   it used to interrogate was right for every bidder exactly as long as every bidder was a
   plant's;
-- **the reflex** asks direction through a venue it bids in, because a direction with no venue
-  behind it is a move with no lever;
+- **the effect rule** predicts what buying would make true along that same walk, because a
+  prediction with no venue behind it is a move with no lever. (It was the reflex that asked
+  this, as a DIRECTION, until the reflex was deleted; the walk is unchanged and the answer is
+  now a number rather than one bit.)
 - **the menu** walks the full chain and now provably yields two rows with two directions for
   two opposite levers on one property, never four — the pinned fixture authors a drying
   market by hand and watches the cross-join stay dead;

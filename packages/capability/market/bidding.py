@@ -191,40 +191,29 @@ class BiddingModule(Module):
                         litres_per_unit=self.conversion)
         return bid.max_qty_l if bid is not None else None
 
-    def _next_move(self, value: float | None = None) -> str | None:
+    def _next_move(self) -> str | None:
         """The WHETHER, asked of whoever deliberates — this module only carries moves out.
 
         The deciding used to be welded in here: an offer meant look-then-bid, and value_bid's
-        cede was the whole of choosing. It is a family now, so a model can replace the reflex
-        without touching this module — see packages/capability/deliberation/. An agent granted
-        no deliberator keeps the old welded behaviour, which is what None falls through to at
-        each call site: the seam must not change what an agent WITHOUT it does.
+        cede was the whole of choosing. It moved out so that a model can answer instead without
+        this module changing — the property `tests/test_deliberation.py` pins by silencing the
+        deliberator and watching a thirsty bidder submit nothing.
 
-        ASKED ABOUT THE GOAL since #240, which is why a `None` value no longer means "look".
-        It used to: `propose` read None as ignorance and answered Observe, and this module
-        leaned on that when an offer arrived with no reading it trusts. But None also meant
-        "the caller has no number", and one sentinel answering two questions is a sentinel
-        that will eventually answer the wrong one. A desire says which of the two epistemic
-        failures it is — never read, or read too long ago — so the question is asked properly
-        and this module keeps the same behaviour for a better reason.
+        ASKED ABOUT THE GOAL since #240, which is why a `None` value never meant "look". It
+        used to: the old bare-value door read None as ignorance and answered Observe, and this
+        module leaned on that when an offer arrived with no reading it trusts. But None also
+        meant "the caller has no number", and one sentinel answering two questions is a
+        sentinel that will eventually answer the wrong one. A desire says which of the two
+        epistemic failures it is — never read, or read too long ago.
 
-        The two call sites ask DIFFERENT questions, which is what the sentinel was hiding. With
-        a reading in hand this is "what should I do about this number", and the number is the
-        one just read — not one fetched back out of the store, because that would make the
-        answer depend on whether the observation had been written yet, an ordering no caller
-        can see. With nothing in hand it is "what should I do about not knowing", and only a
-        desire can say which kind of not-knowing it is.
+        ONE QUESTION NOW, where there were two. The value-carrying half went with the reflex:
+        both call sites here ask *what should I do about this property*, and the answer comes
+        from a search over what the agent believes rather than from a number this module is
+        holding. The store is not behind the caller — `Observations.record` writes before it
+        announces — and where it is (a write that failed), the want reads unmeasured and the
+        answer is Observe, which is the honest move for an agent that lost its own reading.
         """
-        deliberator = self.agent.deliberator
-        if value is not None:
-            return deliberator.propose(self.about, value)
-        desire = next((g for g in self.agent.pursuing()
-                     if not g.is_duty and g.observed_property == self.about), None)
-        if desire is None:
-            #  No want in this property at all: nothing to steer toward, and the old code
-            #  reached the same answer through an aim it could not find.
-            return None
-        return deliberator.propose_for(desire)
+        return self.agent.deliberator.propose_about(self.about)
 
     def _unseal(self, doc: dict) -> dict:
         """Open a sealed claim (#145), or pass a plaintext one through untouched.
@@ -450,11 +439,11 @@ class BiddingModule(Module):
             return
         auction_id, market = rnd["auction_id"], rnd["market"]
 
-        # The WHETHER is the deliberator's. The reflex member reproduces exactly the cede this
-        # module used to compute for itself — below the aim, pursue; otherwise nothing — so the
-        # behaviour is unchanged and the DECIDER is replaceable. An agent with no deliberator
-        # falls through to the old welded logic: value_bid still cedes at-or-above the aim.
-        if self._next_move(moisture) != ACQUIRE:
+        # The WHETHER is the deliberator's, and the cede this module used to compute for itself
+        # — below the aim, pursue; otherwise nothing — now comes out of a search that weighs
+        # the world a purchase would reach. `value_bid` still cedes at or above the aim below,
+        # so the sizing agrees with the deciding without either being the other's authority.
+        if self._next_move() != ACQUIRE:
             self.log.info("auction %s: moisture %.3f — deliberation chose not to pursue",
                           auction_id, moisture)
             return
