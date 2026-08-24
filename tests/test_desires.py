@@ -1,9 +1,10 @@
 """What an agent is pursuing, hottest first — the split pair and its one join (#234, #298).
 
 `desires.rq` asks the desire modality, `readings.rq` asks the belief modality, and `desires_of`
-is the join — the arithmetic lives once, in `Region` and `_duty_urgency`. These pin the
-states, the ranking, and the duty fraction that was always Python's because the store's
-engine will not divide durations.
+is the join — a stake's magnitude is whichever capability answers the choir (sensing's
+declared measure), a duty's fraction is `_duty_urgency`, Python because the store's engine
+will not divide durations. These pin the states, the ranking, both fallbacks and the engine
+limits.
 """
 
 from __future__ import annotations
@@ -12,31 +13,31 @@ from datetime import datetime, timedelta, timezone
 
 import pyoxigraph as ox
 
-from agent.regions import gaps_of, desires_of
+from agent.regions import desires_of
 
-from conftest import MOISTURE, TEMPERATURE, desires_build, genesis_store
+from conftest import MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
 
-def _desires(readings, agent="fern", **kw):
-    from agent import genesis
-
+def _fern(readings, monkeypatch):
+    """A real fern, because a stake's urgency is a capability's answer now: the deducer asks
+    the choir (`Agent.desire_urgency`) and sensing answers from its own declaration, so a
+    hand-built join would fake away the contribution these tests exercise."""
     st = genesis_store(readings)
-    genesis.birth(st, genesis.world_dir("simulation"), agent)
-    return st, desires_of(desires_build(st, agent).query_union, st.query, FERN, agent, **kw)
+    return st, build_agent("fern", st, monkeypatch)
 
 
-def test_the_query_and_the_module_agree_with_the_diff(query_with_readings):
-    """One definition, three readers. `desires.rq` repeats `gap.rq`'s arithmetic because SPARQL
-    has no include, and a repeat nobody checks is a fork with a delay on it — so the urgency a
-    desire carries must equal the |gap| the diff reports, to the store's own precision.
+def test_the_query_and_the_module_agree_with_the_diff(query_with_readings, monkeypatch):
+    """One definition, three readers. The ranking and the diff both ask the same declared
+    measure through the same choir road, so the urgency a desire carries must equal the |gap|
+    the diff reports, to the store's own precision.
 
     Both properties, and both signs: fern below its moisture region and above its temperature
     one. A copy that dropped the sign handling would agree on one of them and not the other.
     """
-    st, desires = _desires({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
-    diffs = gaps_of(desires_build(st, "fern").query_union, st.query, FERN, "fern")
+    _, fern = _fern({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0}, monkeypatch)
+    desires, diffs = fern.deducer.desires(), fern.deducer.gaps()
 
     stakes = {g.observed_property: g for g in desires if not g.is_duty}
     assert set(stakes) == set(diffs), "the same wants, whichever text is run"
@@ -52,24 +53,25 @@ def test_a_want_nobody_has_read_is_the_hottest_goal_and_not_a_missing_one(monkey
     the pot is dying is at least as urgent as knowing it is uncomfortable, which is the answer
     `urgency(None)` has always given and the reason the first intention is to look.
     """
-    st, desires = _desires({("fern", TEMPERATURE): 21.0})   # temperature seen, moisture never
+    _, fern = _fern({("fern", TEMPERATURE): 21.0}, monkeypatch)  # temperature seen, moisture never
+    desires = fern.deducer.desires()
 
     moisture = next(g for g in desires if g.observed_property == MOISTURE)
     assert moisture.value is None
     assert moisture.urgency == 1.0
     assert desires[0] is moisture, "and it sorts to the top, where a deliberator will meet it"
-    assert gaps_of(desires_build(st, "fern").query_union, st.query,
-                   FERN, "fern").get(MOISTURE) is None, \
+    assert fern.deducer.gaps().get(MOISTURE) is None, \
         "while the diff still reports nothing, which is right for a diff"
 
 
-def test_the_states_a_stake_can_be_in():
+def test_the_states_a_stake_can_be_in(monkeypatch):
     """met, unmet and unmeasured, asked across the range rather than at one value — a boundary
     that is wrong by one reads correctly at the centre and at the extremes."""
     for value, expected in [(0.55, "met"), (0.45, "met"), (0.65, "met"),
                             (0.30, "unmet"), (0.95, "unmet")]:
-        _, desires = _desires({("fern", MOISTURE): value})
-        moisture = next(g for g in desires if g.observed_property == MOISTURE)
+        _, fern = _fern({("fern", MOISTURE): value}, monkeypatch)
+        moisture = next(g for g in fern.deducer.desires()
+                        if g.observed_property == MOISTURE)
         met = moisture.urgency == 0.0 or (0.45 <= value <= 0.65)
         assert met == (expected == "met"), f"{value} should be {expected}"
 
@@ -110,7 +112,8 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them():
         "past the window there is nothing left to spend, however hot it reads"
 
 
-def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_a_rebuild():
+def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_a_rebuild(
+        monkeypatch):
     """The finding a-desire-states-its-own-measure records, pinned from the ranking side.
 
     The reflex steered toward the AIM while urgency was measured from the region's CENTRE, so
@@ -122,12 +125,11 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
     """
     from agent.ontology import beliefs_graph
 
-    st = genesis_store({("fern", MOISTURE): 0.55})
-    wants = desires_build(st, "fern")
+    st, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
 
     def urgency():
-        desires = desires_of(wants.query_union, st.query, FERN, "fern")
-        return next(g for g in desires if g.observed_property == MOISTURE).urgency
+        return next(g for g in fern.deducer.desires()
+                    if g.observed_property == MOISTURE).urgency
 
     assert urgency() == 0.0, "at the pick (0.55, which is also the centre) nothing is urgent"
 
@@ -158,64 +160,57 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
         "the same distance out must read differently per side — asymmetric scaling survives"
 
 
-def test_the_measure_answers_one_for_a_world_with_no_reading():
-    """The COALESCE the engine's silent arithmetic demands, exercised through the measure
-    itself: asked of a world holding no observation, the answer is 1.0 and never unbound —
+def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
+    """The COALESCE the engine's silent arithmetic demands, exercised through the whole choir
+    road: asked of a world holding no observation, sensing's answer is 1.0 and never unbound —
     an unmeasured want must not read as no urgency, and this store binds NOTHING for
     arithmetic over an unbound value rather than failing."""
-    from agent.measure import urgency_of
-    from agent.ontology import SENSED_GRAPH, beliefs_graph
-    from agent.regions import measures_of, regions_of
+    from agent.desire import Desire
+    from agent.ontology import SENSED_GRAPH
 
-    st = genesis_store()                      # no readings seeded at all
-    wants = desires_build(st, "fern")
-    measure = measures_of(wants.query_union, st.query, FERN)[MOISTURE]
-    assert urgency_of(st.query, measure, me=FERN,
-                      subject="http://example.org/orexis/world/simulation#fern",
-                      observed_property=MOISTURE, sensed=SENSED_GRAPH,
-                      beliefs=beliefs_graph("fern"),
-                      region=regions_of(wants.query_union, FERN)[MOISTURE]) == 1.0
+    st, fern = _fern(None, monkeypatch)       # no readings seeded at all
+    probe = Desire(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
+    assert fern.desire_urgency(probe, st.query, SENSED_GRAPH) == 1.0
 
 
-def test_a_want_whose_kind_nothing_measures_scores_a_logged_one():
-    """The defined fallback, pinned: a desire whose KIND no loaded package measures reads
+def test_a_want_whose_kind_nothing_measures_scores_a_logged_one(monkeypatch):
+    """The defined fallback, pinned: a desire whose KIND nothing loaded measures reads
     urgency 1.0 — not knowing how bad is maximal, consistent with `urgency(None)` — rather
     than quietly reviving a Python arithmetic beside the declared one. Constructed by
-    emptying the measures graph, the way the partial-plan test removes Acquire's effect
+    emptying sensing's declaration, the way the partial-plan test removes Acquire's effect
     rule: the shipped worlds never hit this, and a sibling test holds THAT."""
-    from agent.ontology import MEASURES_GRAPH
+    from packages.capability.sensing import module as sensing
 
-    st = genesis_store({("fern", MOISTURE): 0.55})
-    st.update("DELETE WHERE { GRAPH <%s> { ?s ?p ?o } }" % MEASURES_GRAPH)
-    _, desires = (st, desires_of(desires_build(st, "fern").query_union, st.query,
-                                 FERN, "fern"))
-    moisture = next(g for g in desires if g.observed_property == MOISTURE)
+    monkeypatch.setattr(sensing, "_DECLARED_MEASURES", ())
+    _, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
+    moisture = next(g for g in fern.deducer.desires()
+                    if g.observed_property == MOISTURE)
     assert moisture.urgency == 1.0, "unmeasurable must never read as content"
     assert moisture.state == "met", \
         "while the met-verdict stays the shape's — the two are different questions"
-    assert moisture.measure is None
 
 
-def test_every_shipped_stake_resolves_a_declared_measure():
+def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
     """The fallback above must be a case no ratified world hits — every desiring agent in the
-    shipped worlds holds stakes in properties whose kind sensing's `measures.ttl` measures,
-    because every stake property is a `sosa:ObservableProperty`. If this fails, a world has
-    grown a want the loaded packages cannot weigh, and that is a genesis conversation rather
-    than a silent 1.0."""
-    from agent.regions import measures_of, regions_of
+    shipped worlds holds a sensing module whose declaration measures its stakes, every stake
+    property being a `sosa:ObservableProperty`. If this fails, a world has grown a want
+    nothing loaded can weigh, and that is a genesis conversation rather than a silent 1.0."""
+    from agent.desire import Desire
+    from agent.ontology import SENSED_GRAPH
     from agent.store import bindings
 
     checked = 0
     for world in ("simulation", "loner"):
+        monkeypatch.setenv("OREXIS_WORLD", world)
         st = genesis_store(world=world)
         for row in bindings(st.query(
                 'SELECT ?a ?id WHERE { ?a a ag:Agent ; ag:localId ?id }')):
-            wants = desires_build(st, row["id"])
-            regions = regions_of(wants.query_union, row["a"])
-            measures = measures_of(wants.query_union, st.query, row["a"])
-            assert set(regions) == set(measures), \
-                f'{row["id"]} in {world}: a stake with no declared measure'
-            checked += len(regions)
+            agent = build_agent(row["id"], st, monkeypatch)
+            for prop in agent.deducer.regions:
+                probe = Desire(uri="urn:asked", urgency=1.0, observed_property=prop)
+                assert agent.desire_urgency(probe, st.query, SENSED_GRAPH) is not None, \
+                    f'{row["id"]} in {world}: a stake nothing loaded measures'
+                checked += 1
     assert checked >= 3, "the walk went quiet — no stakes were checked at all"
 
 

@@ -1,25 +1,31 @@
 @prefix sh:      <http://www.w3.org/ns/shacl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ag:      <http://example.org/orexis#> .
 @prefix sosa:    <http://www.w3.org/ns/sosa/> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 
 #################  How badly an observation-backed want is unmet  #################
 #
-#  SENSING'S, and the placement is the point (a-desire-states-its-own-measure, the sovereign's
-#  split): the core is BDI, so the kernel derives the want, its met-shape and its node — the
-#  mind's structure — and how badness is MEASURED is planning-domain machinery, a capability's
-#  contribution. A want about an observed property is measured by a reading against the aim,
-#  and the reading is this capability's whole subject; the choir's `urgency` hook has always
-#  listed what modules contribute, and this is that instinct made a declaration. The kernel
-#  runs whatever is declared (`agent/measure.py`) and never knows this text exists.
+#  SENSING'S, whole (a-desire-states-its-own-measure, completed by the extraction): the core
+#  is BDI, so the kernel derives the want, its met-shape and its node — the mind's structure —
+#  and how badness is MEASURED is planning-domain machinery, a capability's contribution. A
+#  want about an observed property is measured by a reading against the aim, and the reading
+#  is this capability's whole subject; the choir's `urgency` hook has always listed what
+#  modules contribute, and this is that instinct made a declaration.
 #
-#  ONE declaration for the KIND, not a text per desire: `ag:measureOf sosa:ObservableProperty`
-#  says "a want about an observable property is measured by this SELECT", and the evaluator
-#  resolves a desire to it by asking what the desire's `ssn:forProperty` object IS. Nothing is
-#  compiled at derivation: the aim is read out of $beliefs by the query itself, and the
-#  region's numbers arrive as substituted parameters the caller reads off the deduced shapes
-#  at query time — so a re-pick or a re-derivation moves the answer with no text rebuilt.
+#  READ BY THIS PACKAGE'S OWN CODE (`module.py`), never by a kernel loader: the kernel asks
+#  "how urgent is this desire, in this world" through `Module.desire_urgency` and holds no
+#  measure vocabulary, no measure graph, no evaluator. Which is why the words here are
+#  sensing's own — `sensing:measureOf`, not `ag:` — the repo's promotion test being a word
+#  SEVERAL packages must speak, and today one does. When the market ships its duty measure by
+#  this same mechanic, promotion happens then.
+#
+#  ONE declaration for the KIND, not a text per desire: `sensing:measureOf
+#  sosa:ObservableProperty` says "a want about an observable property is measured by this
+#  SELECT", and the module answers for a desire by asking the store what its
+#  `ssn:forProperty` object IS. Nothing is compiled anywhere: the aim is read out of $beliefs
+#  by the query itself, and the region's numbers arrive as substituted parameters read off
+#  the deduced shapes at answer time — so a re-pick or a re-derivation moves the answer with
+#  no text rebuilt.
 #
 #  The contract: one binding, ?urgency in 0..1. Zero exactly at the aim ($centre stands in
 #  while no aim is picked — where an agent with no other reason to prefer would aim), rising
@@ -29,7 +35,7 @@
 #  depends on how much room there is in that direction.
 
 sensing:AimDistanceMeasure
-    ag:measureOf sosa:ObservableProperty ;
+    sensing:measureOf sosa:ObservableProperty ;
     rdfs:label "distance from the aim, scaled by the survival room on that side" ;
     rdfs:comment "Evaluated against whichever world is being judged: the belief base for the live number, a candidate possible world inside the planner ($sensed names that node's readings). $value is a caller-supplied number to judge — the choir asks about readings not yet written, and about predicted ones — or the live reading when the caller supplies none." ;
     #  ?distance <= 0 answers FIRST and without dividing, and that ordering is an engine fact,

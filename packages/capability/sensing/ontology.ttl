@@ -370,3 +370,14 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
     rdfs:comment "How many readings must have accumulated before an agent may draw a conclusion about them. Guards the failure this mechanism could otherwise cause: two identical readings are a coincidence, and an agent that relaxed its attention on the strength of them would be reasoning from noise." .
 
 :SensingCapability :steadyFraction 0.02 ; :reviewWindow 20 .
+
+# The one word this package's measure declaration speaks (measures.ttl): which KIND of want
+# the declared SELECT scores. Sensing's own and deliberately not the kernel's — the kernel
+# asks "how urgent is this desire, in this world" through the choir and holds no measure
+# vocabulary; this package answers for wants about what can be OBSERVED, from its own file,
+# with its own code. Promotion into ag: has the repo's usual trigger — a word several
+# packages must speak — and fires when a second package ships a measure.
+
+:measureOf a owl:ObjectProperty ; rdfs:range owl:Class ;
+    rdfs:label "measure of" ;
+    rdfs:comment "Which kind of want the subject node's `sh:select` scores — the class of thing the want is about, so `sensing:measureOf sosa:ObservableProperty` reads: a want about an observable property is measured by this SELECT. One binding, ?urgency in 0..1, parameterised by substitution like an effect rule and evaluated against whichever world is being judged." .

@@ -180,6 +180,27 @@ class Module:
         """
         return None
 
+    def desire_urgency(self, desire, query, sensed: str,
+                       value: float | None = None) -> float | None:
+        """How urgent one DESIRE is, in the WORLD `query` answers about. None: no opinion.
+
+        The other half of `urgency` above, and the reason it exists apart: that hook judges a
+        reading against live beliefs, and a planner needs the same judgement about a world
+        NOBODY IS IN YET — a candidate its effects predicted. So the world is a parameter:
+        `query` is a store's query surface (the agent's belief base, or the planner's
+        imaginarium) and `sensed` names the graph that world's readings live in. `value` is a
+        caller-supplied number to judge where one is in hand — the choir is asked about
+        readings not yet written and about predicted ones — and absent, the module judges
+        what `sensed` holds.
+
+        HOW a want's badness is measured is deliberately not the kernel's to say
+        (a-desire-states-its-own-measure): the kernel asks this question and holds no measure
+        vocabulary, no measure graph, no evaluator. A capability that owns the question
+        answers from its own declaration — sensing does, for observation-backed wants — and a
+        desire nobody answers for is maximally urgent, logged, at the call sites that rank.
+        """
+        return None
+
     # --- helpers every module wants ---
 
     @staticmethod

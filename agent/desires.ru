@@ -191,10 +191,10 @@ WHERE  {
 #  NO MEASURE IS WRITTEN HERE, and the absence is the sovereign's ruling rather than an
 #  omission: the core is BDI, so this derivation minting the want, its shape and its node is
 #  the mind's structure — and how badness is MEASURED is planning-domain machinery, a
-#  capability's contribution. Sensing declares the measure for observation-backed wants in its
-#  `measures.ttl` (`ag:measureOf sosa:ObservableProperty`), the evaluator resolves it by the
-#  want's KIND at query time, and `ag:measuredBy` stays empty as the instance-level override
-#  slot. The effects mechanic, applied to desire.
+#  capability's contribution the kernel only ASKS for, through the choir
+#  (Module.desire_urgency). Sensing declares the measure for observation-backed wants in its
+#  own `measures.ttl`, in its own namespace, read by its own code; the kernel holds no
+#  measure vocabulary, no measure graph, no evaluator.
 INSERT { GRAPH $derived {
     $me ag:holds ?desire , ?envelope .
     ?desire a ag:Desire ;

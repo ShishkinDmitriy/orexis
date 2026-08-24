@@ -72,11 +72,11 @@ def test_a_reading_past_the_horizon_is_stale_where_a_fresh_one_is_met(monkeypatc
     look again, and its urgency is the maximum for the same reason an unread property's is.
     """
     agent, st = _fern(monkeypatch, value=0.55)
-    fresh = {g.observed_property: g for g in desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern")}
+    fresh = {g.observed_property: g for g in agent.deducer.desires()}
     assert fresh[MOISTURE].state == "met" and fresh[MOISTURE].urgency == 0.0
 
     _age_the_reading(st)
-    stale = {g.observed_property: g for g in desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern")}
+    stale = {g.observed_property: g for g in agent.deducer.desires()}
     assert stale[MOISTURE].state == "stale"
     assert stale[MOISTURE].urgency == 1.0, \
         "not knowing is not knowing — scaling it by a distance the agent no longer trusts " \
@@ -89,7 +89,7 @@ def test_stale_and_unmeasured_are_told_apart(monkeypatch):
     and let the answer go cold — the same repair, and not the same situation."""
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
-    by_state = {g.state for g in desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern") if not g.is_duty}
+    by_state = {g.state for g in agent.deducer.desires() if not g.is_duty}
     assert by_state == {"stale", "unmeasured"}, \
         "moisture was read and went cold; temperature was never read at all"
 

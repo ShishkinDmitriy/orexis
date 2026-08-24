@@ -60,16 +60,14 @@ class Desire:
     #  governs the urgency, and they are different questions on the desire's own node.
     state: str | None = None
 
-    #  The measure resolved for this want — its own `ag:measuredBy` where an instance states
-    #  one, else what the loaded packages declare for its KIND (`ag:measureOf`, a capability's
-    #  measures.ttl; sensing's for observation-backed wants) — carried so the planner can ask
-    #  the SAME question of a candidate world that `desires_of` asked of the belief base.
-    #  None for a duty (its fraction-of-window stays Python's, because this engine binds
-    #  nothing for duration division — the pinned limit in tests/test_desires.py; its future
-    #  home is the market's measures.ttl by this same mechanic) and for a freshness want
-    #  (epistemic, no distance to scale) — and for a want whose kind nothing measures, which
-    #  scores a logged 1.0.
-    measure: str | None = None
+    #  NO measure field, deliberately, and one briefly existed: a desire does not carry how
+    #  its badness is scored, because that is a capability's answer and not the mind's
+    #  structure (a-desire-states-its-own-measure). Whoever needs the number asks the choir —
+    #  `Agent.desire_urgency(desire, query, sensed)` — of whichever world is being judged,
+    #  and sensing answers for observation-backed wants from its own declaration. A duty's
+    #  fraction-of-window stays kernel Python behind a pinned engine limit (this store binds
+    #  nothing for duration division — tests/test_desires.py), with the market's own
+    #  declaration as its recorded future home.
 
     @property
     def is_met(self) -> bool:

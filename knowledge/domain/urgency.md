@@ -56,10 +56,10 @@ would refuse every dose too small to finish the job.
 So a change in how urgency is computed moves the whole society at once. That is the reason it is
 one definition asked of one owner rather than a formula each consumer keeps — since
 [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md), literally one
-text: the capability that owns the question declares the measure for a KIND of want in the
-graph ([sensing](/domain/sensing.md)'s, for anything observation-backed), and every consumer
-evaluates that, against whichever world it is judging — and the reason the tests hold the
-declared query and the reference arithmetic to the same answer.
+text and one owner: [sensing](/domain/sensing.md) declares and runs the measure for anything
+observation-backed, every consumer asks the choir (`desire_urgency`) about whichever world it
+is judging, and the kernel holds no measure of its own — which is the reason the tests hold
+the declared query and the reference arithmetic to the same answer.
 
 # It is contributed, not only computed
 
