@@ -373,9 +373,9 @@ ag:wouldTake a owl:ObjectProperty ; rdfs:domain ag:Candidate ; rdfs:range ag:Mea
     rdfs:label "would take" ;
     rdfs:comment "The move this candidate is. NOT `ag:by`, whose domain is `ag:Intention` — spelling a weighed lever with the word for a carried-out one would have the closure type every candidate a commitment, which is the exact distinction a trace exists to keep." .
 
-ag:through a owl:ObjectProperty ; rdfs:domain ag:Candidate ;
+ag:through a owl:ObjectProperty ;
     rdfs:label "through" ;
-    rdfs:comment "The lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
+    rdfs:comment "The lever a step goes through. On a candidate, the lever it WOULD act through; on an intention, the lever the plan's head chose — the same `via` column of the same affordance row, so the ledger says which valve or venue and not merely what kind of move. No domain, because it is stated of both and the closure would otherwise type one as the other. On a candidate: the lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
 
 ag:atDepth a owl:DatatypeProperty ; rdfs:domain ag:Candidate ; rdfs:range xsd:integer ;
     rdfs:label "at depth" ;
@@ -730,6 +730,10 @@ ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Means ;
     rdfs:comment "The kind of act committed to. A MEANS, not a plan: the how stays with whichever capability executes it." .
 
 ag:Means a owl:Class ; rdfs:label "Means" .
+
+ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Means ; rdfs:range ag:Capability ;
+    rdfs:label "taken by" ;
+    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated by the package that ships the row, in its own ontology, on the kernel's means: `ag:Observe ag:takenBy sensing:SensingCapability`. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute: `ag:Offer` is one on purpose, since no menu row offers it. See knowledge/domain/actor.md.""" .
 
 ag:Observe a ag:Means ; rdfs:label "Observe" ;
     rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .

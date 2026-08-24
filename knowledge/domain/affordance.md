@@ -103,6 +103,7 @@ too coarse*, which is a distinction a planner that reported them alike would des
   and holds what a lever DOES — a row says only that one is available.
 - [desire](/domain/desire.md) is the other half of a decision: a row answers *what could I do*, a
   gap answers *about what*.
+- [actor](/domain/actor.md) is the code a row is linked to, through `ag:takenBy` on the row's means.
 - [package](/domain/package.md) is how a contribution is found: a directory, and nothing lists it.
 - [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) places rows in the menu modality
   and explains why they are derived where a rule is asserted.

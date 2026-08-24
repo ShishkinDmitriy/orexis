@@ -61,6 +61,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: in memory for one plan, a graph per search node, required to be lost.
 
+* [execution](/domain/execution.md) - Plan, commit the head as an intention, hand it to its actor. One road for every trigger; a standing step is taken, not re-decided.
+
+* [actor](/domain/actor.md) - The module an affordance is linked to, through `ag:takenBy` stated by the package that ships the row. Takes a step; never decides one.
+
 # Doing
 
 * [actuation](/domain/actuation.md) - The power to touch the physical world, held by whoever owns the hardware. Bounded by a claim and by the device's own cap.

@@ -165,3 +165,14 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 :matchesBy a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range :BidMatchingCapability ;
     rdfs:label "matches by" ;
     rdfs:comment "How this host matches bids in the auctions it convenes. The host defines the terms of its own auction, so this is the host's fact and not the venue's — and it is PUBLIC, in the world, because a bidder cannot bid well against terms it does not know. Real auctions announce theirs; a sealed-bid first-price auction says so. Named `matchesBy` rather than `clearsBy` deliberately: clearing is a different thing here — the validator that co-signs a trade — and reusing the word would have made a host's allocation read as the notary's business. The capability is DERIVED from this, never declared." .
+
+#################  Who takes a step  #################
+
+#  The link from the rows this package ships to the code that carries them out
+#  (knowledge/domain/actor.md). Acquire is the buyer's move and Apply, on the HONOURED row
+#  `honoured.rq` derives, is the host's serve. The bidder's own Apply — presenting a held
+#  claim — is adopted on the claim and taken when its watch is live, and never reaches a plan.
+#  Offer states no taker: no menu row offers it, hosting adopts it on a deferral, and a means
+#  no plan chooses needs nobody to take it from one.
+ag:Acquire ag:takenBy :Bidding .
+ag:Apply   ag:takenBy :Hosting .

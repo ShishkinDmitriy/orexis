@@ -6,6 +6,10 @@ description: The trusted actuator — validates the capability grant and drives 
 
 # What it is
 
+> **Not the thing that carries out a plan.** That is [execution](/domain/execution.md), a kernel
+> process handing a committed step to an [actor](/domain/actor.md); this page is the trusted end
+> of a claim, one hop from the valve.
+
 > **Reframed ([thin-trusted-infra](/decisions/thin-trusted-infra.md)):** actuation is *not*
 > separate stake-free infra — the **resource owner (the [supplier](/domain/supplier.md))**
 > drives its own valves. The "executor" is the supplier's **actuation arm**, not a distinct

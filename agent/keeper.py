@@ -132,6 +132,9 @@ class Standing:
     means: str
     observed_property: str
     adopted_at: datetime
+    #  The lever the plan chose — `ag:through`, the row's `via`. None on a row adopted
+    #  before execution wrote it, or by an actor that names no lever (a held claim).
+    via: str | None = None
 
     def age_s(self, now: datetime | None = None) -> float:
         return ((now or datetime.now(timezone.utc)) - self.adopted_at).total_seconds()
@@ -219,58 +222,38 @@ class Keeper(Module):
     # --- gap-driven deliberation (#208) --------------------------------------------------
 
     def deliberate_on_gaps(self) -> None:
-        """Gaps -> the deliberator -> the ledger. Noticing is plural; deciding is not.
+        """Every want, through execution. Noticing is plural; deciding is not; doing is one road.
 
-        Deliberation used to run only when the market knocked — an offer arrived, or birth —
-        so an agent's watching of a property no market relieves lived in cadence machinery
-        and never reached this ledger: the sovereign inspecting intentions saw market conduct
-        only. Now whoever is positioned to notice contributes (Module.notices), the ONE
-        deliberator turns each gap into a move or into nothing, and what it proposes is
-        committed here — visible, resolvable, and bounded by the same patience as everything
-        else. Only Observe is carried out from here: an Acquire needs a round nobody may
-        convene from this side (the-lot-is-the-hosts-standing-offer's seam), and the acting
-        modules adopt their own when the market knocks.
+        Deliberation used to run only when the market knocked, and then this tick carried out
+        ONE of the deliberator's answers — Observe — and dropped the rest on the floor, because
+        an Acquire needs a round nobody may convene from here. It still does; what changed is
+        that the commitment is made anyway. `execution.pursue` plans, writes the head row to
+        this ledger and hands it to its actor, and an actor that cannot act now says so and
+        the intention STANDS — so the bidder answers the next offer from what it already
+        committed to, without a second search. See knowledge/domain/execution.md.
+
+        Duties are skipped: a host serves on a presentation or when stock arrives with a
+        claim held, and hosting runs execution on those events itself.
+
+        The cost is a plan per want per patience period, which is the same work `series()`
+        already does on the metrics clock.
         """
-        deliberator = self.agent.deliberator
-        #  GOALS, not notices, and not a sentinel (#240). This used to walk the choir's noticed
-        #  gaps and ask `propose(property, None)` — where None meant "should I look?", a
-        #  question the deliberator answered by a special case reading None as ignorance. Both
-        #  ends of that arrangement are gone: an epistemic want is a want like any other now,
-        #  it says which failure it is, and the ordinary door takes it.
+        from . import execution
+
         for desire in self.agent.pursuing():
-            #  ASKED ABOUT EVERY WANT, and the filter that used to stand here is gone with the
-            #  hardcode it was the other half of. It skipped anything not `unmeasured` or
-            #  `stale`, which was safe only because the deliberator answered those two by a
-            #  special case before any search ran: the tick knew which wants would say OBSERVE
-            #  and asked about no others. Nothing knows that now — a look is proposed because
-            #  a search found it repairs something — so the honest tick asks about everything
-            #  and acts on the one answer it is entitled to carry out.
-            #
-            #  The cost is a plan per want per patience period rather than per unmet-epistemic
-            #  want, which is the same work `series()` already does on the metrics clock.
             if desire.is_duty:
                 continue
-            move = deliberator.propose_for(desire)
-            if move != OBSERVE:
-                continue
-            observed_property = desire.observed_property
-            adopted = self.adopt(OBSERVE, observed_property,
-                                 f"{desire.state or 'unmet'} — noticed, not asked for")
-            #  EVERY sensing module, not the first. An agent may hold two — the gardener
-            #  subscribes to a probe and listens to a float switch — and `provider` returns
-            #  whichever comes first, which was the listener: the look was committed to, the
-            #  nudge went to a method that cannot nudge, and the intention stood until
-            #  patience outwaited it. Whoever cannot ask does nothing when asked, so sending
-            #  to all of them costs a no-op and buys the one that can.
-            if adopted:
-                for sensing in self.agent.providers(_SENSING):
-                    sensing.sense_now()
+            execution.pursue(self.agent, desire)
 
     # --- the ledger, written -------------------------------------------------------------
 
     def adopt(self, means: str, observed_property: str, because: str,
-              desire: str | None = None) -> str | None:
+              desire: str | None = None, via: str | None = None) -> str | None:
         """Commit to one means toward one desire. Returns the intention's IRI, or None.
+
+        `via` is the lever the plan's head goes through — written as `ag:through`, so the
+        ledger says which valve or venue and the actor handed the row later knows too.
+        Execution passes it; an actor adopting on its own event (a held claim) may not.
 
         `desire` is which end this serves — the bounds an agent is held to, or the obligation a
         claim raised. Optional, because the first three means predate desires having names; a
@@ -300,6 +283,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
     {f'<{kernel("pursues")}> <{desire}> ;' if desire else ""}
     <{kernel("by")}> <{means}> ;
+    {f'<{kernel("through")}> <{via}> ;' if via else ""}
     <http://www.w3.org/ns/ssn/forProperty> <{observed_property}> ;
     <{kernel("adoptedAt")}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
@@ -622,14 +606,16 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
             clauses.append(
                 f'OPTIONAL {{ ?i <{kernel("pursues")}> ?desire }} '
                 f'FILTER(!BOUND(?desire) || ?desire = <{desire}>)')
+        clauses.append(f'OPTIONAL {{ ?i <{kernel("through")}> ?via }}')
         rows = bindings(self.agent.intentions.query(
-            "SELECT ?i ?means ?property ?at WHERE { GRAPH <%s> { %s } }"
+            "SELECT ?i ?means ?property ?at ?via WHERE { GRAPH <%s> { %s } }"
             % (self.graph, " ".join(clauses))))
         return [Standing(uri=r["i"], means=r["means"], observed_property=r["property"],
-                         adopted_at=datetime.fromisoformat(r["at"]))
+                         adopted_at=datetime.fromisoformat(r["at"]), via=r.get("via"))
                 for r in rows]
 
-    def within_patience(self, means: str, observed_property: str) -> bool:
+    def within_patience(self, means: str, observed_property: str,
+                        desire: str | None = None) -> bool:
         """Whether a new impulse to do this is THE SAME impulse — the ledger answering.
 
         The record's sentence — "within your patience, a second impulse to do the same thing
@@ -641,12 +627,18 @@ SELECT DISTINCT ?means ?property WHERE {{ GRAPH <{self.graph}> {{
         question is asked of the LEDGER, any outcome: the newest same-means same-property
         intention, standing or resolved, younger than my patience, absorbs the impulse.
         """
+        #  NARROWED BY THE DESIRE exactly as `standing` is, and for the same reason: two
+        #  duties about one property are two impulses, and a serve for fern must not be
+        #  absorbed as the same impulse as a serve for tomato. Rows naming no desire still
+        #  count, so a ledger written before desires had names keeps absorbing.
+        narrow = (f'OPTIONAL {{ ?i <{kernel("pursues")}> ?desire }} '
+                  f'FILTER(!BOUND(?desire) || ?desire = <{desire}>)') if desire else ""
         latest = bindings(self.agent.intentions.query(
             "SELECT ?at WHERE { GRAPH <%s> { ?i a <%s> ; <%s> <%s> ; "
-            "<http://www.w3.org/ns/ssn/forProperty> <%s> ; <%s> ?at } } "
+            "<http://www.w3.org/ns/ssn/forProperty> <%s> ; <%s> ?at . %s } } "
             "ORDER BY DESC(?at) LIMIT 1"
             % (self.graph, kernel("Intention"), kernel("by"), means,
-               observed_property, kernel("adoptedAt"))))
+               observed_property, kernel("adoptedAt"), narrow)))
         if not latest:
             return False
         age = (datetime.now(timezone.utc)

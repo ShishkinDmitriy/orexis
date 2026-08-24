@@ -399,3 +399,11 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 :Freshness a owl:Class ; rdfs:subClassOf ag:Desire ;
     rdfs:label "freshness want" ;
     rdfs:comment "Wanting a reading of one instrument to exist and to have been taken recently enough to be about now. Repaired by looking and by nothing else — no lever moves a number you cannot see — so an agent that cannot ask this instrument for a reading holds a want with no lever, which is a legitimate state and reported as one." .
+
+#################  Who takes a look  #################
+
+#  The link from the Observe row this package ships to the code that carries it out — the
+#  FAMILY, because an agent may hold two sensing modules and only the one holding a driver
+#  that can be asked will nudge; execution offers the step to every member and the others
+#  answer False. See knowledge/domain/actor.md.
+ag:Observe ag:takenBy :SensingCapability .

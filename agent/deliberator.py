@@ -208,15 +208,36 @@ class Deliberator(Module):
         search. Once the reading is current the stake answers and the pot is dosed or not on
         its merits.
         """
-        mine = [d for d in self.agent.pursuing()
-                if not d.is_duty and d.observed_property == observed_property]
-        desire = (next((d for d in mine if d.is_epistemic and not d.is_met), None)
-                  or next((d for d in mine if not d.is_epistemic), None)
-                  or next(iter(mine), None))
+        desire = self.desire_about(observed_property)
         return self.propose_for(desire) if desire is not None else None
 
+    def desire_about(self, observed_property: str) -> Desire | None:
+        """WHICH of this property's wants is the one to act on — the rule, stated once.
+
+        Asked by `propose_about` and by execution's property door, so the ordering above is
+        one text: an unmet epistemic want first, then the stake, then whatever is left.
+        """
+        mine = [d for d in self.agent.pursuing()
+                if not d.is_duty and d.observed_property == observed_property]
+        return (next((d for d in mine if d.is_epistemic and not d.is_met), None)
+                or next((d for d in mine if not d.is_epistemic), None)
+                or next(iter(mine), None))
+
     def propose_for(self, desire: Desire) -> str | None:
-        """The move for one GOAL, whoever sourced it — the deliberator's real question.
+        """The MEANS of the move for one desire, or None — `decide` projected to its head.
+
+        Kept for every caller that wants only the kind of act; execution wants the row and
+        asks `decide`. Silencing a deliberator means silencing both.
+        """
+        plan = self.decide(desire)
+        return plan.first if plan is not None and plan.steps else None
+
+    def decide(self, desire: Desire) -> planner.Plan | None:
+        """The PLAN for one desire, whoever sourced it — the deliberator's real question.
+
+        Returns the plan as ROWS, because a step is a row and not a means: which lever it
+        goes through is half of what it says, and execution writes that half to the ledger
+        as `ag:through`. None where there is nothing to do, and that None is a decision.
 
         It takes the want itself, so a duty reaches deliberation as what it is: a thing wanted,
         ranked in the same currency, pursued through an affordance like anything else. It is
@@ -252,7 +273,7 @@ class Deliberator(Module):
             #  None here is a DECISION and no longer a hand-off. Every case that used to fall
             #  through to the reflex is either refused at the gates or genuinely means "nothing
             #  I hold moves this", which is a true answer worth leaving in the trace.
-            return self._searched(desire)
+            return self._planned(desire)
         #  Nobody has asked. The holder is waiting for its own watch to be live, and a host
         #  that doses early spends the water where nothing is looking (#132) — so a standing
         #  debt is visible, rankable, and still not actionable until it is presented.
@@ -264,20 +285,21 @@ class Deliberator(Module):
         #  falls out of two rules that never mention each other. A search that answered and
         #  found no move is the evidence the issue demands: the duty stays hot, stays owed,
         #  and is not pursued into a world where serving discharges nothing.
-        if move := self._searched(desire):
-            return move
+        if plan := self._planned(desire):
+            return plan
         #  The search speaks for a duty only when it FOUND a path — a vessel nobody has read
         #  binds no premise, and a premise that cannot bind proves nothing about serving. So
         #  anything short of a plan falls through to the pre-#255 road, unchanged: the
         #  honoured row for this counterparty, and the actuation boundary judges the vessel
-        #  when it pours.
+        #  when it pours. Handed back as a one-row plan labelled HONOURED, which is not a
+        #  search outcome and is not written to the trace: it is the row the duty names.
         for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union):
             if not row.is_chosen and row.for_agent == desire.owed_to:
-                return row.means
+                return planner.Plan(HONOURED, (row,))
         return None
 
-    def _searched(self, desire: Desire) -> str | None:
-        """The move the search found for one desire, or None — which is now always a DECISION.
+    def _planned(self, desire: Desire) -> planner.Plan | None:
+        """The plan the search found for one desire, or None — which is now always a DECISION.
 
         It used to hand back `(answered, move)`, because there were three answers and only two
         would fit in one: take this, take nothing, and *I cannot decide this by simulation*.
@@ -325,7 +347,7 @@ class Deliberator(Module):
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
                           desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
                           else "a duty", plan.outcome, plan.urgency_now, plan.urgency_after)
-            return plan.first
+            return plan
         #  A world reachable and not worth reaching, or no lever pointing at this want at all.
         #  THIS is the decision the reflex could not make, and returning None here is the whole
         #  point rather than a failure to answer — a met desire quietly holding near its pick
@@ -369,3 +391,8 @@ class Deliberator(Module):
 PLAN_QUERY = (Path(__file__).parent / "plan.rq").read_text()
 
 OFFER = AG + "Offer"
+
+#  A duty's fallback plan — the honoured row for its counterparty when the search found no
+#  path. Not one of the planner's outcomes and never in the trace; it labels a row handed to
+#  execution so the ledger's prose says where the step came from.
+HONOURED = "honoured"

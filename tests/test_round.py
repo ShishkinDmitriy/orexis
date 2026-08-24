@@ -862,7 +862,9 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
 
     jti = _win_a_claim(host)
     deliberator = host.deliberator
-    real, deliberator.propose_for = deliberator.propose_for, lambda desire: None
+    #  The PLAN door, which is what execution asks: silencing it is the deliberator proposing
+    #  no move for this duty.
+    real, deliberator.decide = deliberator.decide, lambda desire: None
 
     with caplog.at_level(logging.WARNING):
         host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
@@ -870,7 +872,7 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
     assert ledger_of(host).owed(), "undischarged: nothing went out"
     assert jti in host.hosting().held, "and still held, because it is still owed"
 
-    deliberator.propose_for = real
+    deliberator.decide = real
     stock_reading(host, 4.0)
     assert ledger_of(host).owed() == [], "the vessel reported, the answer changed, the debt is paid"
     assert jti not in host.hosting().held

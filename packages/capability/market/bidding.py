@@ -432,43 +432,75 @@ class BiddingModule(Module):
                 f"I allow for the cadence I set — it has gone quiet")
 
     def submit(self, moisture: float) -> None:
-        rnd, self.pending = self.pending, None
+        """A round is open and I hold a fresh reading: EXECUTE, do not decide.
+
+        The whether used to be asked here — a search inside the actor, on every round, over
+        the same world the keeper's tick had already searched. Now an `Acquire` that stands is
+        a commitment spanning rounds (that was always its documented meaning), so this hands
+        it straight to `take`; only a round arriving with nothing standing asks execution to
+        plan once and commit. `value_bid` still cedes at or above the aim inside `_bid`, so
+        the sizing agrees with the deciding without either being the other's authority.
+        """
+        from agent import execution
+
+        if self.pending is None:
+            return
         if self._deadline:
             self._deadline.stop()
-        if rnd is None:
-            return
-        auction_id, market = rnd["auction_id"], rnd["market"]
-
-        # The WHETHER is the deliberator's, and the cede this module used to compute for itself
-        # — below the aim, pursue; otherwise nothing — now comes out of a search that weighs
-        # the world a purchase would reach. `value_bid` still cedes at or above the aim below,
-        # so the sizing agrees with the deciding without either being the other's authority.
-        if self._next_move() != ACQUIRE:
+        keeper = self._keeper()
+        stake = next((d for d in self.agent.pursuing()
+                      if not d.is_duty and not d.is_epistemic
+                      and d.observed_property == self.about), None)
+        standing = keeper.standing(ACQUIRE, self.about) if keeper is not None else []
+        if standing and stake is not None:
+            execution.take_standing(self.agent, standing[0], stake)
+        elif stake is not None:
+            execution.pursue(self.agent, stake)
+        if self.pending is not None:
+            #  Nobody took it: the search proposed nothing, or the impulse was absorbed
+            #  within patience (a claim just won). Either is a decision, and the round passes.
             self.log.info("auction %s: moisture %.3f — deliberation chose not to pursue",
-                          auction_id, moisture)
-            return
+                          self.pending["auction_id"], moisture)
+            self.pending = None
 
+    def take(self, row, desire, intention: str) -> bool:
+        """Carry out a committed Acquire: bid in the round that is open, if one is.
+
+        The actor for `ag:Acquire` (knowledge/domain/actor.md). No round pending is "not
+        now": the intention stands, and the next offer runs `submit`, which finds it standing
+        and comes back here — a bid adopted on the keeper's tick is answered by the market's
+        knock without a second search. The reading is the one in hand: `on_offer` looked
+        first, and a stale one is never bid on.
+        """
+        if row.means != ACQUIRE or row.observed_property != self.about:
+            return False
+        if self.pending is None:
+            self.log.info("Acquire committed and no round open — standing until one is")
+            return False
+        sensing = self.agent.provider(SENSING)
+        reading = (sensing.fresh_reading(self.me.acts_for, self.about)
+                   if sensing is not None else None)
+        if reading is None:
+            return False
+        return self._bid(reading.value)
+
+    def _bid(self, moisture: float) -> bool:
+        """Size and publish one bid into the pending round. True if one left."""
+        rnd, self.pending = self.pending, None
+        if rnd is None:
+            return False
+        auction_id, market = rnd["auction_id"], rnd["market"]
         aim = self._my_aim()
         if aim is None:
             self.log.info("auction %s: I hold no aim in %s — sitting out",
                           auction_id, self.about)
-            return
-
+            return False
         bid = value_bid(moisture, aim, self.beliefs, self.balance,
                         litres_per_unit=self.conversion)
         if bid is None:
             self.log.info("auction %s: moisture %.3f, aim %.2f — cede",
                           auction_id, moisture, aim)
-            return
-
-        # The commitment is to the GAP, not to the round: adopted with the first bid, absorbed
-        # for every further bid while it stands (that is the keeper's patience at work — one
-        # commitment spanning several rounds is one intention), resolved by the claim.
-        if keeper := self._keeper():
-            keeper.adopt(ACQUIRE, self.about,
-                         f"bid {bid.max_qty_l}L @ {bid.max_price_per_l}/L in auction "
-                         f"{auction_id} to close my deficit below {aim}")
-
+            return False
         self.log.info("auction %s: moisture %.3f -> bid %.3f L @ €%.3f",
                       auction_id, moisture, bid.max_qty_l, bid.max_price_per_l)
         self.publish(f"{market.bid_topic}/{self.me.agent_id}", {
@@ -478,6 +510,7 @@ class BiddingModule(Module):
             "max_price_per_l": bid.max_price_per_l,
             "balance": round(self.balance, 4),
         })
+        return True
 
     # --- what came back ---
 

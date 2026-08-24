@@ -29,9 +29,9 @@ They are rows in a graph now, each with `adoptedAt`, a resolution (`satisfied` |
 a `becauseOf` in both directions, because a commitment abandoned without a reason is
 indistinguishable from one forgotten.
 
-**The keeper also ticks (#208)**: on its own patience clock it collects what the modules'
-`notices()` report — sensing's unobserved-or-stale channels first — hands each gap to the one
-deliberator, and commits what it proposes. Deliberation stopped being something only the
+**The keeper also ticks (#208)**: on its own patience clock it hands every want to
+[execution](/domain/execution.md), which plans, commits the head and hands it to its actor —
+for every means, not only the look. Deliberation stopped being something only the
 market can start: a marketless property's watching reaches this ledger too, Observe adopted
 when stale and satisfied by the reading, whoever caused the look. A healthy society's gap
 entries are ZERO — they mark need, not routine.
@@ -127,9 +127,10 @@ records.
 
 # What it is not
 
-- **Not a decider.** Nothing here chooses what to commit to; whoever acts calls `adopt` when it
-  acts, and the *whether* lives in [deliberation](/domain/deliberation.md) — Reflex today, a
-  model member later. Keeping and deciding share a granting premise and stay two capabilities
+- **Not a decider.** Nothing here chooses what to commit to; [execution](/domain/execution.md)
+  calls `adopt` with the head of a plan, and the *whether* lives in
+  [deliberation](/domain/deliberation.md). A row written here carries `ag:through` the lever
+  that plan chose, so the [actor](/domain/actor.md) handed it knows which valve or venue. Keeping and deciding share a granting premise and stay two capabilities
   because their replaceable parts differ.
 - **Not public.** The ledger is a graph of the agent's own, like its beliefs and its revisions:
   an intention disclosed is strategy leaked, and the **bid is the public face** of an intention
