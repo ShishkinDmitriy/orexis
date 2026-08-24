@@ -71,8 +71,9 @@ agent's watching of a property no market relieves lived in cadence machinery and
 [intention](/domain/intention.md) ledger. **The sovereign inspecting intentions saw market conduct
 only.** Deciding and remembering stay singular, and a source-scan test pins it.
 
-Only Observe is carried out from the tick. An Acquire needs a round nobody may convene from this
-side, which is the lot-is-the-host's-standing-offer seam rather than this mechanism's.
+Every move is carried out from the tick through [execution](/domain/execution.md). An Acquire
+still needs a round nobody may convene from this side — the lot-is-the-host's-standing-offer
+seam — so its intention stands until one arrives, and the actor answers that offer from it.
 
 # A healthy society's gap count is zero
 

@@ -51,6 +51,8 @@ from agent.observation import Observations
 from agent.ontology import INSTRUMENTS_GRAPH, beliefs_graph
 from agent.store import bindings
 
+_OBSERVE = "http://example.org/orexis#Observe"
+
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .terms import (FRESHNESS, LISTENING, PUSH, SCHEDULED, STALE_AFTER_S,
                     SUBSCRIBING)
@@ -911,6 +913,23 @@ class SubscribingModule(SensingModule):
         for sensor in self.sensors:
             if self.drivers[sensor.uri]:
                 self.drivers[sensor.uri].sense_now(sensor)
+
+    def take(self, row, desire, intention: str) -> bool:
+        """Carry out a committed look: nudge the driver that watches this row's lever.
+
+        The actor for `ag:Observe` (knowledge/domain/actor.md) — the FAMILY is named, so the
+        listening module is offered the same row and declines, and this one answers True
+        only where a driver exists to nudge. The look is satisfied by the reading arriving,
+        whoever caused it, exactly as before: `Keeper.on_reading_recorded` resolves it.
+        """
+        if row.means != _OBSERVE:
+            return False
+        nudged = False
+        for sensor in self.sensors:
+            if sensor.observes == row.observed_property and self.drivers[sensor.uri]:
+                self.drivers[sensor.uri].sense_now(sensor)
+                nudged = True
+        return nudged
 
     def on_belief_revised(self, belief_term: str, value) -> None:
         """Take up a re-picked interval at once, rather than at the next restart.

@@ -48,7 +48,8 @@ whole reason it must be exact:
 
 - an **affordance** row offers one — *what could I do*;
 - an **effect** rule attaches to one via `ag:effectOf` — *what would that make true*;
-- an **[intention](/domain/intention.md)** commits to one via `ag:by` — *what I am doing about it*.
+- an **[intention](/domain/intention.md)** commits to one via `ag:by` — *what I am doing about it*;
+- an **[actor](/domain/actor.md)** is linked to one via `ag:takenBy` — *who carries it out*.
 
 So a plan's step, the rule that simulated it, and the ledger row that remembers it all name the
 same term, and a reader can join them without anything storing a correspondence.

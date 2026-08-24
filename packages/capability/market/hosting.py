@@ -497,32 +497,46 @@ SELECT ?p WHERE {{
         if claim is None:
             return
         ledger = self.agent.owing
-        deliberator = self.agent.deliberator
-        if ledger is not None:
-            desire = next((g for g in ledger.duties() if g.claim == jti), None)
-            if desire is None:
-                return
-            move = deliberator.propose_for(desire)
-            if move is None:
-                # Hot, owed, and unpursued. It stays in `held`, so the moment the answer
-                # changes — stock arrives, a lever comes back — the sweep below serves it.
-                self.log.warning(
-                    "claim %s stands unserved (urgency %.2f, owed to %s): %s proposed no move",
-                    jti, desire.urgency, desire.owed_to.rsplit("#", 1)[-1], deliberator.name)
-                return
-            if move != _APPLY:
-                # The plan's FIRST step is not the serve (#255): a host owing water it does
-                # not hold plans the refill, and pouring now would spend a dry vessel's
-                # standing into a claim it cannot discharge. The claim stays held — the
-                # refill landing is exactly the reading the sweep below re-serves on.
-                self.log.info(
-                    "claim %s waits on the plan's first step (%s) — held, not poured",
-                    jti, move.rsplit("#", 1)[-1])
-                return
-        del self.held[jti]
+        if ledger is None:
+            self._serve(jti, why)
+            return
+        desire = next((g for g in ledger.duties() if g.claim == jti), None)
+        if desire is None:
+            return
+        #  THROUGH EXECUTION: the search sees the honoured row AND this agent's own levers,
+        #  so a host owing water it does not hold plans the refill — an Acquire, committed and
+        #  handed to bidding, which stands until the upstream round — and the claim stays held
+        #  for the sweep that re-runs this when stock arrives. A serve is the plan's head only
+        #  when the vessel can honour it, and `take` below is handed exactly that row.
+        from agent import execution
+
+        if execution.pursue(self.agent, desire) is None and jti in self.held:
+            # Hot, owed, and unpursued — or absorbed within patience. It stays in `held`, so
+            # the moment the answer changes the sweep serves it.
+            self.log.warning(
+                "claim %s stands unserved (urgency %.2f, owed to %s): nothing was committed",
+                jti, desire.urgency, desire.owed_to.rsplit("#", 1)[-1])
+
+    def take(self, row, desire, intention: str) -> bool:
+        """Carry out a committed serve: pour the claim this duty names.
+
+        The actor for `ag:Apply` on the HONOURED row (knowledge/domain/actor.md). A plan
+        whose head is the refill hands that row to bidding, not here; this answers only a
+        serve, and only for a claim still held — a duty whose claim was never presented is
+        not this module's to invent.
+        """
+        if row.means != _APPLY or not desire.claim or desire.claim not in self.held:
+            return False
+        self._serve(desire.claim, f"the plan's head — {row.mode.rsplit('#', 1)[-1]}")
+        if (keeper := self._keeper()) is not None:
+            keeper.satisfy(_APPLY, row.observed_property, "served", desire=desire.uri)
+        return True
+
+    def _serve(self, jti: str, why: str) -> None:
+        claim = self.held.pop(jti)
         self.log.info("serving claim %s (%.3f L) — %s", jti, claim.amount_l, why)
         self.redeem([claim])
-        if ledger is not None:
+        if (ledger := self.agent.owing) is not None:
             ledger.discharge(jti)
 
     def _issue(self, market, auction_id: str, claim) -> None:

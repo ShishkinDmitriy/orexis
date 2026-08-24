@@ -145,30 +145,56 @@ class ActuationModule(Module):
             return
         if self.me.actuator_for(self._subject_of(self.me.agent_id)) is None:
             return
-        #  ASKED ABOUT THE PROPERTY, never handed the number. The whether is a search over the
-        #  worlds each lever would reach, scored against what the agent BELIEVES — and the
-        #  reading just recorded is what it believes, because `Observations.record` writes
-        #  before it announces. Handing the value over was the reflex's door and steered by a
-        #  number the search would not have judged.
-        if self.agent.deliberator.propose_about(observed_property) != _ACTUATE:
-            return
-        litres = self.dose_for(observed_property, value)
-        if litres is None or litres <= EPS:
-            return
+        #  THROUGH EXECUTION, never a decision of this module's own: the reading just
+        #  recorded is what the agent believes (`Observations.record` writes before it
+        #  announces), the search decides against it, the keeper commits, and `take` below
+        #  is handed the row. A standing Actuate is not re-taken here — a dose is an act
+        #  whose sizing moves with every reading, so it is re-planned, and an impulse within
+        #  patience is absorbed before anything is written.
+        from agent import execution
+
+        execution.pursue_about(self.agent, observed_property)
+
+    def absorbs(self, row, desire) -> bool:
+        """A dose within patience is the same impulse — asked of the LEDGER, any outcome.
+
+        Actuate is satisfied at the command, so it never stands and `adopt` would absorb
+        nothing: the 584-dose morning. `within_patience` reads the newest Actuate row for this
+        property, standing or resolved, which is the guard that closed it — kept here because
+        which acts resolve instantly is a fact about the act, not about the kernel.
+        """
+        keeper = self.agent.keeper
+        return (row.means == _ACTUATE and keeper is not None
+                and keeper.within_patience(_ACTUATE, row.observed_property))
+
+    def take(self, row, desire, intention: str) -> bool:
+        """Carry out a committed self-dose: size it from the reading in hand and command it.
+
+        The actor for `ag:Actuate` (knowledge/domain/actor.md). Everything the market path
+        earns, a self-dose keeps: the act goes through `redeem` on a SELF-CLAIM — signed by
+        both keys, verified in the device, confirmed on the status channel, counted when
+        silent — and opens an expectation on the end. An unconfirmed self-dose is not a
+        delivered one either; the REA event stands, it merely fulfils no exchange.
+        """
+        if row.means != _ACTUATE:
+            return False
+        observed_property = row.observed_property
+        reading = self.agent.beliefs.current_reading(self.me.acts_for, observed_property)
+        if reading is None:
+            return False
+        value = reading.value
         keeper = self.agent.keeper
         if keeper is not None:
             from datetime import datetime, timezone
             now = datetime.now(timezone.utc)
             if any(now < w.deadline for w in keeper.open_expectations(observed_property)):
-                return  # my own dose has not answered yet — the #167 guard, rung 2
-            if keeper.within_patience(_ACTUATE, observed_property):
-                return  # the same impulse (the 584-dose morning: a satisfied Actuate is
-                        # still a RECENT one, and patience reads the ledger, not the standing)
-            adopted = keeper.adopt(_ACTUATE, observed_property,
-                                   f"self-dose {litres}L toward my aim — lever "
-                                   f"and source both mine, no market to ask")
-            if adopted is None:
-                return  # standing within patience — the amortisation at work
+                return False  # my own dose has not answered yet — the #167 guard, rung 2
+        litres = self.dose_for(observed_property, value)
+        if litres is None or litres <= EPS:
+            if keeper is not None:
+                keeper.drop(_ACTUATE, observed_property,
+                            "the dose sized to nothing from the reading in hand")
+            return False
         jti = uuid.uuid4().hex
         cmd = self.redeem(Claim(sub=self.me.agent_id, scope="actuate:self",
                                 amount_l=litres, debit=0.0,
@@ -183,6 +209,7 @@ class ActuationModule(Module):
                               lands_after_s=effects.lands_after(
                                   self.agent.beliefs, _ACTUATE, me=f"<{self.me.uri}>",
                                   subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
+        return True
 
     def dose_for(self, observed_property: str, value: float) -> float | None:
         """How much I would pour, given where this property stands — the size of ONE act.

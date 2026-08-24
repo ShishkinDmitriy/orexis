@@ -173,9 +173,10 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
     #  Both doors: "silenced" means it answers nothing whatever it is asked. Patching only
     #  the one this scenario happens to use would pass while saying less than it claims, and
     #  would break silently the next time a caller changed which question it asks. They are
-    #  the desire door and the property door now — the bare-value one went with the reflex.
+    #  the desire door and the property door, and `decide`, the PLAN door execution asks.
     monkeypatch.setattr(decider_of(fern), "propose_about", lambda prop: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
+    monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
 
@@ -189,9 +190,10 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     #  Both doors: "silenced" means it answers nothing whatever it is asked. Patching only
     #  the one this scenario happens to use would pass while saying less than it claims, and
     #  would break silently the next time a caller changed which question it asks. They are
-    #  the desire door and the property door now — the bare-value one went with the reflex.
+    #  the desire door and the property door, and `decide`, the PLAN door execution asks.
     monkeypatch.setattr(decider_of(fern), "propose_about", lambda prop: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
+    monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
     assert fern.bidding().pending is None
     # and no observe intention was adopted — nothing committed to a wait nobody is waiting on
