@@ -88,13 +88,10 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
 
 # Seams left open
 
-- **The round is still an event, not a fact.** An `Acquire` adopted from the tick stands until a
-  round arrives, and its actor answers the next offer. Nothing in any store says a round is open,
-  so the Acquire row's premise is *I could buy*, never *I can buy now*. Writing the open round
-  into belief — with its deadline, retracted at close — would let the row's walk carry that hop
-  and the convening seam in
-  [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md)
-  be reached from the plan. That is a decision about the market, taken there.
+- ~~**The round is still an event, not a fact.**~~ Closed by
+  [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md):
+  a round is a belief on both sides, the Acquire row exists only while one is open, and
+  nothing stands to buy between rounds.
 - **The tail is trace, not ledger.** `ag:plannedThen` would be one triple and a reader outside
   could see a two-step plan on the intention that heads it. Not written until something reads it:
   a projection nobody consumes is a claim that can rot.

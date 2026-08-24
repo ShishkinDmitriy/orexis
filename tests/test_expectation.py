@@ -40,7 +40,7 @@ def market_of(agent):
 def win(agent, auction="r1", amount=0.5, debit=0.2):
     """One full acquire: offer in, bid out, claim back."""
     market = market_of(agent)
-    agent.deliver(market.offer_topic, {"auction_id": auction, "closes_in_s": 3})
+    agent.deliver(market.offer_topic, {"auction_id": auction, "closes_in_s": 30})
     agent.deliver(f"{market.claim_topic}/fern", {"amount_l": amount, "debit": debit})
 
 
@@ -180,7 +180,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
 
     market = market_of(thirsty)
     keeper = keeper_of(thirsty)
-    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v1", "amount_l": 0.5, "debit": 0.2})
 
@@ -208,7 +208,7 @@ def test_the_bounded_wait_redeems_blind_rather_than_never(thirsty):
     be confirmed within one full cycle is not going to be, and a dose delayed forever is worse
     than a dose unobserved. The deadline presents the claim and says it ran blind."""
     market = market_of(thirsty)
-    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v2", "amount_l": 0.5, "debit": 0.2})
     assert thirsty.sent.to(f"{market.redeem_topic}/fern") == []
@@ -224,7 +224,7 @@ def test_a_held_claim_is_maximum_urgency(thirsty):
     presentation → the expectation takes over the same answer without a gap."""
     market = market_of(thirsty)
     p = thirsty.subscribing()
-    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v3", "amount_l": 0.5, "debit": 0.2})
     assert keeper_of(thirsty).urgency(thirsty.me.acts_for, MOISTURE, 0.55) == 1.0
@@ -277,13 +277,13 @@ def test_no_new_purchase_while_my_own_dose_is_unanswered(thirsty, caplog):
     win(thirsty)                                        # watch open, dose in flight
     bids = len(thirsty.sent.to(f"{market.bid_topic}/fern"))
     with caplog.at_level(logging.INFO, logger="fern.bidding"):
-        thirsty.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 3})
+        thirsty.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 30})
     assert len(thirsty.sent.to(f"{market.bid_topic}/fern")) == bids, \
         "a phantom deficit was priced while my own dose was unanswered"
     assert "my own dose has not answered yet" in caplog.text
 
     thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.42})   # the world answers
-    thirsty.deliver(market.offer_topic, {"auction_id": "r3", "closes_in_s": 3})
+    thirsty.deliver(market.offer_topic, {"auction_id": "r3", "closes_in_s": 30})
     assert len(thirsty.sent.to(f"{market.bid_topic}/fern")) == bids + 1
 
 
@@ -296,7 +296,7 @@ def test_a_dose_past_its_deadline_frees_the_bidder(monkeypatch):
     market = market_of(fern)
     win(fern)
     bids = len(fern.sent.to(f"{market.bid_topic}/fern"))
-    fern.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == bids + 1
 
 

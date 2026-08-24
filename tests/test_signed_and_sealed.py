@@ -104,7 +104,7 @@ def test_a_winner_without_a_published_sealing_key_gets_plaintext(make, monkeypat
 def test_a_presentation_carries_the_winners_own_signature(keyed, make):
     fern = make("fern", keyed)
     market = market_of(fern)
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     fern.deliver(f"{market.claim_topic}/fern", {"jti": "v1", "amount_l": 0.5, "debit": 0.2})
     fern.bidding()._present_blind()
     presented = fern.sent.to(f"{market.redeem_topic}/fern")[-1]

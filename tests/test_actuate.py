@@ -12,7 +12,8 @@ import pytest
 from agent.menu import menu_of
 from agent.deliberator import ACTUATE, ACQUIRE, OBSERVE
 
-from conftest import build_agent, genesis_store, desires_build
+from agent.ontology import beliefs_graph
+from conftest import build_agent, genesis_store, desires_build, open_round_for
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -41,7 +42,7 @@ def test_the_menu_offers_actuate_where_both_chains_are_mine():
     mine and that no market offers as its lot. Both end at the gardener, so the rung appears —
     beside Observe, with the domain's one stated physics atom as its direction."""
     st = genesis_store(world="loner")
-    rows = menu_of(st.query, GARDENER, desires_build(st, "gardener").query_union)
+    rows = menu_of(st.query, GARDENER, desires_build(st, "gardener").query_union, beliefs_graph("gardener"))
     assert [(r.means.rsplit("#", 1)[-1], r.direction and r.direction.rsplit("#", 1)[-1])
             for r in rows if r.observed_property == MOIST] == [
         ("Actuate", "Raises"), ("Observe", None)]
@@ -62,7 +63,7 @@ def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
     st.clear_graph(WORLD_DERIVED_GRAPH)
     for rule in loader.rule_files():
         st.update(genesis.substitute(rule.read_text(), st))
-    rows = menu_of(st.query, GARDENER, desires_build(st, "gardener").query_union)
+    rows = menu_of(st.query, GARDENER, desires_build(st, "gardener").query_union, beliefs_graph("gardener"))
     assert not any(r.means == ACTUATE for r in rows), \
         "a source a market offers is not yours to open free, whoever holds the pump"
 
@@ -80,7 +81,8 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
         <{ns}fern_pump> <http://example.org/orexis/actuation#actuates> <{ns}fern> ;
             <http://example.org/orexis/actuation#drawsFrom> <{ns}barrel1> .
     }} }}""")
-    rows = [r for r in menu_of(st.query, ns + "fern_agent", desires_build(st, "fern").query_union)
+    open_round_for(st, "fern")
+    rows = [r for r in menu_of(st.query, ns + "fern_agent", desires_build(st, "fern").query_union, beliefs_graph("fern"))
             if r.observed_property == MOIST]
     assert any(r.means == ACQUIRE for r in rows)
     assert not any(r.means == ACTUATE for r in rows), \

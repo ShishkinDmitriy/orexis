@@ -73,7 +73,8 @@ only.** Deciding and remembering stay singular, and a source-scan test pins it.
 
 Every move is carried out from the tick through [execution](/domain/execution.md). An Acquire
 still needs a round nobody may convene from this side — the lot-is-the-host's-standing-offer
-seam — so its intention stands until one arrives, and the actor answers that offer from it.
+seam — and since a round is a fact its row exists only while one is open, so the tick commits
+nothing to buy between rounds and the want simply stays hot.
 
 # A healthy society's gap count is zero
 

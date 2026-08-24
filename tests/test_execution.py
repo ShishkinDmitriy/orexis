@@ -13,7 +13,9 @@ import rdflib
 from agent import execution, loader, menu
 from agent.planner import Planner
 
-from conftest import MOISTURE, build_agent, genesis_store
+from agent.ontology import beliefs_graph
+
+from conftest import MOISTURE, build_agent, genesis_store, open_round_for
 
 ACQUIRE = "http://example.org/orexis#Acquire"
 OBSERVE = "http://example.org/orexis#Observe"
@@ -35,32 +37,55 @@ def stake_of(agent, prop=MOISTURE):
 # --- an intention is the plan's head, lever included ------------------------------------------
 
 
-def test_the_tick_commits_every_move_and_not_only_the_look(monkeypatch):
-    """The keeper's tick used to carry out Observe alone and drop an Acquire on the floor. A
-    thirsty fern with a fresh reading now has an Acquire STANDING after one tick — committed
-    through the venue the plan chose — and it stands because no round is open to bid in."""
+def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeypatch):
+    """Since #358 the buying row exists only while a round is open. A thirsty fern with no
+    round to bid in commits NOTHING on the tick — the want stays hot, the trace shows the
+    look weighed and no Acquire on the menu at all, and nothing stands waiting for the market
+    to knock."""
+    from agent.store import bindings
+
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
     keeper.deliberate_on_gaps()
-    acquires = keeper.standing(means=ACQUIRE, observed_property=MOISTURE)
-    assert len(acquires) == 1, "the plan's head is committed, whoever will carry it out"
-    assert acquires[0].via == fern.me.markets[0].uri, "and the ledger says THROUGH which venue"
-    assert fern.sent.to(f"{fern.me.markets[0].bid_topic}/fern") == [], \
-        "nothing to bid in yet — the actor said 'not now' and the intention stands"
+    assert keeper.standing(means=ACQUIRE) == [], "nothing to bid in, nothing committed"
+    assert fern.sent.to(f"{fern.me.markets[0].bid_topic}/fern") == []
+    weighed = {r["m"] for r in bindings(fern.beliefs.query_union(
+        "SELECT DISTINCT ?m WHERE { ?c ag:wouldTake ?m }"))}
+    assert OBSERVE in weighed and ACQUIRE not in weighed, \
+        "the look was weighed; buying was not on the menu, not merely refused"
 
 
-def test_a_round_is_answered_from_what_stands_without_a_second_search(monkeypatch):
-    """The amortisation, finally for Acquire: an offer arriving while the commitment stands is
-    executed — look, then bid — and the search does not run again."""
+def test_the_tick_bids_when_a_round_is_open(monkeypatch):
+    """And with a round open the tick commits the Acquire THROUGH the venue and the actor bids
+    at once — the row's precondition holds, so the intention is executable when written."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
-    keeper_of(fern).deliberate_on_gaps()
-    assert keeper_of(fern).standing(means=ACQUIRE)
-    passes = []
-    monkeypatch.setattr(Planner, "plan", lambda self, desire: passes.append(desire) or None)
+    open_round_for(fern, "fern")
+    keeper = keeper_of(fern)
+    keeper.deliberate_on_gaps()
+    acquires = keeper.standing(means=ACQUIRE, observed_property=MOISTURE)
+    assert len(acquires) == 1 and acquires[0].via == fern.me.markets[0].uri
+    assert len(fern.sent.to(f"{fern.me.markets[0].bid_topic}/fern")) == 1
+
+
+def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
+    """One search per round: the offer plans and bids, and the tick that follows finds the
+    Acquire standing and searches nothing again."""
+    fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     market = fern.me.markets[0]
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
-    assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1, "the standing Acquire is taken"
-    assert passes == [], "and nothing was re-decided on the way"
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
+    assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
+    assert keeper_of(fern).standing(means=ACQUIRE)
+    from agent.planner import NOT_BETTER, Plan
+
+    passes = []
+    monkeypatch.setattr(Planner, "plan",
+                        lambda self, desire: passes.append(desire) or Plan(NOT_BETTER))
+    keeper_of(fern).deliberate_on_gaps()
+    assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1, "no second bid"
+    #  The freshness want is met and the stake stands, so the tick has nothing to search
+    #  FOR; the one pass it may run is the stake's, which `adopt` then absorbs.
+    assert not [d for d in passes if not d.is_epistemic] or \
+        len(keeper_of(fern).standing(means=ACQUIRE)) == 1
 
 
 def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
@@ -68,7 +93,7 @@ def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
     — and the intention it leaves behind is the same row the tick would have written."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     market = fern.me.markets[0]
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
     standing = keeper_of(fern).standing(means=ACQUIRE, observed_property=MOISTURE)
     assert len(standing) == 1 and standing[0].via == market.uri
@@ -80,7 +105,7 @@ def test_the_bidder_holds_no_opinion_of_its_own(monkeypatch):
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     monkeypatch.setattr(fern.deliberator, "decide", lambda desire: None)
     market = fern.me.markets[0]
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
     assert keeper_of(fern).standing(means=ACQUIRE) == []
 
@@ -109,7 +134,9 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
                             ("loner", "gardener")):
         monkeypatch.setenv("OREXIS_WORLD", world)
         agent = build_agent(agent_id, genesis_store(world=world), monkeypatch)
-        for row in menu.menu_of(agent.beliefs.query, agent.me.uri, agent.desires.query_union):
+        open_round_for(agent, agent_id)
+        for row in menu.menu_of(agent.beliefs.query, agent.me.uri, agent.desires.query_union,
+                                beliefs_graph(agent.id)):
             rows_seen += 1
             assert row.means in takers, f"{world}/{agent_id}: {row.means} has no ag:takenBy"
             family = execution.taken_by(agent.beliefs.query, row.means)

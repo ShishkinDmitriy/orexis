@@ -537,6 +537,20 @@ SELECT ?p WHERE {{
         """
         if row.means != _APPLY or not desire.claim or desire.claim not in self.held:
             return False
+        #  A VESSEL I KNOW IS TOO LOW IS NOT POURED FROM. The search used to keep this claim
+        #  held by planning the refill first; since a round is a fact (#358) there may be no
+        #  upstream round to plan into, the search finds no path, and the duty's own row is
+        #  what reaches here. The actor is the boundary then: what I know of my stock says the
+        #  claim cannot be honoured, so it stays held for the reading that changes that. A
+        #  vessel I have never read keeps the old arrangement and is judged by the pour.
+        claim = self.held[desire.claim]
+        market = next((m for m in self.markets if m.uri == row.via or
+                       self.stock_property.get(m.uri)), None)
+        stock = self._stock_of(market) if market is not None else None
+        if stock is not None and stock + EPS < claim.amount_l:
+            self.log.info("claim %s waits — my vessel holds %.3f L and it asks %.3f L",
+                          desire.claim, stock, claim.amount_l)
+            return False
         self._serve(desire.claim, "the plan's head — a duty's row")
         if (keeper := self._keeper()) is not None:
             keeper.satisfy(_APPLY, row.observed_property, "served", desire=desire.uri)

@@ -47,7 +47,7 @@ standing intention is what makes one affordable: committed means not re-consulte
 | means | the act | adopted | resolved |
 |---|---|---|---|
 | `ag:Observe` | get a reading where the gap is unmeasured or stale | the bidder starts waiting on its sensor | the look comes back (satisfied) or the auction closes first (dropped, with why) |
-| `ag:Acquire` | bid for what would reduce a gap | the first bid flies | the claim arrives |
+| `ag:Acquire` | bid for what would reduce a gap | a round is open and the search picks it — by the offer, or by the tick while it stands | the claim arrives (satisfied), or the round closes without one (dropped, whether told or by the clock) |
 | `ag:Apply` | spend a held claim against the world | the claim arrives — holding IS the intention | the claim is presented on the redeem channel (watch live, or the bounded wait) |
 | `ag:Offer` | open a round owed on a hosted venue (#206) | a LOW arrives at a dry vessel — the deferral IS the debt | the refill lands and the round opens; recovered from the ledger if the process that owed it died |
 | `ag:Actuate` | move it myself — lever and resource both mine (#190) | the search finds this rung reaches a better world than buying | the watch on the end is judged — met or unmet — the row standing from the command until then (#353); the dose itself co-signed and confirmed like any other |

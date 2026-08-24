@@ -24,7 +24,7 @@ from agent.ontology import DELIBERATION_GRAPH, SENSED_GRAPH
 from agent import planner as search, trace
 from agent.planner import Planner
 
-from conftest import build_agent, genesis_store
+from conftest import build_agent, genesis_store, open_round_for
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -151,6 +151,7 @@ def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defe
               % (ACTIONS_GRAPH, ACTIONS_GRAPH))
 
     fern = build_agent("fern", st, monkeypatch)
+    open_round_for(fern, "fern")
     deducer = next(m for m in fern.modules if m.name == "desire")
     desire = next(g for g in fern.pursuing()
                   if g.observed_property == MOISTURE and not g.is_epistemic)
@@ -280,6 +281,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
     fern = build_agent("fern", st, monkeypatch)
+    open_round_for(fern, "fern")
     deducer = next(m for m in fern.modules if m.name == "desire")
     desire = next(g for g in fern.pursuing()
                   if g.observed_property == MOISTURE and not g.is_epistemic)
@@ -310,6 +312,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     fern = build_agent("fern", genesis_store(), monkeypatch)
+    open_round_for(fern, "fern")
     decider = fern.deliberator
 
     #  fern aims at 0.55, and the store holds NO reading — which is the arrangement that makes

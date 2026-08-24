@@ -59,8 +59,15 @@ things follow without a line of policy:
 - the keeper's tick commits an Acquire only when one is executable, and `bidding.take` loses
   its "no round pending" branch;
 - an Acquire intention means *bid in this round*: adopted when the offer is heard (the offer
-  handler runs execution, as it does today), satisfied by the claim, dropped at close — and
+  handler runs execution, as it does today) or by the tick while one is open, satisfied by the
+  claim, dropped at close — told by a claim, or by the clock, since a loser hears nothing — and
   between rounds the desire stays hot and nothing stands, which is the truth;
+- the gate reasons from ACTIONS, not rows: a menu at genesis has no round in it, so
+  `orexis-validate` refuses an action that offers rows and states no effect by reading the
+  node, not the menu of the moment;
+- an actor is the last boundary: a host handed a duty's row whose vessel it knows is too low
+  keeps the claim held, where the search used to keep it by planning a refill it may now have no
+  round to plan into;
 - the convening ceiling becomes visible in the trace rather than in a standing row: a plant
   that wants water and has no round reads `no candidate`, which is the finding the standing
   Acquire was hiding.

@@ -50,7 +50,8 @@ market:Acquiring
     a ag:Action ;
     ag:means ag:Acquire ;
 
-    #  AVAILABLE in a market I bid in WHOSE WINNINGS CAN PHYSICALLY REACH MY SUBJECT: the host
+    #  AVAILABLE while a ROUND IS OPEN in a market I bid in WHOSE WINNINGS CAN PHYSICALLY REACH
+    #  MY SUBJECT: the host
     #  holds an actuator plumbed to my own pot, so opening it puts the good where I am. Deduced
     #  link by link; only the last — that the good RAISES this property — is stated, once, by
     #  the domain, because it is physics. The valuation joins through the venue's good (#198):
@@ -68,6 +69,12 @@ market:Acquiring
           ?valuation market:ofGood ?good ;
                      market:aboutProperty ?property ;
                      market:direction ?direction .
+          #  AND A ROUND IS OPEN (#358). The hop the walk was missing: without it the row said
+          #  "I could buy here", and the keeper committed an Acquire that then waited for the
+          #  market to knock. The round is what THIS agent was told, in its own graph, so the
+          #  hop names $beliefs — a bidder that lost is told nothing, and the clock ends it.
+          GRAPH $beliefs { ?via market:hasRound ?round . ?round market:closesAt ?closes }
+          FILTER(?closes > NOW())
         }""" ;
 
     #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).

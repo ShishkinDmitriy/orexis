@@ -106,7 +106,7 @@ def test_a_wait_the_auction_outlives_is_dropped_with_the_reason(make):
 def test_a_claim_satisfies_the_acquisition(make):
     fern = make("fern", _reading(0.10))
     market = market_of(fern)
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     keeper = keeper_of(fern)
     assert len(keeper.standing(means=ACQUIRE)) == 1
 
@@ -127,8 +127,8 @@ def test_within_its_patience_a_second_impulse_is_absorbed(make):
     re-decided."""
     fern = make("fern", _reading(0.10))
     market = market_of(fern)
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
-    fern.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
+    fern.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 30})
     keeper = keeper_of(fern)
     assert len(keeper.standing(means=ACQUIRE)) == 1
     # both bids still flew — in phase 3 the ledger records and never gates
@@ -164,7 +164,7 @@ def test_intentions_are_nobody_elses_to_read(make):
     """Not public: the bid is the public face of an intention to acquire, never the intention.
     An unqualified pattern — what any peer's query amounts to — finds nothing."""
     fern = make("fern", _reading(0.10))
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert intentions_graph("fern") not in fern.beliefs.public_graphs()
     from agent.store import bindings
     assert bindings(fern.beliefs.query(
@@ -180,7 +180,7 @@ def test_the_agent_reports_what_stands_and_how_old(make):
     # the end-verdict counters ride along since #131 — all quiet on a fresh agent
     assert (fresh["expectations_open"], fresh["expectations_met"],
             fresh["expectations_unmet"], fresh["affordances_suspect"]) == (0, 0, 0, 0)
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     reported = keeper.reports()
     assert reported["intentions_standing"] == 1
     assert reported["oldest_intention_s"] >= 0.0
