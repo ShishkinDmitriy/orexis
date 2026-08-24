@@ -17,15 +17,19 @@ See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 from .desire import Desire
+from .measure import for_property, urgency_of
 from .ontology import AG, INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph, obligations_graph
 from .store import bindings
 
 _SENSING = "http://example.org/orexis/sensing#SensingCapability"
+
+log = logging.getLogger("desire")
 
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
 # file's own header. Read once at import: a malformed query is then an error the moment the
@@ -43,8 +47,9 @@ SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
        schema:value ?value .
 }} }}"""
 
-# My own regions, read once at construction. The only instance identifier named is my own URI,
-# which is the single one a process is handed — everything else is a term.
+# My own regions, read once at construction — through `ag:metWhen`, since the desire became a
+# node carrying its shape rather than being it. The only instance identifier named is my own
+# URI, which is the single one a process is handed — everything else is a term.
 #
 # Not narrowed to the desire graph, deliberately, and this is the trap AGENTS.md names: a basic
 # graph pattern inside one `GRAPH` clause must match entirely within that graph, and desire is a
@@ -67,9 +72,9 @@ SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
 #  went — which watering repairs and a fan does not. See ag:violationIs.
 _REGIONS_Q = """
 SELECT ?property ?low ?high ?floor ?ceiling WHERE {
-  <%s> ag:holds ?shape .
-  ?shape ssn:forProperty ?property ;
-         sh:property ?below , ?above .
+  <%s> ag:holds ?desire .
+  ?desire ssn:forProperty ?property ; ag:metWhen ?shape .
+  ?shape sh:property ?below , ?above .
   ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
          sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
   ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
@@ -96,7 +101,12 @@ class Region:
 
     @property
     def centre(self) -> float:
-        """The point of the region — where an agent with no other reason to prefer would aim."""
+        """The FALLBACK target — where an agent with no other reason to prefer would aim.
+
+        That sentence was always the admission that the centre stood in for the pick, and
+        since a-desire-states-its-own-measure it stands in only where there is no pick: the
+        declared measure reads the aim at query time and falls back to this exactly when the
+        agent has picked nothing."""
         return (self.low + self.high) / 2
 
     def band(self, value: float) -> str:
@@ -115,15 +125,23 @@ class Region:
         return "OK"
 
     def urgency(self, value: float) -> float:
-        """How close this reading puts me to real trouble: 0.0 at the point of my region, 1.0 at
-        the edge of what my subject survives.
+        """How close this reading puts me to real trouble: 0.0 at the centre, 1.0 at the edge
+        of what my subject survives.
 
-        **Measured from the CENTRE and not from the edge**, which is a deliberate difference from
-        the band. A step function would tell sensing to relax completely anywhere inside the
-        region and then panic on the way out, and attention should rise as the edge approaches —
-        an agent at the very edge of comfortable is already worth watching more closely than one
-        sitting in the middle. So the band answers *am I in trouble* and this answers *how close
-        am I getting*, and they are not each other's complement.
+        **A REFERENCE, no longer the live definition.** A want's kind declares its measure now
+        (`ag:measureOf`, sensing's `measures.ttl` for observation-backed wants), measured from
+        the AIM at query time with the centre only as the no-pick fallback — so the two agree
+        exactly when no aim is picked, which is what the tests hold the declared query to.
+        Nothing on the live path calls this any more: a want whose kind nothing measures
+        scores a logged 1.0 rather than falling back here, because a silent second definition
+        is the drift this declaration exists to prevent.
+
+        **Measured from a point INSIDE the region and not from the edge**, which is a deliberate
+        difference from the band. A step function would tell sensing to relax completely
+        anywhere inside the region and then panic on the way out, and attention should rise as
+        the edge approaches — an agent at the very edge of comfortable is already worth watching
+        more closely than one sitting in the middle. So the band answers *am I in trouble* and
+        this answers *how close am I getting*, and they are not each other's complement.
 
         **Asymmetric for free, and that is the whole reason the envelope is carried.** The scale
         on each side is the distance from the centre to the survival bound on THAT side, so how
@@ -153,9 +171,10 @@ class Region:
 class Gap:
     """One row of the diff: where a property is against where it should be — and WHEN it was.
 
-    `gap` is signed — negative below the region's point, positive above — and |gap| is the
-    module's `urgency`, normalised by the survival room on that side. See gap.rq, which is the
-    definition; this is only its Python shape.
+    `gap` is signed — negative below the point being steered for (the aim, or the centre while
+    none is picked), positive above — and |gap| is the desire's own declared measure,
+    normalised by the survival room on that side. One definition, asked of the same measure
+    every other consumer runs, so the diff cannot disagree with the ranking.
 
     `at` is when the sensed side was measured. The row does not judge its own freshness,
     because how old is too old is the agent's rule — the cadence it commanded plus its grace —
@@ -181,7 +200,7 @@ class Gap:
         return ((now or datetime.now(timezone.utc)) - self.at).total_seconds()
 
 
-def gaps_of(desires, beliefs, agent_uri: str) -> dict[str, Gap]:
+def gaps_of(desires, beliefs, agent_uri: str, agent_id: str) -> dict[str, Gap]:
     """The desired/sensed diff for one agent, property -> gap. Computed, never stored.
 
     A gap is a VERDICT — the same number is a crisis for one agent and nothing for another — so
@@ -190,29 +209,70 @@ def gaps_of(desires, beliefs, agent_uri: str) -> dict[str, Gap]:
 
     Two handles since the dataset split (#298): `desires` answers what is WANTED and `beliefs`
     what IS, and the join is here — `desires.rq` and `readings.rq` are the two texts, and the
-    arithmetic that used to be repeated between the queries and the module lives once, in
-    `Region`. A property with no observation yet is absent rather than zero: at birth every
-    desire is unmeasured, and unmeasured must not read as satisfied.
+    magnitude is the desire's own declared measure, run against the belief base. `agent_id`
+    arrived with the measure: the aim it reads and the graph the evaluator names are both built
+    from the one id the agent is handed. A property with no observation yet is absent rather
+    than zero: at birth every desire is unmeasured, and unmeasured must not read as satisfied.
     """
     subjects = _subjects_of(beliefs, agent_uri)
     known, _ = _known(beliefs)
+    aims = aims_of(desires, agent_id, agent_uri)
+    measures: dict = {}
     out: dict[str, Gap] = {}
     for row in _desired(desires, agent_uri, agent_id=None):
         if row["kind"] != "stake":
             continue
-        item = next((known[(s, row["property"])] for s in subjects
-                     if (s, row["property"]) in known), None)
+        subject = next((s for s in subjects if (s, row["property"]) in known), None)
+        item = known.get((subject, row["property"])) if subject else None
         if item is None or item.value is None:
             continue
         region = _region_of(row)
-        urgency = region.urgency(item.value)
-        gap = 0.0 if item.value == region.centre else             (urgency if item.value > region.centre else -urgency)
+        urgency = _stake_urgency(beliefs, row, subject, item.value, agent_uri, agent_id,
+                                 _measure_for(beliefs, row, measures))
+        #  The SIGN is judged against the same point the measure judges distance from: the
+        #  aim, or the centre while none is picked. Signed against the centre it disagreed
+        #  with its own magnitude the moment a pick moved off-centre.
+        target = aims.get(row["property"], region.centre)
+        gap = 0.0 if item.value == target else             (urgency if item.value > target else -urgency)
         out[row["property"]] = Gap(
             observed_property=row["property"], value=item.value,
             low=region.low, high=region.high, gap=gap,
             at=item.at, region=row.get("desire"),
         )
     return out
+
+
+def _stake_urgency(beliefs, row: dict, subject: str | None, value: float,
+                   agent_uri: str, agent_id: str, measure: str | None) -> float:
+    """A stake's urgency: the measure its kind declares, run against the belief base.
+
+    `$value` is the reading the caller already joined, so the number judged and the number on
+    the row are one fact from one read; the region's numbers ride in as parameters read off
+    the deduced shapes at this same call, so nothing is baked anywhere. A want whose kind no
+    loaded package measures scores 1.0, logged — the defined fallback: not knowing how bad is
+    maximal, exactly as not knowing at all is — and a measure that raises lands there too.
+    """
+    if not measure:
+        log.warning("no loaded package measures a want about %s — urgency reads 1.0",
+                    row["property"])
+        return 1.0
+    urgency = urgency_of(beliefs, measure, me=agent_uri, subject=subject,
+                         observed_property=row["property"], sensed=SENSED_GRAPH,
+                         beliefs=beliefs_graph(agent_id), value=value,
+                         region=_region_of(row))
+    return 1.0 if urgency is None else urgency
+
+
+def _measure_for(beliefs, row: dict, cache: dict) -> str | None:
+    """The measure for one stake row: its own `ag:measuredBy` where an instance states one
+    (the override slot — nothing derived writes it today), else whatever the loaded packages
+    declare for its property's KIND, resolved once per property per call."""
+    if row.get("measure"):
+        return row["measure"]
+    prop = row["property"]
+    if prop not in cache:
+        cache[prop] = for_property(beliefs, prop)
+    return cache[prop]
 
 
 def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
@@ -237,6 +297,7 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
     now = now or datetime.now(timezone.utc)
     subjects = _subjects_of(beliefs, agent_uri)
     known, by_instrument = _known(beliefs)
+    measures: dict = {}
     out = []
     for row in _desired(desires, agent_uri, agent_id):
         if row["kind"] == "duty":
@@ -252,15 +313,17 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
                             pursuable=demanded and not lapsed))
             continue
         if row["kind"] == "freshness":
+            subject = None
             item = by_instrument.get((row.get("instrument"), row["property"]))
         else:
-            item = next((known[(s, row["property"])] for s in subjects
-                         if (s, row["property"]) in known), None)
+            subject = next((s for s in subjects if (s, row["property"]) in known), None)
+            item = known.get((subject, row["property"])) if subject else None
         value = item.value if item else None
         stale = _is_stale(item, now)
         if row["kind"] == "freshness":
             #  Nothing to be far FROM, so the only urgencies are the epistemic ones: knowing
-            #  nothing, or knowing something too old to be about now.
+            #  nothing, or knowing something too old to be about now. No declared measure —
+            #  routing epistemic wants through the measure machinery is a recorded seam.
             urgency = 1.0 if value is None or stale else 0.0
             state = "unmeasured" if value is None else ("stale" if stale else "met")
         else:
@@ -273,10 +336,19 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
                 #  LAST reading showed would rank an agent by something it no longer knows.
                 urgency, state = 1.0, "stale"
             else:
-                urgency = region.urgency(value)
+                #  The measure the want's KIND declares, run against the belief base — the
+                #  same text the planner runs against a candidate world, which is the whole
+                #  point of it being declared. The STATE stays the region's: met is the
+                #  shape's verdict, urgency is the measure's, and since the measure is
+                #  anchored at the aim the two genuinely differ — met-and-urgent is an agent
+                #  inside its region and off its pick, a true situation, not a contradiction.
+                urgency = _stake_urgency(beliefs, row, subject, value, agent_uri, agent_id,
+                                         _measure_for(beliefs, row, measures))
                 state = "unmet" if value < region.low or value > region.high else "met"
         out.append(Desire(uri=row["desire"], urgency=urgency, state=state,
-                        observed_property=row["property"], value=value))
+                        observed_property=row["property"], value=value,
+                        measure=(_measure_for(beliefs, row, measures)
+                                 if row["kind"] == "stake" else None)))
     return sorted(out, key=lambda g: -g.urgency)
 
 
@@ -359,6 +431,38 @@ def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
     return {row["property"]: float(row["value"])
             for row in bindings(query(_AIMS_Q.format(
                 beliefs=beliefs_graph(agent_id), me=agent_uri)))}
+
+
+#  Which properties this agent holds STAKES in — the same discriminator the menu uses: a
+#  desire whose met-shape carries the ShouldBecome force on a property shape is a region,
+#  where the envelope is a Warning and a freshness want holds `sh:sparql` instead.
+_STAKE_PROPS_Q = """
+SELECT DISTINCT ?property ?measure WHERE {
+  <%s> ag:holds ?desire .
+  ?desire ssn:forProperty ?property ;
+          ag:metWhen/sh:property/sh:severity ag:ShouldBecome .
+  OPTIONAL { ?desire ag:measuredBy/sh:select ?measure } }"""
+
+
+def measures_of(desires, beliefs, agent_uri: str) -> dict[str, str]:
+    """The measure for each property this agent holds a stake in, property -> SELECT text.
+
+    Resolved, never computed here: an instance's own `ag:measuredBy` where one is stated (the
+    override slot — nothing derived writes it today), else whatever the loaded packages
+    declare for the property's KIND (`ag:measureOf`, a capability's `measures.ttl`), asked of
+    public knowledge through the belief store. A property whose kind nothing measures is
+    absent — and logged, because the defined fallback is urgency 1.0 and an operator should
+    hear why an agent went maximally urgent about a comfortable number.
+    """
+    out: dict[str, str] = {}
+    for row in bindings(desires(_STAKE_PROPS_Q % agent_uri)):
+        text = row.get("measure") or for_property(beliefs, row["property"])
+        if text:
+            out[row["property"]] = text
+        else:
+            log.warning("no loaded package measures a want about %s — urgency reads 1.0",
+                        row["property"])
+    return out
 
 
 def regions_of(query, agent_uri: str) -> dict[str, Region]:

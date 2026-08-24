@@ -2,8 +2,8 @@
 type: Domain Concept
 title: Gap
 description: >-
-  The signed distance between what a subject needs and what has been sensed, normalised by the
-  survival room on the side the value sits on — 0 at the region, |gap| = 1 at the edge of what
+  The signed distance between where a property is wanted and what has been sensed, normalised by
+  the survival room on the side the value sits on — 0 at the pick, |gap| = 1 at the edge of what
   the subject survives, and |gap| IS urgency by construction. A VERDICT: computed on every
   asking and stored nowhere, because the same number is a crisis for one agent and nothing for
   another. A property with no observation yet yields NO ROW rather than a zero — unmeasured must
@@ -17,12 +17,14 @@ A **gap** is the diff between desired and sensed, for one property of one subjec
 dataset split ([a-store-is-a-modality](/decisions/a-store-is-a-modality.md), #298) it is asked
 in two halves — `desires.rq` of the desire modality, `readings.rq` of the belief modality — and
 joined by `gaps_of`, yielding, per property, a **signed** distance normalised by the survival
-room on the side the value sits on: 0 at the [region](/domain/desire.md)'s edge, the sign
-saying which way out, and |gap| = 1 at the edge of what the subject survives.
+room on the side the value sits on: 0 at the [aim](/domain/aim.md) (the region's centre while
+none is picked), the sign saying which side of it, and |gap| = 1 at the edge of what the
+subject survives.
 
-**|gap| is `urgency`, by construction** — literally now: the arithmetic that was once repeated
-between a query and the module lives only in `Region`, so a planner scoring worlds and a
-bidder sizing a bid steer by the same number because it is computed in one place.
+**|gap| is `urgency`, by construction** — literally now: the magnitude is the
+[desire](/domain/desire.md)'s own declared measure, evaluated against the belief base, so a
+planner scoring worlds and a bidder sizing a bid steer by the same number because there is one
+text for it to be.
 
 # A deficit is not a gap, and the difference is a drowning plant
 

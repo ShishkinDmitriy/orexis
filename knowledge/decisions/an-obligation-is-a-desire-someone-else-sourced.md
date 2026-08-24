@@ -39,7 +39,9 @@ the class.
 Three more pieces are already in place:
 
 - **Urgency is the common currency.** It is unit-free by construction — distance from the
-  region's centre scaled by the survival envelope on that side — so "my plant is dying" and "I
+  region's centre scaled by the survival envelope on that side (the anchor has since moved to
+  the aim: [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)) —
+  so "my plant is dying" and "I
   owe fern a litre" become comparable, which is exactly what the sovereign asked for and what
   no code could do today: the stake path and the claim path run in different currencies and
   never meet.

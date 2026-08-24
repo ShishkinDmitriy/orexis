@@ -130,7 +130,9 @@ store, and a materialised tree is on its face a stored conclusion. It earns stor
 discipline the flat desires already use: a derived graph, PROV to every premise, recomputed as
 a function so nothing can outlive what implied it. And the reason it must be NODES rather than
 recomputed rows is what a leaf has to carry that a validation-report row cannot: the agent's
-**aim** (its one pick inside the room), a declared **urgency measure**, the `ag:pursues` link
+**aim** (its one pick inside the room), a resolvable **urgency measure** (its kind's, declared
+in a capability's `measures.ttl`, with `ag:measuredBy` as the per-leaf override slot — the
+measure's content never rides on the node), the `ag:pursues` link
 an intention holds across restarts — the keeper writes it, and a leaf that vanished on
 recomputation would orphan a live commitment — and a **series identity**, the row `deducer.py`
 already publishes per property with the region's edges and the aim on it. A report row exists
@@ -179,7 +181,11 @@ a region desire's urgency measured from the AIM rather than the region's centre 
 prerequisite: a desire that is a node with room on it is what can carry a parent link and a
 label per level. It is **in flight, not landed**, and this record depends on its shape rather
 than its diff; if its review changes the carrier, the forest hangs off whatever the desire node
-becomes.
+becomes. (Its review did exactly that, once: the sovereign moved the measure's CONTENT off the
+node and out of the kernel — declared per KIND in a capability's `measures.ttl`, sensing's for
+observation-backed wants, with `ag:measuredBy` as the instance-level override slot — see
+[a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md). The forest
+hangs off the node exactly as this paragraph provided for.)
 
 # Seams left open
 

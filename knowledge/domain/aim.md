@@ -37,6 +37,15 @@ agent may re-pick inside room it was given — and that page has the argument.
 The consequence for whoever authors a world: **getting the aim right matters much less than
 stating a range inside which being wrong is survivable.**
 
+# It is where urgency's zero sits
+
+Since [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md), the aim
+is what a desire's declared measure anchors at: [urgency](/domain/urgency.md) is distance from
+the pick, and the measure reads `ag:aims` out of the belief base at query time — so a re-pick
+moves every consumer's number the moment it is recorded, with nothing recompiled. The region's
+centre serves only while no aim is picked, which is what its old docstring ("where an agent with
+no other reason to prefer would aim") had been admitting all along.
+
 # It moves; the region does not
 
 The asymmetry is the whole architecture in one line. An agent may move its aim, because an aim is

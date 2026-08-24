@@ -9,9 +9,18 @@ description: >-
   by intersecting every operating range that applies, and carries the survival ranges as the
   envelope that makes urgency asymmetric and unit-free. The band left market:Bidding with it,
   so having an opinion about your own state no longer requires being a market participant.
-status: accepted
+status: superseded-in-part
+superseded-by: a-desire-states-its-own-measure
 timestamp: 2026-08-13T00:00:00Z
 ---
+
+> **Superseded in part** by
+> [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md): the urgency
+> formula below anchors at the region's CENTRE, and the centre was only ever standing in for
+> the pick — the measure is the desire's own now, declared in the graph, anchored at the AIM
+> with the centre as the no-pick fallback. Everything the formula's shape argued survives the
+> re-anchoring: it rises inside the region, and it is asymmetric per plant for free, scaled by
+> the survival room on the side the value sits.
 
 > **AMENDED: it is not a capability any more.** The reasoning below stands and produced what the
 > code does; what changed is WHERE it lives. Wanting, committing and deciding are the kernel's,

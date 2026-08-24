@@ -40,8 +40,12 @@ answering two questions is a sentinel that eventually answers the wrong one.
 
 `propose_for` no longer answers only from the gap's sign. Where a lever's package has said what
 that lever DOES, the deliberator builds the world taking it would make — `(beliefs − retracts) +
-adds`, written nowhere — scores that world by the same `Region.urgency` every consumer reads, and
-takes the move only if the result beats doing nothing.
+adds`, written nowhere — scores that world by the desire's own declared measure, the same text
+every consumer evaluates
+([a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)), and
+takes the move only if the result beats doing nothing. A met desire off its pick still searches:
+met is the outcome's label, urgency is the motive, and near the pick the dose sizes to nothing —
+a deadband nobody chose as a tolerance.
 
 The difference is not academic. A plant sitting ABOVE its region passes every test the reflex
 applies: the pump raises moisture, the aim is above the reading, direction matches sign. Both are

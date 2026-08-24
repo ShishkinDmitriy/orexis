@@ -4,7 +4,8 @@ title: Urgency
 description: >-
   The common currency — one scalar from 0 to 1 that makes unlike wants comparable, so the hottest
   one wins without anything having to rank kinds of want against each other. It has several
-  SOURCES and one meaning: |gap| for a measured property, a deadline's approach for a duty, and
+  SOURCES and one meaning: the desire's own declared measure for a measured property — distance
+  from the aim, scaled by the survival room on that side — a deadline's approach for a duty, and
   1.0 flat for not knowing, which is the choice that makes an agent look before it acts. Every
   consumer reads the same number — the cadence tightens on it, the bidder prices with it, the
   planner scores worlds by it — so a change in how it is computed moves the whole society at
@@ -24,7 +25,7 @@ That is the whole job: **a common currency, so the hottest want wins.**
 
 | the desire | where its urgency comes from |
 |---|---|
-| a measured property outside its region | \|gap\| — the normalised distance, by construction |
+| a measured property | its own declared measure — distance from the [aim](/domain/aim.md), scaled by the survival room on that side, zero at the pick |
 | a duty owed to a peer | the room left before its deadline |
 | a property never read | **1.0** — flat |
 | a commitment whose world has not answered yet | **1.0**, while the watch is open |
@@ -53,8 +54,12 @@ fern from 0.30 to 0.44 leaves the same single violation it started with and a pl
 would refuse every dose too small to finish the job.
 
 So a change in how urgency is computed moves the whole society at once. That is the reason it is
-one definition asked of one owner rather than a formula each consumer keeps — and the reason the
-package's tests hold the query and the module to the same answer.
+one definition asked of one owner rather than a formula each consumer keeps — since
+[a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md), literally one
+text: the capability that owns the question declares the measure for a KIND of want in the
+graph ([sensing](/domain/sensing.md)'s, for anything observation-backed), and every consumer
+evaluates that, against whichever world it is judging — and the reason the tests hold the
+declared query and the reference arithmetic to the same answer.
 
 # It is contributed, not only computed
 

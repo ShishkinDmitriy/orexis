@@ -36,7 +36,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 from rdflib import RDF, URIRef
 
-from . import effects, signature, trace
+from . import effects, measure, signature, trace
 from .desire import Desire
 from .imaginarium import Imaginarium
 from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
@@ -133,25 +133,43 @@ class Planner:
 
     # --- what a world is worth ---------------------------------------------------------------
 
-    def _urgency_in(self, world, desire: Desire) -> float:
+    def _urgency_in(self, world, graph: str, desire: Desire) -> float:
         """How bad this desire is, in the world given. Lower is better; 1.0 is the worst there is.
 
-        The number is the REGION's own, asked of the same `Region.urgency` every consumer uses,
-        so a plan is scored by the measure the agent already steers by. Counting violations
-        instead would have been simpler and wrong in a way that matters: a dose that moves a
-        fern from 0.30 to 0.44 leaves the same single violation it started with, so a planner
-        scoring by count would refuse every dose too small to finish the job — and refuse the
-        second one for the same reason, having never taken the first.
+        THE MEASURE THE DESIRE'S KIND DECLARES — a capability's contribution, resolved from
+        the measures graph and never known here — run against the imaginarium with `$sensed`
+        naming this node's readings: the same text every other consumer runs against the
+        belief base, so a plan is scored by the measure the agent already steers by. That is
+        what declaring
+        it bought: the reflex used to steer for the AIM while this scored distance from the
+        region's CENTRE, so the two mechanisms pursued different targets whenever the pick sat
+        off-centre, silently. It runs on pyoxigraph and never on the flat rdflib copy, because
+        one stored query answered by two engines is the disagreement this repo already closed
+        once (`agent/measure.py` has the argument).
+
+        Counting violations instead would have been simpler and wrong in a way that matters: a
+        dose that moves a fern from 0.30 to 0.44 leaves the same single violation it started
+        with, so a planner scoring by count would refuse every dose too small to finish the job
+        — and refuse the second one for the same reason, having never taken the first.
+
+        `world` (the flat copy) stays a parameter for the wants that state no measure: a duty
+        is met-or-not over the record, and anything else unmeasured scores 1.0, the not-knowing
+        answer.
         """
-        if desire.observed_property is None:      # a duty, or any want with no measure
+        if desire.measure:
+            urgency = measure.urgency_of(
+                self.imaginarium.query, desire.measure, me=self.me.uri,
+                subject=self.me.acts_for, observed_property=desire.observed_property,
+                sensed=graph, beliefs=beliefs_graph(self.agent.id),
+                region=self.deducer.regions.get(desire.observed_property))
+            return 1.0 if urgency is None else urgency
+        if desire.observed_property is None:      # a duty: met-or-not over the record
             return 0.0 if self._met_in(world, desire) else 1.0
-        region = self.deducer.regions.get(desire.observed_property)
-        value = self._value_in(world, desire)
-        if region is None:
-            return 1.0
-        if value is None:
-            return 1.0                          # not knowing is maximal, as it is everywhere
-        return region.urgency(value)
+        #  A want about a property with no resolved measure: a freshness want (epistemic by
+        #  design, no distance to scale) or a want whose kind no loaded package measures.
+        #  Both score the defined fallback — maximal, because not knowing how bad IS how bad
+        #  — which for the freshness case is exactly what the region-less lookup always gave.
+        return 1.0
 
     def _value_in(self, world, desire: Desire) -> float | None:
         """What this desire's property reads in the world given."""
@@ -209,6 +227,13 @@ class Planner:
         mid-search cannot hand two depths two different wants.
         """
         node = URIRef(desire.uri)
+        #  The met-test hangs OFF the desire node since the reification — a desire is a node
+        #  carrying its shape, not the shape itself — so the walk is one hop of `ag:metWhen`.
+        #  A node that IS a shape stays legal: an asserted root desire is a bare NodeShape a
+        #  world's TriG may state, and it never grew a desire node around it.
+        met = self._shapes.value(node, _AG.metWhen)
+        if met is not None and (met, RDF.type, _SH.NodeShape) in self._shapes:
+            return self._shapes.cbd(met)
         if (node, RDF.type, _SH.NodeShape) not in self._shapes:
             return None
         return self._shapes.cbd(node)
@@ -246,7 +271,15 @@ class Planner:
         #  and one that holds two. It also means a pass that raises leaves no trace claiming
         #  to describe a decision nobody reached.
         trace.clear(self.agent.beliefs, self.agent.id, desire.uri)
-        if self._met_in(base, desire):
+        #  MET NO LONGER ENDS THE PASS — a-desire-states-its-own-measure removed the root
+        #  short-circuit that returned SATISFIED without searching whenever the shape held.
+        #  The shape governs the outcome LABEL; the measure governs whether a step is worth
+        #  taking, and since the measure is anchored at the AIM a met desire may still carry
+        #  urgency: inside the region and off the pick is a true situation. Only a desire
+        #  whose measure reads zero has nothing a step could improve, so only that one skips
+        #  the search — which also keeps the per-tick cost of a calm society what it was.
+        met_now = self._met_in(base, desire)
+        if met_now and here.urgency <= 0.0:
             return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
 
@@ -326,14 +359,19 @@ class Planner:
             if not frontier:
                 break
 
+        #  A pass that ends with no step worth taking is labelled by the SHAPE, not by the
+        #  search: a met desire that weighed its levers and found none worth pulling is
+        #  SATISFIED — it is met, and near the pick every dose sizes to nothing, which is the
+        #  deadband satisficing gives for free — where an unmet one in the same position is
+        #  NOT_BETTER (my doses are too coarse) or NOTHING (equip me), and those must not blur.
         if not saw_candidate:
-            return self._record(desire, Plan(NOTHING, (), here.urgency, here.urgency,
+            return self._record(desire, Plan(SATISFIED if met_now else NOTHING,
+                                           (), here.urgency, here.urgency,
                                            self._skipped), here.urgency)
-        if best is here:
-            return self._record(desire, Plan(NOT_BETTER, (), here.urgency, here.urgency,
-                                           self._skipped), here.urgency)
-        if best.urgency >= here.urgency:
-            return self._record(desire, Plan(NOT_BETTER, (), here.urgency, best.urgency,
+        if best is here or best.urgency >= here.urgency:
+            after = here.urgency if best is here else best.urgency
+            return self._record(desire, Plan(SATISFIED if met_now else NOT_BETTER,
+                                           (), here.urgency, after,
                                            self._skipped), here.urgency)
         return self._record(desire, self._offer(
             Plan(EXHAUSTED if not self._met_in(best.world, desire) else SATISFIED,
@@ -462,7 +500,8 @@ class Planner:
         self._base_facts = signature.facts(
             quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id), SENSED_GRAPH]
             for quad in store.quads(iri))
-        return _Node(world=base, graph=SENSED_GRAPH, urgency=self._urgency_in(base, desire))
+        return _Node(world=base, graph=SENSED_GRAPH,
+                     urgency=self._urgency_in(base, SENSED_GRAPH, desire))
 
     def _step_from(self, node, row, desire: Desire):
         """The node one step on from here, or None where the rule would not run.
@@ -485,9 +524,11 @@ class Planner:
         #  step's triples go in as they arrived — pyoxigraph terms, no conversion.
         diff = signature.advance(node.diff, signature.facts(added),
                                  signature.facts(retracted), self._base_facts)
-        return _Node(world=world,
-                     graph=self.imaginarium.reached(node.graph, taken, added, retracted),
-                     taken=taken, urgency=self._urgency_in(world, desire), diff=diff)
+        #  The graph BEFORE the urgency, because the urgency is the measure asked of it: the
+        #  candidate's readings must exist in the imaginarium for `$sensed` to name them.
+        graph = self.imaginarium.reached(node.graph, taken, added, retracted)
+        return _Node(world=world, graph=graph, taken=taken,
+                     urgency=self._urgency_in(world, graph, desire), diff=diff)
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.

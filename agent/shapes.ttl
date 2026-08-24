@@ -187,11 +187,18 @@ ag:DesireShape a sh:NodeShape ;
     rdfs:comment """What a deduced shape must be to be readable — a shape ABOUT shapes, which is the seam a-desire-is-a-shape names: SHACL has no containment operator, so anything said about what an agent pursues is said by treating its shapes as the RDF they are.
 
 Every figure here was computed, so this is arithmetic rather than authorship — but a check over derived data is worth exactly as much as one over authored data when the reader is code that will divide by the width.""" ;
+    #  Both roads to a held shape, since the desire was reified: a DESIRE's met-test hangs one
+    #  `ag:metWhen` hop off the node the agent holds, while the envelope — and an asserted root
+    #  desire in the old bare form — is still held directly. A target that knew only the second
+    #  would have gone quietly blind to every deduced want the day the hop landed.
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
-                ?agent <http://example.org/orexis#holds> ?this .
-                ?this a <http://www.w3.org/ns/shacl#NodeShape> .
+                { ?agent <http://example.org/orexis#holds> ?held .
+                  ?held <http://example.org/orexis#metWhen> ?this }
+                UNION
+                { ?agent <http://example.org/orexis#holds> ?this .
+                  ?this a <http://www.w3.org/ns/shacl#NodeShape> . }
             }
         """ ] ;
     sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
@@ -249,7 +256,8 @@ Every figure here was computed, so this is arithmetic rather than authorship —
                        <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
                        <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
                 OPTIONAL {
-                    ?agent <http://example.org/orexis#holds> $this , ?envelope .
+                    ?agent <http://example.org/orexis#holds> ?desire , ?envelope .
+                    ?desire <http://example.org/orexis#metWhen> $this .
                     ?envelope <http://www.w3.org/ns/ssn/forProperty> ?property ;
                               <http://www.w3.org/ns/shacl#property> ?underFloor , ?overCeiling .
                     ?underFloor <http://www.w3.org/ns/shacl#severity>
@@ -301,9 +309,10 @@ ag:AimShape a sh:NodeShape ;
                 $this <http://example.org/orexis#aims> ?aim .
                 ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
                      <https://schema.org/value> ?value .
-                $this <http://example.org/orexis#holds> ?shape .
-                ?shape <http://www.w3.org/ns/ssn/forProperty> ?property ;
-                       <http://www.w3.org/ns/shacl#property> ?below , ?above .
+                $this <http://example.org/orexis#holds> ?desire .
+                ?desire <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                        <http://example.org/orexis#metWhen> ?shape .
+                ?shape <http://www.w3.org/ns/shacl#property> ?below , ?above .
                 ?below <http://www.w3.org/ns/shacl#severity>
                        <http://example.org/orexis#ShouldBecome> ;
                        <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;

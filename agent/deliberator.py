@@ -257,12 +257,27 @@ class Deliberator(Module):
         lever nobody pulls — the search would decline for want of a rule and the agent would
         read it as a decision not to act.
         """
+        #  A want nothing MEASURES cannot be ranked, and a search that cannot rank must not
+        #  conclude — the `partial` argument, arriving from the desire side: every candidate
+        #  world would score the flat fallback 1.0, "no move improves" would come out
+        #  confidently, and a conclusion drawn from unrankable worlds would override the
+        #  reflex. The ranking fallback (1.0, logged) is the deducer's business; the DECISION
+        #  falls through to the reflex. A duty is exempt because its metric is met-or-not
+        #  over the record, which needs no measure to rank (#255).
+        if not desire.is_duty and desire.measure is None:
+            return False, None
         deducer = self.agent.deducer
         plan = Planner(self.agent, deducer, self.me).plan(desire)
         if plan.outcome == planner.NOTHING:
             return False, None               # nothing to simulate; let the reflex answer
-        if plan.outcome == planner.SATISFIED and not plan.steps:
-            return False, None               # already met; the reflex will also propose nothing
+        #  There USED to be a second deferral here: SATISFIED with no steps fell through to
+        #  the reflex, over a comment claiming "the reflex will also propose nothing". It
+        #  proposes plenty — the reflex steers toward the AIM, so a met desire off its pick
+        #  got a dose with no satisficing behind it, which defeated the deadband the search
+        #  provides: near the pick the dose sizes to ~0, the actor's refusal makes the effect
+        #  predict no change, and the candidate is pruned as somewhere already reached. A met
+        #  desire the search answered is now a DECISION (the fall-through below), not a
+        #  hand-off — unless the search was blind to part of the menu, which `partial` says.
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
                           desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
@@ -275,10 +290,13 @@ class Deliberator(Module):
         if plan.partial:
             return False, None
         #  A world reachable and not worth reaching. THIS is the decision the reflex could not
-        #  make, and returning None here is the whole point rather than a failure to answer.
-        self.log.info("%s: %s — no move improves on doing nothing",
-                      desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
-                      else "a duty", plan.outcome)
+        #  make, and returning None here is the whole point rather than a failure to answer —
+        #  a met desire quietly holding near its pick included, which is most passes and not
+        #  worth a log line; the unmet ones still say why nothing was done.
+        if plan.outcome != planner.SATISFIED:
+            self.log.info("%s: %s — no move improves on doing nothing",
+                          desire.observed_property.rsplit("#", 1)[-1]
+                          if desire.observed_property else "a duty", plan.outcome)
         return True, None
 
     def propose(self, observed_property: str, value: float | None) -> str | None:

@@ -735,11 +735,16 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
     this test went on passing and stopped meaning anything: the query matched the fixture
     nowhere, so the property match it exists to prove was no longer being exercised at all.
     A fixture that drifts from what the derivation emits fails silently, in the direction of
-    green.
+    green — which is why it is now a DESIRE NODE carrying the shape through `ag:metWhen`,
+    the form the derivation emits since a-desire-states-its-own-measure, for the same reason.
     """
     data = _mutate("""
         INSERT { GRAPH <http://example.org/orexis/graph/constraint> {
             <http://example.org/orexis/world/simulation#fern_agent> <http://example.org/orexis#holds> [
+                a <http://example.org/orexis#Desire> ;
+                <http://www.w3.org/ns/ssn/forProperty>
+                    <http://example.org/orexis/water#AirHumidity> ;
+                <http://example.org/orexis#metWhen> [
                 a <http://www.w3.org/ns/shacl#NodeShape> ;
                 <http://www.w3.org/ns/shacl#targetNode>
                     <http://example.org/orexis/world/simulation#fern_agent> ;
@@ -782,7 +787,7 @@ def test_a_region_in_another_property_does_not_judge_the_moisture_target():
                         [
                             <http://www.w3.org/ns/shacl#path>
                                 <http://www.w3.org/ns/sosa/hasSimpleResult> ;
-                            <http://www.w3.org/ns/shacl#minExclusive> 0.80 ] ] ] ] } }
+                            <http://www.w3.org/ns/shacl#minExclusive> 0.80 ] ] ] ] ] } }
         WHERE {}""")
     assert _conforms(data), _report(data)
 

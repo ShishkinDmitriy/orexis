@@ -59,7 +59,8 @@ tomato as missing a band it was never entitled to see.
 than a preference: pySHACL answers `sh:qualifiedValueShape` wrong under `focus_nodes`, measured
 both ways round, and every held shape reaches its readings through one. A focused answer would be
 the wrong answer with nothing to show it had been. Ownership does the scoping instead — a shape an
-agent `ag:holds` is a shape about that agent by construction.
+agent `ag:holds`, directly or as a desire's met-test one `ag:metWhen` hop away, is a shape about
+that agent by construction.
 
 # It is validated against a graph that already holds what the vocabulary implies
 

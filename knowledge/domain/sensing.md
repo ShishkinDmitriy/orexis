@@ -208,6 +208,17 @@ exactly what naming the transport in the capability would have made impossible.
 Adding a transport is therefore small: a driver, its terms, and its completeness rules. No
 new capability, no belief changes.
 
+# It declares how an observation-backed want is measured
+
+Since [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md), this
+package's `measures.ttl` states the [urgency](/domain/urgency.md) measure for any want about a
+`sosa:ObservableProperty` (`ag:measureOf`): a reading against the [aim](/domain/aim.md),
+scaled by the survival room on the side the value sits. Sensing's, because the reading is its
+whole subject — the sovereign's split puts the mind's structure in the kernel and how badness
+is weighed with the capability that owns the question, exactly as an effect rule's content is
+the lever-owner's. The kernel evaluates the declared text (`agent/measure.py`) and never knows
+it; the choir `urgency` hook below is the same contribution asked live.
+
 # Cadence is desire-relative, like the band
 
 Attention scales with how close the plant is to its own `LOW`: thirsty plants watch closely,

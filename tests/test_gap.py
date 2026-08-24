@@ -32,7 +32,7 @@ def _judged(st, *extra):
 def _gaps(st, uri, agent_id="fern"):
     """Both handles the way an agent holds them: wants from the desire modality's build,
     readings from the store (#312)."""
-    return gaps_of(desires_build(st, agent_id).query_union, st.query, uri)
+    return gaps_of(desires_build(st, agent_id).query_union, st.query, uri, agent_id)
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"

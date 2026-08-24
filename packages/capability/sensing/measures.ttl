@@ -1,0 +1,58 @@
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ag:      <http://example.org/orexis#> .
+@prefix sosa:    <http://www.w3.org/ns/sosa/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+
+#################  How badly an observation-backed want is unmet  #################
+#
+#  SENSING'S, and the placement is the point (a-desire-states-its-own-measure, the sovereign's
+#  split): the core is BDI, so the kernel derives the want, its met-shape and its node — the
+#  mind's structure — and how badness is MEASURED is planning-domain machinery, a capability's
+#  contribution. A want about an observed property is measured by a reading against the aim,
+#  and the reading is this capability's whole subject; the choir's `urgency` hook has always
+#  listed what modules contribute, and this is that instinct made a declaration. The kernel
+#  runs whatever is declared (`agent/measure.py`) and never knows this text exists.
+#
+#  ONE declaration for the KIND, not a text per desire: `ag:measureOf sosa:ObservableProperty`
+#  says "a want about an observable property is measured by this SELECT", and the evaluator
+#  resolves a desire to it by asking what the desire's `ssn:forProperty` object IS. Nothing is
+#  compiled at derivation: the aim is read out of $beliefs by the query itself, and the
+#  region's numbers arrive as substituted parameters the caller reads off the deduced shapes
+#  at query time — so a re-pick or a re-derivation moves the answer with no text rebuilt.
+#
+#  The contract: one binding, ?urgency in 0..1. Zero exactly at the aim ($centre stands in
+#  while no aim is picked — where an agent with no other reason to prefer would aim), rising
+#  with distance scaled by the survival room on the side the value sits ($outerLow below,
+#  $outerHigh above — the survival bound where the world states one, the region's own edge
+#  where it does not). The asymmetry is deliberate and old: how bad it is to be 0.05 out
+#  depends on how much room there is in that direction.
+
+sensing:AimDistanceMeasure
+    ag:measureOf sosa:ObservableProperty ;
+    rdfs:label "distance from the aim, scaled by the survival room on that side" ;
+    rdfs:comment "Evaluated against whichever world is being judged: the belief base for the live number, a candidate possible world inside the planner ($sensed names that node's readings). $value is a caller-supplied number to judge — the choir asks about readings not yet written, and about predicted ones — or the live reading when the caller supplies none." ;
+    #  ?distance <= 0 answers FIRST and without dividing, and that ordering is an engine fact,
+    #  not style: pyoxigraph 0.5.9 binds NOTHING for `0.0 / 0.3` — a zero dividend fails the
+    #  decimal division a nonzero one survives — so an agent exactly at its aim would read as
+    #  maximally urgent through the COALESCE below. Measured, and pinned in
+    #  tests/test_desires.py beside the duration limit it rhymes with. The final COALESCE is
+    #  the other half of the same discipline: an unmeasured property, and any arithmetic
+    #  error, land on 1.0 explicitly — not knowing is maximal, as it is everywhere.
+    sh:select """
+        SELECT ?urgency WHERE {
+            OPTIONAL { GRAPH $sensed {
+                ?obs sosa:hasFeatureOfInterest $subject ;
+                     sosa:observedProperty $property ;
+                     sosa:hasSimpleResult ?reading } }
+            OPTIONAL { GRAPH $beliefs {
+                $me ag:aims ?aim .
+                ?aim ssn:forProperty $property ;
+                     schema:value ?picked } }
+            BIND(COALESCE($value, ?reading) AS ?v)
+            BIND(COALESCE(?picked, $centre) AS ?target)
+            BIND(IF(?v < ?target, ?target - $outerLow, $outerHigh - ?target) AS ?room)
+            BIND(IF(?v < ?target, ?target - ?v, ?v - ?target) AS ?distance)
+            BIND(COALESCE(IF(?distance <= 0, 0.0, IF(?room <= 0, 1.0,
+                 IF(?distance / ?room < 1.0, ?distance / ?room, 1.0))), 1.0) AS ?urgency)
+        }""" .

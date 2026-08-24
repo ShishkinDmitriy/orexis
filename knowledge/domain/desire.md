@@ -27,6 +27,15 @@ the subject and its instruments state, and the result is a [region](/domain/regi
 has the intersection, the two kinds of bearer, and why a graph found by TYPE rather than by name
 is what makes a second source of desire possible.
 
+What the derivation mints is a NODE (`ag:Desire`) carrying the met-test as a SHACL shape
+(`ag:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
+say how badly it is unmet, not only whether it is. The measure's CONTENT is deliberately not
+the derivation's to write: the kernel carries the slot and the evaluator, and the capability
+that owns the question declares the text — [sensing](/domain/sensing.md)'s `measures.ttl` for
+any want about an observed property, resolved by the want's KIND (`ag:measureOf`) at query
+time, with `ag:measuredBy` as the instance-level override slot. The argument is
+[a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)'s.
+
 What the deducer adds is the DEDUCING. It used to be granted by a stake — `ag:actsFor` a subject
 that states what it needs — and the stake still decides everything except whether the module
 exists: an agent advancing nobody's interest states no ranges, so it holds no region, and the
@@ -60,9 +69,11 @@ A desire states its own condition in its kind's vocabulary: `met`, `unmet` or `u
 stake; `standing` or `demanded` for a duty.
 
 **Carried rather than derived from urgency, and the distinction is not academic.** Urgency is 0
-only exactly at a region's centre, so "urgency > 0" counts a barrel sitting comfortably inside its
-range as unmet. It read that way on the bench for about ten minutes and made a calm society look
-stuck.
+only exactly at the point being steered for, so "urgency > 0" counts a barrel sitting comfortably
+inside its range as unmet. It read that way on the bench for about ten minutes and made a calm
+society look stuck. The split is structural now: the desire's met-shape governs the state, its
+declared measure governs the urgency, and met-and-urgent — inside the region, off the pick — is a
+true situation rather than a contradiction.
 
 A duty is never *met*. It is discharged — and a discharged debt is history rather than something still wanted.
 
@@ -94,11 +105,17 @@ every module has (`agent/module.py`) or through `agent.provider(DESIRE)`.
 | `region(property)` | anything that needs the range itself | the numbers |
 | `aim(property)` — the pick inside the region | a bidder, at bid time, for the point a deficit is priced against | None is an answer: with no aim there is no deficit, and the bidder cedes rather than inventing one |
 
-**The band is the region; urgency is measured from its centre toward the survival bound on that
-side.** So urgency rises *inside* the region rather than waiting for the edge — an agent at the
+**The band is the region; urgency is the measure the want's kind declares, anchored at the
+[aim](/domain/aim.md)** — a SPARQL SELECT [sensing](/domain/sensing.md) ships for
+observation-backed wants (`ag:measureOf`), which reads the pick out of the belief base at query
+time, falls back to the region's centre only while none is picked, and scales by the survival
+room on the side the value sits, the region's numbers arriving as substituted parameters read
+off the deduced shapes. So urgency rises *inside* the region rather than waiting for the edge — an agent at the
 edge of comfortable is already worth watching more closely than one in the middle — and it is
 asymmetric per subject for free, because the room on each side is whatever that subject's two
-ranges leave. See
+ranges leave. One text, run against whichever world is being judged: the belief base for the live
+number, a candidate possible world inside the planner. See
+[a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md) and
 [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
 
 # The gap it is measured against
@@ -150,9 +167,10 @@ Three deliberate differences from the diff above:
   something that produces one in the hot path.
 - **A count is about wanting, not about distance.** `unmet` means the reading sits outside the
   region, and `unactionable` means a desire nothing can be done about — both read off the row's
-  `state`. The first cut inferred them from urgency, which is zero only at a region's exact
-  centre, so a barrel resting comfortably inside 1–5 reported one unmet and one unactionable
-  desire and a calm society graphed as a stuck one. Ten minutes on the bench found it.
+  `state`. The first cut inferred them from urgency, which is zero only exactly at the point
+  being steered for, so a barrel resting comfortably inside 1–5 reported one unmet and one
+  unactionable desire and a calm society graphed as a stuck one. Ten minutes on the bench
+  found it.
 - **Whether anything can be DONE is not in the query.** That is the deliberator's answer — the
   menu is the union of what every loaded package contributes, and a copy of it inside a desire
   query would be free to disagree with the one the agent acts on. `pursued()` annotates each row

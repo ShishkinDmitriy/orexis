@@ -53,9 +53,13 @@ class Affordance:
         return self.mode == CHOSEN
 
 
+#  Through `ag:metWhen`, since the desire became a node carrying its shape: the ShouldBecome
+#  force lives on the met-shape's property shapes, and reading it there keeps the envelope
+#  (Warning) and the freshness want (sh:sparql, no sh:property) out, exactly as before.
 _DESIRED_Q = """SELECT DISTINCT ?property WHERE {
-  <%s> ag:holds ?region .
-  ?region ssn:forProperty ?property ; sh:property/sh:severity ag:ShouldBecome }"""
+  <%s> ag:holds ?desire .
+  ?desire ssn:forProperty ?property ;
+          ag:metWhen/sh:property/sh:severity ag:ShouldBecome }"""
 
 
 def menu_of(query, agent_uri: str, desires) -> list[Affordance]:

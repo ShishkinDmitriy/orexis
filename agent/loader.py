@@ -119,6 +119,8 @@ REVIEW = "review.rq"
 AFFORDANCES = "affordances.rq"
 # What applying one of this package's levers MAKES TRUE — SHACL-AF rules, as RDF.
 EFFECTS = "effects.ttl"
+# How badly a KIND of want is unmet — a SPARQL SELECT as RDF, by the same mechanic.
+MEASURES = "measures.ttl"
 HONOURED = "honoured.rq"
 
 
@@ -302,6 +304,24 @@ def effect_files() -> tuple[Path, ...]:
     file in the package that owns the lever, and nothing here learns its name.
     """
     return files(EFFECTS)
+
+
+def measure_files() -> tuple[Path, ...]:
+    """Every package's statement of how a KIND of want is measured
+    (a-desire-states-its-own-measure, reworked on the sovereign's ruling).
+
+    A package that ships `measures.ttl` says, per kind of desire, how badly such a want is
+    unmet: a node carrying `ag:measureOf` — the class of thing the want is about — and
+    `sh:select`, the query whose one binding is `?urgency` in 0..1. The effects mechanic
+    applied again: the kernel evaluates whatever is declared (`agent/measure.py`, the way
+    `agent/effects.py` runs a construct) and never knows any measure's content, because how
+    badness is measured is planning-domain machinery, a capability's contribution — the core
+    is BDI, and the mind's structure carries only the slot.
+
+    Found rather than listed, exactly as effects are: a capability that grows a measure is a
+    file in the package that owns the question, and nothing here learns its name.
+    """
+    return files(MEASURES)
 
 
 def honoured_files() -> tuple[Path, ...]:

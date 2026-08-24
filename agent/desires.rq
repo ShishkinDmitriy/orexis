@@ -13,15 +13,22 @@
 # against the desires store; the region patterns stay UNQUALIFIED for the reason gap.rq
 # always gave — desire is a CLASS of graph, and a second source must be readable unasked.
 #
-# ?side and the urgency arithmetic left this text for Python when the dataset split: a
-# sovereign asking the desires store gets the wants and their rooms, and the judging —
-# distance, staleness, lapse — belongs to whoever holds the clock and the readings.
+# ?side and the urgency arithmetic left this text when the dataset split, and the distance
+# half has since come back declared rather than inlined: ?measure is the SELECT the desire
+# itself carries (a-desire-states-its-own-measure), evaluated by whoever holds the readings
+# against whichever world is being judged. Staleness and lapse stay with whoever holds the
+# clock, and a duty's fraction stays Python's while the engine will not divide durations.
 
-SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument
+SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument ?measure
        ?owedTo ?claim ?presented ?at ?expires WHERE {
   {
+    #  The desire is a NODE and the met-shape hangs off it (a-desire-states-its-own-measure) —
+    #  the region's numbers are read through `ag:metWhen`, and the measure the desire declares
+    #  rides out as its own column, the text the Python evaluator runs.
     $me ag:holds ?desire .
-    ?desire ssn:forProperty ?property ; sh:property ?below , ?above .
+    ?desire ssn:forProperty ?property ; ag:metWhen ?met .
+    OPTIONAL { ?desire ag:measuredBy/sh:select ?measure }
+    ?met sh:property ?below , ?above .
     ?below sh:severity ag:ShouldBecome ; ag:violationIs ag:Below ;
            sh:qualifiedValueShape/sh:property/sh:maxExclusive ?low .
     ?above sh:severity ag:ShouldBecome ; ag:violationIs ag:Above ;
@@ -45,7 +52,7 @@ SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument
             prov:wasDerivedFrom ?instrument .
     FILTER NOT EXISTS { $me ag:holds ?region .
                         ?region ssn:forProperty ?property ;
-                                sh:property/ag:violationIs ag:Below }
+                                ag:metWhen/sh:property/ag:violationIs ag:Below }
     BIND("freshness" AS ?kind)
   }
   UNION
