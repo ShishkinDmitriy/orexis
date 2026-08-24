@@ -51,10 +51,9 @@ from agent.observation import Observations
 from agent.ontology import INSTRUMENTS_GRAPH, beliefs_graph
 from agent.store import bindings
 
-_OBSERVE = "http://example.org/orexis#Observe"
 
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
-from .terms import (FRESHNESS, LISTENING, PUSH, SCHEDULED, STALE_AFTER_S,
+from .terms import (FRESHNESS, LISTENING, OBSERVE, PUSH, SCHEDULED, STALE_AFTER_S,
                     SUBSCRIBING)
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
@@ -505,6 +504,19 @@ class SensingModule(Module):
                            f"{limit}s I allow")
         return out
 
+    def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
+        """Every reading is a look that happened: the standing Observe for it is satisfied.
+
+        The keeper used to do this, by name, and it was the one place the kernel spelled
+        `Observe` — so the means could not leave the kernel until this moved. It is the
+        actor's own business anyway: this module takes the look, and whoever caused it — the
+        tick, a bidder waiting, the device's own clock — the reading arriving is the look
+        done. Idempotent across two sensing modules on one agent: the second finds nothing
+        standing.
+        """
+        if (keeper := self.agent.keeper) is not None:
+            keeper.satisfy(OBSERVE, observed_property, "a reading arrived — the look happened")
+
     def notices(self) -> list[tuple[str, str]]:
         """The gaps I am positioned to notice (#208): unobserved, or too stale to act on.
 
@@ -917,12 +929,12 @@ class SubscribingModule(SensingModule):
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed look: nudge the driver that watches this row's lever.
 
-        The actor for `ag:Observe` (knowledge/domain/actor.md) — the FAMILY is named, so the
+        The actor for `sensing:Observe` (knowledge/domain/actor.md) — the FAMILY is named, so the
         listening module is offered the same row and declines, and this one answers True
         only where a driver exists to nudge. The look is satisfied by the reading arriving,
         whoever caused it, exactly as before: `Keeper.on_reading_recorded` resolves it.
         """
-        if row.means != _OBSERVE:
+        if row.means != OBSERVE:
             return False
         nudged = False
         for sensor in self.sensors:

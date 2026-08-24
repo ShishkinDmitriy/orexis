@@ -21,7 +21,7 @@ from conftest import MOISTURE, genesis_store
 
 GARDENER = "http://example.org/orexis/world/loner#gardener"
 ZZ = "http://example.org/orexis/world/loner#zz"
-ACTUATE = "http://example.org/orexis#Actuate"
+ACTUATE = "http://example.org/orexis/actuation#Actuate"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 
 

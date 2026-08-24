@@ -640,7 +640,7 @@ class Planner:
         reach, and be wrong in the direction that looks like a device lying — the single-source
         argument #238 made for an effect's magnitude and #247 for its timing.
 
-        DISPATCHED ON THE MEANS, and getting that wrong is what #268 was underneath. Asking the
+        ASKED OF THE TAKER, and getting that wrong is what #268 was underneath. Asking the
         actuator about everything returned 0.0 for every Acquire, because a plant that BUYS its
         water holds no actuator — so the effect rule predicted a world identical to the one the
         agent was in, and the search concluded that buying does not help. That is worse than the
@@ -654,18 +654,20 @@ class Planner:
         """
         value = desire.value if value is None else value
         observed_property = observed_property or desire.observed_property
-        if observed_property is None or value is None:
+        if observed_property is None or value is None or means is None:
             return 0.0
-        if means == _ACQUIRE:
-            bidding = self.agent.provider(_BIDDING)
-            litres = (bidding.qty_for(observed_property, value)
-                      if bidding is not None else None)
-        elif means == _ACTUATE:
-            actuation = self.agent.provider(_ACTUATION)
-            litres = (actuation.dose_for(observed_property, value)
-                      if actuation is not None else None)
-        else:
-            return 0.0
+        #  ASKED OF WHOEVER TAKES THE ROW, found the way execution finds it: the means'
+        #  `ag:takenBy` family, then every provider, first answer wins. No means is named
+        #  here any more — the table that dispatched Acquire to bidding and Actuate to
+        #  actuation was the kernel's last hold on the latter word.
+        from .execution import taken_by
+
+        family = taken_by(self.agent.beliefs.query, means)
+        litres = None
+        for actor in (self.agent.providers(family) if family else []):
+            litres = actor.size(observed_property, value)
+            if litres is not None:
+                break
         #  NEVER NEGATIVE, and this is the guard that matters most in the whole file. Sizing is
         #  `(aim - value) * conversion`, so a property ABOVE its aim asks for a negative pour —
         #  and the effect rule, asked politely, predicts exactly what a negative dose would do:
@@ -694,10 +696,5 @@ class Planner:
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 _SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
 _AG = rdflib.Namespace("http://example.org/orexis#")
-_ACTUATION = "http://example.org/orexis/actuation#Actuation"
-#  Sizing is asked of whichever module OWNS the lever, so the means and the family that carries
-#  it are both named here. Spelled out rather than imported: `intention/terms.py` and
-#  `market/terms.py` hold the same strings, and a package may not import another's Python.
-_ACTUATE = "http://example.org/orexis#Actuate"
-_ACQUIRE = "http://example.org/orexis#Acquire"
-_BIDDING = "http://example.org/orexis/market#Bidding"
+#  No means or family is named here any more: sizing is `Module.size`, asked of the row's
+#  taker through `ag:takenBy` exactly as execution finds it.

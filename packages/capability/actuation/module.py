@@ -37,10 +37,9 @@ from agent.ontology import SENSED_GRAPH
 from agent.store import bindings
 
 from .beliefs import ACTUATION_PICKS
-from .terms import ACTUATION
+from .terms import ACTUATE as _ACTUATE, ACTUATION
 
 # What this package asks OF others, by family or by IRI — namespaces, never Python.
-_ACTUATE = "http://example.org/orexis#Actuate"
 
 # My own conversion belief for a SELF-dose (#190), keyed by the valuation term the resource
 # chain names: my actuator draws from my own source, the source's class states its good, and
@@ -171,10 +170,14 @@ class ActuationModule(Module):
 
         execution.pursue_about(self.agent, observed_property)
 
+    def size(self, observed_property: str, value: float) -> float | None:
+        """The planner's question, answered by the one who would pour: `dose_for`."""
+        return self.dose_for(observed_property, value)
+
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed self-dose: size it from the reading in hand and command it.
 
-        The actor for `ag:Actuate` (knowledge/domain/actor.md). Everything the market path
+        The actor for `actuation:Actuate` (knowledge/domain/actor.md). Everything the market path
         earns, a self-dose keeps: the act goes through `redeem` on a SELF-CLAIM — signed by
         both keys, verified in the device, confirmed on the status channel, counted when
         silent — and opens an expectation on the end. An unconfirmed self-dose is not a

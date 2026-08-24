@@ -721,8 +721,6 @@ ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capabili
     rdfs:label "taken by" ;
     rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
 
-ag:Observe a ag:Means ; rdfs:label "Observe" ;
-    rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. The first intention every agent adopts, because at birth there is a desired state and no observations — see the decision record. Satisfied by the reading arriving; dropped when whatever needed it stops waiting." .
 
 ag:Acquire a ag:Means ; rdfs:label "Acquire" ;
     rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the claim, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
@@ -730,15 +728,14 @@ ag:Acquire a ag:Means ; rdfs:label "Acquire" ;
 ag:Apply a ag:Means ; rdfs:label "Apply" ;
     rdfs:comment "Spend a held claim against the world. REAL since #132, and earlier than the futures market this was reserved for — because the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy: never spend a dose you cannot watch land. Adopted when the claim arrives, standing while the holder waits for its watch to be live (the #135 ack at the fast cadence, or the bounded wait), satisfied when the claim is presented on the market's redeem channel. The expectation on the end opens HERE rather than at the claim, because this is when the dose becomes imminent. The futures seam now merely extends the holding period this gave a mechanism to." .
 
-ag:Actuate a ag:Means ; rdfs:label "Actuate" ;
-    rdfs:comment "Move a property directly: the lever is mine and the resource is mine, so no negotiation — the ladder's second rung (#190), honest exactly where BOTH chains end at the agent: the lever chain (my actuator, plumbed to my subject) and the resource chain (drawing from a source no market offers as its lot — a pot-local pump on the shared barrel still bids, because the market is about the resource, not the lever). Adopted when the search finds this rung reaches a better world, STANDING from the command until its expectation is judged (#353) — the intention is to the end, a wetter pot, and while it stands the next impulse is absorbed — and satisfied at the verdict, met or unmet; the dose itself is still signed, still confirmed, still watched by an expectation — an unconfirmed self-dose is not a delivered one either, and the REA event stands even though it fulfils no exchange." .
 
-#  `ag:Offer` WAS HERE and is the market's word now — `market:Offer`, declared beside the
-#  action that carries it. It is the first means to leave: the kernel names it nowhere, so
-#  nothing in `agent/` had to learn a package word for it to go. The other four stay only
-#  because the kernel still names them (the keeper satisfies Observe on a reading; the planner
-#  sizes Acquire and Actuate by their families; the keeper reads Apply's hold), which is the
-#  seam a-round-is-a-fact-and-offering-is-an-action records.
+#  `ag:Offer`, `ag:Observe` and `ag:Actuate` WERE HERE and are their packages' words now —
+#  `market:Offer`, `sensing:Observe`, `actuation:Actuate`, each declared beside the action that
+#  carries it. A means leaves the kernel the day the kernel stops naming it: Offer went with
+#  the hand-written plan.rq; Observe when the keeper stopped satisfying a look on a reading
+#  (sensing does, it is the actor); Actuate when the planner stopped dispatching sizing by
+#  means (`Module.size`, asked of whoever takes the row). Acquire and Apply stay while the
+#  kernel names them — the deliberator's tests and the keeper's hold-urgency.
 
 ag:adoptedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "adopted at" .

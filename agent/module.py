@@ -123,6 +123,18 @@ class Module:
         """
         return None
 
+    def size(self, observed_property: str, value: float) -> float | None:
+        """How big the act I take would be, from where this property stands — one act's size.
+
+        Asked by the planner before it simulates a step, and answered by whoever would TAKE
+        the step: a bidder sizes a bid by its deficit and its wallet, an actuator a dose by
+        the deficit and its vessel. The planner used to dispatch this by means — Acquire to
+        the bidding family, Actuate to the actuation family — which was a means->family table
+        in the kernel and the last thing keeping `Actuate` a kernel word. None: I take nothing
+        that has a size, or cannot size this one; a look is sized at nothing.
+        """
+        return None
+
     def take(self, row, desire, intention: str) -> bool:
         """Carry out one committed step, if I am the one who can. True if I did.
 

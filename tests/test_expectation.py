@@ -15,7 +15,8 @@ from dataclasses import replace
 
 import pytest
 
-from agent.keeper import ACQUIRE, ACTUATE as _ACTUATE
+from agent.keeper import ACQUIRE
+from packages.capability.actuation.terms import ACTUATE as _ACTUATE
 
 from agent.store import bindings
 from agent.keeper import DEADLINE_AT

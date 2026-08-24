@@ -120,14 +120,10 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     ("agent/keeper.py", "market#Lowers"): (
         1, "reflex: the keeper's copy of the other half"),
 
-    # KIND 2 — provider-family dispatch. `_dose` dispatches by means (Acquire -> ask Bidding,
-    # Actuate -> ask Actuation), and the keeper and the regions ask sensing to look once. A
-    # means->family table inside the kernel is the registry smell #207 dissolved for menu kinds.
-    # These leave when the sizing declaration moves into the graph: #334's second bullet.
-    ("agent/planner.py", "actuation#Actuation"): (
-        1, "sizing dispatch: the family asked to size an Actuate"),
-    ("agent/planner.py", "market#Bidding"): (
-        1, "sizing dispatch: the family asked to size an Acquire"),
+    # KIND 2 — provider-family dispatch. `_dose` USED to dispatch by means (Acquire -> ask
+    # Bidding, Actuate -> ask Actuation); that is `Module.size` now, asked of the row's taker,
+    # and the two planner entries went with it — #334's second bullet, arrived. What survives
+    # is the keeper and the regions asking sensing to look once.
     ("agent/keeper.py", "sensing#SensingCapability"): (
         1, "the milder cousin: sensing asked to look once, so the baseline is the freshest "
            "thing on record"),
@@ -141,6 +137,10 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # place; it leaves when no volume older than that change can exist to migrate.
     ("agent/vocabulary.py", "market#Offer"): (
         2, "migration: where the kernel's Offer went, from two older spellings — removable with the last pre-#363 volume"),
+    ("agent/vocabulary.py", "sensing#Observe"): (
+        2, "migration: where the kernel's Observe went — removable with the same volumes"),
+    ("agent/vocabulary.py", "actuation#Actuate"): (
+        2, "migration: where the kernel's Actuate went — removable with the same volumes"),
 
     # KIND 3 — `agent/ontology.py`'s namespace constants. Self-aware in place ("these are NOT a
     # prefix registry") and consumed mainly by `onboarding/`, which legitimately knows packages
@@ -257,7 +257,7 @@ def test_the_scan_pattern_matches_the_shape_it_is_looking_for():
         ["market#Bidding"]
     assert [_tail(m) for m in _PACKAGE_IRI.finditer(f"PREFIX sensing: <{_STEM}sensing#>")] == \
         ["sensing#"]
-    assert not _PACKAGE_IRI.findall("http://example.org/orexis#Actuate"), \
+    assert not _PACKAGE_IRI.findall("http://example.org/orexis#Acquire"), \
         "the kernel's own namespace is not a package's and must not be swept up"
 
 

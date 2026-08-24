@@ -47,12 +47,11 @@ def taken_by(query, means: str) -> str | None:
 
 
 def pursue(agent, desire) -> str | None:
-    """Plan, commit, take. The intention adopted, or None: nothing to do, or already standing.
+    """Plan, commit, take. The intention that stands for the plan's head — adopted now, or
+    already standing and absorbed — or None where the search proposed nothing.
 
-    None is three different silences and all three are decisions somebody else made: the
-    search proposed nothing (its trace says why), the keeper absorbed the impulse (the same
-    commitment already stands within patience), or the plan's head is a duty's honoured row
-    this agent is not asked to serve yet. None of them is this function's to second-guess.
+    None is a decision somebody else made: the search found no step (its trace says why).
+    An absorbed impulse is NOT None — the commitment stands, and the caller is told which.
     """
     plan = agent.deliberator.decide(desire)
     if plan is None or not plan.steps:
@@ -69,7 +68,13 @@ def pursue(agent, desire) -> str | None:
     uri = keeper.adopt(row.means, row.observed_property,
                        _because(plan, desire), desire=desire.uri, via=row.via)
     if uri is None:
-        return None
+        #  ABSORBED: the same commitment already stands within patience. Say WHICH, so a
+        #  caller that needs to know whether anything is on its way (a bidder waiting for a
+        #  look) can tell an absorbed impulse from a want nothing can serve — both used to
+        #  come back as None, and the second is the only one that means "sit out".
+        standing = keeper.standing(means=row.means, observed_property=row.observed_property,
+                                   desire=desire.uri)
+        return standing[0].uri if standing else None
     carry_out(agent, row, desire, uri)
     return uri
 

@@ -20,9 +20,9 @@ link from a row to its code is a **fact in the graph** rather than a dispatch ta
 # The triple
 
 ```turtle
-sensing:Observing   ag:means ag:Observe ; ag:takenBy sensing:SensingCapability .
+sensing:Observing   ag:means sensing:Observe ; ag:takenBy sensing:SensingCapability .
 market:Acquiring    ag:means ag:Acquire ; ag:takenBy market:Bidding .
-actuation:Dosing    ag:means ag:Actuate ; ag:takenBy actuation:Actuation .
+actuation:Dosing    ag:means actuation:Actuate ; ag:takenBy actuation:Actuation .
 market:Offering     ag:means market:Offer ; ag:takenBy market:Hosting .
 market:Serving      ag:means ag:Apply   ; ag:takenBy market:Hosting .
 ```

@@ -73,3 +73,8 @@
 :doseGraceS a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:integer ;
     rdfs:label "dose grace seconds" ;
     rdfs:comment "How long after a dose SHOULD have finished this agent still waits for the device to say it did. Added to the open-seconds the agent computed for that dose, never used alone: the deadline is this dose's own duration plus this slack. Silence past it is not proof the water did not flow — the report may simply be lost — which is why it is reported and counted rather than acted on. See knowledge/decisions/an-unconfirmed-dose-is-not-a-delivered-one.md." .
+
+#################  Dosing, as a MEANS  #################
+
+:Actuate a ag:Means ; rdfs:label "Actuate" ;
+    rdfs:comment "Move a property directly: the lever is mine and the resource is mine, so no negotiation — the ladder's second rung (#190), honest exactly where BOTH chains end at the agent. THIS PACKAGE'S word since it left the kernel: `actuation:Dosing` is the action and this module its taker, and the planner sizes a dose by asking the taker (`Module.size`) rather than by naming this term. Adopted when the search finds this rung reaches a better world, STANDING from the command until its expectation is judged (#353), satisfied at the verdict; the dose itself is signed, confirmed, and watched by an expectation." .

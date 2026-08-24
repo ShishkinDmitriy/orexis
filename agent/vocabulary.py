@@ -100,7 +100,7 @@ def declared(st) -> set[str]:
 #  one thing its own error message refuses to do.
 MOVED = {
     **{f"http://example.org/orexis/intention#{n}": f"http://example.org/orexis#{n}"
-       for n in ("Intention", "by", "Means", "Observe", "Acquire", "Apply", "Actuate",
+       for n in ("Intention", "by", "Means", "Acquire", "Apply",
                  "adoptedAt", "resolvedAt", "outcome", "becauseOf", "expectsValueTo",
                  "baselineValue", "baselineAt", "deadlineAt", "expectsDelta", "endMet",
                  "endVerifiedAt")},
@@ -128,6 +128,10 @@ MOVED = {
     #  package's word — the destination, not the step, as the note above says.
     "http://example.org/orexis/intention#Offer": "http://example.org/orexis/market#Offer",
     "http://example.org/orexis#Offer": "http://example.org/orexis/market#Offer",
+    "http://example.org/orexis/intention#Observe": "http://example.org/orexis/sensing#Observe",
+    "http://example.org/orexis#Observe": "http://example.org/orexis/sensing#Observe",
+    "http://example.org/orexis/intention#Actuate": "http://example.org/orexis/actuation#Actuate",
+    "http://example.org/orexis#Actuate": "http://example.org/orexis/actuation#Actuate",
     "http://example.org/orexis/desire#Desire": "http://www.w3.org/ns/shacl#NodeShape",
     "http://example.org/orexis/desire#desires": "http://example.org/orexis#holds",
     "http://example.org/orexis#boundedBy": "http://example.org/orexis#holds",
