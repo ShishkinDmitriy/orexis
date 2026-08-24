@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from conftest import HUMIDITY, MOISTURE, build_agent, genesis_store
+from conftest import HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for
 
 
 @pytest.fixture
@@ -146,7 +146,7 @@ def _with_reading(value, age_s=0):
 def test_a_thirsty_bidder_answers_with_its_own_number(make):
     fern = make("fern", _with_reading(0.10))
     market = market_of(fern)
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     bid = fern.sent.to(f"{market.bid_topic}/fern")[-1]
     assert bid["auction_id"] == "r1" and bid["agent"] == "fern"
     assert bid["max_qty_l"] > 0 and bid["max_price_per_l"] > 0
@@ -155,7 +155,7 @@ def test_a_thirsty_bidder_answers_with_its_own_number(make):
 def test_a_satisfied_bidder_cedes(make):
     # 0.60 is above fern's 0.55 target — a reflex, no bid
     fern = make("fern", _with_reading(0.60))
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.under("market/") == []
 
 
@@ -164,7 +164,7 @@ def test_the_same_reading_divides_them(make):
     fern = make("fern", _with_reading(0.25))
     succulent = make("succulent", _with_reading(0.25))
     for a in (fern, succulent):
-        a.deliver(market_of(a).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+        a.deliver(market_of(a).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.under("market/") != []
     assert succulent.sent.under("market/") == []
 
@@ -172,7 +172,7 @@ def test_the_same_reading_divides_them(make):
 def test_a_stale_reading_cannot_back_a_bid(make):
     """Bone dry, but read a day ago — owning the cadence must not mean bidding on the past."""
     fern = make("fern", _with_reading(0.05, age_s=86_400))
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.under("market/") == []
 
 
@@ -186,7 +186,7 @@ def test_staleness_is_measured_against_the_cadence_the_agent_asked_for(make):
     Nothing has aimed this agent yet, so the interval in force is the slowest it would ask for.
     """
     fern = make("fern", _with_reading(0.05, age_s=200))
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.under("market/") != [], (
         "200s is well inside slowSleepS + grace, so this reading arrived as instructed")
 
@@ -239,7 +239,7 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
     from packages.capability.market.terms import BIDDING
 
     fern = make("fern")  # nothing in hand, so it waits
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     bidding = next(m for m in fern.modules if m.CAPABILITY == BIDDING)
 
     bidding.on_reading_recorded(fern.me.acts_for, HUMIDITY, 0.10)
@@ -274,7 +274,7 @@ def test_a_bidder_whose_domain_prices_no_property_refuses_to_start(make):
 def test_a_reading_past_the_cadence_and_its_grace_is_stale(make):
     """The rule still bites — it is relative, not absent."""
     fern = make("fern", _with_reading(0.05, age_s=6_000))
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.under("market/") == []
 
 
@@ -284,7 +284,7 @@ def test_the_bidder_asks_its_sensor_and_waits(make):
     """With nothing in hand it must not answer from stale storage — it looks first."""
     fern = make("fern")  # no readings at all
     market = market_of(fern)
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
 
     sensor = fern.me.sensors[0]
     assert {"sense": True} in fern.sent.to(sensor.command_topic), "it should nudge its board"
@@ -297,7 +297,7 @@ def test_the_bidder_asks_its_sensor_and_waits(make):
 
 def test_a_silent_sensor_means_sitting_the_round_out(make):
     fern = make("fern")
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     fern.bidding().give_up()  # the window closed with no answer
     assert fern.sent.under(market_of(fern).bid_topic) == []
 
@@ -305,7 +305,7 @@ def test_a_silent_sensor_means_sitting_the_round_out(make):
 def test_a_late_reading_does_not_bid_into_a_closed_round(make):
     fern = make("fern")
     market = market_of(fern)
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     fern.bidding().give_up()
     fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.10})
     assert fern.sent.under(market.bid_topic) == []
@@ -486,9 +486,9 @@ def test_the_host_schedules_the_close(host):
 
 def test_the_bidder_gives_up_when_the_window_passes(make):
     fern = make("fern")
-    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     deadline = fern.bidding()._deadline
-    assert deadline is not None and deadline.interval_s == 3
+    assert deadline is not None and deadline.interval_s == 30
     deadline.stop()
 
 
@@ -927,6 +927,7 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
     assert host.sent.to(valve.command_topic) == [], \
         "a pour from a vessel known too low discharges nothing — the claim is held, not spent"
 
+    open_round_for(host, "supplier")   # the city has a round open — the refill is buyable
     duty = next(g for g in host.pursuing() if g.is_duty)
     move = host.deliberator.propose_for(duty)
     assert move == "http://example.org/orexis#Acquire", \

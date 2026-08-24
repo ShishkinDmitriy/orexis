@@ -250,3 +250,26 @@ def desires_build(st: Store, agent_id: str):
     from agent.desire import Desires
 
     return Desires(Beliefs(st, agent_id))
+
+
+def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[str]:
+    """A round open on every venue this agent bids in — the fact, written as the wire would.
+
+    Since #358 the buying row exists only while a round is open, so a test asking what a
+    plant could do, or whether it would buy, has to say a round is open first. Written through
+    the market's own writer into the agent's own graph, exactly as `on_offer` writes it; a
+    bare store gets a stand-in with the two things the writer reads.
+    """
+    from datetime import datetime, timedelta, timezone
+    from types import SimpleNamespace
+
+    from agent.store import bindings
+    from packages.capability.market import rounds
+
+    st = getattr(st_or_agent, "beliefs", st_or_agent)
+    agent = st_or_agent if hasattr(st_or_agent, "beliefs") else SimpleNamespace(beliefs=st, id=agent_id)
+    venues = [r["v"] for r in bindings(st.query(
+        f'SELECT ?v WHERE {{ ?a ag:localId "{agent_id}" ; market:bidsIn ?v }}'))]
+    closes = datetime.now(timezone.utc) + timedelta(seconds=seconds)
+    return [rounds.open_round(agent, v, f"test-{agent_id}-{i}", 2.0, 0.4, closes)
+            for i, v in enumerate(venues)]

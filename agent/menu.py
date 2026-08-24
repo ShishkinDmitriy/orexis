@@ -60,7 +60,7 @@ _ACTIONS_Q = """SELECT ?means ?available WHERE {
   ?action a ag:Action ; ag:means ?means ; ag:available ?available }"""
 
 
-def menu_of(query, agent_uri: str, desires) -> list[Affordance]:
+def menu_of(query, agent_uri: str, desires, beliefs: str) -> list[Affordance]:
     """What one agent could do, about what, through which lever — derived, never written.
 
     The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
@@ -69,7 +69,8 @@ def menu_of(query, agent_uri: str, desires) -> list[Affordance]:
 
     THE UNION OF WHAT THE LOADED ACTIONS SAY (#207, an-action-is-one-node): every `ag:Action`
     in the store carries its precondition as `ag:available`, and this runs each one with `$me`
-    and the desired `$properties` filled in. The action's `ag:means` is the row's; a bound
+    and the desired `$properties` filled in, and `$beliefs` naming the agent's own graph.
+    The action's `ag:means` is the row's; a bound
     `?for_agent` makes the row a duty's. Sensing brings Observe, the market Acquire and the
     host's Apply, actuation Actuate — and a new way of acting is a node in a new directory,
     never an edit here. Sorted because per-action order is no order.
@@ -81,8 +82,11 @@ def menu_of(query, agent_uri: str, desires) -> list[Affordance]:
     props = " ".join(f"<{r['property']}>" for r in bindings(desires(_DESIRED_Q % agent_uri)))
     rows = []
     for action in bindings(query(_ACTIONS_Q)):
+        #  `$beliefs` names the agent's OWN graph, as it does for an effect rule: a premise
+        #  may be something only this agent was told — an open round is one (#358) — and
+        #  the default graph is public knowledge, so a walk that needs it must say so.
         q = (action["available"].replace("$me", f"<{agent_uri}>")
-             .replace("$properties", props))
+             .replace("$properties", props).replace("$beliefs", f"<{beliefs}>"))
         rows += [Affordance(means=action["means"], observed_property=r["property"],
                             via=r["via"], direction=r.get("direction"),
                             for_agent=r.get("for_agent"))

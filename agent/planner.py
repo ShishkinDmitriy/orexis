@@ -453,10 +453,11 @@ class Planner:
         menu of a world nobody is in yet.
 
         Asked of the agent's store rather than of the node's, and that is not the defect #254
-        closed arriving a third time: no affordance query names a graph or reads a reading, so
-        every row is a conclusion from wiring alone and the menu of a possible world is the menu
-        of this one. It would stop being true of a rule whose effect moved something a row's
-        premises walk, and then this would take the imaginarium too.
+        closed arriving a third time: no shipped effect moves anything a row's premises walk —
+        a reading is not a premise, and the one own-graph premise there is, an open round
+        (#358), is written by the wire and not by any effect. The day an effect opens a round
+        (Offering, #359) this takes the imaginarium too, and "acquire after offer" becomes a
+        two-step a search can see.
 
         No `which violations do I repair` declaration is consulted. The record proposes one and
         it is an OPTIMISATION — a way to skip simulating a lever that obviously cannot help —
@@ -465,7 +466,8 @@ class Planner:
         """
         from .menu import menu_of
 
-        for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union):
+        for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union,
+                           beliefs_graph(self.agent.id)):
             if desire.is_duty:
                 #  A duty may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its

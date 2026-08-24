@@ -49,8 +49,8 @@ def take(self, row, desire, intention: str) -> bool
 `row` is the [affordance](/domain/affordance.md) the plan's head is — the means, the property,
 the [lever](/domain/lever.md) and, for a duty, whom it is owed to. `desire` is the want it
 serves, `intention` the ledger row already written for it. What an actor does with them is its
-own: sensing nudges every driver that can be asked; bidding publishes a bid if a round is
-pending and otherwise stands ready to answer the next one; actuation sizes a dose from the
+own: sensing nudges every driver that can be asked; bidding reads the open round off the row's
+own venue and bids into it; actuation sizes a dose from the
 current reading and commands it; hosting serves the presented claim. The *how* stays where it
 always was — `value_bid`, `dose_for`, `redeem` — and none of them moved.
 

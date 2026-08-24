@@ -38,9 +38,11 @@ first, and goes through the desire door.
 | an offer, reading in hand | bidding | ask the deliberator inside `submit`, adopt, bid |
 | a claim presented, or stock arriving with one held | hosting | ask the deliberator, serve if it said Apply |
 
-**A standing step is executed, not re-decided.** The bidder's case is the one that mattered: an
-`Acquire` adopted on the tick stands until a round arrives, and the offer then goes look → bid
-with no search in between. A round used to cost three passes over one world; it costs one.
+**A standing step is executed, not re-decided.** The bidder's case is the one that mattered: a
+round is decided once — by the offer or by the tick while it is open, whichever comes first —
+and the other finds the `Acquire` standing and searches nothing. A round used to cost three
+passes over one world; it costs one. Between rounds nothing stands to buy, because the row does
+not exist ([a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md)).
 
 # What it is not
 

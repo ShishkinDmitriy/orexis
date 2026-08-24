@@ -335,6 +335,12 @@ class BiddingModule(Module):
         #  round closed — it gets a claim or nothing — so the clock ends the row, and the
         #  ones already past their close are swept here, on the one event that always comes.
         rounds.sweep_expired(self.agent)
+        #  AN ACQUIRE FROM A ROUND THAT ENDED WITHOUT A CLAIM is a commitment the world
+        #  answered by silence — I lost, and nobody tells a loser. The row is gone by the
+        #  clock; the intention it headed is dropped here, with the reason, so the search
+        #  starts this round with nothing standing and its own fresh decision (#358).
+        if (keeper := self._keeper()) is not None and not rounds.rounds_of(self.agent, market.uri):
+            keeper.drop(ACQUIRE, self.about, "the round I bid in closed without a claim")
         from datetime import timedelta
 
         rounds.open_round(self.agent, market.uri, auction_id,
@@ -421,6 +427,7 @@ class BiddingModule(Module):
             rounds.close_round(self.agent, self.pending["auction_id"])
             if keeper := self._keeper():
                 keeper.drop(OBSERVE, self.about, f"the auction closed first: {why}")
+                keeper.drop(ACQUIRE, self.about, f"the auction closed first: {why}")
             self.pending = None
 
     def _why_blind(self) -> str:
@@ -458,6 +465,7 @@ class BiddingModule(Module):
 
         if self.pending is None:
             return
+        auction_id = self.pending["auction_id"]
         if self._deadline:
             self._deadline.stop()
         keeper = self._keeper()
@@ -473,7 +481,7 @@ class BiddingModule(Module):
             #  Nobody took it: the search proposed nothing, or the impulse was absorbed
             #  within patience (a claim just won). Either is a decision, and the round passes.
             self.log.info("auction %s: moisture %.3f — deliberation chose not to pursue",
-                          self.pending["auction_id"], moisture)
+                          auction_id, moisture)
             self.pending = None
 
     def take(self, row, desire, intention: str) -> bool:
@@ -487,22 +495,27 @@ class BiddingModule(Module):
         """
         if row.means != ACQUIRE or row.observed_property != self.about:
             return False
-        if self.pending is None:
-            self.log.info("Acquire committed and no round open — standing until one is")
+        #  THE ROUND IS THE FACT, read off the row's own lever (#358): the row exists only
+        #  while one is open on that venue, so this is a lookup and never a wait. `pending`
+        #  survives only as "I asked for a look for this round" — the actor's own bookkeeping,
+        #  not a second statement of whether a round is open.
+        open_ = [r for r in rounds.rounds_of(self.agent, row.via) if r.is_open()]
+        if not open_:
             return False
         sensing = self.agent.provider(SENSING)
         reading = (sensing.fresh_reading(self.me.acts_for, self.about)
                    if sensing is not None else None)
         if reading is None:
             return False
-        return self._bid(reading.value)
-
-    def _bid(self, moisture: float) -> bool:
-        """Size and publish one bid into the pending round. True if one left."""
-        rnd, self.pending = self.pending, None
-        if rnd is None:
+        market = next((m for m in self.me.markets if m.uri == row.via), None)
+        if market is None:
             return False
-        auction_id, market = rnd["auction_id"], rnd["market"]
+        return self._bid(reading.value, market, open_[0].auction_id)
+
+    def _bid(self, moisture: float, market, auction_id: str) -> bool:
+        """Size and publish one bid into the round that is open. True if one left."""
+        if self.pending and self.pending.get("auction_id") == auction_id:
+            self.pending = None
         aim = self._my_aim()
         if aim is None:
             self.log.info("auction %s: I hold no aim in %s — sitting out",

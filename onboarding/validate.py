@@ -118,10 +118,26 @@ def deliberable(st, desires: dict) -> bool:
     from agent.regions import regions_of
     from agent.world import load_self
 
+    from agent.ontology import beliefs_graph
+    from agent.store import bindings
+
     faults = 0
+    #  EVERY ACTION THAT CAN PUT A ROW ON A MENU, not every row a menu happens to hold now.
+    #  A premise may be a fact an agent is told at runtime — an open round (#358) — so the
+    #  menu at genesis is not the menu at noon, and a gate that read the rows would have
+    #  waved through the very lever that matters. The action's own node says whether it
+    #  states an effect; that is a fact about the loaded packages, and it is asked as one.
+    for action in bindings(st.query(
+            "SELECT ?action ?means WHERE { ?action a ag:Action ; ag:means ?means ; "
+            "ag:available ?q FILTER NOT EXISTS { ?action sh:construct ?c } }")):
+        faults += 1
+        log.error("%s offers rows for %s and no loaded package says what that DOES — a "
+                  "search that cannot simulate a lever passes it over, and then concludes "
+                  "from the rest of the menu", action["action"].rsplit("#", 1)[-1],
+                  action["means"].rsplit("#", 1)[-1])
     for agent_id, wants in desires.items():
         me = load_self(st.query, agent_id)
-        for row in menu_of(st.query, me.uri, wants.query_union):
+        for row in menu_of(st.query, me.uri, wants.query_union, beliefs_graph(agent_id)):
             if effects.rule_for(st, row.means) is None:
                 faults += 1
                 log.error("%s could take %s through %s, and no loaded package says what that "

@@ -22,7 +22,8 @@ from agent.world import load_self
 from agent.menu import menu_of
 from agent.deliberator import ACQUIRE, OBSERVE
 
-from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build
+from agent.ontology import beliefs_graph
+from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for
 
 
 @pytest.fixture
@@ -132,7 +133,9 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     """
     from agent.desire import Desire
 
-    decider = decider_of(make("fern"))
+    fern = make("fern")
+    open_round_for(fern, "fern")   # a buying row exists only while a round is open (#358)
+    decider = decider_of(fern)
     for value in (0.10, 0.54):
         stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) == ACQUIRE, f"thirsty at {value} and not buying"
@@ -177,7 +180,7 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
     monkeypatch.setattr(decider_of(fern), "propose_about", lambda prop: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
 
 
@@ -194,7 +197,7 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     monkeypatch.setattr(decider_of(fern), "propose_about", lambda prop: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
-    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.bidding().pending is None
     # and no observe intention was adopted — nothing committed to a wait nobody is waiting on
     keeper = next(m for m in fern.modules if m.name == "intention")
@@ -207,11 +210,11 @@ def test_the_round_runs_exactly_as_it_always_did(make):
     and it is the one assertion that would have caught the search quietly deciding differently
     from the chain it replaced."""
     thirsty = make("fern", genesis_store({"fern": 0.10}))
-    thirsty.deliver(market_of(thirsty).offer_topic, {"auction_id": "r1", "closes_in_s": 3})
+    thirsty.deliver(market_of(thirsty).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(thirsty.sent.to(f"{market_of(thirsty).bid_topic}/fern")) == 1
 
     sated = make("fern", genesis_store({"fern": 0.80}))
-    sated.deliver(market_of(sated).offer_topic, {"auction_id": "r2", "closes_in_s": 3})
+    sated.deliver(market_of(sated).offer_topic, {"auction_id": "r2", "closes_in_s": 30})
     assert sated.sent.to(f"{market_of(sated).bid_topic}/fern") == []
 
 
@@ -244,7 +247,9 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
         INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule sh:construct ?flipped }} }}
         WHERE  {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule ag:means ag:Acquire ; sh:construct ?text }}
                   BIND(REPLACE(?text, "(\\\\$value) \\\\+ ", "$1 - ") AS ?flipped) }}""")
-    decider = decider_of(make("fern", ds))
+    fern = make("fern", ds)
+    open_round_for(fern, "fern")
+    decider = decider_of(fern)
     stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=0.10)
     assert decider.propose_for(stake) is None, \
         "a lever the graph says would dry this plant out was pulled anyway"
@@ -257,7 +262,8 @@ def test_the_menu_is_derived_from_the_graph(make):
     agent — these properties, these levers, these directions. Nothing here was written as a
     menu; every row is a join over facts that exist for their own reasons."""
     st = genesis_store()
-    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union)
+    open_round_for(st, "fern")
+    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
     as_tuples = {(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
                   r.direction.rsplit("#", 1)[-1] if r.direction else None) for r in rows}
     assert as_tuples == {
@@ -287,7 +293,8 @@ def test_the_dealers_menu_gained_its_lever(make):
     supplier gets now is one lever and an honest silence about the other.
     """
     st = genesis_store()
-    rows = menu_of(st.query, "http://example.org/orexis/world/simulation#supplier", desires_build(st, "supplier").query_union)
+    open_round_for(st, "supplier")
+    rows = menu_of(st.query, "http://example.org/orexis/world/simulation#supplier", desires_build(st, "supplier").query_union, beliefs_graph("supplier"))
     assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
             for r in rows if r.is_own] == [("Acquire", "StoredLitres", "Raises")]
@@ -314,7 +321,7 @@ def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
     st.update(f"""DELETE WHERE {{ GRAPH <{WORLD_GRAPH}> {{
         <http://example.org/orexis/world/simulation#valve_fern>
             <http://example.org/orexis/actuation#actuates> ?pot }} }}""")
-    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union)
+    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
     assert not any(r.means == ACQUIRE for r in rows), (
         "an unplumbed market must yield no Acquire row")
     assert any(r.means == OBSERVE for r in rows), (
@@ -354,7 +361,8 @@ def test_two_denominations_make_two_rows_and_never_four(make):
         <{ns}fan1> <http://example.org/orexis/actuation#actuates> <{ns}fern> .
         <{ns}fern_agent> <{market}bidsIn> <{ns}fan_market> .
     }} }}""")
-    acquire = [r for r in menu_of(st.query, FERN, desires_build(st, "fern").query_union)
+    open_round_for(st, "fern")
+    acquire = [r for r in menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
                if r.means == ACQUIRE and r.observed_property.endswith("SoilMoisture")]
     assert sorted((r.direction or "").rsplit("#", 1)[-1] for r in acquire) == \
         ["Lowers", "Raises"], (
@@ -410,7 +418,8 @@ ag:Consulting a ag:Action ; ag:means ag:Consult ;
     real = loader.action_files()
     monkeypatch.setattr(loader, "action_files", lambda: real + (toy,))
     st = genesis_store()
-    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union)
+    open_round_for(st, "fern")
+    rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
     kinds = {r.means.rsplit("#", 1)[-1] for r in rows}
     assert "Consult" in kinds, "the toy package's kind must appear"
     assert {"Observe", "Acquire"} <= kinds, "and the shipped kinds must survive it"
@@ -432,7 +441,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     from agent.desire import Desire
 
     supplier = make("supplier")
-    rows = menu_of(supplier.beliefs.query, supplier.me.uri, supplier.desires.query_union)
+    rows = menu_of(supplier.beliefs.query, supplier.me.uri, supplier.desires.query_union, beliefs_graph(supplier.id))
     duties = [r for r in rows if not r.is_own]
     assert duties, "the conduct surface includes what it honours"
 
@@ -451,7 +460,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
 def test_a_buyer_honours_nothing(make):
     """Fern holds no venue and no valve: everything on its menu is its own to choose."""
     fern = make("fern")
-    assert all(r.is_own for r in menu_of(fern.beliefs.query, fern.me.uri, fern.desires.query_union))
+    assert all(r.is_own for r in menu_of(fern.beliefs.query, fern.me.uri, fern.desires.query_union, beliefs_graph(fern.id)))
 
 
 # --- step 9: a desire, not a property and a value -----------------------------

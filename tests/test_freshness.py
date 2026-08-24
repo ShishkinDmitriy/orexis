@@ -15,7 +15,7 @@ from pyshacl import validate as shacl_validate
 
 from agent.regions import desires_of
 
-from conftest import desires_build, MOISTURE, build_agent, genesis_store
+from conftest import open_round_for, desires_build, MOISTURE, build_agent, genesis_store
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
@@ -270,6 +270,7 @@ def test_a_listener_reports_the_want_it_cannot_repair_as_unequipped(monkeypatch)
     from agent import trace
 
     supplier = build_agent("supplier", genesis_store(), monkeypatch)
+    open_round_for(supplier, "supplier")   # the upstream lever exists only while a round is open
     want = next(d for d in supplier.pursuing()
                 if d.is_epistemic and d.observed_property.endswith("StoredLitres"))
 
