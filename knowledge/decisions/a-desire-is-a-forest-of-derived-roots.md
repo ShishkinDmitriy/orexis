@@ -3,10 +3,12 @@ type: Decision
 title: A desire is a forest of derived roots, decomposed to the leaves the levers meet
 description: >-
   The sovereign settled the hierarchy the mandate proposal only gestured at, refined from one
-  trunk to several — a root desire per premise, universally quantified over a class, decomposed
-  per instance, per property and per side, materialised into the desires build's derived graph
-  with PROV carrying each node's parent and premises. Instances enter exactly one level down,
-  which is where the T-Box ends and the roster begins; an authored instance-level range
+  trunk to several — a root desire per premise, an underived starting point of decomposition,
+  decomposed per instance, per property and per side, materialised into the desires build's
+  derived graph with PROV carrying each node's parent and premises. A derived root quantifies
+  over a class and binds its instances one level down, but a ratified root may name an instance
+  from the start — the invariant at every level is provenance, deduced or ratified and never
+  authored by the agent, not the quantification level. An authored instance-level range
   statement overrides the type-level one per property, and may widen as well as narrow, because
   the strictness asymmetry binds the agent and the agent may author nothing. Every level must
   name a consumer or fold back, and the two standing rules — never retracted, only recomputed;
@@ -20,10 +22,11 @@ timestamp: 2026-08-24T14:30:00Z
 What an agent holds today is a flat set: `agent/desires.ru` derives one region and one envelope
 per (agent, property), a freshness want per instrument, and nothing that relates any of them.
 The sovereign settled the structure above that set, and it is a **forest, not one trunk**: a
-**root desire** per premise, each a universally quantified statement over a CLASS — *all the
-subjects I act for are inside their ranges*, *all my instruments report freshly*, *all my debts
-are honoured* — decomposing per instance, then per property, then per side, down to exactly the
-leaves the derivation already emits.
+**root desire** per premise, each an underived starting point of decomposition — typically a
+universally quantified statement over a CLASS: *all the subjects I act for are inside their
+ranges*, *all my instruments report freshly*, *all my debts are honoured* — decomposing per
+instance, then per property, then per side, down to exactly the leaves the derivation already
+emits.
 
 [#263](https://github.com/ShishkinDmitriy/orexis/issues/263) closed by naming this: *"the
 mandate proposal — one root desire decomposed — which is the other half of the sovereign's idea
@@ -45,17 +48,30 @@ hand-declaration this record refuses. The guardrail in
 *"deduced or ratified patterns, never privately authored goals"* — a ratified statement is the
 sovereign speaking, and it composes with derivation rather than competing: the standard roots
 arrive implied, and a world that states one more is ratifying, at the gates, auditable. What
-remains refused is only ever the agent authoring its own.
+remains refused is only ever the agent authoring its own. The two amendments reinforce each
+other: a world-stated root is exactly where an instance-level root naturally arrives — see
+below, a root is a position rather than a level — so the asserted block and the A-Box root are
+one door, not two.
 
-## The depth axis is the T-Box/A-Box boundary
+## A root is a position, not a level
 
-A root names class-level terms and nothing else. Instances — this fern, this DHT11, this claim
-— enter **exactly one level down**, where the decomposition binds the roster; from there each
-instance splits per property, and each property per side. That placement is what keeps rule 1
-intact rather than bent: code never names an instance, and none is named here — the derivation
-BINDS them from authored world facts, which is the same move `agent/desires.ru` already makes
-when `$me ag:actsFor ?subject` yields a shape about fern without any line of code knowing a
-fern exists.
+The sovereign corrected this record's first draft here, and the correction is the sharper
+definition: *"the root desire can be not around a class — it's just a starting point; it could
+be over A-Box."* A root is defined by where it SITS — an underived starting point of
+decomposition, with no want above it — not by what it quantifies over. The DERIVED roots are
+class-quantified, and their instances — this fern, this DHT11, this claim — enter one level
+down, where the decomposition binds the roster; from there each instance splits per property,
+and each property per side. But that boundary describes those roots rather than defining a
+root: a ratified one may name an instance from the start — *keep this door locked* — and is no
+less a root for it. What holds at EVERY level, the root included, is the provenance
+discipline: **deduced or ratified, never authored by the agent itself.** That, not the
+quantification level, is the invariant.
+
+Rule 1 survives both cases, and neither bends it: code never names an instance, and none is
+named here. A derivation BINDS instances from authored world facts — the same move
+`agent/desires.ru` already makes when `$me ag:actsFor ?subject` yields a shape about fern
+without any line of code knowing a fern exists — and an instance in a ratified root is authored
+in the world's own files, which rule 1 has never restricted.
 
 The bottom two levels are **already in the graph**, verified rather than assumed: the region
 derivation emits below-the-floor and above-the-ceiling as separate property shapes carrying

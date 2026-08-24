@@ -2,20 +2,23 @@
 type: Domain Concept
 title: Root desire
 description: >-
-  A want quantified over a CLASS — every subject on my roster inside what it states it needs,
-  every instrument reporting freshly, every debt honoured — one per premise, so an agent holds
-  a forest rather than a single trunk and a stakeless agent holds nothing at all. A root
-  decomposes per instance, then per property, then per side, each node stating what implied
-  it; named individuals appear exactly one level down, where the derivation binds the roster.
-  A level nothing consumes is a level to fold back.
+  An underived starting point of decomposition, one per premise — typically a want quantified
+  over a CLASS: every subject on my roster inside what it states it needs, every instrument
+  reporting freshly, every debt honoured — so an agent holds a forest rather than a single
+  trunk and a stakeless agent holds nothing at all. A ratified root may just as well name an
+  instance; what makes it a root is having no want above it, not its quantification level. A
+  root decomposes per instance, then per property, then per side, each node stating what
+  implied it. A level nothing consumes is a level to fold back.
 ---
 
 # What it is
 
-A **root desire** is the top of one tree of wants: a statement over a class of things, never
-over a named individual. An agent holds one root per premise — acting for subjects yields the
-welfare root, holding instruments the freshness root, being able to incur obligations the
-debts root — so the whole is a **forest**, and an agent with no premises has no trees.
+A **root desire** is the top of one tree of wants: a starting point the decomposition grows
+from, derived from no want above it. Typically it is a statement over a class of things — an
+agent holds one per premise: acting for subjects yields the welfare root, holding instruments
+the freshness root, being able to incur obligations the debts root — so the whole is a
+**forest**, and an agent with no premises has no trees. A ratified root may instead name an
+instance from the start; its position, not its level, is what makes it a root.
 
 Like the leaves below it, a root is derived, never hand-written; a world may additionally
 ratify one through its asserted desire block, and that is the sovereign speaking rather than
@@ -23,10 +26,12 @@ the agent.
 
 # Where instances enter
 
-The root speaks only T-Box words. One level down the decomposition binds the roster — this
-fern, this probe, this claim — and from there each instance splits per property, each property
-per side of its range. Code still names no instance anywhere: the derivation binds them from
-what the world's files author, so the depth axis IS the T-Box/A-Box boundary.
+A derived root speaks only T-Box words. One level down the decomposition binds the roster —
+this fern, this probe, this claim — and from there each instance splits per property, each
+property per side of its range. Code still names no instance anywhere: a derivation binds them
+from what the world's files author, and a ratified root's instance is authored there too. What
+holds at every level is the provenance discipline — deduced or ratified, never the agent's own
+authoring — rather than any rule about where the T-Box ends.
 
 # Each node states its why
 
