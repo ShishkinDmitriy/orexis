@@ -40,7 +40,7 @@
 
 actuation:Dosing
     a ag:Action ;
-    ag:means ag:Actuate ;
+    ag:means actuation:Actuate ;
 
     #  AVAILABLE where BOTH chains end at $me (#190, the ladder's second rung): the LEVER chain —
     #  an actuator I hold, plumbed to my own subject — and the RESOURCE chain — it draws from a

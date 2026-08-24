@@ -126,11 +126,12 @@ Three changes, each a PR, in this order because each is the next one's premise:
 
 # Seams left open
 
-- **Four means are still the kernel's.** `Offer` left for the market with this record's third
-  step — the kernel never named it, once the hand-written `plan.rq` went. The other four stay
-  because the kernel does: `keeper.on_reading_recorded` satisfies `ag:Observe` by name, the
-  planner sizes `Acquire` and `Actuate` by their families, the keeper reads `Apply`'s hold for
-  urgency. Each leaves the day that reference becomes a hook.
+- **Two means are still the kernel's.** `Offer` left for the market with this record's third
+  step; `Observe` and `Actuate` followed once their kernel holds became hooks — sensing
+  satisfies the look on the reading itself, and the planner sizes a step by asking the row's
+  taker (`Module.size`) rather than by naming its family. `Acquire` and `Apply` stay while the
+  kernel names them: the keeper reads `Apply`'s hold for urgency, and the deliberator's tests
+  import `Acquire` from it.
 - **The lot is still one number.** Offering's effect offers `market:offerQuantityL` capped by
   stock, as `announce` does now. The standing-offer record's first seam is unchanged.
 - **Uniform-price's uncontested round still runs as a ceremony.** A round that is a fact does

@@ -56,8 +56,6 @@ OUTCOME = AG + "outcome"
 BECAUSE_OF = AG + "becauseOf"
 
 # The means — what kind of act the commitment is to.
-OBSERVE = AG + "Observe"
-ACTUATE = AG + "Actuate"
 ACQUIRE = AG + "Acquire"
 APPLY = AG + "Apply"
 
@@ -479,11 +477,11 @@ SELECT ?i ?means ?property ?direction ?baseline ?baselineAt ?deadline ?delta WHE
         beside it — satisfied-and-unmet is the false-knowledge signature review and the
         dashboard look for.
 
-        And every reading is a look that happened (#208): a standing Observe for this
-        property is satisfied first, whoever caused the look — since the tick, an Observe
+        A reading is also a look that happened (#208), and the sensing module — the actor
+        for the look — satisfies the standing Observe itself now; this used to do it by name,
+        and it was the last kernel reference holding that means here. An Observe
         can stand that no auction is waiting on, and the reading IS its arrival.
         """
-        self.satisfy(OBSERVE, observed_property, "a reading arrived — the look happened")
         if subject_uri != self.me.acts_for:
             return
         now = datetime.now(timezone.utc)

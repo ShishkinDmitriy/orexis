@@ -15,8 +15,8 @@ from agent.store import bindings
 
 from conftest import MOISTURE, build_agent, genesis_store
 
-OBSERVE = "http://example.org/orexis#Observe"
-ACTUATE = "http://example.org/orexis#Actuate"
+OBSERVE = "http://example.org/orexis/sensing#Observe"
+ACTUATE = "http://example.org/orexis/actuation#Actuate"
 _AG = "http://example.org/orexis#"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 RESULT_TIME = "http://www.w3.org/ns/sosa/resultTime"
@@ -225,7 +225,7 @@ def test_looking_lands_at_once_because_looking_changes_nothing():
     st = genesis_store({})
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
     fern = "http://example.org/orexis/world/simulation#fern"
-    assert effects.lands_after(st, f"{_AG}Observe", me=f"<{fern}_agent>",
+    assert effects.lands_after(st, "http://example.org/orexis/sensing#Observe", me=f"<{fern}_agent>",
                                subject=f"<{fern}>") == 0.0
 
 

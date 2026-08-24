@@ -40,7 +40,7 @@ from agent.store import bindings
 
 from . import rounds
 from .beliefs import BIDDING_PICKS
-from .terms import (ACQUIRE, APPLY, BIDDING, OBSERVE,
+from .terms import (ACQUIRE, APPLY, BIDDING,
                     SENSING)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
@@ -212,7 +212,7 @@ class BiddingModule(Module):
         from a search over what the agent believes rather than from a number this module is
         holding. The store is not behind the caller — `Observations.record` writes before it
         announces — and where it is (a write that failed), the want reads unmeasured and the
-        answer is Observe, which is the honest move for an agent that lost its own reading.
+        answer is a look, which is the honest move for an agent that lost its own reading.
         """
         return self.agent.deliberator.propose_about(self.about)
 
@@ -382,20 +382,19 @@ class BiddingModule(Module):
             self.submit(reading.value)
             return
 
-        # No reading it trusts — so ask whoever deliberates what to do about not seeing. The
-        # reflex says look, which is what this module always did; the point of asking anyway is
-        # that a member with more context could say otherwise, without this line changing.
-        if self._next_move() != OBSERVE:
+        #  No reading it trusts — so the LOOK is asked for the way everything is now: the
+        #  want about knowing this property goes through execution, which plans, commits and
+        #  hands the look to whoever takes it. None means no plan for it — deliberation chose
+        #  not to look — and a look already standing is on its way (execution says which by
+        #  returning the standing intention). This module names no Observe: the look is
+        #  sensing's word and sensing's act; waiting for it is `pending`, the bidder's own.
+        from agent import execution
+
+        if execution.pursue_about(self.agent, self.about) is None:
             self.log.info("auction %s: deliberation chose not to look — sitting out",
                           auction_id)
             self.pending = None
             return
-
-        # Waiting on the sensor is a commitment — the state `pending` has always carried,
-        # recorded now so it can outlive this process's memory of it.
-        if keeper := self._keeper():
-            keeper.adopt(OBSERVE, self.about,
-                         f"auction {auction_id} needs a reading I do not have fresh")
 
         # Give up when the auction closes — a bid nobody can count is not a bid.
         window = float(offer.get("closes_in_s") or 0) or 1.0
@@ -414,8 +413,6 @@ class BiddingModule(Module):
             return
         if observed_property != self.about:
             return
-        if keeper := self._keeper():
-            keeper.satisfy(OBSERVE, self.about, "the look I asked for came back")
         self.submit(value)
 
     def give_up(self) -> None:
@@ -425,8 +422,9 @@ class BiddingModule(Module):
             why = self._why_blind()
             self.log.info("auction %s: sitting out — %s", self.pending["auction_id"], why)
             rounds.close_round(self.agent, self.pending["auction_id"])
+            #  The look stays wanted and stays committed — a reading is still owed, round or
+            #  no round — so only the Acquire is dropped; sensing resolves the look when it lands.
             if keeper := self._keeper():
-                keeper.drop(OBSERVE, self.about, f"the auction closed first: {why}")
                 keeper.drop(ACQUIRE, self.about, f"the auction closed first: {why}")
             self.pending = None
 
@@ -483,6 +481,10 @@ class BiddingModule(Module):
             self.log.info("auction %s: moisture %.3f — deliberation chose not to pursue",
                           auction_id, moisture)
             self.pending = None
+
+    def size(self, observed_property: str, value: float) -> float | None:
+        """The planner's question, answered by the one who would bid: `qty_for`."""
+        return self.qty_for(observed_property, value)
 
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed Acquire: bid in the round that is open, if one is.

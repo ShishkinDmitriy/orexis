@@ -22,6 +22,7 @@ SENSING = term("SensingCapability")
 
 # The axis is who holds the clock, and these are in decreasing order of agent control.
 POLLING = term("Polling")  # the agent asks, each time — RESERVED, nothing implements it yet
+OBSERVE = term("Observe")          # the look, as a means — this package's word
 SUBSCRIBING = term("Subscribing")  # the agent states an interval; the device keeps to it
 LISTENING = term("Listening")  # the device announces on its own clock; the agent records
 

@@ -20,7 +20,8 @@ import pytest
 
 from agent.world import load_self
 from agent.menu import menu_of
-from agent.deliberator import ACQUIRE, OBSERVE
+from agent.deliberator import ACQUIRE
+from packages.capability.sensing.terms import OBSERVE
 
 from agent.ontology import beliefs_graph
 from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for

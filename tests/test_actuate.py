@@ -10,7 +10,9 @@ deciding, committing and acting runs with no economy at all.
 import pytest
 
 from agent.menu import menu_of
-from agent.deliberator import ACTUATE, ACQUIRE, OBSERVE
+from agent.deliberator import ACQUIRE
+from packages.capability.actuation.terms import ACTUATE
+from packages.capability.sensing.terms import OBSERVE
 
 from agent.ontology import beliefs_graph
 from conftest import build_agent, genesis_store, desires_build, open_round_for
@@ -187,7 +189,7 @@ def test_a_dose_in_flight_absorbs_the_next_impulse(gardener, monkeypatch):
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
         "the dose in flight is a commitment, and a commitment absorbs the same impulse"
-    assert keeper.standing(means="http://example.org/orexis#Actuate",
+    assert keeper.standing(means="http://example.org/orexis/actuation#Actuate",
                            observed_property=MOIST), "it STANDS until the world answers"
 
 

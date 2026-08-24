@@ -28,8 +28,8 @@ from conftest import build_agent, genesis_store, open_round_for
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
-ACTUATE = "http://example.org/orexis#Actuate"
-OBSERVE = "http://example.org/orexis#Observe"
+ACTUATE = "http://example.org/orexis/actuation#Actuate"
+OBSERVE = "http://example.org/orexis/sensing#Observe"
 #  zz states 0.1–0.3, survives 0.02–0.45, and the gardener aims at 0.18 — dry-side of centre,
 #  deliberately (see knowledge/domain/aim.md), which is what makes this world the live case of
 #  the aim-vs-centre finding: the measure scores distance from 0.18, so CONTENT is comfortable
@@ -80,7 +80,7 @@ def test_a_dose_that_reaches_the_region_is_planned(monkeypatch):
     _, plan, _ = _gardener(monkeypatch, DRY)
 
     assert plan.outcome == search.SATISFIED
-    assert [s.means for s in plan.steps] == ["http://example.org/orexis#Actuate"]
+    assert [s.means for s in plan.steps] == ["http://example.org/orexis/actuation#Actuate"]
     assert plan.urgency_after < plan.urgency_now
 
 
@@ -180,7 +180,7 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
 
     before = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), SENSED_GRAPH)
     world = effects.world_after(
-        before, st, "http://example.org/orexis#Actuate",
+        before, st, "http://example.org/orexis/actuation#Actuate",
         me=f"<{GARDENER}>", subject="<http://example.org/orexis/world/loner#zz>",
         property=f"<{MOISTURE}>", litres=0.3, value=DRY,
         beliefs=f"<{beliefs_graph('gardener')}>")

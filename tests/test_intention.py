@@ -19,7 +19,8 @@ import pytest
 
 from agent.world import load_self
 from agent.graphs import intentions_graph
-from agent.keeper import ACQUIRE, OBSERVE
+from agent.keeper import ACQUIRE
+from packages.capability.sensing.terms import OBSERVE
 
 from conftest import MOISTURE, build_agent, genesis_store
 
@@ -89,18 +90,22 @@ def test_waiting_on_a_sensor_is_a_recorded_commitment(make):
     assert len(keeper.standing(means=ACQUIRE)) == 1   # and the bid it fed is now committed
 
 
-def test_a_wait_the_auction_outlives_is_dropped_with_the_reason(make):
+def test_a_wait_the_auction_outlives_keeps_the_look_and_lets_the_round_go(make):
+    """The look used to be adopted FOR the auction and dropped with it. Since the bidder asks
+    execution for its look, the commitment is to the freshness want — a reading is still owed
+    after the round closes, whoever first wanted it — so the look STANDS, the round's row goes,
+    and the reading that lands is what resolves it (sensing satisfies its own means now)."""
+    from packages.capability.market import rounds
+
     fern = make("fern")
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     keeper = keeper_of(fern)
+    assert len(keeper.standing(means=OBSERVE)) == 1, "the look was committed for the round"
     fern.bidding().give_up()
-    assert keeper.standing(means=OBSERVE) == []
-    # the resolution carries why — a commitment abandoned without a reason is one forgotten
-    from agent.store import bindings
-    rows = bindings(fern.beliefs.query(
-        "SELECT ?why WHERE { GRAPH <%s> { ?i ag:outcome \"dropped\" ; "
-        "ag:becauseOf ?why } }" % intentions_graph("fern")))
-    assert any("auction closed first" in r["why"] for r in rows)
+    assert len(keeper.standing(means=OBSERVE)) == 1, "and it stands — a reading is still owed"
+    assert rounds.rounds_of(fern) == [], "the round is over for me"
+    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2})
+    assert keeper.standing(means=OBSERVE) == [], "the look happened"
 
 
 def test_a_claim_satisfies_the_acquisition(make):
