@@ -200,3 +200,28 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 :closesAt a owl:DatatypeProperty ; rdfs:domain :Round ; rdfs:range xsd:dateTime ;
     rdfs:label "closes at" ;
     rdfs:comment "When bidding closes — the offer's closes_in_s, as an instant. The one clock a bidder is told; the host's window and cooldown stay its own." .
+
+#################  A call — the want a LOW sources on a host  #################
+#
+#  A participant's LOW used to be a TRIGGER: hosting heard it, checked a cooldown and a dict,
+#  and announced. Now that a round is a fact and offering is an action, the LOW is what makes
+#  a round WANTED — a want the host did not source, as a claim makes a dose wanted
+#  (an-obligation-is-a-desire-someone-else-sourced) — and the search plans it: Offer, or
+#  acquire upstream then Offer when the vessel is dry. See knowledge/domain/call.md.
+
+:Call a owl:Class ; rdfs:label "Call" ;
+    rdfs:comment "A round is wanted on this venue, because a participant said it is in trouble. One per venue, in the host's own graph, written on the LOW and retracted when a round opens there. Unmet while no round stands and no clock runs it down: a call is answered or it is not, and the search says what stands in the way." .
+
+:calledOn a owl:ObjectProperty ; rdfs:domain :Call ; rdfs:range :Market ;
+    rdfs:label "called on" .
+
+:calledBy a owl:DatatypeProperty ; rdfs:domain :Call ; rdfs:range xsd:string ;
+    rdfs:label "called by" ;
+    rdfs:comment "The participant whose verdict raised it — the last one, where several did. Prose for the log and the ask channel; a call is never sized from who called." .
+
+:calledAt a owl:DatatypeProperty ; rdfs:domain :Call ; rdfs:range xsd:dateTime ;
+    rdfs:label "called at" .
+
+:mayConveneAt a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:dateTime ;
+    rdfs:label "may convene at" ;
+    rdfs:comment "When the host's cooldown on this venue runs out — written at close, from `roundCooldownS`, into the host's own graph. An instant rather than the duration, so the Offering action's precondition compares it to NOW() and the private cooldown itself is never on a row anyone else could read." .

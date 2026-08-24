@@ -23,6 +23,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [venue](/domain/venue.md) - One market, as a node in the graph — minted from stock plus consent, keyed by its source, so one owner with two goods holds two.
 * [auction](/domain/auction.md) - The process, not a place: it condenses out of scarcity, announces terms, collects bids, matches, is co-signed, and dissolves.
 * [round](/domain/round.md) - One pass of bidding inside an auction. Exactly one is built, so today the two coincide.
+* [call](/domain/call.md) - A round is wanted on a venue because a participant said LOW — a want the host did not source, planned like any other.
 * [bid matching](/domain/bid-matching.md) - A lot and a set of bids become an allocation with prices — an allocation rule and a payment rule together.
 * [clearing](/domain/clearing.md) - A thin stake-free notary: checks a proposed trade and co-signs the claim. The host computes the match.
 * [claim](/domain/claim.md) - What you win — co-signed, single-use, held until the winner's watch is live, then presented on the redeem channel.

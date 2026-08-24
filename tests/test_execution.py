@@ -144,7 +144,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
             assert agent.providers(family), \
                 f"{world}/{agent_id}: {row.means} is taken by {family}, which it does not compose"
     assert rows_seen >= 4
-    assert OFFER not in takers, "Offer is no action and states no taker, on purpose"
+    assert takers[OFFER].endswith("Hosting"), "Offer is an action since #359, taken by the host"
 
 
 def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):

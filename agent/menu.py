@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .ontology import AG
+from .ontology import AG, SENSED_GRAPH
 from .store import bindings
 
 @dataclass(frozen=True)
@@ -60,7 +60,7 @@ _ACTIONS_Q = """SELECT ?means ?available WHERE {
   ?action a ag:Action ; ag:means ?means ; ag:available ?available }"""
 
 
-def menu_of(query, agent_uri: str, desires, beliefs: str) -> list[Affordance]:
+def menu_of(query, agent_uri: str, desires, beliefs: str, sensed: str = SENSED_GRAPH) -> list[Affordance]:
     """What one agent could do, about what, through which lever — derived, never written.
 
     The Consulting member's prompt substrate and the reflex's worldview as data: a move with no
@@ -85,8 +85,12 @@ def menu_of(query, agent_uri: str, desires, beliefs: str) -> list[Affordance]:
         #  `$beliefs` names the agent's OWN graph, as it does for an effect rule: a premise
         #  may be something only this agent was told — an open round is one (#358) — and
         #  the default graph is public knowledge, so a walk that needs it must say so.
+        #  `$sensed` names the readings a premise may read — this agent's, or the graph of a
+        #  world a plan is imagining, so a row whose premise an earlier step made true (stock
+        #  after a refill, #359) appears in the menu of THAT world and not of this one.
         q = (action["available"].replace("$me", f"<{agent_uri}>")
-             .replace("$properties", props).replace("$beliefs", f"<{beliefs}>"))
+             .replace("$properties", props).replace("$beliefs", f"<{beliefs}>")
+             .replace("$sensed", f"<{sensed}>"))
         rows += [Affordance(means=action["means"], observed_property=r["property"],
                             via=r["via"], direction=r.get("direction"),
                             for_agent=r.get("for_agent"))

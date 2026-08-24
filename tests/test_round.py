@@ -597,15 +597,16 @@ def test_a_round_is_sized_by_the_vessel_not_the_belief(host):
 
 
 def test_a_dry_vessel_defers_the_round_until_the_refill_lands(host):
-    """The two-step, held by the market: a LOW nobody can serve is not sold phantom water —
-    the round is DEFERRED, and the moment the host's own witness reports the refill, the
-    round it owed opens, cooldown respected. Acquire upstream, then offer: the planning
-    record's first honest customer, distributed across the dealer's two venues."""
+    """The dealer's two-step, distributed across its two venues — and since #359 not a
+    handler but a PLAN. A LOW on a dry vessel makes a round wanted (a call); the search finds
+    no Offer, because Offering's premise is stock; the moment the host's own witness reports
+    the refill, the call is pursued again and the round opens. Acquire upstream, then offer:
+    the planning record's first honest customer, found by the search from two nodes that
+    never mention each other."""
     stock_reading(host, 0.0)
     host.deliver("readings/fern", low_event())
     assert host.sent.to(market_of(host).offer_topic) == [], \
         "a dry vessel must not announce a lot it cannot pour"
-
     stock_reading(host, 2.5)  # the refill lands — step two opens by itself
     offer = offer_from(host)
     assert offer["quantity_l"] == 2.0, "full lot again — the belief is the cap, stock permitting"
@@ -637,37 +638,41 @@ def keeper_of(agent):
     return next(m for m in agent.modules if m.name == "intention")
 
 
-def test_a_deferred_round_stands_in_the_ledger_and_resolves_on_the_refill(host):
-    """The 'host keeps no gap ledger' line, crossed knowingly: a deferral held only in module
-    memory was a promise a restart forgot and no ask could see. Deciding is still nobody's —
-    physics deferred the round — but OWING it is a commitment, and commitments are ledgered:
-    adopted with the trigger's name when the vessel is dry, satisfied when the refill lands
-    and the round opens."""
+def test_a_call_stands_as_a_want_and_is_answered_by_the_round(host):
+    """The owed round used to be an Offer INTENTION adopted on deferral (#206). It is a CALL
+    now (#359) — a want the LOW sourced, in the host's own graph, hot while no round stands
+    — and the intention appears only when the search finds a plan: with the vessel dry and no
+    upstream round to buy in there is none, so nothing stands and the want does. The refill
+    is the reading that changes the answer; the round opening answers the call."""
+    from packages.capability.market import calls
+
     stock_reading(host, 0.0)
     host.deliver("readings/fern", low_event())
-    owed = [s for s in keeper_of(host).standing() if s.means.endswith("Offer")]
-    assert len(owed) == 1 and owed[0].observed_property == STORED, \
-        "the owed round stands, keyed by the stock that gates it"
-
-    stock_reading(host, 2.5)
+    held = calls.calls_of(host)
+    assert len(held) == 1 and held[0].called_by == "fern", "the LOW made a round wanted"
+    assert [d for d in host.pursuing() if d.uri == held[0].uri], "and it is pursued as a want"
     assert not [s for s in keeper_of(host).standing() if s.means.endswith("Offer")], \
-        "the refill landed, the round opened, the debt is paid"
+        "no plan reaches a round from a dry vessel with nothing to buy — nothing stands"
+    stock_reading(host, 2.5)
+    assert calls.calls_of(host) == [], "the round opened — the call is answered"
     assert offer_from(host)["quantity_l"] == 2.0
 
 
 def test_an_owed_round_survives_the_process_that_owed_it(host, make):
-    """The whole point of the crossing: the deferral is recovered FROM the ledger at start,
-    so a restarted host still owes what it owed — the round reopens on the next stock
-    reading exactly as it would have, and no phantom water is sold meanwhile."""
+    """A call is a fact in the host's own graph, so a restarted host still owes what it owed
+    — the round opens on the next stock reading exactly as it would have, and no phantom
+    water is sold meanwhile."""
+    from packages.capability.market import calls
+
     stock_reading(host, 0.0)
     host.deliver("readings/fern", low_event())
-    assert [s for s in keeper_of(host).standing() if s.means.endswith("Offer")]
-
-    reborn = make("supplier", host.beliefs)  # same store: the volume the ledger lives in
+    assert calls.calls_of(host)
+    reborn = make("supplier", host.beliefs)  # same store: the volume the call lives in
     assert reborn.sent.to(market_of(reborn).offer_topic) == []
+    assert calls.calls_of(reborn), "the want survived the process"
     stock_reading(reborn, 3.0)
     assert offer_from(reborn)["quantity_l"] == 2.0, \
-        "the recovered debt opened the round the moment the vessel could pour"
+        "the recovered call opened the round the moment the vessel could pour"
 
 
 # --- obligations: the desires a host did not source (#218 remade) -----------

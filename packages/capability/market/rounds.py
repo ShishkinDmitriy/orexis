@@ -20,12 +20,13 @@ minds, and neither reads the other's.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from agent.ontology import beliefs_graph
 from agent.store import bindings
 
-from .terms import CLOSES_AT, HAS_ROUND, LOT_L, NS, RESERVE_PER_L, ROUND, ROUND_ID
+from .terms import (CLOSES_AT, HAS_ROUND, LOT_L, MAY_CONVENE_AT, NS, RESERVE_PER_L,
+                    ROUND, ROUND_ID)
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 
@@ -93,3 +94,18 @@ SELECT ?r ?v ?id ?lot ?reserve ?closes WHERE {{ GRAPH <{beliefs_graph(agent.id)}
     return [Round(uri=r["r"], venue=r["v"], auction_id=r["id"], lot_l=float(r["lot"]),
                   reserve_per_l=float(r["reserve"]),
                   closes_at=datetime.fromisoformat(r["closes"])) for r in rows]
+
+
+def convened(agent, venue_uri: str, cooldown_s: float, now: datetime | None = None) -> None:
+    """A round just closed on this venue: write when the host may convene the next one.
+
+    The cooldown is a private belief and stays one; what reaches the graph is the INSTANT it
+    runs out, so the Offering action's precondition can compare it to NOW() without the
+    duration ever sitting on a row. Replaced, never accumulated.
+    """
+    until = (now or datetime.now(timezone.utc)) + timedelta(seconds=float(cooldown_s))
+    agent.beliefs.update(f"""
+DELETE {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{MAY_CONVENE_AT}> ?was }} }}
+WHERE  {{ GRAPH <{beliefs_graph(agent.id)}> {{ <{venue_uri}> <{MAY_CONVENE_AT}> ?was }} }} ;
+INSERT DATA {{ GRAPH <{beliefs_graph(agent.id)}> {{
+  <{venue_uri}> <{MAY_CONVENE_AT}> "{until.isoformat()}"^^<{_XSD}dateTime> }} }}""")

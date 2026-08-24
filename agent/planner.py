@@ -192,7 +192,7 @@ class Planner:
                     return None
         return None
 
-    def _met_in(self, world, desire: Desire) -> bool:
+    def _met_in(self, world, desire: Desire, graph: str | None = None) -> bool:
         """Whether the desire's OWN shape is satisfied in this world.
 
         Its own and no others, which is what makes a pass affordable. Measured on the bench:
@@ -213,6 +213,13 @@ class Planner:
             #  possible world where Apply ran count as satisfying, and the world in hand not.
             if desire.is_duty:
                 return (URIRef(desire.uri), _AG.dischargedAt, None) in world
+            #  A want with no shape and no property — a CALL (#359) — is met exactly where
+            #  whoever measures it says it is: zero urgency in the world being judged. Asked
+            #  of the imaginarium at the node's graph, as `_urgency_in` asks.
+            if desire.observed_property is None and graph is not None:
+                answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
+                if answer is not None:
+                    return answer <= 0.0
             return desire.is_met
         _, results, _ = shacl_validate(world, shacl_graph=shape, inference="none", advanced=True)
         return not list(results.subjects(RDF.type, _SH.ValidationResult))
@@ -278,7 +285,7 @@ class Planner:
         #  urgency: inside the region and off the pick is a true situation. Only a desire
         #  whose measure reads zero has nothing a step could improve, so only that one skips
         #  the search — which also keeps the per-tick cost of a calm society what it was.
-        met_now = self._met_in(base, desire)
+        met_now = self._met_in(base, desire, SENSED_GRAPH)
         if met_now and here.urgency <= 0.0:
             return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
@@ -341,7 +348,7 @@ class Planner:
                     #  would answer "look" on every tick — a step that changes nothing
                     #  reported as achieving something. Met and still urgent is steering
                     #  toward the pick, and steering is what `best` below is for.
-                    if (novel or not met_now) and self._met_in(step.world, desire):
+                    if (novel or not met_now) and self._met_in(step.world, desire, step.graph):
                         self._weighed.append((depth, row, step.urgency, trace.MET))
                         return self._record(
                             desire,
@@ -400,7 +407,7 @@ class Planner:
                                            (), here.urgency, after,
                                            self._skipped), here.urgency)
         return self._record(desire, self._offer(
-            Plan(EXHAUSTED if not self._met_in(best.world, desire) else SATISFIED,
+            Plan(EXHAUSTED if not self._met_in(best.world, desire, best.graph) else SATISFIED,
                  best.taken, here.urgency, best.urgency), desire, best.world), here.urgency)
 
     def _record(self, desire, plan, stands_at):
@@ -452,12 +459,10 @@ class Planner:
         appear is the step before it. At depth 0 this is the ordinary menu; deeper, it is the
         menu of a world nobody is in yet.
 
-        Asked of the agent's store rather than of the node's, and that is not the defect #254
-        closed arriving a third time: no shipped effect moves anything a row's premises walk —
-        a reading is not a premise, and the one own-graph premise there is, an open round
-        (#358), is written by the wire and not by any effect. The day an effect opens a round
-        (Offering, #359) this takes the imaginarium too, and "acquire after offer" becomes a
-        two-step a search can see.
+        Asked of the NODE's world since #359, because a premise may now be something an
+        earlier step made true: Offering reads the stock a refill would leave, and reads the
+        round an Offer in this very plan would have opened. Before that every row was a
+        conclusion from wiring alone and the agent's store answered for every depth.
 
         No `which violations do I repair` declaration is consulted. The record proposes one and
         it is an OPTIMISATION — a way to skip simulating a lever that obviously cannot help —
@@ -466,8 +471,13 @@ class Planner:
         """
         from .menu import menu_of
 
-        for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union,
-                           beliefs_graph(self.agent.id)):
+        #  ASKED OF THE IMAGINARIUM, at the node's own graph (#359): a premise may be a fact
+        #  an earlier step made true — Offering needs stock, Acquiring's effect raises it, and
+        #  "acquire, then offer" is a plan only if the menu of the world after the first step
+        #  shows the second. The root node's graph is the agent's own readings, so at depth 0
+        #  this is the ordinary menu, exactly as before.
+        for row in menu_of(self.imaginarium.query, self.me.uri, self.agent.desires.query_union,
+                           beliefs_graph(self.agent.id), node.graph):
             if desire.is_duty:
                 #  A duty may be served by its counterparty's honoured row, or approached
                 #  through this agent's own levers — refilling the vessel is an Acquire on its

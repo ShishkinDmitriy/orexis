@@ -23,6 +23,7 @@ link from a row to its code is a **fact in the graph** rather than a dispatch ta
 sensing:Observing   ag:means ag:Observe ; ag:takenBy sensing:SensingCapability .
 market:Acquiring    ag:means ag:Acquire ; ag:takenBy market:Bidding .
 actuation:Dosing    ag:means ag:Actuate ; ag:takenBy actuation:Actuation .
+market:Offering     ag:means ag:Offer   ; ag:takenBy market:Hosting .
 market:Serving      ag:means ag:Apply   ; ag:takenBy market:Hosting .
 ```
 
@@ -34,10 +35,10 @@ another: `agent.providers(family)`, through the T-Box, and every member of the f
 the step. That plural is deliberate — the gardener holds two sensing modules and only one can
 nudge a probe — and it is the same reason `providers` exists at all.
 
-**A means with no `ag:takenBy` is a means no plan can execute.** `ag:Offer` is one on purpose:
-no menu row offers it, hosting adopts it on a deferral, and a plan never chooses it. A package
-that ships a *row* for a means and states no taker has shipped an intention nothing can carry
-out, and `tests/test_execution.py` refuses that at the gate rather than letting the ledger fill
+**A means with no `ag:takenBy` is a means no plan can execute.** None ships that way any
+more — `ag:Offer` was the last, and `market:Offering` gave it a row, an effect and the host as
+its taker. A package that ships a *row* for a means and states no taker has shipped an
+intention nothing can carry out, and `tests/test_execution.py` refuses that at the gate rather than letting the ledger fill
 with commitments that stand for ever.
 
 # The hook
@@ -50,7 +51,8 @@ def take(self, row, desire, intention: str) -> bool
 the [lever](/domain/lever.md) and, for a duty, whom it is owed to. `desire` is the want it
 serves, `intention` the ledger row already written for it. What an actor does with them is its
 own: sensing nudges every driver that can be asked; bidding reads the open round off the row's
-own venue and bids into it; actuation sizes a dose from the
+own venue and bids into it; hosting announces a round for the call the plan served, or serves
+the presented claim; actuation sizes a dose from the
 current reading and commands it; hosting serves the presented claim. The *how* stays where it
 always was — `value_bid`, `dose_for`, `redeem` — and none of them moved.
 

@@ -6,6 +6,8 @@
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix ssn:        <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix sensing:    <http://example.org/orexis/sensing#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
 #  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
 #    ag:means      the kind of act, a kernel word;
@@ -175,6 +177,89 @@ market:Acquiring
             }
             FILTER($litres > 0)
         }""" .
+
+#################  What OFFERING makes true  #################
+#
+#  The host's move, as an ACTION at last (a-round-is-a-fact-and-offering-is-an-action). It
+#  was a handler: hear a LOW, check a cooldown and a dict, announce; and when the vessel was
+#  dry, remember the LOW in a second dict and announce on the next reading. Every one of those
+#  checks is a PRECONDITION and belongs on the node — so "acquire upstream, then offer" is a
+#  two-step the search finds from Acquiring's effect (stock rises) and this row's premise
+#  (stock is there), two nodes that never mention each other.
+#
+#  What is NOT decided here is whether a host would RATHER sell: the want this action serves
+#  is a call — a participant's LOW made a round wanted — and the strategic-supplier seam is
+#  untouched.
+
+market:Offering
+    a ag:Action ;
+    ag:means ag:Offer ;
+
+    #  AVAILABLE on a venue I host, while NO round stands on it (in what I hold, or in the
+    #  world a plan is imagining — an Offer already taken in this plan leaves no room for a
+    #  second), my cooldown has run out (an instant I wrote at the last close; the duration
+    #  itself is private and never on a row), and the vessel holds SOMETHING by my own
+    #  witness — or I have no witness at all, which is the mains, and sells as it always did.
+    #  The lot is min(offer, stock), as `announce` always sized it: a partial lot is a real
+    #  round (a-round-is-sized-by-the-vessel), so the premise is stock > 0 and not stock >= lot.
+    #
+    #  ?property is the stock I would be watching, or the good's own property where I watch
+    #  nothing — the row needs a name and the intention is keyed by it; no direction, because
+    #  offering moves no water. The serve does.
+    ag:available """
+        SELECT DISTINCT ?property ?via WHERE {
+          $me market:hosts ?via .
+          ?via market:marketFor ?source .
+          ?source market:supplies ?good .
+          ?valuation market:ofGood ?good ; market:aboutProperty ?goodProperty .
+          OPTIONAL { $me sensing:polls ?witness .
+                     ?witness sensing:monitors ?source ; sosa:observes ?stock }
+          BIND(COALESCE(?stock, ?goodProperty) AS ?property)
+          FILTER NOT EXISTS {
+            GRAPH $beliefs { ?via market:hasRound ?open . ?open market:closesAt ?c }
+            FILTER(?c > NOW()) }
+          FILTER NOT EXISTS { GRAPH $sensed { ?via market:hasRound ?imagined } }
+          OPTIONAL { GRAPH $beliefs { ?via market:mayConveneAt ?may } }
+          FILTER(!BOUND(?may) || ?may <= NOW())
+          OPTIONAL { GRAPH $sensed { ?reading sosa:hasFeatureOfInterest ?source ;
+                                    sosa:observedProperty ?stock ;
+                                    sosa:hasSimpleResult ?level } }
+          FILTER(!BOUND(?stock) || !BOUND(?level) || ?level > 0)
+        }""" ;
+
+    #  WHO CARRIES IT OUT — the host: it announces, exactly as it always did.
+    ag:takenBy market:Hosting ;
+    rdfs:label "what opening a round makes true" ;
+
+    #  THE EFFECT: a round on the venue — the same fact `announce` writes, predicted. It
+    #  lands in the plan's own graph ($sensed, where every effect's triples go), which is why
+    #  the precondition above looks there too and why a call's measure reads both graphs.
+    #  The stock is untouched: offering moves no water. NOW() plus my bid window, in the
+    #  duration arithmetic this engine does support — measured before it was leaned on.
+    sh:construct """
+        CONSTRUCT {
+            ?via market:hasRound ?round .
+            ?round a market:Round ;
+                   market:roundId "imagined" ;
+                   market:lotL ?lot ;
+                   market:reservePerL ?reserve ;
+                   market:closesAt ?closes .
+        } WHERE {
+            $me market:hosts ?via .
+            GRAPH $beliefs { $me market:offerQuantityL ?lot ;
+                                 market:reservePricePerL ?reserve ;
+                                 market:bidWindowS ?window }
+            BIND(BNODE() AS ?round)
+            BIND(NOW() + xsd:dayTimeDuration(CONCAT("PT", STR(?window), "S")) AS ?closes)
+        }""" ;
+
+    #  AT ONCE, and BY CONSTRUCTION: saying so makes it so. The first effect here confirmed
+    #  that way, and the reason the route was declared — nothing is waited for, nothing is
+    #  read back; the round exists because the host announced it.
+    ag:landsAfter """
+        SELECT (0 AS ?seconds) WHERE { }""" ;
+    ag:confirmedBy ag:ByConstruction .
+
 
 #################  What SERVING a presented claim makes true  #################
 #
