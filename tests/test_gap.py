@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 
-from agent.regions import gaps_of, regions_of
+from agent.regions import regions_of
 
 from conftest import MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
@@ -29,59 +29,64 @@ def _judged(st, *extra):
     return data
 
 
-def _gaps(st, uri, agent_id="fern"):
-    """Both handles the way an agent holds them: wants from the desire modality's build,
-    readings from the store (#312)."""
-    return gaps_of(desires_build(st, agent_id).query_union, st.query, uri, agent_id)
+def _gaps(st, uri, agent_id="fern", monkeypatch=None):
+    """Through a REAL agent, because the magnitude is a capability's answer now: the deducer
+    hands `gaps_of` the choir road (`Agent.desire_urgency`) and sensing answers from its own
+    declaration — a hand-built join would fake away exactly the contribution under test."""
+    return build_agent(agent_id, st, monkeypatch).deducer.gaps()
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
 
 
-def test_the_query_and_the_module_are_one_definition(query_with_readings):
-    """|gap| is `urgency`, by construction — and since the split, by construction in the
-    literal sense: `gaps_of` computes the gap FROM `Region.urgency`, so this holds the sign
-    convention and the join to the same numbers every other consumer reads."""
+def test_the_query_and_the_module_are_one_definition(query_with_readings, monkeypatch):
+    """|gap| is `urgency`, by construction — the magnitude is the measure sensing declares,
+    asked through the choir, and where no aim sits off the centre (fern's picks are the
+    centres in this world) it must agree with `Region.urgency`, the reference arithmetic the
+    declared query is held to at exactly that fallback."""
     st = genesis_store({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0})
-    gaps, regions = _gaps(st, FERN), regions_of(desires_build(st, "fern").query_union, FERN)
+    gaps = _gaps(st, FERN, monkeypatch=monkeypatch)
+    regions = regions_of(desires_build(st, "fern").query_union, FERN)
     assert set(gaps) == {MOISTURE, TEMPERATURE}
     for prop, gap in gaps.items():
         assert abs(gap.gap) == round(regions[prop].urgency(gap.value), 6) or \
             abs(abs(gap.gap) - regions[prop].urgency(gap.value)) < 1e-9
 
 
-def test_the_gap_is_signed_and_the_sign_says_which_way_out(query_with_readings):
+def test_the_gap_is_signed_and_the_sign_says_which_way_out(query_with_readings, monkeypatch):
     """0.30 moisture is below fern's region (0.45-0.65) and 33 degrees is above its band
     (18-24): one gap negative, one positive. The sign is what a planner steers by — a band
     says IN TROUBLE, the gap says which direction relief lies in."""
     gaps = _gaps(genesis_store(
-        {("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0}), FERN)
+        {("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0}), FERN,
+        monkeypatch=monkeypatch)
     assert gaps[MOISTURE].gap < 0 < gaps[TEMPERATURE].gap
 
 
-def test_at_the_survival_bound_the_gap_is_exactly_one(query_with_readings):
+def test_at_the_survival_bound_the_gap_is_exactly_one(query_with_readings, monkeypatch):
     """The normalisation: fern survives 0.20-0.85 moisture, so 0.20 is the whole of the dry
     room spent — and past it is not more than everything."""
-    at_floor = _gaps(genesis_store({("fern", MOISTURE): 0.20}), FERN)
+    at_floor = _gaps(genesis_store({("fern", MOISTURE): 0.20}), FERN, monkeypatch=monkeypatch)
     assert at_floor[MOISTURE].gap == -1.0
-    past_it = _gaps(genesis_store({("fern", MOISTURE): 0.05}), FERN)
+    past_it = _gaps(genesis_store({("fern", MOISTURE): 0.05}), FERN, monkeypatch=monkeypatch)
     assert past_it[MOISTURE].gap == -1.0
 
 
-def test_unmeasured_is_not_satisfied():
+def test_unmeasured_is_not_satisfied(monkeypatch):
     """At birth there is a desired state and no observations, so the diff is EMPTY — not zero.
 
     This is the fact the whole roadmap leans on: a gap of 0 would read as "all is well" and an
     absent row reads as "go and look", and the first intention is always to look. A defaulted
     zero here would quietly retire the reason the society polls at all.
     """
-    assert _gaps(genesis_store(), FERN) == {}
+    assert _gaps(genesis_store(), FERN, monkeypatch=monkeypatch) == {}
 
 
-def test_an_agent_with_no_desire_has_no_gap(query_with_readings):
+def test_an_agent_with_no_desire_has_no_gap(query_with_readings, monkeypatch):
     """The supplier observes nothing and wants nothing — no regions, no rows, and nothing here
     invents a stake for it. Handed readings about somebody else's plant, still nothing."""
-    assert _gaps(genesis_store({("fern", MOISTURE): 0.05}), SUPPLIER, "supplier") == {}
+    assert _gaps(genesis_store({("fern", MOISTURE): 0.05}), SUPPLIER, "supplier",
+                 monkeypatch=monkeypatch) == {}
 
 
 def test_the_agent_reports_its_worst_gap(monkeypatch, query_with_readings):
@@ -226,7 +231,7 @@ def test_the_region_and_the_aim_reach_the_agents_own_bucket(monkeypatch):
         "a want with no aim reports its region and no invented pick"
 
 
-def test_an_unmet_want_is_not_printed_as_a_finding():
+def test_an_unmet_want_is_not_printed_as_a_finding(monkeypatch):
     """A report is what a person reads when something is wrong, and a want is not that.
 
     Once a desire compiled to SHACL, every property nobody has read yet produced a result —
@@ -260,7 +265,7 @@ def test_an_unmet_want_is_not_printed_as_a_finding():
     if claimed := re.search(r"Results \((\d+)\):", report):
         assert int(claimed.group(1)) == shown, "the header must count what the body shows"
 
-    assert _gaps(dry, FERN)[MOISTURE].gap < 0, \
+    assert _gaps(dry, FERN, monkeypatch=monkeypatch)[MOISTURE].gap < 0, \
         "the store must still report the gap the report no longer prints"
 
 

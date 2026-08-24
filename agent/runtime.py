@@ -247,6 +247,28 @@ class Agent:
                 opinions.append(opinion)
         return max(opinions) if opinions else None
 
+    def desire_urgency(self, desire, query, sensed: str,
+                       value: float | None = None) -> float | None:
+        """How urgent one desire is in one world — the sharpest answer any module gives.
+
+        The choir again, and deliberately the same resolution as `urgency` above: the kernel
+        iterates its modules and never names a family, a capability that owns the question
+        answers, and None means nobody here knows how to measure this want — which every
+        ranking caller turns into 1.0, because not knowing how bad is maximal. The kernel
+        holds no measure of its own (a-desire-states-its-own-measure): this method is the
+        whole of its involvement.
+        """
+        answers = []
+        for module in self.modules:
+            try:
+                answer = module.desire_urgency(desire, query, sensed, value)
+            except Exception as exc:
+                log.error("%s: %s could not measure a desire: %s", self.id, module.name, exc)
+                continue
+            if answer is not None:
+                answers.append(answer)
+        return max(answers) if answers else None
+
     # --- the shared connection; modules route by the topics they asked for ---
 
     def publish(self, topic: str, payload: dict, retain: bool = False) -> None:

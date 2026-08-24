@@ -36,7 +36,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 from rdflib import RDF, URIRef
 
-from . import effects, measure, signature, trace
+from . import effects, signature, trace
 from .desire import Desire
 from .imaginarium import Imaginarium
 from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
@@ -136,16 +136,17 @@ class Planner:
     def _urgency_in(self, world, graph: str, desire: Desire) -> float:
         """How bad this desire is, in the world given. Lower is better; 1.0 is the worst there is.
 
-        THE MEASURE THE DESIRE'S KIND DECLARES — a capability's contribution, resolved from
-        the measures graph and never known here — run against the imaginarium with `$sensed`
-        naming this node's readings: the same text every other consumer runs against the
-        belief base, so a plan is scored by the measure the agent already steers by. That is
-        what declaring
+        A CAPABILITY'S ANSWER, never this file's arithmetic: the choir is asked
+        (`Agent.desire_urgency`) with the imaginarium as the world and `$sensed`-equivalent
+        `graph` naming this node's readings — the same question every other consumer asks
+        against the belief base, answered by the same module from the same declaration, so a
+        plan is scored by the measure the agent already steers by. That is what declaring
         it bought: the reflex used to steer for the AIM while this scored distance from the
         region's CENTRE, so the two mechanisms pursued different targets whenever the pick sat
-        off-centre, silently. It runs on pyoxigraph and never on the flat rdflib copy, because
-        one stored query answered by two engines is the disagreement this repo already closed
-        once (`agent/measure.py` has the argument).
+        off-centre, silently. The imaginarium is passed rather than the flat rdflib copy,
+        because sensing runs its measure on pyoxigraph against live beliefs and one stored
+        query answered by two engines is the disagreement this repo already closed once —
+        the module's own hook docstring carries the argument.
 
         Counting violations instead would have been simpler and wrong in a way that matters: a
         dose that moves a fern from 0.30 to 0.44 leaves the same single violation it started
@@ -156,19 +157,17 @@ class Planner:
         is met-or-not over the record, and anything else unmeasured scores 1.0, the not-knowing
         answer.
         """
-        if desire.measure:
-            urgency = measure.urgency_of(
-                self.imaginarium.query, desire.measure, me=self.me.uri,
-                subject=self.me.acts_for, observed_property=desire.observed_property,
-                sensed=graph, beliefs=beliefs_graph(self.agent.id),
-                region=self.deducer.regions.get(desire.observed_property))
-            return 1.0 if urgency is None else urgency
+        answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
+        if answer is not None:
+            return answer
         if desire.observed_property is None:      # a duty: met-or-not over the record
             return 0.0 if self._met_in(world, desire) else 1.0
-        #  A want about a property with no resolved measure: a freshness want (epistemic by
-        #  design, no distance to scale) or a want whose kind no loaded package measures.
-        #  Both score the defined fallback — maximal, because not knowing how bad IS how bad
-        #  — which for the freshness case is exactly what the region-less lookup always gave.
+        #  A want no module measures: a freshness want (epistemic by design, no distance to
+        #  scale) or a want whose kind nothing loaded answers for. Both score the defined
+        #  fallback — maximal, because not knowing how bad IS how bad — which for the
+        #  freshness case is exactly what the region-less lookup always gave. The deliberator
+        #  never sends a measure-less non-duty here (it defers to the reflex), so this line
+        #  serves the duty-met path above and the freshness want alone.
         return 1.0
 
     def _value_in(self, world, desire: Desire) -> float | None:

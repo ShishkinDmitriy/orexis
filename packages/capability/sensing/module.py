@@ -41,17 +41,43 @@ Derivation: capabilities/sensing/rules.ru. See knowledge/domain/sensing.md.
 from __future__ import annotations
 
 from datetime import timedelta, datetime, timezone
+from pathlib import Path
 
 from agent.scaling import scaling_for
 from agent.driver import driver_for
 from agent.module import Module
 from agent import pointer
 from agent.observation import Observations
-from agent.ontology import INSTRUMENTS_GRAPH
+from agent.ontology import INSTRUMENTS_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .terms import LISTENING, PUSH, SCHEDULED, STALE_AFTER_S, SUBSCRIBING
+
+#  The measure this capability declares (a-desire-states-its-own-measure, completed): how
+#  badly an observation-backed want is unmet. OUR file, OUR namespace, OUR code — the kernel
+#  asks "how urgent is this desire, in this world" through the choir (`Module.desire_urgency`)
+#  and holds no measure vocabulary, no measure graph, no evaluator; a package may do what it
+#  likes inside itself, and reading its own declaration is exactly that. Parsed at import like
+#  DESIRES_QUERY, so a malformed declaration is an error the moment the package loads. Full
+#  IRIs in this one query because it runs on a bare store no PREFIXES are prepended to.
+_MEASURES_TTL = (Path(__file__).parent / "measures.ttl").read_text()
+
+
+def _declared_measures() -> tuple[tuple[str, str], ...]:
+    """(kind IRI, SELECT text) pairs — which class of want this package measures, and how."""
+    import pyoxigraph as ox
+
+    store = ox.Store()
+    store.load(_MEASURES_TTL, format=ox.RdfFormat.TURTLE)
+    return tuple((row["kind"].value, row["text"].value) for row in store.query(
+        "SELECT ?kind ?text WHERE { "
+        "?m <http://example.org/orexis/sensing#measureOf> ?kind ; "
+        "<http://www.w3.org/ns/shacl#select> ?text }"))
+
+
+_DECLARED_MEASURES = _declared_measures()
+
 
 # The constitutional bounds are stated in the ontology, not compiled in here — and they hang
 # off the capability FAMILY, so every transport and every future sensing inherits them.
@@ -108,6 +134,77 @@ class SensingModule(Module):
         #  `super().__init__()` returns, so asking what rhythm is in force during construction
         #  reaches attributes that do not exist yet. `start()` is after everyone is built.
         self._published: dict[str, int] = {}
+        #  Which declared measure answers for which property — resolved once and kept,
+        #  because a property's KIND is public-graph stable and the planner asks per node.
+        self._measures: dict[str, str | None] = {}
+
+    # --- the measure I declare, answered when the kernel asks (desire_urgency) ---
+
+    def desire_urgency(self, desire, query, sensed: str,
+                       value: float | None = None) -> float | None:
+        """How urgent an OBSERVATION-BACKED want is, in the world `query` answers about.
+
+        My half of the choir's desire question, from my own declaration (measures.ttl): a
+        reading against the aim, scaled by the survival room on that side. Mine because the
+        reading is my whole subject — the kernel asks and holds no measure of its own
+        (a-desire-states-its-own-measure).
+
+        RUN ON PYOXIGRAPH, whichever world is passed — the belief base live, the planner's
+        IMAGINARIUM for a candidate (with `sensed` naming that node's readings), never the
+        flat rdflib copy pySHACL reads — so one stored query is never answered by two
+        engines, which is how I already evaluate everything else. The region's numbers are
+        substituted at answer time, read off the deduced shapes through the desire provider,
+        and the aim is read from $beliefs by the query itself: nothing baked, so a re-pick or
+        a re-derivation moves the next answer.
+
+        None — no opinion — for a duty, for a want in a property nobody here holds a region
+        in (an epistemic want has no distance to scale), for a kind my declaration does not
+        cover, and for a measure that raises: a package's bug must not take an agent down,
+        and every ranking caller reads silence as the maximal 1.0.
+        """
+        if desire.is_duty or desire.observed_property is None:
+            return None
+        region = self.agent.deducer.region(desire.observed_property)
+        if region is None:
+            return None
+        text = self._measure_for(query, desire.observed_property)
+        if text is None:
+            return None
+        outer_low = region.floor if region.floor is not None else region.low
+        outer_high = region.ceiling if region.ceiling is not None else region.high
+        text = (text
+                .replace("$subject",
+                         f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>")
+                .replace("$property", f"<{desire.observed_property}>")
+                .replace("$sensed", f"<{sensed}>")
+                .replace("$beliefs", f"<{beliefs_graph(self.agent.id)}>")
+                .replace("$value", repr(float(value)) if value is not None else "?reading")
+                .replace("$centre", repr(float(region.centre)))
+                .replace("$outerLow", repr(float(outer_low)))
+                .replace("$outerHigh", repr(float(outer_high)))
+                .replace("$me", f"<{self.me.uri}>"))
+        try:
+            rows = bindings(query(text))
+        except Exception as exc:
+            self.log.error("my measure would not run: %s", exc)
+            return None
+        if not rows or rows[0].get("urgency") is None:
+            return None
+        return float(rows[0]["urgency"])
+
+    def _measure_for(self, query, observed_property: str) -> str | None:
+        """The declared measure for this property's KIND, or None where mine do not cover it.
+
+        The kind test asks the store what the property IS — `sensing:measureOf` names a class,
+        and `a` in a default-union query already sees the materialised closure, so no subclass
+        walk is hand-rolled here.
+        """
+        if observed_property not in self._measures:
+            self._measures[observed_property] = next(
+                (text for kind, text in _DECLARED_MEASURES
+                 if query(f"ASK {{ <{observed_property}> a <{kind}> }}")["boolean"]),
+                None)
+        return self._measures[observed_property]
 
     def stale_after_s(self, subject_uri: str) -> int:
         """How old a reading of this subject may be before I stop trusting it.

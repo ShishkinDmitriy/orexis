@@ -6,13 +6,14 @@ description: >-
   AIM while the planner scored worlds from the region's geometric CENTRE, so they pursued
   different targets whenever the pick sat off-centre, and the shipped loner world sat exactly
   there. Closed by reifying the desire into a node that carries its met-shape (unchanged in
-  content) and a label, with a declared urgency measure as SPARQL run by the kernel's
-  evaluator against whichever world is being judged. On the sovereign's ruling the measure's
-  CONTENT is a capability's, not the kernel's — the core is BDI, so the mind carries the slot
-  and sensing declares the observation-backed measure per KIND, the effects mechanic applied
-  to desire. The measure reads the aim at query time; the planner no longer short-circuits a
-  met desire; steering toward the pick comes out of satisficing with a natural deadband. The
-  prerequisite for retiring the reflex, which this change deliberately does not touch.
+  content) and a label, with a declared urgency measure as SPARQL evaluated against whichever
+  world is being judged. On the sovereign's rulings — two of them — nothing of the measure
+  belongs to the core: the kernel ASKS through the choir (Module.desire_urgency) and holds no
+  measure vocabulary, graph or evaluator, while sensing declares, reads and runs the
+  observation-backed measure per KIND from its own file in its own namespace. The measure
+  reads the aim at query time; the planner no longer short-circuits a met desire; steering
+  toward the pick comes out of satisficing with a natural deadband. The prerequisite for
+  retiring the reflex, which this change deliberately does not touch.
 status: accepted
 timestamp: 2026-08-24T12:00:00Z
 ---
@@ -62,46 +63,62 @@ KIND, at a measure the kernel never authors.
   0.45-0.65, aiming 0.55"), for dashboards and the sovereign's ask channel, refreshed on every
   rebuild, which every recorded re-pick triggers.
 - **The measure** — a node carrying `sh:select`, SHACL-AF's word for a SPARQL SELECT held as
-  a literal in the graph, the same mechanic a means' effect rule uses for `sh:construct`.
-  Our own Python runs it (`agent/measure.py`), the way `agent/effects.py` runs a construct;
-  pySHACL is never asked to. The contract: one binding, `?urgency`, in 0..1, parameterised by
-  substitution like an effect rule (`$me`, `$subject`, `$property`, `$sensed`, `$beliefs`,
-  `$value`, and the region's numbers) and evaluated AGAINST A WORLD — the belief base for the
-  live number, or a candidate possible world inside the planner. One measure, asked of
-  whichever world is being judged.
+  a literal, the same mechanic a means' effect rule uses for `sh:construct`. Our own Python
+  runs it — the capability's own, after the split below — and pySHACL is never asked to. The
+  contract: one binding, `?urgency`, in 0..1, parameterised by substitution like an effect
+  rule (`$me`, `$subject`, `$property`, `$sensed`, `$beliefs`, `$value`, and the region's
+  numbers) and evaluated AGAINST A WORLD — the belief base for the live number, or a
+  candidate possible world inside the planner. One measure, asked of whichever world is being
+  judged.
 
-## The sovereign's split: the kernel carries the slot, a capability the content
+## The sovereign's split, in two rulings: nothing of the measure belongs to the core
 
-The first cut compiled the measure's SPARQL inside `agent/desires.ru`, per desire, bounds
-baked. The sovereign rejected the placement, not the mechanism: **the core is BDI** — that an
-agent wants, what it wants, when a want is met — and *how badness is measured* is
-planning-domain machinery, a capability's contribution, not the mind's structure. The precedent
-was already in the house: `agent/effects.py` (kernel) runs what `packages/capability/*/
-effects.ttl` (capability) declares, and the kernel never knows any effect's content. Applied
-again:
+The placement was refused twice, each refusal narrower than what it refused, and both landed —
+the intermediate state is merged history, not a draft this record may pretend away.
 
-- **The kernel keeps** `ag:Desire`, `ag:metWhen`, the derivation (the-mind-is-not-a-package is
-  not re-litigated: the want, its shape and its node stay kernel-derived), `ag:measuredBy` as
-  the instance-level override slot several packages may one day speak, and `agent/measure.py`
-  — the evaluator that runs whatever is declared.
-- **Sensing declares the content**, in `packages/capability/sensing/measures.ttl`, loaded at
-  genesis into a measures graph exactly as `effects.ttl` is loaded — an observation-backed
-  want is measured by a reading against the aim, and the reading is sensing's whole subject.
-  The choir's `urgency` hook always listed what modules contribute; this is that instinct as
-  a declaration the store can show a sovereign.
-- **Declared per KIND, not compiled per desire**: `ag:measureOf sosa:ObservableProperty` says
-  "a want about an observable property is measured by this SELECT", and the evaluator resolves
-  a desire to it by asking what its `ssn:forProperty` object IS. Nothing is compiled at
-  derivation any more: the aim is read out of `$beliefs` by the query itself, and the region's
-  numbers arrive as substituted parameters the caller reads off the deduced shapes at query
-  time — the `$litres` discipline, so a re-pick or a re-derivation moves the answer with no
-  text rebuilt. Where an instance states `ag:measuredBy`, the instance wins — which is the
-  seam the planned instance-over-type overrides land in.
-- **The fallback is defined, not implied**: a want whose kind no loaded package measures
-  scores 1.0, logged — not knowing how bad is maximal, consistent with `urgency(None)` — and
-  a test pins both the fallback and that no shipped world hits it, every shipped stake being
-  a `sosa:ObservableProperty`. `Region.urgency` survives as the test-only reference the
-  declared query is held to at the no-pick fallback; nothing on the live path calls it.
+**The first cut** compiled the measure's SPARQL inside `agent/desires.ru`, per desire, bounds
+baked. Refused before merging: **the core is BDI** — that an agent wants, what it wants, when
+a want is met — and *how badness is measured* is planning-domain machinery, a capability's
+contribution, not the mind's structure.
+
+**The second cut** — the state PR #332 merged with — moved the CONTENT to sensing's
+`measures.ttl` and kept the MACHINERY in the kernel: a kernel evaluator module (a
+`measure.py` under the kernel tree, since deleted), a measures graph loaded by genesis, and
+`ag:MeasureGraph` / `ag:measureOf` / `ag:measuredBy` in
+the kernel vocabulary, on the effects precedent. The sovereign refused that too — *"measures
+is still in core; at least don't add new into core, which is not belong to core"* — because
+every one of those was new core surface that is not BDI structure, whatever its contents.
+
+**The extraction that completes it** dissolves the machinery into the choir, the road the
+house already had (`urgency` was always a hook modules contribute; the keeper already answers
+it for open expectations):
+
+- **The kernel keeps** `ag:Desire`, `ag:metWhen`, the label, and the derivation minting them
+  (the-mind-is-not-a-package is not re-litigated: the want, its shape and its node stay
+  kernel-derived) — and ASKS: `Module.desire_urgency(desire, query, sensed, value=None)`, a
+  hook signature, collected max-of-answers like every choir question, with the kernel
+  iterating its modules and naming no family. No measure vocabulary, no measure graph, no
+  evaluator: the kernel evaluator module, `loader.measure_files()`, `MEASURES_GRAPH` and the
+  three `ag:` terms are deleted.
+- **Sensing owns its whole answer**: `measures.ttl` in its own directory, `sensing:measureOf`
+  in its own namespace, parsed and evaluated by its own module, which answers the hook for
+  observation-backed wants — a reading against the aim, and the reading is sensing's whole
+  subject. The content reaches the kernel through the hook's RETURN VALUE and nothing else:
+  no kernel loader learns the file exists, no `agent/` import crosses into `packages/`.
+- **Still declared per KIND, still nothing compiled**: `sensing:measureOf
+  sosa:ObservableProperty` says "a want about an observable property is measured by this
+  SELECT"; the module resolves a desire by asking the store what its `ssn:forProperty` object
+  IS; the aim is read out of `$beliefs` by the query itself, and the region's numbers arrive
+  as substituted parameters read off the deduced shapes at answer time — the `$litres`
+  discipline, so a re-pick or a re-derivation moves the answer with no text rebuilt.
+- **The fallback is defined, not implied, and unchanged in behaviour**: a want no module
+  answers for scores 1.0, logged — not knowing how bad is maximal, consistent with
+  `urgency(None)` — and the planner-side rule stays: a search that cannot rank must not
+  conclude, so a measure-less non-duty defers to the reflex. Tests pin the fallback and that
+  no shipped world hits it, every shipped desiring agent holding sensing and every shipped
+  stake being a `sosa:ObservableProperty`. `Region.urgency` survives as the test-only
+  reference the declared query is held to at the no-pick fallback; nothing on the live path
+  calls it.
 
 Distance is scaled by the survival room on the side the value sits — the asymmetry
 `Region.urgency` always had, kept and re-anchored: room below the aim is aim-to-floor, above
@@ -156,6 +173,11 @@ unchanged — measurement names never split series.
 
 # Seams left open
 
+- **The measure words are one package's until a second speaks them.** `sensing:measureOf`
+  is sensing's namespace deliberately: the repo's promotion test for an `ag:` word is a word
+  SEVERAL packages must speak, and today one does. The trigger is the second measure-shipping
+  package — the market's duty measure, when the engine allows it — and promotion happens
+  then, not before.
 - **Phase B: retire the reflex.** Decided and deliberately deferred: delete `propose`,
   `_by_gap`, `_direction_of` and the rung ladder once the search demonstrably subsumes them,
   and refuse at genesis an affordance-contributing means with no effect rule — a lever the

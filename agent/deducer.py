@@ -13,11 +13,10 @@ from __future__ import annotations
 from datetime import datetime
 
 from .desire import Desire
-from .measure import urgency_of
 from .module import Module
 from .ontology import AG, SENSED_GRAPH, beliefs_graph
-from .regions import (Gap, Region, aims_of, desires_of, gaps_of, measures_of,
-                      regions_of, _SENSING, _AIMS_Q, _REGIONS_Q)
+from .regions import (Gap, Region, aims_of, desires_of, gaps_of, regions_of,
+                      _SENSING, _AIMS_Q, _REGIONS_Q)
 from .store import bindings
 
 class Deducer(Module):
@@ -28,8 +27,6 @@ class Deducer(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.regions = regions_of(agent.desires.query_union, self.me.uri)
-        self._measures = measures_of(agent.desires.query_union, agent.beliefs.query,
-                                     self.me.uri)
         self._aims = aims_of(agent.desires.query_union, agent.id, self.me.uri)
         self.log.info("wants %s", ", ".join(
             f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
@@ -101,12 +98,12 @@ class Deducer(Module):
                 value: float | None) -> float | None:
         """How close this puts me to trouble. Sensing turns it into a cadence.
 
-        THE MEASURE THE WANT'S KIND DECLARES — sensing's own contribution, resolved from its
-        `measures.ttl` rather than known: the same query the ranking runs and the planner
-        scores candidate worlds with, evaluated here against the belief base with `$value`
-        the caller's number — the choir asks about readings it has not written yet and about
-        PREDICTED ones, so the number judged is a parameter, exactly as an effect rule's is.
-        What shifted with the declaration is the anchor: distance from the AIM, with the
+        NOT MINE TO COMPUTE ANY MORE, only mine to ANSWER FOR: how a want's badness is
+        measured is a capability's contribution (a-desire-states-its-own-measure), so this
+        asks the choir's other half — `Agent.desire_urgency`, where sensing answers for
+        observation-backed wants from its own declaration — with `$value` the caller's number,
+        because the choir is asked about readings it has not written yet and about PREDICTED
+        ones. What shifted with the declaration is the anchor: distance from the AIM, with the
         centre only the no-pick fallback, so the cadence tightens toward the point the agent
         actually steers for. Callers changed nothing.
 
@@ -120,17 +117,19 @@ class Deducer(Module):
             return None
         if value is None:
             return 1.0
-        measure = self._measures.get(observed_property)
-        if measure:
-            answer = urgency_of(self.agent.beliefs.query, measure, me=self.me.uri,
-                                subject=subject_uri,
-                                observed_property=observed_property, sensed=SENSED_GRAPH,
-                                beliefs=beliefs_graph(self.agent.id), value=value,
-                                region=self.regions.get(observed_property))
-            return 1.0 if answer is None else answer
-        #  The defined fallback: a want whose kind no loaded package measures is maximal,
-        #  logged once at construction by `measures_of` — not knowing how bad IS how bad.
-        return 1.0
+        answer = self._measured(Desire(uri="urn:asked", urgency=1.0,
+                                       observed_property=observed_property, value=value),
+                                value)
+        #  The defined fallback: a want nothing loaded measures is maximal — not knowing how
+        #  bad IS how bad. `desires_of` logs it where the ranking runs.
+        return 1.0 if answer is None else answer
+
+    def _measured(self, desire: Desire, value: float | None = None) -> float | None:
+        """The choir road: whichever capability measures this want, asked against the LIVE
+        belief base. Handed into `desires_of` and `gaps_of` too, because a free function
+        cannot hold the agent — one question, one asker, however many joins consume it."""
+        return self.agent.desire_urgency(desire, self.agent.beliefs.query, SENSED_GRAPH,
+                                         value)
 
     # --- the diff, asked of me rather than recomputed by whoever wants it ---
 
@@ -142,7 +141,7 @@ class Deducer(Module):
         carry `at`, and `current()` is the same diff with my own freshness rule applied.
         """
         return gaps_of(self.agent.desires.query_union, self.agent.beliefs.query,
-                       self.me.uri, self.agent.id)
+                       self.me.uri, self.agent.id, measure=self._measured)
 
     def current(self) -> dict[str, Gap]:
         """The diff I would act on: every row still inside my own freshness rule.
@@ -195,7 +194,8 @@ class Deducer(Module):
         takes its own kind, so there is still one text and one definition.
         """
         return [g for g in desires_of(self.agent.desires.query_union,
-                                    self.agent.beliefs.query, self.me.uri, self.agent.id, now)
+                                    self.agent.beliefs.query, self.me.uri, self.agent.id, now,
+                                    measure=self._measured)
                 if not g.is_duty]
 
     def series(self) -> list[tuple[str, dict, dict]]:

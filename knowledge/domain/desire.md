@@ -29,11 +29,11 @@ is what makes a second source of desire possible.
 
 What the derivation mints is a NODE (`ag:Desire`) carrying the met-test as a SHACL shape
 (`ag:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
-say how badly it is unmet, not only whether it is. The measure's CONTENT is deliberately not
-the derivation's to write: the kernel carries the slot and the evaluator, and the capability
-that owns the question declares the text — [sensing](/domain/sensing.md)'s `measures.ttl` for
-any want about an observed property, resolved by the want's KIND (`ag:measureOf`) at query
-time, with `ag:measuredBy` as the instance-level override slot. The argument is
+say how badly it is unmet, not only whether it is. The measure is deliberately NOT the
+kernel's in any part: whoever needs the number asks the choir (`Module.desire_urgency`), and
+the capability that owns the question answers from its own declaration —
+[sensing](/domain/sensing.md)'s, for any want about an observed property, resolved by the
+want's KIND at answer time; that page has the mechanics. The argument is
 [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)'s.
 
 What the deducer adds is the DEDUCING. It used to be granted by a stake — `ag:actsFor` a subject
@@ -106,8 +106,8 @@ every module has (`agent/module.py`) or through `agent.provider(DESIRE)`.
 | `aim(property)` — the pick inside the region | a bidder, at bid time, for the point a deficit is priced against | None is an answer: with no aim there is no deficit, and the bidder cedes rather than inventing one |
 
 **The band is the region; urgency is the measure the want's kind declares, anchored at the
-[aim](/domain/aim.md)** — a SPARQL SELECT [sensing](/domain/sensing.md) ships for
-observation-backed wants (`ag:measureOf`), which reads the pick out of the belief base at query
+[aim](/domain/aim.md)** — a SPARQL SELECT [sensing](/domain/sensing.md) ships and runs for
+observation-backed wants, which reads the pick out of the belief base at query
 time, falls back to the region's centre only while none is picked, and scales by the survival
 room on the side the value sits, the region's numbers arriving as substituted parameters read
 off the deduced shapes. So urgency rises *inside* the region rather than waiting for the edge — an agent at the

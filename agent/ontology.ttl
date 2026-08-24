@@ -311,15 +311,6 @@ ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:la
     rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
 ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
-#  BELIEF-modality like the ontology graph, not menu like the effects: an effect rule is about
-#  what a LEVER would do, and a measure is a fact the packages assert about how a want is
-#  scored — a schema, held identically by everyone, revisable by nobody, which is exactly what
-#  the T-Box is.
-ag:MeasureGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Measure graph" ;
-    rdfs:comment """How each KIND of want is measured — one `sh:select` per kind, loaded from the packages' `measures.ttl` at genesis exactly as the effect rules are, and replaced from those files on every boot.
-
-PUBLIC, schema, nobody's belief: the effects argument again. A measure here is what a capability CONTRIBUTES about how badness is weighed — the core is BDI, and how a want's distance is scored is planning-domain machinery, not the mind's structure — so the kernel's derivation mints every desire and never knows any measure's content, only where declared ones live and how to run one (`agent/measure.py`).""" .
-
 ag:EffectGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:MenuGraph ; rdfs:label "Effect graph" ;
     rdfs:comment """What each MEANS makes true — one `sh:SPARQLRule` per lever, loaded from the packages at genesis exactly as the T-Box is, and replaced from those files on every boot.
 
@@ -428,7 +419,6 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 ##  and the horizon it yields is mine to judge readings by.
 <http://example.org/orexis/graph/instruments>       a ag:BeliefGraph ;  ag:arrivedBy ag:Recorded .
 <http://example.org/orexis/graph/effects>            a ag:EffectGraph ;  ag:arrivedBy ag:Asserted .
-<http://example.org/orexis/graph/measures>           a ag:MeasureGraph ; ag:arrivedBy ag:Asserted .
 <http://example.org/orexis/graph/provenance>        a ag:ProvenanceGraph .
 ##  One pass per goal and no more: written at the start of each, replacing what was there.
 <http://example.org/orexis/graph/deliberation>      a ag:DeliberationGraph ; ag:arrivedBy ag:Derived .
@@ -607,21 +597,23 @@ ag:holds a owl:ObjectProperty ; rdfs:domain ag:Agent ;
 #  node instead of being it, and the measure hangs beside it.
 
 ag:Desire a owl:Class ; rdfs:label "Desire" ;
-    rdfs:comment "One thing an agent pursues: a node carrying the met-test (ag:metWhen, a SHACL shape, unchanged in content from when the desire WAS that shape) and a label a dashboard or the ask channel can print. Derived by the desire modality's build, never authored — the same discipline the shapes always had. What the node does NOT carry is its measure's content: how badness is scored is a capability's contribution, resolved by the want's KIND (ag:measureOf) from whatever the loaded packages declare, with ag:measuredBy as the instance-level override slot." .
+    rdfs:comment "One thing an agent pursues: a node carrying the met-test (ag:metWhen, a SHACL shape, unchanged in content from when the desire WAS that shape) and a label a dashboard or the ask channel can print. Derived by the desire modality's build, never authored — the same discipline the shapes always had. What the node does NOT carry is a measure: how badly such a want is unmet is a capability's answer, asked through the choir (Module.desire_urgency) of whichever world is being judged, and the kernel holds no measure vocabulary at all — the comment after ag:metWhen says why." .
 
 ag:metWhen a owl:ObjectProperty ; rdfs:domain ag:Desire ; rdfs:range sh:NodeShape ;
     rdfs:label "met when" ;
     rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Validated exactly as it was when the desire WAS this shape: unfocused, over the shapes the agent holds." .
 
-ag:measuredBy a owl:ObjectProperty ; rdfs:domain ag:Desire ;
-    rdfs:label "measured by" ;
-    rdfs:comment """THIS desire's own urgency measure — the instance-level slot, for a want whose measure would differ from its kind's. A kernel word because several packages will speak it, like ag:Mode; what it points at is a node carrying `sh:select`, exactly the shape a kind-level declaration has. Nothing derived writes it today: the shipped wants are measured by KIND (ag:measureOf, declared in a capability's measures.ttl), and this exists so an instance may one day override its kind without new vocabulary — the instance-over-type move already planned elsewhere. Where both are stated, the instance wins.""" .
-
-ag:measureOf a owl:ObjectProperty ;
-    rdfs:label "measure of" ;
-    rdfs:comment """Which KIND of want this measure scores — the class of thing the want is about, so sensing's declaration reads "a want about a sosa:ObservableProperty is measured by this SELECT". The join the evaluator walks, as `ag:effectOf` is for a rule and its means: the desire's `ssn:forProperty` object is asked what it IS, and the measure declared for that class answers. On the measure and never on the desire, so a package ships one file that adds itself — nothing in the kernel lists which kinds have measures, exactly as nothing lists which levers have effects.
-
-The subject node carries `sh:select`: a SPARQL SELECT held as a literal, SHACL-AF's mechanic reused exactly as the effect rules reuse `sh:construct`, run by `agent/measure.py` and never by pySHACL. The contract: one binding, ?urgency in 0..1, parameterised by substitution like an effect rule ($me, $subject, $property, $sensed, $beliefs, $value, and the region's numbers), because it is evaluated AGAINST A WORLD — the agent's belief base for the live number, or a candidate possible world inside the planner. One measure, asked of whichever world is being judged, so the number the reflex once steered by and the number the planner scores with cannot be two numbers. A want whose kind no loaded package measures scores 1.0, logged: not knowing how bad is maximal, as not knowing is everywhere.""" .
+#  NO measure vocabulary here, and the absence is the ruling rather than an omission. Two
+#  drafts put it in the kernel — first the measure's SPARQL compiled into the derivation, then
+#  a kernel-owned measures graph and evaluator with the content in a package — and the
+#  sovereign refused both: the core is BDI, and how badness is measured is planning-domain
+#  machinery that does not belong to it. What the kernel does instead is ASK, through the
+#  choir hook every module already answers (`Module.desire_urgency`): how urgent is this
+#  desire, in this world? A capability that owns the question answers from its own
+#  declaration — sensing's `measures.ttl`, in sensing's namespace, read by sensing's code —
+#  and a want nobody answers for scores 1.0, logged. Promotion of a measure word into ag: has
+#  the repo's usual trigger: a word SEVERAL packages must speak, which today none is.
+#  See a-desire-states-its-own-measure.
 #
 #  The INPUT is stated in schema.org's terms and the reuse is load-bearing rather than thrifty:
 #  an operating range's condition says `schema:minValue` / `schema:maxValue` about a property,

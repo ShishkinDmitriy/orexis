@@ -33,7 +33,7 @@ from . import planner, trace
 from .desire import Desire
 from .menu import Affordance, menu_of
 from .module import Module
-from .ontology import AG, DELIBERATION_GRAPH
+from .ontology import AG, DELIBERATION_GRAPH, SENSED_GRAPH
 from .planner import Planner
 from .store import bindings
 
@@ -261,10 +261,12 @@ class Deliberator(Module):
         #  conclude — the `partial` argument, arriving from the desire side: every candidate
         #  world would score the flat fallback 1.0, "no move improves" would come out
         #  confidently, and a conclusion drawn from unrankable worlds would override the
-        #  reflex. The ranking fallback (1.0, logged) is the deducer's business; the DECISION
-        #  falls through to the reflex. A duty is exempt because its metric is met-or-not
-        #  over the record, which needs no measure to rank (#255).
-        if not desire.is_duty and desire.measure is None:
+        #  reflex. So the choir is asked FIRST, of the live world: no module answering for
+        #  this desire means the ranking fallback (1.0, logged) is the deducer's business and
+        #  the DECISION falls through to the reflex. A duty is exempt because its metric is
+        #  met-or-not over the record, which needs no measure to rank (#255).
+        if not desire.is_duty and self.agent.desire_urgency(
+                desire, self.agent.beliefs.query, SENSED_GRAPH) is None:
             return False, None
         deducer = self.agent.deducer
         plan = Planner(self.agent, deducer, self.me).plan(desire)
