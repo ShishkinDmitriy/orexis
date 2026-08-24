@@ -51,6 +51,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel road, and `ag:takenBy` links a row to the code that takes it.
 * [an-action-is-one-node](/decisions/an-action-is-one-node.md) - Precondition, effect and taker are one `ag:Action` node in `actions.ttl`; chosen/honoured is a column, and four surfaces became one.
 * [an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md) - An Actuate stands from the command to its verdict, so the standing rule is the whole patience and the `absorbs` hook is gone.
+* [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md) - A round is a belief on both sides, Acquiring needs an open one, and Offering is an action — the host's two-step becomes a plan.
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation, so the formal layer becomes load-bearing rather than optional.
 * [deterministic-bid](/decisions/deterministic-bid.md) - The bid number is code; the LLM only produces the justification. Rhetoric cannot move the number.
 * [there-is-no-bdi-ontology](/decisions/there-is-no-bdi-ontology.md) - FIPA, DOLCE, prov:Plan, WoT TD and hmas surveyed and refused: the mind crosses no trust boundary, and BDI's words are already ours.
