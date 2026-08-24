@@ -90,12 +90,17 @@ look identical. The contracts carry the boundary alone:
   since the mind came home — **`agent` away from `packages`**: the kernel loads them and never
   reaches into one. That contract could not be stated while three capability packages held the
   mind, and the violations were not theoretical;
-- but it binds **Python and nothing else**, and the kernel does reach into a package's
-  *vocabulary*: twenty-one spelled-out IRIs, across its code, its shapes, its ontology's prefix
-  block and the desire derivation. `tests/test_kernel_namespaces.py` is the second contract —
-  each of the twenty-one allowlisted with what will remove it again, a twenty-second failing the
-  suite, and an entry that has stopped occurring failing it too, so the number can only fall
-  (#334);
+- but it binds **Python and nothing else**, and the kernel does still reach into a package's
+  *vocabulary*, across its code, its shapes, its ontology's prefix block and the desire
+  derivation. That is debt rather than a permitted exception — **the kernel names no package's
+  word**, in RDF as in Python, and the remaining occurrences are tolerated while they are worked
+  off. `tests/test_kernel_namespaces.py` is the second contract and the count of record: every
+  spelled-out IRI allowlisted with what removes it, a new one failing the suite, and an entry
+  that has stopped occurring failing it too, so the number can only fall to zero (#334 — twenty-one
+  keys when the ratchet landed, eighteen since #339 retired the reflex, fourteen since #331 moved
+  the freshness want into the package whose equipment its premise is). See
+  [the-kernel-names-no-package-word](/decisions/the-kernel-names-no-package-word.md) for why the
+  rule has no exceptions and which of the survivors are dangerous rather than merely untidy;
 - the `Containerfile` decides what reaches an image by naming two trees and not a third, with
   `tests/test_layout.py` failing if a `COPY onboarding/` appears.
 
