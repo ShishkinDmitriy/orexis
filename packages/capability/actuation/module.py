@@ -115,6 +115,22 @@ class ActuationModule(Module):
             f'?s ag:localId ?sid }} LIMIT 1'))
         return rows[0]["sid"] if rows else winner_id
 
+    def _subject_uri_of(self, winner_id: str) -> str | None:
+        """The same walk, answering with the subject's IRI — what a rule's `$subject` needs.
+
+        `_subject_of` answers with a LOCAL ID because `actuator_for` matches on one, and for
+        months `redeem` handed that id to the effect rule wrapped in angle brackets: `<fern>`
+        is not an IRI, the timing query failed to parse, `_select` swallowed it, and every
+        served claim fell back to `cmd.seconds` — the one figure #247 made single-source, two
+        figures again on exactly the market path (#351). None where nothing bears the name,
+        and the caller keeps the wire's own duration, which is what it did by accident before.
+        """
+        rows = bindings(self.agent.beliefs.query(
+            f'SELECT ?s WHERE {{ {{ ?a ag:localId "{winner_id}" ; ag:actsFor ?s }} '
+            f'UNION {{ ?s ag:localId "{winner_id}" . FILTER NOT EXISTS {{ ?s ag:actsFor ?x }} }} }} '
+            f'LIMIT 1'))
+        return rows[0]["s"] if rows else None
+
     def command_for(self, claim) -> tuple[Command, object]:
         device = self.me.actuator_for(self._subject_of(claim.sub))
         if device is None:
@@ -323,9 +339,10 @@ SELECT ?source ?p WHERE {{
         # `test_effects` fails if they ever disagree. None keeps the old arrangement whole,
         # which is what a lever with no stated timing deserves.
         if device.status_topic:
+            subject = self._subject_uri_of(claim.sub)
             lands = effects.lands_after(
                 self.agent.beliefs, _ACTUATE, me=f"<{self.me.uri}>",
-                subject=f"<{self._subject_of(claim.sub)}>", litres=repr(float(claim.amount_l)))
+                subject=f"<{subject}>", litres=repr(float(claim.amount_l))) if subject else None
             self.pending[cmd.jti] = (
                 time.monotonic() + (cmd.seconds if lands is None else lands) + self.grace_s,
                 cmd.plant, cmd.ml)

@@ -243,3 +243,35 @@ SELECT ?rule ?means ?confirmed WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
     assert rows, "the packages ship actions, or this test is asking nothing"
     for row in rows:
         assert row.get("confirmed"), f"{row['means']} states no confirmation route"
+
+
+def test_a_served_claim_is_timed_by_the_rule_and_not_by_the_wire(monkeypatch, caplog):
+    """#351. The self-dose path bound `$subject` to the agent's own `acts_for`, a URI; the
+    served-claim path bound it to `_subject_of(claim.sub)`, a LOCAL ID — `<fern>` is not an
+    IRI, the timing query failed to parse, `_select` swallowed it, and every market dose fell
+    back to `cmd.seconds`. Silent, because a swallowed rule error is an empty result.
+
+    So: the host serves a buyer's claim, the log is clean, and the deadline it holds the
+    valve to is the rule's figure plus its grace — the same assertion the self-dose makes.
+    """
+    import logging
+    import time
+
+    from agent.clearing import Claim
+
+    monkeypatch.setenv("OREXIS_WORLD", "simulation")
+    st = genesis_store({}, world="simulation")
+    agent = build_agent("supplier", st, monkeypatch)
+    actuation = next(m for m in agent.modules if m.name == "actuation")
+    fern = "http://example.org/orexis/world/simulation#fern"
+
+    with caplog.at_level(logging.ERROR, logger="effects"):
+        before = time.monotonic()
+        cmd = actuation.redeem(Claim(sub="fern", scope="water", amount_l=0.3, debit=0.1,
+                                     auction_id="a1", jti="served-1"))
+    assert "would not run" not in caplog.text, "the timing query must parse on the served path"
+    stated = _lands(agent.beliefs, 0.3, agent.me.uri, fern)
+    assert stated is not None
+    deadline, _, _ = actuation.pending[cmd.jti]
+    assert abs((deadline - before) - (stated + actuation.grace_s)) < 0.5, \
+        "the served claim is held to the rule's landing time, not the wire's"
