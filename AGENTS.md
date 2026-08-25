@@ -169,6 +169,15 @@ record is worse than none, because it is still cited.
    (service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
+**Three layers, split by how long a thing may take and whether it may be interrupted** —
+reactive handlers (ms, atomic, no search: classify and write), intention progression (seconds to
+minutes, suspends rather than blocks, searches nothing), deliberation (the search). The rule:
+**anything that blocks belongs in progression, anything that searches belongs in deliberation,
+anything that must never block belongs in a handler** — and the belief base is the INTERFACE
+between them, which is why staleness, a dead sensor and event thinning all settled there rather
+than in either neighbour. See
+[layered-by-timescale-and-interruptibility](knowledge/decisions/layered-by-timescale-and-interruptibility.md).
+
 **One principle explains most of the shapes above: control the derivative, not the value.**
 Nothing here controls a step — a cadence not a reading, a region not an aim, a mandate not a
 belief, an affordance not an action. When a change you are making reaches DOWN a level (a
