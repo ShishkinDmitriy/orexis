@@ -708,6 +708,29 @@ ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capabili
     rdfs:label "taken by" ;
     rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
 
+#################  An act: an action filled in  #################
+#
+#  An action is a template. What is committed, taken and promised is a FILLED one — the lever
+#  it goes through (`ag:through`), the want it serves and what that is about (`ag:about`),
+#  how much, for whom, and when. Execution's word; planning's is the STEP, an act at its place
+#  in a plan, which is never written anywhere. `agent/act.py` carries it; the ledger writes the
+#  node with the next change (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
+
+ag:Act a owl:Class ; rdfs:label "Act" ;
+    rdfs:comment "One ag:Action filled in: the lever it goes through, the want it serves, how much, for whom where it is a duty's, and the window in which taking it counts. What an intention commits to, what an actor is handed, what a commitment promises. Every act is an instance and no code names one." .
+
+ag:quantity a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:decimal ;
+    rdfs:label "quantity" ;
+    rdfs:comment "How much the act moves, in the good's unit — sized by whoever would take it (Module.size), never by the planner. Absent on an act that moves nothing: a look." .
+
+ag:notBefore a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:dateTime ;
+    rdfs:label "not before" ;
+    rdfs:comment "The window's opening. Declared and unwritten: a held claim spent later — futures — is the first thing that would write it, and that is the market's decision." .
+
+ag:notAfter a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:dateTime ;
+    rdfs:label "not after" ;
+    rdfs:comment "The window's close — what every hand-kept timer was saying: a bid not after the round closes, a serve not after the claim's expiry, a look not after the round that wanted it closes." .
+
 
 
 

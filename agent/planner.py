@@ -37,6 +37,7 @@ from pyshacl import validate as shacl_validate
 from rdflib import RDF, URIRef
 
 from . import effects, signature, trace
+from .act import Act, Step
 from .desire import Desire
 from .menu import wants_of
 from .imaginarium import Imaginarium
@@ -67,7 +68,7 @@ class Plan:
     """
 
     outcome: str
-    steps: tuple = ()
+    steps: tuple = ()                 # of `act.Step`: an act each, with what it would reach
     urgency_now: float | None = None
     urgency_after: float | None = None
     #  Whether some lever was passed over for want of a stated effect. A search that could not
@@ -100,7 +101,7 @@ class _Node:
 
     world: object
     graph: str = SENSED_GRAPH                     # this node's readings, in the imaginarium
-    taken: tuple = field(default_factory=tuple)   # the means applied to get here, in order
+    taken: tuple = field(default_factory=tuple)   # the STEPS taken to get here, in order
     urgency: float = 1.0
     #  The net diff against the base world, in canonical facts — where this node IS, for cycle
     #  detection. The root stands nowhere but the world itself, so its diff is empty.
@@ -550,23 +551,24 @@ class Planner:
         asked of the store finds the observation still on disk, so the second dose lands beside
         the first instead of replacing it and is then discarded as a world already seen.
         """
+        bind = self._bind(desire, node, row)
         try:
-            added, retracted = effects.apply(self.imaginarium, row.action,
-                                             **self._bind(desire, node, row))
+            added, retracted = effects.apply(self.imaginarium, row.action, **bind)
         except Exception as exc:                 # a package's rule is not an agent's problem
             log.error("could not simulate %s: %s", row.action, exc)
             return None
-        taken = node.taken + (row,)
         world = effects.applied(node.world, added, retracted)
-        #  Where this node stands, advanced by the same diff that built the world above. The
-        #  step's triples go in as they arrived — pyoxigraph terms, no conversion.
+        #  THE ROW BECOMES AN ACT here, where it is sized — the quantity the taker answered is
+        #  what the rule just simulated — and the act becomes a STEP once the world it reaches
+        #  is scored. An act carries no window yet: nothing in a search knows when.
+        act = Act.from_row(row, quantity=bind["litres"] or None)
+        path = node.taken + (Step(act),)
         diff = signature.advance(node.diff, signature.facts(added, self._keys),
                                  signature.facts(retracted, self._keys), self._base_facts)
-        #  The graph BEFORE the urgency, because the urgency is the measure asked of it: the
-        #  candidate's readings must exist in the imaginarium for `$sensed` to name them.
-        graph = self.imaginarium.reached(node.graph, taken, added, retracted)
-        return _Node(world=world, graph=graph, taken=taken,
-                     urgency=self._urgency_in(world, graph, desire), diff=diff)
+        graph = self.imaginarium.reached(node.graph, path, added, retracted)
+        urgency = self._urgency_in(world, graph, desire)
+        taken = node.taken + (Step(act, urgency_after=urgency),)
+        return _Node(world=world, graph=graph, taken=taken, urgency=urgency, diff=diff)
 
     def _bind(self, desire: Desire | None, node=None, row=None) -> dict:
         """What a rule needs filled in to answer about THIS agent and THIS want, HERE.

@@ -6,7 +6,7 @@ description: >-
   The code an affordance is linked to — the module that carries a committed step out. Found
   through one triple, `ag:takenBy`, which the package shipping a row states on the means the
   row offers, so the kernel dispatches by asking the T-Box and never names a package. Exposes
-  `take(row, desire, intention)`, the choir hook that turns a ledger row into a nudge, a bid,
+  `take(act, desire, intention)`, the choir hook that turns a committed act into a nudge, a bid,
   a dose or a serve; answers False where it cannot act now, and the intention stands.
 ---
 
@@ -45,11 +45,12 @@ with commitments that stand for ever.
 # The hook
 
 ```python
-def take(self, row, desire, intention: str) -> bool
+def take(self, act, desire, intention: str) -> bool
 ```
 
-`row` is the [affordance](/domain/affordance.md) the plan's head is — the means, the property,
-the [lever](/domain/lever.md) and, for a duty, whom it is owed to. `desire` is the want it
+`act` is the [act](/domain/act.md) the plan's head proposes — the action, the want and what it
+is about, the [lever](/domain/lever.md), the quantity the search sized, and, for a duty, whom it
+is owed to. `desire` is the want it
 serves, `intention` the ledger row already written for it. What an actor does with them is its
 own: sensing nudges every driver that can be asked; bidding reads the open round off the row's
 own venue and bids into it; hosting announces a round for the call the plan served, or serves
