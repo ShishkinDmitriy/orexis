@@ -457,13 +457,13 @@ def _members(kind: str) -> dict[str, type]:
 
 @lru_cache(maxsize=1)
 def codecs() -> dict[str, type]:
-    """codec term -> the class that decodes it — see `agent.codec.codec_for`."""
+    """codec term -> the class that decodes it — see sensing's `codec.codec_for`."""
     return _members(CODECS)
 
 
 @lru_cache(maxsize=1)
 def scalings() -> dict[str, type]:
-    """scaling term -> the class that applies it — see `agent.scaling.scaling_for`."""
+    """scaling term -> the class that applies it — see sensing's `scaling.scaling_for`."""
     return _members(CALIBRATIONS)
 
 

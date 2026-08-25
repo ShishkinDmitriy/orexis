@@ -252,6 +252,16 @@ def test_no_document_names_a_path_that_is_not_there():
         "agent/auction.py",
         "agent/clearing.py",
         "agent/market.py",
+        # sensing-owns-the-reading-pipeline: four records narrate where the reading pipeline
+        # lived in the kernel — the sensed writer, the observations recorder, the pointer and
+        # the readings query — before it went to the sensing package. Past tense, every one.
+        "agent/observation.py",
+        "agent/sensed_writer.py",
+        "agent/readings.rq",
+        "agent/pointer.py",
+        # and the two empty directories it deleted, named as what went.
+        "agent/codecs",
+        "agent/scalings",
     }
     docs = concepts()
     missing = []

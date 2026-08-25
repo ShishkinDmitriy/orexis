@@ -110,7 +110,7 @@ def _read(agent, value, age_s=0):
     """
     from datetime import datetime, timedelta, timezone
 
-    from agent.sensed_writer import SensedWriter
+    from packages.capability.sensing.sensed_writer import SensedWriter
 
     sensor = agent.me.sensors[0]
     SensedWriter(agent.beliefs).write(

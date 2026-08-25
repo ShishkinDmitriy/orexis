@@ -17,8 +17,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from . import config
-from .influx_writer import InfluxWriter
+from agent import config
+from agent.influx_writer import InfluxWriter
+
 from .sensed_writer import SensedWriter
 
 

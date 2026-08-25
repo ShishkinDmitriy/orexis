@@ -43,16 +43,16 @@ from __future__ import annotations
 from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
-from agent.scaling import scaling_for
 from agent.driver import driver_for
 from agent.module import Module
-from agent import pointer
-from agent.observation import Observations
 from agent.ontology import INSTRUMENTS_GRAPH, beliefs_graph
 from agent.store import bindings
 
 
+from . import pointer
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
+from .observation import Observations
+from .scaling import scaling_for
 from .terms import (FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S,
                     SUBSCRIBING)
 
@@ -165,7 +165,7 @@ class SensingModule(Module):
                 self.log.warning("%s names a scaling this build does not carry — it will "
                                  "never be read", sensor.local_id)
 
-        # Recording is not sensing's to define — see agent/observation.py.
+        # Recording is one place for every capability that records — see observation.py.
         self.observations = Observations(agent)
         #  What I have already written down, so publishing is a no-op until the answer moves.
         #  Nothing is published from HERE: `SubscribingModule` fills its cadence dicts after

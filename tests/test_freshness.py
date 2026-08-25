@@ -65,23 +65,31 @@ def test_the_horizon_the_shape_reads_is_the_one_the_module_computes(monkeypatch)
 
 
 def test_a_reading_past_the_horizon_is_stale_where_a_fresh_one_is_met(monkeypatch):
-    """The same number, the same region, two different wants — the age is what separates them.
+    """The same number, two different wants — the age is what separates them.
 
-    0.55 sits inside fern's 0.45-0.65, so while it is fresh there is nothing to want. Aged past
-    the horizon it is not suddenly wrong, it is no longer EVIDENCE: what the agent wants is to
-    look again, and its urgency is the maximum for the same reason an unread property's is.
+    0.55 sits inside fern's 0.45-0.65, so while it is fresh there is nothing to want. Aged
+    past the horizon it is not suddenly wrong, it is no longer EVIDENCE — and that is the
+    FRESHNESS want's verdict, sensing's judgment through the measure it declares: maximal,
+    for the same reason an unread property's is. The STAKE judges the number it has
+    (sensing-owns-the-reading-pipeline): 0.55 is still inside the region, so it stays met,
+    and not knowing is the epistemic want beside it, which `propose_about` answers first.
     """
     agent, st = _fern(monkeypatch, value=0.55)
-    fresh = {g.observed_property: g for g in agent.deducer.desires()}
-    assert fresh[MOISTURE].state == "met" and fresh[MOISTURE].urgency == 0.0
+    def wants():
+        mine = [g for g in agent.deducer.desires() if g.observed_property == MOISTURE]
+        return (next(g for g in mine if g.is_epistemic), next(g for g in mine if not g.is_epistemic))
+    look, stake = wants()
+    assert look.state == "met" and look.urgency == 0.0
+    assert stake.state == "met"
 
     _age_the_reading(st)
-    stale = {g.observed_property: g for g in agent.deducer.desires()}
-    assert stale[MOISTURE].state == "stale"
-    assert stale[MOISTURE].urgency == 1.0, \
+    look, stake = wants()
+    assert look.state == "stale"
+    assert look.urgency == 1.0, \
         "not knowing is not knowing — scaling it by a distance the agent no longer trusts " \
         "would rank it by something it does not know"
-    assert stale[MOISTURE].value == 0.55, "the last reading is still carried, and still shown"
+    assert look.value == 0.55, "the last reading is still carried, and still shown"
+    assert stake.state == "met", "the stake judges the number it has; staleness is sensing's"
 
 
 def test_stale_and_unmeasured_are_told_apart(monkeypatch):
@@ -89,7 +97,7 @@ def test_stale_and_unmeasured_are_told_apart(monkeypatch):
     and let the answer go cold — the same repair, and not the same situation."""
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
-    by_state = {g.state for g in agent.deducer.desires() if not g.is_duty}
+    by_state = {g.state for g in agent.deducer.desires() if g.is_epistemic}
     assert by_state == {"stale", "unmeasured"}, \
         "moisture was read and went cold; temperature was never read at all"
 

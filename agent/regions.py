@@ -20,10 +20,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from .desire import Desire
-from .ontology import AG, INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph, obligations_graph
+from .ontology import AG, SENSED_GRAPH, beliefs_graph, obligations_graph
 from .store import bindings
 
 _SENSING = "http://example.org/orexis/sensing#SensingCapability"
@@ -34,7 +34,22 @@ log = logging.getLogger("desire")
 # file's own header. Read once at import: a malformed query is then an error the moment the
 # package loads rather than the first time somebody asks.
 DESIRES_QUERY = (Path(__file__).parent / "desires.rq").read_text()
-READINGS_QUERY = (Path(__file__).parent / "readings.rq").read_text()
+#  THE KERNEL'S READING OF THE SENSED GRAPH — sosa and nothing else: what was read, of what,
+#  by which instrument, when. What it does NOT ask is whether a reading is still evidence:
+#  that is sensing's judgment (`sensing:staleAfterS` is sensing's word), made through the
+#  freshness want it derives and the measure it declares, and never here. A stake judges the
+#  number it has; not knowing is the epistemic want's business, and `propose_about` answers
+#  that one first. The instrument is `sosa:madeBySensor`, which the sensed writer stamps.
+_READINGS_Q = """
+SELECT ?subject ?property ?value ?at ?instrument WHERE {
+  GRAPH $sensed {
+    ?obs sosa:hasFeatureOfInterest ?subject ;
+         sosa:observedProperty ?property ;
+         sosa:hasSimpleResult ?value .
+    OPTIONAL { ?obs sosa:resultTime ?at }
+    OPTIONAL { ?obs sosa:madeBySensor ?instrument }
+  }
+}"""
 
 # My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
 # graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
@@ -320,7 +335,6 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
             subject = next((s for s in subjects if (s, row["property"]) in known), None)
             item = known.get((subject, row["property"])) if subject else None
         value = item.value if item else None
-        stale = _is_stale(item, now)
         if row["kind"] == "freshness":
             #  MEASURED like everything else since the want moved into sensing, where the
             #  reading and the horizon both live. The number it comes back with is the one
@@ -347,12 +361,12 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
             region = _region_of(row)
             if value is None:
                 urgency, state = 1.0, "unmeasured"
-            elif stale:
-                #  A stale want is as urgent as an unread one, and for the same reason: the
-                #  number in hand is not evidence about now. Scaling it by the distance the
-                #  LAST reading showed would rank an agent by something it no longer knows.
-                urgency, state = 1.0, "stale"
             else:
+                #  A STAKE JUDGES THE NUMBER IT HAS. It used to go maximal when the reading was
+                #  past sensing's horizon, which meant the kernel judging staleness with a word
+                #  that is sensing's; not knowing is the freshness want's business now — hot,
+                #  and answered first by `propose_about` — and the stake says how the last
+                #  number sits, which is what it knows.
                 #  Whichever capability MEASURES such wants, asked through the choir road the
                 #  caller handed in — the same question the planner asks of a candidate
                 #  world, which is the whole point of one measure. The STATE stays the
@@ -371,13 +385,12 @@ def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
 
 
 @dataclass(frozen=True)
-class _Known:
-    """One current reading and how it may be judged: the value, when it was taken, and the
-    staleness horizon whoever monitors that pair published."""
+class Known:
+    """One current reading: the value and when it was taken. Whether it is still evidence is
+    not on it — that is sensing's judgment, made through the freshness want and its measure."""
 
     value: float | None
     at: datetime | None
-    horizon: float | None
 
 
 def _desired(desires, agent_uri: str, agent_id: str | None) -> list[dict]:
@@ -390,16 +403,12 @@ def _desired(desires, agent_uri: str, agent_id: str | None) -> list[dict]:
 
 
 def _known(beliefs) -> tuple[dict, dict]:
-    """The belief modality's rows — `readings.rq` — keyed twice: by (subject, property) for
-    the stakes, and by (instrument, property) for the freshness wants, whose subject only the
-    belief side knows."""
-    text = (READINGS_QUERY.replace("$sensed", f"<{SENSED_GRAPH}>")
-            .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>"))
+    """What is known, keyed twice: by (subject, property) for the stakes, and by
+    (instrument, property) for the freshness wants, which name the instrument they are about."""
     by_pair, by_instrument = {}, {}
-    for r in bindings(beliefs(text)):
-        item = _Known(value=float(r["value"]) if r.get("value") else None,
-                      at=datetime.fromisoformat(r["at"]) if r.get("at") else None,
-                      horizon=float(r["horizon"]) if r.get("horizon") else None)
+    for r in bindings(beliefs(_READINGS_Q.replace("$sensed", f"<{SENSED_GRAPH}>"))):
+        item = Known(value=float(r["value"]) if r.get("value") else None,
+                     at=datetime.fromisoformat(r["at"]) if r.get("at") else None)
         by_pair[(r["subject"], r["property"])] = item
         if r.get("instrument"):
             by_instrument[(r["instrument"], r["property"])] = item
@@ -417,11 +426,6 @@ def _region_of(row: dict) -> Region:
                   low=float(row["low"]), high=float(row["high"]),
                   floor=float(floor) if floor is not None else None,
                   ceiling=float(ceiling) if ceiling is not None else None)
-
-
-def _is_stale(item, now: datetime) -> bool:
-    return (item is not None and item.horizon is not None and item.at is not None
-            and item.at + timedelta(seconds=item.horizon) < now)
 
 
 def _duty_urgency(row: dict, now: datetime) -> float:

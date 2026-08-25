@@ -14,7 +14,7 @@ import json
 import pytest
 
 from agent.ontology import SENSED_GRAPH
-from agent.pointer import DEFAULT_POINTER, PointerError, resolve
+from packages.capability.sensing.pointer import DEFAULT_POINTER, PointerError, resolve
 from agent.store import bindings
 from agent.world import Sensor, load_self
 
@@ -213,7 +213,7 @@ def test_the_series_store_is_told_which_property_each_reading_is(monkeypatch):
     and every dashboard and later query would read it as one. The belief base was always fine;
     it keys by subject AND property. The series store, which is the record, was not.
     """
-    from agent import observation
+    from packages.capability.sensing import observation
 
     written = []
 

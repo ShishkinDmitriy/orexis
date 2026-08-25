@@ -12,7 +12,7 @@ open to being re-picked as a probe drifts.
 
 from __future__ import annotations
 
-from agent.scaling import Scaling
+from packages.capability.sensing.scaling import Scaling
 
 from .terms import IDENTITY
 

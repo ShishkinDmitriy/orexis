@@ -16,9 +16,9 @@ See knowledge/decisions/bytes-become-a-quantity-in-stages.md and issue #26.
 import pytest
 
 from agent import genesis, loader
-from agent.scaling import scaling_for
+from packages.capability.sensing.scaling import scaling_for
 from packages.scaling.identity.terms import IDENTITY, LINEAR
-from agent.codec import Codec, CodecError, codec_for
+from packages.capability.sensing.codec import Codec, CodecError, codec_for
 from packages.codec.json.codec import JsonCodec
 from packages.codec.json.terms import CBOR, JSON
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH

@@ -38,8 +38,8 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from .ontology import SENSED_GRAPH
-from .store import Store
+from agent.ontology import SENSED_GRAPH
+from agent.store import Store
 
 
 def _slug(uri: str) -> str:

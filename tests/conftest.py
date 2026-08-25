@@ -20,7 +20,7 @@ import pytest
 from agent import genesis, loader
 from agent.genesis import agent_id_of
 from agent.ontology import SENSED_GRAPH
-from agent.sensed_writer import observation_uri
+from packages.capability.sensing.sensed_writer import observation_uri
 from agent.store import Store
 
 REPO_ROOT = loader.REPO_ROOT
@@ -166,7 +166,8 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     Nothing is stubbed except the two things that would reach the network: MQTT and Influx.
     The modules under test are the ones that ship.
     """
-    from agent import observation, runtime
+    from agent import runtime
+    from packages.capability.sensing import observation
 
     class NoInflux:
         def __init__(self, *a, **k):

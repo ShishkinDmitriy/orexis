@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from agent import pointer
+from packages.capability.sensing import pointer
 from agent.config import REPO_ROOT
 
 SENTINEL = REPO_ROOT / "firmware" / "moisture-sentinel" / "src"
