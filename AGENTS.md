@@ -169,6 +169,13 @@ record is worse than none, because it is still cited.
    (service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
+**And a SECOND axis, orthogonal to that one: the agent stack** — network, transport,
+translation, the belief-revision seam, mind — sliced by representation rather than by timescale.
+The transport has no position on the cognitive axis at all; an infrastructure failure becomes a
+belief only by explicit modelling; and a peer's message is a speech act, not an observation, so
+it takes a different path through translation. See
+[the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
+
 **Three layers, split by how long a thing may take and whether it may be interrupted** —
 reactive handlers (ms, atomic, no search: classify and write), intention progression (seconds to
 minutes, suspends rather than blocks, searches nothing), deliberation (the search). The rule:
