@@ -169,6 +169,31 @@ record is worse than none, because it is still cited.
    (service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
+**What an agent BELIEVES about all of that is settled by one test: model it only if a belief
+about it would change which plan gets selected.** Everything else is telemetry — logged and
+reported, never believed. Infrastructure reaches belief only through a named projection; anything
+the interpreter already knows is COMPUTED (what stands, what I can do, how stale this is) and
+never asserted; what comes from outside is stored; self-telemetry gets bands, not raw values;
+reflection caps at one level; and beliefs about other agents stay first-order — what they DID,
+never what they believe. See
+[model-it-only-if-a-plan-would-branch-on-it](knowledge/decisions/model-it-only-if-a-plan-would-branch-on-it.md).
+
+**And a SECOND axis, orthogonal to that one: the agent stack** — network, transport,
+translation, the belief-revision seam, mind — sliced by representation rather than by timescale.
+The transport has no position on the cognitive axis at all; an infrastructure failure becomes a
+belief only by explicit modelling; and a peer's message is a speech act, not an observation, so
+it takes a different path through translation. See
+[the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
+
+**Three layers, split by how long a thing may take and whether it may be interrupted** —
+reactive handlers (ms, atomic, no search: classify and write), intention progression (seconds to
+minutes, suspends rather than blocks, searches nothing), deliberation (the search). The rule:
+**anything that blocks belongs in progression, anything that searches belongs in deliberation,
+anything that must never block belongs in a handler** — and the belief base is the INTERFACE
+between them, which is why staleness, a dead sensor and event thinning all settled there rather
+than in either neighbour. See
+[layered-by-timescale-and-interruptibility](knowledge/decisions/layered-by-timescale-and-interruptibility.md).
+
 **One principle explains most of the shapes above: control the derivative, not the value.**
 Nothing here controls a step — a cadence not a reading, a region not an aim, a mandate not a
 belief, an affordance not an action. When a change you are making reaches DOWN a level (a
