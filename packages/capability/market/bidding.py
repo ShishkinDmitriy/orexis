@@ -39,6 +39,7 @@ from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
 from . import rounds
+from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
 from .terms import (ACQUIRING, BIDDING, PRESENTING,
                     SENSING)
@@ -113,6 +114,7 @@ class BiddingModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
+        self.markets = bidding_markets_of(agent.beliefs.query, self.me.uri)
         self.beliefs = agent.desires.read(BIDDING_PICKS)
         self.balance = self.beliefs.endowment
         self.won_l = 0.0
@@ -312,13 +314,13 @@ class BiddingModule(Module):
 
     def subscriptions(self) -> list[str]:
         topics = []
-        for market in self.me.markets:
+        for market in self.markets:
             topics.append(market.offer_topic)
             topics.append(f"{market.claim_topic}/{self.me.agent_id}")
         return topics
 
     def handle(self, topic: str, payload: bytes) -> bool:
-        for market in self.me.markets:
+        for market in self.markets:
             if topic == market.offer_topic:
                 self.on_offer(market, self.parse(payload) or {})
                 return True
@@ -547,7 +549,7 @@ class BiddingModule(Module):
                    if sensing is not None else None)
         if reading is None:
             return False
-        market = next((m for m in self.me.markets if m.uri == row.via), None)
+        market = next((m for m in self.markets if m.uri == row.via), None)
         if market is None:
             return False
         return self._bid(reading.value, market, open_[0].auction_id)

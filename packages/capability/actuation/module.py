@@ -37,6 +37,7 @@ from agent.store import bindings
 
 from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION, DOSING
+from .wiring import actuator_for, actuators_of
 
 SENSING = "http://example.org/orexis/sensing#SensingCapability"  # whoever can look, asked by family
 
@@ -86,6 +87,7 @@ class ActuationModule(Module):
 
     def __init__(self, agent):
         super().__init__(agent)
+        self.actuators = actuators_of(agent.beliefs.query, self.me.uri)
         self.settled: set[str] = set()
         # Commanded and not yet confirmed: jti -> (deadline, plant, ml). A dose leaves here on
         # the device's report, or on the sweep deciding nobody is going to send one.
@@ -137,7 +139,7 @@ class ActuationModule(Module):
         return rows[0]["s"] if rows else None
 
     def command_for(self, claim) -> tuple[Command, object]:
-        device = self.me.actuator_for(self._subject_of(claim.sub))
+        device = actuator_for(self.actuators, self._subject_of(claim.sub))
         if device is None:
             raise ValueError(f"I own no actuator that serves {claim.sub!r}")
         ml = min(claim.amount_l * 1000.0, device.max_dose_ml)  # the device's own cap
@@ -164,7 +166,7 @@ class ActuationModule(Module):
         """
         if subject_uri != self.me.acts_for:
             return
-        if self.me.actuator_for(self._subject_of(self.me.agent_id)) is None:
+        if actuator_for(self.actuators, self._subject_of(self.me.agent_id)) is None:
             return
         #  THROUGH EXECUTION, never a decision of this module's own: the reading just
         #  recorded is what the agent believes (`Observations.record` writes before it
@@ -376,7 +378,7 @@ SELECT ?source ?p WHERE {{
         """Exactly my own valves' status channels — never a wildcard, and only where the world
         states one. A device wired without a status channel is a real deployment; what it costs
         is stated in `reports()`."""
-        return [a.status_topic for a in self.me.actuators if a.status_topic]
+        return [a.status_topic for a in self.actuators if a.status_topic]
 
     def start(self) -> None:
         self._sweep.start()

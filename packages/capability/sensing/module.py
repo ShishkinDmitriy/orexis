@@ -52,6 +52,7 @@ from agent.store import bindings
 from . import pointer
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .observation import Observations
+from .wiring import sensors_of
 from .scaling import scaling_for
 from .terms import (FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S,
                     SUBSCRIBING)
@@ -142,9 +143,10 @@ class SensingModule(Module):
         # capability for each — but a module that took all of them would aim a cadence at a device
         # that takes no orders, and swallow readings from one it never re-aims. The derivation
         # split the capabilities; this splits the sensors the same way.
-        self.sensors = tuple(s for s in self.me.sensors
+        wired = sensors_of(self.agent.beliefs.query, self.me.uri)
+        self.sensors = tuple(s for s in wired
                              if self.SENSE_MODE is None or s.sense_mode == self.SENSE_MODE)
-        unclaimed = [s.local_id for s in self.me.sensors if s not in self.sensors]
+        unclaimed = [s.local_id for s in wired if s not in self.sensors]
         if unclaimed:
             self.log.debug("%s: not mine — %s", self.name, ", ".join(unclaimed))
 

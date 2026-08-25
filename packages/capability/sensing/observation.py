@@ -21,6 +21,7 @@ from agent import config
 from agent.influx_writer import InfluxWriter
 
 from .sensed_writer import SensedWriter
+from .wiring import event_topic_of
 
 
 def _short(uri: str) -> str:
@@ -32,6 +33,7 @@ class Observations:
     """One agent's record of what it has observed. Held by whichever module does the observing."""
 
     def __init__(self, agent):
+        self.event_topic = event_topic_of(agent.beliefs.query, agent.me.uri)
         self.agent = agent
         self.me = agent.me
         self.log = agent.log if hasattr(agent, "log") else None
@@ -133,12 +135,12 @@ class Observations:
         except Exception as exc:
             log.error("sensed write failed: %s", exc)
             self.agent.metrics.sensed_failed()
-        if self.me.event_topic:
+        if self.event_topic:
             # Voluntary disclosure: the agent announces its own verdict, not its raw state. A
             # host listens for this to learn that scarcity has appeared, and never reads a
             # moisture. The number comes from whoever observed; the judgment comes from
             # whichever capability holds a stake — see runtime.annotations.
-            self.agent.publish(self.me.event_topic, {
+            self.agent.publish(self.event_topic, {
                 "agent": self.me.agent_id, "subject": sensor.subject,
                 # Named, because a subject with two sensors announces two values on one topic
                 # and a listener that cannot tell them apart is worse off than one told nothing.

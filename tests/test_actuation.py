@@ -15,7 +15,8 @@ from agent import loader, signing  # noqa: F401  (loader puts the package trees 
 from packages.capability.market.clearing import Claim
 from agent.signing import verify_command
 from packages.capability.actuation import ActuationModule
-from agent.world import Actuator, Self
+from agent.world import Self
+from packages.capability.actuation.wiring import Actuator
 
 
 class FakeAgent:
@@ -30,8 +31,10 @@ class FakeAgent:
             status_topic=status_topic,
         )
         self.id = "supplier"
-        self.me = Self(uri="<http://example.org/orexis/world/simulation#supplier>", agent_id="supplier", capabilities=frozenset(),
-                       actuators=(valve,))
+        self.me = Self(uri="<http://example.org/orexis/world/simulation#supplier>", agent_id="supplier", capabilities=frozenset())
+        #  What the module would load from the world through its own wiring; the fake's query
+        #  surface answers nothing, so `module()` hands it the valve directly.
+        self.actuators = (valve,)
         self.sent = []
         self.beliefs = _Beliefs(dose_grace_s)
         # The module reads its block from the desire modality now; the stub serves both
@@ -61,6 +64,7 @@ class _Beliefs:
 def module(agent=None):
     agent = agent or FakeAgent()
     m = ActuationModule(agent)
+    m.actuators = getattr(agent, "actuators", m.actuators)
     m.host_key = Ed25519PrivateKey.generate()
     m.clearing_key = Ed25519PrivateKey.generate()
     return m, agent

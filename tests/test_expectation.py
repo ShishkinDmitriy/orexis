@@ -21,7 +21,7 @@ from packages.capability.actuation.terms import DOSING as _ACTUATE
 from agent.store import bindings
 from agent.keeper import DEADLINE_AT
 
-from conftest import MOISTURE, build_agent, genesis_store
+from conftest import MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def keeper_of(agent):
 
 
 def market_of(agent):
-    return agent.me.markets[0]
+    return wired_markets(agent)[0]
 
 
 def win(agent, auction="r1", amount=0.5, debit=0.2):
@@ -76,7 +76,7 @@ def test_the_dose_landing_meets_the_end(thirsty):
     is fine, that is the dose landing. The watch closes and the row now carries BOTH facts:
     outcome satisfied (the claim) and endMet true (the world answered)."""
     win(thirsty)
-    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.42})
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.42})
     keeper = keeper_of(thirsty)
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
@@ -87,7 +87,7 @@ def test_movement_the_wrong_way_proves_nothing_before_the_deadline(thirsty):
     """A dose may land late; drying continues meanwhile. Falling readings inside the horizon
     leave the watch open rather than judging early — unmet is a verdict about the DEADLINE."""
     win(thirsty)
-    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.29})
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29})
     assert len(keeper_of(thirsty).open_expectations()) == 1
 
 
@@ -98,7 +98,7 @@ def test_the_deadline_passing_unmet_is_the_false_knowledge_datum(monkeypatch):
     keeper = keeper_of(fern)
     keeper.beliefs = replace(keeper.beliefs, patience_s=0)   # the horizon is now
     win(fern)
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.28})   # still falling
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.28})   # still falling
     assert keeper.open_expectations() == []
     reported = keeper.reports()
     assert reported["expectations_unmet"] == 1
@@ -122,7 +122,7 @@ def test_an_open_watch_is_maximum_urgency_and_a_verdict_releases_it(thirsty):
     # maximum urgency earns the agent's OWN fast cadence — the floor is a clamp, not a target
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s
 
-    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.42})   # dose lands
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.42})   # dose lands
     assert keeper.urgency(thirsty.me.acts_for, MOISTURE, 0.42) is None
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == calm
 
@@ -143,7 +143,7 @@ def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
         for auction in ("r1", "r2", "r3"):
             win(fern, auction=auction)
             value -= 0.01                                    # the world keeps refusing
-            fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": round(value, 2)})
+            fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": round(value, 2)})
 
     assert keeper.reports()["expectations_unmet"] == 3
     assert keeper.reports()["affordances_suspect"] == 1
@@ -159,11 +159,11 @@ def test_one_success_resets_the_suspicion(monkeypatch):
     keeper.beliefs = replace(keeper.beliefs, patience_s=0)
 
     win(fern, auction="r1")
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.29})   # unmet
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.29})   # unmet
     win(fern, auction="r2")
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.40})   # met — the reset
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.40})   # met — the reset
     win(fern, auction="r3")
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.39})   # unmet
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.39})   # unmet
 
     assert keeper.reports()["expectations_unmet"] == 2
     assert keeper.reports()["affordances_suspect"] == 0
@@ -191,12 +191,12 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     assert keeper.open_expectations() == []          # the dose is not imminent yet
 
     # a reading arrives WITHOUT the ack — the board has not heard the tightening
-    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.29})
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29})
     assert thirsty.sent.to(f"{market.redeem_topic}/fern") == []
 
     # and one acknowledged at the fast cadence — the watch is provably live
     fast = thirsty.subscribing().beliefs.fast_sleep_s
-    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.29, "sleep_s": fast})
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.29, "sleep_s": fast})
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v1"
     assert keeper.standing(action=PRESENTING) == []
@@ -243,10 +243,10 @@ def test_a_breath_of_grain_past_the_baseline_is_not_the_world_answering(thirsty)
     expected delta (0.5 L through 2.0 L-per-fraction = 0.25) is 0.0625, and grain clears
     nothing."""
     win(thirsty)
-    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.301})
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.301})
     keeper = keeper_of(thirsty)
     assert len(keeper.open_expectations()) == 1, "grain must not close a watch"
-    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.37})
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.37})
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
 
@@ -285,7 +285,7 @@ def test_no_new_purchase_while_my_own_dose_is_unanswered(thirsty, caplog):
         "a phantom deficit was priced while my own dose was unanswered"
     assert "my own dose has not answered yet" in caplog.text
 
-    thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.42})   # the world answers
+    thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.42})   # the world answers
     thirsty.deliver(market.offer_topic, {"auction_id": "r3", "closes_in_s": 30})
     assert len(thirsty.sent.to(f"{market.bid_topic}/fern")) == bids + 1
 

@@ -41,109 +41,30 @@ class MessageBus:
     tls_port: int | None = None
 
 
-@dataclass(frozen=True)
-class Sensor:
-    """A device an agent may read, plus whatever its binding states about reaching it.
-
-    The binding fields are optional on purpose: a self-clocked device has no command channel,
-    and a device on some other transport would carry different fields entirely. Which driver
-    speaks to it is decided from these — never from anything the agent believes.
-    """
-
-    uri: str
-    local_id: str
-    subject: str  # URI of what it monitors
-    subject_id: str
-    observes: str  # URI of the property it reads
-    # WHO HOLDS THE CLOCK — sensing:ScheduledProcedure keeps an interval it is given, sensing:PushProcedure keeps its own.
-    # The derivation already reads this to decide whether the agent gains sensing:Subscribing or
-    # sensing:Listening; carrying it here is what lets the runtime partition what the derivation
-    # separated. Without it an agent holding one of each gave both to both modules, and the
-    # scheduled sensor's cadence was silently never re-aimed.
-    sense_mode: str | None = None
-    bus: str | None = None  # URI of the bus it declares itself on, if any
-    reading_topic: str | None = None
-    # WHICH value in that payload is mine — a JSON Pointer, and None means the default. Two
-    # sensors on one board share a topic and differ only here: the board is one MQTT client
-    # with one credential, so it sends one message and each sensor takes its own field.
-    reading_pointer: str | None = None
-    command_topic: str | None = None
-    # The two ends of the pipeline the pointer sits in the middle of. Both are DERIVED — genesis
-    # writes them from what the world stated, or from its silence — so neither is ever None in a
-    # world that has been through genesis, and a shape refuses one that is.
-    decoded_by: str | None = None     # which codec — codec:decodedBy
-    scaled_by: str | None = None  # which calibration — scaling:scaledBy
-    # What unit that quantity is in, as a QUDT IRI. Not the same kind of fact as the two above:
-    # they choose an implementation, this states what the number MEANS. A board reporting soil
-    # moisture 0.183 and air humidity 0.46 sends two numbers that look identical, and nothing but
-    # this says they are the same dimension while 21.4 degrees is not.
-    quantity_unit: str | None = None
-    # The PATCH this probe actually sits in, when someone judged the pot's soil not one thing
-    # (#98): a sosa:Sample whose isSampleOf is the subject above. Optional, and its absence is
-    # the ordinary rig — the subject is the feature, and everything reads as it always did.
-    sample: str | None = None
-    # THIS channel is watched for crossings (#151): its band is commanded beside the cadence,
-    # and silence between heartbeats means "nothing crossed" — information. Per sensor, because
-    # which values a board can watch is a per-channel hardware fact.
-    alarm: bool = False
-
-
-@dataclass(frozen=True)
-class Actuator:
-    """A device an agent may drive, with its own calibration and hard cap."""
-
-    uri: str
-    local_id: str
-    subject: str
-    subject_id: str
-    command_topic: str
-    ml_per_second: float
-    max_dose_ml: float
-    # Where the device says what it actually dispensed. OPTIONAL because a world may wire a
-    # valve it cannot hear back from, and that is a real deployment rather than an error — but
-    # an agent with no status channel cannot tell a delivered dose from a refused one, which is
-    # what `ActuationModule` reports when it is missing.
-    status_topic: str | None = None
-
-
-@dataclass(frozen=True)
-class Market:
-    """A venue and its three channels."""
-
-    uri: str
-    local_id: str
-    resource: str  # URI of what is allocated
-    offer_topic: str
-    bid_topic: str
-    claim_topic: str
-    redeem_topic: str | None = None  # absent in a world authored before #132 — paper, unspendable
-    capacity_l: float = 0.0  # physical ceiling of the resource — the allocation limit
-    #  How long this venue holds a winner's claim. None where the world authored no window,
-    #  which is the same era as no redeem channel: the host redeemed on issue and no winner
-    #  ever waited. A stated window is what puts an expiry on every claim the venue issues.
-    redeem_window_s: float | None = None
+#  `Sensor`, `Actuator` and `Market` WERE HERE, and `load_self` loaded all three by their
+#  packages' words — the kernel knowing what a probe, a valve and a venue are, in SPARQL the
+#  ratchet could not see (self-is-bdi-and-wiring-is-the-packages). Each lives in its package's
+#  `wiring.py` now, loaded by the module that owns it, and `Self` is what an agent IS.
 
 
 @dataclass
 class Self:
-    """What an agent is, from the world's point of view. Its own row, and no one else's."""
+    """What an agent IS, from the world's point of view: its own row, and no one else's.
+
+    Its id, its capabilities, and whom it acts for — BDI's structure and nothing a package
+    owns. What it is WIRED TO — sensors, actuators, venues — is each package's to load
+    (`sensing.wiring`, `actuation.wiring`, `market.wiring`), because a kernel that loads
+    packages should know no probe, no valve and no venue.
+    """
 
     uri: str
     agent_id: str
     capabilities: frozenset[str]
     acts_for: str | None = None  # URI of the subject it advances
     acts_for_id: str | None = None
-    event_topic: str | None = None
-    sensors: tuple[Sensor, ...] = ()
-    actuators: tuple[Actuator, ...] = ()
-    markets: tuple[Market, ...] = ()  # bids in
-    hosted_markets: tuple[Market, ...] = ()
 
     def can(self, capability: str) -> bool:
         return capability in self.capabilities
-
-    def actuator_for(self, subject_id: str) -> Actuator | None:
-        return next((a for a in self.actuators if a.subject_id == subject_id), None)
 
 
 @dataclass
@@ -164,98 +85,10 @@ SELECT ?v WHERE {{
 def _self_q(agent_id: str) -> str:
     """Find me by my id — the only instance identifier the process is given."""
     return f"""
-SELECT ?agent ?capability ?actsFor ?actsForId ?eventTopic WHERE {{ 
+SELECT ?agent ?capability ?actsFor ?actsForId WHERE {{ 
   ?agent a ag:Agent ; ag:localId "{agent_id}" ; ag:hasCapability ?capability .
   OPTIONAL {{ ?agent ag:actsFor ?actsFor . OPTIONAL {{ ?actsFor ag:localId ?actsForId }} }}
-  OPTIONAL {{ ?agent mqtt:eventTopic ?eventTopic }}
  }}"""
-
-
-def _sensors_q(agent_uri: str) -> str:
-    """My sensors and their bindings. The binding parts are OPTIONAL: what a device states
-    about how to reach it varies by transport, and a driver is picked from what is there."""
-    return f"""
-SELECT ?sensor ?localId ?subject ?subjectId ?observes ?senseMode ?bus ?readingTopic
-       ?readingPointer ?commandTopic ?decodedBy ?scaledBy ?quantityUnit ?sample ?alarm
-WHERE {{
-  <{agent_uri}> sensing:polls ?sensor .
-  ?sensor ag:localId ?localId ; sensing:monitors ?subject ; sosa:observes ?observes .
-  # The mode is the DEVICE's (#96), reached through the stream the sensor shares with it —
-  # a peripheral has no clock of its own, and its board's answer is the only answer there is.
-  OPTIONAL {{ ?sensor mqtt:readingTopic ?stream .
-              ?clockKeeper mqtt:readingTopic ?stream ; mqtt:onBus ?anyBus ;
-                           sensing:senseMode ?senseMode }}
-  # Whether THIS CHANNEL is watched for crossings (#151) — per sensor, not per board,
-  # because which values a board can watch is a hardware fact per channel: a ULP reaches the
-  # analog probe and never the DHT. The board wakes for any watched channel that crosses.
-  OPTIONAL {{ ?sensor ssn:implements sensing:AlarmProcedure . BIND(true AS ?alarm) }}
-  OPTIONAL {{ ?subject ag:localId ?subjectId }}
-  OPTIONAL {{ ?sensor sensing:samples ?sample }}
-  OPTIONAL {{ ?sensor mqtt:onBus ?bus }}
-  OPTIONAL {{ ?sensor mqtt:readingTopic ?readingTopic }}
-  OPTIONAL {{ ?sensor mqtt:readingPointer ?readingPointer }}
-  OPTIONAL {{ ?sensor mqtt:commandTopic ?commandTopic }}
-  # Through the stream it publishes on, because an encoding is the stream's — see
-  # knowledge/decisions/a-stream-is-a-thing.md. Both halves are derived; this query runs over
-  # the whole store at boot rather than over `$given`, so it may read a conclusion.
-  OPTIONAL {{ ?sensor mqtt:publishesOn ?readingChannel . ?readingChannel codec:decodedBy ?decodedBy }}
-  OPTIONAL {{ ?sensor scaling:scaledBy ?scaledBy }}
-  OPTIONAL {{ ?sensor scaling:quantityUnit ?quantityUnit }}
- }}"""
-
-
-def _actuators_q(agent_uri: str) -> str:
-    return f"""
-SELECT ?actuator ?localId ?subject ?subjectId ?commandTopic ?mlPerSecond ?maxDoseMl ?statusTopic
-WHERE {{
-  <{agent_uri}> actuation:hasActuator ?actuator .
-  ?actuator ag:localId ?localId ; actuation:actuates ?subject ; mqtt:commandTopic ?commandTopic ;
-            actuation:mlPerSecond ?mlPerSecond ; actuation:maxDoseMl ?maxDoseMl .
-  OPTIONAL {{ ?subject ag:localId ?subjectId }}
-  OPTIONAL {{ ?sensor sensing:samples ?sample }}
-  OPTIONAL {{ ?actuator mqtt:statusTopic ?statusTopic }}
- }}"""
-
-
-def _markets_q(agent_uri: str, relation: str) -> str:
-    return f"""
-SELECT ?market ?localId ?resource ?offerTopic ?bidTopic ?claimTopic ?redeemTopic ?window ?capacity
-WHERE {{ 
-  <{agent_uri}> market:{relation} ?market .
-  ?market ag:localId ?localId ; market:marketFor ?resource ;
-          market:offerTopic ?offerTopic ; market:bidTopic ?bidTopic ; market:claimTopic ?claimTopic .
-  OPTIONAL {{ ?market market:redeemTopic ?redeemTopic }}
-  OPTIONAL {{ ?market market:redeemWindowS ?window }}
-  OPTIONAL {{ ?resource market:lotCapacity ?capacity }}
- }}"""
-
-
-# What each participant may be allocated at most, in one trade. A DOMAIN derives this — the
-# span of what its subject survives, in litres — and states it in the market's word, exactly as
-# a domain states `market:lotCapacity` for the total. This reads the conclusion and names no
-# domain. See packages/plant/water/rules.ru and #270.
-def _ceilings_q(market_uri: str) -> str:
-    return f"""
-SELECT ?agentId ?ceiling WHERE {{
-  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId ;
-         market:allocationCeilingL ?ceiling }}"""
-
-
-# Everyone entitled to bid here — the host needs this to know who may answer an offer.
-def _participants_q(market_uri: str) -> str:
-    return f"""
-SELECT ?agentId WHERE {{ 
-  ?agent market:bidsIn <{market_uri}> ; ag:localId ?agentId  }}"""
-
-
-def _market_from(row: dict) -> Market:
-    return Market(
-        uri=row["market"], local_id=row["localId"], resource=row["resource"],
-        offer_topic=row["offerTopic"], bid_topic=row["bidTopic"],
-        claim_topic=row["claimTopic"], redeem_topic=row.get("redeemTopic"),
-        redeem_window_s=float(row["window"]) if row.get("window") else None,
-        capacity_l=float(row["capacity"]) if row.get("capacity") else 0.0,
-    )
 
 
 def load_world(query: QueryFn) -> World:
@@ -284,44 +117,13 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
         )
 
     first = rows[0]
-    me = Self(
+    return Self(
         uri=first["agent"],
         agent_id=agent_id,
         capabilities=frozenset(r["capability"] for r in rows),
         acts_for=first.get("actsFor"),
         acts_for_id=first.get("actsForId"),
-        event_topic=first.get("eventTopic"),
     )
-
-    me.sensors = tuple(
-        Sensor(
-            uri=r["sensor"], local_id=r["localId"], subject=r["subject"],
-            subject_id=r.get("subjectId") or "", observes=r["observes"],
-            sense_mode=r.get("senseMode"),
-            sample=r.get("sample"),
-            alarm=bool(r.get("alarm")),
-            bus=r.get("bus"), reading_topic=r.get("readingTopic"),
-            reading_pointer=r.get("readingPointer"),
-            command_topic=r.get("commandTopic"),
-            decoded_by=r.get("decodedBy"), scaled_by=r.get("scaledBy"),
-            quantity_unit=r.get("quantityUnit"),
-        )
-        for r in bindings(query(_sensors_q(me.uri)))
-    )
-    me.actuators = tuple(
-        Actuator(
-            uri=r["actuator"], local_id=r["localId"], subject=r["subject"],
-            subject_id=r.get("subjectId") or "", command_topic=r["commandTopic"],
-            ml_per_second=float(r["mlPerSecond"]), max_dose_ml=float(r["maxDoseMl"]),
-            status_topic=r.get("statusTopic"),
-        )
-        for r in bindings(query(_actuators_q(me.uri)))
-    )
-    me.markets = tuple(_market_from(r) for r in bindings(query(_markets_q(me.uri, "bidsIn"))))
-    me.hosted_markets = tuple(
-        _market_from(r) for r in bindings(query(_markets_q(me.uri, "hosts")))
-    )
-    return me
 
 
 def load_bus(query: QueryFn) -> MessageBus:
@@ -337,20 +139,3 @@ def load_bus(query: QueryFn) -> MessageBus:
     row = rows[0]
     return MessageBus(uri=row["bus"], host=row["host"], port=int(row["port"]),
                       tls_port=int(row["tlsPort"]) if row.get("tlsPort") else None)
-
-
-def participants(query: QueryFn, market: Market) -> frozenset[str]:
-    """Who may bid here. Public — a host must know who its counterparties are."""
-    return frozenset(r["agentId"] for r in bindings(query(_participants_q(market.uri))))
-
-
-def allocation_ceilings(query: QueryFn, market: Market) -> dict[str, float]:
-    """The most each participant may be allocated in one trade, for whoever has one.
-
-    A participant is ABSENT rather than zero when its subject states no survival range — a
-    ceiling of 0.0 would refuse every trade it is in, and `world/sensing`'s agents are exactly
-    that case. Clearing treats absent as unchecked, which is the honest answer: nothing in the
-    world says what too much would be.
-    """
-    return {r["agentId"]: float(r["ceiling"])
-            for r in bindings(query(_ceilings_q(market.uri)))}

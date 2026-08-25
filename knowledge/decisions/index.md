@@ -54,6 +54,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `ag:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.
 * [auction-and-clearing-are-the-markets](/decisions/auction-and-clearing-are-the-markets.md) - `auction.py`, `clearing.py` and the market's types leave the kernel for the package; a claim embodies the kernel's commitment, which is what a valve fulfils.
 * [sensing-owns-the-reading-pipeline](/decisions/sensing-owns-the-reading-pipeline.md) - Codec, pointer, scaling, the sensed writer, observations and `readings.rq` move to sensing; what is known is a choir hook.
+* [self-is-bdi-and-wiring-is-the-packages](/decisions/self-is-bdi-and-wiring-is-the-packages.md) - `Self` keeps id, capabilities and whom it acts for; sensors, actuators and venues are loaded by their packages' own `wiring.py`.
 * [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md) - A round is a belief on both sides, Acquiring needs an open one, and Offering is an action — the host's two-step becomes a plan.
 * [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) - Thin BDI: the LLM drives deliberation, so the formal layer becomes load-bearing rather than optional.
 * [deterministic-bid](/decisions/deterministic-bid.md) - The bid number is code; the LLM only produces the justification. Rhetoric cannot move the number.

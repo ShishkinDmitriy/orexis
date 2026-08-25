@@ -20,7 +20,7 @@ from agent.ontology import WORLD_GRAPH
 from onboarding.keygen import (create_agent_signing_keypair, create_keypair,
                                create_sealing_keypair)
 
-from conftest import build_agent, genesis_store
+from conftest import build_agent, genesis_store, wired_actuator_for, wired_hosted_markets, wired_markets
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
@@ -55,7 +55,7 @@ def make(monkeypatch):
 
 
 def market_of(agent):
-    return (agent.me.hosted_markets or agent.me.markets)[0]
+    return (wired_hosted_markets(agent) or wired_markets(agent))[0]
 
 
 def _open_and_win(host):
@@ -123,7 +123,7 @@ def test_the_host_refuses_a_presentation_that_fails_the_published_key(keyed, mak
     sealed = host.sent.to(f"{market_of(host).claim_topic}/fern")[-1]
     jti = json.loads(signing.unseal(signing.load_sealing_private("fern"),
                                     sealed["sealed"]))["jti"]
-    valve = host.me.actuator_for("fern")
+    valve = wired_actuator_for(host, "fern")
 
     host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
     assert host.sent.to(valve.command_topic) == [], "unsigned must be refused — the key is published"

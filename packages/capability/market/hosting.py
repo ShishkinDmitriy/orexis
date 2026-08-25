@@ -36,9 +36,9 @@ from agent.desire import Desire
 from agent.module import Module, Timer
 from agent.ontology import WORLD_GRAPH
 from agent.store import bindings
-from agent.world import allocation_ceilings, participants
 
 from . import calls, rounds
+from .wiring import allocation_ceilings, hosted_markets_of, participants
 from .beliefs import HOSTING_PICKS
 
 #  The serving action, spelled rather than imported: the kernel owns the term and market's own
@@ -92,7 +92,7 @@ class HostingModule(Module):
     def __init__(self, agent):
         super().__init__(agent)
         self.beliefs = agent.desires.read(HOSTING_PICKS)
-        self.markets = self.me.hosted_markets
+        self.markets = hosted_markets_of(agent.beliefs.query, self.me.uri)
         self.participants = {
             m.uri: participants(agent.beliefs.query, m) for m in self.markets
         }

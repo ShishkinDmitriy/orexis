@@ -15,7 +15,7 @@ from agent.planner import Planner
 
 from agent.ontology import beliefs_graph
 
-from conftest import MOISTURE, build_agent, genesis_store, open_round_for
+from conftest import MOISTURE, build_agent, genesis_store, open_round_for, wired_markets
 
 ACQUIRING = "http://example.org/orexis/market#Acquiring"
 OBSERVING = "http://example.org/orexis/sensing#Observing"
@@ -48,7 +48,7 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
     keeper = keeper_of(fern)
     keeper.deliberate_on_gaps()
     assert keeper.standing(action=ACQUIRING) == [], "nothing to bid in, nothing committed"
-    assert fern.sent.to(f"{fern.me.markets[0].bid_topic}/fern") == []
+    assert fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern") == []
     weighed = {r["m"] for r in bindings(fern.beliefs.query_union(
         "SELECT DISTINCT ?m WHERE { ?c ag:wouldTake ?m }"))}
     assert OBSERVING in weighed and ACQUIRING not in weighed, \
@@ -63,15 +63,15 @@ def test_the_tick_bids_when_a_round_is_open(monkeypatch):
     keeper = keeper_of(fern)
     keeper.deliberate_on_gaps()
     acquires = keeper.standing(action=ACQUIRING, observed_property=MOISTURE)
-    assert len(acquires) == 1 and acquires[0].via == fern.me.markets[0].uri
-    assert len(fern.sent.to(f"{fern.me.markets[0].bid_topic}/fern")) == 1
+    assert len(acquires) == 1 and acquires[0].via == wired_markets(fern)[0].uri
+    assert len(fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern")) == 1
 
 
 def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     """One search per round: the offer plans and bids, and the tick that follows finds the
     Acquire standing and searches nothing again."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
-    market = fern.me.markets[0]
+    market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
     assert keeper_of(fern).standing(action=ACQUIRING)
@@ -92,7 +92,7 @@ def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
     """The other order: the market knocks before the tick. One search, one intention, one bid
     — and the intention it leaves behind is the same row the tick would have written."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
-    market = fern.me.markets[0]
+    market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
     standing = keeper_of(fern).standing(action=ACQUIRING, observed_property=MOISTURE)
@@ -104,7 +104,7 @@ def test_the_bidder_holds_no_opinion_of_its_own(monkeypatch):
     `submit` no longer decides, it executes what the search committed to."""
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     monkeypatch.setattr(fern.deliberator, "decide", lambda desire: None)
-    market = fern.me.markets[0]
+    market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
     assert keeper_of(fern).standing(action=ACQUIRING) == []

@@ -23,13 +23,12 @@ from packages.codec.json.codec import JsonCodec
 from packages.codec.json.terms import CBOR, JSON
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.store import PREFIXES, bindings
-from agent.world import load_self
 
-from conftest import genesis_store, query_fn
+from conftest import genesis_store, query_fn, load_wired
 
 
 def sensors_of(world="sensing", agent="fern"):
-    return {s.local_id: s for s in load_self(query_fn(genesis_store(world=world)), agent).sensors}
+    return {s.local_id: s for s in load_wired(query_fn(genesis_store(world=world)), agent).sensors}
 
 
 # --- what genesis writes when a world states nothing -----------------------
@@ -114,7 +113,7 @@ def test_stating_an_encoding_beats_the_default():
     same bytes.
     """
     store = _world_stating("codec:encoding", "codec:Cbor", subjects=BOARD)
-    me = load_self(query_fn(store), "fern")
+    me = load_wired(query_fn(store), "fern")
     assert {s.decoded_by for s in me.sensors} == {CBOR}, \
         "the default overruled a world that named a member"
 
@@ -137,7 +136,7 @@ def test_one_device_disagreeing_about_a_shared_stream_is_refused():
 
 
 def test_stating_a_curve_beats_the_default():
-    me = load_self(query_fn(_world_stating("scaling:curve", "scaling:Linear")), "fern")
+    me = load_wired(query_fn(_world_stating("scaling:curve", "scaling:Linear")), "fern")
     probe = {s.local_id: s for s in me.sensors}["moisture_sensor_fern"]
     assert probe.scaled_by == LINEAR
 

@@ -16,7 +16,7 @@ import rdflib
 from agent.ontology import WORLD_GRAPH
 from agent.store import bindings
 
-from conftest import WORLDS_ROOT, genesis_store
+from conftest import WORLDS_ROOT, genesis_store, load_wired
 from test_shapes import _conforms, _flatten
 
 AG = "http://example.org/orexis#"
@@ -338,10 +338,9 @@ def test_a_scheduled_device_without_a_command_channel_is_refused():
 def test_a_peripheral_inherits_its_boards_clock():
     """The join the whole move rests on: air_temp_fern states no mode and its agent still
     derives sensing:Subscribing, because the mode is found through the shared stream."""
-    from agent.world import load_self
     from packages.capability.sensing.terms import SCHEDULED
 
-    fern = load_self(genesis_store(world="simulation").query, "fern")
+    fern = load_wired(genesis_store(world="simulation").query, "fern")
     air = next(s for s in fern.sensors if s.local_id == "air_temp_fern")
     assert air.sense_mode == SCHEDULED
 

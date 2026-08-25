@@ -8,7 +8,7 @@ import logging
 
 import pytest
 
-from conftest import build_agent
+from conftest import build_agent, wired_actuators, wired_hosted_markets, wired_markets, wired_sensors
 
 
 @pytest.fixture
@@ -65,12 +65,12 @@ def test_the_supplier_listens_to_its_stock_and_schedules_nothing(agent):
     supplier = agent("supplier")
     assert any(m.name == "listening" for m in supplier.modules)
     assert not any(m.name == "subscribing" for m in supplier.modules)
-    assert [s.local_id for s in supplier.me.sensors] == ["barrel1_level"]
+    assert [s.local_id for s in wired_sensors(supplier)] == ["barrel1_level"]
 
 
 def test_a_plant_agent_holds_no_actuator(agent):
     """Winning water is not being able to open a valve."""
-    assert agent("fern").me.actuators == ()
+    assert wired_actuators(agent("fern")) == ()
 
 
 # --- every topic it touches came from the graph ----------------------------
@@ -79,9 +79,9 @@ def test_subscribes_its_own_sensor_and_market_channels(agent):
     from agent import sovereign
 
     fern = agent("fern")
-    market = fern.me.markets[0]
+    market = wired_markets(fern)[0]
     assert set(fern.subscribed) == {
-        fern.me.sensors[0].reading_topic,
+        wired_sensors(fern)[0].reading_topic,
         market.offer_topic,
         f"{market.claim_topic}/fern",
         # its own question channel and nobody else's — the one topic the world does not
@@ -100,7 +100,7 @@ def test_never_subscribes_a_wildcard_sensor(agent):
 
 def test_host_subscribes_its_participants_and_bid_channel(agent):
     supplier = agent("supplier")
-    market = supplier.me.hosted_markets[0]
+    market = wired_hosted_markets(supplier)[0]
     assert f"{market.bid_topic}/+" in supplier.subscribed
     # it listens to what participants announce, which is how scarcity reaches it
     assert "readings/fern" in supplier.subscribed
@@ -127,7 +127,7 @@ def test_a_message_is_offered_to_every_module(agent, monkeypatch):
     seen = []
     for m in fern.modules:
         monkeypatch.setattr(m, "handle", lambda t, p, n=m.name: (seen.append(n), True)[1])
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2})
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2})
     assert len(seen) == len(fern.modules), f"only {seen} were offered it"
 
 
@@ -177,7 +177,7 @@ def test_a_module_raising_does_not_kill_the_agent(agent, monkeypatch):
     fern = agent("fern")
     monkeypatch.setattr(fern.modules[0], "handle",
                         lambda t, p: (_ for _ in ()).throw(RuntimeError("boom")))
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2})  # must not raise
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2})  # must not raise
 
 
 def test_the_agent_holds_a_clean_session():
