@@ -18,7 +18,7 @@ written into it:
 
 | | |
 |---|---|
-| `means` | the kind of act: `sensing:Observe`, `actuation:Actuate`, `market:Acquire`, `market:Offer` |
+| `action` | the [action](/domain/action.md) — the kind of act: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering` |
 | `observed_property` | what it is about — the property the agent holds a desire in |
 | `via` | the lever it goes through: this probe, this valve, this venue |
 | `direction` | which way it moves the property, or **empty** for a look |

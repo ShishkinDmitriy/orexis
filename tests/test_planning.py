@@ -28,8 +28,8 @@ from conftest import build_agent, genesis_store, open_round_for
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
-ACTUATE = "http://example.org/orexis/actuation#Actuate"
-OBSERVE = "http://example.org/orexis/sensing#Observe"
+DOSING = "http://example.org/orexis/actuation#Dosing"
+OBSERVING = "http://example.org/orexis/sensing#Observing"
 #  zz states 0.1–0.3, survives 0.02–0.45, and the gardener aims at 0.18 — dry-side of centre,
 #  deliberately (see knowledge/domain/aim.md), which is what makes this world the live case of
 #  the aim-vs-centre finding: the measure scores distance from 0.18, so CONTENT is comfortable
@@ -80,7 +80,7 @@ def test_a_dose_that_reaches_the_region_is_planned(monkeypatch):
     _, plan, _ = _gardener(monkeypatch, DRY)
 
     assert plan.outcome == search.SATISFIED
-    assert [s.means for s in plan.steps] == ["http://example.org/orexis/actuation#Actuate"]
+    assert [s.action for s in plan.steps] == ["http://example.org/orexis/actuation#Dosing"]
     assert plan.urgency_after < plan.urgency_now
 
 
@@ -109,10 +109,10 @@ def test_met_is_the_label_and_the_aim_is_the_target_with_a_deadband_at_the_pick(
     assert desire.state == "met" and desire.urgency > 0, \
         "met and urgent must be expressible at once — that is what the measure bought"
     assert plan.outcome == search.SATISFIED
-    assert [s.means for s in plan.steps] == [ACTUATE], \
+    assert [s.action for s in plan.steps] == [DOSING], \
         "inside the region and off the pick, a dose is proposed"
     assert plan.urgency_after < plan.urgency_now
-    assert agent.deliberator.propose_for(desire) == ACTUATE
+    assert agent.deliberator.propose_for(desire) == DOSING
 
     at_pick, plan2, desire2 = _gardener(monkeypatch, AT_PICK)
     assert desire2.urgency == 0.0
@@ -146,8 +146,8 @@ def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defe
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({("fern", MOISTURE): 0.30})
-    st.update("""DELETE { GRAPH <%s> { ?rule sh:construct ?c } }
-                 WHERE  { GRAPH <%s> { ?rule ag:means market:Acquire ; sh:construct ?c } }"""
+    st.update("""DELETE { GRAPH <%s> { market:Acquiring sh:construct ?c } }
+                 WHERE  { GRAPH <%s> { market:Acquiring sh:construct ?c } }"""
               % (ACTIONS_GRAPH, ACTIONS_GRAPH))
 
     fern = build_agent("fern", st, monkeypatch)
@@ -180,7 +180,7 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
 
     before = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), SENSED_GRAPH)
     world = effects.world_after(
-        before, st, "http://example.org/orexis/actuation#Actuate",
+        before, st, "http://example.org/orexis/actuation#Dosing",
         me=f"<{GARDENER}>", subject="<http://example.org/orexis/world/loner#zz>",
         property=f"<{MOISTURE}>", litres=0.3, value=DRY,
         beliefs=f"<{beliefs_graph('gardener')}>")
@@ -289,7 +289,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     plan = Planner(fern, deducer, fern.me).plan(desire)
 
     assert not plan.partial, "every lever on this menu states its effect"
-    assert [s.means for s in plan.steps] == ["http://example.org/orexis/market#Acquire"], \
+    assert [s.action for s in plan.steps] == ["http://example.org/orexis/market#Acquiring"], \
         "the lever that waters this plant is the one the search found"
     assert plan.urgency_after < plan.urgency_now, \
         "and the world it reaches is better than standing still — `better` was zero before"
@@ -319,7 +319,7 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     #  the fabrication possible at all. A bare Desire suffices: the measure is not the want's
     #  to carry, and sensing answers the choir for any observation-backed stake.
     stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=0.30)
-    assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquire", \
+    assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquiring", \
         "below the aim there is a deficit to close, and the search must still close it"
     for value in (0.55, 0.80):
         stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
@@ -375,7 +375,7 @@ def test_a_second_dose_is_predicted_from_what_the_first_one_left(monkeypatch):
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     plan = planner.plan(desire)
 
-    assert [s.means for s in plan.steps] == [ACTUATE, ACTUATE], \
+    assert [s.action for s in plan.steps] == [DOSING, DOSING], \
         "two doses, because one cannot pour more than the butt holds"
     assert plan.outcome == search.SATISFIED
     assert plan.urgency_after < plan.urgency_now
@@ -480,8 +480,8 @@ def test_two_paths_to_the_same_world_still_collide(monkeypatch):
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
     planner.plan(desire)
 
-    looks = [(row.means, verdict) for _, row, _, verdict in planner._weighed
-             if row.means == OBSERVE]
+    looks = [(row.action, verdict) for _, row, _, verdict in planner._weighed
+             if row.action == OBSERVING]
     assert looks, "the gardener polls a probe, so looking is on its menu"
     assert {verdict for _, verdict in looks} == {trace.SEEN}, \
         "a look reaches the world it started in, whatever its node's graph is called"
@@ -521,10 +521,10 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
 
     plan = planner.plan(desire)
 
-    looked = [v for _, row, _, v in planner._weighed if row.means == OBSERVE]
+    looked = [v for _, row, _, v in planner._weighed if row.action == OBSERVING]
     assert looked == [trace.SEEN], \
         "a look with nothing to carry forward reached somewhere new — it must not"
-    assert not any(step.means == OBSERVE for step in plan.steps[:-1]), \
+    assert not any(step.action == OBSERVING for step in plan.steps[:-1]), \
         "a plan chained past a sensing action"
 
 
@@ -551,7 +551,7 @@ def test_a_step_that_moves_something_else_is_not_mistaken_for_a_cycle(monkeypatc
     real = effects.apply
 
     def hijacked(store, means, **bind):
-        if means == ACTUATE:
+        if means == DOSING:
             return [claim], []
         return real(store, means, **bind)
 
@@ -559,7 +559,7 @@ def test_a_step_that_moves_something_else_is_not_mistaken_for_a_cycle(monkeypatc
     planner.plan(desire)
 
     doses = {depth: verdict for depth, row, _, verdict in planner._weighed
-             if row.means == ACTUATE}
+             if row.action == DOSING}
     assert doses[0] != trace.SEEN, \
         "a step that adds a claim without moving the goal's number was discarded as a cycle"
     assert doses[1] == trace.SEEN, \

@@ -342,9 +342,9 @@ ag:standsAt a owl:DatatypeProperty ; rdfs:domain ag:Deliberation ; rdfs:range xs
     rdfs:label "stands at" ;
     rdfs:comment "The urgency of the world the agent is actually in — what every candidate is measured against, kept so a reader need not recompute it to understand the verdicts." .
 
-ag:wouldTake a owl:ObjectProperty ; rdfs:domain ag:Candidate ; rdfs:range ag:Means ;
+ag:wouldTake a owl:ObjectProperty ; rdfs:domain ag:Candidate ; rdfs:range ag:Action ;
     rdfs:label "would take" ;
-    rdfs:comment "The move this candidate is. NOT `ag:by`, whose domain is `ag:Intention` — spelling a weighed lever with the word for a carried-out one would have the closure type every candidate a commitment, which is the exact distinction a trace exists to keep." .
+    rdfs:comment "The action this candidate would take. NOT `ag:by`, whose domain is `ag:Intention` — spelling a weighed lever with the word for a carried-out one would have the closure type every candidate a commitment, which is the exact distinction a trace exists to keep." .
 
 ag:through a owl:ObjectProperty ;
     rdfs:label "through" ;
@@ -698,20 +698,42 @@ ag:pursues a owl:ObjectProperty ; rdfs:domain ag:Intention ;
 
 Optional, because the first three means predate goals having names: an intention with no goal is keyed as it always was, and every old row in a ledger stays readable.""" .
 
-ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Means ;
+ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Action ;
     rdfs:label "by" ;
-    rdfs:comment "The kind of act committed to. A MEANS, not a plan: the how stays with whichever capability executes it." .
+    rdfs:comment "The ACTION committed to — the node itself, since the-action-is-the-kind. Not a plan: the how stays with whichever capability takes it." .
 
 ag:Means a owl:Class ; rdfs:label "Means" .
 
 #################  What an action IS  #################
 
 ag:Action a owl:Class ; rdfs:label "Action" ;
-    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md): `ag:means` says what kind of act it is; `ag:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `ag:retracts` are its effect, with `ag:landsAfter` and `ag:confirmedBy` beside them; `ag:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
+    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `ag:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `ag:retracts` are its effect, with `ag:landsAfter` and `ag:confirmedBy` beside them; `ag:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
 
-ag:means a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Means ;
-    rdfs:label "means" ;
-    rdfs:comment "The kind of act this action is. The join everything walks: a menu row carries the means, an intention commits to it, and the action is found from it." .
+
+ag:available a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
+    rdfs:label "available" ;
+    rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
+
+ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capability ;
+    rdfs:label "taken by" ;
+    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
+
+
+
+
+
+#  `ag:Means` WAS HERE — a class of five individuals that nothing ever read. A means was the
+#  JOINT between three surfaces (an affordance row, an effect rule, an intention), and
+#  an-action-is-one-node made those surfaces one node; a name whose only job was to point at
+#  that node one-to-one was a second owner of it (the-action-is-the-kind). The ACTION is the
+#  kind now: a row carries it, an intention commits to it (`ag:by`), a trace weighs it
+#  (`ag:wouldTake`), and the kernel's ontology keeps `ag:Action` and no individual of anything.
+
+#################  What an action IS  #################
+
+ag:Action a owl:Class ; rdfs:label "Action" ;
+    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `ag:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `ag:retracts` are its effect, with `ag:landsAfter` and `ag:confirmedBy` beside them; `ag:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
+
 
 ag:available a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
     rdfs:label "available" ;

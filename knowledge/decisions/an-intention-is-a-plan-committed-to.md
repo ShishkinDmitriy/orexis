@@ -44,7 +44,7 @@ the keeper's tick for every want, a fresh reading for the actuator, a round knoc
 bidder, a presentation for the host. Nothing decides on the way: a trigger says *now*, the
 search says *what*, the ledger says *committed*, and the actor says *done*.
 
-**Every affordance is linked to the code that takes it, by a triple.** A [means](/domain/means.md)
+**Every affordance is linked to the code that takes it, by a triple.** An [action](/domain/action.md)
 states `ag:takenBy` a capability, in the ontology of the package that ships the row —
 `ag:Observe ag:takenBy sensing:SensingCapability`, `ag:Acquire ag:takenBy market:Bidding`,
 `ag:Actuate ag:takenBy actuation:Actuation`, `ag:Apply ag:takenBy market:Hosting`. Execution

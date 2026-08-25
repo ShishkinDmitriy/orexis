@@ -97,12 +97,12 @@ def test_an_event_is_buffered_with_its_instant_and_drained_once(agent):
     """Counting is the kernel's, so the buffer is too: whoever the transition happens to tells
     this object, and the reporting capability drains it on its own tick."""
     m = agent.metrics
-    m.event("adopted", "bid 0.4L to close my deficit", means="Acquire", property="SoilMoisture")
+    m.event("adopted", "bid 0.4L to close my deficit", means="Acquiring", property="SoilMoisture")
     events = m.take_events()
     assert len(events) == 1
     at, kind, text, tags = events[0]
     assert kind == "adopted" and text == "bid 0.4L to close my deficit"
-    assert tags == {"means": "Acquire", "property": "SoilMoisture"}
+    assert tags == {"means": "Acquiring", "property": "SoilMoisture"}
     assert at is not None
     assert m.take_events() == []
 
@@ -129,7 +129,7 @@ def test_the_reporter_writes_the_story_through_the_same_writer(agent):
         def write_events(self, agent_id, events): written.append((agent_id, events))
 
     reporting._writer = _Writer()
-    agent.metrics.event("adopted", "why", means="Observe", property="SoilMoisture")
+    agent.metrics.event("adopted", "why", action="Observing", property="SoilMoisture")
     reporting.report()
     assert len(written) == 1
     assert written[0][0] == agent.id

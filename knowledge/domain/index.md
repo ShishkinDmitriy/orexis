@@ -46,19 +46,17 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [root desire](/domain/root-desire.md) - A want quantified over a class, one per premise; the forest above the per-instance, per-property, per-side wants an agent pursues.
 
-* [intention](/domain/intention.md) - A commitment to reduce a named gap by a named means, kept in a private ledger. Granted by a stake AND a lever.
+* [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a stake AND a lever.
 
 * [deliberation](/domain/deliberation.md) - The whether: name the next move by building the world each lever would make and keeping the one worth reaching. One road.
 
-* [action](/domain/action.md) - One way of acting as one node: means, precondition, effect, taker. A package adds one node and one `take()`.
+* [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
 
 * [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
 
-* [means](/domain/means.md) - The KIND of an act, and a term code may name. Five exist and nothing lists them. Where affordance, effect and intention meet.
-
 * [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.
 
-* [effect](/domain/effect.md) - What taking a means would make true: a package's SHACL rule, with its timing and the route by which anyone would learn it landed.
+* [effect](/domain/effect.md) - What taking an action would make true: a package's SHACL rule, with its timing and the route by which anyone would learn it landed.
 
 * [gap](/domain/gap.md) - The signed, normalised distance from what is sensed to what is wanted. A verdict, computed always and stored never; no reading yields no row.
 

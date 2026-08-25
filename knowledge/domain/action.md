@@ -4,8 +4,9 @@ title: Action
 term: http://example.org/orexis#Action
 description: >-
   One way of acting, whole — the STRIPS operator as a single node a package ships in its
-  `actions.ttl`: what kind of act it is (`ag:means`), when it is available (`ag:available`, a
-  SELECT whose rows are the affordances it puts on the menu now), what it makes true
+  `actions.ttl` — and the KIND of act itself, which a row carries and an intention commits to:
+  when it is available (`ag:available`, a SELECT whose rows are the affordances it puts on the
+  menu now), what it makes true
   (`sh:construct` and `ag:retracts`, with timing and confirmation route), and who carries it
   out (`ag:takenBy`). Loaded into the action graph at genesis so a planner, a sovereign or a
   model reads the whole tool list in one place. Adding a way of acting is one node and one
@@ -14,14 +15,15 @@ description: >-
 
 # What it is
 
-The one thing the four BDI-planning surfaces were always describing. A [means](/domain/means.md)
-says what kind of act; an [affordance](/domain/affordance.md) says it is available through a
+The one thing the three BDI-planning surfaces were always describing. An
+[affordance](/domain/affordance.md) says the action is available through a
 [lever](/domain/lever.md) now; an [effect](/domain/effect.md) says what it would make true; an
-[actor](/domain/actor.md) carries it out. An **action** is the node those hang off.
+[actor](/domain/actor.md) carries it out. An **action** is the node those hang off — and it is
+the KIND of act too, since [the-action-is-the-kind](/decisions/the-action-is-the-kind.md):
+there is no separate word for what a row offers, an intention commits to and a trace weighs.
 
 ```turtle
 market:Acquiring a ag:Action ;
-    ag:means      market:Acquire ;
     ag:available  """SELECT ?property ?via ?direction WHERE { … }""" ;
     sh:construct  """CONSTRUCT { … } WHERE { … }""" ;
     ag:retracts   """CONSTRUCT { … } WHERE { … }""" ;
@@ -30,8 +32,11 @@ market:Acquiring a ag:Action ;
     ag:takenBy    market:Bidding .
 ```
 
-Five ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering` and
-`market:Serving` — the last a duty's, whose availability binds `?for_agent`. A premise may
+Six ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering`,
+`market:Serving` — a duty's, whose availability binds `?for_agent` — and `market:Presenting`,
+the buyer's hold on a won claim, which has no availability and no effect because no plan
+chooses it: the claim arriving is the adoption, and it is a node so the hold can be a
+commitment and an urgency. A premise may
 read `$beliefs` (the agent's own graph — an open round) and `$sensed` (the readings of the
 world being asked about, so a row an earlier step made available appears in that step's
 world and not in this one).
@@ -42,10 +47,10 @@ world and not in this one).
 graph beside the T-Box. Three readers, one join:
 
 - `menu_of` runs every action's `ag:available` with `$me` and the desired `$properties` filled
-  in, and each row it returns is an affordance carrying the action's means;
-- `effects.rule_for(means)` finds the action by `ag:means` and runs its construct and retraction
-  against the [imaginarium](/domain/imaginarium.md);
-- `execution.taken_by(means)` finds the same action and asks `agent.providers` for its taker.
+  in, and each row it returns is an affordance carrying the action;
+- `effects.rule_for(action)` reads the node's construct and retraction and runs them against
+  the [imaginarium](/domain/imaginarium.md);
+- `execution.taken_by(action)` reads the node's `ag:takenBy` and asks `agent.providers`.
 
 # The precondition is the query, whole
 
@@ -69,3 +74,13 @@ cannot simulate is one it must not conclude about.
 - [an-action-is-one-node](/decisions/an-action-is-one-node.md) — why the four surfaces became one.
 - [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) — the record
   that first read the menu row as an action schema.
+
+# It is a term code may name, and the ladder is its order
+
+An action is the exception rule 1 carves out: a T-Box term, so `bidding.py` may say
+`ACQUIRING` in Python while never naming a venue — the [lever](/domain/lever.md) beside it is
+always an instance. Nothing enumerates the set: a sixth way of acting is a node in a new
+directory. The ladder — look, act with what is yours, buy what is not — is their *order*, not
+a ranking: `actuation:Dosing` is offered exactly where the lever and the resource are both the
+agent's own and `market:Acquiring` where the resource is someone else's, and what chooses
+between two rungs is which reaches the better world.

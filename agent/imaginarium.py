@@ -113,7 +113,7 @@ def _name(path) -> str:
     but a name that moved between runs would make two traces of the same search incomparable,
     which is the one thing anybody reads them for.
     """
-    tail = ".".join(f"{quote(_local(row.means), safe='')}-{quote(_local(row.via), safe='')}"
+    tail = ".".join(f"{quote(_local(row.action), safe='')}-{quote(_local(row.via), safe='')}"
                     for row in path)
     return _POSSIBLE + (tail or "here")
 

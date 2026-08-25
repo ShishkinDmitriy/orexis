@@ -15,8 +15,8 @@ from agent.store import bindings
 
 from conftest import MOISTURE, build_agent, genesis_store
 
-OBSERVE = "http://example.org/orexis/sensing#Observe"
-ACTUATE = "http://example.org/orexis/actuation#Actuate"
+OBSERVING = "http://example.org/orexis/sensing#Observing"
+DOSING = "http://example.org/orexis/actuation#Dosing"
 _AG = "http://example.org/orexis#"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 RESULT_TIME = "http://www.w3.org/ns/sosa/resultTime"
@@ -52,7 +52,7 @@ def test_the_rules_are_in_the_store_where_a_sovereign_can_read_them():
     outlive the plumbing it was concluded from, and a rule about a means cannot."""
     st = _loner({("zz", MOISTURE): 0.10})
 
-    for means in (OBSERVE, ACTUATE):
+    for means in (OBSERVING, DOSING):
         rule = effects.rule_for(st, means)
         assert rule is not None, f"{means} states no effect"
         assert "CONSTRUCT" in rule["construct"]
@@ -70,7 +70,7 @@ def test_looking_refreshes_the_reading_and_carries_its_value_unchanged():
     """
     st = _loner({("zz", MOISTURE): 0.10})
     added, retracted = effects.apply(
-        st, OBSERVE, me="<http://example.org/orexis/world/loner#gardener>",
+        st, OBSERVING, me="<http://example.org/orexis/world/loner#gardener>",
         subject="<http://example.org/orexis/world/loner#zz>", property=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>")
 
@@ -88,7 +88,7 @@ def test_the_retraction_takes_the_whole_node_the_writer_would_replace():
     """
     st = _loner({("zz", MOISTURE): 0.10})
     _, retracted = effects.apply(
-        st, OBSERVE, me="<http://example.org/orexis/world/loner#gardener>",
+        st, OBSERVING, me="<http://example.org/orexis/world/loner#gardener>",
         subject="<http://example.org/orexis/world/loner#zz>", property=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>")
 
@@ -134,7 +134,7 @@ def test_the_dose_the_actuator_expects_is_the_dose_its_rule_predicts(monkeypatch
 
     litres = float(gardener.sent.to("actuators/pump/command")[0]["ml"]) / 1000.0
     predicted, _ = effects.apply(
-        gardener.beliefs, ACTUATE, me=f"<{actuation.me.uri}>",
+        gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
         subject=f"<{actuation.me.acts_for}>", property=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
         litres=repr(litres), value="0.1")
@@ -170,7 +170,7 @@ def test_the_prediction_is_a_function_of_value_litres_and_the_agents_own_belief(
 # --- when it lands, and how you would know (#247) ----------------------------
 
 def _lands(store, litres, me, subject):
-    return effects.lands_after(store, ACTUATE, me=f"<{me}>", subject=f"<{subject}>",
+    return effects.lands_after(store, DOSING, me=f"<{me}>", subject=f"<{subject}>",
                                litres=repr(float(litres)))
 
 
@@ -225,7 +225,7 @@ def test_looking_lands_at_once_because_looking_changes_nothing():
     st = genesis_store({})
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
     fern = "http://example.org/orexis/world/simulation#fern"
-    assert effects.lands_after(st, "http://example.org/orexis/sensing#Observe", me=f"<{fern}_agent>",
+    assert effects.lands_after(st, "http://example.org/orexis/sensing#Observing", me=f"<{fern}_agent>",
                                subject=f"<{fern}>") == 0.0
 
 
@@ -236,12 +236,12 @@ def test_every_shipped_effect_says_how_it_would_be_confirmed():
     st = genesis_store({})
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
     rows = bindings(st.query(f"""
-SELECT ?rule ?means ?confirmed WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
-  ?rule a <{_AG}Action> ; <{_AG}means> ?means ; <http://www.w3.org/ns/shacl#construct> ?c .
+SELECT ?rule ?confirmed WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
+  ?rule a <{_AG}Action> ; <http://www.w3.org/ns/shacl#construct> ?c .
   OPTIONAL {{ ?rule <{_AG}confirmedBy> ?confirmed }} }} }}"""))
     assert rows, "the packages ship actions, or this test is asking nothing"
     for row in rows:
-        assert row.get("confirmed"), f"{row['means']} states no confirmation route"
+        assert row.get("confirmed"), f"{row['rule']} states no confirmation route"
 
 
 def test_a_served_claim_is_timed_by_the_rule_and_not_by_the_wire(monkeypatch, caplog):

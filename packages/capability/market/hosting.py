@@ -41,11 +41,11 @@ from agent.world import allocation_ceilings, participants
 from . import calls, rounds
 from .beliefs import HOSTING_PICKS
 
-#  The serving means, spelled rather than imported: the kernel owns the term and market's own
+#  The serving action, spelled rather than imported: the kernel owns the term and market's own
 #  honoured.rq binds it, and `intention/terms.py` holds the same string for the same reason —
 #  a package may not import another's Python.
-from .terms import (ACTUATION, APPLY as _APPLY, HOSTING, BID_MATCHING,
-                    OFFER)
+from .terms import (ACTUATION, SERVING, HOSTING, BID_MATCHING,
+                    OFFERING)
 
 
 def _event_topics_q(market_uri: str) -> str:
@@ -530,7 +530,7 @@ SELECT ?r WHERE {{
         serve, and only for a claim still held — a duty whose claim was never presented is
         not this module's to invent.
         """
-        if row.means == OFFER:
+        if row.action == OFFERING:
             #  THE HOST'S MOVE, taken: announce on the venue the row names, for the call the
             #  plan served. `announce` sizes the lot by the vessel and writes the round; the
             #  call is answered by the round existing. Satisfied at once — the round is the
@@ -542,9 +542,9 @@ SELECT ?r WHERE {{
             if not self.announce(market, trigger=by):
                 return False
             if (keeper := self._keeper()) is not None:
-                keeper.satisfy(OFFER, row.observed_property, "the round opened", desire=desire.uri)
+                keeper.satisfy(OFFERING, row.observed_property, "the round opened", desire=desire.uri)
             return True
-        if row.means != _APPLY or not desire.claim or desire.claim not in self.held:
+        if row.action != SERVING or not desire.claim or desire.claim not in self.held:
             return False
         #  A VESSEL I KNOW IS TOO LOW IS NOT POURED FROM. The search used to keep this claim
         #  held by planning the refill first; since a round is a fact (#358) there may be no
@@ -562,7 +562,7 @@ SELECT ?r WHERE {{
             return False
         self._serve(desire.claim, "the plan's head — a duty's row")
         if (keeper := self._keeper()) is not None:
-            keeper.satisfy(_APPLY, row.observed_property, "served", desire=desire.uri)
+            keeper.satisfy(SERVING, row.observed_property, "served", desire=desire.uri)
         return True
 
     def _serve(self, jti: str, why: str) -> None:

@@ -651,7 +651,7 @@ def test_a_call_stands_as_a_want_and_is_answered_by_the_round(host):
     held = calls.calls_of(host)
     assert len(held) == 1 and held[0].called_by == "fern", "the LOW made a round wanted"
     assert [d for d in host.pursuing() if d.uri == held[0].uri], "and it is pursued as a want"
-    assert not [s for s in keeper_of(host).standing() if s.means.endswith("Offer")], \
+    assert not [s for s in keeper_of(host).standing() if s.action.endswith("Offering")], \
         "no plan reaches a round from a dry vessel with nothing to buy — nothing stands"
     stock_reading(host, 2.5)
     assert calls.calls_of(host) == [], "the round opened — the call is answered"
@@ -935,7 +935,7 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
     open_round_for(host, "supplier")   # the city has a round open — the refill is buyable
     duty = next(g for g in host.pursuing() if g.is_duty)
     move = host.deliberator.propose_for(duty)
-    assert move == "http://example.org/orexis/market#Acquire", \
+    assert move == "http://example.org/orexis/market#Acquiring", \
         "the plan's first step is the refill — the search found the chain the reflex never could"
 
 

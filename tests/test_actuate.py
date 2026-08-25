@@ -10,9 +10,9 @@ deciding, committing and acting runs with no economy at all.
 import pytest
 
 from agent.menu import menu_of
-from packages.capability.market.terms import ACQUIRE
-from packages.capability.actuation.terms import ACTUATE
-from packages.capability.sensing.terms import OBSERVE
+from packages.capability.market.terms import ACQUIRING
+from packages.capability.actuation.terms import DOSING
+from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
 from conftest import build_agent, genesis_store, desires_build, open_round_for
@@ -45,9 +45,9 @@ def test_the_menu_offers_actuate_where_both_chains_are_mine():
     beside Observe, with the domain's one stated physics atom as its direction."""
     st = genesis_store(world="loner")
     rows = menu_of(st.query, GARDENER, desires_build(st, "gardener").query_union, beliefs_graph("gardener"))
-    assert [(r.means.rsplit("#", 1)[-1], r.direction and r.direction.rsplit("#", 1)[-1])
+    assert [(r.action.rsplit("#", 1)[-1], r.direction and r.direction.rsplit("#", 1)[-1])
             for r in rows if r.observed_property == MOIST] == [
-        ("Actuate", "Raises"), ("Observe", None)]
+        ("Dosing", "Raises"), ("Observing", None)]
 
 
 def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
@@ -66,7 +66,7 @@ def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
     for rule in loader.rule_files():
         st.update(genesis.substitute(rule.read_text(), st))
     rows = menu_of(st.query, GARDENER, desires_build(st, "gardener").query_union, beliefs_graph("gardener"))
-    assert not any(r.means == ACTUATE for r in rows), \
+    assert not any(r.action == DOSING for r in rows), \
         "a source a market offers is not yours to open free, whoever holds the pump"
 
 
@@ -86,8 +86,8 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
     open_round_for(st, "fern")
     rows = [r for r in menu_of(st.query, ns + "fern_agent", desires_build(st, "fern").query_union, beliefs_graph("fern"))
             if r.observed_property == MOIST]
-    assert any(r.means == ACQUIRE for r in rows)
-    assert not any(r.means == ACTUATE for r in rows), \
+    assert any(r.action == ACQUIRING for r in rows)
+    assert not any(r.action == DOSING for r in rows), \
         "owning the pump does not exempt anyone from the auction when the water is common"
 
 
@@ -106,7 +106,7 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
 
     deliberator = gardener.deliberator
     assert deliberator.propose_for(
-        Desire(uri="urn:w", urgency=0.6, observed_property=MOIST, value=0.10)) == ACTUATE
+        Desire(uri="urn:w", urgency=0.6, observed_property=MOIST, value=0.10)) == DOSING
     assert deliberator.propose_for(
         Desire(uri="urn:w", urgency=0.1, observed_property=MOIST, value=0.25)) is None, \
         "above the aim, nothing — as ever"
@@ -119,8 +119,8 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     #  inside a region, and nothing else the gardener holds moves a number it cannot see.
     epistemic = next(d for d in gardener.pursuing()
                      if d.is_epistemic and d.observed_property == MOIST)
-    assert deliberator.propose_for(epistemic) == OBSERVE
-    assert deliberator.propose_about(MOIST) == OBSERVE, \
+    assert deliberator.propose_for(epistemic) == OBSERVING
+    assert deliberator.propose_about(MOIST) == OBSERVING, \
         "and the actors' door says the same while the reading is missing — look, then dose"
 
 
@@ -189,7 +189,7 @@ def test_a_dose_in_flight_absorbs_the_next_impulse(gardener, monkeypatch):
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
         "the dose in flight is a commitment, and a commitment absorbs the same impulse"
-    assert keeper.standing(means="http://example.org/orexis/actuation#Actuate",
+    assert keeper.standing(action="http://example.org/orexis/actuation#Dosing",
                            observed_property=MOIST), "it STANDS until the world answers"
 
 

@@ -37,7 +37,7 @@ from agent.ontology import SENSED_GRAPH
 from agent.store import bindings
 
 from .beliefs import ACTUATION_PICKS
-from .terms import ACTUATE as _ACTUATE, ACTUATION
+from .terms import ACTUATION, DOSING
 
 # What this package asks OF others, by family or by IRI — namespaces, never Python.
 
@@ -183,7 +183,7 @@ class ActuationModule(Module):
         silent — and opens an expectation on the end. An unconfirmed self-dose is not a
         delivered one either; the REA event stands, it merely fulfils no exchange.
         """
-        if row.means != _ACTUATE:
+        if row.action != DOSING:
             return False
         observed_property = row.observed_property
         reading = self.agent.beliefs.current_reading(self.me.acts_for, observed_property)
@@ -199,7 +199,7 @@ class ActuationModule(Module):
         litres = self.dose_for(observed_property, value)
         if litres is None or litres <= EPS:
             if keeper is not None:
-                keeper.drop(_ACTUATE, observed_property,
+                keeper.drop(DOSING, observed_property,
                             "the dose sized to nothing from the reading in hand")
             return False
         jti = uuid.uuid4().hex
@@ -219,10 +219,10 @@ class ActuationModule(Module):
                 f"raises what I am short of, so show me",
                 expected_delta=self._expected_delta(observed_property, litres, value),
                 lands_after_s=effects.lands_after(
-                    self.agent.beliefs, _ACTUATE, me=f"<{self.me.uri}>",
+                    self.agent.beliefs, DOSING, me=f"<{self.me.uri}>",
                     subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
             if not opened:
-                keeper.satisfy(_ACTUATE, observed_property,
+                keeper.satisfy(DOSING, observed_property,
                                f"the dose is commanded — {cmd.ml:.0f} ml on its way, and no "
                                f"watch could be opened on the end")
         return True
@@ -299,7 +299,7 @@ SELECT ?source ?p WHERE {{
         exact-crossing verdict, exactly as it did when the conversion belief was missing.
         """
         added, _ = effects.apply(
-            self.agent.beliefs, _ACTUATE,
+            self.agent.beliefs, DOSING,
             me=f"<{self.me.uri}>", subject=f"<{self.me.acts_for}>",
             property=f"<{observed_property}>", sensed=f"<{SENSED_GRAPH}>",
             beliefs=f"<{self.agent.beliefs.graph}>",
@@ -344,7 +344,7 @@ SELECT ?source ?p WHERE {{
         if device.status_topic:
             subject = self._subject_uri_of(claim.sub)
             lands = effects.lands_after(
-                self.agent.beliefs, _ACTUATE, me=f"<{self.me.uri}>",
+                self.agent.beliefs, DOSING, me=f"<{self.me.uri}>",
                 subject=f"<{subject}>", litres=repr(float(claim.amount_l))) if subject else None
             self.pending[cmd.jti] = (
                 time.monotonic() + (cmd.seconds if lands is None else lands) + self.grace_s,

@@ -21,7 +21,7 @@ from conftest import MOISTURE, genesis_store
 
 GARDENER = "http://example.org/orexis/world/loner#gardener"
 ZZ = "http://example.org/orexis/world/loner#zz"
-ACTUATE = "http://example.org/orexis/actuation#Actuate"
+DOSING = "http://example.org/orexis/actuation#Dosing"
 RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 
 
@@ -31,7 +31,7 @@ def _imaginarium(value=0.04):
 
 
 def _dose(im, sensed, litres=0.05, value=0.04):
-    return effects.apply(im, ACTUATE, me=f"<{GARDENER}>", subject=f"<{ZZ}>",
+    return effects.apply(im, DOSING, me=f"<{GARDENER}>", subject=f"<{ZZ}>",
                          property=f"<{MOISTURE}>", beliefs=f"<{beliefs_graph('gardener')}>",
                          sensed=f"<{sensed}>", litres=repr(litres), value=repr(value))
 
@@ -66,8 +66,8 @@ def test_a_node_forks_its_parents_readings_and_leaves_them_alone():
     st, im = _imaginarium()
     added, retracted = _dose(im, SENSED_GRAPH)
 
-    class _Row:                                  # what `_Node.taken` holds: means and lever
-        means, via = ACTUATE, "http://example.org/orexis/world/loner#pump"
+    class _Row:                                  # what `_Node.taken` holds: action and lever
+        action, via = DOSING, "http://example.org/orexis/world/loner#pump"
 
     child = im.reached(SENSED_GRAPH, (_Row(),), added, retracted)
 
@@ -87,7 +87,7 @@ def test_nothing_imagined_reaches_the_store_it_was_imagined_from():
     added, retracted = _dose(im, SENSED_GRAPH)
 
     class _Row:
-        means, via = ACTUATE, "http://example.org/orexis/world/loner#pump"
+        action, via = DOSING, "http://example.org/orexis/world/loner#pump"
 
     im.reached(SENSED_GRAPH, (_Row(),), added, retracted)
 

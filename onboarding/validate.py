@@ -128,22 +128,21 @@ def deliberable(st, desires: dict) -> bool:
     #  waved through the very lever that matters. The action's own node says whether it
     #  states an effect; that is a fact about the loaded packages, and it is asked as one.
     for action in bindings(st.query(
-            "SELECT ?action ?means WHERE { ?action a ag:Action ; ag:means ?means ; "
+            "SELECT ?action WHERE { ?action a ag:Action ; "
             "ag:available ?q FILTER NOT EXISTS { ?action sh:construct ?c } }")):
         faults += 1
-        log.error("%s offers rows for %s and no loaded package says what that DOES — a "
+        log.error("%s offers rows and no loaded package says what that DOES — a "
                   "search that cannot simulate a lever passes it over, and then concludes "
-                  "from the rest of the menu", action["action"].rsplit("#", 1)[-1],
-                  action["means"].rsplit("#", 1)[-1])
+                  "from the rest of the menu", action["action"].rsplit("#", 1)[-1])
     for agent_id, wants in desires.items():
         me = load_self(st.query, agent_id)
         for row in menu_of(st.query, me.uri, wants.query_union, beliefs_graph(agent_id)):
-            if effects.rule_for(st, row.means) is None:
+            if effects.rule_for(st, row.action) is None:
                 faults += 1
                 log.error("%s could take %s through %s, and no loaded package says what that "
                           "DOES — a search that cannot simulate a lever passes it over, and "
                           "then concludes from the rest of the menu", agent_id,
-                          row.means.rsplit("#", 1)[-1], row.via.rsplit("#", 1)[-1])
+                          row.action.rsplit("#", 1)[-1], row.via.rsplit("#", 1)[-1])
         #  Asked of the CLASSES this agent's grants would load, never of a built agent: an
         #  agent needs credentials onboarding has not minted yet, and a gate that had to run
         #  the runtime would be checking the thing it exists to run before.

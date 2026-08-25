@@ -15,8 +15,8 @@ from dataclasses import replace
 
 import pytest
 
-from packages.capability.market.terms import ACQUIRE
-from packages.capability.actuation.terms import ACTUATE as _ACTUATE
+from packages.capability.market.terms import ACQUIRING
+from packages.capability.actuation.terms import DOSING as _ACTUATE
 
 from agent.store import bindings
 from agent.keeper import DEADLINE_AT
@@ -58,7 +58,7 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     watch = watches[0]
     assert watch.baseline == 0.30
     assert watch.direction.endswith("Raises")   # copied from the domain's #127 statement
-    assert watch.means == ACQUIRE
+    assert watch.action == ACQUIRING
 
 
 def test_opening_the_watch_asks_for_a_look(thirsty):
@@ -148,7 +148,7 @@ def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
     assert keeper.reports()["expectations_unmet"] == 3
     assert keeper.reports()["affordances_suspect"] == 1
     assert [pair for pair in keeper.suspects()
-            if pair[0] == ACQUIRE and pair[1] == MOISTURE]
+            if pair[0] == ACQUIRING and pair[1] == MOISTURE]
     assert "AFFORDANCE SUSPECT" in caplog.text
 
 
@@ -177,7 +177,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     acknowledged at the fast cadence is proof the board heard the tightening, and THAT is when
     the claim goes out, the Apply resolves, and the expectation opens with a baseline the hold
     did not age."""
-    from packages.capability.market.terms import APPLY
+    from packages.capability.market.terms import PRESENTING
 
     market = market_of(thirsty)
     keeper = keeper_of(thirsty)
@@ -187,7 +187,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
 
     assert thirsty.sent.to(f"{market.redeem_topic}/fern") == [], \
         "winning must present nothing — the watch is not live"
-    assert len(keeper.standing(means=APPLY)) == 1
+    assert len(keeper.standing(action=PRESENTING)) == 1
     assert keeper.open_expectations() == []          # the dose is not imminent yet
 
     # a reading arrives WITHOUT the ack — the board has not heard the tightening
@@ -199,7 +199,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     thirsty.deliver(thirsty.me.sensors[0].reading_topic, {"moisture": 0.29, "sleep_s": fast})
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v1"
-    assert keeper.standing(means=APPLY) == []
+    assert keeper.standing(action=PRESENTING) == []
     watches = keeper.open_expectations(MOISTURE)
     assert len(watches) == 1 and watches[0].baseline == 0.29
 
@@ -263,7 +263,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_exact_crossing(thirsty):
     """No delta stated, no margin demanded — the pre-noise verdict stays legal for whatever
     cannot say how far it should move the world."""
     keeper = keeper_of(thirsty)
-    uri = keeper.adopt(ACQUIRE, MOISTURE, "an act of unknowable size")
+    uri = keeper.adopt(ACQUIRING, MOISTURE, "an act of unknowable size")
     assert keeper.expect(uri, MOISTURE, "no delta stated")
     keeper.on_reading_recorded(thirsty.me.acts_for, MOISTURE, 0.301)
     assert keeper.open_expectations() == []

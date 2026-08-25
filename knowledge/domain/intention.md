@@ -42,15 +42,15 @@ cost model rather than philosophy — deliberation is about to include an LLM ca
 ([the decision record](/decisions/an-intention-is-an-amortised-deliberation.md)), and the
 standing intention is what makes one affordable: committed means not re-consulted.
 
-# The three means
+# The actions an intention names
 
 | means | the act | adopted | resolved |
 |---|---|---|---|
-| `sensing:Observe` | get a reading where the gap is unmeasured or stale | the bidder starts waiting on its sensor | the look comes back (satisfied) or the auction closes first (dropped, with why) |
-| `market:Acquire` | bid for what would reduce a gap | a round is open and the search picks it — by the offer, or by the tick while it stands | the claim arrives (satisfied), or the round closes without one (dropped, whether told or by the clock) |
-| `market:Apply` | spend a held claim against the world | the claim arrives — holding IS the intention | the claim is presented on the redeem channel (watch live, or the bounded wait) |
-| `market:Offer` | open a round on a hosted venue | the search plans it for a [call](/domain/call.md) — at once, or after the refill it also plans | the round opens (satisfied by construction) |
-| `actuation:Actuate` | move it myself — lever and resource both mine (#190) | the search finds this rung reaches a better world than buying | the watch on the end is judged — met or unmet — the row standing from the command until then (#353); the dose itself co-signed and confirmed like any other |
+| `sensing:Observing` | get a reading where the gap is unmeasured or stale | the bidder starts waiting on its sensor | the look comes back (satisfied) or the auction closes first (dropped, with why) |
+| `market:Acquiring` | bid for what would reduce a gap | a round is open and the search picks it — by the offer, or by the tick while it stands | the claim arrives (satisfied), or the round closes without one (dropped, whether told or by the clock) |
+| `market:Presenting` | spend a held claim against the world | the claim arrives — holding IS the intention | the claim is presented on the redeem channel (watch live, or the bounded wait) |
+| `market:Offering` | open a round on a hosted venue | the search plans it for a [call](/domain/call.md) — at once, or after the refill it also plans | the round opens (satisfied by construction) |
+| `actuation:Dosing` | move it myself — lever and resource both mine (#190) | the search finds this rung reaches a better world than buying | the watch on the end is judged — met or unmet — the row standing from the command until then (#353); the dose itself co-signed and confirmed like any other |
 
 `Observe` is first for a structural reason: at birth there is a desired state and an empty
 sensed graph, so the first intention is always to look — see

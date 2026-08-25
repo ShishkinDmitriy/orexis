@@ -15,7 +15,7 @@ description: >-
 
 A **lever** is the particular thing an act is performed *through*. The gardener's pump; fern's
 moisture probe; the venue the city hosts. It is the `via` column of an
-[affordance](/domain/affordance.md) row, and unlike the [means](/domain/means.md) beside it, a
+[affordance](/domain/affordance.md) row, and unlike the [action](/domain/action.md) it goes through, a
 lever is always an **instance** — so no code may name one, and every lever an agent has is
 discovered by walking the world graph from its own id.
 

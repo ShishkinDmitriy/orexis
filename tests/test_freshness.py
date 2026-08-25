@@ -233,7 +233,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
     keeper.deliberate_on_gaps()
 
     watched = {s.observed_property.rsplit("#", 1)[-1] for s in keeper.standing()
-               if s.means.endswith("Observe")}
+               if s.action.endswith("Observing")}
     assert "SoilMoisture" in watched, "the probe can be asked, so the look is committed to"
     assert "StoredLitres" not in watched, \
         "and the butt cannot, so nothing is committed to — a lever an agent cannot pull is " \

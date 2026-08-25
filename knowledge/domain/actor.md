@@ -14,17 +14,18 @@ description: >-
 
 An **actor** is whichever of an agent's modules takes a step. It is not a new kind of module:
 the sensing module, the bidding module, the actuation module and the hosting module are the
-actors, each for the [means](/domain/means.md) its package declared. What is new is that the
+actors, each for the [action](/domain/action.md) its package declared. What is new is that the
 link from a row to its code is a **fact in the graph** rather than a dispatch table in Python.
 
 # The triple
 
 ```turtle
-sensing:Observing   ag:means sensing:Observe ; ag:takenBy sensing:SensingCapability .
-market:Acquiring    ag:means market:Acquire ; ag:takenBy market:Bidding .
-actuation:Dosing    ag:means actuation:Actuate ; ag:takenBy actuation:Actuation .
-market:Offering     ag:means market:Offer ; ag:takenBy market:Hosting .
-market:Serving      ag:means market:Apply ; ag:takenBy market:Hosting .
+sensing:Observing   ag:takenBy sensing:SensingCapability .
+market:Acquiring    ag:takenBy market:Bidding .
+actuation:Dosing    ag:takenBy actuation:Actuation .
+market:Offering     ag:takenBy market:Hosting .
+market:Serving      ag:takenBy market:Hosting .
+market:Presenting   ag:takenBy market:Bidding .
 ```
 
 Each is stated on the [action](/domain/action.md) node itself, beside the precondition and the

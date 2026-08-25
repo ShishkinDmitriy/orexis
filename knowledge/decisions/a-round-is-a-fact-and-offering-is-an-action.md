@@ -130,8 +130,9 @@ Three changes, each a PR, in this order because each is the next one's premise:
   record's third step; `Observe` and `Actuate` followed once their kernel holds became hooks
   (sensing satisfies the look it takes; the planner sizes a step by asking its taker,
   `Module.size`); `Acquire` and `Apply` last, once the bidder answered its own held-claim
-  urgency through the `urgency` hook. The kernel's ontology keeps `ag:Means`, the class, and
-  names no individual.
+  urgency through the `urgency` hook. The kernel's ontology kept `ag:Means`, the class, for
+  one more change — and then [the-action-is-the-kind](/decisions/the-action-is-the-kind.md)
+  found nothing read it and retired the class too.
 - **The lot is still one number.** Offering's effect offers `market:offerQuantityL` capped by
   stock, as `announce` does now. The standing-offer record's first seam is unchanged.
 - **Uniform-price's uncontested round still runs as a ceremony.** A round that is a fact does

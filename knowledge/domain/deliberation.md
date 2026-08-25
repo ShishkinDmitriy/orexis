@@ -326,7 +326,7 @@ modes are all over there.
 Runs one per candidate, against the [imaginarium](/domain/imaginarium.md). What an
 [effect](/domain/effect.md) IS, what it may claim, and its timing are that page's.
 
-The consequence for this loop: a [means](/domain/means.md) carrying no rule cannot be simulated,
+The consequence for this loop: an [action](/domain/action.md) carrying no rule cannot be simulated,
 so the pass is marked PARTIAL — a flag that used to route the question elsewhere and now only
 says loudly what happened. Concluding from part of the menu is concluding wrongly, and the row
 nobody could simulate may be the one that works — measured on fern, which buys its water. Which

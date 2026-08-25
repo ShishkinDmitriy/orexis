@@ -69,7 +69,6 @@
 #
 #  See knowledge/decisions/one-word-for-one-relation.md.
 
-
 # BORROWED, AND RESTATED — the one axiom this project holds about somebody else's class.
 #
 # `ssn-system:hasSystemCapability` hangs off an `ssn:System`, and what makes it reach a sensor is
@@ -399,8 +398,3 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 :Freshness a owl:Class ; rdfs:subClassOf ag:Desire ;
     rdfs:label "freshness want" ;
     rdfs:comment "Wanting a reading of one instrument to exist and to have been taken recently enough to be about now. Repaired by looking and by nothing else — no lever moves a number you cannot see — so an agent that cannot ask this instrument for a reading holds a want with no lever, which is a legitimate state and reported as one." .
-
-#################  Looking, as a MEANS  #################
-
-:Observe a ag:Means ; rdfs:label "Observe" ;
-    rdfs:comment "Look: obtain a reading where the gap is unmeasured or too stale to act on. THIS PACKAGE'S word since it left the kernel: `sensing:Observing` is the action, the freshness want is what it serves, and this module is its taker — and satisfies it, on the reading, whoever caused the look. The first intention every agent adopts, because at birth there is a desired state and no observations." .
