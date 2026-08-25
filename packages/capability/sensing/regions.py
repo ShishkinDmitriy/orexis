@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from agent.desire import Desire
-from agent.ontology import SENSED_GRAPH, beliefs_graph
+from agent.ontology import STATE_GRAPH, beliefs_graph
 from agent.store import bindings
 
 log = logging.getLogger("sensing")
@@ -73,7 +73,7 @@ def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
 #  that one first. The instrument is `sosa:madeBySensor`, which the sensed writer stamps.
 _READINGS_Q = """
 SELECT ?subject ?property ?value ?at ?instrument WHERE {
-  GRAPH $sensed {
+  GRAPH $state {
     ?obs sosa:hasFeatureOfInterest ?subject ;
          sosa:observedProperty ?property ;
          sosa:hasSimpleResult ?value .
@@ -406,7 +406,7 @@ def _known(beliefs) -> tuple[dict, dict]:
     """What is known, keyed twice: by (subject, property) for the stakes, and by
     (instrument, property) for the freshness wants, which name the instrument they are about."""
     by_pair, by_instrument = {}, {}
-    for r in bindings(beliefs(_READINGS_Q.replace("$sensed", f"<{SENSED_GRAPH}>"))):
+    for r in bindings(beliefs(_READINGS_Q.replace("$state", f"<{STATE_GRAPH}>"))):
         item = Known(value=float(r["value"]) if r.get("value") else None,
                      at=datetime.fromisoformat(r["at"]) if r.get("at") else None)
         by_pair[(r["subject"], r["property"])] = item

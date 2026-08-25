@@ -64,7 +64,7 @@ def apply(store, action: str, **bind) -> tuple[list, list]:
     **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
     what #254 changed here.** An actuator asks about the world it is standing in and passes its
     own belief base; a planner asks about a world nobody is in yet and passes its
-    `agent.imaginarium.Imaginarium`, where `$sensed` names the readings that node's path
+    `agent.imaginarium.Imaginarium`, where `$state` names the readings that node's path
     reached. Nothing in this file distinguishes them, and nothing should: a rule already asks
     about *whichever graph it is pointed at*, and being bound to the store was an accident of
     what the caller happened to hand over. The retraction is the half that made it visible —

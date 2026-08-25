@@ -27,7 +27,7 @@ import rdflib
 from pyshacl import validate as shacl_validate
 
 from . import genesis, loader
-from .ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
+from .ontology import STATE_GRAPH, beliefs_graph
 from .store import Store
 
 log = logging.getLogger("validate")
@@ -224,8 +224,9 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
     #  flatten serialises and re-parses, which relabels blank nodes, so a record arriving by
     #  both roads splits every aim into two nodes — and AimShape rightly calls two aims for
     #  one property not steering.
-    private = [SENSED_GRAPH, INSTRUMENTS_GRAPH] if desires is not None else \
-        [beliefs_graph(agent_id), SENSED_GRAPH, INSTRUMENTS_GRAPH]
+    recorded = st.recorded_graphs()   # sensing's instruments graph, asked rather than named
+    private = [STATE_GRAPH, *recorded] if desires is not None else \
+        [beliefs_graph(agent_id), STATE_GRAPH, *recorded]
     data = graph_from(st, *st.public_graphs(), *private)
     if desires is not None:
         from agent import effects

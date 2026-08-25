@@ -171,11 +171,11 @@ def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
     an unmeasured want must not read as no urgency, and this store binds NOTHING for
     arithmetic over an unbound value rather than failing."""
     from agent.desire import Desire
-    from agent.ontology import SENSED_GRAPH
+    from agent.ontology import STATE_GRAPH
 
     st, fern = _fern(None, monkeypatch)       # no readings seeded at all
     probe = ObservedWant(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
-    assert fern.desire_urgency(probe, st.query, SENSED_GRAPH) == 1.0
+    assert fern.desire_urgency(probe, st.query, STATE_GRAPH) == 1.0
 
 
 def test_a_want_whose_kind_nothing_measures_scores_a_logged_one(monkeypatch):
@@ -201,7 +201,7 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
     property being a `sosa:ObservableProperty`. If this fails, a world has grown a want
     nothing loaded can weigh, and that is a genesis conversation rather than a silent 1.0."""
     from agent.desire import Desire
-    from agent.ontology import SENSED_GRAPH
+    from agent.ontology import STATE_GRAPH
     from agent.store import bindings
 
     checked = 0
@@ -213,7 +213,7 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
             agent = build_agent(row["id"], st, monkeypatch)
             for prop in sensing_of(agent).regions:
                 probe = ObservedWant(uri="urn:asked", urgency=1.0, observed_property=prop)
-                assert agent.desire_urgency(probe, st.query, SENSED_GRAPH) is not None, \
+                assert agent.desire_urgency(probe, st.query, STATE_GRAPH) is not None, \
                     f'{row["id"]} in {world}: a stake nothing loaded measures'
                 checked += 1
     assert checked >= 3, "the walk went quiet — no stakes were checked at all"

@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from agent import effects, genesis
-from agent.ontology import ACTIONS_GRAPH, SENSED_GRAPH, beliefs_graph
+from agent.ontology import ACTIONS_GRAPH, STATE_GRAPH, beliefs_graph
 from agent.store import bindings
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store
@@ -72,7 +72,7 @@ def test_looking_refreshes_the_reading_and_carries_its_value_unchanged():
     added, retracted = effects.apply(
         st, OBSERVING, me="<http://example.org/orexis/world/loner#gardener>",
         subject="<http://example.org/orexis/world/loner#zz>", about=f"<{MOISTURE}>",
-        sensed=f"<{SENSED_GRAPH}>")
+        state=f"<{STATE_GRAPH}>")
 
     assert _values(added) == ["0.1"], "looking tells you what IS, and changes nothing"
     assert _values(added, RESULT_TIME), "and it tells you so NOW — the freshness half"
@@ -90,7 +90,7 @@ def test_the_retraction_takes_the_whole_node_the_writer_would_replace():
     _, retracted = effects.apply(
         st, OBSERVING, me="<http://example.org/orexis/world/loner#gardener>",
         subject="<http://example.org/orexis/world/loner#zz>", about=f"<{MOISTURE}>",
-        sensed=f"<{SENSED_GRAPH}>")
+        state=f"<{STATE_GRAPH}>")
 
     held = {(t.subject.value, t.predicate.value) for t in retracted}
     assert len({s for s, _ in held}) == 1, "one node, which is what the writer keys on"
@@ -136,7 +136,7 @@ def test_the_dose_the_actuator_expects_is_the_dose_its_rule_predicts(monkeypatch
     predicted, _ = effects.apply(
         gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
         subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
-        sensed=f"<{SENSED_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
+        state=f"<{STATE_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
         litres=repr(litres), value="0.1")
     from_rule = float(_values(predicted)[0]) - 0.10
 

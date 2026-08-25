@@ -50,7 +50,7 @@
 sensing:FreshnessMeasure
     sensing:measureOf sensing:Freshness ;
     rdfs:label "whether what I know about this instrument is still about now" ;
-    rdfs:comment "Evaluated against whichever world is being judged, exactly as the aim measure is: $sensed names that world's readings, $instruments the graph holding the horizons this agent has published, and $sensor the instrument this want is about. A look reaches 0.0 in the world it would make, which is what lets the search prefer looking over standing still. $sensor rather than $instrument, because a parameter that is a PREFIX of another is substituted into the middle of it — measured, as `GRAPH <…sensor>s {`, which the parser reports as a missing brace fifty characters away." ;
+    rdfs:comment "Evaluated against whichever world is being judged, exactly as the aim measure is: $state names that world's readings, $instruments the graph holding the horizons this agent has published, and $sensor the instrument this want is about. A look reaches 0.0 in the world it would make, which is what lets the search prefer looking over standing still. $sensor rather than $instrument, because a parameter that is a PREFIX of another is substituted into the middle of it — measured, as `GRAPH <…sensor>s {`, which the parser reports as a missing brace fifty characters away." ;
 
     #  BINARY, and the gradient it does not have is the interesting part. Age-against-horizon
     #  is the natural continuous measure and this deliberately is not it: a graded freshness
@@ -75,7 +75,7 @@ sensing:FreshnessMeasure
     #  perfectly fresh. The met-shape beside it fails the same way round for the same reason.
     sh:select """
         SELECT ?urgency WHERE {
-            OPTIONAL { GRAPH $sensed {
+            OPTIONAL { GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty $property ;
                      #  Made by MY instrument, matching the met-shape clause for clause. Both
@@ -94,7 +94,7 @@ sensing:FreshnessMeasure
 sensing:AimDistanceMeasure
     sensing:measureOf sosa:ObservableProperty ;
     rdfs:label "distance from the aim, scaled by the survival room on that side" ;
-    rdfs:comment "Evaluated against whichever world is being judged: the belief base for the live number, a candidate possible world inside the planner ($sensed names that node's readings). $value is a caller-supplied number to judge — the choir asks about readings not yet written, and about predicted ones — or the live reading when the caller supplies none." ;
+    rdfs:comment "Evaluated against whichever world is being judged: the belief base for the live number, a candidate possible world inside the planner ($state names that node's readings). $value is a caller-supplied number to judge — the choir asks about readings not yet written, and about predicted ones — or the live reading when the caller supplies none." ;
     #  ?distance <= 0 answers FIRST and without dividing, and that ordering is an engine fact,
     #  not style: pyoxigraph 0.5.9 binds NOTHING for `0.0 / 0.3` — a zero dividend fails the
     #  decimal division a nonzero one survives — so an agent exactly at its aim would read as
@@ -104,7 +104,7 @@ sensing:AimDistanceMeasure
     #  error, land on 1.0 explicitly — not knowing is maximal, as it is everywhere.
     sh:select """
         SELECT ?urgency WHERE {
-            OPTIONAL { GRAPH $sensed {
+            OPTIONAL { GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty $property ;
                      sosa:hasSimpleResult ?reading } }

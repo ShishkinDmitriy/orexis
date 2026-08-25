@@ -42,7 +42,7 @@ from .desire import Desire
 from .menu import wants_of
 from .imaginarium import Imaginarium
 from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
-                            INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph,
+                            STATE_GRAPH, beliefs_graph,
                             obligations_graph)
 from .validate import conforms, graph_from
 
@@ -92,7 +92,7 @@ class _Node:
 
     The world is held TWICE, and the pair is what makes depth 2 mean what it says. `graph` names
     this node's readings inside the plan's imaginarium, which is what the next step's rule reads
-    and where its `$sensed` points; `world` is the same readings flattened over public knowledge
+    and where its `$state` points; `world` is the same readings flattened over public knowledge
     into the one rdflib graph pySHACL and `_value_in` want. Two engines want different shapes of
     the same fact, and materialising the second from the first is the piece of work the design
     does not remove — see the seams in
@@ -100,7 +100,7 @@ class _Node:
     """
 
     world: object
-    graph: str = SENSED_GRAPH                     # this node's readings, in the imaginarium
+    graph: str = STATE_GRAPH                     # this node's readings, in the imaginarium
     taken: tuple = field(default_factory=tuple)   # the STEPS taken to get here, in order
     urgency: float = 1.0
     #  The net diff against the base world, in canonical facts — where this node IS, for cycle
@@ -136,7 +136,7 @@ class Planner:
         """How bad this desire is, in the world given. Lower is better; 1.0 is the worst there is.
 
         A CAPABILITY'S ANSWER, never this file's arithmetic: the choir is asked
-        (`Agent.desire_urgency`) with the imaginarium as the world and `$sensed`-equivalent
+        (`Agent.desire_urgency`) with the imaginarium as the world and `$state`-equivalent
         `graph` naming this node's readings — the same question every other consumer asks
         against the belief base, answered by the same module from the same declaration, so a
         plan is scored by the measure the agent already steers by. That is what declaring
@@ -171,7 +171,7 @@ class Planner:
 
     #  `_value_in` and `_value_of` WERE HERE — the planner reading a property's value out of a
     #  candidate world by walking sosa. Nothing here reads a value now: an effect rule reads
-    #  where the property stands from `$sensed` itself, and an actor sizing a step asks
+    #  where the property stands from `$state` itself, and an actor sizing a step asks
     #  sensing at the node's graph (`Module.size(query, graph, property)`).
 
     def _met_in(self, world, desire: Desire, graph: str | None = None) -> bool:
@@ -267,7 +267,7 @@ class Planner:
         #  urgency: inside the region and off the pick is a true situation. Only a desire
         #  whose measure reads zero has nothing a step could improve, so only that one skips
         #  the search — which also keeps the per-tick cost of a calm society what it was.
-        met_now = self._met_in(base, desire, SENSED_GRAPH)
+        met_now = self._met_in(base, desire, STATE_GRAPH)
         if met_now and here.urgency <= 0.0:
             return self._record(desire, Plan(SATISFIED, (), here.urgency, here.urgency),
                                 here.urgency)
@@ -491,11 +491,11 @@ class Planner:
         The imaginarium is built per PLAN and dropped with it — see `plan`, which does that in a
         `finally` so a pass that raises leaves nothing imagined behind either. What it holds is
         public knowledge, this agent's beliefs and this agent's readings, all copied: the
-        readings are the root node's own graph, which is why `$sensed` at depth 0 still names
+        readings are the root node's own graph, which is why `$state` at depth 0 still names
         exactly what it always did, and every deeper node forks from it.
         """
         self.imaginarium = Imaginarium(
-            self.agent.beliefs, beliefs_graph(self.agent.id), SENSED_GRAPH,
+            self.agent.beliefs, beliefs_graph(self.agent.id), STATE_GRAPH,
             #  THE INSTRUMENTS, because a want may be about the reading rather than about
             #  the number in it, and the horizon that decides whether a reading is still
             #  evidence is written here and nowhere else. Without it the freshness measure
@@ -504,7 +504,7 @@ class Planner:
             #  empty-result failure this file's own docstring warns about, arriving through
             #  a graph nobody had copied. Read-only like everything else copied in: no
             #  effect touches it, and a plan cannot re-command a cadence.
-            INSTRUMENTS_GRAPH,
+            *self.agent.beliefs.recorded_graphs(),   # sensing's instruments graph, asked
             obligations_graph(self.agent.id))
         #  What this agent PURSUES, snapshotted for the pass: the desire modality's triples as
         #  one rdflib graph, because pySHACL wants rdflib and a cbd walks blank nodes. Small —
@@ -537,10 +537,10 @@ class Planner:
         self._keys = signature.keys_of(store.query)
         self._base_facts = signature.facts((
             quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id),
-                             SENSED_GRAPH, INSTRUMENTS_GRAPH]
+                             STATE_GRAPH, *store.recorded_graphs()]
             for quad in store.quads(iri)), self._keys)
-        return _Node(world=base, graph=SENSED_GRAPH,
-                     urgency=self._urgency_in(base, SENSED_GRAPH, desire))
+        return _Node(world=base, graph=STATE_GRAPH,
+                     urgency=self._urgency_in(base, STATE_GRAPH, desire))
 
     def _step_from(self, node, row, desire: Desire):
         """The node one step on from here, or None where the rule would not run.
@@ -575,7 +575,7 @@ class Planner:
 
         `node` is where the step is being taken FROM, and passing it is what makes depth 2
         more than a number. It carries BOTH halves of that, and the second is #254: the value
-        the rule predicts from, read out of the node's flat world, and `$sensed` — the graph in
+        the rule predicts from, read out of the node's flat world, and `$state` — the graph in
         the imaginarium holding the readings this node's path reached, which is what the
         retraction half of the rule asks about. Bound to the agent's own sensed graph, as it was
         before, the retraction found the observation still on disk and predicted a reading that
@@ -594,7 +594,7 @@ class Planner:
         one reached is the act the actor would actually take next — which is the whole of what
         makes "too small to finish in one" a plannable situation rather than an unreachable one.
         """
-        graph = node.graph if node is not None else SENSED_GRAPH
+        graph = node.graph if node is not None else STATE_GRAPH
         return {
             "me": f"<{self.me.uri}>",
             "claim": f'"{desire.claim}"' if desire and desire.claim else '"urn:nobody"',
@@ -606,7 +606,7 @@ class Planner:
             "want": f"<{desire.uri}>" if desire else "<urn:nothing>",
             "about": f"<{row.about}>" if row is not None and row.about else "<urn:nothing>",
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
-            "sensed": f"<{graph}>",
+            "state": f"<{graph}>",
             "litres": self._dose(row, graph) if desire and row is not None else 0.0,
         }
 
@@ -652,13 +652,13 @@ class Planner:
 
     def _beliefs(self):
         return graph_from(self.agent.beliefs, *self.agent.beliefs.public_graphs(),
-                          beliefs_graph(self.agent.id), SENSED_GRAPH,
+                          beliefs_graph(self.agent.id), STATE_GRAPH,
                           #  The instruments, for the same reason `validate_agent` flattens
                           #  them: the freshness want's met-test reads the horizon this agent
                           #  published, and a shape whose pattern reaches a graph nobody
                           #  copied does not fail — it finds nothing, reports nothing, and
                           #  the want reads as met for ever.
-                          INSTRUMENTS_GRAPH,
+            *self.agent.beliefs.recorded_graphs(),   # sensing's instruments graph, asked
                           #  The debts too (#255): a duty's met-test is a pattern over the
                           #  record, and the world Apply's effect discharges an obligation in
                           #  must hold the obligation to discharge.

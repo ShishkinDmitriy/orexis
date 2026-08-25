@@ -255,7 +255,7 @@ class Agent:
             except Exception as exc:
                 log.error("%s: %s failed on %s: %s", self.id, module.name, _short(hook), exc)
 
-    def desire_urgency(self, desire, query, sensed: str,
+    def desire_urgency(self, desire, query, state: str,
                        value: float | None = None) -> float | None:
         """How urgent one desire is in one world — the sharpest answer any module gives.
 
@@ -266,7 +266,7 @@ class Agent:
         holds no measure of its own (a-desire-states-its-own-measure): this method is the
         whole of its involvement.
         """
-        answers = self.ask(DESIRE_URGENCY, desire, query, sensed, value)
+        answers = self.ask(DESIRE_URGENCY, desire, query, state, value)
         return max(answers) if answers else None
 
     # --- the shared connection; modules route by the topics they asked for ---

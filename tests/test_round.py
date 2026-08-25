@@ -576,10 +576,10 @@ def _stamp_readings(agent, at):
     stops being evidence, so seeding one at real-time and then asking about a moment past that
     horizon hands the agent a blind spot the test did not mean to create.
     """
-    from agent.ontology import SENSED_GRAPH
+    from agent.ontology import STATE_GRAPH
 
     agent.beliefs.update(f"""
-        WITH <{SENSED_GRAPH}>
+        WITH <{STATE_GRAPH}>
         DELETE {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?was }}
         INSERT {{ ?o <http://www.w3.org/ns/sosa/resultTime>
                   "{at.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }}

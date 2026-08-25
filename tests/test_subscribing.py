@@ -714,7 +714,7 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
     across its patches, which is a choice of witness and deliberately not an aggregation."""
     from datetime import datetime, timedelta, timezone
 
-    from agent.ontology import SENSED_GRAPH, WORLD_GRAPH
+    from agent.ontology import STATE_GRAPH, WORLD_GRAPH
     from agent.store import bindings
 
     st = genesis_store()
@@ -752,7 +752,7 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
     rows = bindings(fern.beliefs.query(
         "SELECT ?obs WHERE { GRAPH <%s> { ?obs a sosa:Observation ; "
         "sosa:observedProperty <%s> ; sosa:hasSimpleResult ?v } }"
-        % (SENSED_GRAPH, MOISTURE)))
+        % (STATE_GRAPH, MOISTURE)))
     assert len(rows) == 2, "the old keying overwrote one patch's record with the other's"
     # the pot answers with the newest witness among its patches
     assert current_reading(fern.beliefs.query, fern.me.acts_for, MOISTURE).value == pytest.approx(0.55)
@@ -764,7 +764,7 @@ def test_a_device_that_speaks_for_itself_lands_in_phenomenon_time(fern):
     resultTime — when the result applies to the world, as distinct from when we heard."""
     from datetime import datetime, timedelta, timezone
 
-    from agent.ontology import SENSED_GRAPH
+    from agent.ontology import STATE_GRAPH
     from agent.store import bindings
 
     p, s = fern.subscribing(), moisture_sensor(fern)
@@ -773,7 +773,7 @@ def test_a_device_that_speaks_for_itself_lands_in_phenomenon_time(fern):
     p.observations.record(p.log, s, 0.41, at=arrived, phenomenon_at=sensed)
 
     rows = bindings(fern.beliefs.query(f"""
-SELECT ?rt ?pt WHERE {{ GRAPH <{SENSED_GRAPH}> {{
+SELECT ?rt ?pt WHERE {{ GRAPH <{STATE_GRAPH}> {{
   ?obs sosa:observedProperty <{MOISTURE}> ;
        sosa:resultTime ?rt .
   OPTIONAL {{ ?obs sosa:phenomenonTime ?pt }} }} }}"""))

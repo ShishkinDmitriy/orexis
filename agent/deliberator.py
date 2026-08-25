@@ -42,7 +42,7 @@ from .act import Act, Step
 from .desire import Desire
 from .menu import menu_of
 from .module import Module
-from .ontology import AG, DELIBERATION_GRAPH, SENSED_GRAPH, beliefs_graph
+from .ontology import AG, DELIBERATION_GRAPH, STATE_GRAPH, beliefs_graph
 from .planner import Planner
 from .store import bindings
 
@@ -282,7 +282,7 @@ class Deliberator(Module):
         #  apart by the kernel's own structure — the kernel holds no region to consult.
         if (not desire.is_duty and not desire.is_epistemic
                 and self.agent.desire_urgency(
-                    desire, self.agent.beliefs.query, SENSED_GRAPH) is None):
+                    desire, self.agent.beliefs.query, STATE_GRAPH) is None):
             self.log.error(
                 "%s: I hold a stake here and nothing I composed can measure it — every world "
                 "I could reach scores alike, so I am about to conclude that nothing helps from "

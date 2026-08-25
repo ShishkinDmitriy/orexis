@@ -28,7 +28,7 @@ from typing import Callable
 import pyoxigraph as ox
 
 from . import loader
-from .ontology import ONTOLOGY_GRAPH, PUBLIC_GRAPH
+from .ontology import AG, ONTOLOGY_GRAPH, PUBLIC_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,
 # unchanged from when this was an HTTP client, so nothing above here knows the difference.
@@ -46,6 +46,17 @@ QueryFn = Callable[[str], dict]
 _DISCOVER = f"""
 SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
   ?g a ?class . ?class rdfs:subClassOf* <{PUBLIC_GRAPH}> .
+}} }}"""
+
+#  The private belief graphs an agent writes down as it goes. Named the same way `_DISCOVER`
+#  is — the ontology graph is the bootstrap root, the one instance a reader may name — and by
+#  CLASS plus arrival, never by IRI: sensing's instruments graph is one and the kernel does not
+#  know its name (the-stake-is-sensings-want).
+_RECORDED = f"""
+SELECT DISTINCT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
+  ?g a ?class ; <{AG}arrivedBy> <{AG}Recorded> .
+  ?class rdfs:subClassOf* <{AG}BeliefGraph> .
+  FILTER NOT EXISTS {{ ?g a ?public . ?public rdfs:subClassOf* <{PUBLIC_GRAPH}> }}
 }} }}"""
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
@@ -129,6 +140,14 @@ class Store:
         self._public: list | None = None  # discovered on demand; see public_graphs()
 
     # --- what counts as public, according to the store itself ---
+
+    def recorded_graphs(self) -> list[str]:
+        """Every belief graph the agent writes down as it goes — `ag:BeliefGraph` arriving
+        `ag:Recorded` — which a plan must carry into its imaginarium and a validation must read
+        beside the state. Asked, never listed: sensing's instruments graph is one, declared in
+        sensing's ontology, and the kernel does not know its name."""
+        rows = self._store.query(PREFIXES + _RECORDED)
+        return sorted(str(row["g"].value) for row in rows)
 
     def public_graphs(self) -> list[str]:
         """Every graph the vocabulary types as an `ag:PublicGraph`.

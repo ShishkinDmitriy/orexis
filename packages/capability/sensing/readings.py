@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from agent.ontology import SENSED_GRAPH
+from agent.ontology import STATE_GRAPH
 from agent.store import bindings
 
 
@@ -56,7 +56,7 @@ def _parse(results) -> Reading | None:
 
 
 def current_reading(query, subject_uri: str, observed_property: str,
-                    sensed: str = SENSED_GRAPH) -> Reading | None:
+                    state: str = STATE_GRAPH) -> Reading | None:
     """The newest reading of one property of one subject — or of a patch of it (#98): an
     observation of a `sosa:Sample` answers for what it samples. The sample link lives in the
     world graph and the observation in the sensed graph, so the walk sits OUTSIDE the GRAPH
@@ -64,7 +64,7 @@ def current_reading(query, subject_uri: str, observed_property: str,
     return _parse(query(f"""
 SELECT ?value ?ts WHERE {{
   {{ BIND(<{subject_uri}> AS ?foi) }} UNION {{ ?foi sosa:isSampleOf <{subject_uri}> }}
-  GRAPH <{sensed}> {{
+  GRAPH <{state}> {{
     ?obs sosa:hasFeatureOfInterest ?foi ;
          sosa:observedProperty <{observed_property}> ;
          sosa:hasSimpleResult ?value .
@@ -76,5 +76,5 @@ SELECT ?value ?ts WHERE {{
 def value_in(query, graph: str, subject_uri: str, observed_property: str) -> float | None:
     """What a property reads in the world `query` answers about, at `graph` — the planner's
     question about a candidate world, and the same query as `current_reading`'s."""
-    reading = current_reading(query, subject_uri, observed_property, sensed=graph)
+    reading = current_reading(query, subject_uri, observed_property, state=graph)
     return reading.value if reading is not None else None

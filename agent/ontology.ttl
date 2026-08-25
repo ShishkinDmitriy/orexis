@@ -303,8 +303,8 @@ ag:PublicGraph a owl:Class ; rdfs:subClassOf ag:Graph ; rdfs:label "Public graph
 
 ag:WorldGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "World graph" ;
     rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see orexis/provenance.py." .
-ag:SensedGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:label "Sensed graph" ;
-    rdfs:comment "What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
+ag:StateGraph a owl:Class ; rdfs:subClassOf ag:Graph , ag:BeliefGraph ; rdfs:label "State graph" ;
+    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing writes observations into it, RECEIVED, since a reading is an instrument's word rather than this agent's). It was `ag:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
 ag:OntologyGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:BeliefGraph ; rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
 ag:ActionGraph a owl:Class ; rdfs:subClassOf ag:PublicGraph , ag:MenuGraph ; rdfs:label "Action graph" ;
@@ -407,13 +407,9 @@ ag:beliefsOf a owl:ObjectProperty ; rdfs:domain ag:Graph ; rdfs:range ag:Agent ;
 <http://example.org/orexis/graph/world>             a ag:WorldGraph ;    ag:arrivedBy ag:Asserted .
 <http://example.org/orexis/graph/world/derived>     a ag:WorldGraph ;    ag:arrivedBy ag:Derived .
 <http://example.org/orexis/graph/world/entailed>    a ag:WorldGraph ;    ag:arrivedBy ag:Entailed .
-<http://example.org/orexis/graph/sensed>            a ag:SensedGraph ;   ag:arrivedBy ag:Received .
-##  A BELIEF and not a reading: what the agent holds about the instruments it polls. It
-##  arrives `ag:Recorded` because the agent writes it down as it goes, the way it records
-##  its own classification — not asserted from a file, not derived by a rule, and not
-##  received from anyone. Private: nobody else needs to know what rhythm I am running,
-##  and the horizon it yields is mine to judge readings by.
-<http://example.org/orexis/graph/instruments>       a ag:BeliefGraph ;  ag:arrivedBy ag:Recorded .
+<http://example.org/orexis/graph/sensed>            a ag:StateGraph ;    ag:arrivedBy ag:Received .
+##  `graph/instruments` — what the agent holds about the instruments it polls — is declared in
+##  sensing's ontology: a package may own a belief graph, and this one is its.
 <http://example.org/orexis/graph/actions>            a ag:ActionGraph ;  ag:arrivedBy ag:Asserted .
 <http://example.org/orexis/graph/provenance>        a ag:ProvenanceGraph .
 ##  One pass per goal and no more: written at the start of each, replacing what was there.
@@ -708,8 +704,6 @@ ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Act ;
     rdfs:label "by" ;
     rdfs:comment "The ACT committed to — the filled action: which action (ag:fills), through which lever (ag:through), how much (ag:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
 
-ag:Means a owl:Class ; rdfs:label "Means" .
-
 #################  An UPSERTED belief, for the planner's signature  #################
 
 ag:keyedBy a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
@@ -776,29 +770,10 @@ ag:notAfter a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:dateTim
 #  kind now: a row carries it, an intention commits to it (`ag:by`), a trace weighs it
 #  (`ag:wouldTake`), and the kernel's ontology keeps `ag:Action` and no individual of anything.
 
-#################  What an action IS  #################
-
-ag:Action a owl:Class ; rdfs:label "Action" ;
-    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `ag:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `ag:retracts` are its effect, with `ag:landsAfter` and `ag:confirmedBy` beside them; `ag:takenBy` is the capability whose module carries it out. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
-
-
-ag:available a owl:DatatypeProperty ; rdfs:domain ag:Action ; rdfs:range xsd:string ;
-    rdfs:label "available" ;
-    rdfs:comment """The precondition, as a SELECT over the world binding `?property ?via ?direction` and — where the row is a duty owed to someone rather than the agent's own option — `?for_agent`. `$me` and `$properties` (the properties the agent holds desires in) are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own.""" .
-
-ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capability ;
-    rdfs:label "taken by" ;
-    rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
-
-
-
-
-
 #  EVERY MEANS WAS HERE and every one is its package's word now — `sensing:Observe`,
 #  `actuation:Actuate`, `market:Acquire`, `market:Apply`, `market:Offer` — each declared beside
-#  the action that carries it, as means.md always said a package could. `ag:Means` stays: the
-#  KIND is BDI structure (what an intention commits to, what an action is), and the kernel
-#  names the class and never an individual. What let each leave was the kernel's last reference
+#  the action that carries it, as means.md always said a package could. `ag:Means` went too
+#  (the-action-is-the-kind): the kind is `ag:Action`. What let each leave was the kernel's last reference
 #  becoming a hook: sensing satisfies the look it takes; the planner sizes a step by asking
 #  its taker; the bidder answers its own held-claim urgency; the deliberator's tests import a
 #  package word from the package.

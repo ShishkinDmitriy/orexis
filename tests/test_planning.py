@@ -20,7 +20,7 @@ import pytest
 import rdflib
 
 from agent import effects
-from agent.ontology import DELIBERATION_GRAPH, SENSED_GRAPH
+from agent.ontology import DELIBERATION_GRAPH, STATE_GRAPH
 from agent import planner as search, trace
 from agent.planner import Planner
 
@@ -174,17 +174,17 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    from agent.ontology import SENSED_GRAPH, beliefs_graph
+    from agent.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import graph_from
 
-    before = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), SENSED_GRAPH)
+    before = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), STATE_GRAPH)
     world = effects.world_after(
         before, st, "http://example.org/orexis/actuation#Dosing",
         me=f"<{GARDENER}>", subject="<http://example.org/orexis/world/loner#zz>",
         about=f"<{MOISTURE}>", litres=0.3, value=DRY,
         beliefs=f"<{beliefs_graph('gardener')}>")
 
-    after = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), SENSED_GRAPH)
+    after = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), STATE_GRAPH)
     assert len(after) == len(before), "the store is untouched by having imagined something"
     assert world is not before and len(world) > 0
 
@@ -251,9 +251,9 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     #  The ROW is passed because sizing dispatches on its taker (#268) — an actuator sizes a
     #  dose, a bidder sizes a bid — and because a duty borrows the row's property when it has
     #  none of its own (#255). A bare `_bind` sizes nothing on purpose. The value is not in the
-    #  binding any more: the rule reads it from `$sensed`, which names the node's own graph.
-    assert planner._bind(desire, step, row)["sensed"] != planner._bind(
-        desire, here, row)["sensed"], \
+    #  binding any more: the rule reads it from `$state`, which names the node's own graph.
+    assert planner._bind(desire, step, row)["state"] != planner._bind(
+        desire, here, row)["state"], \
         "a step taken from here must ASK about here — a rule reads the readings its own node reached"
 
     asked = []
@@ -457,13 +457,13 @@ def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
     the premise it was concluded from.
     """
     agent, planner, desire = _thirsty_with_a_nearly_empty_butt(monkeypatch)
-    before = agent.beliefs.get_graph(SENSED_GRAPH)
+    before = agent.beliefs.get_graph(STATE_GRAPH)
     names = set(agent.beliefs.graph_names())
 
     plan = planner.plan(desire)
 
     assert len(plan.steps) == 2, "a search that never went deep would assert nothing here"
-    assert agent.beliefs.get_graph(SENSED_GRAPH) == before, "readings the agent never took"
+    assert agent.beliefs.get_graph(STATE_GRAPH) == before, "readings the agent never took"
     assert set(agent.beliefs.graph_names()) - names <= {DELIBERATION_GRAPH}, \
         "a possible world escaped into the store that keeps things"
     assert planner.imaginarium is None, "the imaginarium outlived the plan"

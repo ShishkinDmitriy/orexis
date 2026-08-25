@@ -19,7 +19,7 @@ import pytest
 
 from agent import genesis, loader
 from agent.genesis import agent_id_of
-from agent.ontology import SENSED_GRAPH
+from agent.ontology import STATE_GRAPH
 from packages.capability.sensing.sensed_writer import observation_uri
 from agent.store import Store
 
@@ -78,7 +78,7 @@ def genesis_store(readings: dict[str, float] | None = None,
         # of ag: — a seeded reading must point where the world's fern actually is.
         ns = f"http://example.org/orexis/world/{world}#"
         ts = (result_time or datetime.now(timezone.utc)).isoformat()
-        st.update("INSERT DATA { GRAPH <%s> {\n%s\n} }" % (SENSED_GRAPH, "\n".join(
+        st.update("INSERT DATA { GRAPH <%s> {\n%s\n} }" % (STATE_GRAPH, "\n".join(
             f"""  {observation_uri(pid, prop)} a sosa:Observation ;
                     sosa:hasFeatureOfInterest <{ns}{pid}> ;
                     sosa:observedProperty <{prop}> ;

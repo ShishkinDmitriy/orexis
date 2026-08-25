@@ -184,13 +184,13 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
     says why it had better hurry. A violation here would keep a thirsty agent from ever
     bidding for water, which is the one wrong direction.
     """
-    from agent.ontology import SENSED_GRAPH, beliefs_graph
+    from agent.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import conforms, graph_from
 
     st = genesis_store({("fern", MOISTURE): 0.05})   # fern survives 0.20-0.85
     from agent import genesis
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
-    data = _judged(st, SENSED_GRAPH)
+    data = _judged(st, STATE_GRAPH)
     ok, report = conforms(data, focus=FERN)
     assert ok, "a warning must not fail validation — the agent has to be able to start"
     #  The message names the side and the edge, because the shape that produced it was minted
@@ -202,7 +202,7 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
 
     calm = genesis_store({("fern", MOISTURE): 0.30})  # outside the region, inside the envelope
     genesis.birth(calm, genesis.world_dir("simulation"), "fern")
-    data = _judged(calm, SENSED_GRAPH)
+    data = _judged(calm, STATE_GRAPH)
     ok, report = conforms(data, focus=FERN)
     assert ok
     assert "past what fern survives" not in report, \
@@ -245,12 +245,12 @@ def test_an_unmet_want_is_not_printed_as_a_finding(monkeypatch):
     wrote: a report claiming three results and showing one is how a filter goes wrong quietly.
     """
     from agent import genesis
-    from agent.ontology import SENSED_GRAPH, beliefs_graph
+    from agent.ontology import STATE_GRAPH, beliefs_graph
     from agent.validate import conforms, graph_from
 
     dry = genesis_store({("fern", MOISTURE): 0.30})   # outside the region, inside the envelope
     genesis.birth(dry, genesis.world_dir("simulation"), "fern")
-    data = _judged(dry, SENSED_GRAPH)
+    data = _judged(dry, STATE_GRAPH)
     ok, report = conforms(data, focus=FERN)
 
     assert ok

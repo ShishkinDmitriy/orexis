@@ -35,6 +35,12 @@
 :urgency a ag:Hook ; rdfs:label "urgency" ; rdfs:comment "How close does this reading put you to your own trouble, 0 to 1? The sharpest answer wins; None is no opinion. A None value asks how urgent not knowing is." .
 :readingRecorded a ag:Hook ; rdfs:label "reading recorded" ; rdfs:comment "Told: this agent's sensing recorded something new — subject, property, value." .
 
+#  A BELIEF GRAPH of this package's own: what the agent holds about the instruments it polls
+#  — the horizon it published per sensor, which the freshness want reads. It arrives RECORDED
+#  because the agent writes it down as it goes; private, because nobody else needs to know
+#  what rhythm I am running. Found by the kernel as every graph is, by what it is typed.
+<http://example.org/orexis/graph/instruments> a ag:BeliefGraph ; ag:arrivedBy ag:Recorded .
+
 :SensingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
     rdfs:label "Sensing capability" ;
     rdfs:comment "The family. Rules true of sensing however it is done target this class, so nothing is restated per transport, and one capability may ask for 'whoever perceives' without knowing which of the three answered." .
