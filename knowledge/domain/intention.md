@@ -77,9 +77,10 @@ gap moved: an agent whose water never reached the pot bought, recorded satisfied
 again forever — transaction confirmed, outcome never audited. Now resolving the means opens a
 **watch**: the row gains the *baseline* (value and instant, copied into the ledger because the
 sensed graph keeps only the current witness — the ledger is what remembers), the *promised
-direction* (the domain's own `market:direction`, #127, copied so the row stays judgeable), and a
-*deadline* (the patience, until something derives a better horizon from the dose and the
-physics — a recorded seam).
+direction* — said by the actor that opened the watch, which holds the domain's `market:direction`
+(#127) or its own effect's sign, and copied so the row stays judgeable — and a *deadline*: the
+act's landing time plus how long a reading takes to arrive, both passed by the actor, or the
+patience where the act cannot size itself.
 
 Every reading is a chance to judge: past the baseline in the promised direction — **met**, early
 is fine, that is the dose landing — and past it by at least `metFraction` of the act's own

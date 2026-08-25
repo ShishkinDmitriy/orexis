@@ -38,6 +38,8 @@ from agent.store import bindings
 from .beliefs import ACTUATION_PICKS
 from .terms import ACTUATION, DOSING
 
+SENSING = "http://example.org/orexis/sensing#SensingCapability"  # whoever can look, asked by family
+
 # What this package asks OF others, by family or by IRI — namespaces, never Python.
 
 # My own conversion belief for a SELF-dose (#190), keyed by the valuation term the resource
@@ -217,14 +219,25 @@ class ActuationModule(Module):
             #  the ordinary rule, which is the 584-dose guard with no hook and no second read
             #  of the ledger. A watch that cannot open (no baseline, no direction) is resolved
             #  at once: a row that could never be judged must not stand for ever.
+            #  A dose RAISES what it doses — that is this package's own effect rule, `$value +
+            #  litres / conversion` — so the watch is told so here; and how long a reading
+            #  takes to arrive is my sensing's cadence, asked of it rather than by the keeper.
+            sensing = self.agent.provider(SENSING)
+            try:
+                seeing = float(sensing.stale_after_s(self.me.acts_for, observed_property)) if sensing else None
+            except Exception:
+                seeing = None
             opened = keeper.expect(
                 intention, observed_property,
                 f"self-dosed {litres}L ({cmd.ml:.0f} ml commanded) — the graph says this "
                 f"raises what I am short of, so show me",
                 expected_delta=self._expected_delta(observed_property, litres, value),
+                rises=True, seeing_s=seeing,
                 lands_after_s=effects.lands_after(
                     self.agent.beliefs, DOSING, me=f"<{self.me.uri}>",
                     subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
+            if opened and sensing is not None:
+                sensing.sense_now()   # the freshest before on record
             if not opened:
                 keeper.satisfy(DOSING, observed_property,
                                f"the dose is commanded — {cmd.ml:.0f} ml on its way, and no "

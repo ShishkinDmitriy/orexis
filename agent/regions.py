@@ -26,8 +26,6 @@ from .desire import Desire
 from .ontology import AG, SENSED_GRAPH, beliefs_graph, obligations_graph
 from .store import bindings
 
-_SENSING = "http://example.org/orexis/sensing#SensingCapability"
-
 log = logging.getLogger("desire")
 
 # The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the

@@ -57,7 +57,7 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     assert len(watches) == 1
     watch = watches[0]
     assert watch.baseline == 0.30
-    assert watch.direction.endswith("Raises")   # copied from the domain's #127 statement
+    assert watch.rises is True   # said by the actor, from the domain's #127 statement on its valuation
     assert watch.action == ACQUIRING
 
 
@@ -264,7 +264,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_exact_crossing(thirsty):
     cannot say how far it should move the world."""
     keeper = keeper_of(thirsty)
     uri = keeper.adopt(ACQUIRING, MOISTURE, "an act of unknowable size")
-    assert keeper.expect(uri, MOISTURE, "no delta stated")
+    assert keeper.expect(uri, MOISTURE, "no delta stated", rises=True)
     keeper.on_reading_recorded(thirsty.me.acts_for, MOISTURE, 0.301)
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
@@ -329,8 +329,10 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
 
     uri = keeper.adopt(_ACTUATE, MOISTURE, "a dose is on its way")
     before = datetime.now(timezone.utc).timestamp()
+    #  Both halves are the ACTOR's to pass now: the landing from its effect rule, the seeing
+    #  from the sensing it holds — the keeper names neither package to find them.
     assert keeper.expect(uri, MOISTURE, "50 seconds of pouring", expected_delta=0.1,
-                         lands_after_s=50.0)
+                         lands_after_s=50.0, seeing_s=seeing)
 
     rows = bindings(gardener.beliefs.query(f"""
 SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))

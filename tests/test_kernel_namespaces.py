@@ -109,26 +109,10 @@ def _occurrences() -> Counter[tuple[str, str]]:
 
 ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
 
-    # KIND 1 — reflex machinery, and it has already shrunk once. The deliberator's three
-    # entries — the direction query's two answers and the dealer's shop query — went with the
-    # reflex itself (#339), which is #334's third bullet arriving exactly as this list said it
-    # would. What survives is the KEEPER's copy of the direction, and it is not reflex leftovers:
-    # the verification arc writes the expected direction into the expectation row, so this pair
-    # outlives the deliberator that used to share it and leaves on some other change.
-    ("agent/keeper.py", "market#Raises"): (
-        1, "reflex: the keeper's copy of the direction, written into the expectation row"),
-    ("agent/keeper.py", "market#Lowers"): (
-        1, "reflex: the keeper's copy of the other half"),
-
-    # KIND 2 — provider-family dispatch. `_dose` USED to dispatch by means (Acquire -> ask
-    # Bidding, Actuate -> ask Actuation); that is `Module.size` now, asked of the row's taker,
-    # and the two planner entries went with it — #334's second bullet, arrived. What survives
-    # is the keeper and the regions asking sensing to look once.
-    ("agent/keeper.py", "sensing#SensingCapability"): (
-        1, "the milder cousin: sensing asked to look once, so the baseline is the freshest "
-           "thing on record"),
-    ("agent/regions.py", "sensing#SensingCapability"): (
-        1, "the same lookup, from the regions side"),
+    # KIND 1 and KIND 2 ARE EMPTY. The keeper's copy of the direction went when the actor that
+    # opens a watch began saying which way (`rises`), and the look-once and the seeing window
+    # went with it — the actor nudges its own sensing and passes the cadence it keeps. #334's
+    # first two bullets, arrived.
 
     # A migration DESTINATION. `vocabulary.MOVED` records where a retired spelling
     # went, and the first means to leave the kernel for a package (market:Offer, with
@@ -224,18 +208,8 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
         1, "debt, later (excuse): the desire warning's agent half — its loss fires the warning "
            "rather than suppressing it"),
 
-    # 7 — a SELECTOR, and the one waiting on a package that does not exist. Removing actuation
-    # empties `ag:SimulatedActuatorShape`'s target set and removes every simulated actuator it
-    # was checking, together — so nothing false is concluded, and it is still the kernel holding
-    # a word it did not declare. What it really wants is the simulation package that
-    # every-term-in-its-own-house says has not been written. NOTE THE TRAP for whoever pays this
-    # one down: re-targeting `sosa:Actuator` would turn this scan green while changing nothing,
-    # because a world types its valve as `actuation:Valve` and reaches `sosa:Actuator` only
-    # through the subclass axiom actuation's own ontology declares.
-    ("agent/shapes.ttl", "actuation#"): (
-        1, "debt, later (selector): prefix declaration, used by the shape targeting "
-           "actuation:actuates — its loss empties the target set and the population together, "
-           "and the knowledge wants a simulation package to live in"),
+    # 7 — the SELECTOR went to actuation: `SimulatedActuatorShape` targets `actuation:actuates`
+    # and lives in `packages/capability/actuation/shapes.ttl` now.
 }
 
 
