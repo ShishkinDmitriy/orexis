@@ -44,7 +44,7 @@ from .beliefs import HOSTING_PICKS
 #  The serving action, spelled rather than imported: the kernel owns the term and market's own
 #  honoured.rq binds it, and `intention/terms.py` holds the same string for the same reason —
 #  a package may not import another's Python.
-from .terms import (ACTUATION, SERVING, HOSTING, BID_MATCHING,
+from .terms import (ACTUATION, SENSING, SERVING, HOSTING, BID_MATCHING,
                     OFFERING)
 
 
@@ -276,7 +276,8 @@ SELECT ?r WHERE {{
         prop = self.stock_property.get(market.uri)
         if prop is None:
             return None
-        reading = self.agent.beliefs.current_reading(market.resource, prop)
+        sensing = self.agent.provider(SENSING)
+        reading = sensing.current_reading(market.resource, prop) if sensing else None
         return reading.value if reading is not None else None
 
     def announce(self, market, trigger: str) -> bool:

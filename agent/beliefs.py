@@ -19,10 +19,9 @@ could otherwise decide when to look at a comfortable number.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from typing import get_type_hints
 
-from .ontology import SENSED_GRAPH, beliefs_graph
+from .ontology import beliefs_graph
 from .store import bindings
 
 
@@ -68,39 +67,10 @@ class Picks:
         return {field: _CASTS[hints[field]] for field in self.terms}
 
 
-@dataclass(frozen=True)
-class Reading:
-    """A sensed value plus when it was taken — the pair a decision must cite."""
-
-    value: float
-    result_time: datetime | None
-
-    def age_s(self, now: datetime | None = None) -> float | None:
-        if self.result_time is None:
-            return None
-        return ((now or datetime.now(timezone.utc)) - self.result_time).total_seconds()
-
-    def is_fresh(self, max_age_s: float, now: datetime | None = None) -> bool:
-        """Untimed readings are never fresh — an unstamped number can't be shown to be current."""
-        age = self.age_s(now)
-        return age is not None and age <= max_age_s
-
-
-def _parse_datetime(raw: str | None) -> datetime | None:
-    if not raw:
-        return None
-    try:
-        ts = datetime.fromisoformat(raw.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return ts if ts.tzinfo else ts.replace(tzinfo=timezone.utc)
-
-
-def _parse_reading(results: dict) -> Reading | None:
-    rows = bindings(results)
-    if not rows or rows[0].get("value") is None:
-        return None
-    return Reading(value=float(rows[0]["value"]), result_time=_parse_datetime(rows[0].get("ts")))
+#  `Reading`, `_parse_reading` and `current_reading` WERE HERE — the kernel knowing that a
+#  belief about a property is a sosa observation. What a reading looks like is sensing's
+#  (`packages/capability/sensing/readings.py`, the-stake-is-sensings-want), reached through the
+#  sensing provider; this file keeps the picks, which are beliefs of the agent's own.
 
 
 def _picks_query(agent_uri: str, graph: str, terms: dict[str, str]) -> str:
@@ -182,33 +152,6 @@ class Beliefs:
         return read_picks_optional(self.query, self.agent_uri, self.graph,
                                    self.agent_id, picks)
 
-    def current_reading(self, subject_uri: str, observed_property: str) -> Reading | None:
-        """The latest observation of one property of a subject, with the time it was taken.
-
-        The property is required rather than optional, and that is deliberate. It used to be
-        absent, and a subject with two sensors returned whichever had written last — so an
-        omitted argument would silently restore exactly the defect this signature exists to
-        prevent. A caller that does not know which property it means does not know what it is
-        asking.
-        """
-        # The feature may be the subject itself, or a PATCH of it (#98): an observation of a
-        # sosa:Sample answers for what it samples, newest first. The sample link lives in the
-        # world graph and the observation in :sensed, so the walk sits OUTSIDE the GRAPH
-        # clause — inside it, the pattern would have to match entirely within :sensed and the
-        # patch reading would silently vanish, which is AGENTS.md's narrowed-SELECT trap.
-        # Newest-across-patches is deliberately NOT aggregation: nothing here averages, and
-        # the seam one-agent-many-sensors.md leaves open is still open — this is only which
-        # single witness answers when several patches testify.
-        return _parse_reading(self.query(f"""
-SELECT ?value ?ts WHERE {{
-  {{ BIND(<{subject_uri}> AS ?foi) }} UNION {{ ?foi sosa:isSampleOf <{subject_uri}> }}
-  GRAPH <{SENSED_GRAPH}> {{
-    ?obs sosa:hasFeatureOfInterest ?foi ;
-         sosa:observedProperty <{observed_property}> ;
-         sosa:hasSimpleResult ?value .
-    OPTIONAL {{ ?obs sosa:resultTime ?ts }}
-  }}
-}} ORDER BY DESC(?ts) LIMIT 1"""))
 
 
 def read_picks(query, agent_uri: str, graph: str, agent_id: str, picks: Picks):

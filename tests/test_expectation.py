@@ -21,7 +21,7 @@ from packages.capability.actuation.terms import DOSING as _ACTUATE
 from agent.store import bindings
 from agent.keeper import DEADLINE_AT
 
-from conftest import MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors
+from conftest import MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
 
 
 @pytest.fixture
@@ -264,7 +264,8 @@ def test_an_act_that_cannot_size_itself_keeps_the_exact_crossing(thirsty):
     cannot say how far it should move the world."""
     keeper = keeper_of(thirsty)
     uri = keeper.adopt(ACQUIRING, MOISTURE, "an act of unknowable size")
-    assert keeper.expect(uri, MOISTURE, "no delta stated", rises=True)
+    assert keeper.expect(uri, MOISTURE, "no delta stated", rises=True,
+                         baseline=reading_of(thirsty, MOISTURE))
     keeper.on_reading_recorded(thirsty.me.acts_for, MOISTURE, 0.301)
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
@@ -332,7 +333,8 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
     #  Both halves are the ACTOR's to pass now: the landing from its effect rule, the seeing
     #  from the sensing it holds — the keeper names neither package to find them.
     assert keeper.expect(uri, MOISTURE, "50 seconds of pouring", expected_delta=0.1,
-                         lands_after_s=50.0, seeing_s=seeing)
+                         lands_after_s=50.0, seeing_s=seeing,
+                         baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
 SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))
@@ -356,7 +358,8 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
     keeper = keeper_of(gardener)
     uri = keeper.adopt(_ACTUATE, MOISTURE, "something is on its way")
     before = datetime.now(timezone.utc).timestamp()
-    assert keeper.expect(uri, MOISTURE, "bought from someone else's valve", expected_delta=0.1)
+    assert keeper.expect(uri, MOISTURE, "bought from someone else's valve", expected_delta=0.1,
+                         baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
 SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))

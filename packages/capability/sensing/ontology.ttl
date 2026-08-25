@@ -398,3 +398,13 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 :Freshness a owl:Class ; rdfs:subClassOf ag:Desire ;
     rdfs:label "freshness want" ;
     rdfs:comment "Wanting a reading of one instrument to exist and to have been taken recently enough to be about now. Repaired by looking and by nothing else — no lever moves a number you cannot see — so an agent that cannot ask this instrument for a reading holds a want with no lever, which is a legitimate state and reported as one." .
+
+#################  An observation is an UPSERTED belief  #################
+
+#  What the planner's cycle detection needs to know about a reading, said here rather than in
+#  `agent/signature.py`, which used to spell sosa by hand: an observation node is identified
+#  by what it observes of what — the sensed writer's own upsert key — and what it CARRIES is
+#  the result; nothing else on the node (its identity, its instant, who made it) counts as
+#  "where a plan stands", which is what keeps a look from being a new world every time.
+sosa:Observation ag:keyedBy sosa:hasFeatureOfInterest , sosa:observedProperty ;
+                 ag:carries sosa:hasSimpleResult .

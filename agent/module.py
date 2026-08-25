@@ -123,8 +123,9 @@ class Module:
         """
         return None
 
-    def size(self, observed_property: str, value: float) -> float | None:
-        """How big the act I take would be, from where this property stands — one act's size.
+    def size(self, query, graph: str, observed_property: str) -> float | None:
+        """How big the act I take would be, from where this property stands in the world
+        `query` answers about at `graph` — one act's size.
 
         Asked by the planner before it simulates a step, and answered by whoever would TAKE
         the step: a bidder sizes a bid by its deficit and its wallet, an actuator a dose by

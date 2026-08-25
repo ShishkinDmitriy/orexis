@@ -11,6 +11,8 @@ from dataclasses import replace
 
 import pytest
 
+from packages.capability.sensing.readings import current_reading
+
 from conftest import HUMIDITY, MOISTURE, TEMPERATURE, build_agent, genesis_store, wired_sensors, wired_event_topic
 
 
@@ -193,7 +195,7 @@ def test_it_announces_its_verdict_not_just_a_number(fern):
 
 def test_the_reading_is_recorded_as_its_own_assertion(fern):
     fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.123})
-    reading = fern.beliefs.current_reading(fern.me.acts_for, MOISTURE)
+    reading = current_reading(fern.beliefs.query, fern.me.acts_for, MOISTURE)
     assert reading.value == pytest.approx(0.123)
     assert reading.is_fresh(120)
 
@@ -201,7 +203,7 @@ def test_the_reading_is_recorded_as_its_own_assertion(fern):
 def test_a_malformed_reading_changes_nothing(fern):
     fern.deliver(sensor_of(fern).reading_topic, {"sensor": "x"})  # no value
     assert cadences(fern) == []
-    assert fern.beliefs.current_reading(fern.me.acts_for, MOISTURE) is None
+    assert current_reading(fern.beliefs.query, fern.me.acts_for, MOISTURE) is None
 
 
 # --- one agent, two sensors, two clocks --------------------------------------
@@ -447,8 +449,8 @@ def test_two_properties_of_one_pot_do_not_overwrite_each_other(monkeypatch, tmp_
 
     # The pot, not the agent — this world is sensing-only, so nobody acts for anything here.
     pot = sensor_of(agent).subject
-    assert agent.beliefs.current_reading(pot, MOISTURE).value == pytest.approx(0.05)
-    assert agent.beliefs.current_reading(pot, TEMPERATURE).value == pytest.approx(21.0)
+    assert current_reading(agent.beliefs.query, pot, MOISTURE).value == pytest.approx(0.05)
+    assert current_reading(agent.beliefs.query, pot, TEMPERATURE).value == pytest.approx(21.0)
 
 
 def test_the_announcement_says_which_property_it_is_about(monkeypatch, tmp_path):
@@ -752,7 +754,7 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
         % (SENSED_GRAPH, MOISTURE)))
     assert len(rows) == 2, "the old keying overwrote one patch's record with the other's"
     # the pot answers with the newest witness among its patches
-    assert fern.beliefs.current_reading(fern.me.acts_for, MOISTURE).value == pytest.approx(0.55)
+    assert current_reading(fern.beliefs.query, fern.me.acts_for, MOISTURE).value == pytest.approx(0.55)
 
 
 def test_a_device_that_speaks_for_itself_lands_in_phenomenon_time(fern):

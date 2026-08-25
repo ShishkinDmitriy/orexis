@@ -24,7 +24,7 @@ from agent.ontology import DELIBERATION_GRAPH, SENSED_GRAPH
 from agent import planner as search, trace
 from agent.planner import Planner
 
-from conftest import build_agent, genesis_store, open_round_for
+from conftest import build_agent, genesis_store, open_round_for, write_reading
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -241,19 +241,22 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     row = next(iter(planner._candidates(here, desire)))
     step = planner._step_from(here, row, desire)
 
-    assert planner._value_in(here.world, desire) == DRY
-    moved = planner._value_in(step.world, desire)
+    #  What a property reads in a candidate world is SENSING's answer, asked at the node's
+    #  graph (the-stake-is-sensings-want) — the planner no longer walks sosa for it.
+    sensing = agent.provider("http://example.org/orexis/sensing#SensingCapability")
+    value_at = lambda node: sensing.value_in(planner.imaginarium.query, node.graph,
+                                             agent.me.acts_for, MOISTURE)
+    assert value_at(here) == DRY
+    moved = value_at(step)
     assert moved > DRY, "the dose moved the world it was simulated into"
 
-    #  The ROW is passed because sizing dispatches on its means (#268) — an actuator sizes a
+    #  The ROW is passed because sizing dispatches on its taker (#268) — an actuator sizes a
     #  dose, a bidder sizes a bid — and because a duty borrows the row's property when it has
-    #  none of its own (#255). A bare `_bind` sizes nothing on purpose.
-    assert planner._bind(desire, here, row)["value"] == DRY
-    assert planner._bind(desire, step, row)["value"] == moved, \
-        "a step taken from here must be predicted from HERE, not from where the agent stands"
+    #  none of its own (#255). A bare `_bind` sizes nothing on purpose. The value is not in the
+    #  binding any more: the rule reads it from `$sensed`, which names the node's own graph.
     assert planner._bind(desire, step, row)["sensed"] != planner._bind(
         desire, here, row)["sensed"], \
-        "and it must ASK about here too — a rule reads the readings its own node reached"
+        "a step taken from here must ASK about here — a rule reads the readings its own node reached"
 
     asked = []
     monkeypatch.setattr(agent.provider("http://example.org/orexis/actuation#Actuation"),
@@ -318,10 +321,12 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     #  fern aims at 0.55, and the store holds NO reading — which is the arrangement that makes
     #  the fabrication possible at all. A bare Desire suffices: the measure is not the want's
     #  to carry, and sensing answers the choir for any observation-backed stake.
+    write_reading(fern, 0.30, MOISTURE)   # the world holds the value; a want's `value` is not it
     stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=0.30)
     assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquiring", \
         "below the aim there is a deficit to close, and the search must still close it"
     for value in (0.55, 0.80):
+        write_reading(fern, value, MOISTURE)
         stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) is None, \
             f"a content plant bought water at {value} — a zero-size act made something true"
@@ -438,7 +443,9 @@ def _last_predicted(planner, desire, plan) -> float:
     node = planner._begin(desire)
     for step in plan.steps:
         node = planner._step_from(node, step, desire)
-    return planner._value_in(node.world, desire)
+    sensing = planner.agent.provider("http://example.org/orexis/sensing#SensingCapability")
+    return sensing.value_in(planner.imaginarium.query, node.graph, planner.me.acts_for,
+                            desire.observed_property)
 
 
 def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
@@ -587,9 +594,9 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
 
     def observation(node, value, datatype, when):
         return [
+            ox.Triple(node, ox.NamedNode(sosa + "hasFeatureOfInterest"), zz),
             ox.Triple(node, ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
                       ox.NamedNode(sosa + "Observation")),
-            ox.Triple(node, ox.NamedNode(sosa + "hasFeatureOfInterest"), zz),
             ox.Triple(node, ox.NamedNode(sosa + "observedProperty"), prop),
             ox.Triple(node, ox.NamedNode(sosa + "hasSimpleResult"),
                       ox.Literal(value, datatype=ox.NamedNode(xsd + datatype))),
@@ -603,12 +610,16 @@ def test_a_path_that_returns_to_the_base_world_returns_to_the_empty_diff(monkeyp
     back = observation(ox.BlankNode(), repr(0.33 - 0.03),   # 0.30000000000000004
                        "double", "2026-01-01T00:02:00Z")
 
-    base_facts = signature.facts(base)
+    #  What sensing declares of an observation (`ag:keyedBy`, `ag:carries`), as the planner
+    #  reads it once per pass — the signature no longer spells sosa itself.
+    keys = {sosa + "Observation": (frozenset({sosa + "hasFeatureOfInterest", sosa + "observedProperty"}),
+                                   frozenset({sosa + "hasSimpleResult"}))}
+    base_facts = signature.facts(base, keys)
     there = signature.advance(signature.EMPTY,
-                              signature.facts(up), signature.facts(base), base_facts)
+                              signature.facts(up, keys), signature.facts(base, keys), base_facts)
     assert there != signature.EMPTY, "a dose reaches somewhere new"
     home = signature.advance(there,
-                             signature.facts(back), signature.facts(up), base_facts)
+                             signature.facts(back, keys), signature.facts(up, keys), base_facts)
     assert home == signature.EMPTY, \
         "+3 then −3 nets to nothing, whatever nodes and timestamps the runs minted"
 

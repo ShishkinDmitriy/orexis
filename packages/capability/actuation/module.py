@@ -178,9 +178,13 @@ class ActuationModule(Module):
 
         execution.pursue_about(self.agent, observed_property)
 
-    def size(self, observed_property: str, value: float) -> float | None:
-        """The planner's question, answered by the one who would pour: `dose_for`."""
-        return self.dose_for(observed_property, value)
+    def size(self, query, graph: str, observed_property: str) -> float | None:
+        """The planner's question, answered by the one who would pour: `dose_for`, from where
+        the property stands in the world being asked about — read through sensing at that
+        world's graph, because what a reading looks like is sensing's."""
+        sensing = self.agent.provider(SENSING)
+        value = sensing.value_in(query, graph, self.me.acts_for, observed_property) if sensing else None
+        return self.dose_for(observed_property, value) if value is not None else None
 
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed self-dose: size it from the reading in hand and command it.
@@ -194,7 +198,8 @@ class ActuationModule(Module):
         if row.action != DOSING:
             return False
         observed_property = row.observed_property
-        reading = self.agent.beliefs.current_reading(self.me.acts_for, observed_property)
+        sensing = self.agent.provider(SENSING)
+        reading = sensing.current_reading(self.me.acts_for, observed_property) if sensing else None
         if reading is None:
             return False
         value = reading.value
@@ -234,7 +239,7 @@ class ActuationModule(Module):
                 f"self-dosed {litres}L ({cmd.ml:.0f} ml commanded) — the graph says this "
                 f"raises what I am short of, so show me",
                 expected_delta=self._expected_delta(observed_property, litres, value),
-                rises=True, seeing_s=seeing,
+                rises=True, seeing_s=seeing, baseline=reading,
                 lands_after_s=effects.lands_after(
                     self.agent.beliefs, DOSING, me=f"<{self.me.uri}>",
                     subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
@@ -296,7 +301,8 @@ SELECT ?source ?p WHERE {{
   ?s sensing:monitors ?source ; sosa:observes ?p }} LIMIT 1"""))
         if not rows:
             return None
-        reading = self.agent.beliefs.current_reading(rows[0]["source"], rows[0]["p"])
+        sensing = self.agent.provider(SENSING)
+        reading = sensing.current_reading(rows[0]["source"], rows[0]["p"]) if sensing else None
         return reading.value if reading is not None else None
 
     def _expected_delta(self, observed_property: str, litres: float,
@@ -327,9 +333,17 @@ SELECT ?source ?p WHERE {{
         #  brackets and datatype included, so comparing `str(predicate)` to an IRI silently
         #  never matches and every expectation comes back None. It cost a test run to notice,
         #  which is cheap only because the test was pinning a number rather than a shape.
+        #  The rule reads where the property STANDS from the sensed graph (it no longer takes
+        #  the base as an argument), so the delta is its prediction against that same standing
+        #  reading — read through sensing, which owns what a reading looks like. `value`, the
+        #  reading the actor was handed, is the same number by construction: `Observations.record`
+        #  writes before it announces.
+        sensing = self.agent.provider(SENSING)
+        standing = sensing.current_reading(self.me.acts_for, observed_property) if sensing else None
+        base = standing.value if standing is not None else value
         for triple in added:
             if triple.predicate.value == f"{_SOSA}hasSimpleResult":
-                return float(triple.object.value) - value
+                return float(triple.object.value) - base
         return None
 
     def _conversion_for(self, observed_property: str) -> float | None:

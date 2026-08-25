@@ -46,10 +46,25 @@ from __future__ import annotations
 
 import pyoxigraph as ox
 
-_SOSA = "http://www.w3.org/ns/sosa/"
-_OBSERVED = ox.NamedNode(_SOSA + "observedProperty")
-_FOI = ox.NamedNode(_SOSA + "hasFeatureOfInterest")
-_RESULT = ox.NamedNode(_SOSA + "hasSimpleResult")
+#  sosa WAS spelled here — an observation's upsert key and its result, by name. A package
+#  declares that now: `?class ag:keyedBy ?p` (the predicates that identify a node of that class)
+#  and `?class ag:carries ?p` (what such a node states), and this reads the declaration.
+_RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+_KEYS_Q = """
+SELECT ?class ?keyed ?carried WHERE {
+  ?class <http://example.org/orexis#keyedBy> ?keyed .
+  ?class <http://example.org/orexis#carries> ?carried }"""
+
+
+def keys_of(query) -> dict:
+    """class IRI -> (frozenset of key predicate IRIs, frozenset of carried predicate IRIs)."""
+    from .store import bindings
+
+    out: dict = {}
+    for r in bindings(query(_KEYS_Q)):
+        keyed, carried = out.setdefault(r["class"], (set(), set()))
+        keyed.add(r["keyed"]); carried.add(r["carried"])
+    return {c: (frozenset(k), frozenset(v)) for c, (k, v) in out.items()}
 
 #  How far a literal is trusted, and it is the OLD signature surviving as a clause: two worlds
 #  whose readings agree to six decimals were the same place before, and still are.
@@ -58,36 +73,48 @@ _ROUND = 6
 EMPTY = (frozenset(), frozenset())
 
 
-def facts(triples) -> frozenset:
+def facts(triples, keys: dict | None = None) -> frozenset:
     """The canonical facts a set of triples states — what of it counts as 'where I am'.
 
     `triples` is anything with `.subject`, `.predicate` and `.object` — a step's diff as
     `effects.apply` returns it, or the base as the store's own quads — and is read twice:
-    once to learn which nodes are observations and what hangs off each blank node, once to
-    emit. Both passes are the caller's iterable materialised, so a generator is fine.
+    once to learn which nodes are KEYED (typed with a class some package declared `ag:keyedBy`)
+    and what hangs off each blank node, once to emit. A keyed node canonicalises to its class,
+    its key values and what it carries — never its identity, and never anything else on it
+    (an instant, who made it), which is what keeps a look from being a new world every time.
+    `keys` is `keys_of(query)`; with none given, nothing is keyed and every triple counts.
     """
+    keys = keys or {}
     triples = [(t.subject, t.predicate, t.object) for t in triples]
-    prop, foi, outgoing, incoming = {}, {}, {}, {}
+    typed, outgoing, incoming = {}, {}, {}
     for s, p, o in triples:
-        if p == _OBSERVED:
-            prop[s] = o
-        elif p == _FOI:
-            foi[s] = o
+        if p == _RDF_TYPE and isinstance(o, ox.NamedNode) and o.value in keys:
+            typed[s] = o.value
         if isinstance(s, ox.BlankNode):
             outgoing.setdefault(s, []).append((p, o))
         if isinstance(o, ox.BlankNode):
             incoming.setdefault(o, []).append((s, p))
-    world = _World({s: (foi[s].value, p.value) for s, p in prop.items() if s in foi},
-                   outgoing, incoming)
+    keyed = {}
+    for s, cls in typed.items():
+        key_preds, _ = keys[cls]
+        key = tuple(sorted((p.value, _term_value(o)) for a, p, o in triples
+                           if a == s and p.value in key_preds))
+        if len(key) == len(key_preds):
+            keyed[s] = (cls, key)
+    world = _World(keyed, outgoing, incoming)
     out = set()
     for s, p, o in triples:
-        if s in world.observations:
-            if p == _RESULT:
-                f, pr = world.observations[s]
-                out.add(("obs", f, pr, _literal(o)))
+        if s in keyed:
+            cls, key = keyed[s]
+            if p.value in keys[cls][1]:
+                out.add(("keyed", cls, key, p.value, _literal(o)))
             continue
         out.add((world.term(s), p.value, world.term(o)))
     return frozenset(out)
+
+
+def _term_value(o):
+    return o.value if isinstance(o, (ox.NamedNode, ox.BlankNode)) else _literal(o)
 
 
 def advance(diff: tuple, added: frozenset, retracted: frozenset, base: frozenset) -> tuple:
