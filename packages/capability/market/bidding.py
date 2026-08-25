@@ -161,6 +161,11 @@ class BiddingModule(Module):
             f"SELECT ?d WHERE {{ <{self._valuation_term}> market:direction ?d }} LIMIT 1"))
         return not rows or not rows[0]["d"].endswith("Lowers")
 
+    def _baseline(self):
+        """The reading I hold of my property — the before a watch leaves from."""
+        sensing = self.agent.provider(SENSING)
+        return sensing.current_reading(self.me.acts_for, self.about) if sensing else None
+
     def _seeing_s(self) -> float | None:
         """How long a reading of my property may take to arrive — the cadence my sensing keeps."""
         sensing = self.agent.provider(SENSING)
@@ -458,7 +463,7 @@ class BiddingModule(Module):
         ignored.
         """
         sensing = self.agent.provider(SENSING)
-        reading = self.agent.beliefs.current_reading(self.me.acts_for, self.about)
+        reading = sensing.current_reading(self.me.acts_for, self.about) if sensing else None
         if reading is None:
             return "no reading yet from my sensor"
         if sensing is None:
@@ -522,9 +527,12 @@ class BiddingModule(Module):
             return 1.0
         return None
 
-    def size(self, observed_property: str, value: float) -> float | None:
-        """The planner's question, answered by the one who would bid: `qty_for`."""
-        return self.qty_for(observed_property, value)
+    def size(self, query, graph: str, observed_property: str) -> float | None:
+        """The planner's question, answered by the one who would bid: `qty_for`, from where the
+        property stands in the world being asked about — read through sensing at that graph."""
+        sensing = self.agent.provider(SENSING)
+        value = sensing.value_in(query, graph, self.me.acts_for, observed_property) if sensing else None
+        return self.qty_for(observed_property, value) if value is not None else None
 
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed Acquire: bid in the round that is open, if one is.
@@ -605,7 +613,7 @@ class BiddingModule(Module):
                               f"paid {debit} for {amount}L on a market with no redeem channel "
                               f"— the host has already redeemed, so show me",
                               expected_delta=self._delta_of(amount), rises=self._rises,
-                              seeing_s=self._seeing_s())
+                              seeing_s=self._seeing_s(), baseline=self._baseline())
             if (sensing := self.agent.provider(SENSING)) is not None:
                 sensing.sense_now()   # the freshest before on record
             return
@@ -673,6 +681,6 @@ class BiddingModule(Module):
                               f"presented {held['jti']} for {held['amount_l']}L — the graph "
                               f"says this moves what I am short of, so show me",
                               expected_delta=self._delta_of(held["amount_l"]), rises=self._rises,
-                              seeing_s=self._seeing_s())
+                              seeing_s=self._seeing_s(), baseline=self._baseline())
             if (sensing := self.agent.provider(SENSING)) is not None:
                 sensing.sense_now()

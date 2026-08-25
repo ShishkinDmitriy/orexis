@@ -332,3 +332,27 @@ def load_wired(query, agent_id: str):
 def wired_event_topic(agent):
     from packages.capability.sensing.wiring import event_topic_of
     return event_topic_of(agent.beliefs.query, agent.me.uri)
+
+
+def reading_of(agent, observed_property: str, subject_uri: str | None = None):
+    """The newest reading an agent holds of one property — through the sensing provider, since
+    what a reading looks like is sensing's (the-stake-is-sensings-want)."""
+    sensing = agent.provider("http://example.org/orexis/sensing#SensingCapability")
+    return sensing.current_reading(subject_uri or agent.me.acts_for, observed_property)
+
+
+def write_reading(agent, value: float, observed_property: str | None = None, age_s: float = 0):
+    """Put one reading of the agent's subject in its sensed graph, through the production
+    writer — so the observation carries the sensor that made it. Since readings are sensing's
+    (the-stake-is-sensings-want) a want's `value` is not the world; the world is."""
+    from datetime import datetime, timedelta, timezone
+
+    from packages.capability.sensing.sensed_writer import SensedWriter
+
+    sensors = wired_sensors(agent)
+    sensor = next(s for s in sensors if observed_property is None or s.observes == observed_property)
+    SensedWriter(agent.beliefs).write(
+        subject_uri=sensor.subject, subject_id=sensor.subject.rsplit("#", 1)[-1],
+        value=value, sensor_uri=sensor.uri, observed_property=sensor.observes,
+        author_uri=agent.me.uri, used_procedure=sensor.sense_mode,
+        ts=(datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat())

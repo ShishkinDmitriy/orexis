@@ -344,11 +344,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                expected_delta: float | None = None,
                lands_after_s: float | None = None,
                rises: bool | None = None,
-               seeing_s: float | None = None) -> bool:
+               seeing_s: float | None = None,
+               baseline=None) -> bool:
         """Open the watch: the act happened, now the world owes a movement.
 
-        The BASELINE is copied into the row — the sensed graph keeps only the current witness,
-        so the before of any before/after survives nowhere but the ledger. WHICH WAY the value
+        The BASELINE — the reading the actor holds, handed in — is copied into the row: the
+        sensed graph keeps only the current witness, so the before of any before/after survives
+        nowhere but the ledger. WHICH WAY the value
         should move is the actor's to say: `rises`, or the sign of `expected_delta` — how far
         the act should move the property when the actor can size it (#165), which is what the
         met-verdict measures its margin against. An act that cannot size itself passes `rises`
@@ -371,8 +373,12 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         would sit unverified forever, which is indistinguishable from the failure it exists to
         catch.
         """
-        reading = self.agent.beliefs.current_reading(self.me.acts_for, observed_property)
-        if reading is None or reading.result_time is None:
+        #  THE BASELINE IS THE ACTOR'S TO HAND IN: the reading it holds, value and instant.
+        #  The keeper used to read it off the belief base itself, which meant knowing what a
+        #  reading looks like — sensing's knowledge, not the ledger's. Anything with `.value`
+        #  and `.result_time` will do; a reading with no instant cannot be a before.
+        reading = baseline
+        if reading is None or getattr(reading, "result_time", None) is None:
             self.log.warning("cannot expect an end for %s — no baselined reading to leave from",
                              observed_property)
             return False

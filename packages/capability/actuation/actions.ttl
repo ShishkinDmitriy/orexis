@@ -78,7 +78,13 @@ actuation:Dosing
             ?term market:ofGood ?good ; market:aboutProperty $property .
             GRAPH $beliefs { $me ?term ?conversion }
             FILTER(?conversion > 0)
-            BIND($value + ($litres / ?conversion) AS ?predicted)
+            #  WHERE THE PROPERTY STANDS, read by this rule from the world it is asked about
+            #  rather than handed in by the planner: the kernel no longer knows what a reading
+            #  looks like, and a rule that reads $sensed already does. Nothing read yet is zero.
+            OPTIONAL { GRAPH $sensed { ?standing sosa:hasFeatureOfInterest $subject ;
+                                       sosa:observedProperty $property ;
+                                       sosa:hasSimpleResult ?was } }
+            BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
             BIND(BNODE() AS ?obs)
             BIND(NOW() AS ?now)
         }""" ;

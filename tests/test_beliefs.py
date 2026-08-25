@@ -10,7 +10,8 @@ import pytest
 
 from agent import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
-from agent.beliefs import BeliefError, Beliefs, Reading
+from agent.beliefs import BeliefError, Beliefs
+from packages.capability.sensing.readings import Reading, current_reading
 from agent.regions import aims_of, regions_of
 from packages.capability.market.beliefs import BIDDING_PICKS, HOSTING_PICKS
 from packages.capability.sensing.beliefs import SUBSCRIBING_PICKS
@@ -164,12 +165,12 @@ def _reading(age_s):
 
 def test_reads_its_subject(query_with_readings):
     b = Beliefs(genesis_store({"fern": 0.18}), "fern")
-    reading = b.current_reading("http://example.org/orexis/world/simulation#fern", MOISTURE)
+    reading = current_reading(b.query, "http://example.org/orexis/world/simulation#fern", MOISTURE)
     assert reading.value == 0.18 and reading.is_fresh(120)
 
 
 def test_no_reading_yet_is_none(fern):
-    assert fern.current_reading("http://example.org/orexis/world/simulation#fern", MOISTURE) is None
+    assert current_reading(fern.query, "http://example.org/orexis/world/simulation#fern", MOISTURE) is None
 
 
 def test_two_properties_of_one_subject_both_survive(query_with_readings):
@@ -181,15 +182,15 @@ def test_two_properties_of_one_subject_both_survive(query_with_readings):
     """
     b = Beliefs(genesis_store({("fern", MOISTURE): 0.18,
                                              ("fern", TEMPERATURE): 21.0}), "fern")
-    assert b.current_reading(FERN_URI, MOISTURE).value == 0.18
-    assert b.current_reading(FERN_URI, TEMPERATURE).value == 21.0
+    assert current_reading(b.query, FERN_URI, MOISTURE).value == 0.18
+    assert current_reading(b.query, FERN_URI, TEMPERATURE).value == 21.0
 
 
 def test_a_property_nothing_has_read_is_none_not_the_other_one(query_with_readings):
     """The substitution, guarded from the other side. Silence must not be answered with a
     number that happens to be about the same pot."""
     b = Beliefs(genesis_store({("fern", TEMPERATURE): 21.0}), "fern")
-    assert b.current_reading(FERN_URI, MOISTURE) is None
+    assert current_reading(b.query, FERN_URI, MOISTURE) is None
 
 
 def test_stale_reading_is_not_fresh():

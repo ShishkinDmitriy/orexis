@@ -18,7 +18,7 @@ from packages.capability.sensing.pointer import DEFAULT_POINTER, PointerError, r
 from agent.store import bindings
 from packages.capability.sensing.wiring import Sensor
 
-from conftest import build_agent, genesis_store, query_fn, wired_sensors, load_wired
+from conftest import build_agent, genesis_store, query_fn, wired_sensors, load_wired, reading_of
 
 AIR_TEMP = "http://example.org/orexis/water#AirTemperature"
 AIR_HUMIDITY = "http://example.org/orexis/water#AirHumidity"
@@ -110,9 +110,9 @@ def test_one_message_produces_an_observation_for_every_sensor_on_the_channel(mon
                    "sensor": "moisture_sensor_fern"})
 
     # all three survive AT ONCE — the point of keying an observation by subject AND property
-    assert agent.beliefs.current_reading(fern, MOISTURE).value == pytest.approx(0.183)
-    assert agent.beliefs.current_reading(fern, AIR_TEMP).value == pytest.approx(21.4)
-    assert agent.beliefs.current_reading(fern, AIR_HUMIDITY).value == pytest.approx(0.46)
+    assert reading_of(agent, subject_uri=fern, observed_property=MOISTURE).value == pytest.approx(0.183)
+    assert reading_of(agent, subject_uri=fern, observed_property=AIR_TEMP).value == pytest.approx(21.4)
+    assert reading_of(agent, subject_uri=fern, observed_property=AIR_HUMIDITY).value == pytest.approx(0.46)
 
 
 def test_values_from_one_read_carry_one_instant(monkeypatch):
@@ -138,7 +138,7 @@ def test_values_from_one_read_carry_one_instant(monkeypatch):
                   {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46,
                    "sensor": "moisture_sensor_fern"})
 
-    stamps = {agent.beliefs.current_reading(fern, p).result_time
+    stamps = {reading_of(agent, subject_uri=fern, observed_property=p).result_time
               for p in (MOISTURE, AIR_TEMP, AIR_HUMIDITY)}
     assert len(stamps) == 1, f"one read, {len(stamps)} instants: {sorted(map(str, stamps))}"
 
@@ -152,8 +152,8 @@ def test_a_sensor_whose_field_is_missing_records_nothing_and_says_so(monkeypatch
     with caplog.at_level("WARNING"):
         agent.deliver("sensors/moisture_sensor_fern/reading", {"moisture": 0.183})
 
-    assert agent.beliefs.current_reading(fern, MOISTURE).value == pytest.approx(0.183)
-    assert agent.beliefs.current_reading(fern, AIR_TEMP) is None
+    assert reading_of(agent, subject_uri=fern, observed_property=MOISTURE).value == pytest.approx(0.183)
+    assert reading_of(agent, subject_uri=fern, observed_property=AIR_TEMP) is None
     assert "air_temp_fern" in caplog.text and "/temperature" in caplog.text
 
 

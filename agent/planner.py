@@ -171,26 +171,10 @@ class Planner:
         #  it, which `orexis-validate` refuses for a stake and cannot for anything else.
         return 1.0
 
-    def _value_in(self, world, desire: Desire) -> float | None:
-        """What this desire's property reads in the world given."""
-        if desire.observed_property is None:
-            return None
-        return self._value_of(world, desire.observed_property)
-
-    def _value_of(self, world, observed_property: str) -> float | None:
-        """What one property reads in the world given — the predicted one, in a simulation."""
-        sosa = _SOSA
-        subject = rdflib.URIRef(self.me.acts_for) if self.me.acts_for else None
-        for obs in world.subjects(sosa.observedProperty,
-                                  rdflib.URIRef(observed_property)):
-            if subject is not None and (obs, sosa.hasFeatureOfInterest, subject) not in world:
-                continue
-            for value in world.objects(obs, sosa.hasSimpleResult):
-                try:
-                    return float(value)
-                except (TypeError, ValueError):
-                    return None
-        return None
+    #  `_value_in` and `_value_of` WERE HERE — the planner reading a property's value out of a
+    #  candidate world by walking sosa. Nothing here reads a value now: an effect rule reads
+    #  where the property stands from `$sensed` itself, and an actor sizing a step asks
+    #  sensing at the node's graph (`Module.size(query, graph, property)`).
 
     def _met_in(self, world, desire: Desire, graph: str | None = None) -> bool:
         """Whether the desire's OWN shape is satisfied in this world.
@@ -544,10 +528,14 @@ class Planner:
         #  own quads — the same graphs `_beliefs` flattens — because the signature works in
         #  pyoxigraph terms and the rdflib copy exists only for pySHACL.
         store = self.agent.beliefs
-        self._base_facts = signature.facts(
+        #  Which beliefs are UPSERTED, and by what — declared by the package that writes them
+        #  (`ag:keyedBy`, `ag:carries` on the node's class), read once per pass so the signature
+        #  canonicalises a reading without this file knowing what one looks like.
+        self._keys = signature.keys_of(store.query)
+        self._base_facts = signature.facts((
             quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id),
                              SENSED_GRAPH, INSTRUMENTS_GRAPH]
-            for quad in store.quads(iri))
+            for quad in store.quads(iri)), self._keys)
         return _Node(world=base, graph=SENSED_GRAPH,
                      urgency=self._urgency_in(base, SENSED_GRAPH, desire))
 
@@ -570,8 +558,8 @@ class Planner:
         world = effects.applied(node.world, added, retracted)
         #  Where this node stands, advanced by the same diff that built the world above. The
         #  step's triples go in as they arrived — pyoxigraph terms, no conversion.
-        diff = signature.advance(node.diff, signature.facts(added),
-                                 signature.facts(retracted), self._base_facts)
+        diff = signature.advance(node.diff, signature.facts(added, self._keys),
+                                 signature.facts(retracted, self._keys), self._base_facts)
         #  The graph BEFORE the urgency, because the urgency is the measure asked of it: the
         #  candidate's readings must exist in the imaginarium for `$sensed` to name them.
         graph = self.imaginarium.reached(node.graph, taken, added, retracted)
@@ -604,17 +592,13 @@ class Planner:
         """
         action = row.action if row is not None else None
         prop = desire.observed_property if desire else None
-        value = desire.value if desire else None
         if prop is None and row is not None:
             #  A duty names no property, and neither does a call — but the LEVER does (#255,
             #  #359): the refill is an Acquire on this agent's own stake, and its rule binds
             #  the row's property and predicts from where that property stands in the node's
             #  world. Every want without a property is sized this way.
             prop = row.observed_property
-        if node is not None and prop is not None:
-            here = self._value_of(node.world, prop)
-            if here is not None:
-                value = here
+        graph = node.graph if node is not None else SENSED_GRAPH
         return {
             "me": f"<{self.me.uri}>",
             #  A duty's rules read the record: WHICH claim, and WHERE the debts are kept —
@@ -624,13 +608,11 @@ class Planner:
             "subject": f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>",
             "property": f"<{prop}>" if prop else "<urn:nothing>",
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
-            "sensed": f"<{node.graph if node is not None else SENSED_GRAPH}>",
-            "value": value if value is not None else 0,
-            "litres": self._dose(desire, value, action, prop) if desire else 0.0,
+            "sensed": f"<{graph}>",
+            "litres": self._dose(action, prop, graph) if desire else 0.0,
         }
 
-    def _dose(self, desire: Desire, value: float | None = None,
-              action: str | None = None, observed_property: str | None = None) -> float:
+    def _dose(self, action: str | None, observed_property: str | None, graph: str) -> float:
         """How much this act would move — ASKED OF WHOEVER WOULD TAKE IT, never computed here.
 
         Each lever's owner sizes its own act, and the two owners size differently: an actuator
@@ -640,32 +622,24 @@ class Planner:
         reach, and be wrong in the direction that looks like a device lying — the single-source
         argument #238 made for an effect's magnitude and #247 for its timing.
 
-        ASKED OF THE TAKER, and getting that wrong is what #268 was underneath. Asking the
-        actuator about everything returned 0.0 for every Acquire, because a plant that BUYS its
-        water holds no actuator — so the effect rule predicted a world identical to the one the
-        agent was in, and the search concluded that buying does not help. That is worse than the
-        blindness it replaced: a partial plan defers to the reflex, but a plan that confidently
-        finds nothing better STOPS the agent bidding.
+        ASKED OF THE TAKER, found the way execution finds it — the action's `ag:takenBy` family
+        — and asked ABOUT A WORLD: the imaginarium at this node's graph, so a second dose is
+        sized from where the first one left the property (#254). The taker reads the value
+        there through sensing; nothing here knows what a reading looks like.
 
         Zero for a means nobody sizes. A zero dose predicts the value it started from, and a
         world no better than the one you are in is refused by the satisficing test one line
         later — so an unsized lever arrives at "this does not help" by the same road as every
         other, rather than by an exception.
         """
-        value = desire.value if value is None else value
-        observed_property = observed_property or desire.observed_property
-        if observed_property is None or value is None or action is None:
+        if observed_property is None or action is None:
             return 0.0
-        #  ASKED OF WHOEVER TAKES THE ROW, found the way execution finds it: the means'
-        #  `ag:takenBy` family, then every provider, first answer wins. No means is named
-        #  here any more — the table that dispatched Acquire to bidding and Actuate to
-        #  actuation was the kernel's last hold on the latter word.
         from .execution import taken_by
 
         family = taken_by(self.agent.beliefs.query, action)
         litres = None
         for actor in (self.agent.providers(family) if family else []):
-            litres = actor.size(observed_property, value)
+            litres = actor.size(self.imaginarium.query, graph, observed_property)
             if litres is not None:
                 break
         #  NEVER NEGATIVE, and this is the guard that matters most in the whole file. Sizing is
@@ -694,7 +668,6 @@ class Planner:
 
 
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
-_SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
 _AG = rdflib.Namespace("http://example.org/orexis#")
 #  No means or family is named here any more: sizing is `Module.size`, asked of the row's
 #  taker through `ag:takenBy` exactly as execution finds it.

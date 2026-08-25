@@ -54,13 +54,17 @@ debts, hosting the calls — and `regions.desires_of` becomes the *assembly*: th
 measure asked of the choir, the pick, and nothing sosa-shaped. `Desire`'s `value` is filled
 by whoever contributed it.
 
-**What a reading looks like is asked, not walked.** Three hooks, all answered by sensing:
-`current_reading(subject, property)` becomes a sensing provider method (bidding and actuation
-already call `fresh_reading` on it); the planner's `_value_of` becomes `Module.value_in(query,
-graph, subject, property)`; and the signature's "never the timestamp" becomes a declaration —
-a package marks the predicates that do not count as *where a plan stands* (`ag:volatile`, a
-kernel term sensing puts on `sosa:resultTime`), and `signature.py` reads the term, not the
-vocabulary.
+**What a reading looks like is asked, not walked** (#376, landed). `current_reading` is a
+sensing provider method (bidding, actuation and hosting reach it through `agent.provider`, as
+they already reached `fresh_reading`); the keeper is handed the baseline a watch leaves from by
+the actor that opens it; the planner reads no value at all — an effect rule reads where the
+property stands from `$sensed` itself, and an actor sizing a step (`Module.size(query, graph,
+property)`) asks sensing's `value_in` at the node's graph; and the signature's "never the
+timestamp" is a declaration sensing makes on the class it writes — `sosa:Observation
+ag:keyedBy` its feature and property, `ag:carries` its result — which `signature.py` reads once
+per pass and canonicalises by, naming no vocabulary. (The record first said `ag:volatile`;
+saying what a node is keyed by and what it carries is the same declaration from the side that
+keeps a look from being a new world, and it needs no list of what to ignore.)
 
 **The kernel keys nothing by property.** The sovereign's ruling, sharper than the first draft
 of this record: a property is a sensing notion, and a BDI engine has wants, acts and

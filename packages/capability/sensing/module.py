@@ -53,6 +53,7 @@ from . import pointer
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .observation import Observations
 from .wiring import sensors_of
+from . import readings
 from .scaling import scaling_for
 from .terms import (FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S,
                     SUBSCRIBING)
@@ -531,7 +532,7 @@ class SensingModule(Module):
         """
         out = []
         for sensor in self.sensors:
-            reading = self.agent.beliefs.current_reading(sensor.subject, sensor.observes)
+            reading = readings.current_reading(self.agent.beliefs.query, sensor.subject, sensor.observes)
             if reading is None or not reading.is_fresh(
                     self.stale_after_s(sensor.subject, sensor.observes)):
                 out.append((sensor.subject, sensor.observes))
@@ -545,9 +546,19 @@ class SensingModule(Module):
         is always listening, and would then drive every reading this way.
         """
 
+    def current_reading(self, subject_uri: str, observed_property: str):
+        """The newest reading of one property of one subject, whatever its age — the door every
+        other capability comes through, now that what a reading looks like is this package's."""
+        return readings.current_reading(self.agent.beliefs.query, subject_uri, observed_property)
+
+    def value_in(self, query, graph: str, subject_uri: str, observed_property: str):
+        """What a property reads in the world `query` answers about, at `graph` — the planner's
+        question about a candidate world, and an actor's when it sizes a step there."""
+        return readings.value_in(query, graph, subject_uri, observed_property)
+
     def fresh_reading(self, subject_uri: str, observed_property: str):
         """The latest reading of one property, or None if it is older than I trust."""
-        reading = self.agent.beliefs.current_reading(subject_uri, observed_property)
+        reading = readings.current_reading(self.agent.beliefs.query, subject_uri, observed_property)
         if reading is None:
             return None
         return reading if reading.is_fresh(self.stale_after_s(subject_uri, observed_property)) else None
@@ -850,7 +861,7 @@ class SubscribingModule(SensingModule):
             for peer in group:
                 if peer.local_id == sensor.local_id:
                     continue
-                reading = self.agent.beliefs.current_reading(peer.subject, peer.observes)
+                reading = readings.current_reading(self.agent.beliefs.query, peer.subject, peer.observes)
                 if reading is None:
                     continue
                 claims.append((
@@ -969,7 +980,7 @@ class SubscribingModule(SensingModule):
         else:
             self.beliefs = self.agent.desires.read(SUBSCRIBING_PICKS)
         for sensor in self.sensors:
-            reading = self.agent.beliefs.current_reading(sensor.subject, sensor.observes)
+            reading = readings.current_reading(self.agent.beliefs.query, sensor.subject, sensor.observes)
             if reading is not None:
                 self.set_cadence(
                     sensor,

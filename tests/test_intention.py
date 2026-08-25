@@ -22,7 +22,7 @@ from agent.graphs import intentions_graph
 from packages.capability.market.terms import ACQUIRING
 from packages.capability.sensing.terms import OBSERVING
 
-from conftest import MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors
+from conftest import MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
 
 FERN = "http://example.org/orexis#fern_agent"
 
@@ -210,7 +210,8 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
         "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
     # and the end's verdict, which is the payoff line of the whole arc (#131)
-    assert keeper.expect(uri, MOISTURE, "the dose owes a rise", rises=True)
+    assert keeper.expect(uri, MOISTURE, "the dose owes a rise", rises=True,
+                         baseline=reading_of(fern, MOISTURE))
     fern.metrics.take_events()
     keeper.on_reading_recorded(fern.me.acts_for, MOISTURE, 0.50)
     verdicts = fern.metrics.take_events()

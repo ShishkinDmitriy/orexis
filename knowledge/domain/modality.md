@@ -39,7 +39,7 @@ fourth ruling.
 
 `orexis-ask` names a modality, required, with no default — the third ruling, which is "there
 is no default world" said of a mind — and a module asks for the modality it means
-(`agent.desires.read`, `agent.beliefs.current_reading`). What makes the address necessary is
+(`agent.desires.read`, sensing's `current_reading`). What makes the address necessary is
 the first paragraph: a question that did not say which assertion it meant would be answered
 with a value where it wanted a bound.
 

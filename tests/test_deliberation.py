@@ -24,7 +24,7 @@ from packages.capability.market.terms import ACQUIRING
 from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors
+from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
 
 
 @pytest.fixture
@@ -137,10 +137,14 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     fern = make("fern")
     open_round_for(fern, "fern")   # a buying row exists only while a round is open (#358)
     decider = decider_of(fern)
+    #  The WORLD holds the value, not the want: a reading is sensing's, and the rule sizing
+    #  a purchase reads where the property stands from the sensed graph.
     for value in (0.10, 0.54):
+        write_reading(fern, value, MOISTURE)
         stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) == ACQUIRING, f"thirsty at {value} and not buying"
     for value in (0.55, 0.80):
+        write_reading(fern, value, MOISTURE)
         stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) is None, f"content at {value} and buying anyway"
 

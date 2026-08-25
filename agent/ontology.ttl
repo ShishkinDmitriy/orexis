@@ -704,6 +704,16 @@ ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Action ;
 
 ag:Means a owl:Class ; rdfs:label "Means" .
 
+#################  An UPSERTED belief, for the planner's signature  #################
+
+ag:keyedBy a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
+    rdfs:label "keyed by" ;
+    rdfs:comment "A predicate that IDENTIFIES a node of this class — the writer upserts one node per key. Declared by the package that writes such nodes (sensing: an observation is keyed by what it observes of what), and read by the planner's cycle detection, which canonicalises a keyed node to its class, its key values and what it carries — never its identity. The kernel used to spell sosa here by hand." .
+
+ag:carries a owl:ObjectProperty ; rdfs:domain owl:Class ; rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
+    rdfs:label "carries" ;
+    rdfs:comment "The predicate a keyed node STATES — the value that makes two worlds different. Everything else on the node (an instant, who made it) is not where a plan stands: a look that predicts the value it already holds nets to nothing, which is what keeps looking from being a new world every time." .
+
 #################  What an action IS  #################
 
 ag:Action a owl:Class ; rdfs:label "Action" ;

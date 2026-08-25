@@ -121,7 +121,8 @@ What that rests on is the signature's canonical form.
 [#258](https://github.com/ShishkinDmitriy/orexis/issues/258) made the signature carry where a
 plan IS — the world's net diff against the base, in canonical facts — and a look still nets to
 nothing there: an observation canonicalises to its upsert key and its value, never its
-`sosa:resultTime`, and a valueless first look states no fact at all (see
+`sosa:resultTime` — sensing declares what an observation is keyed by and what it carries, and
+the signature reads that — and a valueless first look states no fact at all (see
 `agent/signature.py`). A signature that counted a fresher timestamp
 as somewhere new would make "look, then look" a new world every time. Chaining past a look
 becomes a real question again exactly there, and nowhere earlier.

@@ -15,7 +15,7 @@ from packages.capability.actuation.terms import DOSING
 from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from conftest import build_agent, genesis_store, desires_build, open_round_for
+from conftest import build_agent, genesis_store, desires_build, open_round_for, write_reading
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -105,8 +105,12 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     from agent.desire import Desire
 
     deliberator = gardener.deliberator
+    #  The world holds the value; the want does not. Written OLD, so the freshness want the
+    #  tail of this test asks about is still unmet — a stake judges the number it has.
+    write_reading(gardener, 0.10, MOIST, age_s=10_000)
     assert deliberator.propose_for(
         Desire(uri="urn:w", urgency=0.6, observed_property=MOIST, value=0.10)) == DOSING
+    write_reading(gardener, 0.30, MOIST, age_s=10_000)
     assert deliberator.propose_for(
         Desire(uri="urn:w", urgency=0.1, observed_property=MOIST, value=0.25)) is None, \
         "above the aim, nothing — as ever"
