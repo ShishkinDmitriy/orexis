@@ -36,7 +36,9 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import ACTUATION, AG, MARKET, MQTT, SENSING, SOSA, WORLD_GRAPH
+from agent.ontology import ACTUATION, AG, MARKET, MQTT, SENSING, WORLD_GRAPH
+
+from .namespaces import SOSA
 from agent import genesis
 from agent.genesis import world_dir, worlds
 

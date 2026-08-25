@@ -108,9 +108,13 @@ it; it no longer has to say it.
 2. The stake as sensing's want — `desires.ru`, `Region`, `gaps_of`, the region shapes, and
    the kernel's `desires_of` dissolved into the modules' own `desires()`; the aim with them
    (#377, landed).
-3. Reconcile: `store.PREFIXES` still declares `sosa`/`ssn-system` because prefixes are
-   discovered from ontologies; the kernel's own files should then name neither, and the
-   ratchet's prefixed-name blind spot (#344) is what would keep it so (#378).
+3. Reconcile (#378, landed): `store.PREFIXES` keeps six vocabularies the kernel speaks itself
+   and DISCOVERS the rest off whichever ontology declares them — `sosa:` reaches a query because
+   sensing says so; `SOSA` left `agent/ontology.py` for `onboarding/namespaces.py`; the kernel's
+   Turtle declares no package prefix it does not use; and the ratchet reads the prefixed form,
+   every namespace, and resolves each term it finds (#344). What the widening found was the
+   bus — `mqtt:` in `agent/world.py` and in the simulated-device shape — listed as debt with
+   what removes it.
 4. No property in the kernel — wants by node, intentions by (act, want), rows and acts
    carrying the want, the actors' door by want, the ledger migrated
    (#380). The largest step, and the one that makes the kernel exactly the BDI engine.

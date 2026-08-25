@@ -33,7 +33,9 @@ import logging
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import worlds
-from agent.ontology import AG, SENSING, SOSA, WORLD_GRAPH
+from agent.ontology import AG, SENSING, WORLD_GRAPH
+
+from .namespaces import SOSA
 
 SSN_SYSTEM = "http://www.w3.org/ns/ssn/systems/"
 SSN = "http://www.w3.org/ns/ssn/"

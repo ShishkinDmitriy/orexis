@@ -51,12 +51,19 @@ adding a directory.
 store that imported them back would close the loop. Reading Turtle text needs no import and runs
 before any capability's Python.
 
-**The external vocabularies stay in the kernel.** `rdfs:`, `owl:`, `xsd:`, `sosa:`, `prov:`, `rdf:`
-are standardised and stable, and a package that could rebind `rdfs:` could make `rdfs:subClassOf`
-mean what it liked — the walk [one-graph-both-engines-read](one-graph-both-engines-read.md)
-materialises and every shape leans on. `ag:` is *not* in that list: it is READ off the ontology
-that declares it, exactly as a package's is, and hard-coding it would have made it an exception
-for no reason but habit.
+**The kernel's own external vocabularies stay in the kernel, and the rest are discovered.**
+`rdf:`, `rdfs:`, `owl:`, `xsd:`, `sh:`, `prov:` are standardised, stable, and the language the
+kernel's own structure is written in; a package that could rebind `rdfs:` could make
+`rdfs:subClassOf` mean what it liked — the walk
+[one-graph-both-engines-read](one-graph-both-engines-read.md) materialises and every shape leans
+on. Every other external vocabulary — `sosa:`, `ssn-system:`, `unit:`, `schema:`, `dcterms:` — is
+READ off whichever ontology declares it, exactly as a package's own namespace is, since
+[the-stake-is-sensings-want](the-stake-is-sensings-want.md)'s third step: the kernel speaks no
+reading, so it does not declare the vocabulary readings are written in. What the old "not a
+package's to bind" argument needed is the loader's refusal of one label bound to two IRIs, and
+that holds without the kernel naming the vocabulary. (This said `sosa:` was the kernel's; it was,
+while the kernel derived the stake.) `ag:` is read the same way, off the ontology that declares
+it, and hard-coding it would have made it an exception for no reason but habit.
 
 **AMENDED in one word.** This said `ag:` arrives "like any other package's, because the base
 vocabulary is a package". It is not one any more — it is the kernel, `agent/ontology.ttl`, not

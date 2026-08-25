@@ -26,21 +26,23 @@ is. The rule is `knowledge/decisions/the-kernel-names-no-package-word.md`, and i
 exceptions: the kernel names no package's word, in RDF as in Python, because a package is
 optional and the core depends on none of them.
 
-WHAT IS NOT IN SCOPE, said plainly so a green run is not read as more than it is: the SPELLED-OUT
-IRI, and only that. A kernel query saying `market:bidsIn` with the prefix declared for it is
-invisible here, and `agent/world.py` is full of them — it loads an agent's own view of itself
-through the market vocabulary, which predates #334 and is untouched by it. That is the larger
-surface and a different argument, so this guard does not quietly start making it. What the
-spelled-out form has that the prefixed one does not is silence on the way out: a prefixed name is
-at least text a rename can grep for, while an interpolated IRI goes on matching nothing.
+BOTH FORMS, SINCE #378. The scan first counted the spelled-out IRI alone, and said so: a kernel
+query saying `market:bidsIn` with the prefix declared for it was invisible, and `agent/world.py`
+was full of them. The wiring left the kernel for the packages before this widened, so what the
+prefixed scan found on the day it landed was four `mqtt:` terms in one query — the bus. It looks
+for the prefixed form where a prefixed form MEANS something: a query string in Python (found by
+the tokenizer, never a docstring or a comment), and a rule or a Turtle file with its comments
+and its string literals stripped. Prose that names a package's word is not a dependency on it.
 
-That exclusion still holds, and #337 sharpened it rather than overturning it. The rule now covers
-the prefixed form too — it covers every form — but this guard is a COUNT, and a count is the wrong
-instrument for a term that is merely misspelled. `agent/readings.rq:23` reads `sensing:staleAfterS`
-prefixed: zero occurrences here, and the same dependency as the spelled-out one two files away. So
-what the prefixed form needs first is a check that the term still RESOLVES against the package
-declaring it (#344), and widening this scan to `agent/world.py`'s market vocabulary stays the
-larger, later argument.
+AND EVERY NAMESPACE OF OURS, not five families by hand. `loader.prefixes()` is what the ratchet
+scans for, less `ag:`, so a transport's or a part's namespace in the kernel counts exactly as a
+capability's does — which is what the rule says.
+
+AND IT RESOLVES (#344). A count cannot see a term that is merely misspelled: a package renames a
+word in its own namespace, the kernel goes on naming the old one, the pattern matches nothing
+and no engine says so. So every term found here, in either form, must be a subject some ontology
+declares — except the retired spellings `vocabulary.MOVED` carries on its left-hand side, which
+are listed as such below and are the one kind of reference that is SUPPOSED to name nothing.
 
 The trees are asked of `loader.sources()` rather than globbed, for the reason that function
 exists: a glob is a layout, and layouts move. Each kind is asserted non-empty below.
@@ -48,24 +50,37 @@ exists: a glob is a layout, and layouts move. Each kind is asserted non-empty be
 
 from __future__ import annotations
 
+import io
 import re
+import tokenize
 from collections import Counter
+
+import rdflib
 
 import pytest
 
 from agent import loader
 
-# The namespace every package of ours hangs off. Spelled once; the allowlist keys carry only
-# the `family#term` tail, which is what a reader is actually checking.
-_STEM = "http://example.org/orexis/"
-
-# The five capability families, from #334. A bare `family#` with no local name is a namespace
-# constant or a PREFIX line, and counts: it is the kernel holding another tree's namespace,
-# which is the thing being ratcheted down.
-_FAMILIES = ("actuation", "market", "reporting", "review", "sensing")
+# Every namespace of ours that is not the kernel's own, label -> IRI, asked of the loader
+# rather than listed: a sixth capability, a new transport or a new part is scanned for the day
+# it declares a prefix. The allowlist keys carry only the `label#term` tail, which is what a
+# reader is actually checking. A bare `family#` with no local name is a namespace constant or
+# a PREFIX line, and counts: it is the kernel holding another tree's namespace, which is the
+# thing being ratcheted down.
+_NAMESPACES = {label: iri for label, iri in loader.prefixes().items() if label != "ag"}
+_LABEL_OF = {iri: label for label, iri in _NAMESPACES.items()}
 
 _PACKAGE_IRI = re.compile(
-    re.escape(_STEM) + "(" + "|".join(_FAMILIES) + ")#([A-Za-z][A-Za-z0-9]*)?")
+    "(" + "|".join(re.escape(iri) for iri in sorted(_NAMESPACES.values(), key=len, reverse=True))
+    + ")([A-Za-z][A-Za-z0-9]*)?")
+
+# The prefixed form: `market:bidsIn`. Not preceded by anything that would make it part of a
+# longer token — an IRI's scheme, a path, a fragment.
+_PREFIXED = re.compile(
+    r"(?<![\w/#:.-])(" + "|".join(re.escape(l) for l in sorted(_NAMESPACES, key=len, reverse=True))
+    + r"):([A-Za-z][A-Za-z0-9]*)")
+
+_QUERY_WORDS = ("SELECT", "INSERT", "DELETE", "CONSTRUCT", "ASK", "WHERE", "GRAPH", "PREFIX")
 
 # Every file kind the kernel ships that can carry an IRI, with what it is doing here. `*.ttl`
 # and `*.ru` are in for the reason the docstring gives; `*.rq` carries none today and is in
@@ -86,22 +101,67 @@ _KERNEL_FILES = {
 
 
 def _tail(match: re.Match) -> str:
-    """`market#Raises`, or `market#` for a bare namespace."""
-    return f"{match.group(1)}#{match.group(2) or ''}"
+    """`market#Raises`, or `market#` for a bare namespace — the same key for either form."""
+    return f"{_LABEL_OF[match.group(1)]}#{match.group(2) or ''}"
+
+
+def _query_strings(text: str) -> list[str]:
+    """The string literals of a Python file that carry SPARQL — never a docstring, never a
+    comment. An f-string is joined back from its pieces, because `{{` splits one and a piece
+    may then hold the term without the keyword that marks it as a query."""
+    toks = list(tokenize.generate_tokens(io.StringIO(text).readline))
+
+    def is_docstring(i: int) -> bool:
+        j = i - 1
+        while j >= 0 and toks[j].type in (tokenize.NL, tokenize.COMMENT):
+            j -= 1
+        return j < 0 or toks[j].type in (tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT,
+                                         tokenize.ENCODING)
+
+    out, i = [], 0
+    while i < len(toks):
+        tok = toks[i]
+        if tok.type == tokenize.STRING and not is_docstring(i):
+            out.append(tok.string)
+        elif tok.type == getattr(tokenize, "FSTRING_START", -1):
+            doc, pieces = is_docstring(i), []
+            i += 1
+            while toks[i].type != tokenize.FSTRING_END:
+                if toks[i].type == tokenize.FSTRING_MIDDLE:
+                    pieces.append(toks[i].string)
+                i += 1
+            if not doc:
+                out.append("".join(pieces))
+        i += 1
+    return [s for s in out if any(w in s.upper() for w in _QUERY_WORDS)]
+
+
+def _without_prose(text: str) -> str:
+    """A rule or a Turtle file with its comments and its string literals blanked, so that a
+    prefixed name found in it is one the parser would read as a term."""
+    text = re.sub(r'"""(?:.|\n)*?"""', '""', text)
+    text = re.sub(r'"(?:[^"\\\n]|\\.)*"', '""', text)
+    return re.sub(r"#[^\n]*", "", text)
 
 
 def _occurrences() -> Counter[tuple[str, str]]:
-    """Every package-namespace IRI the kernel spells out, by (file, tail), with multiplicity.
+    """Every package-namespace term the kernel names, by (file, tail), with multiplicity —
+    spelled out anywhere in the file, or prefixed where a prefixed form means something.
 
     Counted rather than set-collected so that a SECOND use of an already-allowed term is still a
     new reference. The ratchet is about the number going down.
     """
     found: Counter[tuple[str, str]] = Counter()
-    for paths in _KERNEL_FILES.values():
+    for kind, paths in _KERNEL_FILES.items():
         for path in paths:
             rel = path.relative_to(loader.REPO_ROOT).as_posix()
-            for match in _PACKAGE_IRI.finditer(path.read_text()):
+            text = path.read_text()
+            for match in _PACKAGE_IRI.finditer(text):
                 found[(rel, _tail(match))] += 1
+            haystacks = _query_strings(text) if kind == "*.py" else [_without_prose(text)]
+            for hay in haystacks:
+                for match in _PREFIXED.finditer(hay):
+                    found[(rel, f"{match.group(1)}#{match.group(2)}")] += 1
     return found
 
 
@@ -146,6 +206,32 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     ("agent/ontology.py", "sensing#"): (1, "namespace constant, same"),
     ("agent/ontology.py", "actuation#"): (1, "namespace constant, same"),
     ("agent/ontology.py", "review#"): (1, "namespace constant, same"),
+    #  And the eight the widened scan (#378) found beside them — a transport, a bus, five parts
+    #  and a microcontroller — all interpolated by onboarding's generators and by nothing in the
+    #  kernel. `SOSA` was the first of the block to move to `onboarding/namespaces.py`; these
+    #  follow it the same way, and each removal is one entry off this list.
+    ("agent/ontology.py", "mqtt#"): (1, "namespace constant, for onboarding's interpolation"),
+    ("agent/ontology.py", "mc#"): (1, "namespace constant, same"),
+    ("agent/ontology.py", "dht11#"): (1, "namespace constant, same"),
+    ("agent/ontology.py", "esp32#"): (1, "namespace constant, same"),
+    ("agent/ontology.py", "i2c#"): (1, "namespace constant, same"),
+    ("agent/ontology.py", "onewire#"): (1, "namespace constant, same"),
+    ("agent/ontology.py", "probe#"): (1, "namespace constant, same"),
+    ("agent/ontology.py", "rgbled#"): (1, "namespace constant, same"),
+
+    # KIND 5 — the BUS. `agent/world.py` asks the world where the broker is before any package's
+    # Python has loaded, in the transport's own words, and `ag:SimulatedDeviceShape` says a
+    # stand-in must be reachable the way a real device is — on a bus, or sharing a reading topic.
+    # Found by the prefixed scan (#378), which is what made them visible; they were the whole of
+    # what "agent/world.py is full of market:bidsIn" had left once the wiring went to the
+    # packages. What removes them: the transport package answering "where is the bus" itself,
+    # and the reachability shape living with it — a seam, not yet an issue.
+    ("agent/world.py", "mqtt#MessageBus"): (1, "the bus: where the broker is, asked before any package loads"),
+    ("agent/world.py", "mqtt#brokerHost"): (1, "the bus, same"),
+    ("agent/world.py", "mqtt#brokerPort"): (1, "the bus, same"),
+    ("agent/world.py", "mqtt#brokerTlsPort"): (1, "the bus, same"),
+    ("agent/shapes.ttl", "mqtt#onBus"): (2, "a stand-in must be reachable like a real device — the transport's words for reachable"),
+    ("agent/shapes.ttl", "mqtt#readingTopic"): (2, "same shape, the shared-topic half"),
 
     # KIND 4 — the kernel's RDF, found by widening the scan past `agent/*.py`. #334's three
     # kinds are all Python and none of them covers these, so they sat here marked UNCLASSIFIED
@@ -231,26 +317,77 @@ def test_the_scan_pattern_matches_the_shape_it_is_looking_for():
     a bare namespace — against literals, so the pattern is known to work whatever the kernel
     happens to contain.
     """
-    assert [_tail(m) for m in _PACKAGE_IRI.finditer(f'"{_STEM}market#Bidding"')] == \
+    stem = "http://example.org/orexis/"
+    assert [_tail(m) for m in _PACKAGE_IRI.finditer(f'"{stem}market#Bidding"')] == \
         ["market#Bidding"]
-    assert [_tail(m) for m in _PACKAGE_IRI.finditer(f"PREFIX sensing: <{_STEM}sensing#>")] == \
+    assert [_tail(m) for m in _PACKAGE_IRI.finditer(f"PREFIX sensing: <{stem}sensing#>")] == \
         ["sensing#"]
     assert not _PACKAGE_IRI.findall("http://example.org/orexis#Intention"), \
         "the kernel's own namespace is not a package's and must not be swept up"
+    #  The prefixed form, and the three places it must NOT fire: inside an IRI, on the
+    #  kernel's own prefix, and in prose the tokenizer keeps out of a query string.
+    assert [m.group(1, 2) for m in _PREFIXED.finditer("?a market:bidsIn ?v ; ag:localId ?i")] == \
+        [("market", "bidsIn")]
+    assert not _PREFIXED.findall(f"<{stem}market#bidsIn>")
+    assert _query_strings('_Q = f"""SELECT ?b WHERE {{ ?b a mqtt:MessageBus }}"""') == \
+        ["SELECT ?b WHERE { ?b a mqtt:MessageBus }"]
+    assert _query_strings('def f():\n    """A SELECT over mqtt:MessageBus rows."""\n') == []
+    assert _without_prose('x sh:message "sensing:polls" . # sensing:polls\n') == 'x sh:message "" . \n'
 
 
-def test_the_families_scanned_for_are_still_the_capability_packages_on_disk():
-    """#334 named five families by hand. If a sixth capability package lands, or one is
-    renamed, the pattern above goes on matching and silently stops covering it — so the list is
-    held to the tree rather than trusted. Widening `_FAMILIES` is the fix, and deciding whether
-    the new package's namespace belongs in the kernel is the point of being asked."""
+def test_every_capability_package_on_disk_is_among_the_namespaces_scanned_for():
+    """#334 named five families by hand; the scan asks the loader now, so a sixth is covered
+    the day it declares a prefix. This holds the two together: a capability package whose
+    namespace the loader does not report is one the ratchet cannot see."""
     on_disk = {p.name for p in (loader.PACKAGES_ROOT / "capability").iterdir()
                if p.is_dir() and not p.name.startswith("__")}
     assert on_disk, "no capability packages found — the tree has moved and this checks nothing"
-    assert on_disk == set(_FAMILIES), (
-        f"the capability families are {sorted(on_disk)} but this file scans for "
-        f"{sorted(_FAMILIES)} — reconcile them, and say in the allowlist what the kernel may "
-        "do with the difference")
+    assert on_disk <= set(_NAMESPACES), (
+        f"{sorted(on_disk - set(_NAMESPACES))} declare no namespace the loader reports, so the "
+        "kernel could name their words unseen")
+    assert len(_NAMESPACES) > len(on_disk), \
+        "only the capability families are scanned for — the transports and the parts are not"
+
+
+# --- every term named still exists (#344) -----------------------------------------------------
+
+#  The left-hand side of `vocabulary.MOVED`: spellings that were RETIRED, which the kernel names
+#  precisely because nothing declares them any more. The one kind of reference that is supposed
+#  to resolve to nothing.
+RETIRED = frozenset(
+    key for key, (_, why) in ALLOWED.items() if why.startswith("migration: a retired spelling"))
+
+
+def _declared() -> set[str]:
+    """Every subject any ontology or actions file declares — the union T-Box, read off the
+    files. An action node (`market:Offering`) is declared in its package's `actions.ttl`."""
+    out: set[str] = set()
+    for path in loader.ontology_files() + loader.files(loader.ACTIONS):
+        out.update(str(s) for s in rdflib.Graph().parse(path, format="turtle").subjects()
+                   if isinstance(s, rdflib.URIRef))
+    return out
+
+
+def test_every_package_term_the_kernel_names_is_one_its_package_declares():
+    """A rename in a package's own namespace must not leave the kernel naming the old word: the
+    pattern would match nothing, and no engine says so — the failure every-term-in-its-own-house
+    records biting four times in one sweep. So each term found, in either form, is resolved
+    against what the ontologies declare, and the retired spellings are the only ones excused."""
+    found = _occurrences()
+    assert found, "the scan found nothing at all — it is not reading the kernel"
+    declared = _declared()
+    assert declared, "no ontology declared a subject — the loader found no files"
+    unresolved = sorted(
+        (rel, tail) for rel, tail in found
+        if tail.split("#", 1)[1] and (rel, tail) not in RETIRED
+        and _NAMESPACES[tail.split("#", 1)[0]] + tail.split("#", 1)[1] not in declared)
+    assert not unresolved, (
+        f"the kernel names package terms no ontology declares: {unresolved}. Either the "
+        "package renamed its word and the kernel kept the old spelling, or the term never "
+        "existed — both match nothing, silently."
+    )
+    #  The check can fail: a spelling nothing declares is seen as such.
+    assert _NAMESPACES["sensing"] + "NotAThingAnyPackageDeclares" not in declared
 
 
 # --- the ratchet itself -----------------------------------------------------------------------

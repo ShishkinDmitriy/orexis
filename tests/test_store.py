@@ -151,13 +151,34 @@ def test_a_prefix_meaning_two_things_is_refused(tmp_path, monkeypatch):
         loader.prefixes.cache_clear()
 
 
-def test_an_external_vocabulary_is_not_a_packages_to_move(monkeypatch):
-    """`rdfs:` and friends stay in the kernel. They are standardised and stable, and a package
-    that could rebind one could make `rdfs:subClassOf` mean whatever it liked — which is exactly
-    the walk `agent/inference.py` materialises and every shape leans on.
+def test_the_kernels_own_vocabularies_are_its_own_and_the_rest_are_discovered(monkeypatch):
+    """`rdfs:` and its five companions stay hard-coded: standardised, stable, and the language
+    the kernel's own structure is written in — a package that could rebind one could make
+    `rdfs:subClassOf` mean whatever it liked, which is exactly the walk `agent/inference.py`
+    materialises. Everything else external — `sosa:` first of all — is READ off whichever
+    ontology declares it (#378): the kernel speaks no reading, so it does not declare the
+    vocabulary readings are written in; sensing does, and the label reaches a query that way.
     """
-    assert {"rdfs", "owl", "xsd", "sosa", "prov", "rdf"} <= store.DECLARED
-    assert not {"rdfs", "owl", "xsd", "sosa", "prov", "rdf"} & set(loader.prefixes())
+    assert {"rdf", "rdfs", "owl", "xsd", "sh", "prov"} <= set(store._KERNEL)
+    assert not set(store._KERNEL) & set(loader.prefixes())
+    assert "sosa" not in store._KERNEL
+    assert {"sosa", "ssn-system", "unit", "schema"} <= set(loader.external_prefixes())
+    assert {"sosa", "ssn-system", "unit", "schema", "rdf"} <= store.DECLARED
+
+
+def test_one_external_label_bound_two_ways_is_refused(tmp_path, monkeypatch):
+    """The whole of the ownership argument, mechanised: a package cannot rebind `unit:` past
+    this, so the kernel need not hold the label to keep it honest."""
+    a = tmp_path / "a.ttl"; b = tmp_path / "b.ttl"
+    a.write_text("@prefix unit: <http://qudt.org/vocab/unit/> .\n")
+    b.write_text("@prefix unit: <http://example.com/not-qudt/> .\n")
+    monkeypatch.setattr(loader, "ontology_files", lambda: (a, b))
+    loader.external_prefixes.cache_clear()
+    try:
+        with pytest.raises(RuntimeError, match="One label, one namespace"):
+            loader.external_prefixes()
+    finally:
+        loader.external_prefixes.cache_clear()
 
 
 # --- the kernel namespace, spelled out ----------------------------------------------------
