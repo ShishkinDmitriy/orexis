@@ -56,9 +56,10 @@ rather than as a roadmap item.
 1. `ag:Act` and the kernel dataclass; an affordance row becomes an act when the search sizes
    it; `Plan.steps` hold steps whose acts are those; `take(act, …)` (#369, landed — `agent/act.py`,
    the row sized into an act in `Planner._step_from`, `execution.carry_out(agent, act, …)`).
-2. An intention commits to an act — `ag:by` names the act node, which carries action, lever,
-   want, quantity and window; the ledger's `ag:through` becomes the act's; old ledgers
-   migrate (#370).
+2. An intention commits to an act — `ag:by` names the act node, which `ag:fills` the action
+   and carries lever, quantity and window; the ledger's `ag:through` became the act's; old
+   ledgers migrate at the keeper's construction (#370, landed — `Standing.act`, and the
+   sovereign asking the intentions modality sees the quantity and the window on the act).
 3. A commitment promises an act; `Claim` carries the host's Serving act; `exp` is the act's
    not-after; the actors' hand-kept timers read the window instead (#371).
 

@@ -130,8 +130,9 @@ records.
 
 - **Not a decider.** Nothing here chooses what to commit to; [execution](/domain/execution.md)
   calls `adopt` with the head of a plan, and the *whether* lives in
-  [deliberation](/domain/deliberation.md). A row written here carries `ag:through` the lever
-  that plan chose, so the [actor](/domain/actor.md) handed it knows which valve or venue. Keeping and deciding share a granting premise and stay two capabilities
+  [deliberation](/domain/deliberation.md). A row written here names, `ag:by`, the [act](/domain/act.md) the
+  plan's head is — the action it fills, `ag:through` the lever, the quantity the taker sized,
+  the window — so the [actor](/domain/actor.md) handed it later takes the same act. Keeping and deciding share a granting premise and stay two capabilities
   because their replaceable parts differ.
 - **Not public.** The ledger is a graph of the agent's own, like its beliefs and its revisions:
   an intention disclosed is strategy leaked, and the **bid is the public face** of an intention

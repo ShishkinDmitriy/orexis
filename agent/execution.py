@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import logging
 
+from dataclasses import replace
+
 from .act import Act
 from .ontology import AG
 from .store import bindings
@@ -65,7 +67,7 @@ def pursue(agent, desire) -> str | None:
     #  claim, an Actuate until its watch is judged (#353). There used to be a hook here for
     #  the one act that resolved at the command; making its intention stand to the END was
     #  the BDI-shaped fix, and the hook went with it.
-    uri = keeper.adopt(act.action, desire.uri, _because(plan, desire), via=act.via)
+    uri = keeper.adopt(act, desire.uri, _because(plan, desire))
     if uri is None:
         #  ABSORBED: the same commitment already stands within patience. Say WHICH, so a
         #  caller that needs to know whether anything is on its way (a bidder waiting for a
@@ -95,13 +97,11 @@ def take_standing(agent, standing, desire) -> bool:
     commitment was made on the tick and the actor could not act then. Nothing is re-decided;
     the standing row is rebuilt from the ledger and handed over.
     """
-    #  The act is rebuilt from the ledger: action, lever, want — and what the want is ABOUT
-    #  (`ag:about`, read back off the want). Unsized: the actor sizes from the reading in hand,
-    #  as it does for a fresh act. (#370 writes the act node itself, quantity and all.)
+    #  The act is the ledger's, read whole — action, lever, quantity, window — plus what the
+    #  want is ABOUT (`ag:about`, read back off the want), which is the want's and not the act's.
     rows = bindings(agent.desires.query_union(
         f"SELECT ?about WHERE {{ <{standing.want}> <{AG}about> ?about }}"))
-    act = Act(action=standing.action, want=standing.want, via=standing.via or "",
-              about=rows[0]["about"] if rows else None)
+    act = replace(standing.act, about=rows[0]["about"] if rows else None)
     return carry_out(agent, act, desire, standing.uri)
 
 

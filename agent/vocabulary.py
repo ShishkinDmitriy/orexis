@@ -360,3 +360,33 @@ def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
         DELETE {{ GRAPH <{graph}> {{ ?i <{_LEDGER_PROPERTY}> ?p }} }}
         WHERE  {{ GRAPH <{graph}> {{ ?i <{_LEDGER_PROPERTY}> ?p }} }}""")
     return given
+
+
+def migrate_ledger_acts(intentions, graph: str) -> int:
+    """Bring an intention that names an ACTION under `ag:by` to one that names an ACT.
+
+    Before an-act-is-a-filled-action, `ag:by` pointed at the action node and `ag:through` sat on
+    the intention. Such a row is rebuilt: an act node is minted, `ag:fills` the action,
+    `ag:through` moved onto it, and `ag:by` repointed. Told apart by structure — a `by` object
+    that is not `a ag:Act` in the ledger — so the migration is idempotent. Returns how many.
+    """
+    from .ontology import AG
+    from .store import bindings
+
+    rows = bindings(intentions.query(f"""
+        SELECT ?i ?action ?through WHERE {{ GRAPH <{graph}> {{
+            ?i <{AG}by> ?action .
+            OPTIONAL {{ ?i <{AG}through> ?through }}
+            FILTER NOT EXISTS {{ ?action a <{AG}Act> }} }} }}"""))
+    for row in rows:
+        act = row["i"].replace("intent_", "act_", 1) if "intent_" in row["i"] else row["i"] + ".act"
+        through = f'<{act}> <{AG}through> <{row["through"]}> .' if row.get("through") else ""
+        intentions.update(f"""
+            DELETE {{ GRAPH <{graph}> {{ <{row['i']}> <{AG}by> <{row['action']}> ;
+                                                    <{AG}through> ?t }} }}
+            INSERT {{ GRAPH <{graph}> {{ <{row['i']}> <{AG}by> <{act}> .
+                                        <{act}> a <{AG}Act> ; <{AG}fills> <{row['action']}> .
+                                        {through} }} }}
+            WHERE  {{ GRAPH <{graph}> {{ <{row['i']}> <{AG}by> <{row['action']}> .
+                                        OPTIONAL {{ <{row['i']}> <{AG}through> ?t }} }} }}""")
+    return len(rows)

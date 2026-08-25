@@ -37,6 +37,7 @@ from datetime import datetime, timezone
 
 from .beliefs import BeliefError, Picks
 from . import vocabulary
+from .act import Act
 from .module import Module, Timer
 from .store import bindings
 
@@ -121,15 +122,22 @@ KEEPING_PICKS = Picks(
 
 @dataclass(frozen=True)
 class Standing:
-    """One unresolved commitment, as a reader gets it back."""
+    """One unresolved commitment, as a reader gets it back: the ACT committed to, and the want
+    it pursues. `ag:by` names the act node (an-act-is-a-filled-action…); the action, the
+    lever and the quantity are the act's, read through it."""
 
     uri: str
-    action: str
+    act: Act
     want: str               # the desire's node — `ag:pursues`; the kernel's only key besides the act
     adopted_at: datetime
-    #  The lever the plan chose — `ag:through`, the row's `via`. None on a row adopted
-    #  before execution wrote it, or by an actor that names no lever (a held claim).
-    via: str | None = None
+
+    @property
+    def action(self) -> str:
+        return self.act.action
+
+    @property
+    def via(self) -> str | None:
+        return self.act.via or None
 
     def age_s(self, now: datetime | None = None) -> float:
         return ((now or datetime.now(timezone.utc)) - self.adopted_at).total_seconds()
@@ -166,6 +174,8 @@ class Keeper(Module):
             f"?want <{AG}about> ?about }}"))}
         if (n := vocabulary.migrate_ledger(agent.intentions, self.graph, about_of)):
             self.log.info("ledger migrated: %d row(s) keyed by a property now pursue a want", n)
+        if (n := vocabulary.migrate_ledger_acts(agent.intentions, self.graph)):
+            self.log.info("ledger migrated: %d row(s) naming an action now commit to an act", n)
 
     @property
     def beliefs(self) -> KeepingBeliefs:
@@ -249,8 +259,14 @@ class Keeper(Module):
 
     # --- the ledger, written -------------------------------------------------------------
 
-    def adopt(self, action: str, want: str, because: str, via: str | None = None) -> str | None:
-        """Commit to one action toward one want. Returns the intention's IRI, or None.
+    def adopt(self, act, want: str, because: str, via: str | None = None) -> str | None:
+        """Commit to one ACT toward one want. Returns the intention's IRI, or None.
+
+        `act` is an `Act` — the plan's head, sized, through its lever — or, for an actor
+        committing on its own event with nothing sized (a held claim), the action's IRI and
+        the lever as `via`. Either way the ledger holds an act NODE: `ag:by` names it, and it
+        carries `ag:fills` the action, `ag:through` the lever, `ag:quantity` and the window
+        (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
         KEYED ON (ACTION, WANT) and nothing else: a want is its node, and the kernel no longer
         knows what one is about (the-stake-is-sensings-want). Two commitments about one
@@ -275,6 +291,9 @@ class Keeper(Module):
         recorded, and the new commitment adopted, because honouring a commitment forever is as
         wrong as honouring it not at all.
         """
+        if isinstance(act, str):
+            act = Act(action=act, via=via or "")
+        action = act.action
         now = datetime.now(timezone.utc)
         for standing in self.standing(action=action, want=want):
             if standing.age_s(now) <= self.beliefs.patience_s:
@@ -282,15 +301,29 @@ class Keeper(Module):
             self._resolve(standing, "dropped",
                           f"outwaited: stood {standing.age_s(now):.0f}s against a patience "
                           f"of {self.beliefs.patience_s}s, superseded by a new adoption")
-        uri = f"{AG}intent_{self.agent.id}_{uuid.uuid4().hex[:8]}"
+        stem = uuid.uuid4().hex[:8]
+        uri = f"{AG}intent_{self.agent.id}_{stem}"
+        act_uri = f"{AG}act_{self.agent.id}_{stem}"
+        xsd = "http://www.w3.org/2001/XMLSchema#"
+        facts = [f'<{kernel("fills")}> <{action}>']
+        if act.via:
+            facts.append(f'<{kernel("through")}> <{act.via}>')
+        if act.for_agent:
+            facts.append(f'<{kernel("forAgent")}> <{act.for_agent}>')
+        if act.quantity is not None:
+            facts.append(f'<{kernel("quantity")}> "{act.quantity}"^^<{xsd}decimal>')
+        if act.not_before:
+            facts.append(f'<{kernel("notBefore")}> "{act.not_before.isoformat()}"^^<{xsd}dateTime>')
+        if act.not_after:
+            facts.append(f'<{kernel("notAfter")}> "{act.not_after.isoformat()}"^^<{xsd}dateTime>')
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
     <{kernel("pursues")}> <{want}> ;
-    <{kernel("by")}> <{action}> ;
-    {f'<{kernel("through")}> <{via}> ;' if via else ""}
-    <{kernel("adoptedAt")}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+    <{kernel("by")}> <{act_uri}> ;
+    <{kernel("adoptedAt")}> "{now.isoformat()}"^^<{xsd}dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
+  <{act_uri}> a <{kernel("Act")}> ; {" ; ".join(facts)} .
 }} }}""")
         self.log.info("adopted %s for %s: %s", action.rsplit("#", 1)[-1], _short(want), because)
         self._tell("adopted", action, want, because)
@@ -425,9 +458,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?i ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
   GRAPH <{self.graph}> {{
-    ?i <{kernel("by")}> ?action ;
-       <{kernel("pursues")}> ?want ;
-       <{EXPECTS_RISE}> ?rises ;
+    ?i <{kernel("by")}> ?act ;
+       <{kernel("pursues")}> ?want .
+    ?act <{kernel("fills")}> ?action .
+    ?i <{EXPECTS_RISE}> ?rises ;
        <{BASELINE_VALUE}> ?baseline ;
        <{BASELINE_AT}> ?baselineAt ;
        <{DEADLINE_AT}> ?deadline .
@@ -526,9 +560,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         """
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("by")}> <{action}> ;
+  ?i <{kernel("by")}> ?act ;
      <{kernel("pursues")}> <{want}> ;
-     <{END_MET}> ?met ;
+     <{END_MET}> ?met .
+  ?act <{kernel("fills")}> <{action}> .
+  ?i
      <{END_VERIFIED_AT}> ?at .
 }} }} ORDER BY DESC(?at) LIMIT {self._suspect_after()}"""))
         n = self._suspect_after()
@@ -538,9 +574,10 @@ SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
         """Every (action, want) pair currently suspect. What review and the report read."""
         pairs = {(r["action"], r["want"]) for r in bindings(self.agent.intentions.query(f"""
 SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
-  ?i <{kernel("by")}> ?action ;
+  ?i <{kernel("by")}> ?act ;
      <{kernel("pursues")}> ?want ;
      <{END_MET}> ?met .
+  ?act <{kernel("fills")}> ?action .
 }} }}"""))}
         return sorted(p for p in pairs if self._is_suspect(*p))
 
@@ -563,21 +600,28 @@ SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
 
     def standing(self, action: str | None = None, want: str | None = None) -> list[Standing]:
         """What stands: adopted and not resolved. The question a deliberator asks first."""
-        clauses = [f"?i a <{kernel('Intention')}> ; <{kernel('by')}> ?action ; "
+        clauses = [f"?i a <{kernel('Intention')}> ; <{kernel('by')}> ?act ; "
                    f"<{kernel('pursues')}> ?want ; "
                    f"<{kernel('adoptedAt')}> ?at .",
+                   f"?act <{kernel('fills')}> ?action .",
                    f"FILTER NOT EXISTS {{ ?i <{kernel('resolvedAt')}> ?done }}"]
         if action:
             clauses.append(f"FILTER(?action = <{action}>)")
         if want:
             clauses.append(f"FILTER(?want = <{want}>)")
-        clauses.append(f'OPTIONAL {{ ?i <{kernel("through")}> ?via }}')
+        for term in ("through", "quantity", "forAgent", "notBefore", "notAfter"):
+            clauses.append(f'OPTIONAL {{ ?act <{kernel(term)}> ?{term} }}')
         rows = bindings(self.agent.intentions.query(
-            "SELECT ?i ?action ?want ?at ?via WHERE { GRAPH <%s> { %s } }"
-            % (self.graph, " ".join(clauses))))
-        return [Standing(uri=r["i"], action=r["action"], want=r["want"],
-                         adopted_at=datetime.fromisoformat(r["at"]), via=r.get("via"))
-                for r in rows]
+            "SELECT ?i ?act ?action ?want ?at ?through ?quantity ?forAgent ?notBefore ?notAfter "
+            "WHERE { GRAPH <%s> { %s } }" % (self.graph, " ".join(clauses))))
+        return [Standing(
+            uri=r["i"], want=r["want"], adopted_at=datetime.fromisoformat(r["at"]),
+            act=Act(action=r["action"], via=r.get("through") or "", want=r["want"],
+                    quantity=float(r["quantity"]) if r.get("quantity") else None,
+                    for_agent=r.get("forAgent"),
+                    not_before=datetime.fromisoformat(r["notBefore"]) if r.get("notBefore") else None,
+                    not_after=datetime.fromisoformat(r["notAfter"]) if r.get("notAfter") else None))
+            for r in rows]
 
     def reports(self) -> dict:
         """How many commitments stand, and how old the oldest is.
