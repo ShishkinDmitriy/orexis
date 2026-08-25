@@ -134,6 +134,10 @@ record is worse than none, because it is still cited.
    capabilities name (#216). Adding one is adding a directory. Packages never
    import each other's Python: ask `agent.provider(family)` or contribute via
    the choir hooks (`annotate`, `urgency`, `notices`, `series`, `quiet`, `take`).
+   The one written exception: a family's plug-ins import the family's contract — `packages/codec/*`,
+   `packages/scaling/*` and `packages/transport/*` import sensing's `Codec`, `Scaling` and
+   `pointer`, because those are the contracts they exist to implement (see
+   [sensing-owns-the-reading-pipeline](knowledge/decisions/sensing-owns-the-reading-pipeline.md)).
 
    **`agent/` is the kernel that loads them, not their home.** Capability Python used to live
    under it, so the tree itself showed which of it a runtime loads — it does not show that now.

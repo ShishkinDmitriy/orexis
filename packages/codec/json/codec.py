@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 
-from agent.codec import Codec, CodecError
+from packages.capability.sensing.codec import Codec, CodecError
 
 from .terms import JSON
 
