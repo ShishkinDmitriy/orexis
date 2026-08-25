@@ -76,7 +76,7 @@ failure used to cost.
   `infra/tests/` as a contract with paho the way the existing ones are contracts with mosquitto
   and InfluxDB. The watchdog makes the answer matter less: whichever way paho behaves, the
   bound holds.
-- **`_thread` is paho's private attribute.** The deliberate price of watching a thing that
+- **`_thread` is paho's private attribute** — read by `MqttLink.alive()` now, the kernel asking the [link](/domain/link.md) for a pulse. The deliberate price of watching a thing that
   offers no public pulse; if a future paho renames it, the check degrades to never-true and the
   disconnection bound still stands guard behind it.
 - **The quiet() sweep informs and does not act.** A sensor gone silent is the *board's* fault

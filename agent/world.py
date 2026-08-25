@@ -27,19 +27,10 @@ class WorldError(RuntimeError):
     """The world does not say something the code needs. Genesis is wrong, not the runtime."""
 
 
-@dataclass(frozen=True)
-class MessageBus:
-    """A broker the society meets on. In the world, because a channel name means nothing
-    without it and members who disagree about the bus are not in one society."""
-
-    uri: str
-    host: str
-    port: int
-    # Optional second door on the SAME bus, where a principal proves itself with a certificate
-    # instead of a password. None means this world has no mTLS listener and everyone uses the
-    # port above. It is not a different bus: same topics, same ACL, same society.
-    tls_port: int | None = None
-
+#  `MessageBus` and `load_bus` WERE HERE — the kernel asking the world for `mqtt:MessageBus`
+#  and its ports, the last package word it spoke. Where a society meets is the transport's to
+#  find, in its own vocabulary: `agent.link.link_for` asks every transport's `Link.where`, and
+#  `packages/transport/mqtt/link.py` answers (the-link-is-the-transports).
 
 #  `Sensor`, `Actuator` and `Market` WERE HERE, and `load_self` loaded all three by their
 #  packages' words — the kernel knowing what a probe, a valve and a venue are, in SPARQL the
@@ -71,11 +62,6 @@ class Self:
 class World:
     version: int
 
-
-_BUS_Q = f"""
-SELECT ?bus ?host ?port ?tlsPort WHERE {{ 
-  ?bus a mqtt:MessageBus ; mqtt:brokerHost ?host ; mqtt:brokerPort ?port .
-  OPTIONAL {{ ?bus mqtt:brokerTlsPort ?tlsPort }}  }}"""
 
 _VERSION_Q = f"""
 SELECT ?v WHERE {{ 
@@ -126,16 +112,3 @@ def load_self(query: QueryFn, agent_id: str) -> Self:
     )
 
 
-def load_bus(query: QueryFn) -> MessageBus:
-    """Where the society meets. The one piece of infrastructure that is a belief, not an
-    environment variable — because everyone must agree on it."""
-    rows = bindings(query(_BUS_Q))
-    if not rows:
-        raise WorldError("the world declares no mqtt:MessageBus — has it been seeded?")
-    if len(rows) > 1:
-        # A second bus is meaningful, but then resources must say which one they are on
-        # (mqtt:onBus) and this becomes a lookup. Refuse to guess.
-        raise WorldError(f"{len(rows)} buses declared; mqtt:onBus routing is not implemented")
-    row = rows[0]
-    return MessageBus(uri=row["bus"], host=row["host"], port=int(row["port"]),
-                      tls_port=int(row["tlsPort"]) if row.get("tlsPort") else None)

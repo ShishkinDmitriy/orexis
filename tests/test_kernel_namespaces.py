@@ -200,18 +200,10 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,
     # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
 
-    # KIND 5 — the BUS. `agent/world.py` asks the world where the broker is before any package's
-    # Python has loaded, in the transport's own words, and `ag:SimulatedDeviceShape` says a
-    # stand-in must be reachable the way a real device is — on a bus, or sharing a reading topic.
-    # Found by the prefixed scan (#378), which is what made them visible. What removes them: the
-    # transport package answering "where is the bus" itself, and the reachability shape living
-    # with it — a seam, not yet an issue.
-    ("agent/world.py", "mqtt#MessageBus"): (1, "the bus: where the broker is, asked before any package loads"),
-    ("agent/world.py", "mqtt#brokerHost"): (1, "the bus, same"),
-    ("agent/world.py", "mqtt#brokerPort"): (1, "the bus, same"),
-    ("agent/world.py", "mqtt#brokerTlsPort"): (1, "the bus, same"),
-    ("agent/shapes.ttl", "mqtt#onBus"): (2, "a stand-in must be reachable like a real device — the transport's words for reachable"),
-    ("agent/shapes.ttl", "mqtt#readingTopic"): (2, "same shape, the shared-topic half"),
+    # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
+    # reachability half of `ag:SimulatedDeviceShape` — is the transport's: `agent.link.Link` is
+    # the contract, `packages/transport/mqtt/link.py` finds the bus in its own words, and the
+    # shape is `mqtt:SimulatedDeviceReachableShape` (the-link-is-the-transports).
 
     # KIND 4 — the kernel's RDF, found by widening the scan past `agent/*.py`. #334's three
     # kinds are all Python and none of them covers these, so they sat here marked UNCLASSIFIED

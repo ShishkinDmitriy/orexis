@@ -52,24 +52,16 @@ ag:PublicGraphShape a sh:NodeShape ;
     ) ;
     sh:message "a public graph must record what it was derived from or what generated it — see orexis/provenance.py" .
 
-ag:SimulatedDeviceShape a sh:NodeShape ;
-    rdfs:comment """A device that is stood in for must still be reachable like a real one, or the failure is a sensor that is simply, permanently silent — which reads exactly like hardware that is not there. Which it is not.
+#  `ag:SimulatedDeviceShape` WAS HERE: "a stand-in must be reachable like a real device" — on
+#  a bus, or sharing a reading topic — which is a sentence in the transport's words, so it is
+#  `mqtt:SimulatedDeviceReachableShape` in that package's shapes (the-link-is-the-transports).
+#  Its first half, "one device, one stand-in", is kernel structure and stays:
 
-What makes it reachable is no longer only its own credential. A KY-015 reports two properties down ONE line, and `world/sensing` states that shape already: `ag:air_temp_fern` has no `mqtt:onBus` at all, because a peripheral sharing its board's connection must not mint a principal for a client that never connects. So the test is REACHABILITY rather than ownership — on a bus, or sharing the reading topic of something that is. This shape used to demand the credential, and demanding it of a simulated multi-property board would have forced exactly the second principal the hardware world refuses.""" ;
+ag:SimulatedDeviceShape a sh:NodeShape ;
+    rdfs:comment "One device, one stand-in. What makes a stand-in REACHABLE is the transport's to say, and it says so in its own shapes." ;
     sh:targetSubjectsOf ag:simulatedBy ;
     sh:property [ sh:path ag:simulatedBy ; sh:maxCount 1 ;
-                  sh:message "one device, one stand-in" ] ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a simulated device must be reachable: on a bus of its own, or sharing the reading topic of a device that is — otherwise nothing would ever publish for it" ;
-        sh:select """
-            SELECT $this WHERE {
-                FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#onBus> ?bus }
-                FILTER NOT EXISTS {
-                    $this <http://example.org/orexis/mqtt#readingTopic> ?topic .
-                    ?peer <http://example.org/orexis/mqtt#readingTopic> ?topic ;
-                          <http://example.org/orexis/mqtt#onBus> ?peerBus .
-                }
-            }""" ] .
+                  sh:message "one device, one stand-in" ] .
 
 
 ag:DeviceModelShape a sh:NodeShape ;

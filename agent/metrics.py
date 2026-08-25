@@ -81,8 +81,8 @@ class Metrics:
         self.last_reading_at: dict[str, float] = {}
         self.influx_failures = 0
         self.sensed_failures = 0
-        self.mqtt_reconnects = -1  # the first connect is not a RE-connect; see connected()
-        self.mqtt_connected = False
+        self.link_reconnects = -1  # the first connect is not a RE-connect; see connected()
+        self.link_connected = False
         # Born disconnected, and the clock starts NOW, deliberately: an agent whose first
         # connect never completes — a broker refusing its CONNACK in a loop — is exactly as
         # cut off as one whose session died, and must meet the same bound (#53).
@@ -132,12 +132,12 @@ class Metrics:
         self._events.extendleft(reversed(events))
 
     def connected(self) -> None:
-        self.mqtt_connected = True
-        self.mqtt_reconnects += 1
+        self.link_connected = True
+        self.link_reconnects += 1
         self.disconnected_at = None
 
     def disconnected(self) -> None:
-        self.mqtt_connected = False
+        self.link_connected = False
         # Only the FIRST notice starts the clock: paho may report one dead session more than
         # once, and each repeat is the same outage, not a fresh one.
         if self.disconnected_at is None:
@@ -148,7 +148,7 @@ class Metrics:
 
         The number the watchdog acts on (#53). Continuous, not cumulative: one successful
         reconnect resets it, so a flapping link never accumulates its way to a resignation —
-        flapping is a different fault, and `mqtt_reconnects` is its counter.
+        flapping is a different fault, and `link_reconnects` is its counter.
         """
         return None if self.disconnected_at is None else time.monotonic() - self.disconnected_at
 
@@ -184,8 +184,8 @@ class Metrics:
             # runs — a rising line here means something started appending instead, and that is
             # exactly the failure this number exists to make visible.
             "belief_triples": len(self.agent.beliefs),
-            "mqtt_connected": 1 if self.mqtt_connected else 0,
-            "mqtt_reconnects": max(self.mqtt_reconnects, 0),
+            "link_connected": 1 if self.link_connected else 0,
+            "link_reconnects": max(self.link_reconnects, 0),
             # Both were being swallowed by `Observations` and only logged. A dashboard that is
             # flat at zero here is the evidence that nothing is being lost quietly.
             "influx_write_failures": self.influx_failures,

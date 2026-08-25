@@ -59,13 +59,13 @@ def test_the_swallowed_write_failures_are_counted(agent):
 
 def test_the_first_connect_is_not_a_reconnect(agent):
     m = Metrics(agent)
-    assert m.agent_fields()["mqtt_reconnects"] == 0
+    assert m.agent_fields()["link_reconnects"] == 0
     m.connected()
-    assert m.agent_fields()["mqtt_connected"] == 1
-    assert m.agent_fields()["mqtt_reconnects"] == 0
+    assert m.agent_fields()["link_connected"] == 1
+    assert m.agent_fields()["link_reconnects"] == 0
     m.disconnected()
     m.connected()
-    assert m.agent_fields()["mqtt_reconnects"] == 1
+    assert m.agent_fields()["link_reconnects"] == 1
 
 
 def test_it_reports_the_world_version_it_is_running(agent):

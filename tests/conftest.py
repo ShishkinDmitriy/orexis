@@ -182,7 +182,7 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     if monkeypatch is not None:
         # one place for every capability that records — see orexis/observation.py
         monkeypatch.setattr(observation, "InfluxWriter", NoInflux)
-        monkeypatch.setattr(runtime.mqtt, "Client", lambda *a, **k: _FakeClient())
+        monkeypatch.setattr(runtime, "link_for", lambda query: _FakeLink())
         # What a deployed agent is handed: its OWN bucket and a token that opens only it,
         # mounted into its container by `orexis-influx`. Set here rather than defaulted in the
         # code, because a fallback to a shared bucket is exactly the isolation failure the
@@ -200,8 +200,9 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     agent.publish = lambda topic, payload, retain=False: agent.sent.append(
         (topic, payload, retain))
     agent.subscribed = []
-    agent._on_connect(_Recorder(agent.subscribed), None, None, 0, None)
-    agent.deliver = lambda topic, payload: agent._on_message(None, None, Msg(topic, payload))
+    agent.link.subscribe = agent.subscribed.append   # the fake link records what was asked for
+    agent._on_connect()
+    agent.deliver = lambda topic, payload: agent._on_message(topic, Msg(topic, payload).payload)
     # convenience: reach a module by name, the way a test wants to talk about it
     agent.module = lambda name: next(m for m in agent.modules if m.name == name)
     agent.hosting = lambda: agent.module("hosting")
@@ -222,14 +223,27 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     return agent
 
 
-class _FakeClient:
-    def __init__(self, *a, **k):
-        self.on_connect = self.on_message = None
+class _FakeLink:
+    """The agent's link to its society, captured: nothing reaches the network. `up` is what
+    the watchdog's corpse check reads (None until told otherwise, as a transport that cannot
+    see its own thread answers)."""
+    def __init__(self):
+        self.up = None
+        self.published = []
 
-    def publish(self, *a, **k):
+    def connect(self, on_up, on_down, on_message):
         pass
 
-    def subscribe(self, *a, **k):
+    def subscribe(self, channel):
+        pass
+
+    def publish(self, channel, payload, retain=False):
+        self.published.append((channel, payload, retain))
+
+    def alive(self):
+        return self.up
+
+    def stop(self):
         pass
 
 

@@ -420,8 +420,18 @@ def registry() -> dict[str, type]:
 @lru_cache(maxsize=1)
 def drivers() -> tuple[type, ...]:
     """Every transport's driver. Which one speaks to a given sensor is the driver's own
-    answer — see `agent.driver.driver_for`."""
-    return tuple(cls for p in of_kind(TRANSPORTS) for cls in p.provides())
+    answer — see `agent.driver.driver_for`. A transport's `PROVIDES` may hold a link too
+    (`agent.link.Link`, how the AGENT reaches everyone); that is `links()`."""
+    return tuple(cls for p in of_kind(TRANSPORTS) for cls in p.provides()
+                 if hasattr(cls, "claims"))
+
+
+@lru_cache(maxsize=1)
+def links() -> tuple[type, ...]:
+    """Every transport's link — how an agent reaches its society. Which one this world uses
+    is the link's own answer to `where(query)`; see `agent.link.link_for`."""
+    return tuple(cls for p in of_kind(TRANSPORTS) for cls in p.provides()
+                 if hasattr(cls, "where"))
 
 
 def _members(kind: str) -> dict[str, type]:

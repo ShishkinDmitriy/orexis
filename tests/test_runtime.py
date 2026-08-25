@@ -201,11 +201,11 @@ def test_the_agent_holds_a_clean_session():
 
     import paho.mqtt.client as paho
 
-    from agent import runtime
+    from packages.transport.mqtt import link as mqtt_link
 
-    source = inspect.getsource(runtime)
+    source = inspect.getsource(mqtt_link)
     assert "clean_session" not in source, \
-        "runtime.py mentions clean_session — if it sets False, every freshness judgment lies"
+        "the MQTT link mentions clean_session — if it sets False, every freshness judgment lies"
     real = paho.Client(paho.CallbackAPIVersion.VERSION2)
     assert getattr(real, "_clean_session", None) is True, \
         "paho's default session is no longer clean — the runtime must now say so explicitly"

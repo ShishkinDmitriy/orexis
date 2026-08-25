@@ -93,14 +93,12 @@ class BusWatchdog:
             log.error("%s: the watchdog could not look: %s", self.agent.id, exc)
 
     def _thread_died(self) -> bool:
-        """True only when paho's loop thread demonstrably existed and is demonstrably dead.
-
-        `_thread` is paho's private attribute, and reaching for it is the deliberate price of
-        watching a thing that offers no public pulse: if a future paho renames it, this check
-        degrades to never-true and the disconnect bound still stands guard behind it.
+        """True only when the link's own machinery demonstrably existed and is demonstrably
+        dead — `Link.alive()` False, never None. How a transport knows is its own business
+        (MQTT's watches paho's loop thread); a transport that cannot say degrades this check
+        to never-true and the disconnect bound still stands guard behind it.
         """
-        thread = getattr(self.agent.mqtt, "_thread", None)
-        return thread is not None and not thread.is_alive()
+        return self.agent.link.alive() is False
 
     def _sweep_quiet(self) -> None:
         """Say what has gone silent, once on entry and once on recovery — never per tick."""

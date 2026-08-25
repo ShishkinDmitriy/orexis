@@ -72,7 +72,7 @@ def test_a_dead_network_thread_is_a_resignation_whatever_the_flag_says(fern):
     so the corpse is checked before the flag is believed."""
     said = resignations(fern)
     fern.metrics.connected()  # the stale-true flag of the incident
-    fern.mqtt._thread = SimpleNamespace(is_alive=lambda: False)
+    fern.link.up = False   # the transport says its machinery is dead
     fern.watchdog.check()
     assert len(said) == 1 and "network thread is dead" in said[0]
 
@@ -80,7 +80,7 @@ def test_a_dead_network_thread_is_a_resignation_whatever_the_flag_says(fern):
 def test_a_live_thread_is_not_a_corpse(fern):
     said = resignations(fern)
     fern.metrics.connected()
-    fern.mqtt._thread = SimpleNamespace(is_alive=lambda: True)
+    fern.link.up = True
     fern.watchdog.check()
     assert said == []
 
