@@ -18,7 +18,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from agent import config
-from agent.influx_writer import InfluxWriter
+import time
 
 from . import choir
 from .sensed_writer import SensedWriter
@@ -30,34 +30,70 @@ def _short(uri: str) -> str:
     return uri.rstrip("#/").split("#")[-1].split("/")[-1]
 
 
+SENSOR_MEASUREMENT = "agent_sensor_health"   # what the dashboards filter on
+
+
 class Observations:
     """One agent's record of what it has observed. Held by whichever module does the observing."""
 
-    def __init__(self, agent):
+    def __init__(self, agent, sensors=()):
         self.event_topic = event_topic_of(agent.beliefs.query, agent.me.uri)
         self.agent = agent
         self.me = agent.me
         self.log = agent.log if hasattr(agent, "log") else None
-        # The bucket and the token have NO defaults, and that is the point. They are this
-        # agent's alone, minted by `orexis-influx` and mounted into its container only; falling
-        # back to a shared bucket would quietly undo the isolation at exactly the moment the
-        # credential failed to arrive. The URL and org may default — they say where the store
-        # is, which is not a privilege. See knowledge/decisions/series-and-bus-isolation.md.
-        bucket, token = config.env("INFLUX_BUCKET"), config.env("INFLUX_TOKEN")
-        if not bucket or not token:
-            raise RuntimeError(
-                "no INFLUX_BUCKET/INFLUX_TOKEN in the environment — this agent has no series "
-                "store of its own. Run `orexis-influx <world>` and regenerate the compose file.")
-        self.influx = InfluxWriter(
-            config.env("INFLUX_URL", "http://localhost:8086"),
-            token,
-            config.env("INFLUX_ORG", "orexis"),
-            bucket,
-        )
         self.sensed = SensedWriter(agent.beliefs)
+        #  THE COUNTERS ARE SENSING'S (metrics-are-an-aspect): per sensor, keyed by local id —
+        #  the same key the ACL and the topics use — and reported through this module's
+        #  `reports()` and `series()`. They were the kernel's `Metrics`, which knew what a
+        #  sensor was; the kernel counts nothing about readings now.
+        self.wired = tuple(sensors)
+        self.readings: dict[str, int] = {}
+        self.last_reading_at: dict[str, float] = {}
+        self.acked_cadence: dict[str, int] = {}
+        self.sensed_failures = 0
 
     def close(self) -> None:
-        self.influx.close()
+        pass
+
+    # --- the account of what this module has heard ---------------------------------------
+
+    def reading_recorded(self, sensor) -> None:
+        self.readings[sensor.local_id] = self.readings.get(sensor.local_id, 0) + 1
+        self.last_reading_at[sensor.local_id] = time.monotonic()
+
+    def reading_age_s(self, local_id: str) -> float | None:
+        """Seconds since this sensor last delivered. None until it has delivered once — an
+        agent that has never heard from its board has a different problem from one whose
+        board went quiet, and a number for both would hide the first."""
+        at = self.last_reading_at.get(local_id)
+        return None if at is None else time.monotonic() - at
+
+    def cadence_acked(self, local_id: str, acknowledged_s: int) -> None:
+        """The board's own statement of its rhythm (#135), kept for the health series."""
+        self.acked_cadence[local_id] = int(acknowledged_s)
+
+    def cadence_acked_s(self, local_id: str) -> int | None:
+        return self.acked_cadence.get(local_id)
+
+    def sensors_seen(self) -> set[str]:
+        """Every sensor worth a line: the ones wired to this module, and the ones that have
+        delivered. A wired sensor that never delivered reports zero — the "never heard from"
+        signal — and a delivered one that is not in the wired set (a simulated sensor, wired
+        with `ag:models`, which SPARQL does not follow without inference) is not omitted."""
+        return {s.local_id for s in self.wired} | set(self.readings)
+
+    def health_rows(self) -> list[tuple[str, dict, dict]]:
+        """One tagged row per sensor for the series — `readings_total`, `reading_age_s`,
+        `cadence_acked_s` — the sensor as a TAG, so one generic panel groups by it."""
+        rows = []
+        for local_id in sorted(self.sensors_seen()):
+            fields: dict = {"readings_total": int(self.readings.get(local_id, 0))}
+            if (age := self.reading_age_s(local_id)) is not None:
+                fields["reading_age_s"] = round(float(age), 1)
+            if (acked := self.cadence_acked_s(local_id)) is not None:
+                fields["cadence_acked_s"] = int(acked)
+            rows.append((SENSOR_MEASUREMENT, {"sensor": local_id}, fields))
+        return rows
 
     def record_prior(self, log, sensor, value: float, at: datetime) -> None:
         """A sample the device took EARLIER, placed at the instant it was actually taken.
@@ -77,13 +113,13 @@ class Observations:
         that makes the picture true.
         """
         try:
-            self.influx.write_reading(value, at, plant=sensor.subject_id,
-                                      sensor=sensor.local_id, property=_short(sensor.observes))
+            self.agent.tell("record", value, at, plant=sensor.subject_id,
+                            sensor=sensor.local_id, property=_short(sensor.observes))
             log.info("%s: %.3f at %s — the last quiet look before the crossing",
                      sensor.local_id, value, at.isoformat(timespec="seconds"))
         except Exception as exc:
             log.error("influx write failed for the prior sample: %s", exc)
-            self.agent.metrics.influx_failed()
+            pass
 
     def record(self, log, sensor, value: float, at: datetime | None = None,
                phenomenon_at: datetime | None = None) -> None:
@@ -112,14 +148,15 @@ class Observations:
                  "".join(f"  {k}={v}" for k, v in sorted(verdict.items())))
 
         try:
-            self.influx.write_reading(value, at, plant=sensor.subject_id,
-                                      sensor=sensor.local_id, property=_short(sensor.observes))
+            #  TOLD, not written: whoever holds the series sink (reporting) records it.
+            self.agent.tell("record", value, at, plant=sensor.subject_id,
+                            sensor=sensor.local_id, property=_short(sensor.observes))
         except Exception as exc:  # history is best-effort; never drop the reading over it
             # Logged AND counted. Logging alone made this invisible: nothing reads a container's
             # log until something is already known to be wrong, so a store that had quietly
             # stopped accepting writes looked exactly like one that was working.
             log.error("influx write failed: %s", exc)
-            self.agent.metrics.influx_failed()
+            pass
         try:
             self.sensed.write(
                 subject_uri=sensor.subject, subject_id=sensor.subject_id,
@@ -135,7 +172,7 @@ class Observations:
             )
         except Exception as exc:
             log.error("sensed write failed: %s", exc)
-            self.agent.metrics.sensed_failed()
+            self.sensed_failures += 1
         if self.event_topic:
             # Voluntary disclosure: the agent announces its own verdict, not its raw state. A
             # host listens for this to learn that scarcity has appeared, and never reads a
@@ -152,5 +189,5 @@ class Observations:
         # Counted after the writes, so a reading that failed both still counts as heard: the
         # sensor did deliver, and conflating "the board went quiet" with "the store refused" is
         # what makes an outage hard to place.
-        self.agent.metrics.reading_recorded(sensor)
+        self.reading_recorded(sensor)
         choir.recorded(self.agent, sensor.subject, sensor.observes, value)

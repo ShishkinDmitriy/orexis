@@ -680,10 +680,10 @@ def test_the_ack_reaches_the_health_series(fern):
     the two diverging is a cleared or clamped command, visible instead of silent."""
     s = moisture_sensor(fern)
     fern.deliver(s.reading_topic, {"moisture": 0.2, "sleep_s": 600})
-    assert fern.metrics.cadence_acked_s(s.local_id) == 600
+    assert fern.subscribing().observations.cadence_acked_s(s.local_id) == 600
     # every sensor sharing the board's channel carries the board's rhythm
     for peer in fern.subscribing()._aimed_with(s):
-        assert fern.metrics.cadence_acked_s(peer.local_id) == 600
+        assert fern.subscribing().observations.cadence_acked_s(peer.local_id) == 600
 
 
 # --- a cadence that could not be sent is not pretended sent (#103) -----------

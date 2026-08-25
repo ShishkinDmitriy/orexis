@@ -233,6 +233,11 @@ def test_no_document_names_a_path_that_is_not_there():
         # the-kernel-has-no-mailbox and a-dead-session-is-resigned-not-endured narrate where
         # the watchdog WAS; it is `packages/transport/mqtt/watchdog.py` now.
         "agent/watchdog.py",
+        # metrics-are-an-aspect narrates where the sink, the driver contract and the sovereign
+        # channel WERE; they are reporting's and sensing's now.
+        "agent/influx_writer.py",
+        "agent/sovereign.py",
+        "agent/driver.py",
         # repository-layout: the two-distribution layout, past tense — "used a `src` layout and
         # were pip-installed separately".
         "onboarding/src/onboarding/",

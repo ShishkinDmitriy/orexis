@@ -426,7 +426,7 @@ def registry() -> dict[str, type]:
 @lru_cache(maxsize=1)
 def drivers() -> tuple[type, ...]:
     """Every transport's driver. Which one speaks to a given sensor is the driver's own
-    answer — see `agent.driver.driver_for`. A transport's `PROVIDES` may hold a MODULE too —
+    answer — see sensing's `driver.driver_for`. A transport's `PROVIDES` may hold a MODULE too —
     the capability the fact of its bus grants, how the AGENT reaches everyone — and that one
     is found as every capability is, through `registry_for`."""
     return tuple(cls for p in of_kind(TRANSPORTS) for cls in p.provides()

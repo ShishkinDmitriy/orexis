@@ -190,7 +190,7 @@ class Store:
     def query_union(self, sparql: str) -> dict:
         """Read with the default graph as the union of EVERYTHING this store holds.
 
-        For two callers. The sovereign's question channel (agent/sovereign.py): an
+        For two callers. The sovereign's question channel (packages/capability/reporting/sovereign.py): an
         agent answering its sovereign answers about its WHOLE self — beliefs, record,
         evidence, revisions — not only the public knowledge an ordinary query reads, and
         making the sovereign spell each private graph IRI would be rule 1's own trap

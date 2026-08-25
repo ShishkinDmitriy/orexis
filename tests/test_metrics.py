@@ -20,6 +20,7 @@ from agent.beliefs import BeliefError, Picks
 from packages.capability.reporting.beliefs import REPORTING_PICKS, ReportingBeliefs
 from packages.capability.reporting.terms import term as reporting_term
 from agent.metrics import Metrics, tree_bytes
+from conftest import sensing_of
 
 from conftest import build_agent, wired_sensors
 
@@ -32,13 +33,13 @@ class _Sensor:
 def test_a_sensor_that_never_delivered_reports_no_age(agent):
     """None, not zero. An agent that has never heard from its board has a different problem from
     one whose board went quiet, and a number for both would hide the first."""
-    m = agent.metrics
+    m = sensing_of(agent).observations   # the counters are sensing's (metrics-are-an-aspect)
     assert m.reading_age_s("moisture_sensor_fern") is None
     assert m.readings.get("moisture_sensor_fern", 0) == 0
 
 
 def test_recording_a_reading_starts_the_clock(agent):
-    m = agent.metrics
+    m = sensing_of(agent).observations
     m.reading_recorded(_Sensor("moisture_sensor_fern"))
     assert m.readings["moisture_sensor_fern"] == 1
     age = m.reading_age_s("moisture_sensor_fern")
@@ -48,13 +49,26 @@ def test_recording_a_reading_starts_the_clock(agent):
 def test_the_swallowed_write_failures_are_counted(agent):
     """observation.py catches both and logs. Logging alone is what made a store that had quietly
     stopped accepting writes look exactly like one that was working."""
-    m = agent.metrics
-    assert m.agent_fields()["influx_write_failures"] == 0
-    m.influx_failed()
-    m.influx_failed()
-    m.sensed_failed()
-    assert m.agent_fields()["influx_write_failures"] == 2
-    assert m.agent_fields()["sensed_write_failures"] == 1
+    reporting, sensing = agent.module("reporting"), sensing_of(agent)
+    assert reporting.reports()["influx_write_failures"] == 0
+    assert sensing.reports()["sensed_write_failures"] == 0
+
+    class Refusing:
+        def write_reading(self, *a, **k):
+            raise RuntimeError("store down")
+
+    #  Each package counts its own refusals (metrics-are-an-aspect): the sink's are
+    #  reporting's, the belief base's are sensing's.
+    reporting._writer = Refusing()
+    agent.tell("record", 0.5, None, sensor="x")
+    agent.tell("record", 0.6, None, sensor="x")
+    assert reporting.reports()["influx_write_failures"] == 2
+    monkeypatch_write = sensing.observations.sensed.write
+    sensing.observations.sensed.write = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("refused"))
+    sensor = wired_sensors(agent)[0]
+    sensing.observations.record(sensing.log, sensor, 0.3)
+    sensing.observations.sensed.write = monkeypatch_write
+    assert sensing.reports()["sensed_write_failures"] == 1
 
 
 def test_the_first_connect_is_not_a_reconnect(monkeypatch):
@@ -202,11 +216,11 @@ def test_a_delivered_sensor_is_reported_even_when_not_wired(agent):
     """A simulated sensor is wired with ag:models, a sub-property of sensing:polls that SPARQL does
     not follow — so `me.sensors` is empty for a simulated agent while it records readings every
     few seconds. Reporting only the wired set omitted every one of them."""
-    agent.metrics.reading_recorded(_Sensor("sim_moisture_fern"))
-    assert "sim_moisture_fern" in agent.metrics.sensors_seen()
+    sensing_of(agent).observations.reading_recorded(_Sensor("sim_moisture_fern"))
+    assert "sim_moisture_fern" in sensing_of(agent).observations.sensors_seen()
 
 
 def test_a_wired_sensor_is_reported_before_it_has_ever_delivered(agent):
     """The other half: zero readings is the signal that a board has never been heard from."""
     wired = {s.local_id for s in wired_sensors(agent)}
-    assert wired <= agent.metrics.sensors_seen()
+    assert wired <= sensing_of(agent).observations.sensors_seen()

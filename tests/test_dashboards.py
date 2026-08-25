@@ -26,9 +26,9 @@ def test_every_agent_gets_an_annotation_stream_of_its_own():
 
 def test_the_annotation_query_reads_the_events_the_writer_writes():
     """The measurement is restated here the way every other one is — so a rename in
-    agent/influx_writer.py fails this visibly instead of producing markers that query
+    reporting/series.py fails this visibly instead of producing markers that query
     nothing."""
-    from agent.influx_writer import EVENT_MEASUREMENT as WRITTEN
+    from packages.capability.reporting.series import EVENT_MEASUREMENT as WRITTEN
 
     assert EVENT_MEASUREMENT == WRITTEN
     doc = render_health("simulation")

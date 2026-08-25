@@ -77,7 +77,7 @@ def test_a_plant_agent_holds_no_actuator(agent):
 # --- every topic it touches came from the graph ----------------------------
 
 def test_subscribes_its_own_sensor_and_market_channels(agent):
-    from agent import sovereign
+    from packages.capability.reporting import sovereign
 
     fern = agent("fern")
     market = wired_markets(fern)[0]
@@ -86,7 +86,7 @@ def test_subscribes_its_own_sensor_and_market_channels(agent):
         market.offer_topic,
         f"{market.claim_topic}/fern",
         # its own question channel and nobody else's — the one topic the world does not
-        # state, single-sourced in agent/sovereign.py and granted by the ACL to one asker
+        # state, single-sourced in packages/capability/reporting/sovereign.py and granted by the ACL to one asker
         sovereign.query_topic("fern"),
     }
 

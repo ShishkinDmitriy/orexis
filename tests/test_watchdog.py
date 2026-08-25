@@ -111,7 +111,7 @@ def test_a_quiet_sensor_is_reported_by_sensing(fern):
     fern.deliver(sensor.reading_topic, {"moisture": 0.5})
     p = fern.subscribing()
     assert p.quiet() == []
-    fern.metrics.last_reading_at[sensor.local_id] = (
+    p.observations.last_reading_at[sensor.local_id] = (
         time.monotonic() - p.stale_after_s(sensor.subject, sensor.observes) - 60)
     overdue = p.quiet()
     assert len(overdue) == 1 and sensor.local_id in overdue[0]

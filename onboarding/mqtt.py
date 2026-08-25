@@ -51,7 +51,8 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from agent import ratified, sovereign
+from agent import ratified
+from packages.capability.reporting import sovereign
 
 from . import certs
 from agent.config import REPO_ROOT
@@ -273,7 +274,7 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
     for row in ratified.rows(ds, _ACTUATES_Q):
         agent(row["id"]).may(WRITE, row["commandTopic"])
 
-    # The sovereign's question channel (agent/sovereign.py): one principal per world, never
+    # The sovereign's question channel (packages/capability/reporting/sovereign.py): one principal per world, never
     # mounted into any agent container, may ask each agent and hear each answer — and each
     # agent may hear only its own questions and answer only on its own channel. Explicit
     # topic pairs rather than wildcards, in this file's own idiom: silence is not permission.

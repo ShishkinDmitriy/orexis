@@ -44,7 +44,7 @@ from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
 from agent.desire import Desire
-from agent.driver import driver_for
+from .driver import driver_for
 from agent.module import Module
 from agent.ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
@@ -172,7 +172,7 @@ class SensingModule(Module):
                                  "never be read", sensor.local_id)
 
         # Recording is one place for every capability that records — see observation.py.
-        self.observations = Observations(agent)
+        self.observations = Observations(agent, self.sensors)
         #  THE REGIONS this agent holds — deduced by my own `desires.ru` from what its subject
         #  states it needs, read once here. They were the kernel's deducer's, and every
         #  question about them is a question about a reading, so they are mine now
@@ -515,7 +515,7 @@ class SensingModule(Module):
         """
         out = []
         for sensor in self.sensors:
-            age = self.agent.metrics.reading_age_s(sensor.local_id)
+            age = self.observations.reading_age_s(sensor.local_id)
             if age is None:
                 continue
             limit = self.stale_after_s(sensor.subject, sensor.observes)
@@ -710,7 +710,8 @@ class SensingModule(Module):
         """What the agent wants, how much of that it can currently see, and the worst of it —
         in the health series, because an agent whose regions silently went to nothing looks
         exactly like a content one on every other panel."""
-        out: dict = {"desires": len(self.regions)}
+        out: dict = {"desires": len(self.regions),
+                     "sensed_write_failures": self.observations.sensed_failures}
         current = self.current()
         out["desires_measured"] = len(current)
         if current:
@@ -729,7 +730,9 @@ class SensingModule(Module):
             if aim is not None:
                 fields["aim"] = aim
             rows.append(("agent_desire", {"property": local}, fields))
-        return rows
+        #  And the health of every sensor this module hears — the counters that were the
+        #  kernel's `Metrics` (metrics-are-an-aspect).
+        return rows + self.observations.health_rows()
 
     def current_reading(self, subject_uri: str, observed_property: str):
         """The newest reading of one property of one subject, whatever its age — the door every
@@ -915,7 +918,7 @@ class SubscribingModule(SensingModule):
         #  — a rhythm clamped to a device's floor makes readings stale later, not sooner.
         self.publish_horizon(sensor)
         for peer in self._aimed_with(sensor):
-            self.agent.metrics.cadence_acked(peer.local_id, int(acknowledged_s))
+            self.observations.cadence_acked(peer.local_id, int(acknowledged_s))
         commanded = self.sent_cadence.get(sensor.local_id)
         if commanded is not None and int(acknowledged_s) != int(commanded):
             dispute = (commanded, int(acknowledged_s))

@@ -42,11 +42,11 @@ method, and sensing says what it is asked with and how the answers merge
 | `desire_urgency` | how urgent is this want, in this world? | first opinion |
 | `size` | how big would the act this row commits to be? | the taker's answer |
 | `take` | carry this committed row out | any True |
+| `reports` / `series` | which fields go on the health point; which tagged rows go to the bucket | merged (later wins, logged) / concatenated — by [reporting](/decisions/metrics-are-an-aspect.md), the sink |
+| `record` | a reading for the record — told by sensing | whoever holds the series sink |
 | `subscriptions` / `handle` / `send` | which channels do you need; take this message; carry this out to the society | the [transport](/domain/transport.md)'s — asked by the module that holds the connection |
 | `notices` | which pairs are unknown or too stale to act on? | concatenated for the deliberator |
 | `quiet` | what did you expect to hear and have stopped hearing? | a set of log lines |
-| `series` | which tagged rows go to the agent's own bucket? | concatenated, one writer |
-| `reports` | which fields go on the agent's health point? | merged dict |
 
 Prose around the project often names the choir by an older five — `annotate`, `urgency`,
 `notices`, `series`, `quiet` — a shorthand from before the rest joined. This table is the

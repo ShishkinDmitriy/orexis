@@ -167,7 +167,6 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     The modules under test are the ones that ship.
     """
     from agent import runtime
-    from packages.capability.sensing import observation
 
     class NoInflux:
         def __init__(self, *a, **k):
@@ -180,8 +179,8 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
             pass
 
     if monkeypatch is not None:
-        # one place for every capability that records — see orexis/observation.py
-        monkeypatch.setattr(observation, "InfluxWriter", NoInflux)
+        #  No series sink: reporting builds its writer in `start()`, which a built agent never
+        #  runs, so `record` is told and nobody writes — exactly a deployment with no credential.
         #  The transport's client, captured — the module is real, its socket is not.
         from packages.transport.mqtt import module as mqtt_module
         monkeypatch.setattr(mqtt_module.mqtt, "Client", lambda *a, **k: _FakeClient())

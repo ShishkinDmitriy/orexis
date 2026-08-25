@@ -75,14 +75,8 @@ class Metrics:
     def __init__(self, agent):
         self.agent = agent
         self.started_at = time.monotonic()
-        self.acked_cadence: dict[str, int] = {}
-        # Per sensor, keyed by local id — the same key the ACL and the topics use.
-        self.readings: dict[str, int] = {}
-        self.last_reading_at: dict[str, float] = {}
-        self.influx_failures = 0
-        self.sensed_failures = 0
-        #  The session's figures (`link_connected`, `link_reconnects`) are the transport's
-        #  `reports()` now — the kernel has no mailbox.
+        #  What a sensor delivered, how often, how stale, what the store refused — sensing's
+        #  counters now, reported through its `reports()`/`series()` (metrics-are-an-aspect).
         # The STORY, beside the figures (#125): point-in-time transitions with their prose —
         # an intention adopted, a commitment resolved, an end judged. Bounded, so a deployment
         # with no working reporter cannot grow a leak: the series is a projection for the
@@ -90,17 +84,6 @@ class Metrics:
         self._events: deque = deque(maxlen=256)
 
     # --- what the rest of the agent tells it ---
-
-    def reading_recorded(self, sensor) -> None:
-        local_id = sensor.local_id
-        self.readings[local_id] = self.readings.get(local_id, 0) + 1
-        self.last_reading_at[local_id] = time.monotonic()
-
-    def influx_failed(self) -> None:
-        self.influx_failures += 1
-
-    def sensed_failed(self) -> None:
-        self.sensed_failures += 1
 
     def event(self, kind: str, text: str, **tags: str) -> None:
         """A transition worth a marker over the series, stamped with the instant it happened.
@@ -132,25 +115,6 @@ class Metrics:
     def uptime_s(self) -> float:
         return time.monotonic() - self.started_at
 
-    def cadence_acked(self, local_id: str, acknowledged_s: int) -> None:
-        """The board's own statement of its rhythm (#135), kept for the health series."""
-        self.acked_cadence[local_id] = int(acknowledged_s)
-
-    def cadence_acked_s(self, local_id: str) -> int | None:
-        """None until the board has ever said — old firmware stays legal, and absence is the
-        pre-ack world rather than an error."""
-        return self.acked_cadence.get(local_id)
-
-    def reading_age_s(self, local_id: str) -> float | None:
-        """Seconds since this sensor last delivered. None until it has delivered once.
-
-        None rather than zero, and rather than seconds-since-boot: an agent that has never heard
-        from its board has a different problem from one whose board went quiet, and reporting a
-        number for both would hide it. `readings_total` at 0 is what says the first case out loud.
-        """
-        at = self.last_reading_at.get(local_id)
-        return None if at is None else time.monotonic() - at
-
     def agent_fields(self) -> dict:
         return {
             "uptime_s": round(self.uptime_s(), 1),
@@ -161,8 +125,6 @@ class Metrics:
             "belief_triples": len(self.agent.beliefs),
             # Both were being swallowed by `Observations` and only logged. A dashboard that is
             # flat at zero here is the evidence that nothing is being lost quietly.
-            "influx_write_failures": self.influx_failures,
-            "sensed_write_failures": self.sensed_failures,
             # Which world an agent is actually running, as opposed to which one is on disk. A
             # world can be re-ratified while agents keep running the version they booted with,
             # and nothing else at runtime would show the difference.
@@ -171,43 +133,12 @@ class Metrics:
         }
 
     def _upkeep_fields(self) -> dict:
-        """What the agent has had to do to keep its own house, and how many minds it has changed.
-
-        `belief_bytes` and `belief_triples` are reported separately above and the interesting
-        thing was always their QUOTIENT — flat triples under rising bytes is the signature of
-        write amplification, and neither number alone shows it. Now that the ratio triggers a
-        compaction, the compaction count is what tells a reader why the bytes line has teeth in
-        it, and `belief_revisions` is what tells them an agent is no longer running exactly the
-        beliefs its author wrote. See orexis/upkeep.py and capabilities/review/.
-
-        **Two sources, because they are two different things now.** Compaction is every agent's
-        and comes off the kernel; the revision counts come off a module an agent may not have.
-        An agent given no room to move reports the first and not the others — and the ABSENCE of
-        those lines is itself the reading, saying this one was never granted any latitude rather
-        than that it has had no second thoughts.
-        """
+        """What the agent has had to do to keep its own house. `belief_bytes` and
+        `belief_triples` are reported separately and the interesting thing was always their
+        QUOTIENT — flat triples under rising bytes is the signature of write amplification —
+        so the compaction count is what tells a reader why the bytes line has teeth in it.
+        Every other figure is a MODULE's, answered to the choir's `reports()` and merged by
+        reporting (metrics-are-an-aspect); the kernel reports only what is the mind's own."""
         upkeep = getattr(self.agent, "upkeep", None)
         out = {} if upkeep is None else {"belief_compactions": upkeep.compactions}
-        for module in getattr(self.agent, "modules", ()):
-            try:
-                out.update(module.reports())
-            except Exception as exc:
-                log.error("%s: %s could not report on itself: %s", self.agent.id, module.name, exc)
         return out
-
-    def sensors_seen(self) -> set[str]:
-        """Every sensor worth a line: the ones wired to me, and the ones that have delivered.
-
-        The two sets are not the same and neither contains the other. A wired sensor that has
-        never delivered belongs here so it can report zero — that is the whole "the board has
-        never been heard from" signal. And a sensor that HAS delivered belongs here even when it
-        is not in `me.sensors`, which is not a hypothetical: a simulated sensor is wired with
-        `ag:models`, a sub-property of `sensing:polls`, and SPARQL does not follow sub-properties
-        without inference — so a simulated agent's wired set is empty while it is recording
-        readings every few seconds. Reporting only the wired set silently omitted every
-        simulated agent, which is exactly the world one tests instrumentation in.
-        """
-        #  The wired set is each sensing module's own (`wiring.sensors_of`); this reads it
-        #  off whichever modules keep one, by attribute, because the kernel names no sensor.
-        wired = {s.local_id for m in self.agent.modules for s in getattr(m, "sensors", ())}
-        return wired | set(self.readings)

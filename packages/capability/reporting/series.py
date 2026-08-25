@@ -1,4 +1,11 @@
-"""InfluxDB = the series (the record). Every raw reading lands here."""
+"""The series store — InfluxDB — as the reporting capability writes to it.
+
+Was `agent/influx_writer.py`, the kernel's. The record's SINK is reporting's business: one
+credential, one writer, one clock, one write per tick — and the readings sensing records go
+through the same writer, told through the choir (`record`), so one place knows Influx exists
+(metrics-are-an-aspect). The measurement names are what the dashboards filter on and what
+`infra/tests` asserts against; they did not move.
+"""
 
 from __future__ import annotations
 
@@ -17,7 +24,7 @@ SENSOR_MEASUREMENT = "agent_sensor_health"
 EVENT_MEASUREMENT = "agent_events"
 
 
-class InfluxWriter:
+class SeriesWriter:
     def __init__(self, url: str, token: str, org: str, bucket: str):
         self.client = InfluxDBClient(url=url, token=token, org=org)
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
@@ -47,36 +54,23 @@ class InfluxWriter:
             point.time(at)
         self.write_api.write(bucket=self.bucket, record=point)
 
-    def write_agent_health(self, agent_id: str, fields: dict,
-                           per_sensor: dict, belief_bytes: int | None = None,
-                           tagged: list | None = None) -> None:
-        """One round of an agent's account of itself — see agent/metrics.py.
+    def write_agent_health(self, agent_id: str, fields: dict, belief_bytes=None,
+                           tagged=None) -> None:
+        """One health point per tick, and beside it every TAGGED row the modules contributed.
 
-        Written in one call so a round is one round: a partial write would show as a moment when
-        an agent had an uptime but no belief base.
+        `fields` is the merged answer to the choir's `reports()` — the kernel's own figures
+        and every module's, one dict — and `tagged` the concatenated answer to `series()`:
+        `(measurement, tags, fields)` rows, a property or a sensor as a TAG so one generic
+        panel groups by it (metrics-are-an-aspect). Per-sensor health used to be a parameter of
+        its own; it is sensing's `series()` rows now, because which sensors an agent has is
+        sensing's to say.
         """
         agent_point = Point(AGENT_MEASUREMENT).tag("agent", agent_id)
         for name, value in fields.items():
             agent_point.field(name, value)
         if belief_bytes is not None:
             agent_point.field("belief_bytes", int(belief_bytes))
-
         points = [agent_point]
-        for sensor, (total, age_s, acked_s) in per_sensor.items():
-            p = Point(SENSOR_MEASUREMENT).tag("agent", agent_id).tag("sensor", sensor)
-            p.field("readings_total", int(total))
-            # Omitted until the sensor has delivered once. A missing field is a gap in the
-            # series; a zero would be a claim that a reading had just arrived.
-            if age_s is not None:
-                p.field("reading_age_s", round(float(age_s), 1))
-            # The board's own account of its rhythm (#135). Beside the commanded cadence this
-            # is the #37 detector in series form: the two diverging IS the cleared or clamped
-            # command, visible instead of silent. Absent for old firmware, which stays legal.
-            if acked_s is not None:
-                p.field("cadence_acked_s", int(acked_s))
-            points.append(p)
-        # Module-contributed dimensioned rows (Module.series): a property is a TAG, so one
-        # generic panel groups by it — the same argument that put `property` on a reading.
         for measurement, tags, row_fields in (tagged or []):
             p = Point(measurement).tag("agent", agent_id)
             for name, value in tags.items():

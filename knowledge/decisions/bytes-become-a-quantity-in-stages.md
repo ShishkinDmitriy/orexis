@@ -256,7 +256,7 @@ premise-then-conclusion discipline, and the pointer staying a function.
 - **Nothing compares units before comparing numbers.** `water:bandLow` is a bare decimal and no code
   asks what unit the reading it is compared against is in. Stating units makes that check
   *possible*; it does not perform it.
-- **The unit reaches nothing downstream.** `agent/influx_writer.py` tags a reading with its
+- **The unit reaches nothing downstream.** the series writer (`packages/capability/reporting/series.py`, once `agent/influx_writer.py`) tags a reading with its
   property and not its unit, so the series store still cannot say what `21.4` is. Deliberate: #51
   changed the shape of that data once already, and doing it twice in consecutive changes would be
   two migrations where one would do.

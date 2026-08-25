@@ -1,4 +1,6 @@
-"""How a device is actually spoken to — the part that varies per binding.
+"""How a device is actually spoken to — the part that varies per binding. Sensing's contract,
+which a transport's driver implements (was `agent/driver.py`: the kernel held sensing's
+word for its devices, as it once held its codec and its scaling).
 
 A sensing module decides *when* to look and *what to make of it*; a driver knows only how
 to reach one kind of device. That line is deliberate: protocol changes nothing an agent must
@@ -18,7 +20,7 @@ here — because how a device is reached is not something an agent decides.
 
 from __future__ import annotations
 
-from . import loader
+from agent import loader
 
 
 class Driver:
