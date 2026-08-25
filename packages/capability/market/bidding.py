@@ -126,6 +126,10 @@ class BiddingModule(Module):
         self._present_deadline: Timer | None = None
         self.about, self._valuation_term = self._what_my_bids_are_priced_in()
         self.conversion = self._my_conversion()
+        #  WHICH WAY the lot moves the property I am priced in — the domain's statement on my
+        #  valuation term (#127), read here rather than by the keeper, because it is the
+        #  market's word and the watch I open is mine to describe.
+        self._rises = self._lot_raises()
 
     def _what_my_bids_are_priced_in(self) -> tuple[str, str]:
         """The observable property my valuation is denominated in, and the term that says so.
@@ -149,6 +153,19 @@ class BiddingModule(Module):
                 f"market:supplies good, no term carries market:ofGood/market:aboutProperty "
                 f"for it, or the stake's ranges and the good's valuations do not meet")
         return rows[0]["property"], rows[0]["term"]
+
+    def _lot_raises(self) -> bool:
+        rows = bindings(self.agent.beliefs.query(
+            f"SELECT ?d WHERE {{ <{self._valuation_term}> market:direction ?d }} LIMIT 1"))
+        return not rows or not rows[0]["d"].endswith("Lowers")
+
+    def _seeing_s(self) -> float | None:
+        """How long a reading of my property may take to arrive — the cadence my sensing keeps."""
+        sensing = self.agent.provider(SENSING)
+        try:
+            return float(sensing.stale_after_s(self.me.acts_for, self.about)) if sensing else None
+        except Exception:
+            return None
 
     def _my_conversion(self) -> float:
         """My own belief about how a deficit in the priced property becomes litres of the good.
@@ -258,7 +275,9 @@ class BiddingModule(Module):
         effect for the met-verdict's margin (#165), through the same conversion the bid was
         priced with. None when the belief cannot say, which keeps the exact-crossing verdict."""
         lpf = self.conversion
-        return (float(amount_l) / lpf) if lpf > 0 and amount_l else None
+        if not (lpf > 0 and amount_l):
+            return None
+        return (float(amount_l) / lpf) * (1 if self._rises else -1)
 
     def _keeper(self):
         """Whoever keeps my commitments, or None — and None is a complete answer.
@@ -583,7 +602,10 @@ class BiddingModule(Module):
                 keeper.expect(uri, self.about,
                               f"paid {debit} for {amount}L on a market with no redeem channel "
                               f"— the host has already redeemed, so show me",
-                              expected_delta=self._delta_of(amount))
+                              expected_delta=self._delta_of(amount), rises=self._rises,
+                              seeing_s=self._seeing_s())
+            if (sensing := self.agent.provider(SENSING)) is not None:
+                sensing.sense_now()   # the freshest before on record
             return
 
         # HOLD (#132): winning is not actuating. The claim stands until my watch is live —
@@ -647,5 +669,8 @@ class BiddingModule(Module):
                                       f"claim {held['jti']} presented: {why}"):
                 keeper.expect(uri, self.about,
                               f"presented {held['jti']} for {held['amount_l']}L — the graph "
-                              f"says this raises what I am short of, so show me",
-                              expected_delta=self._delta_of(held["amount_l"]))
+                              f"says this moves what I am short of, so show me",
+                              expected_delta=self._delta_of(held["amount_l"]), rises=self._rises,
+                              seeing_s=self._seeing_s())
+            if (sensing := self.agent.provider(SENSING)) is not None:
+                sensing.sense_now()

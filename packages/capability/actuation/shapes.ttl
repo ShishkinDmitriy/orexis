@@ -31,3 +31,17 @@ actuation:ActuatorShape a sh:NodeShape ;
     sh:property [ sh:path actuation:maxDoseMl ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ;
                   sh:message "an actuator must cap its own dose, whatever the claim says" ] .
+
+#  Moved from the kernel's shapes: a shape targeting `actuation:actuates` is this package's,
+#  whatever the term it checks belongs to (the-kernel-names-no-package-word, paid).
+actuation:SimulatedActuatorShape a sh:NodeShape ;
+    rdfs:comment "A stood-in actuator must say where it reports. Water reaching soil is physics, and physics has no wire — so between containers the only way a simulated sensor can learn that water actually flowed is a message from the valve that flowed it. Without a status topic the stand-in valve would open into nowhere: the command would be verified, the dose computed, and the soil would stay dry forever." ;
+    sh:targetSubjectsOf actuation:actuates ;
+    sh:property [ sh:path mqtt:statusTopic ; sh:maxCount 1 ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a simulated actuator must state mqtt:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/orexis#simulatedBy> ?model .
+                FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#statusTopic> ?t }
+            }""" ] .

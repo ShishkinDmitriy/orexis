@@ -260,3 +260,16 @@ written to support.
   that has none: a kernel-owned way to name a measurement range, an owner for the no-sensor
   warning, and the simulation package that does not exist. They are debt with a prerequisite, which
   is why the table says so rather than pretending an issue could close them today.
+
+# Paid since — the keeper, and the actuator shape
+
+Three more rows left the allowlist in one change. The keeper's copy of the market's direction
+(`market:Raises`/`market:Lowers`, looked up by the keeper when a watch opened) became something
+the ACTOR says: `expect(rises=…)`, or the sign of the delta it sized — the actor always held
+the word. The keeper's two lookups of the sensing family — a look once the watch opens, and the
+cadence that sets how long a reading takes to arrive — went the same way: the actor nudges its
+own sensing and passes `seeing_s`. And `ag:SimulatedActuatorShape`, the selector targeting
+`actuation:actuates`, is `actuation:SimulatedActuatorShape` in that package's own shapes. What
+remains on the list is the two sensing terms in the desire warning shape, the namespace
+constants onboarding interpolates, and the migration destinations — and `agent/world.py`, which
+the scan cannot see and the next change is about.

@@ -210,7 +210,7 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
         "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
     # and the end's verdict, which is the payoff line of the whole arc (#131)
-    assert keeper.expect(uri, MOISTURE, "the dose owes a rise")
+    assert keeper.expect(uri, MOISTURE, "the dose owes a rise", rises=True)
     fern.metrics.take_events()
     keeper.on_reading_recorded(fern.me.acts_for, MOISTURE, 0.50)
     verdicts = fern.metrics.take_events()

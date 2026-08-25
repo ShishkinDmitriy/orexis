@@ -16,7 +16,7 @@ from .desire import Desire
 from .module import Module
 from .ontology import AG, SENSED_GRAPH, beliefs_graph
 from .regions import (Gap, Region, aims_of, desires_of, gaps_of, regions_of,
-                      _SENSING, _AIMS_Q, _REGIONS_Q)
+                      _AIMS_Q, _REGIONS_Q)
 from .store import bindings
 
 class Deducer(Module):
@@ -144,26 +144,22 @@ class Deducer(Module):
                        self.me.uri, self.agent.id, measure=self._measured)
 
     def current(self) -> dict[str, Gap]:
-        """The diff I would act on: every row still inside my own freshness rule.
+        """The gaps whose reading is still evidence — the eyes that are open.
 
-        The rule is sensing's — the cadence I commanded plus my grace, per property — asked
-        through the provider exactly as bidding asks it, because a reading past what I allow
-        for the rhythm I myself set is a sensor gone quiet, not a measurement. Issue #124's
-        case in one sentence: a dead probe's last observation is upserted, never expires, and
-        without this filter kept presenting a comfortable pot for however long the probe stayed
-        dead. With no sensing at all nothing wrote these observations either, so every row
-        passes vacuously and honestly.
+        Whether a reading is still evidence is SENSING's judgment, not this module's: it derives
+        a freshness want per instrument and measures it against the horizon it keeps, and that
+        want is met exactly when the reading is current. So this asks the agent's own wants —
+        kernel structure, `is_epistemic` and `is_met` — and counts a gap whose property has a
+        met freshness want, rather than asking the sensing family for its horizon by name,
+        which was the kernel judging staleness with a word that is not its own. Issue #124's
+        case holds by the same road: a dead probe's last observation is upserted and never
+        expires, but its freshness want goes cold, and the gap stops counting as seen. With no
+        sensing at all no epistemic want exists and nothing wrote a reading either, so every
+        gap is unmeasured and honestly absent.
         """
-        sensing = self.agent.provider(_SENSING)
-        if sensing is None:
-            return self.gaps()
-        out = {}
-        for prop, gap in self.gaps().items():
-            age = gap.age_s()
-            if age is not None and age > sensing.stale_after_s(self.me.acts_for, prop):
-                continue
-            out[prop] = gap
-        return out
+        fresh = {d.observed_property for d in self.agent.pursuing()
+                 if d.is_epistemic and d.is_met}
+        return {prop: gap for prop, gap in self.gaps().items() if prop in fresh}
 
     def reports(self) -> dict:
         """What this agent wants, how much of that it can currently see, and the worst of it.

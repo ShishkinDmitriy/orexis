@@ -61,7 +61,7 @@ BECAUSE_OF = AG + "becauseOf"
 PATIENCE_S = AG + "patienceS"
 
 # The expectation — the END, judged apart from the action.
-EXPECTS_VALUE_TO = AG + "expectsValueTo"
+EXPECTS_RISE = AG + "expectsRise"
 BASELINE_VALUE = AG + "baselineValue"
 BASELINE_AT = AG + "baselineAt"
 EXPECTS_DELTA = AG + "expectsDelta"
@@ -79,13 +79,11 @@ def kernel(name: str) -> str:
 # What this package asks OF others — namespaces, never Python. The direction a lever moves the
 # property it is priced in is the domain's statement (#127), copied into the expectation row;
 # sensing is asked to look once so the baseline is the freshest thing on record.
-_SENSING = "http://example.org/orexis/sensing#SensingCapability"
-_RAISES = "http://example.org/orexis/market#Raises"
-_LOWERS = "http://example.org/orexis/market#Lowers"
-_DIRECTION_Q = """
-SELECT ?direction WHERE {
-  ?term market:aboutProperty <%s> ; market:direction ?direction
-} LIMIT 1"""
+#  The sensing family, the two market directions and the direction query WERE HERE. The keeper
+#  used to look up which way a dose should move the value (the market's word) and ask sensing
+#  to look once (the sensing family's name) when a watch opened — the last package words this
+#  file named. Both are the ACTOR's to say: whoever opened the watch knows which way its act
+#  pushes and how long a reading of that property takes to arrive, and nudges its own sensing.
 
 # How many consecutive unmet ends make an affordance suspect — the family's figure, like the
 # patience bounds: what this society tolerates before it stops trusting a claim.
@@ -143,7 +141,7 @@ class OpenExpectation:
     uri: str
     action: str
     observed_property: str
-    direction: str          # market:Raises or market:Lowers — which way the value should move
+    rises: bool             # which way the act promised to move the value
     baseline: float
     baseline_at: datetime
     deadline: datetime
@@ -344,35 +342,32 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def expect(self, intention_uri: str, observed_property: str, because: str,
                expected_delta: float | None = None,
-               lands_after_s: float | None = None) -> bool:
+               lands_after_s: float | None = None,
+               rises: bool | None = None,
+               seeing_s: float | None = None) -> bool:
         """Open the watch: the act happened, now the world owes a movement.
 
         The BASELINE is copied into the row — the sensed graph keeps only the current witness,
-        so the before of any before/after survives nowhere but the ledger. `expected_delta` is
-        how far the act should move the property when the actor can say — a dose of known
-        litres through the domain's conversion — and it is what the met-verdict measures its
-        margin against (#165); an act that cannot size its own effect passes None and keeps
-        the exact-crossing verdict. The DIRECTION comes
-        from the domain's own statement on its valuation (#127), copied so the row stays
-        judgeable even if the vocabulary is later amended. And sensing is asked to look once, so
-        the freshest possible before is on record and the first after arrives sooner.
+        so the before of any before/after survives nowhere but the ledger. WHICH WAY the value
+        should move is the actor's to say: `rises`, or the sign of `expected_delta` — how far
+        the act should move the property when the actor can size it (#165), which is what the
+        met-verdict measures its margin against. An act that cannot size itself passes `rises`
+        alone and keeps the exact-crossing verdict. The keeper used to look the direction up
+        from the market's statement on the valuation; that is a package word, and the actor
+        that opened the watch already holds it.
 
-        The DEADLINE was the patience, and that was a recorded seam in this docstring — "the
-        dose and the physics could derive a better one". `lands_after_s` is that better one
-        (#247): the actor asks its own effect rule when the world change completes and passes
-        the answer, and the watch runs until then PLUS how long a reading of that property may
-        honestly take to arrive. Both halves are figures somebody already states — the device's
-        calibration through the rule, and the cadence this agent itself commanded through
-        `stale_after_s` — so nothing here invents a number.
-
-        Patience remains the answer when an act cannot size itself, which is the same shape as
-        `expected_delta`: a caller that cannot say passes nothing and keeps exactly the
-        behaviour it had. Patience was never wrong, only unrelated — it is how long an agent
+        The DEADLINE is the act's landing time (`lands_after_s`, asked of the effect rule by
+        the actor, #247) PLUS how long a reading of that property may honestly take to arrive
+        (`seeing_s`, the cadence the actor's sensing keeps) — both figures somebody already
+        states. An act that cannot size itself gets the patience, unchanged: how long an agent
         waits before re-deciding, not how long the physics takes, and holding a dose to it
         called a valve late at 120s while the pot's own sensor reported every 600.
 
+        The actor also asks its sensing to look once after opening the watch, so the freshest
+        before is on record; the keeper no longer names the sensing family to do it.
+
         False rather than a row when something needed is missing — no reading to baseline on,
-        no direction stated — and the reason is logged: an expectation that cannot be judged
+        no direction said — and the reason is logged: an expectation that cannot be judged
         would sit unverified forever, which is indistinguishable from the failure it exists to
         catch.
         """
@@ -381,14 +376,16 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             self.log.warning("cannot expect an end for %s — no baselined reading to leave from",
                              observed_property)
             return False
-        rows = bindings(self.agent.beliefs.query(_DIRECTION_Q % observed_property))
-        if not rows:
-            self.log.warning("cannot expect an end for %s — the domain states no direction",
-                             observed_property)
+        if rises is None and expected_delta:
+            rises = expected_delta > 0
+        if rises is None:
+            self.log.warning("cannot expect an end for %s — the actor said which way it "
+                             "should move neither by sign nor by word", observed_property)
             return False
-        direction = rows[0]["direction"]
+        expected_delta = abs(expected_delta) if expected_delta else None
         now = datetime.now(timezone.utc)
-        window = self._window_for(observed_property, lands_after_s)
+        window = (lands_after_s + (seeing_s or 0.0) if lands_after_s is not None
+                  else float(self.beliefs.patience_s))
         deadline = now.timestamp() + window
         deadline_dt = datetime.fromtimestamp(deadline, tz=timezone.utc)
         delta = (f"""
@@ -397,57 +394,26 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{intention_uri}>{delta}
-    <{EXPECTS_VALUE_TO}> <{direction}> ;
+    <{EXPECTS_RISE}> {"true" if rises else "false"} ;
     <{BASELINE_VALUE}> "{reading.value}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
     <{BASELINE_AT}> "{reading.result_time.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
     <{DEADLINE_AT}> "{deadline_dt.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
-        self.log.info("expecting %s to move %s from %.3f within %ss: %s",
+        self.log.info("expecting %s to %s from %.3f within %ss: %s",
                       observed_property.rsplit("#", 1)[-1],
-                      direction.rsplit("#", 1)[-1], reading.value, round(window), because)
-        #  All of them, for the reason the gap tick gives: an agent with two clocks has two
-        #  sensing modules, and the one `provider` happens to return may be the one that
-        #  cannot ask.
-        for sensing in self.agent.providers(_SENSING):
-            sensing.sense_now()
+                      "rise" if rises else "fall", reading.value, round(window), because)
         return True
-
-    def _window_for(self, observed_property: str, lands_after_s: float | None) -> float:
-        """How long to hold the world to this expectation: landing plus the latency of SEEING it.
-
-        Two figures, neither of them new. The first is the act's own — the effect rule's answer
-        for this dose — and the second is how stale a reading of this property may be before
-        this agent stops trusting it, which is the cadence it commanded plus its own grace.
-        An act that cannot size itself gets the patience, unchanged.
-
-        The observation half matters as much as the landing half: a dose that takes 50s to pour
-        into a pot whose sensor reports every 600s cannot be judged at 50s, and holding it to
-        the patience judged it at 120 — before any reading could possibly have shown it. That
-        is a false UNMET manufactured by a clock, and it feeds `suspectAfter`, which is how an
-        honest lever comes to be marked a liar.
-        """
-        if lands_after_s is None:
-            return float(self.beliefs.patience_s)
-        seeing = 0.0
-        if (sensing := self.agent.provider(_SENSING)) is not None:
-            try:
-                seeing = float(sensing.stale_after_s(self.me.acts_for, observed_property))
-            except Exception:
-                #  A property this agent polls no sensor for: the act may still be worth
-                #  waiting on, and the landing time alone is the honest bound.
-                seeing = 0.0
-        return lands_after_s + seeing
 
     def open_expectations(self, observed_property: str | None = None) -> list[OpenExpectation]:
         """Every watch still on: expectation adopted, end not yet verified."""
         prop = f"FILTER(?property = <{observed_property}>)" if observed_property else ""
         rows = bindings(self.agent.intentions.query(f"""
-SELECT ?i ?action ?property ?direction ?baseline ?baselineAt ?deadline ?delta WHERE {{
+SELECT ?i ?action ?property ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{kernel("by")}> ?action ;
        <http://www.w3.org/ns/ssn/forProperty> ?property ;
-       <{EXPECTS_VALUE_TO}> ?direction ;
+       <{EXPECTS_RISE}> ?rises ;
        <{BASELINE_VALUE}> ?baseline ;
        <{BASELINE_AT}> ?baselineAt ;
        <{DEADLINE_AT}> ?deadline .
@@ -457,7 +423,7 @@ SELECT ?i ?action ?property ?direction ?baseline ?baselineAt ?deadline ?delta WH
   }} }}"""))
         return [OpenExpectation(
             uri=r["i"], action=r["action"], observed_property=r["property"],
-            direction=r["direction"], baseline=float(r["baseline"]),
+            rises=r["rises"] in ("true", "1"), baseline=float(r["baseline"]),
             baseline_at=datetime.fromisoformat(r["baselineAt"]),
             deadline=datetime.fromisoformat(r["deadline"]),
             expected_delta=float(r["delta"]) if r.get("delta") else None) for r in rows]
@@ -484,8 +450,7 @@ SELECT ?i ?action ?property ?direction ?baseline ?baselineAt ?deadline ?delta WH
             return
         now = datetime.now(timezone.utc)
         for watch in self.open_expectations(observed_property):
-            moved = (value > watch.baseline if watch.direction == _RAISES
-                     else value < watch.baseline)
+            moved = value > watch.baseline if watch.rises else value < watch.baseline
             if moved and watch.expected_delta:
                 # The margin (#165): a movement is the world answering only when it is
                 # commensurate with the act — metFraction of what the dose should have moved.

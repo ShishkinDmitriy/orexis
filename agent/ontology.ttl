@@ -782,10 +782,9 @@ ag:becauseOf a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:
 #  a SEPARATE fact: `endMet`. Satisfied-and-unmet is the false-knowledge signature — the graph
 #  said this lever moves this property, and the world kept disagreeing.
 
-ag:expectsValueTo a owl:ObjectProperty ; rdfs:domain ag:Intention ;
-    rdfs:label "expects value to" ;
-    rdfs:comment "Which way the property should move if the act did what the graph claims — a market:Direction individual, copied from the lever's own statement at expectation time so the row is judgeable without a join to a vocabulary that may since have been amended." .
-ag:baselineValue a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:decimal ;
+ag:expectsRise a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:boolean ;
+    rdfs:label "expects the value to rise" ;
+    rdfs:comment "Which way the act promised to move the property — said by the actor that opened the watch, from the sign of the delta it sized or in so many words. It WAS `ag:expectsValueTo`, a market direction the keeper looked up itself; a package word in the kernel, and the actor always knew. An open watch written under the old term is not read back: it closes unjudged across this upgrade, and the next act opens a new one." .ag:baselineValue a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:decimal ;
     rdfs:label "baseline value" ;
     rdfs:comment "Where the property stood when the expectation was adopted. Copied into the row, deliberately: the sensed graph upserts — one current observation per property — so the BEFORE of any before/after survives nowhere but here. The ledger is the memory of commitments, and this is the commitment's opening position." .
 ag:baselineAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
