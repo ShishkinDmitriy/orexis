@@ -53,6 +53,10 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
 
+* [act](/domain/act.md) - An action filled in — lever, property, quantity, whom for, and a window. Execution's word: committed, taken, promised.
+
+* [step](/domain/step.md) - Planning's word: an act at its place in a plan with what the search predicted. Only the head's act is committed.
+
 * [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
 
 * [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.
