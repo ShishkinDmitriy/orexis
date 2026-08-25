@@ -389,4 +389,10 @@ def migrate_ledger_acts(intentions, graph: str) -> int:
                                         {through} }} }}
             WHERE  {{ GRAPH <{graph}> {{ <{row['i']}> <{AG}by> <{row['action']}> .
                                         OPTIONAL {{ <{row['i']}> <{AG}through> ?t }} }} }}""")
+    #  And the watch's deadline, which sat on the intention as `ag:deadlineAt` before the
+    #  window was the act's: moved onto the act as `ag:notAfter`.
+    intentions.update(f"""
+        DELETE {{ GRAPH <{graph}> {{ ?i <{AG}deadlineAt> ?d }} }}
+        INSERT {{ GRAPH <{graph}> {{ ?act <{AG}notAfter> ?d }} }}
+        WHERE  {{ GRAPH <{graph}> {{ ?i <{AG}deadlineAt> ?d ; <{AG}by> ?act }} }}""")
     return len(rows)

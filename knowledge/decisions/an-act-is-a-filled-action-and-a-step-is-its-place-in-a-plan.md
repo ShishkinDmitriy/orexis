@@ -61,7 +61,11 @@ rather than as a roadmap item.
    ledgers migrate at the keeper's construction (#370, landed — `Standing.act`, and the
    sovereign asking the intentions modality sees the quantity and the window on the act).
 3. A commitment promises an act; `Claim` carries the host's Serving act; `exp` is the act's
-   not-after; the actors' hand-kept timers read the window instead (#371).
+   not-after; the actors' hand-kept timers read the window instead (#371, landed —
+   `Commitment.act`; `issue_claims(…, act_for)` fills the Serving act from the host; the
+   self-dose commits to a Dosing act windowed by its landing and seeing time; `ag:deadlineAt`
+   is gone and the watch's deadline IS the act's `ag:notAfter`, which the bidder's give-up
+   timer reads back off the ledger and the keeper writes through `window()`).
 
 **Written after the record, and worth saying:** this record was merged as #372 and then lost
 from `main` in a history rewrite; it was recovered from the orphaned commit with #369, and
@@ -70,7 +74,10 @@ its "property" became "want" on the way, since
 
 # Seams left open
 
-- **Not-before has no writer.** The field exists once #371 lands; the first thing to write it
-  is futures, which is a market decision.
+- **Not-before has no writer.** The field exists; the first thing to write it is futures, which
+  is a market decision.
+- **A commitment over the wire carries no act.** The buyer's claim has `exp` and nothing else
+  of the window; the act it embodies stays with the host that issued it. Putting the act on the
+  wire would be putting the host's lever in a buyer's hands, which the executor page refuses.
 - **A step's predicted world is trace only.** `ag:wouldReach` on a candidate is a number; the
   world itself is dropped with the imaginarium, by design.

@@ -42,7 +42,8 @@ class AuctionResult:
 
 
 def run_auction(offer: Offer, bids: Iterable[Bid], state: MarketState, auction_id: str,
-              match: Match, redeem_window_s: float | None = None) -> AuctionResult:
+              match: Match, redeem_window_s: float | None = None,
+              act_for=None) -> AuctionResult:
     """Host proposes the match; clearing validates; claims issue only on a green light.
 
     The window is the VENUE's and arrives from the host, which is the only party that has read
@@ -51,5 +52,5 @@ def run_auction(offer: Offer, bids: Iterable[Bid], state: MarketState, auction_i
     """
     trade = match(offer, bids)
     result = validate(trade, state)
-    claims = issue_claims(trade, auction_id, redeem_window_s) if result.ok else []
+    claims = issue_claims(trade, auction_id, redeem_window_s, act_for) if result.ok else []
     return AuctionResult(trade=trade, validation=result, claims=claims)

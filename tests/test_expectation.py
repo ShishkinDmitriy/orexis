@@ -19,7 +19,7 @@ from packages.capability.market.terms import ACQUIRING
 from packages.capability.actuation.terms import DOSING as _ACTUATE
 
 from agent.store import bindings
-from agent.keeper import DEADLINE_AT
+from agent.ontology import AG
 
 from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
 
@@ -337,7 +337,7 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
                          baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
-SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))
+SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{AG}by> ?act . ?act <{AG}notAfter> ?d }} }}"""))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - (50.0 + seeing)) < 2.0, (
         f"the watch should run for the dose (50s) plus how long seeing takes ({seeing}s), "
@@ -362,6 +362,6 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
                          baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
-SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{DEADLINE_AT}> ?d }} }}"""))
+SELECT ?d WHERE {{ GRAPH <{keeper.graph}> {{ <{uri}> <{AG}by> ?act . ?act <{AG}notAfter> ?d }} }}"""))
     window = datetime.fromisoformat(rows[0]["d"]).timestamp() - before
     assert abs(window - keeper.beliefs.patience_s) < 2.0

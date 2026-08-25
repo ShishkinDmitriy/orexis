@@ -14,7 +14,12 @@ binds an agent to a device — the access grant is *granted* (at genesis), the c
 # Shape
 
 A `Claim` is the kernel's [commitment](/domain/commitment.md) — the promised flow — with the
-credit leg added; the fields below are that shape plus `debit`.
+credit leg added; the fields below are that shape plus `debit`. What it is a commitment TO is
+the host's Serving [act](/domain/act.md): this venue, so many litres, for this buyer, not after
+`exp` — issued with the claim, held by the host, and the act the buyer's presentation asks it
+to take. **The window is the act's**: `exp` is its `not_after` on the wire, the host's redeem
+check reads it, and the buyer's Acquiring act is windowed the same way at the round's close.
+`not_before` exists on the act and nothing writes it — see futures below.
 
 `sub` (who won), the supplier, `amount_l`, `debit` (the price), `auction_id`, `jti` (single-use),
 `exp`. **Co-signed** by the **host** (`match_sig` — the seller offered it) and

@@ -67,7 +67,9 @@ EXPECTS_RISE = AG + "expectsRise"
 BASELINE_VALUE = AG + "baselineValue"
 BASELINE_AT = AG + "baselineAt"
 EXPECTS_DELTA = AG + "expectsDelta"
-DEADLINE_AT = AG + "deadlineAt"
+#  `ag:deadlineAt` WAS HERE: the watch's deadline is the ACT's `ag:notAfter` now — one window,
+#  read by the keeper, the bidder's give-up and the host's redeem check alike
+#  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). `vocabulary` migrates it.
 END_MET = AG + "endMet"
 END_VERIFIED_AT = AG + "endVerifiedAt"
 SUSPECT_AFTER = AG + "suspectAfter"
@@ -385,8 +387,14 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                lands_after_s: float | None = None,
                rises: bool | None = None,
                seeing_s: float | None = None,
-               baseline=None) -> bool:
+               baseline=None,
+               not_after: datetime | None = None) -> bool:
         """Open the watch: the act happened, now the world owes a movement.
+
+        THE DEADLINE IS THE ACT'S WINDOW. `not_after`, where the actor states it (the act it
+        committed to carries one), or else the landing time plus the seeing time computed
+        here — and either way it is written as the act's `ag:notAfter`, so the ledger holds
+        one window and every reader reads that one.
 
         The BASELINE — the reading the actor holds, handed in — is copied into the row: the
         sensed graph keeps only the current witness, so the before of any before/after survives
@@ -432,8 +440,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         now = datetime.now(timezone.utc)
         window = (lands_after_s + (seeing_s or 0.0) if lands_after_s is not None
                   else float(self.beliefs.patience_s))
-        deadline = now.timestamp() + window
-        deadline_dt = datetime.fromtimestamp(deadline, tz=timezone.utc)
+        deadline_dt = not_after or datetime.fromtimestamp(now.timestamp() + window,
+                                                          tz=timezone.utc)
+        window = (deadline_dt - now).total_seconds()
         delta = (f"""
     <{EXPECTS_DELTA}> "{expected_delta}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;"""
                  if expected_delta else "")
@@ -443,13 +452,22 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     <{EXPECTS_RISE}> {"true" if rises else "false"} ;
     <{BASELINE_VALUE}> "{reading.value}"^^<http://www.w3.org/2001/XMLSchema#decimal> ;
     <{BASELINE_AT}> "{reading.result_time.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-    <{DEADLINE_AT}> "{deadline_dt.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
+        self.window(intention_uri, deadline_dt)
         self.log.info("expecting %s to %s from %.3f within %ss: %s",
                       _short(intention_uri),
                       "rise" if rises else "fall", reading.value, round(window), because)
         return True
+
+    def window(self, intention_uri: str, not_after: datetime) -> None:
+        """Set the window's close on the act an intention names — the one figure the bidder's
+        give-up, the host's redeem check and the expectation's verdict all read."""
+        self.agent.intentions.update(f"""
+DELETE {{ GRAPH <{self.graph}> {{ ?act <{kernel("notAfter")}> ?was }} }}
+INSERT {{ GRAPH <{self.graph}> {{ ?act <{kernel("notAfter")}> "{not_after.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}
+WHERE  {{ GRAPH <{self.graph}> {{ <{intention_uri}> <{kernel("by")}> ?act .
+                                  OPTIONAL {{ ?act <{kernel("notAfter")}> ?was }} }} }}""")
 
     def open_expectations(self, want: str | None = None) -> list[OpenExpectation]:
         """Every watch still on: expectation adopted, end not yet verified — for one want, or
@@ -460,11 +478,11 @@ SELECT ?i ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{kernel("by")}> ?act ;
        <{kernel("pursues")}> ?want .
-    ?act <{kernel("fills")}> ?action .
+    ?act <{kernel("fills")}> ?action ;
+         <{kernel("notAfter")}> ?deadline .
     ?i <{EXPECTS_RISE}> ?rises ;
        <{BASELINE_VALUE}> ?baseline ;
-       <{BASELINE_AT}> ?baselineAt ;
-       <{DEADLINE_AT}> ?deadline .
+       <{BASELINE_AT}> ?baselineAt .
     OPTIONAL {{ ?i <{EXPECTS_DELTA}> ?delta }}
     FILTER NOT EXISTS {{ ?i <{END_MET}> ?met }}
     {prop}
