@@ -213,8 +213,6 @@ def test_the_series_store_is_told_which_property_each_reading_is(monkeypatch):
     and every dashboard and later query would read it as one. The belief base was always fine;
     it keys by subject AND property. The series store, which is the record, was not.
     """
-    from packages.capability.sensing import observation
-
     written = []
 
     class Recorder:
@@ -231,8 +229,8 @@ def test_the_series_store_is_told_which_property_each_reading_is(monkeypatch):
             pass
 
     agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
-    monkeypatch.setattr(observation, "InfluxWriter", Recorder)
-    agent.subscribing().observations = observation.Observations(agent)
+    #  The sink is reporting's; sensing TELLS `record` and reporting writes (metrics-are-an-aspect).
+    agent.module("reporting")._writer = Recorder()
 
     agent.deliver("sensors/moisture_sensor_fern/reading",
                   {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46})

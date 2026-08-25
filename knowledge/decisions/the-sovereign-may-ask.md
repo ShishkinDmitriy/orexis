@@ -39,7 +39,7 @@ Three properties carry the design:
   refused with the road spelled out.
 
 The topic pair is the one channel an agent listens on that the world does not state
-(`agent/sovereign.py` is its single source, imported by both the ACL generator and the
+(`packages/capability/reporting/sovereign.py` — `agent/sovereign.py` until [metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md) — is its single source, imported by both the ACL generator and the
 responder): it is not the society's business — no agent may hear another's questions or speak
 on another's answers, which the generated grants say explicitly, in the ACL's own idiom of
 silence-is-not-permission.

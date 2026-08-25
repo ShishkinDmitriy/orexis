@@ -27,7 +27,8 @@ import time
 import paho.mqtt.client as mqtt
 
 from agent import config
-from agent.module import Module
+from agent.module import Module, hook
+from agent.ontology import HANDLE, SEND, SUBSCRIPTIONS
 from agent.store import bindings
 
 from .watchdog import BusWatchdog
@@ -113,7 +114,7 @@ class MqttModule(Module):
             self.connected = True
             self.reconnects += 1
             self.disconnected_at = None
-            topics = [t for wanted in self.agent.ask("subscriptions") for t in wanted]
+            topics = [t for wanted in self.agent.ask(SUBSCRIPTIONS) for t in wanted]
             for topic in topics:
                 self.client.subscribe(topic)
             #  The topics, spelled out. An agent subscribed to the wrong thing looks exactly
@@ -144,11 +145,12 @@ class MqttModule(Module):
         a WARNING — the world names one channel, the device publishes on another, both ends
         look healthy, and the message would be dropped in silence.
         """
-        if not any(self.agent.ask("handle", topic, payload)):
+        if not any(self.agent.ask(HANDLE, topic, payload)):
             self.log.warning("nothing handled a message on %s", topic)
 
     # --- the choir: what the rest of the agent asks of me ---------------------------------
 
+    @hook(SEND)
     def send(self, channel: str, payload: dict, retain: bool = False) -> None:
         """What `Module.publish` tells: carry this to the society."""
         self.client.publish(channel, json.dumps(payload), qos=1, retain=retain)

@@ -66,7 +66,7 @@ and never learns a message exists.
 
 # What did not change
 
-- **Channel names** — strings the society agrees on; `agent/sovereign.py`'s topic shape is a
+- **Channel names** — strings the society agrees on; the sovereign channel's topic shape (reporting's, since [metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md)) is a
   naming convention read by the ACL generator too, not a transport.
 - **The ACL and the credentials** — `orexis-mqtt` mints them as before; only their reader
   moved. [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) is untouched.

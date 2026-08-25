@@ -63,7 +63,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from agent import loader
-from agent.module import Module
+from agent.module import Module, hook
+from agent.ontology import BELIEF_REVISED
+
+READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from agent.ontology import beliefs_graph
 from agent.store import bindings, decimal
 from agent.validate import BeliefsInvalid, validate_agent
@@ -151,6 +154,7 @@ class ReviewModule(Module):
 
     # --- what I fold in as it arrives ------------------------------------------------------
 
+    @hook(READING_RECORDED)
     def on_reading_recorded(self, subject_uri: str, observed_property: str,
                             value: float) -> None:
         """Keep the running account this module's own judgement is made from.
@@ -373,12 +377,7 @@ SELECT ?v WHERE {{ GRAPH <{beliefs_graph(self.agent.id)}> {{
         # Modules read their block once, into a frozen dataclass. A revision nothing tells them
         # about would not take effect until the next restart, which makes the whole mechanism
         # look broken rather than absent.
-        for module in self.agent.modules:
-            try:
-                module.on_belief_revised(room.term, value)
-            except Exception as exc:
-                log.error("%s: %s could not take up the revision: %s",
-                          self.agent.id, module.name, exc)
+        self.agent.tell(BELIEF_REVISED, room.term, value)
         return True
 
     def _write(self, graph: str, belief_term: str, value) -> None:

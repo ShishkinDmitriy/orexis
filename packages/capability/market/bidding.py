@@ -34,7 +34,11 @@ from datetime import datetime, timedelta, timezone
 
 from agent import signing
 from .trade import EPS, Bid
-from agent.module import Module, Timer
+from agent.module import Module, Timer, hook
+from agent.ontology import HANDLE, SUBSCRIPTIONS
+
+SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
+READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
 from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
@@ -334,6 +338,7 @@ class BiddingModule(Module):
         if self._present_deadline:
             self._present_deadline.stop()
 
+    @hook(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
         topics = []
         for market in self.markets:
@@ -341,6 +346,7 @@ class BiddingModule(Module):
             topics.append(f"{market.claim_topic}/{self.me.agent_id}")
         return topics
 
+    @hook(HANDLE)
     def handle(self, topic: str, payload: bytes) -> bool:
         for market in self.markets:
             if topic == market.offer_topic:
@@ -454,6 +460,7 @@ class BiddingModule(Module):
         self._deadline = Timer(window, self.give_up)
         self._deadline.start()
 
+    @hook(READING_RECORDED)
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
         """The look I asked for came back. Now I can bid on it — if it is the one I asked for.
 
@@ -534,6 +541,7 @@ class BiddingModule(Module):
                           auction_id, moisture)
             self.pending = None
 
+    @hook(SENSING_URGENCY)
     def urgency(self, subject_uri: str, observed_property: str,
                 value: float | None) -> float | None:
         """A HELD claim is urgency (#132): the dose is coming the moment my watch is live,

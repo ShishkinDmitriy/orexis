@@ -42,6 +42,7 @@ import os
 import signal
 
 from agent.module import Timer
+from agent.ontology import QUIET
 from agent.store import bindings
 
 log = logging.getLogger("watchdog")
@@ -101,7 +102,7 @@ class BusWatchdog:
 
     def _sweep_quiet(self) -> None:
         """Say what has gone silent, once on entry and once on recovery — never per tick."""
-        heard_nothing = {line for lines in self.agent.ask("quiet") for line in lines}
+        heard_nothing = {line for lines in self.agent.ask(QUIET) for line in lines}
         for line in sorted(heard_nothing - self._quiet):
             log.warning("%s: %s", self.agent.id, line)
         for line in sorted(self._quiet - heard_nothing):

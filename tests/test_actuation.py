@@ -45,8 +45,8 @@ class FakeAgent:
         self.sent.append((topic, payload))
 
     def tell(self, hook, *args, **kwargs):
-        #  `Module.publish` tells `send` to whoever holds the connection; here that is this fake
-        if hook == "send":
+        #  `Module.publish` tells `ag:send` to whoever holds the connection; here that is this fake
+        if hook.endswith("#send"):
             self.publish(*args, **kwargs)
 
 

@@ -27,7 +27,9 @@ capability holds a judgment another merely needs, and it is half of what makes
 
 The kernel owns the MECHANISM — `Agent.ask(hook, …)` collects every module's answer to a
 question and `Agent.tell(hook, …)` delivers an event, an error in one voice logged and never
-silencing the rest — and defines by name only the BDI-shaped hooks. The hooks about a READING
+silencing the rest — and every hook is a TERM, an `ag:Hook` declared by whoever owns the
+question and refused if nobody does ([a-hook-is-a-term](/decisions/a-hook-is-a-term.md)). A
+module answers one by `@hook(term)` on a method; an override by name inherits the term. The hooks about a READING
 are sensing's contract (`packages/capability/sensing/choir.py`): a module joins by defining the
 method, and sensing says what it is asked with and how the answers merge
 ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
@@ -42,11 +44,11 @@ method, and sensing says what it is asked with and how the answers merge
 | `desire_urgency` | how urgent is this want, in this world? | first opinion |
 | `size` | how big would the act this row commits to be? | the taker's answer |
 | `take` | carry this committed row out | any True |
+| `reports` / `series` | which fields go on the health point; which tagged rows go to the bucket | merged (later wins, logged) / concatenated — by [reporting](/decisions/metrics-are-an-aspect.md), the sink |
+| `record` | a reading for the record — told by sensing | whoever holds the series sink |
 | `subscriptions` / `handle` / `send` | which channels do you need; take this message; carry this out to the society | the [transport](/domain/transport.md)'s — asked by the module that holds the connection |
 | `notices` | which pairs are unknown or too stale to act on? | concatenated for the deliberator |
 | `quiet` | what did you expect to hear and have stopped hearing? | a set of log lines |
-| `series` | which tagged rows go to the agent's own bucket? | concatenated, one writer |
-| `reports` | which fields go on the agent's health point? | merged dict |
 
 Prose around the project often names the choir by an older five — `annotate`, `urgency`,
 `notices`, `series`, `quiet` — a shorthand from before the rest joined. This table is the
@@ -67,8 +69,9 @@ a different fact from having had nothing to say.
 # Adding a singer is nothing; adding a hook is a kernel edit
 
 A package whose module implements a hook joins the choir by being loaded — no registration, no
-list to append to. A new hook is different: it needs an asker — the kernel's, for a BDI-shaped
-question, or a package's through `Agent.ask` for one in its own words — and it must obey the discipline the first collision taught — two hooks may not share a
+list to append to. A new hook is different: it needs a TERM in the ontology of whoever owns the
+question — the kernel's for a BDI-shaped one, a package's for one in its own words — and an
+asker, and it must obey the discipline the first collision taught — two hooks may not share a
 name with different contracts. `notices()` is named for the act rather than the object because
 desire already had a `gaps()` with a different contract, and the collision broke the keeper's
 tick before a test caught it.

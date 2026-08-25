@@ -27,6 +27,14 @@
 #  They are strictly decreasing in agent control, and each one asks the agent for strictly
 #  less. Only the middle one is implemented today; see the note on sensing:Polling.
 
+#  THE READING CHOIR — the questions this package asks of every module about a reading, as
+#  terms (a-hook-is-a-term). Bidding answers :urgency for a held claim; sensing itself answers
+#  all four from the region it holds.
+:annotate a ag:Hook ; rdfs:label "annotate" ; rdfs:comment "What do you add to this agent's public announcement about a reading of its own? Merged dict." .
+:bounds a ag:Hook ; rdfs:label "bounds" ; rdfs:comment "Where do you want this property held? The intersection — highest floor, lowest ceiling — is what a crossing-watching board is told." .
+:urgency a ag:Hook ; rdfs:label "urgency" ; rdfs:comment "How close does this reading put you to your own trouble, 0 to 1? The sharpest answer wins; None is no opinion. A None value asks how urgent not knowing is." .
+:readingRecorded a ag:Hook ; rdfs:label "reading recorded" ; rdfs:comment "Told: this agent's sensing recorded something new — subject, property, value." .
+
 :SensingCapability a owl:Class ; rdfs:subClassOf ag:Capability ;
     rdfs:label "Sensing capability" ;
     rdfs:comment "The family. Rules true of sensing however it is done target this class, so nothing is restated per transport, and one capability may ask for 'whoever perceives' without knowing which of the three answered." .

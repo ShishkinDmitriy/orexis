@@ -96,7 +96,7 @@ and the series store, two points per message, ~25 ms apart:
 Three things that had only ever been argued are now observed: `handle()` offers one message to
 every sensor on the channel; a pointer picks the right field out of a **real** payload rather than
 a fixture; and a temperature lands tagged `AirTemperature` beside a fraction instead of becoming
-a third moisture reading — the hazard `agent/influx_writer` added the tag to prevent.
+a third moisture reading — the hazard the series writer added the tag to prevent.
 
 The band is on the moisture and not on the temperature, which is the protection against judging a
 humidity against a moisture band working in a running society rather than in a unit test.

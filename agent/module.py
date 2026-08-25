@@ -16,6 +16,9 @@ See knowledge/decisions/capability-packages.md.
 
 from __future__ import annotations
 
+from .ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, NOTICES, QUIET, REPORTS,
+                       SEND, SERIES, SIZE, TAKE)
+
 from datetime import datetime
 
 from .desire import Desire
@@ -25,11 +28,44 @@ import logging
 import threading
 
 
+def hook(term: str):
+    """Mark a method as this module's answer to one choir question, by TERM.
+
+    The term is an `ag:Hook` some ontology declares — the kernel's for the BDI-shaped
+    questions, a package's for its own — and `Agent.ask(term, …)` finds the method through it.
+    An override by NAME inherits the term: the kernel's defaults below carry theirs, so a
+    package answering `reports` need not repeat it (a-hook-is-a-term).
+    """
+    def mark(fn):
+        fn.__hook__ = term
+        return fn
+    return mark
+
+
 class Module:
     """Base class. Subclasses set CAPABILITY to the ontology term that activates them."""
 
     CAPABILITY: str = ""
     name: str = "module"
+
+    @classmethod
+    def _hooks(cls) -> dict[str, str]:
+        """term -> method name, read off the class and its bases once."""
+        found = cls.__dict__.get("_hooks_of")
+        if found is None:
+            found = {}
+            for klass in reversed(cls.__mro__):
+                for name, fn in vars(klass).items():
+                    term = getattr(fn, "__hook__", None)
+                    if term:
+                        found[term] = name
+            cls._hooks_of = found
+        return found
+
+    def answer(self, term: str):
+        """My answer to one hook, as a bound method — or None if I define none."""
+        name = self._hooks().get(term)
+        return getattr(self, name) if name else None
 
     def __init__(self, agent):
         self.agent = agent  # the runtime.Agent hosting this module
@@ -51,6 +87,7 @@ class Module:
     #  defines it. What stays here by name is BDI-shaped: wants, sizing and taking an act,
     #  the series an agent reports.
 
+    @hook(BELIEF_REVISED)
     def on_belief_revised(self, belief_term: str, value) -> None:
         """One of my agent's beliefs has been re-picked. Take it up, if it is one of mine.
 
@@ -81,6 +118,7 @@ class Module:
     # a property — a band is a band of moisture — so a module handed a temperature must be able
     # to say it has no opinion, instead of judging it against the only scale it owns.
 
+    @hook(SERIES)
     def series(self) -> list[tuple[str, dict, dict]]:
         """Tagged rows for this agent's own bucket: (measurement, tags, fields), zero or more.
 
@@ -92,6 +130,7 @@ class Module:
         tag is added by the writer."""
         return []
 
+    @hook(REPORTS)
     def reports(self) -> dict:
         """Fields this module wants in its agent's own health series. Most have none.
 
@@ -103,6 +142,7 @@ class Module:
         """
         return {}
 
+    @hook(SIZE)
     def size(self, query, graph: str, row) -> float | None:
         """How big the act this row commits to would be, in the world `query` answers about at
         `graph` — one act's size. `row` is the affordance: the action, the want it serves and
@@ -117,6 +157,7 @@ class Module:
         """
         return None
 
+    @hook(TAKE)
     def take(self, act, desire, intention: str) -> bool:
         """Carry out one committed step, if I am the one who can. True if I did.
 
@@ -134,6 +175,7 @@ class Module:
         """
         return False
 
+    @hook(DESIRES)
     def desires(self, now: "datetime | None" = None) -> list["Desire"]:
         """What this module contributes to what the agent is pursuing. Empty by default.
 
@@ -146,6 +188,7 @@ class Module:
         """
         return []
 
+    @hook(NOTICES)
     def notices(self) -> list[tuple[str, str]]:
         """(subject, property) pairs this module notices are unknown or too stale to act on.
 
@@ -165,6 +208,7 @@ class Module:
         """
         return []
 
+    @hook(QUIET)
     def quiet(self) -> list[str]:
         """What this module has stopped hearing that it expected to hear — one line each.
 
@@ -176,6 +220,7 @@ class Module:
         """
         return []
 
+    @hook(DESIRE_URGENCY)
     def desire_urgency(self, desire, query, sensed: str,
                        value: float | None = None) -> float | None:
         """How urgent one DESIRE is, in the WORLD `query` answers about. None: no opinion.
@@ -208,7 +253,7 @@ class Module:
     def publish(self, topic: str, payload: dict, retain: bool = False) -> None:
         """Put something on the wire — told to whoever holds the connection (`send`). The
         kernel has no mailbox; the transport that reaches the society is a capability."""
-        self.agent.tell("send", topic, payload, retain)
+        self.agent.tell(SEND, topic, payload, retain)
 
 
 class Timer:

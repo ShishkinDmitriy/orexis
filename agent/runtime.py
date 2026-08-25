@@ -34,6 +34,7 @@ import signal
 
 from . import config, genesis, loader
 from .beliefs import Beliefs
+from .ontology import DESIRES, DESIRE_URGENCY
 from .deliberator import Deliberator
 from .desire import Desire, Desires
 from .intentions import Intentions
@@ -204,47 +205,55 @@ class Agent:
         #  sensing modules and each reads every region the agent holds — and a want is its
         #  node, so the second sighting is the same want and not a second one.
         seen: dict[str, Desire] = {}
-        for m in self.modules:
-            for desire in m.desires(now):
+        for wants in self.ask(DESIRES, now):
+            for desire in wants:
                 seen.setdefault(desire.uri, desire)
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
     def ask(self, hook: str, *args, **kwargs) -> list:
         """Every module's answer to one question, in module order, None left out.
 
-        THE CHOIR, generically. `annotations`, `bounds` and `urgency` used to be three methods
-        here, each merging its modules' answers about a READING — a subject, a property, a
-        value — and every one of those was a sensing sentence in the kernel. What the kernel
-        owns is the mechanism: whoever defines the hook is asked, an error in one voice is
+        THE CHOIR, generically, and BY TERM: `hook` is an `ag:Hook` some ontology declares —
+        the kernel's for the BDI-shaped questions, a package's for its own — and a module
+        answers it by the method it decorated with that term (a-hook-is-a-term). What the
+        kernel owns is the mechanism: whoever answers is asked, an error in one voice is
         logged and does not silence the rest, and the caller merges the answers by its own
-        rule (the-stake-is-sensings-want). Sensing asks `annotate`, `bounds` and `urgency`
-        this way and says what those mean; the hooks the kernel still defines by name on
-        `Module` are the BDI-shaped ones.
+        rule. Sensing asks its verdicts on a reading this way and says what they mean.
         """
+        self._declared(hook)
         answers = []
         for module in self.modules:
-            fn = getattr(module, hook, None)
+            fn = module.answer(hook)
             if fn is None:
                 continue
             try:
                 answer = fn(*args, **kwargs)
             except Exception as exc:
-                log.error("%s: %s could not answer %s: %s", self.id, module.name, hook, exc)
+                log.error("%s: %s could not answer %s: %s", self.id, module.name, _short(hook), exc)
                 continue
             if answer is not None:
                 answers.append(answer)
         return answers
 
+    @staticmethod
+    def _declared(hook: str) -> None:
+        """A hook is a TERM some ontology declares (a-hook-is-a-term); a string nobody declared
+        would be answered by silence, which is the failure this refuses."""
+        if hook not in loader.hooks():
+            raise ValueError(f"{hook} is not a hook any ontology declares — a question nobody "
+                             "owns would be answered by nobody, silently")
+
     def tell(self, hook: str, *args, **kwargs) -> None:
         """Every module that listens for one event is told, and a failure in one is logged."""
+        self._declared(hook)
         for module in self.modules:
-            fn = getattr(module, hook, None)
+            fn = module.answer(hook)
             if fn is None:
                 continue
             try:
                 fn(*args, **kwargs)
             except Exception as exc:
-                log.error("%s: %s failed on %s: %s", self.id, module.name, hook, exc)
+                log.error("%s: %s failed on %s: %s", self.id, module.name, _short(hook), exc)
 
     def desire_urgency(self, desire, query, sensed: str,
                        value: float | None = None) -> float | None:
@@ -257,15 +266,7 @@ class Agent:
         holds no measure of its own (a-desire-states-its-own-measure): this method is the
         whole of its involvement.
         """
-        answers = []
-        for module in self.modules:
-            try:
-                answer = module.desire_urgency(desire, query, sensed, value)
-            except Exception as exc:
-                log.error("%s: %s could not measure a desire: %s", self.id, module.name, exc)
-                continue
-            if answer is not None:
-                answers.append(answer)
+        answers = self.ask(DESIRE_URGENCY, desire, query, sensed, value)
         return max(answers) if answers else None
 
     # --- the shared connection; modules route by the topics they asked for ---
@@ -331,3 +332,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def _short(iri: str) -> str:
+    return iri.rsplit("#", 1)[-1]

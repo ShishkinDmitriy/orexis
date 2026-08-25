@@ -89,6 +89,21 @@ def term(name: str) -> str:
 # --- the kernel's own terms ----------------------------------------------------------------
 CAPABILITY = term("Capability")  # the root every capability term is a kind of
 
+# --- the choir's questions, as terms (a-hook-is-a-term) ------------------------------------
+HOOK = term("Hook")
+DESIRES = term("desires")
+DESIRE_URGENCY = term("desireUrgency")
+SIZE = term("size")
+TAKE = term("take")
+REPORTS = term("reports")
+SERIES = term("series")
+NOTICES = term("notices")
+QUIET = term("quiet")
+BELIEF_REVISED = term("beliefRevised")
+SUBSCRIPTIONS = term("subscriptions")
+HANDLE = term("handle")
+SEND = term("send")
+
 # --- named graphs ---------------------------------------------------------------------------
 #
 # Public knowledge is five graphs, not one, and the axis is **who put the fact there**. Three

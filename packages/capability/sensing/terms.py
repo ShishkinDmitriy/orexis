@@ -51,3 +51,9 @@ AIMS = term("aims")
 #  Derived, and the difference from `polls` is the whole of it: polls is who may READ an
 #  instrument, mayAsk is who may INTERRUPT one. Only the second is a lever.
 MAY_ASK = term("mayAsk")
+
+# The reading choir — this package's questions to every module, as terms (a-hook-is-a-term).
+ANNOTATE = term("annotate")
+BOUNDS = term("bounds")
+URGENCY = term("urgency")
+READING_RECORDED = term("readingRecorded")

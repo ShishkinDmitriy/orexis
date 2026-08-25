@@ -10,7 +10,7 @@ See knowledge/domain/sensing.md.
 
 from __future__ import annotations
 
-from agent.driver import Driver
+from packages.capability.sensing.driver import Driver
 from packages.capability.sensing.codec import CodecError, codec_for
 from packages.capability.sensing.pointer import DEFAULT_POINTER, PointerError, resolve
 

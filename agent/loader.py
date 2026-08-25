@@ -426,7 +426,7 @@ def registry() -> dict[str, type]:
 @lru_cache(maxsize=1)
 def drivers() -> tuple[type, ...]:
     """Every transport's driver. Which one speaks to a given sensor is the driver's own
-    answer — see `agent.driver.driver_for`. A transport's `PROVIDES` may hold a MODULE too —
+    answer — see sensing's `driver.driver_for`. A transport's `PROVIDES` may hold a MODULE too —
     the capability the fact of its bus grants, how the AGENT reaches everyone — and that one
     is found as every capability is, through `registry_for`."""
     return tuple(cls for p in of_kind(TRANSPORTS) for cls in p.provides()
@@ -554,3 +554,18 @@ def prefixes() -> dict[str, str]:
             out.setdefault(label, iri)
             origin.setdefault(label, path)
     return out
+
+
+@lru_cache(maxsize=1)
+def hooks() -> frozenset[str]:
+    """Every `ag:Hook` any ontology declares — the kernel's questions and each package's. What
+    `Agent.ask` and `Agent.tell` hold a term to: a hook nobody declared is a typo that would
+    otherwise be answered by silence (a-hook-is-a-term)."""
+    import rdflib
+
+    out: set[str] = set()
+    hook = rdflib.URIRef("http://example.org/orexis#Hook")
+    for path in ontology_files():
+        g = rdflib.Graph().parse(path, format="turtle")
+        out.update(str(s) for s in g.subjects(rdflib.RDF.type, hook))
+    return frozenset(out)

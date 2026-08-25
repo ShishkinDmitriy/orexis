@@ -34,7 +34,10 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from agent.commitment import Commitment
-from agent.module import Module, Timer
+from agent.module import Module, Timer, hook
+from agent.ontology import HANDLE, SUBSCRIPTIONS
+
+READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from agent.ontology import SENSED_GRAPH
 from agent.store import bindings
 
@@ -152,6 +155,7 @@ class ActuationModule(Module):
             auction_id=claim.auction_id,
         ), device
 
+    @hook(READING_RECORDED)
     def on_reading_recorded(self, subject_uri: str, observed_property: str,
                             value: float) -> None:
         """The Actuate rung's trigger (#190): a fresh look at my own subject, whose gap the
@@ -400,6 +404,7 @@ SELECT ?source ?p WHERE {{
 
     # --- did it actually flow? -------------------------------------------------------------
 
+    @hook(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
         """Exactly my own valves' status channels — never a wildcard, and only where the world
         states one. A device wired without a status channel is a real deployment; what it costs
@@ -412,6 +417,7 @@ SELECT ?source ?p WHERE {{
     def stop(self) -> None:
         self._sweep.stop()
 
+    @hook(HANDLE)
     def handle(self, topic: str, payload: bytes) -> bool:
         """A device saying what it dispensed. Matched by `jti`, which is what makes it *this*
         dose's report and not the previous one's.

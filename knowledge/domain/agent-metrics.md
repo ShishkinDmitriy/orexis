@@ -127,7 +127,7 @@ grants narrow ranges — which is the same as granting none.
 
 The counters say *that* something happened; since #125 the kernel also buffers **events** —
 point-in-time transitions with their prose. The [intention](/domain/intention.md) ledger tells
-`Metrics.event()` at every adoption, resolution and end-verdict, carrying the `becauseOf` text;
+`Metrics.event()` (the kernel's event buffer — the story is the mind's; the counters are each package's, see [metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md)) at every adoption, resolution and end-verdict, carrying the `becauseOf` text;
 the reporting capability drains the buffer on its ordinary tick, through the same writer, token
 and bucket, into a third measurement (`agent_events`, each point stamped with the transition's
 own instant); and the health dashboard draws each agent's stream as **annotations** over every
