@@ -437,10 +437,10 @@ class BiddingModule(Module):
         #  not to look — and a look already standing is on its way (execution says which by
         #  returning the standing intention). This module names no Observe: the look is
         #  sensing's word and sensing's act; waiting for it is `pending`, the bidder's own.
-        from agent import execution
+        from agent import execution, revision
 
         want = self._want()
-        intention = execution.pursue_for(self.agent, want.uri) if want is not None else None
+        intention = revision.wake(self.agent, want.uri) if want is not None else None
         if intention is None:
             self.log.info("auction %s: deliberation chose not to look — sitting out",
                           auction_id)
@@ -519,7 +519,7 @@ class BiddingModule(Module):
         plan once and commit. `value_bid` still cedes at or above the aim inside `_bid`, so
         the sizing agrees with the deciding without either being the other's authority.
         """
-        from agent import execution
+        from agent import execution, revision
 
         if self.pending is None:
             return
@@ -533,7 +533,7 @@ class BiddingModule(Module):
         if standing and stake is not None:
             execution.take_standing(self.agent, standing[0], stake)
         elif stake is not None:
-            execution.pursue(self.agent, stake)
+            revision.wake_for(self.agent, stake)
         if self.pending is not None:
             #  Nobody took it: the search proposed nothing, or the impulse was absorbed
             #  within patience (a claim just won). Either is a decision, and the round passes.

@@ -29,21 +29,42 @@ ag:Capability a owl:Class ; rdfs:label "Capability" ;
 #  (`agent.module.hook`); the kernel's defaults on `Module` carry the kernel's terms, so an
 #  override by name inherits the term (a-hook-is-a-term).
 
+#  WHICH ROW a hook belongs to — reactive, progression, deliberative
+#  (layered-by-timescale-and-interruptibility). A property of the QUESTION and therefore of
+#  every answer to it: `handle` is always reactive, `take` always progression,
+#  `desireUrgency` always deliberative. It is stated here rather than in a directory because a
+#  row partitions METHODS of one module and crosses the kernel/package line in both
+#  directions — and because a term can be checked, where a directory can only remind.
+
+ag:Row a owl:Class ; rdfs:label "Row" ;
+    rdfs:comment "One of the three cognitive layers, as a term. Latency and interruptibility are the axis: reactive is atomic and must never block, progression spans time and suspends, deliberation searches." .
+
+ag:Reactive a ag:Row ; rdfs:label "reactive" ;
+    rdfs:comment "Milliseconds, atomic, no search. Classify and write — decode a payload, take a bid into a round, note a status. Must never block and must never reach the planner." .
+ag:Progression a ag:Row ; rdfs:label "progression" ;
+    rdfs:comment "Seconds to minutes, suspends rather than blocks, searches nothing: carrying out what is already committed. BDI's own layer — intentions with a lifecycle, which is what holds a commitment across the gap between two deliberation episodes." .
+ag:Deliberative a ag:Row ; rdfs:label "deliberative" ;
+    rdfs:comment "The search: bounded, ranked by simulation, and the only row a model may be asked in. Should be interruptible; today a pass runs to completion, which bounded depth is what makes affordable." .
+
+ag:row a owl:ObjectProperty ; rdfs:domain ag:Hook ; rdfs:range ag:Row ;
+    rdfs:label "row" ;
+    rdfs:comment "Which cognitive layer answering this hook belongs to. Every hook declares one, and `tests/test_hooks.py` holds them to it." .
+
 ag:Hook a owl:Class ; rdfs:label "Hook" ;
     rdfs:comment "A question the choir is asked, or an event it is told, named as a term. Whoever defines an answer is asked; the asker merges the answers by its own rule. Declared by whoever owns the question: the kernel for wants, acts and the account; a package for anything in its own words." .
 
-ag:desires a ag:Hook ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
-ag:desireUrgency a ag:Hook ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
-ag:size a ag:Hook ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
-ag:take a ag:Hook ; rdfs:label "take" ; rdfs:comment "Carry this committed act out, if you are the one who can. True if you did." .
-ag:reports a ag:Hook ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
-ag:series a ag:Hook ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
-ag:notices a ag:Hook ; rdfs:label "notices" ; rdfs:comment "Which (subject, property) pairs are unknown or too stale to act on? Concatenated for the deliberator." .
-ag:quiet a ag:Hook ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
-ag:beliefRevised a ag:Hook ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
-ag:subscriptions a ag:Hook ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
-ag:handle a ag:Hook ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
-ag:send a ag:Hook ; rdfs:label "send" ; rdfs:comment "Carry this to the society. Told by Module.publish; answered by whichever module holds the connection." .
+ag:desires a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
+ag:desireUrgency a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
+ag:size a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
+ag:take a ag:Hook ; ag:row ag:Progression ; rdfs:label "take" ; rdfs:comment "Carry this committed act out, if you are the one who can. True if you did." .
+ag:reports a ag:Hook ; ag:row ag:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
+ag:series a ag:Hook ; ag:row ag:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
+ag:notices a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "notices" ; rdfs:comment "Which (subject, property) pairs are unknown or too stale to act on? Concatenated for the deliberator." .
+ag:quiet a ag:Hook ; ag:row ag:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
+ag:beliefRevised a ag:Hook ; ag:row ag:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
+ag:subscriptions a ag:Hook ; ag:row ag:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
+ag:handle a ag:Hook ; ag:row ag:Reactive ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
+ag:send a ag:Hook ; ag:row ag:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society. Told by Module.publish; answered by whichever module holds the connection." .
 
 ag:hasCapability a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Capability ;
     rdfs:label "has capability" ;

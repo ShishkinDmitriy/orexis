@@ -94,8 +94,8 @@ infrastructure rather than with the code.
 - **The speech-act path has no vocabulary.** A message's performative and sender are implicit —
   the topic it arrived on, the signature it carries — and nothing refuses an observation minted
   from a peer's message. Filed as [#394](https://github.com/ShishkinDmitriy/orexis/issues/394).
-- **The BRF is implicit**, as the first record already says: what is worth waking the
-  deliberator for is decided by who calls `pursue_for`, not by one named function.
+- ~~**The BRF is implicit.**~~ `agent/revision.py` is the row, and every reactive path goes
+  through it. What it decides is still thin; where it decides is one place now.
 - **`sensor_unreachable(...)` is not modelled.** The freshness want covers not-knowing, which is
   what a planner can act on; whether the DISTINCTION between a quiet board and a dead link is
   worth a belief of its own is open, and `quiet()` says it in logs today.

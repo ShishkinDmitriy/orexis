@@ -92,7 +92,9 @@ on anything.
 tells the choir, and actuation's and bidding's `on_reading_recorded` call
 `execution.pursue_for`, which calls `decide`, which searches — all inside `handle`, on the
 callback thread. That is deliberation in the reactive row: it blocks every other message for the
-length of a pass, and a slow deliberator (a model, later) would stall the bus. Filed as
+length of a pass, and a slow deliberator (a model, later) would stall the bus. Every reactive
+caller goes through `revision.wake` now, so the fix is one file; a STRICT xfail in
+`tests/test_hooks.py` fails the day it lands. Filed as
 [#392](https://github.com/ShishkinDmitriy/orexis/issues/392) rather than fixed here, because
 the fix is a design choice — a queue the deliberator drains on its own clock, or a marker the
 belief base's revision function sets — and this record is what makes it visible.
@@ -104,5 +106,8 @@ belief base's revision function sets — and this record is what makes it visibl
   yet.
 - **Deliberation is not interruptible.** The table says it should be; a pass runs to completion.
   Bounded depth is what keeps that affordable, and a model in the loop is what would end it.
-- **The revision function is implicit.** What is worth waking the deliberator for is decided by
-  who calls `pursue_for` and when, not by one named function over the belief base.
+- ~~**The revision function is implicit.**~~ Named: `agent/revision.py` is the seam, and
+  `wake`/`wake_for` are the one door from a change to a pass. It is thin on purpose — the rule
+  it runs is still *something moved, so reconsider the want it moved* — and what it buys is
+  that #392, a band filter over churning self-telemetry, and any infrastructure projection are
+  each a change to one file.

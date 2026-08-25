@@ -29,7 +29,10 @@ The kernel owns the MECHANISM — `Agent.ask(hook, …)` collects every module's
 question and `Agent.tell(hook, …)` delivers an event, an error in one voice logged and never
 silencing the rest — and every hook is a TERM, an `ag:Hook` declared by whoever owns the
 question and refused if nobody does ([a-hook-is-a-term](/decisions/a-hook-is-a-term.md)). A
-module answers one by `@hook(term)` on a method; an override by name inherits the term. The hooks about a READING
+module answers one by `@hook(term)` on a method; an override by name inherits the term. Each hook
+also declares **which row** answering it belongs to — `ag:row`, one of `ag:Reactive`,
+`ag:Progression`, `ag:Deliberative` — because a row partitions the methods of one module, and no
+directory can ([layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)). The hooks about a READING
 are sensing's contract (`packages/capability/sensing/choir.py`): a module joins by defining the
 method, and sensing says what it is asked with and how the answers merge
 ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).

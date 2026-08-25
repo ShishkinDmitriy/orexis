@@ -8,8 +8,8 @@ import pytest
 
 from agent import loader
 from agent.module import Module
-from agent.ontology import DESIRES, REPORTS, SEND
-from conftest import build_agent
+from agent.ontology import AG, DESIRES, HANDLE, REPORTS, SEND
+from conftest import build_agent, wired_sensors
 
 
 def _provided_classes():
@@ -50,3 +50,57 @@ def test_the_transport_answers_send_and_nothing_else_does(monkeypatch):
     fern = build_agent("fern", monkeypatch=monkeypatch)
     answering = [m.name for m in fern.modules if m.answer(SEND) is not None]
     assert answering == ["mqtt"]
+
+
+# --- the rows (layered-by-timescale-and-interruptibility) --------------------------------
+
+REACTIVE = AG + "Reactive"
+
+
+def test_every_hook_declares_which_row_answering_it_belongs_to():
+    """A hook without a row is a question nobody has placed: is answering it allowed to block,
+    allowed to search, allowed to take a second? The row is a term because it partitions
+    METHODS of one module — `SensingModule` answers in three rows — which no directory can."""
+    rows, declared = loader.hook_rows(), loader.hooks()
+    assert declared, "no ontology declares a hook"
+    missing = sorted(declared - set(rows))
+    assert not missing, f"hooks with no ag:row: {missing}"
+    assert set(rows.values()) <= {AG + "Reactive", AG + "Progression", AG + "Deliberative"}
+
+
+def test_the_rows_say_what_the_records_say():
+    rows = loader.hook_rows()
+    assert rows[HANDLE] == REACTIVE, "a message arriving is reactive: classify and write"
+    assert rows[AG + "take"] == AG + "Progression", "taking a committed act spans time"
+    assert rows[AG + "desireUrgency"] == AG + "Deliberative", "measuring a want is the search's"
+
+
+@pytest.mark.xfail(reason="#392: deliberation runs on the transport's callback thread",
+                   strict=True)
+def test_a_reactive_hook_never_reaches_the_planner(monkeypatch):
+    """The rule the rows exist to enforce: *anything that searches belongs in deliberation,
+    anything that must never block belongs in the reactive layer.* Delivering a message must
+    not enter a search on the delivering thread.
+
+    RECORDED, not raised: `Agent.tell` catches what a module throws, so an exception from
+    inside the planner would be swallowed and the gate would pass while the defect stood.
+
+    XFAIL, strictly, and that is the point: it fails today because the gardener's actuation
+    answers a fresh reading by asking the search what to do about it, inside `handle` (#392).
+    The day the marker lands it goes green and this marker comes off; a gate that could not
+    fail would not be a gate.
+    """
+    import threading
+
+    from agent.planner import Planner
+    from conftest import genesis_store
+
+    gardener = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
+    here, ran = threading.current_thread(), []
+    plan = Planner.plan
+    monkeypatch.setattr(Planner, "plan",
+                        lambda self, desire: (ran.append(threading.current_thread()),
+                                              plan(self, desire))[1])
+    gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
+    assert not [t for t in ran if t is here], \
+        "a reading was delivered and a search ran on the delivering thread"
