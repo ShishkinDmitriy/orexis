@@ -52,72 +52,38 @@ SELECT ?g WHERE {{ GRAPH <{ONTOLOGY_GRAPH}> {{
 # common prefixes and others do not, so relying on that works in one and fails in another.
 # `test_store.py` holds the codebase to this list.
 #
-# Two halves, and the split is who owns the namespace. The EXTERNAL vocabularies are the
-# kernel's: stable, standardised, and not a package's to redefine. Everything under this
-# project's own base is ASSEMBLED — `agent.loader` reads it off the ontologies that declare the
-# terms, so a package with a namespace of its own is nameable in SPARQL without anything here
-# learning it exists. `ag:` arrives that way too, from the kernel's own `agent/ontology.ttl`,
-# which the loader prepends to the packages: the base vocabulary is read exactly as a package's
-# is, and hard-coding it here would have made it the one exception for no reason but habit.
+# Three sources, and none of them is a registry. The KERNEL'S OWN external vocabularies are
+# the six it speaks itself — RDF, RDFS, OWL, XSD, SHACL, PROV — stable, standardised, and the
+# language a BDI engine's structure is written in (a want is a shape, a graph says who put a
+# fact there). Every OTHER external vocabulary — `sosa:`, `ssn-system:`, `unit:`, `schema:`,
+# `dcterms:` — is DISCOVERED, read off the `@prefix` lines of whichever ontology declares it,
+# exactly as every namespace under this project's own base is: `sosa:` reaches a query because
+# sensing's ontology says so, not because the kernel knows what a reading looks like (#378).
+# What keeps a discovered label honest is `agent.loader`'s refusal of one label bound to two
+# IRIs anywhere in the tree — which is the whole of what the old "an external vocabulary is not
+# a package's to bind" argument needed, and it holds without the kernel naming the vocabulary.
+# `ag:` arrives the discovered way too, from the kernel's own `agent/ontology.ttl`.
 #
 # Assembled eagerly, at import. A malformed or missing ontology is then an error the moment the
 # store is imported rather than the first time a query runs, which is the failure that used to
 # arrive in production — see the module docstring of `tests/test_store.py`.
-_EXTERNAL = {
-    "sosa": "http://www.w3.org/ns/sosa/",
-    #  Queried, not just validated against, since a desire became a shape: what an agent
-    #  pursues is SHACL, so reading its numbers is an ordinary query over ordinary triples.
-    "sh": "http://www.w3.org/ns/shacl#",
-    "prov": "http://www.w3.org/ns/prov#",
+_KERNEL = {
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
-    # Units, as IRIs rather than as strings. SOSA deliberately defines none and names QUDT as
-    # one of the vocabularies to reach for, so this is the standard companion to what is already
-    # in use. `http://`, not `https://`, which is the canonical form QUDT publishes.
-    #
-    # Here rather than in `scalings/identity/ontology.ttl` even though that package is the
-    # only one that uses it, because the split above is about OWNERSHIP and not about who reads
-    # it: an external vocabulary is not a package's to bind, and a package that could rebind
-    # `unit:` could silently redirect every unit in the society. Borrowed and not imported — the
-    # IRIs are referenced, nothing of QUDT is loaded, and `agent/inference.py` gains no axioms.
-    "unit": "http://qudt.org/vocab/unit/",
-    # Part-whole, for the one relation SOSA and SSN do not have. Their combined 44 object
-    # properties contain nothing linking a Procedure to a Procedure — `ssn:hasSubSystem` is
-    # System to System — and a composite part needs to say that one procedure's product is
-    # included in another's. Measured across all three published vocabularies before reaching
-    # outside them.
-    #
-    # dcterms because it is the standard generic mereology and declares NO domain and NO range,
-    # so applying it to procedures borrows nothing and constrains nothing; its definition is
-    # "included either physically or logically in the described resource", and logically is the
-    # case here. Deliberately not a step or invocation relation — see dht11's ontology for why
-    # this part makes that distinction load-bearing.
-    "dcterms": "http://purl.org/dc/terms/",
-
-    # How a figure states its number and its unit. schema.org's `value`/`unitCode` pair is
-    # what the W3C's own worked DHT22 example uses to say a Frequency is two seconds, and it
-    # completes an idiom half-adopted already: #77 put `unit:` IRIs on sensors and then wrote
-    # the number beside them in a term of ours. External, so it belongs here rather than in a
-    # package — one that could rebind `schema:` could redefine every figure in the society.
-    "schema": "https://schema.org/",
-
-    # What a device can honour, rather than what it is being asked for. SSN's System
-    # capabilities module, borrowed on the same terms as everything else here: the IRIs are
-    # referenced and none of SSN is loaded.
-    #
-    # `ssn:` is here for one axiom and would otherwise not be. `ssn-system:hasSystemCapability`
-    # hangs off an `ssn:System`, and what makes that reach a sensor is `sosa:Sensor
-    # rdfs:subClassOf ssn:System` — asserted in the SSN document, which is neither SOSA nor this
-    # module, and which nothing here loads. Borrowing an IRI brings its DEFINITION and not the
-    # axioms other documents state ABOUT it; `capabilities/sensing/ontology.ttl` restates that
-    # one so the module reaches what it is supposed to reach.
-    "ssn": "http://www.w3.org/ns/ssn/",
-    "ssn-system": "http://www.w3.org/ns/ssn/systems/",
+    #  Queried, not just validated against, since a desire became a shape: what an agent
+    #  pursues is SHACL, so reading its numbers is an ordinary query over ordinary triples.
+    "sh": "http://www.w3.org/ns/shacl#",
+    "prov": "http://www.w3.org/ns/prov#",
 }
 
-NAMESPACES = {**_EXTERNAL, **loader.prefixes()}
+for _label, _iri in loader.external_prefixes().items():
+    if _KERNEL.get(_label, _iri) != _iri:
+        raise RuntimeError(f"prefix {_label!r} is the kernel's, bound to <{_KERNEL[_label]}>, "
+                           f"and an ontology binds it to <{_iri}>")
+
+NAMESPACES = {**loader.external_prefixes(), **_KERNEL, **loader.prefixes()}
 
 PREFIXES = "\n" + "\n".join(
     f"PREFIX {label}: <{iri}>" for label, iri in sorted(NAMESPACES.items())

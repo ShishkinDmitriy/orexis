@@ -160,9 +160,11 @@ use here.
 
 **Borrowed, not imported**, exactly as [settlement-speaks-rea](settlement-speaks-rea.md) decided for
 ValueFlows: the IRIs are referenced, nothing of QUDT is loaded, and `agent/inference.py`'s
-hand-materialised closure gains no axioms to cover. `unit:` sits in the kernel prefix list in
-`agent/store.py` rather than in the calibration package, because an external vocabulary is not a
-package's to bind — one that could rebind `unit:` could quietly redirect every unit in the society.
+hand-materialised closure gains no axioms to cover. `unit:` reaches a query from whichever ontology declares it, and the loader refuses a second
+ontology binding the label to another IRI — one that could rebind `unit:` could quietly redirect
+every unit in the society. (It sat in a kernel prefix list in `agent/store.py` when this was
+written, on the same argument; the refusal is what the argument needed, and the list went with
+[the-stake-is-sensings-want](the-stake-is-sensings-want.md).)
 
 **Nothing was converted and no number moved.** Identity stays identity. This declares what the
 numbers already meant, which is what turns [#26](https://github.com/ShishkinDmitriy/orexis/issues/26)

@@ -489,6 +489,38 @@ _PREFIX_LINE = re.compile(
     rf"@prefix\s+([A-Za-z][\w.-]*):\s*<({re.escape(_NAMESPACE_BASE)}[^>]*)>")
 
 
+_ANY_PREFIX_LINE = re.compile(r"@prefix\s+([A-Za-z][\w.-]*):\s*<([^>]*)>")
+
+
+@lru_cache(maxsize=1)
+def external_prefixes() -> dict[str, str]:
+    """Every EXTERNAL namespace some ontology declares, label -> IRI, found by looking.
+
+    The other half of `prefixes()`, arrived at last (#378). `sosa:`, `ssn-system:`, `unit:`,
+    `schema:`, `dcterms:` used to be a kernel constant on the argument that an external
+    vocabulary is not a package's to bind — and the kernel then declared `sosa:` while speaking
+    no sosa, because sensing does. What the ownership argument actually needs is the rule
+    below: ONE label, ONE IRI, across every ontology there is, refused otherwise. A package
+    cannot rebind `unit:` past that check, and the kernel does not have to know which package
+    reads units to let it name them. What the kernel keeps hard-coded is the handful it speaks
+    itself — see `store._KERNEL`.
+    """
+    out: dict[str, str] = {}
+    origin: dict[str, Path] = {}
+    for path in ontology_files():
+        for label, iri in _ANY_PREFIX_LINE.findall(path.read_text()):
+            if iri.startswith(_NAMESPACE_BASE):
+                continue
+            if (prior := out.get(label)) is not None and prior != iri:
+                raise RuntimeError(
+                    f"prefix {label!r} means <{prior}> in {origin[label]} and <{iri}> in "
+                    f"{path}. One label, one namespace — a query cannot mean both."
+                )
+            out.setdefault(label, iri)
+            origin.setdefault(label, path)
+    return out
+
+
 @lru_cache(maxsize=1)
 def prefixes() -> dict[str, str]:
     """Every project-internal namespace there is, label -> IRI, found by looking.

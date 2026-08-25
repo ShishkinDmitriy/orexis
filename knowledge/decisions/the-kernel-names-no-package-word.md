@@ -246,12 +246,12 @@ written to support.
 
 # Seams left open
 
-- **Nothing enforces the rule beyond the count.** The ratchet catches a new spelled-out IRI and
-  nothing catches a new prefixed one. What is mechanisable meanwhile is the narrower thing filed as
-  [#344](https://github.com/ShishkinDmitriy/orexis/issues/344): that a borrowed term still exists.
-  Whether the ratchet should widen to the prefixed form is a real question and a bigger one —
-  `agent/world.py` is full of `market:bidsIn`, and paying that down is this record's argument at ten
-  times the size.
+- ~~**Nothing enforces the rule beyond the count.**~~ Closed with
+  [the-stake-is-sensings-want](the-stake-is-sensings-want.md)'s third step. The ratchet reads the
+  prefixed form where it means something — a query string, a rule or a shape with its prose
+  stripped — scans for every namespace the loader reports rather than five families by hand, and
+  resolves every term it finds against what the ontologies declare (#344). `agent/world.py`'s
+  market vocabulary had already left with the wiring; what the widening found was the bus.
 - **The rule says nothing about a package borrowing another package's word.** Packages already do —
   `market/effects.ttl` names `actuation:hasActuator` — and that is a different question, since
   neither of them claims to stand alone. Out of scope here because the kernel/package direction is
@@ -273,3 +273,15 @@ own sensing and passes `seeing_s`. And `ag:SimulatedActuatorShape`, the selector
 remains on the list is the two sensing terms in the desire warning shape, the namespace
 constants onboarding interpolates, and the migration destinations — and `agent/world.py`, which
 the scan cannot see and the next change is about.
+
+# Paid since — the stake, the widened scan, and what it found
+
+The desire warning shape went to sensing with the region (`sensing:BeyondSurvivalShape`), and the
+kernel's `sosa:` went with it: `store.PREFIXES` no longer declares a vocabulary the kernel does
+not speak, and the `SOSA` constant is `onboarding/namespaces.py`'s. The scan then widened — every
+namespace, both forms, resolved — and what it found in the kernel was not the market vocabulary
+this record feared but the BUS: four `mqtt:` terms in `agent/world.py`'s one query, and the
+reachability check in `ag:SimulatedDeviceShape`. Both are on the list as a fifth kind, with the
+transport package answering "where is the bus" itself as what removes them. The remaining
+namespace constants are the ratchet's third kind, eight more of them visible now, each leaving
+the way `SOSA` did.

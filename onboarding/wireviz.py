@@ -30,7 +30,9 @@ from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from agent.ontology import (AG, DHT11, ESP32, I2C, MC, ONEWIRE, ONTOLOGY_GRAPH,
-                            PROBE, RGBLED, SOSA, WORLD_GRAPH)
+                            PROBE, RGBLED, WORLD_GRAPH)
+
+from .namespaces import SOSA
 
 log = logging.getLogger("wireviz")
 

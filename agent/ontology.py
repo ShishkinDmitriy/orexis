@@ -102,7 +102,7 @@ REVIEW = "http://example.org/orexis/review#"
 # that is deliberately domain-coupled (market's bidding beliefs) carries the literal itself,
 # the way every cross-package reference already does.
 
-SOSA = "http://www.w3.org/ns/sosa/"
+#  SOSA was here and is `onboarding/namespaces.py`'s: the kernel spells no reading (#378).
 PROV = "http://www.w3.org/ns/prov#"
 
 
