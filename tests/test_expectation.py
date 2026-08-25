@@ -15,7 +15,7 @@ from dataclasses import replace
 
 import pytest
 
-from agent.keeper import ACQUIRE
+from packages.capability.market.terms import ACQUIRE
 from packages.capability.actuation.terms import ACTUATE as _ACTUATE
 
 from agent.store import bindings
@@ -177,7 +177,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     acknowledged at the fast cadence is proof the board heard the tightening, and THAT is when
     the claim goes out, the Apply resolves, and the expectation opens with a baseline the hold
     did not age."""
-    from agent.keeper import APPLY
+    from packages.capability.market.terms import APPLY
 
     market = market_of(thirsty)
     keeper = keeper_of(thirsty)
@@ -228,7 +228,9 @@ def test_a_held_claim_is_maximum_urgency(thirsty):
     thirsty.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     thirsty.deliver(f"{market.claim_topic}/fern",
                     {"jti": "v3", "amount_l": 0.5, "debit": 0.2})
-    assert keeper_of(thirsty).urgency(thirsty.me.acts_for, MOISTURE, 0.55) == 1.0
+    #  Answered by the BIDDER — it holds the claim and Apply is its word — through the same
+    #  choir hook the keeper used to answer it by; the cadence below is the choir's max.
+    assert thirsty.bidding().urgency(thirsty.me.acts_for, MOISTURE, 0.55) == 1.0
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s
 
 

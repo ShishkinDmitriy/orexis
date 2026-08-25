@@ -722,20 +722,17 @@ ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capabili
     rdfs:comment """WHICH capability carries this means out — the link from an affordance row to the code that takes it, as a fact rather than a dispatch table. Stated on the ACTION node, in the package's `actions.ttl`, beside the precondition and the effect it carries out. Execution asks the T-Box for the family and `agent.providers` for whoever is loaded, so the kernel names no package and which code carries a step out is queryable. A means with no taker is a means no plan can execute, and none ships that way. See knowledge/domain/actor.md.""" .
 
 
-ag:Acquire a ag:Means ; rdfs:label "Acquire" ;
-    rdfs:comment "Obtain what would reduce a gap — here, bid in a market. Adopted when a bid is submitted, satisfied by the claim, and standing in between, which is exactly the state `bidding` used to keep as an untyped dict." .
-
-ag:Apply a ag:Means ; rdfs:label "Apply" ;
-    rdfs:comment "Spend a held claim against the world. REAL since #132, and earlier than the futures market this was reserved for — because the reason to hold a claim turned out to be OBSERVABILITY before it was temporal strategy: never spend a dose you cannot watch land. Adopted when the claim arrives, standing while the holder waits for its watch to be live (the #135 ack at the fast cadence, or the bounded wait), satisfied when the claim is presented on the market's redeem channel. The expectation on the end opens HERE rather than at the claim, because this is when the dose becomes imminent. The futures seam now merely extends the holding period this gave a mechanism to." .
 
 
-#  `ag:Offer`, `ag:Observe` and `ag:Actuate` WERE HERE and are their packages' words now —
-#  `market:Offer`, `sensing:Observe`, `actuation:Actuate`, each declared beside the action that
-#  carries it. A means leaves the kernel the day the kernel stops naming it: Offer went with
-#  the hand-written plan.rq; Observe when the keeper stopped satisfying a look on a reading
-#  (sensing does, it is the actor); Actuate when the planner stopped dispatching sizing by
-#  means (`Module.size`, asked of whoever takes the row). Acquire and Apply stay while the
-#  kernel names them — the deliberator's tests and the keeper's hold-urgency.
+
+#  EVERY MEANS WAS HERE and every one is its package's word now — `sensing:Observe`,
+#  `actuation:Actuate`, `market:Acquire`, `market:Apply`, `market:Offer` — each declared beside
+#  the action that carries it, as means.md always said a package could. `ag:Means` stays: the
+#  KIND is BDI structure (what an intention commits to, what an action is), and the kernel
+#  names the class and never an individual. What let each leave was the kernel's last reference
+#  becoming a hook: sensing satisfies the look it takes; the planner sizes a step by asking
+#  its taker; the bidder answers its own held-claim urgency; the deliberator's tests import a
+#  package word from the package.
 
 ag:adoptedAt a owl:DatatypeProperty ; rdfs:domain ag:Intention ; rdfs:range xsd:dateTime ;
     rdfs:label "adopted at" .

@@ -10,7 +10,7 @@ deciding, committing and acting runs with no economy at all.
 import pytest
 
 from agent.menu import menu_of
-from agent.deliberator import ACQUIRE
+from packages.capability.market.terms import ACQUIRE
 from packages.capability.actuation.terms import ACTUATE
 from packages.capability.sensing.terms import OBSERVE
 

@@ -3,7 +3,7 @@ type: Domain Concept
 title: Means
 term: http://example.org/orexis#Means
 description: >-
-  The KIND of an act, and a T-Box term — `sensing:Observe`, `actuation:Actuate`, `ag:Acquire`, `ag:Apply`,
+  The KIND of an act, and a T-Box term — `sensing:Observe`, `actuation:Actuate`, `market:Acquire`, `market:Apply`,
   `market:Offer`. Not the instrument it goes through, which is the lever, and not what taking it
   would make true, which is the effect. A means is what an intention commits to (`ag:by`), what
   an affordance row offers, and what an action declares itself to be (`ag:means`) — three
@@ -20,8 +20,8 @@ A **means** is *what kind of act this is*. Five exist, each an `ag:Means` in the
 |---|---|
 | `sensing:Observe` | look — obtain a reading where the gap is unmeasured or too stale to act on |
 | `actuation:Actuate` | move a property directly, where the lever and the resource are both mine |
-| `ag:Acquire` | obtain what would reduce a gap — here, bid in a market |
-| `ag:Apply` | spend a held claim against the world |
+| `market:Acquire` | obtain what would reduce a gap — here, bid in a market |
+| `market:Apply` | spend a held claim against the world |
 | `market:Offer` | the host's move — open a round on a venue it convenes; the market's own word |
 
 It is a **term**, not an instance, so code may name one. That is the exception rule 1 carves
@@ -58,14 +58,12 @@ same term, and a reader can join them without anything storing a correspondence.
 
 There is no registry of means, in the same way there is no registry of packages or of
 affordance kinds. A means is declared by whoever owns the acting, and a sixth would arrive as
-a declaration plus an action node — [package](/domain/package.md)'s mechanic again. `Offer`,
-`Observe` and `Actuate` are declared that way, by the market, sensing and actuation; `Acquire`
-and `Apply` are still in the kernel's ontology only because the kernel names them in Python
-(a hold read for urgency, and the deliberator's tests), and each leaves the day that reference
-becomes a hook. Nothing anywhere enumerates the set.
+a declaration plus an action node — [package](/domain/package.md)'s mechanic again. All five are
+declared that way now — by sensing, actuation and the market — and the kernel's ontology
+keeps only the class. Nothing anywhere enumerates the set.
 
 **The ladder is their order, not a ranking of quality.** `actuation:Actuate` is offered exactly where
-both chains end at the agent — the lever is mine and so is the resource — and `ag:Acquire` where
+both chains end at the agent — the lever is mine and so is the resource — and `market:Acquire` where
 the resource is someone else's. Acting with what is yours is cheaper than buying what is not —
 and nothing states that preference any more. A rung table used to sort the rows cheapest-first,
 and it went with the chain that read it; what chooses between two rungs now is which of them

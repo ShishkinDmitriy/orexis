@@ -19,7 +19,7 @@ import pytest
 
 from agent.world import load_self
 from agent.graphs import intentions_graph
-from agent.keeper import ACQUIRE
+from packages.capability.market.terms import ACQUIRE
 from packages.capability.sensing.terms import OBSERVE
 
 from conftest import MOISTURE, build_agent, genesis_store
@@ -311,7 +311,7 @@ def test_the_tick_survives_an_agent_that_has_seen_things(make):
 
 # --- a commitment names the desire it serves (step 3) -------------------------
 
-APPLY = "http://example.org/orexis#Apply"
+APPLY = "http://example.org/orexis/market#Apply"
 
 
 def test_two_debts_about_one_property_no_longer_collide(make):

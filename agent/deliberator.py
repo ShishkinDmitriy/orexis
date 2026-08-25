@@ -52,7 +52,6 @@ from .store import bindings
 # between deciding and remembering.
 # The means are the kernel's words (the-mind-is-six-graphs): a move IS what the keeper
 # records, and four packages name these, which is what makes them lingua franca.
-ACQUIRE = AG + "Acquire"
 
 #  WHAT IS NOT HERE ANY MORE: the rung order, the direction terms and the venue join that read
 #  them. Preferring the cheaper rung and matching a lever's stated direction against the gap's

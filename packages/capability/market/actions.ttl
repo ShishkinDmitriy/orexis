@@ -50,7 +50,7 @@
 
 market:Acquiring
     a ag:Action ;
-    ag:means ag:Acquire ;
+    ag:means market:Acquire ;
 
     #  AVAILABLE while a ROUND IS OPEN in a market I bid in WHOSE WINNINGS CAN PHYSICALLY REACH
     #  MY SUBJECT: the host
@@ -280,7 +280,7 @@ market:Offering
 
 market:Serving
     a ag:Action ;
-    ag:means ag:Apply ;
+    ag:means market:Apply ;
 
     #  AVAILABLE as a DUTY — ?for_agent bound — for each buyer this venue admits who acts for a
     #  subject my valve serves: the ACL's shape applied to obligation, so a presentation from

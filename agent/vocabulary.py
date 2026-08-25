@@ -100,7 +100,7 @@ def declared(st) -> set[str]:
 #  one thing its own error message refuses to do.
 MOVED = {
     **{f"http://example.org/orexis/intention#{n}": f"http://example.org/orexis#{n}"
-       for n in ("Intention", "by", "Means", "Acquire", "Apply",
+       for n in ("Intention", "by", "Means",
                  "adoptedAt", "resolvedAt", "outcome", "becauseOf", "expectsValueTo",
                  "baselineValue", "baselineAt", "deadlineAt", "expectsDelta", "endMet",
                  "endVerifiedAt")},
@@ -132,6 +132,10 @@ MOVED = {
     "http://example.org/orexis#Observe": "http://example.org/orexis/sensing#Observe",
     "http://example.org/orexis/intention#Actuate": "http://example.org/orexis/actuation#Actuate",
     "http://example.org/orexis#Actuate": "http://example.org/orexis/actuation#Actuate",
+    "http://example.org/orexis/intention#Acquire": "http://example.org/orexis/market#Acquire",
+    "http://example.org/orexis#Acquire": "http://example.org/orexis/market#Acquire",
+    "http://example.org/orexis/intention#Apply": "http://example.org/orexis/market#Apply",
+    "http://example.org/orexis#Apply": "http://example.org/orexis/market#Apply",
     "http://example.org/orexis/desire#Desire": "http://www.w3.org/ns/shacl#NodeShape",
     "http://example.org/orexis/desire#desires": "http://example.org/orexis#holds",
     "http://example.org/orexis#boundedBy": "http://example.org/orexis#holds",

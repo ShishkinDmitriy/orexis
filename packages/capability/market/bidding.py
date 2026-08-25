@@ -482,6 +482,25 @@ class BiddingModule(Module):
                           auction_id, moisture)
             self.pending = None
 
+    def urgency(self, subject_uri: str, observed_property: str,
+                value: float | None) -> float | None:
+        """A HELD claim is urgency (#132): the dose is coming the moment my watch is live,
+        and the watch becomes live by exactly this answer reaching the board. Read off the
+        ledger — a standing Apply on this property, younger than my patience — so a claim
+        the bounded wait will redeem blind anyway cannot hold the fast cadence forever. The
+        keeper used to answer this by naming Apply; it is this package's word and this
+        module's hold, so the answer moved here, through the same choir hook."""
+        if subject_uri != self.me.acts_for or observed_property != self.about:
+            return None
+        keeper = self._keeper()
+        if keeper is None:
+            return None
+        now = datetime.now(timezone.utc)
+        if any(s.age_s(now) <= keeper.beliefs.patience_s
+               for s in keeper.standing(means=APPLY, observed_property=observed_property)):
+            return 1.0
+        return None
+
     def size(self, observed_property: str, value: float) -> float | None:
         """The planner's question, answered by the one who would bid: `qty_for`."""
         return self.qty_for(observed_property, value)
@@ -489,7 +508,7 @@ class BiddingModule(Module):
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed Acquire: bid in the round that is open, if one is.
 
-        The actor for `ag:Acquire` (knowledge/domain/actor.md). No round pending is "not
+        The actor for `market:Acquire` (knowledge/domain/actor.md). No round pending is "not
         now": the intention stands, and the next offer runs `submit`, which finds it standing
         and comes back here — a bid adopted on the keeper's tick is answered by the market's
         knock without a second search. The reading is the one in hand: `on_offer` looked

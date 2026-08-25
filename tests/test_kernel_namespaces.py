@@ -141,6 +141,10 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
         2, "migration: where the kernel's Observe went — removable with the same volumes"),
     ("agent/vocabulary.py", "actuation#Actuate"): (
         2, "migration: where the kernel's Actuate went — removable with the same volumes"),
+    ("agent/vocabulary.py", "market#Acquire"): (
+        2, "migration: where the kernel's Acquire went — removable with the same volumes"),
+    ("agent/vocabulary.py", "market#Apply"): (
+        2, "migration: where the kernel's Apply went — removable with the same volumes"),
 
     # KIND 3 — `agent/ontology.py`'s namespace constants. Self-aware in place ("these are NOT a
     # prefix registry") and consumed mainly by `onboarding/`, which legitimately knows packages
@@ -257,7 +261,7 @@ def test_the_scan_pattern_matches_the_shape_it_is_looking_for():
         ["market#Bidding"]
     assert [_tail(m) for m in _PACKAGE_IRI.finditer(f"PREFIX sensing: <{_STEM}sensing#>")] == \
         ["sensing#"]
-    assert not _PACKAGE_IRI.findall("http://example.org/orexis#Acquire"), \
+    assert not _PACKAGE_IRI.findall("http://example.org/orexis#Intention"), \
         "the kernel's own namespace is not a package's and must not be swept up"
 
 

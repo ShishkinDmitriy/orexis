@@ -935,7 +935,7 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
     open_round_for(host, "supplier")   # the city has a round open — the refill is buyable
     duty = next(g for g in host.pursuing() if g.is_duty)
     move = host.deliberator.propose_for(duty)
-    assert move == "http://example.org/orexis#Acquire", \
+    assert move == "http://example.org/orexis/market#Acquire", \
         "the plan's first step is the refill — the search found the chain the reflex never could"
 
 

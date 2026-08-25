@@ -17,10 +17,10 @@ from agent.ontology import beliefs_graph
 
 from conftest import MOISTURE, build_agent, genesis_store, open_round_for
 
-ACQUIRE = "http://example.org/orexis#Acquire"
+ACQUIRE = "http://example.org/orexis/market#Acquire"
 OBSERVE = "http://example.org/orexis/sensing#Observe"
 ACTUATE = "http://example.org/orexis/actuation#Actuate"
-APPLY = "http://example.org/orexis#Apply"
+APPLY = "http://example.org/orexis/market#Apply"
 OFFER = "http://example.org/orexis/market#Offer"
 TAKEN_BY = rdflib.URIRef("http://example.org/orexis#takenBy")
 

@@ -20,7 +20,7 @@ import pytest
 
 from agent.world import load_self
 from agent.menu import menu_of
-from agent.deliberator import ACQUIRE
+from packages.capability.market.terms import ACQUIRE
 from packages.capability.sensing.terms import OBSERVE
 
 from agent.ontology import beliefs_graph
@@ -246,7 +246,7 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     ds.update(f"""
         DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule sh:construct ?text }} }}
         INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule sh:construct ?flipped }} }}
-        WHERE  {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule ag:means ag:Acquire ; sh:construct ?text }}
+        WHERE  {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule ag:means market:Acquire ; sh:construct ?text }}
                   BIND(REPLACE(?text, "(\\\\$value) \\\\+ ", "$1 - ") AS ?flipped) }}""")
     fern = make("fern", ds)
     open_round_for(fern, "fern")
@@ -488,7 +488,7 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     duty = Desire(uri="urn:o", urgency=0.9, claim="j-1",
                 owed_to="http://example.org/orexis/world/simulation#fern_agent")
     assert supplier.deliberator.propose_for(duty) == \
-        "http://example.org/orexis#Apply"
+        "http://example.org/orexis/market#Apply"
 
     stranger = Desire(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
     assert supplier.deliberator.propose_for(stranger) is None, \
