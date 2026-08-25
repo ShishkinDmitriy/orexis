@@ -9,10 +9,10 @@ intention with its own reason. The search was one road and execution was three, 
 Now every trigger arrives here and none of them decides. `pursue(agent, desire)`:
 
 1. PLAN — `deliberator.decide(desire)`, the search as it was, answering with rows;
-2. COMMIT — the head row to the keeper, `ag:by` the action, `ag:through` the lever,
+2. COMMIT — the head step's ACT to the keeper, `ag:by` the action, `ag:through` the lever,
    `ag:pursues` the desire. Absorbed within patience means nothing to carry out;
 3. TAKE — the action's `ag:takenBy` family asked of the T-Box, `agent.providers` asked for
-   whoever is loaded, and each handed the row. False from all of them is "not now": the
+   whoever is loaded, and each handed the act. False from all of them is "not now": the
    intention stands and the next trigger finds it.
 
 **Only the head is committed**, and that is not a shortcut: the plan is re-derived every pass
@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import logging
 
+from .act import Act
 from .ontology import AG
 from .store import bindings
 
@@ -55,7 +56,7 @@ def pursue(agent, desire) -> str | None:
     plan = agent.deliberator.decide(desire)
     if plan is None or not plan.steps:
         return None
-    row = plan.steps[0]
+    act = plan.steps[0].act
     keeper = agent.keeper
     if keeper is None:
         return None
@@ -64,15 +65,15 @@ def pursue(agent, desire) -> str | None:
     #  claim, an Actuate until its watch is judged (#353). There used to be a hook here for
     #  the one act that resolved at the command; making its intention stand to the END was
     #  the BDI-shaped fix, and the hook went with it.
-    uri = keeper.adopt(row.action, desire.uri, _because(plan, desire), via=row.via)
+    uri = keeper.adopt(act.action, desire.uri, _because(plan, desire), via=act.via)
     if uri is None:
         #  ABSORBED: the same commitment already stands within patience. Say WHICH, so a
         #  caller that needs to know whether anything is on its way (a bidder waiting for a
         #  look) can tell an absorbed impulse from a want nothing can serve — both used to
         #  come back as None, and the second is the only one that means "sit out".
-        standing = keeper.standing(action=row.action, want=desire.uri)
+        standing = keeper.standing(action=act.action, want=desire.uri)
         return standing[0].uri if standing else None
-    carry_out(agent, row, desire, uri)
+    carry_out(agent, act, desire, uri)
     return uri
 
 
@@ -94,33 +95,32 @@ def take_standing(agent, standing, desire) -> bool:
     commitment was made on the tick and the actor could not act then. Nothing is re-decided;
     the standing row is rebuilt from the ledger and handed over.
     """
-    from .menu import Affordance
-
-    #  The row carries what the want is ABOUT, as the menu's did: `ag:about`, the kernel's
-    #  word for the one node an actor may join a lever to, read back off the want.
+    #  The act is rebuilt from the ledger: action, lever, want — and what the want is ABOUT
+    #  (`ag:about`, read back off the want). Unsized: the actor sizes from the reading in hand,
+    #  as it does for a fresh act. (#370 writes the act node itself, quantity and all.)
     rows = bindings(agent.desires.query_union(
         f"SELECT ?about WHERE {{ <{standing.want}> <{AG}about> ?about }}"))
-    row = Affordance(action=standing.action, want=standing.want, via=standing.via or "",
-                     about=rows[0]["about"] if rows else None)
-    return carry_out(agent, row, desire, standing.uri)
+    act = Act(action=standing.action, want=standing.want, via=standing.via or "",
+              about=rows[0]["about"] if rows else None)
+    return carry_out(agent, act, desire, standing.uri)
 
 
-def carry_out(agent, row, desire, intention: str) -> bool:
-    """Hand one committed row to whoever the T-Box says takes its action. True if anyone did."""
-    family = taken_by(agent.beliefs.query, row.action)
+def carry_out(agent, act: Act, desire, intention: str) -> bool:
+    """Hand one committed act to whoever the T-Box says takes its action. True if anyone did."""
+    family = taken_by(agent.beliefs.query, act.action)
     if family is None:
         #  A row was shipped and no taker was stated. `tests/test_execution.py` refuses this
         #  for every means that has a row in a shipped world; reaching it at runtime is a
         #  package onboarded past that gate, and the honest thing is to say so loudly.
         log.error("nothing takes %s — its package states no ag:takenBy, so this intention "
-                  "stands with nobody to carry it out", row.action.rsplit("#", 1)[-1])
+                  "stands with nobody to carry it out", act.action.rsplit("#", 1)[-1])
         return False
     took = False
     for actor in agent.providers(family):
-        took = bool(actor.take(row, desire, intention)) or took
+        took = bool(actor.take(act, desire, intention)) or took
     if not took:
         log.info("%s through %s: no actor could take it now — standing",
-                 row.action.rsplit("#", 1)[-1], (row.via or "?").rsplit("#", 1)[-1])
+                 act.action.rsplit("#", 1)[-1], (act.via or "?").rsplit("#", 1)[-1])
     return took
 
 

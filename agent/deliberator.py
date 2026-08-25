@@ -38,6 +38,7 @@ See knowledge/decisions/an-intention-is-an-amortised-deliberation.md.
 from __future__ import annotations
 
 from . import planner, trace
+from .act import Act, Step
 from .desire import Desire
 from .menu import menu_of
 from .module import Module
@@ -251,7 +252,8 @@ class Deliberator(Module):
         for row in menu_of(self.agent.beliefs.query, self.me.uri, self.agent.desires.query_union,
                            beliefs_graph(self.agent.id)):
             if row.for_agent == desire.owed_to:
-                return planner.Plan(DUTY, (row,))
+                #  A duty's row, unsized: the host sizes the serve from the claim it holds.
+                return planner.Plan(DUTY, (Step(Act.from_row(row)),))
         return None
 
     def _planned(self, desire: Desire) -> planner.Plan | None:

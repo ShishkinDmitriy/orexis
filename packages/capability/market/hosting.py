@@ -523,7 +523,7 @@ SELECT ?r WHERE {{
                 "claim %s stands unserved (urgency %.2f, owed to %s): nothing was committed",
                 jti, desire.urgency, desire.owed_to.rsplit("#", 1)[-1])
 
-    def take(self, row, desire, intention: str) -> bool:
+    def take(self, act, desire, intention: str) -> bool:
         """Carry out a committed serve: pour the claim this duty names.
 
         The actor for `market:Apply` on the duty's row (knowledge/domain/actor.md). A plan
@@ -531,12 +531,12 @@ SELECT ?r WHERE {{
         serve, and only for a claim still held — a duty whose claim was never presented is
         not this module's to invent.
         """
-        if row.action == OFFERING:
+        if act.action == OFFERING:
             #  THE HOST'S MOVE, taken: announce on the venue the row names, for the call the
             #  plan served. `announce` sizes the lot by the vessel and writes the round; the
             #  call is answered by the round existing. Satisfied at once — the round is the
             #  end, and it is there by construction.
-            market = next((m for m in self.markets if m.uri == row.via), None)
+            market = next((m for m in self.markets if m.uri == act.via), None)
             if market is None:
                 return False
             by = next((c.called_by for c in calls.calls_of(self.agent, market.uri)), "?")
@@ -545,7 +545,7 @@ SELECT ?r WHERE {{
             if (keeper := self._keeper()) is not None:
                 keeper.satisfy(OFFERING, desire.uri, "the round opened")
             return True
-        if row.action != SERVING or not desire.claim or desire.claim not in self.held:
+        if act.action != SERVING or not desire.claim or desire.claim not in self.held:
             return False
         #  A VESSEL I KNOW IS TOO LOW IS NOT POURED FROM. The search used to keep this claim
         #  held by planning the refill first; since a round is a fact (#358) there may be no
@@ -554,7 +554,7 @@ SELECT ?r WHERE {{
         #  claim cannot be honoured, so it stays held for the reading that changes that. A
         #  vessel I have never read keeps the old arrangement and is judged by the pour.
         claim = self.held[desire.claim]
-        market = next((m for m in self.markets if m.uri == row.via or
+        market = next((m for m in self.markets if m.uri == act.via or
                        self.stock_property.get(m.uri)), None)
         stock = self._stock_of(market) if market is not None else None
         if stock is not None and stock + EPS < claim.amount_l:

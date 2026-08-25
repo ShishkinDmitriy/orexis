@@ -126,7 +126,7 @@ class Module:
         """
         return None
 
-    def take(self, row, desire, intention: str) -> bool:
+    def take(self, act, desire, intention: str) -> bool:
         """Carry out one committed step, if I am the one who can. True if I did.
 
         The choir's doing hook (knowledge/domain/actor.md): execution has planned, written the

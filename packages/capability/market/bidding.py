@@ -552,7 +552,7 @@ class BiddingModule(Module):
         value = sensing.value_in(query, graph, self.me.acts_for, row.about) if sensing else None
         return self.qty_for(row.about, value) if value is not None else None
 
-    def take(self, row, desire, intention: str) -> bool:
+    def take(self, act, desire, intention: str) -> bool:
         """Carry out a committed Acquire: bid in the round that is open, if one is.
 
         The actor for `market:Acquire` (knowledge/domain/actor.md). No round pending is "not
@@ -561,13 +561,13 @@ class BiddingModule(Module):
         knock without a second search. The reading is the one in hand: `on_offer` looked
         first, and a stale one is never bid on.
         """
-        if row.action != ACQUIRING or row.about != self.about:
+        if act.action != ACQUIRING or act.about != self.about:
             return False
         #  THE ROUND IS THE FACT, read off the row's own lever (#358): the row exists only
         #  while one is open on that venue, so this is a lookup and never a wait. `pending`
         #  survives only as "I asked for a look for this round" — the actor's own bookkeeping,
         #  not a second statement of whether a round is open.
-        open_ = [r for r in rounds.rounds_of(self.agent, row.via) if r.is_open()]
+        open_ = [r for r in rounds.rounds_of(self.agent, act.via) if r.is_open()]
         if not open_:
             return False
         sensing = self.agent.provider(SENSING)
@@ -575,7 +575,7 @@ class BiddingModule(Module):
                    if sensing is not None else None)
         if reading is None:
             return False
-        market = next((m for m in self.markets if m.uri == row.via), None)
+        market = next((m for m in self.markets if m.uri == act.via), None)
         if market is None:
             return False
         return self._bid(reading.value, market, open_[0].auction_id)

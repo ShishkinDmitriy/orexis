@@ -1124,7 +1124,7 @@ class SubscribingModule(SensingModule):
             if self.drivers[sensor.uri]:
                 self.drivers[sensor.uri].sense_now(sensor)
 
-    def take(self, row, desire, intention: str) -> bool:
+    def take(self, act, desire, intention: str) -> bool:
         """Carry out a committed look: nudge the driver that watches this row's lever.
 
         The actor for `sensing:Observe` (knowledge/domain/actor.md) — the FAMILY is named, so the
@@ -1132,11 +1132,11 @@ class SubscribingModule(SensingModule):
         only where a driver exists to nudge. The look is satisfied by the reading arriving,
         whoever caused it, exactly as before: `on_reading_recorded` here resolves it, per want.
         """
-        if row.action != OBSERVING:
+        if act.action != OBSERVING:
             return False
         nudged = False
         for sensor in self.sensors:
-            if row.about in (sensor.observes, sensor.uri) and self.drivers[sensor.uri]:
+            if act.about in (sensor.observes, sensor.uri) and self.drivers[sensor.uri]:
                 self.drivers[sensor.uri].sense_now(sensor)
                 nudged = True
         return nudged

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import rdflib
 
+from agent.act import Act
 from agent import execution, loader, menu
 from agent.planner import Planner
 
@@ -156,11 +157,11 @@ def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
             monkeypatch.setattr(m, "take", lambda row, desire, i, m=m: handed.append(m.name) or False)
     stake = stake_of(fern)
     row = menu.Affordance(action=OBSERVING, want=stake.uri, about=MOISTURE, via="urn:probe")
-    assert execution.carry_out(fern, row, stake, "urn:intent") is False
+    assert execution.carry_out(fern, Act.from_row(row), stake, "urn:intent") is False
     assert handed == ["subscribing"], "Observe went to sensing and to nothing else"
     handed.clear()
     row = menu.Affordance(action=ACQUIRING, want=stake.uri, about=MOISTURE, via="urn:venue")
-    execution.carry_out(fern, row, stake, "urn:intent")
+    execution.carry_out(fern, Act.from_row(row), stake, "urn:intent")
     assert handed == ["bidding"]
 
 
@@ -169,7 +170,7 @@ def test_a_means_nobody_takes_is_logged_and_takes_nothing(monkeypatch, caplog):
     row = menu.Affordance(action="http://example.org/nowhere#Untaken",
                           want=stake_of(fern).uri, about=MOISTURE, via="urn:x")
     with caplog.at_level("ERROR", logger="execution"):
-        assert execution.carry_out(fern, row, stake_of(fern), "urn:i") is False
+        assert execution.carry_out(fern, Act.from_row(row), stake_of(fern), "urn:i") is False
     assert any("nothing takes" in r.message for r in caplog.records)
 
 
