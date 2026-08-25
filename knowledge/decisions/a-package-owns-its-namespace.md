@@ -166,9 +166,11 @@ than assumed.
   the benefit was not legibility but a bounded kernel: `agent/ontology.py` claims everything in it
   is true of every agent, and 102 terms were making that false. See
   [every-term-in-its-own-house](every-term-in-its-own-house.md).
-- **`vocabulary/` packages ship no Python**, so they have no `terms.py` to hold an `NS` and their
-  namespaces stay as constants in `agent/ontology.py`. The one asymmetry left, and it follows from
-  a vocabulary package being pure knowledge rather than from anything about namespaces.
+- ~~**`vocabulary/` packages ship no Python**, so they have no `terms.py` to hold an `NS` and
+  their namespaces stay as constants in `agent/ontology.py`.~~ Closed: nothing in the kernel
+  ever read those constants — only the sovereign's generators — so they are
+  `onboarding/namespaces.py`'s now, where they are consumed, and the kernel names no package's
+  namespace at all. A knowledge-only part still has no `terms.py`, and needs none.
 - **Nothing stops a package declaring terms in another's namespace.** The loader would find the
   prefix and every gate would pass; only a reader would notice. A shape could check that each
   package's `ontology.ttl` defines only terms under its own base, and would need an exception for

@@ -11,7 +11,8 @@ import pytest
 
 from agent import genesis
 from packages.capability.review.graphs import evidence_graph, revisions_graph
-from agent.ontology import SENSING, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph, term
+from agent.ontology import SENSED_GRAPH, WORLD_GRAPH, beliefs_graph, term
+from onboarding.namespaces import SENSING
 from packages.capability.review import RECKONING, REVIEW
 from packages.capability.review.module import Range, world_ranges
 from agent.store import bindings

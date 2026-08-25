@@ -21,8 +21,8 @@ import pytest
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import MC, ONTOLOGY_GRAPH
-
+from agent.ontology import ONTOLOGY_GRAPH
+from onboarding.namespaces import MC
 # Found by looking, like everything else: a part that has a Wokwi drawing keeps it beside its
 # ontology, so `packages/part/rgb_led/wokwi/` travels with the package and is deleted with it.
 # Keyed by the PART, which is the thing the vocabulary names — the vendor's "KY-016" appears

@@ -36,9 +36,8 @@ from pathlib import Path
 
 from agent import ratified
 from agent.config import REPO_ROOT
-from agent.ontology import ACTUATION, AG, MARKET, MQTT, SENSING, WORLD_GRAPH
-
-from .namespaces import SOSA
+from agent.ontology import AG, WORLD_GRAPH
+from .namespaces import ACTUATION, MARKET, MQTT, SENSING, SOSA
 from agent import genesis
 from agent.genesis import world_dir, worlds
 
@@ -356,7 +355,7 @@ def _persist_looks(world: str) -> int:
     """The constitutional debounce (#180), read from the merged T-Box the way orexis-firmware
     reads it for the boards: a stand-in must rehearse the same N consecutive looks, or the
     simulation promises a faster messenger than any real pot has."""
-    from agent.ontology import SENSING
+    from .namespaces import SENSING
     rows = ratified.rows(ratified.dataset(world), f"""
 SELECT ?n WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmPersistenceLooks> ?n }} LIMIT 1""")
     return int(float(rows[0]["n"])) if rows else 2
