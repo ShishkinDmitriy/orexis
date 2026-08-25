@@ -282,6 +282,8 @@ not speak, and the `SOSA` constant is `onboarding/namespaces.py`'s. The scan the
 namespace, both forms, resolved — and what it found in the kernel was not the market vocabulary
 this record feared but the BUS: four `mqtt:` terms in `agent/world.py`'s one query, and the
 reachability check in `ag:SimulatedDeviceShape`. Both are on the list as a fifth kind, with the
-transport package answering "where is the bus" itself as what removes them. The remaining
-namespace constants are the ratchet's third kind, eight more of them visible now, each leaving
-the way `SOSA` did.
+transport package answering "where is the bus" itself as what removes them. The
+namespace constants — the ratchet's third kind, twelve once every namespace was scanned for —
+have since left the way `SOSA` did, to `onboarding/namespaces.py`: nothing in the kernel read
+them, only the sovereign's generators. What the list holds now is the bus, the migration
+destinations, and one shape widener.

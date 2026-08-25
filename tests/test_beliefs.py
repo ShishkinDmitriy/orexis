@@ -152,7 +152,7 @@ def test_the_error_names_every_missing_term(query):
     # complete error must name — the test's point is EVERY, not WHICH.
     with pytest.raises(BeliefError) as exc:
         Beliefs(genesis_store(), "supplier").read(SUBSCRIBING_PICKS)
-    for term in (ontology.SENSING + "fastSleepS", ontology.SENSING + "slowSleepS"):
+    for term in ("http://example.org/orexis/sensing#fastSleepS", "http://example.org/orexis/sensing#slowSleepS"):
         assert term in str(exc.value)
 
 

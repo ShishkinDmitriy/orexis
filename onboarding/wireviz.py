@@ -29,10 +29,10 @@ from pathlib import Path
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
-from agent.ontology import (AG, DHT11, ESP32, I2C, MC, ONEWIRE, ONTOLOGY_GRAPH,
-                            PROBE, RGBLED, WORLD_GRAPH)
+from agent.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
+from .namespaces import DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED, SOSA
 
-from .namespaces import SOSA
+
 
 log = logging.getLogger("wireviz")
 

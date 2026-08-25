@@ -38,10 +38,10 @@ from pathlib import Path
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
-from agent.ontology import (AG, DHT11, MC, MQTT, ONEWIRE, ONTOLOGY_GRAPH, SENSING,
-                            PROBE, RGBLED, WORLD_GRAPH)
+from agent.ontology import AG, ONTOLOGY_GRAPH, WORLD_GRAPH
+from .namespaces import DHT11, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
 
-from .namespaces import SOSA
+
 
 log = logging.getLogger("firmware")
 

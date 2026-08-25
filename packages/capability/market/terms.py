@@ -18,7 +18,6 @@ knowledge/decisions/a-package-owns-its-namespace.md.
 
 from __future__ import annotations
 
-from agent import ontology
 
 # Where this package's terms live. `ontology.ttl` declares the same namespace and is the
 # authority — `agent.loader` reads it from there, which is how `market:` reaches a query. This
@@ -71,7 +70,7 @@ CALLED_AT = term("calledAt")
 # exactly that when actuation took a namespace of its own.
 ACTUATION_NS = "http://example.org/orexis/actuation#"
 
-SENSING = ontology.SENSING + "SensingCapability"  # whoever can look, however it looks
+SENSING = "http://example.org/orexis/sensing#SensingCapability"  # whoever can look, however it looks — spelled, as every cross-package reference is
 ACTUATION = ACTUATION_NS + "Actuation"  # whoever can touch the hardware, if this agent can at all
 # The mind's STATES are kernel words; the FAMILIES that arrive at them are not.
 KERNEL = "http://example.org/orexis#"

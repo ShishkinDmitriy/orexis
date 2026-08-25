@@ -196,36 +196,16 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     ("agent/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
     ("agent/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
 
-    # KIND 3 — `agent/ontology.py`'s namespace constants. Self-aware in place ("these are NOT a
-    # prefix registry") and consumed mainly by `onboarding/`, which legitimately knows packages
-    # because it reads the ratified files directly rather than through a Store carrying
-    # `store.PREFIXES`. #334's fourth bullet: they move to their consumers, or their staying is
-    # argued here. Neither has happened yet, so this comment is the placeholder and not the
-    # argument.
-    ("agent/ontology.py", "market#"): (1, "namespace constant, for onboarding's interpolation"),
-    ("agent/ontology.py", "sensing#"): (1, "namespace constant, same"),
-    ("agent/ontology.py", "actuation#"): (1, "namespace constant, same"),
-    ("agent/ontology.py", "review#"): (1, "namespace constant, same"),
-    #  And the eight the widened scan (#378) found beside them — a transport, a bus, five parts
-    #  and a microcontroller — all interpolated by onboarding's generators and by nothing in the
-    #  kernel. `SOSA` was the first of the block to move to `onboarding/namespaces.py`; these
-    #  follow it the same way, and each removal is one entry off this list.
-    ("agent/ontology.py", "mqtt#"): (1, "namespace constant, for onboarding's interpolation"),
-    ("agent/ontology.py", "mc#"): (1, "namespace constant, same"),
-    ("agent/ontology.py", "dht11#"): (1, "namespace constant, same"),
-    ("agent/ontology.py", "esp32#"): (1, "namespace constant, same"),
-    ("agent/ontology.py", "i2c#"): (1, "namespace constant, same"),
-    ("agent/ontology.py", "onewire#"): (1, "namespace constant, same"),
-    ("agent/ontology.py", "probe#"): (1, "namespace constant, same"),
-    ("agent/ontology.py", "rgbled#"): (1, "namespace constant, same"),
+    # KIND 3 IS PAID. `agent/ontology.py`'s twelve namespace constants — consumed by onboarding's
+    # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,
+    # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
 
     # KIND 5 — the BUS. `agent/world.py` asks the world where the broker is before any package's
     # Python has loaded, in the transport's own words, and `ag:SimulatedDeviceShape` says a
     # stand-in must be reachable the way a real device is — on a bus, or sharing a reading topic.
-    # Found by the prefixed scan (#378), which is what made them visible; they were the whole of
-    # what "agent/world.py is full of market:bidsIn" had left once the wiring went to the
-    # packages. What removes them: the transport package answering "where is the bus" itself,
-    # and the reachability shape living with it — a seam, not yet an issue.
+    # Found by the prefixed scan (#378), which is what made them visible. What removes them: the
+    # transport package answering "where is the bus" itself, and the reachability shape living
+    # with it — a seam, not yet an issue.
     ("agent/world.py", "mqtt#MessageBus"): (1, "the bus: where the broker is, asked before any package loads"),
     ("agent/world.py", "mqtt#brokerHost"): (1, "the bus, same"),
     ("agent/world.py", "mqtt#brokerPort"): (1, "the bus, same"),

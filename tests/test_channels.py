@@ -7,7 +7,7 @@ reason for having the node is gone.
 
 import pytest
 
-from agent.ontology import MQTT
+from onboarding.namespaces import MQTT
 from agent.store import bindings
 
 from conftest import genesis_store

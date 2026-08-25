@@ -70,38 +70,12 @@ AG = "http://example.org/orexis#"
 # declares it, so the prefix arrives with the package. See
 # knowledge/decisions/a-package-owns-its-namespace.md.
 #
-# The hardware constants stay here because `packages/part/` and `packages/bus/` ship no Python at
-# all, so there is no `terms.py` of their own to hold them — the one asymmetry left, and it
-# follows from a knowledge-only package being knowledge rather than from anything about
-# namespaces. (`vocabulary/` was the tree's name two layouts ago; the packages are one tree now.)
-MC = "http://example.org/orexis/microcontroller#"
-ONEWIRE = "http://example.org/orexis/onewire#"
-I2C = "http://example.org/orexis/i2c#"
-DHT11 = "http://example.org/orexis/dht11#"
-RGBLED = "http://example.org/orexis/rgb-led#"
-PROBE = "http://example.org/orexis/moisture-probe#"
-ESP32 = "http://example.org/orexis/esp32#"
-
-# And the packages the SOVEREIGN's tooling reads across. `onboarding/` builds full IRIs by
-# interpolation rather than by prefix, because it queries the ratified files directly and not
-# through a `Store` that would carry `store.PREFIXES`. That is a third way to name a term, after
-# a `pkg:Term` in SPARQL text and a package's own `terms.py`, and it is the one a rename cannot
-# see: an `AG`-interpolated `bidsIn` went on compiling and matching nothing from the moment
-# market owned `market:bidsIn`, and a test that iterated its empty result asserted nothing while
-# passing — for four merged PRs, until this sweep looked.
+#  THE PACKAGE NAMESPACE CONSTANTS WERE HERE — twelve of them, `MC` to `REVIEW`, every one
+#  interpolated by onboarding's generators and by nothing in the kernel — and are
+#  `onboarding/namespaces.py`'s, where they are consumed (the ratchet's KIND 3, paid). The
+#  kernel names no package's namespace: a package's own is in its `terms.py`, and a runtime
+#  query reaches any of them by the prefix `agent.loader` reads off the declaring ontology.
 #
-# These are NOT a prefix registry — `agent.loader` reads those off each ontology. They are the
-# handful of namespaces one tree names in the other's terms, and a package listed here still
-# owns its own vocabulary.
-MARKET = "http://example.org/orexis/market#"
-MQTT = "http://example.org/orexis/mqtt#"
-SENSING = "http://example.org/orexis/sensing#"
-ACTUATION = "http://example.org/orexis/actuation#"
-REVIEW = "http://example.org/orexis/review#"
-# WATER left this list with #148: the kernel now names no domain — the one capability block
-# that is deliberately domain-coupled (market's bidding beliefs) carries the literal itself,
-# the way every cross-package reference already does.
-
 #  SOSA was here and is `onboarding/namespaces.py`'s: the kernel spells no reading (#378).
 PROV = "http://www.w3.org/ns/prov#"
 

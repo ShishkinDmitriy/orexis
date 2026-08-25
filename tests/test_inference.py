@@ -24,8 +24,9 @@ from pyshacl import validate as shacl_validate
 
 from agent import genesis, inference, loader
 SOSA = "http://www.w3.org/ns/sosa/"   # spelled here: the kernel no longer names it (#378)
-from agent.ontology import (AG, MC, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, SENSING,
-                            WORLD_ENTAILED_GRAPH, WORLD_GRAPH)
+from agent.ontology import AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH
+from onboarding.namespaces import MC, SENSING
+
 from agent.store import Store, bindings
 
 MC = "http://example.org/orexis/microcontroller#"
@@ -116,7 +117,7 @@ def test_a_part_described_once_reaches_every_device_it_is_fitted_to():
     # The fourth subject is the firmware's doing, not the part's (#181): the moisture channel
     # is typed governed:Node, and the alarm promise arrives through the same hasValue closure
     # the datasheet figures ride — one mechanism, two describers.
-    from agent.ontology import SENSING
+    from onboarding.namespaces import SENSING
     assert reached.get("http://example.org/orexis/world/sensing#moisture_sensor_fern") == {SENSING + "AlarmProcedure"}
     assert len(reached) == 4, f"walked the vocabulary and reached {len(reached)} devices"
 

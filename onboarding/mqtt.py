@@ -57,8 +57,8 @@ from . import certs
 from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from packages.capability.market.terms import NS as MARKET
-from agent.ontology import ACTUATION, AG, MQTT, SENSING, WORLD_GRAPH
-
+from agent.ontology import AG, WORLD_GRAPH
+from .namespaces import ACTUATION, MQTT, SENSING
 log = logging.getLogger("mqtt")
 
 def mosquitto_dir(world: str):
