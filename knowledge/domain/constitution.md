@@ -26,7 +26,7 @@ with no argument. The first shapes exist (each package's `shapes.ttl`, run toget
 every observation must be complete and world-versioned, and — under
 [trusted-agent-mode](/decisions/trusted-agent-mode.md) — **self-asserted** (authored by the
 plant itself; a signing sensor re-adds an independent witness in adversarial mode). The
-allocation constraints are Python in `agent/clearing.py` rather than SHACL, and **both are now
+allocation constraints are Python in `packages/capability/market/clearing.py` rather than SHACL, and **both are now
 live**: total ≤ tank, and a per-participant **allocation ceiling** ([#270](https://github.com/ShishkinDmitriy/orexis/issues/270)).
 
 The ceiling is **structural, and that is what makes it safe to compute**. It is the span of what
@@ -39,7 +39,7 @@ be moved, so a line asking for more can only overshoot whichever end it started 
 envelope, never the dose.
 
 The domain computes it and the kernel reads it, on the `market:lotCapacity` precedent: what
-counts as too much water is a fact about plants, and `agent/clearing.py` must name no domain.
+counts as too much water is a fact about plants, and `packages/capability/market/clearing.py` must name no domain.
 **Absent is not zero** — a participant whose subject states no survival range has no ceiling and
 is not checked, because nothing in the world says what too much would be for it.
 

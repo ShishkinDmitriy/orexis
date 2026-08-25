@@ -33,7 +33,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from agent import signing
-from agent.market import EPS, Bid
+from .trade import EPS, Bid
 from agent.module import Module, Timer
 from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings

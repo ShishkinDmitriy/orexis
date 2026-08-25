@@ -547,7 +547,7 @@ def test_a_winner_named_unlike_its_subject_still_gets_its_dose(make, tmp_path, m
     good valve it could not find while the barrel sat at 0.000."""
     from onboarding.keygen import create_keypair
 
-    from agent.clearing import Claim
+    from packages.capability.market.clearing import Claim
 
     monkeypatch.setenv("OREXIS_WORLD_DIR", str(tmp_path))
     (tmp_path / "secrets").mkdir()

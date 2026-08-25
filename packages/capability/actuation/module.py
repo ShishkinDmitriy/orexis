@@ -30,8 +30,7 @@ from dataclasses import asdict, dataclass
 import uuid
 
 from agent import effects, signing
-from agent.clearing import Claim
-from agent.market import EPS
+from agent.commitment import Commitment
 from agent.module import Module, Timer
 from agent.ontology import SENSED_GRAPH
 from agent.store import bindings
@@ -62,6 +61,11 @@ SELECT ?v WHERE {
 # How often the module looks for doses nobody confirmed. Not the deadline — that is per dose
 # and derived — only how coarsely it is noticed. A sweep is cheap and lateness is not urgent.
 SWEEP_S = 5.0
+
+
+#  A litre below which a dose is nothing. The market keeps the same figure for a bid; two
+#  packages that may not import each other each say what "nothing" is for their own act.
+EPS = 1e-9
 
 
 @dataclass(frozen=True)
@@ -203,8 +207,8 @@ class ActuationModule(Module):
                             "the dose sized to nothing from the reading in hand")
             return False
         jti = uuid.uuid4().hex
-        cmd = self.redeem(Claim(sub=self.me.agent_id, scope="actuate:self",
-                                amount_l=litres, debit=0.0,
+        cmd = self.redeem(Commitment(sub=self.me.agent_id, scope="actuate:self",
+                                      amount_l=litres,
                                 auction_id=f"self-{jti[:8]}", jti=jti))
         if keeper is not None:
             #  THE INTENTION STANDS until the world answers (#353). It is to the END — a wetter

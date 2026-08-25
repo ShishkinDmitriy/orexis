@@ -246,6 +246,12 @@ def test_no_document_names_a_path_that_is_not_there():
         "packages/core/orexis",
         "packages/core/orexis/",
         "packages/core/orexis/ontology.ttl",
+        # auction-and-clearing-are-the-markets: three records narrate where the auction, the
+        # clearing validator and the market's types lived before they went to the package —
+        # "stayed in", "said of itself", "is a function" — all past tense about the kernel.
+        "agent/auction.py",
+        "agent/clearing.py",
+        "agent/market.py",
     }
     docs = concepts()
     missing = []

@@ -15,7 +15,7 @@ conversation:
 (offer, bids) -> trade
 ```
 
-That is the whole contract. `agent/auction.py` names it `Match`, and every member of the family
+That is the whole contract. `packages/capability/market/auction.py` names it `Match`, and every member of the family
 satisfies it.
 
 **Its two halves have standard names.** Mechanism design decomposes any mechanism into an
@@ -154,7 +154,7 @@ the world switching: [#50](https://github.com/ShishkinDmitriy/orexis/issues/50) 
 `packages/capability/market/`, in `market:`. `matching.py` holds both implementations; the family,
 its members and `market:matchesBy` are declared in the package's `ontology.ttl`, the two shapes (a
 host must say how it matches; only a host may) in its `shapes.ttl`, and the derivation is the third
-update in its `rules.ru`. `agent/auction.py` holds the path around it: propose, validate, issue.
+update in its `rules.ru`. `packages/capability/market/auction.py` holds the path around it: propose, validate, issue.
 
 **It shares a package with the protocol and is still its own family.** A directory is a package,
 not a capability — `packages/capability/market/` provides three. What keeps the two independent is

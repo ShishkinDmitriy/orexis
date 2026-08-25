@@ -26,6 +26,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [call](/domain/call.md) - A round is wanted on a venue because a participant said LOW — a want the host did not source, planned like any other.
 * [bid matching](/domain/bid-matching.md) - A lot and a set of bids become an allocation with prices — an allocation rule and a payment rule together.
 * [clearing](/domain/clearing.md) - A thin stake-free notary: checks a proposed trade and co-signs the claim. The host computes the match.
+* [commitment](/domain/commitment.md) - REA's promised flow, as the kernel's shape: what a valve fulfils, what a claim embodies. Not BDI's, which is an intention.
 * [claim](/domain/claim.md) - What you win — co-signed, single-use, held until the winner's watch is live, then presented on the redeem channel.
 * [executor](/domain/executor.md) - The supplier's actuation arm: verifies the claim and drives its own valve, bounded by clearing and the device fail-safe.
 

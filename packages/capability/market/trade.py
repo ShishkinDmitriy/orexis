@@ -1,4 +1,10 @@
-"""Market data model: signed orders, the host's proposed trade, and the state
+"""THE MARKET'S TYPES — a bid, an offer, a trade and its lines, the state clearing validates against.
+
+They were `agent/market.py`, the kernel holding a package's nouns because two of its modules
+(auction, clearing) lived there too. All three are the market's (auction-and-clearing-are-the-
+markets): a kernel is what LOADS packages, and nothing in it should know what a bid is.
+
+Market data model: signed orders, the host's proposed trade, and the state
 clearing needs to validate it.
 
 Vocabulary follows knowledge/decisions/clearing-as-validator.md — an *order* is a bid

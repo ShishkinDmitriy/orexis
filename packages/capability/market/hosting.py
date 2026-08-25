@@ -30,8 +30,8 @@ import uuid
 import json
 
 from agent import signing
-from agent.auction import run_auction
-from agent.market import EPS, Bid, Limits, MarketState, Offer
+from .auction import run_auction
+from .trade import EPS, Bid, Limits, MarketState, Offer
 from agent.desire import Desire
 from agent.module import Module, Timer
 from agent.ontology import WORLD_GRAPH

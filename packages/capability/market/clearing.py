@@ -17,7 +17,9 @@ import time
 from dataclasses import dataclass, field
 from uuid import uuid4
 
-from .market import EPS, MarketState, Trade
+from agent.commitment import Commitment
+
+from .trade import EPS, MarketState, Trade
 
 
 @dataclass
@@ -81,24 +83,17 @@ def validate(trade: Trade, state: MarketState) -> Validation:
     return Validation(ok=not v, violations=v)
 
 
-@dataclass(frozen=True)
-class Claim:
-    """Settlement token (capability). v1: unsigned, in-process — the signature chain
-    (order_sig / match_sig / val_sig) is added later without changing this shape.
-    See knowledge/decisions/authn-authz-capabilities.md."""
+@dataclass(frozen=True, kw_only=True)
+class Claim(Commitment):
+    """Settlement token: the market's embodiment of a commitment (settlement-speaks-rea).
 
-    sub: str  # who
-    scope: str  # what
-    amount_l: float  # water leg
-    debit: float  # credit leg
-    auction_id: str  # binds to the auction it was won in, never to a bidding pass
-    jti: str  # anti-replay id
-    #  When the venue stops holding it, in epoch seconds — JWT's word, as `jti` is. None means
-    #  a market that named no window, which is a market with no redeem channel: the host
-    #  redeemed on issue and there was never a wait to bound. It is what makes a debt URGENT
-    #  rather than eternal — an obligation's heat is the room its claim has left — and what
-    #  lets a host stop holding paper for a winner that walked away.
-    exp: float | None = None
+    The flow itself — who, what, how much, which round, once — is the kernel's `Commitment`,
+    which is what a valve fulfils; this adds the CREDIT leg. The signature chain
+    (match_sig / val_sig) rides on the wire, not on this shape. See
+    knowledge/decisions/authn-authz-capabilities.md.
+    """
+
+    debit: float      # the credit leg
 
 
 def issue_claims(trade: Trade, auction_id: str,
