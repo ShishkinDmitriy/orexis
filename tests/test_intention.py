@@ -359,3 +359,44 @@ def test_a_commitment_is_keyed_by_its_want_and_absorbed_by_it(make):
     assert len(keeper.standing(action=OBSERVING, want=stake)) == 1
     assert keeper.adopt(OBSERVING, "urn:another-want", "look, for something else")
     assert len(keeper.standing(action=OBSERVING)) == 2
+
+
+def test_an_old_row_naming_an_action_is_rebuilt_as_an_act(make):
+    """A ledger written before an-act-is-a-filled-action pointed `ag:by` at the ACTION node and
+    kept `ag:through` on the intention. At the keeper's construction such a row is rebuilt: an
+    act node fills the action, the lever moves onto it, and `ag:by` names the act — so a reader
+    of the ledger sees one shape whatever the volume's age, and the migration finds nothing
+    to do the second time."""
+    from agent import vocabulary
+    from agent.ontology import AG
+
+    fern = make("fern")
+    keeper = keeper_of(fern)
+    keeper.agent.intentions.update(f"""INSERT DATA {{ GRAPH <{keeper.graph}> {{
+        <{AG}intent_fern_old1> a <{AG}Intention> ;
+            <{AG}pursues> <{stake_of(fern).uri}> ;
+            <{AG}by> <{ACQUIRING}> ;
+            <{AG}through> <urn:old-venue> ;
+            <{AG}adoptedAt> "2026-08-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
+    assert vocabulary.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 1
+    old = next(s for s in keeper.standing(action=ACQUIRING) if s.uri.endswith("old1"))
+    assert old.act.action == ACQUIRING and old.act.via == "urn:old-venue"
+    assert vocabulary.migrate_ledger_acts(keeper.agent.intentions, keeper.graph) == 0, \
+        "idempotent — a row already naming an act is left alone"
+
+
+def test_the_ledger_holds_the_act_sized_and_windowed(make):
+    """What the plan's head committed to is written whole: the action it fills, the lever, the
+    quantity the taker sized, and the window — read back as one `Act`, which is what an actor
+    is handed when the trigger changes and the decision does not."""
+    from datetime import datetime, timezone
+    from agent.act import Act
+
+    fern = make("fern")
+    keeper = keeper_of(fern)
+    closes = datetime(2026, 9, 1, 12, 0, tzinfo=timezone.utc)
+    act = Act(action=ACQUIRING, via="urn:venue", quantity=0.4, not_after=closes)
+    keeper.adopt(act, stake_of(fern).uri, "bid 0.4L, not after the round closes")
+    standing = keeper.standing(action=ACQUIRING)[0]
+    assert (standing.act.action, standing.act.via, standing.act.quantity,
+            standing.act.not_after) == (ACQUIRING, "urn:venue", 0.4, closes)

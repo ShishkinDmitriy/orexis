@@ -346,7 +346,7 @@ ag:wouldTake a owl:ObjectProperty ; rdfs:domain ag:Candidate ; rdfs:range ag:Act
 
 ag:through a owl:ObjectProperty ;
     rdfs:label "through" ;
-    rdfs:comment "The lever a step goes through. On a candidate, the lever it WOULD act through; on an intention, the lever the plan's head chose — the same `via` column of the same affordance row, so the ledger says which valve or venue and not merely what kind of move. No domain, because it is stated of both and the closure would otherwise type one as the other. On a candidate: the lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
+    rdfs:comment "The lever a step goes through. On a candidate, the lever it WOULD act through; on an act, the lever the plan's head chose — the same `via` column of the same affordance row, so the ledger says which valve or venue and not merely what kind of move. No domain, because it is stated of both and the closure would otherwise type one as the other. On a candidate: the lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
 
 ag:atDepth a owl:DatatypeProperty ; rdfs:domain ag:Candidate ; rdfs:range xsd:integer ;
     rdfs:label "at depth" ;
@@ -678,9 +678,9 @@ ag:pursues a owl:ObjectProperty ; rdfs:domain ag:Intention ;
 
 Optional, because the first three means predate goals having names: an intention with no goal is keyed as it always was, and every old row in a ledger stays readable.""" .
 
-ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Action ;
+ag:by a owl:ObjectProperty ; rdfs:domain ag:Intention ; rdfs:range ag:Act ;
     rdfs:label "by" ;
-    rdfs:comment "The ACTION committed to — the node itself, since the-action-is-the-kind. Not a plan: the how stays with whichever capability takes it." .
+    rdfs:comment "The ACT committed to — the filled action: which action (ag:fills), through which lever (ag:through), how much (ag:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
 
 ag:Means a owl:Class ; rdfs:label "Means" .
 
@@ -713,11 +713,19 @@ ag:takenBy a owl:ObjectProperty ; rdfs:domain ag:Action ; rdfs:range ag:Capabili
 #  An action is a template. What is committed, taken and promised is a FILLED one — the lever
 #  it goes through (`ag:through`), the want it serves and what that is about (`ag:about`),
 #  how much, for whom, and when. Execution's word; planning's is the STEP, an act at its place
-#  in a plan, which is never written anywhere. `agent/act.py` carries it; the ledger writes the
-#  node with the next change (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
+#  in a plan, which is never written anywhere. `agent/act.py` carries it, and the keeper writes
+#  the node beside every intention (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
 
 ag:Act a owl:Class ; rdfs:label "Act" ;
     rdfs:comment "One ag:Action filled in: the lever it goes through, the want it serves, how much, for whom where it is a duty's, and the window in which taking it counts. What an intention commits to, what an actor is handed, what a commitment promises. Every act is an instance and no code names one." .
+
+ag:fills a owl:ObjectProperty ; rdfs:domain ag:Act ; rdfs:range ag:Action ;
+    rdfs:label "fills" ;
+    rdfs:comment "Which action this act is an instance of — the template it fills. The one hop from a commitment to the precondition, the effect and the taker." .
+
+ag:forAgent a owl:ObjectProperty ; rdfs:domain ag:Act ; rdfs:range ag:Agent ;
+    rdfs:label "for agent" ;
+    rdfs:comment "Whom the act serves, where it is a duty's — the counterparty a Serving act is owed to. Absent on an act of the agent's own." .
 
 ag:quantity a owl:DatatypeProperty ; rdfs:domain ag:Act ; rdfs:range xsd:decimal ;
     rdfs:label "quantity" ;
