@@ -97,3 +97,12 @@ def allocation_ceilings(query, market: Market) -> dict[str, float]:
     """
     return {r["agentId"]: float(r["ceiling"])
             for r in bindings(query(_ceilings_q(market.uri)))}
+
+
+def node_of(query, agent_id: str) -> str | None:
+    """A participant's node, from the one thing a bid or a claim carries: its id. Public
+    wiring, so an act names an agent the world declares and never a string somebody sent."""
+    rows = bindings(query(
+        f'SELECT ?a WHERE {{ ?a a <http://example.org/orexis#Agent> ; '
+        f'<http://example.org/orexis#localId> "{agent_id}" }}'))
+    return rows[0]["a"] if rows else None

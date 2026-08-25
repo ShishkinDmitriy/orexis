@@ -488,7 +488,7 @@ def test_the_bidder_gives_up_when_the_window_passes(make):
     fern = make("fern")
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     deadline = fern.bidding()._deadline
-    assert deadline is not None and deadline.interval_s == 30
+    assert deadline is not None and deadline.interval_s == pytest.approx(30, abs=0.5)
     deadline.stop()
 
 

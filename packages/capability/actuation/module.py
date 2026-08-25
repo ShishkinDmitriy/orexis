@@ -30,6 +30,9 @@ from dataclasses import asdict, dataclass
 import uuid
 
 from agent import effects, signing
+from dataclasses import replace
+from datetime import datetime, timedelta, timezone
+
 from agent.commitment import Commitment
 from agent.module import Module, Timer
 from agent.ontology import SENSED_GRAPH
@@ -209,7 +212,6 @@ class ActuationModule(Module):
         value = reading.value
         keeper = self.agent.keeper
         if keeper is not None:
-            from datetime import datetime, timezone
             now = datetime.now(timezone.utc)
             if any(now < w.deadline for w in keeper.open_expectations(desire.uri)):
                 return False  # my own dose has not answered yet — the #167 guard, rung 2
@@ -220,33 +222,39 @@ class ActuationModule(Module):
                             "the dose sized to nothing from the reading in hand")
             return False
         jti = uuid.uuid4().hex
+        #  THE WINDOW IS THE ACT'S: the dose lands after what its effect rule says, and a
+        #  reading of it takes what my sensing's cadence says — so the act I commit to is
+        #  not-after the sum, and the keeper's watch reads the same figure off the act
+        #  (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan). A self-dose is a
+        #  commitment to a Dosing act with nobody to pay.
+        sensing = self.agent.provider(SENSING)
+        try:
+            seeing = float(sensing.stale_after_s(self.me.acts_for, observed_property)) if sensing else None
+        except Exception:
+            seeing = None
+        lands = effects.lands_after(self.agent.beliefs, DOSING, me=f"<{self.me.uri}>",
+                                    subject=f"<{self.me.acts_for}>", litres=repr(float(litres)))
+        not_after = (datetime.now(timezone.utc) + timedelta(seconds=lands + (seeing or 0.0))
+                     if lands is not None else None)
+        promised = replace(act, quantity=litres, want=desire.uri, not_after=not_after)
         cmd = self.redeem(Commitment(sub=self.me.agent_id, scope="actuate:self",
-                                      amount_l=litres,
-                                auction_id=f"self-{jti[:8]}", jti=jti))
+                                     amount_l=litres, auction_id=f"self-{jti[:8]}", jti=jti,
+                                     act=promised))
         if keeper is not None:
             #  THE INTENTION STANDS until the world answers (#353). It is to the END — a wetter
             #  pot — not to the command, so the watch opens on the standing row and the keeper
             #  resolves it at the verdict. While it stands, `adopt` absorbs the next impulse by
-            #  the ordinary rule, which is the 584-dose guard with no hook and no second read
-            #  of the ledger. A watch that cannot open (no baseline, no direction) is resolved
-            #  at once: a row that could never be judged must not stand for ever.
-            #  A dose RAISES what it doses — that is this package's own effect rule, `$value +
-            #  litres / conversion` — so the watch is told so here; and how long a reading
-            #  takes to arrive is my sensing's cadence, asked of it rather than by the keeper.
-            sensing = self.agent.provider(SENSING)
-            try:
-                seeing = float(sensing.stale_after_s(self.me.acts_for, observed_property)) if sensing else None
-            except Exception:
-                seeing = None
+            #  the ordinary rule. A watch that cannot open (no baseline, no direction) is
+            #  resolved at once: a row that could never be judged must not stand for ever.
+            #  A dose RAISES what it doses — this package's own effect rule — so the watch is
+            #  told so here.
             opened = keeper.expect(
                 intention,
                 f"self-dosed {litres}L ({cmd.ml:.0f} ml commanded) — the graph says this "
                 f"raises what I am short of, so show me",
                 expected_delta=self._expected_delta(observed_property, litres, value),
-                rises=True, seeing_s=seeing, baseline=reading,
-                lands_after_s=effects.lands_after(
-                    self.agent.beliefs, DOSING, me=f"<{self.me.uri}>",
-                    subject=f"<{self.me.acts_for}>", litres=repr(float(litres))))
+                rises=True, seeing_s=seeing, baseline=reading, lands_after_s=lands,
+                not_after=not_after)
             if opened and sensing is not None:
                 sensing.sense_now()   # the freshest before on record
             if not opened:

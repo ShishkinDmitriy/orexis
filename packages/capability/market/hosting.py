@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import time
 import uuid
+from dataclasses import replace
+from datetime import datetime, timezone
 
 import json
 
@@ -34,11 +36,12 @@ from .auction import run_auction
 from .trade import EPS, Bid, Limits, MarketState, Offer
 from agent.desire import Desire
 from agent.module import Module, Timer
+from agent.act import Act
 from agent.ontology import WORLD_GRAPH
 from agent.store import bindings
 
 from . import calls, rounds
-from .wiring import allocation_ceilings, hosted_markets_of, participants
+from .wiring import allocation_ceilings, hosted_markets_of, node_of, participants
 from .beliefs import HOSTING_PICKS
 
 #  The serving action, spelled rather than imported: the kernel owns the term and market's own
@@ -389,9 +392,18 @@ SELECT ?r WHERE {{
                            "so the bids are discarded. Check its market:matchesBy.", auction_id)
             return
 
+        #  Every claim is a commitment to MY Serving act: this venue, so many litres, for
+        #  this buyer, not after the window closes — the act the buyer's presentation will
+        #  ask me to take (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
+        def serving(line, expires):
+            return Act(action=SERVING, via=market.uri, quantity=line.qty_l,
+                       for_agent=node_of(self.agent.beliefs.query, line.agent),
+                       not_after=(datetime.fromtimestamp(expires, tz=timezone.utc)
+                                  if expires is not None else None))
+
         result = run_auction(offer, bids, state, auction_id=auction_id,
                              match=matcher.propose_match,
-                             redeem_window_s=market.redeem_window_s)
+                             redeem_window_s=market.redeem_window_s, act_for=serving)
         if not result.validation.ok:
             self.log.warning("auction %s RED — clearing rejected: %s",
                              auction_id, result.validation.violations)
@@ -467,6 +479,8 @@ SELECT ?r WHERE {{
         # it. The debt stays on the books, undischarged, with a deadline in the past: that is
         # the evidence, and it reads differently from a debt paid and differently again from a
         # debt nobody ever demanded.
+        #  THE WINDOW IS THE ACT'S: `exp` is its `not_after` on the wire, and a claim that
+        #  came back over the wire carries only that; the act it embodies is the one I issued.
         if claim.exp is not None and time.time() > claim.exp:
             del self.held[jti]
             self.log.warning("%s presented claim %s after its window closed — refused, and the "

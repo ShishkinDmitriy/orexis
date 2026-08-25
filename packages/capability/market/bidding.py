@@ -30,7 +30,7 @@ bid means here). Rules: capabilities/market/shapes.ttl, domain/water/shapes.ttl.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from agent import signing
 from .trade import EPS, Bid
@@ -434,14 +434,23 @@ class BiddingModule(Module):
         from agent import execution
 
         want = self._want()
-        if want is None or execution.pursue_for(self.agent, want.uri) is None:
+        intention = execution.pursue_for(self.agent, want.uri) if want is not None else None
+        if intention is None:
             self.log.info("auction %s: deliberation chose not to look — sitting out",
                           auction_id)
             self.pending = None
             return
 
-        # Give up when the auction closes — a bid nobody can count is not a bid.
+        #  THE WINDOW IS THE ACT'S: a bid not after the round closes. Written onto the act the
+        #  intention names, and the give-up timer READS it back rather than keeping a clock
+        #  of its own (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
         window = float(offer.get("closes_in_s") or 0) or 1.0
+        if (keeper := self._keeper()) is not None:
+            keeper.window(intention, datetime.now(timezone.utc) + timedelta(seconds=window))
+            standing = next((s for s in keeper.standing(want=want.uri) if s.uri == intention), None)
+            if standing is not None and standing.act.not_after is not None:
+                window = max(0.1, (standing.act.not_after
+                                   - datetime.now(timezone.utc)).total_seconds())
         self._deadline = Timer(window, self.give_up)
         self._deadline.start()
 

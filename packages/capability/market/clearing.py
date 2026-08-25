@@ -97,7 +97,7 @@ class Claim(Commitment):
 
 
 def issue_claims(trade: Trade, auction_id: str,
-                 redeem_window_s: float | None = None) -> list[Claim]:
+                 redeem_window_s: float | None = None, act_for=None) -> list[Claim]:
     """Turn a *validated* trade into per-buyer settlement claims. Caller must have
     confirmed `validate(trade, state).ok` first.
 
@@ -105,6 +105,11 @@ def issue_claims(trade: Trade, auction_id: str,
     the window runs from the moment the society allocated the good, so two winners of the
     same round are held for the same time and neither can be late by an accident of loop
     order. A `None` window leaves `exp` unset — see the field.
+
+    `act_for(line, expires)` is the host's: the Serving act each claim is a commitment TO —
+    this venue, so many litres, for this buyer, not after `expires`. Clearing does not know
+    the host's lever, so it asks rather than inventing one; None leaves the act unset, which
+    is what a matcher test with no venue gets.
     """
     expires = time.time() + redeem_window_s if redeem_window_s is not None else None
     return [
@@ -116,6 +121,7 @@ def issue_claims(trade: Trade, auction_id: str,
             auction_id=auction_id,
             jti=uuid4().hex,
             exp=expires,
+            act=act_for(line, expires) if act_for is not None else None,
         )
         for line in trade.lines
     ]
