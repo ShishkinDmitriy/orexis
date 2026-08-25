@@ -221,7 +221,7 @@ class Module:
         return []
 
     @hook(DESIRE_URGENCY)
-    def desire_urgency(self, desire, query, sensed: str,
+    def desire_urgency(self, desire, query, state: str,
                        value: float | None = None) -> float | None:
         """How urgent one DESIRE is, in the WORLD `query` answers about. None: no opinion.
 
@@ -229,10 +229,10 @@ class Module:
         reading against live beliefs, and a planner needs the same judgement about a world
         NOBODY IS IN YET — a candidate its effects predicted. So the world is a parameter:
         `query` is a store's query surface (the agent's belief base, or the planner's
-        imaginarium) and `sensed` names the graph that world's readings live in. `value` is a
+        imaginarium) and `state` names the graph that world's state lives in. `value` is a
         caller-supplied number to judge where one is in hand — the choir is asked about
         readings not yet written and about predicted ones — and absent, the module judges
-        what `sensed` holds.
+        what `state` holds.
 
         HOW a want's badness is measured is deliberately not the kernel's to say
         (a-desire-states-its-own-measure): the kernel asks this question and holds no measure

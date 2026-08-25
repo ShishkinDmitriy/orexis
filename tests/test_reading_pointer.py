@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from agent.ontology import SENSED_GRAPH
+from agent.ontology import STATE_GRAPH
 from packages.capability.sensing.pointer import DEFAULT_POINTER, PointerError, resolve
 from agent.store import bindings
 from packages.capability.sensing.wiring import Sensor
@@ -279,7 +279,7 @@ def test_an_observation_says_which_procedure_made_it(monkeypatch):
     # narrowing silently drops facts that live in a sibling; this one has to be asked for.
     rows = bindings(agent.beliefs.query(f"""
         PREFIX sosa: <http://www.w3.org/ns/sosa/>
-        SELECT ?proc WHERE {{ GRAPH <{SENSED_GRAPH}> {{
+        SELECT ?proc WHERE {{ GRAPH <{STATE_GRAPH}> {{
           ?obs a sosa:Observation ; sosa:usedProcedure ?proc }} }}"""))
     assert rows, "no observation cited a procedure"
     cited = {r["proc"] for r in rows}

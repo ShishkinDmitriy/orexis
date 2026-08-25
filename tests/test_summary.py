@@ -13,7 +13,7 @@ import pytest
 
 from agent import genesis
 from packages.capability.review.graphs import summaries_graph
-from agent.ontology import SENSED_GRAPH, term
+from agent.ontology import STATE_GRAPH, term
 from agent.store import Store
 from packages.capability.review.summary import RING, Summaries
 
@@ -151,7 +151,7 @@ def test_a_summary_is_not_part_of_the_sensed_record(fern):
     sensed record' untestable."""
     sensor = fern.subscribing().sensors[0]
     fern.reviewing().summaries.record(sensor.subject, sensor.observes, 0.5)
-    assert "ObservationSummary" not in fern.beliefs.get_graph(SENSED_GRAPH)
+    assert "ObservationSummary" not in fern.beliefs.get_graph(STATE_GRAPH)
     assert "ObservationSummary" in fern.beliefs.get_graph(summaries_graph("fern"))
 
 

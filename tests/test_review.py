@@ -11,7 +11,7 @@ import pytest
 
 from agent import genesis
 from packages.capability.review.graphs import evidence_graph, revisions_graph
-from agent.ontology import SENSED_GRAPH, WORLD_GRAPH, beliefs_graph, term
+from agent.ontology import STATE_GRAPH, WORLD_GRAPH, beliefs_graph, term
 from onboarding.namespaces import SENSING
 from packages.capability.review import RECKONING, REVIEW
 from packages.capability.review.module import Range, world_ranges
@@ -318,12 +318,12 @@ def test_a_review_writes_only_its_own_beliefs_and_never_the_world_or_the_record(
     """The graph types made load-bearing. A review reads the world as constraint and `:sensed`
     as evidence, and changes neither — which is what the tripartite split is FOR."""
     feed(fern, [0.500, 0.502] * (window(fern) // 2 + 1))
-    before = (fern.beliefs.get_graph(WORLD_GRAPH), fern.beliefs.get_graph(SENSED_GRAPH))
+    before = (fern.beliefs.get_graph(WORLD_GRAPH), fern.beliefs.get_graph(STATE_GRAPH))
 
     fern.reviewing().review()
 
     assert fern.reviewing().current(SLOW) == CEILING, "it should have changed something"
-    assert (fern.beliefs.get_graph(WORLD_GRAPH), fern.beliefs.get_graph(SENSED_GRAPH)) == before
+    assert (fern.beliefs.get_graph(WORLD_GRAPH), fern.beliefs.get_graph(STATE_GRAPH)) == before
 
 
 def test_a_review_touches_no_other_agents_beliefs(fern):

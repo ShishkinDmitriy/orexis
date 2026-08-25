@@ -156,3 +156,15 @@ it; it no longer has to say it.
   which names what it migrates FROM, as `MOVED` does. It leaves with the last pre-#380 volume.
 - **`ag:about` is one node.** A want about two things — a property on two subjects — would
   need two, and nothing derives one; the day it does, `VALUES` grows a row per pair.
+
+# Paid since — the state graph, and the instruments graph
+
+The kernel's last sensing-shaped names went with the audit. `ag:SensedGraph` is `ag:StateGraph`:
+the world's current state as this agent holds it — what an effect rewrites, what a plan forks
+per step, what a met-test reads — which is all the kernel knows of it; what is in it is the
+packages' word. The instance keeps its IRI (`graph/sensed`) so a deployed volume keeps its
+readings. The placeholder a rule is handed is `$state`. And `graph/instruments` is sensing's:
+declared in sensing's ontology, named in its terms, and found by the kernel as every graph is —
+`Store.recorded_graphs()` asks for belief graphs that arrive recorded, so the planner's
+imaginarium and the validator carry it without naming it. `ag:Means` and a duplicated
+`ag:Action` block left the ontology in the same sweep.

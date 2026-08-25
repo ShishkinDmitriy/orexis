@@ -227,7 +227,7 @@ SELECT ?p WHERE {{
         """
         return [Desire(uri=c.uri, urgency=1.0) for c in calls.calls_of(self.agent)]
 
-    def desire_urgency(self, desire, query, sensed: str, value=None) -> float | None:
+    def desire_urgency(self, desire, query, state: str, value=None) -> float | None:
         """How badly a CALL is unmet, in the world `query` answers about: 0 where a round
         stands on its venue, 1 where none does. Reads both the graph I hold rounds in and
         the graph a plan imagines them into, because an Offer's effect lands in the latter.
@@ -241,7 +241,7 @@ SELECT ?r WHERE {{
   GRAPH <{beliefs_graph(self.agent.id)}> {{ <{desire.uri}> market:calledOn ?via }}
   {{ GRAPH <{beliefs_graph(self.agent.id)}> {{ ?via market:hasRound ?r . ?r market:closesAt ?c }}
     FILTER(?c > NOW()) }}
-  UNION {{ GRAPH <{sensed}> {{ ?via market:hasRound ?r }} }}
+  UNION {{ GRAPH <{state}> {{ ?via market:hasRound ?r }} }}
 }} LIMIT 1"""))
         return 0.0 if rows else 1.0
 

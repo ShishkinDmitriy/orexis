@@ -57,3 +57,6 @@ ANNOTATE = term("annotate")
 BOUNDS = term("bounds")
 URGENCY = term("urgency")
 READING_RECORDED = term("readingRecorded")
+
+# This package's own belief graph: what the agent holds about the instruments it polls.
+INSTRUMENTS_GRAPH = "http://example.org/orexis/graph/instruments"

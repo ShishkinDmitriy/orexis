@@ -15,7 +15,7 @@ import pyoxigraph as ox
 
 from agent import effects
 from agent.imaginarium import Imaginarium
-from agent.ontology import (ONTOLOGY_GRAPH, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph)
+from agent.ontology import (ONTOLOGY_GRAPH, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
 
 from conftest import MOISTURE, genesis_store
 
@@ -27,13 +27,13 @@ RESULT = "http://www.w3.org/ns/sosa/hasSimpleResult"
 
 def _imaginarium(value=0.04):
     st = genesis_store({("zz", MOISTURE): value}, world="loner")
-    return st, Imaginarium(st, beliefs_graph("gardener"), SENSED_GRAPH)
+    return st, Imaginarium(st, beliefs_graph("gardener"), STATE_GRAPH)
 
 
 def _dose(im, sensed, litres=0.05, value=0.04):
     return effects.apply(im, DOSING, me=f"<{GARDENER}>", subject=f"<{ZZ}>",
                          about=f"<{MOISTURE}>", beliefs=f"<{beliefs_graph('gardener')}>",
-                         sensed=f"<{sensed}>", litres=repr(litres), value=repr(value))
+                         state=f"<{sensed}>", litres=repr(litres), value=repr(value))
 
 
 def test_a_rule_asked_of_the_imaginarium_answers_what_it_answers_of_the_store():
@@ -49,9 +49,9 @@ def test_a_rule_asked_of_the_imaginarium_answers_what_it_answers_of_the_store():
     """
     st, im = _imaginarium()
 
-    from_store = sorted(t.object.value for t in _dose(st, SENSED_GRAPH)[0]
+    from_store = sorted(t.object.value for t in _dose(st, STATE_GRAPH)[0]
                         if t.predicate.value == RESULT)
-    from_imaginarium = sorted(t.object.value for t in _dose(im, SENSED_GRAPH)[0]
+    from_imaginarium = sorted(t.object.value for t in _dose(im, STATE_GRAPH)[0]
                               if t.predicate.value == RESULT)
 
     assert from_store, "the rule binds against the belief base, or this test compares nothing"
@@ -64,15 +64,15 @@ def test_a_node_forks_its_parents_readings_and_leaves_them_alone():
     graph would need save/restore around every expansion and not even a stack discipline would
     serve, because the frontier is a set rather than a path."""
     st, im = _imaginarium()
-    added, retracted = _dose(im, SENSED_GRAPH)
+    added, retracted = _dose(im, STATE_GRAPH)
 
     class _Row:                                  # what `_Node.taken` holds: action and lever
         action, via = DOSING, "http://example.org/orexis/world/loner#pump"
 
-    child = im.reached(SENSED_GRAPH, (_Row(),), added, retracted)
+    child = im.reached(STATE_GRAPH, (_Row(),), added, retracted)
 
-    assert child != SENSED_GRAPH, "a node's readings are its own graph"
-    assert _values_in(im, SENSED_GRAPH) == ["0.04"], "the parent is not disturbed by a child"
+    assert child != STATE_GRAPH, "a node's readings are its own graph"
+    assert _values_in(im, STATE_GRAPH) == ["0.04"], "the parent is not disturbed by a child"
     assert _values_in(im, child) == sorted(t.object.value for t in added
                                            if t.predicate.value == RESULT)
     assert len(_values_in(im, child)) == 1, \
@@ -84,15 +84,15 @@ def test_nothing_imagined_reaches_the_store_it_was_imagined_from():
     a graph can be forgotten to be dropped, and a store that was never on disk cannot be."""
     st, im = _imaginarium()
     before = set(st.graph_names())
-    added, retracted = _dose(im, SENSED_GRAPH)
+    added, retracted = _dose(im, STATE_GRAPH)
 
     class _Row:
         action, via = DOSING, "http://example.org/orexis/world/loner#pump"
 
-    im.reached(SENSED_GRAPH, (_Row(),), added, retracted)
+    im.reached(STATE_GRAPH, (_Row(),), added, retracted)
 
     assert set(st.graph_names()) == before, "a possible world escaped into the belief base"
-    assert _values_in(st, SENSED_GRAPH) == ["0.04"], "the agent's readings are its own"
+    assert _values_in(st, STATE_GRAPH) == ["0.04"], "the agent's readings are its own"
 
 
 def test_the_snapshot_is_public_knowledge_and_the_named_private_graphs_and_nothing_else():
@@ -103,11 +103,11 @@ def test_the_snapshot_is_public_knowledge_and_the_named_private_graphs_and_nothi
     #  A world with FOUR agents in it, because the claim is about what was left behind and a
     #  world holding one agent could not tell.
     st = genesis_store({("fern", MOISTURE): 0.30})
-    im = Imaginarium(st, beliefs_graph("fern"), SENSED_GRAPH)
+    im = Imaginarium(st, beliefs_graph("fern"), STATE_GRAPH)
 
     assert im.public_graphs() == st.public_graphs(), \
         "public knowledge means the same thing in both, or an unqualified pattern does not"
-    for graph in (ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph("fern"), SENSED_GRAPH):
+    for graph in (ONTOLOGY_GRAPH, WORLD_GRAPH, beliefs_graph("fern"), STATE_GRAPH):
         assert im.get_graph(graph).strip(), f"{graph} is empty in the imaginarium"
     for other in ("supplier", "tomato", "succulent"):
         assert st.get_graph(beliefs_graph(other)).strip(), f"{other} has beliefs to leave out"

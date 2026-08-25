@@ -47,7 +47,7 @@ from agent.desire import Desire
 from .driver import driver_for
 from agent.module import Module, hook
 from agent.ontology import HANDLE, SUBSCRIPTIONS
-from agent.ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
+from agent.ontology import STATE_GRAPH, beliefs_graph
 from agent.store import bindings
 
 
@@ -59,7 +59,7 @@ from .regions import Gap, ObservedWant, Region, aims_of, desires_of, gaps_of, re
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
-from .terms import (ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S,
+from .terms import (INSTRUMENTS_GRAPH, ANNOTATE, BOUNDS, READING_RECORDED, URGENCY, FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S,
                     SUBSCRIBING)
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
@@ -201,7 +201,7 @@ class SensingModule(Module):
 
     # --- the measure I declare, answered when the kernel asks (desire_urgency) ---
 
-    def desire_urgency(self, desire, query, sensed: str,
+    def desire_urgency(self, desire, query, state: str,
                        value: float | None = None) -> float | None:
         """How urgent an OBSERVATION-BACKED want is, in the world `query` answers about.
 
@@ -211,7 +211,7 @@ class SensingModule(Module):
         (a-desire-states-its-own-measure).
 
         RUN ON PYOXIGRAPH, whichever world is passed — the belief base live, the planner's
-        IMAGINARIUM for a candidate (with `sensed` naming that node's readings), never the
+        IMAGINARIUM for a candidate (with `state` naming that node's readings), never the
         flat rdflib copy pySHACL reads — so one stored query is never answered by two
         engines, which is how I already evaluate everything else. The region's numbers are
         substituted at answer time, read off the deduced shapes I hold myself,
@@ -243,7 +243,7 @@ class SensingModule(Module):
                                 .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>")
                                 .replace("$subject", self._watched(query, instrument))
                                 .replace("$property", f"<{about}>")
-                                .replace("$sensed", f"<{sensed}>"))
+                                .replace("$state", f"<{state}>"))
         region = self.region(about)
         if region is None:
             return None
@@ -256,7 +256,7 @@ class SensingModule(Module):
                 .replace("$subject",
                          f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>")
                 .replace("$property", f"<{about}>")
-                .replace("$sensed", f"<{sensed}>")
+                .replace("$state", f"<{state}>")
                 .replace("$beliefs", f"<{beliefs_graph(self.agent.id)}>")
                 .replace("$value", repr(float(value)) if value is not None else "?reading")
                 .replace("$centre", repr(float(region.centre)))
@@ -689,7 +689,7 @@ class SensingModule(Module):
         """The choir road, asked of the LIVE belief base — through the agent rather than
         straight to `desire_urgency`, so a second module that measures the same want (none
         ships) would be heard, and so one question has one asker."""
-        return self.agent.desire_urgency(desire, self.agent.beliefs.query, SENSED_GRAPH, value)
+        return self.agent.desire_urgency(desire, self.agent.beliefs.query, STATE_GRAPH, value)
 
     def gaps(self) -> dict[str, Gap]:
         """Where every property the agent wants stands against where it wants it — stale rows

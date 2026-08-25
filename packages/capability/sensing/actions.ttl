@@ -95,7 +95,7 @@ sensing:Observing
             ?sensor sensing:monitors $subject ;
                     sosa:observes ?property .
             FILTER(?sensor = $about || ?property = $about)
-            OPTIONAL { GRAPH $sensed {
+            OPTIONAL { GRAPH $state {
                 ?seen sosa:hasFeatureOfInterest $subject ;
                       sosa:observedProperty ?property .
                 OPTIONAL { ?seen sosa:hasSimpleResult ?value }
@@ -120,7 +120,7 @@ sensing:Observing
         CONSTRUCT { ?obs ?p ?o } WHERE {
             ?sensor sensing:monitors $subject ; sosa:observes ?property .
             FILTER(?sensor = $about || ?property = $about)
-            GRAPH $sensed {
+            GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty ?property ;
                      ?p ?o

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent.ontology import (AG, SENSED_GRAPH, WORLD_GRAPH, beliefs_graph)
+from agent.ontology import (AG, STATE_GRAPH, WORLD_GRAPH, beliefs_graph)
 from agent.store import bindings
 
 from conftest import build_agent, genesis_store
@@ -38,7 +38,7 @@ def test_the_desires_store_holds_wants_and_only_wants(monkeypatch):
         "the regions are DERIVED here now — genesis derives no wants (#312)"
     assert beliefs_graph("gardener") in graphs, "the pick record is projected: picks are wants"
     assert WORLD_GRAPH not in graphs, "topology is a premise, dropped after the derivation"
-    assert SENSED_GRAPH not in graphs, "a reading is a belief, not a want"
+    assert STATE_GRAPH not in graphs, "a reading is a belief, not a want"
 
 
 def test_a_region_is_readable_from_the_desires_store_alone(monkeypatch):

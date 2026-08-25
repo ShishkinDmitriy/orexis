@@ -127,11 +127,14 @@ ONTOLOGY_ENTAILED_GRAPH = _GRAPH + "ontology/entailed"  # what that vocabulary i
 WORLD_GRAPH = _GRAPH + "world"  # topology, as the sovereign ratified it
 WORLD_DERIVED_GRAPH = _GRAPH + "world/derived"  # what each package's rules.ru computed
 WORLD_ENTAILED_GRAPH = _GRAPH + "world/entailed"  # what the vocabulary implies of instances
-SENSED_GRAPH = _GRAPH + "sensed"  # what sensors read
+#  The world's current state as this agent holds it — what an effect rewrites and a plan forks.
+#  The IRI still says "sensed", for every volume that holds readings under it; the NAME says
+#  what the kernel knows about it, which is not that (the-stake-is-sensings-want).
+STATE_GRAPH = _GRAPH + "sensed"
 #  What this agent knows about its own instruments — the rhythm each is running and the
 #  horizon that follows from it. Private, and separate from `sensed` because a cadence is
 #  not a reading: it is what the agent believes about the instrument that produced one.
-INSTRUMENTS_GRAPH = _GRAPH + "instruments"
+#  `graph/instruments` is sensing's, declared in its ontology and named in its terms.
 #  The desire modality's own graphs — named by the kernel as write/bootstrap roots, exactly
 #  the two-category exception the graph-IRI rule states: the build WRITES the first and
 #  projects the second, and no reader ever enumerates either (reads go through the modality's

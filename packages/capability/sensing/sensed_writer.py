@@ -38,7 +38,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from agent.ontology import SENSED_GRAPH
+from agent.ontology import STATE_GRAPH
 from agent.store import Store
 
 
@@ -92,9 +92,9 @@ class SensedWriter:
         wv = f"    ag:underWorldVersion {int(world_version)} ;\n" if world_version is not None else ""
 
         self.store.update(f"""
-WITH <{SENSED_GRAPH}>
+WITH <{STATE_GRAPH}>
 DELETE {{ {obs} ?p ?o }} WHERE {{ {obs} ?p ?o }} ;
-INSERT DATA {{ GRAPH <{SENSED_GRAPH}> {{
+INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{
   {obs} a sosa:Observation ;
     sosa:hasFeatureOfInterest <{foi}> ;
     sosa:observedProperty <{observed_property}> ;

@@ -24,7 +24,7 @@ agent's — a graph can be forgotten to be dropped, and a store that was never o
 single hypothesis graph each step overwrites, and it is wrong: the search is breadth-first, so
 siblings are alive at the same time and *branching* rather than backtracking is the hard case. A
 world is therefore a VALUE — written once when the node is created, and choosing another branch
-is binding `$sensed` to another name. There is nothing to restore because nothing was disturbed.
+is binding `$state` to another name. There is nothing to restore because nothing was disturbed.
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ class Imaginarium(Store):
 
     def reached(self, parent: str, path, added, retracted) -> str:
         """The world one step past `parent`: its readings, less what the step retracts, plus what
-        it adds. Returns the new graph's name, which is what a rule's `$sensed` is bound to.
+        it adds. Returns the new graph's name, which is what a rule's `$state` is bound to.
 
         **Fork, do not replay.** A node's readings are made by copying its parent's and applying
         the diff. Recomputing a world by replaying from the root would sound cheaper and is the

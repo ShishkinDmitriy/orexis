@@ -80,8 +80,8 @@ actuation:Dosing
             FILTER(?conversion > 0)
             #  WHERE THE PROPERTY STANDS, read by this rule from the world it is asked about
             #  rather than handed in by the planner: the kernel no longer knows what a reading
-            #  looks like, and a rule that reads $sensed already does. Nothing read yet is zero.
-            OPTIONAL { GRAPH $sensed { ?standing sosa:hasFeatureOfInterest $subject ;
+            #  looks like, and a rule that reads $state already does. Nothing read yet is zero.
+            OPTIONAL { GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
                                        sosa:observedProperty $about ;
                                        sosa:hasSimpleResult ?was } }
             BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
@@ -128,7 +128,7 @@ actuation:Dosing
     #  works.
     ag:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $sensed {
+            GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty $about ;
                      ?p ?o

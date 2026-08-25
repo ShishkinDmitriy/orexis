@@ -120,8 +120,8 @@ market:Acquiring
             FILTER($litres > 0)
             #  WHERE THE PROPERTY STANDS, read by this rule from the world it is asked about
             #  rather than handed in by the planner: the kernel no longer knows what a reading
-            #  looks like, and a rule that reads $sensed already does. Nothing read yet is zero.
-            OPTIONAL { GRAPH $sensed { ?standing sosa:hasFeatureOfInterest $subject ;
+            #  looks like, and a rule that reads $state already does. Nothing read yet is zero.
+            OPTIONAL { GRAPH $state { ?standing sosa:hasFeatureOfInterest $subject ;
                                        sosa:observedProperty $about ;
                                        sosa:hasSimpleResult ?was } }
             BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
@@ -174,7 +174,7 @@ market:Acquiring
     #  found it, which is the opposite of the error above and just as wrong.
     ag:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
-            GRAPH $sensed {
+            GRAPH $state {
                 ?obs sosa:hasFeatureOfInterest $subject ;
                      sosa:observedProperty $about ;
                      ?p ?o
@@ -221,10 +221,10 @@ market:Offering
           FILTER NOT EXISTS {
             GRAPH $beliefs { ?via market:hasRound ?open . ?open market:closesAt ?c }
             FILTER(?c > NOW()) }
-          FILTER NOT EXISTS { GRAPH $sensed { ?via market:hasRound ?imagined } }
+          FILTER NOT EXISTS { GRAPH $state { ?via market:hasRound ?imagined } }
           OPTIONAL { GRAPH $beliefs { ?via market:mayConveneAt ?may } }
           FILTER(!BOUND(?may) || ?may <= NOW())
-          OPTIONAL { GRAPH $sensed { ?reading sosa:hasFeatureOfInterest ?source ;
+          OPTIONAL { GRAPH $state { ?reading sosa:hasFeatureOfInterest ?source ;
                                     sosa:observedProperty ?stock ;
                                     sosa:hasSimpleResult ?level } }
           FILTER(!BOUND(?stock) || !BOUND(?level) || ?level > 0)
@@ -235,7 +235,7 @@ market:Offering
     rdfs:label "what opening a round makes true" ;
 
     #  THE EFFECT: a round on the venue — the same fact `announce` writes, predicted. It
-    #  lands in the plan's own graph ($sensed, where every effect's triples go), which is why
+    #  lands in the plan's own graph ($state, where every effect's triples go), which is why
     #  the precondition above looks there too and why a call's measure reads both graphs.
     #  The stock is untouched: offering moves no water. NOW() plus my bid window, in the
     #  duration arithmetic this engine does support — measured before it was leaned on.
@@ -336,7 +336,7 @@ market:Serving
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
-            GRAPH $sensed { ?cur sosa:hasFeatureOfInterest ?vessel ;
+            GRAPH $state { ?cur sosa:hasFeatureOfInterest ?vessel ;
                                  sosa:observedProperty ?levelProp ;
                                  sosa:hasSimpleResult ?level }
             FILTER(?level >= ?litres)
@@ -374,7 +374,7 @@ market:Serving
             $me market:hosts ?venue ; actuation:hasActuator ?lever .
             ?lever actuation:drawsFrom ?vessel .
             ?vessel ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?levelProp .
-            GRAPH $sensed { ?obs sosa:hasFeatureOfInterest ?vessel ;
+            GRAPH $state { ?obs sosa:hasFeatureOfInterest ?vessel ;
                                  sosa:observedProperty ?levelProp ; ?p ?o .
                             ?obs sosa:hasSimpleResult ?level }
             FILTER(?level >= ?litres)

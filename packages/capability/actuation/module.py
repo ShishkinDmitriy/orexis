@@ -38,7 +38,7 @@ from agent.module import Module, Timer, hook
 from agent.ontology import HANDLE, SUBSCRIPTIONS
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
-from agent.ontology import SENSED_GRAPH
+from agent.ontology import STATE_GRAPH
 from agent.store import bindings
 
 from .beliefs import ACTUATION_PICKS
@@ -342,7 +342,7 @@ SELECT ?source ?p WHERE {{
         added, _ = effects.apply(
             self.agent.beliefs, DOSING,
             me=f"<{self.me.uri}>", subject=f"<{self.me.acts_for}>",
-            property=f"<{observed_property}>", sensed=f"<{SENSED_GRAPH}>",
+            property=f"<{observed_property}>", state=f"<{STATE_GRAPH}>",
             beliefs=f"<{self.agent.beliefs.graph}>",
             litres=repr(float(litres)), value=repr(float(value)))
         #  `.value` and not `str()`: a pyoxigraph term stringifies to its N-Triples form, angle
