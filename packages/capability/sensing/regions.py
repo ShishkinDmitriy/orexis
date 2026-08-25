@@ -6,8 +6,9 @@ reading from the point steered for; the wants assembled here — a stake per pro
 freshness want per instrument — are exactly the wants whose premise is an observation. Every
 one of those is a sentence in `sosa`, which is this package's vocabulary and not the kernel's:
 the kernel knows that a want exists, ranks it, plans for it and commits to it, and never learns
-what a reading is (the-stake-is-sensings-want). What stayed behind is the AIM (`agent/aims.py`,
-the pick inside a region) and the duty (`agent/owing.py`), neither of which is about sensing.
+what a reading is (the-stake-is-sensings-want). The AIM — the pick inside a region — is here too,
+since a point in a property checked against a range is the same kind of sentence; what stayed
+behind is the duty (`agent/owing.py`), which is not about sensing.
 
 `Region.urgency` is a reference definition and not the live one: how a want's badness is
 measured is declared in `measures.ttl` and asked through the choir (`Module.desire_urgency`).
@@ -21,9 +22,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from agent.aims import aims_of
 from agent.desire import Desire
-from agent.ontology import SENSED_GRAPH
+from agent.ontology import SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 log = logging.getLogger("sensing")
@@ -32,6 +32,28 @@ log = logging.getLogger("sensing")
 # SPARQL so any consumer can run it. Read once at import: a malformed query is then an error
 # the moment the package loads rather than the first time somebody asks.
 DESIRES_QUERY = (Path(__file__).parent / "desires.rq").read_text()
+
+# My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
+# graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
+# never arrive that way.
+_AIMS_Q = """
+SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
+  <{me}> sensing:aims ?aim .
+  ?aim ssn:forProperty ?property ;
+       schema:value ?value .
+}} }}"""
+
+
+def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
+    """One agent's aims, property -> value. Private, so the beliefs graph is named.
+
+    Takes the id as well as the URI because the graph is named from the one and the subject from
+    the other — the same two facts the module itself is handed at construction.
+    """
+    return {row["property"]: float(row["value"])
+            for row in bindings(query(_AIMS_Q.format(
+                beliefs=beliefs_graph(agent_id), me=agent_uri)))}
+
 
 #  THE READING OF THE SENSED GRAPH — sosa and nothing else: what was read, of what,
 #  by which instrument, when. What it does NOT ask is whether a reading is still evidence:
@@ -214,7 +236,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
 
     Two handles since the dataset split (#298): `desires` answers what is WANTED and `beliefs`
     what IS, and the join is here — `desires.rq` and `readings.rq` are the two texts. The
-    MAGNITUDE is nobody's arithmetic here: `measure` is the choir road the deducer hands in
+    MAGNITUDE is nobody's arithmetic here: `measure` is the choir road the sensing module hands in
     (see `_measured_urgency`), so the diff and the ranking cannot disagree because both ask the
     same capability the same question. `agent_id` names the pick record the sign's aim is read
     from. A property with no observation yet is absent rather than zero: at birth every desire
@@ -255,7 +277,7 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
     function does not learn which kind it just asked about. `value` may be None, because the
     question *how urgent is not knowing* is exactly the one a freshness want asks.
 
-    `measure` is the choir road, handed in by the deducer — `(desire, value) -> float | None`,
+    `measure` is the choir road, handed in by the sensing module — `(desire, value) -> float | None`,
     behind which `Agent.desire_urgency` asks every module and sensing answers for
     observation-backed wants against the live belief base. A free function cannot hold the
     agent, so the join takes the question as a parameter; the KERNEL evaluates nothing

@@ -8,7 +8,7 @@
 # must hold a coherent valuation. Swap the domain module and these go with it.
 
 water:WaterBidderShape a sh:NodeShape ;
-    rdfs:comment "A bidder for water values it by its deficit below an aim, so it needs a pot size, a ceiling price, and an aim in the property those are denominated in. WHERE the aim may sit is not checked here: an aim inside its region is desire's arithmetic, true of any domain, and desire:AimShape holds every aim to it. What only this domain can know is that a BID needs one — a bidder with no aim in the priced property has no deficit to value." ;
+    rdfs:comment "A bidder for water values it by its deficit below an aim, so it needs a pot size, a ceiling price, and an aim in the property those are denominated in. WHERE the aim may sit is not checked here: an aim inside its region is desire's arithmetic, true of any domain, and sensing:AimShape holds every aim to it. What only this domain can know is that a BID needs one — a bidder with no aim in the priced property has no deficit to value." ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
             SELECT ?this WHERE {
@@ -36,7 +36,7 @@ water:WaterBidderShape a sh:NodeShape ;
                 <http://example.org/orexis/water#litresPerFraction>
                       <http://example.org/orexis/market#aboutProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/orexis#aims> ?aim .
+                    $this <http://example.org/orexis/sensing#aims> ?aim .
                     ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
                 }
             }""" ] .
@@ -69,7 +69,7 @@ water:RefillBidderShape a sh:NodeShape ;
                 <http://example.org/orexis/water#litresPerStoredLitre>
                       <http://example.org/orexis/market#aboutProperty> ?property .
                 FILTER NOT EXISTS {
-                    $this <http://example.org/orexis#aims> ?aim .
+                    $this <http://example.org/orexis/sensing#aims> ?aim .
                     ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
                 }
             }""" ] .
@@ -81,7 +81,7 @@ water:PlantShape a sh:NodeShape ;
     sh:property [ sh:path water:servedBy ; sh:minCount 1 ; sh:class water:WaterSource ] ;
     sh:property [ sh:path water:litresPerFraction ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
-    sh:property [ sh:path <http://example.org/orexis#aims> ; sh:maxCount 0 ;
+    sh:property [ sh:path <http://example.org/orexis/sensing#aims> ; sh:maxCount 0 ;
                   sh:message "a plant holds no desire — the aim belongs to its agent's beliefs" ] ;
 
     # What it MAY state is the range it needs, which is not a desire but a fact about the plant.

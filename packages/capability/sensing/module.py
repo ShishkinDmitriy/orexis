@@ -53,7 +53,7 @@ from agent.store import bindings
 from . import pointer
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .observation import Observations
-from .regions import Gap, Region, desires_of, gaps_of, regions_of
+from .regions import Gap, Region, aims_of, desires_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
@@ -173,11 +173,14 @@ class SensingModule(Module):
         # Recording is one place for every capability that records — see observation.py.
         self.observations = Observations(agent)
         #  THE REGIONS this agent holds — deduced by my own `desires.ru` from what its subject
-        #  states it needs, read once here. They were the deducer's (the kernel's) and every
+        #  states it needs, read once here. They were the kernel's deducer's, and every
         #  question about them is a question about a reading, so they are mine now
         #  (the-stake-is-sensings-want). Every sensing module the agent composes reads the
         #  same ones, and `Agent.pursuing` folds a want seen twice into one by its node.
         self.regions: dict[str, Region] = regions_of(self.agent.desires.query_union, self.me.uri)
+        #  And the AIM inside each — the agent's own pick, a belief, which a review may move.
+        self._aims: dict[str, float] = aims_of(self.agent.desires.query_union, self.agent.id,
+                                               self.me.uri)
         if self.regions:
             self.log.info("wants %s", ", ".join(
                 f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
@@ -560,7 +563,7 @@ class SensingModule(Module):
 
     #  ---- the region, and what a reading means against it -------------------------------
     #
-    #  These were `agent/deducer.py`'s: the band, the urgency, the bounds a board should watch,
+    #  These were the kernel's deducer's: the band, the urgency, the bounds a board should watch,
     #  the gaps, the stakes contributed to what the agent pursues. Every one of them is a
     #  verdict on an OBSERVATION, and the kernel no longer knows what one is.
 
@@ -572,6 +575,21 @@ class SensingModule(Module):
         `agent.providers(SENSING)`, or through the choir hooks below.
         """
         return self.regions.get(observed_property)
+
+    def aim(self, observed_property: str) -> float | None:
+        """The point the agent is steering this property toward, or None if it picked none.
+
+        A consumer that requires one (a bidder pricing a deficit) treats None as its own
+        refusal; nothing here defaults to the region's centre, because a fabricated preference
+        is still a fabricated belief.
+        """
+        return self._aims.get(observed_property)
+
+    def on_belief_revised(self, belief_term: str, value) -> None:
+        """An aim is a belief, so a review may move it — within the region, which is the same
+        check boot makes. Re-read rather than patched: the revision names a term and an aim is
+        a structure, so the simplest correct answer is to ask the graph again."""
+        self._aims = aims_of(self.agent.desires.query_union, self.agent.id, self.me.uri)
 
     def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
         """A stake is in one property of the one subject the agent advances. Both have to
@@ -658,7 +676,7 @@ class SensingModule(Module):
         for prop, region in sorted(self.regions.items()):
             local = prop.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
             fields = {"desired_low": region.low, "desired_high": region.high}
-            aim = self.agent.deducer.aim(prop) if self.agent.deducer is not None else None
+            aim = self.aim(prop)
             if aim is not None:
                 fields["aim"] = aim
             rows.append(("agent_desire", {"property": local}, fields))
@@ -1082,6 +1100,7 @@ class SubscribingModule(SensingModule):
         alternative is waiting out the OLD cadence, which after a relaxation is up to a quarter
         of an hour of the agent knowingly running a policy it has just abandoned.
         """
+        super().on_belief_revised(belief_term, value)   # the aim, re-read
         # Compared whole. This used to strip the namespace off and match on the local name,
         # which was a latent bug rather than a shortcut: two packages may each declare a
         # `slowSleepS` in their own namespace, and the stripped form cannot tell them apart —

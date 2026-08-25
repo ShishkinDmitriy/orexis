@@ -332,7 +332,7 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) already draws.
 
   It is violated today, in exactly one place, and it is already filed as
-  [#264](https://github.com/ShishkinDmitriy/orexis/issues/264): `ag:aims` is a WANT and it lives
+  [#264](https://github.com/ShishkinDmitriy/orexis/issues/264): `sensing:aims` is a WANT and it lives
   in `graph/beliefs/<agent>`, beside `patienceS`, `fastSleepS` and `maxValuePerL`, which are
   settings. Under a store per modality that triple could not be written at all — an aim is not a
   belief and there would be nowhere to put it. A defect becomes an unrepresentable state, which

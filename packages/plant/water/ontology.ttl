@@ -95,7 +95,7 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 
 #################  What a bid means here — the bidder's private valuation  #################
 #
-#  `water:hasTarget` was here and is GONE, to `ag:aims`. It fused two things: the point an
+#  `water:hasTarget` was here and is GONE, to `sensing:aims`. It fused two things: the point an
 #  agent steers its moisture toward (desire's — any agent with a stake holds one, market or no
 #  market) and the input a litre-deficit is priced from (this domain's). What this domain keeps
 #  is the pricing: how a deficit becomes litres, what a litre is worth, and the statement of

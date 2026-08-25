@@ -294,6 +294,9 @@ class _NoSensing:
     about a reading. Said as an empty module rather than as None, so a test can ask."""
     regions: dict = {}
 
+    def aim(self, observed_property):
+        return None
+
     def gaps(self):
         return {}
 

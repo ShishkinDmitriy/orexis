@@ -48,7 +48,7 @@ ag:supplier a ag:Agent ; actuation:hasActuator ag:valve_fern , … .
 and each agent's own graph carries what it thinks:
 
 ```turtle
-ag:fern_agent ag:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.55 ] ;
+ag:fern_agent sensing:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.55 ] ;
     sensing:fastSleepS 30 ; sensing:slowSleepS 600 ; sensing:readingGraceS 45 ;
     water:litresPerFraction 2.0 ; water:maxValuePerL 0.80 .
 ```

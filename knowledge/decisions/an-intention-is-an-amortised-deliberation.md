@@ -80,7 +80,7 @@ it, which is review's existing pattern and needs no new mechanism.
 ## 2. The aim moves into desire
 
 `water:hasTarget` is two things fused: the point an agent aims at inside its region (desire's)
-and the input a litre-deficit is priced from (the market's). They split: `ag:aims` is
+and the input a litre-deficit is priced from (the market's). They split: `sensing:aims` is
 private, per property, checked against the region it picks inside; bidding reads the aim through
 `agent.provider(DESIRE)` and keeps only its value curve (`litresPerFraction`,
 `maxValuePerL`). The old term migrates through the vocabulary successor mechanism, so a running

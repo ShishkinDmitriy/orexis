@@ -41,14 +41,13 @@ def _gardener(monkeypatch, moisture):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    deducer = next(m for m in agent.modules if m.name == "desire")
     #  THE STAKE, said out loud. Two wants are about this property now — the region zz should
     #  sit in, and that the probe has reported recently — and asking for "the want about
     #  moisture" would take whichever happened to be hotter, which on a dry pot is the wrong
     #  one and answers a different question. These tests are about doses.
     desire = next(g for g in agent.pursuing()
                   if g.observed_property == MOISTURE and not g.is_epistemic)
-    return agent, Planner(agent, deducer, agent.me).plan(desire), desire
+    return agent, Planner(agent, agent.me).plan(desire), desire
 
 
 def test_a_lever_that_would_overshoot_is_refused_by_simulating_it(monkeypatch):
@@ -152,11 +151,10 @@ def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defe
 
     fern = build_agent("fern", st, monkeypatch)
     open_round_for(fern, "fern")
-    deducer = next(m for m in fern.modules if m.name == "desire")
     desire = next(g for g in fern.pursuing()
                   if g.observed_property == MOISTURE and not g.is_epistemic)
 
-    plan = Planner(fern, deducer, fern.me).plan(desire)
+    plan = Planner(fern, fern.me).plan(desire)
     assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
     assert plan.first is None, "and nothing it COULD see wets soil"
 
@@ -232,8 +230,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    deducer = next(m for m in agent.modules if m.name == "desire")
-    planner = Planner(agent, deducer, agent.me)
+    planner = Planner(agent, agent.me)
     desire = next(g for g in agent.pursuing()
                   if g.observed_property == MOISTURE and not g.is_epistemic)
 
@@ -285,11 +282,10 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     st = genesis_store({("fern", MOISTURE): 0.30})
     fern = build_agent("fern", st, monkeypatch)
     open_round_for(fern, "fern")
-    deducer = next(m for m in fern.modules if m.name == "desire")
     desire = next(g for g in fern.pursuing()
                   if g.observed_property == MOISTURE and not g.is_epistemic)
 
-    plan = Planner(fern, deducer, fern.me).plan(desire)
+    plan = Planner(fern, fern.me).plan(desire)
 
     assert not plan.partial, "every lever on this menu states its effect"
     assert [s.action for s in plan.steps] == ["http://example.org/orexis/market#Acquiring"], \
@@ -347,10 +343,9 @@ def _thirsty_with_a_nearly_empty_butt(monkeypatch):
     st = genesis_store({("zz", MOISTURE): DRY, ("water_butt", STORED): NEARLY_EMPTY},
                        world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    deducer = next(m for m in agent.modules if m.name == "desire")
     desire = next(g for g in agent.pursuing()
                   if g.observed_property == MOISTURE and not g.is_epistemic)
-    return agent, Planner(agent, deducer, agent.me), desire
+    return agent, Planner(agent, agent.me), desire
 
 
 def _readings_of(world, subject, prop):
@@ -521,10 +516,9 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("water_butt", STORED): NEARLY_EMPTY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    deducer = next(m for m in agent.modules if m.name == "desire")
     desire = next(g for g in agent.pursuing()
                   if g.observed_property == MOISTURE and not g.is_epistemic)
-    planner = Planner(agent, deducer, agent.me)
+    planner = Planner(agent, agent.me)
 
     plan = planner.plan(desire)
 

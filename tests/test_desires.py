@@ -20,7 +20,7 @@ FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
 
 def _fern(readings, monkeypatch):
-    """A real fern, because a stake's urgency is a capability's answer now: the deducer asks
+    """A real fern, because a stake's urgency is a capability's answer now: sensing asks
     the choir (`Agent.desire_urgency`) and sensing answers from its own declaration, so a
     hand-built join would fake away the contribution these tests exercise."""
     st = genesis_store(readings)
@@ -143,7 +143,7 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
     st.update(f"""DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim <https://schema.org/value> ?v }} }}
                   INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim <https://schema.org/value> 0.65 }} }}
                   WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
-                      <{FERN}> <http://example.org/orexis#aims> ?aim .
+                      <{FERN}> <http://example.org/orexis/sensing#aims> ?aim .
                       ?aim <http://www.w3.org/ns/ssn/forProperty> <{MOISTURE}> ;
                            <https://schema.org/value> ?v }} }}""")
     #  0.55 against an aim of 0.65: distance 0.10, and the room on the LOW side is

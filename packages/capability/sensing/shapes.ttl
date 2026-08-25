@@ -269,3 +269,63 @@ sensing:BeyondSurvivalShape a sh:NodeShape ;
                             <http://www.w3.org/ns/sosa/observes> ?property .
                 }
             }""" ] .
+
+# The aim answers to the region, and both halves of that sentence are checked here — sensing's, since the
+# region is (the-stake-is-sensings-want) — rather than in any domain: which properties may be aimed at and where the aim may sit are this package's
+# arithmetic, true of a thermometer exactly as of a pot. What a DOMAIN checks is different in
+# kind — that a bidder holds an aim in the property its bids are priced in — and stays in the
+# domain's shapes, because only the domain knows a bid exists.
+#
+# Targeted through what POINTS at an aim, not by class: an aim is written inline as
+# `sensing:aims [ ... ]` and nobody types `a sensing:Aim` on a node they are already describing —
+# the same lesson review's mandate shape records.
+sensing:AimShape a sh:NodeShape ;
+    rdfs:comment """An aim is one property and one value, and the value sits inside the shape the agent is held to for that property. The checks span a PUBLIC shape and a PRIVATE aim, which meet only inside the agent at boot — nothing outside it ever sees the number.\n\nThis is the containment check a-desire-is-a-shape names as a seam: SHACL has no operator for "this shape is inside that one", so the bound is read out of the deduced shape as the ordinary RDF it is. SHACL, validated by a query over SHACL — mind-bending to read, and the price of having one language for what a graph should look like instead of two.""" ;
+    sh:targetSubjectsOf sensing:aims ;
+    sh:property [ sh:path ( sensing:aims <http://www.w3.org/ns/ssn/forProperty> ) ;
+                  sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "an aim must say which property it is a pick FOR" ] ;
+    sh:property [ sh:path ( sensing:aims <https://schema.org/value> ) ;
+                  sh:minCount 1 ; sh:datatype xsd:decimal ;
+                  sh:message "an aim must carry one decimal value" ] ;
+    sh:sparql [
+        sh:message "an aim names a property this agent holds no region in — a pick with nothing to pick inside is a number with nothing behind it" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/orexis/sensing#aims> ?aim .
+                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER NOT EXISTS {
+                    $this <http://example.org/orexis#holds> ?shape .
+                    ?shape <http://www.w3.org/ns/ssn/forProperty> ?property .
+                }
+            }""" ] ;
+    sh:sparql [
+        sh:message "the aim sits outside the region this agent deduced for that property — a desire is a pick within a range, not a number of its own" ;
+        sh:select """
+            SELECT $this ?value WHERE {
+                $this <http://example.org/orexis/sensing#aims> ?aim .
+                ?aim <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                     <https://schema.org/value> ?value .
+                $this <http://example.org/orexis#holds> ?desire .
+                ?desire <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                        <http://example.org/orexis#metWhen> ?shape .
+                ?shape <http://www.w3.org/ns/shacl#property> ?below , ?above .
+                ?below <http://www.w3.org/ns/shacl#severity>
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
+                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
+                ?above <http://www.w3.org/ns/shacl#severity>
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
+                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
+                FILTER(?value < ?low || ?value > ?high)
+            }""" ] ;
+    sh:sparql [
+        sh:message "two aims for one property — an agent steering one property toward two points is not steering" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/orexis/sensing#aims> ?one , ?other .
+                ?one   <http://www.w3.org/ns/ssn/forProperty> ?property .
+                ?other <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER(?one != ?other)
+            }""" ] .

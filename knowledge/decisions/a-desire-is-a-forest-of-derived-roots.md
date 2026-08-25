@@ -135,7 +135,7 @@ in a capability's `measures.ttl` and answered through the choir — the measure 
 the node, and a per-leaf override remains future work for whichever package ships it), the
 `ag:pursues` link
 an intention holds across restarts — the keeper writes it, and a leaf that vanished on
-recomputation would orphan a live commitment — and a **series identity**, the row `deducer.py`
+recomputation would orphan a live commitment — and a **series identity**, the row sensing's module
 already publishes per property with the region's edges and the aim on it. A report row exists
 for the length of one validation and can hold none of those. What stays UNstored is the current
 number: a gap is a verdict, computed on asking, and the tree stores structure and measure,

@@ -16,9 +16,9 @@ matters here is the consequence: every agent holds a desire store, and what diff
 is whether their subject states anything to want.
 
 Three things, three holders. [Sensing](/domain/sensing.md) deduces a [region](/domain/region.md)
-per property the subject needs, with an envelope beside it, and contributes those stakes to what
-the agent pursues; the deducer — the kernel's own module in this modality — holds the
-[aim](/domain/aim.md) the agent picked inside each; and *what am I pursuing* is answered across
+per property the subject needs, with an envelope beside it, holds the [aim](/domain/aim.md) the
+agent picked inside each, and contributes those stakes to what the agent pursues; the ledger
+contributes the debts; and *what am I pursuing* is answered across
 those and the [obligations](/domain/obligation.md) the agent did not source, by `Agent.pursuing`
 merging every module's `desires()`.
 
@@ -244,7 +244,7 @@ themselves.
 
 # What it is not
 
-- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`ag:aims`,
+- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`sensing:aims`,
   which replaced `water:hasTarget`) stays a private belief in `beliefs/<id>.ttl`, is the agent's
   to move within its
   [mandate](/decisions/self-review-is-a-capability.md), and is checked against the region at boot.

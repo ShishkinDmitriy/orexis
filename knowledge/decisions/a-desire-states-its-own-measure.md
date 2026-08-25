@@ -25,7 +25,7 @@ timestamp: 2026-08-24T12:00:00Z
 
 The deliberator held two ways of deciding, and they disagreed about what was being pursued.
 The reflex (`propose`/`_by_gap`) steers a property toward the agent's AIM — the pick, read
-through `deducer.aim`, which deliberately refuses to default to the region's centre, because a
+through the sensing provider's `aim`, which deliberately refuses to default to the region's centre, because a
 fabricated preference is still a fabricated belief. The planner scored candidate worlds by
 `Region.urgency`, which measured distance from the region's geometric CENTRE. So whenever the
 pick sat off-centre the two mechanisms pursued different targets — and once a desire was

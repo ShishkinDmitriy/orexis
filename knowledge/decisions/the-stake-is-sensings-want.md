@@ -54,9 +54,13 @@ kernel's `desires.rq` and `regions.py`. Every want an agent pursues is contribut
 query over its own graph, `agent/owing.py`), hosting the calls — and `Agent.pursuing` is the
 whole assembly: it merges the modules' lists and folds a want seen twice into one by its
 node, because two sensing modules read the same regions. There is no kernel `desires_of` left
-to be an assembly function; `Desire`'s `value` is filled by whoever contributed it. What the
-kernel kept of the region is the AIM alone — `agent/aims.py`, read by the deducer — until #380
-moves it too. The choir's verdicts on a reading (the band, the bounds a board watches, the
+to be an assembly function; `Desire`'s `value` is filled by whoever contributed it. The AIM
+went with the region, in the same change and ahead of #380's schedule, on the sovereign's
+ruling that a pick in a property checked against a range is sensing's sentence: `sensing:Aim`,
+`sensing:aims`, `sensing:AimShape`, `aims_of` in sensing's `regions.py`, `aim()` on the
+sensing provider, the world files' aims respelled and `vocabulary.MOVED` carrying a deployed
+volume across. The deducer is gone — the kernel has no module in the desire modality now. The
+choir's verdicts on a reading (the band, the bounds a board watches, the
 urgency a cadence follows, the gaps and the health figures) are sensing's hooks now, and
 `ag:KeeperShape` asks for a patience from an agent that `ag:holds` a want whose violation is not
 `ag:Stale` — the stake said in the kernel's own words, where "acts for a subject that states
@@ -90,10 +94,9 @@ altogether, not by renaming it but by no longer needing it:
   package's side, and an effect rule is handed `$want` and walks the same way;
 - the **actors' door** is `pursue_for(want)`; an actor holding a reading finds the want it
   means by its own query (bidding: the want about the property it is priced in);
-- the **aim** — a pick inside a region — moves to sensing with the region: `ag:Aim`, `ag:aims`,
-  `aims_of` and `AimShape` become sensing's, and the sovereign-authored aims in
-  `world/*/beliefs/*.ttl` are read by sensing's words. The kernel keeps *pick* as a concept —
-  a belief chosen inside a range, which review moves — and holds no aim of its own.
+- the **aim** — a pick inside a region — moved to sensing with the region under #377 (above).
+  The kernel keeps *pick* as a concept — a belief chosen inside a range, which review moves —
+  and holds no aim of its own.
 
 SSN's generic relation was the honest word for "which property" while the kernel had to say
 it; it no longer has to say it.
@@ -103,12 +106,13 @@ it; it no longer has to say it.
 1. Readings behind sensing — `current_reading` as a provider method, `value_in` as a hook,
    `ag:volatile` for the signature (#376).
 2. The stake as sensing's want — `desires.ru`, `Region`, `gaps_of`, the region shapes, and
-   the kernel's `desires_of` dissolved into the modules' own `desires()` (#377, landed).
+   the kernel's `desires_of` dissolved into the modules' own `desires()`; the aim with them
+   (#377, landed).
 3. Reconcile: `store.PREFIXES` still declares `sosa`/`ssn-system` because prefixes are
    discovered from ontologies; the kernel's own files should then name neither, and the
    ratchet's prefixed-name blind spot (#344) is what would keep it so (#378).
 4. No property in the kernel — wants by node, intentions by (act, want), rows and acts
-   carrying the want, the actors' door by want, the aim to sensing, the ledger migrated
+   carrying the want, the actors' door by want, the ledger migrated
    (#380). The largest step, and the one that makes the kernel exactly the BDI engine.
 
 # Seams left open
@@ -117,6 +121,6 @@ it; it no longer has to say it.
   reading — and becomes true in structure: a stake is derived by the package that reads.
 - ~~**The debts and the calls are derived by their owners already**; the kernel's `desires_of`
   after this change is an assembly function that happens to live in `regions.py`.~~ Closed
-  with #377: nothing is left of the file but the aim, and `agent/aims.py` is named for it.
+  with #377: nothing is left of the file at all — the aim went too.
 - **`ssn:forProperty` in `agent/ontology.ttl`'s comments** narrates the old arrangement until
   #380 lands; the term itself is declared by SSN, not by us, so nothing in the T-Box changes.

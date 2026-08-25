@@ -301,15 +301,15 @@ class BiddingModule(Module):
     def _my_aim(self) -> float | None:
         """The point I am steering the priced property toward — desire's, asked for at bid time.
 
-        Through `agent.provider`, so this package never imports desire's Python. None when
-        nothing here holds desires or no aim was picked, and the caller cedes: a bid prices the
+        Through `agent.provider`, so this package never imports sensing's Python. None when
+        nothing here senses or no aim was picked, and the caller cedes: a bid prices the
         deficit below an aim, and with no aim there is no deficit — only a number somebody would
         have had to invent.
         """
-        desire = self.agent.deducer
-        if desire is None:
+        sensing = self.agent.provider(SENSING)
+        if sensing is None:
             return None
-        return desire.aim(self.about)
+        return sensing.aim(self.about)
 
     def stop(self) -> None:
         if self._deadline:

@@ -239,7 +239,7 @@ rename, so writes moved while reads stayed — caught by tests, not by a scan.
    the agent picks inside, review moves the pick. Default social, or the shipped worlds change
    behaviour.
 8. **What an agent pursues becomes SHACL** — constraint, desire and obligation as shapes
-   differing in severity and in whose graph they sit; `ag:Bounds`, `ag:boundedBy` and `ag:Aim`
+   differing in severity and in whose graph they sit; `ag:Bounds`, `ag:boundedBy` and `sensing:Aim`
    retire. Before the next step, because a goal that is a pattern is what makes the next step
    expressible at all. This step was first designed as *desired states in belief's shape* and
    the sovereign turned it over within a day — see

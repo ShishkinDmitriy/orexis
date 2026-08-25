@@ -419,7 +419,7 @@ SELECT ?r WHERE {{
         # claim that sourced it, whether or not the holder ever presents. What it buys
         # immediately is durability: `held` above dies with the process, and a restarted host
         # used to forget every claim it had issued.
-        #  The LEDGER OF DEBTS and not the deducer (#233). A host with no stake of its
+        #  The LEDGER OF DEBTS and not the regions (#233). A host with no stake of its
         #  own — the city, acting for a mains that states no ranges — used to reach this line,
         #  find no desire module, and record nothing at all while issuing claims all day.
         if (ledger := self.agent.owing) is not None:

@@ -44,6 +44,10 @@ STALE_AFTER_S = term("staleAfterS")
 #  is on the want rather than on the thing it is about.
 FRESHNESS = term("Freshness")
 
+# The pick inside a region — was `ag:Aim` / `ag:aims` (the-stake-is-sensings-want).
+AIM = term("Aim")
+AIMS = term("aims")
+
 #  Derived, and the difference from `polls` is the whole of it: polls is who may READ an
 #  instrument, mayAsk is who may INTERRUPT one. Only the second is a lever.
 MAY_ASK = term("mayAsk")

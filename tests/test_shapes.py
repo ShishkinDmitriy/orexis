@@ -168,9 +168,9 @@ def test_a_bidder_with_no_aim_in_the_priced_property_is_refused():
     could only invent a number, and it must not start instead."""
     assert not _conforms(_mutate(f"""
         DELETE {{ GRAPH <{beliefs_graph("fern")}> {{
-                 <http://example.org/orexis/world/simulation#fern_agent> ag:aims ?aim . ?aim ?p ?o }} }}
+                 <http://example.org/orexis/world/simulation#fern_agent> sensing:aims ?aim . ?aim ?p ?o }} }}
         WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
-                 <http://example.org/orexis/world/simulation#fern_agent> ag:aims ?aim . ?aim ?p ?o }} }}"""))
+                 <http://example.org/orexis/world/simulation#fern_agent> sensing:aims ?aim . ?aim ?p ?o }} }}"""))
 
 
 def test_an_aim_in_a_property_with_no_region_is_refused():
@@ -178,7 +178,7 @@ def test_an_aim_in_a_property_with_no_region_is_refused():
     humidity range — so an aim there is a number with nothing behind it, whatever its value."""
     assert not _conforms(_mutate(f"""
         INSERT {{ GRAPH <{beliefs_graph("fern")}> {{
-            <http://example.org/orexis/world/simulation#fern_agent> ag:aims [
+            <http://example.org/orexis/world/simulation#fern_agent> sensing:aims [
                 ssn:forProperty <http://example.org/orexis/water#AirHumidity> ;
                 schema:value 0.5 ] }} }}
         WHERE {{}}"""))
@@ -330,7 +330,7 @@ def test_valve_must_carry_its_calibration():
 def test_a_plant_may_not_hold_a_desire():
     """The aim belongs to an agent's beliefs; a plant that held one would be a category error."""
     assert not _conforms(_mutate(f"""
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#fern> <http://example.org/orexis#aims> [
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#fern> <http://example.org/orexis/sensing#aims> [
             <http://www.w3.org/ns/ssn/forProperty> <http://example.org/orexis/water#SoilMoisture> ;
             <https://schema.org/value> 0.55 ] }} }} WHERE {{}}"""))
 
@@ -710,7 +710,7 @@ def test_an_aim_outside_the_agents_region_is_refused():
         DELETE {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.55 }} }}
         INSERT {{ GRAPH <{beliefs_graph("fern")}> {{ ?aim schema:value 0.90 }} }}
         WHERE  {{ GRAPH <{beliefs_graph("fern")}> {{
-                 <http://example.org/orexis/world/simulation#fern_agent> ag:aims ?aim . ?aim schema:value 0.55 }} }}""")
+                 <http://example.org/orexis/world/simulation#fern_agent> sensing:aims ?aim . ?aim schema:value 0.55 }} }}""")
     assert not _conforms(data)
     assert "pick within a range" in _report(data)
 
@@ -818,7 +818,7 @@ def test_a_plant_still_holds_no_desire_of_its_own():
     say what it needs and may not say what it wants."""
     data = _mutate("""
         INSERT { GRAPH <http://example.org/orexis/graph/world> {
-            <http://example.org/orexis/world/simulation#fern> <http://example.org/orexis#aims> [
+            <http://example.org/orexis/world/simulation#fern> <http://example.org/orexis/sensing#aims> [
                 <http://www.w3.org/ns/ssn/forProperty> <http://example.org/orexis/water#SoilMoisture> ;
                 <https://schema.org/value> 0.55 ] } }
         WHERE {}""")

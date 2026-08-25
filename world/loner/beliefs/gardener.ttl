@@ -27,7 +27,7 @@
 #   0.18: dry-side of centre, deliberately — the survival ceiling is a rot cliff and the
 #   floor is nearly free, so a ZZ keeper errs dry. The region arrives entailed; only this
 #   pick is the gardener's.
-:gardener ag:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.18 ] .
+:gardener sensing:aims [ ssn:forProperty water:SoilMoisture ; schema:value 0.18 ] .
 
 ##  water — what it believes its pot takes: the conversion a self-dose is sized with.
 #   The physics copy lives on the pot in the world; this is the agent's own, the one it

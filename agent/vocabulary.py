@@ -135,6 +135,10 @@ MOVED = {
     **{old: "http://example.org/orexis/market#Offering" for old in (
         "http://example.org/orexis/intention#Offer", "http://example.org/orexis#Offer",
         "http://example.org/orexis/market#Offer")},
+    #  The AIM went to sensing with the region it sits in (the-stake-is-sensings-want): a
+    #  volume authored while it was the kernel's holds `ag:aims`, and this is the rename.
+    "http://example.org/orexis#Aim": "http://example.org/orexis/sensing#Aim",
+    "http://example.org/orexis#aims": "http://example.org/orexis/sensing#aims",
     **{old: "http://example.org/orexis/sensing#Observing" for old in (
         "http://example.org/orexis/intention#Observe", "http://example.org/orexis#Observe",
         "http://example.org/orexis/sensing#Observe")},

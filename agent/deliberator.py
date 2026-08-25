@@ -326,7 +326,7 @@ class Deliberator(Module):
                 "I could reach scores alike, so I am about to conclude that nothing helps from "
                 "a comparison that means nothing. `orexis-validate` refuses this world.",
                 desire.observed_property.rsplit("#", 1)[-1])
-        plan = Planner(self.agent, self.agent.deducer, self.me).plan(desire)
+        plan = Planner(self.agent, self.me).plan(desire)
         #  A SEARCH OVER PART OF THE MENU CANNOT SAY "NOTHING HELPS", and it no longer has
         #  anywhere to hand the question to. Some lever had no stated effect and was passed
         #  over, so the one that works may be the one nobody simulated — fern buys its water,

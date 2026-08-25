@@ -125,6 +125,8 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     ("agent/vocabulary.py", "market#Offering"): (
         1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
     ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
+    ("agent/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
+    ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
     ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
     ("agent/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
     ("agent/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),

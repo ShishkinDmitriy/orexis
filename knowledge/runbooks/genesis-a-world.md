@@ -49,7 +49,7 @@ output.
 
 Two families, and they behave differently ([genesis-process](/domain/genesis-process.md)):
 **operational** (`sensing:fastSleepS`, `sensing:slowSleepS`, `sensing:maxReadingAgeS`) follows the *kind* of
-world — a bench rig wants 10s, a garden wants 600s; **stake** (`ag:aims`,
+world — a bench rig wants 10s, a garden wants 600s; **stake** (`sensing:aims`,
 `market:hasEndowment`, `water:maxValuePerL`) is the agent's own and derivable from nothing.
 
 There is no band to author. Where a plant is parched and where it is soaked belong to the

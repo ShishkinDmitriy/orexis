@@ -264,8 +264,8 @@ class ActuationModule(Module):
         None where the agent cannot size a dose at all — no aim to steer toward, no stated
         conversion, or a vessel it has watched run dry.
         """
-        desire = self.agent.deducer
-        aim = desire.aim(observed_property) if desire is not None else None
+        sensing = self.agent.provider(SENSING)
+        aim = sensing.aim(observed_property) if sensing is not None else None
         conversion = self._conversion_for(observed_property)
         if aim is None or conversion is None:
             return None

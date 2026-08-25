@@ -1,10 +1,10 @@
 ---
 type: Domain Concept
 title: Aim
-term: http://example.org/orexis#Aim
+term: http://example.org/orexis/sensing#Aim
 description: >-
   The point an agent picks inside the region it was given — its own, and the one part of its
-  desire it chose. A structure rather than a triple (`ag:aims` carries the property and the
+  desire it chose. A structure rather than a triple (`sensing:aims` carries the property and the
   value), and a first pick rather than a bound: an agent with room to move re-picks on its own
   clock, which makes the author's job to constrain well rather than to guess well. It is a WANT
   living among settings, which is the one place the modality split is violated today and is
@@ -22,7 +22,7 @@ from what the subject states; the aim is a judgement made inside it.
 
 # A structure, not a triple
 
-`ag:aims` carries a node with the property and the value, not a bare number — which is why an
+`sensing:aims` carries a node with the property and the value, not a bare number — which is why an
 amendment endowing an agent with an aim endows a whole structure, and why the old `hasTarget`
 could not simply be renamed into it.
 
@@ -41,7 +41,7 @@ stating a range inside which being wrong is survivable.**
 
 Since [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md), the aim
 is what a desire's declared measure anchors at: [urgency](/domain/urgency.md) is distance from
-the pick, and the measure reads `ag:aims` out of the belief base at query time — so a re-pick
+the pick, and the measure reads `sensing:aims` out of the belief base at query time — so a re-pick
 moves every consumer's number the moment it is recorded, with nothing recompiled. The region's
 centre serves only while no aim is picked, which is what its old docstring ("where an agent with
 no other reason to prefer would aim") had been admitting all along.

@@ -27,7 +27,7 @@ from conftest import WORLDS_ROOT, genesis_store
 #
 # `ag:bandLow`, `ag:bandHigh` and `ag:hasTarget` were here and had to go, which is the one edit
 # that principle does not cover: the terms they were renamed TO have since been DELETED — the
-# bands in favour of the deduced region, the target in favour of `ag:aims`, which is a
+# bands in favour of the deduced region, the target in favour of `sensing:aims`, which is a
 # STRUCTURE and so not a rename at all — and a store holding them is now correctly unmigratable
 # rather than merely old. Every migration test would fail on a term that is not what any of them
 # is about. What that case looks like is tested directly, on a synthetic term, by

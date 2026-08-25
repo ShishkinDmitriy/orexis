@@ -280,7 +280,7 @@ WHERE  {
     #  The aim, if one is already picked — for the LABEL only. The measure never bakes it: it
     #  reads $beliefs at query time, which is what lets a re-pick move the urgency between
     #  rebuilds. The label is refreshed on rebuild, which every recorded re-pick triggers.
-    OPTIONAL { $me ag:aims ?aimed . ?aimed ssn:forProperty ?property ; schema:value ?picked }
+    OPTIONAL { $me sensing:aims ?aimed . ?aimed ssn:forProperty ?property ; schema:value ?picked }
     BIND(CONCAT(?name, " inside ", STR(?low), "-", STR(?high),
                 COALESCE(CONCAT(", aiming ", STR(?picked)), ", no aim picked yet"))
          AS ?label)
