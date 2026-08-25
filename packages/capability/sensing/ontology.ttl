@@ -408,3 +408,33 @@ sosa:hosts owl:propertyChainAxiom ( ssn:inDeployment ssn:deployedSystem ) .
 #  "where a plan stands", which is what keeps a look from being a new world every time.
 sosa:Observation ag:keyedBy sosa:hasFeatureOfInterest , sosa:observedProperty ;
                  ag:carries sosa:hasSimpleResult .
+
+#  Was the kernel's (`ag:Aim`, `ag:aims`); the region it sits in is this package's, and so is
+#  the aim (the-stake-is-sensings-want).
+#################
+#
+#  PRIVATE, and the one part of desire that is. A region is deduced and public; the AIM is the
+#  point inside it this agent is currently steering for, and it is the last thing left that an
+#  agent decides about its own ends — which is exactly why it is a belief in the agent's own
+#  graph, why review may move it, and why nothing may default it. "No preference inside my
+#  region" is not a stance this vocabulary can express, deliberately: a consumer that needs a
+#  point needs the agent to have picked one, and a missing belief is an error rather than a
+#  default everywhere in this project.
+#
+#  This replaces `water:hasTarget`, which fused two things: the point an agent aims at
+#  (desire's) and the input a litre-deficit is priced from (the market's). The domain keeps the
+#  pricing — `water:litresPerFraction`, `water:maxValuePerL`, and the statement of which
+#  property a bid is denominated in — and asks the aim of whoever provides the sensing family.
+#
+#  NOTE ON MIGRATION: this is a structural move, not a rename, so the vocabulary successor
+#  mechanism cannot carry a store across it — `water:hasTarget 0.55` has no single term it
+#  became. A volume holding the old term is refused loudly at boot with the term named, which
+#  is `agent/vocabulary.py`'s designed behaviour for a deletion: deciding what a dead structure
+#  meant is authorship, not computation.
+
+sensing:Aim a owl:Class ; rdfs:label "Aim" ;
+    rdfs:comment "One property and the value this agent is holding it toward: the pick inside the region. Shaped to lie inside the region for that same property, and meaningless — refused — for a property the agent holds no region in." .
+
+sensing:aims a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sensing:Aim ;
+    rdfs:label "aims" ;
+    rdfs:comment "Reads as the point this agent is steering one property toward. In the agent's own beliefs graph, never the world: the region answers to the sovereign's facts, the pick inside it answers to nobody — which is what makes it the agent's. Stated with ssn:forProperty and schema:value, the same two terms a region and a condition already use, so a reader that can read either can read this." .

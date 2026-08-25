@@ -19,7 +19,7 @@ timestamp: 2026-08-24T14:30:00Z
 
 # A desire is a forest of derived roots
 
-What an agent holds today is a flat set: `agent/desires.ru` derives one region and one envelope
+What an agent holds today is a flat set: sensing's `desires.ru` derives one region and one envelope
 per (agent, property), a freshness want per instrument, and nothing that relates any of them.
 The sovereign settled the structure above that set, and it is a **forest, not one trunk**: a
 **root desire** per premise, each an underived starting point of decomposition — typically a
@@ -120,7 +120,7 @@ the graph, not in a diff archaeology.
 inherits it whole. The tree is a function of premises, regrown by re-derivation; no agent edits
 or retires a branch; a vanished branch is one no longer implied, and its absence should be
 visible. The machinery is further along than #263's text now reads: since the desires store
-became a modality of its own, `agent/desires.ru` runs on every rebuild — boot, a re-pick, an
+became a modality of its own, every package's `desires.ru` runs on every rebuild — boot, a re-pick, an
 obligation transition — not once at genesis. What #263 still holds open (re-derivation during a
 life on premise change, bounded, with visible absence) the hierarchy inherits rather than adds
 to; the analysis stays there.
@@ -135,7 +135,7 @@ in a capability's `measures.ttl` and answered through the choir — the measure 
 the node, and a per-leaf override remains future work for whichever package ships it), the
 `ag:pursues` link
 an intention holds across restarts — the keeper writes it, and a leaf that vanished on
-recomputation would orphan a live commitment — and a **series identity**, the row `deducer.py`
+recomputation would orphan a live commitment — and a **series identity**, the row sensing's module
 already publishes per property with the region's edges and the aim on it. A report row exists
 for the length of one validation and can hold none of those. What stays UNstored is the current
 number: a gap is a verdict, computed on asking, and the tree stores structure and measure,
@@ -152,7 +152,7 @@ back* — applied to tree depth, and stated here so the next proposed level has 
 | **leaf** (per side) | repair-matching — a means declares which violations it repairs, and the side is what lets watering and a fan stop being one row; it is also what makes `market:direction` redundant, a retirement that rides with the matching rather than with this record |
 | **property** | the aim, the dose a bidder sizes against it, and the per-want series a dashboard follows |
 | **instance** | where the roster premise binds and an override hangs its provenance — and the hop the walk names ("fern, below its floor") |
-| **root** | the roll-up urgency — max of children, which is the semantics `hottest` already computes in `agent/deliberator.py` and `agent/regions.py`, now given a home — and the sovereign's ask-channel entry: *I want my plants well (0.72 — fern below floor), my instruments fresh (0.10), my debts honoured (0.00)* — labelled roots, walkable to the hot leaf |
+| **root** | the roll-up urgency — max of children, which is the semantics `hottest` already computes in `agent/deliberator.py` and sensing's `regions.py`, now given a home — and the sovereign's ask-channel entry: *I want my plants well (0.72 — fern below floor), my instruments fresh (0.10), my debts honoured (0.00)* — labelled roots, walkable to the hot leaf |
 
 The instance level is the thinnest of the four, held by the walk and the override audit; if
 both of those consumers ever move elsewhere, the test says fold it, and this table is where
@@ -161,7 +161,7 @@ that argument starts.
 ## Three recorded needs this design converges
 
 - **The per-side split** the plan record demanded — *"splitting makes the violation name the
-  side"* — landed before this record was written: `agent/desires.ru` emits the side shapes and
+  side"* — landed before this record was written: the region derivation emits the side shapes and
   [region](/domain/region.md) documents them. The forest does not re-ask for it; it gives the
   sides a parent.
 - **The epistemic want gets a principled seat.** *This property in range* decomposes into

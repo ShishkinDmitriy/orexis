@@ -54,7 +54,7 @@ force and in whose graph they are in:
   sh:property [ sh:path …moisture ; sh:minInclusive 0.45 ; sh:maxInclusive 0.65 ] ]
 ```
 
-`ag:Bounds`, `ag:boundedBy` and `ag:Aim` retire — and with them the argument we had been having
+`ag:Bounds`, `ag:boundedBy` and `sensing:Aim` retire — and with them the argument we had been having
 for two days about what to call a thing that binds and motivates at once. It binds at
 `sh:Violation` and motivates at `ag:ShouldBecome`, and an obligation is the same shape again,
 sourced by a peer's claim rather than by the sovereign or the agent.

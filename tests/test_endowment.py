@@ -16,9 +16,10 @@ from agent.store import Store, bindings
 
 NS = "http://example.org/orexis/world/simulation#"
 MARKET = "http://example.org/orexis/market#"
-DESIRE = "http://example.org/orexis#"
+SENSING = "http://example.org/orexis/sensing#"   # the aim is sensing's (the-stake-is-sensings-want)
 PROLOG = """@prefix : <http://example.org/orexis/world/simulation#> .
 @prefix market: <http://example.org/orexis/market#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix ag:   <http://example.org/orexis#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
@@ -67,12 +68,12 @@ def test_a_structure_arrives_whole(tmp_path):
     assert genesis.birth(st, world, "dealer")
 
     world_with(tmp_path, """:dealer market:hasEndowment 50.0 ;
-        ag:aims [ ssn:forProperty <http://example.org/orexis/water#StoredLitres> ;
+        sensing:aims [ ssn:forProperty <http://example.org/orexis/water#StoredLitres> ;
                       schema:value 3.0 ] .""")
-    assert genesis.endow(st, world, "dealer") == [DESIRE + "aims"]
+    assert genesis.endow(st, world, "dealer") == [SENSING + "aims"]
     rows = bindings(st.query(f"""
         SELECT ?p ?v WHERE {{ GRAPH <{beliefs_graph('dealer')}> {{
-            ?s <{DESIRE}aims> ?aim . ?aim <http://www.w3.org/ns/ssn/forProperty> ?p ;
+            ?s <{SENSING}aims> ?aim . ?aim <http://www.w3.org/ns/ssn/forProperty> ?p ;
                <https://schema.org/value> ?v }} }}"""))
     assert rows and float(rows[0]["v"]) == 3.0, "the closure travels with the pair"
 

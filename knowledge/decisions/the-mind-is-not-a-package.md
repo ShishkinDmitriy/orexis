@@ -33,7 +33,7 @@ dissolve:
 
 | was | is | granted by |
 |---|---|---|
-| `desire:Deducing` | `agent/deducer.py`, `agent/regions.py` | nothing |
+| `desire:Deducing` | nothing left in the kernel: the region, the gap and the aim went on to sensing — [the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md) | nothing |
 | `desire:Owing` | `agent/owing.py` | nothing |
 | `intention:Keeping` | `agent/keeper.py` | nothing |
 | `deliberation:Reflex`, `deliberation:Planning` | `agent/deliberator.py` — ONE class | nothing |

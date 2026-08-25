@@ -314,11 +314,11 @@ class Deliberator(Module):
         #  ASKED OF THE LIVE WORLD ONCE, purely to complain. The planner asks the same
         #  question of every candidate and takes the flat 1.0 when nobody answers — which
         #  makes every possible world score alike, so "no move improves" comes back with
-        #  confidence from an unrankable comparison. A want with no REGION is the freshness
-        #  case and legitimately unmeasured (it has no distance to scale); a want with one is
-        #  a stake, and a stake nothing measures is what the gate refuses.
-        if (not desire.is_duty and desire.observed_property
-                and self.agent.deducer.region(desire.observed_property) is not None
+        #  confidence from an unrankable comparison. An EPISTEMIC want is the freshness case
+        #  and legitimately unmeasured (it has no distance to scale); any other want about a
+        #  property is a stake, and a stake nothing measures is what the gate refuses. Told
+        #  apart by the kernel's own structure — the kernel holds no region to consult.
+        if (not desire.is_duty and not desire.is_epistemic and desire.observed_property
                 and self.agent.desire_urgency(
                     desire, self.agent.beliefs.query, SENSED_GRAPH) is None):
             self.log.error(
@@ -326,7 +326,7 @@ class Deliberator(Module):
                 "I could reach scores alike, so I am about to conclude that nothing helps from "
                 "a comparison that means nothing. `orexis-validate` refuses this world.",
                 desire.observed_property.rsplit("#", 1)[-1])
-        plan = Planner(self.agent, self.agent.deducer, self.me).plan(desire)
+        plan = Planner(self.agent, self.me).plan(desire)
         #  A SEARCH OVER PART OF THE MENU CANNOT SAY "NOTHING HELPS", and it no longer has
         #  anywhere to hand the question to. Some lever had no stated effect and was passed
         #  over, so the one that works may be the one nobody simulated — fern buys its water,

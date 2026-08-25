@@ -124,7 +124,7 @@ cadence, which is the honest reading of "nothing here is urgent to me". A percei
 holds no band is now a coherent thing to be, rather than a `try/except`.
 
 They landed on `BiddingBeliefs`, moved again to a desire package, and have since come into the
-kernel with the rest of the mind — `agent/deducer.py`. That second move is the one this section
+kernel with the rest of the mind, and on again to sensing with the region ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)). That second move is the one this section
 is about, and it is
 where they should have gone the first time: putting them on a bidder made *having an opinion
 about your own state* conditional on being a market participant, and limited it to the one

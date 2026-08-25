@@ -47,7 +47,7 @@
 ##  desire — the pick inside the region the barrel states (arc 2). Three litres: enough
 #   slack to serve several rounds, comfortably above the stated reserve. Private where the
 #   region is public, exactly as a fern's aim is.
-:supplier ag:aims [ ssn:forProperty water:StoredLitres ; schema:value 3.0 ] .
+:supplier sensing:aims [ ssn:forProperty water:StoredLitres ; schema:value 3.0 ] .
 
 ##  market:Bidding — the DEALER's buy side (arc 4). Derived, not declared: the city's pipe
 #   reaches its barrel and the barrel states a need in StoredLitres, so participation in the

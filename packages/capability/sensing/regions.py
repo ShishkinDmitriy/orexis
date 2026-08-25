@@ -1,38 +1,61 @@
-"""What an agent wants, as arithmetic: the region, the gap, and the wants it ranks.
+"""Where a property should be held, and how far a reading is from there — sensing's arithmetic.
 
-**The kernel's.** This was the desire package's, granted to an agent that acts for a subject
-stating what it needs — and the store those wants live in was built for every agent regardless,
-by `Agent.__init__`, three lines above the modules. The same contradiction the keeper and the
-deliberator each turned out to have: a modality for everyone, a reader for some. A mind is not
-plug-in-able.
+**Was `agent/regions.py`, the kernel's.** A region is deduced from what a subject STATES IT
+NEEDS and met by an OBSERVATION sitting inside it; a gap is the signed distance of the latest
+reading from the point steered for; the wants assembled here — a stake per property, a
+freshness want per instrument — are exactly the wants whose premise is an observation. Every
+one of those is a sentence in `sosa`, which is this package's vocabulary and not the kernel's:
+the kernel knows that a want exists, ranks it, plans for it and commits to it, and never learns
+what a reading is (the-stake-is-sensings-want). The AIM — the pick inside a region — is here too,
+since a point in a property checked against a range is the same kind of sentence; what stayed
+behind is the duty (`agent/owing.py`), which is not about sensing.
 
-What is HERE is the arithmetic, which has one form: intersecting stated ranges, measuring the
-signed distance to an aim, ranking a stake against a duty in one unit-free currency. What is
-NOT here is the question the capability was actually named for — where a region COMES from.
-Working it out from the ranges the world states is one answer and asking something else is
-another, and that seam is real; it is a pick now rather than a grant, like the deliberator's.
-
-See knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md.
+`Region.urgency` is a reference definition and not the live one: how a want's badness is
+measured is declared in `measures.ttl` and asked through the choir (`Module.desire_urgency`).
+See knowledge/domain/desire.md and knowledge/decisions/a-desire-states-its-own-measure.md.
 """
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
-from .desire import Desire
-from .ontology import AG, SENSED_GRAPH, beliefs_graph, obligations_graph
-from .store import bindings
+from agent.desire import Desire
+from agent.ontology import SENSED_GRAPH, beliefs_graph
+from agent.store import bindings
 
-log = logging.getLogger("desire")
+log = logging.getLogger("sensing")
 
-# The diff between desired and sensed, shipped as SPARQL so any consumer can run it — see the
-# file's own header. Read once at import: a malformed query is then an error the moment the
-# package loads rather than the first time somebody asks.
+# What this agent wants about observations: its stakes and its freshness wants, shipped as
+# SPARQL so any consumer can run it. Read once at import: a malformed query is then an error
+# the moment the package loads rather than the first time somebody asks.
 DESIRES_QUERY = (Path(__file__).parent / "desires.rq").read_text()
-#  THE KERNEL'S READING OF THE SENSED GRAPH — sosa and nothing else: what was read, of what,
+
+# My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
+# graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
+# never arrive that way.
+_AIMS_Q = """
+SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
+  <{me}> sensing:aims ?aim .
+  ?aim ssn:forProperty ?property ;
+       schema:value ?value .
+}} }}"""
+
+
+def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
+    """One agent's aims, property -> value. Private, so the beliefs graph is named.
+
+    Takes the id as well as the URI because the graph is named from the one and the subject from
+    the other — the same two facts the module itself is handed at construction.
+    """
+    return {row["property"]: float(row["value"])
+            for row in bindings(query(_AIMS_Q.format(
+                beliefs=beliefs_graph(agent_id), me=agent_uri)))}
+
+
+#  THE READING OF THE SENSED GRAPH — sosa and nothing else: what was read, of what,
 #  by which instrument, when. What it does NOT ask is whether a reading is still evidence:
 #  that is sensing's judgment (`sensing:staleAfterS` is sensing's word), made through the
 #  freshness want it derives and the measure it declares, and never here. A stake judges the
@@ -49,15 +72,6 @@ SELECT ?subject ?property ?value ?at ?instrument WHERE {
   }
 }"""
 
-# My own aims — the pick inside each region, one per property I chose to steer. PRIVATE, so the
-# graph is named: an unqualified pattern reads public knowledge, and an aim is exactly what must
-# never arrive that way.
-_AIMS_Q = """
-SELECT ?property ?value WHERE {{ GRAPH <{beliefs}> {{
-  <{me}> ag:aims ?aim .
-  ?aim ssn:forProperty ?property ;
-       schema:value ?value .
-}} }}"""
 
 # My own regions, read once at construction — through `ag:metWhen`, since the desire became a
 # node carrying its shape rather than being it. The only instance identifier named is my own
@@ -222,7 +236,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
 
     Two handles since the dataset split (#298): `desires` answers what is WANTED and `beliefs`
     what IS, and the join is here — `desires.rq` and `readings.rq` are the two texts. The
-    MAGNITUDE is nobody's arithmetic here: `measure` is the choir road the deducer hands in
+    MAGNITUDE is nobody's arithmetic here: `measure` is the choir road the sensing module hands in
     (see `_measured_urgency`), so the diff and the ranking cannot disagree because both ask the
     same capability the same question. `agent_id` names the pick record the sign's aim is read
     from. A property with no observation yet is absent rather than zero: at birth every desire
@@ -232,7 +246,7 @@ def gaps_of(desires, beliefs, agent_uri: str, agent_id: str, measure=None) -> di
     known, _ = _known(beliefs)
     aims = aims_of(desires, agent_id, agent_uri)
     out: dict[str, Gap] = {}
-    for row in _desired(desires, agent_uri, agent_id=None):
+    for row in _desired(desires, agent_uri):
         if row["kind"] != "stake":
             continue
         subject = next((s for s in subjects if (s, row["property"]) in known), None)
@@ -263,7 +277,7 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
     function does not learn which kind it just asked about. `value` may be None, because the
     question *how urgent is not knowing* is exactly the one a freshness want asks.
 
-    `measure` is the choir road, handed in by the deducer — `(desire, value) -> float | None`,
+    `measure` is the choir road, handed in by the sensing module — `(desire, value) -> float | None`,
     behind which `Agent.desire_urgency` asks every module and sensing answers for
     observation-backed wants against the live belief base. A free function cannot hold the
     agent, so the join takes the question as a parameter; the KERNEL evaluates nothing
@@ -290,42 +304,24 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
     return answer
 
 
-def desires_of(desires, beliefs, agent_uri: str, agent_id: str,
-             now: datetime | None = None, measure=None) -> list[Desire]:
-    """Everything an agent is pursuing, hottest first — its stakes and its debts in one list.
+def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Desire]:
+    """Sensing's wants, hottest first: every stake, and every freshness want.
 
-    Both sources appear because an obligation is a desire someone else sourced and urgency is
-    the common currency — a litre owed and a pot drying rank against each other rather than
-    running down two paths that never meet. Two handles since the dataset split (#298):
-    `desires.rq` asks the desire modality what is pursued, `readings.rq` asks the belief
-    modality what is known, and the judging — distance, staleness, lapse — happens here,
-    where the clock is. One clock, deliberately: the deadline and the urgency used to be
-    judged by two (the store's NOW and Python's), and two clocks that normally agree are
-    still two clocks.
+    Was the kernel's `desires_of`, and it read the DUTIES too — the ledger reads its own now
+    (`agent/owing.py`), and what is left here is exactly the two kinds of want whose premise is
+    an observation: a region a reading should sit inside, and an instrument that should have
+    spoken recently. Two handles since the dataset split (#298): `desires` answers what is
+    WANTED (`desires.rq`, this package's), `beliefs` what IS (the sensed graph), and the join
+    is here. The MAGNITUDE is nobody's arithmetic here: `measure` is the choir road
+    (`_measured_urgency`), so the ranking and the gap cannot disagree.
 
-    A want whose reading is missing or too old is maximally urgent: not knowing whether the
-    pot is dying outranks knowing it is uncomfortable, which is why the first intention is
-    always to look. Staleness is judged against the horizon `publish_horizon` wrote — a store
-    with none published does not judge staleness at all, the honest outcome of not knowing
-    what rhythm is being kept.
+    A want whose reading is missing is maximally urgent: not knowing whether the pot is dying
+    outranks knowing it is uncomfortable, which is why the first intention is always to look.
     """
-    now = now or datetime.now(timezone.utc)
     subjects = _subjects_of(beliefs, agent_uri)
     known, by_instrument = _known(beliefs)
     out = []
-    for row in _desired(desires, agent_uri, agent_id):
-        if row["kind"] == "duty":
-            #  Lapsed is judged HERE, against the same clock the urgency uses — one reader,
-            #  one now, so a debt cannot be maximally hot and still count as open because two
-            #  clocks disagreed.
-            demanded = row.get("presented") == "true"
-            lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
-            out.append(Desire(uri=row["desire"], urgency=_duty_urgency(row, now),
-                            claim=row["claim"], owed_to=row["owedTo"],
-                            state="lapsed" if lapsed else
-                                  ("demanded" if demanded else "standing"),
-                            pursuable=demanded and not lapsed))
-            continue
+    for row in _desired(desires, agent_uri):
         if row["kind"] == "freshness":
             subject = None
             item = by_instrument.get((row.get("instrument"), row["property"]))
@@ -391,13 +387,9 @@ class Known:
     at: datetime | None
 
 
-def _desired(desires, agent_uri: str, agent_id: str | None) -> list[dict]:
-    """The desire modality's rows — `desires.rq`, with the duty branch reaching this agent's
-    obligations graph only when an id is given to name it by."""
-    text = DESIRES_QUERY.replace("$me", f"<{agent_uri}>")
-    text = text.replace("$owed", f"<{obligations_graph(agent_id)}>" if agent_id
-                        else "<urn:nobody:owes>")
-    return bindings(desires(text))
+def _desired(desires, agent_uri: str) -> list[dict]:
+    """The desire modality's rows about observations — `desires.rq`, this package's."""
+    return bindings(desires(DESIRES_QUERY.replace("$me", f"<{agent_uri}>")))
 
 
 def _known(beliefs) -> tuple[dict, dict]:
@@ -426,39 +418,13 @@ def _region_of(row: dict) -> Region:
                   ceiling=float(ceiling) if ceiling is not None else None)
 
 
-def _duty_urgency(row: dict, now: datetime) -> float:
-    """The fraction of the claim's redeem window that has run, clamped.
-
-    Here rather than in the query because the store's engine binds NOTHING for
-    `duration / duration` — measured, and pinned by a test, because an unsupported operation
-    that returns unbound instead of failing is how a whole column silently reads zero.
-    """
-    if not row.get("expires"):
-        return 0.0                        # a market with no redeem channel; nobody is waiting
-    owed_at = datetime.fromisoformat(row["at"])
-    window = (datetime.fromisoformat(row["expires"]) - owed_at).total_seconds()
-    if window <= 0:
-        return 1.0
-    return max(0.0, min(1.0, (now - owed_at).total_seconds() / window))
-
-
-def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
-    """One agent's aims, property -> value. Private, so the beliefs graph is named.
-
-    Takes the id as well as the URI because the graph is named from the one and the subject from
-    the other — the same two facts the module itself is handed at construction.
-    """
-    return {row["property"]: float(row["value"])
-            for row in bindings(query(_AIMS_Q.format(
-                beliefs=beliefs_graph(agent_id), me=agent_uri)))}
-
-
 def regions_of(query, agent_uri: str) -> dict[str, Region]:
     """Every region one agent holds, property -> region. Read, never computed here.
 
     A free function because it is the whole of what this module does with a store, and a test
     about what a world implies should not have to build an agent to ask. The arithmetic that
-    produced these numbers is in `rules.ru` and ran at genesis; this only reads the answer.
+    produced these numbers is `desires.ru`, run on every rebuild of the desire modality; this
+    only reads the answer.
     """
     out: dict[str, Region] = {}
     for row in bindings(query(_REGIONS_Q % (agent_uri, agent_uri))):
@@ -470,4 +436,3 @@ def regions_of(query, agent_uri: str) -> dict[str, Region]:
             ceiling=float(ceiling) if ceiling is not None else None,
         )
     return out
-

@@ -89,7 +89,7 @@ and every crossing already has a native shape in the house:
   graph and the data graph as separate arguments. The shapes come from the desires store, the
   data from the beliefs store; this boundary exists in the API today.
 - **The gap computation already lives in Python.** `gap.rq` and `desires.rq` read a shape's
-  bounds to compute signed distance — and the deducer already materialises exactly that join
+  bounds to compute signed distance — and sensing's `gaps_of` already materialises exactly that join
   as `Region` objects. The split moves a join into code that performs it now.
 - **The affordance walks take the desired properties as a parameter.** Three `affordances.rq`
   files join wiring with *which properties I hold desires in* — a small set, injected as a
@@ -178,7 +178,7 @@ the desires store's.
 
 | term | asserts | store |
 |---|---|---|
-| `ag:aims` (with `ssn:forProperty`, `schema:value`) | the point steered for — a want about the world | desires |
+| `sensing:aims` (with `ssn:forProperty`, `schema:value`) | the point steered for — a want about the world | desires |
 | `sensing:fastSleepS`, `sensing:slowSleepS` | the cadences it wants kept | desires |
 | `sensing:readingGraceS`, `sensing:maxReadingAgeS` | how long silence is tolerated | desires |
 | `sensing:alarmDeltaFraction` | what counts as a jolt | desires |

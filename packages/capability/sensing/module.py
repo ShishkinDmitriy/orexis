@@ -43,15 +43,17 @@ from __future__ import annotations
 from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
+from agent.desire import Desire
 from agent.driver import driver_for
 from agent.module import Module
-from agent.ontology import INSTRUMENTS_GRAPH, beliefs_graph
+from agent.ontology import INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
 
 from . import pointer
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .observation import Observations
+from .regions import Gap, Region, aims_of, desires_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
@@ -170,6 +172,19 @@ class SensingModule(Module):
 
         # Recording is one place for every capability that records — see observation.py.
         self.observations = Observations(agent)
+        #  THE REGIONS this agent holds — deduced by my own `desires.ru` from what its subject
+        #  states it needs, read once here. They were the kernel's deducer's, and every
+        #  question about them is a question about a reading, so they are mine now
+        #  (the-stake-is-sensings-want). Every sensing module the agent composes reads the
+        #  same ones, and `Agent.pursuing` folds a want seen twice into one by its node.
+        self.regions: dict[str, Region] = regions_of(self.agent.desires.query_union, self.me.uri)
+        #  And the AIM inside each — the agent's own pick, a belief, which a review may move.
+        self._aims: dict[str, float] = aims_of(self.agent.desires.query_union, self.agent.id,
+                                               self.me.uri)
+        if self.regions:
+            self.log.info("wants %s", ", ".join(
+                f"{p.rsplit('#', 1)[-1]} in {r.low:g}..{r.high:g}"
+                for p, r in sorted(self.regions.items())))
         #  What I have already written down, so publishing is a no-op until the answer moves.
         #  Nothing is published from HERE: `SubscribingModule` fills its cadence dicts after
         #  `super().__init__()` returns, so asking what rhythm is in force during construction
@@ -197,7 +212,7 @@ class SensingModule(Module):
         IMAGINARIUM for a candidate (with `sensed` naming that node's readings), never the
         flat rdflib copy pySHACL reads — so one stored query is never answered by two
         engines, which is how I already evaluate everything else. The region's numbers are
-        substituted at answer time, read off the deduced shapes through the desire provider,
+        substituted at answer time, read off the deduced shapes I hold myself,
         and the aim is read from $beliefs by the query itself: nothing baked, so a re-pick or
         a re-derivation moves the next answer.
 
@@ -226,7 +241,7 @@ class SensingModule(Module):
                                 .replace("$subject", self._watched(query, instrument))
                                 .replace("$property", f"<{desire.observed_property}>")
                                 .replace("$sensed", f"<{sensed}>"))
-        region = self.agent.deducer.region(desire.observed_property)
+        region = self.region(desire.observed_property)
         if region is None:
             return None
         text = self._measure_for(query, desire.observed_property)
@@ -545,6 +560,127 @@ class SensingModule(Module):
         sensing:Polling, not a substitute for it — a real polling module would need a device that
         is always listening, and would then drive every reading this way.
         """
+
+    #  ---- the region, and what a reading means against it -------------------------------
+    #
+    #  These were the kernel's deducer's: the band, the urgency, the bounds a board should watch,
+    #  the gaps, the stakes contributed to what the agent pursues. Every one of them is a
+    #  verdict on an OBSERVATION, and the kernel no longer knows what one is.
+
+    def region(self, observed_property: str) -> Region | None:
+        """The agent's region in one property, or None if it holds no stake in it.
+
+        Whoever wants, and this says what it wants — so a bid, a dose or a cadence can be
+        computed against the agent's ends without anything importing this package: through
+        `agent.providers(SENSING)`, or through the choir hooks below.
+        """
+        return self.regions.get(observed_property)
+
+    def aim(self, observed_property: str) -> float | None:
+        """The point the agent is steering this property toward, or None if it picked none.
+
+        A consumer that requires one (a bidder pricing a deficit) treats None as its own
+        refusal; nothing here defaults to the region's centre, because a fabricated preference
+        is still a fabricated belief.
+        """
+        return self._aims.get(observed_property)
+
+    def on_belief_revised(self, belief_term: str, value) -> None:
+        """An aim is a belief, so a review may move it — within the region, which is the same
+        check boot makes. Re-read rather than patched: the revision names a term and an aim is
+        a structure, so the simplest correct answer is to ask the graph again."""
+        self._aims = aims_of(self.agent.desires.query_union, self.agent.id, self.me.uri)
+
+    def _is_mine(self, subject_uri: str, observed_property: str) -> bool:
+        """A stake is in one property of the one subject the agent advances. Both have to
+        match: handed a temperature against a moisture region the honest answer is no opinion,
+        and 21.0 read as a moisture fraction would score as perfectly comfortable."""
+        return subject_uri == self.me.acts_for and observed_property in self.regions
+
+    def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
+        """The verdict on the agent's own subject, for its public announcement — a band and
+        never a number: a listener learns that it is in trouble, not how wet it is."""
+        if not self._is_mine(subject_uri, observed_property):
+            return {}
+        return {"band": self.regions[observed_property].band(value)}
+
+    def bounds(self, subject_uri: str, observed_property: str) -> tuple[float, float] | None:
+        """The region's edges — what a crossing-watching board is told to announce on leaving
+        (#151). The REGION and not the survival envelope, deliberately: waking at the edge of
+        comfort is what makes the announcement early enough to act on."""
+        if subject_uri != self.me.acts_for:
+            return None
+        region = self.regions.get(observed_property)
+        return (region.low, region.high) if region else None
+
+    def urgency(self, subject_uri: str, observed_property: str,
+                value: float | None) -> float | None:
+        """How close this reading puts the agent to trouble, from the declared measure — the
+        same road `desire_urgency` answers, asked about a number the caller has in hand or is
+        predicting. `None` for the value asks how urgent NOT KNOWING is, and that is maximal:
+        the first current reading ends it, which is "the first intention is always to look" in
+        its cadence-shaped form."""
+        if not self._is_mine(subject_uri, observed_property):
+            return None
+        if value is None:
+            return 1.0
+        answer = self._measured(Desire(uri="urn:asked", urgency=1.0,
+                                       observed_property=observed_property, value=value),
+                                value)
+        return 1.0 if answer is None else answer
+
+    def _measured(self, desire, value: float | None = None) -> float | None:
+        """The choir road, asked of the LIVE belief base — through the agent rather than
+        straight to `desire_urgency`, so a second module that measures the same want (none
+        ships) would be heard, and so one question has one asker."""
+        return self.agent.desire_urgency(desire, self.agent.beliefs.query, SENSED_GRAPH, value)
+
+    def gaps(self) -> dict[str, Gap]:
+        """Where every property the agent wants stands against where it wants it — stale rows
+        included. A dry pot read an hour ago is "last I looked I was dry, and I cannot see any
+        more", which a deliberator needs precisely because nothing else will mention it."""
+        return gaps_of(self.agent.desires.query_union, self.agent.beliefs.query,
+                       self.me.uri, self.agent.id, measure=self._measured)
+
+    def current(self) -> dict[str, Gap]:
+        """The gaps whose reading is still evidence — the eyes that are open: a gap whose
+        property has a MET freshness want. Issue #124's case holds by the same road: a dead
+        probe's last observation is upserted and never expires, but its freshness want goes
+        cold, and the gap stops counting as seen."""
+        fresh = {d.observed_property for d in self.agent.pursuing()
+                 if d.is_epistemic and d.is_met}
+        return {prop: gap for prop, gap in self.gaps().items() if prop in fresh}
+
+    def desires(self, now: datetime | None = None) -> list[Desire]:
+        """My contribution to what the agent is pursuing: its stakes and its freshness wants,
+        the two kinds whose premise is an observation. The duties are the ledger's."""
+        return desires_of(self.agent.desires.query_union, self.agent.beliefs.query,
+                          self.me.uri, measure=self._measured)
+
+    def reports(self) -> dict:
+        """What the agent wants, how much of that it can currently see, and the worst of it —
+        in the health series, because an agent whose regions silently went to nothing looks
+        exactly like a content one on every other panel."""
+        out: dict = {"desires": len(self.regions)}
+        current = self.current()
+        out["desires_measured"] = len(current)
+        if current:
+            out["worst_gap"] = round(max(abs(g.gap) for g in current.values()), 3)
+        return out
+
+    def series(self) -> list[tuple[str, dict, dict]]:
+        """WHERE each want sits — one row per property, the property as a TAG, into the
+        agent's own bucket (#61's argument extended to the regions): a region that quietly
+        moved and an aim drifting inside it are exactly the lines a sovereign wants."""
+        rows = []
+        for prop, region in sorted(self.regions.items()):
+            local = prop.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+            fields = {"desired_low": region.low, "desired_high": region.high}
+            aim = self.aim(prop)
+            if aim is not None:
+                fields["aim"] = aim
+            rows.append(("agent_desire", {"property": local}, fields))
+        return rows
 
     def current_reading(self, subject_uri: str, observed_property: str):
         """The newest reading of one property of one subject, whatever its age — the door every
@@ -964,6 +1100,7 @@ class SubscribingModule(SensingModule):
         alternative is waiting out the OLD cadence, which after a relaxation is up to a quarter
         of an hour of the agent knowingly running a policy it has just abandoned.
         """
+        super().on_belief_revised(belief_term, value)   # the aim, re-read
         # Compared whole. This used to strip the namespace off and match on the local name,
         # which was a latent bug rather than a shortcut: two packages may each declare a
         # `slowSleepS` in their own namespace, and the stripped form cannot tell them apart —

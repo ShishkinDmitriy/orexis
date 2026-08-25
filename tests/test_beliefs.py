@@ -12,7 +12,7 @@ from agent import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
 from agent.beliefs import BeliefError, Beliefs
 from packages.capability.sensing.readings import Reading, current_reading
-from agent.regions import aims_of, regions_of
+from packages.capability.sensing.regions import aims_of, regions_of
 from packages.capability.market.beliefs import BIDDING_PICKS, HOSTING_PICKS
 from packages.capability.sensing.beliefs import SUBSCRIBING_PICKS
 
@@ -47,7 +47,7 @@ def test_bidding_block(fern):
     """A wallet and a value curve — no band, no target, and no conversion.
 
     The band edges left first: they were the plant's own limits restated privately. The target
-    followed, as `ag:aims` — the point an agent steers for is a fact about its ends, not
+    followed, as `sensing:aims` — the point an agent steers for is a fact about its ends, not
     about a market, and the bidder now asks whoever provides the desire family for it at bid
     time. The conversion left last (#198): WHICH term turns a deficit into litres is a fact
     about the bidder's venue — litres-per-fraction for a fern, litres-per-stored-litre for the

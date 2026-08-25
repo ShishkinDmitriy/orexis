@@ -120,12 +120,8 @@ class Planner:
     #  afternoon planning while its plant died.
     MAX_DEPTH = 2
 
-    def __init__(self, agent, deducer, me):
+    def __init__(self, agent, me):
         self.agent = agent
-        #  The DESIRE CAPABILITY's provider, named for what it does rather than for what it
-        #  produces — `self.desire` collided with the Desire objects this class ranges over the
-        #  moment the noun was ruled on, which is the ambiguity the ruling exists to remove.
-        self.deducer = deducer
         self.me = me
         #  Alive only during a pass. Between passes there is no imaginarium, which is the point:
         #  a hypothesis explored against a world that has moved is not a hypothesis, so the

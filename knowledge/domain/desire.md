@@ -15,26 +15,25 @@ records why a stake stopped being a premise, and
 matters here is the consequence: every agent holds a desire store, and what differs between them
 is whether their subject states anything to want.
 
-The deducer produces two things and holds a third. It deduces a [region](/domain/region.md) per
-property its subject needs, with an envelope beside it; the agent then picks an
-[aim](/domain/aim.md) inside each; and it answers *what am I pursuing* across both of those and
-the [obligations](/domain/obligation.md) it did not source.
+Three things, three holders. [Sensing](/domain/sensing.md) deduces a [region](/domain/region.md)
+per property the subject needs, with an envelope beside it, holds the [aim](/domain/aim.md) the
+agent picked inside each, and contributes those stakes to what the agent pursues; the ledger
+contributes the debts; and *what am I pursuing* is answered across
+those and the [obligations](/domain/obligation.md) the agent did not source, by `Agent.pursuing`
+merging every module's `desires()`.
 
 # It is deduced, not authored
 
-Nothing writes a desire. `agent/desires.ru` computes one from what
-the subject and its instruments state, and the result is a [region](/domain/region.md) — that page
-has the intersection, the two kinds of bearer, and why a graph found by TYPE rather than by name
-is what makes a second source of desire possible.
-
-**A package may derive one too, and one does.** The build collects `desires.ru` from every loaded
-package exactly as genesis collects `rules.ru`, and what belongs there is a want whose PREMISE
-belongs there: [sensing](/domain/sensing.md) derives the freshness want, because the fact that
-makes it meaningful is an instrument this agent polls, and the horizon that decides whether a
-reading still counts is that package's own term. The mind stays the kernel's — what a want is,
-when one is met, the region derivation — and this is not an exception to it: the kernel went on
-holding every one of those and stopped spelling another tree's vocabulary into a query string to
-say one thing it could not otherwise say.
+Nothing writes a desire, and the kernel derives none. The build collects `desires.ru` from every
+loaded package exactly as genesis collects `rules.ru`, and what belongs in one is a want whose
+PREMISE belongs to that package: `packages/capability/sensing/desires.ru` computes the region
+want from what the subject and its instruments state — the result is a
+[region](/domain/region.md); that page has the intersection, the two kinds of bearer, and why a
+graph found by TYPE rather than by name is what makes a second source of desire possible — and
+the freshness want beside it, because both premises are that package's facts: a range a subject
+states in `ssn-system`, an instrument this agent polls and the horizon it keeps. What stays the
+kernel's is the mind — what a want is, when one is met, how wants rank — and it has no reading
+in it ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
 What the derivation mints is a NODE (`ag:Desire`) carrying the met-test as a SHACL shape
 (`ag:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
@@ -45,11 +44,11 @@ the capability that owns the question answers from its own declaration —
 want's KIND at answer time; that page has the mechanics. The argument is
 [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md)'s.
 
-What the deducer adds is the DEDUCING. It used to be granted by a stake — `ag:actsFor` a subject
-that states what it needs — and the stake still decides everything except whether the module
-exists: an agent advancing nobody's interest states no ranges, so it holds no region, and the
-desire shapes that target a stake never reach it. The sensing world's agent has three sensors and
-no desires at all, exactly as before, by the fact rather than by a grant.
+Deducing used to be granted by a stake — `ag:actsFor` a subject that states what it needs — and
+the stake still decides everything except whether a module exists: an agent advancing nobody's
+interest states no ranges, so it holds no region, and the shapes that target a stake never reach
+it. The sensing world's agent has three sensors and no region at all, by the fact rather than by
+a grant.
 
 # Two sources, one currency
 
@@ -231,21 +230,21 @@ is computed over — so a dead sensor's upserted last reading makes `worst_gap` 
 rather than reassure**, and `reading_age_s` on the same dashboard says why. The blind case — a
 desire in a property the agent polls no sensor for — warns at the gate (the mirror of #111)
 and shows at runtime as `desires` and `desires_measured` diverging. That warning has no shape
-of its own: it is an `sh:sparql` constraint sitting inside `desire:BeyondSurvivalShape`, whose
+of its own: it is an `sh:sparql` constraint sitting inside `sensing:BeyondSurvivalShape`, whose
 name and comment describe a survival check that moved into the deduction and is no longer
 there ([#275](https://github.com/ShishkinDmitriy/orexis/issues/275)). An earlier version of this
 page called it `desire:UnwatchedDesireShape`, which is the name it deserves and not a name that
 exists.
 
 Consumers today: `reports()` discloses `desires`, `desires_measured` and `worst_gap` into the
-health series; `desire:BeyondSurvivalShape` turns |gap| = 1 into a **warning** at boot — never
+health series; `sensing:BeyondSurvivalShape` turns |gap| = 1 into a **warning** at boot — never
 a refusal, because an agent past its envelope must be allowed to start precisely so it can do
-something about it; and whoever holds `provider(DESIRE)` may call `gaps()` or `current()` for
-the rows themselves.
+something about it; and whoever holds the sensing provider may call `gaps()` or `current()` for the rows
+themselves.
 
 # What it is not
 
-- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`ag:aims`,
+- **Not an aim.** A region is a range and an aim is a point inside it. The aim (`sensing:aims`,
   which replaced `water:hasTarget`) stays a private belief in `beliefs/<id>.ttl`, is the agent's
   to move within its
   [mandate](/decisions/self-review-is-a-capability.md), and is checked against the region at boot.

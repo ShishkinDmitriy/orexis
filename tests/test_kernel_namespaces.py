@@ -71,7 +71,10 @@ _PACKAGE_IRI = re.compile(
 # and `*.ru` are in for the reason the docstring gives; `*.rq` carries none today and is in
 # anyway, so that the day a kernel query grows one, this says so rather than the query silently
 # depending on a package.
-_KINDS = ("*.py", "*.rq", "*.ru", "*.ttl")
+#  No `*.rq` any more: the kernel's last query file was `desires.rq`, and it went to sensing
+#  with the stake (the-stake-is-sensings-want). A kind the kernel legitimately ships none of
+#  is not a kind the ratchet has lost sight of.
+_KINDS = ("*.py", "*.ru", "*.ttl")
 
 # PARTITIONED out of the loader's union, exactly as `test_store.py` does: the kernel is what is
 # left when `packages/` is taken away, so a tree nobody here has heard of lands on one side or
@@ -122,6 +125,8 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     ("agent/vocabulary.py", "market#Offering"): (
         1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
     ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
+    ("agent/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
+    ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
     ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
     ("agent/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
     ("agent/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),
@@ -191,22 +196,16 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #     The mind's own derivation is no longer the thing reaching into a capability's
     #     vocabulary for its premise; the capability derives the want its equipment implies.
     #
-    # `agent/readings.rq:23` still reads `sensing:staleAfterS` prefixed, where this scan cannot
-    # see it, and #344 is the check that would.
-    # 5 and 6 — the shapes. Both measured, both loud, both still debt:
-    #   l.108, a WIDENER inside DeviceModelShape's OPTIONAL — without it COALESCE falls back to
-    #     1.0, the ceiling drops, and an initial value of 45.0 that conformed now VIOLATES. It
-    #     wants a kernel-owned way to say "the range this thing is measured against";
-    #   ll.375-376, an EXCUSE inside FILTER NOT EXISTS — without it the "no sensor for this
-    #     desire" warning fires for every region instead of none. The warning is arguably
-    #     sensing's to raise rather than the kernel's.
+    # 5 — the last shape entry. 6 IS PAID: the "no sensor for this desire" warning that joined
+    #   through `sensing:polls` and `sensing:monitors` is `sensing:BeyondSurvivalShape` now,
+    #   beside `sensing:DesirerShape`, both targeted on the stake's premise in the package that
+    #   states it (the-stake-is-sensings-want). What remains is one WIDENER inside
+    #   DeviceModelShape's OPTIONAL — without it COALESCE falls back to 1.0, the ceiling drops,
+    #   and an initial value of 45.0 that conformed now VIOLATES. It wants a kernel-owned way
+    #   to say "the range this thing is measured against".
     ("agent/shapes.ttl", "sensing#monitors"): (
-        2, "debt, later (widener at l.108, excuse at l.376): a model's initial value is checked "
-           "against the subject it monitors, and a desire warns when no sensor watches the "
-           "subject — losing either makes validation stricter and noisier, never quieter"),
-    ("agent/shapes.ttl", "sensing#polls"): (
-        1, "debt, later (excuse): the desire warning's agent half — its loss fires the warning "
-           "rather than suppressing it"),
+        1, "debt, later (widener): a model's initial value is checked against the subject it "
+           "monitors — losing it makes validation stricter and noisier, never quieter"),
 
     # 7 — the SELECTOR went to actuation: `SimulatedActuatorShape` targets `actuation:actuates`
     # and lives in `packages/capability/actuation/shapes.ttl` now.

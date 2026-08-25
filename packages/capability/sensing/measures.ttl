@@ -109,7 +109,7 @@ sensing:AimDistanceMeasure
                      sosa:observedProperty $property ;
                      sosa:hasSimpleResult ?reading } }
             OPTIONAL { GRAPH $beliefs {
-                $me ag:aims ?aim .
+                $me sensing:aims ?aim .
                 ?aim ssn:forProperty $property ;
                      schema:value ?picked } }
             BIND(COALESCE($value, ?reading) AS ?v)

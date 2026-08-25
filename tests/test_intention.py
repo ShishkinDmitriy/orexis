@@ -49,9 +49,11 @@ def test_every_agent_keeps_a_ledger_and_the_stake_is_what_needs_a_patience(make)
     modality. Commitment is not plug-in-able.
 
     What survives is the SHAPE, and it is narrower on purpose. `ag:KeeperShape` targets the
-    stake alone — an agent that advances somebody's interest must state a patience within the
-    constitutional bounds. The lever half could not follow it into the kernel without the kernel
-    naming three packages' predicates, and a lever is an instance anyway.
+    stake alone — an agent that holds a want that is not merely about knowing must state a
+    patience within the constitutional bounds. The lever half could not follow it into the
+    kernel without the kernel naming three packages' predicates, and a lever is an instance
+    anyway; the stake's PREMISE (a subject stating what it needs) is sensing's sentence now,
+    so the shape names the want and not the premise.
 
     So: everyone keeps, and the stake is what obliges you to say how patiently."""
     from agent.validate import validate_agent

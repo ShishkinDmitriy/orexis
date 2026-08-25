@@ -20,6 +20,8 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX ag:   <http://example.org/orexis#>
 PREFIX ssn:  <http://www.w3.org/ns/ssn/>
+PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+PREFIX schema: <https://schema.org/>
 
 #  The freshness want: a reading of this exists, and it was taken recently enough to be about
 #  NOW. Stated POSITIVELY, and that is this rule's one substantive change (#342).
@@ -133,4 +135,179 @@ WHERE  {
       "<", STR(?sensor), "> <http://example.org/orexis/sensing#staleAfterS> ?horizon . ",
       "FILTER(?at + STRDT(CONCAT(\"PT\", STR(?horizon), \"S\"), ",
       "<http://www.w3.org/2001/XMLSchema#dayTimeDuration>) > NOW()) } }") AS ?staleQuery)
+}
+;
+
+#################  The stake: the region, and the envelope around it  #################
+#
+#  Was `agent/desires.ru`, the kernel's — and the kernel's last `sosa`. The want is derived
+#  from what the subject STATES IT NEEDS (`ssn-system:hasOperatingRange`, narrowed by every
+#  instrument that monitors it) and met by an OBSERVATION of it sitting inside — both sensing's
+#  facts, in sensing's words, which is why the rule is here (the-stake-is-sensings-want). The
+#  node IRIs are unchanged: `ag:desire.<who>.<property>`, `ag:bounds.…`, `ag:envelope.…`, so
+#  a ledger row that names one still resolves.
+#
+#  The regions and the envelopes are derived on every rebuild of the desire modality, never at
+#  genesis — a want whose premise has ceased is absent afterwards because the derivation no
+#  longer implies it (#263, #312).
+#
+#  TWO NODE SHAPES per property, told apart by the FORCE they carry: the region, a violation of
+#  which is a gap, and the envelope, a violation of which is the subject ending. Within each the
+#  edges live on the SIDE shapes, one number apiece (#242), so a violation says WHICH WAY it
+#  went — see ag:violationIs.
+INSERT { GRAPH $derived {
+    $me ag:holds ?desire , ?envelope .
+    ?desire a ag:Desire ;
+        ssn:forProperty ?property ;
+        prov:wasDerivedFrom ?subject ;
+        rdfs:label ?label ;
+        rdfs:comment ?describes ;
+        ag:metWhen ?bounds .
+    ?bounds a sh:NodeShape ;
+        sh:targetNode $me ;
+        ssn:forProperty ?property ;
+        prov:wasDerivedFrom ?subject ;
+        #  NOT LOOKED. Existence alone, so an unmeasured property reports exactly one thing and
+        #  it is the true one. The two side shapes below cannot say this: each asks whether a
+        #  reading is outside its edge, and no reading is outside anything.
+        sh:property [
+            sh:severity ag:ShouldBecome ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Unmeasured ;
+            sh:qualifiedMinCount 1 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ] ;
+            sh:message ?unseen ] ;
+        #  BELOW, and ABOVE, as two shapes rather than one range test inside a qualified shape.
+        #  The old form violated `QualifiedMinCount` — "no conforming reading exists" — which
+        #  is true of a drowning plant and a dying one alike, and watering repairs one of them.
+        #  A means will declare which violations it repairs (#239), a message can name the side
+        #  it is about, and a dashboard stops showing the two as one row.
+        sh:property [
+            sh:severity ag:ShouldBecome ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Below ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:maxExclusive ?low ] ] ;
+            sh:message ?tooLow ] ;
+        sh:property [
+            sh:severity ag:ShouldBecome ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Above ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:minExclusive ?high ] ] ;
+            sh:message ?tooHigh ] .
+    ?envelope a sh:NodeShape ;
+        sh:targetNode $me ;
+        ssn:forProperty ?property ;
+        prov:wasDerivedFrom ?subject ;
+        #  A WARNING and not a violation, which is the difference between "this world is
+        #  illegitimate" and "this plant is dying". Refusing here would stop an agent booting
+        #  exactly when its subject most needs it — and the envelope's real work is scaling
+        #  urgency, which happens whether or not anything is validated.
+        #
+        #  NO observation may sit past either edge — where the region demands that one exist at
+        #  all. The asymmetry is about evidence: not knowing is a gap an agent closes by
+        #  looking, but silence is not evidence that a subject is past tolerating, and a shape
+        #  that said so would have every agent reporting catastrophe at birth.
+        #
+        #  Two shapes here too, and splitting them cost nothing but bought the `sh:not` back:
+        #  "outside the range" needed a negation, "past this edge" is `sh:maxExclusive`.
+        sh:property [
+            sh:severity sh:Warning ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Below ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:maxExclusive ?floor ] ] ;
+            sh:message ?underFloor ] ;
+        sh:property [
+            sh:severity sh:Warning ;
+            sh:path ( ag:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+            ag:violationIs ag:Above ;
+            sh:qualifiedMaxCount 0 ;
+            sh:qualifiedValueShape [
+                sh:property [ sh:path sosa:observedProperty ; sh:hasValue ?property ] ;
+                sh:property [ sh:path sosa:hasSimpleResult ; sh:minExclusive ?ceiling ] ] ;
+            sh:message ?overCeiling ] } }
+$given
+WHERE  {
+    { SELECT ?property ?subject (MAX(?min) AS ?low) (MIN(?max) AS ?high) WHERE {
+        $me a ag:Agent ; ag:actsFor ?subject .
+        ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
+        ?need ssn:forProperty ?property .
+        { ?subject ssn-system:hasOperatingRange ?range }
+        UNION
+        { ?instrument sensing:monitors ?subject ; ssn-system:hasOperatingRange ?range }
+        ?range ssn-system:inCondition ?condition .
+        ?condition ssn:forProperty ?property ;
+                   schema:minValue ?min ;
+                   schema:maxValue ?max .
+      } GROUP BY ?property ?subject }
+    OPTIONAL {
+      SELECT ?property (MAX(?least) AS ?floor) (MIN(?most) AS ?ceiling) WHERE {
+        $me a ag:Agent ; ag:actsFor ?subject .
+        ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?need .
+        ?need ssn:forProperty ?property .
+        { ?subject ssn-system:hasSurvivalRange ?envelope }
+        UNION
+        { ?instrument sensing:monitors ?subject ; ssn-system:hasSurvivalRange ?envelope }
+        ?envelope ssn-system:inCondition ?tolerated .
+        ?tolerated ssn:forProperty ?property ;
+                   schema:minValue ?least ;
+                   schema:maxValue ?most .
+      } GROUP BY ?property }
+    FILTER(?low <= ?high)
+    #  After the subqueries, because a BIND sees only what its own group has bound so far —
+    #  the scope rule plan.rq met the hard way (#206).
+    $me ag:localId ?who .
+    BIND(IRI(CONCAT("http://example.org/orexis#desire.", ENCODE_FOR_URI(?who), ".",
+                    ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?desire)
+    BIND(IRI(CONCAT("http://example.org/orexis#bounds.", ENCODE_FOR_URI(?who), ".",
+                    ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?bounds)
+    BIND(IRI(CONCAT("http://example.org/orexis#envelope.", ENCODE_FOR_URI(?who), ".",
+                    ENCODE_FOR_URI(STRAFTER(STR(?property), "#")))) AS ?envelope)
+
+    #  For the description only — the measure reads nothing baked. The centre is the no-pick
+    #  fallback target: where an agent with no other reason to prefer would aim.
+    BIND((?low + ?high) / 2 AS ?centre)
+
+    #  The aim, if one is already picked — for the LABEL only. The measure never bakes it: it
+    #  reads $beliefs at query time, which is what lets a re-pick move the urgency between
+    #  rebuilds. The label is refreshed on rebuild, which every recorded re-pick triggers.
+    OPTIONAL { $me sensing:aims ?aimed . ?aimed ssn:forProperty ?property ; schema:value ?picked }
+    BIND(CONCAT(?name, " inside ", STR(?low), "-", STR(?high),
+                COALESCE(CONCAT(", aiming ", STR(?picked)), ", no aim picked yet"))
+         AS ?label)
+    BIND(CONCAT(?who, " holds ", ?name, " of ", STRAFTER(STR(?subject), "#"),
+                " inside ", STR(?low), "-", STR(?high),
+                "; urgency is the distance from its aim (the centre, ", STR(?centre),
+                ", while none is picked), scaled by the survival room on that side")
+         AS ?describes)
+
+    #  The messages, with the property and the numbers IN them. A shape is minted per (agent,
+    #  property), so a message written here is already about one property and one region — no
+    #  templating engine required, and none available: pySHACL interpolates `{$var}` only for
+    #  `sh:sparql` constraints, measured, and these are declarative on purpose.
+    #
+    #  What cannot be baked in is the offending VALUE, which is not known until validation.
+    #  That one is answered where it belongs — `gap.rq` reports value, region and signed
+    #  distance together, and a report is for saying WHAT is wrong, not how far.
+    BIND(STRAFTER(STR(?property), "#") AS ?name)
+    BIND(CONCAT("nothing has read ", ?name, " for ", ?who,
+                " — an unmeasured want is a gap, and the first intention is to look")
+         AS ?unseen)
+    BIND(CONCAT(?name, " is below ", STR(?low), ", the floor of the region deduced for ",
+                ?who, " (", STR(?low), "-", STR(?high), ")") AS ?tooLow)
+    BIND(CONCAT(?name, " is above ", STR(?high), ", the ceiling of the region deduced for ",
+                ?who, " (", STR(?low), "-", STR(?high), ")") AS ?tooHigh)
+    BIND(CONCAT(?name, " is below ", STR(?floor), " — past what ", ?who,
+                " survives, not merely uncomfortable") AS ?underFloor)
+    BIND(CONCAT(?name, " is above ", STR(?ceiling), " — past what ", ?who,
+                " survives, not merely uncomfortable") AS ?overCeiling)
 }

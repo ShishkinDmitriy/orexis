@@ -205,7 +205,7 @@ def validate_agent(st: Store, agent_id: str, agent_uri: str, capabilities,
     Checked against its own store, which holds the world it booted with and its own beliefs —
     everything a capability-scoped shape needs, and nothing belonging to anyone else. Since
     #312 the wants are not in that store: the desire modality derives them, so a caller with
-    one passes it and its quads join the data graph — `DesirerShape` demands a region and
+    one passes it and its quads join the data graph — sensing's `DesirerShape` demands a region and
     `AimShape` holds the aim to it, and both would fire falsely against a store that
     rightly no longer holds either. `None` stays legal for the world-level caller, which
     builds the modality itself per agent.

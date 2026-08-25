@@ -224,6 +224,12 @@ def test_no_document_names_a_path_that_is_not_there():
         # evidence offered is that `packages/kernel/` is not a directory anyone can add a
         # sibling to. Its absence is the sentence.
         "packages/kernel/",
+        # the-stake-is-sensings-want and the records it amends narrate where the region want
+        # and its arithmetic USED to be derived and held. Both files are sensing's now
+        # (`desires.ru`, `regions.py` under packages/capability/sensing/), and a record that
+        # says so in the past tense is not a rename that missed the bundle.
+        "agent/desires.ru",
+        "agent/regions.py",
         # repository-layout: the two-distribution layout, past tense — "used a `src` layout and
         # were pip-installed separately".
         "onboarding/src/onboarding/",
