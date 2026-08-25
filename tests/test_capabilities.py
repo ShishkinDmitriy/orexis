@@ -10,19 +10,19 @@ import rdflib
 
 from agent import genesis, loader
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
-from agent.world import WorldError, load_self, load_world
+from agent.world import WorldError, load_world
 from packages.capability.actuation import ACTUATION
 from packages.capability.market import BIDDING, HOSTING, PAY_AS_BID
 from packages.capability.sensing import LISTENING, SUBSCRIBING
 from packages.capability.reporting import STORING
 from packages.capability.review import RECKONING
 
-from conftest import genesis_store, query_fn
+from conftest import genesis_store, query_fn, load_wired
 
 
 @pytest.fixture
 def me(query):
-    return lambda agent_id: load_self(query, agent_id)
+    return lambda agent_id: load_wired(query, agent_id)
 
 
 # --- what the shipped world derives ----------------------------------------
@@ -115,7 +115,7 @@ def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
     from conftest import desires_build
 
     st = genesis_store()
-    uri = lambda who: load_self(st.query, who).uri
+    uri = lambda who: load_wired(st.query, who).uri
 
     def honoured(who):
         return [r for r in menu_of(st.query, uri(who), desires_build(st, who).query_union, beliefs_graph(who))
@@ -194,14 +194,14 @@ def _world_with_push_sensor():
 
 def test_push_hardware_yields_listening_not_subscribing():
     """The same agent, the same wiring — a different board, a different capability."""
-    me = load_self(query_fn(_world_with_push_sensor()), "fern")
+    me = load_wired(query_fn(_world_with_push_sensor()), "fern")
     assert me.can(LISTENING)
     assert not me.can(SUBSCRIBING)
 
 
 def test_swapping_the_board_does_not_touch_the_agent():
     """Nothing about fern_agent was edited — only the device it is wired to."""
-    me = load_self(query_fn(_world_with_push_sensor()), "fern")
+    me = load_wired(query_fn(_world_with_push_sensor()), "fern")
     assert me.can(BIDDING)  # its market wiring is untouched
     #  A SET, not a sequence: the claim is that the wiring is untouched, and the row order a
     #  store returns is the engine's own — a load-order change flipped it once and only this
@@ -218,7 +218,7 @@ def test_the_smallest_world_yields_sensing_and_nothing_else():
     society runs, over thinner wiring. This is the check that a capability can genuinely
     stand alone, which is the whole claim of deriving them.
     """
-    me = load_self(query_fn(genesis_store(world="sensing")), "fern")
+    me = load_wired(query_fn(genesis_store(world="sensing")), "fern")
     assert me.capabilities == {SUBSCRIBING, RECKONING, STORING}
     assert not me.can(BIDDING) and not me.can(ACTUATION)
     assert me.markets == () and me.actuators == ()
@@ -235,8 +235,8 @@ def test_the_board_did_not_change_only_the_model_did():
     of that message is the world's business, and a field nobody points at is simply ignored —
     which is why the identical flashed board still works in either.
     """
-    watching = load_self(query_fn(genesis_store(world="sensing")), "fern")
-    buying = load_self(query_fn(genesis_store(world="simulation")), "fern")
+    watching = load_wired(query_fn(genesis_store(world="sensing")), "fern")
+    buying = load_wired(query_fn(genesis_store(world="simulation")), "fern")
 
     assert {s.reading_topic for s in watching.sensors} == \
            {s.reading_topic for s in buying.sensors}, "one channel, whichever world is seeded"
@@ -261,7 +261,7 @@ def test_agent_sees_only_its_own_sensors(me):
 
 def test_unknown_agent_id_fails_loudly(query):
     with pytest.raises(WorldError, match="knows no agent"):
-        load_self(query, "orchid")
+        load_wired(query, "orchid")
 
 
 # --- the world itself ------------------------------------------------------
@@ -297,7 +297,7 @@ def test_a_boards_mode_is_entailed_from_its_firmware_class():
     conclusion."""
     from packages.capability.sensing.terms import SCHEDULED, SUBSCRIBING
 
-    me = load_self(query_fn(genesis_store(world="sensing")), "fern")
+    me = load_wired(query_fn(genesis_store(world="sensing")), "fern")
     assert SUBSCRIBING in me.capabilities, "the grant must flow through the entailed mode"
     probe = next(s for s in me.sensors if s.local_id == "moisture_sensor_fern")
     assert probe.sense_mode == SCHEDULED, "the runtime must read the entailed mode"
@@ -321,7 +321,7 @@ def test_the_alarm_promise_is_entailed_from_the_governed_class():
     firmware class's, arriving through the same hasValue closure as the sense mode. Only the
     connecting device is typed, so the promise reaches the moisture channel and never the
     DHT's — per channel by construction, with nobody saying so per world."""
-    me = load_self(query_fn(genesis_store(world="sensing")), "fern")
+    me = load_wired(query_fn(genesis_store(world="sensing")), "fern")
     probe = next(s for s in me.sensors if s.local_id == "moisture_sensor_fern")
     assert probe.alarm, "the promise must flow from governed:Node to the connecting device"
     air = next(s for s in me.sensors if s.local_id == "air_temp_fern")
@@ -371,6 +371,6 @@ def test_a_fern_imports_no_actuation(monkeypatch):
     real = loader._provider_in
     monkeypatch.setattr(loader, "_provider_in",
                         lambda p, c: (imported.append(p.name), real(p, c))[1])
-    loader.registry_for(load_self(query_fn(genesis_store()), "fern").capabilities)
+    loader.registry_for(load_wired(query_fn(genesis_store()), "fern").capabilities)
     assert "actuation" not in imported
     assert "sensing" in imported and "market" in imported

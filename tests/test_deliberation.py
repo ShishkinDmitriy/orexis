@@ -24,7 +24,7 @@ from packages.capability.market.terms import ACQUIRING
 from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for
+from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def decider_of(agent):
 
 
 def market_of(agent):
-    return agent.me.markets[0]
+    return wired_markets(agent)[0]
 
 
 # --- who decides, and who has nothing to decide -----------------------------
@@ -112,7 +112,7 @@ def _read(agent, value, age_s=0):
 
     from packages.capability.sensing.sensed_writer import SensedWriter
 
-    sensor = agent.me.sensors[0]
+    sensor = wired_sensors(agent)[0]
     SensedWriter(agent.beliefs).write(
         subject_uri=sensor.subject, subject_id=sensor.subject.rsplit("#", 1)[-1],
         value=value, sensor_uri=sensor.uri, observed_property=sensor.observes,

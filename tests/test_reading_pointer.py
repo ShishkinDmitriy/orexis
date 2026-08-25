@@ -16,9 +16,9 @@ import pytest
 from agent.ontology import SENSED_GRAPH
 from packages.capability.sensing.pointer import DEFAULT_POINTER, PointerError, resolve
 from agent.store import bindings
-from agent.world import Sensor, load_self
+from packages.capability.sensing.wiring import Sensor
 
-from conftest import build_agent, genesis_store, query_fn
+from conftest import build_agent, genesis_store, query_fn, wired_sensors, load_wired
 
 AIR_TEMP = "http://example.org/orexis/water#AirTemperature"
 AIR_HUMIDITY = "http://example.org/orexis/water#AirHumidity"
@@ -78,7 +78,7 @@ def test_a_pointer_that_does_not_identify_a_value_is_refused(pointer, doc):
 # --- one message, several sensors ------------------------------------------
 
 def _fern():
-    return load_self(query_fn(genesis_store(world="sensing")), "fern")
+    return load_wired(query_fn(genesis_store(world="sensing")), "fern")
 
 
 def test_the_shipped_world_reads_three_properties_off_one_board():
@@ -103,7 +103,7 @@ def test_one_message_produces_an_observation_for_every_sensor_on_the_channel(mon
     silently, because the topic HAD been handled, so nothing upstream complained.
     """
     agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
-    fern = next(s.subject for s in agent.me.sensors)
+    fern = next(s.subject for s in wired_sensors(agent))
 
     agent.deliver("sensors/moisture_sensor_fern/reading",
                   {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46,
@@ -132,7 +132,7 @@ def test_values_from_one_read_carry_one_instant(monkeypatch):
     The message is the measurement. One arrival, one instant, however many values it carried.
     """
     agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
-    fern = next(s.subject for s in agent.me.sensors)
+    fern = next(s.subject for s in wired_sensors(agent))
 
     agent.deliver("sensors/moisture_sensor_fern/reading",
                   {"moisture": 0.183, "temperature": 21.4, "humidity": 0.46,
@@ -147,7 +147,7 @@ def test_a_sensor_whose_field_is_missing_records_nothing_and_says_so(monkeypatch
     """One sensor missing its field while its neighbours read fine is the failure a shared
     payload makes possible, so the warning has to name WHICH sensor found nothing."""
     agent = build_agent("fern", genesis_store(world="sensing"), monkeypatch)
-    fern = next(s.subject for s in agent.me.sensors)
+    fern = next(s.subject for s in wired_sensors(agent))
 
     with caplog.at_level("WARNING"):
         agent.deliver("sensors/moisture_sensor_fern/reading", {"moisture": 0.183})
@@ -289,5 +289,5 @@ def test_an_observation_says_which_procedure_made_it(monkeypatch):
     # Every sensor on this board keeps the interval it is given, so all three cite one mode —
     # and the assertion is against what the SENSORS say rather than a constant, so a world that
     # rewires its board moves both sides together.
-    assert cited == {s.sense_mode for s in agent.me.sensors}
+    assert cited == {s.sense_mode for s in wired_sensors(agent)}
     assert cited == {SCHEDULED}, "the shipped board keeps an interval it is given"

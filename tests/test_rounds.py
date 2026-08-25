@@ -17,7 +17,7 @@ from packages.capability.market import rounds
 from packages.capability.market.terms import NS as MARKET
 BID_WINDOW_S, ROUND_COOLDOWN_S = MARKET + "bidWindowS", MARKET + "roundCooldownS"
 
-from conftest import build_agent, genesis_store
+from conftest import build_agent, genesis_store, wired_markets
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def make(monkeypatch):
 
 
 def market_of(agent):
-    return agent.me.markets[0]
+    return wired_markets(agent)[0]
 
 
 def _row_terms(agent, uri):

@@ -11,7 +11,7 @@ from dataclasses import replace
 
 import pytest
 
-from conftest import HUMIDITY, MOISTURE, TEMPERATURE, build_agent, genesis_store
+from conftest import HUMIDITY, MOISTURE, TEMPERATURE, build_agent, genesis_store, wired_sensors, wired_event_topic
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ def fern(monkeypatch):
 
 
 def sensor_of(agent):
-    return agent.me.sensors[0]
+    return wired_sensors(agent)[0]
 
 
 def cadence_for(agent, value, observed_property=MOISTURE):
@@ -186,7 +186,7 @@ def test_it_announces_its_verdict_not_just_a_number(fern):
     """Sensing supplies the number; the band is contributed by the capability that holds a
     stake. The announcement is the agent's, not sensing's — which is why it carries both."""
     fern.deliver(sensor_of(fern).reading_topic, {"moisture": 0.10})
-    event = fern.sent.to(fern.me.event_topic)[-1]
+    event = fern.sent.to(wired_event_topic(fern))[-1]
     assert event["band"] == "LOW" and event["agent"] == "fern"
     assert event["value"] == 0.10
 
@@ -462,7 +462,7 @@ def test_the_announcement_says_which_property_it_is_about(monkeypatch, tmp_path)
     agent.deliver("sensors/moisture_sensor_fern/reading", {"moisture": 0.05})
     agent.deliver("sensors/chatter_fern/reading", {"value": 21.0})
 
-    said = {e["property"]: e["value"] for e in agent.sent.to(agent.me.event_topic)}
+    said = {e["property"]: e["value"] for e in agent.sent.to(wired_event_topic(agent))}
     assert said == {MOISTURE: 0.05, TEMPERATURE: 21.0}
 
 
@@ -472,7 +472,7 @@ def moisture_sensor(agent):
     """The probe, by what it observes — never sensors[0], which on this board is whichever
     sorted first, and a 0.5 ingested into the THERMOMETER is a frozen greenhouse at maximum
     urgency. The first draft of these tests did exactly that and asserted on the wrong panic."""
-    return next(s for s in agent.me.sensors if s.observes == MOISTURE)
+    return next(s for s in wired_sensors(agent) if s.observes == MOISTURE)
 
 
 def _ingest_pair(fern, first, second, seconds_apart=600):

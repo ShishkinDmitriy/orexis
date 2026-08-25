@@ -191,7 +191,7 @@ def test_a_world_whose_plants_state_survival_ranges_yields_ceilings():
     from types import SimpleNamespace
 
     from conftest import genesis_store
-    from agent.world import allocation_ceilings
+    from packages.capability.market.wiring import allocation_ceilings
 
     # world -> agents that must have a ceiling. `sensing` is the control: its agents act for
     # subjects that state no survival range, so they get NO entry — and absent is not zero,

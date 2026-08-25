@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from conftest import HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for
+from conftest import HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for, wired_actuator_for, wired_hosted_markets, wired_markets, wired_sensors
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def host(make, tmp_path, monkeypatch):
 
 
 def market_of(agent):
-    return (agent.me.hosted_markets or agent.me.markets)[0]
+    return (wired_hosted_markets(agent) or wired_markets(agent))[0]
 
 
 def offer_from(host):
@@ -245,7 +245,7 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
     bidding.on_reading_recorded(fern.me.acts_for, HUMIDITY, 0.10)
     assert fern.sent.under("market/") == [], "dry air is not a reason to buy water"
 
-    probe = next(s for s in fern.me.sensors if s.observes == MOISTURE)
+    probe = next(s for s in wired_sensors(fern) if s.observes == MOISTURE)
     fern.deliver(probe.reading_topic, {"moisture": 0.10})
     assert fern.sent.under("market/") != [], "the reading it was actually waiting for"
 
@@ -286,7 +286,7 @@ def test_the_bidder_asks_its_sensor_and_waits(make):
     market = market_of(fern)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
 
-    sensor = fern.me.sensors[0]
+    sensor = wired_sensors(fern)[0]
     assert {"sense": True} in fern.sent.to(sensor.command_topic), "it should nudge its board"
     assert fern.sent.under(market.bid_topic) == [], "and not bid before the answer arrives"
 
@@ -307,7 +307,7 @@ def test_a_late_reading_does_not_bid_into_a_closed_round(make):
     market = market_of(fern)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     fern.bidding().give_up()
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.10})
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.10})
     assert fern.sent.under(market.bid_topic) == []
 
 
@@ -414,7 +414,7 @@ def _win_for_fern(host):
     market = market_of(host)
     host.deliver(f"{market.bid_topic}/fern", a_bid("fern", rid, qty=0.5, price=0.6))
     host.hosting().close()
-    return host.me.actuator_for("fern")
+    return wired_actuator_for(host, "fern")
 
 
 def test_winning_issues_paper_and_only_presenting_opens_the_valve(host):

@@ -21,7 +21,7 @@ from packages.capability.reporting.beliefs import REPORTING_PICKS, ReportingBeli
 from packages.capability.reporting.terms import term as reporting_term
 from agent.metrics import Metrics, tree_bytes
 
-from conftest import build_agent
+from conftest import build_agent, wired_sensors
 
 
 class _Sensor:
@@ -206,5 +206,5 @@ def test_a_delivered_sensor_is_reported_even_when_not_wired(agent):
 
 def test_a_wired_sensor_is_reported_before_it_has_ever_delivered(agent):
     """The other half: zero readings is the signal that a board has never been heard from."""
-    wired = {s.local_id for s in agent.me.sensors}
+    wired = {s.local_id for s in wired_sensors(agent)}
     assert wired <= agent.metrics.sensors_seen()

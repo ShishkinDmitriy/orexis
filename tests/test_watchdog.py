@@ -13,7 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import build_agent, genesis_store
+from conftest import build_agent, genesis_store, wired_sensors
 
 
 @pytest.fixture
@@ -107,7 +107,7 @@ def test_what_went_quiet_is_said_once_and_recovery_is_said_too(fern, caplog):
 def test_a_quiet_sensor_is_reported_by_sensing(fern):
     """The module's own half: delivered once, then silent past the freshness rule. The limit
     is the same `stale_after_s` the rule uses, so the log and the refusal cannot disagree."""
-    sensor = next(s for s in fern.me.sensors if s.observes.endswith("SoilMoisture"))
+    sensor = next(s for s in wired_sensors(fern) if s.observes.endswith("SoilMoisture"))
     fern.deliver(sensor.reading_topic, {"moisture": 0.5})
     p = fern.subscribing()
     assert p.quiet() == []

@@ -22,7 +22,7 @@ from agent.graphs import intentions_graph
 from packages.capability.market.terms import ACQUIRING
 from packages.capability.sensing.terms import OBSERVING
 
-from conftest import MOISTURE, build_agent, genesis_store
+from conftest import MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors
 
 FERN = "http://example.org/orexis#fern_agent"
 
@@ -37,7 +37,7 @@ def keeper_of(agent):
 
 
 def market_of(agent):
-    return agent.me.markets[0]
+    return wired_markets(agent)[0]
 
 
 # --- who keeps, and what became of "who has nothing to keep" -----------------
@@ -85,7 +85,7 @@ def test_waiting_on_a_sensor_is_a_recorded_commitment(make):
     standing = keeper.standing(action=OBSERVING)
     assert len(standing) == 1 and standing[0].observed_property == MOISTURE
 
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.10})
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.10})
     assert keeper.standing(action=OBSERVING) == []       # the look came back
     assert len(keeper.standing(action=ACQUIRING)) == 1   # and the bid it fed is now committed
 
@@ -104,7 +104,7 @@ def test_a_wait_the_auction_outlives_keeps_the_look_and_lets_the_round_go(make):
     fern.bidding().give_up()
     assert len(keeper.standing(action=OBSERVING)) == 1, "and it stands — a reading is still owed"
     assert rounds.rounds_of(fern) == [], "the round is over for me"
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2})
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2})
     assert keeper.standing(action=OBSERVING) == [], "the look happened"
 
 
@@ -247,7 +247,7 @@ def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     assert ("Observing", TEMP) in standing, "the marketless property is watched ON THE RECORD"
     assert ("Observing", MOIST) in standing
 
-    fern.deliver(fern.me.sensors[0].reading_topic, {"temperature": 21.0})
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"temperature": 21.0})
     left = {s.observed_property for s in keeper.standing()}
     assert TEMP not in left, "the look happened — satisfied, whoever triggered it"
     assert MOIST in left, "the other channel still owes a reading"
@@ -304,7 +304,7 @@ def test_the_tick_survives_an_agent_that_has_seen_things(make):
     has no observations and desire's dict was empty; the bench, where observations exist on
     every stake, crashed per tick. So: see something first, then tick."""
     fern = make("fern")
-    fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2, "temperature": 21.0})
+    fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2, "temperature": 21.0})
     keeper = next(m for m in fern.modules if m.name == "intention")
     keeper.deliberate_on_gaps()  # must not raise — that is the whole test
 

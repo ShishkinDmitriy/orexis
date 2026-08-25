@@ -274,3 +274,61 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
     closes = datetime.now(timezone.utc) + timedelta(seconds=seconds)
     return [rounds.open_round(agent, v, f"test-{agent_id}-{i}", 2.0, 0.4, closes)
             for i, v in enumerate(venues)]
+
+
+# --- what an agent is WIRED TO, since it left `Self` (self-is-bdi-and-wiring-is-the-packages) ---
+#
+# `agent.me` is what an agent IS; its sensors, actuators and venues are each package's to load.
+# A test that reaches for them reaches through the package's own wiring loader, exactly as the
+# module does — and these are the one-liners so a test says `wired_sensors(fern)` and not the
+# query surface and the agent's URI every time.
+
+def wired_sensors(agent):
+    from packages.capability.sensing.wiring import sensors_of
+    return sensors_of(agent.beliefs.query, agent.me.uri)
+
+
+def wired_actuators(agent):
+    from packages.capability.actuation.wiring import actuators_of
+    return actuators_of(agent.beliefs.query, agent.me.uri)
+
+
+def wired_actuator_for(agent, subject_id: str):
+    from packages.capability.actuation.wiring import actuator_for
+    return actuator_for(wired_actuators(agent), subject_id)
+
+
+def wired_markets(agent):
+    from packages.capability.market.wiring import bidding_markets_of
+    return bidding_markets_of(agent.beliefs.query, agent.me.uri)
+
+
+def wired_hosted_markets(agent):
+    from packages.capability.market.wiring import hosted_markets_of
+    return hosted_markets_of(agent.beliefs.query, agent.me.uri)
+
+
+def load_wired(query, agent_id: str):
+    """`load_self` plus the wiring every package would load for this agent — for a test that
+    reads sensors, actuators or venues off a bare store without building an agent. A
+    composite the kernel deliberately no longer has; tests are the one place it is wanted."""
+    from types import SimpleNamespace
+
+    from agent.world import load_self
+    from packages.capability.actuation.wiring import actuator_for, actuators_of
+    from packages.capability.market.wiring import bidding_markets_of, hosted_markets_of
+    from packages.capability.sensing.wiring import sensors_of
+
+    me = load_self(query, agent_id)
+    actuators = actuators_of(query, me.uri)
+    return SimpleNamespace(
+        actuator_for=lambda subject_id: actuator_for(actuators, subject_id),
+        uri=me.uri, agent_id=me.agent_id, capabilities=me.capabilities, can=me.can,
+        acts_for=me.acts_for, acts_for_id=me.acts_for_id,
+        sensors=sensors_of(query, me.uri), actuators=actuators,
+        markets=bidding_markets_of(query, me.uri), hosted_markets=hosted_markets_of(query, me.uri))
+
+
+def wired_event_topic(agent):
+    from packages.capability.sensing.wiring import event_topic_of
+    return event_topic_of(agent.beliefs.query, agent.me.uri)

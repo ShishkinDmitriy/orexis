@@ -234,4 +234,7 @@ class Metrics:
         readings every few seconds. Reporting only the wired set silently omitted every
         simulated agent, which is exactly the world one tests instrumentation in.
         """
-        return {s.local_id for s in self.agent.me.sensors} | set(self.readings)
+        #  The wired set is each sensing module's own (`wiring.sensors_of`); this reads it
+        #  off whichever modules keep one, by attribute, because the kernel names no sensor.
+        wired = {s.local_id for m in self.agent.modules for s in getattr(m, "sensors", ())}
+        return wired | set(self.readings)
