@@ -58,7 +58,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [affordance](/domain/affordance.md) - One row of what an agent could do now — an action whose precondition holds. Derived and never stored; whom it serves is a column.
 
 * [lever](/domain/lever.md) - The INSTRUMENT an act goes through, always an instance. Its absence is what removes a row, with nothing edited.
-* [link](/domain/link.md) - How an agent reaches its society: the kernel contract a transport implements. Not a driver, which reaches one device.
+* [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
 * [effect](/domain/effect.md) - What taking an action would make true: a package's SHACL rule, with its timing and the route by which anyone would learn it landed.
 

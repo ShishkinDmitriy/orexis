@@ -64,7 +64,7 @@ def test_every_subscription_a_module_makes_is_granted(world, monkeypatch):
         agent = build_agent(agent_id, st=store, monkeypatch=monkeypatch)
         allowed = read_grants(principal)
         for module in agent.modules:
-            for topic in module.subscriptions():
+            for topic in getattr(module, "subscriptions", list)():   # a hook, not every module answers it
                 assert any(covers(g, topic) for g in allowed), (
                     f"{world}/{agent_id}: {module.name} subscribes {topic!r}, which the "
                     f"derived ACL does not grant. Allowed: {sorted(allowed)}")

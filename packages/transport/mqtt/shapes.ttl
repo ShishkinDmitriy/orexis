@@ -103,7 +103,7 @@ mqtt:AlarmChannelShape a sh:NodeShape ;
 
 
 #  Was `ag:SimulatedDeviceShape`'s second half, in the kernel: reachable is a sentence in this
-#  transport's words (the-link-is-the-transports). The kernel keeps "one device, one stand-in".
+#  transport's words (the-kernel-has-no-mailbox). The kernel keeps "one device, one stand-in".
 mqtt:SimulatedDeviceReachableShape a sh:NodeShape ;
     rdfs:comment """A device that is stood in for must still be reachable like a real one, or the failure is a sensor that is simply, permanently silent — which reads exactly like hardware that is not there. Which it is not.
 

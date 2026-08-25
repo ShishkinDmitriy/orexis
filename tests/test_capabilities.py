@@ -17,6 +17,9 @@ from packages.capability.sensing import LISTENING, SUBSCRIBING
 from packages.capability.reporting import STORING
 from packages.capability.review import RECKONING
 
+#  Granted to every agent by the fact of a bus in the world (the-kernel-has-no-mailbox).
+LINKING = "http://example.org/orexis/mqtt#Linking"
+
 from conftest import genesis_store, query_fn, load_wired
 
 
@@ -38,7 +41,7 @@ def test_plant_agent_gets_subscribing_and_bidding(me):
     granted by the same fact and separate because their replaceable parts differ.
     """
     assert me("fern").capabilities == {
-        SUBSCRIBING, BIDDING, RECKONING, STORING}
+        SUBSCRIBING, BIDDING, RECKONING, STORING, LINKING}
 
 
 def test_a_mandate_whose_ends_meet_grants_nothing(me):
@@ -59,7 +62,7 @@ def test_a_mandate_whose_ends_meet_grants_nothing(me):
     # between a MANDATORY capability and a granted one. Reporting is not conditional on
     # latitude, because an agent permitted to fall silent cannot be told from a dead one; the
     # ability to re-pick is, because with nowhere to go there is nothing to re-pick.
-    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING}
+    assert succulent.capabilities == {SUBSCRIBING, BIDDING, STORING, LINKING}
 
 
 def test_supplier_gets_hosting_actuation_and_matching(me):
@@ -87,7 +90,7 @@ def test_supplier_gets_hosting_actuation_and_matching(me):
     #  test_the_city_owes_without_wanting_and_a_plant_wants_without_owing below.
     
     assert me("supplier").capabilities == {HOSTING, ACTUATION, PAY_AS_BID, STORING, LISTENING,
-                                           BIDDING}
+                                           BIDDING, LINKING}
 
 
 def test_the_city_owes_without_wanting_and_a_plant_wants_without_owing():
@@ -219,7 +222,7 @@ def test_the_smallest_world_yields_sensing_and_nothing_else():
     stand alone, which is the whole claim of deriving them.
     """
     me = load_wired(query_fn(genesis_store(world="sensing")), "fern")
-    assert me.capabilities == {SUBSCRIBING, RECKONING, STORING}
+    assert me.capabilities == {SUBSCRIBING, RECKONING, STORING, LINKING}
     assert not me.can(BIDDING) and not me.can(ACTUATION)
     assert me.markets == () and me.actuators == ()
     assert me.acts_for is None  # it advances nobody's interest; it only records

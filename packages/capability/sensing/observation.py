@@ -141,7 +141,7 @@ class Observations:
             # host listens for this to learn that scarcity has appeared, and never reads a
             # moisture. The number comes from whoever observed; the judgment comes from
             # whichever capability holds a stake — see runtime.annotations.
-            self.agent.publish(self.event_topic, {
+            self.agent.tell("send", self.event_topic, {
                 "agent": self.me.agent_id, "subject": sensor.subject,
                 # Named, because a subject with two sensors announces two values on one topic
                 # and a listener that cannot tell them apart is worse off than one told nothing.

@@ -353,7 +353,7 @@ def test_the_topics_it_subscribed_to_are_logged(fern, caplog):
     against the board's own config without anyone having to guess.
     """
     with caplog.at_level(logging.INFO):
-        fern._on_connect()   # the fake link records the subscriptions
+        fern.module("mqtt")._on_connect()   # the captured client records the subscriptions
 
     listening = [r.getMessage() for r in caplog.records if "listening on" in r.getMessage()]
     assert any(sensor_of(fern).reading_topic in m for m in listening)

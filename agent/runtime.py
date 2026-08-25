@@ -42,9 +42,7 @@ from .owing import Owing
 from .metrics import Metrics
 from .upkeep import BeliefBaseUpkeep
 from .store import bindings
-from .watchdog import BusWatchdog
 from .validate import validate_agent
-from .link import Link, link_for
 from .world import Self, World, load_self, load_world
 
 log = logging.getLogger("agent")
@@ -87,7 +85,6 @@ class Agent:
         st = st or genesis.open_belief_base(
             genesis.current_world(), agent_id, config.env("OREXIS_STORE"))
         self.world: World = load_world(st.query)
-        self.link: Link = link_for(st.query)  # where my society meets — discovered, in the transport's words
         self.me: Self = load_self(st.query, agent_id)
         self.beliefs = Beliefs(st, agent_id)
         # The desire modality, rebuilt from the beliefs it is deduced from. Each modality
@@ -131,7 +128,6 @@ class Agent:
 
         # And noticing I am cut off (#53) — kernel for the same reason, on a clock of its own
         # because paho's network thread is one of the things it watches. Nothing starts here.
-        self.watchdog = BusWatchdog(self)
 
         # The WHETHER. Unconditional, like the modalities above and for the same reason: a mind
         # is not plug-in-able. It was a capability granted by a stake and a lever, which made
@@ -274,87 +270,12 @@ class Agent:
 
     # --- the shared connection; modules route by the topics they asked for ---
 
-    def publish(self, topic: str, payload: dict, retain: bool = False) -> None:
-        import json
-
-        self.link.publish(topic, json.dumps(payload).encode(), retain=retain)
-
-    def _on_connect(self) -> None:
-        # Wrapped whole, like _on_message's per-module dispatch: an exception escaping any
-        # callback kills paho's network thread, and a dead network thread is the one failure
-        # that silences every future callback including the disconnect that would report it
-        # (#53). The watchdog checks for that corpse anyway — this makes it a check that
-        # should never fire, which is what a watchdog's checks should be.
-        try:
-            self.metrics.connected()
-            topics = []
-            for module in self.modules:
-                for topic in module.subscriptions():
-                    self.link.subscribe(topic)
-                    topics.append(topic)
-            log.info("%s up — world v%s, running %s", self.id, self.world.version,
-                     ", ".join(m.name for m in self.modules) or "nothing")
-            # The topics, spelled out. An agent subscribed to the wrong thing looks exactly
-            # like a device that never speaks, and this is the one line that tells them apart —
-            # it can be read against the ACL and against the board's own config without
-            # guessing.
-            for topic in topics:
-                log.info("%s: listening on %s", self.id, topic)
-            if not topics:
-                log.warning("%s: subscribed to NOTHING — it will never hear anything", self.id)
-        except Exception as exc:
-            log.error("%s: failed while taking up a connection: %s", self.id, exc)
-
-    def _on_disconnect(self, reason_code) -> None:
-        self.metrics.disconnected()
-        # It used to be counted and NOT logged, on the reasoning that a reconnecting agent is
-        # normal on a marginal link and the count over time is what matters. That reasoning is
-        # right about flapping and wrong about the case it actually produced: this agent lost
-        # its session and never came back, and the container went on looking perfectly healthy
-        # for two days while nothing was ingested. The metric existed and nobody was watching a
-        # metric, because nothing had gone visibly wrong.
-        #
-        # Logged at WARNING with the reason, and _on_connect already logs the way back. A
-        # flapping link therefore shows as paired lines — which is information about the link,
-        # not noise to be suppressed. A drop with no matching "up" line after it is the shape of
-        # the fault that cost the two days.
-        log.warning("%s: disconnected from the bus (%s) — paho will retry", self.id, reason_code)
-
-    def _on_message(self, topic: str, payload: bytes) -> None:
-        """Offer the message to EVERY module, and note whether any of them wanted it.
-
-        It used to `return` on the first module whose `handle` came back true, which read as an
-        optimisation and was a defect: a second module subscribed to the same topic never saw
-        the message, and nothing anywhere said so. Exactly what #51 fixed one level down, where
-        `SensingModule.handle` returned after the first SENSOR owning a topic and a board's
-        second channel went unread.
-
-        It stayed here because nothing wanted one topic twice. Actuation reading its valves'
-        status is the case that wants it — a supplier runs actuation beside hosting — and the
-        old loop would have handed the status to whichever module came first in the list.
-
-        `tell` above has always offered to every module. This is the same shape,
-        and the two now agree.
-        """
-        handled = False
-        for module in self.modules:
-            try:
-                if module.handle(topic, payload):
-                    handled = True
-            except Exception as exc:  # one bad message must not take the agent down
-                log.error("%s: %s failed on %s: %s", self.id, module.name, topic, exc)
-        if handled:
-            return
-        # Nobody claimed it, and until now nobody said so. This is the shape a topic
-        # disagreement takes — the world names one channel, the device publishes on another,
-        # both ends look healthy, and the message is dropped in silence. It cannot be an error
-        # (a wildcard subscription may legitimately catch more than one module wants) but it
-        # must not be invisible.
-        #
-        # `handled` means at least one module TOOK it, not that every module was asked. The
-        # difference is the whole value of this line: offering the message to everyone would
-        # otherwise silence the warning for ever.
-        log.warning("%s: nothing handled a message on %s", self.id, topic)
+    #  `publish`, `_on_connect`, `_on_disconnect` and `_on_message` WERE HERE — the kernel's
+    #  mailbox: a client, a dispatch loop handing every message to every module, a session to
+    #  watch. None of it is BDI. How an agent reaches its society is a capability the fact of
+    #  a bus grants (`packages/transport/mqtt/module.py`), reached through the choir:
+    #  `Module.publish` tells `send`, the transport asks `subscriptions` and `handle`
+    #  (the-kernel-has-no-mailbox).
 
     def run(self) -> None:
         # Who I am on the bus. The broker refuses anonymous connections, and the ACL it holds
@@ -366,7 +287,6 @@ class Agent:
 
         #  The link opens with whatever credential and door its transport reads off the
         #  environment — the kernel hands over its three callbacks and nothing else.
-        self.link.connect(self._on_connect, self._on_disconnect, self._on_message)
         # After the mask, so the timer thread inherits it and this thread stays the one that
         # wakes on a signal. Its thread is a daemon, so it cannot hold the process open either.
         # Upkeep runs for everyone, on its own clock, and is NOT a capability: nothing about
@@ -380,9 +300,10 @@ class Agent:
         # being timed. When it resigns it sends SIGTERM to this process — blocked, pending,
         # and received by the sigwait below exactly as `podman stop`'s would be, so a
         # resignation IS a clean shutdown and the container's restart policy is the recovery.
-        self.watchdog.start()
         for module in self.modules:
             module.start()
+        log.info("%s up — world v%s, running %s", self.id, self.world.version,
+                 ", ".join(m.name for m in self.modules) or "nothing")
 
         try:
             signal.sigwait({signal.SIGINT, signal.SIGTERM})
@@ -392,9 +313,7 @@ class Agent:
             log.info("%s shutting down", self.id)
             for module in self.modules:
                 module.stop()
-            self.watchdog.stop()
             self.upkeep.stop()
-            self.link.stop()
 
 
 def main() -> None:

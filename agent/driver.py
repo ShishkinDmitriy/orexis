@@ -3,15 +3,17 @@
 A sensing module decides *when* to look and *what to make of it*; a driver knows only how
 to reach one kind of device. That line is deliberate: protocol changes nothing an agent must
 decide, so it has no business appearing in a capability, a belief, or a policy. It is why
-`transports/` is a separate tree from `capabilities/` and grants nothing.
+`transports/` is a separate tree from `capabilities/`; a DRIVER grants nothing (the transport's
+module, how the AGENT reaches everyone, is granted by the fact of its bus — that is a different
+thing, and `packages/transport/mqtt/module.py` says why).
 
 A driver is chosen **per sensor**, and it is the driver that decides: each one is asked
 whether it recognises the binding the world states on that device. So one agent with one
 attention policy can hold a sensor on a bus and another on a wire, which is exactly the case
 that would force a duplicate cadence if the transport were named in the capability instead.
 
-Adding a transport is a directory under `transports/` and nothing else: no capability, no
-belief, no edit here — because how a device is reached is not something an agent decides.
+Adding a transport is a directory under `transports/` and nothing else: no belief, no edit
+here — because how a device is reached is not something an agent decides.
 """
 
 from __future__ import annotations

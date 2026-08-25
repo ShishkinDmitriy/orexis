@@ -290,10 +290,10 @@ destinations, and one shape widener.
 
 # Paid since — the bus
 
-The fifth kind is gone. How an agent reaches its society is a kernel contract, `agent.link.Link`,
-and the transport package implements it — the `mqtt:MessageBus` query, the credential, paho and
-its thread all live in `packages/transport/mqtt/link.py`; the reachability half of the
-simulated-device shape is `mqtt:SimulatedDeviceReachableShape`
-([the-link-is-the-transports](/decisions/the-link-is-the-transports.md)). What the list holds
-now is the migration destinations and one shape widener, and the kernel names no package's word
-in any query, rule, shape or constant.
+The fifth kind is gone, and the concept behind it with it. How an agent reaches its society is
+a capability the fact of a bus grants ([the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md)):
+the `mqtt:MessageBus` query, the credential, paho, the delivery loop and the watchdog all
+live in `packages/transport/mqtt/`; the reachability half of the simulated-device shape is
+`mqtt:SimulatedDeviceReachableShape`; `Module` defines no messaging hook. What the list holds
+now is the migration destinations and one shape widener, and the kernel names no package's
+word in any query, rule, shape or constant.

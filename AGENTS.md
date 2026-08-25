@@ -139,9 +139,10 @@ record is worse than none, because it is still cited.
    `packages/scaling/*` and `packages/transport/*` import sensing's `Codec`, `Scaling` and
    `pointer`, because those are the contracts they exist to implement (see
    [sensing-owns-the-reading-pipeline](knowledge/decisions/sensing-owns-the-reading-pipeline.md)).
-   A transport may also implement the kernel's `Link` — how the agent reaches its society —
-   and the kernel never learns what the meeting place is called (see
-   [the-link-is-the-transports](knowledge/decisions/the-link-is-the-transports.md)).
+   A transport is also a capability the fact of its bus grants — how the agent reaches its
+   society, connection, delivery loop and watchdog in the transport's module, reached through
+   the choir (`subscriptions`, `handle`, `send`) — and the kernel has no mailbox (see
+   [the-kernel-has-no-mailbox](knowledge/decisions/the-kernel-has-no-mailbox.md)).
 
    **`agent/` is the kernel that loads them, not their home.** Capability Python used to live
    under it, so the tree itself showed which of it a runtime loads — it does not show that now.

@@ -201,9 +201,10 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
 
     # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
-    # reachability half of `ag:SimulatedDeviceShape` — is the transport's: `agent.link.Link` is
-    # the contract, `packages/transport/mqtt/link.py` finds the bus in its own words, and the
-    # shape is `mqtt:SimulatedDeviceReachableShape` (the-link-is-the-transports).
+    # reachability half of `ag:SimulatedDeviceShape` — is the transport's: reaching the society
+    # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
+    # connection, the loop and the watchdog, and the shape is
+    # `mqtt:SimulatedDeviceReachableShape` (the-kernel-has-no-mailbox).
 
     # KIND 4 — the kernel's RDF, found by widening the scan past `agent/*.py`. #334's three
     # kinds are all Python and none of them covers these, so they sat here marked UNCLASSIFIED

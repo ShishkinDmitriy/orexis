@@ -36,4 +36,13 @@ $given
 WHERE  {
     ?device mqtt:commandTopic ?topic .
     BIND(IRI(CONCAT("http://example.org/orexis#channel.", ENCODE_FOR_URI(?topic))) AS ?channel)
-}
+} ;
+
+#  THE GRANT. A world that states a bus is a world every agent reaches over it: the fact of the
+#  bus grants Linking to every agent, the way a polled sensor grants Subscribing. There is no
+#  choosing — an agent in a society that meets on a broker is on the broker — which is why the
+#  premise is the bus alone (the-kernel-has-no-mailbox).
+INSERT { GRAPH $derived {
+    ?agent ag:hasCapability mqtt:Linking } }
+$given
+WHERE  { ?agent a ag:Agent . ?bus a mqtt:MessageBus }

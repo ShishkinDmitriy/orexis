@@ -1,6 +1,6 @@
 """The manifest: what this transport contributes to a build."""
 
 from .driver import MqttDriver
-from .link import MqttLink
+from .module import MqttModule
 
-PROVIDES = (MqttDriver, MqttLink)
+PROVIDES = (MqttDriver, MqttModule)

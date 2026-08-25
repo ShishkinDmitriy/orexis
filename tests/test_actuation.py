@@ -44,6 +44,11 @@ class FakeAgent:
     def publish(self, topic, payload, retain=False):
         self.sent.append((topic, payload))
 
+    def tell(self, hook, *args, **kwargs):
+        #  `Module.publish` tells `send` to whoever holds the connection; here that is this fake
+        if hook == "send":
+            self.publish(*args, **kwargs)
+
 
 class _Beliefs:
     """Just enough of the belief modality: this capability's one figure, and an empty query

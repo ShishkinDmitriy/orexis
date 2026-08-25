@@ -54,7 +54,7 @@ ag:PublicGraphShape a sh:NodeShape ;
 
 #  `ag:SimulatedDeviceShape` WAS HERE: "a stand-in must be reachable like a real device" — on
 #  a bus, or sharing a reading topic — which is a sentence in the transport's words, so it is
-#  `mqtt:SimulatedDeviceReachableShape` in that package's shapes (the-link-is-the-transports).
+#  `mqtt:SimulatedDeviceReachableShape` in that package's shapes (the-kernel-has-no-mailbox).
 #  Its first half, "one device, one stand-in", is kernel structure and stays:
 
 ag:SimulatedDeviceShape a sh:NodeShape ;
