@@ -24,18 +24,18 @@ def fern(monkeypatch):
 def resignations(agent) -> list[str]:
     """Capture instead of SIGTERM — the test process would rather not stop itself."""
     said: list[str] = []
-    agent.watchdog._resign = lambda why: said.append(why)
+    agent.module("mqtt").watchdog._resign = lambda why: said.append(why)
     return said
 
 
 def test_the_bound_comes_from_the_ontology_not_the_code(fern):
-    assert fern.watchdog.resign_after_s == 600
+    assert fern.module("mqtt").watchdog.resign_after_s == 600
 
 
 def test_a_connected_agent_is_left_alone(fern):
     said = resignations(fern)
-    fern.metrics.connected()
-    fern.watchdog.check()
+    fern.module("mqtt")._on_connect()
+    fern.module("mqtt").watchdog.check()
     assert said == []
 
 
@@ -43,63 +43,63 @@ def test_cut_off_past_the_bound_is_a_resignation(fern):
     """Born disconnected and never connected counts too, deliberately: an agent whose CONNACK
     is refused in a loop is exactly as cut off as one whose session died."""
     said = resignations(fern)
-    fern.metrics.disconnected_at = time.monotonic() - 601
-    fern.watchdog.check()
+    fern.module("mqtt").disconnected_at = time.monotonic() - 601
+    fern.module("mqtt").watchdog.check()
     assert len(said) == 1 and "cut off from the bus" in said[0]
 
 
 def test_a_short_outage_is_endured(fern):
     said = resignations(fern)
-    fern.metrics.disconnected_at = time.monotonic() - 30
-    fern.watchdog.check()
+    fern.module("mqtt").disconnected_at = time.monotonic() - 30
+    fern.module("mqtt").watchdog.check()
     assert said == []
 
 
 def test_one_reconnect_resets_the_clock_so_flapping_never_accumulates(fern):
-    fern.metrics.disconnected()
-    assert fern.metrics.disconnected_for_s() is not None
-    fern.metrics.connected()
-    assert fern.metrics.disconnected_for_s() is None
+    fern.module("mqtt")._on_disconnect(0)
+    assert fern.module("mqtt").disconnected_for_s() is not None
+    fern.module("mqtt")._on_connect()
+    assert fern.module("mqtt").disconnected_for_s() is None
     # and a repeated notice of one dead session is the same outage, not a fresh clock
-    fern.metrics.disconnected()
-    first = fern.metrics.disconnected_at
-    fern.metrics.disconnected()
-    assert fern.metrics.disconnected_at == first
+    fern.module("mqtt")._on_disconnect(0)
+    first = fern.module("mqtt").disconnected_at
+    fern.module("mqtt")._on_disconnect(0)
+    assert fern.module("mqtt").disconnected_at == first
 
 
 def test_a_dead_network_thread_is_a_resignation_whatever_the_flag_says(fern):
     """The connected flag is set by a callback, and a dead loop thread fires no callbacks —
     so the corpse is checked before the flag is believed."""
     said = resignations(fern)
-    fern.metrics.connected()  # the stale-true flag of the incident
-    fern.mqtt._thread = SimpleNamespace(is_alive=lambda: False)
-    fern.watchdog.check()
+    fern.module("mqtt")._on_connect()  # the stale-true flag of the incident
+    fern.module("mqtt").client._thread = SimpleNamespace(is_alive=lambda: False)
+    fern.module("mqtt").watchdog.check()
     assert len(said) == 1 and "network thread is dead" in said[0]
 
 
 def test_a_live_thread_is_not_a_corpse(fern):
     said = resignations(fern)
-    fern.metrics.connected()
-    fern.mqtt._thread = SimpleNamespace(is_alive=lambda: True)
-    fern.watchdog.check()
+    fern.module("mqtt")._on_connect()
+    fern.module("mqtt").client._thread = SimpleNamespace(is_alive=lambda: True)
+    fern.module("mqtt").watchdog.check()
     assert said == []
 
 
 def test_what_went_quiet_is_said_once_and_recovery_is_said_too(fern, caplog):
     """A lamp that repeats itself is one you stop reading: entry once, recovery once,
     and the ticks in between are silent."""
-    fern.metrics.connected()
+    fern.module("mqtt")._on_connect()
     lines = ["moisture_sensor_fern: nothing for 700s, past the 645s I allow"]
     fern.modules.append(SimpleNamespace(quiet=lambda: list(lines)))
 
     with caplog.at_level(logging.INFO, logger="watchdog"):
-        fern.watchdog.check()
+        fern.module("mqtt").watchdog.check()
         assert sum("nothing for 700s" in r.message for r in caplog.records) == 1
-        fern.watchdog.check()
+        fern.module("mqtt").watchdog.check()
         assert sum("nothing for 700s" in r.message for r in caplog.records) == 1
 
         lines.clear()
-        fern.watchdog.check()
+        fern.module("mqtt").watchdog.check()
     recovered = [r for r in caplog.records if "heard again" in r.message]
     assert len(recovered) == 1
 

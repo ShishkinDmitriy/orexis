@@ -46,7 +46,7 @@ loaders, so a test says `wired_sensors(fern)[0].reading_topic` where it said
 
 # What stays, and why
 
-- **The bus.** `MessageBus` and `load_bus` are still the kernel's, and `mqtt:` is the one
+- ~~**The bus.**~~ Closed by [the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md). `MessageBus` and `load_bus` were still the kernel's, and `mqtt:` was the one
   package namespace `world.py` still names, because the kernel still opens the MQTT
   connection itself (`runtime.py`). The day the transport package owns the connection, the
   bus goes with it.

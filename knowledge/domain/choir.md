@@ -42,6 +42,7 @@ method, and sensing says what it is asked with and how the answers merge
 | `desire_urgency` | how urgent is this want, in this world? | first opinion |
 | `size` | how big would the act this row commits to be? | the taker's answer |
 | `take` | carry this committed row out | any True |
+| `subscriptions` / `handle` / `send` | which channels do you need; take this message; carry this out to the society | the [transport](/domain/transport.md)'s — asked by the module that holds the connection |
 | `notices` | which pairs are unknown or too stale to act on? | concatenated for the deliberator |
 | `quiet` | what did you expect to hear and have stopped hearing? | a set of log lines |
 | `series` | which tagged rows go to the agent's own bucket? | concatenated, one writer |

@@ -178,7 +178,7 @@ def test_the_gardener_derives_no_market_pair():
     caps = {c.rsplit("#", 1)[-1] for c in
             load_self(genesis_store(world="loner").query, "gardener").capabilities}
     assert caps == {"Subscribing", "Listening", "Storing",
-                    "Actuation"}, "both clocks in one agent since the butt got its witness"
+                    "Actuation", "Linking"}, "both clocks in one agent since the butt got its witness"
 
 
 # --- the 584-dose morning (patience reads the ledger; the butt is metered) --

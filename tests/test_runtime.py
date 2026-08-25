@@ -30,7 +30,7 @@ def test_plant_agent_runs_sensing_and_bidding(agent):
     #  went to sensing — the-stake-is-sensings-want.) What is fern's own is `subscribing` (a
     #  scheduled board), `bidding` (a market position), `review` (latitude) and `reporting`.
     assert {m.name for m in agent("fern").modules} == {
-        "subscribing", "bidding", "review", "reporting",
+        "subscribing", "bidding", "review", "reporting", "mqtt",
         "intention", "deliberation", "owing"}
 
 
@@ -54,7 +54,7 @@ def test_supplier_runs_the_dealers_full_stack(agent):
         # the planner was a member that subclassed the reflex and added one clause inert for
         # everyone else, so it is a clause and not a module. What it protects is pinned in
         # test_deliberation, against the fact rather than against who was handed which module.
-        "owing", "intention", "deliberation", "bidding"}
+        "owing", "intention", "deliberation", "bidding", "mqtt"}
 
 
 def test_the_supplier_listens_to_its_stock_and_schedules_nothing(agent):
@@ -127,7 +127,8 @@ def test_a_message_is_offered_to_every_module(agent, monkeypatch):
     fern = agent("fern")
     seen = []
     for m in fern.modules:
-        monkeypatch.setattr(m, "handle", lambda t, p, n=m.name: (seen.append(n), True)[1])
+        monkeypatch.setattr(m, "handle", lambda t, p, n=m.name: (seen.append(n), True)[1],
+                            raising=False)   # the transport itself answers no handle
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2})
     assert len(seen) == len(fern.modules), f"only {seen} were offered it"
 
@@ -140,9 +141,9 @@ def test_a_module_that_claims_a_topic_does_not_silence_the_next(agent, monkeypat
     """
     fern = agent("fern")
     first, second = fern.modules[0], fern.modules[1]
-    monkeypatch.setattr(first, "handle", lambda t, p: True)
+    monkeypatch.setattr(first, "handle", lambda t, p: True, raising=False)
     reached = []
-    monkeypatch.setattr(second, "handle", lambda t, p: (reached.append(t), True)[1])
+    monkeypatch.setattr(second, "handle", lambda t, p: (reached.append(t), True)[1], raising=False)
     fern.deliver("shared/channel", {})
     assert reached, "the first module claiming the topic hid it from the second"
 
@@ -156,7 +157,7 @@ def test_the_unhandled_warning_still_fires_only_when_nobody_took_it(agent, monke
     """
     fern = agent("fern")
     for m in fern.modules:
-        monkeypatch.setattr(m, "handle", lambda t, p: False)
+        monkeypatch.setattr(m, "handle", lambda t, p: False, raising=False)
     with caplog.at_level(logging.WARNING):
         fern.deliver("nobody/wants/this", {})
     assert "nothing handled a message" in caplog.text
@@ -201,11 +202,11 @@ def test_the_agent_holds_a_clean_session():
 
     import paho.mqtt.client as paho
 
-    from agent import runtime
+    from packages.transport.mqtt import module as mqtt_module
 
-    source = inspect.getsource(runtime)
+    source = inspect.getsource(mqtt_module)
     assert "clean_session" not in source, \
-        "runtime.py mentions clean_session — if it sets False, every freshness judgment lies"
+        "the MQTT module mentions clean_session — if it sets False, every freshness judgment lies"
     real = paho.Client(paho.CallbackAPIVersion.VERSION2)
     assert getattr(real, "_clean_session", None) is True, \
         "paho's default session is no longer clean — the runtime must now say so explicitly"

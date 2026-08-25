@@ -38,19 +38,10 @@ class Module:
 
     # --- lifecycle ---
 
-    def subscriptions(self) -> list[str]:
-        """Topics this module needs. All of them come from the graph."""
-        return []
-
-    def handle(self, topic: str, payload: bytes) -> bool:
-        """Return True if this module took the message. Others are offered it regardless.
-
-        It used to say "so no other module sees it", which was true and was the defect: the
-        runtime returned on the first module that claimed a topic, and a second module
-        subscribed to the same one never saw the message. Returning True is a report, not a
-        claim — what it decides is whether the runtime warns that nobody wanted this.
-        """
-        return False
+    #  `subscriptions()` and `handle(topic, payload)` WERE HERE — the kernel's half of a
+    #  mailbox. Which channels a module needs and what it does with a message are the
+    #  transport's questions, asked through `Agent.ask` by the module that holds the
+    #  connection (`packages/transport/mqtt/module.py`); a module that listens defines them.
 
     #  THE READING CHOIR — `on_reading_recorded`, `annotate`, `bounds`, `urgency`, `measures`
     #  — was defined here by name and is not any more: every one of those hooks is a sentence
@@ -215,7 +206,9 @@ class Module:
             return None
 
     def publish(self, topic: str, payload: dict, retain: bool = False) -> None:
-        self.agent.publish(topic, payload, retain)
+        """Put something on the wire — told to whoever holds the connection (`send`). The
+        kernel has no mailbox; the transport that reaches the society is a capability."""
+        self.agent.tell("send", topic, payload, retain)
 
 
 class Timer:

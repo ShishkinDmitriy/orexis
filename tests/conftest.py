@@ -182,7 +182,9 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     if monkeypatch is not None:
         # one place for every capability that records — see orexis/observation.py
         monkeypatch.setattr(observation, "InfluxWriter", NoInflux)
-        monkeypatch.setattr(runtime.mqtt, "Client", lambda *a, **k: _FakeClient())
+        #  The transport's client, captured — the module is real, its socket is not.
+        from packages.transport.mqtt import module as mqtt_module
+        monkeypatch.setattr(mqtt_module.mqtt, "Client", lambda *a, **k: _FakeClient())
         # What a deployed agent is handed: its OWN bucket and a token that opens only it,
         # mounted into its container by `orexis-influx`. Set here rather than defaulted in the
         # code, because a fallback to a shared bucket is exactly the isolation failure the
@@ -196,14 +198,17 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     # agent's own graphs say what they ARE, which is how the mind's build selects them.
     genesis.classify_own_graphs(st, agent_id)
     agent = runtime.Agent(agent_id, st=st)
-    agent.sent = Sent()
-    agent.publish = lambda topic, payload, retain=False: agent.sent.append(
-        (topic, payload, retain))
-    agent.subscribed = []
-    agent._on_connect(_Recorder(agent.subscribed), None, None, 0, None)
-    agent.deliver = lambda topic, payload: agent._on_message(None, None, Msg(topic, payload))
     # convenience: reach a module by name, the way a test wants to talk about it
     agent.module = lambda name: next(m for m in agent.modules if m.name == name)
+    #  The wire, read through the transport's captured client: everything sent, and every
+    #  channel asked for at connect. The kernel has no mailbox, so the transport module is
+    #  where a test speaks to the society from.
+    link = agent.module("mqtt")
+    agent.sent = Sent()
+    link.client.sent = agent.sent
+    agent.subscribed = link.client.subscribed
+    link._on_connect()
+    agent.deliver = lambda topic, payload: link._on_message(topic, Msg(topic, payload).payload)
     agent.hosting = lambda: agent.module("hosting")
     agent.bidding = lambda: agent.module("bidding")
     agent.subscribing = lambda: agent.module("subscribing")
@@ -223,14 +228,20 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
 
 
 class _FakeClient:
+    """Paho, captured: what was published lands in `sent` as (topic, dict, retain), what was
+    subscribed in `subscribed`, and nothing reaches the network. `_thread` is what the
+    watchdog's corpse check reads — absent until a test plants one, as on a client that never
+    started its loop."""
     def __init__(self, *a, **k):
-        self.on_connect = self.on_message = None
+        self.on_connect = self.on_disconnect = self.on_message = None
+        self.sent: list = []
+        self.subscribed: list = []
 
-    def publish(self, *a, **k):
-        pass
+    def publish(self, topic, payload, qos=1, retain=False):
+        self.sent.append((topic, json.loads(payload), retain))
 
-    def subscribe(self, *a, **k):
-        pass
+    def subscribe(self, topic):
+        self.subscribed.append(topic)
 
 
 class _Recorder:

@@ -101,7 +101,7 @@ class StoringModule(Module):
     def _reply(self, answer: dict) -> bool:
         # The dict itself: Agent.publish serialises, and pre-dumping here double-encoded
         # the answer into a JSON string OF a JSON string — found by the first live ask.
-        self.agent.publish(sovereign.result_topic(self.agent.id), answer)
+        self.agent.tell("send", sovereign.result_topic(self.agent.id), answer)
         self.log.info("answered the sovereign: %s", "error" if "error" in answer
                       else f"{len(answer['rows'])} row(s)")
         return True

@@ -287,3 +287,13 @@ namespace constants — the ratchet's third kind, twelve once every namespace wa
 have since left the way `SOSA` did, to `onboarding/namespaces.py`: nothing in the kernel read
 them, only the sovereign's generators. What the list holds now is the bus, the migration
 destinations, and one shape widener.
+
+# Paid since — the bus
+
+The fifth kind is gone, and the concept behind it with it. How an agent reaches its society is
+a capability the fact of a bus grants ([the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md)):
+the `mqtt:MessageBus` query, the credential, paho, the delivery loop and the watchdog all
+live in `packages/transport/mqtt/`; the reachability half of the simulated-device shape is
+`mqtt:SimulatedDeviceReachableShape`; `Module` defines no messaging hook. What the list holds
+now is the migration destinations and one shape widener, and the kernel names no package's
+word in any query, rule, shape or constant.

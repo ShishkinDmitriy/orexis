@@ -457,7 +457,7 @@ def render_health(world: str) -> dict:
         ("Belief base — on disk", AGENT_MEASUREMENT, "belief_bytes", "timeseries", "bytes", 12, 7,
          "RocksDB compacts on its own schedule, so this is lumpier than the triple count and "
          "should still be bounded."),
-        ("Reconnects", AGENT_MEASUREMENT, "mqtt_reconnects", "timeseries", "short", 12, 7,
+        ("Reconnects", AGENT_MEASUREMENT, "link_reconnects", "timeseries", "short", 12, 7,
          "Since boot. A marginal link shows here before it shows anywhere else."),
         ("Uptime", AGENT_MEASUREMENT, "uptime_s", "stat", "s", 12, 5,
          "Resets to zero on restart, which is how a crash-looping agent announces itself."),

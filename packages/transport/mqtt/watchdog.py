@@ -41,8 +41,8 @@ import logging
 import os
 import signal
 
-from .module import Timer
-from .store import bindings
+from agent.module import Timer
+from agent.store import bindings
 
 log = logging.getLogger("watchdog")
 
@@ -59,11 +59,12 @@ SELECT ?s WHERE {
 class BusWatchdog:
     """Notice a dead connection and resign, on a clock no other thread owns."""
 
-    def __init__(self, agent):
-        self.agent = agent
+    def __init__(self, link):
+        self.link = link
+        self.agent = link.agent
         self._timer: Timer | None = None
         self._quiet: set[str] = set()  # what has already been said, so it is said once
-        rows = bindings(agent.beliefs.query(_RESIGN_Q))
+        rows = bindings(self.agent.beliefs.query(_RESIGN_Q))
         if not rows:
             raise RuntimeError("the ontology states no ag:resignAfterS — re-run orexis-seed")
         self.resign_after_s = int(rows[0]["s"])
@@ -83,7 +84,7 @@ class BusWatchdog:
                 self._resign("the network thread is dead — no callback will ever fire again, "
                              "and the connected flag can no longer be believed")
                 return
-            cut_off = self.agent.metrics.disconnected_for_s()
+            cut_off = self.link.disconnected_for_s()
             if cut_off is not None and cut_off > self.resign_after_s:
                 self._resign(f"cut off from the bus for {cut_off:.0f}s, past the "
                              f"{self.resign_after_s}s this society tolerates")
@@ -93,18 +94,14 @@ class BusWatchdog:
             log.error("%s: the watchdog could not look: %s", self.agent.id, exc)
 
     def _thread_died(self) -> bool:
-        """True only when paho's loop thread demonstrably existed and is demonstrably dead.
-
-        `_thread` is paho's private attribute, and reaching for it is the deliberate price of
-        watching a thing that offers no public pulse: if a future paho renames it, this check
-        degrades to never-true and the disconnect bound still stands guard behind it.
-        """
-        thread = getattr(self.agent.mqtt, "_thread", None)
-        return thread is not None and not thread.is_alive()
+        """True only when paho's loop thread demonstrably existed and is demonstrably dead —
+        `alive()` False, never None; a pulse it cannot read degrades this check to never-true
+        and the disconnect bound still stands guard behind it."""
+        return self.link.alive() is False
 
     def _sweep_quiet(self) -> None:
         """Say what has gone silent, once on entry and once on recovery — never per tick."""
-        heard_nothing = {line for module in self.agent.modules for line in module.quiet()}
+        heard_nothing = {line for lines in self.agent.ask("quiet") for line in lines}
         for line in sorted(heard_nothing - self._quiet):
             log.warning("%s: %s", self.agent.id, line)
         for line in sorted(self._quiet - heard_nothing):
