@@ -13,6 +13,9 @@ binds an agent to a device — the access grant is *granted* (at genesis), the c
 
 # Shape
 
+A `Claim` is the kernel's [commitment](/domain/commitment.md) — the promised flow — with the
+credit leg added; the fields below are that shape plus `debit`.
+
 `sub` (who won), the supplier, `amount_l`, `debit` (the price), `auction_id`, `jti` (single-use),
 `exp`. **Co-signed** by the **host** (`match_sig` — the seller offered it) and
 **clearing** (`val_sig` — it passed validation). Concretely a JWT/JWS; v1 signs with Ed25519.

@@ -42,7 +42,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from agent.market import EPS, Bid, Offer, Trade, TradeLine
+from .trade import EPS, Bid, Offer, Trade, TradeLine
 from agent.module import Module
 
 from .terms import PAY_AS_BID, UNIFORM_PRICE

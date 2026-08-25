@@ -4,8 +4,8 @@ import dataclasses
 
 import pytest
 
-from agent.clearing import clear, issue_claims, validate
-from agent.market import Bid, Limits, MarketState, Offer, Trade, TradeLine
+from packages.capability.market.clearing import clear, issue_claims, validate
+from packages.capability.market.trade import Bid, Limits, MarketState, Offer, Trade, TradeLine
 
 
 def base_state() -> MarketState:
@@ -178,7 +178,7 @@ def test_clear_raises_on_invalid_trade():
 def test_a_world_whose_plants_state_survival_ranges_yields_ceilings():
     """The half that was missing for as long as the check existed.
 
-    `agent/clearing.py` has always refused a line past a participant's ceiling, and the only
+    `clearing.py` has always refused a line past a participant's ceiling, and the only
     production caller passed `{}` — so `.get()` returned None for every agent and the branch was
     skipped for every line of every trade. The unit test above passes a populated map and is
     correct; it proves the CHECK. Nothing asserted that anything FILLS it, which is

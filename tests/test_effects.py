@@ -187,7 +187,7 @@ def test_the_deadline_and_the_command_cannot_be_two_different_durations(monkeypa
     Across a RANGE, including past the device's cap: the cap is where two implementations of
     "how long is this dose" most easily part company, since one of them may forget it.
     """
-    from agent.clearing import Claim
+    from packages.capability.market.clearing import Claim
 
     agent = build_agent("gardener", _loner({("zz", MOISTURE): 0.10}), monkeypatch)
     actuation = next(m for m in agent.modules if m.name == "actuation")
@@ -256,7 +256,7 @@ def test_a_served_claim_is_timed_by_the_rule_and_not_by_the_wire(monkeypatch, ca
     import logging
     import time
 
-    from agent.clearing import Claim
+    from packages.capability.market.clearing import Claim
 
     monkeypatch.setenv("OREXIS_WORLD", "simulation")
     st = genesis_store({}, world="simulation")

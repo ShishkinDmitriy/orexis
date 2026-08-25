@@ -2,15 +2,15 @@
 
 `propose_match` moved into `capabilities/market/matching.py` when matching became a capability (#66),
 so it is exercised here through the module that provides it — the same object `hosting.py` gets
-from `agent.provider`. `run_auction` stayed in `agent/auction.py`, because propose-validate-issue
+from `agent.provider`. `run_auction` stayed with the auction, here in the market package, because propose-validate-issue
 is true of every member, and it now takes the matcher rather than importing one.
 """
 
 import pytest
 
-from agent.auction import run_auction
+from packages.capability.market.auction import run_auction
 from packages.capability.market.matching import PayAsBidModule, UniformPriceModule
-from agent.market import Bid, Limits, MarketState, Offer
+from packages.capability.market.trade import Bid, Limits, MarketState, Offer
 
 # The matching under test. It is static because a lot and a set of bids fully determine the
 # answer — which is what lets it be checked without a world, and a way of matching be swapped

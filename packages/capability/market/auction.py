@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from typing import Callable, Iterable
 
 from .clearing import Validation, Claim, issue_claims, validate
-from .market import Bid, MarketState, Offer, Trade
+from .trade import Bid, MarketState, Offer, Trade
 
 # What a matching capability offers: a lot and the bids for it, in — a proposed allocation out.
 # Named so this module can say what it needs without naming who provides it.
