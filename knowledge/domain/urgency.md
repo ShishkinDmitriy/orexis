@@ -63,9 +63,9 @@ the declared query and the reference arithmetic to the same answer.
 
 # It is contributed, not only computed
 
-`Module.urgency()` is a [choir](/domain/choir.md) hook. Any module
-may raise the urgency of a (subject, property) it can see something about, and the agent takes the
-highest. So a capability that knows a reason to hurry does not need a path into the deliberator —
+`urgency` is a [choir](/domain/choir.md) hook — sensing's, asked through `Agent.ask`. Any module
+may raise the urgency of a (subject, property) it can see something about, and sensing takes the
+highest; the keeper adds the maximum while a watch is open on any want about the property. So a capability that knows a reason to hurry does not need a path into the deliberator —
 it answers when asked.
 
 # Related

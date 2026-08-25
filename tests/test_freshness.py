@@ -239,7 +239,8 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
 
     keeper.deliberate_on_gaps()
 
-    watched = {s.observed_property.rsplit("#", 1)[-1] for s in keeper.standing()
+    about = {w.uri: w.observed_property for w in sensing_of(gardener).desires()}
+    watched = {about[s.want].rsplit("#", 1)[-1] for s in keeper.standing()
                if s.action.endswith("Observing")}
     assert "SoilMoisture" in watched, "the probe can be asked, so the look is committed to"
     assert "StoredLitres" not in watched, \

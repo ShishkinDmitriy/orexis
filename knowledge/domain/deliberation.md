@@ -25,13 +25,13 @@ the actors treat it exactly as they treat their own cooldowns.
 ever express a stake, and an agent also wants things that are not distances — "this claim
 redeemed" is a state, wanted, with a deadline. A desire carries either shape and one urgency,
 so a duty is ranked against a thirst rather than running down a second path that never meets
-the first. There is a second door, `propose_about(property)`, and it is a lookup rather than a
-second question: an actor holding a fresh reading asks what to do about that property, and the
-want it names is found and put through the same road. **That lookup now has to choose**, because
-a property carries two wants — the region it should sit in, and that its instrument has spoken
-recently — and it chooses by a rule rather than by a ranking: an unmet epistemic want answers
-first, since no lever moves a number you cannot see, and once the reading is current the stake
-answers on its merits.
+the first. The second door — an actor holding a fresh reading asking what to do about that
+property — is not the deliberator's any more: which wants a property carries is
+[sensing](/domain/sensing.md)'s to say, and its `want_about` chooses by a rule rather than by a
+ranking (an unmet epistemic want first, since no lever moves a number you cannot see; once the
+reading is current the stake answers on its merits) and hands the kernel the want's node
+through `execution.pursue_for`. The deliberator sees only wants
+([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
 **And not-seeing is no longer answered HERE at all** (#331). Two hardcodes said it in turn:
 `if value is None: return OBSERVE`, and then `if desire.state in ("unmeasured", "stale"):

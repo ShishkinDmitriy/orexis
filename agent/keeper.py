@@ -36,6 +36,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from .beliefs import BeliefError, Picks
+from . import vocabulary
 from .module import Module, Timer
 from .store import bindings
 
@@ -124,7 +125,7 @@ class Standing:
 
     uri: str
     action: str
-    observed_property: str
+    want: str               # the desire's node — `ag:pursues`; the kernel's only key besides the act
     adopted_at: datetime
     #  The lever the plan chose — `ag:through`, the row's `via`. None on a row adopted
     #  before execution wrote it, or by an actor that names no lever (a held claim).
@@ -140,7 +141,7 @@ class OpenExpectation:
 
     uri: str
     action: str
-    observed_property: str
+    want: str
     rises: bool             # which way the act promised to move the value
     baseline: float
     baseline_at: datetime
@@ -158,6 +159,13 @@ class Keeper(Module):
         self.graph = intentions_graph(agent.id)
         self._tick: Timer | None = None
         self._picks = None
+        #  A volume from before the ledger keyed on the want: rows carrying a property are
+        #  given the want that property names for this agent, once, at construction.
+        about_of = {r["want"]: r["about"] for r in bindings(agent.desires.query_union(
+            f"SELECT ?want ?about WHERE {{ <{self.me.uri}> <{AG}holds> ?want . "
+            f"?want <{AG}about> ?about }}"))}
+        if (n := vocabulary.migrate_ledger(agent.intentions, self.graph, about_of)):
+            self.log.info("ledger migrated: %d row(s) keyed by a property now pursue a want", n)
 
     @property
     def beliefs(self) -> KeepingBeliefs:
@@ -241,9 +249,13 @@ class Keeper(Module):
 
     # --- the ledger, written -------------------------------------------------------------
 
-    def adopt(self, action: str, observed_property: str, because: str,
-              desire: str | None = None, via: str | None = None) -> str | None:
-        """Commit to one means toward one desire. Returns the intention's IRI, or None.
+    def adopt(self, action: str, want: str, because: str, via: str | None = None) -> str | None:
+        """Commit to one action toward one want. Returns the intention's IRI, or None.
+
+        KEYED ON (ACTION, WANT) and nothing else: a want is its node, and the kernel no longer
+        knows what one is about (the-stake-is-sensings-want). Two commitments about one
+        property but different wants were always distinct — a dealer owing water to fern and
+        to tomato holds two Serving rows — and the property was only ever the coarser key.
 
         `via` is the lever the plan's head goes through — written as `ag:through`, so the
         ledger says which valve or venue and the actor handed the row later knows too.
@@ -264,8 +276,7 @@ class Keeper(Module):
         wrong as honouring it not at all.
         """
         now = datetime.now(timezone.utc)
-        for standing in self.standing(action=action, observed_property=observed_property,
-                                      desire=desire):
+        for standing in self.standing(action=action, want=want):
             if standing.age_s(now) <= self.beliefs.patience_s:
                 return None
             self._resolve(standing, "dropped",
@@ -275,21 +286,19 @@ class Keeper(Module):
         self.agent.intentions.update(f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
   <{uri}> a <{kernel("Intention")}> ;
-    {f'<{kernel("pursues")}> <{desire}> ;' if desire else ""}
+    <{kernel("pursues")}> <{want}> ;
     <{kernel("by")}> <{action}> ;
     {f'<{kernel("through")}> <{via}> ;' if via else ""}
-    <http://www.w3.org/ns/ssn/forProperty> <{observed_property}> ;
     <{kernel("adoptedAt")}> "{now.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
     <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
-        self.log.info("adopted %s(%s): %s",
-                      action.rsplit("#", 1)[-1], observed_property.rsplit("#", 1)[-1], because)
-        self._tell("adopted", action, observed_property, because)
+        self.log.info("adopted %s for %s: %s", action.rsplit("#", 1)[-1], _short(want), because)
+        self._tell("adopted", action, want, because)
         return uri
 
-    def satisfy(self, action: str, observed_property: str, because: str,
-                desire: str | None = None) -> list[str]:
-        """The world answered: whatever stood for this means and desire is done.
+    def satisfy(self, action: str, want: str | None, because: str) -> list[str]:
+        """The world answered: whatever stood for this action and want is done — or, with the
+        want omitted, for this action toward anything.
 
         Returns the resolved rows' IRIs, because resolving the MEANS is where an expectation
         about the END begins — the caller hands them straight to `expect`.
@@ -300,20 +309,18 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         what every caller predating desires meant and still action.
         """
         resolved = []
-        for standing in self.standing(action=action, observed_property=observed_property,
-                                      desire=desire):
+        for standing in self.standing(action=action, want=want):
             self._resolve(standing, "satisfied", because)
             resolved.append(standing.uri)
         return resolved
 
-    def drop(self, action: str, observed_property: str, because: str,
-             desire: str | None = None) -> None:
+    def drop(self, action: str, want: str | None, because: str) -> None:
         """The commitment died without being met, and the reason is the record.
 
         A commitment abandoned without a reason is indistinguishable from one forgotten, which
         is why the argument is not optional.
         """
-        for standing in self.standing(action=action, observed_property=observed_property):
+        for standing in self.standing(action=action, want=want):
             self._resolve(standing, "dropped", because)
 
     def _resolve(self, standing: Standing, outcome: str, because: str) -> None:
@@ -325,9 +332,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
           <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         self.log.info("%s: %s", outcome, because)
-        self._tell(outcome, standing.action, standing.observed_property, because)
+        self._tell(outcome, standing.action, standing.want, because)
 
-    def _tell(self, kind: str, action: str, observed_property: str, because: str) -> None:
+    def _tell(self, kind: str, action: str, want: str, because: str) -> None:
         """One transition into the kernel's event buffer (#125), for the operator's eyes.
 
         The ledger stays the record; this is a projection — the reporting capability drains it
@@ -336,11 +343,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         dashboard tag is for filtering by a person, exactly as the log lines above shorten.
         """
         self.agent.metrics.event(kind, because, means=action.rsplit("#", 1)[-1],
-                                 property=observed_property.rsplit("#", 1)[-1])
+                                 want=_short(want))
 
     # --- the expectation: the end, judged apart from the means (#131) ---------------------
 
-    def expect(self, intention_uri: str, observed_property: str, because: str,
+    def expect(self, intention_uri: str, because: str,
                expected_delta: float | None = None,
                lands_after_s: float | None = None,
                rises: bool | None = None,
@@ -380,13 +387,13 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         reading = baseline
         if reading is None or getattr(reading, "result_time", None) is None:
             self.log.warning("cannot expect an end for %s — no baselined reading to leave from",
-                             observed_property)
+                             _short(intention_uri))
             return False
         if rises is None and expected_delta:
             rises = expected_delta > 0
         if rises is None:
             self.log.warning("cannot expect an end for %s — the actor said which way it "
-                             "should move neither by sign nor by word", observed_property)
+                             "should move neither by sign nor by word", _short(intention_uri))
             return False
         expected_delta = abs(expected_delta) if expected_delta else None
         now = datetime.now(timezone.utc)
@@ -407,18 +414,19 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         self.log.info("expecting %s to %s from %.3f within %ss: %s",
-                      observed_property.rsplit("#", 1)[-1],
+                      _short(intention_uri),
                       "rise" if rises else "fall", reading.value, round(window), because)
         return True
 
-    def open_expectations(self, observed_property: str | None = None) -> list[OpenExpectation]:
-        """Every watch still on: expectation adopted, end not yet verified."""
-        prop = f"FILTER(?property = <{observed_property}>)" if observed_property else ""
+    def open_expectations(self, want: str | None = None) -> list[OpenExpectation]:
+        """Every watch still on: expectation adopted, end not yet verified — for one want, or
+        for all of them."""
+        prop = f"FILTER(?want = <{want}>)" if want else ""
         rows = bindings(self.agent.intentions.query(f"""
-SELECT ?i ?action ?property ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
+SELECT ?i ?action ?want ?rises ?baseline ?baselineAt ?deadline ?delta WHERE {{
   GRAPH <{self.graph}> {{
     ?i <{kernel("by")}> ?action ;
-       <http://www.w3.org/ns/ssn/forProperty> ?property ;
+       <{kernel("pursues")}> ?want ;
        <{EXPECTS_RISE}> ?rises ;
        <{BASELINE_VALUE}> ?baseline ;
        <{BASELINE_AT}> ?baselineAt ;
@@ -428,15 +436,18 @@ SELECT ?i ?action ?property ?rises ?baseline ?baselineAt ?deadline ?delta WHERE 
     {prop}
   }} }}"""))
         return [OpenExpectation(
-            uri=r["i"], action=r["action"], observed_property=r["property"],
+            uri=r["i"], action=r["action"], want=r["want"],
             rises=r["rises"] in ("true", "1"), baseline=float(r["baseline"]),
             baseline_at=datetime.fromisoformat(r["baselineAt"]),
             deadline=datetime.fromisoformat(r["deadline"]),
             expected_delta=float(r["delta"]) if r.get("delta") else None) for r in rows]
 
-    def on_reading_recorded(self, subject_uri: str, observed_property: str,
-                            value: float) -> None:
-        """Every reading is a chance to judge an open watch.
+    def judge(self, want: str, value: float) -> None:
+        """A number arrived for this want: judge every open watch on it.
+
+        Told by sensing, per want — a reading is about a property, and which wants that is
+        about is sensing's to say (the-stake-is-sensings-want). This was a choir hook on a
+        reading, keyed by property in the ledger; the ledger keys on the want now.
 
         Met when the value crosses the baseline in the promised direction — early is fine,
         that is the dose landing — and, where the act sized itself (expectsDelta), crosses by
@@ -452,10 +463,8 @@ SELECT ?i ?action ?property ?rises ?baseline ?baselineAt ?deadline ?delta WHERE 
         and it was the last kernel reference holding that means here. An Observe
         can stand that no auction is waiting on, and the reading IS its arrival.
         """
-        if subject_uri != self.me.acts_for:
-            return
         now = datetime.now(timezone.utc)
-        for watch in self.open_expectations(observed_property):
+        for watch in self.open_expectations(want):
             moved = value > watch.baseline if watch.rises else value < watch.baseline
             if moved and watch.expected_delta:
                 # The margin (#165): a movement is the world answering only when it is
@@ -482,10 +491,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 <{BECAUSE_OF}> {_literal(because)} .
 }} }}""")
         (self.log.info if met else self.log.warning)(
-            "end %s for %s: %s", "met" if met else "UNMET",
-            watch.observed_property.rsplit("#", 1)[-1], because)
-        self._tell("end-met" if met else "end-unmet", watch.action,
-                   watch.observed_property, because)
+            "end %s for %s: %s", "met" if met else "UNMET", _short(watch.want), because)
+        self._tell("end-met" if met else "end-unmet", watch.action, watch.want, because)
         #  A COMMITMENT THAT STOOD UNTIL THE WORLD ANSWERED is done now, either way. An
         #  Actuate stands from the command to this verdict (#353) — the intention is to the
         #  END, and while it stands `adopt` absorbs the next impulse by the ordinary rule,
@@ -493,16 +500,15 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  not dropped, whatever the verdict: the act was taken, and satisfied-and-unmet is
         #  the false-knowledge signature this ledger exists to record. An Acquire was already
         #  satisfied by its claim and this finds nothing standing.
-        for s in self.standing(action=watch.action, observed_property=watch.observed_property):
+        for s in self.standing(action=watch.action, want=watch.want):
             if s.uri == watch.uri:
                 self._resolve(s, "satisfied",
                               f"the world answered — end {'met' if met else 'unmet'}")
-        if not met and self._is_suspect(watch.action, watch.observed_property):
+        if not met and self._is_suspect(watch.action, watch.want):
             self.log.warning(
                 "AFFORDANCE SUSPECT: %s toward %s has not paid %d times running — the graph "
                 "claims a movement the world keeps refusing",
-                watch.action.rsplit("#", 1)[-1],
-                watch.observed_property.rsplit("#", 1)[-1], self._suspect_after())
+                watch.action.rsplit("#", 1)[-1], _short(watch.want), self._suspect_after())
 
     def _suspect_after(self) -> int:
         rows = bindings(self.agent.beliefs.query(_SUSPECT_Q))
@@ -512,7 +518,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         rows = bindings(self.agent.beliefs.query(_MET_FRACTION_Q))
         return float(rows[0]["f"]) if rows else 0.25
 
-    def _is_suspect(self, action: str, observed_property: str) -> bool:
+    def _is_suspect(self, action: str, want: str) -> bool:
         """The last suspectAfter verdicts for this pair, all unmet, none met among them.
 
         Consecutive rather than cumulative, so one success resets the count: an affordance
@@ -521,7 +527,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         rows = bindings(self.agent.intentions.query(f"""
 SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
   ?i <{kernel("by")}> <{action}> ;
-     <http://www.w3.org/ns/ssn/forProperty> <{observed_property}> ;
+     <{kernel("pursues")}> <{want}> ;
      <{END_MET}> ?met ;
      <{END_VERIFIED_AT}> ?at .
 }} }} ORDER BY DESC(?at) LIMIT {self._suspect_after()}"""))
@@ -529,63 +535,47 @@ SELECT ?met WHERE {{ GRAPH <{self.graph}> {{
         return len(rows) >= n and all(r["met"] == "false" for r in rows)
 
     def suspects(self) -> list[tuple[str, str]]:
-        """Every (action, property) pair currently suspect. What review and the report read."""
-        pairs = {(r["action"], r["property"]) for r in bindings(self.agent.intentions.query(f"""
-SELECT DISTINCT ?action ?property WHERE {{ GRAPH <{self.graph}> {{
+        """Every (action, want) pair currently suspect. What review and the report read."""
+        pairs = {(r["action"], r["want"]) for r in bindings(self.agent.intentions.query(f"""
+SELECT DISTINCT ?action ?want WHERE {{ GRAPH <{self.graph}> {{
   ?i <{kernel("by")}> ?action ;
-     <http://www.w3.org/ns/ssn/forProperty> ?property ;
+     <{kernel("pursues")}> ?want ;
      <{END_MET}> ?met .
 }} }}"""))}
         return sorted(p for p in pairs if self._is_suspect(*p))
 
     # --- what sensing asks me: the verification watch ----------------------------------
 
-    def urgency(self, subject_uri: str, observed_property: str, value: float) -> float | None:
-        """Maximum, while a watch is on and its deadline has not passed.
+    def watching(self, want: str) -> bool:
+        """Is a watch on for this want, its deadline not yet passed?
 
         The two processes run at different speeds — evaporation is fractions per day, a dose
         lands in seconds — and the one place urgency-by-state gets it wrong is right after
         acting: the value improves, attention would relax, and the dose would land unobserved.
-        So an open expectation IS urgency, and sensing's ordinary max-of-answers does the
-        rest: cadence tightens the moment the watch opens and relaxes the moment it resolves.
-        Bounded by the deadline so a dead sensor cannot hold the fast cadence forever.
+        So an open expectation IS urgency, and sensing folds this into its cadence as the
+        maximal answer: it tightens the moment the watch opens and relaxes the moment it
+        resolves, bounded by the deadline so a dead sensor cannot hold the fast cadence for
+        ever. This was the keeper's answer to the reading choir, keyed by property; the want
+        is the key now, and sensing asks per want it holds about the property it is pacing.
         """
-        if subject_uri != self.me.acts_for:
-            return None
         now = datetime.now(timezone.utc)
-        if any(now < w.deadline for w in self.open_expectations(observed_property)):
-            return 1.0
-        #  A HELD claim used to be answered here too — the same need one step earlier (#132)
-        #  — by reading a standing Apply by name, which was the kernel's last hold on that
-        #  word. The bidder holds the claim and answers that urgency itself now, through the
-        #  same choir hook, from the same ledger.
-        return None
+        return any(now < w.deadline for w in self.open_expectations(want))
 
-    # --- the ledger, read ----------------------------------------------------------------
-
-    def standing(self, action: str | None = None, observed_property: str | None = None,
-                 desire: str | None = None) -> list[Standing]:
+    def standing(self, action: str | None = None, want: str | None = None) -> list[Standing]:
         """What stands: adopted and not resolved. The question a deliberator asks first."""
         clauses = [f"?i a <{kernel('Intention')}> ; <{kernel('by')}> ?action ; "
-                   f"<http://www.w3.org/ns/ssn/forProperty> ?property ; "
+                   f"<{kernel('pursues')}> ?want ; "
                    f"<{kernel('adoptedAt')}> ?at .",
                    f"FILTER NOT EXISTS {{ ?i <{kernel('resolvedAt')}> ?done }}"]
         if action:
             clauses.append(f"FILTER(?action = <{action}>)")
-        if observed_property:
-            clauses.append(f"FILTER(?property = <{observed_property}>)")
-        if desire:
-            #  A desire NARROWS: rows that name this desire, plus rows that name none, because a
-            #  commitment adopted before desires had names is still about something and must
-            #  not be orphaned by a question it could not have answered.
-            clauses.append(
-                f'OPTIONAL {{ ?i <{kernel("pursues")}> ?desire }} '
-                f'FILTER(!BOUND(?desire) || ?desire = <{desire}>)')
+        if want:
+            clauses.append(f"FILTER(?want = <{want}>)")
         clauses.append(f'OPTIONAL {{ ?i <{kernel("through")}> ?via }}')
         rows = bindings(self.agent.intentions.query(
-            "SELECT ?i ?action ?property ?at ?via WHERE { GRAPH <%s> { %s } }"
+            "SELECT ?i ?action ?want ?at ?via WHERE { GRAPH <%s> { %s } }"
             % (self.graph, " ".join(clauses))))
-        return [Standing(uri=r["i"], action=r["action"], observed_property=r["property"],
+        return [Standing(uri=r["i"], action=r["action"], want=r["want"],
                          adopted_at=datetime.fromisoformat(r["at"]), via=r.get("via"))
                 for r in rows]
 
@@ -613,6 +603,11 @@ SELECT ?met (COUNT(?i) AS ?n) WHERE {{ GRAPH <{self.graph}> {{
         out["expectations_unmet"] = counts.get("false", 0)
         out["affordances_suspect"] = len(self.suspects())
         return out
+
+
+def _short(iri: str) -> str:
+    """A node's local name, for a log line or a dashboard tag."""
+    return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
 def _literal(text: str) -> str:

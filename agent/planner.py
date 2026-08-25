@@ -38,6 +38,7 @@ from rdflib import RDF, URIRef
 
 from . import effects, signature, trace
 from .desire import Desire
+from .menu import wants_of
 from .imaginarium import Imaginarium
 from .ontology import (DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH,
                             INSTRUMENTS_GRAPH, SENSED_GRAPH, beliefs_graph,
@@ -157,7 +158,7 @@ class Planner:
         answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
         if answer is not None:
             return answer
-        if desire.observed_property is None:      # a duty: met-or-not over the record
+        if desire.is_duty:                        # met-or-not over the record
             return 0.0 if self._met_in(world, desire) else 1.0
         #  A want whose kind nothing loaded answers for, scoring the defined fallback:
         #  maximal, because not knowing how bad IS how bad. It used to serve the freshness
@@ -196,7 +197,7 @@ class Planner:
             #  A want with no shape and no property — a CALL (#359) — is met exactly where
             #  whoever measures it says it is: zero urgency in the world being judged. Asked
             #  of the imaginarium at the node's graph, as `_urgency_in` asks.
-            if desire.observed_property is None and graph is not None:
+            if graph is not None:
                 answer = self.agent.desire_urgency(desire, self.imaginarium.query, graph)
                 if answer is not None:
                     return answer <= 0.0
@@ -467,7 +468,11 @@ class Planner:
             else:
                 if not row.is_own:
                     continue
-                if desire.observed_property and row.observed_property != desire.observed_property:
+                #  A row that names a want serves that want. A want ABOUT NOTHING — a call —
+                #  ranges over every row of the agent's own, because what would raise the
+                #  stock a round needs is a row the stake names (the dealer's two-step).
+                if (row.want is not None and row.want != desire.uri
+                        and desire.uri in self._about_of):
                     continue
             if effects.rule_for(self.agent.beliefs, row.action) is None:
                 #  A lever whose package never said what it does. It still works — the reflex
@@ -527,6 +532,7 @@ class Planner:
         #  Which beliefs are UPSERTED, and by what — declared by the package that writes them
         #  (`ag:keyedBy`, `ag:carries` on the node's class), read once per pass so the signature
         #  canonicalises a reading without this file knowing what one looks like.
+        self._about_of = wants_of(self.agent.desires.query_union, self.me.uri)
         self._keys = signature.keys_of(store.query)
         self._base_facts = signature.facts((
             quad for iri in [*store.public_graphs(), beliefs_graph(self.agent.id),
@@ -586,29 +592,23 @@ class Planner:
         one reached is the act the actor would actually take next — which is the whole of what
         makes "too small to finish in one" a plannable situation rather than an unreachable one.
         """
-        action = row.action if row is not None else None
-        prop = desire.observed_property if desire else None
-        if prop is None and row is not None:
-            #  A duty names no property, and neither does a call — but the LEVER does (#255,
-            #  #359): the refill is an Acquire on this agent's own stake, and its rule binds
-            #  the row's property and predicts from where that property stands in the node's
-            #  world. Every want without a property is sized this way.
-            prop = row.observed_property
         graph = node.graph if node is not None else SENSED_GRAPH
         return {
             "me": f"<{self.me.uri}>",
-            #  A duty's rules read the record: WHICH claim, and WHERE the debts are kept —
-            #  the one graph name built from the one id the rules allow building from.
             "claim": f'"{desire.claim}"' if desire and desire.claim else '"urn:nobody"',
             "owed": f"<{obligations_graph(self.agent.id)}>",
             "subject": f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>",
-            "property": f"<{prop}>" if prop else "<urn:nothing>",
+            #  THE WANT AND WHAT IT IS ABOUT, carried from the row to the rule and never read
+            #  here: `$about` is whatever the want's deriver said (`ag:about`) — a property,
+            #  for a region want — and the rule joins on it in its own words.
+            "want": f"<{desire.uri}>" if desire else "<urn:nothing>",
+            "about": f"<{row.about}>" if row is not None and row.about else "<urn:nothing>",
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
             "sensed": f"<{graph}>",
-            "litres": self._dose(action, prop, graph) if desire else 0.0,
+            "litres": self._dose(row, graph) if desire and row is not None else 0.0,
         }
 
-    def _dose(self, action: str | None, observed_property: str | None, graph: str) -> float:
+    def _dose(self, row, graph: str) -> float:
         """How much this act would move — ASKED OF WHOEVER WOULD TAKE IT, never computed here.
 
         Each lever's owner sizes its own act, and the two owners size differently: an actuator
@@ -628,14 +628,14 @@ class Planner:
         later — so an unsized lever arrives at "this does not help" by the same road as every
         other, rather than by an exception.
         """
-        if observed_property is None or action is None:
+        if row is None or row.about is None:
             return 0.0
         from .execution import taken_by
 
-        family = taken_by(self.agent.beliefs.query, action)
+        family = taken_by(self.agent.beliefs.query, row.action)
         litres = None
         for actor in (self.agent.providers(family) if family else []):
-            litres = actor.size(self.imaginarium.query, graph, observed_property)
+            litres = actor.size(self.imaginarium.query, graph, row)
             if litres is not None:
                 break
         #  NEVER NEGATIVE, and this is the guard that matters most in the whole file. Sizing is

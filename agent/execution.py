@@ -64,28 +64,26 @@ def pursue(agent, desire) -> str | None:
     #  claim, an Actuate until its watch is judged (#353). There used to be a hook here for
     #  the one act that resolved at the command; making its intention stand to the END was
     #  the BDI-shaped fix, and the hook went with it.
-    uri = keeper.adopt(row.action, row.observed_property,
-                       _because(plan, desire), desire=desire.uri, via=row.via)
+    uri = keeper.adopt(row.action, desire.uri, _because(plan, desire), via=row.via)
     if uri is None:
         #  ABSORBED: the same commitment already stands within patience. Say WHICH, so a
         #  caller that needs to know whether anything is on its way (a bidder waiting for a
         #  look) can tell an absorbed impulse from a want nothing can serve — both used to
         #  come back as None, and the second is the only one that means "sit out".
-        standing = keeper.standing(action=row.action, observed_property=row.observed_property,
-                                   desire=desire.uri)
+        standing = keeper.standing(action=row.action, want=desire.uri)
         return standing[0].uri if standing else None
     carry_out(agent, row, desire, uri)
     return uri
 
 
-def pursue_about(agent, observed_property: str) -> str | None:
-    """The actors' door: a fresh reading of this property is in hand — what now, about it?
+def pursue_for(agent, want: str) -> str | None:
+    """The actors' door: something changed about this want — what now, about it?
 
-    Which of the property's wants is pursued is the deliberator's rule (an unmet epistemic
-    want first, then the stake), stated once in `desire_about` and asked here rather than
-    restated. None where nothing is wanted about the property at all.
+    An actor holding a fresh reading finds the want it means by its own query — sensing's
+    `want_about(property)` states the rule, an unmet epistemic want first and then the stake —
+    and hands the NODE here. None where the agent is not pursuing that want at all.
     """
-    desire = agent.deliberator.desire_about(observed_property)
+    desire = next((d for d in agent.pursuing() if d.uri == want), None)
     return pursue(agent, desire) if desire is not None else None
 
 
@@ -98,8 +96,12 @@ def take_standing(agent, standing, desire) -> bool:
     """
     from .menu import Affordance
 
-    row = Affordance(action=standing.action, observed_property=standing.observed_property,
-                     via=standing.via or "")
+    #  The row carries what the want is ABOUT, as the menu's did: `ag:about`, the kernel's
+    #  word for the one node an actor may join a lever to, read back off the want.
+    rows = bindings(agent.desires.query_union(
+        f"SELECT ?about WHERE {{ <{standing.want}> <{AG}about> ?about }}"))
+    row = Affordance(action=standing.action, want=standing.want, via=standing.via or "",
+                     about=rows[0]["about"] if rows else None)
     return carry_out(agent, row, desire, standing.uri)
 
 
@@ -124,8 +126,7 @@ def carry_out(agent, row, desire, intention: str) -> bool:
 
 def _because(plan, desire) -> str:
     """The ledger's prose: what the plan found and how far it expected to get."""
-    what = (desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
-            else f"a duty to {desire.owed_to.rsplit('#', 1)[-1]}" if desire.is_duty
+    what = (f"a duty to {desire.owed_to.rsplit('#', 1)[-1]}" if desire.is_duty
             else desire.uri.rsplit("#", 1)[-1])
     if plan.urgency_now is None or plan.urgency_after is None:
         return f"{plan.outcome} for {what}"

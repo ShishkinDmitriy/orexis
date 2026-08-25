@@ -57,8 +57,8 @@ market:Acquiring
     #  the domain, because it is physics. The valuation joins through the venue's good (#198):
     #  property alone put both directions on both rows the day two venues priced one property.
     ag:available """
-        SELECT DISTINCT ?property ?via ?direction WHERE {
-          VALUES ?property { $properties }
+        SELECT DISTINCT ?want ?via ?direction WHERE {
+          VALUES (?want ?about) { $wants }
           $me ag:actsFor ?subject .
           $me market:bidsIn ?via .
           ?via market:marketFor ?src .
@@ -67,7 +67,7 @@ market:Acquiring
                 actuation:hasActuator ?lever .
           ?lever actuation:actuates ?subject .
           ?valuation market:ofGood ?good ;
-                     market:aboutProperty ?property ;
+                     market:aboutProperty ?about ;
                      market:direction ?direction .
           #  AND A ROUND IS OPEN (#358). The hop the walk was missing: without it the row said
           #  "I could buy here", and the keeper committed an Acquire that then waited for the
@@ -96,7 +96,7 @@ market:Acquiring
         CONSTRUCT {
             ?obs a sosa:Observation ;
                  sosa:hasFeatureOfInterest $subject ;
-                 sosa:observedProperty $property ;
+                 sosa:observedProperty $about ;
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?predicted .
         } WHERE {
@@ -105,7 +105,7 @@ market:Acquiring
             ?source market:supplies ?good .
             ?host market:hosts ?via ; actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject .
-            ?term market:ofGood ?good ; market:aboutProperty $property .
+            ?term market:ofGood ?good ; market:aboutProperty $about .
             GRAPH $beliefs { $me ?term ?conversion }
             FILTER(?conversion > 0)
             #  AN ACT OF ZERO SIZE MAKES NOTHING TRUE, and the filter is load-bearing rather
@@ -122,7 +122,7 @@ market:Acquiring
             #  rather than handed in by the planner: the kernel no longer knows what a reading
             #  looks like, and a rule that reads $sensed already does. Nothing read yet is zero.
             OPTIONAL { GRAPH $sensed { ?standing sosa:hasFeatureOfInterest $subject ;
-                                       sosa:observedProperty $property ;
+                                       sosa:observedProperty $about ;
                                        sosa:hasSimpleResult ?was } }
             BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
             BIND(BNODE() AS ?obs)
@@ -176,7 +176,7 @@ market:Acquiring
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $sensed {
                 ?obs sosa:hasFeatureOfInterest $subject ;
-                     sosa:observedProperty $property ;
+                     sosa:observedProperty $about ;
                      ?p ?o
             }
             FILTER($litres > 0)
@@ -210,14 +210,14 @@ market:Offering
     #  nothing — the row needs a name and the intention is keyed by it; no direction, because
     #  offering moves no water. The serve does.
     ag:available """
-        SELECT DISTINCT ?property ?via WHERE {
+        SELECT DISTINCT ?about ?via WHERE {
           $me market:hosts ?via .
           ?via market:marketFor ?source .
           ?source market:supplies ?good .
           ?valuation market:ofGood ?good ; market:aboutProperty ?goodProperty .
           OPTIONAL { $me sensing:polls ?witness .
                      ?witness sensing:monitors ?source ; sosa:observes ?stock }
-          BIND(COALESCE(?stock, ?goodProperty) AS ?property)
+          BIND(COALESCE(?stock, ?goodProperty) AS ?about)
           FILTER NOT EXISTS {
             GRAPH $beliefs { ?via market:hasRound ?open . ?open market:closesAt ?c }
             FILTER(?c > NOW()) }
@@ -305,16 +305,16 @@ market:Serving
     #  also claim to move that pot's stored litres. Disclosure, not a filter — what an obligation
     #  makes me do arrives as a want, and the deliberator ranges over it like any other.
     ag:available """
-        SELECT ?property ?via ?direction ?for_agent WHERE {
+        SELECT ?about ?via ?direction ?for_agent WHERE {
           $me market:hosts ?venue ; actuation:hasActuator ?via .
           ?venue market:marketFor ?source .
           ?via actuation:drawsFrom ?source ;
                actuation:actuates ?subject .
           ?source market:supplies ?good .
           ?for_agent market:bidsIn ?venue ; ag:actsFor ?subject .
-          ?subject ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?property .
+          ?subject ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?about .
           ?valuation market:ofGood ?good ;
-                     market:aboutProperty ?property ;
+                     market:aboutProperty ?about ;
                      market:direction ?direction .
         }""" ;
 

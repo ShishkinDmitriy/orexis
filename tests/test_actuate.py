@@ -15,7 +15,8 @@ from packages.capability.actuation.terms import DOSING
 from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from conftest import build_agent, genesis_store, desires_build, open_round_for, write_reading
+from packages.capability.sensing.regions import ObservedWant
+from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -46,7 +47,7 @@ def test_the_menu_offers_actuate_where_both_chains_are_mine():
     st = genesis_store(world="loner")
     rows = menu_of(st.query, GARDENER, desires_build(st, "gardener").query_union, beliefs_graph("gardener"))
     assert [(r.action.rsplit("#", 1)[-1], r.direction and r.direction.rsplit("#", 1)[-1])
-            for r in rows if r.observed_property == MOIST] == [
+            for r in rows if r.about == MOIST] == [
         ("Dosing", "Raises"), ("Observing", None)]
 
 
@@ -85,7 +86,7 @@ def test_a_pot_local_pump_on_the_shared_barrel_still_yields_acquire_only():
     }} }}""")
     open_round_for(st, "fern")
     rows = [r for r in menu_of(st.query, ns + "fern_agent", desires_build(st, "fern").query_union, beliefs_graph("fern"))
-            if r.observed_property == MOIST]
+            if r.about == MOIST]
     assert any(r.action == ACQUIRING for r in rows)
     assert not any(r.action == DOSING for r in rows), \
         "owning the pump does not exempt anyone from the auction when the water is common"
@@ -109,10 +110,12 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     #  tail of this test asks about is still unmet — a stake judges the number it has.
     write_reading(gardener, 0.10, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        Desire(uri="urn:w", urgency=0.6, observed_property=MOIST, value=0.10)) == DOSING
+        ObservedWant(uri=stake_of(gardener, MOIST).uri, urgency=0.6, observed_property=MOIST,
+                     value=0.10)) == DOSING
     write_reading(gardener, 0.30, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        Desire(uri="urn:w", urgency=0.1, observed_property=MOIST, value=0.25)) is None, \
+        ObservedWant(uri=stake_of(gardener, MOIST).uri, urgency=0.1, observed_property=MOIST,
+                     value=0.25)) is None, \
         "above the aim, nothing — as ever"
     #  NOT SEEING is answered by the search like everything else, and it is a different WANT
     #  rather than a state this one is in. It used to be asserted of a made-up desire carrying
@@ -124,7 +127,7 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     epistemic = next(d for d in gardener.pursuing()
                      if d.is_epistemic and d.observed_property == MOIST)
     assert deliberator.propose_for(epistemic) == OBSERVING
-    assert deliberator.propose_about(MOIST) == OBSERVING, \
+    assert deliberator.propose_for(sensing_of(gardener).want_about(MOIST)) == OBSERVING, \
         "and the actors' door says the same while the reading is missing — look, then dose"
 
 
@@ -149,7 +152,7 @@ def test_a_self_dose_is_commanded_co_signed_and_ledgered(gardener):
                           actuation.clearing_key.public_key())
 
     keeper = next(m for m in gardener.modules if m.name == "intention")
-    watches = keeper.open_expectations(MOIST)
+    watches = keeper.open_expectations(stake_of(gardener, MOIST).uri)
     assert len(watches) == 1 and watches[0].expected_delta == pytest.approx(0.08)
 
 
@@ -194,7 +197,7 @@ def test_a_dose_in_flight_absorbs_the_next_impulse(gardener, monkeypatch):
     assert len(gardener.sent.to("actuators/pump/command")) == 1, \
         "the dose in flight is a commitment, and a commitment absorbs the same impulse"
     assert keeper.standing(action="http://example.org/orexis/actuation#Dosing",
-                           observed_property=MOIST), "it STANDS until the world answers"
+                           want=stake_of(gardener, MOIST).uri), "it STANDS until the world answers"
 
 
 def test_the_dose_is_capped_by_what_the_vessel_holds(gardener):

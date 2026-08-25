@@ -34,9 +34,11 @@ class Desire:
     uri: str  # the desire's own node: a shape this agent holds, or an obligation
     urgency: float  # 0 = content, 1 = at the edge of what it can bear or of its deadline
 
-    # A stake's two: what is wanted, and what it currently reads. `value` is None when nothing
-    # has been observed, which is a gap and not a zero — see gap.rq.
-    observed_property: str | None = None
+    # What it currently reads, where whoever contributed the want has a number for it — a
+    # stake's reading, filled by sensing. None when nothing has been observed, which is a gap
+    # and not a zero. WHAT the want is about is not on this type: a want is its node, and a
+    # package that needs the property of one it holds walks to it in its own words
+    # (the-stake-is-sensings-want; sensing's `ObservedWant` carries `observed_property`).
     value: float | None = None
 
     # A duty's two: the claim it came from and whom it is owed to. A stake has neither, which

@@ -14,7 +14,7 @@ description: >-
 1. **Plan.** `deliberator.decide(desire)` — the search, unchanged, returning its
    [plan](/domain/deliberation.md) as rows. No steps means nothing to execute, and that None is
    the deliberator's decision, not this process's.
-2. **Commit.** The head row goes to the keeper: `adopt(means, property, desire=…, via=lever)`.
+2. **Commit.** The head row goes to the keeper: `adopt(action, want, because, via=lever)`.
    The [intention](/domain/intention.md) written carries the lever the plan chose. If one
    already stands within patience, `adopt` returns None and the process ends here — the same
    impulse, absorbed, and no row written. That is the whole of the patience, because every
@@ -25,9 +25,10 @@ description: >-
    step taken; all False is logged and the intention stands for the next trigger.
 
 Two doors, and both are the same three phases: `pursue(agent, desire)` for a want in hand, and
-`pursue_about(agent, property)` for an actor holding a fresh reading — the property door picks
-the want by the rule [deliberation](/domain/deliberation.md) states, an unmet epistemic want
-first, and goes through the desire door.
+`pursue_for(agent, want)` for an actor holding a fresh reading — which want a reading is about
+is [sensing](/domain/sensing.md)'s to say (`want_about`: an unmet epistemic want first, then the
+stake), so the actor hands the kernel a NODE and goes through the desire door. The kernel keys
+nothing by property ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
 # What starts it
 

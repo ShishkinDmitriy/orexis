@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from agent import config
 from agent.influx_writer import InfluxWriter
 
+from . import choir
 from .sensed_writer import SensedWriter
 from .wiring import event_topic_of
 
@@ -76,8 +77,8 @@ class Observations:
         that makes the picture true.
         """
         try:
-            self.influx.write_reading(sensor.subject_id, sensor.local_id, value,
-                                      _short(sensor.observes), at)
+            self.influx.write_reading(value, at, plant=sensor.subject_id,
+                                      sensor=sensor.local_id, property=_short(sensor.observes))
             log.info("%s: %.3f at %s — the last quiet look before the crossing",
                      sensor.local_id, value, at.isoformat(timespec="seconds"))
         except Exception as exc:
@@ -106,13 +107,13 @@ class Observations:
         # One line, at INFO, naming the instrument and the property. Both matter now that a
         # subject can be watched by more than one sensor: "0.183" alone does not say whether
         # that is soil or air.
-        verdict = self.agent.annotations(sensor.subject, sensor.observes, value)
+        verdict = choir.annotations(self.agent, sensor.subject, sensor.observes, value)
         log.info("%s: %s %.3f%s", sensor.local_id, _short(sensor.observes), value,
                  "".join(f"  {k}={v}" for k, v in sorted(verdict.items())))
 
         try:
-            self.influx.write_reading(sensor.subject_id, sensor.local_id, value,
-                                      _short(sensor.observes), at)
+            self.influx.write_reading(value, at, plant=sensor.subject_id,
+                                      sensor=sensor.local_id, property=_short(sensor.observes))
         except Exception as exc:  # history is best-effort; never drop the reading over it
             # Logged AND counted. Logging alone made this invisible: nothing reads a container's
             # log until something is already known to be wrong, so a store that had quietly
@@ -152,4 +153,4 @@ class Observations:
         # sensor did deliver, and conflating "the board went quiet" with "the store refused" is
         # what makes an outage hard to place.
         self.agent.metrics.reading_recorded(sensor)
-        self.agent.reading_recorded(sensor.subject, sensor.observes, value)
+        choir.recorded(self.agent, sensor.subject, sensor.observes, value)

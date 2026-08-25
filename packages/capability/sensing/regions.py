@@ -28,6 +28,16 @@ from agent.store import bindings
 
 log = logging.getLogger("sensing")
 
+@dataclass(frozen=True)
+class ObservedWant(Desire):
+    """A want ABOUT AN OBSERVED PROPERTY — the kernel's `Desire`, plus the one thing this
+    package knows about it that the kernel does not. A stake and a freshness want are both
+    of this kind; a duty and a call are not. The kernel ranks, plans for and commits to the
+    base type by its node; whoever needs the property asks this package, which is where the
+    property was ever meaningful (the-stake-is-sensings-want)."""
+    observed_property: str | None = None
+
+
 # What this agent wants about observations: its stakes and its freshness wants, shipped as
 # SPARQL so any consumer can run it. Read once at import: a malformed query is then an error
 # the moment the package loads rather than the first time somebody asks.
@@ -59,7 +69,7 @@ def aims_of(query, agent_id: str, agent_uri: str) -> dict[str, float]:
 #  by which instrument, when. What it does NOT ask is whether a reading is still evidence:
 #  that is sensing's judgment (`sensing:staleAfterS` is sensing's word), made through the
 #  freshness want it derives and the measure it declares, and never here. A stake judges the
-#  number it has; not knowing is the epistemic want's business, and `propose_about` answers
+#  number it has; not knowing is the epistemic want's business, and `want_about` answers
 #  that one first. The instrument is `sosa:madeBySensor`, which the sensed writer stamps.
 _READINGS_Q = """
 SELECT ?subject ?property ?value ?at ?instrument WHERE {
@@ -292,7 +302,7 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
     """
     #  The INSTRUMENT rides along, because it is what tells the answerer which kind of want
     #  this is. A row that binds none is a stake and the want it makes says so by omission.
-    answer = measure(Desire(uri=row["desire"], urgency=1.0,
+    answer = measure(ObservedWant(uri=row["desire"], urgency=1.0,
                             observed_property=row["property"], value=value,
                             instrument=row.get("instrument")),
                      value) if measure else None
@@ -359,7 +369,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Desire]:
                 #  A STAKE JUDGES THE NUMBER IT HAS. It used to go maximal when the reading was
                 #  past sensing's horizon, which meant the kernel judging staleness with a word
                 #  that is sensing's; not knowing is the freshness want's business now — hot,
-                #  and answered first by `propose_about` — and the stake says how the last
+                #  and answered first by `want_about` — and the stake says how the last
                 #  number sits, which is what it knows.
                 #  Whichever capability MEASURES such wants, asked through the choir road the
                 #  caller handed in — the same question the planner asks of a candidate
@@ -370,7 +380,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Desire]:
                 #  situation, not a contradiction.
                 urgency = _measured_urgency(measure, row, value)
                 state = "unmet" if value < region.low or value > region.high else "met"
-        out.append(Desire(uri=row["desire"], urgency=urgency, state=state,
+        out.append(ObservedWant(uri=row["desire"], urgency=urgency, state=state,
                         observed_property=row["property"], value=value,
                         #  Only a freshness row binds one, which is what makes it the
                         #  discriminator rather than a decoration.

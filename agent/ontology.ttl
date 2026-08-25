@@ -573,6 +573,10 @@ ag:metWhen a owl:ObjectProperty ; rdfs:domain ag:Desire ; rdfs:range sh:NodeShap
     rdfs:label "met when" ;
     rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Validated exactly as it was when the desire WAS this shape: unfocused, over the shapes the agent holds." .
 
+ag:about a owl:ObjectProperty ; rdfs:domain ag:Desire ;
+    rdfs:label "about" ;
+    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in ag:available, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-stake-is-sensings-want)." .
+
 #  NO measure vocabulary here, and the absence is the ruling rather than an omission. Two
 #  drafts put it in the kernel — first the measure's SPARQL compiled into the derivation, then
 #  a kernel-owned measures graph and evaluator with the content in a package — and the
@@ -662,7 +666,7 @@ ag:dischargedAt a owl:DatatypeProperty ; rdfs:domain ag:Obligation ; rdfs:range 
 #################  What an intention IS  #################
 
 ag:Intention a owl:Class ; rdfs:label "Intention" ;
-    rdfs:comment """One commitment: reduce the gap in one property, by one means, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
+    rdfs:comment """One commitment: one want pursued by one action, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
 
 
 

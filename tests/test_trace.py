@@ -29,7 +29,8 @@ def _gardener(monkeypatch, moisture):
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): moisture}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(g for g in agent.pursuing() if g.observed_property == MOISTURE)
+    desire = next(g for g in agent.pursuing()
+                  if getattr(g, "observed_property", None) == MOISTURE)
     return agent, Planner(agent, agent.me), desire
 
 

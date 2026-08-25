@@ -221,8 +221,8 @@ def test_the_series_store_is_told_which_property_each_reading_is(monkeypatch):
         def __init__(self, *a, **k):
             pass
 
-        def write_reading(self, plant_id, sensor, value, observed_property, at=None):
-            written.append((sensor, value, observed_property, at))
+        def write_reading(self, value, at=None, **tags):
+            written.append((tags.get("sensor"), value, tags.get("property"), at))
 
         def write_agent_health(self, *a, **k):
             pass

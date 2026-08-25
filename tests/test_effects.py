@@ -13,7 +13,7 @@ from agent import effects, genesis
 from agent.ontology import ACTIONS_GRAPH, SENSED_GRAPH, beliefs_graph
 from agent.store import bindings
 
-from conftest import MOISTURE, build_agent, genesis_store
+from conftest import stake_of, MOISTURE, build_agent, genesis_store
 
 OBSERVING = "http://example.org/orexis/sensing#Observing"
 DOSING = "http://example.org/orexis/actuation#Dosing"
@@ -71,7 +71,7 @@ def test_looking_refreshes_the_reading_and_carries_its_value_unchanged():
     st = _loner({("zz", MOISTURE): 0.10})
     added, retracted = effects.apply(
         st, OBSERVING, me="<http://example.org/orexis/world/loner#gardener>",
-        subject="<http://example.org/orexis/world/loner#zz>", property=f"<{MOISTURE}>",
+        subject="<http://example.org/orexis/world/loner#zz>", about=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>")
 
     assert _values(added) == ["0.1"], "looking tells you what IS, and changes nothing"
@@ -89,7 +89,7 @@ def test_the_retraction_takes_the_whole_node_the_writer_would_replace():
     st = _loner({("zz", MOISTURE): 0.10})
     _, retracted = effects.apply(
         st, OBSERVING, me="<http://example.org/orexis/world/loner#gardener>",
-        subject="<http://example.org/orexis/world/loner#zz>", property=f"<{MOISTURE}>",
+        subject="<http://example.org/orexis/world/loner#zz>", about=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>")
 
     held = {(t.subject.value, t.predicate.value) for t in retracted}
@@ -129,13 +129,13 @@ def test_the_dose_the_actuator_expects_is_the_dose_its_rule_predicts(monkeypatch
 
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.10})
     keeper = next(m for m in gardener.modules if m.name == "intention")
-    watches = keeper.open_expectations(MOISTURE)
+    watches = keeper.open_expectations(stake_of(gardener, MOISTURE).uri)
     assert len(watches) == 1, "a self-dose went out and opened exactly one expectation"
 
     litres = float(gardener.sent.to("actuators/pump/command")[0]["ml"]) / 1000.0
     predicted, _ = effects.apply(
         gardener.beliefs, DOSING, me=f"<{actuation.me.uri}>",
-        subject=f"<{actuation.me.acts_for}>", property=f"<{MOISTURE}>",
+        subject=f"<{actuation.me.acts_for}>", about=f"<{MOISTURE}>",
         sensed=f"<{SENSED_GRAPH}>", beliefs=f"<{beliefs_graph('gardener')}>",
         litres=repr(litres), value="0.1")
     from_rule = float(_values(predicted)[0]) - 0.10

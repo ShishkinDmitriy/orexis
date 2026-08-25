@@ -24,7 +24,8 @@ from packages.capability.market.terms import ACQUIRING
 from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
+from packages.capability.sensing.regions import ObservedWant
+from conftest import stake_of, MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
 
 
 @pytest.fixture
@@ -141,11 +142,13 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     #  a purchase reads where the property stands from the sensed graph.
     for value in (0.10, 0.54):
         write_reading(fern, value, MOISTURE)
-        stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
+        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+                             value=value)
         assert decider.propose_for(stake) == ACQUIRING, f"thirsty at {value} and not buying"
     for value in (0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
+        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+                             value=value)
         assert decider.propose_for(stake) is None, f"content at {value} and buying anyway"
 
 
@@ -163,8 +166,10 @@ def test_a_property_this_agent_cannot_move_is_not_pursued(make):
     """
     from agent.desire import Desire
 
-    stake = Desire(uri="urn:w", urgency=0.4, observed_property=TEMPERATURE, value=5.0)
-    assert decider_of(make("fern")).propose_for(stake) is None
+    fern = make("fern")
+    stake = ObservedWant(uri=stake_of(fern, TEMPERATURE).uri, urgency=0.4,
+                         observed_property=TEMPERATURE, value=5.0)
+    assert decider_of(fern).propose_for(stake) is None
 
 
 # --- the seam is load-bearing: the whether is not the bidder's --------------
@@ -182,7 +187,7 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
     #  the one this scenario happens to use would pass while saying less than it claims, and
     #  would break silently the next time a caller changed which question it asks. They are
     #  the desire door and the property door, and `decide`, the PLAN door execution asks.
-    monkeypatch.setattr(decider_of(fern), "propose_about", lambda prop: None)
+    monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
@@ -199,7 +204,7 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     #  the one this scenario happens to use would pass while saying less than it claims, and
     #  would break silently the next time a caller changed which question it asks. They are
     #  the desire door and the property door, and `decide`, the PLAN door execution asks.
-    monkeypatch.setattr(decider_of(fern), "propose_about", lambda prop: None)
+    monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
@@ -255,7 +260,8 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     fern = make("fern", ds)
     open_round_for(fern, "fern")
     decider = decider_of(fern)
-    stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=0.10)
+    stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+                         value=0.10)
     assert decider.propose_for(stake) is None, \
         "a lever the graph says would dry this plant out was pulled anyway"
 
@@ -269,16 +275,21 @@ def test_the_menu_is_derived_from_the_graph(make):
     st = genesis_store()
     open_round_for(st, "fern")
     rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
-    as_tuples = {(r.action.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
+    as_tuples = {(r.action.rsplit("#", 1)[-1], r.about.rsplit("#", 1)[-1],
                   r.direction.rsplit("#", 1)[-1] if r.direction else None) for r in rows}
+    #  A row says which WANT it serves through what the want is about: a stake is about its
+    #  property, a freshness want about its instrument (the-stake-is-sensings-want). So a look
+    #  appears twice per probe — for the region it should sit in, and for knowing it recently.
     assert as_tuples == {
-        ("Observing", "SoilMoisture", None),       # look through the probe
-        ("Observing", "AirTemperature", None),     # look through the thermometer
-        ("Acquiring", "SoilMoisture", "Raises"),   # raise it through the market
+        ("Observing", "SoilMoisture", None),          # look through the probe, for the stake
+        ("Observing", "AirTemperature", None),        # look through the thermometer, for it
+        ("Observing", "moisture_sensor_fern", None),  # look, for knowing what the probe says
+        ("Observing", "air_temp_fern", None),         # and what the thermometer says
+        ("Acquiring", "SoilMoisture", "Raises"),      # raise it through the market
     }
     # and the row that is NOT there is the finding: fern wants a temperature it can see and
     # cannot move — a want with no lever, which is legitimate and now legible.
-    assert not any(r.action.endswith("Acquiring") and "Temperature" in r.observed_property
+    assert not any(r.action.endswith("Acquiring") and "Temperature" in r.about
                    for r in rows)
 
 
@@ -300,10 +311,10 @@ def test_the_dealers_menu_gained_its_lever(make):
     st = genesis_store()
     open_round_for(st, "supplier")
     rows = menu_of(st.query, "http://example.org/orexis/world/simulation#supplier", desires_build(st, "supplier").query_union, beliefs_graph("supplier"))
-    assert [(r.action.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
+    assert {(r.action.rsplit("#", 1)[-1], r.about.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
-            for r in rows if r.is_own] == [("Acquiring", "StoredLitres", "Raises"),
-                                            ("Offering", "StoredLitres", None)], \
+            for r in rows if r.is_own} == {("Acquiring", "StoredLitres", "Raises"),
+                                            ("Offering", "StoredLitres", None)}, \
         "buy upstream while the city's round is open, and offer downstream (#359) — no direction " \
         "on the second, because offering moves no water"
     #  And beside them, since #218, what the dealer HONOURS: claims presented against the
@@ -371,7 +382,7 @@ def test_two_denominations_make_two_rows_and_never_four(make):
     }} }}""")
     open_round_for(st, "fern")
     acquire = [r for r in menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
-               if r.action == ACQUIRING and r.observed_property.endswith("SoilMoisture")]
+               if r.action == ACQUIRING and r.about.endswith("SoilMoisture")]
     assert sorted((r.direction or "").rsplit("#", 1)[-1] for r in acquire) == \
         ["Lowers", "Raises"], (
         "two opposite levers on one property must each carry their own direction — "
@@ -425,7 +436,7 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
 @prefix ag: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 ag:Consulting a ag:Action ; ag:means ag:Consult ;
-    ag:available \"\"\"SELECT ?property ?via WHERE { VALUES ?property { $properties } BIND($me AS ?via) }\"\"\" ;
+    ag:available \"\"\"SELECT ?want ?via WHERE { VALUES (?want ?about) { $wants } BIND($me AS ?via) }\"\"\" ;
     sh:construct "CONSTRUCT {} WHERE {}" .
 """)
     real = loader.action_files()
@@ -464,8 +475,8 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     #  filter that leaks.
     for row in duties:
         for value in (0.0, 0.5, 5.0, 50.0):
-            stake = Desire(uri="urn:w", urgency=0.5,
-                           observed_property=row.observed_property, value=value)
+            stake = ObservedWant(uri="urn:w", urgency=0.5, observed_property=row.about,
+                                 value=value)
             assert deliberator.propose_for(stake) not in duty_means, \
                 "a duty was proposed as if it were a choice"
 
@@ -532,7 +543,8 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
 
     fern = make("fern")
     monkeypatch.setattr(Planner, "plan", lambda self, desire: search.Plan(search.NOTHING))
-    thirsty = Desire(uri="urn:want", urgency=1.0, observed_property=MOISTURE, value=0.10)
+    thirsty = ObservedWant(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
+                           value=0.10)
     assert fern.deliberator.propose_for(thirsty) is None, \
         "the search said it had nothing to weigh, and something else answered anyway"
 
@@ -557,8 +569,10 @@ def test_a_stake_nothing_measures_is_complained_about_rather_than_decided_quietl
     ds = genesis_store()
     ds.update(f"""DELETE {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}
                   WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}""")
-    decider = decider_of(make("fern", ds))
-    stake = Desire(uri="urn:w", urgency=1.0, observed_property=MOISTURE, value=0.10)
+    fern = make("fern", ds)
+    decider = decider_of(fern)
+    stake = ObservedWant(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
+                         value=0.10)
 
     with caplog.at_level(logging.ERROR):
         decider.propose_for(stake)

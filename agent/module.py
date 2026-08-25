@@ -52,8 +52,13 @@ class Module:
         """
         return False
 
-    def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
-        """This agent's sensing recorded something new. Most modules do not care."""
+    #  THE READING CHOIR — `on_reading_recorded`, `annotate`, `bounds`, `urgency`, `measures`
+    #  — was defined here by name and is not any more: every one of those hooks is a sentence
+    #  about a reading, and what a reading is belongs to sensing (the-stake-is-sensings-want).
+    #  Sensing states that contract in its own module and asks it through `Agent.ask` and
+    #  `Agent.tell`, which dispatch any hook by name; a module that answers one simply
+    #  defines it. What stays here by name is BDI-shaped: wants, sizing and taking an act,
+    #  the series an agent reports.
 
     def on_belief_revised(self, belief_term: str, value) -> None:
         """One of my agent's beliefs has been re-picked. Take it up, if it is one of mine.
@@ -85,14 +90,6 @@ class Module:
     # a property — a band is a band of moisture — so a module handed a temperature must be able
     # to say it has no opinion, instead of judging it against the only scale it owns.
 
-    def annotate(self, subject_uri: str, observed_property: str, value: float) -> dict:
-        """What I can add to my agent's public announcement about a reading.
-
-        Voluntary disclosure: this is the agent saying what it makes of its own state, so
-        only a module that actually holds an opinion contributes one.
-        """
-        return {}
-
     def series(self) -> list[tuple[str, dict, dict]]:
         """Tagged rows for this agent's own bucket: (measurement, tags, fields), zero or more.
 
@@ -115,17 +112,10 @@ class Module:
         """
         return {}
 
-    def bounds(self, subject_uri: str, observed_property: str) -> tuple[float, float] | None:
-        """Where this module wants the property HELD — the band a crossing-watching board
-        should announce on leaving (#151). None means no stake and no opinion, like urgency;
-        desire answers with its region's edges, and the board then literally watches the
-        agent's desire while both of them sleep.
-        """
-        return None
-
-    def size(self, query, graph: str, observed_property: str) -> float | None:
-        """How big the act I take would be, from where this property stands in the world
-        `query` answers about at `graph` — one act's size.
+    def size(self, query, graph: str, row) -> float | None:
+        """How big the act this row commits to would be, in the world `query` answers about at
+        `graph` — one act's size. `row` is the affordance: the action, the want it serves and
+        what that want is about, which is how an actor finds the property it sizes against.
 
         Asked by the planner before it simulates a step, and answered by whoever would TAKE
         the step: a bidder sizes a bid by its deficit and its wallet, an actuator a dose by
@@ -195,21 +185,6 @@ class Module:
         """
         return []
 
-    def urgency(self, subject_uri: str, observed_property: str,
-                value: float | None) -> float | None:
-        """How close this reading puts me to my own trouble: 0.0 (fine) to 1.0 (trouble).
-
-        None means I have no stake in this subject and this property, and therefore no
-        opinion. Sensing uses it to decide how closely to watch — attention follows need,
-        and need is not sensing's to define.
-
-        `value` may itself be None, and the question changes with it: not "how bad is this
-        number" but "how urgent is it that I have no current number at all". Ignorance is a
-        need like any other (#137) — a module with a stake in the property answers it, one
-        with none stays silent, and the same max-of-answers resolves the choir either way.
-        """
-        return None
-
     def desire_urgency(self, desire, query, sensed: str,
                        value: float | None = None) -> float | None:
         """How urgent one DESIRE is, in the WORLD `query` answers about. None: no opinion.
@@ -230,26 +205,6 @@ class Module:
         desire nobody answers for is maximally urgent, logged, at the call sites that rank.
         """
         return None
-
-    @classmethod
-    def measures(cls, query, observed_property: str) -> bool:
-        """Would I have a measure for a want about this property? The same question as
-        `desire_urgency`, asked of the CLASS and before any agent exists.
-
-        It exists because the sovereign's gate must ask it (`orexis-validate`), and a gate
-        cannot build an agent: an agent holds credentials that onboarding has not minted yet,
-        and building one to interrogate it would put the runtime inside the check that runs
-        before the runtime is allowed to exist. So the class answers from the same declaration
-        the instance reads — one resolution, two callers — and the kernel still holds no
-        measure vocabulary of its own: it asks, and whoever declares one answers.
-
-        `query` is a store's query surface over the ratified world, which is all a KIND test
-        needs. False by default, and False is the honest answer for every module that judges
-        no wants — the choir shape again, with the roll called earlier than usual.
-        """
-        return False
-
-    # --- helpers every module wants ---
 
     @staticmethod
     def parse(payload: bytes) -> dict | None:

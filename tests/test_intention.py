@@ -22,7 +22,7 @@ from agent.graphs import intentions_graph
 from packages.capability.market.terms import ACQUIRING
 from packages.capability.sensing.terms import OBSERVING
 
-from conftest import MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
+from conftest import sensing_of, stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
 
 FERN = "http://example.org/orexis#fern_agent"
 
@@ -85,7 +85,10 @@ def test_waiting_on_a_sensor_is_a_recorded_commitment(make):
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     keeper = keeper_of(fern)
     standing = keeper.standing(action=OBSERVING)
-    assert len(standing) == 1 and standing[0].observed_property == MOISTURE
+    #  The look is committed FOR THE FRESHNESS WANT — knowing first, sensing's rule — and
+    #  the ledger says which want, not which property (the-stake-is-sensings-want).
+    looked_for = next(w for w in sensing_of(fern).wants_about(MOISTURE) if w.is_epistemic)
+    assert len(standing) == 1 and standing[0].want == looked_for.uri
 
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.10})
     assert keeper.standing(action=OBSERVING) == []       # the look came back
@@ -148,8 +151,8 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
     fern = make("fern", _reading(0.10))
     keeper = keeper_of(fern)
     keeper.beliefs = replace(keeper.beliefs, patience_s=0)  # everything is instantly stale
-    first = keeper.adopt(ACQUIRING, MOISTURE, "first")
-    second = keeper.adopt(ACQUIRING, MOISTURE, "second")
+    first = keeper.adopt(ACQUIRING, stake_of(fern).uri, "first")
+    second = keeper.adopt(ACQUIRING, stake_of(fern).uri, "second")
     assert first and second and first != second
     standing = keeper.standing(action=ACQUIRING)
     assert [s.uri for s in standing] == [second]
@@ -202,20 +205,21 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
     fern = make("fern", _reading(0.10))
     keeper = keeper_of(fern)
     fern.metrics.take_events()
-    uri = keeper.adopt(ACQUIRING, MOISTURE, "bid 0.4L to close my deficit")
-    keeper.satisfy(ACQUIRING, MOISTURE, "claim for 0.4L at a debit of 0.29")
+    stake = stake_of(fern).uri
+    uri = keeper.adopt(ACQUIRING, stake, "bid 0.4L to close my deficit")
+    keeper.satisfy(ACQUIRING, stake, "claim for 0.4L at a debit of 0.29")
     events = fern.metrics.take_events()
     assert [(kind, tags) for _, kind, _, tags in events] == [
-        ("adopted", {"means": "Acquiring", "property": "SoilMoisture"}),
-        ("satisfied", {"means": "Acquiring", "property": "SoilMoisture"})]
+        ("adopted", {"means": "Acquiring", "want": "desire.fern.SoilMoisture"}),
+        ("satisfied", {"means": "Acquiring", "want": "desire.fern.SoilMoisture"})]
     assert [text for _, _, text, _ in events] == [
         "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
     # and the end's verdict, which is the payoff line of the whole arc (#131)
-    assert keeper.expect(uri, MOISTURE, "the dose owes a rise", rises=True,
+    assert keeper.expect(uri, "the dose owes a rise", rises=True,
                          baseline=reading_of(fern, MOISTURE))
     fern.metrics.take_events()
-    keeper.on_reading_recorded(fern.me.acts_for, MOISTURE, 0.50)
+    keeper.judge(stake, 0.50)
     verdicts = fern.metrics.take_events()
     assert [kind for _, kind, _, _ in verdicts] == ["end-met"]
     assert "moved from" in verdicts[0][2]
@@ -246,12 +250,14 @@ def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
     keeper.deliberate_on_gaps()
-    standing = {(s.action.rsplit("#", 1)[-1], s.observed_property) for s in keeper.standing()}
+    #  The ledger names the WANT; which property a want is about is sensing's to say.
+    about = {w.uri: w.observed_property for w in sensing_of(fern).desires()}
+    standing = {(s.action.rsplit("#", 1)[-1], about.get(s.want)) for s in keeper.standing()}
     assert ("Observing", TEMP) in standing, "the marketless property is watched ON THE RECORD"
     assert ("Observing", MOIST) in standing
 
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"temperature": 21.0})
-    left = {s.observed_property for s in keeper.standing()}
+    left = {about.get(s.want) for s in keeper.standing()}
     assert TEMP not in left, "the look happened — satisfied, whoever triggered it"
     assert MOIST in left, "the other channel still owes a reading"
 
@@ -331,23 +337,25 @@ def test_two_debts_about_one_property_no_longer_collide(make):
     to_fern = "http://example.org/orexis#obligation.fern-claim"
     to_tomato = "http://example.org/orexis#obligation.tomato-claim"
 
-    assert keeper.adopt(SERVING, MOIST, "owed to fern", desire=to_fern)
-    assert keeper.adopt(SERVING, MOIST, "owed to tomato", desire=to_tomato), \
+    assert keeper.adopt(SERVING, to_fern, "owed to fern")
+    assert keeper.adopt(SERVING, to_tomato, "owed to tomato"), \
         "a second debt about the same property is a second debt, not the same impulse"
-    assert len(keeper.standing(action=SERVING, observed_property=MOIST)) == 2
+    assert len(keeper.standing(action=SERVING)) == 2
 
-    keeper.satisfy(SERVING, MOIST, "fern's dose went out", desire=to_fern)
-    left = keeper.standing(action=SERVING, observed_property=MOIST)
+    keeper.satisfy(SERVING, to_fern, "fern's dose went out")
+    left = keeper.standing(action=SERVING)
     assert len(left) == 1, "paying one debt must not discharge the other"
 
 
-def test_a_commitment_without_a_desire_is_keyed_as_it_always_was(make):
-    """The compatibility half: the first three means predate desires having names, and a ledger
-    full of rows that could not have answered the question must stay readable — so a desireless
-    row is absorbed and resolved by the old key, and a desire-shaped question still finds it."""
+def test_a_commitment_is_keyed_by_its_want_and_absorbed_by_it(make):
+    """The ledger keys on (action, want) and nothing else — the property is not a key the
+    kernel holds any more (the-stake-is-sensings-want). A second impulse toward the same want
+    within patience is absorbed; the same action toward ANOTHER want is a second commitment."""
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
-    keeper.adopt(OBSERVING, MOIST, "the old way")
-    assert keeper.adopt(OBSERVING, MOIST, "again, within patience") is None
-    assert len(keeper.standing(action=OBSERVING, observed_property=MOIST,
-                               desire="http://example.org/orexis#bounds.fern.SoilMoisture")) == 1
+    stake = stake_of(fern).uri
+    keeper.adopt(OBSERVING, stake, "look, for the stake")
+    assert keeper.adopt(OBSERVING, stake, "again, within patience") is None
+    assert len(keeper.standing(action=OBSERVING, want=stake)) == 1
+    assert keeper.adopt(OBSERVING, "urn:another-want", "look, for something else")
+    assert len(keeper.standing(action=OBSERVING)) == 2

@@ -68,7 +68,7 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
   [deliberation](/domain/deliberation.md) describes them. This record is about who carries an
   answer out.
 - **"Look, then bid" is still two intentions, not one plan.** The freshness want and the region
-  want are different desires; an unmet epistemic want answers first by `propose_about`'s rule;
+  want are different desires; an unmet epistemic want answers first by sensing's `want_about` rule;
   a look nets to nothing in the signature so it never extends a frontier. All three facts stand,
   and the sequence you see in the logs — Observe committed, satisfied by the reading, Acquire
   committed, satisfied by the claim — is two desires pursued in the right order rather than one

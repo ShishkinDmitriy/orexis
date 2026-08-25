@@ -106,7 +106,7 @@ class Summaries:
     """One agent's running account of everything it senses.
 
     This capability's, not the kernel's: a summary exists as evidence for a judgement, so an
-    agent given no room to make one keeps none. Fed through `Module.on_reading_recorded`, so the
+    agent given no room to make one keeps none. Fed through sensing's `on_reading_recorded` hook, so the
     ingest path never learns that summaries exist.
     """
 

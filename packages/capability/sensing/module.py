@@ -27,7 +27,7 @@ Two things deliberately do NOT appear here:
   another on a wire under a single attention policy.
 - **What counts as trouble.** Sensing knows how to look and how fresh a number is; it has
   no band and no target, because those belong to whoever holds a stake in the subject. So it
-  *asks* — `agent.urgency` for how closely to watch, `agent.annotations` for what to say
+  *asks* — the reading choir (`choir.urgency`) for how closely to watch, `choir.annotations` for what to say
   publicly — and an agent with no stake simply gets no answer and watches at its slow cadence.
   That is why nothing here imports another capability.
 
@@ -53,7 +53,8 @@ from agent.store import bindings
 from . import pointer
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .observation import Observations
-from .regions import Gap, Region, aims_of, desires_of, gaps_of, regions_of
+from . import choir
+from .regions import Gap, ObservedWant, Region, aims_of, desires_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
@@ -229,7 +230,8 @@ class SensingModule(Module):
         measure that raises: a package's bug must not take an agent down, and every ranking
         caller reads silence as the maximal 1.0.
         """
-        if desire.is_duty or desire.observed_property is None:
+        about = getattr(desire, "observed_property", None)
+        if desire.is_duty or about is None:
             return None
         if (instrument := desire.instrument) is not None:
             return self._answer(query, _FRESHNESS_MEASURE
@@ -239,12 +241,12 @@ class SensingModule(Module):
                                 .replace("$sensor", f"<{instrument}>")
                                 .replace("$instruments", f"<{INSTRUMENTS_GRAPH}>")
                                 .replace("$subject", self._watched(query, instrument))
-                                .replace("$property", f"<{desire.observed_property}>")
+                                .replace("$property", f"<{about}>")
                                 .replace("$sensed", f"<{sensed}>"))
-        region = self.region(desire.observed_property)
+        region = self.region(about)
         if region is None:
             return None
-        text = self._measure_for(query, desire.observed_property)
+        text = self._measure_for(query, about)
         if text is None:
             return None
         outer_low = region.floor if region.floor is not None else region.low
@@ -252,7 +254,7 @@ class SensingModule(Module):
         text = (text
                 .replace("$subject",
                          f"<{self.me.acts_for}>" if self.me.acts_for else "<urn:nobody>")
-                .replace("$property", f"<{desire.observed_property}>")
+                .replace("$property", f"<{about}>")
                 .replace("$sensed", f"<{sensed}>")
                 .replace("$beliefs", f"<{beliefs_graph(self.agent.id)}>")
                 .replace("$value", repr(float(value)) if value is not None else "?reading")
@@ -523,17 +525,64 @@ class SensingModule(Module):
         return out
 
     def on_reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
-        """Every reading is a look that happened: the standing Observe for it is satisfied.
+        """Every reading is a look that happened, and a number for every want about it.
 
-        The keeper used to do this, by name, and it was the one place the kernel spelled
-        `Observe` — so the means could not leave the kernel until this moved. It is the
-        actor's own business anyway: this module takes the look, and whoever caused it — the
-        tick, a bidder waiting, the device's own clock — the reading arriving is the look
-        done. Idempotent across two sensing modules on one agent: the second finds nothing
-        standing.
+        Two things the kernel used to do by property and now does by want, because the ledger
+        keys on the want and which wants a property carries is this package's to say
+        (the-stake-is-sensings-want): the standing Observe for each is satisfied — the look
+        is this module's act, and the reading arriving is the look done — and the keeper
+        judges every open watch on the want against the number. Idempotent across two sensing
+        modules on one agent: the second finds nothing standing and no watch open.
         """
-        if (keeper := self.agent.keeper) is not None:
-            keeper.satisfy(OBSERVING, observed_property, "a reading arrived — the look happened")
+        if (keeper := self.agent.keeper) is None:
+            return
+        for want in self.wants_about(observed_property, subject_uri):
+            keeper.satisfy(OBSERVING, want.uri, "a reading arrived — the look happened")
+            if subject_uri == self.me.acts_for:
+                keeper.judge(want.uri, value)
+
+    # --- which want a reading is about: this package's to say --------------------------
+
+    def wants_about(self, observed_property: str, subject_uri: str | None = None) -> list:
+        """Every want this agent holds about a property — its stake, if it acts for the
+        subject, and the freshness want of each instrument that reads it."""
+        return [w for w in self.desires()
+                if getattr(w, "observed_property", None) == observed_property
+                and (w.is_epistemic or subject_uri in (None, self.me.acts_for))]
+
+    def want_about(self, observed_property: str):
+        """WHICH of a property's wants is the one to act on — the rule, stated once: an unmet
+        epistemic want first, then the stake, then whatever is left.
+
+        KNOWING FIRST, then the number, and the order is a rule rather than a ranking. A
+        property carries two wants — the region it should sit in, and that its instrument
+        has spoken recently — and taking whichever is HOTTER would decide between two
+        different questions by a number that means the same thing in both. No lever moves a
+        number you cannot see, so an actuator asking whether to dose a pot nobody has looked
+        at lately is told to look; once the reading is current the stake answers. This was
+        the deliberator's `desire_about`; the actors' door is `execution.pursue_for(want)`.
+        """
+        mine = self.wants_about(observed_property)
+        return (next((d for d in mine if d.is_epistemic and not d.is_met), None)
+                or next((d for d in mine if not d.is_epistemic), None)
+                or next(iter(mine), None))
+
+    def stake_about(self, observed_property: str):
+        """The region want about a property, or None — what a bidder or an actuator commits
+        to, and what the keeper's rows for their acts pursue."""
+        return next((d for d in self.wants_about(observed_property) if not d.is_epistemic), None)
+
+    def reading_urgency(self, subject_uri: str, observed_property: str,
+                        value: float | None) -> float | None:
+        """The choir's sharpest opinion on a reading, and the keeper's: a watch still open on
+        any want about this property is maximal, because an act has just happened and the
+        world owes a movement — attention must not relax before it lands."""
+        opinion = choir.urgency(self.agent, subject_uri, observed_property, value)
+        keeper = self.agent.keeper
+        if (keeper is not None and subject_uri == self.me.acts_for
+                and any(keeper.watching(w.uri) for w in self.wants_about(observed_property))):
+            return 1.0
+        return opinion
 
     def notices(self) -> list[tuple[str, str]]:
         """The gaps I am positioned to notice (#208): unobserved, or too stale to act on.
@@ -624,8 +673,8 @@ class SensingModule(Module):
             return None
         if value is None:
             return 1.0
-        answer = self._measured(Desire(uri="urn:asked", urgency=1.0,
-                                       observed_property=observed_property, value=value),
+        answer = self._measured(ObservedWant(uri="urn:asked", urgency=1.0,
+                                             observed_property=observed_property, value=value),
                                 value)
         return 1.0 if answer is None else answer
 
@@ -647,7 +696,7 @@ class SensingModule(Module):
         property has a MET freshness want. Issue #124's case holds by the same road: a dead
         probe's last observation is upserted and never expires, but its freshness want goes
         cold, and the gap stops counting as seen."""
-        fresh = {d.observed_property for d in self.agent.pursuing()
+        fresh = {getattr(d, "observed_property", None) for d in self.agent.pursuing()
                  if d.is_epistemic and d.is_met}
         return {prop: gap for prop, gap in self.gaps().items() if prop in fresh}
 
@@ -810,7 +859,7 @@ class SubscribingModule(SensingModule):
             value = reading.value if reading is not None else None
             self.set_cadence(sensor,
                              self.cadence_for(sensor.subject, sensor.observes, value),
-                             self.agent.annotations(sensor.subject, sensor.observes,
+                             choir.annotations(self.agent, sensor.subject, sensor.observes,
                                                     value) if value is not None else None)
 
     def on_reading(self, sensor, value: float, at=None) -> None:
@@ -827,7 +876,7 @@ class SubscribingModule(SensingModule):
         # no stake in this property contributes nothing and the device is told only a cadence.
         self.set_cadence(sensor,
                          self.cadence_for(sensor.subject, sensor.observes, value),
-                         self.agent.annotations(sensor.subject, sensor.observes, value))
+                         choir.annotations(self.agent, sensor.subject, sensor.observes, value))
 
     def watch_is_live(self, subject_uri: str, observed_property: str) -> bool:
         sensor = self.sensor_for(subject_uri, observed_property)
@@ -922,7 +971,7 @@ class SubscribingModule(SensingModule):
         from this agent's own readings. Evidence or nothing.
         """
         b = self.beliefs
-        urgency = self.agent.urgency(subject_uri, observed_property, value)
+        urgency = self.reading_urgency(subject_uri, observed_property, value)
         if urgency is None:
             return min(self.max_sleep_s, max(self.min_sleep_s, b.slow_sleep_s))
 
@@ -933,7 +982,7 @@ class SubscribingModule(SensingModule):
         slope = self._trend.get((subject_uri, observed_property))
         if slope and value is not None:
             predicted = value + slope * sleep_s
-            ahead = self.agent.urgency(subject_uri, observed_property, predicted)
+            ahead = self.reading_urgency(subject_uri, observed_property, predicted)
             if ahead is not None and ahead > urgency:
                 sleep_s = granted(ahead)
         return int(round(min(self.max_sleep_s, max(self.min_sleep_s, sleep_s))))
@@ -1002,7 +1051,7 @@ class SubscribingModule(SensingModule):
                     continue
                 claims.append((
                     self.cadence_for(peer.subject, peer.observes, reading.value),
-                    self.agent.annotations(peer.subject, peer.observes, reading.value)))
+                    choir.annotations(self.agent, peer.subject, peer.observes, reading.value)))
             # Keyed on the interval alone: `min` over the pairs would compare the dicts on a tie
             # and raise. Ties go to the earliest claim, which is the triggering sensor's.
             sleep_s, verdict = min(claims, key=lambda claim: claim[0])
@@ -1024,7 +1073,7 @@ class SubscribingModule(SensingModule):
         for peer in self._aimed_with(sensor):
             if not peer.alarm:
                 continue
-            held = self.agent.bounds(peer.subject, peer.observes)
+            held = choir.bounds(self.agent, peer.subject, peer.observes)
             if held is not None:
                 limits = [round(held[0], 3), round(held[1], 3)]
                 # The DEVIATION half: a move of more than this since the board's last report is
@@ -1081,13 +1130,13 @@ class SubscribingModule(SensingModule):
         The actor for `sensing:Observe` (knowledge/domain/actor.md) — the FAMILY is named, so the
         listening module is offered the same row and declines, and this one answers True
         only where a driver exists to nudge. The look is satisfied by the reading arriving,
-        whoever caused it, exactly as before: `Keeper.on_reading_recorded` resolves it.
+        whoever caused it, exactly as before: `on_reading_recorded` here resolves it, per want.
         """
         if row.action != OBSERVING:
             return False
         nudged = False
         for sensor in self.sensors:
-            if sensor.observes == row.observed_property and self.drivers[sensor.uri]:
+            if row.about in (sensor.observes, sensor.uri) and self.drivers[sensor.uri]:
                 self.drivers[sensor.uri].sense_now(sensor)
                 nudged = True
         return nudged
@@ -1122,7 +1171,7 @@ class SubscribingModule(SensingModule):
                 self.set_cadence(
                     sensor,
                     self.cadence_for(sensor.subject, sensor.observes, reading.value),
-                    self.agent.annotations(sensor.subject, sensor.observes, reading.value))
+                    choir.annotations(self.agent, sensor.subject, sensor.observes, reading.value))
 
 
 class ListeningModule(SensingModule):

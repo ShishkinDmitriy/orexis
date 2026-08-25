@@ -32,7 +32,7 @@ def _imaginarium(value=0.04):
 
 def _dose(im, sensed, litres=0.05, value=0.04):
     return effects.apply(im, DOSING, me=f"<{GARDENER}>", subject=f"<{ZZ}>",
-                         property=f"<{MOISTURE}>", beliefs=f"<{beliefs_graph('gardener')}>",
+                         about=f"<{MOISTURE}>", beliefs=f"<{beliefs_graph('gardener')}>",
                          sensed=f"<{sensed}>", litres=repr(litres), value=repr(value))
 
 

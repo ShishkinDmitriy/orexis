@@ -543,7 +543,7 @@ SELECT ?r WHERE {{
             if not self.announce(market, trigger=by):
                 return False
             if (keeper := self._keeper()) is not None:
-                keeper.satisfy(OFFERING, row.observed_property, "the round opened", desire=desire.uri)
+                keeper.satisfy(OFFERING, desire.uri, "the round opened")
             return True
         if row.action != SERVING or not desire.claim or desire.claim not in self.held:
             return False
@@ -563,7 +563,7 @@ SELECT ?r WHERE {{
             return False
         self._serve(desire.claim, "the plan's head — a duty's row")
         if (keeper := self._keeper()) is not None:
-            keeper.satisfy(SERVING, row.observed_property, "served", desire=desire.uri)
+            keeper.satisfy(SERVING, desire.uri, "served")
         return True
 
     def _serve(self, jti: str, why: str) -> None:

@@ -176,15 +176,19 @@ class ActuationModule(Module):
         #  patience is absorbed before anything is written.
         from agent import execution
 
-        execution.pursue_about(self.agent, observed_property)
+        #  Which want the reading is about is sensing's to say; the door takes the node.
+        sensing = self.agent.provider(SENSING)
+        want = sensing.want_about(observed_property) if sensing is not None else None
+        if want is not None:
+            execution.pursue_for(self.agent, want.uri)
 
-    def size(self, query, graph: str, observed_property: str) -> float | None:
+    def size(self, query, graph: str, row) -> float | None:
         """The planner's question, answered by the one who would pour: `dose_for`, from where
         the property stands in the world being asked about — read through sensing at that
         world's graph, because what a reading looks like is sensing's."""
         sensing = self.agent.provider(SENSING)
-        value = sensing.value_in(query, graph, self.me.acts_for, observed_property) if sensing else None
-        return self.dose_for(observed_property, value) if value is not None else None
+        value = sensing.value_in(query, graph, self.me.acts_for, row.about) if sensing else None
+        return self.dose_for(row.about, value) if value is not None else None
 
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed self-dose: size it from the reading in hand and command it.
@@ -197,7 +201,7 @@ class ActuationModule(Module):
         """
         if row.action != DOSING:
             return False
-        observed_property = row.observed_property
+        observed_property = row.about
         sensing = self.agent.provider(SENSING)
         reading = sensing.current_reading(self.me.acts_for, observed_property) if sensing else None
         if reading is None:
@@ -207,12 +211,12 @@ class ActuationModule(Module):
         if keeper is not None:
             from datetime import datetime, timezone
             now = datetime.now(timezone.utc)
-            if any(now < w.deadline for w in keeper.open_expectations(observed_property)):
+            if any(now < w.deadline for w in keeper.open_expectations(desire.uri)):
                 return False  # my own dose has not answered yet — the #167 guard, rung 2
         litres = self.dose_for(observed_property, value)
         if litres is None or litres <= EPS:
             if keeper is not None:
-                keeper.drop(DOSING, observed_property,
+                keeper.drop(DOSING, desire.uri,
                             "the dose sized to nothing from the reading in hand")
             return False
         jti = uuid.uuid4().hex
@@ -235,7 +239,7 @@ class ActuationModule(Module):
             except Exception:
                 seeing = None
             opened = keeper.expect(
-                intention, observed_property,
+                intention,
                 f"self-dosed {litres}L ({cmd.ml:.0f} ml commanded) — the graph says this "
                 f"raises what I am short of, so show me",
                 expected_delta=self._expected_delta(observed_property, litres, value),
@@ -246,7 +250,7 @@ class ActuationModule(Module):
             if opened and sensing is not None:
                 sensing.sense_now()   # the freshest before on record
             if not opened:
-                keeper.satisfy(DOSING, observed_property,
+                keeper.satisfy(DOSING, desire.uri,
                                f"the dose is commanded — {cmd.ml:.0f} ml on its way, and no "
                                f"watch could be opened on the end")
         return True

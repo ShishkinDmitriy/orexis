@@ -46,8 +46,8 @@ actuation:Dosing
     #  NOT EXISTS is the rule that keeps the rung honest: the market is about the resource, not
     #  the lever, so a pot-local pump on the shared barrel yields Acquire and only Acquire.
     ag:available """
-        SELECT DISTINCT ?property ?via ?direction WHERE {
-          VALUES ?property { $properties }
+        SELECT DISTINCT ?want ?via ?direction WHERE {
+          VALUES (?want ?about) { $wants }
           $me ag:actsFor ?subject .
           $me actuation:hasActuator ?via .
           ?via actuation:actuates ?subject ;
@@ -56,7 +56,7 @@ actuation:Dosing
           FILTER NOT EXISTS { ?venue market:marketFor ?source }
           ?source market:supplies ?good .
           ?valuation market:ofGood ?good ;
-                     market:aboutProperty ?property ;
+                     market:aboutProperty ?about ;
                      market:direction ?direction .
         }""" ;
 
@@ -68,21 +68,21 @@ actuation:Dosing
         CONSTRUCT {
             ?obs a sosa:Observation ;
                  sosa:hasFeatureOfInterest $subject ;
-                 sosa:observedProperty $property ;
+                 sosa:observedProperty $about ;
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?predicted .
         } WHERE {
             $me ag:actsFor $subject ; actuation:hasActuator ?lever .
             ?lever actuation:actuates $subject ; actuation:drawsFrom ?source .
             ?source market:offeredBy $me ; market:supplies ?good .
-            ?term market:ofGood ?good ; market:aboutProperty $property .
+            ?term market:ofGood ?good ; market:aboutProperty $about .
             GRAPH $beliefs { $me ?term ?conversion }
             FILTER(?conversion > 0)
             #  WHERE THE PROPERTY STANDS, read by this rule from the world it is asked about
             #  rather than handed in by the planner: the kernel no longer knows what a reading
             #  looks like, and a rule that reads $sensed already does. Nothing read yet is zero.
             OPTIONAL { GRAPH $sensed { ?standing sosa:hasFeatureOfInterest $subject ;
-                                       sosa:observedProperty $property ;
+                                       sosa:observedProperty $about ;
                                        sosa:hasSimpleResult ?was } }
             BIND(COALESCE(?was, 0) + ($litres / ?conversion) AS ?predicted)
             BIND(BNODE() AS ?obs)
@@ -130,7 +130,7 @@ actuation:Dosing
         CONSTRUCT { ?obs ?p ?o } WHERE {
             GRAPH $sensed {
                 ?obs sosa:hasFeatureOfInterest $subject ;
-                     sosa:observedProperty $property ;
+                     sosa:observedProperty $about ;
                      ?p ?o
             }
         }""" .

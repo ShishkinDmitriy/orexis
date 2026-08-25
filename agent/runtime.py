@@ -218,57 +218,42 @@ class Agent:
                 seen.setdefault(desire.uri, desire)
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
-    def annotations(self, subject_uri: str, observed_property: str, value: float) -> dict:
-        """Everything my modules want to say about a reading of mine, merged.
+    def ask(self, hook: str, *args, **kwargs) -> list:
+        """Every module's answer to one question, in module order, None left out.
 
-        This is what makes my announcement *mine* rather than sensing's: whoever holds an
-        opinion contributes it, and a module with no stake contributes nothing.
-        """
-        out: dict = {}
-        for module in self.modules:
-            try:
-                out.update(module.annotate(subject_uri, observed_property, value))
-            except Exception as exc:
-                log.error("%s: %s could not annotate a reading: %s", self.id, module.name, exc)
-        return out
-
-    def bounds(self, subject_uri: str, observed_property: str) -> tuple[float, float] | None:
-        """The tightest band any of my modules wants this property held in, or None.
-
-        Collected like urgency — whoever holds a stake contributes, and the intersection is
-        what a crossing-watching board is told to announce on leaving (#151): the highest
-        floor and the lowest ceiling, because a board that woke for the loosest opinion would
-        sleep through the tightest one's trouble.
+        THE CHOIR, generically. `annotations`, `bounds` and `urgency` used to be three methods
+        here, each merging its modules' answers about a READING — a subject, a property, a
+        value — and every one of those was a sensing sentence in the kernel. What the kernel
+        owns is the mechanism: whoever defines the hook is asked, an error in one voice is
+        logged and does not silence the rest, and the caller merges the answers by its own
+        rule (the-stake-is-sensings-want). Sensing asks `annotate`, `bounds` and `urgency`
+        this way and says what those mean; the hooks the kernel still defines by name on
+        `Module` are the BDI-shaped ones.
         """
         answers = []
         for module in self.modules:
+            fn = getattr(module, hook, None)
+            if fn is None:
+                continue
             try:
-                answer = module.bounds(subject_uri, observed_property)
+                answer = fn(*args, **kwargs)
             except Exception as exc:
-                log.error("%s: %s could not state bounds: %s", self.id, module.name, exc)
+                log.error("%s: %s could not answer %s: %s", self.id, module.name, hook, exc)
                 continue
             if answer is not None:
                 answers.append(answer)
-        if not answers:
-            return None
-        return max(low for low, _ in answers), min(high for _, high in answers)
+        return answers
 
-    def urgency(self, subject_uri: str, observed_property: str,
-                value: float | None) -> float | None:
-        """How close this reading puts me to trouble — the sharpest opinion any of me holds.
-
-        `value` None asks a different question of the same choir: how urgent is not knowing.
-        """
-        opinions = []
+    def tell(self, hook: str, *args, **kwargs) -> None:
+        """Every module that listens for one event is told, and a failure in one is logged."""
         for module in self.modules:
-            try:
-                opinion = module.urgency(subject_uri, observed_property, value)
-            except Exception as exc:
-                log.error("%s: %s could not judge a reading: %s", self.id, module.name, exc)
+            fn = getattr(module, hook, None)
+            if fn is None:
                 continue
-            if opinion is not None:
-                opinions.append(opinion)
-        return max(opinions) if opinions else None
+            try:
+                fn(*args, **kwargs)
+            except Exception as exc:
+                log.error("%s: %s failed on %s: %s", self.id, module.name, hook, exc)
 
     def desire_urgency(self, desire, query, sensed: str,
                        value: float | None = None) -> float | None:
@@ -340,20 +325,6 @@ class Agent:
         # the fault that cost the two days.
         log.warning("%s: disconnected from the bus (%s) — paho will retry", self.id, reason_code)
 
-    def reading_recorded(self, subject_uri: str, observed_property: str, value: float) -> None:
-        """Sensing tells the rest of me that something new is known.
-
-        The agent's own modules are the only audience: this is me noticing, not me telling
-        anyone. It is what lets a bid wait for the reading it asked for instead of using
-        whatever happened to be lying around — and, now that a subject can have two sensors,
-        for it to wait for the reading it asked for rather than for the next one to arrive.
-        """
-        for module in self.modules:
-            try:
-                module.on_reading_recorded(subject_uri, observed_property, value)
-            except Exception as exc:
-                log.error("%s: %s failed on a new reading: %s", self.id, module.name, exc)
-
     def _on_message(self, client, userdata, msg) -> None:
         """Offer the message to EVERY module, and note whether any of them wanted it.
 
@@ -367,7 +338,7 @@ class Agent:
         status is the case that wants it — a supplier runs actuation beside hosting — and the
         old loop would have handed the status to whichever module came first in the list.
 
-        `reading_recorded` above has always offered to every module. This is the same shape,
+        `tell` above has always offered to every module. This is the same shape,
         and the two now agree.
         """
         handled = False

@@ -329,3 +329,70 @@ sensing:AimShape a sh:NodeShape ;
                 ?other <http://www.w3.org/ns/ssn/forProperty> ?property .
                 FILTER(?one != ?other)
             }""" ] .
+
+
+sensing:DeducedRegionShape a sh:NodeShape ;
+    rdfs:comment "What a deduced region or envelope must be to be readable by the code that will divide by its width — the property-shaped half of what was `ag:DesireShape`, whose kernel half still checks whose state a met-test is about and with what force. Every figure here was computed, so this is arithmetic rather than authorship; a check over derived data is worth exactly as much as one over authored data when the reader is code." ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                { ?agent <http://example.org/orexis#holds> ?held .
+                  ?held <http://example.org/orexis#metWhen> ?this }
+                UNION
+                { ?agent <http://example.org/orexis#holds> ?this .
+                  ?this a <http://www.w3.org/ns/shacl#NodeShape> . }
+            }
+        """ ] ;
+    sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
+                  sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a deduced shape must say which property it is about" ] ;
+    # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales
+    # urgency by it produces a negative denominator and an agent that is most relaxed exactly
+    # where it is closest to dying. Nothing authored can cause this directly — both figures are
+    # intersections — but a world whose survival range is narrower than its operating range can,
+    # and `water:RangesAgreeShape` only checks that pairing per plant. This checks it after
+    # everything that applies has been folded together, which is where a rig assembled from two
+    # correct halves can still be wrong.
+    #
+    # Every optional bound is guarded with BOUND rather than compared directly, and it is not
+    # defensive typing. `?low < ?floor` on an unbound `?floor` is an ERROR, and SPARQL's `||`
+    # propagates an error unless some other operand is true — so a region with no envelope made
+    # the whole filter error, the row vanish, and the `?low > ?high` case it was also supposed to
+    # catch go unreported. The shape would have been green on exactly the world it was written
+    # for.
+    #
+    # Both edges are read off the SIDE shapes since #242: the floor is what the Below shape
+    # refuses to see a reading under, the ceiling what the Above shape refuses to see one over.
+    # `sh:maxExclusive ?low` still means the region is inclusive of ?low — a reading strictly
+    # below it is the violation — so the arithmetic below is untouched by the split.
+    sh:sparql [
+        sh:message "a region lies outside the envelope it is supposed to sit inside — the survival range stated for this property is narrower than the operating range, once every source is intersected" ;
+        sh:select """
+            SELECT $this ?low ?high WHERE {
+                $this <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                      <http://www.w3.org/ns/shacl#property> ?below , ?above .
+                ?below <http://www.w3.org/ns/shacl#severity>
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
+                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
+                ?above <http://www.w3.org/ns/shacl#severity>
+                       <http://example.org/orexis#ShouldBecome> ;
+                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
+                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
+                OPTIONAL {
+                    ?agent <http://example.org/orexis#holds> ?desire , ?envelope .
+                    ?desire <http://example.org/orexis#metWhen> $this .
+                    ?envelope <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                              <http://www.w3.org/ns/shacl#property> ?underFloor , ?overCeiling .
+                    ?underFloor <http://www.w3.org/ns/shacl#severity>
+                                <http://www.w3.org/ns/shacl#Warning> ;
+                                <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
+                                <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?floor .
+                    ?overCeiling <http://www.w3.org/ns/shacl#severity>
+                                 <http://www.w3.org/ns/shacl#Warning> ;
+                                 <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
+                                 <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?ceiling }
+                FILTER(   ?low > ?high
+                       || (BOUND(?floor)   && ?low  < ?floor)
+                       || (BOUND(?ceiling) && ?high > ?ceiling))
+            }""" ] .

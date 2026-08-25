@@ -21,7 +21,7 @@ description: >-
 
 # What it is
 
-A **commitment**: reduce the gap in one property, by one means, adopted at a moment and standing
+A **commitment**: one want pursued by one action, adopted at a moment and standing
 until the world answers. BDI's third letter, and the one this project ran longest without —
 `bidding.pending` was an intention to observe and a bid awaiting its claim was an intention to
 acquire, both living as Python attributes that died with the process and answered to nothing.
@@ -102,7 +102,7 @@ Two consequences ride on the watch:
   released on verdict. Opening the watch also asks for one look (`sense_now`), so the freshest
   before is on record.
 - **enough unmet makes an affordance SUSPECT.** `suspectAfter` consecutive unmet ends for one
-  (means, property) pair — consecutive, so one success resets: mostly-paying is noisy, not
+  (action, want) pair — consecutive, so one success resets: mostly-paying is noisy, not
   false — raises a warning and a health-series flag (`affordances_suspect`). Flagged, never
   auto-retracted: what to do about a belief that is not paying is a decision, and deleting
   knowledge would be reaching down a level

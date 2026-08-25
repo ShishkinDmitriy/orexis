@@ -46,6 +46,6 @@ figure exists to show.
 
 # Seams left open
 
-- **A verdict on a deadline still needs a reading to arrive.** The watch is judged in
-  `on_reading_recorded`, so a board that goes silent leaves the row standing until patience
+- **A verdict on a deadline still needs a reading to arrive.** The watch is judged when
+  sensing hands the keeper a number for the want (`keeper.judge`), so a board that goes silent leaves the row standing until patience
   supersedes it — visible as the figure above, not closed by a clock of its own.

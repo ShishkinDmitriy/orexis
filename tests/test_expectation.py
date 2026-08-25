@@ -21,7 +21,7 @@ from packages.capability.actuation.terms import DOSING as _ACTUATE
 from agent.store import bindings
 from agent.keeper import DEADLINE_AT
 
-from conftest import MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
+from conftest import stake_of, MOISTURE, build_agent, genesis_store, wired_markets, wired_sensors, reading_of
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def test_a_claim_opens_a_watch_with_the_baseline_in_the_row(thirsty):
     the sensed graph upserts — the before of any before/after survives nowhere else."""
     win(thirsty)
     keeper = keeper_of(thirsty)
-    watches = keeper.open_expectations(MOISTURE)
+    watches = keeper.open_expectations(stake_of(thirsty).uri)
     assert len(watches) == 1
     watch = watches[0]
     assert watch.baseline == 0.30
@@ -118,12 +118,12 @@ def test_an_open_watch_is_maximum_urgency_and_a_verdict_releases_it(thirsty):
     calm = p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55)
 
     win(thirsty)
-    assert keeper.urgency(thirsty.me.acts_for, MOISTURE, 0.55) == 1.0
+    assert keeper.watching(stake_of(thirsty).uri)
     # maximum urgency earns the agent's OWN fast cadence — the floor is a clamp, not a target
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == p.beliefs.fast_sleep_s
 
     thirsty.deliver(wired_sensors(thirsty)[0].reading_topic, {"moisture": 0.42})   # dose lands
-    assert keeper.urgency(thirsty.me.acts_for, MOISTURE, 0.42) is None
+    assert not keeper.watching(stake_of(thirsty).uri)
     assert p.cadence_for(thirsty.me.acts_for, MOISTURE, 0.55) == calm
 
 
@@ -148,7 +148,7 @@ def test_an_affordance_that_never_pays_becomes_suspect(monkeypatch, caplog):
     assert keeper.reports()["expectations_unmet"] == 3
     assert keeper.reports()["affordances_suspect"] == 1
     assert [pair for pair in keeper.suspects()
-            if pair[0] == ACQUIRING and pair[1] == MOISTURE]
+            if pair[0] == ACQUIRING and pair[1] == stake_of(fern).uri]
     assert "AFFORDANCE SUSPECT" in caplog.text
 
 
@@ -200,7 +200,7 @@ def test_a_claim_is_held_until_the_watch_is_live(thirsty):
     presented = thirsty.sent.to(f"{market.redeem_topic}/fern")
     assert presented and presented[-1]["jti"] == "v1"
     assert keeper.standing(action=PRESENTING) == []
-    watches = keeper.open_expectations(MOISTURE)
+    watches = keeper.open_expectations(stake_of(thirsty).uri)
     assert len(watches) == 1 and watches[0].baseline == 0.29
 
 
@@ -255,7 +255,7 @@ def test_the_row_carries_how_far_the_act_should_move_it(thirsty):
     """The act sizes its own effect: 0.5 L through the same conversion the bid was priced
     with. Copied into the row like the baseline, so the verdict needs no join at reading time."""
     win(thirsty, amount=0.5)
-    watch = keeper_of(thirsty).open_expectations(MOISTURE)[0]
+    watch = keeper_of(thirsty).open_expectations(stake_of(thirsty).uri)[0]
     assert watch.expected_delta == pytest.approx(0.25)
 
 
@@ -263,10 +263,10 @@ def test_an_act_that_cannot_size_itself_keeps_the_exact_crossing(thirsty):
     """No delta stated, no margin demanded — the pre-noise verdict stays legal for whatever
     cannot say how far it should move the world."""
     keeper = keeper_of(thirsty)
-    uri = keeper.adopt(ACQUIRING, MOISTURE, "an act of unknowable size")
-    assert keeper.expect(uri, MOISTURE, "no delta stated", rises=True,
+    uri = keeper.adopt(ACQUIRING, stake_of(thirsty).uri, "an act of unknowable size")
+    assert keeper.expect(uri, "no delta stated", rises=True,
                          baseline=reading_of(thirsty, MOISTURE))
-    keeper.on_reading_recorded(thirsty.me.acts_for, MOISTURE, 0.301)
+    keeper.judge(stake_of(thirsty).uri, 0.301)
     assert keeper.open_expectations() == []
     assert keeper.reports()["expectations_met"] == 1
 
@@ -332,7 +332,7 @@ def test_the_watch_runs_until_the_dose_lands_and_a_reading_could_show_it(monkeyp
     before = datetime.now(timezone.utc).timestamp()
     #  Both halves are the ACTOR's to pass now: the landing from its effect rule, the seeing
     #  from the sensing it holds — the keeper names neither package to find them.
-    assert keeper.expect(uri, MOISTURE, "50 seconds of pouring", expected_delta=0.1,
+    assert keeper.expect(uri, "50 seconds of pouring", expected_delta=0.1,
                          lands_after_s=50.0, seeing_s=seeing,
                          baseline=reading_of(gardener, MOISTURE))
 
@@ -358,7 +358,7 @@ def test_an_act_that_cannot_size_itself_keeps_the_patience(monkeypatch):
     keeper = keeper_of(gardener)
     uri = keeper.adopt(_ACTUATE, MOISTURE, "something is on its way")
     before = datetime.now(timezone.utc).timestamp()
-    assert keeper.expect(uri, MOISTURE, "bought from someone else's valve", expected_delta=0.1,
+    assert keeper.expect(uri, "bought from someone else's valve", expected_delta=0.1,
                          baseline=reading_of(gardener, MOISTURE))
 
     rows = bindings(gardener.beliefs.query(f"""
