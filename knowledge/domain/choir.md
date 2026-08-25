@@ -25,23 +25,31 @@ capability holds a judgment another merely needs, and it is half of what makes
 
 # The hooks
 
-Every hook is a method on `Module` whose default answers nothing, and each resolves its many
-answers its own way:
+The kernel owns the MECHANISM — `Agent.ask(hook, …)` collects every module's answer to a
+question and `Agent.tell(hook, …)` delivers an event, an error in one voice logged and never
+silencing the rest — and defines by name only the BDI-shaped hooks. The hooks about a READING
+are sensing's contract (`packages/capability/sensing/choir.py`): a module joins by defining the
+method, and sensing says what it is asked with and how the answers merge
+([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
 | hook | the question | resolved by |
 |---|---|---|
-| `annotate` | what do you add to my public announcement about this reading? | merged dict |
-| `urgency` | how close does this reading put you to your own trouble? | max of the answers |
-| `bounds` | where do you want this property held? | intersection — highest floor, lowest ceiling |
-| `wants` | what do you contribute to what the agent pursues? | ranked together by `agent.desires()` |
+| `annotate` | what do you add to my public announcement about this reading? | merged dict (sensing's) |
+| `urgency` | how close does this reading put you to your own trouble? | max of the answers (sensing's) |
+| `bounds` | where do you want this property held? | intersection — highest floor, lowest ceiling (sensing's) |
+| `on_reading_recorded` | something new is known — told, not asked | every listener (sensing's) |
+| `desires` | what do you contribute to what the agent pursues? | ranked together by `agent.pursuing()`, one want per node |
+| `desire_urgency` | how urgent is this want, in this world? | first opinion |
+| `size` | how big would the act this row commits to be? | the taker's answer |
+| `take` | carry this committed row out | any True |
 | `notices` | which pairs are unknown or too stale to act on? | concatenated for the deliberator |
 | `quiet` | what did you expect to hear and have stopped hearing? | a set of log lines |
 | `series` | which tagged rows go to the agent's own bucket? | concatenated, one writer |
 | `reports` | which fields go on the agent's health point? | merged dict |
 
 Prose around the project often names the choir by an older five — `annotate`, `urgency`,
-`notices`, `series`, `quiet` — a shorthand from before `wants`, `bounds` and `reports` joined.
-This table is the roster.
+`notices`, `series`, `quiet` — a shorthand from before the rest joined. This table is the
+roster.
 
 # Silence is an answer, and it is not zero
 
@@ -58,8 +66,8 @@ a different fact from having had nothing to say.
 # Adding a singer is nothing; adding a hook is a kernel edit
 
 A package whose module implements a hook joins the choir by being loaded — no registration, no
-list to append to. A new hook is different: it needs the `Module` default and an asker in the
-kernel, and it must obey the discipline the first collision taught — two hooks may not share a
+list to append to. A new hook is different: it needs an asker — the kernel's, for a BDI-shaped
+question, or a package's through `Agent.ask` for one in its own words — and it must obey the discipline the first collision taught — two hooks may not share a
 name with different contracts. `notices()` is named for the act rather than the object because
 desire already had a `gaps()` with a different contract, and the collision broke the keeper's
 tick before a test caught it.

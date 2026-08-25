@@ -45,12 +45,15 @@ sensing:Observing
     #  (a-lever-an-agent-cannot-pull-is-not-a-lever). DISTINCT because a region carries three
     #  property shapes and all three are wants. Reads the whole default graph: wiring is public.
     ag:available """
-        SELECT DISTINCT ?property ?via ?direction WHERE {
-          VALUES ?property { $properties }
-          $me ag:actsFor ?subject .
+        SELECT DISTINCT ?want ?via ?direction WHERE {
+          VALUES (?want ?about) { $wants }
           $me sensing:mayAsk ?via .
-          ?via sensing:monitors ?subject ;
-               sosa:observes ?property .
+          ?via sensing:monitors ?subject ; sosa:observes ?property .
+          # A want ABOUT AN INSTRUMENT — knowing, the freshness want — is looked for through
+          # exactly that instrument, whatever it watches; a want ABOUT A PROPERTY — a stake —
+          # through any instrument of this agent's that reads it on the subject it acts for.
+          FILTER(?via = ?about
+                 || (?property = ?about && EXISTS { $me ag:actsFor ?subject }))
         }""" ;
 
     #  WHO CARRIES IT OUT — the module whose family this names (knowledge/domain/actor.md).
@@ -83,17 +86,18 @@ sensing:Observing
         CONSTRUCT {
             ?obs a sosa:Observation ;
                  sosa:hasFeatureOfInterest $subject ;
-                 sosa:observedProperty $property ;
+                 sosa:observedProperty ?property ;
                  sosa:madeBySensor ?sensor ;
                  sosa:resultTime ?now ;
                  sosa:hasSimpleResult ?value .
         } WHERE {
             $me sensing:mayAsk ?sensor .
             ?sensor sensing:monitors $subject ;
-                    sosa:observes $property .
+                    sosa:observes ?property .
+            FILTER(?sensor = $about || ?property = $about)
             OPTIONAL { GRAPH $sensed {
                 ?seen sosa:hasFeatureOfInterest $subject ;
-                      sosa:observedProperty $property .
+                      sosa:observedProperty ?property .
                 OPTIONAL { ?seen sosa:hasSimpleResult ?value }
             } }
             BIND(COALESCE(?seen, BNODE()) AS ?obs)
@@ -114,9 +118,11 @@ sensing:Observing
 
     ag:retracts """
         CONSTRUCT { ?obs ?p ?o } WHERE {
+            ?sensor sensing:monitors $subject ; sosa:observes ?property .
+            FILTER(?sensor = $about || ?property = $about)
             GRAPH $sensed {
                 ?obs sosa:hasFeatureOfInterest $subject ;
-                     sosa:observedProperty $property ;
+                     sosa:observedProperty ?property ;
                      ?p ?o
             }
         }""" .

@@ -238,7 +238,24 @@ class BiddingModule(Module):
         announces — and where it is (a write that failed), the want reads unmeasured and the
         answer is a look, which is the honest move for an agent that lost its own reading.
         """
-        return self.agent.deliberator.propose_about(self.about)
+        want = self._want()
+        return self.agent.deliberator.propose_for(want) if want is not None else None
+
+    #  WHICH WANT my bids serve: the stake about the property they are priced in, asked of
+    #  sensing, which is where a property means anything (the-stake-is-sensings-want). The
+    #  ledger keys on the want, so every row this module writes or reads names it.
+    def _stake(self):
+        sensing = self.agent.provider(SENSING)
+        return sensing.stake_about(self.about) if sensing is not None else None
+
+    def _stake_uri(self) -> str | None:
+        stake = self._stake()
+        return stake.uri if stake is not None else None
+
+    def _want(self):
+        """The want to act on about my property NOW — sensing's rule: knowing first."""
+        sensing = self.agent.provider(SENSING)
+        return sensing.want_about(self.about) if sensing is not None else None
 
     def _unseal(self, doc: dict) -> dict:
         """Open a sealed claim (#145), or pass a plaintext one through untouched.
@@ -366,7 +383,7 @@ class BiddingModule(Module):
         #  clock; the intention it headed is dropped here, with the reason, so the search
         #  starts this round with nothing standing and its own fresh decision (#358).
         if (keeper := self._keeper()) is not None and not rounds.rounds_of(self.agent, market.uri):
-            keeper.drop(ACQUIRING, self.about, "the round I bid in closed without a claim")
+            keeper.drop(ACQUIRING, self._stake_uri(), "the round I bid in closed without a claim")
         from datetime import timedelta
 
         rounds.open_round(self.agent, market.uri, auction_id,
@@ -393,7 +410,7 @@ class BiddingModule(Module):
         # it, and #151 is the device-side answer to that half.
         if keeper := self._keeper():
             now = datetime.now(timezone.utc)
-            if any(now < w.deadline for w in keeper.open_expectations(self.about)):
+            if any(now < w.deadline for w in keeper.open_expectations(self._stake_uri())):
                 self.log.info("auction %s: my own dose has not answered yet — ceding, and "
                               "asking for the look that would answer it", auction_id)
                 sensing.sense_now()
@@ -416,7 +433,8 @@ class BiddingModule(Module):
         #  sensing's word and sensing's act; waiting for it is `pending`, the bidder's own.
         from agent import execution
 
-        if execution.pursue_about(self.agent, self.about) is None:
+        want = self._want()
+        if want is None or execution.pursue_for(self.agent, want.uri) is None:
             self.log.info("auction %s: deliberation chose not to look — sitting out",
                           auction_id)
             self.pending = None
@@ -451,7 +469,7 @@ class BiddingModule(Module):
             #  The look stays wanted and stays committed — a reading is still owed, round or
             #  no round — so only the Acquire is dropped; sensing resolves the look when it lands.
             if keeper := self._keeper():
-                keeper.drop(ACQUIRING, self.about, f"the auction closed first: {why}")
+                keeper.drop(ACQUIRING, self._stake_uri(), f"the auction closed first: {why}")
             self.pending = None
 
     def _why_blind(self) -> str:
@@ -493,10 +511,9 @@ class BiddingModule(Module):
         if self._deadline:
             self._deadline.stop()
         keeper = self._keeper()
-        stake = next((d for d in self.agent.pursuing()
-                      if not d.is_duty and not d.is_epistemic
-                      and d.observed_property == self.about), None)
-        standing = keeper.standing(ACQUIRING, self.about) if keeper is not None else []
+        stake = self._stake()
+        standing = (keeper.standing(ACQUIRING, stake.uri)
+                    if keeper is not None and stake is not None else [])
         if standing and stake is not None:
             execution.take_standing(self.agent, standing[0], stake)
         elif stake is not None:
@@ -523,16 +540,17 @@ class BiddingModule(Module):
             return None
         now = datetime.now(timezone.utc)
         if any(s.age_s(now) <= keeper.beliefs.patience_s
-               for s in keeper.standing(action=PRESENTING, observed_property=observed_property)):
+               for s in keeper.standing(action=PRESENTING, want=self._stake_uri())):
             return 1.0
         return None
 
-    def size(self, query, graph: str, observed_property: str) -> float | None:
+    def size(self, query, graph: str, row) -> float | None:
         """The planner's question, answered by the one who would bid: `qty_for`, from where the
-        property stands in the world being asked about — read through sensing at that graph."""
+        property the row's want is about stands in the world being asked about — read through
+        sensing at that graph."""
         sensing = self.agent.provider(SENSING)
-        value = sensing.value_in(query, graph, self.me.acts_for, observed_property) if sensing else None
-        return self.qty_for(observed_property, value) if value is not None else None
+        value = sensing.value_in(query, graph, self.me.acts_for, row.about) if sensing else None
+        return self.qty_for(row.about, value) if value is not None else None
 
     def take(self, row, desire, intention: str) -> bool:
         """Carry out a committed Acquire: bid in the round that is open, if one is.
@@ -543,7 +561,7 @@ class BiddingModule(Module):
         knock without a second search. The reading is the one in hand: `on_offer` looked
         first, and a stale one is never bid on.
         """
-        if row.action != ACQUIRING or row.observed_property != self.about:
+        if row.action != ACQUIRING or row.about != self.about:
             return False
         #  THE ROUND IS THE FACT, read off the row's own lever (#358): the row exists only
         #  while one is open on that venue, so this is a lookup and never a wait. `pending`
@@ -600,7 +618,7 @@ class BiddingModule(Module):
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, self.balance)
 
         keeper = self._keeper()
-        acquire_uris = (keeper.satisfy(ACQUIRING, self.about,
+        acquire_uris = (keeper.satisfy(ACQUIRING, self._stake_uri(),
                                        f"claim for {amount}L at a debit of {debit}")
                         if keeper is not None else [])
 
@@ -609,7 +627,7 @@ class BiddingModule(Module):
         # acquire's row, exactly as before #132.
         if not market.redeem_topic or not claim.get("jti"):
             for uri in acquire_uris:
-                keeper.expect(uri, self.about,
+                keeper.expect(uri,
                               f"paid {debit} for {amount}L on a market with no redeem channel "
                               f"— the host has already redeemed, so show me",
                               expected_delta=self._delta_of(amount), rises=self._rises,
@@ -627,8 +645,8 @@ class BiddingModule(Module):
                              self.holding.get("jti"))
         self.holding = {"jti": claim["jti"], "market": market,
                         "amount_l": amount, "debit": debit}
-        if keeper is not None:
-            keeper.adopt(PRESENTING, self.about,
+        if keeper is not None and (stake := self._stake_uri()) is not None:
+            keeper.adopt(PRESENTING, stake,
                          f"holding claim {claim['jti']} ({amount}L) until my watch is "
                          f"live — never spend a dose you cannot watch land")
         if (sensing := self.agent.provider(SENSING)) is not None:
@@ -675,9 +693,9 @@ class BiddingModule(Module):
             # sense_now inside expect() lands on a board that is provably (or at least
             # plausibly) awake and fast. The watch hangs on the Apply row, because applying is
             # the act whose end the movement is.
-            for uri in keeper.satisfy(PRESENTING, self.about,
+            for uri in keeper.satisfy(PRESENTING, self._stake_uri(),
                                       f"claim {held['jti']} presented: {why}"):
-                keeper.expect(uri, self.about,
+                keeper.expect(uri,
                               f"presented {held['jti']} for {held['amount_l']}L — the graph "
                               f"says this moves what I am short of, so show me",
                               expected_delta=self._delta_of(held["amount_l"]), rises=self._rises,

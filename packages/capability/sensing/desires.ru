@@ -64,6 +64,7 @@ INSERT { GRAPH $derived {
     $me ag:holds ?fresh .
     ?fresh a ag:Desire , sensing:Freshness ;
         ssn:forProperty ?property ;
+        ag:about ?sensor ;
         #  THE SENSOR ALONE, and the subject is reached through it. This carried both for a
         #  while, on the reasoning that a want is about the thing as much as about the
         #  instrument — and `desires.rq` binds the instrument off `prov:wasDerivedFrom`, so two
@@ -159,6 +160,7 @@ INSERT { GRAPH $derived {
     $me ag:holds ?desire , ?envelope .
     ?desire a ag:Desire ;
         ssn:forProperty ?property ;
+        ag:about ?property ;
         prov:wasDerivedFrom ?subject ;
         rdfs:label ?label ;
         rdfs:comment ?describes ;

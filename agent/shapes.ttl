@@ -167,9 +167,6 @@ Every figure here was computed, so this is arithmetic rather than authorship —
                   ?this a <http://www.w3.org/ns/shacl#NodeShape> . }
             }
         """ ] ;
-    sh:property [ sh:path <http://www.w3.org/ns/ssn/forProperty> ;
-                  sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
-                  sh:message "a deduced shape must say which property it is about" ] ;
     sh:property [ sh:path sh:targetNode ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
                   sh:message "a deduced shape must say whose state it is about" ] ;
     #  WHERE THE ENGINE WILL READ IT, which differs by constraint kind and was measured both
@@ -186,58 +183,12 @@ Every figure here was computed, so this is arithmetic rather than authorship —
                       ( [ sh:alternativePath ( sh:property sh:sparql ) ] sh:severity )
                       sh:severity ) ] ;
                   sh:minCount 1 ;
-                  sh:message "a deduced shape must carry its FORCE on the property shape that produces the result — above it, every unmet want reports as a violation and an agent whose pot is dry refuses to boot" ] ;
+                  sh:message "a deduced shape must carry its FORCE on the property shape that produces the result — above it, every unmet want reports as a violation and an agent whose pot is dry refuses to boot" ] .
 
-    # The envelope has to be OUTSIDE the region, on both sides, or the arithmetic that scales
-    # urgency by it produces a negative denominator and an agent that is most relaxed exactly
-    # where it is closest to dying. Nothing authored can cause this directly — both figures are
-    # intersections — but a world whose survival range is narrower than its operating range can,
-    # and `water:RangesAgreeShape` only checks that pairing per plant. This checks it after
-    # everything that applies has been folded together, which is where a rig assembled from two
-    # correct halves can still be wrong.
-    #
-    # Every optional bound is guarded with BOUND rather than compared directly, and it is not
-    # defensive typing. `?low < ?floor` on an unbound `?floor` is an ERROR, and SPARQL's `||`
-    # propagates an error unless some other operand is true — so a region with no envelope made
-    # the whole filter error, the row vanish, and the `?low > ?high` case it was also supposed to
-    # catch go unreported. The shape would have been green on exactly the world it was written
-    # for.
-    #
-    # Both edges are read off the SIDE shapes since #242: the floor is what the Below shape
-    # refuses to see a reading under, the ceiling what the Above shape refuses to see one over.
-    # `sh:maxExclusive ?low` still means the region is inclusive of ?low — a reading strictly
-    # below it is the violation — so the arithmetic below is untouched by the split.
-    sh:sparql [
-        sh:message "a region lies outside the envelope it is supposed to sit inside — the survival range stated for this property is narrower than the operating range, once every source is intersected" ;
-        sh:select """
-            SELECT $this ?low ?high WHERE {
-                $this <http://www.w3.org/ns/ssn/forProperty> ?property ;
-                      <http://www.w3.org/ns/shacl#property> ?below , ?above .
-                ?below <http://www.w3.org/ns/shacl#severity>
-                       <http://example.org/orexis#ShouldBecome> ;
-                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
-                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?low .
-                ?above <http://www.w3.org/ns/shacl#severity>
-                       <http://example.org/orexis#ShouldBecome> ;
-                       <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
-                       <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?high .
-                OPTIONAL {
-                    ?agent <http://example.org/orexis#holds> ?desire , ?envelope .
-                    ?desire <http://example.org/orexis#metWhen> $this .
-                    ?envelope <http://www.w3.org/ns/ssn/forProperty> ?property ;
-                              <http://www.w3.org/ns/shacl#property> ?underFloor , ?overCeiling .
-                    ?underFloor <http://www.w3.org/ns/shacl#severity>
-                                <http://www.w3.org/ns/shacl#Warning> ;
-                                <http://example.org/orexis#violationIs> <http://example.org/orexis#Below> ;
-                                <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#maxExclusive> ?floor .
-                    ?overCeiling <http://www.w3.org/ns/shacl#severity>
-                                 <http://www.w3.org/ns/shacl#Warning> ;
-                                 <http://example.org/orexis#violationIs> <http://example.org/orexis#Above> ;
-                                 <http://www.w3.org/ns/shacl#qualifiedValueShape>/<http://www.w3.org/ns/shacl#property>/<http://www.w3.org/ns/shacl#minExclusive> ?ceiling }
-                FILTER(   ?low > ?high
-                       || (BOUND(?floor)   && ?low  < ?floor)
-                       || (BOUND(?ceiling) && ?high > ?ceiling))
-            }""" ] .
+    #  The region-inside-envelope check and "a deduced shape says which property it is
+    #  about" WERE HERE and are `sensing:DeducedRegionShape`'s: both are sentences about a
+    #  property and its ranges, and the kernel checks only what a met-test is — whose state,
+    #  and with what force (the-stake-is-sensings-want).
 
 # The first consumer of the gap, and deliberately a WARNING. An observation outside the
 # survival envelope is not an invalid belief — it is an emergency, and an agent must be allowed

@@ -319,3 +319,44 @@ def check(st, migrating: bool = False) -> None:
           "is spelled and never which value it is. `rebirth` would also clear this, and would "
           "throw away everything the agent revised for itself — see orexis/vocabulary.py."
     )
+
+
+#  THE LEDGER'S PROPERTY. An intention used to carry `ssn:forProperty` beside `ag:pursues`, and
+#  a row adopted before wants had names carried the property ALONE. The kernel keys on the
+#  want now (the-stake-is-sensings-want, #380), so a volume from before is brought across:
+#  a row with a property and no want is given the want that property named for this agent —
+#  found through `ag:about`, which is what the deriver says a want is about — and the property
+#  triple is then dropped from every row. The retired term is spelled here for the same
+#  reason `MOVED` spells its left-hand sides: a migration names what it migrates FROM.
+_LEDGER_PROPERTY = "http://www.w3.org/ns/ssn/forProperty"
+
+
+def migrate_ledger(intentions, graph: str, about_of: dict[str, str]) -> int:
+    """Bring one agent's intention ledger from property-keyed rows to want-keyed ones.
+
+    `about_of` maps each want the agent holds to what it is about; a row whose property names
+    no want is left as it is and said so, because inventing a want for it would be authorship.
+    Returns how many rows gained a want.
+    """
+    from .ontology import AG
+    from .store import bindings
+
+    want_of = {about: want for want, about in about_of.items()}
+    rows = bindings(intentions.query(f"""
+        SELECT ?i ?property WHERE {{ GRAPH <{graph}> {{
+            ?i <{_LEDGER_PROPERTY}> ?property .
+            FILTER NOT EXISTS {{ ?i <{AG}pursues> ?want }} }} }}"""))
+    given = 0
+    for row in rows:
+        if (want := want_of.get(row["property"])) is None:
+            log.warning("ledger row %s is about %s, and no want of this agent's is — left "
+                        "keyed by a property the kernel no longer reads", row["i"],
+                        row["property"])
+            continue
+        intentions.update(f"""INSERT DATA {{ GRAPH <{graph}> {{
+            <{row['i']}> <{AG}pursues> <{want}> }} }}""")
+        given += 1
+    intentions.update(f"""
+        DELETE {{ GRAPH <{graph}> {{ ?i <{_LEDGER_PROPERTY}> ?p }} }}
+        WHERE  {{ GRAPH <{graph}> {{ ?i <{_LEDGER_PROPERTY}> ?p }} }}""")
+    return given

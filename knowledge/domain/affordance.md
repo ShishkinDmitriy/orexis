@@ -19,7 +19,8 @@ written into it:
 | | |
 |---|---|
 | `action` | the [action](/domain/action.md) — the kind of act: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering` |
-| `observed_property` | what it is about — the property the agent holds a desire in |
+| `want` | the [desire](/domain/desire.md) it serves — the node, which is the kernel's only key. Empty on a row that serves any want (a host's Offering) or a duty's |
+| `about` | what that want is about — `ag:about`, said by whoever derived the want and opaque to the kernel: a property for a stake, an instrument for a freshness want. Carried to the effect as `$about` |
 | `via` | the lever it goes through: this probe, this valve, this venue |
 | `direction` | which way it moves the property, or **empty** for a look |
 | `for_agent` | whom the row serves, where it is a duty. Absent on the agent's own rows |

@@ -78,22 +78,47 @@ per pass and canonicalises by, naming no vocabulary. (The record first said `ag:
 saying what a node is keyed by and what it carries is the same declaration from the side that
 keeps a look from being a new world, and it needs no list of what to ignore.)
 
-**The kernel keys nothing by property.** The sovereign's ruling, sharper than the first draft
-of this record: a property is a sensing notion, and a BDI engine has wants, acts and
-commitments, not properties. So `ssn:forProperty` leaves the kernel's vocabulary and code
-altogether, not by renaming it but by no longer needing it:
+**The kernel keys nothing by property** (#380, landed). The sovereign's ruling, sharper than
+the first draft of this record: a property is a sensing notion, and a BDI engine has wants,
+acts and commitments, not properties. So `ssn:forProperty` leaves the kernel's vocabulary and
+code altogether, not by renaming it but by no longer needing it — with one thing the
+implementing change found and this record did not foresee, said first:
 
-- a **want** is identified by its node; `Desire.observed_property` goes, and a package that
-  needs the property of a want it holds walks `?want ssn:forProperty ?p` in its own query;
-- an **intention** is `ag:pursues` the want and `ag:by` the act — both already written — and
-  the ledger's `ssn:forProperty` goes; patience, suspicion and `standing(...)` key on (act,
-  want). The ledger migrates: a row's property becomes the want it pursued, found through the
-  want the property named for that agent;
-- an **affordance row** and an **act** carry the want they serve, not the property; an
-  action's `ag:available` binds `?want` from `$wants` and walks to the property on the
-  package's side, and an effect rule is handed `$want` and walks the same way;
-- the **actors' door** is `pursue_for(want)`; an actor holding a reading finds the want it
-  means by its own query (bidding: the want about the property it is priced in);
+**A want is ABOUT something, and the kernel carries that without reading it.** The desire
+modality is its own store ([a-store-is-a-modality](/decisions/a-store-is-a-modality.md)), so an
+`ag:available` query or an effect rule, which run against the belief base or the imaginarium,
+cannot walk `?want ssn:forProperty ?p` themselves — the want is not in the graph they are asked
+about. What the kernel passes instead is `ag:about`: the one node a package's query may join a
+lever to, stated by whoever derived the want and opaque to the kernel. Sensing says a region
+want is about its property and a freshness want about its INSTRUMENT — which is what keeps a
+purchase from serving a want about knowing, since the market's queries join `?about` to a
+valuation's property and an instrument matches none. `menu_of` hands every action query
+`VALUES (?want ?about) { … }`; a row carries the want and its about; the planner binds `$want`
+and `$about` for the rule; a want about nothing — a call — ranges over every row of the
+agent's own, which is how the dealer's two-step is still found. A generic object of a want is
+a BDI notion; which property it is stays sensing's.
+
+- a **want** is identified by its node; `Desire.observed_property` is gone, and sensing's
+  `ObservedWant` — the kernel's `Desire` plus the property — is what sensing contributes, so a
+  package that needs the property of a want asks sensing (`want_about`, `stake_about`,
+  `wants_about`) or reads the field off the object sensing handed over;
+- an **intention** is `ag:pursues` the want and `ag:by` the act, and the ledger's
+  `ssn:forProperty` is gone; `adopt`, `satisfy`, `drop`, `standing`, `expect`,
+  `open_expectations` and suspicion key on (act, want). The ledger migrates at the keeper's
+  construction (`vocabulary.migrate_ledger`): a row with a property and no want is given the
+  want that property names for the agent, through `ag:about`, and the property triple is
+  dropped from every row;
+- an **affordance row** carries the want it serves and what that want is about; an action's
+  `ag:available` binds `(?want ?about)` from `$wants` and joins a lever to `?about` in its own
+  words, and an effect rule is handed `$want` and `$about`;
+- the **actors' door** is `pursue_for(want)`; an actor holding a reading asks sensing which
+  want it means (bidding: the stake about the property it is priced in; actuation: sensing's
+  `want_about`, knowing first);
+- the **reading choir** — `annotate`, `bounds`, `urgency`, `on_reading_recorded`, `measures` —
+  is no longer defined by name on the kernel's `Module`: the kernel keeps the mechanism
+  (`Agent.ask`, `Agent.tell`) and sensing keeps the contract (`sensing/choir.py`). The keeper
+  no longer listens for readings; sensing hands it a number per want (`keeper.judge`) and asks
+  whether a watch is open (`keeper.watching`). The influx writer takes tags it does not read;
 - the **aim** — a pick inside a region — moved to sensing with the region under #377 (above).
   The kernel keeps *pick* as a concept — a belief chosen inside a range, which review moves —
   and holds no aim of its own.
@@ -115,9 +140,10 @@ it; it no longer has to say it.
    every namespace, and resolves each term it finds (#344). What the widening found was the
    bus — `mqtt:` in `agent/world.py` and in the simulated-device shape — listed as debt with
    what removes it.
-4. No property in the kernel — wants by node, intentions by (act, want), rows and acts
-   carrying the want, the actors' door by want, the ledger migrated
-   (#380). The largest step, and the one that makes the kernel exactly the BDI engine.
+4. No property in the kernel — wants by node, intentions by (act, want), rows carrying the
+   want and its about, the actors' door by want, the reading choir out of `Module`, the ledger
+   migrated (#380, landed). The largest step, and the one that makes the kernel exactly the
+   BDI engine.
 
 # Seams left open
 
@@ -126,5 +152,7 @@ it; it no longer has to say it.
 - ~~**The debts and the calls are derived by their owners already**; the kernel's `desires_of`
   after this change is an assembly function that happens to live in `regions.py`.~~ Closed
   with #377: nothing is left of the file at all — the aim went too.
-- **`ssn:forProperty` in `agent/ontology.ttl`'s comments** narrates the old arrangement until
-  #380 lands; the term itself is declared by SSN, not by us, so nothing in the T-Box changes.
+- **`ssn:forProperty` survives in the ledger migration alone** (`vocabulary._LEDGER_PROPERTY`),
+  which names what it migrates FROM, as `MOVED` does. It leaves with the last pre-#380 volume.
+- **`ag:about` is one node.** A want about two things — a property on two subjects — would
+  need two, and nothing derives one; the day it does, `VALUES` grows a row per pair.

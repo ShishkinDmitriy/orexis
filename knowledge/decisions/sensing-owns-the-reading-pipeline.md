@@ -37,7 +37,7 @@ that had outlived the packages they once held are deleted.
 instant and *horizon*, and the horizon's only kernel use was to mark a stake maximally urgent
 once its reading was older than `sensing:staleAfterS`. That word is sensing's — the sovereign's
 ruling — and so is the judgment: whether a reading is still evidence is the freshness want's
-business, derived and measured by sensing, and `propose_about` already answers that want
+business, derived and measured by sensing, and sensing's `want_about` already answers that want
 first. So a stake judges the number it has, `regions.py` reads the sensed graph in sosa alone
 (`sosa:madeBySensor`, which the sensed writer stamps, keys the freshness wants to their
 instrument), and `readings.rq` is deleted rather than moved. A choir hook was tried first and

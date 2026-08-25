@@ -24,7 +24,8 @@ from agent.ontology import DELIBERATION_GRAPH, SENSED_GRAPH
 from agent import planner as search, trace
 from agent.planner import Planner
 
-from conftest import build_agent, genesis_store, open_round_for, write_reading
+from packages.capability.sensing.regions import ObservedWant
+from conftest import stake_of, build_agent, genesis_store, open_round_for, write_reading
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 GARDENER = "http://example.org/orexis/world/loner#gardener"
@@ -46,7 +47,7 @@ def _gardener(monkeypatch, moisture):
     #  moisture" would take whichever happened to be hotter, which on a dry pot is the wrong
     #  one and answers a different question. These tests are about doses.
     desire = next(g for g in agent.pursuing()
-                  if g.observed_property == MOISTURE and not g.is_epistemic)
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     return agent, Planner(agent, agent.me).plan(desire), desire
 
 
@@ -152,7 +153,7 @@ def test_a_search_that_could_not_see_every_lever_says_so_and_has_nowhere_to_defe
     fern = build_agent("fern", st, monkeypatch)
     open_round_for(fern, "fern")
     desire = next(g for g in fern.pursuing()
-                  if g.observed_property == MOISTURE and not g.is_epistemic)
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
 
     plan = Planner(fern, fern.me).plan(desire)
     assert plan.partial, "with Acquire's rule removed, the menu was not fully simulated"
@@ -180,7 +181,7 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     world = effects.world_after(
         before, st, "http://example.org/orexis/actuation#Dosing",
         me=f"<{GARDENER}>", subject="<http://example.org/orexis/world/loner#zz>",
-        property=f"<{MOISTURE}>", litres=0.3, value=DRY,
+        about=f"<{MOISTURE}>", litres=0.3, value=DRY,
         beliefs=f"<{beliefs_graph('gardener')}>")
 
     after = graph_from(st, *st.public_graphs(), beliefs_graph("gardener"), SENSED_GRAPH)
@@ -232,7 +233,7 @@ def test_a_step_is_simulated_from_where_it_is_taken(monkeypatch):
     agent = build_agent("gardener", st, monkeypatch)
     planner = Planner(agent, agent.me)
     desire = next(g for g in agent.pursuing()
-                  if g.observed_property == MOISTURE and not g.is_epistemic)
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
 
     here = planner._begin(desire)
     row = next(iter(planner._candidates(here, desire)))
@@ -283,7 +284,7 @@ def test_a_plant_that_buys_its_water_can_see_the_lever_that_waters_it(monkeypatc
     fern = build_agent("fern", st, monkeypatch)
     open_round_for(fern, "fern")
     desire = next(g for g in fern.pursuing()
-                  if g.observed_property == MOISTURE and not g.is_epistemic)
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
 
     plan = Planner(fern, fern.me).plan(desire)
 
@@ -318,12 +319,14 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     #  the fabrication possible at all. A bare Desire suffices: the measure is not the want's
     #  to carry, and sensing answers the choir for any observation-backed stake.
     write_reading(fern, 0.30, MOISTURE)   # the world holds the value; a want's `value` is not it
-    stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=0.30)
+    stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+                         value=0.30)
     assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquiring", \
         "below the aim there is a deficit to close, and the search must still close it"
     for value in (0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = Desire(uri="urn:want", urgency=0.4, observed_property=MOISTURE, value=value)
+        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4,
+                             observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) is None, \
             f"a content plant bought water at {value} — a zero-size act made something true"
 
@@ -344,7 +347,7 @@ def _thirsty_with_a_nearly_empty_butt(monkeypatch):
                        world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     desire = next(g for g in agent.pursuing()
-                  if g.observed_property == MOISTURE and not g.is_epistemic)
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     return agent, Planner(agent, agent.me), desire
 
 
@@ -440,7 +443,7 @@ def _last_predicted(planner, desire, plan) -> float:
         node = planner._step_from(node, step, desire)
     sensing = planner.agent.provider("http://example.org/orexis/sensing#SensingCapability")
     return sensing.value_in(planner.imaginarium.query, node.graph, planner.me.acts_for,
-                            desire.observed_property)
+                            desire.observed_property)   # an ObservedWant: sensing's field
 
 
 def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):
@@ -517,7 +520,7 @@ def test_a_sensing_action_still_ends_a_plan_with_no_rule_of_its_own(monkeypatch)
     st = genesis_store({("water_butt", STORED): NEARLY_EMPTY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     desire = next(g for g in agent.pursuing()
-                  if g.observed_property == MOISTURE and not g.is_epistemic)
+                  if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     planner = Planner(agent, agent.me)
 
     plan = planner.plan(desire)

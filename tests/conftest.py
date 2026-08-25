@@ -304,6 +304,12 @@ class _NoSensing:
         return []
 
 
+def stake_of(agent, observed_property=None):
+    """The region want an agent holds about a property — the node the ledger keys on now."""
+    from conftest import MOISTURE as _M
+    return sensing_of(agent).stake_about(observed_property or _M)
+
+
 def wired_sensors(agent):
     from packages.capability.sensing.wiring import sensors_of
     return sensors_of(agent.beliefs.query, agent.me.uri)

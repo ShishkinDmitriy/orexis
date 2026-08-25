@@ -148,7 +148,8 @@ def deliberable(st, desires: dict) -> bool:
         #  the runtime would be checking the thing it exists to run before.
         answering = loader.registry_for(me.capabilities).values()
         for observed_property in sorted(regions_of(wants.query_union, me.uri)):
-            if any(cls.measures(st.query, observed_property) for cls in answering):
+            if any(getattr(cls, "measures", None) is not None
+                   and cls.measures(st.query, observed_property) for cls in answering):
                 continue
             faults += 1
             log.error("%s holds a stake in %s and nothing it composed can measure one — "

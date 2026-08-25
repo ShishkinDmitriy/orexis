@@ -31,7 +31,8 @@ def keeper_of(agent):
 
 def stake_of(agent, prop=MOISTURE):
     return next(d for d in agent.pursuing()
-                if not d.is_duty and not d.is_epistemic and d.observed_property == prop)
+                if not d.is_duty and not d.is_epistemic
+                and getattr(d, "observed_property", None) == prop)
 
 
 # --- an intention is the plan's head, lever included ------------------------------------------
@@ -62,7 +63,7 @@ def test_the_tick_bids_when_a_round_is_open(monkeypatch):
     open_round_for(fern, "fern")
     keeper = keeper_of(fern)
     keeper.deliberate_on_gaps()
-    acquires = keeper.standing(action=ACQUIRING, observed_property=MOISTURE)
+    acquires = keeper.standing(action=ACQUIRING, want=stake_of(fern).uri)
     assert len(acquires) == 1 and acquires[0].via == wired_markets(fern)[0].uri
     assert len(fern.sent.to(f"{wired_markets(fern)[0].bid_topic}/fern")) == 1
 
@@ -95,7 +96,7 @@ def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
     market = wired_markets(fern)[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
-    standing = keeper_of(fern).standing(action=ACQUIRING, observed_property=MOISTURE)
+    standing = keeper_of(fern).standing(action=ACQUIRING, want=stake_of(fern).uri)
     assert len(standing) == 1 and standing[0].via == market.uri
 
 
@@ -154,11 +155,11 @@ def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
         if m.CAPABILITY:
             monkeypatch.setattr(m, "take", lambda row, desire, i, m=m: handed.append(m.name) or False)
     stake = stake_of(fern)
-    row = menu.Affordance(action=OBSERVING, observed_property=MOISTURE, via="urn:probe")
+    row = menu.Affordance(action=OBSERVING, want=stake.uri, about=MOISTURE, via="urn:probe")
     assert execution.carry_out(fern, row, stake, "urn:intent") is False
     assert handed == ["subscribing"], "Observe went to sensing and to nothing else"
     handed.clear()
-    row = menu.Affordance(action=ACQUIRING, observed_property=MOISTURE, via="urn:venue")
+    row = menu.Affordance(action=ACQUIRING, want=stake.uri, about=MOISTURE, via="urn:venue")
     execution.carry_out(fern, row, stake, "urn:intent")
     assert handed == ["bidding"]
 
@@ -166,7 +167,7 @@ def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
 def test_a_means_nobody_takes_is_logged_and_takes_nothing(monkeypatch, caplog):
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     row = menu.Affordance(action="http://example.org/nowhere#Untaken",
-                          observed_property=MOISTURE, via="urn:x")
+                          want=stake_of(fern).uri, about=MOISTURE, via="urn:x")
     with caplog.at_level("ERROR", logger="execution"):
         assert execution.carry_out(fern, row, stake_of(fern), "urn:i") is False
     assert any("nothing takes" in r.message for r in caplog.records)

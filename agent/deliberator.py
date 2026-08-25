@@ -172,51 +172,11 @@ class Deliberator(Module):
         rows.append(("agent_planning", {}, trace.effort(self.agent.beliefs.query_union)))
         return rows
 
-    def propose_about(self, observed_property: str) -> str | None:
-        """The move for whatever I want about this property — the ACTORS' door.
-
-        A bidder holding a fresh reading and an actuator that has just recorded one both want
-        the same thing: what should I do about this property, now. They used to ask
-        `propose(property, value)` and hand over the number they were holding; the answer came
-        from the reflex, which steered by that number and never looked at the store.
-
-        The number is not a parameter any more, and that is the substantive half of this door
-        replacing that one. A search reads what the agent BELIEVES — its desire carries the
-        value the sensed graph holds — so a caller passing a number would be describing a world
-        the search does not judge. The ordering that makes this safe is production's own:
-        `Observations.record` writes the reading and THEN tells the rest of the agent, so by
-        the time either caller asks, the store holds exactly the number it was handed. A
-        reading whose write failed leaves the want unmeasured, and unmeasured answers Observe —
-        which is the honest move for an agent that does not know what it just failed to record.
-
-        None where nothing is wanted about this property at all, which is not a refusal but an
-        absence of a question.
-
-        KNOWING FIRST, then the number, and the order is a rule rather than a ranking. A
-        property carries two wants now — the region it should sit in, and that its instrument
-        has spoken recently — so "the want about this property" has two answers, and taking
-        whichever is HOTTER decides between two different questions by a number that means
-        the same thing in both. No lever moves a number you cannot see, so an unmet epistemic
-        want answers first: an actuator that asks whether to dose a pot nobody has looked at
-        lately is told to look, which is what the deleted `state in (unmeasured, stale)`
-        branch said and the one part of it that was about this door rather than about the
-        search. Once the reading is current the stake answers and the pot is dosed or not on
-        its merits.
-        """
-        desire = self.desire_about(observed_property)
-        return self.propose_for(desire) if desire is not None else None
-
-    def desire_about(self, observed_property: str) -> Desire | None:
-        """WHICH of this property's wants is the one to act on — the rule, stated once.
-
-        Asked by `propose_about` and by execution's property door, so the ordering above is
-        one text: an unmet epistemic want first, then the stake, then whatever is left.
-        """
-        mine = [d for d in self.agent.pursuing()
-                if not d.is_duty and d.observed_property == observed_property]
-        return (next((d for d in mine if d.is_epistemic and not d.is_met), None)
-                or next((d for d in mine if not d.is_epistemic), None)
-                or next(iter(mine), None))
+    #  `propose_about(property)` and `desire_about(property)` WERE HERE — the actors' door by
+    #  property, and the rule that an unmet epistemic want answers before the stake. Which
+    #  wants a property carries is sensing's to say, so the door is sensing's `want_about`
+    #  now and the rule went with it (the-stake-is-sensings-want); what an actor hands the
+    #  kernel is the want's node, through `execution.pursue_for`.
 
     def propose_for(self, desire: Desire) -> str | None:
         """The MEANS of the move for one desire, or None — `decide` projected to its head.
@@ -318,14 +278,14 @@ class Deliberator(Module):
         #  and legitimately unmeasured (it has no distance to scale); any other want about a
         #  property is a stake, and a stake nothing measures is what the gate refuses. Told
         #  apart by the kernel's own structure — the kernel holds no region to consult.
-        if (not desire.is_duty and not desire.is_epistemic and desire.observed_property
+        if (not desire.is_duty and not desire.is_epistemic
                 and self.agent.desire_urgency(
                     desire, self.agent.beliefs.query, SENSED_GRAPH) is None):
             self.log.error(
                 "%s: I hold a stake here and nothing I composed can measure it — every world "
                 "I could reach scores alike, so I am about to conclude that nothing helps from "
                 "a comparison that means nothing. `orexis-validate` refuses this world.",
-                desire.observed_property.rsplit("#", 1)[-1])
+                _short(desire.uri))
         plan = Planner(self.agent, self.me).plan(desire)
         #  A SEARCH OVER PART OF THE MENU CANNOT SAY "NOTHING HELPS", and it no longer has
         #  anywhere to hand the question to. Some lever had no stated effect and was passed
@@ -337,12 +297,10 @@ class Deliberator(Module):
             self.log.error(
                 "%s: a lever on my menu states no effect, so I weighed part of my options and "
                 "am answering as if that were all of them. `orexis-validate` refuses this "
-                "world.", desire.observed_property.rsplit("#", 1)[-1]
-                if desire.observed_property else "a duty")
+                "world.", _short(desire.uri))
         if plan.steps:
             self.log.info("%s: %s (urgency %.2f -> %.2f)",
-                          desire.observed_property.rsplit("#", 1)[-1] if desire.observed_property
-                          else "a duty", plan.outcome, plan.urgency_now, plan.urgency_after)
+                          _short(desire.uri), plan.outcome, plan.urgency_now, plan.urgency_after)
             return plan
         #  A world reachable and not worth reaching, or no lever pointing at this want at all.
         #  THIS is the decision the reflex could not make, and returning None here is the whole
@@ -351,8 +309,7 @@ class Deliberator(Module):
         #  why nothing was done.
         if plan.outcome != planner.SATISFIED:
             self.log.info("%s: %s — no move improves on doing nothing",
-                          desire.observed_property.rsplit("#", 1)[-1]
-                          if desire.observed_property else "a duty", plan.outcome)
+                          _short(desire.uri), plan.outcome)
         return None
 
 # WHAT WENT WITH THE REFLEX, and what that costs: the dealer's shop query — the lot my
@@ -379,3 +336,7 @@ class Deliberator(Module):
 #  Not one of the planner's outcomes and never in the trace; it labels a row handed to
 #  execution so the ledger's prose says where the step came from.
 DUTY = "duty"
+
+
+def _short(iri: str) -> str:
+    return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]

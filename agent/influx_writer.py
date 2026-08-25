@@ -23,37 +23,26 @@ class InfluxWriter:
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
         self.bucket = bucket
 
-    def write_reading(self, plant_id: str, sensor: str, value: float,
-                      observed_property: str,  # a term's LOCAL name, from the caller
-                      at: datetime | None = None) -> None:
-        """One reading, tagged with WHICH property it is.
+    def write_reading(self, value: float, at: datetime | None = None, **tags: str) -> None:
+        """One reading, with whatever TAGS the caller says it is about.
 
-        The property is not optional and not derivable from the number. A board reporting soil
-        moisture and air humidity sends two fractions in the same 0-1 range, and nothing in
-        either says which it is — so writing both into one measurement tagged only by plant and
-        sensor put an air temperature of 21.4 into a series called `soil_moisture`, where every
-        dashboard and every later query would read it as one.
-
-        A tag is what a person filters a dashboard on, so it carries the term's LOCAL
-        name rather than its IRI — shortened by the caller, which is where that helper lives.
-
-        The measurement name is unchanged, because it is what the readings dashboards already
-        filter on and what `infra/tests` asserts against. The tag is what separates them, and a
-        query that does not filter on it now gets a series it can at least SEE is mixed.
+        The tags are the caller's — sensing's: `plant`, `sensor` and `property`, each a term's
+        LOCAL name, because a tag is what a person filters a dashboard on. Which property a
+        number is of is not optional and not derivable from the number (a board reporting soil
+        moisture and air humidity sends two fractions in the same 0-1 range), and sensing
+        fills it; the kernel's writer names no property of its own — this is a series surface
+        (the-stake-is-sensings-want). The measurement name is unchanged, because it is what the
+        readings dashboards filter on and what `infra/tests` asserts against.
 
         `at` is the caller's instant, and stating it matters more than it looks. Left unset, a
         point is stamped by InfluxDB on RECEIPT, so two values out of one message landed at two
         times and a third time appeared in the belief base — three clocks for one measurement.
-        Passing it also means the series agrees with `sosa:resultTime`, which is what makes a
-        dashboard and a query about the same reading comparable at all.
+        Passing it also means the series agrees with the reading's own result time, which is
+        what makes a dashboard and a query about the same reading comparable at all.
         """
-        point = (
-            Point("soil_moisture")
-            .tag("plant", plant_id)
-            .tag("sensor", sensor)
-            .tag("property", observed_property)
-            .field("value", float(value))
-        )
+        point = Point("soil_moisture").field("value", float(value))
+        for name, tag in tags.items():
+            point = point.tag(name, tag)
         if at is not None:
             point.time(at)
         self.write_api.write(bucket=self.bucket, record=point)

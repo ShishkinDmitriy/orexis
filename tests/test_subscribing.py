@@ -13,7 +13,8 @@ import pytest
 
 from packages.capability.sensing.readings import current_reading
 
-from conftest import HUMIDITY, MOISTURE, TEMPERATURE, build_agent, genesis_store, wired_sensors, wired_event_topic
+from packages.capability.sensing import choir
+from conftest import sensing_of, HUMIDITY, MOISTURE, TEMPERATURE, build_agent, genesis_store, wired_sensors, wired_event_topic
 
 
 @pytest.fixture
@@ -91,11 +92,11 @@ def test_a_property_it_has_no_stake_in_gets_no_verdict(fern):
     "an agent may want more than one thing" bought. Humidity is the property nothing in this
     world has an opinion about.
     """
-    assert fern.urgency(fern.me.acts_for, HUMIDITY, 0.46) is None
-    assert fern.annotations(fern.me.acts_for, HUMIDITY, 0.46) == {}
+    assert sensing_of(fern).reading_urgency(fern.me.acts_for, HUMIDITY, 0.46) is None
+    assert choir.annotations(fern, fern.me.acts_for, HUMIDITY, 0.46) == {}
 
-    assert fern.urgency(fern.me.acts_for, MOISTURE, 0.10) is not None
-    assert fern.annotations(fern.me.acts_for, MOISTURE, 0.10) == {"band": "LOW"}
+    assert sensing_of(fern).reading_urgency(fern.me.acts_for, MOISTURE, 0.10) is not None
+    assert choir.annotations(fern, fern.me.acts_for, MOISTURE, 0.10) == {"band": "LOW"}
 
 
 def test_it_holds_an_opinion_about_every_property_its_plant_states_a_range_for(fern):
@@ -105,10 +106,10 @@ def test_it_holds_an_opinion_about_every_property_its_plant_states_a_range_for(f
     agent watch its board more closely. That is the cheapest slice the issue asked for, and it
     needed no market to exist.
     """
-    assert fern.annotations(fern.me.acts_for, TEMPERATURE, 21.0) == {"band": "OK"}
-    assert fern.annotations(fern.me.acts_for, TEMPERATURE, 6.0) == {"band": "LOW"}
-    assert fern.urgency(fern.me.acts_for, TEMPERATURE, 5.0) == 1.0
-    assert fern.urgency(fern.me.acts_for, TEMPERATURE, 21.0) == 0.0
+    assert choir.annotations(fern, fern.me.acts_for, TEMPERATURE, 21.0) == {"band": "OK"}
+    assert choir.annotations(fern, fern.me.acts_for, TEMPERATURE, 6.0) == {"band": "LOW"}
+    assert sensing_of(fern).reading_urgency(fern.me.acts_for, TEMPERATURE, 5.0) == 1.0
+    assert sensing_of(fern).reading_urgency(fern.me.acts_for, TEMPERATURE, 21.0) == 0.0
 
 
 def test_the_bounds_come_from_the_ontology_not_the_code(fern):
@@ -543,8 +544,8 @@ def test_not_knowing_a_desired_property_is_maximum_urgency(fern):
     and for a property the agent wants held, the answer is maximal: not knowing whether the
     pot is dying is at least as urgent as knowing it is uncomfortable. A property with no
     region stays silent, exactly as it does for any reading of it."""
-    assert fern.urgency(fern.me.acts_for, MOISTURE, None) == 1.0
-    assert fern.urgency(fern.me.acts_for, HUMIDITY, None) is None
+    assert sensing_of(fern).reading_urgency(fern.me.acts_for, MOISTURE, None) == 1.0
+    assert sensing_of(fern).reading_urgency(fern.me.acts_for, HUMIDITY, None) is None
 
 
 def test_the_opening_burst_commands_fast_before_any_reading_exists(fern):
