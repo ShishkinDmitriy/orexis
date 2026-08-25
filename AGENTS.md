@@ -169,6 +169,15 @@ record is worse than none, because it is still cited.
    (service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
+**What an agent BELIEVES about all of that is settled by one test: model it only if a belief
+about it would change which plan gets selected.** Everything else is telemetry — logged and
+reported, never believed. Infrastructure reaches belief only through a named projection; anything
+the interpreter already knows is COMPUTED (what stands, what I can do, how stale this is) and
+never asserted; what comes from outside is stored; self-telemetry gets bands, not raw values;
+reflection caps at one level; and beliefs about other agents stay first-order — what they DID,
+never what they believe. See
+[model-it-only-if-a-plan-would-branch-on-it](knowledge/decisions/model-it-only-if-a-plan-would-branch-on-it.md).
+
 **And a SECOND axis, orthogonal to that one: the agent stack** — network, transport,
 translation, the belief-revision seam, mind — sliced by representation rather than by timescale.
 The transport has no position on the cognitive axis at all; an infrastructure failure becomes a
