@@ -9,8 +9,9 @@ description: >-
   same kind of want freshness already is: sensing's. Decided: sensing derives the stake as it
   derives the freshness want, keeps the region, the envelope and the gap, and answers the
   planner's and the keeper's questions about readings through hooks; the kernel keeps
-  `ag:Desire`, `ag:metWhen`, the pick and the ledger of debts, and derives no want. SSN's
-  generic `ssn:forProperty` stays the kernel's word for what a want is about.
+  `ag:Desire`, `ag:metWhen` and the ledger of debts, derives no want, and keys nothing by
+  property: a want is its node, an intention is an act pursuing a want, and the aim moves to
+  sensing with the region it sits in.
 status: accepted
 timestamp: 2026-08-27T18:00:00Z
 ---
@@ -61,16 +62,29 @@ a package marks the predicates that do not count as *where a plan stands* (`ag:v
 kernel term sensing puts on `sosa:resultTime`), and `signature.py` reads the term, not the
 vocabulary.
 
-**`ssn:forProperty` stays the kernel's word for what a want is about.** It is SSN's generic
-relation — a condition, a capability, a property of interest, all "for property" — with no
-sensing baggage, and it is what every want, intention and aim already carries, including the
-aims a sovereign authored in `world/*/beliefs/*.ttl`. `ag:about` in its place would need a
-migration that cannot tell a want's `forProperty` from a datasheet condition's. A kernel that
-speaks SHACL for shapes and PROV for provenance may speak SSN for "which property".
+**The kernel keys nothing by property.** The sovereign's ruling, sharper than the first draft
+of this record: a property is a sensing notion, and a BDI engine has wants, acts and
+commitments, not properties. So `ssn:forProperty` leaves the kernel's vocabulary and code
+altogether, not by renaming it but by no longer needing it:
 
-**The pick stays.** `ag:Aim`, `ag:aims`, `aims_of` and `AimShape` are the agent's choice inside
-a range — [pick](/domain/pick.md) — and the shape reads the want's bounds through `ag:metWhen`,
-kernel structure. What moves is the range; what stays is the choosing.
+- a **want** is identified by its node; `Desire.observed_property` goes, and a package that
+  needs the property of a want it holds walks `?want ssn:forProperty ?p` in its own query;
+- an **intention** is `ag:pursues` the want and `ag:by` the act — both already written — and
+  the ledger's `ssn:forProperty` goes; patience, suspicion and `standing(...)` key on (act,
+  want). The ledger migrates: a row's property becomes the want it pursued, found through the
+  want the property named for that agent;
+- an **affordance row** and an **act** carry the want they serve, not the property; an
+  action's `ag:available` binds `?want` from `$wants` and walks to the property on the
+  package's side, and an effect rule is handed `$want` and walks the same way;
+- the **actors' door** is `pursue_for(want)`; an actor holding a reading finds the want it
+  means by its own query (bidding: the want about the property it is priced in);
+- the **aim** — a pick inside a region — moves to sensing with the region: `ag:Aim`, `ag:aims`,
+  `aims_of` and `AimShape` become sensing's, and the sovereign-authored aims in
+  `world/*/beliefs/*.ttl` are read by sensing's words. The kernel keeps *pick* as a concept —
+  a belief chosen inside a range, which review moves — and holds no aim of its own.
+
+SSN's generic relation was the honest word for "which property" while the kernel had to say
+it; it no longer has to say it.
 
 # Order of work
 
@@ -81,6 +95,9 @@ kernel structure. What moves is the range; what stays is the choosing.
 3. Reconcile: `store.PREFIXES` still declares `sosa`/`ssn-system` because prefixes are
    discovered from ontologies; the kernel's own files should then name neither, and the
    ratchet's prefixed-name blind spot (#344) is what would keep it so (#378).
+4. No property in the kernel — wants by node, intentions by (act, want), rows and acts
+   carrying the want, the actors' door by want, the aim to sensing, the ledger migrated
+   (#380). The largest step, and the one that makes the kernel exactly the BDI engine.
 
 # Seams left open
 
@@ -89,3 +106,5 @@ kernel structure. What moves is the range; what stays is the choosing.
 - **The debts and the calls are derived by their owners already**; the kernel's `desires_of`
   after this change is an assembly function that happens to live in `regions.py`, and the
   file's name will be wrong the day the regions leave. Rename with #377.
+- **`ssn:forProperty` in `agent/ontology.ttl`'s comments** narrates the old arrangement until
+  #380 lands; the term itself is declared by SSN, not by us, so nothing in the T-Box changes.
