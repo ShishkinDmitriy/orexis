@@ -1,27 +1,17 @@
-# Every want this agent holds, asked of the DESIRE MODALITY alone — the store-side half of
-# what `desires.rq` and `gap.rq` used to ask of one dataset (a-store-is-a-modality, #298).
+# What this agent wants ABOUT OBSERVATIONS, one row per want: a stake — the region a reading
+# of `?property` should sit inside, and the survival envelope around it where the world states
+# one — and a freshness want, an instrument that should have spoken recently. Was the kernel's
+# `desires.rq`, which also carried the duties; the ledger reads those itself now, and what is
+# here is exactly the two kinds whose met-shape is a sentence about an observation
+# (the-stake-is-sensings-want).
 #
-# Three branches, three kinds of want, none of them joined to a reading HERE: the desires
-# store holds what is pursued, the beliefs store holds what is, and the join is Python's —
-# `readings.rq` is the other half, and the arithmetic that used to be repeated between two
-# queries and the module now lives once, in `Region`. Measured before it was built (#296):
-# the split answers the same rows 3x faster than the join it replaces.
+# The edges are read off the SIDE shapes the deduction emits (#242): the region's floor is what
+# its Below shape refuses to see a reading under, its ceiling what the Above shape refuses to see
+# one over; the envelope's the same at `sh:Warning`. `$me` is the one agent asking.
 #
-# `$me` is substituted as ever. `$owed` stays a placeholder for the obligations graph — a
-# debt is this agent's own, the pattern would match nothing in a default union of public
-# graphs, and a graph IRI is an INSTANCE code may not name. Run with the union default
-# against the desires store; the region patterns stay UNQUALIFIED for the reason gap.rq
-# always gave — desire is a CLASS of graph, and a second source must be readable unasked.
-#
-# ?side and the urgency arithmetic left this text when the dataset split, and the distance
-# half never came back: how badly a stake is unmet is a capability's answer now
-# (a-desire-states-its-own-measure), asked through the choir of whichever world is being
-# judged — sensing's declaration for observation-backed wants. Staleness and lapse stay with
-# whoever holds the clock, and a duty's fraction stays Python's while the engine will not
-# divide durations.
-
-SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument
-       ?owedTo ?claim ?presented ?at ?expires WHERE {
+# NOT narrowed to a graph: a want contributed by something other than this package's deduction
+# is simply seen, which is what `ag:DesireGraph` being a CLASS is for.
+SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument WHERE {
   {
     #  The desire is a NODE and the met-shape hangs off it (a-desire-states-its-own-measure) —
     #  the region's numbers are read through `ag:metWhen`. No measure rides out: how badly a
@@ -66,16 +56,5 @@ SELECT ?kind ?desire ?property ?low ?high ?floor ?ceiling ?instrument
     ?desire ag:violationIs ag:Stale ; ssn:forProperty ?property ;
             prov:wasDerivedFrom ?instrument .
     BIND("freshness" AS ?kind)
-  }
-  UNION
-  {
-    GRAPH $owed {
-      ?desire a ag:Obligation ; ag:owedTo ?owedTo ; ag:forClaim ?claim ;
-            ag:presented ?presented ; ag:owedAt ?at .
-      OPTIONAL { ?desire ag:expiresAt ?expires }
-      #  A paid debt is HISTORY, not a desire — the ledger keeps every one, and `owed()` is
-      #  where to ask about them.
-      FILTER NOT EXISTS { ?desire ag:dischargedAt ?paid } }
-    BIND("duty" AS ?kind)
   }
 }

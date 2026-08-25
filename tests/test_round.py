@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from conftest import HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for, wired_actuator_for, wired_hosted_markets, wired_markets, wired_sensors
+from conftest import sensing_of, HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for, wired_actuator_for, wired_hosted_markets, wired_markets, wired_sensors
 
 
 @pytest.fixture
@@ -900,7 +900,7 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     #  Still no stake: a mains states no ranges, so the city holds no region. It used to have no
     #  desire MODULE, because wanting was a grant; every agent has a deducer now and the claim
     #  is asserted where it was always true — in what the agent actually wants.
-    assert not city.deducer.gaps(), \
+    assert not sensing_of(city).gaps(), \
         "still no stake — a mains that states no ranges wants nothing, and that stays true"
     ledger = ledger_of(city)
 

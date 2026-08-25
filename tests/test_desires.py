@@ -13,9 +13,8 @@ from datetime import datetime, timedelta, timezone
 
 import pyoxigraph as ox
 
-from agent.regions import desires_of
 
-from conftest import MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
+from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 
@@ -37,7 +36,7 @@ def test_the_query_and_the_module_agree_with_the_diff(query_with_readings, monke
     one. A copy that dropped the sign handling would agree on one of them and not the other.
     """
     _, fern = _fern({("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0}, monkeypatch)
-    desires, diffs = fern.deducer.desires(), fern.deducer.gaps()
+    desires, diffs = sensing_of(fern).desires(), sensing_of(fern).gaps()
 
     #  STAKES, which now needs saying: a property carries an epistemic want beside its region,
     #  and a dict keyed on the property alone quietly kept whichever came last. The diff is
@@ -58,13 +57,13 @@ def test_a_want_nobody_has_read_is_the_hottest_goal_and_not_a_missing_one(monkey
     `urgency(None)` has always given and the reason the first intention is to look.
     """
     _, fern = _fern({("fern", TEMPERATURE): 21.0}, monkeypatch)  # temperature seen, moisture never
-    desires = fern.deducer.desires()
+    desires = sensing_of(fern).desires()
 
     moisture = next(g for g in desires if g.observed_property == MOISTURE)
     assert moisture.value is None
     assert moisture.urgency == 1.0
     assert desires[0] is moisture, "and it sorts to the top, where a deliberator will meet it"
-    assert fern.deducer.gaps().get(MOISTURE) is None, \
+    assert sensing_of(fern).gaps().get(MOISTURE) is None, \
         "while the diff still reports nothing, which is right for a diff"
 
 
@@ -74,13 +73,13 @@ def test_the_states_a_stake_can_be_in(monkeypatch):
     for value, expected in [(0.55, "met"), (0.45, "met"), (0.65, "met"),
                             (0.30, "unmet"), (0.95, "unmet")]:
         _, fern = _fern({("fern", MOISTURE): value}, monkeypatch)
-        moisture = next(g for g in fern.deducer.desires()
+        moisture = next(g for g in sensing_of(fern).desires()
                         if g.observed_property == MOISTURE)
         met = moisture.urgency == 0.0 or (0.45 <= value <= 0.65)
         assert met == (expected == "met"), f"{value} should be {expected}"
 
 
-def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them():
+def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them(monkeypatch):
     """The engine limit, made visible rather than worked around.
 
     A duty's urgency is the fraction of its redeem window that has run, and this store binds
@@ -103,10 +102,11 @@ def test_a_duty_carries_its_timestamps_and_the_fraction_is_computed_from_them():
             <http://example.org/orexis#owedAt> "{owed.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
             <http://example.org/orexis#expiresAt> "{(owed + timedelta(seconds=900)).isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }} }}""")
 
+    fern = build_agent("fern", st, monkeypatch)
+
     def duty_at(offset_s):
-        desires = desires_of(desires_build(st, "fern").query_union, st.query, FERN, "fern",
-                             now=owed + timedelta(seconds=offset_s))
-        return next(g for g in desires if g.is_duty)
+        return next(g for g in fern.owing.desires(now=owed + timedelta(seconds=offset_s))
+                    if g.is_duty)
 
     assert duty_at(0).urgency == 0.0
     assert abs(duty_at(450).urgency - 0.5) < 0.02
@@ -132,7 +132,7 @@ def test_a_stakes_urgency_is_measured_from_the_aim_and_follows_a_repick_without_
     st, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
 
     def urgency():
-        return next(g for g in fern.deducer.desires()
+        return next(g for g in sensing_of(fern).desires()
                     if g.observed_property == MOISTURE).urgency
 
     assert urgency() == 0.0, "at the pick (0.55, which is also the centre) nothing is urgent"
@@ -187,7 +187,7 @@ def test_a_want_whose_kind_nothing_measures_scores_a_logged_one(monkeypatch):
 
     monkeypatch.setattr(sensing, "_DECLARED_MEASURES", ())
     _, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)
-    moisture = next(g for g in fern.deducer.desires()
+    moisture = next(g for g in sensing_of(fern).desires()
                     if g.observed_property == MOISTURE)
     assert moisture.urgency == 1.0, "unmeasurable must never read as content"
     assert moisture.state == "met", \
@@ -210,7 +210,7 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
         for row in bindings(st.query(
                 'SELECT ?a ?id WHERE { ?a a ag:Agent ; ag:localId ?id }')):
             agent = build_agent(row["id"], st, monkeypatch)
-            for prop in agent.deducer.regions:
+            for prop in sensing_of(agent).regions:
                 probe = Desire(uri="urn:asked", urgency=1.0, observed_property=prop)
                 assert agent.desire_urgency(probe, st.query, SENSED_GRAPH) is not None, \
                     f'{row["id"]} in {world}: a stake nothing loaded measures'

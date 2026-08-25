@@ -283,6 +283,24 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
 # module does — and these are the one-liners so a test says `wired_sensors(fern)` and not the
 # query surface and the agent's URI every time.
 
+def sensing_of(agent):
+    """The agent's sensing module — where its regions, gaps and stakes live now
+    (the-stake-is-sensings-want). A test that used to ask `agent.deducer` asks this."""
+    return next((m for m in agent.modules if hasattr(m, "regions")), _NoSensing())
+
+
+class _NoSensing:
+    """An agent that senses nothing — the city — holds no region, sees no gap, wants nothing
+    about a reading. Said as an empty module rather than as None, so a test can ask."""
+    regions: dict = {}
+
+    def gaps(self):
+        return {}
+
+    def desires(self, now=None):
+        return []
+
+
 def wired_sensors(agent):
     from packages.capability.sensing.wiring import sensors_of
     return sensors_of(agent.beliefs.query, agent.me.uri)

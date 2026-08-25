@@ -210,3 +210,62 @@ given, so validate_agent never targets this — the same scoping as the wiring s
                    <https://schema.org/unitCode> ?u .
                 FILTER(?kmin < ?rmin || ?kmax > ?rmax)
             }""" ] .
+
+
+#################  The stake  #################
+#
+#  Were `ag:DesirerShape` and `ag:BeyondSurvivalShape` in the kernel's shapes, targeted on
+#  "acts for a subject that states what it needs" — `ssn-system:hasOperatingRange`, this
+#  package's premise for the region want it derives in `desires.ru`. A shape whose target is
+#  a sensing sentence is a sensing shape (the-stake-is-sensings-want). The kernel keeps
+#  `ag:KeeperShape`, which asks the same agents for a patience, targeted on the want itself.
+
+sensing:DesirerShape a sh:NodeShape ;
+    rdfs:comment """An agent that acts for a subject stating what it needs must end up with at least one region. The two are derived from very nearly the same premise and can still come apart: the grant asks only that the subject state a range, and the deduction additionally asks that every range applying to a property AGREE. A plant whose pot says 0.45-0.65 in a world whose instrument says 0.10-0.30 produces an empty intersection, no region, and — without this shape — an agent that starts, holds the capability, and quietly has no opinion about anything.
+
+That failure is the one this whole design is most exposed to, because its symptom is silence: no band on any announcement, the slow cadence forever, and a market that never hears that anyone is in trouble. Refusing to start is loud, and the report names the agent.""" ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/orexis#actsFor> ?subject .
+                ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange>/<http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
+                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                           <https://schema.org/minValue> ?min ;
+                           <https://schema.org/maxValue> ?max .
+            }
+        """ ] ;
+    sh:property [ sh:path ag:holds ; sh:minCount 1 ;
+                  sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
+
+sensing:BeyondSurvivalShape a sh:NodeShape ;
+    rdfs:comment "The last reading of a property this agent has a desire in lies outside what its subject survives. Not a refusal: the agent starts, and the report says why it had better hurry. |gap| = 1 in the package's gap.rq is this same fact as a number." ;
+    sh:severity sh:Warning ;
+    sh:target [ a sh:SPARQLTarget ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this <http://example.org/orexis#actsFor> ?subject .
+                ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange>/<http://www.w3.org/ns/ssn/systems/inCondition> ?condition .
+                ?condition <http://www.w3.org/ns/ssn/forProperty> ?property ;
+                           <https://schema.org/minValue> ?min ;
+                           <https://schema.org/maxValue> ?max .
+            }
+        """ ] ;
+    #  The hand-written "a reading sits outside the survival envelope" check was HERE and is gone.
+    #  The deduction emits that shape now — targeting the subject, at sh:Warning, saying the
+    #  same sentence in the language the checker already speaks. Two statements of one rule is
+    #  one too many, and the surviving one is the one an agent can also steer by.
+    
+    sh:sparql [
+        sh:severity sh:Warning ;
+        sh:message "a desire in a property this agent polls no sensor for — the region is real, and the agent will never see a reading to hold it to" ;
+        sh:select """
+            SELECT $this ?property WHERE {
+                $this <http://example.org/orexis#actsFor> ?subject ;
+                      <http://example.org/orexis#holds> ?region .
+                ?region <http://www.w3.org/ns/ssn/forProperty> ?property .
+                FILTER NOT EXISTS {
+                    $this <http://example.org/orexis/sensing#polls> ?sensor .
+                    ?sensor <http://example.org/orexis/sensing#monitors> ?subject ;
+                            <http://www.w3.org/ns/sosa/observes> ?property .
+                }
+            }""" ] .

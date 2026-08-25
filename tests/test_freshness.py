@@ -13,9 +13,8 @@ from datetime import datetime, timedelta, timezone
 import rdflib
 from pyshacl import validate as shacl_validate
 
-from agent.regions import desires_of
 
-from conftest import open_round_for, desires_build, MOISTURE, build_agent, genesis_store
+from conftest import sensing_of, open_round_for, desires_build, MOISTURE, build_agent, genesis_store
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
@@ -76,7 +75,7 @@ def test_a_reading_past_the_horizon_is_stale_where_a_fresh_one_is_met(monkeypatc
     """
     agent, st = _fern(monkeypatch, value=0.55)
     def wants():
-        mine = [g for g in agent.deducer.desires() if g.observed_property == MOISTURE]
+        mine = [g for g in sensing_of(agent).desires() if g.observed_property == MOISTURE]
         return (next(g for g in mine if g.is_epistemic), next(g for g in mine if not g.is_epistemic))
     look, stake = wants()
     assert look.state == "met" and look.urgency == 0.0
@@ -97,7 +96,7 @@ def test_stale_and_unmeasured_are_told_apart(monkeypatch):
     and let the answer go cold — the same repair, and not the same situation."""
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
-    by_state = {g.state for g in agent.deducer.desires() if g.is_epistemic}
+    by_state = {g.state for g in sensing_of(agent).desires() if g.is_epistemic}
     assert by_state == {"stale", "unmeasured"}, \
         "moisture was read and went cold; temperature was never read at all"
 

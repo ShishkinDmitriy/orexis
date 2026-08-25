@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import re
 
-from agent.regions import regions_of
+from packages.capability.sensing.regions import regions_of
 
-from conftest import MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
+from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
 
 def _judged(st, *extra):
@@ -33,7 +33,7 @@ def _gaps(st, uri, agent_id="fern", monkeypatch=None):
     """Through a REAL agent, because the magnitude is a capability's answer now: the deducer
     hands `gaps_of` the choir road (`Agent.desire_urgency`) and sensing answers from its own
     declaration — a hand-built join would fake away exactly the contribution under test."""
-    return build_agent(agent_id, st, monkeypatch).deducer.gaps()
+    return sensing_of(build_agent(agent_id, st, monkeypatch)).gaps()
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
 SUPPLIER = "http://example.org/orexis/world/simulation#supplier"
@@ -95,7 +95,7 @@ def test_the_agent_reports_its_worst_gap(monkeypatch, query_with_readings):
     before the first reading says 'wants things it has not seen', not 'fine'."""
     fern = build_agent("fern", genesis_store(
         {("fern", MOISTURE): 0.30, ("fern", TEMPERATURE): 33.0}), monkeypatch)
-    desire = next(m for m in fern.modules if m.name == "desire")
+    desire = sensing_of(fern)
     reported = desire.reports()
     assert reported["desires"] == 2
     assert reported["desires_measured"] == 2
@@ -103,7 +103,7 @@ def test_the_agent_reports_its_worst_gap(monkeypatch, query_with_readings):
     assert reported["worst_gap"] == round(abs(desire.gaps()[TEMPERATURE].gap), 3)
 
     unmeasured = build_agent("fern", genesis_store(), monkeypatch)
-    fresh = next(m for m in unmeasured.modules if m.name == "desire")
+    fresh = sensing_of(unmeasured)
     assert "worst_gap" not in fresh.reports()
     assert fresh.reports()["desires"] == 2
     assert fresh.reports()["desires_measured"] == 0
@@ -123,7 +123,7 @@ def test_a_dead_sensors_last_reading_does_not_present_as_a_current_gap(monkeypat
     long_dead = datetime.now(timezone.utc) - timedelta(seconds=6_000)  # slow 600 + grace 45
     fern = build_agent("fern", genesis_store(
         {("fern", MOISTURE): 0.05}, result_time=long_dead), monkeypatch)
-    desire = next(m for m in fern.modules if m.name == "desire")
+    desire = sensing_of(fern)
 
     # the diff still SAYS it: last I looked I was parched, and I cannot see any more
     assert desire.gaps()[MOISTURE].gap == -1.0
@@ -138,7 +138,7 @@ def test_a_dead_sensors_last_reading_does_not_present_as_a_current_gap(monkeypat
 
 def test_a_fresh_reading_is_current_by_the_same_rule(monkeypatch):
     fern = build_agent("fern", genesis_store({("fern", MOISTURE): 0.30}), monkeypatch)
-    desire = next(m for m in fern.modules if m.name == "desire")
+    desire = sensing_of(fern)
     assert MOISTURE in desire.current()
     assert desire.reports()["desires_measured"] == 1   # temperature stays unmeasured
     assert desire.reports()["desires"] == 2
@@ -215,7 +215,7 @@ def test_the_region_and_the_aim_reach_the_agents_own_bucket(monkeypatch):
     one generic panel groups any number of wants where a suffixed field name could only be
     string-matched. Into this agent's own series: the operator sees them, rivals do not."""
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
-    desire = next(m for m in fern.modules if m.name == "desire")
+    desire = sensing_of(fern)
     rows = {tags["property"]: (measurement, fields)
             for measurement, tags, fields in desire.series()
             if measurement == "agent_desire"}   # the ranking's own row has no property tag

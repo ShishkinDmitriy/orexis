@@ -115,7 +115,7 @@ def deliberable(st, desires: dict) -> bool:
     """
     from agent import effects, loader
     from agent.menu import menu_of
-    from agent.regions import regions_of
+    from packages.capability.sensing.regions import regions_of
     from agent.world import load_self
 
     from agent.ontology import beliefs_graph

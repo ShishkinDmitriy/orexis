@@ -198,9 +198,10 @@ resembles.
 capabilities were granted that way — wanting, committing, deciding — and all three are gone:
 they were the mind, every agent has one, and the STORES they read were already built for every
 agent unconditionally. A modality nobody may write is not a modality. What a stake still decides
-is which SHAPES apply — `ag:KeeperShape` and the desire shapes target `ag:actsFor` a subject that
-states what it needs — so `world/sensing`'s agent still holds no region and states no patience,
-by the fact rather than by a grant. See
+is which SHAPES apply — `ag:KeeperShape` targets a want that is not merely about knowing, and
+sensing's stake shapes target `ag:actsFor` a subject that states what it needs — so
+`world/sensing`'s agent still holds no region and states no patience, by the fact rather than
+by a grant. See
 [the-mind-is-not-a-package](knowledge/decisions/the-mind-is-not-a-package.md),
 [self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md),
 [desire-is-deduced-from-the-ranges-the-world-states](knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)

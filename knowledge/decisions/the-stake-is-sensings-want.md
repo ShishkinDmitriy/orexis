@@ -48,11 +48,19 @@ derivation moves to sensing's `desires.ru` beside the freshness want; `Region`, 
 (a `regions.py` of sensing's own); the kernel shapes that check a region against its
 subject's ranges go to sensing's shapes. The reader of `ssn-system:*` leaves the kernel with it.
 
-**The kernel derives no want.** `agent/desires.ru` goes. Every want an agent pursues is
-contributed through `Module.desires()` — sensing the stakes and the freshness wants, owing the
-debts, hosting the calls — and `regions.desires_of` becomes the *assembly*: the shape, the
-measure asked of the choir, the pick, and nothing sosa-shaped. `Desire`'s `value` is filled
-by whoever contributed it.
+**The kernel derives no want** (#377, landed). `agent/desires.ru` went, and so did the
+kernel's `desires.rq` and `regions.py`. Every want an agent pursues is contributed through
+`Module.desires()` — sensing the stakes and the freshness wants, owing the debts (its own
+query over its own graph, `agent/owing.py`), hosting the calls — and `Agent.pursuing` is the
+whole assembly: it merges the modules' lists and folds a want seen twice into one by its
+node, because two sensing modules read the same regions. There is no kernel `desires_of` left
+to be an assembly function; `Desire`'s `value` is filled by whoever contributed it. What the
+kernel kept of the region is the AIM alone — `agent/aims.py`, read by the deducer — until #380
+moves it too. The choir's verdicts on a reading (the band, the bounds a board watches, the
+urgency a cadence follows, the gaps and the health figures) are sensing's hooks now, and
+`ag:KeeperShape` asks for a patience from an agent that `ag:holds` a want whose violation is not
+`ag:Stale` — the stake said in the kernel's own words, where "acts for a subject that states
+what it needs" was its premise in sensing's.
 
 **What a reading looks like is asked, not walked** (#376, landed). `current_reading` is a
 sensing provider method (bidding, actuation and hosting reach it through `agent.provider`, as
@@ -95,7 +103,7 @@ it; it no longer has to say it.
 1. Readings behind sensing — `current_reading` as a provider method, `value_in` as a hook,
    `ag:volatile` for the signature (#376).
 2. The stake as sensing's want — `desires.ru`, `Region`, `gaps_of`, the region shapes, and
-   `desires_of` as assembly (#377).
+   the kernel's `desires_of` dissolved into the modules' own `desires()` (#377, landed).
 3. Reconcile: `store.PREFIXES` still declares `sosa`/`ssn-system` because prefixes are
    discovered from ontologies; the kernel's own files should then name neither, and the
    ratchet's prefixed-name blind spot (#344) is what would keep it so (#378).
@@ -107,8 +115,8 @@ it; it no longer has to say it.
 
 - **A world with no sensing has no stakes.** That is already true in fact — nothing writes a
   reading — and becomes true in structure: a stake is derived by the package that reads.
-- **The debts and the calls are derived by their owners already**; the kernel's `desires_of`
-  after this change is an assembly function that happens to live in `regions.py`, and the
-  file's name will be wrong the day the regions leave. Rename with #377.
+- ~~**The debts and the calls are derived by their owners already**; the kernel's `desires_of`
+  after this change is an assembly function that happens to live in `regions.py`.~~ Closed
+  with #377: nothing is left of the file but the aim, and `agent/aims.py` is named for it.
 - **`ssn:forProperty` in `agent/ontology.ttl`'s comments** narrates the old arrangement until
   #380 lands; the term itself is declared by SSN, not by us, so nothing in the T-Box changes.

@@ -17,7 +17,7 @@ what noticed, which is the third time in this series it has caught what a green 
 
 from __future__ import annotations
 
-from agent.regions import Region
+from packages.capability.sensing.regions import Region
 
 # A Zamioculcas, in the figures its own package states: the region it grows in, and a survival
 # envelope that is NOT symmetric around it. That asymmetry is the reason the envelope is carried

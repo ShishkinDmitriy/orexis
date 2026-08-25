@@ -24,8 +24,33 @@ from .module import Module
 from .ontology import AG, obligations_graph
 from .store import bindings
 
+#  What I owe, as rows — the duty branch of what used to be one shipped `desires.rq` for every
+#  kind of want. The stakes and the freshness wants went to sensing with the region
+#  (the-stake-is-sensings-want), and the ledger reads its own graph, which it always named.
+_DUTIES_Q = """
+SELECT ?desire ?owedTo ?claim ?presented ?at ?expires WHERE {
+  GRAPH <%s> {
+    ?desire a ag:Obligation ; ag:owedTo ?owedTo ; ag:forClaim ?claim ;
+            ag:presented ?presented ; ag:owedAt ?at .
+    OPTIONAL { ?desire ag:expiresAt ?expires }
+    FILTER NOT EXISTS { ?desire ag:dischargedAt ?paid } }
+}"""
 
-from .regions import desires_of
+
+def _duty_urgency(row: dict, now: datetime) -> float:
+    """The fraction of the claim's redeem window that has run, clamped.
+
+    Here rather than in the query because the store's engine binds NOTHING for
+    `duration / duration` — measured, and pinned by a test, because an unsupported operation
+    that returns unbound instead of failing is how a whole column silently reads zero.
+    """
+    if not row.get("expires"):
+        return 0.0                        # a market with no redeem channel; nobody is waiting
+    owed_at = datetime.fromisoformat(row["at"])
+    window = (datetime.fromisoformat(row["expires"]) - owed_at).total_seconds()
+    if window <= 0:
+        return 1.0
+    return max(0.0, min(1.0, (now - owed_at).total_seconds() / window))
 
 
 class Owing(Module):
@@ -155,13 +180,23 @@ SELECT ?o ?to ?jti ?presented ?at ?expires WHERE {{ GRAPH <{obligations_graph(se
     def desires(self, now: datetime | None = None) -> list[Desire]:
         """MY contribution to what this agent is pursuing: its debts, and no stakes.
 
-        The other half of the choir hook `DesireModule.desires()` answers — and the half the city
-        had no way to contribute before, which is the whole of #233. One shipped query still
-        defines both; each module takes its own kind out of it.
+        The half of the choir the city had no way to contribute before, which is the whole of
+        #233. Lapsed is judged HERE, against the same clock the urgency uses — one reader, one
+        now, so a debt cannot be maximally hot and still count as open because two clocks
+        disagreed.
         """
-        return [g for g in desires_of(self.agent.desires.query_union,
-                                    self.agent.beliefs.query, self.me.uri, self.agent.id, now)
-                if g.is_duty]
+        now = now or datetime.now(timezone.utc)
+        out = []
+        for row in bindings(self.agent.desires.query_union(
+                _DUTIES_Q % obligations_graph(self.agent.id))):
+            demanded = row.get("presented") == "true"
+            lapsed = bool(row.get("expires")) and now >= datetime.fromisoformat(row["expires"])
+            out.append(Desire(uri=row["desire"], urgency=_duty_urgency(row, now),
+                              claim=row["claim"], owed_to=row["owedTo"],
+                              state="lapsed" if lapsed else
+                                    ("demanded" if demanded else "standing"),
+                              pursuable=demanded and not lapsed))
+        return sorted(out, key=lambda g: -g.urgency)
 
     def series(self) -> list[tuple[str, dict, dict]]:
         """What I owe, as figures. A host straining under debts it cannot serve used to look

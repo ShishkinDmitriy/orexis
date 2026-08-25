@@ -211,8 +211,14 @@ class Agent:
         ranking is what makes the two comparable — urgency is unit-free on both sides, so a
         litre owed and a pot drying finally rank against each other.
         """
-        return sorted((desire for m in self.modules for desire in m.desires(now)),
-                      key=lambda g: -g.urgency)
+        #  ONE WANT, ONE NODE. Two modules may hold the same want — the gardener composes two
+        #  sensing modules and each reads every region the agent holds — and a want is its
+        #  node, so the second sighting is the same want and not a second one.
+        seen: dict[str, Desire] = {}
+        for m in self.modules:
+            for desire in m.desires(now):
+                seen.setdefault(desire.uri, desire)
+        return sorted(seen.values(), key=lambda g: -g.urgency)
 
     def annotations(self, subject_uri: str, observed_property: str, value: float) -> dict:
         """Everything my modules want to say about a reading of mine, merged.
