@@ -27,7 +27,9 @@ capability holds a judgment another merely needs, and it is half of what makes
 
 The kernel owns the MECHANISM — `Agent.ask(hook, …)` collects every module's answer to a
 question and `Agent.tell(hook, …)` delivers an event, an error in one voice logged and never
-silencing the rest — and defines by name only the BDI-shaped hooks. The hooks about a READING
+silencing the rest — and every hook is a TERM, an `ag:Hook` declared by whoever owns the
+question and refused if nobody does ([a-hook-is-a-term](/decisions/a-hook-is-a-term.md)). A
+module answers one by `@hook(term)` on a method; an override by name inherits the term. The hooks about a READING
 are sensing's contract (`packages/capability/sensing/choir.py`): a module joins by defining the
 method, and sensing says what it is asked with and how the answers merge
 ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
@@ -67,8 +69,9 @@ a different fact from having had nothing to say.
 # Adding a singer is nothing; adding a hook is a kernel edit
 
 A package whose module implements a hook joins the choir by being loaded — no registration, no
-list to append to. A new hook is different: it needs an asker — the kernel's, for a BDI-shaped
-question, or a package's through `Agent.ask` for one in its own words — and it must obey the discipline the first collision taught — two hooks may not share a
+list to append to. A new hook is different: it needs a TERM in the ontology of whoever owns the
+question — the kernel's for a BDI-shaped one, a package's for one in its own words — and an
+asker, and it must obey the discipline the first collision taught — two hooks may not share a
 name with different contracts. `notices()` is named for the act rather than the object because
 desire already had a `gaps()` with a different contract, and the collision broke the keeper's
 tick before a test caught it.

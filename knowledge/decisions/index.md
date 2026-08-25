@@ -88,6 +88,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) - Entailments are materialised into the store at genesis, so shapes and the runtime cannot disagree about the vocabulary.
 * [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) - Five packages took namespaces of their own. A term is named seven ways, and a rename sees one of them.
 * [the-kernel-names-no-package-word](/decisions/the-kernel-names-no-package-word.md) - Packages are optional, so the core depends on none of them in RDF either. Nine occurrences left, ordered by danger.
+* [a-hook-is-a-term](/decisions/a-hook-is-a-term.md) - Every choir question is an `ag:Hook` declared by whoever owns it; modules answer by decorating with the term; undeclared terms are refused.
 * [metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md) - Every package counts its own and answers `reports()`/`series()`; the choir is the registry; reporting is the sink; the kernel counts only the mind's.
 * [the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md) - Reaching the society is a capability the fact of a bus grants; the transport's module holds the connection, the loop and the watchdog.
 * [a-mandate-is-not-a-commitment](/decisions/a-mandate-is-not-a-commitment.md) - review:Commitment is renamed review:Mandate: REA's commitment is the claim and BDI's is an intention, so the governance thing takes the word everyone used.

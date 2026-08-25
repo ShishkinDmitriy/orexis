@@ -24,13 +24,14 @@ import json
 
 from agent import config
 from agent.metrics import tree_bytes
-from agent.module import Module, Timer
+from agent.module import Module, Timer, hook
+from agent.ontology import HANDLE, REPORTS, SEND, SERIES, SUBSCRIPTIONS
 from agent.store import bindings
 
 from . import sovereign
 from .beliefs import REPORTING_PICKS
 from .series import SeriesWriter
-from .terms import STORING
+from .terms import RECORD, STORING
 
 
 class StoringModule(Module):
@@ -50,6 +51,7 @@ class StoringModule(Module):
     # questions are a person's, and a person who truly wants a million rows has the volume.
     ANSWER_ROWS = 1000
 
+    @hook(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
         # The sovereign's question channel (agent/sovereign.py) — the one topic an agent
         # listens on that the world does not state, because it is not the society's business:
@@ -58,6 +60,7 @@ class StoringModule(Module):
         # what you believe are one capability's two voices.
         return [sovereign.query_topic(self.agent.id)]
 
+    @hook(HANDLE)
     def handle(self, topic: str, payload: bytes) -> bool:
         if topic != sovereign.query_topic(self.agent.id):
             return False
@@ -107,7 +110,7 @@ class StoringModule(Module):
     def _reply(self, answer: dict) -> bool:
         # The dict itself: Agent.publish serialises, and pre-dumping here double-encoded
         # the answer into a JSON string OF a JSON string — found by the first live ask.
-        self.agent.tell("send", sovereign.result_topic(self.agent.id), answer)
+        self.agent.tell(SEND, sovereign.result_topic(self.agent.id), answer)
         self.log.info("answered the sovereign: %s", "error" if "error" in answer
                       else f"{len(answer['rows'])} row(s)")
         return True
@@ -144,6 +147,7 @@ class StoringModule(Module):
             except Exception:  # shutting down; a failed close must not mask the real exit
                 pass
 
+    @hook(RECORD)
     def record(self, value: float, at=None, **tags) -> None:
         """A reading for the record — sensing tells, this module writes. The choir's `record`
         hook: one writer, one token, one place that knows the series store exists."""
@@ -167,12 +171,12 @@ class StoringModule(Module):
         #  one with tagged rows answers `series()`, and the kernel's own account comes off
         #  `Metrics`. Merged here, last answer winning on a key both claim — and saying so.
         fields = dict(metrics.agent_fields())
-        for answer in self.agent.ask("reports"):
+        for answer in self.agent.ask(REPORTS):
             for key, value in answer.items():
                 if key in fields and fields[key] != value:
                     self.log.warning("two modules report %r — keeping the later", key)
                 fields[key] = value
-        tagged = [row for rows in self.agent.ask("series") for row in rows]
+        tagged = [row for rows in self.agent.ask(SERIES) for row in rows]
         # The story rides the same tick, writer, token and bucket as the figures (#125) — so
         # nothing new is granted, and an agent whose modules tell no events writes none. Each
         # event carries its own instant, so landing on the tick costs nothing but latency.

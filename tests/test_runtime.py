@@ -8,6 +8,7 @@ import logging
 
 import pytest
 
+from agent.ontology import HANDLE
 from conftest import build_agent, wired_actuators, wired_hosted_markets, wired_markets, wired_sensors
 
 
@@ -126,11 +127,11 @@ def test_a_message_is_offered_to_every_module(agent, monkeypatch):
     """
     fern = agent("fern")
     seen = []
-    for m in fern.modules:
-        monkeypatch.setattr(m, "handle", lambda t, p, n=m.name: (seen.append(n), True)[1],
-                            raising=False)   # the transport itself answers no handle
+    listeners = [m for m in fern.modules if m.answer(HANDLE) is not None]
+    for m in listeners:
+        monkeypatch.setattr(m, "handle", lambda t, p, n=m.name: (seen.append(n), True)[1])
     fern.deliver(wired_sensors(fern)[0].reading_topic, {"moisture": 0.2})
-    assert len(seen) == len(fern.modules), f"only {seen} were offered it"
+    assert len(listeners) > 1 and len(seen) == len(listeners), f"only {seen} were offered it"
 
 
 def test_a_module_that_claims_a_topic_does_not_silence_the_next(agent, monkeypatch):
@@ -140,10 +141,10 @@ def test_a_module_that_claims_a_topic_does_not_silence_the_next(agent, monkeypat
     second is never called, and nothing anywhere says so — the message is simply gone.
     """
     fern = agent("fern")
-    first, second = fern.modules[0], fern.modules[1]
-    monkeypatch.setattr(first, "handle", lambda t, p: True, raising=False)
+    first, second = [m for m in fern.modules if m.answer(HANDLE) is not None][:2]
+    monkeypatch.setattr(first, "handle", lambda t, p: True)
     reached = []
-    monkeypatch.setattr(second, "handle", lambda t, p: (reached.append(t), True)[1], raising=False)
+    monkeypatch.setattr(second, "handle", lambda t, p: (reached.append(t), True)[1])
     fern.deliver("shared/channel", {})
     assert reached, "the first module claiming the topic hid it from the second"
 
@@ -157,7 +158,8 @@ def test_the_unhandled_warning_still_fires_only_when_nobody_took_it(agent, monke
     """
     fern = agent("fern")
     for m in fern.modules:
-        monkeypatch.setattr(m, "handle", lambda t, p: False, raising=False)
+        if m.answer(HANDLE) is not None:
+            monkeypatch.setattr(m, "handle", lambda t, p: False)
     with caplog.at_level(logging.WARNING):
         fern.deliver("nobody/wants/this", {})
     assert "nothing handled a message" in caplog.text

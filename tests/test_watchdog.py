@@ -90,7 +90,8 @@ def test_what_went_quiet_is_said_once_and_recovery_is_said_too(fern, caplog):
     and the ticks in between are silent."""
     fern.module("mqtt")._on_connect()
     lines = ["moisture_sensor_fern: nothing for 700s, past the 645s I allow"]
-    fern.modules.append(SimpleNamespace(quiet=lambda: list(lines)))
+    fern.modules.append(SimpleNamespace(quiet=lambda: list(lines),
+                                        answer=lambda term: (lambda: list(lines)) if term.endswith("#quiet") else None))
 
     with caplog.at_level(logging.INFO, logger="watchdog"):
         fern.module("mqtt").watchdog.check()

@@ -60,8 +60,8 @@ def test_the_swallowed_write_failures_are_counted(agent):
     #  Each package counts its own refusals (metrics-are-an-aspect): the sink's are
     #  reporting's, the belief base's are sensing's.
     reporting._writer = Refusing()
-    agent.tell("record", 0.5, None, sensor="x")
-    agent.tell("record", 0.6, None, sensor="x")
+    agent.tell("http://example.org/orexis/reporting#record", 0.5, None, sensor="x")
+    agent.tell("http://example.org/orexis/reporting#record", 0.6, None, sensor="x")
     assert reporting.reports()["influx_write_failures"] == 2
     monkeypatch_write = sensing.observations.sensed.write
     sensing.observations.sensed.write = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("refused"))

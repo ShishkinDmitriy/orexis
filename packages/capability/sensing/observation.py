@@ -18,6 +18,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from agent import config
+from agent.ontology import SEND
+
+#  Reporting's hook, spelled as every cross-package reference is: a reading for the record is
+#  told to whoever holds the sink (a-hook-is-a-term).
+RECORD = "http://example.org/orexis/reporting#record"
 import time
 
 from . import choir
@@ -113,7 +118,7 @@ class Observations:
         that makes the picture true.
         """
         try:
-            self.agent.tell("record", value, at, plant=sensor.subject_id,
+            self.agent.tell(RECORD, value, at, plant=sensor.subject_id,
                             sensor=sensor.local_id, property=_short(sensor.observes))
             log.info("%s: %.3f at %s — the last quiet look before the crossing",
                      sensor.local_id, value, at.isoformat(timespec="seconds"))
@@ -149,7 +154,7 @@ class Observations:
 
         try:
             #  TOLD, not written: whoever holds the series sink (reporting) records it.
-            self.agent.tell("record", value, at, plant=sensor.subject_id,
+            self.agent.tell(RECORD, value, at, plant=sensor.subject_id,
                             sensor=sensor.local_id, property=_short(sensor.observes))
         except Exception as exc:  # history is best-effort; never drop the reading over it
             # Logged AND counted. Logging alone made this invisible: nothing reads a container's
@@ -178,7 +183,7 @@ class Observations:
             # host listens for this to learn that scarcity has appeared, and never reads a
             # moisture. The number comes from whoever observed; the judgment comes from
             # whichever capability holds a stake — see runtime.annotations.
-            self.agent.tell("send", self.event_topic, {
+            self.agent.tell(SEND, self.event_topic, {
                 "agent": self.me.agent_id, "subject": sensor.subject,
                 # Named, because a subject with two sensors announces two values on one topic
                 # and a listener that cannot tell them apart is worse off than one told nothing.

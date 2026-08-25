@@ -554,3 +554,18 @@ def prefixes() -> dict[str, str]:
             out.setdefault(label, iri)
             origin.setdefault(label, path)
     return out
+
+
+@lru_cache(maxsize=1)
+def hooks() -> frozenset[str]:
+    """Every `ag:Hook` any ontology declares — the kernel's questions and each package's. What
+    `Agent.ask` and `Agent.tell` hold a term to: a hook nobody declared is a typo that would
+    otherwise be answered by silence (a-hook-is-a-term)."""
+    import rdflib
+
+    out: set[str] = set()
+    hook = rdflib.URIRef("http://example.org/orexis#Hook")
+    for path in ontology_files():
+        g = rdflib.Graph().parse(path, format="turtle")
+        out.update(str(s) for s in g.subjects(rdflib.RDF.type, hook))
+    return frozenset(out)
