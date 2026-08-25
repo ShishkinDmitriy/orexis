@@ -64,9 +64,9 @@ SELECT ?verdict ?means ?wouldReach ?standsAt WHERE {{ GRAPH <{DELIBERATION_GRAPH
     #  a reader asking why nothing happened learns that looking was weighed too, and that the
     #  pump was tried and found wanting — not that the search never saw it.
     by_means = {r["means"].rsplit("#", 1)[-1]: r for r in rows}
-    assert set(by_means) == {"Observe", "Actuate"}
+    assert set(by_means) == {"Observing", "Dosing"}
 
-    pump = by_means["Actuate"]
+    pump = by_means["Dosing"]
     assert pump["verdict"] == trace.WORSE
     #  The numbers are the point: a reader must be able to see that the world it would reach
     #  is no better than the one it is in, rather than take the verdict on trust.
@@ -87,7 +87,7 @@ SELECT ?means ?via ?depth ?verdict WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
   ?c <{KERNEL}wouldTake> ?means ; <{KERNEL}through> ?via ;
      <{KERNEL}atDepth> ?depth ; <{KERNEL}verdict> ?verdict }} }}"""))
     assert len(rows) == 1, "one chosen candidate, named once"
-    assert rows[0]["means"].endswith("Actuate")
+    assert rows[0]["means"].endswith("Dosing")
     assert rows[0]["via"].endswith("pump"), "the lever itself, not just the kind of move"
     assert int(rows[0]["depth"]) == 0
     assert rows[0]["verdict"] in (trace.MET, trace.BETTER)

@@ -71,13 +71,13 @@ def test_a_lever_nothing_states_an_effect_for_is_refused(monkeypatch, caplog):
     state from the runtime side.
     """
     st = build("simulation", monkeypatch)
-    st.update("""DELETE { GRAPH <%s> { ?rule sh:construct ?c } }
-                 WHERE  { GRAPH <%s> { ?rule ag:means market:Acquire ; sh:construct ?c } }"""
+    st.update("""DELETE { GRAPH <%s> { market:Acquiring sh:construct ?c } }
+                 WHERE  { GRAPH <%s> { market:Acquiring sh:construct ?c } }"""
               % (ACTIONS_GRAPH, ACTIONS_GRAPH))
 
     assert not deliberable(st, desires_of(st)), \
         "a world whose water lever states no effect was allowed through"
-    assert "Acquire" in caplog.text and "what that DOES" in caplog.text, \
+    assert "Acquiring" in caplog.text and "what that DOES" in caplog.text, \
         "the refusal must name the lever — a gate that says only 'no' is a gate nobody can act on"
 
 

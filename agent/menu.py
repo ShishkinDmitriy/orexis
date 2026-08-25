@@ -22,14 +22,14 @@ from .store import bindings
 
 @dataclass(frozen=True)
 class Affordance:
-    """One row of the menu: a means, the property it is about, the lever, — for a means that
+    """One row of the menu: a action, the property it is about, the lever, — for a means that
     moves anything — which way it moves it, and whether it is mine to CHOOSE or to HONOUR.
 
     Whom it serves is the #218 half: a row of my own is an option a deliberator ranges over;
     one owed to somebody is a duty exercised on a valid presentation and never proposed.
     """
 
-    means: str
+    action: str
     observed_property: str
     via: str
     direction: str | None = None
@@ -56,8 +56,8 @@ _DESIRED_Q = """SELECT DISTINCT ?property WHERE {
           ag:metWhen/sh:property/sh:severity ag:ShouldBecome }"""
 
 
-_ACTIONS_Q = """SELECT ?means ?available WHERE {
-  ?action a ag:Action ; ag:means ?means ; ag:available ?available }"""
+_ACTIONS_Q = """SELECT ?action ?available WHERE {
+  ?action a ag:Action ; ag:available ?available }"""
 
 
 def menu_of(query, agent_uri: str, desires, beliefs: str, sensed: str = SENSED_GRAPH) -> list[Affordance]:
@@ -70,7 +70,7 @@ def menu_of(query, agent_uri: str, desires, beliefs: str, sensed: str = SENSED_G
     THE UNION OF WHAT THE LOADED ACTIONS SAY (#207, an-action-is-one-node): every `ag:Action`
     in the store carries its precondition as `ag:available`, and this runs each one with `$me`
     and the desired `$properties` filled in, and `$beliefs` naming the agent's own graph.
-    The action's `ag:means` is the row's; a bound
+    The action itself is the row's kind; a bound
     `?for_agent` makes the row a duty's. Sensing brings Observe, the market Acquire and the
     host's Apply, actuation Actuate — and a new way of acting is a node in a new directory,
     never an edit here. Sorted because per-action order is no order.
@@ -91,8 +91,8 @@ def menu_of(query, agent_uri: str, desires, beliefs: str, sensed: str = SENSED_G
         q = (action["available"].replace("$me", f"<{agent_uri}>")
              .replace("$properties", props).replace("$beliefs", f"<{beliefs}>")
              .replace("$sensed", f"<{sensed}>"))
-        rows += [Affordance(means=action["means"], observed_property=r["property"],
+        rows += [Affordance(action=action["action"], observed_property=r["property"],
                             via=r["via"], direction=r.get("direction"),
                             for_agent=r.get("for_agent"))
                  for r in bindings(query(q))]
-    return sorted(rows, key=lambda a: (a.observed_property, a.means, a.for_agent or ""))
+    return sorted(rows, key=lambda a: (a.observed_property, a.action, a.for_agent or ""))

@@ -102,7 +102,7 @@ def write(store, agent_id: str, desire, plan, considered, stands_at: float,
 def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
            took_s: float) -> None:
     node = _uri(agent_id, desire.uri)
-    chosen = plan.steps[0].means if plan.steps else None
+    chosen = plan.steps[0].action if plan.steps else None
     rows = []
     for i, (depth, row, urgency, verdict) in enumerate(considered):
         candidate = f"{node}.{i}"
@@ -111,7 +111,7 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
         rows.append(
             f'    <{node}> <{KERNEL}considered> <{candidate}> .\n'
             f'    <{candidate}> a <{KERNEL}Candidate> ;\n'
-            f'        <{KERNEL}wouldTake> <{row.means}> ;\n'
+            f'        <{KERNEL}wouldTake> <{row.action}> ;\n'
             f'        <{KERNEL}through> <{row.via}> ;\n'
             f'        <{KERNEL}atDepth> {depth} ;\n'
             f'{reached}'
@@ -122,7 +122,7 @@ def _write(store, agent_id: str, desire, plan, considered, stands_at: float,
     took = ""
     if chosen is not None:
         for i, (_, row, _, _) in enumerate(considered):
-            if row.means == chosen:
+            if row.action == chosen:
                 took = f'        <{KERNEL}chose> <{node}.{i}> ;\n'
                 break
     store.update(f"""INSERT DATA {{ GRAPH <{DELIBERATION_GRAPH}> {{

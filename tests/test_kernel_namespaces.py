@@ -135,16 +135,17 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # a-round-is-a-fact-and-offering-is-an-action) makes a package word the destination of two
     # kernel spellings. The map is a record of where things went and cannot avoid naming the
     # place; it leaves when no volume older than that change can exist to migrate.
-    ("agent/vocabulary.py", "market#Offer"): (
-        2, "migration: where the kernel's Offer went, from two older spellings — removable with the last pre-#363 volume"),
-    ("agent/vocabulary.py", "sensing#Observe"): (
-        2, "migration: where the kernel's Observe went — removable with the same volumes"),
-    ("agent/vocabulary.py", "actuation#Actuate"): (
-        2, "migration: where the kernel's Actuate went — removable with the same volumes"),
-    ("agent/vocabulary.py", "market#Acquire"): (
-        2, "migration: where the kernel's Acquire went — removable with the same volumes"),
-    ("agent/vocabulary.py", "market#Apply"): (
-        2, "migration: where the kernel's Apply went — removable with the same volumes"),
+    ("agent/vocabulary.py", "market#Offering"): (
+        1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
+    ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
+    ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
+    ("agent/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
+    ("agent/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),
+    ("agent/vocabulary.py", "sensing#Observe"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent/vocabulary.py", "actuation#Actuate"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent/vocabulary.py", "market#Offer"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
 
     # KIND 3 — `agent/ontology.py`'s namespace constants. Self-aware in place ("these are NOT a
     # prefix registry") and consumed mainly by `onboarding/`, which legitimately knows packages

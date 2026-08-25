@@ -87,4 +87,4 @@ society with none is not idle — it is fed.
   than authored.
 - [deliberation](/domain/deliberation.md) is handed a gap and names the next move.
 - [intention](/domain/intention.md) is the commitment to close one by a named
-  [means](/domain/means.md).
+  [action](/domain/action.md).

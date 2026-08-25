@@ -81,7 +81,7 @@ class Plan:
     def first(self) -> str | None:
         """The one move to commit. A plan is re-derived every pass, so only its head is acted
         on: the world moves, and a committed tail is a promise about a future nobody can see."""
-        return self.steps[0].means if self.steps else None
+        return self.steps[0].action if self.steps else None
 
 
 @dataclass
@@ -306,7 +306,7 @@ class Planner:
                     if step is None:
                         self._weighed.append((depth, row, None, trace.UNSIMULATED))
                         continue
-                    #  CYCLE DETECTION, and it compares WORLDS rather than means. The first
+                    #  CYCLE DETECTION, and it compares WORLDS rather than action. The first
                     #  draft refused to apply the same means twice, which is not what a cycle
                     #  is: two doses in a row reach somewhere new, and forbidding them would
                     #  have made every dose too small to finish the job unplannable. What must
@@ -489,7 +489,7 @@ class Planner:
                     continue
                 if desire.observed_property and row.observed_property != desire.observed_property:
                     continue
-            if effects.rule_for(self.agent.beliefs, row.means) is None:
+            if effects.rule_for(self.agent.beliefs, row.action) is None:
                 #  A lever whose package never said what it does. It still works — the reflex
                 #  can take it — but nothing can simulate it, and a planner that guessed would
                 #  be inventing the consequence it is supposed to be checking. Remembered
@@ -561,10 +561,10 @@ class Planner:
         the first instead of replacing it and is then discarded as a world already seen.
         """
         try:
-            added, retracted = effects.apply(self.imaginarium, row.means,
+            added, retracted = effects.apply(self.imaginarium, row.action,
                                              **self._bind(desire, node, row))
         except Exception as exc:                 # a package's rule is not an agent's problem
-            log.error("could not simulate %s: %s", row.means, exc)
+            log.error("could not simulate %s: %s", row.action, exc)
             return None
         taken = node.taken + (row,)
         world = effects.applied(node.world, added, retracted)
@@ -602,7 +602,7 @@ class Planner:
         one reached is the act the actor would actually take next — which is the whole of what
         makes "too small to finish in one" a plannable situation rather than an unreachable one.
         """
-        means = row.means if row is not None else None
+        action = row.action if row is not None else None
         prop = desire.observed_property if desire else None
         value = desire.value if desire else None
         if prop is None and row is not None:
@@ -626,11 +626,11 @@ class Planner:
             "beliefs": f"<{beliefs_graph(self.agent.id)}>",
             "sensed": f"<{node.graph if node is not None else SENSED_GRAPH}>",
             "value": value if value is not None else 0,
-            "litres": self._dose(desire, value, means, prop) if desire else 0.0,
+            "litres": self._dose(desire, value, action, prop) if desire else 0.0,
         }
 
     def _dose(self, desire: Desire, value: float | None = None,
-              means: str | None = None, observed_property: str | None = None) -> float:
+              action: str | None = None, observed_property: str | None = None) -> float:
         """How much this act would move — ASKED OF WHOEVER WOULD TAKE IT, never computed here.
 
         Each lever's owner sizes its own act, and the two owners size differently: an actuator
@@ -654,7 +654,7 @@ class Planner:
         """
         value = desire.value if value is None else value
         observed_property = observed_property or desire.observed_property
-        if observed_property is None or value is None or means is None:
+        if observed_property is None or value is None or action is None:
             return 0.0
         #  ASKED OF WHOEVER TAKES THE ROW, found the way execution finds it: the means'
         #  `ag:takenBy` family, then every provider, first answer wins. No means is named
@@ -662,7 +662,7 @@ class Planner:
         #  actuation was the kernel's last hold on the latter word.
         from .execution import taken_by
 
-        family = taken_by(self.agent.beliefs.query, means)
+        family = taken_by(self.agent.beliefs.query, action)
         litres = None
         for actor in (self.agent.providers(family) if family else []):
             litres = actor.size(observed_property, value)

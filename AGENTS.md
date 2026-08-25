@@ -54,7 +54,7 @@ If it is unavailable, the rules are short enough to follow by hand:
   a path that is not on disk.
 
 **`knowledge/domain/` is the shared dictionary, and a term is defined before it is used.** The
-pages there fix what our words MEAN — affordance, gap, imaginarium, capability, means, lot, venue
+pages there fix what our words MEAN — affordance, gap, imaginarium, capability, action, lot, venue
 — and a discussion, a commit message, a docstring or an issue that uses one of them uses it the
 way its page does. **If a change needs a word the bundle does not have, write the page in the SAME
 change, first.** A word used before it is defined is a word everyone defines differently, and the
@@ -73,8 +73,10 @@ Three clauses make that workable, and each was learned by getting it wrong:
 - **A pointer that restates is a second owner.** A stub saying what the other page says has not
   moved the claim, it has copied it. Say what THIS page does with the thing, and link.
 - **A relationship can be the concept**, and the test is whether each half stands alone.
-  `means` and `lever` split because each had content of its own — a means is a term code may name
-  and the joint three subsystems meet at; a lever is an instance whose absence removes a row.
+  `means` and `lever` split because each had content of its own — a means was the joint three
+  subsystems met at; a lever is an instance whose absence removes a row. And when the three
+  subsystems became one node, `means` folded into `action`, because a joint between one thing
+  and itself is nothing (the-action-is-the-kind).
   `model-and-unit` does not split: its whole content is what a unit inherits from its model, so
   two pages would each have to restate the relationship, and the gate would refuse them.
 

@@ -37,7 +37,7 @@ chosen row did not. Two terms for a fact one column states is a second owner of 
 
 | part | property | what it is |
 |---|---|---|
-| kind | `ag:means` | the [means](/domain/means.md), a kernel word |
+| kind | ~~`ag:means`~~ | the node itself, since [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) |
 | precondition | `ag:available` | a SELECT binding `?property ?via ?direction`, and `?for_agent` for a duty |
 | effect | `sh:construct`, `ag:retracts`, `ag:landsAfter`, `ag:confirmedBy` | unchanged from the effect rule |
 | taker | `ag:takenBy` | the capability whose module carries it out |

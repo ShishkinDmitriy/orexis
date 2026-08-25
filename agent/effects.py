@@ -33,32 +33,32 @@ from .store import bindings
 
 log = logging.getLogger("effects")
 
-#  Which ACTION carries this means, and the two queries it carries as its effect. Asked of the
+#  Which ACTION carries this action, and the two queries it carries as its effect. Asked of the
 #  action graph by NAME, because that graph is the one place actions live and an action for a
 #  means nobody loaded is one nothing will ever ask for. An action with no construct states no
 #  effect and is not returned — the gate refuses a world whose menu offers one.
 _RULE_Q = """
 SELECT ?rule ?construct ?retracts ?lands ?confirmed WHERE { GRAPH <%s> {
+  BIND(<%s> AS ?rule)
   ?rule a <http://example.org/orexis#Action> ;
-        <http://example.org/orexis#means> <%s> ;
         <http://www.w3.org/ns/shacl#construct> ?construct .
   OPTIONAL { ?rule <http://example.org/orexis#retracts> ?retracts }
   OPTIONAL { ?rule <http://example.org/orexis#landsAfter> ?lands }
   OPTIONAL { ?rule <http://example.org/orexis#confirmedBy> ?confirmed } } } LIMIT 1"""
 
 
-def rule_for(store, means: str) -> dict | None:
+def rule_for(store, action: str) -> dict | None:
     """The effect rule a means carries, or None where the package shipped no `effects.ttl`.
 
     None is an ordinary answer and every caller must take it: most means have no effect stated
     yet, and a lever whose consequences nobody has written down is still a lever that works —
     it is only one a planner cannot reason about.
     """
-    rows = bindings(store.query(_RULE_Q % (ACTIONS_GRAPH, means)))
+    rows = bindings(store.query(_RULE_Q % (ACTIONS_GRAPH, action)))
     return rows[0] if rows else None
 
 
-def apply(store, means: str, **bind) -> tuple[list, list]:
+def apply(store, action: str, **bind) -> tuple[list, list]:
     """Run one means' effect: `(added, retracted)`, as triples, against nothing.
 
     **`store` is whichever dataset the question is being asked ABOUT, and that is the whole of
@@ -86,14 +86,14 @@ def apply(store, means: str, **bind) -> tuple[list, list]:
     `$me`, `$subject`, `$property`, `$litres`. Substitution rather than SPARQL's own binding
     because the text is a literal in the graph and the engine takes a string.
     """
-    rule = rule_for(store, means)
+    rule = rule_for(store, action)
     if rule is None:
         return [], []
     return (_run(store, rule.get("construct"), bind),
             _run(store, rule.get("retracts"), bind))
 
 
-def world_after(base, store, means: str, /, **bind):
+def world_after(base, store, action: str, /, **bind):
     """The world as it WOULD be, had this means been taken: `(base − retracted) + added`.
 
     The two halves are separately callable and the search calls them separately, because it
@@ -121,7 +121,7 @@ def world_after(base, store, means: str, /, **bind):
     removed by the retraction that was meant to precede it, and the possible world would come
     back holding neither reading.
     """
-    added, retracted = apply(store, means, **bind)
+    added, retracted = apply(store, action, **bind)
     return applied(base, added, retracted)
 
 
@@ -167,7 +167,7 @@ def _term(x):
     return x
 
 
-def lands_after(store, means: str, **bind) -> float | None:
+def lands_after(store, action: str, **bind) -> float | None:
     """How long after this act the world change completes, in seconds — asked, never computed.
 
     The figure a waiter needs and the figure a planner needs, and they must be the same one.
@@ -176,12 +176,12 @@ def lands_after(store, means: str, **bind) -> float | None:
     disagreement surfaces as a false UNMET that looks like a device lying. That is #238's
     argument for magnitude, one axis over — see `ag:landsAfter`.
 
-    None where the rule declines: no effect stated for this means, no timing on the effect, or
+    None where the rule declines: no effect stated for this action, no timing on the effect, or
     premises that do not hold (an agent whose lever does not reach this subject). Every caller
     must take None and keep whatever it did before, because a lever with no stated timing is
     still a lever that works — it is only one nobody can wait for precisely.
     """
-    rule = rule_for(store, means)
+    rule = rule_for(store, action)
     if rule is None or not rule.get("lands"):
         return None
     rows = _select(store, rule["lands"], bind)

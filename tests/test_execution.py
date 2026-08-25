@@ -17,11 +17,11 @@ from agent.ontology import beliefs_graph
 
 from conftest import MOISTURE, build_agent, genesis_store, open_round_for
 
-ACQUIRE = "http://example.org/orexis/market#Acquire"
-OBSERVE = "http://example.org/orexis/sensing#Observe"
-ACTUATE = "http://example.org/orexis/actuation#Actuate"
-APPLY = "http://example.org/orexis/market#Apply"
-OFFER = "http://example.org/orexis/market#Offer"
+ACQUIRING = "http://example.org/orexis/market#Acquiring"
+OBSERVING = "http://example.org/orexis/sensing#Observing"
+DOSING = "http://example.org/orexis/actuation#Dosing"
+SERVING = "http://example.org/orexis/market#Serving"
+OFFERING = "http://example.org/orexis/market#Offering"
 TAKEN_BY = rdflib.URIRef("http://example.org/orexis#takenBy")
 
 
@@ -47,11 +47,11 @@ def test_no_round_open_means_no_acquire_committed_and_the_trace_says_why(monkeyp
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
     keeper = keeper_of(fern)
     keeper.deliberate_on_gaps()
-    assert keeper.standing(means=ACQUIRE) == [], "nothing to bid in, nothing committed"
+    assert keeper.standing(action=ACQUIRING) == [], "nothing to bid in, nothing committed"
     assert fern.sent.to(f"{fern.me.markets[0].bid_topic}/fern") == []
     weighed = {r["m"] for r in bindings(fern.beliefs.query_union(
         "SELECT DISTINCT ?m WHERE { ?c ag:wouldTake ?m }"))}
-    assert OBSERVE in weighed and ACQUIRE not in weighed, \
+    assert OBSERVING in weighed and ACQUIRING not in weighed, \
         "the look was weighed; buying was not on the menu, not merely refused"
 
 
@@ -62,7 +62,7 @@ def test_the_tick_bids_when_a_round_is_open(monkeypatch):
     open_round_for(fern, "fern")
     keeper = keeper_of(fern)
     keeper.deliberate_on_gaps()
-    acquires = keeper.standing(means=ACQUIRE, observed_property=MOISTURE)
+    acquires = keeper.standing(action=ACQUIRING, observed_property=MOISTURE)
     assert len(acquires) == 1 and acquires[0].via == fern.me.markets[0].uri
     assert len(fern.sent.to(f"{fern.me.markets[0].bid_topic}/fern")) == 1
 
@@ -74,7 +74,7 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     market = fern.me.markets[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
-    assert keeper_of(fern).standing(means=ACQUIRE)
+    assert keeper_of(fern).standing(action=ACQUIRING)
     from agent.planner import NOT_BETTER, Plan
 
     passes = []
@@ -85,7 +85,7 @@ def test_a_round_is_decided_once_and_a_second_impulse_is_absorbed(monkeypatch):
     #  The freshness want is met and the stake stands, so the tick has nothing to search
     #  FOR; the one pass it may run is the stake's, which `adopt` then absorbs.
     assert not [d for d in passes if not d.is_epistemic] or \
-        len(keeper_of(fern).standing(means=ACQUIRE)) == 1
+        len(keeper_of(fern).standing(action=ACQUIRING)) == 1
 
 
 def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
@@ -95,7 +95,7 @@ def test_a_round_with_nothing_standing_plans_once_and_commits(monkeypatch):
     market = fern.me.markets[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 1
-    standing = keeper_of(fern).standing(means=ACQUIRE, observed_property=MOISTURE)
+    standing = keeper_of(fern).standing(action=ACQUIRING, observed_property=MOISTURE)
     assert len(standing) == 1 and standing[0].via == market.uri
 
 
@@ -107,7 +107,7 @@ def test_the_bidder_holds_no_opinion_of_its_own(monkeypatch):
     market = fern.me.markets[0]
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     assert fern.sent.to(f"{market.bid_topic}/fern") == []
-    assert keeper_of(fern).standing(means=ACQUIRE) == []
+    assert keeper_of(fern).standing(action=ACQUIRING) == []
 
 
 # --- the link from a row to its code is a triple ---------------------------------------------
@@ -126,8 +126,7 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
     row composes a module in that family — which is the whole of 'every affordance is linked
     to code'."""
     actions = _actions()
-    MEANS = rdflib.URIRef("http://example.org/orexis#means")
-    takers = {str(actions.value(a, MEANS)): str(f) for a, f in actions.subject_objects(TAKEN_BY)}
+    takers = {str(a): str(f) for a, f in actions.subject_objects(TAKEN_BY)}
     assert takers, "no ag:takenBy anywhere — the action files stopped stating it"
     rows_seen = 0
     for world, agent_id in (("simulation", "fern"), ("simulation", "supplier"),
@@ -138,13 +137,13 @@ def test_every_means_a_shipped_world_offers_is_taken_by_a_loaded_capability(monk
         for row in menu.menu_of(agent.beliefs.query, agent.me.uri, agent.desires.query_union,
                                 beliefs_graph(agent.id)):
             rows_seen += 1
-            assert row.means in takers, f"{world}/{agent_id}: {row.means} has no ag:takenBy"
-            family = execution.taken_by(agent.beliefs.query, row.means)
-            assert family == takers[row.means]
+            assert row.action in takers, f"{world}/{agent_id}: {row.action} has no ag:takenBy"
+            family = execution.taken_by(agent.beliefs.query, row.action)
+            assert family == takers[row.action]
             assert agent.providers(family), \
-                f"{world}/{agent_id}: {row.means} is taken by {family}, which it does not compose"
+                f"{world}/{agent_id}: {row.action} is taken by {family}, which it does not compose"
     assert rows_seen >= 4
-    assert takers[OFFER].endswith("Hosting"), "Offer is an action since #359, taken by the host"
+    assert takers[OFFERING].endswith("Hosting"), "Offer is an action since #359, taken by the host"
 
 
 def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
@@ -155,18 +154,18 @@ def test_execution_dispatches_by_the_triple_and_never_by_name(monkeypatch):
         if m.CAPABILITY:
             monkeypatch.setattr(m, "take", lambda row, desire, i, m=m: handed.append(m.name) or False)
     stake = stake_of(fern)
-    row = menu.Affordance(means=OBSERVE, observed_property=MOISTURE, via="urn:probe")
+    row = menu.Affordance(action=OBSERVING, observed_property=MOISTURE, via="urn:probe")
     assert execution.carry_out(fern, row, stake, "urn:intent") is False
     assert handed == ["subscribing"], "Observe went to sensing and to nothing else"
     handed.clear()
-    row = menu.Affordance(means=ACQUIRE, observed_property=MOISTURE, via="urn:venue")
+    row = menu.Affordance(action=ACQUIRING, observed_property=MOISTURE, via="urn:venue")
     execution.carry_out(fern, row, stake, "urn:intent")
     assert handed == ["bidding"]
 
 
 def test_a_means_nobody_takes_is_logged_and_takes_nothing(monkeypatch, caplog):
     fern = build_agent("fern", genesis_store({"fern": 0.10}), monkeypatch)
-    row = menu.Affordance(means="http://example.org/nowhere#Untaken",
+    row = menu.Affordance(action="http://example.org/nowhere#Untaken",
                           observed_property=MOISTURE, via="urn:x")
     with caplog.at_level("ERROR", logger="execution"):
         assert execution.carry_out(fern, row, stake_of(fern), "urn:i") is False

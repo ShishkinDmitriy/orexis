@@ -53,7 +53,7 @@ from agent.store import bindings
 
 
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
-from .terms import (FRESHNESS, LISTENING, OBSERVE, PUSH, SCHEDULED, STALE_AFTER_S,
+from .terms import (FRESHNESS, LISTENING, OBSERVING, PUSH, SCHEDULED, STALE_AFTER_S,
                     SUBSCRIBING)
 
 #  The measure this capability declares (a-desire-states-its-own-measure, completed): how
@@ -394,7 +394,7 @@ class SensingModule(Module):
                 self.on_cadence_ack(sensor, acknowledged)
             mine = True
             raw = driver.parse(sensor, payload)
-            # The last stage: a raw value is what the device sent, a quantity is what it means.
+            # The last stage: a raw value is what the device sent, a quantity is what it action.
             # A binding whose scaling this build lacks is treated exactly as an unreadable
             # payload — the sensor is reported unread rather than recorded unscaled, because
             # a number nobody could interpret is worse in the store than a gap.
@@ -515,7 +515,7 @@ class SensingModule(Module):
         standing.
         """
         if (keeper := self.agent.keeper) is not None:
-            keeper.satisfy(OBSERVE, observed_property, "a reading arrived — the look happened")
+            keeper.satisfy(OBSERVING, observed_property, "a reading arrived — the look happened")
 
     def notices(self) -> list[tuple[str, str]]:
         """The gaps I am positioned to notice (#208): unobserved, or too stale to act on.
@@ -934,7 +934,7 @@ class SubscribingModule(SensingModule):
         only where a driver exists to nudge. The look is satisfied by the reading arriving,
         whoever caused it, exactly as before: `Keeper.on_reading_recorded` resolves it.
         """
-        if row.means != OBSERVE:
+        if row.action != OBSERVING:
             return False
         nudged = False
         for sensor in self.sensors:

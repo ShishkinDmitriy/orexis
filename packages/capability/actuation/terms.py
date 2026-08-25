@@ -19,4 +19,4 @@ def term(name: str) -> str:
 
 ACTUATION = term("Actuation")  # holds the hardware, and may therefore touch the world
 
-ACTUATE = term("Actuate")          # the dose, as a means — this package's word
+DOSING = term("Dosing")            # the dose — the action, and the kind of act it is

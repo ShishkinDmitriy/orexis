@@ -18,8 +18,7 @@ not say what pulling it would achieve — and a desire that is a shape needs exa
 matching a desire to a lever means asking what the lever would make true.
 
 So the effect sits on the [action](/domain/action.md) node itself, beside the availability
-query and the taker, loaded into the action graph at genesis and found by the action's
-`ag:means`. The vocabulary is SHACL Advanced Features' — `sh:construct` for the query yielding
+query and the taker, loaded into the action graph at genesis. The vocabulary is SHACL Advanced Features' — `sh:construct` for the query yielding
 the triples applying it would add. One
 term is ours, `ag:retracts`, because the standard has none: SHACL rules exist to add entailments,
 so nothing in it can say a thing stops being true.

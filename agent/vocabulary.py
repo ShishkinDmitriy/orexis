@@ -126,16 +126,27 @@ MOVED = {
     #  The host's move left the kernel for the market (a-round-is-a-fact-and-offering-is-an-
     #  action): a ledger holding Offer intentions under either older spelling lands on the
     #  package's word — the destination, not the step, as the note above says.
-    "http://example.org/orexis/intention#Offer": "http://example.org/orexis/market#Offer",
-    "http://example.org/orexis#Offer": "http://example.org/orexis/market#Offer",
-    "http://example.org/orexis/intention#Observe": "http://example.org/orexis/sensing#Observe",
-    "http://example.org/orexis#Observe": "http://example.org/orexis/sensing#Observe",
-    "http://example.org/orexis/intention#Actuate": "http://example.org/orexis/actuation#Actuate",
-    "http://example.org/orexis#Actuate": "http://example.org/orexis/actuation#Actuate",
-    "http://example.org/orexis/intention#Acquire": "http://example.org/orexis/market#Acquire",
-    "http://example.org/orexis#Acquire": "http://example.org/orexis/market#Acquire",
-    "http://example.org/orexis/intention#Apply": "http://example.org/orexis/market#Apply",
-    "http://example.org/orexis#Apply": "http://example.org/orexis/market#Apply",
+    #  The means went to their packages and then went altogether: the ACTION is the kind
+    #  (the-action-is-the-kind), so an intention's `ag:by` names the action node. Every older
+    #  spelling — the intention package's, the kernel's, and the packages' short-lived means —
+    #  lands on the node. `Apply` lands on the buyer's hold (Presenting): that was its meaning
+    #  for every ledger old enough to hold it; the host's serve (Serving) is newer than the
+    #  split and was never spelled Apply in a volume.
+    **{old: "http://example.org/orexis/market#Offering" for old in (
+        "http://example.org/orexis/intention#Offer", "http://example.org/orexis#Offer",
+        "http://example.org/orexis/market#Offer")},
+    **{old: "http://example.org/orexis/sensing#Observing" for old in (
+        "http://example.org/orexis/intention#Observe", "http://example.org/orexis#Observe",
+        "http://example.org/orexis/sensing#Observe")},
+    **{old: "http://example.org/orexis/actuation#Dosing" for old in (
+        "http://example.org/orexis/intention#Actuate", "http://example.org/orexis#Actuate",
+        "http://example.org/orexis/actuation#Actuate")},
+    **{old: "http://example.org/orexis/market#Acquiring" for old in (
+        "http://example.org/orexis/intention#Acquire", "http://example.org/orexis#Acquire",
+        "http://example.org/orexis/market#Acquire")},
+    **{old: "http://example.org/orexis/market#Presenting" for old in (
+        "http://example.org/orexis/intention#Apply", "http://example.org/orexis#Apply",
+        "http://example.org/orexis/market#Apply")},
     "http://example.org/orexis/desire#Desire": "http://www.w3.org/ns/shacl#NodeShape",
     "http://example.org/orexis/desire#desires": "http://example.org/orexis#holds",
     "http://example.org/orexis#boundedBy": "http://example.org/orexis#holds",

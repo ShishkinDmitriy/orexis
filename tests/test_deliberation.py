@@ -20,8 +20,8 @@ import pytest
 
 from agent.world import load_self
 from agent.menu import menu_of
-from packages.capability.market.terms import ACQUIRE
-from packages.capability.sensing.terms import OBSERVE
+from packages.capability.market.terms import ACQUIRING
+from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
 from conftest import MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for
@@ -74,9 +74,9 @@ def test_every_agent_deliberates_including_one_with_nothing_to_decide(make):
 def test_not_seeing_means_look(make):
     """The oldest rule in deliberation, and now nothing in deliberation says it.
 
-    Three forms, in order. It was `propose(property, None) == OBSERVE`, a first line reading a
+    Three forms, in order. It was `propose(property, None) == OBSERVING`, a first line reading a
     missing value as ignorance. Then it was `desire.state in ("unmeasured", "stale") ->
-    OBSERVE`, which said the same thing in the words it meant and still said it by hand. It is
+    OBSERVING`, which said the same thing in the words it meant and still said it by hand. It is
     now a WANT — this reading exists and was taken recently enough — whose met-shape a look
     repairs and whose repair the search finds, so the rule is not stated anywhere and holds
     anyway.
@@ -91,13 +91,13 @@ def test_not_seeing_means_look(make):
     never_read = next(d for d in fern.pursuing()
                       if d.is_epistemic and d.observed_property == MOISTURE)
     assert never_read.state == "unmeasured"
-    assert decider.propose_for(never_read) == OBSERVE
+    assert decider.propose_for(never_read) == OBSERVING
 
     _read(fern, 0.30, age_s=10_000)
     too_old = next(d for d in fern.pursuing()
                    if d.is_epistemic and d.observed_property == MOISTURE)
     assert too_old.state == "stale", "read once, and the answer has gone cold"
-    assert decider.propose_for(too_old) == OBSERVE, \
+    assert decider.propose_for(too_old) == OBSERVING, \
         "a reading that stopped being evidence is repaired by looking, not by watering"
 
 
@@ -139,7 +139,7 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     decider = decider_of(fern)
     for value in (0.10, 0.54):
         stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
-        assert decider.propose_for(stake) == ACQUIRE, f"thirsty at {value} and not buying"
+        assert decider.propose_for(stake) == ACQUIRING, f"thirsty at {value} and not buying"
     for value in (0.55, 0.80):
         stake = Desire(uri="urn:w", urgency=0.4, observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) is None, f"content at {value} and buying anyway"
@@ -244,9 +244,9 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
 
     ds = genesis_store()
     ds.update(f"""
-        DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule sh:construct ?text }} }}
-        INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule sh:construct ?flipped }} }}
-        WHERE  {{ GRAPH <{ACTIONS_GRAPH}> {{ ?rule ag:means market:Acquire ; sh:construct ?text }}
+        DELETE {{ GRAPH <{ACTIONS_GRAPH}> {{ market:Acquiring sh:construct ?text }} }}
+        INSERT {{ GRAPH <{ACTIONS_GRAPH}> {{ market:Acquiring sh:construct ?flipped }} }}
+        WHERE  {{ GRAPH <{ACTIONS_GRAPH}> {{ market:Acquiring sh:construct ?text }}
                   BIND(REPLACE(?text, "(\\\\$value) \\\\+ ", "$1 - ") AS ?flipped) }}""")
     fern = make("fern", ds)
     open_round_for(fern, "fern")
@@ -265,16 +265,16 @@ def test_the_menu_is_derived_from_the_graph(make):
     st = genesis_store()
     open_round_for(st, "fern")
     rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
-    as_tuples = {(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
+    as_tuples = {(r.action.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
                   r.direction.rsplit("#", 1)[-1] if r.direction else None) for r in rows}
     assert as_tuples == {
-        ("Observe", "SoilMoisture", None),       # look through the probe
-        ("Observe", "AirTemperature", None),     # look through the thermometer
-        ("Acquire", "SoilMoisture", "Raises"),   # raise it through the market
+        ("Observing", "SoilMoisture", None),       # look through the probe
+        ("Observing", "AirTemperature", None),     # look through the thermometer
+        ("Acquiring", "SoilMoisture", "Raises"),   # raise it through the market
     }
     # and the row that is NOT there is the finding: fern wants a temperature it can see and
     # cannot move — a want with no lever, which is legitimate and now legible.
-    assert not any(r.means.endswith("Acquire") and "Temperature" in r.observed_property
+    assert not any(r.action.endswith("Acquiring") and "Temperature" in r.observed_property
                    for r in rows)
 
 
@@ -285,7 +285,7 @@ def test_the_dealers_menu_gained_its_lever(make):
     StoredLitres, raising it. This test guarded the seen-but-unmovable reading while that
     was the honest one; the row it waited for is derived now, direction and all.
 
-    AND NO OBSERVE ROW, which is the shipped case of a lever an agent cannot pull. The
+    AND NO OBSERVING ROW, which is the shipped case of a lever an agent cannot pull. The
     supplier's one instrument is `barrel1_level`, a float switch that announces — push mode,
     so the supplier is a LISTENER on it and `sense_now()` is an empty method whose docstring
     says listening cannot. The row was offered anyway until the mode-conditional affordance:
@@ -296,16 +296,16 @@ def test_the_dealers_menu_gained_its_lever(make):
     st = genesis_store()
     open_round_for(st, "supplier")
     rows = menu_of(st.query, "http://example.org/orexis/world/simulation#supplier", desires_build(st, "supplier").query_union, beliefs_graph("supplier"))
-    assert [(r.means.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
+    assert [(r.action.rsplit("#", 1)[-1], r.observed_property.rsplit("#", 1)[-1],
              (r.direction or "").rsplit("#", 1)[-1] or None)
-            for r in rows if r.is_own] == [("Acquire", "StoredLitres", "Raises"),
-                                            ("Offer", "StoredLitres", None)], \
+            for r in rows if r.is_own] == [("Acquiring", "StoredLitres", "Raises"),
+                                            ("Offering", "StoredLitres", None)], \
         "buy upstream while the city's round is open, and offer downstream (#359) — no direction " \
         "on the second, because offering moves no water"
     #  And beside them, since #218, what the dealer HONOURS: claims presented against the
     #  venue it hosts are redeemed through its valves — one row per lever, never a proposal.
     honoured = [r for r in rows if not r.is_own]
-    assert {r.means.rsplit("#", 1)[-1] for r in honoured} == {"Apply"}
+    assert {r.action.rsplit("#", 1)[-1] for r in honoured} == {"Serving"}
     assert len(honoured) == 3, "one duty per valve it holds for its buyers"
 
 
@@ -326,9 +326,9 @@ def test_a_market_no_valve_connects_to_your_pot_is_no_lever(make):
         <http://example.org/orexis/world/simulation#valve_fern>
             <http://example.org/orexis/actuation#actuates> ?pot }} }}""")
     rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
-    assert not any(r.means == ACQUIRE for r in rows), (
+    assert not any(r.action == ACQUIRING for r in rows), (
         "an unplumbed market must yield no Acquire row")
-    assert any(r.means == OBSERVE for r in rows), (
+    assert any(r.action == OBSERVING for r in rows), (
         "cutting the pipe must not blind the agent — the probes still watch")
 
 
@@ -341,7 +341,7 @@ def test_two_denominations_make_two_rows_and_never_four(make):
     of them lies, and the reflex steered by whichever the store returned first. With the tie
     (venue -> marketFor -> source -> supplies -> good <- ofGood <- valuation) each lever
     carries its own physics: two Acquire rows, opposite directions, and a fan is still an
-    ACQUIRE — the ladder's rung is about whose resource it is, not which way it moves things.
+    ACQUIRING — the ladder's rung is about whose resource it is, not which way it moves things.
 
     Authored by hand into the world graph, which stays legal for a venue the wiring does not
     imply; the goods and the valuation are the test's own, because no shipped domain sells
@@ -367,7 +367,7 @@ def test_two_denominations_make_two_rows_and_never_four(make):
     }} }}""")
     open_round_for(st, "fern")
     acquire = [r for r in menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
-               if r.means == ACQUIRE and r.observed_property.endswith("SoilMoisture")]
+               if r.action == ACQUIRING and r.observed_property.endswith("SoilMoisture")]
     assert sorted((r.direction or "").rsplit("#", 1)[-1] for r in acquire) == \
         ["Lowers", "Raises"], (
         "two opposite levers on one property must each carry their own direction — "
@@ -403,8 +403,8 @@ def test_the_search_finds_the_dealers_two_step_from_two_nodes_that_never_meet(ma
     want = next(d for d in supplier.pursuing() if d.uri.startswith(calls.NS + "call_"))
     plan = supplier.deliberator.decide(want)
     assert plan is not None
-    assert [(s.means.rsplit("#", 1)[-1], s.via.rsplit(".", 1)[-1]) for s in plan.steps] == [
-        ("Acquire", "city_mains"), ("Offer", "barrel1")]
+    assert [(s.action.rsplit("#", 1)[-1], s.via.rsplit(".", 1)[-1]) for s in plan.steps] == [
+        ("Acquiring", "city_mains"), ("Offering", "barrel1")]
     assert plan.urgency_after == 0.0, "and the world it reaches has the round the call wanted"
 # --- the menu is the union of package contributions (#207) ------------------
 
@@ -429,9 +429,9 @@ ag:Consulting a ag:Action ; ag:means ag:Consult ;
     st = genesis_store()
     open_round_for(st, "fern")
     rows = menu_of(st.query, FERN, desires_build(st, "fern").query_union, beliefs_graph("fern"))
-    kinds = {r.means.rsplit("#", 1)[-1] for r in rows}
-    assert "Consult" in kinds, "the toy package's kind must appear"
-    assert {"Observe", "Acquire"} <= kinds, "and the shipped kinds must survive it"
+    kinds = {r.action.rsplit("#", 1)[-1] for r in rows}
+    assert "Consulting" in kinds, "the toy package's kind must appear"
+    assert {"Observing", "Acquiring"} <= kinds, "and the shipped kinds must survive it"
 
 
 # --- whom a row serves (#218) --------------------------------------------
@@ -455,7 +455,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     assert duties, "the conduct surface includes what it honours"
 
     deliberator = supplier.deliberator
-    duty_means = {r.means for r in duties}
+    duty_means = {r.action for r in duties}
     #  Across the range rather than at one value, because a filter that leaks at one sign is a
     #  filter that leaks.
     for row in duties:
@@ -488,7 +488,7 @@ def test_a_duty_is_pursued_through_the_lever_that_serves_its_counterparty(make):
     duty = Desire(uri="urn:o", urgency=0.9, claim="j-1",
                 owed_to="http://example.org/orexis/world/simulation#fern_agent")
     assert supplier.deliberator.propose_for(duty) == \
-        "http://example.org/orexis/market#Apply"
+        "http://example.org/orexis/market#Serving"
 
     stranger = Desire(uri="urn:o", urgency=0.9, claim="j-2", owed_to="urn:nobody")
     assert supplier.deliberator.propose_for(stranger) is None, \
@@ -518,7 +518,7 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
     search that finds no candidate returns NOTHING, and the honest answer to that is to
     propose nothing, not to consult a chain that would have steered by the gap's sign.
 
-    Made to fail by hand: a line standing in for the deleted deferral — return ACQUIRE where
+    Made to fail by hand: a line standing in for the deleted deferral — return ACQUIRING where
     the plan comes back NOTHING — turns this red, which is what a guard that has never failed
     cannot claim about itself.
     """

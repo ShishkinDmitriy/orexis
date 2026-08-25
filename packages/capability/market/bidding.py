@@ -40,7 +40,7 @@ from agent.store import bindings
 
 from . import rounds
 from .beliefs import BIDDING_PICKS
-from .terms import (ACQUIRE, APPLY, BIDDING,
+from .terms import (ACQUIRING, BIDDING, PRESENTING,
                     SENSING)
 
 # What my bids are priced in, found THROUGH MY VENUE AND MY STAKE (#198) rather than by
@@ -335,12 +335,12 @@ class BiddingModule(Module):
         #  round closed — it gets a claim or nothing — so the clock ends the row, and the
         #  ones already past their close are swept here, on the one event that always comes.
         rounds.sweep_expired(self.agent)
-        #  AN ACQUIRE FROM A ROUND THAT ENDED WITHOUT A CLAIM is a commitment the world
+        #  AN ACQUIRING FROM A ROUND THAT ENDED WITHOUT A CLAIM is a commitment the world
         #  answered by silence — I lost, and nobody tells a loser. The row is gone by the
         #  clock; the intention it headed is dropped here, with the reason, so the search
         #  starts this round with nothing standing and its own fresh decision (#358).
         if (keeper := self._keeper()) is not None and not rounds.rounds_of(self.agent, market.uri):
-            keeper.drop(ACQUIRE, self.about, "the round I bid in closed without a claim")
+            keeper.drop(ACQUIRING, self.about, "the round I bid in closed without a claim")
         from datetime import timedelta
 
         rounds.open_round(self.agent, market.uri, auction_id,
@@ -425,7 +425,7 @@ class BiddingModule(Module):
             #  The look stays wanted and stays committed — a reading is still owed, round or
             #  no round — so only the Acquire is dropped; sensing resolves the look when it lands.
             if keeper := self._keeper():
-                keeper.drop(ACQUIRE, self.about, f"the auction closed first: {why}")
+                keeper.drop(ACQUIRING, self.about, f"the auction closed first: {why}")
             self.pending = None
 
     def _why_blind(self) -> str:
@@ -470,7 +470,7 @@ class BiddingModule(Module):
         stake = next((d for d in self.agent.pursuing()
                       if not d.is_duty and not d.is_epistemic
                       and d.observed_property == self.about), None)
-        standing = keeper.standing(ACQUIRE, self.about) if keeper is not None else []
+        standing = keeper.standing(ACQUIRING, self.about) if keeper is not None else []
         if standing and stake is not None:
             execution.take_standing(self.agent, standing[0], stake)
         elif stake is not None:
@@ -497,7 +497,7 @@ class BiddingModule(Module):
             return None
         now = datetime.now(timezone.utc)
         if any(s.age_s(now) <= keeper.beliefs.patience_s
-               for s in keeper.standing(means=APPLY, observed_property=observed_property)):
+               for s in keeper.standing(action=PRESENTING, observed_property=observed_property)):
             return 1.0
         return None
 
@@ -514,7 +514,7 @@ class BiddingModule(Module):
         knock without a second search. The reading is the one in hand: `on_offer` looked
         first, and a stale one is never bid on.
         """
-        if row.means != ACQUIRE or row.observed_property != self.about:
+        if row.action != ACQUIRING or row.observed_property != self.about:
             return False
         #  THE ROUND IS THE FACT, read off the row's own lever (#358): the row exists only
         #  while one is open on that venue, so this is a lookup and never a wait. `pending`
@@ -571,7 +571,7 @@ class BiddingModule(Module):
         self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, self.balance)
 
         keeper = self._keeper()
-        acquire_uris = (keeper.satisfy(ACQUIRE, self.about,
+        acquire_uris = (keeper.satisfy(ACQUIRING, self.about,
                                        f"claim for {amount}L at a debit of {debit}")
                         if keeper is not None else [])
 
@@ -596,7 +596,7 @@ class BiddingModule(Module):
         self.holding = {"jti": claim["jti"], "market": market,
                         "amount_l": amount, "debit": debit}
         if keeper is not None:
-            keeper.adopt(APPLY, self.about,
+            keeper.adopt(PRESENTING, self.about,
                          f"holding claim {claim['jti']} ({amount}L) until my watch is "
                          f"live — never spend a dose you cannot watch land")
         if (sensing := self.agent.provider(SENSING)) is not None:
@@ -643,7 +643,7 @@ class BiddingModule(Module):
             # sense_now inside expect() lands on a board that is provably (or at least
             # plausibly) awake and fast. The watch hangs on the Apply row, because applying is
             # the act whose end the movement is.
-            for uri in keeper.satisfy(APPLY, self.about,
+            for uri in keeper.satisfy(PRESENTING, self.about,
                                       f"claim {held['jti']} presented: {why}"):
                 keeper.expect(uri, self.about,
                               f"presented {held['jti']} for {held['amount_l']}L — the graph "

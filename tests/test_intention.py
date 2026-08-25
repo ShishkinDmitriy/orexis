@@ -19,8 +19,8 @@ import pytest
 
 from agent.world import load_self
 from agent.graphs import intentions_graph
-from packages.capability.market.terms import ACQUIRE
-from packages.capability.sensing.terms import OBSERVE
+from packages.capability.market.terms import ACQUIRING
+from packages.capability.sensing.terms import OBSERVING
 
 from conftest import MOISTURE, build_agent, genesis_store
 
@@ -82,12 +82,12 @@ def test_waiting_on_a_sensor_is_a_recorded_commitment(make):
     fern = make("fern")  # no fresh reading, so the offer starts a wait
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     keeper = keeper_of(fern)
-    standing = keeper.standing(means=OBSERVE)
+    standing = keeper.standing(action=OBSERVING)
     assert len(standing) == 1 and standing[0].observed_property == MOISTURE
 
     fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.10})
-    assert keeper.standing(means=OBSERVE) == []       # the look came back
-    assert len(keeper.standing(means=ACQUIRE)) == 1   # and the bid it fed is now committed
+    assert keeper.standing(action=OBSERVING) == []       # the look came back
+    assert len(keeper.standing(action=ACQUIRING)) == 1   # and the bid it fed is now committed
 
 
 def test_a_wait_the_auction_outlives_keeps_the_look_and_lets_the_round_go(make):
@@ -100,12 +100,12 @@ def test_a_wait_the_auction_outlives_keeps_the_look_and_lets_the_round_go(make):
     fern = make("fern")
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     keeper = keeper_of(fern)
-    assert len(keeper.standing(means=OBSERVE)) == 1, "the look was committed for the round"
+    assert len(keeper.standing(action=OBSERVING)) == 1, "the look was committed for the round"
     fern.bidding().give_up()
-    assert len(keeper.standing(means=OBSERVE)) == 1, "and it stands — a reading is still owed"
+    assert len(keeper.standing(action=OBSERVING)) == 1, "and it stands — a reading is still owed"
     assert rounds.rounds_of(fern) == [], "the round is over for me"
     fern.deliver(fern.me.sensors[0].reading_topic, {"moisture": 0.2})
-    assert keeper.standing(means=OBSERVE) == [], "the look happened"
+    assert keeper.standing(action=OBSERVING) == [], "the look happened"
 
 
 def test_a_claim_satisfies_the_acquisition(make):
@@ -113,10 +113,10 @@ def test_a_claim_satisfies_the_acquisition(make):
     market = market_of(fern)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     keeper = keeper_of(fern)
-    assert len(keeper.standing(means=ACQUIRE)) == 1
+    assert len(keeper.standing(action=ACQUIRING)) == 1
 
     fern.deliver(f"{market.claim_topic}/fern", {"amount_l": 0.5, "debit": 0.2})
-    assert keeper.standing(means=ACQUIRE) == []
+    assert keeper.standing(action=ACQUIRING) == []
 
 
 def _reading(value):
@@ -135,7 +135,7 @@ def test_within_its_patience_a_second_impulse_is_absorbed(make):
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
     fern.deliver(market.offer_topic, {"auction_id": "r2", "closes_in_s": 30})
     keeper = keeper_of(fern)
-    assert len(keeper.standing(means=ACQUIRE)) == 1
+    assert len(keeper.standing(action=ACQUIRING)) == 1
     # both bids still flew — in phase 3 the ledger records and never gates
     assert len(fern.sent.to(f"{market.bid_topic}/fern")) == 2
 
@@ -146,10 +146,10 @@ def test_past_its_patience_a_new_adoption_supersedes(make):
     fern = make("fern", _reading(0.10))
     keeper = keeper_of(fern)
     keeper.beliefs = replace(keeper.beliefs, patience_s=0)  # everything is instantly stale
-    first = keeper.adopt(ACQUIRE, MOISTURE, "first")
-    second = keeper.adopt(ACQUIRE, MOISTURE, "second")
+    first = keeper.adopt(ACQUIRING, MOISTURE, "first")
+    second = keeper.adopt(ACQUIRING, MOISTURE, "second")
     assert first and second and first != second
-    standing = keeper.standing(means=ACQUIRE)
+    standing = keeper.standing(action=ACQUIRING)
     assert [s.uri for s in standing] == [second]
 
     from agent.store import bindings
@@ -200,12 +200,12 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
     fern = make("fern", _reading(0.10))
     keeper = keeper_of(fern)
     fern.metrics.take_events()
-    uri = keeper.adopt(ACQUIRE, MOISTURE, "bid 0.4L to close my deficit")
-    keeper.satisfy(ACQUIRE, MOISTURE, "claim for 0.4L at a debit of 0.29")
+    uri = keeper.adopt(ACQUIRING, MOISTURE, "bid 0.4L to close my deficit")
+    keeper.satisfy(ACQUIRING, MOISTURE, "claim for 0.4L at a debit of 0.29")
     events = fern.metrics.take_events()
     assert [(kind, tags) for _, kind, _, tags in events] == [
-        ("adopted", {"means": "Acquire", "property": "SoilMoisture"}),
-        ("satisfied", {"means": "Acquire", "property": "SoilMoisture"})]
+        ("adopted", {"means": "Acquiring", "property": "SoilMoisture"}),
+        ("satisfied", {"means": "Acquiring", "property": "SoilMoisture"})]
     assert [text for _, _, text, _ in events] == [
         "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
@@ -243,9 +243,9 @@ def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
     keeper.deliberate_on_gaps()
-    standing = {(s.means.rsplit("#", 1)[-1], s.observed_property) for s in keeper.standing()}
-    assert ("Observe", TEMP) in standing, "the marketless property is watched ON THE RECORD"
-    assert ("Observe", MOIST) in standing
+    standing = {(s.action.rsplit("#", 1)[-1], s.observed_property) for s in keeper.standing()}
+    assert ("Observing", TEMP) in standing, "the marketless property is watched ON THE RECORD"
+    assert ("Observing", MOIST) in standing
 
     fern.deliver(fern.me.sensors[0].reading_topic, {"temperature": 21.0})
     left = {s.observed_property for s in keeper.standing()}
@@ -311,7 +311,7 @@ def test_the_tick_survives_an_agent_that_has_seen_things(make):
 
 # --- a commitment names the desire it serves (step 3) -------------------------
 
-APPLY = "http://example.org/orexis/market#Apply"
+SERVING = "http://example.org/orexis/market#Serving"
 
 
 def test_two_debts_about_one_property_no_longer_collide(make):
@@ -328,13 +328,13 @@ def test_two_debts_about_one_property_no_longer_collide(make):
     to_fern = "http://example.org/orexis#obligation.fern-claim"
     to_tomato = "http://example.org/orexis#obligation.tomato-claim"
 
-    assert keeper.adopt(APPLY, MOIST, "owed to fern", desire=to_fern)
-    assert keeper.adopt(APPLY, MOIST, "owed to tomato", desire=to_tomato), \
+    assert keeper.adopt(SERVING, MOIST, "owed to fern", desire=to_fern)
+    assert keeper.adopt(SERVING, MOIST, "owed to tomato", desire=to_tomato), \
         "a second debt about the same property is a second debt, not the same impulse"
-    assert len(keeper.standing(means=APPLY, observed_property=MOIST)) == 2
+    assert len(keeper.standing(action=SERVING, observed_property=MOIST)) == 2
 
-    keeper.satisfy(APPLY, MOIST, "fern's dose went out", desire=to_fern)
-    left = keeper.standing(means=APPLY, observed_property=MOIST)
+    keeper.satisfy(SERVING, MOIST, "fern's dose went out", desire=to_fern)
+    left = keeper.standing(action=SERVING, observed_property=MOIST)
     assert len(left) == 1, "paying one debt must not discharge the other"
 
 
@@ -344,7 +344,7 @@ def test_a_commitment_without_a_desire_is_keyed_as_it_always_was(make):
     row is absorbed and resolved by the old key, and a desire-shaped question still finds it."""
     fern = make("fern")
     keeper = next(m for m in fern.modules if m.name == "intention")
-    keeper.adopt(OBSERVE, MOIST, "the old way")
-    assert keeper.adopt(OBSERVE, MOIST, "again, within patience") is None
-    assert len(keeper.standing(means=OBSERVE, observed_property=MOIST,
+    keeper.adopt(OBSERVING, MOIST, "the old way")
+    assert keeper.adopt(OBSERVING, MOIST, "again, within patience") is None
+    assert len(keeper.standing(action=OBSERVING, observed_property=MOIST,
                                desire="http://example.org/orexis#bounds.fern.SoilMoisture")) == 1

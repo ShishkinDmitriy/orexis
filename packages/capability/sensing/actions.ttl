@@ -5,7 +5,6 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
 
 #  THE ACTIONS THIS PACKAGE BRINGS — one node each, and the whole of one (knowledge/domain/action.md):
-#    ag:means      the kind of act, a kernel word;
 #    ag:available  its PRECONDITION — a SELECT over the world binding ?property ?via ?direction,
 #                  and ?for_agent where the row is a duty owed to someone; `$me` and
 #                  `$properties` substituted by the collector, prefixes prepended by the store;
@@ -40,7 +39,6 @@
 
 sensing:Observing
     a ag:Action ;
-    ag:means sensing:Observe ;
 
     #  AVAILABLE where I may ASK an instrument that monitors my subject for this property —
     #  `sensing:mayAsk`, not `sensing:polls`, so a device that takes no orders offers no row
