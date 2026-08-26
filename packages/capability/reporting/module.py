@@ -129,9 +129,14 @@ class StoringModule(Module):
             # without re-ratifying a world.
             self.log.warning("no series credential, so nothing will be reported about this agent")
             return
-        from agent.influx_writer import InfluxWriter  # deferred: nothing built for a test agent
-
-        self._writer = InfluxWriter(
+        #  NOT deferred. It was `from agent.influx_writer import InfluxWriter`, deferred with
+        #  the note "nothing built for a test agent" — and when that module became this
+        #  package's `series.py` (metrics-are-an-aspect) the line was not repointed. It sat
+        #  broken while `SeriesWriter` was imported at the top of this very file, crash-looping
+        #  every agent in every world at `start()`, because a deferred import is code no test
+        #  runs and reporting is the one capability every agent holds
+        #  (a-deferred-import-is-code-no-test-runs).
+        self._writer = SeriesWriter(
             config.env("INFLUX_URL", "http://localhost:8086"), token,
             config.env("INFLUX_ORG", "orexis"), bucket)
         self._timer = Timer(self.beliefs.interval_s, self.report)
