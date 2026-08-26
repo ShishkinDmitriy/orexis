@@ -208,11 +208,11 @@ SELECT ?p WHERE {{
 
     def _pursue_calls(self, market=None) -> None:
         """Every call I hold — on one venue, or all — through execution."""
-        from agent import execution
+        from agent import execution, revision
 
         for desire in self.desires():
             if market is None or desire.uri == calls.uri_for(market.uri):
-                execution.pursue(self.agent, desire)
+                revision.wake_for(self.agent, desire)
 
     def desires(self, now=None) -> list[Desire]:
         """My contribution to what this agent pursues: the calls on the venues I host.
@@ -534,9 +534,9 @@ SELECT ?r WHERE {{
         #  handed to bidding, which stands until the upstream round — and the claim stays held
         #  for the sweep that re-runs this when stock arrives. A serve is the plan's head only
         #  when the vessel can honour it, and `take` below is handed exactly that row.
-        from agent import execution
+        from agent import execution, revision
 
-        if execution.pursue(self.agent, desire) is None and jti in self.held:
+        if revision.wake_for(self.agent, desire) is None and jti in self.held:
             # Hot, owed, and unpursued — or absorbed within patience. It stays in `held`, so
             # the moment the answer changes the sweep serves it.
             self.log.warning(

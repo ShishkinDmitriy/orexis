@@ -252,12 +252,12 @@ class Keeper(Module):
         The cost is a plan per want per patience period, which is the same work `series()`
         already does on the metrics clock.
         """
-        from . import execution
+        from . import revision
 
         for desire in self.agent.pursuing():
             if desire.is_duty:
                 continue
-            execution.pursue(self.agent, desire)
+            revision.wake_for(self.agent, desire)
 
     # --- the ledger, written -------------------------------------------------------------
 

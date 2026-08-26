@@ -30,10 +30,10 @@
 #  THE READING CHOIR — the questions this package asks of every module about a reading, as
 #  terms (a-hook-is-a-term). Bidding answers :urgency for a held claim; sensing itself answers
 #  all four from the region it holds.
-:annotate a ag:Hook ; rdfs:label "annotate" ; rdfs:comment "What do you add to this agent's public announcement about a reading of its own? Merged dict." .
-:bounds a ag:Hook ; rdfs:label "bounds" ; rdfs:comment "Where do you want this property held? The intersection — highest floor, lowest ceiling — is what a crossing-watching board is told." .
-:urgency a ag:Hook ; rdfs:label "urgency" ; rdfs:comment "How close does this reading put you to your own trouble, 0 to 1? The sharpest answer wins; None is no opinion. A None value asks how urgent not knowing is." .
-:readingRecorded a ag:Hook ; rdfs:label "reading recorded" ; rdfs:comment "Told: this agent's sensing recorded something new — subject, property, value." .
+:annotate a ag:Hook ; ag:row ag:Reactive ; rdfs:label "annotate" ; rdfs:comment "What do you add to this agent's public announcement about a reading of its own? Merged dict." .
+:bounds a ag:Hook ; ag:row ag:Reactive ; rdfs:label "bounds" ; rdfs:comment "Where do you want this property held? The intersection — highest floor, lowest ceiling — is what a crossing-watching board is told." .
+:urgency a ag:Hook ; ag:row ag:Reactive ; rdfs:label "urgency" ; rdfs:comment "How close does this reading put you to your own trouble, 0 to 1? The sharpest answer wins; None is no opinion. A None value asks how urgent not knowing is." .
+:readingRecorded a ag:Hook ; ag:row ag:Reactive ; rdfs:label "reading recorded" ; rdfs:comment "Told: this agent's sensing recorded something new — subject, property, value." .
 
 #  A BELIEF GRAPH of this package's own: what the agent holds about the instruments it polls
 #  — the horizon it published per sensor, which the freshness want reads. It arrives RECORDED

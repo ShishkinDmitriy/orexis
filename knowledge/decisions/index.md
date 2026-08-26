@@ -88,6 +88,7 @@ holds its reasoning; its mechanism has moved, and the record says where.
 * [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) - Entailments are materialised into the store at genesis, so shapes and the runtime cannot disagree about the vocabulary.
 * [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) - Five packages took namespaces of their own. A term is named seven ways, and a rename sees one of them.
 * [the-kernel-names-no-package-word](/decisions/the-kernel-names-no-package-word.md) - Packages are optional, so the core depends on none of them in RDF either. Nine occurrences left, ordered by danger.
+* [absence-is-not-retraction](/decisions/absence-is-not-retraction.md) - No belief update function: a reading is upserted and never expires, not-current is a want, and validity is a window with three legitimate treatments.
 * [a-hook-is-a-term](/decisions/a-hook-is-a-term.md) - Every choir question is an `ag:Hook` declared by whoever owns it; modules answer by decorating with the term; undeclared terms are refused.
 * [publishing-is-a-goal-and-the-protocol-is-a-primitive](/decisions/publishing-is-a-goal-and-the-protocol-is-a-primitive.md) - Deciding to send is a goal with alternatives and deadlines; framing and backoff stay a library; the outbox is a droppable intention.
 * [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md) - The test for what an agent believes about the layers and itself; store what comes from outside, compute what the interpreter knows.

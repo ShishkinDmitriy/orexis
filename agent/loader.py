@@ -557,6 +557,23 @@ def prefixes() -> dict[str, str]:
 
 
 @lru_cache(maxsize=1)
+def hook_rows() -> dict[str, str]:
+    """Every hook and the cognitive row it belongs to — `ag:row`, declared beside the hook by
+    whoever owns the question (layered-by-timescale-and-interruptibility)."""
+    import rdflib
+
+    out: dict[str, str] = {}
+    row = rdflib.URIRef("http://example.org/orexis#row")
+    hook = rdflib.URIRef("http://example.org/orexis#Hook")
+    for path in ontology_files():
+        g = rdflib.Graph().parse(path, format="turtle")
+        for term in g.subjects(rdflib.RDF.type, hook):
+            for value in g.objects(term, row):
+                out[str(term)] = str(value)
+    return out
+
+
+@lru_cache(maxsize=1)
 def hooks() -> frozenset[str]:
     """Every `ag:Hook` any ontology declares — the kernel's questions and each package's. What
     `Agent.ask` and `Agent.tell` hold a term to: a hook nobody declared is a typo that would
