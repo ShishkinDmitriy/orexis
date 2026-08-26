@@ -5,7 +5,9 @@ description: >-
   How capabilities contribute judgments to one another without knowing each other exists — the
   kernel puts a question to every loaded module, whoever holds an opinion answers, and the
   asker never learns who sang. Eight hooks on Module, each with its own way of resolving many
-  answers into one; silence is a first-class answer, distinct from judging fine.
+  answers into one; silence is a first-class answer, distinct from judging fine. Eighteen hooks,
+  thirteen the kernel's and five a package's, with the roster below generated from what the code
+  declares rather than from memory.
 ---
 
 # What it is
@@ -37,22 +39,64 @@ are sensing's contract (`packages/capability/sensing/choir.py`): a module joins 
 method, and sensing says what it is asked with and how the answers merge
 ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
-| hook | the question | resolved by |
-|---|---|---|
-| `annotate` | what do you add to my public announcement about this reading? | merged dict (sensing's) |
-| `urgency` | how close does this reading put you to your own trouble? | max of the answers (sensing's) |
-| `bounds` | where do you want this property held? | intersection — highest floor, lowest ceiling (sensing's) |
-| `on_reading_recorded` | something new is known — told, not asked | every listener (sensing's) |
-| `sweep` | the clock has moved — retract what it has ended | asked on the agent's own housekeeping tick; only the owner of a fact knows which treatment it deserves |
-| `desires` | what do you contribute to what the agent pursues? | ranked together by `agent.pursuing()`, one want per node |
-| `desire_urgency` | how urgent is this want, in this world? | first opinion |
-| `size` | how big would the act this row commits to be? | the taker's answer |
-| `take` | carry this committed row out | any True |
-| `reports` / `series` | which fields go on the health point; which tagged rows go to the bucket | merged (later wins, logged) / concatenated — by [reporting](/decisions/metrics-are-an-aspect.md), the sink |
-| `record` | a reading for the record — told by sensing | whoever holds the series sink |
-| `subscriptions` / `handle` / `send` | which channels do you need; take this message; carry this out to the society | the [transport](/domain/transport.md)'s — asked by the module that holds the connection |
-| `notices` | which pairs are unknown or too stale to act on? | concatenated for the deliberator |
-| `quiet` | what did you expect to hear and have stopped hearing? | a set of log lines |
+## Declared by the kernel — 13
+
+| hook | row | signature | asked by | answered by |
+|---|---|---|---|---|
+| `beliefRevised` | Progression | `on_belief_revised(belief_term, value) -> None` | review | sensing |
+| `desireUrgency` | Deliberative | `desire_urgency(desire, query, state, value=…) -> float \| None` | kernel | market, sensing |
+| `desires` | Deliberative | `desires(now=…) -> list['Desire']` | kernel | market, sensing |
+| `handle` | Reactive | `handle(topic, payload) -> bool` | mqtt | actuation, market, reporting, sensing |
+| `notices` | Deliberative | `notices() -> list[tuple[str, str]]` | **nobody** | sensing |
+| `quiet` | Reactive | `quiet() -> list[str]` | mqtt | sensing |
+| `reports` | Reactive | `reports() -> dict` | reporting | actuation, mqtt, reporting, review, sensing |
+| `send` | Reactive | `send(channel, payload, retain=…, not_after=…) -> bool` | kernel, reporting, sensing | mqtt |
+| `series` | Reactive | `series() -> list[tuple[str, dict, dict]]` | reporting | sensing |
+| `size` | Deliberative | `size(query, graph, row) -> float \| None` | kernel *(direct)* | actuation, market |
+| `subscriptions` | Reactive | `subscriptions() -> list[str]` | mqtt | actuation, market, reporting, sensing |
+| `sweep` | Progression | `sweep() -> int` | kernel | market |
+| `take` | Progression | `take(act, desire, intention) -> bool` | kernel *(direct)* | actuation, market, sensing |
+
+## Declared by `packages/capability/sensing/` — 4
+
+| hook | row | signature | asked by | answered by |
+|---|---|---|---|---|
+| `annotate` | Reactive | `annotate(subject_uri, observed_property, value) -> dict` | sensing | sensing |
+| `bounds` | Reactive | `bounds(subject_uri, observed_property) -> tuple[float, float] \| None` | sensing | sensing |
+| `readingRecorded` | Reactive | `on_reading_recorded(subject_uri, observed_property, value) -> None` | sensing | actuation, market, review, sensing |
+| `urgency` | Reactive | `urgency(subject_uri, observed_property, value) -> float \| None` | sensing | market, sensing |
+
+## Declared by `packages/capability/reporting/` — 1
+
+| hook | row | signature | asked by | answered by |
+|---|---|---|---|---|
+| `record` | Reactive | `record(value, at=…) -> None` | sensing | reporting |
+
+**Read the table this way.** *Asked by* is the package that puts the question — it decides how
+the answers merge, and it is the contract's real owner. *Answered by* is every package that
+currently has an opinion, which changes as packages are added and removed and is exactly what no
+asker is allowed to know. Two rows say `kernel *(direct)*`: `size` and `take` are declared hooks
+but are NOT broadcast — the caller has already resolved WHICH module by `ag:takenBy` and
+`agent.providers(family)`, and calls the method on that one.
+
+**Two ways to answer one.** Override the base method on `Module` — `reports()`, `desires()`,
+`take()` — and `Module.answer` finds it through the MRO without a decorator, which is how five
+packages answer `reports`. Or decorate any method with `@hook(TERM)`, which is what a PACKAGE's
+hook needs, since there is no base method to override: sensing's `readingRecorded` is answered by
+four packages, each on a method called `on_reading_recorded`.
+
+**The signature is the hook's, not the mechanism's.** `Agent.ask(hook, *args)` calls
+`fn(*args)` straight through, so an answerer whose parameters do not match raises `TypeError`,
+which `ask` logs as *could not answer* and steps over. A mismatched signature is therefore a
+module quietly not participating — the contract lives in the base method's docstring for a
+kernel hook, and in the asking package's `choir.py` for a package's.
+
+**`notices` is declared and asked by nobody.** The term, the base method and sensing's override
+all exist; nothing calls `ask(NOTICES, …)`. The deliberator stopped asking when freshness became
+a WANT rather than a noticed gap — see
+[a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md) —
+and the hook was left behind. Whether it is rewired or retired is
+[#413](https://github.com/ShishkinDmitriy/orexis/issues/413).
 
 Prose around the project often names the choir by an older five — `annotate`, `urgency`,
 `notices`, `series`, `quiet` — a shorthand from before the rest joined. This table is the
@@ -70,7 +114,7 @@ Absence composes the same way. A module that is not loaded contributes nothing t
 the missing lines are themselves a reading: this agent was never granted that ability, which is
 a different fact from having had nothing to say.
 
-# Adding a singer is nothing; adding a hook is a kernel edit
+# Adding a singer is nothing; adding a hook is an ontology edit
 
 A package whose module implements a hook joins the choir by being loaded — no registration, no
 list to append to. A new hook is different: it needs a TERM in the ontology of whoever owns the
@@ -84,7 +128,7 @@ tick before a test caught it.
 
 [sensing](/domain/sensing.md) asks `urgency` so attention follows need, and the watchdog asks
 `quiet` on its own clock; announcements carry whatever `annotate` gathered, which is what makes
-them the agent's rather than sensing's; the deliberator turns `notices` into moves and
-[gap](/domain/gap.md) explains why noticing is collective while deciding stays singular; a
+them the agent's rather than sensing's; [gap](/domain/gap.md) explains why noticing is
+collective while deciding stays singular — though nothing asks `notices` today; a
 crossing-watching board is told the `bounds` intersection; and the reporting tick flushes
 `series` and `reports` in one write.
