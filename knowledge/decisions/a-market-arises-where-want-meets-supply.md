@@ -19,8 +19,9 @@ FIRST appear the same way? Yes to both, because everything a market instance sta
 derivable from wiring that exists for its own reasons, except one triple that should stay
 authored because it is consent.
 
-Look at what `:barrel1_market` actually says: topics that are mechanically `market/barrel1/*`
-— a function of the source's id, exactly the shape
+Look at what the authored venue said — this record was written while `world/simulation` still
+had one, and the change it argues for is why it does not: topics that are mechanically
+`market/barrel1/*`, a function of the source's id, exactly the shape
 [a-stream-is-a-thing](/decisions/a-stream-is-a-thing.md) already mints derived instances in —
 a `marketFor` pointing at the source, and a host who owns it. So:
 

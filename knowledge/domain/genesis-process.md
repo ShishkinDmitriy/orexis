@@ -96,7 +96,7 @@ own to revise (aspirational — nothing revises them yet).
 **But beliefs are not all the same kind of thing**, and the two shipped worlds make the split
 visible. The same agent id, the same hardware, two worlds:
 
-| | `world/society` | `world/sensing` |
+| | `world/simulation` | `world/sensing` |
 |---|---|---|
 | `sensing:slowSleepS` | 600 | 10 |
 | `sensing:aims` (soil moisture) | 0.55 | *absent — it holds no stake* |

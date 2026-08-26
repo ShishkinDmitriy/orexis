@@ -30,7 +30,9 @@ keeps the measurement-vs-judgment line even without a witness:
 - **`:sensed`** — the agent's **sensor data**: what it read (`hasSimpleResult 0.18`). Its
   record of observations.
 - **`:opinion`** — the agent's **judgments**: what it concludes (band `LOW`, valuation,
-  learning). Its interpretations.
+  learning). Its interpretations. (AMENDED: it shipped as **`:classification`**. The split this
+  record asks for is exactly what was built — read apart from verdict — under the name the
+  modality carries.)
 
 Both are the agent's and both are opinion, but separating them means "fern *read* 0.18" and
 "fern *thinks* it's LOW" stay distinct, auditable facts — you can inspect the reading apart

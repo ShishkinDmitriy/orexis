@@ -16,7 +16,7 @@ what genuinely can't move.
 # Decision — the three powers, relaxed toward public mechanisms
 
 - **Attest → dropped.** Each agent self-asserts its own state as opinion (`:sensed` /
-  `:opinion`). Not infra. See [trusted-agent-mode](/decisions/trusted-agent-mode.md).
+  `:classification`). Not infra. See [trusted-agent-mode](/decisions/trusted-agent-mode.md).
 - **Actuate → the resource owner.** The **supplier** drives its own valves — it *executes*
   a claim (how much) + topology (which valve), it does not *decide*. Safe because the amount
   is bounded by two independent checks it doesn't control: **clearing** (a valid, cleared

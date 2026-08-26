@@ -42,7 +42,7 @@ not a base with fragments layered on it. An agent is given exactly one, mounted.
 made of, and how to author one, is [world](/domain/world.md).
 
 This matters more than convenience. A world is the *entire* model of a system, so a second one
-is not a variant of the first: it is a different society. `world/society` has a market;
+is not a variant of the first: it is a different society. `world/simulation` has a market;
 `world/sensing` has one subject, one board and one agent and no market at all — which makes
 it the smallest genesis output that still produces a working agent, and the proof that a
 capability can stand alone. If `market:Bidding` could only exist alongside sensing, "capability"

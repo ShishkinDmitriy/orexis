@@ -98,10 +98,15 @@ stated as a number: three sensors, two streams.
 soil probe while its own credential sits unused — was attempted here and **reverted**, because it
 collides with a property this project already holds.
 
-`tests/test_isolation.py::test_two_worlds_that_share_a_device_share_its_credential` asserts that
-`world/sensing` and `world/society` share device principals, *"so one flashed board works in
-either"*. A device credential is deliberately not world-scoped, and that is
-[series-and-bus-isolation](series-and-bus-isolation.md)'s doing.
+`tests/test_isolation.py::test_a_board_is_known_by_the_same_name_and_granted_the_same_channels_in_both`
+asserts that `world/sensing` and `world/simulation` model the same probe identically. A device
+credential is deliberately not world-scoped, and that is
+[series-and-bus-isolation](series-and-bus-isolation.md)'s doing. (This paragraph named
+`world/society` and a test called `test_two_worlds_that_share_a_device_share_its_credential`,
+quoting it as *"so one flashed board works in either"*. The world is gone, the test was rewritten,
+and its successor's docstring disowns that very phrase as overclaiming — each world mints its own
+password and listens on its own port, so moving a board is a credential swap and a reflash. What
+survives is that it is ONLY that.)
 
 Moving `mqtt:onBus` onto the board makes `sensing`'s only device principal `esp32_fern`, while
 `society` — which states no hardware and therefore no board — keeps three sensor principals. The

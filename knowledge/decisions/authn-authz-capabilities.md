@@ -57,8 +57,10 @@ registry; the artifact carries its own proof.
 
 # Revocation
 
-- **Only on mechanically-provable violations** — forged provenance, citing a triple not in
-  `:attested`, bidding above wallet, flooding the bus. Never on *judged intent*: bluffing and
+- **Only on mechanically-provable violations** — forged provenance, citing a triple that is not
+  held (this said `:attested`, the witness's graph, which
+  [trusted-agent-mode](/decisions/trusted-agent-mode.md) dropped before it was built), bidding
+  above wallet, flooding the bus. Never on *judged intent*: bluffing and
   aggressive-but-legal strategy are undecidable to tell from malice, and a judge that revokes
   on them reintroduces the adjudicator [trust-boundary](/decisions/trust-boundary.md)
   forbids.

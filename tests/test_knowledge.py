@@ -31,7 +31,9 @@ going green.
 from __future__ import annotations
 
 import itertools
+import pathlib
 import re
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -192,7 +194,63 @@ _TOP = ("agent/", "packages/", "onboarding/", "tests/", "infra/", "tools/", "fir
 _PATH = re.compile(r"`((?:" + "|".join(re.escape(t) for t in _TOP) + r")[A-Za-z0-9_./<>*-]*)`")
 
 
-def _exists(spec: str) -> bool:
+#  ASK GIT, NOT THE FILESYSTEM. This guard used to call `Path.exists()`, and that made its
+#  verdict depend on gitignored local state in both directions at once:
+#
+#  - a GENERATED path — `infra/.env`, `world/<w>/secrets/`, a board's `config.h` — is absent
+#    until somebody runs onboarding, so a fresh clone or a new worktree reported five real
+#    documents as broken. Three readers in a row called the whole failure environmental and
+#    moved on, which is what a guard that cries wolf buys;
+#  - and a DELETED path can be kept alive by a leftover. `world/society` was removed, five
+#    documents went on naming it, and the checkout it was written in still held an empty
+#    `world/society/secrets/` from before the deletion. Untracked, gitignored, invisible — and
+#    enough to make `exists()` say yes. The guard was green here and red everywhere else.
+#
+#  Tracked, ignored and absent are three different answers and git knows all three. A path is
+#  fine if git TRACKS it, or if git IGNORES it (a generator's output, legitimately named in
+#  prose, whose presence is nobody's business here). Anything else is a rename that did not
+#  reach the bundle — the same verdict in a fresh clone, a worktree and a working checkout.
+
+
+def _tracked() -> set[str]:
+    """Every tracked path, plus every directory on the way to one."""
+    files = subprocess.run(["git", "ls-files", "-z"], cwd=REPO_ROOT,
+                           capture_output=True, text=True, check=True).stdout.split("\0")
+    known = {f for f in files if f}
+    for f in list(known):
+        known |= {str(d) for d in pathlib.PurePosixPath(f).parents if str(d) != "."}
+    return known
+
+
+def _ignored(specs: list[str]) -> set[str]:
+    """Which of these git would ignore — asked in one call, because there can be dozens."""
+    if not specs:
+        return set()
+    done = subprocess.run(["git", "check-ignore", "--stdin"], cwd=REPO_ROOT,
+                          input="\n".join(specs), capture_output=True, text=True)
+    return {line for line in done.stdout.splitlines() if line}
+
+
+def _as_regex(pattern: str) -> re.Pattern:
+    """A shell-ish glob over slash-separated paths: `**` crosses separators, `*` does not."""
+    out, i = [], 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out.append("(?:.*/)?")     # `**/` spans zero directories or many, as a shell does
+            i += 3
+        elif pattern.startswith("**", i):
+            out.append(".*")
+            i += 2
+        elif pattern[i] == "*":
+            out.append("[^/]*")
+            i += 1
+        else:
+            out.append(re.escape(pattern[i]))
+            i += 1
+    return re.compile("".join(out) + "$")
+
+
+def _is_tracked(spec: str, known: set[str]) -> bool:
     """A placeholder segment matches anything; a glob is a glob; and prose names a module
     without its extension as often as with it, which is not a broken reference."""
     spec = spec.rstrip("/")
@@ -200,8 +258,18 @@ def _exists(spec: str) -> bool:
         return True
     pattern = re.sub(r"<[^>]+>", "*", spec)
     if "*" in pattern:
-        return any(REPO_ROOT.glob(pattern))
-    return (REPO_ROOT / pattern).exists() or (REPO_ROOT / f"{pattern}.py").exists()
+        rx = _as_regex(pattern)
+        return any(rx.match(k) for k in known)
+    return spec in known or f"{spec}.py" in known
+
+
+def _concrete(spec: str) -> str:
+    """A path git can be asked about: every placeholder filled with a name nothing else uses.
+
+    The trailing slash is KEPT. `.gitignore` says `world/*/secrets/`, and a directory-only
+    pattern will not match a path git cannot stat — which every generated path is, on a machine
+    where nobody has run onboarding. With the slash it matches by spelling alone."""
+    return re.sub(r"<[^>]+>", "placeholder", spec).replace("**", "placeholder")
 
 
 def test_no_document_names_a_path_that_is_not_there():
@@ -276,18 +344,41 @@ def test_no_document_names_a_path_that_is_not_there():
         # and the two empty directories it deleted, named as what went.
         "agent/codecs",
         "agent/scalings",
+        # two-worlds-were-one removed `world/society`, a near-duplicate of `world/simulation`.
+        # Three records narrate it and each is explicit: a struck-through seam marked "Moot",
+        # the pair of worlds that WAS device-for-device identical, and the two that once shared
+        # a broker. This entry is why the guard had to stop asking the filesystem — the checkout
+        # where those records were written still holds an empty `world/society/secrets/`, so
+        # `exists()` said the world was there.
+        "world/society",
     }
     docs = concepts()
-    missing = []
+    known = _tracked()
+    assert docs, "no concept documents found — the glob stopped matching"
+    assert known, "git tracks nothing — `git ls-files` stopped answering, and every path below "
+    "would read as missing"
+
+    unresolved = {}
     for path in docs:
         for spec in set(_PATH.findall(path.read_text())):
-            if spec in absent_on_purpose or _exists(spec):
+            if spec in absent_on_purpose or _is_tracked(spec, known):
                 continue
-            missing.append(f"{path.relative_to(BUNDLE)}: `{spec}`")
-    assert docs, "no concept documents found — the glob stopped matching"
+            unresolved.setdefault(_concrete(spec), []).append(
+                f"{path.relative_to(BUNDLE)}: `{spec}`")
+
+    #  The second question, asked only of what the first could not answer: is it a generator's
+    #  output? Those are named in prose on purpose and are absent until somebody runs onboarding.
+    #  Asked about both spellings: a bare path, and the same with a trailing slash, since a
+    #  directory-only `.gitignore` pattern matches only the second when the path is not on disk.
+    asked = sorted({s for c in unresolved for s in (c.rstrip("/"), c.rstrip("/") + "/")})
+    generated = {g.rstrip("/") for g in _ignored(asked)}
+    missing = sorted(m for concrete, mentions in unresolved.items()
+                     if concrete.rstrip("/") not in generated for m in mentions)
     assert not missing, (
-        "documents naming a path that is not on disk — a rename that did not reach the "
-        "bundle:\n  " + "\n  ".join(sorted(missing))
+        "documents naming a path git neither tracks nor ignores — a rename that did not reach "
+        "the bundle. (A path that is merely UNGENERATED does not appear here: git ignores those, "
+        "so this list is the same in a fresh clone as in a working checkout.)\n  "
+        + "\n  ".join(missing)
     )
 
 
@@ -544,3 +635,105 @@ def test_a_dictionary_term_is_a_declared_one():
     assert families, "no capability families found — the subclass pattern stopped matching"
     assert owners, "no page binds any term — the term: field stopped being read"
     assert not wrong, "the dictionary and the T-Box disagree:\n  " + "\n  ".join(wrong)
+
+
+# --- the graphs a document names ---------------------------------------------------------------
+
+#  A bundle writes a graph as `:sensed` and an individual as `:fern_agent` — the same shorthand,
+#  and neither has a namespace to check. So this asks one question of both: does the project
+#  DECLARE the thing? A graph is declared in an ontology as `…/graph/<name>`, per-agent ones
+#  through an `ag:graphPrefix`; an individual is declared by the world that holds it, which
+#  `_declared()` already sweeps up for the term guard above.
+#
+#  This found #269 — `:attested`, `:opinion`, `:claims`, `:ledger` and `:exp/<agent>` across nine
+#  documents, written as if they were graphs. None of them was ever built: the first two were the
+#  witness's, dropped by `trusted-agent-mode` before anything wrote them, and the record cited as
+#  the authority on who authors what had all three of its graph names wrong.
+#
+#  Exact rather than a word list, which is the point: the day a graph is renamed, every document
+#  naming the old one fails here, and nobody has to remember to update a list of forbidden words.
+
+_GRAPH_BASE = "http://example.org/orexis/graph/"
+_SHORTHAND = re.compile(r"`(:[A-Za-z][\w/<>-]*)`")
+
+
+def _graphs() -> tuple[set[str], set[str]]:
+    """Every graph the project declares: fixed names, and the prefixes per-agent ones grow from."""
+    from agent import loader
+
+    fixed, prefixes = set(), set()
+    for ttl in loader.sources("*.ttl"):
+        text = ttl.read_text()
+        fixed |= {iri[len(_GRAPH_BASE):]
+                  for iri in re.findall(rf"<({re.escape(_GRAPH_BASE)}[^>]*)>", text)}
+        prefixes |= {p[len(_GRAPH_BASE):]
+                     for p in re.findall(r'ag:graphPrefix\s+"([^"]+)"', text)
+                     if p.startswith(_GRAPH_BASE)}
+    return {f for f in fixed if f}, prefixes
+
+
+def test_no_document_names_a_graph_the_store_has_never_had():
+    """Every `:shorthand` a document writes is a graph the store has, or something declared.
+
+    One thing it cannot check: a per-agent graph's AGENT. `:beliefs/nobody` passes, because the
+    prefix is what the ontology declares and the suffix is whatever agents a world happens to
+    hold — and a document naming `:beliefs/fern` as an example is not claiming that world exists.
+    The graph before the slash is the part that can rot, and that part is checked.
+    """
+    absent_on_purpose = {
+        # THE WITNESS'S GRAPHS, dropped by trusted-agent-mode before anything wrote them. Four
+        # records and one component page narrate them, each explicitly: "does not exist", "was
+        # never built", "this said", "becomes asserted".
+        ":attested",
+        ":attested/<plant>",
+        # The judgment graph trusted-agent-mode asked for, which shipped as `:classification`.
+        # That record keeps the name it chose, with the amendment beside it.
+        ":opinion",
+        # Three writers with three graphs, in agent-centric-epistemics' two-store block. The
+        # writers collapsed into one and none of these names was built; the block quotes itself.
+        ":ledger",
+        ":exp/<agent>",
+        # Untrusted peer assertions. Never built and never needed — a bid is a message on the
+        # bus, weighed and discarded — which `domain/belief-base.md` says in those words, and
+        # which is why the name survives only inside sentences denying it.
+        ":claims",
+        # PROPOSALS, not drift: three documents name a per-subject or per-witness split of
+        # `:sensed` as the next step, each saying in the same breath that `:sensed` is still one
+        # shared graph. Naming what does not exist yet is what a seam is for.
+        ":sensed/<plant>",
+        ":sensed/<subject>",
+        ":sensed/<witness>",
+        # The decommissioned component, named as the provenance a witnessed fact would carry.
+        ":gateway",
+        # The authored venue `world/simulation` held until arc 3, when a source offered by
+        # someone who states how they match BECAME a market and the venue derived. Two records
+        # narrate it: the one that argued for the change, and the one recording that this guard
+        # caught it still being named in the present tense.
+        ":barrel1_market",
+    }
+    fixed, prefixes = _graphs()
+    declared = _declared()
+    docs = concepts()
+    assert docs, "no concept documents found — the glob stopped matching"
+    assert fixed, "no graphs found — the ontology scan stopped matching"
+    assert prefixes, "no per-agent graph prefixes found — `ag:graphPrefix` stopped matching"
+
+    def resolves(name: str) -> bool:
+        bare = name.lstrip(":")
+        if "/" in bare:
+            #  A slash is unambiguous: no term has one, so this is a per-agent graph or nothing.
+            return bare in fixed or any(bare.startswith(p) and len(bare) > len(p)
+                                        for p in prefixes)
+        return bare in fixed or bare in declared
+
+    wrong = sorted(
+        f"{path.relative_to(BUNDLE)}: `{name}`"
+        for path in docs
+        for name in set(_SHORTHAND.findall(path.read_text()))
+        if name not in absent_on_purpose and not resolves(name)
+    )
+    assert not wrong, (
+        "documents naming a graph the store has never had, or a term nothing declares — the "
+        "graphs are enumerable, so this is exact rather than a list of forbidden words:\n  "
+        + "\n  ".join(wrong)
+    )

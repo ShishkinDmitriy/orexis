@@ -18,7 +18,7 @@ world plus its own private beliefs — identity,
 plant URI, desire, endowment, skill set, system prompt), the **certificate** (signed proof
 of who it is; see [authn-authz-capabilities](/decisions/authn-authz-capabilities.md)), the
 **wallet**, the **active intention**, and its own **beliefs** (self-asserted `:sensed` +
-`:opinion`; no witness in [trusted-agent-mode](/decisions/trusted-agent-mode.md)). It holds the
+`:classification`; no witness in [trusted-agent-mode](/decisions/trusted-agent-mode.md)). It holds the
 model the same way every agent does — see [agent](/domain/agent.md) for the invariants, which
 are what let 50 of these share one model and still hold separate positions.
 
