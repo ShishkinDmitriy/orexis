@@ -1,0 +1,43 @@
+@prefix sim:  <http://example.org/orexis/sim#> .
+@prefix ag:   <http://example.org/orexis#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  What a stand-in must state, and what its physics must be. A BDI kernel has no rules about
+#  either (the-substrate-is-not-the-minds), and neither has a package about pins: what is stood
+#  in for is a ROLE, so these target the mark and never a physical class.
+
+sim:StandInShape a sh:NodeShape ;
+    rdfs:comment "One system, one stand-in. Its NAME on the wire is required by whatever role it plays — a sensor states one because the dashboards are drawn from it, an actuator because the ACL is — so nothing about it is asked twice here. What makes a stand-in REACHABLE is the transport's to say, and it says so in its own shapes." ;
+    sh:targetSubjectsOf sim:simulatedBy ;
+    sh:property [ sh:path sim:simulatedBy ; sh:maxCount 1 ;
+                  sh:message "one system, one stand-in" ] .
+
+sim:ModelShape a sh:NodeShape ;
+    rdfs:comment """What the stand-in computes between readings. Optional individually — a modelled valve has no dry rate — but each must be a number if stated at all, because the simulator reads them without a graph to check them against.
+
+An initial value used to be held to 0..1, on the reasoning that it is a fraction of the observed property. That was true of every value this project had and false of sensing: a KY-015 reports degrees Celsius, and 21.4 is not a fraction of anything. It is held to the model's OWN range now, which catches the slip the old rule was written for — 45 where 0.45 was meant, in a model that says it runs 0..1 — and catches it in a thermometer too, where the old rule could not look.""" ;
+    sh:targetClass sim:Model ;
+    sh:property [ sh:path sim:losesPerDay ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path sim:minValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path sim:maxValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path sim:initialValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path sim:tickSeconds ; sh:maxCount 1 ; sh:datatype xsd:integer ;
+                  sh:minExclusive 0 ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "an initial value must lie inside the range this model states — 45 where 0.45 was meant would clamp and read as a permanently soaking pot" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this <http://example.org/orexis/sim#initialValue> ?initial .
+                OPTIONAL { $this <http://example.org/orexis/sim#minValue> ?min }
+                OPTIONAL { $this <http://example.org/orexis/sim#maxValue> ?max }
+                OPTIONAL {
+                    ?d <http://example.org/orexis/sim#simulatedBy> $this ;
+                       <http://example.org/orexis/sensing#monitors> ?subject .
+                    ?subject <http://example.org/orexis/sim#maxValue> ?subjectMax
+                }
+                BIND(COALESCE(?max, ?subjectMax, 1.0) AS ?high)
+                BIND(COALESCE(?min, 0.0) AS ?low)
+                FILTER(?initial < ?low || ?initial > ?high)
+            }""" ] .

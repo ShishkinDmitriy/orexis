@@ -1,82 +1,26 @@
 @prefix device: <http://example.org/orexis/device#> .
 @prefix : <http://example.org/orexis/device#> .
-@prefix ag:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
-@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
 <http://example.org/orexis/device> a owl:Ontology ;
     rdfs:label "Device" ;
-    rdfs:comment """What a thing is MADE OF, and what stands in for it when it is not there.
+    rdfs:comment """What a thing is MADE OF — one word, for the inventory and the wiring.
 
-A knowledge-only package: no Python, no capability, nothing to grant — a vocabulary two
-capabilities, a transport and every part package name, and the kernel does not
-(the-substrate-is-not-the-minds).
+A knowledge-only package: no Python, no capability, nothing to grant. The kernel does not own it
+(the-substrate-is-not-the-minds) and neither does any capability: **nothing that observes or acts
+requires it.** A sensor is a sosa:Sensor and an actuator is a sosa:Actuator, whether or not
+anybody built one (a-stand-in-is-not-a-device).
 
 **The axis is SUBSTRATE, and it is not SOSA's.** SOSA's classes are functional and the spec is
-explicit that any of them may be virtual: `sosa:Sensor` says *this observes*, never *this
-exists*. `device:Device` says a physical edge node is there — with legs, a bus and an address —
-or that something is standing in for one, which is the claim `device:simulatedBy` needs and the
-one no standard vocabulary makes. `mc:hasPin` and `mc:logicVolts` take it as their domain,
-because boards have pins.""" .
+explicit that any of them may be virtual: `sosa:Sensor` says *this observes*, never *this exists*.
+`device:Device` says a physical node is there — with legs, a bus and an address — which is the
+claim `mc:hasPin` and `mc:logicVolts` need as their domain, because boards have pins. That is what
+it is FOR: an inventory of parts and a harness joining them. Nothing else should ask.
+
+So it is stated by INSTANCES and by the classes that are physical by definition — a board, a
+peripheral. A class naming a role does not state it, because the role is available to a thing that
+was never built.""" .
 
 :Device a owl:Class ; rdfs:label "Device" ;
-    rdfs:comment "A physical edge node: mechanism, never policy, and interchangeable with a simulated one." .
-
-#################  Devices that are not there  #################
-# A simulated device is an ORDINARY device in every statement the world makes about it: it is
-# on a bus, it has topics, it has a sense mode, and an agent is wired to it with sensing:polls like
-# any other. The only extra fact is that a process stands in for it.
-#
-# The marker is on the DEVICE and never on the agent, and that is the whole design. An agent
-# that could tell would be a second code path, and a second code path is what a simulation is
-# supposed to avoid: world/simulation used to exercise its own implementation, so it could pass
-# while the real one was broken.
-
-device:simulatedBy a owl:ObjectProperty ; rdfs:domain device:Device ; rdfs:range device:DeviceModel ;
-    rdfs:label "simulated by" ;
-    rdfs:comment "No such device exists; a process stands in for it, publishing on the same topics and speaking the same protocol. Read by the generators, which give it a container and a credential, and by nothing an agent runs — an agent must not be able to tell, and the surest way is that nothing it executes ever asks." .
-
-device:modelMinValue a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "model minimum" ;
-    rdfs:comment "The floor of what this stand-in can report. A moisture fraction happens to run 0..1; a thermometer does not, so the range is stated rather than assumed." .
-device:modelMaxValue a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "model maximum" .
-
-device:DeviceModel a owl:Class ; rdfs:label "Device model" ;
-    rdfs:comment "The physics the stand-in computes between readings. Facts about the thing being modelled rather than opinions about it, which is why they sit on the device and not in anybody's beliefs." .
-
-device:modelInitialValue a owl:DatatypeProperty ; rdfs:domain device:DeviceModel ; rdfs:range xsd:decimal ;
-    rdfs:label "model initial value" ;
-    rdfs:comment "What it reads before anything has happened to it." .
-
-device:modelDoseEffect a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
-    rdfs:label "model dose effect" ;
-    rdfs:comment "How a dispensed unit moves this modelled value, SIGNED — in units of this value per litre on the dose wire, the litre being the WIRE's unit (a valve's status message speaks ml; that is actuation's physical reality, so it lives in this comment and not in the term's name — the first draft said modelDoseLitres, and the kernel wearing the water domain's word is the exact smell modelLosesPerDay had just been cured of). A pot's conversion arrives through the domain's denomination and never through this; a SOURCE'S effect is not per-instance configuration at all but CONSERVATION — every source loses exactly what was dispensed from it — so the water domain states -1.0 once, on the WaterSource class, and the closure entails it onto every barrel. Read from the SUBJECT by the generation, like the ceiling and the drying." .
-
-device:modelLosesPerDay a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
-    # Un-domained since #164: stated on a DeviceModel as an override, or entailed onto a
-    # SUBJECT from a domain's own physics term (water:driesPerDay rdfs:subPropertyOf this),
-    # so the generator reads one kernel term and the pot keeps the only copy of its fact.
-    rdfs:label "model dries per day" ;
-    rdfs:comment "How much of the observed property is LOST per simulated day — first-order decay toward the model's floor, for any value that drains: a pot's moisture, a barrel's evaporation, a battery's self-discharge. Was modelDriesPerDay, a kernel term wearing the water domain's word (every-term-in-its-own-house had it listed: only a plant dries); before that `device:modelDryRate`, per tick, and the tick made the physics an artifact of attention: the pot dried one step per reading, so a closely-watched plant dried faster than an ignored one — backwards, and visibly so once the cadence machinery started varying how closely anyone watched. Time-based now, scaled by the world's device:timeScale, so the pot loses what the day costs it however often it is read. Since #164 the domain's water:driesPerDay is a subproperty of this: a pot states its physics once, in its own vocabulary, and the closure entails the kernel's term the generation reads — while a DeviceModel may still state this directly, as an override for values that are not anyone's pot." .
-
-device:modelDailySwing a owl:DatatypeProperty ; rdfs:domain device:DeviceModel ; rdfs:range xsd:decimal ;
-    rdfs:label "model daily swing" ;
-    rdfs:comment "The amplitude of a daily sine around the value — for properties with a diurnal cycle, which soil moisture does not have and air temperature does. One simulated day per period, so under device:timeScale 24 a bench hour draws a whole day's curve. Absent means flat, which is what the old ever-falling drift pretended not to be." .
-
-device:modelTickSeconds a owl:DatatypeProperty ; rdfs:domain device:DeviceModel ; rdfs:range xsd:integer ;
-    rdfs:label "model tick seconds" ;
-    rdfs:comment "Wall-clock seconds per tick — the PUBLISH interval of a sensing:PushProcedure device, which keeps its own clock; a sensing:ScheduledProcedure one keeps the interval its agent gives it, exactly as a board does. This used to also pace the physics, which is the artifact device:modelLosesPerDay records; physics run on the clock now, and the tick is only a rhythm of speech." .
-
-device:timeScale a owl:DatatypeProperty ; rdfs:domain ag:World ; rdfs:range xsd:decimal ;
-    rdfs:label "time scale" ;
-    rdfs:comment "Simulated seconds per wall-clock second — 24 makes one bench hour a simulated day. A fact about the WORLD, not any device: every stand-in in a world must age at the same rate or their physics stop composing (a dose sized for a day's drying must land against a day's drying). The agents are deliberately not told: they act in real time against a world that happens to live fast, which changes nothing about how they decide and everything about how much of their behaviour a bench hour shows." .
-
-device:strayDoseMeanDays a owl:DatatypeProperty ; rdfs:domain ag:World ; rdfs:range xsd:decimal ;
-    rdfs:label "stray dose mean days" ;
-    rdfs:comment "The mean interval, in simulated days, between waterings NOBODY in the society decided — a human with a watering can, rain through a window. Exponentially distributed, per subject that states an device:rainTopic. Absent means nobody meddles. Stating it gives the world ONE meddler: a container of its own (firmware/simulated-meddler) with a credential of its own, granted WRITE on each rain topic and nothing else — a pot must not water itself, and rain must never ride the valve's status topic, which is the valve's testimony. This is the third-party impulse of #151 made routine: the signal changes without any agent's doing, and the society's only defence is how it samples." .
-
-device:rainTopic a owl:DatatypeProperty ; rdfs:range xsd:string ;
-    rdfs:label "rain topic" ;
-    rdfs:comment "Where water from OUTSIDE the society arrives for this subject — the meddler writes it, the subject's simulated sensor reads it, and nothing else may touch it. On the SUBJECT, because rain falls on a pot and not on an instrument; a simulated world without one for a subject keeps that subject dry except by the market. The payload is the dose report's shape ({\"ml\": N}) because millilitres are millilitres to soil — the indistinguishability is the point, not an economy." .
-
-#################  Where a society executes  #################
+    rdfs:comment "A physical node: mechanism, never policy. What has legs, a place in the inventory and a line in the harness." .

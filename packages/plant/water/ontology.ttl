@@ -6,7 +6,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix market: <http://example.org/orexis/market#> .
-@prefix device: <http://example.org/orexis/device#> .
+@prefix sim:  <http://example.org/orexis/sim#> .
 
 <http://example.org/orexis/water> a owl:Ontology ;
     rdfs:label "Orexis water domain" ;
@@ -36,7 +36,7 @@
 #  in is a litre held, so the litres-per-stored-litre conversion is identically 1.0 and stating
 #  it per barrel would be the #164 copy again.
 :WaterSource rdfs:subClassOf
-    [ a owl:Restriction ; owl:onProperty device:modelDoseEffect ; owl:hasValue -1.0 ] ,
+    [ a owl:Restriction ; owl:onProperty sim:doseEffect ; owl:hasValue -1.0 ] ,
     [ a owl:Restriction ; owl:onProperty market:supplies ; owl:hasValue :Water ] ,
     [ a owl:Restriction ; owl:onProperty :litresPerStoredLitre ; owl:hasValue 1.0 ] .
 
@@ -60,14 +60,14 @@ Denominated in lux, and stated as such with `unit:LUX`, because unlike a moistur
 :suppliedBy a owl:ObjectProperty ; rdfs:subPropertyOf market:offeredBy ; rdfs:domain :WaterSource ; rdfs:range ag:Agent ;
     rdfs:label "supplied by" .
 :capacityL a owl:DatatypeProperty ; rdfs:domain :WaterSource ; rdfs:range xsd:decimal ;
-    rdfs:subPropertyOf market:lotCapacity , device:modelMaxValue ;
+    rdfs:subPropertyOf market:lotCapacity , sim:maxValue ;
     rdfs:label "capacity litres" ;
-    rdfs:comment "Physical ceiling on what this source can dispense — the constitution's total-allocation limit. A subproperty of market:lotCapacity, which is the word the KERNEL reads (#148): the world states litres, the closure entails the market's term, and the loader that hands clearing its limit names no domain. Also of device:modelMaxValue since the barrel learned to run dry: a level stand-in's ceiling IS the capacity, and restating 5.0 on the model would be the #164 copy all over again — one statement, both readers entailed." .
+    rdfs:comment "Physical ceiling on what this source can dispense — the constitution's total-allocation limit. A subproperty of market:lotCapacity, which is the word the KERNEL reads (#148): the world states litres, the closure entails the market's term, and the loader that hands clearing its limit names no domain. Also of sim:maxValue since the barrel learned to run dry: a level stand-in's ceiling IS the capacity, and restating 5.0 on the model would be the #164 copy all over again — one statement, both readers entailed." .
 
 #################  Physics of a pot (public: it is how the world behaves)  #################
 
 :driesPerDay a owl:DatatypeProperty ; rdfs:domain :Plant ; rdfs:range xsd:decimal ;
-    rdfs:subPropertyOf device:modelLosesPerDay ;
+    rdfs:subPropertyOf sim:losesPerDay ;
     rdfs:label "dries per day" ;
     rdfs:comment "How fast this pot loses moisture, as a fraction of saturation per simulated day — the pot's own physics, stated publicly because it is how the world behaves (#164). Was dryRatePerTick, a figure whose tick was never defined and which nothing had ever read: the stand-ins ran on a private copy (the kernel model term, on the device model) restating the same fact in different units. The subproperty bridge is the whole mechanism, on the capacityLitres -> market:lotCapacity precedent: the world states the pot's physics in the domain's term, the closure entails the kernel's, and the simulator generation reads the conclusion naming no domain. The model term survives as an OVERRIDE for values that are not anyone's pot — a room's temperature drifts on the model's say-so, a pot dries on its own." .
 

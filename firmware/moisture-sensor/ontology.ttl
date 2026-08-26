@@ -31,7 +31,7 @@ What holds the promise to the silicon is the wiring shape (mc:WatchedChannelWiri
 a board's class states which pin roles its sleep-watcher reaches, and a watched channel whose
 signal pin the watcher cannot reach refuses to validate.
 
-Simulated devices run no firmware and never carry this type: device:simulatedBy is their
+Simulated devices run no firmware and never carry this type: sim:simulatedBy is their
 kind-statement, and a stand-in typed with a firmware class it does not run would be a new way
 to lie.""" .
 

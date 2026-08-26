@@ -62,7 +62,7 @@ instructable shape rightly refuses it — the class describes the SPEAKING role.
   `mc:WatchedChannelWiringShape` refuses a watched channel wired past that reach. A stand-in
   still states its promises by hand — it has no pins and no watcher, and its constitution is
   that it reports what its world says.
-- **Simulated devices run no firmware and are never typed**: `device:simulatedBy` is their
+- **Simulated devices run no firmware and are never typed**: `sim:simulatedBy` is their
   kind-statement, and a stand-in wearing a firmware class it does not run would be a new way
   to lie. The simulation world keeps its direct statements.
 - **No volume migration**: everything that moved lives in public graphs, refreshed from files

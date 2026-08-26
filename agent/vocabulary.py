@@ -138,11 +138,19 @@ MOVED = {
     #  The AIM went to sensing with the region it sits in (the-stake-is-sensings-want): a
     #  volume authored while it was the kernel's holds `ag:aims`, and this is the rename.
     #  THE SUBSTRATE went to `packages/part/device/`: a BDI kernel says nothing about what a
-    #  thing is made of (the-substrate-is-not-the-minds).
-    **{f"http://example.org/orexis#{n}": f"http://example.org/orexis/device#{n}"
-       for n in ("Device", "simulatedBy", "DeviceModel", "modelInitialValue", "modelDoseEffect",
-                 "modelLosesPerDay", "modelDailySwing", "modelTickSeconds", "modelMinValue",
-                 "modelMaxValue", "timeScale", "strayDoseMeanDays", "rainTopic")},
+    #  thing is made of (the-substrate-is-not-the-minds). It went in ONE word, because the rest
+    #  of what the kernel held was never about substrate at all — a stand-in is the ABSENCE of a
+    #  device, so it went to `packages/sim/standin/` under its own name, and the `model` prefix
+    #  each of its physics terms carried to fake a namespace inside `ag:` came off with the move
+    #  (a-stand-in-is-not-a-device).
+    "http://example.org/orexis#Device": "http://example.org/orexis/device#Device",
+    **{f"http://example.org/orexis#{old}": f"http://example.org/orexis/sim#{new}"
+       for old, new in (("simulatedBy", "simulatedBy"), ("DeviceModel", "Model"),
+                        ("modelInitialValue", "initialValue"), ("modelDoseEffect", "doseEffect"),
+                        ("modelLosesPerDay", "losesPerDay"), ("modelDailySwing", "dailySwing"),
+                        ("modelTickSeconds", "tickSeconds"), ("modelMinValue", "minValue"),
+                        ("modelMaxValue", "maxValue"), ("timeScale", "timeScale"),
+                        ("strayDoseMeanDays", "strayDoseMeanDays"), ("rainTopic", "rainTopic"))},
     "http://example.org/orexis#Aim": "http://example.org/orexis/sensing#Aim",
     "http://example.org/orexis#aims": "http://example.org/orexis/sensing#aims",
     **{old: "http://example.org/orexis/sensing#Observing" for old in (

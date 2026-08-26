@@ -48,8 +48,8 @@ the same relation SOSA standardises, so it is **declared a subproperty** rather 
 
 ```turtle
 mc:carries a owl:ObjectProperty ; rdfs:subPropertyOf sosa:hosts .
-mc:Microcontroller rdfs:subClassOf ag:Device , sosa:Platform .
-mc:Peripheral      rdfs:subClassOf ag:Device , sosa:Platform .
+mc:Microcontroller rdfs:subClassOf device:Device , sosa:Platform .
+mc:Peripheral      rdfs:subClassOf device:Device , sosa:Platform .
 ```
 
 Declaring rather than renaming keeps the hardware layer reading in its own words — a wiring

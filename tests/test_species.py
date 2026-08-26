@@ -30,7 +30,7 @@ ZZ = "http://example.org/orexis/zamioculcas#ZamioculcasZamiifolia"
 # a substitution that quietly matches nothing is the failure mode issue #106 exists for.
 _FERN = """:fern a water:Plant ;
     ag:localId "fern" ; water:servedBy :barrel1 ;
-    device:rainTopic "rain/fern" ;
+    sim:rainTopic "rain/fern" ;
     water:driesPerDay 0.12 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;

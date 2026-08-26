@@ -1102,3 +1102,40 @@ def test_a_graph_is_never_changed_after_it_is_validated():
         + "\n  ".join(offenders)
         + "\nEither build a fresh graph for the second question, or drop the memoisation."
     )
+
+
+def test_no_capability_asks_what_a_thing_is_made_of():
+    """A role is a role. Nothing that observes, acts, bids or hosts may name `device:`.
+
+    The rule this guards is `a-stand-in-is-not-a-device`. `sensing:polls` used to demand
+    `sosa:Sensor , device:Device` and `actuation:hasActuator` the actuator equivalent — the
+    intersection left behind when our two classes were retired for SOSA's — so every simulated
+    world declared a physical edge node and denied it in the next line, and W3C's own DHT22
+    description had to be told it was hardware before our shapes would take it.
+
+    Substrate is the inventory's question and the harness's: `mc:hasPin` asks it, because boards
+    have pins. Whether a role has a referent at all is `sim:simulatedBy`, on `ssn:System`. A
+    capability asks neither.
+
+    Prose is exempt — the two ontologies carry the audit that reached this conclusion, and it
+    cannot be written without naming the word. Only what a machine reads is checked.
+    """
+    offenders = {}
+    for path in sorted(pathlib.Path("packages/capability").rglob("*.ttl")):
+        code = _without_comments(path.read_text())
+        for line in code.splitlines():
+            if "device:" in line or "orexis/device#" in line:
+                offenders.setdefault(str(path), []).append(line.strip())
+    assert not offenders, (
+        "a capability names the substrate vocabulary — a role asks for the role alone "
+        "(a-stand-in-is-not-a-device):\n" + "\n".join(
+            f"  {p}: {ls}" for p, ls in offenders.items()))
+
+
+def _without_comments(text: str) -> str:
+    """Turtle with its `#` comments and its string literals removed — the machine-read part."""
+    import re
+    text = re.sub(r'"""(?:.|\n)*?"""', '""', text)
+    text = re.sub(r'"(?:[^"\\\n]|\\.)*"', '""', text)
+    text = re.sub(r"^\s*#.*$", "", text, flags=re.M)
+    return re.sub(r"\s#.*$", "", text, flags=re.M)

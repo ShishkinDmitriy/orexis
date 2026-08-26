@@ -186,8 +186,10 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
         1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
     ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
     ("agent/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
-    ("agent/vocabulary.py", "device#"): (
-        1, "migration: where the substrate vocabulary went — thirteen terms behind one prefix, "
+    ("agent/vocabulary.py", "device#Device"): (
+        1, "migration: where the ONE substrate word went — removable with the last volume older than the move"),
+    ("agent/vocabulary.py", "sim#"): (
+        1, "migration: where the stand-in vocabulary went — twelve terms behind one prefix, "
            "removable with the last volume older than the move"),
     ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
     ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
@@ -204,7 +206,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
 
     # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
-    # reachability half of `device:SimulatedDeviceShape` — is the transport's: reaching the society
+    # reachability half of `sim:StandInShape` — is the transport's: reaching the society
     # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
     # connection, the loop and the watchdog, and the shape is
     # `mqtt:SimulatedDeviceReachableShape` (the-kernel-has-no-mailbox).
@@ -268,8 +270,10 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
         1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
     ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
     ("agent/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
-    ("agent/vocabulary.py", "device#"): (
-        1, "migration: where the substrate vocabulary went — thirteen terms behind one prefix, "
+    ("agent/vocabulary.py", "device#Device"): (
+        1, "migration: where the ONE substrate word went — removable with the last volume older than the move"),
+    ("agent/vocabulary.py", "sim#"): (
+        1, "migration: where the stand-in vocabulary went — twelve terms behind one prefix, "
            "removable with the last volume older than the move"),
     ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
     ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
@@ -286,7 +290,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
 
     # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
-    # reachability half of `device:SimulatedDeviceShape` — is the transport's: reaching the society
+    # reachability half of `sim:StandInShape` — is the transport's: reaching the society
     # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
     # connection, the loop and the watchdog, and the shape is
     # `mqtt:SimulatedDeviceReachableShape` (the-kernel-has-no-mailbox).

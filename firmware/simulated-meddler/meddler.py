@@ -9,7 +9,7 @@ sampling policy.
 **Its own container and its own credential, deliberately.** The first draft hid this inside the
 simulated sensor, which was wrong twice: a pot does not water itself, and a stand-in that
 secretly did could never be told from one whose physics were broken. The meddler is a separate
-process on the far side of the wire, granted WRITE on each pot's `device:rainTopic` and nothing
+process on the far side of the wire, granted WRITE on each pot's `sim:rainTopic` and nothing
 else — it cannot hear a reading, see an offer, or impersonate a valve, because the ACL never
 lets rain near the society's channels. The valve's status topic stays the valve's testimony.
 
@@ -61,7 +61,7 @@ class Meddler:
         self.timescale = float(_env("MEDDLER_TIMESCALE", "1"))
         if self.mean_days <= 0 or self.timescale <= 0:
             raise SystemExit("MEDDLER_MEAN_DAYS and MEDDLER_TIMESCALE must be positive — a "
-                             "world that wants no meddling states no `device:strayDoseMeanDays`")
+                             "world that wants no meddling states no `sim:strayDoseMeanDays`")
         self.rng = random.Random()
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,
                                   client_id=f"orexis-meddler-{self.rng.randint(0, 1 << 24):06x}")

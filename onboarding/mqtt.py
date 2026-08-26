@@ -59,7 +59,7 @@ from agent.config import REPO_ROOT
 from agent.genesis import world_dir, worlds
 from packages.capability.market.terms import NS as MARKET
 from agent.ontology import AG, WORLD_GRAPH
-from .namespaces import ACTUATION, DEVICE, MQTT, SENSING
+from .namespaces import ACTUATION, MQTT, SENSING, SIM
 log = logging.getLogger("mqtt")
 
 def mosquitto_dir(world: str):
@@ -151,7 +151,7 @@ WHERE {{
 # of its own holding a single dose grant, for a client that never connects — the same defect
 # #81 names one level up, where a board authenticates as one of its own peripherals.
 _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
-  ?d <{AG}localId> ?id ; <{DEVICE}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
+  ?d <{AG}localId> ?id ; <{SIM}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
      <{MQTT}onBus> ?bus .
   {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic }}
   UNION
@@ -162,24 +162,24 @@ _SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
 # shape, because the litre is one event with two witnesses.
 
 # And the rain, by the same guard: a simulated sensor whose subject can be rained on hears it
-# arrive on the subject's device:rainTopic. Its own channel rather than the valve's status topic,
+# arrive on the subject's sim:rainTopic. Its own channel rather than the valve's status topic,
 # because the status topic is the VALVE's testimony and rain is nobody's — the soil cannot tell
 # the two waters apart, but the record must never say a valve dispensed what a stranger poured.
 _SIM_RAIN_Q = _q(f"""?id ?rainTopic WHERE {{
-  ?d <{AG}localId> ?id ; <{DEVICE}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
+  ?d <{AG}localId> ?id ; <{SIM}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
      <{MQTT}onBus> ?bus .
-  ?subject <{DEVICE}rainTopic> ?rainTopic .
+  ?subject <{SIM}rainTopic> ?rainTopic .
  }}""")
 
-# The meddler itself: ONE principal per world that states device:strayDoseMeanDays, granted WRITE on
+# The meddler itself: ONE principal per world that states sim:strayDoseMeanDays, granted WRITE on
 # every rain topic and nothing else. The worst a compromised meddler can do is be over-generous
 # with water — it cannot hear a reading, see an offer, or speak for a valve.
 _MEDDLER_Q = _q(f"""?rainTopic WHERE {{
-  ?w a <{AG}World> ; <{DEVICE}strayDoseMeanDays> ?mean .
-  ?subject <{DEVICE}rainTopic> ?rainTopic .
+  ?w a <{AG}World> ; <{SIM}strayDoseMeanDays> ?mean .
+  ?subject <{SIM}rainTopic> ?rainTopic .
  }}""")
 
-# Any valve that reports, stood in for or not. This used to require device:simulatedBy, which meant
+# Any valve that reports, stood in for or not. This used to require sim:simulatedBy, which meant
 # a REAL valve could not publish the status its own firmware sends — "so the executor knows water
 # actually flowed" — and the broker dropped it silently, because MQTT never refuses a publish out
 # loud. The simulation was strictly more capable than the hardware it stands for, which is the

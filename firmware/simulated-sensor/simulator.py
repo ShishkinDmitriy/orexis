@@ -29,7 +29,7 @@ moves the one value whose property the domain's valuation is denominated in; the
 untouched by a dose, which is what makes a thermometer on a watered pot behave like a thermometer.
 
 **The physics run on the clock, at the world's pace.** Drying is stated per simulated day and
-integrated over real time times `SIM_TIMESCALE` (`device:timeScale`), so a pot loses what the day
+integrated over real time times `SIM_TIMESCALE` (`sim:timeScale`), so a pot loses what the day
 costs it however often anyone looks — the per-reading drift this replaces made a closely-watched
 pot dry faster, which is backwards. A daily sine (`swing`) gives a room its afternoons. And the
 instrument is imperfect on purpose: Gaussian grain on every reading and the occasional outright
@@ -190,7 +190,7 @@ class SimulatedSensor:
         # through the same kind of status message, and only the set can say which is which.
         self.dose_topics = {t for t in (os.environ.get("SIM_DOSE_TOPIC") or "").split(",") if t}
         self.drain_topics = {t for t in (os.environ.get("SIM_DRAIN_TOPIC") or "").split(",") if t}
-        # Water from OUTSIDE the society — the meddler's channel (`device:rainTopic`). Arrives at the
+        # Water from OUTSIDE the society — the meddler's channel (`sim:rainTopic`). Arrives at the
         # soil exactly as a dose does, which is the point: the pot cannot tell a bought litre
         # from a kind stranger's, and neither can the agent except by not having decided it.
         self.rain_topic = os.environ.get("SIM_RAIN_TOPIC") or ""
@@ -198,7 +198,7 @@ class SimulatedSensor:
         # capability follows from this, and neither branch knows that.
         self.mode = _env("SIM_SENSE_MODE", "scheduled").lower()
 
-        # The world's clock (`device:timeScale`): simulated seconds per real second. Physics integrate
+        # The world's clock (`sim:timeScale`): simulated seconds per real second. Physics integrate
         # real elapsed time times this, so one bench hour can hold one simulated day.
         self.timescale = _float("SIM_TIMESCALE", 1.0)
 
