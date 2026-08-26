@@ -11,7 +11,9 @@ import time
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from agent import loader, signing  # noqa: F401  (loader puts the package trees on sys.path)
+from agent import signing
+
+from assembly import loader  # noqa: F401  (loader puts the package trees on sys.path)
 from packages.capability.market.clearing import Claim
 from agent.signing import verify_command
 from packages.capability.actuation import ActuationModule

@@ -27,7 +27,7 @@ See knowledge/decisions/bytes-become-a-quantity-in-stages.md.
 
 from __future__ import annotations
 
-from agent import loader
+from assembly import loader
 
 
 class CodecError(ValueError):

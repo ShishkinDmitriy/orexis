@@ -15,7 +15,9 @@ See knowledge/decisions/bytes-become-a-quantity-in-stages.md and issue #26.
 
 import pytest
 
-from agent import genesis, loader
+from agent import genesis
+
+from assembly import loader
 from packages.capability.sensing.scaling import scaling_for
 from packages.scaling.identity.terms import IDENTITY, LINEAR
 from packages.capability.sensing.codec import Codec, CodecError, codec_for

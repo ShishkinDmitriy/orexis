@@ -441,7 +441,7 @@ def test_a_new_kind_of_move_is_a_new_directory(make, tmp_path, monkeypatch):
     means no shipped package knows — and its row appears beside Observe and Acquire the moment
     the loader would find its file. Instances were always dynamic (premises in, rows out);
     this is the kinds joining them."""
-    from agent import loader
+    from assembly import loader
 
     toy = tmp_path / "actions.ttl"
     toy.write_text("""

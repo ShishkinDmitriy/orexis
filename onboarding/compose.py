@@ -174,13 +174,17 @@ def _service(agent_id: str, caps: set[str], world: str) -> str:
       - ./secrets/{agent_id}.key:/app/world/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/world/secrets/ca.crt:ro{signing}
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
-      # two the Containerfile copies, and keeping the pair in step is the lesson this block
-      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # three the Containerfile copies, and keeping them in step is the lesson this block
+      # keeps relearning. It relearned it again when `assembly/` arrived: this block said "the
+      # same TWO" while the image copied three, and a restart would have failed on a missing
+      # module. `tests/test_layout.py` compares the two lists now, so the next tree cannot
+      # arrive in one and not the other. capabilities/ and transports/ moved inside agent/ and their husks
       # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
       # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
       # next restart, which arrived with a host logout weeks after the tree moved. A mount
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
+      - ../../assembly:/app/assembly:ro
       - ../../agent:/app/agent:ro
       - ../../packages:/app/packages:ro
 """

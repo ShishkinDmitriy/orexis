@@ -286,7 +286,7 @@ def test_only_the_keeper_writes_the_intentions_graph():
     and neither is a keeper — but the guard could not see them, because it looked only at the
     tree the pen was not in. Now it scans BOTH trees and the exemptions are named with reasons,
     which is the difference between a boundary and a boundary nobody checked half of."""
-    from agent import loader
+    from assembly import loader
 
     #  Named one by one, with the reason each is allowed to hold the pen. An exemption that
     #  could be met by accident is a hole; these are three files and three arguments.

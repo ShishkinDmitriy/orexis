@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from agent import loader  # noqa: F401  (puts the package trees on sys.path)
+from assembly import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
 from agent.beliefs import BeliefError, Beliefs
 from packages.capability.sensing.readings import Reading, current_reading

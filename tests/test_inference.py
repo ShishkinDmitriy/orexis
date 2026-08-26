@@ -22,7 +22,9 @@ import pytest
 import rdflib
 from pyshacl import validate as shacl_validate
 
-from agent import genesis, inference, loader
+from agent import genesis, inference
+
+from assembly import loader
 SOSA = "http://www.w3.org/ns/sosa/"   # spelled here: the kernel no longer names it (#378)
 from agent.ontology import AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, WORLD_ENTAILED_GRAPH, WORLD_GRAPH
 from onboarding.namespaces import MC, SENSING

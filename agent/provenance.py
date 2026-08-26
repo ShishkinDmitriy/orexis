@@ -40,7 +40,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import loader
+from assembly import loader
 from .config import REPO_ROOT
 from .ontology import (CLASSIFICATION_GRAPH, DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, ONTOLOGY_ENTAILED_GRAPH,
                        ONTOLOGY_GRAPH, PROVENANCE_GRAPH,

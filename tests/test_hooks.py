@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent import loader
+from assembly import loader
 from agent.module import Module
 from agent.ontology import AG, DESIRES, HANDLE, REPORTS, SEND
 from conftest import build_agent, wired_sensors

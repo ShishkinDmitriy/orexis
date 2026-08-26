@@ -14,7 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from agent import loader, store
+from agent import store
+
+from assembly import loader
 
 # `?s ag:foo ?o` — a prefixed name in a query. Deliberately loose; false positives are
 # filtered by requiring the prefix to look like one, and a false positive here is a
@@ -326,7 +328,7 @@ def test_an_ontology_gives_its_own_terms_the_default_prefix():
 
     import rdflib
 
-    from agent import loader
+    from assembly import loader
 
     checked = 0
     for path in loader.ontology_files():

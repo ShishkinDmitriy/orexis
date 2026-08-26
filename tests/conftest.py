@@ -17,7 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from agent import genesis, loader
+from agent import genesis
+
+from assembly import loader
 from agent.genesis import agent_id_of
 from agent.ontology import STATE_GRAPH
 from packages.capability.sensing.sensed_writer import observation_uri
