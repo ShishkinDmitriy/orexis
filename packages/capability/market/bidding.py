@@ -42,7 +42,7 @@ READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
 from agent.ontology import ONTOLOGY_GRAPH
 from agent.store import bindings
 
-from . import rounds
+from . import rounds, wallet
 from .wiring import bidding_markets_of
 from .beliefs import BIDDING_PICKS
 from .terms import (ACQUIRING, BIDDING, PRESENTING,
@@ -120,7 +120,8 @@ class BiddingModule(Module):
         super().__init__(agent)
         self.markets = bidding_markets_of(agent.beliefs.query, self.me.uri)
         self.beliefs = agent.desires.read(BIDDING_PICKS)
-        self.balance = self.beliefs.endowment
+        #  THE WALLET IS A BELIEF (#395): what is left lives in this agent's own graph, so a
+        #  restart resumes with what it has rather than with what it was given.
         self.won_l = 0.0
         self.pending: dict | None = None  # an auction I have been asked to answer
         self._deadline: Timer | None = None
@@ -248,6 +249,11 @@ class BiddingModule(Module):
     #  WHICH WANT my bids serve: the stake about the property they are priced in, asked of
     #  sensing, which is where a property means anything (the-stake-is-sensings-want). The
     #  ledger keys on the want, so every row this module writes or reads names it.
+    @property
+    def balance(self) -> float:
+        """What I have left to bid with — read, never remembered."""
+        return wallet.balance_of(self.agent)
+
     def _stake(self):
         sensing = self.agent.provider(SENSING)
         return sensing.stake_about(self.about) if sensing is not None else None
@@ -628,9 +634,9 @@ class BiddingModule(Module):
             rounds.close_round(self.agent, claim["auction_id"])   # over for me: I won
         amount = float(claim.get("amount_l", 0.0))
         debit = float(claim.get("debit", 0.0))
-        self.balance -= debit
+        left = wallet.debit(self.agent, debit)
         self.won_l += amount
-        self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, self.balance)
+        self.log.info("won %.3f L for €%.2f — balance €%.2f", amount, debit, left)
 
         keeper = self._keeper()
         acquire_uris = (keeper.satisfy(ACQUIRING, self._stake_uri(),

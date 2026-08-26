@@ -84,3 +84,9 @@ ACQUIRING = term("Acquiring")     # buying — the action, and the kind of act i
 SERVING = term("Serving")         # the host pouring a presented claim
 PRESENTING = term("Presenting")   # the buyer holding, then presenting, a won claim (#132)
 OFFERING = term("Offering")       # the host opening a round
+
+
+# The wallet: what was brought, and what is left. The first is authored at genesis and never
+# moves; the second is the agent's own belief, written when a claim is won.
+HAS_ENDOWMENT = term("hasEndowment")
+BALANCE = term("balance")

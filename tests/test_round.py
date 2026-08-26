@@ -474,6 +474,28 @@ def test_the_winner_debits_its_own_wallet(make):
     assert fern.bidding().won_l == 0.5
 
 
+def test_the_wallet_survives_a_restart(monkeypatch):
+    """What an agent has left comes from outside its own reasoning — the market decides it —
+    so it is STORED, and a restart resumes with what is left rather than with what it was
+    given (#395). It lived in memory until then: an agent that spent its wallet forgot, and
+    bid again with money it did not have.
+
+    Two agents over one store is what a restart looks like from here: same volume, same world,
+    a new process.
+    """
+    store = _with_reading(0.10)
+    fern = build_agent("fern", store, monkeypatch)
+    market = market_of(fern)
+    opening = fern.bidding().balance
+    fern.deliver(f"{market.claim_topic}/fern",
+                 {"auction_id": "r1", "amount_l": 0.5, "debit": 0.30})
+
+    reborn = build_agent("fern", store, monkeypatch)
+    assert reborn.bidding().balance == pytest.approx(opening - 0.30), \
+        "the wallet was forgotten: this agent would bid with money it has already spent"
+    assert reborn.bidding().won_l == 0.0, "and what it has WON is telemetry, which may reset"
+
+
 # --- the window is real ----------------------------------------------------
 
 def test_the_host_schedules_the_close(host):
