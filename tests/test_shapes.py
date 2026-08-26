@@ -1155,7 +1155,7 @@ def test_a_valve_on_the_bus_must_state_where_it_takes_commands():
 
 
 def test_a_stood_in_valve_must_state_where_it_reports():
-    """The other half of #404's move: `mqtt:SimulatedActuatorReportsShape`.
+    """The other half of #404's move: `sim:StandInReportsShape`.
 
     Without a status topic the stand-in opens into nowhere — the command is verified, the dose
     computed, and the soil stays dry, because a simulated sensor waters only on what the valve

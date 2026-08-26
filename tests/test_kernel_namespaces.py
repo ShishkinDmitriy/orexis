@@ -209,7 +209,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # reachability half of `sim:StandInShape` — is the transport's: reaching the society
     # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
     # connection, the loop and the watchdog, and the shape is
-    # `mqtt:SimulatedDeviceReachableShape` (the-kernel-has-no-mailbox).
+    # `sim:StandInReachableShape` (the-kernel-has-no-mailbox).
 
     # KIND 4 — the kernel's RDF, found by widening the scan past `agent/*.py`. #334's three
     # kinds are all Python and none of them covers these, so they sat here marked UNCLASSIFIED
@@ -293,7 +293,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # reachability half of `sim:StandInShape` — is the transport's: reaching the society
     # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
     # connection, the loop and the watchdog, and the shape is
-    # `mqtt:SimulatedDeviceReachableShape` (the-kernel-has-no-mailbox).
+    # `sim:StandInReachableShape` (the-kernel-has-no-mailbox).
 
     # KIND 4 — the kernel's RDF, found by widening the scan past `agent/*.py`. #334's three
     # kinds are all Python and none of them covers these, so they sat here marked UNCLASSIFIED
@@ -352,10 +352,9 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #   and an initial value of 45.0 that conformed now VIOLATES. It wants a kernel-owned way
     #   to say "the range this thing is measured against".
 
-    # 7 — the SELECTOR went to actuation, and then one package further (#404): every term the
-    # shape CHECKS is `mqtt:`, so it is `mqtt:SimulatedActuatorReportsShape`, selecting on
-    # `actuation:actuates` from inside the transport. A shape lives where its constraints are
-    # declared — a-shape-belongs-to-the-vocabulary-it-checks.
+    # 7 — went to actuation, and then to the SIMULATION (#404): "a stand-in must say where it
+    # reports" is meaningless without stand-ins, so `sim:StandInReportsShape` is filed where
+    # deleting the package deletes the rule — a-shape-belongs-to-the-vocabulary-it-checks.
 }
 
 

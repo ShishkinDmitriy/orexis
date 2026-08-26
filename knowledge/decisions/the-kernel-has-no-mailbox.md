@@ -62,7 +62,11 @@ messaging. The runtime builds the mind, loads the modules, starts them, waits fo
 and never learns a message exists.
 
 **Reachable is the transport's word.** "One device, one stand-in" stays a kernel shape;
-"reachable — on a bus, or sharing a reading topic" is `mqtt:SimulatedDeviceReachableShape`.
+"reachable — on a bus, or sharing a reading topic" left for the transport. (AMENDED: it is
+`sim:StandInReachableShape` now. Reachable is still the transport's WORD, but the rule is the
+simulation's — a stand-in nothing can reach is a stand-in for nothing — and filing it under the
+transport meant replacing the transport would delete it in silence. See
+[a-shape-belongs-to-the-vocabulary-it-checks](/decisions/a-shape-belongs-to-the-vocabulary-it-checks.md).)
 
 # What did not change
 
