@@ -238,8 +238,10 @@ That failure is the one this whole design is most exposed to, because its sympto
     sh:property [ sh:path ag:holds ; sh:minCount 1 ;
                   sh:message "this agent acts for a subject that states what it needs, but no region survived intersecting those ranges — check that every range stated for a property actually overlaps" ] .
 
-sensing:BeyondSurvivalShape a sh:NodeShape ;
-    rdfs:comment "The last reading of a property this agent has a desire in lies outside what its subject survives. Not a refusal: the agent starts, and the report says why it had better hurry. |gap| = 1 in the package's gap.rq is this same fact as a number." ;
+sensing:UnwatchedRegionShape a sh:NodeShape ;
+    rdfs:comment """A region in a property this agent watches nothing for. Not a refusal: the agent starts, holds an opinion about the property, and can never be shown to be wrong about it — so the report says which property, and a human decides whether the sensor is missing or the region is.
+
+WAS `sensing:BeyondSurvivalShape`, and before that the kernel's. It was named for a hand-written "the last reading lies outside what the subject survives" check that is gone: the deduction emits that shape now, targeting the subject and saying the same sentence in the language the checker already speaks (|gap| = 1 in `gap.rq` is the same fact as a number). Removing the check was right and the NAME was left behind, so a warning about a blind region arrived under a heading about survival. Whoever wrote `domain/desire.md` reached for `desire:UnwatchedDesireShape`, a term that never existed anywhere — the clearest evidence available that the old name described nothing this shape does (#275).""" ;
     sh:severity sh:Warning ;
     sh:target [ a sh:SPARQLTarget ;
         sh:select """
@@ -251,11 +253,6 @@ sensing:BeyondSurvivalShape a sh:NodeShape ;
                            <https://schema.org/maxValue> ?max .
             }
         """ ] ;
-    #  The hand-written "a reading sits outside the survival envelope" check was HERE and is gone.
-    #  The deduction emits that shape now — targeting the subject, at sh:Warning, saying the
-    #  same sentence in the language the checker already speaks. Two statements of one rule is
-    #  one too many, and the surviving one is the one an agent can also steer by.
-    
     sh:sparql [
         sh:severity sh:Warning ;
         sh:message "a desire in a property this agent polls no sensor for — the region is real, and the agent will never see a reading to hold it to" ;

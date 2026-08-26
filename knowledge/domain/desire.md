@@ -242,17 +242,18 @@ information; `current()` is the same diff with the agent's rule applied, and is 
 is computed over — so a dead sensor's upserted last reading makes `worst_gap` **disappear
 rather than reassure**, and `reading_age_s` on the same dashboard says why. The blind case — a
 desire in a property the agent polls no sensor for — warns at the gate (the mirror of #111)
-and shows at runtime as `desires` and `desires_measured` diverging. That warning has no shape
-of its own: it is an `sh:sparql` constraint sitting inside `sensing:BeyondSurvivalShape`, whose
-name and comment describe a survival check that moved into the deduction and is no longer
-there ([#275](https://github.com/ShishkinDmitriy/orexis/issues/275)). An earlier version of this
-page called it `desire:UnwatchedDesireShape`, which is the name it deserves and not a name that
-exists.
+and shows at runtime as `desires` and `desires_measured` diverging. It is
+`sensing:UnwatchedRegionShape`, named for what it checks since
+[#275](https://github.com/ShishkinDmitriy/orexis/issues/275) — the shape was called
+`BeyondSurvivalShape` after a survival check that had moved into the deduction, so a warning
+about a blind region arrived under a heading about dying. An earlier version of this page reached
+for `desire:UnwatchedDesireShape`, a name that existed nowhere, which is how the mismatch was
+found.
 
 Consumers today: `reports()` discloses `desires`, `desires_measured` and `worst_gap` into the
-health series; `sensing:BeyondSurvivalShape` turns |gap| = 1 into a **warning** at boot — never
-a refusal, because an agent past its envelope must be allowed to start precisely so it can do
-something about it; and whoever holds the sensing provider may call `gaps()` or `current()` for the rows
+health series; the envelope the deduction derives beside each region turns |gap| = 1 into a
+**warning** at boot — never a refusal, because an agent past its envelope must be allowed to
+start precisely so it can do something about it; and whoever holds the sensing provider may call `gaps()` or `current()` for the rows
 themselves.
 
 # What it is not

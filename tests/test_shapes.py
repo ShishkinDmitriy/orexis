@@ -1193,3 +1193,41 @@ def test_no_capability_shape_names_a_transport():
         "a capability's shapes constrain a transport's vocabulary — that constraint belongs "
         "where it can be deleted with the transport (a-shape-belongs-to-the-vocabulary-it-checks):"
         "\n" + "\n".join(f"  {p}: {ls}" for p, ls in offenders.items()))
+
+
+def test_every_shape_says_what_it_is_for():
+    """A named `sh:NodeShape` carries an `rdfs:comment`, because nothing else can read one.
+
+    The audit behind #275 asked whether any other shape's name or comment had drifted from its
+    constraints, and found two: `sensing:BeyondSurvivalShape`, named for a check that had moved
+    into the deduction, and `market:MarketShape`, which said *all three of its channels* while
+    demanding four. **Neither is mechanically checkable** — SHACL does not care what a shape is
+    called, and no gate can read a sentence and a constraint and say they disagree.
+
+    What IS checkable is that the sentence exists. A shape with no comment cannot be compared to
+    its constraints at all, by a reader or by anyone auditing later, and one had none:
+    `ag:WorldVersionShape`, alone among every shape in the repo.
+
+    Blank-node shapes are excluded on purpose: an `sh:property [ … ]` is a constraint rather than
+    a shape somebody names, and it carries an `sh:message` where it needs to say something.
+    """
+    import rdflib
+
+    SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+    files = sorted(pathlib.Path("agent").glob("shapes.ttl")) + \
+        sorted(pathlib.Path("packages").rglob("shapes.ttl"))
+    assert files, "no shapes files found — the globs stopped matching"
+
+    silent, seen = [], 0
+    for path in files:
+        graph = rdflib.Graph().parse(path)
+        for shape in graph.subjects(rdflib.RDF.type, SH.NodeShape):
+            if not isinstance(shape, rdflib.URIRef):
+                continue
+            seen += 1
+            if not str(graph.value(shape, rdflib.RDFS.comment) or "").strip():
+                silent.append(f"{path}: {str(shape).rsplit('#', 1)[-1]}")
+    assert seen, "no named node shapes found — the type scan stopped matching"
+    assert not silent, (
+        "a shape that says nothing about itself — a reader meets it by its name alone, and a "
+        "name is the thing that drifts (#275):\n  " + "\n  ".join(silent))
