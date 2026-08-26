@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 import pyoxigraph as ox
 
 
-from packages.capability.sensing.regions import ObservedWant
+from packages.capability.sensing.regions import ObservedDesire
 from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
@@ -174,7 +174,7 @@ def test_the_measure_answers_one_for_a_world_with_no_reading(monkeypatch):
     from agent.ontology import STATE_GRAPH
 
     st, fern = _fern(None, monkeypatch)       # no readings seeded at all
-    probe = ObservedWant(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
+    probe = ObservedDesire(uri="urn:asked", urgency=1.0, observed_property=MOISTURE)
     assert fern.desire_urgency(probe, st.query, STATE_GRAPH) == 1.0
 
 
@@ -212,7 +212,7 @@ def test_every_shipped_stake_resolves_a_declared_measure(monkeypatch):
                 'SELECT ?a ?id WHERE { ?a a ag:Agent ; ag:localId ?id }')):
             agent = build_agent(row["id"], st, monkeypatch)
             for prop in sensing_of(agent).regions:
-                probe = ObservedWant(uri="urn:asked", urgency=1.0, observed_property=prop)
+                probe = ObservedDesire(uri="urn:asked", urgency=1.0, observed_property=prop)
                 assert agent.desire_urgency(probe, st.query, STATE_GRAPH) is not None, \
                     f'{row["id"]} in {world}: a stake nothing loaded measures'
                 checked += 1

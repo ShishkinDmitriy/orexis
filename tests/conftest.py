@@ -207,7 +207,15 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
     link.client.sent = agent.sent
     agent.subscribed = link.client.subscribed
     link._on_connect()
-    agent.deliver = lambda topic, payload: link._on_message(topic, Msg(topic, payload).payload)
+    #  DELIVER AND SETTLE. A message is reactive: it marks what moved and returns, and the
+    #  pass runs on a thread of the mind's own (#392). A test wants the consequences before it
+    #  asserts, so this waits for that thread — which is not this one, which is what
+    #  `tests/test_hooks.py` holds the reactive row to.
+    def deliver(topic, payload):
+        link._on_message(topic, Msg(topic, payload).payload)
+        agent.revision.settle()
+
+    agent.deliver = deliver
     agent.hosting = lambda: agent.module("hosting")
     agent.bidding = lambda: agent.module("bidding")
     agent.subscribing = lambda: agent.module("subscribing")

@@ -15,7 +15,7 @@ from packages.capability.actuation.terms import DOSING
 from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from packages.capability.sensing.regions import ObservedWant
+from packages.capability.sensing.regions import ObservedDesire
 from conftest import sensing_of, stake_of, build_agent, genesis_store, desires_build, open_round_for, write_reading
 
 MOIST = "http://example.org/orexis/water#SoilMoisture"
@@ -110,11 +110,11 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     #  tail of this test asks about is still unmet — a stake judges the number it has.
     write_reading(gardener, 0.10, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        ObservedWant(uri=stake_of(gardener, MOIST).uri, urgency=0.6, observed_property=MOIST,
+        ObservedDesire(uri=stake_of(gardener, MOIST).uri, urgency=0.6, observed_property=MOIST,
                      value=0.10)) == DOSING
     write_reading(gardener, 0.30, MOIST, age_s=10_000)
     assert deliberator.propose_for(
-        ObservedWant(uri=stake_of(gardener, MOIST).uri, urgency=0.1, observed_property=MOIST,
+        ObservedDesire(uri=stake_of(gardener, MOIST).uri, urgency=0.1, observed_property=MOIST,
                      value=0.25)) is None, \
         "above the aim, nothing — as ever"
     #  NOT SEEING is answered by the search like everything else, and it is a different WANT

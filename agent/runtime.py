@@ -37,6 +37,7 @@ from .beliefs import Beliefs
 from .ontology import DESIRES, DESIRE_URGENCY
 from .deliberator import Deliberator
 from .desire import Desire, Desires
+from .revision import Revision
 from .intentions import Intentions
 from .keeper import Keeper
 from .owing import Owing
@@ -102,6 +103,9 @@ class Agent:
         # Built before the modules, because Observations counts into it and a module builds one
         # of those. Counting only — nothing is reported until run() starts it.
         self.metrics = Metrics(self)
+        #  The belief-revision seam: a change is marked here and the pass runs on a thread of
+        #  the mind's own, never on the one that noticed (#392).
+        self.revision = Revision(self)
 
 
         # exactly the modules this agent composed — no more, no less, and since #216 the
@@ -295,6 +299,7 @@ class Agent:
         # construction so that building an agent starts no threads and a test can hold one
         # without it acting. Reporting used to start here too and is a module now — mandatory,
         # granted to every agent, and started below with the rest.
+        self.revision.start()
         self.upkeep.start()
         # The watchdog last, after the connect above has had its chance: its disconnection
         # clock started at construction, so an agent that never gets its CONNACK is already
@@ -315,6 +320,7 @@ class Agent:
             for module in self.modules:
                 module.stop()
             self.upkeep.stop()
+            self.revision.stop()
 
 
 def main() -> None:

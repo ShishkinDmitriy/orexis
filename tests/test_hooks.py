@@ -75,8 +75,6 @@ def test_the_rows_say_what_the_records_say():
     assert rows[AG + "desireUrgency"] == AG + "Deliberative", "measuring a want is the search's"
 
 
-@pytest.mark.xfail(reason="#392: deliberation runs on the transport's callback thread",
-                   strict=True)
 def test_a_reactive_hook_never_reaches_the_planner(monkeypatch):
     """The rule the rows exist to enforce: *anything that searches belongs in deliberation,
     anything that must never block belongs in the reactive layer.* Delivering a message must
@@ -85,10 +83,12 @@ def test_a_reactive_hook_never_reaches_the_planner(monkeypatch):
     RECORDED, not raised: `Agent.tell` catches what a module throws, so an exception from
     inside the planner would be swallowed and the gate would pass while the defect stood.
 
-    XFAIL, strictly, and that is the point: it fails today because the gardener's actuation
-    answers a fresh reading by asking the search what to do about it, inside `handle` (#392).
-    The day the marker lands it goes green and this marker comes off; a gate that could not
-    fail would not be a gate.
+    It was a strict xfail until #392 landed — the gardener's actuation answered a fresh
+    reading by asking the search what to do about it, inside `handle`. It marks the want now
+    and the pass runs on the mind's own thread, which is what this holds.
+
+    The harness settles after every delivery (`conftest.deliver`), so the consequences are
+    here to assert — on a thread that is still not this one.
     """
     import threading
 

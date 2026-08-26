@@ -536,12 +536,11 @@ SELECT ?r WHERE {{
         #  when the vessel can honour it, and `take` below is handed exactly that row.
         from agent import execution, revision
 
-        if revision.wake_for(self.agent, desire) is None and jti in self.held:
-            # Hot, owed, and unpursued — or absorbed within patience. It stays in `held`, so
-            # the moment the answer changes the sweep serves it.
-            self.log.warning(
-                "claim %s stands unserved (urgency %.2f, owed to %s): nothing was committed",
-                jti, desire.urgency, desire.owed_to.rsplit("#", 1)[-1])
+        #  MARKED, not asked (#392): a claim presented is a message, and what the search makes
+        #  of it is not this handler's to wait for. The claim stays in `held` until it is
+        #  served — which is what happened anyway when nothing was committed — so the moment
+        #  the answer changes, the sweep serves it.
+        revision.wake_for(self.agent, desire)
 
     def take(self, act, desire, intention: str) -> bool:
         """Carry out a committed serve: pour the claim this duty names.

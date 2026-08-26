@@ -24,7 +24,7 @@ from packages.capability.market.terms import ACQUIRING
 from packages.capability.sensing.terms import OBSERVING
 
 from agent.ontology import beliefs_graph
-from packages.capability.sensing.regions import ObservedWant
+from packages.capability.sensing.regions import ObservedDesire
 from conftest import stake_of, MOISTURE, TEMPERATURE, build_agent, genesis_store, desires_build, open_round_for, wired_markets, wired_sensors, write_reading
 
 
@@ -142,12 +142,12 @@ def test_below_the_aim_means_pursue_and_above_means_nothing(make):
     #  a purchase reads where the property stands from the sensed graph.
     for value in (0.10, 0.54):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+        stake = ObservedDesire(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                              value=value)
         assert decider.propose_for(stake) == ACQUIRING, f"thirsty at {value} and not buying"
     for value in (0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+        stake = ObservedDesire(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                              value=value)
         assert decider.propose_for(stake) is None, f"content at {value} and buying anyway"
 
@@ -167,7 +167,7 @@ def test_a_property_this_agent_cannot_move_is_not_pursued(make):
     from agent.desire import Desire
 
     fern = make("fern")
-    stake = ObservedWant(uri=stake_of(fern, TEMPERATURE).uri, urgency=0.4,
+    stake = ObservedDesire(uri=stake_of(fern, TEMPERATURE).uri, urgency=0.4,
                          observed_property=TEMPERATURE, value=5.0)
     assert decider_of(fern).propose_for(stake) is None
 
@@ -197,7 +197,14 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
 def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     """The other whether: with no fresh reading, the reflex says look — and a member that said
     otherwise (a model judging the last reading close enough to certain) is obeyed, not
-    second-guessed. The bidder neither senses nor waits; the round simply passes."""
+    second-guessed. The bidder neither senses nor bids; the round simply passes.
+
+    WHEN it passes moved with #392. The offer marks the want and returns — a handler does not
+    wait on a search — so the bidder finds out that nothing was proposed at the round's CLOSE
+    rather than at once, which is also the more honest moment: a reading arriving mid-round
+    could have changed the answer. What the silence still buys is the whole of it: nothing
+    committed, nothing sensed, nothing bid.
+    """
     fern = make("fern")  # no reading at all
     market = market_of(fern)
     #  Both doors: "silenced" means it answers nothing whatever it is asked. Patching only
@@ -208,10 +215,15 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
-    assert fern.bidding().pending is None
-    # and no observe intention was adopted — nothing committed to a wait nobody is waiting on
+    # nothing was committed to — no observe intention, no acquire, nothing to wait on
     keeper = next(m for m in fern.modules if m.name == "intention")
     assert keeper.standing() == []
+    #  The nudge is not the deliberator's: `on_offer` asks its board to look whenever a round
+    #  opens, silenced or not. What the silence buys is that no BID went out.
+    assert not fern.sent.to(f"{market.bid_topic}/{fern.id}"), "silenced, and it bid anyway"
+    # and the round passes when it closes, which is the give-up the offer's own window set
+    fern.bidding().give_up()
+    assert fern.bidding().pending is None
 
 
 def test_the_round_runs_exactly_as_it_always_did(make):
@@ -260,7 +272,7 @@ def test_the_sign_is_the_packages_statement_and_not_this_codes(make):
     fern = make("fern", ds)
     open_round_for(fern, "fern")
     decider = decider_of(fern)
-    stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+    stake = ObservedDesire(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                          value=0.10)
     assert decider.propose_for(stake) is None, \
         "a lever the graph says would dry this plant out was pulled anyway"
@@ -475,7 +487,7 @@ def test_a_duty_is_on_the_menu_and_a_stake_never_reaches_for_it(make):
     #  filter that leaks.
     for row in duties:
         for value in (0.0, 0.5, 5.0, 50.0):
-            stake = ObservedWant(uri="urn:w", urgency=0.5, observed_property=row.about,
+            stake = ObservedDesire(uri="urn:w", urgency=0.5, observed_property=row.about,
                                  value=value)
             assert deliberator.propose_for(stake) not in duty_means, \
                 "a duty was proposed as if it were a choice"
@@ -543,7 +555,7 @@ def test_a_search_that_answers_nothing_proposes_nothing(make, monkeypatch):
 
     fern = make("fern")
     monkeypatch.setattr(Planner, "plan", lambda self, desire: search.Plan(search.NOTHING))
-    thirsty = ObservedWant(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
+    thirsty = ObservedDesire(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
                            value=0.10)
     assert fern.deliberator.propose_for(thirsty) is None, \
         "the search said it had nothing to weigh, and something else answered anyway"
@@ -571,7 +583,7 @@ def test_a_stake_nothing_measures_is_complained_about_rather_than_decided_quietl
                   WHERE  {{ GRAPH <{ONTOLOGY_GRAPH}> {{ ?p a sosa:ObservableProperty }} }}""")
     fern = make("fern", ds)
     decider = decider_of(fern)
-    stake = ObservedWant(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
+    stake = ObservedDesire(uri=stake_of(fern).uri, urgency=1.0, observed_property=MOISTURE,
                          value=0.10)
 
     with caplog.at_level(logging.ERROR):

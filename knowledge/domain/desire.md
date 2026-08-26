@@ -22,6 +22,19 @@ contributes the debts; and *what am I pursuing* is answered across
 those and the [obligations](/domain/obligation.md) the agent did not source, by `Agent.pursuing`
 merging every module's `desires()`.
 
+# Desire, and the word *want*
+
+They are the same thing, and the difference is grammatical rather than conceptual: **desire is
+the kind** — the type `Desire`, the term `ag:Desire`, the modality, the store — and **a want is
+one of them**, identified by its node. That is what `?want` binds, what an
+[intention](/domain/intention.md) `ag:pursues`, and what the ledger is keyed on beside the
+[act](/domain/act.md).
+
+So *the desire modality* holds *the wants this agent has*, a package contributes wants through
+the `desires` hook, and a want is met, hot, stale or dropped. Nothing turns on the choice; what
+would turn on it is using both without saying they are one, which is how a reader ends up
+looking for a distinction that was never there.
+
 # It is deduced, not authored
 
 Nothing writes a desire, and the kernel derives none. The build collects `desires.ru` from every

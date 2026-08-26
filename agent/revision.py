@@ -25,24 +25,123 @@ records ask for next are each a change to this file alone:
 from __future__ import annotations
 
 import logging
+import threading
 
 from . import execution
 
 log = logging.getLogger("revision")
 
 
-def wake(agent, want: str) -> str | None:
-    """Something moved that this want is about — reconsider it. The intention that now stands
-    for it, or None where the search proposed nothing.
+class Revision:
+    """The seam, with a queue behind it: a change is NOTED here and a pass runs elsewhere.
 
-    THE ONLY DOOR from a change to a deliberation pass. It is a direct call today, which means
-    the pass runs on whatever thread noticed the change — the defect #392 records — and the
-    fix lands here rather than in any caller.
+    **Deliberation may not run on the thread that noticed the change** (#392). A reading
+    arriving is reactive — milliseconds, atomic, no search — and the search it used to trigger
+    ran inside the transport's callback, so one pass blocked every other message and a slow
+    deliberator would have stalled the bus outright. The want is now marked and the pass runs
+    on a thread of the mind's own, which is the whole of the fix and is why every reactive
+    caller was routed through this file first.
+
+    **Deduplicated by want, and that is the beginning of the filter.** Ten readings between two
+    passes leave one mark, not ten; the record's *bands, not raw values* belongs here next, and
+    the projections after it (layered-by-timescale-and-interruptibility).
+
+    The words — a MARK, DRAINED on the agent's own clock — are the dictionary's:
+    knowledge/domain/revision.md, and knowledge/domain/row.md for the rows they keep apart.
     """
-    return execution.pursue_for(agent, want)
+
+    def __init__(self, agent):
+        self.agent = agent
+        self._pending: dict[str, object] = {}   # want -> the desire, where the caller had one
+        self._lock = threading.Condition()
+        self._drain_lock = threading.Lock()     # one pass at a time, whoever asked for it
+        self._worker: threading.Thread | None = None
+        self._stopped = False
+
+    # --- the door -----------------------------------------------------------------------
+
+    def note(self, want: str, desire=None) -> None:
+        """Something moved that this want is about. Returns at once, whatever it costs to
+        reconsider it."""
+        with self._lock:
+            self._pending.setdefault(want, desire)
+            if desire is not None:
+                self._pending[want] = desire
+            self._lock.notify_all()
+
+    # --- the drain ----------------------------------------------------------------------
+
+    def start(self) -> None:
+        self._worker = threading.Thread(target=self._serve, name=f"{self.agent.id}-mind",
+                                        daemon=True)
+        self._worker.start()
+
+    def stop(self) -> None:
+        with self._lock:
+            self._stopped = True
+            self._lock.notify_all()
+
+    def settle(self, timeout: float = 30.0) -> None:
+        """Drain what is pending and return when it is done — the door a TEST knocks on.
+
+        With a worker running this waits for it; without one it drains on a thread of its own
+        and joins, which is deterministic for a caller that wants the consequences before it
+        asserts, and is still never the delivering thread.
+        """
+        if self._worker is not None and self._worker.is_alive():
+            with self._lock:
+                self._lock.wait_for(lambda: not self._pending, timeout=timeout)
+            with self._drain_lock:      # and until the pass in flight finishes
+                pass
+            return
+        drain = threading.Thread(target=self._drain, name=f"{self.agent.id}-mind", daemon=True)
+        drain.start()
+        drain.join(timeout)
+
+    def _serve(self) -> None:
+        while True:
+            with self._lock:
+                self._lock.wait_for(lambda: self._pending or self._stopped)
+                if self._stopped:
+                    return
+            self._drain()
+
+    def _drain(self) -> None:
+        """Every marked want, reconsidered. Never raises: the mind must not die of one want."""
+        with self._drain_lock:
+            while True:
+                with self._lock:
+                    if not self._pending:
+                        self._lock.notify_all()
+                        return
+                    want, desire = next(iter(self._pending.items()))
+                    del self._pending[want]
+                try:
+                    if desire is not None:
+                        execution.pursue(self.agent, desire)
+                    else:
+                        execution.pursue_for(self.agent, want)
+                except Exception as exc:
+                    log.error("%s: could not reconsider %s: %s", self.agent.id,
+                              want.rsplit("#", 1)[-1], exc)
 
 
-def wake_for(agent, desire) -> str | None:
+
+
+
+def wake(agent, want: str) -> None:
+    """Something moved that this want is about — mark it, and return.
+
+    THE ONLY DOOR from a change to a deliberation pass, and it answers nothing: what the search
+    decides is not knowable to the caller, because the caller is a handler and the search is
+    not its to wait for. A caller that needs the consequence reads it where it lands — the
+    ledger, the act it takes — not from here.
+    """
+    agent.revision.note(want)
+
+
+def wake_for(agent, desire) -> None:
     """The same door, for a caller holding the want itself rather than its node — a host with a
-    call to convene for, a keeper's tick walking everything the agent pursues."""
-    return execution.pursue(agent, desire)
+    call to convene for. The desire travels with the mark, because the caller derived it and
+    the drain would have no way to find it again."""
+    agent.revision.note(desire.uri, desire)

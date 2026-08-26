@@ -38,7 +38,7 @@ class Desire:
     # stake's reading, filled by sensing. None when nothing has been observed, which is a gap
     # and not a zero. WHAT the want is about is not on this type: a want is its node, and a
     # package that needs the property of one it holds walks to it in its own words
-    # (the-stake-is-sensings-want; sensing's `ObservedWant` carries `observed_property`).
+    # (the-stake-is-sensings-want; sensing's `ObservedDesire` carries `observed_property`).
     value: float | None = None
 
     # A duty's two: the claim it came from and whom it is owed to. A stake has neither, which
