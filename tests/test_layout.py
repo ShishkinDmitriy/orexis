@@ -674,3 +674,38 @@ def test_the_kernel_namespace_holds_no_individuals():
             "world's own namespace")
         checked += 1
     assert checked >= 8, f"only {checked} world files checked — the glob has gone quiet"
+
+
+def test_no_generated_credential_is_tracked():
+    """Nothing git tracks may be a credential, or a file a generator writes beside one.
+
+    Three files under `world/sensing/mosquitto/` were tracked for three weeks — the broker's
+    `passwd`, its ACL and its config — and `passwd` reached main in seven successively
+    re-salted versions. `.gitignore` had named that directory since the very commit that added
+    them, and the rule could not bite: **a trailing-slash pattern matches a DIRECTORY**, git
+    prunes an ignored directory only while nothing in it is tracked, and once the ACL and the
+    config were in the index git had to descend — at which point `world/*/mosquitto/` matched
+    none of the files inside. Every `git add -A` after that swept up whatever `orexis-mqtt`
+    had just written.
+
+    An ignore rule is advice about untracked files. This is the invariant, and it holds
+    whatever `.gitignore` says.
+    """
+    import subprocess
+
+    tracked = subprocess.run(["git", "ls-files"], capture_output=True, text=True,
+                             check=True).stdout.split()
+    assert tracked, "git tracks nothing — `git ls-files` stopped answering"
+
+    #  Directories a generator owns, and the file shapes that carry a secret wherever they sit.
+    #  `infra/mosquitto/` is the image's own source — a Containerfile and an entrypoint, written
+    #  by hand and true of the installation — which is why the pattern is a world's copy.
+    generated = ("world/", "infra/secrets/", "infra/grafana/certs/", "infra/grafana/dashboards/")
+    offenders = sorted(
+        path for path in tracked
+        if (any(part in path for part in ("/mosquitto/", "/secrets/")) and path.startswith(generated))
+        or path.endswith((".key", ".pem", "/passwd", "/keys.ttl", "/config.h"))
+        or path.endswith(".env") and not path.endswith(".env.example"))
+    assert not offenders, (
+        "a credential or a generated file is tracked — regenerate it with `orexis-onboard` "
+        "instead of committing it, and rotate whatever leaked:\n  " + "\n  ".join(offenders))
