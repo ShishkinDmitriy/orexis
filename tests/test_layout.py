@@ -33,7 +33,9 @@ CONTAINERFILE = REPO_ROOT / "Containerfile"
 # file plus the import contracts are the whole of the boundary.
 #  firmware/ is admitted for its ontologies alone — the third T-Box source (#175) — and the
 #  .containerignore exception narrows the COPY to them; the test below holds both halves.
-ALLOWED_TREES = {"agent", "packages", "firmware"}
+#  `assembly` is what FINDS packages, so an agent that loads any needs it — the kernel is
+#  one of the things it assembles (the-assembly-is-not-the-mind).
+ALLOWED_TREES = {"assembly", "agent", "packages", "firmware"}
 
 # Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 # store and which no agent may ever hold; the surest guarantee is that the code using it is
@@ -139,18 +141,24 @@ def test_the_kernel_stands_alone_with_no_packages_at_all(tmp_path, monkeypatch):
     every shipped world names `water:`, `mqtt:` and `part:` terms and would not validate here.
     The claim is narrower and load-bearing — the thing that LOADS packages does not need one.
     """
-    from agent import loader
+    from assembly import loader
 
-    caches = (loader.packages, loader.prefixes, loader.registry,
-              loader.ontology_files if hasattr(loader.ontology_files, "cache_clear") else None)
+    #  EVERY cache the loader has, found by looking. This was a hand-list of four, and the
+    #  test populates far more than four while the tree is empty — `shapes_files`, `hooks`,
+    #  `_namespace_owners` — so they survived the restore holding kernel-only answers and
+    #  poisoned every later test that built an agent. `pytest tests/test_layout.py
+    #  tests/test_hooks.py` failed deterministically and the full suite hid it, because
+    #  `-n auto` puts the two files on different workers.
+    caches = tuple(v for v in vars(loader).values() if hasattr(v, "cache_clear"))
     monkeypatch.setattr(loader, "PACKAGES_ROOT", tmp_path / "nothing-here")
     for cache in caches:
         if cache is not None and hasattr(cache, "cache_clear"):
             cache.cache_clear()
     try:
         found = loader.packages()
-        assert found == (loader.KERNEL,), (
-            f"with no packages the build should be the kernel alone, got {[p.name for p in found]}")
+        assert found == (loader.ASSEMBLY, loader.KERNEL), (
+            "with no packages the build should be the two roots — what assembles, and what it "
+            f"assembles onto — got {[p.name for p in found]}")
         assert loader.registry() == {}, "no packages, no capabilities to implement"
         assert loader.prefixes().get("ag"), "the kernel still declares its own namespace"
 
@@ -173,7 +181,8 @@ def test_the_kernel_stands_alone_with_no_packages_at_all(tmp_path, monkeypatch):
         #  everything the loader reads.
         from_packages = [f for f in loader.ontology_files()
                          if not str(f).startswith(str(loader.REPO_ROOT / "firmware"))]
-        assert from_packages == [loader.KERNEL.file(loader.ONTOLOGY)], \
+        assert from_packages == [loader.ASSEMBLY.file(loader.ONTOLOGY),
+                                 loader.KERNEL.file(loader.ONTOLOGY)], \
             f"a package ontology survived an empty packages tree: {from_packages}"
     finally:
         for cache in caches:
@@ -392,7 +401,8 @@ def test_the_society_repeats_every_limit_the_wiring_states():
     that knows its board wakes slowly on battery is stating something true that no class
     declares. Extra is allowed; missing and contradicting are not.
     """
-    from agent import genesis, inference, loader
+    from agent import genesis, inference
+    from assembly import loader
     from agent.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
     from agent.store import Store, bindings
 
@@ -494,7 +504,7 @@ def test_a_packages_python_namespace_is_the_one_its_ontology_declares():
     """
     import importlib
 
-    from agent import loader
+    from assembly import loader
 
     checked = []
     for package in loader.packages():
@@ -541,7 +551,7 @@ def test_the_docs_only_name_terms_that_exist(doc):
 
     import rdflib
 
-    from agent import loader
+    from assembly import loader
 
     # The census is built from the PARSED graphs, not from the files' spellings. It used to
     # be a regex over the text, which went quiet the day ontologies took the default prefix
@@ -654,7 +664,7 @@ def test_the_kernel_namespace_holds_no_individuals():
     name is legal, and the surviving copy passed."""
     import rdflib
 
-    from agent import loader
+    from assembly import loader
 
     AG = "http://example.org/orexis#"
     core = rdflib.Graph()
@@ -709,3 +719,28 @@ def test_no_generated_credential_is_tracked():
     assert not offenders, (
         "a credential or a generated file is tracked — regenerate it with `orexis-onboard` "
         "instead of committing it, and rotate whatever leaked:\n  " + "\n  ".join(offenders))
+
+
+def test_the_mounted_trees_are_the_copied_trees():
+    """What compose bind-mounts is what the image copies — the block's own recurring lesson.
+
+    `onboarding/compose.py` carries the warning in its own comment: the mounts are *"the SAME
+    two the Containerfile copies, and keeping the pair in step is the lesson this block keeps
+    relearning"*. Twice before, a tree moved and a husk went on being mounted silently; the
+    third time it failed loudly, but only at the next restart, because a bind resolves when a
+    container is CREATED and a stale one keeps running until the day it cannot.
+
+    It relearned it once more when `assembly/` arrived. So the two lists are compared rather
+    than described, and `firmware/` is excepted: the image copies its ontologies as a third
+    T-Box source, and no agent needs the tree mounted to read what is already inside.
+    """
+    import pathlib
+    import re
+
+    compose = pathlib.Path(__file__).resolve().parent.parent / "onboarding" / "compose.py"
+    mounts = set(re.findall(r"\.\./\.\./([a-z_]+):/app/", compose.read_text()))
+    copied = {p.split("/")[0].strip("./") for p in copied_paths() if "/" in p} - {"firmware"}
+    assert mounts, "no source trees mounted — the pattern stopped matching"
+    assert mounts == copied, (
+        f"compose mounts {sorted(mounts)} and the image copies {sorted(copied)}. A tree in one "
+        "and not the other is a container that starts today and refuses at its next restart.")

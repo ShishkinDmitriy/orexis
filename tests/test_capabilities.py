@@ -8,7 +8,9 @@ to, and cannot drift from it.
 import pytest
 import rdflib
 
-from agent import genesis, loader
+from agent import genesis
+
+from assembly import loader
 from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from agent.world import WorldError, load_world
 from packages.capability.actuation import ACTUATION
@@ -310,7 +312,7 @@ def test_the_firmware_self_descriptions_are_still_found():
     """The glob guard, in the spirit of test_store's: moving files has twice emptied a source
     glob without failing anything, and a firmware tree that quietly stopped loading would
     strip every typed board of its mode at the next genesis."""
-    from agent import loader
+    from assembly import loader
 
     found = sorted(str(p) for p in loader.ontology_files() if "/firmware/" in str(p))
     assert len(found) >= 2, "the firmware ontologies stopped being loaded"
@@ -343,7 +345,7 @@ def test_a_package_whose_import_fails_costs_only_the_agents_granted_it(tmp_path,
     failure is scoped: the granted agent gets the honest "nothing provides it" path, and
     everyone else never touches the package at all.
     """
-    from agent import loader
+    from assembly import loader
 
     pkg = tmp_path / "capability" / "oracular"
     pkg.mkdir(parents=True)
@@ -368,7 +370,7 @@ def test_a_fern_imports_no_actuation(monkeypatch):
     """The economy, stated as a fact rather than hoped for: the packages a grant reaches are
     the packages imported. Fern holds no actuator, so actuation's Python — and whatever a
     future package brings with it — stays out of its process."""
-    from agent import loader
+    from assembly import loader
 
     imported = []
     real = loader._provider_in

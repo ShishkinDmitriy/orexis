@@ -58,11 +58,12 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-# Three roots at the repo top: the kernel, the packages it loads, and the operator's tools.
+# Four roots at the repo top: what assembles a build, the kernel it assembles onto, the
+# packages it finds, and the operator's tools.
 # `packages*` is what makes `packages.capability.market` installable rather than merely importable
 # from a checkout — the trees moved out of `agent/`, so they are no longer carried along by it.
 where = ["."]
-include = ["agent*", "packages*", "onboarding*"]
+include = ["assembly*", "agent*", "packages*", "onboarding*"]
 
 [tool.pytest.ini_options]
 # BOTH roots. `tests/` is the integration suite — most of what this project asserts is about the
@@ -118,7 +119,17 @@ addopts = "-n auto"
 #
 #   .venv/bin/lint-imports
 [tool.importlinter]
-root_packages = ["agent", "packages", "onboarding"]
+root_packages = ["assembly", "agent", "packages", "onboarding"]
+
+[[tool.importlinter.contracts]]
+# ASSEMBLY IS UNDER EVERYTHING. It finds packages and owns the extension mechanism; the kernel
+# is one of the things it assembles, so it must not know the kernel exists. It names `agent/`
+# by PATH — a directory it merges first — and never by import
+# (the-assembly-is-not-the-mind).
+name = "What assembles a build does not import what it assembles"
+type = "forbidden"
+source_modules = ["assembly"]
+forbidden_modules = ["agent", "onboarding", "packages"]
 
 [[tool.importlinter.contracts]]
 name = "The agent never reaches for the operator's tools"

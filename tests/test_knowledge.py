@@ -426,7 +426,7 @@ def _declared() -> set[str]:
     covering it — silently as far as this function is concerned, and loudly one line later,
     since every `ag:` term a page names would read as undeclared.
     """
-    from agent import loader
+    from assembly import loader
 
     #  ALL of the kernel's TTL, not just its ontology. A SHAPE is declared in `shapes.ttl` and a
     #  page may legitimately name one — `ag:KeeperShape` does — and while the shapes lived in
@@ -455,7 +455,7 @@ def test_a_domain_page_names_only_terms_that_exist():
         "desire:UnwatchedDesireShape",
     }
 
-    from agent import loader
+    from assembly import loader
     project = set(loader.prefixes())          # found by looking, never listed — as the code does
     declared = _declared()
 
@@ -568,7 +568,7 @@ def _bound_terms(meta: dict) -> list[str]:
 def test_a_dictionary_term_is_a_declared_one():
     import rdflib
 
-    from agent import loader
+    from assembly import loader
     from agent.store import NAMESPACES
 
     #  Asked of the loader, not globbed. This was `packages/**/ontology.ttl` plus a firmware
@@ -666,7 +666,7 @@ _SHORTHAND = re.compile(r"`(:[A-Za-z][\w/<>-]*)`")
 
 def _graphs() -> tuple[set[str], set[str]]:
     """Every graph the project declares: fixed names, and the prefixes per-agent ones grow from."""
-    from agent import loader
+    from assembly import loader
 
     fixed, prefixes = set(), set()
     for ttl in loader.sources("*.ttl"):

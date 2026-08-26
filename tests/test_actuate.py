@@ -56,7 +56,8 @@ def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
     consent, a shop on the butt — re-derive, and the venue exists, so the butt is a source a
     market offers and the Actuate row vanishes. The market is about the resource: once it is
     a lot, even its owner's own pump answers to the venue."""
-    from agent import genesis, loader
+    from agent import genesis
+    from assembly import loader
     from agent.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 
     st = genesis_store(world="loner")

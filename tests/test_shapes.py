@@ -10,7 +10,9 @@ import pathlib
 import pytest
 import rdflib
 
-from agent import genesis, inference, loader
+from agent import genesis, inference
+
+from assembly import loader
 from agent.ontology import (ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_GRAPH,
                             beliefs_graph)
 from agent.validate import conforms as validate_conforms

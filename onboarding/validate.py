@@ -113,7 +113,8 @@ def deliberable(st, desires: dict) -> bool:
 
     See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
     """
-    from agent import effects, loader
+    from agent import effects
+    from assembly import loader
     from agent.menu import menu_of
     from packages.capability.sensing.regions import regions_of
     from agent.world import load_self

@@ -1,0 +1,60 @@
+@prefix assembly: <http://example.org/orexis/assembly#> .
+@prefix : <http://example.org/orexis/assembly#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/orexis/assembly> a owl:Ontology ;
+    rdfs:label "Assembly" ;
+    rdfs:comment """How a build is put together, and how its parts reach each other.
+
+Merged FIRST, before the kernel's, because the kernel's own extension points are instances of a
+class declared here. This is not a package — it is what finds packages — and neither is `agent/`;
+a tree and its loader are not two trees (the-assembly-is-not-the-mind).""" .
+
+:Extension a owl:Class ; rdfs:label "Extension point" ;
+    rdfs:comment "A named place another package may contribute to, filled by `@extends(TERM)` on a function. Was `ag:Hook`, and in the kernel. Declared by whoever owns the QUESTION — the kernel's for the BDI-shaped ones, a package's for its own — and refused if nobody declares it, because a term nobody declared would be answered by silence (a-hook-is-a-term). Two moments, one mechanism: a package module fills the assembly-time points and a Module instance fills the run-time ones, and which is which is decided by where the decorated function lives rather than by anything stated." .
+
+:signature a owl:DatatypeProperty ; rdfs:domain :Extension ; rdfs:range xsd:string ;
+    rdfs:label "signature" ;
+    rdfs:comment "The parameters a function filling this point must take, and what it returns. Published ON the point so a package can fill one another package declared WITHOUT importing whoever declared it — which is the difference between an extension point and a private callback. Checked strictly against every filler's parameter names: before this, a filler whose parameters did not match raised TypeError, which the asker logged as `could not answer` and stepped over, so a wrong signature was a module quietly not participating. A string rather than a structure, because it is read by people and compared by name." .
+
+#################  The assembly-time points  #################
+#
+#  What a package brings to a build. Each is handed what EXISTS at the moment it is asked, and
+#  that argument is the whole of the phase discipline: `vocabulary` is given no store because
+#  none is open yet — `refresh_public` runs before the belief base does — so a package cannot
+#  generate vocabulary from beliefs, and does not need telling.
+#
+#  None of these carries `ag:row`. A row says whether ANSWERING may block or search, which is a
+#  fact about the cognitive layering and means nothing at assembly time: there is no planner to
+#  stay out of and no latency to keep.
+#
+#  A filler returns `Path | str`: a path is read and named by its path, a string is used as it
+#  stands and named by its package. A file, something fetched, something generated — one
+#  signature. Not a graph, because every package's `__init__` is imported at assembly and rdflib
+#  in fourteen knowledge-only packages is a cost with nothing to show for it.
+
+:vocabulary a :Extension ;
+    :signature "(world) -> list[Path | str]" ;
+    rdfs:comment "What terms do you bring? Merged into the T-Box before anything reads a belief." .
+
+:shapes a :Extension ;
+    :signature "(world) -> list[Path | str]" ;
+    rdfs:comment "What must be true of a thing that has what you bring? Handed to the validator." .
+
+:derivation a :Extension ;
+    :signature "(world) -> list[Path | str]" ;
+    rdfs:comment "What premise grants your capability? SPARQL updates, run once in package order — and a premise may not rest on another package's conclusions." .
+
+:wants a :Extension ;
+    :signature "(world) -> list[Path | str]" ;
+    rdfs:comment "What does an agent holding your capability therefore want? Run on every rebuild of the desire modality, never at genesis." .
+
+:actions a :Extension ;
+    :signature "(world) -> list[Path | str]" ;
+    rdfs:comment "What ways of acting do you bring? One `ag:Action` node each: precondition, effect, and the capability that takes it." .
+
+:review a :Extension ;
+    :signature "(world) -> list[Path | str]" ;
+    rdfs:comment "What would you like an agent to reconsider about itself? A SELECT binding ?term and ?value, never an update and never Python." .

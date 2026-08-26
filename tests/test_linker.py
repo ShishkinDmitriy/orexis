@@ -7,7 +7,7 @@ shipped tree caught `ag:modelDryRate` in DeviceModelShape: a constraint that had
 renames of its term by matching nothing, exactly the vacuous green it exists to refuse.
 """
 
-from agent import loader
+from assembly import loader
 from onboarding import linker
 
 

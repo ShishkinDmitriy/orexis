@@ -27,7 +27,7 @@ from typing import Callable
 
 import pyoxigraph as ox
 
-from . import loader
+from assembly import loader
 from .ontology import AG, ONTOLOGY_GRAPH, PUBLIC_GRAPH
 
 # A SPARQL SELECT -> the SPARQL-JSON results dict. The seam every reader is written against,

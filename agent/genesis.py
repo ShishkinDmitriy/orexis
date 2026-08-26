@@ -31,7 +31,9 @@ import logging
 import re
 from pathlib import Path
 
-from . import config, inference, loader, provenance, vocabulary
+from agent import config, inference, provenance, vocabulary
+
+from assembly import loader
 from .config import REPO_ROOT
 from .ontology import (DESIRE_ASSERTED_GRAPH, ACTIONS_GRAPH, GRAPH_PREFIX, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                        WORLD_DERIVED_GRAPH,

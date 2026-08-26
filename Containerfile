@@ -20,11 +20,12 @@ WORKDIR /app
 # Dependencies first, so editing a capability does not reinstall the world.
 COPY pyproject.toml pyproject.toml
 COPY agent/__init__.py agent/__init__.py
+COPY assembly/__init__.py assembly/__init__.py
 RUN pip install -e .
 
 # Everything an agent runs, and nothing else.
 #
-# Two trees: the KERNEL that loads packages, and the packages. `packages/` holds both what an
+# Three trees: what ASSEMBLES a build, the KERNEL it assembles onto, and the packages. `packages/` holds both what an
 # agent imports and what it merely reads — a capability's Python and a part's ontology sit in one
 # tree now — and it is copied whole because onboarding derives capabilities from the same terms
 # and neither side owns it.
@@ -38,6 +39,7 @@ RUN pip install -e .
 # Note what is NOT here: world/. A world is MOUNTED, one per container, so the image is
 # world-agnostic — the same image is every agent of every world, and which one it is comes from
 # OREXIS_AGENT_ID and the world mounted beside it.
+COPY assembly/ assembly/
 COPY agent/    agent/
 COPY packages/ packages/
 

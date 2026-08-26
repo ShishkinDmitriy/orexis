@@ -26,7 +26,9 @@ import re
 import rdflib
 from pyshacl import validate as shacl_validate
 
-from . import genesis, loader
+from agent import genesis
+
+from assembly import loader
 from .ontology import STATE_GRAPH, beliefs_graph
 from .store import Store
 

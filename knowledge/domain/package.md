@@ -34,7 +34,7 @@ the twenty-three packages shipped today carry no Python at all.
 # The family is the directory above, and it is declared nowhere
 
 `agent.loader` walks two levels down from `packages/` and reads the family off the path. Nothing
-enumerates the families; `KINDS` in `agent/loader.py` fixes only the **order they merge in**, for
+enumerates the families; `KINDS` in `assembly/loader.py` fixes only the **order they merge in**, for
 determinism in logs and diffs. A family invented tomorrow is found without editing anything — it
 merely sorts after the named ones.
 

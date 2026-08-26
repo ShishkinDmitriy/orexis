@@ -348,13 +348,17 @@ services:
       - ./secrets/city.sign.key:/app/world/secrets/city.sign.key:ro
       - ./secrets/city.seal.key:/app/world/secrets/city.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
-      # two the Containerfile copies, and keeping the pair in step is the lesson this block
-      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # three the Containerfile copies, and keeping them in step is the lesson this block
+      # keeps relearning. It relearned it again when `assembly/` arrived: this block said "the
+      # same TWO" while the image copied three, and a restart would have failed on a missing
+      # module. `tests/test_layout.py` compares the two lists now, so the next tree cannot
+      # arrive in one and not the other. capabilities/ and transports/ moved inside agent/ and their husks
       # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
       # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
       # next restart, which arrived with a host logout weeks after the tree moved. A mount
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
+      - ../../assembly:/app/assembly:ro
       - ../../agent:/app/agent:ro
       - ../../packages:/app/packages:ro
 
@@ -406,13 +410,17 @@ services:
       - ./secrets/fern.sign.key:/app/world/secrets/fern.sign.key:ro
       - ./secrets/fern.seal.key:/app/world/secrets/fern.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
-      # two the Containerfile copies, and keeping the pair in step is the lesson this block
-      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # three the Containerfile copies, and keeping them in step is the lesson this block
+      # keeps relearning. It relearned it again when `assembly/` arrived: this block said "the
+      # same TWO" while the image copied three, and a restart would have failed on a missing
+      # module. `tests/test_layout.py` compares the two lists now, so the next tree cannot
+      # arrive in one and not the other. capabilities/ and transports/ moved inside agent/ and their husks
       # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
       # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
       # next restart, which arrived with a host logout weeks after the tree moved. A mount
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
+      - ../../assembly:/app/assembly:ro
       - ../../agent:/app/agent:ro
       - ../../packages:/app/packages:ro
 
@@ -464,13 +472,17 @@ services:
       - ./secrets/succulent.sign.key:/app/world/secrets/succulent.sign.key:ro
       - ./secrets/succulent.seal.key:/app/world/secrets/succulent.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
-      # two the Containerfile copies, and keeping the pair in step is the lesson this block
-      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # three the Containerfile copies, and keeping them in step is the lesson this block
+      # keeps relearning. It relearned it again when `assembly/` arrived: this block said "the
+      # same TWO" while the image copied three, and a restart would have failed on a missing
+      # module. `tests/test_layout.py` compares the two lists now, so the next tree cannot
+      # arrive in one and not the other. capabilities/ and transports/ moved inside agent/ and their husks
       # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
       # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
       # next restart, which arrived with a host logout weeks after the tree moved. A mount
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
+      - ../../assembly:/app/assembly:ro
       - ../../agent:/app/agent:ro
       - ../../packages:/app/packages:ro
 
@@ -525,13 +537,17 @@ services:
       - ./secrets/supplier.sign.key:/app/world/secrets/supplier.sign.key:ro
       - ./secrets/supplier.seal.key:/app/world/secrets/supplier.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
-      # two the Containerfile copies, and keeping the pair in step is the lesson this block
-      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # three the Containerfile copies, and keeping them in step is the lesson this block
+      # keeps relearning. It relearned it again when `assembly/` arrived: this block said "the
+      # same TWO" while the image copied three, and a restart would have failed on a missing
+      # module. `tests/test_layout.py` compares the two lists now, so the next tree cannot
+      # arrive in one and not the other. capabilities/ and transports/ moved inside agent/ and their husks
       # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
       # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
       # next restart, which arrived with a host logout weeks after the tree moved. A mount
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
+      - ../../assembly:/app/assembly:ro
       - ../../agent:/app/agent:ro
       - ../../packages:/app/packages:ro
 
@@ -583,13 +599,17 @@ services:
       - ./secrets/tomato.sign.key:/app/world/secrets/tomato.sign.key:ro
       - ./secrets/tomato.seal.key:/app/world/secrets/tomato.seal.key:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME
-      # two the Containerfile copies, and keeping the pair in step is the lesson this block
-      # keeps relearning. capabilities/ and transports/ moved inside agent/ and their husks
+      # three the Containerfile copies, and keeping them in step is the lesson this block
+      # keeps relearning. It relearned it again when `assembly/` arrived: this block said "the
+      # same TWO" while the image copied three, and a restart would have failed on a missing
+      # module. `tests/test_layout.py` compares the two lists now, so the next tree cannot
+      # arrive in one and not the other. capabilities/ and transports/ moved inside agent/ and their husks
       # were mounted silently; then vocabulary/ moved inside packages/ and its mount failed
       # LOUDLY — a bind whose source is gone refuses to start the container, but only at the
       # next restart, which arrived with a host logout weeks after the tree moved. A mount
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
+      - ../../assembly:/app/assembly:ro
       - ../../agent:/app/agent:ro
       - ../../packages:/app/packages:ro
 

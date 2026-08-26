@@ -11,7 +11,8 @@ from __future__ import annotations
 import rdflib
 
 from agent.act import Act
-from agent import execution, loader, menu
+from agent import execution, menu
+from assembly import loader
 from agent.planner import Planner
 
 from agent.ontology import beliefs_graph

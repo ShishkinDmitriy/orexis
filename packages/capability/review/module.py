@@ -62,7 +62,7 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from agent import loader
+from assembly import loader
 from agent.module import Module, hook
 from agent.ontology import BELIEF_REVISED
 

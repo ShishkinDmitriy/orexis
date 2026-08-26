@@ -38,7 +38,7 @@ def test_a_package_that_ships_an_action_file_is_found_without_being_named():
     """The loader idiom, applied a fourth time. A way of acting is a node in a file in the
     package that owns the acting, and nothing in the kernel learns its name — the reason
     adding a capability is adding a directory."""
-    from agent import loader
+    from assembly import loader
 
     shipped = {p.parent.name for p in loader.action_files()}
     assert {"sensing", "actuation", "market"} <= shipped

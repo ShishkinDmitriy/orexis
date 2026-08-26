@@ -118,7 +118,7 @@ class Desire:
 #  module asks for the one it means — and a holder no question needs is a namespace, not a
 #  concept.
 
-from . import loader
+from assembly import loader
 from .ontology import DESIRE_ASSERTED_GRAPH, DESIRE_DERIVED_GRAPH
 from .store import Store
 

@@ -8,7 +8,9 @@ honest so the next one is found by a gate rather than by a design sitting.
 
 import pytest
 
-from agent import genesis, loader
+from agent import genesis
+
+from assembly import loader
 from agent.ontology import AG, PROVENANCE_GRAPH, beliefs_graph
 from agent.store import bindings
 

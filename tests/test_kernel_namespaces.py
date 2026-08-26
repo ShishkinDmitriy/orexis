@@ -59,7 +59,7 @@ import rdflib
 
 import pytest
 
-from agent import loader
+from assembly import loader
 
 # Every namespace of ours that is not the kernel's own, label -> IRI, asked of the loader
 # rather than listed: a sixth capability, a new transport or a new part is scanned for the day

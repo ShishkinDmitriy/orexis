@@ -20,7 +20,7 @@ here — because how a device is reached is not something an agent decides.
 
 from __future__ import annotations
 
-from agent import loader
+from assembly import loader
 
 
 class Driver:

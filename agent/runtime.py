@@ -32,7 +32,9 @@ import logging
 from datetime import datetime
 import signal
 
-from . import config, genesis, loader
+from agent import config, genesis
+
+from assembly import loader
 from .beliefs import Beliefs
 from .ontology import DESIRES, DESIRE_URGENCY
 from .deliberator import Deliberator

@@ -28,7 +28,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from agent import loader
+from assembly import loader
 
 # The project's namespace root. A constant in a LINTER, not in agent code: the check must
 # say whose terms it polices, exactly as the prefix guard names store.PREFIXES.

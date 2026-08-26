@@ -21,7 +21,9 @@ from pathlib import Path
 
 import pytest
 
-from agent import genesis, loader, ratified
+from agent import genesis, ratified
+
+from assembly import loader
 from agent.ontology import (AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENANCE_GRAPH,
                             WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
                             WORLD_GRAPH)

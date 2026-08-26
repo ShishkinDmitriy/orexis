@@ -153,7 +153,8 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
     the wiring is legitimate, the sentence in the boot log was the missing part. The shipped
     world stays clean, which is the negative half that keeps the channel worth reading.
     """
-    from agent import genesis, loader
+    from agent import genesis
+    from assembly import loader
     from agent.ontology import WORLD_GRAPH, beliefs_graph
     from agent.validate import conforms, graph_from
 

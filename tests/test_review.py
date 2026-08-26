@@ -385,7 +385,7 @@ def _sensing_with(update: str = ""):
     and leaving the old one beside the new is how `test_capabilities` once read BOTH sensing
     capabilities and called it a pass.
     """
-    from agent import loader
+    from assembly import loader
     from agent.ontology import WORLD_DERIVED_GRAPH
 
     st = genesis_store(world="sensing")

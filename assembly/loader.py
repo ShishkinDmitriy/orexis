@@ -63,14 +63,17 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from .config import REPO_ROOT
+#  Assembly computes this itself rather than importing the kernel's: nothing here may import
+#  `agent`, which is what lets the kernel be one of the things assembled.
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 log = logging.getLogger("loader")
 
 # This package's own directory, and the one tree every package lives in. `packages/` sits beside
 # `agent/` rather than under it: a package is not the runtime's, it is the project's, and
 # onboarding reads the TTL of every one without importing a line of Python from any.
-AGENT_ROOT = Path(__file__).resolve().parent
+AGENT_ROOT = REPO_ROOT / "agent"
+ASSEMBLY_ROOT = Path(__file__).resolve().parent
 PACKAGES = "packages"
 PACKAGES_ROOT = REPO_ROOT / PACKAGES
 
@@ -174,7 +177,14 @@ class Package:
 # reaches it without knowing it is special. What it is NOT is a family: `packages/kernel/` is not
 # a directory anyone can add a sibling to, which is exactly the difference from `core`.
 KERNEL_KIND = "kernel"
-KERNEL = Package(kind=KERNEL_KIND, name=BASE, path=AGENT_ROOT, module=__package__)
+#  The kernel is named, not discovered — it is what the packages layer on, and a thing outside
+#  the tree cannot be sorted wrong. Assembly names it by PATH and never imports it.
+KERNEL = Package(kind=KERNEL_KIND, name=BASE, path=AGENT_ROOT, module="agent")
+
+#  MERGED FIRST, before the kernel's: the kernel's own extension points are instances of a class
+#  this declares (`assembly:Extension`). Not a package and not the kernel — a third root, and
+#  the only one that names the other two.
+ASSEMBLY = Package(kind=KERNEL_KIND, name="assembly", path=ASSEMBLY_ROOT, module="assembly")
 
 
 def _put_repo_root_on_path() -> None:
@@ -214,7 +224,7 @@ def packages() -> tuple[Package, ...]:
     optional, stated as the value this function returns.
     """
     if not PACKAGES_ROOT.is_dir():
-        return (KERNEL,)
+        return (ASSEMBLY, KERNEL)
 
     def visible(path):
         return sorted(p for p in path.iterdir()
@@ -226,7 +236,7 @@ def packages() -> tuple[Package, ...]:
                          key=lambda p: (order.get(p.name, len(order)), p.name)):
         for path in sorted(visible(family), key=lambda p: (p.name != BASE, p.name)):
             found.append(Package(kind=family.name, name=path.name, path=path))
-    return (KERNEL,) + tuple(found)
+    return (ASSEMBLY, KERNEL) + tuple(found)
 
 
 def of_kind(kind: str) -> tuple[Package, ...]:
