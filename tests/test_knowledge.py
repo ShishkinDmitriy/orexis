@@ -352,9 +352,15 @@ def test_no_document_names_a_path_that_is_not_there():
         # `exists()` said the world was there.
         "world/society",
     }
-    docs = concepts()
+    #  THE ROOT DOCUMENTS TOO. `README.md` and `AGENTS.md` name paths exactly as a record does,
+    #  and nothing was looking: the README described `packages/core/`, a tree that came into
+    #  `agent/`, and a Fuseki endpoint removed with the shared store, while AGENTS.md cited
+    #  `tests/test_goals.py` — renamed to `test_desires.py` by the goal-is-a-desire ruling, in
+    #  the very file that tells everyone which guard pins what.
+    docs = concepts() + [REPO_ROOT / "README.md", REPO_ROOT / "AGENTS.md"]
     known = _tracked()
     assert docs, "no concept documents found — the glob stopped matching"
+    assert all(d.exists() for d in docs), "a root document moved — README.md or AGENTS.md"
     assert known, "git tracks nothing — `git ls-files` stopped answering, and every path below "
     "would read as missing"
 
@@ -363,8 +369,9 @@ def test_no_document_names_a_path_that_is_not_there():
         for spec in set(_PATH.findall(path.read_text())):
             if spec in absent_on_purpose or _is_tracked(spec, known):
                 continue
-            unresolved.setdefault(_concrete(spec), []).append(
-                f"{path.relative_to(BUNDLE)}: `{spec}`")
+            where = (path.relative_to(BUNDLE) if BUNDLE in path.parents
+                     else path.relative_to(REPO_ROOT))
+            unresolved.setdefault(_concrete(spec), []).append(f"{where}: `{spec}`")
 
     #  The second question, asked only of what the first could not answer: is it a generator's
     #  output? Those are named in prose on purpose and are absent until somebody runs onboarding.

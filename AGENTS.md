@@ -439,7 +439,7 @@ fails if pyshacl ever entails something the closure does not. See
   and `duration * number` return unbound in pyoxigraph, so a column computed that way reads
   empty for every row and no query errors, no test goes red. It is the same family as the
   empty-result trap above, arriving through arithmetic: measure an unfamiliar operation on a
-  literal before building a column on it, and pin what you measured — `tests/test_goals.py`
+  literal before building a column on it, and pin what you measured — `tests/test_desires.py`
   does, so the day the engine grows the operation the guard says so.
 - **Stray host processes are the usual cause of doubled data.** A leaked publisher from an
   earlier run keeps writing to the same topic, and both readings get ingested. `podman compose
