@@ -20,9 +20,12 @@ from agent import ratified
 from onboarding import influx as influx_admin, mqtt as mqtt_admin
 from agent.ontology import AG, WORLD_GRAPH
 from onboarding.namespaces import MARKET, MQTT, SENSING
-from conftest import build_agent, genesis_store
+from conftest import build_agent, genesis_store, shipped_worlds
 
-WORLDS = ["sensing", "simulation"]
+#  Found by looking, never listed (`conftest.shipped_worlds`): this was a hand-written
+#  pair that stopped growing the day `world/loner` landed.
+WORLDS = shipped_worlds()
+assert len(WORLDS) > 2, "the world roster shrank — a test that runs for no world passes"
 
 
 def covers(pattern: str, topic: str) -> bool:

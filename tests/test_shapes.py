@@ -53,7 +53,11 @@ def _flatten(st, world_dir=GENESIS_DIR) -> rdflib.Graph:
 
 
 def _worlds():
-    return sorted(d.name for d in WORLDS_ROOT.iterdir() if genesis.world_files(d))
+    #  The roster moved to `conftest.shipped_worlds` so three files share one — this file had
+    #  it right and two others hard-coded a pair that stopped growing.
+    from conftest import shipped_worlds
+
+    return shipped_worlds()
 
 
 @pytest.mark.parametrize("world", _worlds())
