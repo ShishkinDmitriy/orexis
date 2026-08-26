@@ -1,10 +1,11 @@
-# Orexis — v1
+# Orexis
 
-A market society of self-interested agents that allocate a scarce resource through
-iterative auctions and deliberation, under a hard trust/constitution boundary — grounded
-in real sensors on a Raspberry Pi. The domain is a plug-in; the **v1 example domain is
-plant watering** (agents bid for water). Architecture and rationale live in
-[`knowledge/`](knowledge/) (OKF bundle).
+A society of self-interested agents that bid for a scarce resource, each one a BDI mind —
+belief, desire, intention — deciding for itself under a hard trust boundary, grounded in real
+sensors on a Raspberry Pi. **The domain is a plug-in**: plant watering is the example, not the
+architecture. Architecture and rationale live in [`knowledge/`](knowledge/), an
+[OKF](https://okf.md) bundle — start at
+[`knowledge/decisions/index.md`](knowledge/decisions/index.md) §Start here.
 
 **One process per agent.** Each is told only its own id and reads the rest from the belief
 base — what it is wired to, what it can therefore do, and what it privately wants:
@@ -12,10 +13,10 @@ base — what it is wired to, what it can therefore do, and what it privately wa
 ```
   agent asks its board      -> mqtt:commandTopic   {"sense":true} | {"sleep_s":N} retained
   board answers             -> mqtt:readingTopic   {"value":0.183,...}
-  agent records + announces -> :sensed + Influx, then ag:eventTopic {"band":"LOW"}
-  host opens a round        -> ag:offerTopic     quantity, reserve, deadline
-  each bidder answers       -> ag:bidTopic/<id>  a number only it can compute
-  host clears, claims go  -> ag:claimTopic/<id>  -> owner opens its own valve
+  agent records + announces -> :sensed + Influx, then mqtt:eventTopic {"band":"LOW"}
+  host opens a round        -> market:offerTopic   quantity, reserve, deadline
+  each bidder answers       -> market:bidTopic/<id>   a number only it can compute
+  host clears, claims go -> market:claimTopic/<id> -> owner opens its own valve
 ```
 
 Nothing above is a name in the code. Every channel, every device, every limit is read from
@@ -24,10 +25,10 @@ the graph; the one instance identifier a process gets is its own agent id.
 Agents are configured by **belief, not by file**. `:world` holds the public wiring — and from
 that wiring genesis *derives* what each agent can do, so a scheduled sensor gives its agent a
 cadence to own and a push-mode one does not. `:beliefs/<agent>` holds what each privately
-wants. See [`capability-modules`](knowledge/decisions/capability-modules.md) and
+wants. See [`capability-packages`](knowledge/decisions/capability-packages.md) and
 [`world-graph`](knowledge/decisions/world-graph.md).
 
-Trusted-agent mode (v1): there is no gateway — each plant asserts its own reading. See
+Trusted-agent mode: there is no gateway — each plant asserts its own reading. See
 [`knowledge/decisions/trusted-agent-mode.md`](knowledge/decisions/trusted-agent-mode.md).
 
 Sensing is **agent-timed**: the board only senses and sleeps; the *agent* decides how often to
@@ -38,14 +39,16 @@ look, and bids only on a fresh reading. See
 
 ```
 packages/      EVERY package there is, one mechanic: packages/<family>/<name>/
-  core/          the base vocabulary everything layers on
-  bus/  part/    protocols, and the physical things — dht11, esp32, the probe
+  bus/  part/    protocols, and the physical things — dht11, esp32, the probe, device
   plant/         what this society is about: the domain, and a species
+  sim/           what stands in for hardware nobody built, and the physics it computes
   tool/          vocabularies a generator reads, not the society
-  capability/    what an agent can DO — sensing, market, actuation. The extendable axis
+  capability/    what an agent can DO — sensing, market, actuation, review, reporting
   transport/     how a device is REACHED — mqtt. Deliberately not a capability
   codec/  scaling/   how bytes become a document, and a document a quantity
-agent/         the KERNEL that loads packages: store, genesis, runtime, inference, validate
+agent/         the KERNEL that loads packages: store, genesis, runtime, inference, validate.
+               A BDI engine and nothing else — it holds no vocabulary for hardware, no
+               mailbox, and no word for any domain
 onboarding/    the sovereign's tools: what turns a ratified world into a running society
 tests/         the two gates, plus the layering the image depends on
 world/         ratified worlds — one directory each: topology, beliefs, and its compose file
@@ -67,7 +70,7 @@ packages/capability/sensing/
   terms.py       the terms it implements, and the families it asks others for
   beliefs.py     its Blocks — the private parameters it reads
   module.py      the code, which reads only that vocabulary
-  __init__.py    the manifest: PROVIDES = (PollingModule, ListeningModule)
+  __init__.py    the manifest: PROVIDES = (SubscribingModule, ListeningModule)
 ```
 
 Every one of them is optional, and an omission is a statement: `packages/plant/water/` has no code,
@@ -88,26 +91,30 @@ Python imports. See
 - Docker + Compose, **or** Podman + `podman-compose` (both work — the compose file is
   plain Compose-spec, rootless-friendly)
 - Python 3.10+
-- Mosquitto MQTT broker on the host (see below)
+- `mosquitto-clients` on the host, for `mosquitto_sub`. **Not the mosquitto server** — every
+  broker here is a container, one per world, and installing the server package breaks them
+  (see below)
 
 ## 1. Infra
 
 ```bash
 cp infra/.env.example infra/.env                      # where the series store is (no secret)
 cp infra/admin.env.example infra/secrets/admin.env    # the admin token — fill it in
-orexis-mqtt society                                    # the broker's ACL, before it can start
-cd infra && docker compose up -d                      # or: podman compose up -d
+orexis-infra-certs                                    # the services' certs and whom they trust
+cd infra && podman compose up -d                      # or: docker compose up -d
 ```
 
-Brings up: MQTT (`:1883`), InfluxDB (`:8086`) and Grafana (`:3000`). **No triplestore** — each agent holds its
-own belief base inside its own container. Grafana is pre-wired to InfluxDB over a **read-only** token, requires a login, and serves
-HTTPS with a certificate from the installation CA — so your browser will warn until you trust
-`infra/secrets/ca.crt`.
+Brings up **InfluxDB (`:8086`) and Grafana (`:3000`), and nothing else.** No triplestore — each
+agent holds its own belief base inside its own container. **No broker either:** a broker belongs
+to a world, not to the installation, so each world runs its own on its own port and neither can
+hear the other. Grafana is pre-wired to InfluxDB over a **read-only** token, requires a login,
+and serves HTTPS with a certificate from the installation CA — so your browser will warn until
+you trust `infra/secrets/ca.crt`.
 
-**MQTT is built here rather than pulled**, and **the broker refuses anonymous clients**: every
+**A world's broker is built here rather than pulled**, and **refuses anonymous clients**: every
 agent and every board connects as itself, and may reach only the topics the world wires it to.
-Both files behind that are generated by `orexis-mqtt` from the worlds' own wiring, so it must run
-before the broker will start.
+The password file and the ACL behind that are generated by `orexis-mqtt <world>` from that
+world's own wiring, so it must run before that world's broker will start.
 
 `infra/mosquitto/Containerfile` is Debian + the stock `mosquitto` package. It is built rather
 than pulled so the version is pinned — an upgrade should be a decision, not a side effect of
@@ -129,14 +136,14 @@ With the package removed, stop takes 1s and exits 0. `mosquitto-clients` is safe
 is not in it. Generated files are still mounted directly in `/etc/mosquitto` rather than a
 subdirectory, which costs nothing and keeps the layout working if a profile ever returns.
 
-Install `mosquitto-clients` on the host for `mosquitto_sub`/`mosquitto_pub` — the broker itself
-is a container:
+Install `mosquitto-clients` on the host for `mosquitto_sub`/`mosquitto_pub` — every broker
+itself is a container:
 
 ```bash
 sudo apt install -y mosquitto-clients
 ```
 
-If a **host** mosquitto is running from an earlier setup, disable it or it holds `:1883`:
+If a **host** mosquitto is running from an earlier setup, disable it:
 `sudo systemctl disable --now mosquitto`.
 
 ## 2. App
@@ -151,12 +158,17 @@ pip install -e .
 One-time setup, in order:
 
 ```bash
-orexis-keygen society   # that world's host + clearing signing keys, once
-orexis-validate society # build the world from its files and check it
+orexis-keygen simulation    # that world's host + clearing signing keys, once
+orexis-validate simulation  # build the world from its files and hold it to every shape
 ```
 
-[`world/`](world/) holds one directory per ratified world, each complete on its own:
-`society` is the full example, `sensing` is the smallest one that produces a working agent.
+**There is no default world.** Every command takes one as a required argument and refuses rather
+than guessing, because a fallback puts a misconfigured agent on the same topics as the real one.
+
+[`world/`](world/) holds one directory per ratified world, each complete on its own. Three ship:
+`simulation` is the full society — plants, a supplier, a barrel market, valves and a meddler who
+waters pots unasked; `loner` is a gardener alone with a water butt and no market at all; `sensing`
+is the smallest one that produces a working agent, and the one that runs against a real board.
 [`domain/world`](knowledge/domain/world.md) is the guide to authoring your own — what a world
 is made of, what you state versus what gets derived, and how to check it.
 
@@ -170,16 +182,16 @@ from that wiring, and writes its **private beliefs** once if it has none. `orexi
 the same thing without running anything, and prints what it derived:
 
 ```
-derived fern      -> Bidding, Subscribing
-derived supplier  -> Hosting, Actuation
+fern       Linking, Subscribing, Reckoning, Storing, Bidding
+supplier   Linking, Listening, Storing, Bidding, PayAsBid, Hosting, Actuation
 ```
 
 Then bring the society up. **Agents are not launched from a list — they are born from the
 world**, one process each:
 
 ```bash
-orexis-onboard society                                  # credentials, ACL and the compose file FROM the world
-cd world/society && podman compose up -d
+orexis-onboard simulation                # credentials, ACL and the compose file FROM the world
+cd world/simulation && podman compose up -d
 ```
 
 ```
@@ -190,7 +202,8 @@ born  tomato     Bidding, Subscribing
 ```
 
 The roster is the ratified world, so a different world brings up a different society with no
-edit anywhere — `orexis-onboard sensing` yields exactly one agent that only watches.
+edit anywhere — `orexis-onboard sensing` yields exactly one agent that only watches, and
+`orexis-onboard loner` a single gardener that owns both ends of its own problem.
 `OREXIS_AGENT_ID=fern orexis-agent` is still the primitive underneath; the container merely sets
 that variable.
 
@@ -208,7 +221,7 @@ Each agent boots from its id alone: it reads the world (*what am I wired to, and
 that let me do?*), then its own beliefs (*what do I want, how closely should I watch?*), and
 runs exactly the modules its capabilities name. A round is a conversation — a plant announces
 its own verdict, the host offers, bidders answer with numbers only they can compute, clearing
-validates, claims come back. Deterministic, no LLM. (For a closed loop where wins actually
+validates, claims come back, and the winner's own valve opens. Deterministic, no LLM.
 
 A bidder **looks before it bids** and sits out the round if its sensor does not answer in
 time, or if the newest reading is older than its own `sensing:maxReadingAgeS`. Owning the cadence
@@ -220,57 +233,62 @@ For unattended operation see [`runbooks/run-a-world`](knowledge/runbooks/run-a-w
 
 ## Running without hardware
 
-Not by running a simulator beside the agents — there isn't one any more, and there was no good
-place to put it. A program pretending to be hardware had to be told which subjects to pretend
-to be, and getting that wrong put two publishers on one topic with both readings ingested.
+**A simulation is a world**, not a flag or a mode. `world/simulation` and `world/loner` need no
+board at all: what stands in for one is a container the compose generator writes, told by the
+world which subject it is pretending to be — so nothing is passed a flag, and a world cannot
+disagree with how it is actually running.
 
-**A simulation is a world.** The model already says what every device is and how it is driven;
-a device that is simulated is a *kind of device*, so an agent derives a simulated capability
-from it exactly as it derives any other. Nothing is toggled, nothing is passed a flag, and a
-world cannot disagree with how it is actually running.
+**The agent cannot tell.** A stand-in publishes on the same topics, speaks the same protocol and
+is reached through the same credential, so the mark that says a thing is stood in for
+(`sim:simulatedBy`) sits on the SYSTEM and never on the agent. An agent that could tell would be
+a second code path, and a second code path is what a simulation exists to avoid.
 
-**That world does not exist yet** — the capability and its binding are unbuilt, so today the
-society needs real boards. See [`domain/world`](knowledge/domain/world.md) §Simulation.
+A simulated world lives fast: `sim:timeScale 24` makes one bench hour a simulated day, so an
+hour shows a day's drying, a day's bidding and a day's watering. The agents are deliberately not
+told — they act in real time against a world that happens to age quickly. See
+[`a-stand-in-is-not-a-device`](knowledge/decisions/a-stand-in-is-not-a-device.md).
 
 ## 4. Inspect
 
-- **Grafana dashboard** — http://localhost:3000/d/orexis-moisture (or `http://<pi-ip>:3000/...`
-  from another machine). No login (anonymous Viewer enabled); auto-refreshes every 5s.
-  Shows current moisture per plant (colored by band) and a moisture-over-time chart. The
-  dashboard and datasource are **provisioned** from `infra/grafana/` — recreating Grafana
-  restores them, nothing lives only in the container.
-- **Sensed measurement (what agents cite)** — lives inside each agent and cannot be queried
-  from outside; that is the isolation. `:sensed` holds the *number* and
-  the time it was taken, never a band — "is it LOW?" is each agent's own call, and "is it
-  still true?" is the freshness gate's. Query endpoint on this image is `/ds/sparql` (not
-  `/ds/query`); updates go to `/ds/update`:
+- **Grafana** — https://localhost:3000, a folder per world, generated by `orexis-dashboards`
+  from what that world's agents actually observe. It **requires a login** and serves HTTPS with
+  the installation CA's certificate, so your browser will warn until you trust
+  `infra/secrets/ca.crt`. Datasource and dashboards are provisioned from `infra/grafana/` —
+  recreating Grafana restores them, and nothing lives only in the container.
+- **The wire** — `mosquitto_sub -t '#' -v -p <that world's port>`, which is the one place a
+  society is visible from outside without asking anybody.
+- **An agent's own mind** — `orexis-ask`, the sovereign's single question to a RUNNING agent
+  over its world's bus. There is no shared store to query and no endpoint to point a browser
+  at: a belief base is a file in its owner's volume, and this is disclosure rather than access,
+  read-only by construction.
 
   ```bash
-  curl -s http://localhost:3030/ds/sparql \
-    --data-urlencode 'query=PREFIX sosa:<http://www.w3.org/ns/sosa/>
-      SELECT ?plant ?value WHERE {
-        GRAPH <http://example.org/orexis/graph/sensed> {
-          ?o sosa:hasFeatureOfInterest ?plant ; sosa:hasSimpleResult ?value }
-      }' \
-    -H 'Accept: text/csv'
+  orexis-ask simulation fern beliefs \
+    'SELECT ?p ?v WHERE { ?s <http://www.w3.org/ns/sosa/hasSimpleResult> ?v ;
+                             <http://www.w3.org/ns/sosa/observedProperty> ?p }'
   ```
+
+  The modality is required — `beliefs` or `desires` — as the world is, because there is no
+  default for either. See
+  [`the-sovereign-may-ask`](knowledge/decisions/the-sovereign-may-ask.md).
 
 ## Bringing a real board up
 
-Seed the **smallest world** instead of the society. `world/sensing` has one subject, one
+Seed the **smallest world**. `world/sensing` has one subject, one
 board and one agent, plumbed into no market — so derivation gives that agent `sensing:Subscribing`
 and nothing else. It reads, records, and stops. Nothing in that world declares it sensor-only;
 there is simply no market for a market capability to come from.
 
 ```bash
-orexis-onboard sensing                                 # one agent, sensing only
+orexis-firmware sensing                # that board's config.h, from the world it belongs to
+orexis-onboard sensing                 # one agent, sensing only
 cd world/sensing && podman compose up -d
-mosquitto_sub -t 'sensors/#' -v      # or just watch the wire
+mosquitto_sub -t 'sensors/#' -v -p 1884       # or just watch the wire
 ```
 
-The device ids and channels are identical in both worlds on purpose, so **the board needs no
-reflash**: seed `society` and the very same hardware joins a market. The model changed, not
-the firmware.
+`sensing` and `simulation` model the same probe identically — same id, same channels — so moving
+a board between them is a credential swap and a reflash and **nothing else**: it is not
+re-modelled, re-identified or re-granted. The model changed, not the firmware.
 
 A scheduled board is asleep almost all the time, so silence usually means it is working —
 wait one interval. The interval is retained and therefore reliable; `{"sense":true}` is
@@ -304,7 +322,7 @@ The ESP32 firmware is `sensing:ScheduledProcedure`. Change the firmware, edit `s
 agent, and the capability changes with it — the agent is never edited.
 
 The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
-([`world/<name>/beliefs/<agent>.ttl`](genesis/)); the wiring and the valve calibration are the
+(`world/<name>/beliefs/<agent>.ttl`); the wiring and the valve calibration are the
 world's ([`world/`](world/)). Edit the files and restart the agent — no reflash.
 The one thing firmware *does* enforce is the constitutional cadence clamp
 (`MIN_SLEEP_S`/`MAX_SLEEP_S` in `config.h`) — a buggy agent must not be able to talk a board
@@ -312,37 +330,49 @@ into sleeping through a drought.
 
 ## Tests
 
-The market layer (`clearing`, `auction`) is pure (no infra, no LLM), so it's fully unit-tested:
+**Two gates, and both must pass before a change is done.**
 
 ```bash
 pip install -e ".[dev]"
-pytest -q
+pytest -q                    # BOTH roots: tests/ and any a package carries
+orexis-validate simulation   # and every other world you have
+lint-imports                 # the layering: onboarding may import agent, never the reverse
 ```
 
-Validate the live belief base against every package's `shapes.ttl`. The checks
-are **capability-aware**: a rule applies to an agent only if the world derived that capability
-for it. So the supplier is never asked for a cadence, a polling agent must have one, and a
-listening agent must *not* — plus the usual: a band whose floor is below its ceiling, a
-cadence that watches more closely when thirsty, nobody sleeping past the constitutional
-ceiling, and every device stating where it is reachable.
+`orexis-validate` holds a world to every package's `shapes.ttl`, and the checks are
+**capability-aware**: a rule applies to an agent only if the world derived that capability for
+it. So the supplier is never asked for a cadence, a subscribing agent must have one, and a
+listening agent must *not* — plus the usual: a band whose floor is below its ceiling, a cadence
+that watches more closely when thirsty, nobody sleeping past the constitutional ceiling, and
+every device stating where it is reachable.
+
+A third thing, run deliberately and **not** part of the two:
 
 ```bash
-orexis-validate         # every package's shapes over :world + :beliefs/* + :sensed
+pytest infra -q -n0          # -n0 is REQUIRED: these rewrite one acl.conf in place
 ```
+
+`infra/tests/` is a contract with mosquitto and InfluxDB rather than with this code — that a
+revoked grant stops delivery to an already-connected client, that a rotated credential is refused
+at once, that one agent's token cannot reach another's bucket. None of that is guaranteed by MQTT
+or computed by anything here, so it is worth re-proving whenever those two change.
 
 ## What's next
 
-Built: belief base ✓ (modular T-Box + `:world` + `:beliefs/<agent>` + `:sensed`,
-typed/versioned/SHACL-clean, and the only source of configuration), capability modules ✓
-(vocabulary + rules + derivation + code, with abilities derived from hardware), one process
-per agent ✓, the distributed round ✓, `sensing` ✓
-(agent-driven: the agent sets the cadence and bids only on a fresh reading), `agent` ✓
-(deterministic bids from live `:sensed`), `auction` ✓, `clearing` ✓ (validator + grant),
-`executor` ✓ (grant → bounded valve command, `jti` single-use), and firmware for both edges
-(moisture sensor, guarded pump/valve). The loop closes: **sensor-in → water-out**.
+**The loop closes: sensor-in → water-out.** A plant reads its own soil, decides for itself that
+it is short, bids a number nobody else can compute, and the winner's valve opens — deterministic,
+no model in the path.
 
-Next: the **LLM stance** layer (justification/coalition on top of the deterministic number —
-the leash), wallet debiting + metabolic cost — which is also what makes *sensing* a priced
-action, the one part of agent-driven sensing still missing — and the constitution as SHACL
-over the trade.
-See [`knowledge/decisions/roadmap.md`](knowledge/decisions/roadmap.md).
+Built since that sentence was first written, and worth knowing before you read the code: a
+**desire is a SHACL shape** and its force is a severity, so pursuing is validating; an
+**intention is the head of a plan committed to**, re-derived every pass because the world moves;
+**deliberation searches possible worlds** as graph diffs; an agent given room to move
+**re-picks its own settings** on its own clock; a **round is a fact** on both sides, so buying
+has a real precondition; and the market is one package among several, replaceable, reached only
+through T-Box terms.
+
+Next: the **LLM stance** layer — justification and coalition on top of the deterministic number,
+on a leash — wallet debiting and metabolic cost, which is also what makes *sensing* a priced
+action, and the constitution as SHACL over the trade. Direction lives in
+[`roadmap`](knowledge/decisions/roadmap.md); what is known to be wrong lives in the issue
+tracker, and what was deliberately left open lives in each record's *seams* section.
