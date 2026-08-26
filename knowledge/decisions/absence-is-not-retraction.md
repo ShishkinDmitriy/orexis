@@ -68,11 +68,13 @@ background refresh.
   treats it specially: it arrives as an ordinary reading with the instant it was published. A
   reconnect is therefore the one moment a buf-shaped diff would be possible, and we do not take
   it.
-- **The round sweep runs on one agent's one event.** `sweep_expired` is called when an offer
-  arrives, which is the event a bidder always gets — so an agent that stops bidding keeps rows
-  a filter hides but nothing removes. Correctness holds (`is_open` decides every read); the
-  belief base's flat-triple guarantee is what slips. Filed as
-  [#398](https://github.com/ShishkinDmitriy/orexis/issues/398).
+- ~~**The round sweep runs on one agent's one event.**~~ Closed (#398). Retracting what the
+  clock has ended is a choir hook, `ag:sweep`, asked on the agent's own housekeeping tick —
+  the one clock every agent has, because keeping your own house is not a capability. The
+  kernel asks and never sweeps: which fact expires, and which of the three treatments it
+  deserves, stays with its owner. What the tick guarantees is BOUNDEDNESS rather than
+  promptness — it is hourly, and a bidder still sweeps on an offer because a round beginning
+  with yesterday's rows standing reads oddly in a trace.
 - **No belief carries its own validity in the kernel's words.** `ag:notAfter` exists for an
   ACT, and the same shape would fit a fact; nothing needs it yet, and inventing it before a
   third treatment appears would be the generalisation this record refuses.

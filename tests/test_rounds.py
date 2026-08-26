@@ -113,6 +113,30 @@ def test_a_round_that_closed_before_the_look_came_back_is_let_go(make):
     assert rounds.rounds_of(fern) == []
 
 
+def test_the_housekeeping_clock_retracts_what_the_round_clock_ended(make):
+    """A bidder is never told a round closed, so the row goes by its own `closesAt` — and what
+    GUARANTEES it goes is the agent's own housekeeping tick, not an offer it may stop receiving
+    (#398). An agent that stops bidding used to keep every row it had last heard: invisible to
+    every read, because `is_open` filters, and visible on the one line that watches for exactly
+    this — a belief base that grows with what an agent has done.
+    """
+    fern = make("fern")
+    market = market_of(fern)
+
+    #  Measured with nothing else in flight: an agent that has just been told an offer holds a
+    #  ledger row too, and this is about the ROUND rows.
+    held = len(fern.beliefs)
+    rounds.open_round(fern, market.uri, "r10", 2.0, 0.4,
+                      datetime.now(timezone.utc) - timedelta(seconds=1))
+    assert rounds.rounds_of(fern), "held, though already closed — nothing has swept yet"
+    assert len(fern.beliefs) > held, "the round is a fact, and facts are held"
+
+    gone = fern.upkeep.sweep()
+    assert gone == 1
+    assert rounds.rounds_of(fern) == []
+    assert len(fern.beliefs) == held, "and the belief base is where it started"
+
+
 # --- the sovereign can ask ---------------------------------------------------------------------
 
 

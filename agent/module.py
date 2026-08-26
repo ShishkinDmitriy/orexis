@@ -17,7 +17,7 @@ See knowledge/decisions/capability-packages.md.
 from __future__ import annotations
 
 from .ontology import (BELIEF_REVISED, DESIRES, DESIRE_URGENCY, NOTICES, QUIET, REPORTS,
-                       SEND, SERIES, SIZE, TAKE)
+                       SEND, SERIES, SIZE, SWEEP, TAKE)
 
 from datetime import datetime
 
@@ -207,6 +207,21 @@ class Module:
         condition the original test missed.
         """
         return []
+
+    @hook(SWEEP)
+    def sweep(self) -> int:
+        """The clock has moved — retract what you hold that has stopped being true by it.
+
+        Asked on the agent's own housekeeping tick, so a fact that expires by the clock never
+        waits for an event this agent may stop receiving: a bidder that stops bidding keeps no
+        round rows, and a belief base holds a fixed number of nodes however long it runs.
+
+        WHICH TREATMENT a fact deserves is the owner's, and there are three
+        (absence-is-not-retraction): retract it, keep it and mark it, or keep it and let a want
+        go cold. This hook is for the first — a module that keeps nothing by the clock answers
+        nothing. Returns how many rows went, for the log.
+        """
+        return 0
 
     @hook(QUIET)
     def quiet(self) -> list[str]:

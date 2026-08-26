@@ -43,6 +43,7 @@ method, and sensing says what it is asked with and how the answers merge
 | `urgency` | how close does this reading put you to your own trouble? | max of the answers (sensing's) |
 | `bounds` | where do you want this property held? | intersection — highest floor, lowest ceiling (sensing's) |
 | `on_reading_recorded` | something new is known — told, not asked | every listener (sensing's) |
+| `sweep` | the clock has moved — retract what it has ended | asked on the agent's own housekeeping tick; only the owner of a fact knows which treatment it deserves |
 | `desires` | what do you contribute to what the agent pursues? | ranked together by `agent.pursuing()`, one want per node |
 | `desire_urgency` | how urgent is this want, in this world? | first opinion |
 | `size` | how big would the act this row commits to be? | the taker's answer |
