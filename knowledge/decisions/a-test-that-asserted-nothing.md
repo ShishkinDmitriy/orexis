@@ -6,6 +6,23 @@ status: accepted
 timestamp: 2026-08-12T00:00:00Z
 ---
 
+# What it does not catch, and one of those has now happened
+
+Two blind spots were recorded when this landed: **a parametrisation that generated zero cases**,
+and **a glob that still matches but no longer covers what it is named for**. The second arrived in
+a third shape — not a glob that emptied, but a hand-written roster that stopped growing.
+
+`test_provenance.py` and `test_isolation.py` each opened `WORLDS = ["simulation", "sensing"]`,
+written on 2026-08-09 and 2026-08-07. `world/loner` was ratified on 2026-08-18 and received **none
+of the eleven parametrised tests** between those two files, for as long as it had existed. Every
+assertion ran, every test was green, and one shipped world was simply not among the subjects.
+
+`test_shapes.py` had the answer in its own docstring the whole time — *found by looking, never
+listed*. The roster is `conftest.shipped_worlds()` now, and all three files read it; each of the
+two carries `assert len(WORLDS) > 2`, so a roster that SHRINKS fails where a roster that failed to
+grow could not. Measured after the change: `loner` passes all eleven, which is luck rather than
+evidence — nine days of silence is what this is about.
+
 # The failure
 
 An empty result set is not an error. A loop over one runs its body zero times, so every assertion

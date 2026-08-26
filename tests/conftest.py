@@ -27,6 +27,23 @@ REPO_ROOT = loader.REPO_ROOT
 WORLDS_ROOT = REPO_ROOT / "world"
 GENESIS_DIR = WORLDS_ROOT / "simulation"   # the world most tests are about
 
+
+def shipped_worlds() -> list[str]:
+    """Every ratified world, FOUND BY LOOKING — the one roster, so a new one is covered at once.
+
+    `test_shapes.py` already said this in its own words — *found by looking, never listed* — and
+    two files did not follow: `test_provenance.py` and `test_isolation.py` each hard-coded
+    `["simulation", "sensing"]`, written on 2026-08-09 and 2026-08-07. `world/loner` arrived on
+    2026-08-18 and got none of the eleven parametrised tests between them, for as long as it has
+    existed. It passes all eleven; that is luck, and the nine days were silent.
+
+    A directory with no world files is not a world, which is what keeps a stray `world/society/`
+    holding nothing but an orphaned `secrets/` out of the roster without anybody listing it.
+    """
+    from agent import genesis
+
+    return sorted(d.name for d in WORLDS_ROOT.iterdir() if genesis.world_files(d))
+
 # The property the water domain is about, spelled out because a reading is now keyed by it.
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
 # Two more, for the tests that are about a subject with more than one property. HUMIDITY is

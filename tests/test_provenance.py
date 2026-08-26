@@ -27,8 +27,12 @@ from agent.ontology import (AG, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH, PROVENA
                             WORLD_GRAPH)
 from agent.store import Store, bindings
 from agent.validate import conforms, graph_from
+from conftest import shipped_worlds
 
-WORLDS = ["simulation", "sensing"]
+#  Found by looking, never listed (`conftest.shipped_worlds`): this was a hand-written
+#  pair that stopped growing the day `world/loner` landed.
+WORLDS = shipped_worlds()
+assert len(WORLDS) > 2, "the world roster shrank — a test that runs for no world passes"
 
 
 def _public(world: str) -> Store:
