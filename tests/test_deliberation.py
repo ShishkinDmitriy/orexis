@@ -197,7 +197,14 @@ def test_silencing_the_deliberator_silences_the_bidder(make, monkeypatch):
 def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     """The other whether: with no fresh reading, the reflex says look — and a member that said
     otherwise (a model judging the last reading close enough to certain) is obeyed, not
-    second-guessed. The bidder neither senses nor waits; the round simply passes."""
+    second-guessed. The bidder neither senses nor bids; the round simply passes.
+
+    WHEN it passes moved with #392. The offer marks the want and returns — a handler does not
+    wait on a search — so the bidder finds out that nothing was proposed at the round's CLOSE
+    rather than at once, which is also the more honest moment: a reading arriving mid-round
+    could have changed the answer. What the silence still buys is the whole of it: nothing
+    committed, nothing sensed, nothing bid.
+    """
     fern = make("fern")  # no reading at all
     market = market_of(fern)
     #  Both doors: "silenced" means it answers nothing whatever it is asked. Patching only
@@ -208,10 +215,15 @@ def test_the_deliberator_choosing_not_to_look_is_honoured(make, monkeypatch):
     monkeypatch.setattr(decider_of(fern), "propose_for", lambda desire: None)
     monkeypatch.setattr(decider_of(fern), "decide", lambda desire: None)
     fern.deliver(market.offer_topic, {"auction_id": "r1", "closes_in_s": 30})
-    assert fern.bidding().pending is None
-    # and no observe intention was adopted — nothing committed to a wait nobody is waiting on
+    # nothing was committed to — no observe intention, no acquire, nothing to wait on
     keeper = next(m for m in fern.modules if m.name == "intention")
     assert keeper.standing() == []
+    #  The nudge is not the deliberator's: `on_offer` asks its board to look whenever a round
+    #  opens, silenced or not. What the silence buys is that no BID went out.
+    assert not fern.sent.to(f"{market.bid_topic}/{fern.id}"), "silenced, and it bid anyway"
+    # and the round passes when it closes, which is the give-up the offer's own window set
+    fern.bidding().give_up()
+    assert fern.bidding().pending is None
 
 
 def test_the_round_runs_exactly_as_it_always_did(make):

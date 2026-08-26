@@ -86,18 +86,34 @@ on anything.
   satisfied-and-`endMet` false is the false-knowledge signature
   ([an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md)).
 
-# What this makes wrong, and it is wrong today
+# What this made wrong, and what fixed it
 
-**A search runs on the transport's network thread.** A reading arrives, sensing writes it and
-tells the choir, and actuation's and bidding's `on_reading_recorded` call
-`execution.pursue_for`, which calls `decide`, which searches — all inside `handle`, on the
-callback thread. That is deliberation in the reactive row: it blocks every other message for the
-length of a pass, and a slow deliberator (a model, later) would stall the bus. Every reactive
-caller goes through `revision.wake` now, so the fix is one file; a STRICT xfail in
-`tests/test_hooks.py` fails the day it lands. Filed as
-[#392](https://github.com/ShishkinDmitriy/orexis/issues/392) rather than fixed here, because
-the fix is a design choice — a queue the deliberator drains on its own clock, or a marker the
-belief base's revision function sets — and this record is what makes it visible.
+**A search ran on the transport's network thread.** A reading arrived, sensing wrote it and
+told the choir, and actuation's and bidding's `on_reading_recorded` called through to `decide`,
+which searched — all inside `handle`, on the callback thread. That was deliberation in the
+reactive row: it blocked every other message for the length of a pass, and a slow deliberator
+(a model, later) would have stalled the bus.
+
+**Fixed (#392).** `revision.wake` MARKS the want and returns; `Revision` drains the marks on a
+thread of the mind's own, started with the agent and stopped with it. Three consequences worth
+knowing, because each is the rule showing its teeth:
+
+- **A handler cannot learn what the search decided**, and two callers had been reading it. The
+  bidder found out at once that nothing was proposed; it finds out at the round's close now,
+  through the give-up it already kept — the more honest moment, since a reading arriving
+  mid-round can change the answer. The host logged *stands unserved* on a presentation nothing
+  pursued; the claim simply stays held, which is what happened anyway, and the ledger is the
+  evidence rather than a log line.
+- **The window moved to where the act is taken.** `on_offer` used to write the bid's
+  `ag:notAfter` onto the intention it had just adopted; the actor writes it in `take`, from the
+  round row it reads there — which is where the act record said it belonged.
+- **The keeper's tick still searches synchronously**, deliberately: it is the mind's own clock
+  rather than a callback, so marking there would only queue work for the thread already
+  running it.
+
+**Marks are deduplicated by want**, which is the beginning of the filter this record asks for:
+ten readings between two passes leave one mark. What is still absent is the judgement — *did
+this change anything a plan could branch on* — and that belongs in the same file.
 
 # Seams left open
 

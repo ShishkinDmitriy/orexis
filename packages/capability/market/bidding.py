@@ -439,24 +439,17 @@ class BiddingModule(Module):
         #  sensing's word and sensing's act; waiting for it is `pending`, the bidder's own.
         from agent import execution, revision
 
-        want = self._want()
-        intention = revision.wake(self.agent, want.uri) if want is not None else None
-        if intention is None:
-            self.log.info("auction %s: deliberation chose not to look — sitting out",
-                          auction_id)
-            self.pending = None
-            return
+        #  MARKED, not asked (#392): what the search decides is not this handler's to wait
+        #  for. If it proposes nothing, the give-up below says so — at the round's close
+        #  rather than at once, which is also the more honest moment: a reading arriving
+        #  mid-round can change the answer.
+        if (want := self._want()) is not None:
+            revision.wake(self.agent, want.uri)
 
-        #  THE WINDOW IS THE ACT'S: a bid not after the round closes. Written onto the act the
-        #  intention names, and the give-up timer READS it back rather than keeping a clock
-        #  of its own (an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan).
+        #  THE WINDOW IS THE ACT'S — a bid not after the round closes — and the ACTOR writes
+        #  it when it takes the act, from the round row it reads there. What stays here is the
+        #  give-up: the close the offer itself states.
         window = float(offer.get("closes_in_s") or 0) or 1.0
-        if (keeper := self._keeper()) is not None:
-            keeper.window(intention, datetime.now(timezone.utc) + timedelta(seconds=window))
-            standing = next((s for s in keeper.standing(want=want.uri) if s.uri == intention), None)
-            if standing is not None and standing.act.not_after is not None:
-                window = max(0.1, (standing.act.not_after
-                                   - datetime.now(timezone.utc)).total_seconds())
         self._deadline = Timer(window, self.give_up)
         self._deadline.start()
 
@@ -587,6 +580,11 @@ class BiddingModule(Module):
         open_ = [r for r in rounds.rounds_of(self.agent, act.via) if r.is_open()]
         if not open_:
             return False
+        #  THE WINDOW IS THE ACT'S, written where the act is TAKEN: a bid is worth nothing
+        #  after the round closes, and the round row says when that is. It moved here from
+        #  `on_offer` with #392, which no longer learns which intention was adopted.
+        if (keeper := self._keeper()) is not None:
+            keeper.window(intention, open_[0].closes_at)
         sensing = self.agent.provider(SENSING)
         reading = (sensing.fresh_reading(self.me.acts_for, self.about)
                    if sensing is not None else None)

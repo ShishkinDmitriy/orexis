@@ -873,9 +873,13 @@ def test_a_duty_no_move_answers_stays_hot_until_the_answer_changes(host, caplog)
 
     with caplog.at_level(logging.WARNING):
         host.deliver(f"{market_of(host).redeem_topic}/fern", {"jti": jti, "sub": "fern"})
-    assert "stands unserved" in caplog.text
+    #  The claim is the evidence, and the ledger is where it stands — not a log line. The
+    #  bespoke "stands unserved" warning went with #392: a presentation marks the want and
+    #  returns, so the handler no longer learns what the search made of it. What it asserted
+    #  is asserted here directly, and more strongly.
     assert ledger_of(host).owed(), "undischarged: nothing went out"
     assert jti in host.hosting().held, "and still held, because it is still owed"
+    assert not any("dose" in t for t in host.sent.topics()), "and no valve was opened"
 
     deliberator.decide = real
     stock_reading(host, 4.0)
