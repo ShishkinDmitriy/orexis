@@ -36,6 +36,7 @@ import time
 
 from .metrics import tree_bytes
 from .module import Timer
+from .ontology import SWEEP
 from .store import bindings
 
 log = logging.getLogger("upkeep")
@@ -118,8 +119,22 @@ class BeliefBaseUpkeep:
         self._timer = Timer(EVERY_S, self._tick)
         self._timer.start()
 
+    def sweep(self) -> int:
+        """Ask every module to retract what the clock has ended. Returns how many rows went.
+
+        HERE because keeping your own house is not a capability and this is the clock that
+        proves it: a fact that expires by the clock must not depend on an event some agent may
+        stop receiving. The kernel asks and never sweeps — which fact expires, and what its
+        expiry means, is the owner's (absence-is-not-retraction).
+        """
+        gone = sum(self.agent.ask(SWEEP))
+        if gone:
+            log.info("%s: %d row(s) the clock had ended were retracted", self.agent.id, gone)
+        return gone
+
     def _tick(self) -> None:
         try:
+            self.sweep()
             self.consider()
         except Exception as exc:
             # Upkeep failing is a reason to say so, not a reason to stop being an agent — and a

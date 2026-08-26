@@ -60,6 +60,9 @@ ag:take a ag:Hook ; ag:row ag:Progression ; rdfs:label "take" ; rdfs:comment "Ca
 ag:reports a ag:Hook ; ag:row ag:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
 ag:series a ag:Hook ; ag:row ag:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
 ag:notices a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "notices" ; rdfs:comment "Which (subject, property) pairs are unknown or too stale to act on? Concatenated for the deliberator." .
+ag:sweep a ag:Hook ; ag:row ag:Progression ; rdfs:label "sweep" ;
+    rdfs:comment "The clock has moved: retract whatever you hold that has stopped being true by it. Asked of every module on the agent's own housekeeping tick, because a fact that expires by the clock must not wait for an event some agent may stop receiving. Only the OWNER of a fact knows which treatment it deserves — retract it, keep and mark it, or keep it and let a want go cold (absence-is-not-retraction) — so the kernel asks and never sweeps." .
+
 ag:quiet a ag:Hook ; ag:row ag:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
 ag:beliefRevised a ag:Hook ; ag:row ag:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
 ag:subscriptions a ag:Hook ; ag:row ag:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .

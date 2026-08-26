@@ -35,7 +35,7 @@ from datetime import datetime, timedelta, timezone
 from agent import signing
 from .trade import EPS, Bid
 from agent.module import Module, Timer, hook
-from agent.ontology import HANDLE, SUBSCRIPTIONS
+from agent.ontology import HANDLE, SUBSCRIPTIONS, SWEEP
 
 SENSING_URGENCY = "http://example.org/orexis/sensing#urgency"       # sensing's hook, spelled as every cross-package reference is
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"
@@ -344,6 +344,12 @@ class BiddingModule(Module):
         if self._present_deadline:
             self._present_deadline.stop()
 
+    @hook(SWEEP)
+    def sweep(self) -> int:
+        """Rounds the clock has closed. A bidder is never told a round ended — it gets a claim
+        or nothing — so the row goes by its own `closesAt` and nothing else (#398)."""
+        return rounds.sweep_expired(self.agent)
+
     @hook(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
         topics = []
@@ -386,9 +392,10 @@ class BiddingModule(Module):
             return
 
         self.pending = {"auction_id": auction_id, "market": market}
-        #  THE ROUND AS A FACT, in my own graph: what I was told. A bidder is never told a
-        #  round closed — it gets a claim or nothing — so the clock ends the row, and the
-        #  ones already past their close are swept here, on the one event that always comes.
+        #  Swept here too, and only as an optimisation: an offer is the event a bidder
+        #  usually gets, and starting a round with yesterday's rows still standing would read
+        #  oddly in a trace. What GUARANTEES they go is the housekeeping tick's `sweep` —
+        #  an agent that stops bidding stops getting this event (#398).
         rounds.sweep_expired(self.agent)
         #  AN ACQUIRING FROM A ROUND THAT ENDED WITHOUT A CLAIM is a commitment the world
         #  answered by silence — I lost, and nobody tells a loser. The row is gone by the
