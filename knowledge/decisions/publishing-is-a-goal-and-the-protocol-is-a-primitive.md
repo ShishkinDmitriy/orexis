@@ -55,8 +55,8 @@ mechanic as every other action, in the package that owns the words
 # Where the instinct actually pays: the outbox
 
 Not in the protocol — in **the outbox as an intention**. A pending outbound message is a
-commitment with a deadline, survivable across a reconnect, and — the property no transport queue
-can give — **droppable when the want that motivated it is dropped**. When a plant loses the
+commitment with a deadline, survivable across a reconnect, and — the one thing no transport
+queue can give — **droppable when the want that motivated it is dropped**. When a plant loses the
 round, its unsent bid should be retracted, not eventually delivered. A retry queue faithfully
 delivers a message the agent no longer means.
 
@@ -84,9 +84,9 @@ that cannot tell a lost bid from a losing one.
 
 # Order of work
 
-1. The outbox (#396, landed) — **and not as a new action**. The property wanted was that a
-   message the agent may stop meaning is never handed to a queue, and the act that carries the
-   message already had every part of it: an [intention](/domain/intention.md) that stands, a
+1. The outbox (#396, landed) — **and not as a new action**. What it was wanted FOR is one
+   guarantee — a message the agent may stop meaning is never handed to a queue — and the act
+   that carries the message already had every part of it: an [intention](/domain/intention.md) that stands, a
    window, and an [actor](/domain/actor.md) whose False means *not now*. So `ag:send` answers
    whether the message LEFT, a message that states when it stops mattering is refused rather
    than queued while the link is down, and the Acquire stands until the round's close drops it.
