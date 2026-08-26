@@ -4,6 +4,7 @@
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix assembly: <http://example.org/orexis/assembly#> .
 
 <http://example.org/orexis/core> a owl:Ontology ;
     rdfs:label "Orexis core" ;
@@ -46,28 +47,44 @@ ag:Progression a ag:Row ; rdfs:label "progression" ;
 ag:Deliberative a ag:Row ; rdfs:label "deliberative" ;
     rdfs:comment "The search: bounded, ranked by simulation, and the only row a model may be asked in. Should be interruptible; today a pass runs to completion, which bounded depth is what makes affordable." .
 
-ag:row a owl:ObjectProperty ; rdfs:domain ag:Hook ; rdfs:range ag:Row ;
+ag:row a owl:ObjectProperty ; rdfs:domain assembly:Extension ; rdfs:range ag:Row ;
     rdfs:label "row" ;
     rdfs:comment "Which cognitive layer answering this hook belongs to. Every hook declares one, and `tests/test_hooks.py` holds them to it." .
 
-ag:Hook a owl:Class ; rdfs:label "Hook" ;
-    rdfs:comment "A question the choir is asked, or an event it is told, named as a term. Whoever defines an answer is asked; the asker merges the answers by its own rule. Declared by whoever owns the question: the kernel for wants, acts and the account; a package for anything in its own words." .
+#  `ag:Hook` WAS HERE and is `assembly:Extension` — the mechanism by which anything reaches
+#  anything is not the mind's, and the kernel keeps only the points it OWNS
+#  (the-assembly-is-not-the-mind). `ag:Row` below stays: which cognitive row ANSWERING belongs
+#  to is a fact about this project's layering, and an assembly-time point has none.
 
-ag:desires a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
-ag:desireUrgency a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
-ag:size a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
-ag:take a ag:Hook ; ag:row ag:Progression ; rdfs:label "take" ; rdfs:comment "Carry this committed act out, if you are the one who can. True if you did." .
-ag:reports a ag:Hook ; ag:row ag:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
-ag:series a ag:Hook ; ag:row ag:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
-ag:notices a ag:Hook ; ag:row ag:Deliberative ; rdfs:label "notices" ; rdfs:comment "Which (subject, property) pairs are unknown or too stale to act on? Concatenated for the deliberator." .
-ag:sweep a ag:Hook ; ag:row ag:Progression ; rdfs:label "sweep" ;
+
+ag:desires a assembly:Extension ;
+    assembly:signature "(now=…) -> list['Desire']" ; ag:row ag:Deliberative ; rdfs:label "desires" ; rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." .
+ag:desireUrgency a assembly:Extension ;
+    assembly:signature "(desire, query, state, value=…) -> float | None" ; ag:row ag:Deliberative ; rdfs:label "desire urgency" ; rdfs:comment "How urgent is this want, in this world? The sharpest answer wins; None is no opinion." .
+ag:size a assembly:Extension ;
+    assembly:signature "(query, graph, row) -> float | None" ; ag:row ag:Deliberative ; rdfs:label "size" ; rdfs:comment "How big would the act this row commits to be? Asked of the row's taker before it is simulated." .
+ag:take a assembly:Extension ;
+    assembly:signature "(act, desire, intention) -> bool" ; ag:row ag:Progression ; rdfs:label "take" ; rdfs:comment "Carry this committed act out, if you are the one who can. True if you did." .
+ag:reports a assembly:Extension ;
+    assembly:signature "() -> dict" ; ag:row ag:Reactive ; rdfs:label "reports" ; rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." .
+ag:series a assembly:Extension ;
+    assembly:signature "() -> list[tuple[str, dict, dict]]" ; ag:row ag:Reactive ; rdfs:label "series" ; rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." .
+ag:notices a assembly:Extension ;
+    assembly:signature "() -> list[tuple[str, str]]" ; ag:row ag:Deliberative ; rdfs:label "notices" ; rdfs:comment "Which (subject, property) pairs are unknown or too stale to act on? Concatenated for the deliberator." .
+ag:sweep a assembly:Extension ;
+    assembly:signature "() -> int" ; ag:row ag:Progression ; rdfs:label "sweep" ;
     rdfs:comment "The clock has moved: retract whatever you hold that has stopped being true by it. Asked of every module on the agent's own housekeeping tick, because a fact that expires by the clock must not wait for an event some agent may stop receiving. Only the OWNER of a fact knows which treatment it deserves — retract it, keep and mark it, or keep it and let a want go cold (absence-is-not-retraction) — so the kernel asks and never sweeps." .
 
-ag:quiet a ag:Hook ; ag:row ag:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
-ag:beliefRevised a ag:Hook ; ag:row ag:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
-ag:subscriptions a ag:Hook ; ag:row ag:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
-ag:handle a ag:Hook ; ag:row ag:Reactive ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
-ag:send a ag:Hook ; ag:row ag:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
+ag:quiet a assembly:Extension ;
+    assembly:signature "() -> list[str]" ; ag:row ag:Reactive ; rdfs:label "quiet" ; rdfs:comment "What did you expect to hear and have stopped hearing? Log lines, said once on entry and once on recovery." .
+ag:beliefRevised a assembly:Extension ;
+    assembly:signature "(belief_term, value) -> None" ; ag:row ag:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
+ag:subscriptions a assembly:Extension ;
+    assembly:signature "() -> list[str]" ; ag:row ag:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
+ag:handle a assembly:Extension ;
+    assembly:signature "(topic, payload) -> bool" ; ag:row ag:Reactive ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
+ag:send a assembly:Extension ;
+    assembly:signature "(channel, payload, retain=…, not_after=…) -> bool" ; ag:row ag:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
 
 ag:hasCapability a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Capability ;
     rdfs:label "has capability" ;

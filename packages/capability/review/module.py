@@ -63,7 +63,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from assembly import loader
-from agent.module import Module, hook
+from agent.module import Module, extends
 from agent.ontology import BELIEF_REVISED
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
@@ -154,7 +154,7 @@ class ReviewModule(Module):
 
     # --- what I fold in as it arrives ------------------------------------------------------
 
-    @hook(READING_RECORDED)
+    @extends(READING_RECORDED)
     def on_reading_recorded(self, subject_uri: str, observed_property: str,
                             value: float) -> None:
         """Keep the running account this module's own judgement is made from.

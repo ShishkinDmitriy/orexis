@@ -24,7 +24,7 @@ import json
 
 from agent import config
 from agent.metrics import tree_bytes
-from agent.module import Module, Timer, hook
+from agent.module import Module, Timer, extends
 from agent.ontology import HANDLE, REPORTS, SEND, SERIES, SUBSCRIPTIONS
 from agent.store import bindings
 
@@ -51,7 +51,7 @@ class StoringModule(Module):
     # questions are a person's, and a person who truly wants a million rows has the volume.
     ANSWER_ROWS = 1000
 
-    @hook(SUBSCRIPTIONS)
+    @extends(SUBSCRIPTIONS)
     def subscriptions(self) -> list[str]:
         # The sovereign's question channel (agent/sovereign.py) — the one topic an agent
         # listens on that the world does not state, because it is not the society's business:
@@ -60,7 +60,7 @@ class StoringModule(Module):
         # what you believe are one capability's two voices.
         return [sovereign.query_topic(self.agent.id)]
 
-    @hook(HANDLE)
+    @extends(HANDLE)
     def handle(self, topic: str, payload: bytes) -> bool:
         if topic != sovereign.query_topic(self.agent.id):
             return False
@@ -152,7 +152,7 @@ class StoringModule(Module):
             except Exception:  # shutting down; a failed close must not mask the real exit
                 pass
 
-    @hook(RECORD)
+    @extends(RECORD)
     def record(self, value: float, at=None, **tags) -> None:
         """A reading for the record — sensing tells, this module writes. The choir's `record`
         hook: one writer, one token, one place that knows the series store exists."""

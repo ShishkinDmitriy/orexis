@@ -67,7 +67,13 @@ from assembly import loader
 # reader is actually checking. A bare `family#` with no local name is a namespace constant or
 # a PREFIX line, and counts: it is the kernel holding another tree's namespace, which is the
 # thing being ratcheted down.
-_NAMESPACES = {label: iri for label, iri in loader.prefixes().items() if label != "ag"}
+#  Less `ag:`, which is the kernel's own — and less `assembly:`, which is not a PACKAGE's. The
+#  kernel sits ON assembly: its extension points are instances of a class assembly declares, and
+#  naming that class is the kernel being assembled rather than the kernel reaching sideways into
+#  a tree it loads. `loader.packages()` types both roots `kind="kernel"`, and that is the test.
+_ROOTS = {p.name for p in loader.packages() if p.kind == loader.KERNEL_KIND}
+_NAMESPACES = {label: iri for label, iri in loader.prefixes().items()
+               if label != "ag" and label not in _ROOTS}
 _LABEL_OF = {iri: label for label, iri in _NAMESPACES.items()}
 
 _PACKAGE_IRI = re.compile(

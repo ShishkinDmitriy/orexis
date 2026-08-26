@@ -216,50 +216,50 @@ class Agent:
                 seen.setdefault(desire.uri, desire)
         return sorted(seen.values(), key=lambda g: -g.urgency)
 
-    def ask(self, hook: str, *args, **kwargs) -> list:
+    def ask(self, point: str, *args, **kwargs) -> list:
         """Every module's answer to one question, in module order, None left out.
 
-        THE CHOIR, generically, and BY TERM: `hook` is an `ag:Hook` some ontology declares —
+        THE CHOIR, generically, and BY TERM: `point` is an `assembly:Extension` some ontology declares —
         the kernel's for the BDI-shaped questions, a package's for its own — and a module
         answers it by the method it decorated with that term (a-hook-is-a-term). What the
         kernel owns is the mechanism: whoever answers is asked, an error in one voice is
         logged and does not silence the rest, and the caller merges the answers by its own
         rule. Sensing asks its verdicts on a reading this way and says what they mean.
         """
-        self._declared(hook)
+        self._declared(point)
         answers = []
         for module in self.modules:
-            fn = module.answer(hook)
+            fn = module.answer(point)
             if fn is None:
                 continue
             try:
                 answer = fn(*args, **kwargs)
             except Exception as exc:
-                log.error("%s: %s could not answer %s: %s", self.id, module.name, _short(hook), exc)
+                log.error("%s: %s could not answer %s: %s", self.id, module.name, _short(point), exc)
                 continue
             if answer is not None:
                 answers.append(answer)
         return answers
 
     @staticmethod
-    def _declared(hook: str) -> None:
-        """A hook is a TERM some ontology declares (a-hook-is-a-term); a string nobody declared
-        would be answered by silence, which is the failure this refuses."""
-        if hook not in loader.hooks():
-            raise ValueError(f"{hook} is not a hook any ontology declares — a question nobody "
+    def _declared(point: str) -> None:
+        """An extension point is a TERM some ontology declares (a-hook-is-a-term); a string nobody
+        declared would be answered by silence, which is the failure this refuses."""
+        if point not in loader.extensions():
+            raise ValueError(f"{point} is not an extension point any ontology declares — a question nobody "
                              "owns would be answered by nobody, silently")
 
-    def tell(self, hook: str, *args, **kwargs) -> None:
+    def tell(self, point: str, *args, **kwargs) -> None:
         """Every module that listens for one event is told, and a failure in one is logged."""
-        self._declared(hook)
+        self._declared(point)
         for module in self.modules:
-            fn = module.answer(hook)
+            fn = module.answer(point)
             if fn is None:
                 continue
             try:
                 fn(*args, **kwargs)
             except Exception as exc:
-                log.error("%s: %s failed on %s: %s", self.id, module.name, _short(hook), exc)
+                log.error("%s: %s failed on %s: %s", self.id, module.name, _short(point), exc)
 
     def desire_urgency(self, desire, query, state: str,
                        value: float | None = None) -> float | None:

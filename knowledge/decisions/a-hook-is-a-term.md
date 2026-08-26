@@ -12,6 +12,16 @@ status: accepted
 timestamp: 2026-08-26T12:00:00Z
 ---
 
+
+> **AMENDED — the word, not the claim.** A hook is an **extension point** now, its class is
+> `assembly:Extension` rather than `ag:Hook`, and a method fills one with `@extends(term)`. The
+> mechanism left the kernel for `assembly/` with it: how anything reaches anything is not belief,
+> desire or intention. Everything this record argues is untouched — a point is a term, a term
+> nobody declared is refused rather than answered by silence — and one thing was added, which
+> this record's own reasoning implies: a point now publishes the SIGNATURE that fills it
+> (`assembly:signature`), so a package can fill a point another package declared without
+> importing whoever declared it. See
+> [the-assembly-is-not-the-mind](/decisions/the-assembly-is-not-the-mind.md).
 # What was true before
 
 The choir grew hook by hook, each a method name on `Module` or, since
