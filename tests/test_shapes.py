@@ -1139,3 +1139,57 @@ def _without_comments(text: str) -> str:
     text = re.sub(r'"(?:[^"\\\n]|\\.)*"', '""', text)
     text = re.sub(r"^\s*#.*$", "", text, flags=re.M)
     return re.sub(r"\s#.*$", "", text, flags=re.M)
+
+
+def test_a_valve_on_the_bus_must_state_where_it_takes_commands():
+    """Moved from actuation to the transport with #404, and it must still fire from there.
+
+    `actuation:ActuatorShape` used to demand `mqtt:commandTopic` of EVERY actuator — a capability
+    deciding how its subject must be spoken to. `mqtt:MqttActuatorShape` demands it of an actuator
+    on a bus, which is the honest scope, and this proves the requirement did not evaporate in the
+    move.
+    """
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#valve_fern> mqtt:commandTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#valve_fern> mqtt:commandTopic ?t }} }}"""))
+
+
+def test_a_stood_in_valve_must_state_where_it_reports():
+    """The other half of #404's move: `mqtt:SimulatedActuatorReportsShape`.
+
+    Without a status topic the stand-in opens into nowhere — the command is verified, the dose
+    computed, and the soil stays dry, because a simulated sensor waters only on what the valve
+    reports and physics has no wire between two containers.
+    """
+    assert not _conforms(_mutate(f"""
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#valve_fern> mqtt:statusTopic ?t }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ <http://example.org/orexis/world/simulation#valve_fern> mqtt:statusTopic ?t }} }}"""))
+
+
+def test_no_capability_shape_names_a_transport():
+    """A capability says what a role must BE, never how it must be spoken to (#404).
+
+    The boundary this guards is `a-shape-belongs-to-the-vocabulary-it-checks`: a shape can be
+    deleted with the package whose terms it CONSTRAINS, so a constraint on `mqtt:` left behind in
+    a capability would outlive the transport and refuse every world for a vocabulary that is no
+    longer declared. A selector may still be foreign — one that matches nothing costs nothing.
+
+    Shapes only. A capability's `rules.ru` may still join through a transport's terms: sensing's
+    three derivation rules do, deliberately, and `knowledge/domain/channel.md` records why — a
+    transport-neutral class earns its place the day a second transport exists, and a premise is
+    its own capability's to state whatever happens.
+    """
+    transports = {p.name for p in pathlib.Path("packages/transport").iterdir() if p.is_dir()
+                  and not p.name.startswith("__")}
+    assert transports, "the transport family glob stopped matching"
+    offenders = {}
+    for path in sorted(pathlib.Path("packages/capability").rglob("shapes.ttl")):
+        code = _without_comments(path.read_text())
+        for name in transports:
+            for line in code.splitlines():
+                if f"{name}:" in line or f"orexis/{name}#" in line:
+                    offenders.setdefault(str(path), []).append(line.strip())
+    assert not offenders, (
+        "a capability's shapes constrain a transport's vocabulary — that constraint belongs "
+        "where it can be deleted with the transport (a-shape-belongs-to-the-vocabulary-it-checks):"
+        "\n" + "\n".join(f"  {p}: {ls}" for p, ls in offenders.items()))

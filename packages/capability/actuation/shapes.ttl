@@ -1,4 +1,3 @@
-@prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -22,27 +21,12 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
                   sh:message "an agent that actuates must say how long it waits for a device to confirm a dose — actuation:doseGraceS, added to the open-seconds it computed for that dose" ] .
 
 actuation:ActuatorShape a sh:NodeShape ;
-    rdfs:comment "An actuator delivers to exactly one subject, states where it takes its commands, carries its own calibration and hard cap — so dosing is a fact about the actuator, not a constant in code — and states the short name the broker's ACL is written from. That last used to arrive from device:DeviceShape, which reached it because an actuator was required to be a physical device; an actuator is not (a-stand-in-is-not-a-device)." ;
+    rdfs:comment "An actuator delivers to exactly one subject, carries its own calibration and hard cap — so dosing is a fact about the actuator, not a constant in code — and states the short name the broker's ACL is written from. It does NOT state where it takes its commands: that is a sentence in a transport's words, and mqtt:MqttActuatorShape says it of every actuator on a bus (a-shape-belongs-to-the-vocabulary-it-checks). The name used to arrive from device:DeviceShape, which reached it because an actuator was required to be a physical device; an actuator is not (a-stand-in-is-not-a-device)." ;
     sh:targetClass sosa:Actuator ;
     sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path actuation:actuates ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
-    sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path actuation:mlPerSecond ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ] ;
     sh:property [ sh:path actuation:maxDoseMl ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:decimal ; sh:minExclusive 0 ;
                   sh:message "an actuator must cap its own dose, whatever the claim says" ] .
-
-#  Moved from the kernel's shapes: a shape targeting `actuation:actuates` is this package's,
-#  whatever the term it checks belongs to (the-kernel-names-no-package-word, paid).
-actuation:SimulatedActuatorShape a sh:NodeShape ;
-    rdfs:comment "A stood-in actuator must say where it reports. Water reaching soil is physics, and physics has no wire — so between containers the only way a simulated sensor can learn that water actually flowed is a message from the valve that flowed it. Without a status topic the stand-in valve would open into nowhere: the command would be verified, the dose computed, and the soil would stay dry forever." ;
-    sh:targetSubjectsOf actuation:actuates ;
-    sh:property [ sh:path mqtt:statusTopic ; sh:maxCount 1 ] ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a simulated actuator must state mqtt:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
-        sh:select """
-            SELECT $this WHERE {
-                $this <http://example.org/orexis/sim#simulatedBy> ?model .
-                FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#statusTopic> ?t }
-            }""" ] .

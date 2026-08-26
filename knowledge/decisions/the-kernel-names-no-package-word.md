@@ -269,7 +269,14 @@ the ACTOR says: `expect(rises=…)`, or the sign of the delta it sized — the a
 the word. The keeper's two lookups of the sensing family — a look once the watch opens, and the
 cadence that sets how long a reading takes to arrive — went the same way: the actor nudges its
 own sensing and passes `seeing_s`. And `ag:SimulatedActuatorShape`, the selector targeting
-`actuation:actuates`, is `actuation:SimulatedActuatorShape` in that package's own shapes. What
+`actuation:actuates`, is `actuation:SimulatedActuatorShape` in that package's own shapes.
+(AMENDED. It landed one package short: every term it CHECKS is `mqtt:`, so it is
+`mqtt:SimulatedActuatorReportsShape` now. The note left on it — *a shape targeting
+`actuation:actuates` is this package's, whatever the term it checks belongs to* — had the ends the
+wrong way round, which
+[a-shape-belongs-to-the-vocabulary-it-checks](/decisions/a-shape-belongs-to-the-vocabulary-it-checks.md)
+settles by asking what a deletion leaves behind. THIS record's own ruling stands: the kernel may
+name no package word at either end.) What
 remains on the list is the two sensing terms in the desire warning shape, the namespace
 constants onboarding interpolates, and the migration destinations — and `agent/world.py`, which
 the scan cannot see and the next change is about.

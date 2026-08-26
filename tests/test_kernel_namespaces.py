@@ -352,8 +352,10 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #   and an initial value of 45.0 that conformed now VIOLATES. It wants a kernel-owned way
     #   to say "the range this thing is measured against".
 
-    # 7 — the SELECTOR went to actuation: `SimulatedActuatorShape` targets `actuation:actuates`
-    # and lives in `packages/capability/actuation/shapes.ttl` now.
+    # 7 — the SELECTOR went to actuation, and then one package further (#404): every term the
+    # shape CHECKS is `mqtt:`, so it is `mqtt:SimulatedActuatorReportsShape`, selecting on
+    # `actuation:actuates` from inside the transport. A shape lives where its constraints are
+    # declared — a-shape-belongs-to-the-vocabulary-it-checks.
 }
 
 
