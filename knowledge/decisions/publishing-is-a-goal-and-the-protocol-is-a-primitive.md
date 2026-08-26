@@ -84,9 +84,15 @@ that cannot tell a lost bid from a losing one.
 
 # Order of work
 
-1. The outbox: a `Delivering` action, its intention keyed by the want it serves, its window from
-   the message's own deadline (a round's `closesAt`, a claim's `exp`), dropped when the want is.
-   Filed as [#396](https://github.com/ShishkinDmitriy/orexis/issues/396).
+1. The outbox (#396, landed) — **and not as a new action**. The property wanted was that a
+   message the agent may stop meaning is never handed to a queue, and the act that carries the
+   message already had every part of it: an [intention](/domain/intention.md) that stands, a
+   window, and an [actor](/domain/actor.md) whose False means *not now*. So `ag:send` answers
+   whether the message LEFT, a message that states when it stops mattering is refused rather
+   than queued while the link is down, and the Acquire stands until the round's close drops it.
+   A `Delivering` action node buys nothing over that and would put a second machinery under the
+   first; it is worth minting the day a message has no act behind it — the sovereign's reply, or
+   an escalation to a second route.
 2. Delivery failure as a want the search can answer — only once something branches on it, by
    [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)'s
    test. *Escalate to another route* is the first plausible branch and needs a second transport.
@@ -95,8 +101,10 @@ that cannot tell a lost bid from a losing one.
 
 - **No second route.** *Escalate to HTTP* is the branch that makes delivery failure worth
   deliberating about, and there is one transport.
-- **The client's queue and the outbox would overlap.** Two things retry unless the outbox
-  publishes at QoS 0 and owns the retry itself, which is the honest version — and it is a
-  change to what the broker guarantees, so it is a decision, not an implementation detail.
+- **The client's queue and the act still overlap, narrowly.** Nothing with a deadline is
+  queued now, so the case that mattered is closed without touching what the broker guarantees.
+  What remains is a publish already in flight when the session drops: paho will retry that one,
+  and the receiver's idempotence is what makes it safe. Owning the retry outright still means
+  QoS 0, and that is still a decision rather than an implementation detail.
 - **Nothing declares a compensation for a half-sent message.** The vocabulary exists
   (`ag:retracts`, the confirmation routes); nothing uses it for delivery.

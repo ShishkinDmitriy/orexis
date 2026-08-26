@@ -151,9 +151,27 @@ class MqttModule(Module):
     # --- the choir: what the rest of the agent asks of me ---------------------------------
 
     @hook(SEND)
-    def send(self, channel: str, payload: dict, retain: bool = False) -> None:
-        """What `Module.publish` tells: carry this to the society."""
+    def send(self, channel: str, payload: dict, retain: bool = False, not_after=None) -> bool:
+        """What `Module.publish` asks: carry this to the society, and say whether it left.
+
+        **A message with a deadline is never queued.** With no session, paho holds a QoS 1
+        publish and delivers it on reconnect — which is right for a cadence a board should
+        have whenever it wakes, and wrong for anything the agent may stop meaning: a bid
+        arriving after its round closed is a message nobody wants, and the sender cannot tell
+        a lost bid from a losing one. So a message that states when it stops mattering is
+        refused while the link is down, and whoever asked treats that as *not now* — the act
+        stands, and the trigger that changes the answer takes it again
+        (publishing-is-a-goal-and-the-protocol-is-a-primitive).
+
+        Everything else is queued exactly as before, which is what a boot-time cadence relies
+        on: modules start before the session is up.
+        """
+        if not_after is not None and not self.connected:
+            self.log.info("%s not sent: no session, and it is worth nothing after %s",
+                          channel, not_after)
+            return False
         self.client.publish(channel, json.dumps(payload), qos=1, retain=retain)
+        return self.connected
 
     def disconnected_for_s(self) -> float | None:
         """How long the session has been down, or None while it is up. Flapping is a different

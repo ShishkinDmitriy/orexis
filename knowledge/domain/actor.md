@@ -58,8 +58,8 @@ the presented claim; actuation sizes a dose from the
 current reading and commands it; hosting serves the presented claim. The *how* stays where it
 always was — `value_bid`, `dose_for`, `redeem` — and none of them moved.
 
-**False means "not now", never "no".** A bid with no round open, a dose with no fresh reading,
-a serve with no claim in hand: the actor declines, the intention stands, and the trigger that
+**False means "not now", never "no".** A bid with no round open, a bid the link cannot carry,
+a dose with no fresh reading, a serve with no claim in hand: the actor declines, the intention stands, and the trigger that
 changes the answer — an offer, a reading, a presentation — runs execution again, which finds
 the standing row and takes it without re-deciding. That is what makes an intention an
 amortised deliberation for every means and not only for the ones that happened to stand.

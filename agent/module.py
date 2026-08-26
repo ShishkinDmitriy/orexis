@@ -265,10 +265,21 @@ class Module:
         except (ValueError, TypeError):
             return None
 
-    def publish(self, topic: str, payload: dict, retain: bool = False) -> None:
-        """Put something on the wire — told to whoever holds the connection (`send`). The
-        kernel has no mailbox; the transport that reaches the society is a capability."""
-        self.agent.tell(SEND, topic, payload, retain)
+    def publish(self, topic: str, payload: dict, retain: bool = False,
+                not_after=None) -> bool:
+        """Put something on the wire — asked of whoever holds the connection (`send`). True if
+        it left. The kernel has no mailbox; the transport that reaches the society is a
+        capability.
+
+        `not_after` is the moment the message stops meaning anything — an
+        [act](knowledge/domain/act.md)'s window, where one is being carried out. Given one, a
+        transport with no live session REFUSES rather than queueing: a queue faithfully
+        delivers a message the agent no longer means, which is the whole argument of
+        knowledge/decisions/publishing-is-a-goal-and-the-protocol-is-a-primitive.md. Without
+        one — a cadence command, a status reply, an announcement — queueing is right and
+        nothing changes.
+        """
+        return any(self.agent.ask(SEND, topic, payload, retain, not_after))
 
 
 class Timer:

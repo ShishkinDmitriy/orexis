@@ -496,6 +496,38 @@ def test_the_wallet_survives_a_restart(monkeypatch):
     assert reborn.bidding().won_l == 0.0, "and what it has WON is telemetry, which may reset"
 
 
+def test_a_bid_the_link_cannot_carry_is_held_and_never_arrives_late(make):
+    """A message the agent may stop meaning is never handed to a queue (#396).
+
+    With no session, paho holds a QoS 1 publish and delivers it on reconnect — which is right
+    for a cadence a board should have whenever it wakes, and wrong for a bid: it would arrive
+    at a venue that has moved on, and the bidder could not tell a lost bid from a losing one.
+    So a bid states when it stops mattering, the link refuses it while it is down, and the
+    Acquire STANDS — the outbox's whole property, from the act that was already there. When
+    the round closes the intention is dropped, and the message that was never queued is never
+    sent.
+    """
+    fern = make("fern", _with_reading(0.10))
+    market = market_of(fern)
+    link = fern.module("mqtt")
+    link.connected = False   # the session went away between the offer and the bid
+
+    fern.deliver(market.offer_topic, {"auction_id": "r1", "quantity_l": 2.0,
+                                      "reserve_price_per_l": 0.4, "closes_in_s": 30})
+    assert fern.sent.under(f"{market.bid_topic}/") == [], "a bid nobody could carry went out"
+    from packages.capability.market.terms import ACQUIRING
+
+    keeper = next(m for m in fern.modules if m.name == "intention")
+    assert keeper.standing(action=ACQUIRING), \
+        "and it is HELD as an intention rather than queued as bytes"
+
+    fern.bidding().give_up()          # the round closed while the link was away
+    link.connected = True             # and the session came back afterwards
+    assert keeper.standing(action=ACQUIRING) == [], "the want died, so the message died with it"
+    assert fern.sent.under(f"{market.bid_topic}/") == [], \
+        "a queue would have delivered a bid the agent no longer meant"
+
+
 # --- the window is real ----------------------------------------------------
 
 def test_the_host_schedules_the_close(host):

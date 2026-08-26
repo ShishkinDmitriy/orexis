@@ -539,13 +539,13 @@ class BiddingModule(Module):
         if standing and stake is not None:
             execution.take_standing(self.agent, standing[0], stake)
         elif stake is not None:
+            #  MARKED, and nothing is concluded from it (#392): what the search decides is
+            #  not this module's to wait for. This branch used to read the mark's `None` as
+            #  "deliberation chose not to pursue" and clear `pending` — which said the round
+            #  had passed while the pass that would bid was still to run, and took the
+            #  give-up with it. What ends the round for this bidder is a bid leaving (`_bid`)
+            #  or the give-up firing, and nothing else.
             revision.wake_for(self.agent, stake)
-        if self.pending is not None:
-            #  Nobody took it: the search proposed nothing, or the impulse was absorbed
-            #  within patience (a claim just won). Either is a decision, and the round passes.
-            self.log.info("auction %s: moisture %.3f — deliberation chose not to pursue",
-                          auction_id, moisture)
-            self.pending = None
 
     @hook(SENSING_URGENCY)
     def urgency(self, subject_uri: str, observed_property: str,
@@ -606,33 +606,51 @@ class BiddingModule(Module):
         market = next((m for m in self.markets if m.uri == act.via), None)
         if market is None:
             return False
-        return self._bid(reading.value, market, open_[0].auction_id)
+        return self._bid(reading.value, market, open_[0].auction_id,
+                         not_after=open_[0].closes_at)
 
-    def _bid(self, moisture: float, market, auction_id: str) -> bool:
-        """Size and publish one bid into the round that is open. True if one left."""
-        if self.pending and self.pending.get("auction_id") == auction_id:
-            self.pending = None
+    def _bid(self, moisture: float, market, auction_id: str, not_after=None) -> bool:
+        """Size and publish one bid into the round that is open. True if one left.
+
+        `not_after` is the round's own close, where the caller knows it: a bid is worth
+        nothing after it, so it is refused rather than queued when the link is down, and the
+        Acquire stands instead — which is the outbox's whole property, obtained from the act
+        that was already there (#396)."""
+        #  `pending` is "I asked for a look for this round", and it is cleared when the round
+        #  is DONE for me — ceded, or bid. It used to be cleared here, before anyone knew
+        #  whether the bid left; a bid the link could not carry then took the give-up with it,
+        #  and the Acquire outlived the round it was for (#396).
+        mine = bool(self.pending and self.pending.get("auction_id") == auction_id)
+
+        def done():
+            if mine:
+                self.pending = None
+
         aim = self._my_aim()
         if aim is None:
             self.log.info("auction %s: I hold no aim in %s — sitting out",
                           auction_id, self.about)
+            done()
             return False
         bid = value_bid(moisture, aim, self.beliefs, self.balance,
                         litres_per_unit=self.conversion)
         if bid is None:
             self.log.info("auction %s: moisture %.3f, aim %.2f — cede",
                           auction_id, moisture, aim)
+            done()
             return False
         self.log.info("auction %s: moisture %.3f -> bid %.3f L @ €%.3f",
                       auction_id, moisture, bid.max_qty_l, bid.max_price_per_l)
-        self.publish(f"{market.bid_topic}/{self.me.agent_id}", {
+        sent = self.publish(f"{market.bid_topic}/{self.me.agent_id}", {
             "auction_id": auction_id,
             "agent": self.me.agent_id,
             "max_qty_l": bid.max_qty_l,
             "max_price_per_l": bid.max_price_per_l,
             "balance": round(self.balance, 4),
-        })
-        return True
+        }, not_after=not_after)
+        if sent:
+            done()
+        return sent
 
     # --- what came back ---
 
