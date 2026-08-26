@@ -345,7 +345,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #     vocabulary for its premise; the capability derives the want its equipment implies.
     #
     # 5 — the last shape entry. 6 IS PAID: the "no sensor for this desire" warning that joined
-    #   through `sensing:polls` and `sensing:monitors` is `sensing:BeyondSurvivalShape` now,
+    #   through `sensing:polls` and `sensing:monitors` is `sensing:UnwatchedRegionShape` now,
     #   beside `sensing:DesirerShape`, both targeted on the stake's premise in the package that
     #   states it (the-stake-is-sensings-want). What remains is one WIDENER inside
     #   DeviceModelShape's OPTIONAL — without it COALESCE falls back to 1.0, the ceiling drops,

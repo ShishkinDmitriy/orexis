@@ -284,7 +284,7 @@ the scan cannot see and the next change is about.
 
 # Paid since — the stake, the widened scan, and what it found
 
-The desire warning shape went to sensing with the region (`sensing:BeyondSurvivalShape`), and the
+The desire warning shape went to sensing with the region (`sensing:UnwatchedRegionShape` now — it was `BeyondSurvivalShape` then, and #275 renamed it for what it actually checks), and the
 kernel's `sosa:` went with it: `store.PREFIXES` no longer declares a vocabulary the kernel does
 not speak, and the `SOSA` constant is `onboarding/namespaces.py`'s. The scan then widened — every
 namespace, both forms, resolved — and what it found in the kernel was not the market vocabulary

@@ -21,6 +21,7 @@ ag:WorldShape a sh:NodeShape ;
     sh:property [ sh:path ag:currentVersion ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ag:WorldVersion ] .
 
 ag:WorldVersionShape a sh:NodeShape ;
+    rdfs:comment "A version is one whole number. It is what an observation stamps itself with, so a world whose version is missing or doubled makes every reading taken under it unattributable — and the number is the only content this node has." ;
     sh:targetClass ag:WorldVersion ;
     sh:property [ sh:path ag:versionNumber ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ] .
 
