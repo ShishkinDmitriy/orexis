@@ -1,0 +1,13 @@
+@prefix device: <http://example.org/orexis/device#> .
+@prefix ag:   <http://example.org/orexis#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  What a physical node must state. Was the kernel's, and a BDI kernel has no rules about pins
+#  (the-substrate-is-not-the-minds).
+
+device:DeviceShape a sh:NodeShape ;
+    rdfs:comment "A device is reachable: it states where it is on the wire, so nothing has to guess its address from a naming convention. A thing that was never built states the same by sim:StandInShape, for its own reason — the generators name its container from it." ;
+    sh:targetClass device:Device ;
+    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .

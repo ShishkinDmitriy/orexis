@@ -20,6 +20,7 @@ from conftest import WORLDS_ROOT, genesis_store, load_wired
 from test_shapes import _conforms, _flatten
 
 AG = "http://example.org/orexis#"
+SIM = "http://example.org/orexis/sim#"   # what stands in for hardware nobody built
 
 _CAPS_Q = f"""
 SELECT ?id ?cap WHERE {{ 
@@ -104,17 +105,17 @@ def test_an_initial_value_outside_the_range_is_refused():
     """It is a fraction of the observed property. 45 instead of 0.45 is the obvious slip, and
     it would clamp to 1.0 and look like a permanently soaking pot."""
     assert not _conforms(_mutate_simulation(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelInitialValue 0.45 }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelInitialValue 45.0 }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelInitialValue 0.45 }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:initialValue 0.45 }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:initialValue 45.0 }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:initialValue 0.45 }} }}"""))
 
 
 def test_a_tick_of_zero_seconds_is_refused():
     """A push device would spin its clock at zero and publish without pause."""
     assert not _conforms(_mutate_simulation(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelTickSeconds 3 }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelTickSeconds 0 }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelTickSeconds 3 }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:tickSeconds 3 }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:tickSeconds 0 }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:tickSeconds 3 }} }}"""))
 
 
 # --- one board, several properties -------------------------------------------
@@ -134,7 +135,7 @@ def test_a_stand_in_may_share_a_neighbours_wire_without_a_bus_of_its_own():
     """
     st = genesis_store(world="simulation")
     rows = bindings(st.query(f"""
-        SELECT ?id WHERE {{ ?s <{AG}localId> ?id ; <{AG}simulatedBy> ?m .
+        SELECT ?id WHERE {{ ?s <{AG}localId> ?id ; <{SIM}simulatedBy> ?m .
                             FILTER NOT EXISTS {{ ?s <http://example.org/orexis/mqtt#onBus> ?b }} }}"""))
     assert [r["id"] for r in rows] == ["air_temp_fern"], \
         "the world that this test is about no longer has a stand-in sharing a wire"
@@ -153,9 +154,9 @@ def test_an_initial_value_outside_a_models_own_range_is_refused():
     written for. It is caught by the model's OWN range now, so it is caught in a thermometer
     too, where a rule that said `0..1` could not look."""
     assert not _conforms(_mutate_simulation(f"""
-        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelInitialValue 21.0 }} }}
-        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelInitialValue 210.0 }} }}
-        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?m ag:modelInitialValue 21.0 }} }}"""))
+        DELETE {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:initialValue 21.0 }} }}
+        INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:initialValue 210.0 }} }}
+        WHERE  {{ GRAPH <{WORLD_GRAPH}> {{ ?m sim:initialValue 21.0 }} }}"""))
 
 
 def test_a_temperature_is_not_refused_for_not_being_a_fraction():
@@ -163,8 +164,8 @@ def test_a_temperature_is_not_refused_for_not_being_a_fraction():
     the old shape refused it, because it held every model to 0..1."""
     st = genesis_store(world="simulation")
     rows = bindings(st.query(f"""
-        SELECT ?initial WHERE {{ <http://example.org/orexis/world/simulation#air_temp_fern> <{AG}simulatedBy> ?m .
-                                 ?m <{AG}modelInitialValue> ?initial }}"""))
+        SELECT ?initial WHERE {{ <http://example.org/orexis/world/simulation#air_temp_fern> <{SIM}simulatedBy> ?m .
+                                 ?m <{SIM}initialValue> ?initial }}"""))
     assert rows, "air_temp_fern states no initial value; this test has lost its subject"
     assert float(rows[0]["initial"]) == 21.0
 
@@ -206,7 +207,7 @@ def test_a_generated_stand_in_knows_what_a_litre_is_worth():
 
 
 def test_a_generated_stand_in_runs_at_the_worlds_pace():
-    """ag:timeScale rides into every stand-in's environment, and the physics arrive per
+    """sim:timeScale rides into every stand-in's environment, and the physics arrive per
     simulated day — the per-tick drift is gone from the spec entirely."""
     import json
 
@@ -237,7 +238,7 @@ def test_the_pot_is_the_only_statement_of_its_own_drying():
 
     ds = ratified.dataset("simulation")
     models = ratified.rows(ds, f"""SELECT ?m WHERE {{
-        ?m a <{AG}DeviceModel> . ?m <{AG}modelLosesPerDay> ?v }}""")
+        ?m a <{SIM}Model> . ?m <{SIM}losesPerDay> ?v }}""")
     assert not models, "a moisture model restating the pot's physics is the copy #164 retired"
 
     rows = ratified.rows(ds, _SIMULATED_Q)
@@ -262,9 +263,9 @@ def test_a_model_stating_its_own_drying_overrides_the_pot():
     from onboarding.compose import _SIMULATED_Q, _values
 
     ds = ratified.dataset("simulation")
-    ds.update(f"""INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m <{AG}modelLosesPerDay> 0.5 }} }}
+    ds.update(f"""INSERT {{ GRAPH <{WORLD_GRAPH}> {{ ?m <{SIM}losesPerDay> 0.5 }} }}
 WHERE {{ GRAPH <{WORLD_GRAPH}> {{
-    ?s <{AG}localId> "moisture_sensor_fern" ; <{AG}simulatedBy> ?m }} }}""")
+    ?s <{AG}localId> "moisture_sensor_fern" ; <{SIM}simulatedBy> ?m }} }}""")
     rows = [r for r in ratified.rows(ds, _SIMULATED_Q) if r["id"] == "moisture_sensor_fern"]
     values = json.loads(_values(rows))
     moisture = next(v for v in values if v["pointer"] == "/moisture")
@@ -273,7 +274,7 @@ WHERE {{ GRAPH <{WORLD_GRAPH}> {{
 
 def test_the_meddler_is_its_own_service_with_its_own_credential():
     """A pot must not water itself: the rain comes from a separate container on a separate
-    image, listed in compose only because the world states ag:strayDoseMeanDays."""
+    image, listed in compose only because the world states sim:strayDoseMeanDays."""
     from onboarding.compose import render
 
     compose = render("simulation")

@@ -186,6 +186,11 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
         1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
     ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
     ("agent/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
+    ("agent/vocabulary.py", "device#Device"): (
+        1, "migration: where the ONE substrate word went — removable with the last volume older than the move"),
+    ("agent/vocabulary.py", "sim#"): (
+        1, "migration: where the stand-in vocabulary went — twelve terms behind one prefix, "
+           "removable with the last volume older than the move"),
     ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
     ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
     ("agent/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
@@ -201,7 +206,91 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
 
     # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
-    # reachability half of `ag:SimulatedDeviceShape` — is the transport's: reaching the society
+    # reachability half of `sim:StandInShape` — is the transport's: reaching the society
+    # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
+    # connection, the loop and the watchdog, and the shape is
+    # `mqtt:SimulatedDeviceReachableShape` (the-kernel-has-no-mailbox).
+
+    # KIND 4 — the kernel's RDF, found by widening the scan past `agent/*.py`. #334's three
+    # kinds are all Python and none of them covers these, so they sat here marked UNCLASSIFIED
+    # until #337 settled what rule the project actually holds:
+    #
+    #     knowledge/decisions/the-kernel-names-no-package-word.md
+    #
+    # THE KERNEL NAMES NO PACKAGE'S WORD. Not in Python, where `lint-imports` has held it since
+    # the mind came home, and not in RDF, where nothing held it at all. A package is optional and
+    # the core depends on none of them, and that claim does not survive being true of imports and
+    # negotiable for vocabulary. So every entry below is debt, exactly like kinds 1-3, and this
+    # list is the tolerated relaxation rather than a set of permissions: it must reach zero, and
+    # #334's last bullet — the ratchet flipping to a prohibition — is unchanged.
+    #
+    # THAT RULING OVERTURNED A LOOSER ONE, which is worth knowing because the looser one is the
+    # first thing a reader re-derives. It permitted a borrowing whose absence fails LOUDLY — a
+    # shape that starts refusing more, a warning that starts firing — on the reasoning that only
+    # a SILENT loss is a real dependency. The measurements behind it stand and are in the record.
+    # The permission does not: optionality is the claim the architecture rests on, and a claim
+    # with a carve-out cannot carry it.
+    #
+    # What survived the demotion is the ORDER. The loudness analysis no longer licenses anything;
+    # it says which of these is dangerous and which is merely untidy, so the entries are grouped
+    # first-to-go rather than by file. Measured on pySHACL 0.40.1 with the sensing predicates
+    # renamed into a namespace nothing declares, which is what a removed package looks like to a
+    # shape.
+
+    # 1 THROUGH 4 ARE PAID, and by one change rather than four: `agent/desires.ru`'s whole
+    # relationship with `sensing:` was the FRESHNESS WANT, and that want is derived by
+    # `packages/capability/sensing/desires.ru` now (#331). Its premise is an instrument, which
+    # is that package's fact, so the horizon term is spelled where it is owned and the three
+    # prefix lines had nothing left to bind. Worth reading in the order this list put them:
+    #
+    #   1, THE JUDGE (#342) — the met-test named the horizon in a REQUIRED triple pattern, so
+    #     the term decided pass or fail: spelled wrong, the query returned no rows and pySHACL
+    #     reported conformance, and the want read MET for ever with nothing red anywhere. It is
+    #     dissolved rather than moved. The shape now says what the agent WANTS — a reading of
+    #     this exists, made by this instrument, taken within the horizon — so a term that stops
+    #     resolving takes the inner pattern with it, the NOT EXISTS holds, and the want reports
+    #     UNMET. Which is the direction #337's ruling asks for, arrived at by stating the goal
+    #     positively rather than by guarding the borrowing.
+    #   2 and 3, SPELLINGS (#343) — `market:` and `actuation:` were named by no pattern in the
+    #     file, and went with the rule that had left them behind. `agent/ontology.ttl`'s
+    #     `sensing:` was the last of the three and is now gone too, which closes #343: it
+    #     declared a prefix the kernel ontology used in prose only, so no triple needed it.
+    #   4, THE SELECTOR — `sensing:polls` and `sensing:monitors` in the rule's WHERE, which is
+    #     exactly the "somewhere for the knowledge to go" this entry said it was waiting for.
+    #     The mind's own derivation is no longer the thing reaching into a capability's
+    #     vocabulary for its premise; the capability derives the want its equipment implies.
+    #
+    # THE SHAPE ENTRY IS PAID, and it was the last one that was not a migration. The widener
+    # lived in `ag:DeviceModelShape` — a stand-in's initial value checked against the range of
+    # the subject it monitors — and the shape went to `packages/part/device/` with the rest of
+    # the substrate vocabulary (the-substrate-is-not-the-minds). A package naming another
+    # package's word is ordinary; only the kernel doing it was debt.
+
+    ("agent/vocabulary.py", "market#Offering"): (
+        1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
+    ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
+    ("agent/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
+    ("agent/vocabulary.py", "device#Device"): (
+        1, "migration: where the ONE substrate word went — removable with the last volume older than the move"),
+    ("agent/vocabulary.py", "sim#"): (
+        1, "migration: where the stand-in vocabulary went — twelve terms behind one prefix, "
+           "removable with the last volume older than the move"),
+    ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
+    ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
+    ("agent/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
+    ("agent/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),
+    ("agent/vocabulary.py", "sensing#Observe"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent/vocabulary.py", "actuation#Actuate"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent/vocabulary.py", "market#Offer"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
+
+    # KIND 3 IS PAID. `agent/ontology.py`'s twelve namespace constants — consumed by onboarding's
+    # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,
+    # which showed the road (#378). #334's fourth bullet: they moved to their consumer.
+
+    # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
+    # reachability half of `sim:StandInShape` — is the transport's: reaching the society
     # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
     # connection, the loop and the watchdog, and the shape is
     # `mqtt:SimulatedDeviceReachableShape` (the-kernel-has-no-mailbox).
@@ -262,9 +351,6 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #   DeviceModelShape's OPTIONAL — without it COALESCE falls back to 1.0, the ceiling drops,
     #   and an initial value of 45.0 that conformed now VIOLATES. It wants a kernel-owned way
     #   to say "the range this thing is measured against".
-    ("agent/shapes.ttl", "sensing#monitors"): (
-        1, "debt, later (widener): a model's initial value is checked against the subject it "
-           "monitors — losing it makes validation stricter and noisier, never quieter"),
 
     # 7 — the SELECTOR went to actuation: `SimulatedActuatorShape` targets `actuation:actuates`
     # and lives in `packages/capability/actuation/shapes.ttl` now.

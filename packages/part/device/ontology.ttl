@@ -1,0 +1,26 @@
+@prefix device: <http://example.org/orexis/device#> .
+@prefix : <http://example.org/orexis/device#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<http://example.org/orexis/device> a owl:Ontology ;
+    rdfs:label "Device" ;
+    rdfs:comment """What a thing is MADE OF — one word, for the inventory and the wiring.
+
+A knowledge-only package: no Python, no capability, nothing to grant. The kernel does not own it
+(the-substrate-is-not-the-minds) and neither does any capability: **nothing that observes or acts
+requires it.** A sensor is a sosa:Sensor and an actuator is a sosa:Actuator, whether or not
+anybody built one (a-stand-in-is-not-a-device).
+
+**The axis is SUBSTRATE, and it is not SOSA's.** SOSA's classes are functional and the spec is
+explicit that any of them may be virtual: `sosa:Sensor` says *this observes*, never *this exists*.
+`device:Device` says a physical node is there — with legs, a bus and an address — which is the
+claim `mc:hasPin` and `mc:logicVolts` need as their domain, because boards have pins. That is what
+it is FOR: an inventory of parts and a harness joining them. Nothing else should ask.
+
+So it is stated by INSTANCES and by the classes that are physical by definition — a board, a
+peripheral. A class naming a role does not state it, because the role is available to a thing that
+was never built.""" .
+
+:Device a owl:Class ; rdfs:label "Device" ;
+    rdfs:comment "A physical node: mechanism, never policy. What has legs, a place in the inventory and a line in the harness." .

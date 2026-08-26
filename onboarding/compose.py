@@ -37,7 +37,7 @@ from pathlib import Path
 from agent import ratified
 from agent.config import REPO_ROOT
 from agent.ontology import AG, WORLD_GRAPH
-from .namespaces import ACTUATION, MARKET, MQTT, SENSING, SOSA
+from .namespaces import ACTUATION, MARKET, MQTT, SENSING, SIM, SOSA
 from agent import genesis
 from agent.genesis import world_dir, worlds
 
@@ -237,19 +237,19 @@ SELECT ?id ?readingTopic ?commandTopic ?senseMode ?tick ?doseTopic ?drainTopic ?
        ?pointer ?initial ?loses ?subjectLoses ?swing ?litres ?doseEffect ?minValue ?maxValue
        ?subjectMax ?scale ?rainTopic
 WHERE {{
-  ?d <{AG}localId> ?id ; <{AG}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
+  ?d <{AG}localId> ?id ; <{SIM}simulatedBy> ?deviceModel ; <{MQTT}readingTopic> ?readingTopic ;
      <{MQTT}onBus> ?onBus .
-  ?s <{MQTT}readingTopic> ?readingTopic ; <{AG}simulatedBy> ?model ;
+  ?s <{MQTT}readingTopic> ?readingTopic ; <{SIM}simulatedBy> ?model ;
      <{SENSING}monitors> ?subject .
   OPTIONAL {{ ?d <{MQTT}commandTopic> ?commandTopic }}
   OPTIONAL {{ ?d <{SENSING}senseMode> ?senseMode }}
-  OPTIONAL {{ ?deviceModel <{AG}modelTickSeconds> ?tick }}
+  OPTIONAL {{ ?deviceModel <{SIM}tickSeconds> ?tick }}
   OPTIONAL {{ ?s <{MQTT}readingPointer> ?pointer }}
-  OPTIONAL {{ ?model <{AG}modelInitialValue> ?initial }}
-  OPTIONAL {{ ?model <{AG}modelLosesPerDay> ?loses }}
-  OPTIONAL {{ ?model <{AG}modelDailySwing> ?swing }}
-  OPTIONAL {{ ?model <{AG}modelMinValue> ?minValue }}
-  OPTIONAL {{ ?model <{AG}modelMaxValue> ?maxValue }}
+  OPTIONAL {{ ?model <{SIM}initialValue> ?initial }}
+  OPTIONAL {{ ?model <{SIM}losesPerDay> ?loses }}
+  OPTIONAL {{ ?model <{SIM}dailySwing> ?swing }}
+  OPTIONAL {{ ?model <{SIM}minValue> ?minValue }}
+  OPTIONAL {{ ?model <{SIM}maxValue> ?maxValue }}
   OPTIONAL {{ ?s <{SOSA}observes> ?wetProperty .
              ?conversion <{MARKET}aboutProperty> ?wetProperty .
              ?subject ?conversion ?litres .
@@ -258,17 +258,17 @@ WHERE {{
              # exactly the valued channel and never the thermometer beside it. The kernel
              # term is read — a domain's own word (water:driesPerDay) arrives entailed
              # through its subproperty bridge, so no domain is named here either.
-             OPTIONAL {{ ?subject <{AG}modelLosesPerDay> ?subjectLoses }} }}
+             OPTIONAL {{ ?subject <{SIM}losesPerDay> ?subjectLoses }} }}
   OPTIONAL {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?doseTopic }}
   # The SUPPLY side of the same wire (the barrel learns to run dry): a level stand-in watches
   # every valve that DRAWS from its subject — the litre that fills a pot lowers the barrel.
   OPTIONAL {{ ?drainer <{ACTUATION}drawsFrom> ?subject ; <{MQTT}statusTopic> ?drainTopic }}
   # A subject may carry the model's ceiling by entailment (water:capacityL is a subproperty
-  # of ag:modelMaxValue) — one statement, the #164 pattern, read here like the drying is.
-  OPTIONAL {{ ?subject <{AG}modelMaxValue> ?subjectMax }}
-  OPTIONAL {{ ?subject <{AG}modelDoseEffect> ?doseEffect }}
-  OPTIONAL {{ ?w a <{AG}World> ; <{AG}timeScale> ?scale }}
-  OPTIONAL {{ ?subject <{AG}rainTopic> ?rainTopic }}
+  # of sim:maxValue) — one statement, the #164 pattern, read here like the drying is.
+  OPTIONAL {{ ?subject <{SIM}maxValue> ?subjectMax }}
+  OPTIONAL {{ ?subject <{SIM}doseEffect> ?doseEffect }}
+  OPTIONAL {{ ?w a <{AG}World> ; <{SIM}timeScale> ?scale }}
+  OPTIONAL {{ ?subject <{SIM}rainTopic> ?rainTopic }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
@@ -312,13 +312,13 @@ def _values(rows: list[dict]) -> str:
     return json.dumps(specs, separators=(",", ":"))
 
 
-# The world's one meddler, and only if the world states ag:strayDoseMeanDays: which pots can be
+# The world's one meddler, and only if the world states sim:strayDoseMeanDays: which pots can be
 # rained on, how often on average, and at what pace the world runs.
 _MEDDLER_Q = f"""
 SELECT DISTINCT ?rainTopic ?strayDays ?scale ?port WHERE {{
-  ?w a <{AG}World> ; <{AG}strayDoseMeanDays> ?strayDays .
-  ?subject <{AG}rainTopic> ?rainTopic .
-  OPTIONAL {{ ?w <{AG}timeScale> ?scale }}
+  ?w a <{AG}World> ; <{SIM}strayDoseMeanDays> ?strayDays .
+  ?subject <{SIM}rainTopic> ?rainTopic .
+  OPTIONAL {{ ?w <{SIM}timeScale> ?scale }}
   ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
  }}"""
 
@@ -392,9 +392,9 @@ def _simulator(world: str, rows: list[dict]) -> str:
             ("SIM_DOSE_TOPIC", dose_topics),
             ("SIM_DRAIN_TOPIC", drain_topics),
             ("SIM_TICK_SECONDS", row.get("tick")),
-            # The world's clock (ag:timeScale), handed to every stand-in alike, because
+            # The world's clock (sim:timeScale), handed to every stand-in alike, because
             # physics that age at different rates stop composing. And the rain channel
-            # (ag:rainTopic) — where the meddler's water arrives, if this world has one.
+            # (sim:rainTopic) — where the meddler's water arrives, if this world has one.
             ("SIM_TIMESCALE", row.get("scale")),
             ("SIM_RAIN_TOPIC", row.get("rainTopic")),
             # The society's debounce (#180), the same figure the boards compile in.
@@ -431,7 +431,7 @@ def _simulator(world: str, rows: list[dict]) -> str:
 _SIM_VALVES_Q = f"""
 SELECT ?id ?commandTopic ?statusTopic ?mlPerSecond ?maxDoseMl ?port
 WHERE {{ 
-  ?v <{AG}localId> ?id ; <{AG}simulatedBy> ?model ; <{ACTUATION}actuates> ?subject ;
+  ?v <{AG}localId> ?id ; <{SIM}simulatedBy> ?model ; <{ACTUATION}actuates> ?subject ;
      <{MQTT}commandTopic> ?commandTopic ; <{MQTT}statusTopic> ?statusTopic .
   OPTIONAL {{ ?v <{ACTUATION}mlPerSecond> ?mlPerSecond }}
   OPTIONAL {{ ?v <{ACTUATION}maxDoseMl> ?maxDoseMl }}

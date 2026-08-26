@@ -7,6 +7,7 @@
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix mc: <http://example.org/orexis/microcontroller#> .
 @prefix : <http://example.org/orexis/microcontroller#> .
+@prefix device: <http://example.org/orexis/device#> .
 
 <http://example.org/orexis/microcontroller> a owl:Ontology ;
     rdfs:label "Microcontrollers and wiring" ;
@@ -21,7 +22,7 @@ A CONCRETE part does not live here — a DHT11 or an RGB LED is its own package,
 #################  What things are  #################
 
 
-:Microcontroller a owl:Class ; rdfs:subClassOf ag:Device , sosa:Platform , ssn:System ;
+:Microcontroller a owl:Class ; rdfs:subClassOf device:Device , sosa:Platform , ssn:System ;
     rdfs:label "Microcontroller" ;
     rdfs:comment """A board at the edge, carrying peripherals and reachable over a bus. It runs firmware, not agents.
 
@@ -29,7 +30,7 @@ A CONCRETE part does not live here — a DHT11 or an RGB LED is its own package,
 
 Typing it as a Platform alone used to be our simplification, recorded as such below. It stopped being harmless once procedures were declared: `ssn:implements` has `ssn:System` as its domain, so a board that is only a Platform cannot be said to do anything, and the publishing every board in this repository performs had nowhere to live. See knowledge/decisions/a-procedure-belongs-to-whatever-performs-it.md.""" .
 
-:Peripheral a owl:Class ; rdfs:subClassOf ag:Device , ssn:System ;
+:Peripheral a owl:Class ; rdfs:subClassOf device:Device , ssn:System ;
     rdfs:label "Peripheral" ;
     rdfs:comment """Something wired to a board's pins. A sensor is one; so is an indicator.
 
@@ -103,7 +104,7 @@ No rdfs:domain, deliberately. It is stated on classes, and a domain axiom would 
 :Pin a owl:Class ; rdfs:label "Pin" ;
     rdfs:comment "One leg of one device. It belongs to the device that physically has it, which is why both ends of a wire are pins and neither is special." .
 
-:hasPin a owl:ObjectProperty ; rdfs:domain ag:Device ; rdfs:range :Pin ;
+:hasPin a owl:ObjectProperty ; rdfs:domain device:Device ; rdfs:range :Pin ;
     rdfs:label "has pin" .
 
 :pinRole a owl:ObjectProperty ; rdfs:domain :Pin ; rdfs:range :PinRole ;
@@ -134,7 +135,7 @@ skos:notation a owl:DatatypeProperty ; rdfs:domain :Pin ; rdfs:range xsd:string 
     rdfs:label "rail volts" ;
     rdfs:comment "What a power pin supplies. Stated on the SOURCE — a board's 3V3 and VIN legs — because a peripheral's VCC takes whatever it is wired to, which is exactly the mistake worth catching." .
 
-:logicVolts a owl:DatatypeProperty ; rdfs:domain ag:Device ; rdfs:range xsd:decimal ;
+:logicVolts a owl:DatatypeProperty ; rdfs:domain device:Device ; rdfs:range xsd:decimal ;
     rdfs:label "logic volts" ;
     rdfs:comment "The voltage this device's signal lines expect. An ESP32 is 3.3V and is not 5V tolerant; a device powered from a higher rail will idle its pull-up above that and damage the input over time. Held on the device rather than the pin because it is true of all of them at once." .
 

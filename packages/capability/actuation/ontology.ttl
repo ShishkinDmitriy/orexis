@@ -15,33 +15,24 @@
 
 #  `actuation:Actuator` was here, and it was `sosa:Actuator` wearing our name.
 #
-#  It was an intersection, not a synonym — `ag:Device ∧ sosa:Actuator` — and that is why the earlier
-#  audits kept it. But a named class is not the only way to state an intersection: an instance
-#  can carry both types, and the two constraints can sit side by side in the one shape that
-#  enforced the conjunction. What the name bought was saying it once; what it cost was a reader
-#  having to learn that our word for a valve is not the standard one.
+#  It was read as an intersection — `device:Device ∧ sosa:Actuator` — and the shape that replaced it
+#  demanded both. That second conjunct was wrong, and it took a while to see: **acting is not
+#  something only a built thing can do.** SOSA says so itself — the spec is explicit that all its
+#  major classes may be virtual — and `world/simulation` proved it by carrying `device:Device` on
+#  nodes it declared in the very next line to be stood in for by a process, in a world with no
+#  board and no pin anywhere in it. The type was there to pass this shape and for nothing else.
 #
-#  `ag:Device` STAYS, and why is the principle this whole audit turns on.
+#  So the shape asks for the ROLE alone. What a thing is MADE OF is `device:Device`, it is the
+#  inventory's word and the harness's, and nothing that observes or acts asks for it —
+#  `mc:hasPin` and `mc:logicVolts` do, because boards have pins. Whether a role has a referent at
+#  all is `sim:simulatedBy`, on `ssn:System`: three questions, three vocabularies, and a class
+#  naming a role answers only the first.
 #
-#  SOSA's axis is FUNCTIONAL: `sosa:Platform` asks *where is it mounted* — its own examples are
-#  a post, a buoy, a ship, a cell-phone, a human — and `ssn:System` asks *what implements the
-#  procedure*. Neither is about what a thing is made of, and the spec is explicit that all its
-#  major classes may be virtual, a correction it made deliberately.
-#
-#  `ag:Device`'s axis is SUBSTRATE: a physical edge node with legs, interchangeable with a
-#  stand-in. That is a different question, so a term answering it necessarily cuts ACROSS their
-#  classes rather than duplicating one — `mc:Microcontroller` and `mc:Peripheral` are Platforms,
-#  sensors and actuators are Systems, and `mc:hasPin`, `mc:logicVolts` and `ag:simulatedBy` all
-#  take `ag:Device` as their domain. Boards have pins.
-#
-#  So the test for keeping one of ours is not whether a standard has a similar word. It is
-#  whether the standard is answering the same QUESTION. Here it is not, which is why
-#  `actuation:Actuator` goes and `ag:Device` stays.
-#
-#  See knowledge/decisions/one-word-for-one-relation.md.
+#  See knowledge/decisions/a-stand-in-is-not-a-device.md and
+#  knowledge/decisions/one-word-for-one-relation.md.
 
-:Valve a owl:Class ; rdfs:subClassOf ag:Device , sosa:Actuator ; rdfs:label "Valve" ;
-    rdfs:comment "Opens for a bounded time to deliver to one subject. Verifies its command before acting and runs its own fail-safe." .
+:Valve a owl:Class ; rdfs:subClassOf sosa:Actuator ; rdfs:label "Valve" ;
+    rdfs:comment "Opens for a bounded time to deliver to one subject. Not a device:Device: every valve this project has ever run is stood in for, and a class that asserted a physical node would have made each of those worlds contradict itself. An instance that IS built says so. Verifies its command before acting and runs its own fail-safe." .
 
 :hasActuator a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range sosa:Actuator ;
     rdfs:label "has actuator" .

@@ -15,15 +15,16 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
             SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
                                        <http://example.org/orexis/actuation#Actuation> }
         """ ] ;
-    sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class sosa:Actuator , ag:Device ;
+    sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class sosa:Actuator ;
                   sh:message "an agent that actuates must own at least one actuator" ] ;
     sh:property [ sh:path actuation:doseGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 0 ;
                   sh:message "an agent that actuates must say how long it waits for a device to confirm a dose — actuation:doseGraceS, added to the open-seconds it computed for that dose" ] .
 
 actuation:ActuatorShape a sh:NodeShape ;
-    rdfs:comment "An actuator delivers to exactly one subject, states where it takes its commands, and carries its own calibration and hard cap — so dosing is a fact about the device, not a constant in code." ;
+    rdfs:comment "An actuator delivers to exactly one subject, states where it takes its commands, carries its own calibration and hard cap — so dosing is a fact about the actuator, not a constant in code — and states the short name the broker's ACL is written from. That last used to arrive from device:DeviceShape, which reached it because an actuator was required to be a physical device; an actuator is not (a-stand-in-is-not-a-device)." ;
     sh:targetClass sosa:Actuator ;
+    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path actuation:actuates ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
     sh:property [ sh:path mqtt:commandTopic ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
     sh:property [ sh:path actuation:mlPerSecond ; sh:minCount 1 ; sh:maxCount 1 ;
@@ -42,6 +43,6 @@ actuation:SimulatedActuatorShape a sh:NodeShape ;
         sh:message "a simulated actuator must state mqtt:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis#simulatedBy> ?model .
+                $this <http://example.org/orexis/sim#simulatedBy> ?model .
                 FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#statusTopic> ?t }
             }""" ] .

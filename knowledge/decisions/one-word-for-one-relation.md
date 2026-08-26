@@ -26,13 +26,17 @@ to buoys, ships, satellites and humans — and `ssn:System` asks *what implement
 Neither is about what a thing is made of, and the spec is explicit that all its major classes may
 be virtual, a correction it made deliberately after the first SSN handled software sensors badly.
 
-`ag:Device`'s axis is **substrate**: a physical edge node with legs, interchangeable with a
+`device:Device`'s axis is **substrate**: a physical node with legs, interchangeable with a
 stand-in. That is a different question, so a term answering it necessarily cuts **across** their
 classes rather than duplicating one — `mc:Microcontroller` is a Platform, a sensor is a System,
-and `mc:hasPin`, `mc:logicVolts` and `ag:simulatedBy` all take `ag:Device` as their domain.
-Boards have pins.
+and `mc:hasPin` and `mc:logicVolts` take `device:Device` as their domain. Boards have pins.
 
-That is why `ag:Device` survives an audit that retired the classes sitting directly on top of it.
+That is why `device:Device` survives an audit that retired the classes sitting directly on top of
+it. (AMENDED. Two things this passage said are no longer true. The word is not the kernel's —
+[the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md). And
+`sim:simulatedBy` does NOT take it as its domain: a stand-in is the ABSENCE of a device, so it
+hangs off the role instead, which is
+[a-stand-in-is-not-a-device](/decisions/a-stand-in-is-not-a-device.md).)
 
 # What went
 
@@ -47,8 +51,14 @@ before. A term was given up and a rule was gained.
 intersections — `ag:Device ∧ sosa:X` — which is why earlier audits kept them. True, and beside
 the point: a named class is not the only way to state an intersection. An instance carries both
 types, and the one shape that enforced the conjunction states it as two `sh:class` values.
-`actuation:Valve` survives as a genuine narrowing and took `ag:Device` with it, so valve instances
-did not change at all.
+
+(AMENDED, and this is the half that was wrong: **the conjunction should not have been preserved
+at all.** Keeping it meant a sensor had to be hardware, in a project whose simulated worlds
+contain no hardware and whose own defence of the word is that SOSA's classes may be virtual. The
+shapes ask for the role alone now, and `actuation:Valve` narrows `sosa:Actuator` and nothing
+else — see [a-stand-in-is-not-a-device](/decisions/a-stand-in-is-not-a-device.md). What this
+record got right was the method: ask whether the standard answers the same question. What it got
+wrong was assuming the intersection it found was one worth keeping.)
 
 **`sensing:seconds` → `schema:value` + `schema:unitCode`.** The W3C's own worked example of
 the DHT22 — the KY-015's sibling, written by the people who wrote SSN — says a frequency as a
@@ -89,7 +99,7 @@ rather than guessed.
 
 | term | why it stays |
 |---|---|
-| `ag:Device` | different **axis** — substrate, where SOSA's is functional |
+| `device:Device` | different **axis** — substrate, where SOSA's is functional. No capability asks for it |
 | `sensing:senseMode` | different **cardinality** — `sh:maxCount 1`, which `ssn:implements` cannot say |
 | `review:Revision` | different **kind** — a deliberation, where PROV's is a derivation |
 | `actuation:Actuation` | different **kind** — a capability, where SOSA's is an event |

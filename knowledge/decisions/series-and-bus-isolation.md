@@ -41,7 +41,7 @@ topics that capability needs:
 | wiring | granted |
 |---|---|
 | `sensing:polls S` | read S's `readingTopic`, write S's `commandTopic` |
-| `ag:simulatedBy` on a device | that DEVICE reads the `commandTopic` of whatever actuates its subject |
+| `sim:simulatedBy` on a system | that DEVICE reads the `commandTopic` of whatever actuates its subject |
 | `market:bidsIn M` | read M's `offerTopic` and `claimTopic/<me>`, write `bidTopic/<me>` |
 | `market:hosts M` | write `offerTopic` and `claimTopic/+`, read `bidTopic/+` and each bidder's `eventTopic` |
 | `actuation:hasActuator V` | write V's `commandTopic` |

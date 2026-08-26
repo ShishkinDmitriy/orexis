@@ -278,8 +278,9 @@ on a real one, not a program running beside it, and — this is the correction �
 of its own either.
 
 A simulated sensor states everything a board states: the bus it is on, the subject it monitors,
-the property it observes, its topics, and who holds the clock. One extra fact, `ag:simulatedBy`,
-says a process stands in for it. An agent wired to one with `sensing:polls` derives `sensing:Subscribing`
+the property it observes, its topics, and who holds the clock. One extra fact, `sim:simulatedBy`,
+says a process stands in for it — and one fact fewer, since it does not claim to be a
+`device:Device`, which is a claim only a world with pins in it can honestly make. An agent wired to one with `sensing:polls` derives `sensing:Subscribing`
 and runs the **ordinary sensing module**, because from where the agent stands there is
 nothing else it could be.
 
@@ -304,7 +305,7 @@ distinguishes how a device is spoken to". That was right, and it is what now exi
 lower: not a binding but the device itself.
 
 **An actuator is stood in for the same way, and the check is the point.** A simulated valve is
-an `actuation:Valve` carrying `ag:simulatedBy`, held by `actuation:hasActuator` like any other — so its
+an `actuation:Valve` carrying `sim:simulatedBy`, held by `actuation:hasActuator` like any other — so its
 supplier derives plain `actuation:Actuation` and co-signs every command exactly as it would for
 hardware. The stand-in verifies both signatures before it opens, holding the two PUBLIC keys and
 no private one.
@@ -348,8 +349,8 @@ only an explicit re-birth discards them.
   or the first readings are lost.
 - **Two publishers on one topic are still two publishers.** A stand-in configured for subjects a
   real board already publishes for puts both readings on the same topic and both are ingested.
-  The world *can* warn about this now — `ag:simulatedBy` is on the device, so a world states
-  which of its devices are stood in for — but nothing checks it yet, and a stray container from
+  The world *can* warn about this now — `sim:simulatedBy` is on the system, so a world states
+  which of the things it names are stood in for — but nothing checks it yet, and a stray container from
   an earlier run is outside what any shape can see. `podman compose down` removes a society
   deterministically, which is half of why deployment is containers.
 

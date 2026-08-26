@@ -242,7 +242,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     # them, so the cut started inside the platform block and took the rest of it with it. The
     # part goes too — a KY-015 hosting two channels this world no longer has would be a
     # platform pointing at nothing.
-    for block in (":air_temp_fern a sosa:Sensor , ag:Device ;", ":air_humidity_fern a sosa:Sensor , ag:Device ;",
+    for block in (":air_temp_fern a sosa:Sensor , device:Device ;", ":air_humidity_fern a sosa:Sensor , device:Device ;",
                   "\n:air_sensor_fern a ssn:System ;"):
         start = s.index(block)
         s = s[:start] + s[s.index(" .\n", start) + 3:]
@@ -254,7 +254,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
 
     s = s.replace(
         ":fern_agent a ag:Agent ;",
-        ':chatter_fern a sosa:Sensor , ag:Device ;\n'
+        ':chatter_fern a sosa:Sensor , device:Device ;\n'
         '    ag:localId "chatter_fern" ;\n'
         '    mqtt:onBus :local_bus ;\n'
         '    sensing:senseMode sensing:PushProcedure ;\n'          # keeps its own clock, takes no orders
@@ -730,7 +730,7 @@ def test_two_probes_in_two_patches_keep_two_records(monkeypatch):
             ag:fern_east a sosa:Sample ; sosa:isSampleOf <http://example.org/orexis/world/simulation#fern> .
             ag:fern_west a sosa:Sample ; sosa:isSampleOf <http://example.org/orexis/world/simulation#fern> .
             <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples ag:fern_east .
-            ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
+            ag:second_probe_fern a sosa:Sensor , device:Device ; ag:localId "second_probe_fern" ;
                 mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ;
                 sensing:monitors <http://example.org/orexis/world/simulation#fern> ; sensing:samples ag:fern_west ;
                 sosa:observes water:SoilMoisture ;

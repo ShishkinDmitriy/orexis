@@ -175,8 +175,11 @@ kernel is where such words live.
 
 **And the objection against it does not survive.** "Not every agent is a BDI agent" —
 `world/sensing`'s agent wants nothing — argues against making the CAPABILITY mandatory, never
-against the TERM being kernel: `ag:Device` is a kernel class and most agents hold none. The
-existence of a class was never a claim about the universality of its instances.
+against the TERM being kernel: a class most agents hold no instance of is still a class. The
+existence of a class was never a claim about the universality of its instances. (The example
+this used was `ag:Device`, which has since left for a reason of its own —
+[the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md) — and the
+argument never depended on which class it was.)
 
 So the line falls one notch over: **what a mind CONTAINS is the kernel's — desires, aims,
 obligations, intentions and the means they name — and HOW a mind reaches them is the
