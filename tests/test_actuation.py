@@ -44,10 +44,18 @@ class FakeAgent:
     def publish(self, topic, payload, retain=False):
         self.sent.append((topic, payload))
 
-    def tell(self, hook, *args, **kwargs):
-        #  `Module.publish` tells `ag:send` to whoever holds the connection; here that is this fake
+    def ask(self, hook, *args, **kwargs):
+        #  `Module.publish` asks `ag:send` of whoever holds the connection — here, this fake,
+        #  which is always able to carry it.
         if hook.endswith("#send"):
-            self.publish(*args, **kwargs)
+            topic, payload = args[0], args[1]
+            self.publish(topic, payload)
+            return [True]
+        return []
+
+    def tell(self, hook, *args, **kwargs):
+        if hook.endswith("#send"):
+            self.ask(hook, *args, **kwargs)
 
 
 class _Beliefs:

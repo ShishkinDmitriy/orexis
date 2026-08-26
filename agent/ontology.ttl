@@ -67,7 +67,7 @@ ag:quiet a ag:Hook ; ag:row ag:Reactive ; rdfs:label "quiet" ; rdfs:comment "Wha
 ag:beliefRevised a ag:Hook ; ag:row ag:Progression ; rdfs:label "belief revised" ; rdfs:comment "One of this agent's beliefs has been re-picked — take it up, if it is one of yours." .
 ag:subscriptions a ag:Hook ; ag:row ag:Reactive ; rdfs:label "subscriptions" ; rdfs:comment "Which channels do you need? Asked by whoever holds the connection, once the session is up. The QUESTION is the kernel's; what a channel is carried over is the transport's." .
 ag:handle a ag:Hook ; ag:row ag:Reactive ; rdfs:label "handle" ; rdfs:comment "Something arrived on this channel — take it if it is yours. Offered to every module; nobody taking it is logged." .
-ag:send a ag:Hook ; ag:row ag:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society. Told by Module.publish; answered by whichever module holds the connection." .
+ag:send a ag:Hook ; ag:row ag:Reactive ; rdfs:label "send" ; rdfs:comment "Carry this to the society, and say whether it left. True where it reached a live session, False where it did not — a message with a DEADLINE is refused rather than queued when there is none, because a queue would deliver it after the moment it meant anything (publishing-is-a-goal-and-the-protocol-is-a-primitive). Told by Module.publish; answered by whichever module holds the connection." .
 
 ag:hasCapability a owl:ObjectProperty ; rdfs:domain ag:Agent ; rdfs:range ag:Capability ;
     rdfs:label "has capability" ;
