@@ -20,6 +20,7 @@ is built, and the gap is in the security-critical direction.
 | | status |
 |---|---|
 | a balance exists and a bid carries it | **built** |
+| the balance survives a restart | **built** — `market:balance`, the agent's own belief in its own graph |
 | clearing refuses a line the balance cannot pay | **built** — but see below |
 | the balance is trustworthy | **not built** — it is self-reported |
 | a periodic allowance is minted | **not built** |
@@ -34,7 +35,19 @@ is built, and the gap is in the security-critical direction.
   a periodic **allowance**, spent-to-void rather than transferred, which is what would prevent
   permanent losers and kill Sybil swarms — newcomers join broke and accrue, nobody's credits are
   seized. **None of that is implemented.** There is no minting, no window, no allowance, and no
-  ledger; an opening balance is authored at genesis and moves only as an agent's own belief.
+  ledger; an opening balance is authored at genesis (`market:hasEndowment`) and moves only as
+  an agent's own belief (`market:balance`, upserted in its own graph when a claim is won, and
+  read back when a bid is priced — so what it has left outlives the process that spent it).
+
+# What a duplicate claim would cost
+
+A claim is delivered at least once, so the same win can arrive twice, and the debit is applied
+where it arrives. Nothing here is keyed by the claim's `jti` on the bidder's side — the host
+spends a `jti` once, the buyer does not — so a repeat would charge twice, and now durably. It
+has never been observed and the loss is bounded by one debit; naming it is cheaper than
+guarding it while the balance is self-reported anyway, and it is the first thing to fix on the
+day a mint makes the number matter. See [claim](/domain/claim.md) for the single-use half that
+IS enforced.
 
 # Solvency is checked, and the number it is checked against is untrusted
 

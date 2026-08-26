@@ -142,7 +142,11 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 
 :hasEndowment a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
     rdfs:label "has endowment" ;
-    rdfs:comment "Opening wallet balance. The authoritative running balance is the mint's, never a self-report." .
+    rdfs:comment "OPENING wallet balance, authored at genesis — what an agent brought to the venue, not what it has left. The running balance is :balance, the agent's own belief; the authoritative one would be the mint's, which is not built (knowledge/domain/wallet.md)." .
+
+:balance a owl:DatatypeProperty ; rdfs:domain ag:Agent ; rdfs:range xsd:decimal ;
+    rdfs:label "balance" ;
+    rdfs:comment "What this agent has left, as its own belief in its own graph — written when a claim is won, read when a bid is priced. Absent until the first claim, which reads as the endowment: a wallet nobody has spent from is the wallet it was given. A BELIEF and not a pick: nothing chooses it, and review may not move it (the-wallet-is-a-belief-the-agent-keeps)." .
 
 #################  Matching: the third capability, and the only family  #################
 #  A family, because given a lot and a set of bids there is genuinely more than one right
