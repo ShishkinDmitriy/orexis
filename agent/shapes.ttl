@@ -48,8 +48,10 @@ ag:PublicGraphShape a sh:NodeShape ;
     sh:message "a public graph must record what it was derived from or what generated it — see orexis/provenance.py" .
 
 #  `ag:SimulatedDeviceShape` WAS HERE: "a stand-in must be reachable like a real device" — on
-#  a bus, or sharing a reading topic — which is a sentence in the transport's words, so it is
-#  `mqtt:SimulatedDeviceReachableShape` in that package's shapes (the-kernel-has-no-mailbox).
+#  a bus, or sharing a reading topic. It left as the transport's, being a sentence in the
+#  transport's words, and is `sim:StandInReachableShape` now: the rule is meaningless without
+#  stand-ins, so it is filed where deleting the package deletes it
+#  (the-kernel-has-no-mailbox, then a-shape-belongs-to-the-vocabulary-it-checks).
 #  Its first half, "one device, one stand-in", is kernel structure and stays:
 
 #################  An effect rule accounts for its own timing  #################
