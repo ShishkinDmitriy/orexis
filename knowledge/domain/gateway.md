@@ -8,16 +8,21 @@ description: Thin stake-free attestor on the RPi; turns the ESP32's raw readings
 
 > **Status: decommissioned in v1** ([trusted-agent-mode](/decisions/trusted-agent-mode.md)).
 > Under the trusted-agent assumption there is no separate witness: each plant asserts its own
-> current-state (`:sensed` / `:opinion`, provenance = the plant). The gateway's store-writing
+> current-state (`:sensed` / `:classification`, provenance = the plant). The gateway's store-writing
 > folds into the sensor edge (the virtual plant / device writes directly). This doc describes
 > the *adversarial-mode* witness — the role returns as a **signing sensor** (device cert) if
 > you open the society, never as a central process. The measurement-witness reasoning below
 > is why the role exists at all; it just no longer runs as its own component in v1.
 
-Trusted, stake-free infrastructure, and the **only** component that authors the `:attested`
+Trusted, stake-free infrastructure, and the **only** component that WOULD author the attested
 graph. It is **not a monolith** — it is a thin RPi process (≈ one file) that turns raw
 sensor numbers into citable qualitative state. Build it first: it owns the most settled
 decisions and everything downstream trusts it.
+
+**Everything below this line is the adversarial-mode design, in its own present tense.** It was
+never built: the graph it describes — `:attested`, and `:attested/<plant>` beside it — is not one
+of the agent's, and the readings it would have witnessed land in `:sensed`, authored by the agent
+that took them.
 
 The measurement root is split across the hardware, and the split is the point:
 
@@ -51,14 +56,14 @@ ESP32 ──raw reading──► InfluxDB            (the series / record — ev
 ```
 
 Writing raw numbers to Influx is **not** attestation. Only the gateway's materialization
-into `:attested` is citable; a bare Influx point is just a record.
+into the attested graph is citable; a bare Influx point is just a record.
 
 # Responsibilities
 
 1. Receive readings from the ESP32 (soil moisture) and the weather **forecast** from an API
    (a forecast is just an external reading, source = the API).
 2. Ensure **every** reading lands in InfluxDB (the record) — see ingest options below.
-3. **Materialize** only the current-state triple into `:attested`, overwriting rather than
+3. **Materialize** only the current-state triple into the attested graph, overwriting rather than
    accumulating — a thin, current, qualitative projection of the series.
 4. Apply the **threshold→band** decision as part of attestation. See below.
 5. Stamp provenance (`prov:wasGeneratedBy :gateway`) so the belief is citable-but-unforgeable.

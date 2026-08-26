@@ -71,8 +71,10 @@ holder of that power:
 | private beliefs / learning / self-view | the agent | **the agent** | nothing to gain by faking its own opinion |
 
 The agent authors only what it cannot gain by faking. Its self-metrics are welcome but
-**untrusted** (like `:claims`) — clearing checks solvency against *its* ledger, never a
-self-report. Provenance / write-scope distinguishes them.
+**untrusted** — solvency is checked against the mint's own record, never against a self-report.
+Provenance and write-scope distinguish them. (This said *like `:claims`*, naming a graph for
+untrusted peer assertions that was never built and never needed: a bid is a message on the bus,
+weighed and discarded — see [belief-base](/domain/belief-base.md).)
 
 # The economy is a clearing-authored time series
 
@@ -80,10 +82,19 @@ The two-store pattern (**RDF current-state + Influx history**) is *general*, not
 gateway-specific — every writer uses it for its own scope:
 
 ```
-gateway  → measurements        → :attested/<plant>  (RDF) + influx     [witness]
-clearing → wallet / wins / grants → :ledger          (RDF) + influx     [mint / outcomes]
-agent    → private beliefs / self-view → :exp/<agent> (RDF) + influx     [own scope, untrusted]
+agent → what it read      → :sensed             (RDF) + influx   [its own, as opinion]
+agent → what it concludes → :classification     (RDF) + influx   [band, verdict]
+agent → what it holds     → :beliefs/<agent>    (RDF) + influx   [picks, wallet, own scope]
 ```
+
+**AMENDED — the writers collapsed into one.** This block read `gateway → :attested/<plant>`,
+`clearing → :ledger` and `agent → :exp/<agent>`, three authorities with three graphs, and none of
+those three graph names was ever built.
+[trusted-agent-mode](/decisions/trusted-agent-mode.md) dropped the witness and
+[where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) dropped the shared store,
+so there is one writer per agent and its own base. **The two-store pattern itself is unchanged**,
+which was this section's actual claim: RDF holds current state, Influx holds the series, and every
+writer uses both for its own scope.
 
 So you can watch the *society* evolve (wallet, win-rate, water received over time), not just
 soil moisture.

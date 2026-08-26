@@ -20,7 +20,7 @@ infrastructure and are never granted to an agent:
 1. **Authoring *witnessed* facts** — in adversarial mode only the
    [gateway](/domain/gateway.md) / a signing sensor authors ground truth. *(Scoped:*
    [trusted-agent-mode](/decisions/trusted-agent-mode.md) *relaxes this — an agent may author
-   facts about **itself** as opinion (`:sensed` / `:opinion`); it still may not author facts
+   facts about **itself** as opinion (`:sensed` / `:classification`); it still may not author facts
    about **others**.)*
 2. **Minting / debiting currency** — the one that resists. *(Scoped:*
    [thin-trusted-infra](/decisions/thin-trusted-infra.md) *thins it — debits are self-signed

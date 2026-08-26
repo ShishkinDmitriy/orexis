@@ -54,7 +54,8 @@ timestamp: 2026-08-01T00:00:00Z
 
 # Access rules
 
-- Cite a fact → LLM-composed **SPARQL** on `:attested` (read-only, small, safe).
+- Cite a fact → LLM-composed **SPARQL** on the witnessed graph (read-only, small, safe). *Named
+  `:attested` when this was written; the banner above records that no such graph was built.*
 - Need a trend → **typed Influx function** (fixed Flux, LLM fills params only). Tighter leash
   on the high-volume quantitative path. See [belief-base](/domain/belief-base.md).
 
