@@ -24,7 +24,7 @@ from agent.ontology import DELIBERATION_GRAPH, STATE_GRAPH
 from agent import planner as search, trace
 from agent.planner import Planner
 
-from packages.capability.sensing.regions import ObservedWant
+from packages.capability.sensing.regions import ObservedDesire
 from conftest import stake_of, build_agent, genesis_store, open_round_for, write_reading
 
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
@@ -319,13 +319,13 @@ def test_a_content_plant_does_not_buy_water_to_find_out_how_wet_it_is(monkeypatc
     #  the fabrication possible at all. A bare Desire suffices: the measure is not the want's
     #  to carry, and sensing answers the choir for any observation-backed stake.
     write_reading(fern, 0.30, MOISTURE)   # the world holds the value; a want's `value` is not it
-    stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
+    stake = ObservedDesire(uri=stake_of(fern).uri, urgency=0.4, observed_property=MOISTURE,
                          value=0.30)
     assert decider.propose_for(stake) == "http://example.org/orexis/market#Acquiring", \
         "below the aim there is a deficit to close, and the search must still close it"
     for value in (0.55, 0.80):
         write_reading(fern, value, MOISTURE)
-        stake = ObservedWant(uri=stake_of(fern).uri, urgency=0.4,
+        stake = ObservedDesire(uri=stake_of(fern).uri, urgency=0.4,
                              observed_property=MOISTURE, value=value)
         assert decider.propose_for(stake) is None, \
             f"a content plant bought water at {value} — a zero-size act made something true"
@@ -443,7 +443,7 @@ def _last_predicted(planner, desire, plan) -> float:
         node = planner._step_from(node, step, desire)
     sensing = planner.agent.provider("http://example.org/orexis/sensing#SensingCapability")
     return sensing.value_in(planner.imaginarium.query, node.graph, planner.me.acts_for,
-                            desire.observed_property)   # an ObservedWant: sensing's field
+                            desire.observed_property)   # an ObservedDesire: sensing's field
 
 
 def test_a_whole_search_writes_nothing_to_the_belief_base(monkeypatch):

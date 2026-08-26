@@ -55,7 +55,7 @@ from . import pointer
 from .beliefs import ALARM_PICKS, LISTENING_PICKS, SUBSCRIBING_PICKS
 from .observation import Observations
 from . import choir
-from .regions import Gap, ObservedWant, Region, aims_of, desires_of, gaps_of, regions_of
+from .regions import Gap, ObservedDesire, Region, aims_of, desires_of, gaps_of, regions_of
 from .wiring import sensors_of
 from . import readings
 from .scaling import scaling_for
@@ -680,7 +680,7 @@ class SensingModule(Module):
             return None
         if value is None:
             return 1.0
-        answer = self._measured(ObservedWant(uri="urn:asked", urgency=1.0,
+        answer = self._measured(ObservedDesire(uri="urn:asked", urgency=1.0,
                                              observed_property=observed_property, value=value),
                                 value)
         return 1.0 if answer is None else answer

@@ -29,12 +29,15 @@ from agent.store import bindings
 log = logging.getLogger("sensing")
 
 @dataclass(frozen=True)
-class ObservedWant(Desire):
-    """A want ABOUT AN OBSERVED PROPERTY — the kernel's `Desire`, plus the one thing this
+class ObservedDesire(Desire):
+    """A desire ABOUT AN OBSERVED PROPERTY — the kernel's `Desire`, plus the one thing this
     package knows about it that the kernel does not. A stake and a freshness want are both
     of this kind; a duty and a call are not. The kernel ranks, plans for and commits to the
     base type by its node; whoever needs the property asks this package, which is where the
-    property was ever meaningful (the-stake-is-sensings-want)."""
+    property was ever meaningful (the-stake-is-sensings-want).
+
+    Named for the KIND, as every type is: a desire is the kind and a want is one of them
+    (knowledge/domain/desire.md)."""
     observed_property: str | None = None
 
 
@@ -302,7 +305,7 @@ def _measured_urgency(measure, row: dict, value: float | None) -> float:
     """
     #  The INSTRUMENT rides along, because it is what tells the answerer which kind of want
     #  this is. A row that binds none is a stake and the want it makes says so by omission.
-    answer = measure(ObservedWant(uri=row["desire"], urgency=1.0,
+    answer = measure(ObservedDesire(uri=row["desire"], urgency=1.0,
                             observed_property=row["property"], value=value,
                             instrument=row.get("instrument")),
                      value) if measure else None
@@ -380,7 +383,7 @@ def desires_of(desires, beliefs, agent_uri: str, measure=None) -> list[Desire]:
                 #  situation, not a contradiction.
                 urgency = _measured_urgency(measure, row, value)
                 state = "unmet" if value < region.low or value > region.high else "met"
-        out.append(ObservedWant(uri=row["desire"], urgency=urgency, state=state,
+        out.append(ObservedDesire(uri=row["desire"], urgency=urgency, state=state,
                         observed_property=row["property"], value=value,
                         #  Only a freshness row binds one, which is what makes it the
                         #  discriminator rather than a decoration.
