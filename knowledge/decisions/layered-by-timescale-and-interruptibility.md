@@ -28,7 +28,7 @@ actually has.
 
 **The axis is latency and interruptibility, not push versus plan.**
 
-| | latency | interruptible | searches |
+| [row](/domain/row.md) | latency | interruptible | searches |
 |---|---|---|---|
 | reactive | ms | n/a — atomic | no |
 | progression | s–min | suspends | no |
@@ -94,8 +94,8 @@ which searched — all inside `handle`, on the callback thread. That was deliber
 reactive row: it blocked every other message for the length of a pass, and a slow deliberator
 (a model, later) would have stalled the bus.
 
-**Fixed (#392).** `revision.wake` MARKS the want and returns; `Revision` drains the marks on a
-thread of the mind's own, started with the agent and stopped with it. Three consequences worth
+**Fixed (#392).** `revision.wake` leaves a [mark](/domain/revision.md) and returns, and the
+marks are drained on a thread of the mind's own, started with the agent and stopped with it. Three consequences worth
 knowing, because each is the rule showing its teeth:
 
 - **A handler cannot learn what the search decided**, and two callers had been reading it. The

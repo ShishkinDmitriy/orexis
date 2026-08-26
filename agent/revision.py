@@ -45,6 +45,9 @@ class Revision:
     **Deduplicated by want, and that is the beginning of the filter.** Ten readings between two
     passes leave one mark, not ten; the record's *bands, not raw values* belongs here next, and
     the projections after it (layered-by-timescale-and-interruptibility).
+
+    The words — a MARK, DRAINED on the agent's own clock — are the dictionary's:
+    knowledge/domain/revision.md, and knowledge/domain/row.md for the rows they keep apart.
     """
 
     def __init__(self, agent):

@@ -75,6 +75,8 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [actuation](/domain/actuation.md) - The power to touch the physical world, held by whoever owns the hardware. Bounded by a claim and by the device's own cap.
 
 * [review](/domain/review.md) - An agent re-picking its own settings inside the room its world left it. Granted by latitude; a mandate whose ends meet grants nothing.
+* [revision](/domain/revision.md) - The seam where a change becomes a reason to deliberate: marks a want, drains them on the agent's own clock, and answers the marker nothing.
+* [row](/domain/row.md) - One of three cognitive layers — reactive, progression, deliberative — declared on the hook a module answers, because one module answers in several.
 
 # Sensing
 
