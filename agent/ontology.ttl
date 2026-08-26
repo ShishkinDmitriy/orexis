@@ -544,7 +544,7 @@ ag:holds a owl:ObjectProperty ; rdfs:domain ag:Agent ;
 #  where the how could differ — and it is why universality was never the test:
 #  telemetry-is-a-mandatory-capability settled that a capability every agent holds is still a
 #  capability, and the mirror holds here, that a STATE no agent is obliged to have is still the
-#  kernel's word for it. `ag:Device` is kernel and most agents hold none.
+#  kernel's word for it. `device:Device` is a package's now, and most agents hold none.
 #
 #  See knowledge/decisions/the-mind-is-six-graphs.md.
 
