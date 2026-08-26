@@ -61,7 +61,7 @@ Dropping it needed the prefix to be doing no real work. It was not:
 - **Nothing outside `world/simulation/world.ttl` referenced it.** The only other occurrences were
   two arbitrary strings in `tests/test_simulated_valve.py`, which invents its own topics as
   environment for a standalone process.
-- **`onboarding/compose.py` keys off `ag:simulatedBy`**, not off ids or topics, so container
+- **`onboarding/compose.py` keys off `device:simulatedBy`**, not off ids or topics, so container
   names and `SIM_*` environment followed the rename without a line changing. Verified by
   regenerating rather than assumed.
 - **Dashboards use the Influx measurement and its tags**, never a topic; **`orexis-firmware

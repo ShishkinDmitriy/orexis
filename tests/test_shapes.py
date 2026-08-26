@@ -272,7 +272,7 @@ def test_an_agent_may_hold_both_modes_at_once():
     """
     assert _conforms(_mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:chatter_fern a sosa:Sensor , ag:Device ; ag:localId "chatter_fern" ; mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ;
+            ag:chatter_fern a sosa:Sensor , device:Device ; ag:localId "chatter_fern" ; mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ;
                 sensing:senseMode sensing:PushProcedure ; sensing:monitors <http://example.org/orexis/world/simulation#fern> ; sosa:observes water:SoilMoisture ;
                 scaling:quantityUnit unit:UNITLESS ;
                 mqtt:readingTopic "sensors/chatter_fern/reading" .
@@ -285,7 +285,7 @@ def test_an_agent_may_hold_both_modes_at_once():
 def _duplicate_probe(observes: str) -> rdflib.Graph:
     return _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
+            ag:second_probe_fern a sosa:Sensor , device:Device ; ag:localId "second_probe_fern" ;
                 mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors <http://example.org/orexis/world/simulation#fern> ;
                 sosa:observes {observes} ;
                 scaling:quantityUnit unit:UNITLESS ;
@@ -835,7 +835,7 @@ def _duplicate_probe_in_its_own_patch() -> rdflib.Graph:
             ag:fern_west a <http://www.w3.org/ns/sosa/Sample> ;
                 <http://www.w3.org/ns/sosa/isSampleOf> <http://example.org/orexis/world/simulation#fern> .
             <http://example.org/orexis/world/simulation#moisture_sensor_fern> sensing:samples ag:fern_east .
-            ag:second_probe_fern a sosa:Sensor , ag:Device ; ag:localId "second_probe_fern" ;
+            ag:second_probe_fern a sosa:Sensor , device:Device ; ag:localId "second_probe_fern" ;
                 mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ; sensing:senseMode sensing:ScheduledProcedure ; sensing:monitors <http://example.org/orexis/world/simulation#fern> ;
                 sensing:samples ag:fern_west ;
                 sosa:observes water:SoilMoisture ;
@@ -935,7 +935,7 @@ def test_a_watched_channel_on_a_push_device_is_legal():
     device without the channel its bands would arrive on."""
     data = _mutate(f"""
         INSERT {{ GRAPH <{WORLD_GRAPH}> {{
-            ag:sentinel_x a sosa:Sensor , ag:Device ; ag:localId "sentinel_x" ;
+            ag:sentinel_x a sosa:Sensor , device:Device ; ag:localId "sentinel_x" ;
                 mqtt:onBus <http://example.org/orexis/world/simulation#local_bus> ;
                 sensing:senseMode sensing:PushProcedure ;
                 <http://www.w3.org/ns/ssn/implements> sensing:AlarmProcedure ;

@@ -137,6 +137,12 @@ MOVED = {
         "http://example.org/orexis/market#Offer")},
     #  The AIM went to sensing with the region it sits in (the-stake-is-sensings-want): a
     #  volume authored while it was the kernel's holds `ag:aims`, and this is the rename.
+    #  THE SUBSTRATE went to `packages/part/device/`: a BDI kernel says nothing about what a
+    #  thing is made of (the-substrate-is-not-the-minds).
+    **{f"http://example.org/orexis#{n}": f"http://example.org/orexis/device#{n}"
+       for n in ("Device", "simulatedBy", "DeviceModel", "modelInitialValue", "modelDoseEffect",
+                 "modelLosesPerDay", "modelDailySwing", "modelTickSeconds", "modelMinValue",
+                 "modelMaxValue", "timeScale", "strayDoseMeanDays", "rainTopic")},
     "http://example.org/orexis#Aim": "http://example.org/orexis/sensing#Aim",
     "http://example.org/orexis#aims": "http://example.org/orexis/sensing#aims",
     **{old: "http://example.org/orexis/sensing#Observing" for old in (

@@ -36,3 +36,7 @@ MQTT = "http://example.org/orexis/mqtt#"
 SENSING = "http://example.org/orexis/sensing#"
 ACTUATION = "http://example.org/orexis/actuation#"
 REVIEW = "http://example.org/orexis/review#"
+
+# The substrate and its stand-in — `packages/part/device/`, which the generators read to build
+# a simulated world (the-substrate-is-not-the-minds).
+DEVICE = "http://example.org/orexis/device#"

@@ -15,11 +15,6 @@ ag:AgentShape a sh:NodeShape ;
     sh:property [ sh:path ag:hasCapability ; sh:minCount 1 ; sh:class ag:Capability ;
                   sh:message "an agent must compose at least one capability" ] .
 
-ag:DeviceShape a sh:NodeShape ;
-    rdfs:comment "A device is reachable: it states where it is on the wire, so nothing has to guess its address from a naming convention." ;
-    sh:targetClass ag:Device ;
-    sh:property [ sh:path ag:localId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
-
 ag:WorldShape a sh:NodeShape ;
     rdfs:comment "The world is versioned, so every fact recorded under it can say which world it was recorded in." ;
     sh:targetClass ag:World ;
@@ -57,41 +52,6 @@ ag:PublicGraphShape a sh:NodeShape ;
 #  `mqtt:SimulatedDeviceReachableShape` in that package's shapes (the-kernel-has-no-mailbox).
 #  Its first half, "one device, one stand-in", is kernel structure and stays:
 
-ag:SimulatedDeviceShape a sh:NodeShape ;
-    rdfs:comment "One device, one stand-in. What makes a stand-in REACHABLE is the transport's to say, and it says so in its own shapes." ;
-    sh:targetSubjectsOf ag:simulatedBy ;
-    sh:property [ sh:path ag:simulatedBy ; sh:maxCount 1 ;
-                  sh:message "one device, one stand-in" ] .
-
-
-ag:DeviceModelShape a sh:NodeShape ;
-    rdfs:comment """What the stand-in computes between readings. Optional individually — a modelled valve has no dry rate — but each must be a number if stated at all, because the simulator reads them without a graph to check them against.
-
-An initial value used to be held to 0..1, on the reasoning that it is a fraction of the observed property. That was true of every value this project had and false of sensing: a KY-015 reports degrees Celsius, and 21.4 is not a fraction of anything. It is held to the model's OWN range now, which catches the slip the old rule was written for — 45 where 0.45 was meant, in a model that says it runs 0..1 — and catches it in a thermometer too, where the old rule could not look.""" ;
-    sh:targetClass ag:DeviceModel ;
-    sh:property [ sh:path ag:modelLosesPerDay ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path ag:modelMinValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path ag:modelMaxValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path ag:modelInitialValue ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
-    sh:property [ sh:path ag:modelTickSeconds ; sh:maxCount 1 ; sh:datatype xsd:integer ;
-                  sh:minExclusive 0 ] ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "an initial value must lie inside the range this model states — 45 where 0.45 was meant would clamp and read as a permanently soaking pot" ;
-        sh:select """
-            SELECT $this WHERE {
-                $this <http://example.org/orexis#modelInitialValue> ?initial .
-                OPTIONAL { $this <http://example.org/orexis#modelMinValue> ?min }
-                OPTIONAL { $this <http://example.org/orexis#modelMaxValue> ?max }
-                OPTIONAL {
-                    ?d <http://example.org/orexis#simulatedBy> $this ;
-                       <http://example.org/orexis/sensing#monitors> ?subject .
-                    ?subject <http://example.org/orexis#modelMaxValue> ?subjectMax
-                }
-                BIND(COALESCE(?max, ?subjectMax, 1.0) AS ?high)
-                BIND(COALESCE(?min, 0.0) AS ?low)
-                FILTER(?initial < ?low || ?initial > ?high)
-            }""" ] .
-
 #################  An effect rule accounts for its own timing  #################
 #
 #  The ontology says a rule that omitted these would be claiming immediacy by silence, and this
@@ -102,6 +62,10 @@ An initial value used to be held to 0..1, on the reasoning that it is a fraction
 #  A VIOLATION and not a warning. An effect nobody can wait for is worse than an effect nobody
 #  stated: a planner reads the rule, commits to the act, and then has no answer to "has it
 #  landed yet" — which is the flooding failure with a plan wrapped around it.
+
+#  `ag:DeviceShape`, `ag:SimulatedDeviceShape` and `ag:DeviceModelShape` WERE HERE and are
+#  `packages/part/device/shapes.ttl`'s: what a physical node must state, and what a stand-in
+#  must compute, are the substrate's rules (the-substrate-is-not-the-minds).
 
 ag:EffectRuleAccountsForItsTimingShape a sh:NodeShape ;
     rdfs:comment "What a rule must say beyond what it does: when the world change completes, and by which route anyone would learn that it had." ;

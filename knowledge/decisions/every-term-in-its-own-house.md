@@ -126,7 +126,9 @@ at `packages/core/orexis/` — declared 34 terms at the time
 and **eleven are not true of every agent**:
 
 - **The simulated device model — seven terms** *(eleven since the scenario grew: the physics
-  went time-based and the weather arrived)*. `ag:DeviceModel`, `ag:simulatedBy`,
+  went time-based and the weather arrived)*. (AMENDED: every term in this paragraph is `device:` now, in
+  `packages/part/device/` — see [the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md).)
+  `ag:DeviceModel`, `ag:simulatedBy`,
   RESOLVED for the drying entry by #164's follow-up: the kernel term is `ag:modelLosesPerDay`
   now — property-neutral, with the domain's own `water:driesPerDay` bridging in by subproperty —
   so the kernel no longer speaks water. It was

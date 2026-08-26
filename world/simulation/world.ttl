@@ -13,13 +13,14 @@
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
+@prefix device: <http://example.org/orexis/device#> .
 
 #  A ratified world, v1 — the society, with nothing physical in it.
 #
 #  Not society with a flag, and no longer society with its own capabilities either. Every agent
 #  here is ORDINARY: it polls a sensor with sensing:polls, derives sensing:Subscribing, and runs the same
 #  sensing module a world with real boards runs. What differs is one fact about the DEVICES —
-#  ag:simulatedBy — which says a process stands in for hardware that does not exist.
+#  device:simulatedBy — which says a process stands in for hardware that does not exist.
 #
 #  That is the point. This world used to be wired with ag:models to ag:ModelledSubject, and the
 #  agents derived a simulated capability with its own implementation of perceiving. So the
@@ -69,10 +70,10 @@
     #  one minute per day the slow cadence spans ten days, the trend bound pins every agent
     #  to the constitutional floor, and the machinery this world exists to show has nothing
     #  left to choose between.
-    ag:timeScale 144 ;
+    device:timeScale 144 ;
     #  And someone with a watering can wanders through about every other simulated day,
     #  per pot: the third-party impulse of #151, made routine rather than hypothetical.
-    ag:strayDoseMeanDays 2 ;
+    device:strayDoseMeanDays 2 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 :version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
@@ -120,7 +121,7 @@
 #  fill rate is conservation's mirror (litresPerStoredLitre, identically 1.0 — a litre poured
 #  in is a litre held), and the ceiling is water:capacityL above — all three reach the model
 #  entailed, one statement each, the #164 pattern three times.
-:barrel1_level a sosa:Sensor , ag:Device ;
+:barrel1_level a sosa:Sensor , device:Device ;
     ag:localId "barrel1_level" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:PushProcedure ;
@@ -128,10 +129,10 @@
     sosa:observes water:StoredLitres ;
     scaling:quantityUnit unit:L ;
     mqtt:readingTopic "sensors/barrel1_level/reading" ;
-    ag:simulatedBy [ a ag:DeviceModel ;
-        ag:modelMinValue 0.0 ;
-        ag:modelInitialValue 3.0 ;
-        ag:modelTickSeconds 30 ] .
+    device:simulatedBy [ a device:DeviceModel ;
+        device:modelMinValue 0.0 ;
+        device:modelInitialValue 3.0 ;
+        device:modelTickSeconds 30 ] .
 
 ##########  The supplier — runs the venue and owns the valves  ##########
 #  Derivation gives it Hosting (it owns a market) and Actuation (it holds valves), and NOT
@@ -199,7 +200,7 @@
 :city_valve a actuation:Valve ;
     ag:localId "city_valve" ; mqtt:onBus :local_bus ;
     actuation:actuates :barrel1 ; actuation:drawsFrom :city_mains ;
-    ag:simulatedBy [ a ag:DeviceModel ] ;
+    device:simulatedBy [ a device:DeviceModel ] ;
     mqtt:commandTopic "actuators/city_valve/command" ;
     mqtt:statusTopic "actuators/city_valve/status" ;
     #  A mains pours faster than a gravity barrel: a two-litre refill is a forty-second
@@ -230,7 +231,7 @@
 
 :fern a water:Plant ;
     ag:localId "fern" ; water:servedBy :barrel1 ;
-    ag:rainTopic "rain/fern" ;
+    device:rainTopic "rain/fern" ;
     water:driesPerDay 0.12 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
@@ -249,7 +250,7 @@
 
 :tomato a water:Plant ;
     ag:localId "tomato" ; water:servedBy :barrel1 ;
-    ag:rainTopic "rain/tomato" ;
+    device:rainTopic "rain/tomato" ;
     water:driesPerDay 0.20 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
@@ -262,7 +263,7 @@
 
 :succulent a water:Plant ;
     ag:localId "succulent" ; water:servedBy :barrel1 ;
-    ag:rainTopic "rain/succulent" ;
+    device:rainTopic "rain/succulent" ;
     water:driesPerDay 0.04 ; water:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange [ a ssn-system:OperatingRange ;
         ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ;
@@ -338,9 +339,9 @@
 #  Note which one carries mqtt:onBus and which does not. The board holds ONE credential and
 #  publishes ONE message, so `ag:air_temp_fern` mints no principal of its own: a second credential
 #  for a client that never connects is exactly what the hardware world refuses. It is reachable
-#  because its neighbour publishes for it, which is what `ag:SimulatedDeviceShape` now tests.
+#  because its neighbour publishes for it, which is what `device:SimulatedDeviceShape` now tests.
 
-:moisture_sensor_fern a sosa:Sensor , ag:Device ;
+:moisture_sensor_fern a sosa:Sensor , device:Device ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
@@ -355,18 +356,18 @@
     #  exists for devices that state nothing, and a moisture reading is not anonymous.
     mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
-    ag:simulatedBy [ a ag:DeviceModel ;
-        ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
-        ag:modelInitialValue 0.45 ;
+    device:simulatedBy [ a device:DeviceModel ;
+        device:modelMinValue 0.0 ; device:modelMaxValue 1.0 ;
+        device:modelInitialValue 0.45 ;
         #  No drying stated here since #164: the pot's own water:driesPerDay above is the
         #  physics, entailed into the kernel's term, and this model would only override it.
-        ag:modelTickSeconds 3 ] .
+        device:modelTickSeconds 3 ] .
 
 #  The second property on that same wire. No bus, no command topic of its own, no principal —
 #  it is the same device speaking, and the only thing that makes it a separate SENSOR is that it
 #  observes a different property. Its range is degrees, not a fraction, which is the assumption
-#  ag:DeviceModelShape had to stop making.
-:air_temp_fern a sosa:Sensor , ag:Device ;
+#  device:DeviceModelShape had to stop making.
+:air_temp_fern a sosa:Sensor , device:Device ;
     ag:localId "air_temp_fern" ;
     #  Watched too (#151): a stand-in may watch every channel it has, where a real ESP32's ULP
     #  reaches only the analog probe — the per-channel statement is exactly for that asymmetry.
@@ -378,16 +379,16 @@
     mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
     mqtt:readingPointer "/temperature" ;
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
-    ag:simulatedBy [ a ag:DeviceModel ;
-        ag:modelMinValue -10.0 ; ag:modelMaxValue 45.0 ;
-        ag:modelInitialValue 21.0 ;
+    device:simulatedBy [ a device:DeviceModel ;
+        device:modelMinValue -10.0 ; device:modelMaxValue 45.0 ;
+        device:modelInitialValue 21.0 ;
         #  A room, not a trend: 21 at the shoulders, ~25 mid-afternoon, ~17 before dawn. The
         #  old model warmed forever, one step per reading — the artifact the model loss term's
         #  comment records, wearing a minus sign.
-        ag:modelDailySwing 4.0 ;
-        ag:modelTickSeconds 3 ] .
+        device:modelDailySwing 4.0 ;
+        device:modelTickSeconds 3 ] .
 
-:moisture_sensor_tomato a sosa:Sensor , ag:Device ;
+:moisture_sensor_tomato a sosa:Sensor , device:Device ;
     ag:localId "moisture_sensor_tomato" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
@@ -402,13 +403,13 @@
     #  exists for devices that state nothing, and a moisture reading is not anonymous.
     mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_tomato/command" ;
-    ag:simulatedBy [ a ag:DeviceModel ;
-        ag:modelInitialValue 0.45 ;
+    device:simulatedBy [ a device:DeviceModel ;
+        device:modelInitialValue 0.45 ;
         #  The thirsty one: a fifth of saturation per day, which is why it is also the anxious
         #  one — its cadence beliefs and its physics agree about how fast trouble arrives.
-        ag:modelTickSeconds 3 ] .
+        device:modelTickSeconds 3 ] .
 
-:moisture_sensor_succulent a sosa:Sensor , ag:Device ;
+:moisture_sensor_succulent a sosa:Sensor , device:Device ;
     ag:localId "moisture_sensor_succulent" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
@@ -423,16 +424,16 @@
     #  exists for devices that state nothing, and a moisture reading is not anonymous.
     mqtt:readingPointer "/moisture" ;
     mqtt:commandTopic "sensors/moisture_sensor_succulent/command" ;
-    ag:simulatedBy [ a ag:DeviceModel ;
-        ag:modelInitialValue 0.45 ;
+    device:simulatedBy [ a device:DeviceModel ;
+        device:modelInitialValue 0.45 ;
         #  A succulent barely drinks: a watering every week or two, real and simulated.
-        ag:modelTickSeconds 3 ] .
+        device:modelTickSeconds 3 ] .
 
 ##########  The supplier's valves — real valves, stood in for  ##########
 #
 #  actuation:Valve, not a separate class: the supplier holds actuation:hasActuator and derives plain
 #  actuation:Actuation, so it co-signs every command exactly as it would for hardware. What is
-#  simulated is the DEVICE at the other end, which is what ag:simulatedBy says — the same
+#  simulated is the DEVICE at the other end, which is what device:simulatedBy says — the same
 #  mark the sensors carry.
 #
 #  mqtt:statusTopic is where the stand-in reports what it actually dispensed. A simulated
@@ -441,21 +442,21 @@
 
 :valve_fern a actuation:Valve ;
     ag:localId "valve_fern" ; mqtt:onBus :local_bus ; actuation:actuates :fern ; actuation:drawsFrom :barrel1 ;
-    ag:simulatedBy [ a ag:DeviceModel ] ;
+    device:simulatedBy [ a device:DeviceModel ] ;
     mqtt:commandTopic "actuators/valve_fern/command" ;
     mqtt:statusTopic "actuators/valve_fern/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
 :valve_tomato a actuation:Valve ;
     ag:localId "valve_tomato" ; mqtt:onBus :local_bus ; actuation:actuates :tomato ; actuation:drawsFrom :barrel1 ;
-    ag:simulatedBy [ a ag:DeviceModel ] ;
+    device:simulatedBy [ a device:DeviceModel ] ;
     mqtt:commandTopic "actuators/valve_tomato/command" ;
     mqtt:statusTopic "actuators/valve_tomato/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .
 
 :valve_succulent a actuation:Valve ;
     ag:localId "valve_succulent" ; mqtt:onBus :local_bus ; actuation:actuates :succulent ; actuation:drawsFrom :barrel1 ;
-    ag:simulatedBy [ a ag:DeviceModel ] ;
+    device:simulatedBy [ a device:DeviceModel ] ;
     mqtt:commandTopic "actuators/valve_succulent/command" ;
     mqtt:statusTopic "actuators/valve_succulent/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 1000.0 .

@@ -5,6 +5,7 @@
 @prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix device: <http://example.org/orexis/device#> .
 
 # Rules for the Actuation module.
 
@@ -15,7 +16,7 @@ actuation:ActuatingAgentShape a sh:NodeShape ;
             SELECT ?this WHERE { ?this <http://example.org/orexis#hasCapability>
                                        <http://example.org/orexis/actuation#Actuation> }
         """ ] ;
-    sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class sosa:Actuator , ag:Device ;
+    sh:property [ sh:path actuation:hasActuator ; sh:minCount 1 ; sh:class sosa:Actuator , device:Device ;
                   sh:message "an agent that actuates must own at least one actuator" ] ;
     sh:property [ sh:path actuation:doseGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minInclusive 0 ;
@@ -42,6 +43,6 @@ actuation:SimulatedActuatorShape a sh:NodeShape ;
         sh:message "a simulated actuator must state mqtt:statusTopic — its stand-in reports there, and a simulated sensor waters only on what it reports" ;
         sh:select """
             SELECT $this WHERE {
-                $this <http://example.org/orexis#simulatedBy> ?model .
+                $this <http://example.org/orexis/device#simulatedBy> ?model .
                 FILTER NOT EXISTS { $this <http://example.org/orexis/mqtt#statusTopic> ?t }
             }""" ] .

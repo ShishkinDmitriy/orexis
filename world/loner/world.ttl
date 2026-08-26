@@ -9,6 +9,7 @@
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix scaling: <http://example.org/orexis/scaling#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix device: <http://example.org/orexis/device#> .
 
 #  The loner — the ladder's second rung as a whole world (#190). Named by the sovereign for
 #  what it is: EVERYTHING IN ONE AGENT — stake, sight, lever and source — so it needs nobody:
@@ -36,7 +37,7 @@
     mqtt:brokerTlsPort 8887 .
 
 :world a ag:World ; ag:currentVersion :version_1 ;
-    ag:timeScale 144 ;
+    device:timeScale 144 ;
     prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole ag:Sovereign ] .
 :version_1 a ag:WorldVersion ; ag:versionNumber 1 .
 
@@ -64,7 +65,7 @@
     water:suppliedBy :gardener ;
     water:capacityL 20.0 .
 
-:butt_level a sosa:Sensor , ag:Device ;
+:butt_level a sosa:Sensor , device:Device ;
     ag:localId "butt_level" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:PushProcedure ;
@@ -72,10 +73,10 @@
     sosa:observes water:StoredLitres ;
     scaling:quantityUnit unit:L ;
     mqtt:readingTopic "sensors/butt_level/reading" ;
-    ag:simulatedBy [ a ag:DeviceModel ;
-        ag:modelMinValue 0.0 ;
-        ag:modelInitialValue 15.0 ;
-        ag:modelTickSeconds 30 ] .
+    device:simulatedBy [ a device:DeviceModel ;
+        device:modelMinValue 0.0 ;
+        device:modelInitialValue 15.0 ;
+        device:modelTickSeconds 30 ] .
 
 ##########  The gardener — stake, lever, and no market anywhere  ##########
 #  Derivation gives it Subscribing (a scheduled probe), Listening (the butt's level
@@ -92,7 +93,7 @@
 
 ##########  The probe — ordinary, scheduled, simulated  ##########
 
-:moisture_probe a sosa:Sensor , ag:Device ;
+:moisture_probe a sosa:Sensor , device:Device ;
     ag:localId "moisture_probe" ;
     mqtt:onBus :local_bus ;
     sensing:senseMode sensing:ScheduledProcedure ;
@@ -101,17 +102,17 @@
     scaling:quantityUnit unit:UNITLESS ;
     mqtt:readingTopic "sensors/moisture_probe/reading" ;
     mqtt:commandTopic "sensors/moisture_probe/command" ;
-    ag:simulatedBy [ a ag:DeviceModel ;
-        ag:modelMinValue 0.0 ; ag:modelMaxValue 1.0 ;
-        ag:modelInitialValue 0.22 ;
-        ag:modelTickSeconds 3 ] .
+    device:simulatedBy [ a device:DeviceModel ;
+        device:modelMinValue 0.0 ; device:modelMaxValue 1.0 ;
+        device:modelInitialValue 0.22 ;
+        device:modelTickSeconds 3 ] .
 
 ##########  The pump — the gardener's own lever on the gardener's own water  ##########
 
 :pump a actuation:Valve ;
     ag:localId "pump" ; mqtt:onBus :local_bus ;
     actuation:actuates :zz ; actuation:drawsFrom :water_butt ;
-    ag:simulatedBy [ a ag:DeviceModel ] ;
+    device:simulatedBy [ a device:DeviceModel ] ;
     mqtt:commandTopic "actuators/pump/command" ;
     mqtt:statusTopic "actuators/pump/status" ;
     actuation:mlPerSecond 10.0 ; actuation:maxDoseMl 500.0 .

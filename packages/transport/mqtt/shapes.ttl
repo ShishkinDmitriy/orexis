@@ -4,6 +4,7 @@
 @prefix ag:   <http://example.org/orexis#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix device: <http://example.org/orexis/device#> .
 
 # Rules for the MQTT binding: the bus must be reachable, channels must be stated, and only an
 # agent that can actually DRIVE a device is required to hold a cadence.
@@ -102,13 +103,13 @@ mqtt:AlarmChannelShape a sh:NodeShape ;
         """ ] .
 
 
-#  Was `ag:SimulatedDeviceShape`'s second half, in the kernel: reachable is a sentence in this
+#  Was `device:SimulatedDeviceShape`'s second half, in the kernel: reachable is a sentence in this
 #  transport's words (the-kernel-has-no-mailbox). The kernel keeps "one device, one stand-in".
 mqtt:SimulatedDeviceReachableShape a sh:NodeShape ;
     rdfs:comment """A device that is stood in for must still be reachable like a real one, or the failure is a sensor that is simply, permanently silent — which reads exactly like hardware that is not there. Which it is not.
 
 What makes it reachable is no longer only its own credential. A KY-015 reports two properties down ONE line, and `world/sensing` states that shape already: `ag:air_temp_fern` has no `mqtt:onBus` at all, because a peripheral sharing its board's connection must not mint a principal for a client that never connects. So the test is REACHABILITY rather than ownership — on a bus, or sharing the reading topic of something that is. This shape used to demand the credential, and demanding it of a simulated multi-property board would have forced exactly the second principal the hardware world refuses.""" ;
-    sh:targetSubjectsOf ag:simulatedBy ;
+    sh:targetSubjectsOf device:simulatedBy ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a simulated device must be reachable: on a bus of its own, or sharing the reading topic of a device that is — otherwise nothing would ever publish for it" ;
         sh:select """

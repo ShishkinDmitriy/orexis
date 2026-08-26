@@ -12,6 +12,7 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix device: <http://example.org/orexis/device#> .
 
 # Rules that hold for sensing however it is done. They target the capability FAMILY, so a
 # new transport inherits them by declaring its capabilities as sensing:SensingCapability rather
@@ -26,7 +27,7 @@ sensing:PerceivingAgentShape a sh:NodeShape ;
                 ?cap a <http://example.org/orexis/sensing#SensingCapability> .
             }
         """ ] ;
-    sh:property [ sh:path sensing:polls ; sh:minCount 1 ; sh:class sosa:Sensor , ag:Device ;
+    sh:property [ sh:path sensing:polls ; sh:minCount 1 ; sh:class sosa:Sensor , device:Device ;
                   sh:message "an agent that perceives must be wired to at least one sensor" ] ;
     sh:property [ sh:path sensing:readingGraceS ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:datatype xsd:integer ; sh:minExclusive 0 ;

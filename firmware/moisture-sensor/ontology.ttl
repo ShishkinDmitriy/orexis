@@ -6,6 +6,7 @@
 @prefix ag:   <http://example.org/orexis#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix device: <http://example.org/orexis/device#> .
 
 <http://example.org/orexis/firmware/moisture-sensor> a owl:Ontology ;
     rdfs:label "The governed node — what a board running this firmware IS" ;
@@ -30,12 +31,12 @@ What holds the promise to the silicon is the wiring shape (mc:WatchedChannelWiri
 a board's class states which pin roles its sleep-watcher reaches, and a watched channel whose
 signal pin the watcher cannot reach refuses to validate.
 
-Simulated devices run no firmware and never carry this type: ag:simulatedBy is their
+Simulated devices run no firmware and never carry this type: device:simulatedBy is their
 kind-statement, and a stand-in typed with a firmware class it does not run would be a new way
 to lie.""" .
 
 :Node a owl:Class ; rdfs:label "governed node" ;
-    rdfs:subClassOf ag:Device ,
+    rdfs:subClassOf device:Device ,
         #  The two facts every board of this kind shares, reaching each instance through the
         #  closure's hasValue rule — a datasheet fact, except the sheet is src/main.cpp:
         #  the agent commands the cadence and the board keeps it (Scheduled), and the

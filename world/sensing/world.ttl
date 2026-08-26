@@ -14,6 +14,7 @@
 @prefix scaling: <http://example.org/orexis/scaling#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix device: <http://example.org/orexis/device#> .
 
 #  A ratified world, v1 — the SMALLEST one that produces a working agent.
 #
@@ -110,7 +111,7 @@
     ssn:hasSubSystem :air_temp_fern , :air_humidity_fern ;
     rdfs:comment "One part reporting two properties. A System rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it has the two that do as sub-systems. Not a Platform either: it is hosted and has sub-systems, and nothing is MOUNTED on a KY-015. What the part itself does is produce both values in one frame, which is why they share an instant." .
 
-:moisture_sensor_fern a sosa:Sensor , ag:Device , governed:Node ;
+:moisture_sensor_fern a sosa:Sensor , device:Device , governed:Node ;
     ag:localId "moisture_sensor_fern" ;
     mqtt:onBus :local_bus ;
     #  No senseMode stated since #175: the FIRMWARE says what it is — this device is typed
@@ -141,7 +142,7 @@
 #  board, which already has one. `ag:air_sensor_fern` in hardware.ttl is the peripheral they
 #  read — its pins, its model and its wires are stated there and nothing here repeats them.
 
-:air_temp_fern a sosa:Sensor , ag:Device ;
+:air_temp_fern a sosa:Sensor , device:Device ;
     ag:localId "air_temp_fern" ;
     #  no senseMode here since #96: the clock is the BOARD's, stated once where it
     #  connects — this element rides that wire and shares that answer
@@ -159,7 +160,7 @@
         ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
         ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
 
-:air_humidity_fern a sosa:Sensor , ag:Device ;
+:air_humidity_fern a sosa:Sensor , device:Device ;
     ag:localId "air_humidity_fern" ;
     #  no senseMode here since #96: the clock is the BOARD's, stated once where it
     #  connects — this element rides that wire and shares that answer

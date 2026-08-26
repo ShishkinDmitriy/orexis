@@ -20,15 +20,16 @@
 @prefix unit:       <http://qudt.org/vocab/unit/> .
 @prefix sosa:       <http://www.w3.org/ns/sosa/> .
 @prefix dht22:      <http://example.org/data/DHT22/4578#> .
+@prefix device: <http://example.org/orexis/device#> .
 
-# Their two channels, deployed. `ag:Device` is ours and is the conjunct that carries a name on
+# Their two channels, deployed. `device:Device` is ours and is the conjunct that carries a name on
 # our wire — see the audit in capabilities/sensing/ontology.ttl for why that class survives
 # where `sensing:Sensor` did not.
 # No senseMode on either channel since #96: the clock is the BOARD's — the device whose wire
 # these channels ride states it once, and a channel claiming its own would now be refused. A
 # deployment overlay says what the channel watches and where it speaks; who holds the clock was
 # never a per-channel fact to say.
-dht22:TemperatureSensor a ag:Device ;
+dht22:TemperatureSensor a device:Device ;
     ag:localId "vendor_air_temp" ;
     sensing:monitors world:fern ;
     sosa:observes water:AirTemperature ;
@@ -37,7 +38,7 @@ dht22:TemperatureSensor a ag:Device ;
     mqtt:readingPointer "/temperature" ;
     mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
 
-dht22:HumiditySensor a ag:Device ;
+dht22:HumiditySensor a device:Device ;
     ag:localId "vendor_air_humidity" ;
     sensing:monitors world:fern ;
     sosa:observes water:AirHumidity ;
