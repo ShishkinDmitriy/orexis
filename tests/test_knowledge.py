@@ -737,3 +737,37 @@ def test_no_document_names_a_graph_the_store_has_never_had():
         "graphs are enumerable, so this is exact rather than a list of forbidden words:\n  "
         + "\n  ".join(wrong)
     )
+
+
+#  A section nobody can read is a section nobody reads. `decisions/index.md` had ten headings and
+#  one of them held 38 of its 127 entries — a third of the bundle in a flat list called "The mind",
+#  which is where anything not obviously about hardware or the market ended up. Thirteen of those
+#  38 were not about the mind at all: four guard records, three about vocabulary ownership, two
+#  about the market, two about sensing. Nothing was wrong with any single entry; the section had
+#  simply stopped meaning anything, and it stopped one entry at a time.
+#
+#  The cap is not a truth about how many decisions may exist. It is the point at which a heading
+#  has to earn itself again — 24 leaves room above today's largest (19) and trips long before a
+#  section becomes a dumping ground.
+MAX_INDEX_SECTION_ENTRIES = 24
+
+
+def test_no_index_section_is_a_dumping_ground():
+    """Every heading holds a readable number of entries, so a section still names something."""
+    oversized, seen = [], 0
+    for path in indexes():
+        section = "(no heading)"
+        counts: dict[str, int] = {}
+        for line in path.read_text().splitlines():
+            if line.startswith("#"):
+                section = line.lstrip("# ").strip()
+            elif line.startswith("* ["):
+                counts[section] = counts.get(section, 0) + 1
+                seen += 1
+        oversized += [f"{path.relative_to(BUNDLE)}: {name} — {n} entries"
+                      for name, n in counts.items() if n > MAX_INDEX_SECTION_ENTRIES]
+    assert seen, "no index entries found — the pattern stopped matching"
+    assert not oversized, (
+        f"an index section over {MAX_INDEX_SECTION_ENTRIES} entries — split it into headings "
+        "that each name something, or the section becomes where records go to be lost:\n  "
+        + "\n  ".join(oversized))
