@@ -744,3 +744,43 @@ def test_the_mounted_trees_are_the_copied_trees():
     assert mounts == copied, (
         f"compose mounts {sorted(mounts)} and the image copies {sorted(copied)}. A tree in one "
         "and not the other is a container that starts today and refuses at its next restart.")
+
+
+
+def test_a_package_manifest_imports_nothing_expensive():
+    """`__init__.py` may import stdlib and `assembly` — nothing else.
+
+    Every one of them is imported at ASSEMBLY, for every agent, because that is how the loader
+    asks what a package brings. So a heavy import there is paid by every agent for every
+    package — including the packages that agent was never granted, which is exactly what #216
+    removed: *"an agent granted no Consulting never touches whatever Consulting will need
+    installed."*
+
+    The classes go behind `provides()`, which is a function for this reason and not a constant.
+    A package's own `.terms` is allowed: it is constants and a string concatenation.
+    """
+    import ast
+    import pathlib
+    import sys
+
+    stdlib = sys.stdlib_module_names
+    root = pathlib.Path(__file__).resolve().parent.parent
+    offenders = []
+    for path in sorted((root / "packages").glob("*/*/__init__.py")):
+        tree = ast.parse(path.read_text(), str(path))
+        for node in tree.body:                      # TOP LEVEL only — inside a function is the point
+            names = []
+            if isinstance(node, ast.Import):
+                names = [a.name for a in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                if node.level:                      # `from .terms import …` — its own, and cheap
+                    continue
+                names = [node.module or ""]
+            for name in names:
+                root = name.split(".")[0]
+                if root not in stdlib and root != "assembly":
+                    offenders.append(f"{path}: {name}")
+    assert not offenders, (
+        "a package manifest imports something expensive at the top level — every agent pays "
+        "for it, for every package, granted or not. Move it inside `provides()`:\n  "
+        + "\n  ".join(offenders))

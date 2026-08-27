@@ -11,5 +11,7 @@ the kernel, which is what lets the kernel be one of the things assembled.
 """
 
 from .contribute import answer, contributes, contributions_of
+from .terms import ACTIONS, DERIVATION, REVIEW, SHAPES, VOCABULARY, WANTS
 
-__all__ = ["answer", "contributes", "contributions_of"]
+__all__ = ["answer", "contributes", "contributions_of",
+           "ACTIONS", "DERIVATION", "REVIEW", "SHAPES", "VOCABULARY", "WANTS"]

@@ -16,7 +16,7 @@ from agent import signing
 from assembly import loader  # noqa: F401  (loader puts the package trees on sys.path)
 from packages.capability.market.clearing import Claim
 from agent.signing import verify_command
-from packages.capability.actuation import ActuationModule
+from packages.capability.actuation.module import ActuationModule
 from agent.world import Self
 from packages.capability.actuation.wiring import Actuator
 

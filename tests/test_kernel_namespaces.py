@@ -428,7 +428,7 @@ def _declared() -> set[str]:
     """Every subject any ontology or actions file declares — the union T-Box, read off the
     files. An action node (`market:Offering`) is declared in its package's `actions.ttl`."""
     out: set[str] = set()
-    for path in loader.ontology_files() + loader.files(loader.ACTIONS):
+    for path in loader.ontology_files() + loader.action_files():
         out.update(str(s) for s in rdflib.Graph().parse(path, format="turtle").subjects()
                    if isinstance(s, rdflib.URIRef))
     return out

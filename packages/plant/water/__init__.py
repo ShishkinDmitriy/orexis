@@ -1,4 +1,8 @@
-"""The manifest: what this transport contributes to a build."""
+"""What `plant/water` brings to a build.
+
+Knowledge only: it contributes vocabulary and no behaviour, which is why there is no
+`provides()` below. A board has no code a runtime could load.
+"""
 
 from pathlib import Path
 
@@ -18,12 +22,3 @@ def shapes(package: Path) -> list[Path]:
 def derivation(package: Path) -> list[Path]:
     """the premise that grants it."""
     return [package / "rules.ru"]
-
-def provides() -> tuple:
-    """The classes this package contributes. Imported HERE and not at the top, so an
-    agent granted none of them never pays for the import (#216) — and a missing optional
-    extra costs only the agents that were granted the capability needing it."""
-    from .driver import MqttDriver
-    from .module import MqttModule
-
-    return (MqttDriver, MqttModule)

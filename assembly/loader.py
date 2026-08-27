@@ -63,6 +63,9 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from . import terms
+from .contribute import answer
+
 #  Assembly computes this itself rather than importing the kernel's: nothing here may import
 #  `agent`, which is what lets the kernel be one of the things assembled.
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -112,16 +115,18 @@ BASE = "orexis"
 # relied on now: the kernel is not in the tree, so it cannot be sorted wrong.
 KINDS = (BUS, PART, PLANT, TOOL, CAPABILITIES, TRANSPORTS, CODECS, CALIBRATIONS)
 
+#  THE ONLY FILENAMES LEFT, and they are the two ROOTS' rather than any package's. Assembly and
+#  the kernel are not packages — they are what packages are assembled onto — and neither may be
+#  imported to be asked what it brings, since `assembly` importing `agent` is the one direction
+#  `lint-imports` forbids outright. So the loader knows their layout by name, which is honest:
+#  their layout is its own. Every other package SAYS what it brings, and may call its files
+#  whatever it likes (the-assembly-is-not-the-mind).
+#
+#  `desires.ru`, `review.rq` and `actions.ttl` were here too and are not: no root has one, and
+#  no package needs a constant for a name only it uses.
 ONTOLOGY = "ontology.ttl"
 SHAPES = "shapes.ttl"
 RULES = "rules.ru"
-DESIRES_RULES = "desires.ru"
-# What a package would like its agents to reconsider about themselves. A SPARQL SELECT binding
-# ?term and ?value, run by the reviewer — never an update, and never Python. See orexis/review.py.
-REVIEW = "review.rq"
-# The ways of acting this package brings — one `ag:Action` node each: precondition, effect,
-# taker. Replaced `affordances.rq`, `honoured.rq` and `effects.ttl` (an-action-is-one-node).
-ACTIONS = "actions.ttl"
 
 
 @dataclass(frozen=True)
@@ -156,20 +161,61 @@ class Package:
         candidate = self.path / filename
         return candidate if candidate.exists() else None
 
+    def manifest(self):
+        """This package's `__init__`, imported — or None where it ships no Python.
+
+        Imported at ASSEMBLY, for every package, which is why an `__init__.py` must stay cheap:
+        stdlib and `assembly.terms`, nothing else. The heavy import lives behind `provides()`
+        and is paid only by an agent whose grants reach it (#216).
+
+        The kernel answers nothing here, and the guard is explicit rather than incidental:
+        `agent/__init__.py` exists, so without it this would import the runtime.
+        """
+        if self.is_kernel or not (self.path / "__init__.py").exists():
+            return None
+        return importlib.import_module(self.import_name)
+
+    #  What the two ROOTS bring, by convention rather than by contribution. Assembly and the
+    #  kernel are not packages — they are what packages are assembled onto — and neither may be
+    #  imported to be asked: `assembly` importing `agent` is the one direction `lint-imports`
+    #  forbids outright. So the loader knows their layout, which is honest, because their layout
+    #  is the loader's own.
+    _ROOT_FILES = {terms.VOCABULARY: ONTOLOGY, terms.SHAPES: SHAPES,
+                   terms.DERIVATION: RULES}
+
+    def contributes(self, point: str) -> tuple:
+        """What this package contributes to one assembly-time point, flattened.
+
+        Never imports anything beyond the package's own `__init__`, and for a root does not
+        import at all.
+        """
+        if self.is_kernel:
+            name = self._ROOT_FILES.get(point)
+            found = self.file(name) if name else None
+            return (found,) if found is not None else ()
+        manifest = self.manifest()
+        if manifest is None:
+            return ()
+        fn = answer(manifest, point)
+        return tuple(fn(self.path)) if fn is not None else ()
+
     def provides(self) -> tuple:
         """Whatever classes this package contributes — modules, drivers — or nothing.
 
         A package with no `__init__.py` is knowledge only, and that is a legitimate kind of
         package: the domain contributes vocabulary and no behaviour.
 
-        The kernel answers nothing here, and the guard is explicit rather than incidental:
-        `agent/__init__.py` exists, so without it this would import the runtime looking for a
-        `PROVIDES` the kernel must never have. A capability is something an agent MAY hold, and
-        the kernel is what every agent IS.
+        LAZY, and that is the whole of #216: `provides()` is a function a package defines, so
+        the classes it names are imported when something asks for them rather than when the
+        manifest is read. A missing optional extra costs the agents that were granted the
+        capability and nothing at all to the rest.
         """
-        if self.is_kernel or not (self.path / "__init__.py").exists():
+        manifest = self.manifest()
+        if manifest is None:
             return ()
-        return tuple(getattr(importlib.import_module(self.import_name), "PROVIDES", ()))
+        if callable(getattr(manifest, "provides", None)):
+            return tuple(manifest.provides())
+        return tuple(getattr(manifest, "PROVIDES", ()))
 
 
 # The kernel, as a record. It carries the same four filenames a package carries, so every
@@ -243,8 +289,25 @@ def of_kind(kind: str) -> tuple[Package, ...]:
     return tuple(p for p in packages() if p.kind == kind)
 
 
+def ask(point: str) -> tuple[Path, ...]:
+    """Everything every package contributes to one assembly-time point, in merge order.
+
+    The one door. It used to be a filename — `files("shapes.ttl")` — six literals the kernel
+    held and seven call sites reaching for them, which meant a NEW kind of contribution was a
+    kernel edit and no package could offer another package a place to contribute knowledge.
+    Now a package says what it brings, by term, exactly as it says what it does at run time
+    (the-assembly-is-not-the-mind).
+
+    A package that answers nothing contributes nothing, which is how a package with no
+    `__init__.py`— there are none left — or one that simply has no shapes says so.
+    """
+    return tuple(f for pkg in packages() for f in pkg.contributes(point))
+
+
 def files(filename: str) -> tuple[Path, ...]:
-    """Every package's copy of one of the four files, in merge order."""
+    """Every package's copy of one named file. NOT the contribution mechanism — this is for a
+    reader that wants a file by name whatever a package says it brings, and the tests that
+    check the tree's shape are its callers."""
     return tuple(f for p in packages() if (f := p.file(filename)) is not None)
 
 
@@ -265,15 +328,15 @@ def ontology_files() -> tuple[Path, ...]:
         from_firmware = tuple(sorted(
             p / ONTOLOGY for p in firmware_root.iterdir()
             if p.is_dir() and not p.name.startswith((".", "_")) and (p / ONTOLOGY).exists()))
-    return files(ONTOLOGY) + from_firmware
+    return ask(terms.VOCABULARY) + from_firmware
 
 
 def shapes_files() -> tuple[Path, ...]:
-    return files(SHAPES)
+    return ask(terms.SHAPES)
 
 
 def rule_files() -> tuple[Path, ...]:
-    return files(RULES)
+    return ask(terms.DERIVATION)
 
 
 def desires_rule_files() -> tuple[Path, ...]:
@@ -281,7 +344,7 @@ def desires_rule_files() -> tuple[Path, ...]:
     never by genesis (#312). Only the desire package ships one today; a package that grows a
     kind of want ships its own, and the build collects them exactly as genesis collects
     `rules.ru` — the same union-of-what-is-loaded discipline, one lifecycle over."""
-    return files(DESIRES_RULES)
+    return ask(terms.WANTS)
 
 
 def action_files() -> tuple[Path, ...]:
@@ -299,7 +362,7 @@ def action_files() -> tuple[Path, ...]:
     used to say this — availability, duties, effects — and an author adding one way of acting
     wrote to all of them.
     """
-    return files(ACTIONS)
+    return ask(terms.ACTIONS)
 
 
 def sources(pattern: str = "*.py") -> tuple[Path, ...]:
@@ -327,7 +390,7 @@ def sources(pattern: str = "*.py") -> tuple[Path, ...]:
 def review_rules() -> tuple[Path, ...]:
     """Every package's review rule, if it has one. Most do not, and that is a statement:
     a capability with nothing worth reconsidering says so by shipping no file."""
-    return files(REVIEW)
+    return ask(terms.REVIEW)
 
 
 _ONTOLOGY_IRI = re.compile(r"<(http://example\.org/orexis[^>\s]*)>\s+a\s+owl:Ontology")

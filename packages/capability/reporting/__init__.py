@@ -10,9 +10,32 @@ The two would fail independently, which is the reason it is the member worth bui
 also its limit: a member reporting over the bus cannot report having lost the bus.
 """
 
-from .module import StoringModule
+from pathlib import Path
+
+from assembly import contributes, DERIVATION, SHAPES, VOCABULARY
 from .terms import ANNOUNCING, INTERVAL_S, REPORTING, STORING
 
-PROVIDES = (StoringModule,)
+@contributes(VOCABULARY)
+def vocabulary(package: Path) -> list[Path]:
+    """the vocabulary — what its terms mean."""
+    return [package / "ontology.ttl"]
 
-__all__ = ["PROVIDES", "StoringModule", "REPORTING", "STORING", "ANNOUNCING", "INTERVAL_S"]
+@contributes(SHAPES)
+def shapes(package: Path) -> list[Path]:
+    """what must be true of a thing that has it."""
+    return [package / "shapes.ttl"]
+
+@contributes(DERIVATION)
+def derivation(package: Path) -> list[Path]:
+    """the premise that grants it."""
+    return [package / "rules.ru"]
+
+def provides() -> tuple:
+    """The classes this package contributes. Imported HERE and not at the top, so an
+    agent granted none of them never pays for the import (#216) — and a missing optional
+    extra costs only the agents that were granted the capability needing it."""
+    from .module import StoringModule
+
+    return (StoringModule,)
+
+__all__ = ["REPORTING", "STORING", "ANNOUNCING", "INTERVAL_S"]
