@@ -12,7 +12,7 @@ description: >-
 
 # What it is
 
-`packages/transport/mqtt/module.py` — `mqtt:Linking`, derived for every agent by the fact of
+`packages/orexis-transport-mqtt/module.py` — `mqtt:Linking`, derived for every agent by the fact of
 an `mqtt:MessageBus` in the world ([the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md)).
 It finds the bus in its own words, opens the session with the credential `orexis-mqtt`
 minted, subscribes to whatever the other modules ask for, offers every arriving message to

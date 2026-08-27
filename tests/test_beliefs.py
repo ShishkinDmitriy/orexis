@@ -11,10 +11,10 @@ import pytest
 from assembly import loader  # noqa: F401  (puts the package trees on sys.path)
 from agent import ontology
 from agent.beliefs import BeliefError, Beliefs
-from packages.capability.sensing.readings import Reading, current_reading
-from packages.capability.sensing.regions import aims_of, regions_of
-from packages.capability.market.beliefs import BIDDING_PICKS, HOSTING_PICKS
-from packages.capability.sensing.beliefs import SUBSCRIBING_PICKS
+from orexis_capability_sensing.readings import Reading, current_reading
+from orexis_capability_sensing.regions import aims_of, regions_of
+from orexis_capability_market.beliefs import BIDDING_PICKS, HOSTING_PICKS
+from orexis_capability_sensing.beliefs import SUBSCRIBING_PICKS
 
 from conftest import MOISTURE, TEMPERATURE, desires_build, genesis_store
 

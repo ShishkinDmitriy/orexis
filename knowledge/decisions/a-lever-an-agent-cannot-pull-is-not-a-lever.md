@@ -24,7 +24,7 @@ The second half is the sharp one, and it was already false on the bench.
 
 ## What was there: a row, an intention, and nothing
 
-`packages/capability/sensing/actions.ttl` (then `affordances.rq`) emitted the Observe row on `sensing:polls`, which is
+`packages/orexis-capability-sensing/actions.ttl` (then `affordances.rq`) emitted the Observe row on `sensing:polls`, which is
 authored for both sense modes — the derivation keys `sensing:Subscribing` and `sensing:Listening`
 off the DEVICE, and both branches read the same triple. `SensingModule.sense_now()`'s base
 implementation is an empty method whose docstring says *ask for a reading now, if my hardware
@@ -61,7 +61,7 @@ finally hears.
 The kernel derived the freshness want, in `agent/desires.ru`, and built its met-test as a STRING
 with `sensing#staleAfterS` spelled out where no prefix reaches — one of the entries the namespace
 ratchet ([#334](https://github.com/ShishkinDmitriy/orexis/issues/334)) carried as unclassified.
-It now lives in `packages/capability/sensing/desires.ru`, and four allowlist entries go with it:
+It now lives in `packages/orexis-capability-sensing/desires.ru`, and four allowlist entries go with it:
 the horizon term and three PREFIX lines that had nothing left to bind.
 
 **This does not re-litigate [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md),

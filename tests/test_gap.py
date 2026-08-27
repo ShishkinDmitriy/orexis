@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 
-from packages.capability.sensing.regions import regions_of
+from orexis_capability_sensing.regions import regions_of
 
 from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 

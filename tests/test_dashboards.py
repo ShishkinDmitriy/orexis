@@ -28,7 +28,7 @@ def test_the_annotation_query_reads_the_events_the_writer_writes():
     """The measurement is restated here the way every other one is — so a rename in
     reporting/series.py fails this visibly instead of producing markers that query
     nothing."""
-    from packages.capability.reporting.series import EVENT_MEASUREMENT as WRITTEN
+    from orexis_capability_reporting.series import EVENT_MEASUREMENT as WRITTEN
 
     assert EVENT_MEASUREMENT == WRITTEN
     doc = render_health("simulation")

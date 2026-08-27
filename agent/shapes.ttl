@@ -67,7 +67,7 @@ ag:PublicGraphShape a sh:NodeShape ;
 #  landed yet" — which is the flooding failure with a plan wrapped around it.
 
 #  `ag:DeviceShape`, `ag:SimulatedDeviceShape` and `ag:DeviceModelShape` WERE HERE and are
-#  `packages/part/device/shapes.ttl`'s: what a physical node must state, and what a stand-in
+#  `packages/orexis-part-device/shapes.ttl`'s: what a physical node must state, and what a stand-in
 #  must compute, are the substrate's rules (the-substrate-is-not-the-minds).
 
 ag:EffectRuleAccountsForItsTimingShape a sh:NodeShape ;

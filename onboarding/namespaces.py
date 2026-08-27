@@ -37,7 +37,7 @@ SENSING = "http://example.org/orexis/sensing#"
 ACTUATION = "http://example.org/orexis/actuation#"
 REVIEW = "http://example.org/orexis/review#"
 
-# What stands in for hardware nobody built — `packages/sim/standin/`, which the generators read
+# What stands in for hardware nobody built — `packages/orexis-sim-standin/`, which the generators read
 # to give a stand-in a container and a credential (a-stand-in-is-not-a-device). The SUBSTRATE
 # vocabulary beside it, `device:`, is not here: the generators build an inventory and a harness
 # from `mc:`, and never ask what anything is made of.

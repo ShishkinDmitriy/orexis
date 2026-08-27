@@ -11,9 +11,9 @@ from dataclasses import replace
 
 import pytest
 
-from packages.capability.sensing.readings import current_reading
+from orexis_capability_sensing.readings import current_reading
 
-from packages.capability.sensing import choir
+from orexis_capability_sensing import choir
 from conftest import sensing_of, HUMIDITY, MOISTURE, TEMPERATURE, build_agent, genesis_store, wired_sensors, wired_event_topic
 
 
@@ -807,7 +807,7 @@ def test_a_repicked_jolt_threshold_rearms_the_watch(monkeypatch):
     the module re-aims, and the corrected threshold reaches the board in the next retained
     command — being wrong about the estimate costs a message, never a reflash."""
     from agent.ontology import beliefs_graph
-    from packages.capability.sensing.terms import term as sensing_term
+    from orexis_capability_sensing.terms import term as sensing_term
 
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)
     p, s = fern.subscribing(), moisture_sensor(fern)
@@ -831,9 +831,9 @@ def test_an_agent_with_no_pick_commands_band_only_alarms(monkeypatch):
     """Absence is a statement, not an error: no jolt threshold means the board watches the
     band's edges and nothing else — and no figure is invented from the family's default,
     because a pick must be the agent's own to be revisable."""
-    from packages.capability.sensing.beliefs import ALARM_PICKS
-    from packages.capability.sensing.module import SubscribingModule
-    from packages.capability.sensing.terms import term as sensing_term
+    from orexis_capability_sensing.beliefs import ALARM_PICKS
+    from orexis_capability_sensing.module import SubscribingModule
+    from orexis_capability_sensing.terms import term as sensing_term
     from agent.ontology import beliefs_graph
 
     fern = build_agent("fern", genesis_store({"fern": 0.55}), monkeypatch)

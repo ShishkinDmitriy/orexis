@@ -54,7 +54,7 @@ COPY packages/ packages/
 # must not reach the network at all: everything these projects depend on is either the root
 # (installed above) or a sibling in this same directory, and a dependency that ISN'T is a
 # mistake `pytest` catches at the gate rather than a container discovering it at build time.
-RUN pip install --no-build-isolation --no-deps -e . $(ls -d packages/*/*/)
+RUN pip install --no-build-isolation --no-deps -e . $(ls -d packages/*/)
 
 # The third T-Box source (#175): a firmware's ontology describes what a board running it IS,
 # and an agent whose world types its board by firmware class derives its sensing capability

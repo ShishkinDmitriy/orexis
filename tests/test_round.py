@@ -80,7 +80,7 @@ def test_the_offer_announces_the_rule_bidders_are_bidding_under(host):
     Read off the provider rather than a belief, so what is announced is necessarily what runs —
     a host cannot advertise one rule and apply another.
     """
-    from packages.capability.market import PAY_AS_BID
+    from orexis_capability_market import PAY_AS_BID
 
     host.deliver("readings/fern", low_event())
     assert offer_from(host)["matches_by"] == PAY_AS_BID
@@ -197,7 +197,7 @@ def test_sitting_out_says_which_of_three_things_happened(make):
     Not a test of wording — of the distinction. If these three collapse to one string again, a
     quiet sensor becomes indistinguishable from a board sleeping exactly as instructed.
     """
-    from packages.capability.market.terms import BIDDING
+    from orexis_capability_market.terms import BIDDING
 
     def why(agent):
         bidding = next(m for m in agent.modules if m.CAPABILITY == BIDDING)
@@ -236,7 +236,7 @@ def test_a_bidder_waiting_for_a_reading_ignores_one_of_another_property(make):
     writes the reading and then tells the rest of the agent, and a test that skipped the write
     would be asking the bidder to act on a reading nobody took.
     """
-    from packages.capability.market.terms import BIDDING
+    from orexis_capability_market.terms import BIDDING
 
     fern = make("fern")  # nothing in hand, so it waits
     fern.deliver(market_of(fern).offer_topic, {"auction_id": "r1", "closes_in_s": 30})
@@ -515,7 +515,7 @@ def test_a_bid_the_link_cannot_carry_is_held_and_never_arrives_late(make):
     fern.deliver(market.offer_topic, {"auction_id": "r1", "quantity_l": 2.0,
                                       "reserve_price_per_l": 0.4, "closes_in_s": 30})
     assert fern.sent.under(f"{market.bid_topic}/") == [], "a bid nobody could carry went out"
-    from packages.capability.market.terms import ACQUIRING
+    from orexis_capability_market.terms import ACQUIRING
 
     keeper = next(m for m in fern.modules if m.name == "intention")
     assert keeper.standing(action=ACQUIRING), \
@@ -564,7 +564,7 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
     from onboarding.keygen import create_keypair
 
     from agent import genesis
-    from packages.capability.market import UNIFORM_PRICE
+    from orexis_capability_market import UNIFORM_PRICE
     from agent.genesis import agent_id_of
     from agent.store import Store
 
@@ -601,7 +601,7 @@ def test_a_winner_named_unlike_its_subject_still_gets_its_dose(make, tmp_path, m
     good valve it could not find while the barrel sat at 0.000."""
     from onboarding.keygen import create_keypair
 
-    from packages.capability.market.clearing import Claim
+    from orexis_capability_market.clearing import Claim
 
     monkeypatch.setenv("OREXIS_WORLD_DIR", str(tmp_path))
     (tmp_path / "secrets").mkdir()
@@ -698,7 +698,7 @@ def test_a_call_stands_as_a_want_and_is_answered_by_the_round(host):
     — and the intention appears only when the search finds a plan: with the vessel dry and no
     upstream round to buy in there is none, so nothing stands and the want does. The refill
     is the reading that changes the answer; the round opening answers the call."""
-    from packages.capability.market import calls
+    from orexis_capability_market import calls
 
     stock_reading(host, 0.0)
     host.deliver("readings/fern", low_event())
@@ -716,7 +716,7 @@ def test_an_owed_round_survives_the_process_that_owed_it(host, make):
     """A call is a fact in the host's own graph, so a restarted host still owes what it owed
     — the round opens on the next stock reading exactly as it would have, and no phantom
     water is sold meanwhile."""
-    from packages.capability.market import calls
+    from orexis_capability_market import calls
 
     stock_reading(host, 0.0)
     host.deliver("readings/fern", low_event())

@@ -228,7 +228,7 @@ is more urgent set how closely its board is watched. Nothing bids on air tempera
   weight would have to come from somewhere no ratified file currently is.
 - **The target is still a separate belief.** A region and a point are different things and the
   split is deliberate, but nothing stops an agent whose region moved from keeping a target that
-  is merely still legal rather than still sensible. `packages/capability/review/` could be asked to
+  is merely still legal rather than still sensible. `packages/orexis-capability-review/` could be asked to
   justify a target against its region; today it only refuses one outside it.
 - **Only the bidder consumes a region for anything but attention.** Actuation doses against a
   claim, not against a region, so *"keep the value inside the region"* is a market's job

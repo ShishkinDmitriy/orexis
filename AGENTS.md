@@ -109,14 +109,14 @@ record is worse than none, because it is still cited.
    differ, you have a function, not a capability.
 
    The two are not the same axis, and saying "a capability is a directory" hid that.
-   `packages/capability/market/` provides three — bidding, hosting, and the matching family — and it is
+   `packages/orexis-capability-market/` provides three — bidding, hosting, and the matching family — and it is
    one package. **What isolates a capability is `PROVIDES` and its term, never the directory
    boundary**: `hosting.py` asks `agent.provider(BID_MATCHING)` and never learns which member
    answered, so uniform price landed without touching a line of it. A directory is how a package
    is FOUND and how one is deleted. See
    [a-package-owns-its-namespace](knowledge/decisions/a-package-owns-its-namespace.md).
 
-   **There is ONE package tree and one mechanic.** `packages/<family>/<name>/` holds whichever
+   **There is ONE package tree and one mechanic.** `packages/orexis-<family>-<name>/` holds whichever
    of `ontology.ttl`, `shapes.ttl`, `rules.ru`, `actions.ttl`, `review.rq` and Python it wants — every one
    optional, and an omission is a statement. Two files are NOT optional: a `pyproject.toml`,
    because **every package is its own distribution with its own dependencies**
@@ -125,25 +125,26 @@ record is worse than none, because it is still cited.
    directions — a missing one and an unused one both fail. `packages/` and `packages/<family>/`
    are PEP 420 namespace portions belonging to no distribution, which is what lets a package
    from another repository join the same import root. See
-   [every-package-is-a-project](knowledge/decisions/every-package-is-a-project.md). `packages/part/esp32/` is an ontology and nothing
-   else because a board has no behaviour a runtime could load; `packages/capability/market/` has
+   [every-package-is-a-project](knowledge/decisions/every-package-is-a-project.md). `packages/orexis-part-esp32/` is an ontology and nothing
+   else because a board has no behaviour a runtime could load; `packages/orexis-capability-market/` has
    all of it. Neither is more of a package than the other, and that is the point: a plant, a
    part and a capability are the same kind of thing to the loader.
 
    A package may declare **its own namespace**, in its `ontology.ttl` and mirrored in
    `terms.py`. `agent.loader` reads every project namespace off the ontology that declares it,
    so `market:` reaches a query without `store.PREFIXES` learning the package exists. Nothing
-   lists them — `agent.loader` finds them two levels down, and the FAMILY is the parent
-   directory rather than anything declared, so `kind` distinguishes a plant from a part without
-   a registry. `PROVIDES` in `__init__.py` is how an implementation registers, and its absence
+   lists them — `agent.loader` finds them one level down, and the FAMILY is the second segment of
+   the package's own NAME — which is also its distribution name and, with underscores, its
+   module — so `kind` distinguishes a plant from a part without a registry and without a second
+   place to state it. `PROVIDES` in `__init__.py` is how an implementation registers, and its absence
    is what makes a package knowledge-only. A package implements the terms IT declares —
    which is what lets imports follow grants: a runtime imports only the packages its own
    capabilities name (#216). Adding one is adding a directory. Packages never
    import each other's Python: ask `agent.provider(family)` or contribute via
    the choir's extension points (`desires`, `size`, `take`, `notices`, `series`, `quiet` — and, in sensing's
    words through `agent.ask`, `annotate`, `urgency`, `bounds`).
-   The one written exception: a family's plug-ins import the family's contract — `packages/codec/*`,
-   `packages/scaling/*` and `packages/transport/*` import sensing's `Codec`, `Scaling` and
+   The one written exception: a family's plug-ins import the family's contract — `packages/orexis-codec-*`,
+   `packages/orexis-scaling-*` and `packages/orexis-transport-*` import sensing's `Codec`, `Scaling` and
    `pointer`, because those are the contracts they exist to implement (see
    [sensing-owns-the-reading-pipeline](knowledge/decisions/sensing-owns-the-reading-pipeline.md)).
    A transport is also a capability the fact of its bus grants — how the agent reaches its
@@ -153,7 +154,7 @@ record is worse than none, because it is still cited.
 
    **`agent/` is the kernel that loads them, not their home.** Capability Python used to live
    under it, so the tree itself showed which of it a runtime loads — it does not show that now.
-   `packages/capability/market/` and `packages/part/dht11/` look identical, so the CONTRACTS
+   `packages/orexis-capability-market/` and `packages/orexis-part-dht11/` look identical, so the CONTRACTS
    carry the boundary alone: `lint-imports` holds `packages` away from `onboarding`, and the
    `Containerfile` decides what reaches an image by naming two trees and not a third. Both were
    always the real enforcement; the layout was a reminder, and the reminder is gone.
@@ -302,7 +303,7 @@ stops being theoretical.
 
 ```bash
 source .venv/bin/activate
-pip install -e . $(ls -d packages/*/*/)   # 22 distributions; or `uv sync --all-packages`
+pip install -e . $(ls -d packages/*/)   # 22 distributions; or `uv sync --all-packages`
 
 orexis-validate <world> # build the world from its files and hold it to every package's shapes
 orexis-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.
@@ -380,10 +381,10 @@ agent's whatever their value. `rebirth` remains the explicit discard. See
 But a belief is a **point chosen inside a range**, not a constant, and what genesis wrote is the
 first pick rather than a bound. An agent whose **world gives it room to move** — `review:commits`, in
 `world.ttl` — re-picks on its own clock inside that room, so the author's job is to constrain
-well, not to guess well. **The mandate is also the grant**: `packages/capability/review/` derives its
+well, not to guess well. **The mandate is also the grant**: `packages/orexis-capability-review/` derives its
 capability from exactly those triples, so an agent given no room has no review module, keeps no
 summaries and never arises. Which terms may move is one triple in the owning package's
-`ontology.ttl`; a review rule is `packages/capability/<name>/review.rq`, SPARQL and never Python; and a
+`ontology.ttl`; a review rule is `packages/orexis-capability-<name>/review.rq`, SPARQL and never Python; and a
 revision is legitimate exactly when `validate_agent` still passes, which is the same call the
 agent makes at boot. **Compaction is not part of this** — it is not a choice, so it stayed in the
 kernel on a clock of its own. See

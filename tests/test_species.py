@@ -1,6 +1,6 @@
 """A species is described once and planted many times.
 
-`packages/plant/zamioculcas/` is the plant-side counterpart of `packages/part/dht11/`, and deliberately
+`packages/orexis-plant-zamioculcas/` is the plant-side counterpart of `packages/orexis-part-dht11/`, and deliberately
 the same shape: a species is a model, the pots are the units, and what the species knows is stated
 on the class and reaches each pot by entailment. These check that the mechanism actually carries —
 that typing a pot is the ONLY thing a world writes, and that everything else follows.
@@ -130,9 +130,9 @@ def test_a_ferns_desire_will_not_do_for_a_zamioculcas(zz_world):
 def test_it_cannot_thrive_where_it_would_not_survive():
     """Two ranges only mean something together. Raising the operating ceiling above the rot limit
     is the mistake that matters — and it is the direction a well-meaning edit goes."""
-    ontology = pathlib.Path("packages/plant/zamioculcas/ontology.ttl").read_text()
+    ontology = pathlib.Path("packages/orexis-plant-zamioculcas/ontology.ttl").read_text()
     data = rdflib.Graph().parse(data=ontology, format="turtle")
-    data.parse(data=pathlib.Path("packages/plant/water/ontology.ttl").read_text(), format="turtle")
+    data.parse(data=pathlib.Path("packages/orexis-plant-water/ontology.ttl").read_text(), format="turtle")
 
     # a pot of it, and the operating ceiling pushed past the survival ceiling
     data.parse(format="turtle", data="""

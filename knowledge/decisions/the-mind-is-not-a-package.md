@@ -166,7 +166,7 @@ Two things found only because a widened guard could finally see: `ag:amountL`, w
 ledger and read by three of the market's effect rules and declared by no ontology for months; and
 five terms of this very change sitting inside an `rdfs:comment` as prose. And one found only by
 diffing collected test ids — six tests of the region arithmetic that went into the bin with the
-desire package while the suite stayed green at 1302. They are `tests/test_regions.py` now.
+desire package while the suite stayed green at 1302. They are `packages/orexis-capability-sensing/test_regions.py` now.
 
 **The fix each time was the same: ask the loader what to scan, rather than globbing a tree.**
 Nothing enforces that, and it is the obvious next guard — a guard on the guards, which is a thing

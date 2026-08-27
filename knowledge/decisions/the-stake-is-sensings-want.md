@@ -34,7 +34,7 @@ like*:
 And `desires.ru` is the kernel **deriving a want** — the region want, from
 `ssn-system:hasOperatingRange` on the subject or on the instrument that monitors it
 (`sensing:monitors`, a package word), with the envelope from `hasSurvivalRange`. Sensing
-already derives the freshness want by the same mechanic (`packages/capability/sensing/desires.ru`)
+already derives the freshness want by the same mechanic (`packages/orexis-capability-sensing/desires.ru`)
 and declares the stake's *measure* (`measures.ttl`, `sensing:measureOf sosa:ObservableProperty`).
 The want's shape and the want's measure are in two owners.
 

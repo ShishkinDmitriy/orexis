@@ -5,7 +5,7 @@ description: >-
   Six kernel files were sensing's: the codec and scaling contracts, the pointer between them,
   the sensed writer, the observations recorder and `readings.rq`. Their only callers were the
   sensing module and the pipeline's plug-ins, and the query named sensing's own words from
-  the kernel. All six move to `packages/capability/sensing/`; the one thing the kernel needed
+  the kernel. All six move to `packages/orexis-capability-sensing/`; the one thing the kernel needed
   from them — what is known, with its horizon — becomes the `readings` choir hook, with a
   sosa-only fallback for a build that senses nothing. The pipeline's plug-ins (codec, scaling,
   transport) import the contract they implement from sensing, which is the one place a
@@ -18,8 +18,8 @@ timestamp: 2026-08-27T00:00:00Z
 
 `bytes ─[codec]→ document ─[pointer]→ raw value ─[scaling]→ quantity ─[observations]→ the
 sensed graph` — every stage of the reading pipeline lived in `agent/`, and every caller of it
-was `packages/capability/sensing/module.py` or one of the pipeline's own plug-ins
-(`packages/codec/json`, `packages/scaling/identity`, `packages/transport/mqtt`). The kernel
+was `packages/orexis-capability-sensing/module.py` or one of the pipeline's own plug-ins
+(`packages/orexis-codec-json`, `packages/orexis-scaling-identity`, `packages/orexis-transport-mqtt`). The kernel
 also read the result back: `agent/readings.rq`, run by `regions.py` to give the desire
 modality each reading's value, instant and horizon — and to do that it named
 `sensing:staleAfterS` and `sensing:monitors`, a kernel file reading a package's words that
@@ -29,7 +29,7 @@ only list as debt.
 # What is decided
 
 **The pipeline is sensing's.** `codec.py`, `scaling.py`, `pointer.py`, `sensed_writer.py`,
-`observation.py` and `readings.rq` move to `packages/capability/sensing/`. Nothing about them
+`observation.py` and `readings.rq` move to `packages/orexis-capability-sensing/`. Nothing about them
 changes but their imports. Two empty kernel directories (`agent/codecs`, `agent/scalings`)
 that had outlived the packages they once held are deleted.
 
@@ -44,10 +44,10 @@ instrument), and `readings.rq` is deleted rather than moved. A choir hook was tr
 refused by the sovereign for the reason rule 2 refuses a capability of one member: a hook one
 module answers is a function call in disguise.
 
-**A family's plug-ins import the family's contract.** `packages/codec/json` implements
-`Codec`, `packages/scaling/identity` implements `Scaling`, `packages/transport/mqtt` decodes
+**A family's plug-ins import the family's contract.** `packages/orexis-codec-json` implements
+`Codec`, `packages/orexis-scaling-identity` implements `Scaling`, `packages/orexis-transport-mqtt` decodes
 with `codec_for` and resolves with `pointer` — and all of those are sensing's now, so those
-packages import `packages.capability.sensing`. That is a package importing another's Python,
+packages import `orexis_capability_sensing`. That is a package importing another's Python,
 which rule 2 says never happens between *capabilities*; here the importer is not a
 capability but a member of a family sensing defines, importing the contract it exists to
 implement — the same relation a capability module has to `agent.module.Module`, one level

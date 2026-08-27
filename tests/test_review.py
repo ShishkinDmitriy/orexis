@@ -10,13 +10,13 @@ from __future__ import annotations
 import pytest
 
 from agent import genesis
-from packages.capability.review.graphs import evidence_graph, revisions_graph
+from orexis_capability_review.graphs import evidence_graph, revisions_graph
 from agent.ontology import STATE_GRAPH, WORLD_GRAPH, beliefs_graph, term
 from onboarding.namespaces import SENSING
-from packages.capability.review import RECKONING, REVIEW
-from packages.capability.review.module import Range, world_ranges
+from orexis_capability_review import RECKONING, REVIEW
+from orexis_capability_review.module import Range, world_ranges
 from agent.store import bindings
-from packages.capability.review.summary import RING, Summaries
+from orexis_capability_review.summary import RING, Summaries
 
 from conftest import WORLDS_ROOT, build_agent, genesis_store
 

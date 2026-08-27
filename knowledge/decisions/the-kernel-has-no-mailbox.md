@@ -41,10 +41,10 @@ agent in a society that meets on a broker is on the broker. It is found as every
 (`PROVIDES`, `registry_for`), and the loader's ownership map covers a transport's namespace as
 it covers a capability's.
 
-**The transport's module holds everything the kernel used to.** `packages/transport/mqtt/module.py`:
+**The transport's module holds everything the kernel used to.** `packages/orexis-transport-mqtt/module.py`:
 the `mqtt:MessageBus` query, the two doors and the credential's environment names, paho, the
 delivery loop, the session's figures (`link_connected`, `link_reconnects`, through
-`reports()`), and the watchdog — `packages/transport/mqtt/watchdog.py`, the same rule
+`reports()`), and the watchdog — `packages/orexis-transport-mqtt/watchdog.py`, the same rule
 [a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md)
 states, now beside the session it watches.
 

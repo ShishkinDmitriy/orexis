@@ -66,7 +66,7 @@ packages rather than one. `sim:simulatedBy` takes `ssn:System` as its domain —
 the role — and says the role has no referent: nobody built it, a process supplies its behaviour.
 Hanging that off a physical class was what produced the self-contradicting worlds, and putting
 the two words in one package would have kept them looking like halves of one idea.
-`packages/sim/standin/` holds the mark, `sim:Model` and the physics a stand-in computes; the
+`packages/orexis-sim-standin/` holds the mark, `sim:Model` and the physics a stand-in computes; the
 `model` prefix each of those properties wore to fake a namespace inside `ag:` came off with the
 move, because `sim:losesPerDay` on a `sim:Model` needs no such help.
 

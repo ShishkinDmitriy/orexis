@@ -58,12 +58,12 @@ knowledge/     OKF knowledge bundle (architecture decisions + domain model)
 ```
 
 **A directory is a PACKAGE** — not a capability. The two are not the same axis, and saying it
-the other way hid that: `packages/capability/market/` provides three capabilities, and
-`packages/part/esp32/` provides none. What isolates a capability is `PROVIDES` and its term.
+the other way hid that: `packages/orexis-capability-market/` provides three capabilities, and
+`packages/orexis-part-esp32/` provides none. What isolates a capability is `PROVIDES` and its term.
 Inside a package the same names mean the same things every time:
 
 ```
-packages/capability/sensing/
+packages/orexis-capability-sensing/
   ontology.ttl   the vocabulary — what its terms mean
   shapes.ttl     the rules — what an agent must believe to hold it
   rules.ru       the derivation — what wiring GIVES an agent it
@@ -73,13 +73,13 @@ packages/capability/sensing/
   __init__.py    the manifest: PROVIDES = (SubscribingModule, ListeningModule)
 ```
 
-Every one of them is optional, and an omission is a statement: `packages/plant/water/` has no code,
-`packages/transport/mqtt/` has no `rules.ru` because a transport grants no capability, and
-`packages/capability/actuation/` has no `beliefs.py` because it decides nothing.
+Every one of them is optional, and an omission is a statement: `packages/orexis-plant-water/` has no code,
+`packages/orexis-transport-mqtt/` has no `rules.ru` because a transport grants no capability, and
+`packages/orexis-capability-actuation/` has no `beliefs.py` because it decides nothing.
 
 Nothing lists these — `agent.loader` finds them by looking, two levels down, and the
 FAMILY is the parent directory rather than anything declared. So **adding a capability is
-adding a directory**: drop in `packages/capability/forecast/`, and agents load its vocabulary, run its
+adding a directory**: drop in `packages/orexis-capability-forecast/`, and agents load its vocabulary, run its
 derivation, and boot with it if the wiring qualifies them. No registry line, no
 term constant, no edit to any existing file — and deleting the directory removes it just as
 completely, because capabilities reach each other through T-Box terms and never through

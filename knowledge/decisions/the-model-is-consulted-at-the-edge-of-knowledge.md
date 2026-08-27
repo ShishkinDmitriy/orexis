@@ -62,7 +62,7 @@ completes the amortisation ladder the roadmap was named for:
 | a review arising | re-opening either | bounded by its own clock, on evidence |
 
 **Periodic improvement is review's, and review already works this way.** "Propose changes when
-the environment shifts" is not a new mechanism — `packages/capability/review/` wakes on its own clock,
+the environment shifts" is not a new mechanism — `packages/orexis-capability-review/` wakes on its own clock,
 reads evidence summaries, re-picks a belief within its mandate and records why.
 `review:Consulting` has been declared-and-reserved since that capability was built; a model
 proposing a better aim from gap history is that member, inside the same mandate every re-pick

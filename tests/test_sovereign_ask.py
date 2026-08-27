@@ -1,6 +1,6 @@
 """The sovereign may ask, and the agent answers about itself — disclosure, not access.
 
-The channel packages/capability/reporting/sovereign.py declares, exercised end to end short of a broker: the
+The channel packages/orexis-capability-reporting/sovereign.py declares, exercised end to end short of a broker: the
 responder in reporting, the grants in orexis-mqtt, and the one property that makes the whole
 thing safe to exist — read-only by construction, because pyoxigraph's query API structurally
 cannot execute an update.
@@ -12,7 +12,7 @@ import json
 
 import pytest
 
-from packages.capability.reporting import sovereign
+from orexis_capability_reporting import sovereign
 from onboarding import mqtt as mqtt_admin
 
 from conftest import build_agent, genesis_store

@@ -14,7 +14,7 @@ timestamp: 2026-08-28T20:00:00Z
 
 # What happened
 
-`packages/capability/reporting/module.py` held, inside `StoringModule.start()`:
+`packages/orexis-capability-reporting/module.py` held, inside `StoringModule.start()`:
 
 ```python
 from agent.influx_writer import InfluxWriter  # deferred: nothing built for a test agent

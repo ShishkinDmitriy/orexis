@@ -20,7 +20,7 @@ timestamp: 2026-08-12T00:00:00Z
 # The structural question first, because it dissolved
 
 The request came with a preference: *one feature has all it needs — ontology, scripts* — and a
-suggestion that `packages/part/dht11/` should be restructured to match a capability.
+suggestion that `packages/orexis-part-dht11/` should be restructured to match a capability.
 
 **It already is, and nothing needed moving.** Measured rather than assumed:
 
@@ -42,7 +42,7 @@ the *plant* side of the domain, and that is what this record is about.
 
 # A species is a model, and a pot is a unit
 
-`packages/plant/zamioculcas/` is deliberately the same shape as `packages/part/dht11/`, because the
+`packages/orexis-plant-zamioculcas/` is deliberately the same shape as `packages/orexis-part-dht11/`, because the
 underlying situation is the same one:
 [a part is described once and fitted many times](/decisions/a-part-is-described-once-and-fitted-many-times.md).
 A datasheet describes a model and a world names the soldered units; care guidance describes a

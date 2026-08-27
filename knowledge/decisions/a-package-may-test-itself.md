@@ -42,20 +42,36 @@ So one file qualified, not two. Worth recording because the wrong number was pro
 plausible-looking scripts, and only a question about *dependency* rather than *vocabulary* gave
 the right one.
 
+Two packages carry their own tests today: the market's `test_auction.py` (pay-as-bid and
+uniform-price arithmetic) and sensing's `test_regions.py` (banding and urgency), the second
+having come back from `tests/` when it turned out `Region` had never left the package
+([a-package-is-its-name](/decisions/a-package-is-its-name.md)).
+
 # Plain files, not a tests/ subdirectory
 
 Both were tried. A `tests/` subdirectory **fails**:
 
 ```
-ERROR packages/part/rgb_led/tests/test_shared_name.py
+ERROR packages/orexis-part-rgb-led/tests/test_shared_name.py
 HINT: ... use a unique basename for your test file modules
 Interrupted: 1 error during collection
 ```
 
 A `tests/` subdir has no `__init__.py`, so pytest derives a module name from the basename and two
-packages cannot both hold `test_config.py`. Plain files in the package do not collide — the
-directory already has an `__init__.py`, so the module is
-`packages.capability.market.test_auction`, unique by construction. Both same-named files ran.
+packages cannot both hold `test_config.py`. Plain files in the package did not collide — the
+directory has an `__init__.py`, so the module was `packages.capability.market.test_auction`,
+unique by construction. Both same-named files ran.
+
+> **Amended by [a-package-is-its-name](/decisions/a-package-is-its-name.md).** That derivation is
+> gone. A package directory is now its distribution name, hyphens and all, and
+> `orexis-capability-market.test_auction` is not an identifier — every one of the market's
+> twenty-one tests failed to COLLECT, which is the dangerous kind of failure, because a test that
+> cannot be imported is a test that does not run. The suite is on
+> `--import-mode=importlib` now, which derives no name from any path. **The decision below is
+> unchanged and the second argument is the one carrying it**: a package is flat files, and a
+> `tests/` subdir would be the only nested thing in one. The collision argument is void — importlib
+> mode permits duplicate basenames — so if the format argument ever stops convincing, nothing else
+> is holding this.
 
 It also matches the format. A package is **flat files** — `ontology.ttl`, `shapes.ttl`,
 `terms.py`, `module.py` — and a `tests/` subdir would be the only nested thing in one, reading as

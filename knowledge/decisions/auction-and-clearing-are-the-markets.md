@@ -5,7 +5,7 @@ description: >-
   `agent/auction.py` (propose, validate, issue), `agent/clearing.py` (the notary that checks a
   trade and mints claims) and `agent/market.py` (Bid, Offer, Trade, MarketState) sat in the
   kernel while the only code that called them was the market package. A kernel is what LOADS
-  packages and should know no bid; all three move to `packages/capability/market/`. The one
+  packages and should know no bid; all three move to `packages/orexis-capability-market/`. The one
   thing that resisted was actuation importing the market's `Claim`, which the independence
   contract forbids between packages — and the sovereign's correction resolved it: a claim is
   the EMBODIMENT of a commitment, REA's promised flow, and the commitment is the kernel's.
@@ -27,7 +27,7 @@ kernel held a package's vocabulary in Python while its ontology, since
 
 # What is decided
 
-The three move: `packages/capability/market/auction.py`, `clearing.py`, and `trade.py` for the
+The three move: `packages/orexis-capability-market/auction.py`, `clearing.py`, and `trade.py` for the
 types (the file is named for what it holds, not for the package it is in). Every import is now
 relative inside the package; `tests/test_clearing.py` reaches through the package path as the
 market's own `test_auction.py` already did.

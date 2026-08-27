@@ -22,9 +22,9 @@ fix the vocabulary before it could say anything else.
 | | what it is | where it lives |
 |---|---|---|
 | [market](/domain/market.md) | the standing structure it happens inside | `market:Market` in the world |
-| [round](/domain/round.md) | one pass of bidding inside it — exactly one is built | `packages/capability/market/hosting.py` |
-| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `packages/capability/market/matching.py` |
-| [clearing](/domain/clearing.md) | the notary that validates and co-signs — never allocates | `packages/capability/market/clearing.py` |
+| [round](/domain/round.md) | one pass of bidding inside it — exactly one is built | `packages/orexis-capability-market/hosting.py` |
+| [bid matching](/domain/bid-matching.md) | how a lot and the bids become an allocation with prices | `packages/orexis-capability-market/matching.py` |
+| [clearing](/domain/clearing.md) | the notary that validates and co-signs — never allocates | `packages/orexis-capability-market/clearing.py` |
 
 The line that holds them apart is **the host proposes, clearing disposes**. Matching decides
 *who gets what and at what price*; clearing decides *whether that is permitted* — conservation,
@@ -92,7 +92,7 @@ the second is the one to argue.
 - **Not a venue.** Discovery, membership and channels are the market's. An auction has no
   address.
 - **Not the matching.** Propose, validate, issue is the auction's shape however the bids were
-  matched — which is why `packages/capability/market/auction.py` kept the sequence and lost the allocation.
+  matched — which is why `packages/orexis-capability-market/auction.py` kept the sequence and lost the allocation.
 - **Not a format.** *Auction format* names a bidding procedure and a payment rule together; this
   project models only the second, and [bid matching](/domain/bid-matching.md) says why and what the word
   costs when it is used loosely.

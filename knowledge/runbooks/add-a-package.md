@@ -13,11 +13,11 @@ Three files: a project saying what you need, a manifest saying what you bring, a
 bring.
 
 ```bash
-mkdir -p packages/part/thermistor
+mkdir -p packages/orexis-part-thermistor
 ```
 
 ```toml
-# packages/part/thermistor/pyproject.toml
+# packages/orexis-part-thermistor/pyproject.toml
 [project]
 name = "orexis-part-thermistor"
 version = "0.1.0"
@@ -30,15 +30,15 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["packages.part.thermistor"]
-package-dir = {"packages.part.thermistor" = "."}
+packages = ["orexis_part_thermistor"]
+package-dir = {"orexis_part_thermistor" = "."}
 
 [tool.setuptools.package-data]
-"packages.part.thermistor" = ["*.ttl", "*.ru", "*.rq"]     # the knowledge IS the package
+"orexis_part_thermistor" = ["*.ttl", "*.ru", "*.rq"]     # the knowledge IS the package
 ```
 
 ```python
-# packages/part/thermistor/__init__.py
+# packages/orexis-part-thermistor/__init__.py
 """What a thermistor brings to a build. Knowledge only — no behaviour a runtime could load."""
 
 from pathlib import Path
@@ -52,7 +52,7 @@ def vocabulary(package: Path) -> list[Path]:
 ```
 
 ```turtle
-# packages/part/thermistor/ontology.ttl
+# packages/orexis-part-thermistor/ontology.ttl
 @prefix thermistor: <http://example.org/orexis/thermistor#> .
 @prefix : <http://example.org/orexis/thermistor#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -67,14 +67,14 @@ def vocabulary(package: Path) -> list[Path]:
 
 That is a complete package. **Nothing else is edited** — no registry, no list, no import; the
 workspace glob in the root `pyproject.toml` already matches `packages/*/*`. The
-loader walks two levels under `packages/`, finds it, asks what it contributes, merges its
+loader walks one level under `packages/`, finds it, asks what it contributes, merges its
 vocabulary, and `thermistor:` reaches any query. Delete the directory and it is gone as
 completely.
 
 Check it landed:
 
 ```bash
-pip install -e packages/part/thermistor      # or: uv sync --all-packages
+pip install -e packages/orexis-part-thermistor   # or: uv sync --all-packages
 python -c "from assembly import loader; print(loader.prefixes()['thermistor'])"
 orexis-validate simulation
 ```
@@ -95,12 +95,12 @@ orexis-validate simulation
 | `tool/` | vocabularies a generator reads, not the society |
 
 **A family nobody thought of is still found.** `KINDS` in the loader is a sort order, not a
-gate: a new family sorts after the known ones instead of being ignored. `packages/sim/` was
+gate: a new family sorts after the known ones instead of being ignored. `packages/orexis-sim-*/` was
 added without touching the loader.
 
 # What may be in it, and what an omission means
 
-Every file is optional, **and leaving one out is a statement**. `packages/part/esp32/` is an
+Every file is optional, **and leaving one out is a statement**. `packages/orexis-part-esp32/` is an
 ontology and nothing else, because a board has no behaviour a runtime could load.
 
 **The manifest is the only file the loader knows by name.** Everything else is named by the
@@ -155,7 +155,7 @@ family member needs `TERM`. A class with neither is refused by name.
 
 **No capability imports another capability.** `lint-imports` holds an `independence` contract
 over actuation, market, sensing and review. The one written exception is a family's plug-ins
-importing that family's **contract** — `packages/codec/*` imports sensing's `Codec`. Reach
+importing that family's **contract** — `packages/orexis-codec-*` imports sensing's `Codec`. Reach
 another capability through `agent.provider(family)` or the choir, never through Python.
 
 **No package imports `onboarding`.** It mints credentials and reads the admin token.
@@ -295,7 +295,7 @@ anyone open a TOML file. Four defects were sitting in the single list the day it
 all four were of these two kinds — see
 [every-package-is-a-project](/decisions/every-package-is-a-project.md).
 
-**A sibling package is a dependency like any other.** `packages/codec/json` implements sensing's
+**A sibling package is a dependency like any other.** `packages/orexis-codec-json` implements sensing's
 `Codec`, so it depends on `orexis-capability-sensing` and says so. That is the one written
 exception to packages not importing each other: a family's plug-ins import the family's contract.
 
@@ -321,8 +321,8 @@ extra goes in — yours, not the root's.
 # You cannot add a member to somebody else's family
 
 A package may implement only the terms IT declares, and that is enforced at load. So a different
-matching algorithm goes in `packages/capability/market/`, and a model-backed review in
-`packages/capability/review/` — beside the family that declared them, not in a package of your
+matching algorithm goes in `packages/orexis-capability-market/`, and a model-backed review in
+`packages/orexis-capability-review/` — beside the family that declared them, not in a package of your
 own. What a new package brings is a NEW ability: its own family, its own terms, its own members.
 See [a-family-is-closed-and-that-is-a-choice](/decisions/a-family-is-closed-and-that-is-a-choice.md),
 which also says what it would take to change that.
@@ -330,7 +330,7 @@ which also says what it would take to change that.
 # Before you call it done
 
 ```bash
-pip install -e packages/<family>/<name>   # a project is not installed by existing
+pip install -e packages/orexis-<family>-<name>   # a project is not installed by existing
 pytest -q                    # BOTH roots — not `pytest tests`
 orexis-validate simulation   # and every other world you have
 lint-imports                 # the layering

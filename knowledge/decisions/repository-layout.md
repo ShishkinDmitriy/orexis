@@ -16,13 +16,13 @@ timestamp: 2026-08-07T00:00:00Z
 ```
 pyproject.toml   Containerfile
 agent/                       the runtime, and the model it reads
-packages/capability/<name>/   what an agent can DO — discovered
-packages/transport/<name>/     how a device is REACHED — discovered
+packages/orexis-capability-<name>/   what an agent can DO — discovered
+packages/orexis-transport-<name>/     how a device is REACHED — discovered
 onboarding/                  the sovereign's tools
 packages/core/orexis/            the society kernel everything layers on
-packages/part/microcontroller/  boards, peripherals, pins, wires
+packages/orexis-part-microcontroller/  boards, peripherals, pins, wires
 vocabulary/<part>/           one concrete part, or one protocol — dht11, onewire, rgb-led
-packages/plant/water/            what this society is about
+packages/orexis-plant-water/            what this society is about
 tests/  firmware/  infra/  world/  knowledge/
 ```
 
@@ -88,7 +88,7 @@ the boundary test trivial. See
 # Why there is no `agent/kernel/`
 
 Symmetry was proposed — `agent/{kernel,capabilities,transports}`, three peer trees — and refused,
-because the symmetry would be false. `packages/capability/` and `packages/transport/` are **discovered**: the
+because the symmetry would be false. `packages/orexis-capability-*/` and `packages/orexis-transport-*/` are **discovered**: the
 loader globs them, anything dropped in is found, nothing lists them. A kernel is what those
 discovered trees **import**. One is a trunk, the others are places to graft onto, and presenting
 them as peers would suggest the trunk is replaceable.
@@ -116,7 +116,7 @@ is the same redundancy as `onboarding/src/onboarding`. The known cost is that on
 correct. The import contract states the rule explicitly, so the name surprises and the contract
 does not.
 
-`packages/core/orexis` and `packages/plant/water` rather than `kernel/` and `domain/water/`: at the
+`packages/core/orexis` and `packages/orexis-plant-water` rather than `kernel/` and `domain/water/`: at the
 time those two were the only trees with no Python at all, which is exactly what they had in
 common. There are now more of them than two — the stand, a package per protocol, a package per
 part — and that is the same rule applied further: see

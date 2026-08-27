@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 import pyoxigraph as ox
 
 
-from packages.capability.sensing.regions import ObservedDesire
+from orexis_capability_sensing.regions import ObservedDesire
 from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 
 FERN = "http://example.org/orexis/world/simulation#fern_agent"
@@ -184,7 +184,7 @@ def test_a_want_whose_kind_nothing_measures_scores_a_logged_one(monkeypatch):
     than quietly reviving a Python arithmetic beside the declared one. Constructed by
     emptying sensing's declaration, the way the partial-plan test removes Acquire's effect
     rule: the shipped worlds never hit this, and a sibling test holds THAT."""
-    from packages.capability.sensing import module as sensing
+    from orexis_capability_sensing import module as sensing
 
     monkeypatch.setattr(sensing, "_DECLARED_MEASURES", ())
     _, fern = _fern({("fern", MOISTURE): 0.55}, monkeypatch)

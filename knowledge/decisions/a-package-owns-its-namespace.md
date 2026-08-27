@@ -1,7 +1,7 @@
 ---
 type: Decision
 title: A package owns its namespace, and a directory is a package rather than a capability
-description: Every package has declared an owl:Ontology IRI of its own since there were packages, and then put its terms in someone else's namespace — because store.PREFIXES was a kernel constant, so a package wanting one had to edit the kernel to be nameable in SPARQL. The prefixes are now read off the ontologies that declare them, packages/capability/market took market:, and bid matching folded into it. Three latent bugs only became visible once a second namespace existed.
+description: Every package has declared an owl:Ontology IRI of its own since there were packages, and then put its terms in someone else's namespace — because store.PREFIXES was a kernel constant, so a package wanting one had to edit the kernel to be nameable in SPARQL. The prefixes are now read off the ontologies that declare them, packages/orexis-capability-market took market:, and bid matching folded into it. Three latent bugs only became visible once a second namespace existed.
 status: accepted
 timestamp: 2026-08-10T00:00:00Z
 ---
@@ -14,7 +14,7 @@ timestamp: 2026-08-10T00:00:00Z
 
 Two things were true at once and should not have been.
 
-**Every package already declared a namespace of its own.** `packages/capability/market/ontology.ttl` opens
+**Every package already declared a namespace of its own.** `packages/orexis-capability-market/ontology.ttl` opens
 `<http://example.org/orexis/market> a owl:Ontology`, and so does every other package — review,
 sensing, actuation, the mqtt transport. The trees under `vocabulary/` went further and put their
 *terms* there too: `mc:`, `onewire:`, `i2c:`, `probe:`, since
@@ -75,15 +75,15 @@ address.
 are valid SPARQL, so one package's query would read another's terms and no engine could tell
 anyone.
 
-## A directory is a package, and `packages/capability/market/` holds three capabilities
+## A directory is a package, and `packages/orexis-capability-market/` holds three capabilities
 
 AGENTS.md rule 2 said *"a capability … is a directory"*. That was already false when it was
-written: `packages/capability/market/` provided `ag:Bidding` and `ag:Hosting`, which are not
+written: `packages/orexis-capability-market/` provided `ag:Bidding` and `ag:Hosting`, which are not
 interchangeable members of one family but two different abilities. The rule conflated two axes and
 hid the one that matters.
 
 **What isolates a capability is `PROVIDES` and its term, never the directory boundary.** So bid
-matching moved into `packages/capability/market/` — `matching.py`, plus its share of the package's
+matching moved into `packages/orexis-capability-market/` — `matching.py`, plus its share of the package's
 ontology, shapes and rules — and the family is unchanged. `hosting.py` still asks
 `agent.provider(BID_MATCHING)` and still never learns which member answered.
 
@@ -101,14 +101,14 @@ In exchange the cross-package reference goes. `market/terms.py` had to re-declar
 to ask for it, and under a namespace split would have had to re-declare the namespace IRI beside
 it — one string in two files, with nothing to catch drift.
 
-## `packages/capability/market/` takes `market:`
+## `packages/orexis-capability-market/` takes `market:`
 
 Nineteen terms and five shapes. The line is **who declares the term**:
 
 | stays `ag:` | why |
 |---|---|
 | `ag:Agent`, `ag:Capability`, `ag:hasCapability`, `ag:localId` | the kernel's — true of every agent |
-| `water:hasTarget`, `water:bandLow`, `water:maxValuePerL` | `packages/plant/water`'s — what a bid is *worth* here |
+| `water:hasTarget`, `water:bandLow`, `water:maxValuePerL` | `packages/orexis-plant-water`'s — what a bid is *worth* here |
 | `mqtt:eventTopic`, `mqtt:readingTopic` | the mqtt transport's |
 
 A bidder's belief block now reads from two namespaces at once, and that is the split stated rather

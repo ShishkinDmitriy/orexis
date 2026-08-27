@@ -22,7 +22,7 @@ allowed import, so every service the kernel offers is keyed by its class.
 A term is the fallback, for a service whose contract is not an importable class. It was once
 the only key here, on the reasoning that `lint-imports` forbids capability packages importing
 each other — true of an IMPLEMENTATION and not of a contract, which is the one import that
-rule has always allowed (`packages/codec/json/` imports sensing's `Codec`). Terms belong to
+rule has always allowed (`packages/orexis-codec-json/` imports sensing's `Codec`). Terms belong to
 extension points, where a point IS a declared thing in the graph; a service is a Python object
 and its type says what it is.
 

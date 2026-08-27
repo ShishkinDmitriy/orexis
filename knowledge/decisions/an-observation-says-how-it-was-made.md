@@ -56,7 +56,7 @@ taken:
   create or transform one or more samples."* It produces a `sosa:Sample`: a specimen removed and
   examined. Our probes sit in the soil and remove nothing, so the name imported a concept we
   deliberately do not model — and one that is the subject of an open issue.
-- **`Reporting` is ours.** `packages/capability/reporting/` was created eight commits earlier for
+- **`Reporting` is ours.** `packages/orexis-capability-reporting/` was created eight commits earlier for
   telemetry an agent emits *about itself* — `reporting:Storing`, `reporting:Announcing`. A
   sensing procedure called `PushReporting` is a second sense of that word, in one codebase,
   introduced the same day.

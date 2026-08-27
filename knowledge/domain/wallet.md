@@ -53,9 +53,9 @@ IS enforced.
 
 This is the one to understand, because half of it works.
 
-`packages/capability/market/clearing.py` genuinely refuses a trade whose buyer cannot pay its line — solvency is one
+`packages/orexis-capability-market/clearing.py` genuinely refuses a trade whose buyer cannot pay its line — solvency is one
 of the five checks, beside identity, order-consistency, conservation and the constitution. What
-it checks against is `MarketState.wallets`, and `packages/capability/market/hosting.py` fills
+it checks against is `MarketState.wallets`, and `packages/orexis-capability-market/hosting.py` fills
 that from the `balance` field **the bidders themselves put in their bids**:
 
 > Balances are SELF-REPORTED by the bidders and therefore untrusted. Clearing is supposed to

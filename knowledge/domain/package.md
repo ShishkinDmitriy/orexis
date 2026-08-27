@@ -2,20 +2,21 @@
 type: Domain Concept
 title: Package — the one unit the loader knows, and the one tree it lives in
 description: >-
-  What a package IS today, in one place: `packages/<family>/<name>/`, five optional files, the
-  family read off the path, the namespace read off the ontology, and `PROVIDES` as the only
-  registration. Four decision records got here in four steps and each amends the one before;
+  What a package IS today, in one place: `packages/orexis-<family>-<name>/`, five optional files,
+  the family read off the NAME, the namespace read off the ontology, and `PROVIDES` as the only
+  registration. Five decision records got here in five steps and each amends the one before;
   this says where they landed, so nobody has to replay them to learn the current model.
 ---
 
 # What a package is
 
-A **package is a directory** — `packages/<family>/<name>/` — holding whichever of five files it
-wants. It is found by looking, never by being listed. Adding one is adding a directory; removing
+A **package is a directory** — `packages/orexis-<family>-<name>/` — holding whichever of five
+files it wants. **The directory name is the distribution name**, and the module is that name with
+underscores: one string in three spellings, fixed by punctuation. It is found by looking, never by being listed. Adding one is adding a directory; removing
 one is deleting it.
 
 ```
-packages/<family>/<name>/
+packages/orexis-<family>-<name>/
     pyproject.toml THE PROJECT — what this package needs, and the one name it installs under
     __init__.py    THE MANIFEST — what this package contributes, and what it provides
     ontology.ttl   the vocabulary — what its terms mean
@@ -49,9 +50,9 @@ manifest is how the loader learns what the rest of the files are. Everything bel
 chosen. Why a package is a project at all, and the four dependency defects one shared list was
 hiding, is [every-package-is-a-project](/decisions/every-package-is-a-project.md)'s.
 
-**Every other one is optional, and an omission is a statement.** `packages/part/esp32/` is an ontology
+**Every other one is optional, and an omission is a statement.** `packages/orexis-part-esp32/` is an ontology
 and nothing else, because a board has no behaviour a runtime could load.
-`packages/capability/market/` has all of them. Neither is more of a package than the other, and
+`packages/orexis-capability-market/` has all of them. Neither is more of a package than the other, and
 that is the point: **a plant, a part and a capability are the same kind of thing to the loader.**
 
 A package whose Python is its manifest and nothing else is **knowledge-only** — legitimate, and
@@ -59,12 +60,18 @@ the majority: thirteen of the twenty-one shipped today load no module at run tim
 `PROVIDES`, not the presence of a file. It used to be the absence of `__init__.py`, and that
 stopped being true when every package gained a manifest.
 
-# The family is the directory above, and it is declared nowhere
+# The family is the second segment of the name, and it is declared nowhere else
 
-`agent.loader` walks two levels down from `packages/` and reads the family off the path — and
-those two levels belong to **no distribution**: `packages/` and `packages/<family>/` are PEP 420
-namespace portions, which is what lets twenty-two distributions share one import root and a
-twenty-second package arrive from another repository. Nothing enumerates the families; `KINDS` in `assembly/loader.py` fixes only the **order they merge in**, for
+`agent.loader` walks ONE level under `packages/` and reads the family off the **name**. It used to
+be a directory, and that was a second place for the same fact: a package's distribution said
+`orexis-capability-market` while its path said `capability/market`, and nothing held the two
+together. A package can no longer be filed under one family and published under another, because
+there is only one statement to make. See
+[a-package-is-its-name](/decisions/a-package-is-its-name.md).
+
+`packages/` itself is a **plain directory** — somewhere to keep projects, not somewhere to import
+from. Each package owns a top-level module of its own, so there is no shared root to join and
+none to shut anybody out of. Nothing enumerates the families; `KINDS` in `assembly/loader.py` fixes only the **order they merge in**, for
 determinism in logs and diffs. A family invented tomorrow is found without editing anything — it
 merely sorts after the named ones.
 
@@ -113,7 +120,7 @@ without knowing it is special; what it is not is a FAMILY, since `packages/kerne
 directory anyone can add a sibling to.
 
 Capability Python used to live under `agent/`, so the tree itself showed which of it a runtime
-loads. **It does not show that now** — `packages/capability/market/` and `packages/part/dht11/`
+loads. **It does not show that now** — `packages/orexis-capability-market/` and `packages/orexis-part-dht11/`
 look identical. The contracts carry the boundary alone:
 
 - `lint-imports` holds `packages` away from `onboarding`, onboarding away from nothing, and —

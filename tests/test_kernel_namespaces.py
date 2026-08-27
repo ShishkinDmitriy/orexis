@@ -213,7 +213,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
 
     # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
     # reachability half of `sim:StandInShape` — is the transport's: reaching the society
-    # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
+    # is a capability the fact of a bus grants, `packages/orexis-transport-mqtt/module.py` holds the
     # connection, the loop and the watchdog, and the shape is
     # `sim:StandInReachableShape` (the-kernel-has-no-mailbox).
 
@@ -245,7 +245,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
 
     # 1 THROUGH 4 ARE PAID, and by one change rather than four: `agent/desires.ru`'s whole
     # relationship with `sensing:` was the FRESHNESS WANT, and that want is derived by
-    # `packages/capability/sensing/desires.ru` now (#331). Its premise is an instrument, which
+    # `packages/orexis-capability-sensing/desires.ru` now (#331). Its premise is an instrument, which
     # is that package's fact, so the horizon term is spelled where it is owned and the three
     # prefix lines had nothing left to bind. Worth reading in the order this list put them:
     #
@@ -268,7 +268,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     #
     # THE SHAPE ENTRY IS PAID, and it was the last one that was not a migration. The widener
     # lived in `ag:DeviceModelShape` — a stand-in's initial value checked against the range of
-    # the subject it monitors — and the shape went to `packages/part/device/` with the rest of
+    # the subject it monitors — and the shape went to `packages/orexis-part-device/` with the rest of
     # the substrate vocabulary (the-substrate-is-not-the-minds). A package naming another
     # package's word is ordinary; only the kernel doing it was debt.
 
@@ -297,7 +297,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
 
     # KIND 5 IS PAID. The bus — `agent/world.py`'s `mqtt:MessageBus` query and the
     # reachability half of `sim:StandInShape` — is the transport's: reaching the society
-    # is a capability the fact of a bus grants, `packages/transport/mqtt/module.py` holds the
+    # is a capability the fact of a bus grants, `packages/orexis-transport-mqtt/module.py` holds the
     # connection, the loop and the watchdog, and the shape is
     # `sim:StandInReachableShape` (the-kernel-has-no-mailbox).
 
@@ -329,7 +329,7 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
 
     # 1 THROUGH 4 ARE PAID, and by one change rather than four: `agent/desires.ru`'s whole
     # relationship with `sensing:` was the FRESHNESS WANT, and that want is derived by
-    # `packages/capability/sensing/desires.ru` now (#331). Its premise is an instrument, which
+    # `packages/orexis-capability-sensing/desires.ru` now (#331). Its premise is an instrument, which
     # is that package's fact, so the horizon term is spelled where it is owned and the three
     # prefix lines had nothing left to bind. Worth reading in the order this list put them:
     #
@@ -405,8 +405,10 @@ def test_every_capability_package_on_disk_is_among_the_namespaces_scanned_for():
     """#334 named five families by hand; the scan asks the loader now, so a sixth is covered
     the day it declares a prefix. This holds the two together: a capability package whose
     namespace the loader does not report is one the ratchet cannot see."""
-    on_disk = {p.name for p in (loader.PACKAGES_ROOT / "capability").iterdir()
-               if p.is_dir() and not p.name.startswith("__")}
+    #  ASKED, not globbed. It walked `PACKAGES_ROOT / "capability"` while the family was a
+    #  directory; the family is a segment of the name now, and `of_kind` is the one thing that
+    #  knows how to read it. A glob would have kept working and covered nothing.
+    on_disk = {p.name for p in loader.of_kind("capability")}
     assert on_disk, "no capability packages found — the tree has moved and this checks nothing"
     assert on_disk <= set(_NAMESPACES), (
         f"{sorted(on_disk - set(_NAMESPACES))} declare no namespace the loader reports, so the "

@@ -132,7 +132,7 @@ ratchet cannot see it at all.
 
 **PAID, and by a change that was not about this** ([#331](https://github.com/ShishkinDmitriy/orexis/issues/331),
 [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md)):
-the freshness want is derived by `packages/capability/sensing/desires.ru` now, because its premise
+the freshness want is derived by `packages/orexis-capability-sensing/desires.ru` now, because its premise
 is an instrument and that is sensing's fact, so the horizon term is spelled where it is owned and
 `desires.ru`'s three prefix lines went with the rule that had left them behind. The judge position
 is DISSOLVED rather than moved into the package. The met-test says what the agent wants — a
@@ -301,7 +301,7 @@ destinations, and one shape widener.
 The fifth kind is gone, and the concept behind it with it. How an agent reaches its society is
 a capability the fact of a bus grants ([the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md)):
 the `mqtt:MessageBus` query, the credential, paho, the delivery loop and the watchdog all
-live in `packages/transport/mqtt/`; the reachability half of the simulated-device shape is
+live in `packages/orexis-transport-mqtt/`; the reachability half of the simulated-device shape is
 `sim:StandInReachableShape`; `Module` defines no messaging hook. What the list holds
 now is the migration destinations and one shape widener, and the kernel names no package's
 word in any query, rule, shape or constant.

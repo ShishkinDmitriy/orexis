@@ -294,12 +294,12 @@ def test_no_document_names_a_path_that_is_not_there():
         "packages/kernel/",
         # the-stake-is-sensings-want and the records it amends narrate where the region want
         # and its arithmetic USED to be derived and held. Both files are sensing's now
-        # (`desires.ru`, `regions.py` under packages/capability/sensing/), and a record that
+        # (`desires.ru`, `regions.py` under packages/orexis-capability-sensing/), and a record that
         # says so in the past tense is not a rename that missed the bundle.
         "agent/desires.ru",
         "agent/regions.py",
         # the-kernel-has-no-mailbox and a-dead-session-is-resigned-not-endured narrate where
-        # the watchdog WAS; it is `packages/transport/mqtt/watchdog.py` now.
+        # the watchdog WAS; it is `packages/orexis-transport-mqtt/watchdog.py` now.
         "agent/watchdog.py",
         # metrics-are-an-aspect narrates where the sink, the driver contract and the sovereign
         # channel WERE; they are reporting's and sensing's now.
@@ -315,7 +315,7 @@ def test_no_document_names_a_path_that_is_not_there():
         "infra/fuseki/",
         # capability-packages: a throwaway package dropped in to prove the loader finds one
         # without being told, then deleted. It is evidence, not a path.
-        "packages/capability/forecast/",
+        "packages/orexis-capability-forecast/",
         # domain/world: a runbook step. `world/orchard/` is what the reader is being told to
         # CREATE, so its absence is the precondition.
         "world/orchard/world.ttl",

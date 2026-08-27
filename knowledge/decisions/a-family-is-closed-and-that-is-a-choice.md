@@ -4,7 +4,7 @@ title: A family is closed — an alternative implementation of an ability is the
 description: >-
   A package may implement only terms it declares, which is what lets imports follow grants. The
   consequence, noticed while placing a model-backed review: nobody outside a package can ship an
-  alternative member of its family. `review:Consulting` must live in `packages/capability/review/`
+  alternative member of its family. `review:Consulting` must live in `packages/orexis-capability-review/`
   because the term is review's. Decided that the rule stands and the consequence is stated rather
   than discovered by hitting a RuntimeError, with the two ways to relax it written down and the
   trigger for doing so.
@@ -27,8 +27,8 @@ granted the capability that needs it.
 
 The sovereign asked where a consulting package would declare its dependencies. It would not:
 **there is no consulting package and there cannot be one.** `review:Consulting` is declared by
-`packages/capability/review/ontology.ttl`, so only that package may implement it — exactly as
-`market:PayAsBid` and `market:UniformPrice` live in `packages/capability/market/`.
+`packages/orexis-capability-review/ontology.ttl`, so only that package may implement it — exactly as
+`market:PayAsBid` and `market:UniformPrice` live in `packages/orexis-capability-market/`.
 
 Generalised: **a family is closed.** Whoever declares the family owns every member of it. Nobody
 outside can ship a different matching algorithm, a model-backed review, or a second codec for a

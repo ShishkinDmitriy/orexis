@@ -36,7 +36,7 @@ anything reaches anything is not belief, desire or intention. A module fills a p
 declares **which row** answering it belongs to — `ag:row`, one of `ag:Reactive`,
 `ag:Progression`, `ag:Deliberative` — because a row partitions the methods of one module, and no
 directory can ([layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)). The points about a READING
-are sensing's contract (`packages/capability/sensing/choir.py`): a module joins by defining the
+are sensing's contract (`packages/orexis-capability-sensing/choir.py`): a module joins by defining the
 method, and sensing says what it is asked with and how the answers merge
 ([the-stake-is-sensings-want](/decisions/the-stake-is-sensings-want.md)).
 
@@ -58,7 +58,7 @@ method, and sensing says what it is asked with and how the answers merge
 | `sweep` | Progression | `sweep() -> int` | kernel | market |
 | `take` | Progression | `take(act, desire, intention) -> bool` | kernel *(direct)* | actuation, market, sensing |
 
-## Declared by `packages/capability/sensing/` — 4
+## Declared by `packages/orexis-capability-sensing/` — 4
 
 | point | row | signature | asked by | filled by |
 |---|---|---|---|---|
@@ -67,7 +67,7 @@ method, and sensing says what it is asked with and how the answers merge
 | `readingRecorded` | Reactive | `on_reading_recorded(subject_uri, observed_property, value) -> None` | sensing | actuation, market, review, sensing |
 | `urgency` | Reactive | `urgency(subject_uri, observed_property, value) -> float \| None` | sensing | market, sensing |
 
-## Declared by `packages/capability/reporting/` — 1
+## Declared by `packages/orexis-capability-reporting/` — 1
 
 | point | row | signature | asked by | filled by |
 |---|---|---|---|---|

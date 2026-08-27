@@ -13,8 +13,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from packages.capability.market import rounds
-from packages.capability.market.terms import NS as MARKET
+from orexis_capability_market import rounds
+from orexis_capability_market.terms import NS as MARKET
 BID_WINDOW_S, ROUND_COOLDOWN_S = MARKET + "bidWindowS", MARKET + "roundCooldownS"
 
 from conftest import build_agent, genesis_store, wired_markets

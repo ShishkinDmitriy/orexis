@@ -81,6 +81,10 @@ ASSEMBLY_ROOT = Path(__file__).resolve().parent
 PACKAGES = "packages"
 PACKAGES_ROOT = REPO_ROOT / PACKAGES
 
+# Every package's distribution, directory and module begin with this. It is the only thing that
+# marks a directory under `packages/` as one, now that there is no family directory to sit in.
+DIST_PREFIX = "orexis"
+
 # The families. NOT a registry — `packages()` finds whatever directories are there, and this
 # tuple only fixes the order they merge in. A family invented tomorrow is picked up without
 # editing anything; it merely sorts after these.
@@ -152,11 +156,17 @@ class Package:
     def import_name(self) -> str:
         """Where its Python lives, for the packages that have any.
 
-        Every package is `packages.<family>.<name>`, whether or not there is anything there to
-        import — `provides()` checks for an `__init__.py` before asking, so a knowledge-only
-        package is never imported rather than being a special case here.
+        **A package's directory IS its distribution name, and its module is that name with
+        underscores** — `packages/orexis-capability-market/` is `orexis-capability-market` on
+        an index and `orexis_capability_market` to an importer. One string, three spellings
+        fixed by punctuation, and nothing to keep in step (a-package-is-its-name).
+
+        There is no shared import root any more: a package is a TOP-LEVEL module, so nothing
+        the kernel could import lives under a name the kernel also owns. `provides()` checks
+        for an `__init__.py` before asking, so a knowledge-only package is never imported
+        rather than being a special case here.
         """
-        return self.module or f"{PACKAGES}.{self.kind}.{self.name}"
+        return self.module or self.path.name.replace("-", "_")
 
     def file(self, filename: str) -> Path | None:
         candidate = self.path / filename
@@ -236,7 +246,13 @@ ASSEMBLY = Package(kind=KERNEL_KIND, name="assembly", path=ASSEMBLY_ROOT, module
 
 def _put_repo_root_on_path() -> None:
     """Make the repo root importable — done on import, so a checkout that has not been pip
-    installed still resolves `packages.capability.market` and the world trees beside it.
+    installed still resolves `agent`, `assembly` and `onboarding`.
+
+    **It does NOT reach the packages any more, and cannot.** A package's module is
+    `orexis_capability_market` while its directory is `packages/orexis-capability-market/`, so
+    no single sys.path entry maps one to the other: a package is reachable because it is
+    INSTALLED, which is what being a project means (a-package-is-its-name). This function is
+    therefore about the three trees of the root distribution and nothing else.
 
     Appended rather than prepended: an installed distribution must always win over a stray
     directory at the repo root, so a new tree can never shadow a real dependency.
@@ -253,10 +269,15 @@ _put_repo_root_on_path()
 def packages() -> tuple[Package, ...]:
     """Every package there is, found by looking. Nothing is named.
 
-    Two levels — `packages/<family>/<name>/` — and the family is read off the path rather than
-    declared. That is the whole of what made this uniform: a plant and a part were once both
-    `kind="vocabulary"`, which could not tell them apart, and a capability was a different tree
-    entirely because its Python needed a home. One tree now, and `kind` means something.
+    ONE level — `packages/orexis-<family>-<name>/` — and the family is read off the NAME rather
+    than off a directory above it. It used to be a directory, and that was a second place for
+    the same fact: a package's distribution said `orexis-capability-market` while its path said
+    `capability/market`, and nothing held the two together. The name is now the only statement,
+    so a package cannot be filed under one family and published under another.
+
+    A plant and a part were once both `kind="vocabulary"`, which could not tell them apart. The
+    family still means something; it is simply spelled where the package already had to spell
+    it.
 
     The KERNEL comes first and is not found — it is prepended. Everything else layers on its
     terms, so it must merge first, and making that a fact of construction rather than of sort
@@ -266,6 +287,10 @@ def packages() -> tuple[Package, ...]:
     nobody thought of is still found: it sorts after the known ones instead of being ignored,
     which is the behaviour a registry could not give.
 
+    A directory whose name is not `orexis-<family>-<name>` is REFUSED rather than skipped. A
+    skipped package is the failure this project keeps meeting — the thing that is silently not
+    there, that no test sees because an empty result is not an error.
+
     **An empty `packages/` — or none at all — leaves the kernel, and that is a complete
     build.** Not a degenerate case to guard against: it is the claim that every package is
     optional, stated as the value this function returns.
@@ -273,16 +298,21 @@ def packages() -> tuple[Package, ...]:
     if not PACKAGES_ROOT.is_dir():
         return (ASSEMBLY, KERNEL)
 
-    def visible(path):
-        return sorted(p for p in path.iterdir()
-                      if p.is_dir() and not p.name.startswith((".", "_")))
+    visible = sorted(p for p in PACKAGES_ROOT.iterdir()
+                     if p.is_dir() and not p.name.startswith((".", "_")))
 
     order = {family: i for i, family in enumerate(KINDS)}
     found: list[Package] = []
-    for family in sorted(visible(PACKAGES_ROOT),
-                         key=lambda p: (order.get(p.name, len(order)), p.name)):
-        for path in sorted(visible(family), key=lambda p: (p.name != BASE, p.name)):
-            found.append(Package(kind=family.name, name=path.name, path=path))
+    for path in visible:
+        prefix, _, rest = path.name.partition("-")
+        family, _, name = rest.partition("-")
+        if prefix != DIST_PREFIX or not family or not name:
+            raise ValueError(
+                f"{path} is not a package: a package directory is named "
+                f"`{DIST_PREFIX}-<family>-<name>`, which is also its distribution name. "
+                "Rename it or move it out of packages/.")
+        found.append(Package(kind=family, name=name.replace("-", "_"), path=path))
+    found.sort(key=lambda p: (order.get(p.kind, len(order)), p.kind, p.name != BASE, p.name))
     return (ASSEMBLY, KERNEL) + tuple(found)
 
 

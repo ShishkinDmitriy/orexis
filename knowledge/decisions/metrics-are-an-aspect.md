@@ -54,9 +54,9 @@ at, **tags)` — so one place knows the series store exists, and an agent with n
 records nothing and says why once, exactly as before.
 
 **Two neighbours moved on the same argument.** `Driver` is what a transport's driver
-implements for sensing, like `Codec` and `Scaling`; it is `packages/capability/sensing/driver.py`.
+implements for sensing, like `Codec` and `Scaling`; it is `packages/orexis-capability-sensing/driver.py`.
 The sovereign's channel names are what reporting answers on and what onboarding grants; they
-are `packages/capability/reporting/sovereign.py`, and onboarding imports them from there.
+are `packages/orexis-capability-reporting/sovereign.py`, and onboarding imports them from there.
 
 # What did not change
 

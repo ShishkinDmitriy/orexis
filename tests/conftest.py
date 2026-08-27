@@ -22,7 +22,7 @@ from agent import genesis
 from assembly import loader
 from agent.genesis import agent_id_of
 from agent.ontology import STATE_GRAPH
-from packages.capability.sensing.sensed_writer import observation_uri
+from orexis_capability_sensing.sensed_writer import observation_uri
 from agent.store import Store
 
 REPO_ROOT = loader.REPO_ROOT
@@ -201,7 +201,7 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None):
         #  No series sink: reporting builds its writer in `start()`, which a built agent never
         #  runs, so `record` is told and nobody writes — exactly a deployment with no credential.
         #  The transport's client, captured — the module is real, its socket is not.
-        from packages.transport.mqtt import module as mqtt_module
+        from orexis_transport_mqtt import module as mqtt_module
         monkeypatch.setattr(mqtt_module.mqtt, "Client", lambda *a, **k: _FakeClient())
         # What a deployed agent is handed: its OWN bucket and a token that opens only it,
         # mounted into its container by `orexis-influx`. Set here rather than defaulted in the
@@ -302,7 +302,7 @@ def open_round_for(st_or_agent, agent_id: str, seconds: float = 60.0) -> list[st
     from types import SimpleNamespace
 
     from agent.store import bindings
-    from packages.capability.market import rounds
+    from orexis_capability_market import rounds
 
     st = getattr(st_or_agent, "beliefs", st_or_agent)
     agent = st_or_agent if hasattr(st_or_agent, "beliefs") else SimpleNamespace(beliefs=st, id=agent_id)
@@ -348,27 +348,27 @@ def stake_of(agent, observed_property=None):
 
 
 def wired_sensors(agent):
-    from packages.capability.sensing.wiring import sensors_of
+    from orexis_capability_sensing.wiring import sensors_of
     return sensors_of(agent.beliefs.query, agent.me.uri)
 
 
 def wired_actuators(agent):
-    from packages.capability.actuation.wiring import actuators_of
+    from orexis_capability_actuation.wiring import actuators_of
     return actuators_of(agent.beliefs.query, agent.me.uri)
 
 
 def wired_actuator_for(agent, subject_id: str):
-    from packages.capability.actuation.wiring import actuator_for
+    from orexis_capability_actuation.wiring import actuator_for
     return actuator_for(wired_actuators(agent), subject_id)
 
 
 def wired_markets(agent):
-    from packages.capability.market.wiring import bidding_markets_of
+    from orexis_capability_market.wiring import bidding_markets_of
     return bidding_markets_of(agent.beliefs.query, agent.me.uri)
 
 
 def wired_hosted_markets(agent):
-    from packages.capability.market.wiring import hosted_markets_of
+    from orexis_capability_market.wiring import hosted_markets_of
     return hosted_markets_of(agent.beliefs.query, agent.me.uri)
 
 
@@ -379,9 +379,9 @@ def load_wired(query, agent_id: str):
     from types import SimpleNamespace
 
     from agent.world import load_self
-    from packages.capability.actuation.wiring import actuator_for, actuators_of
-    from packages.capability.market.wiring import bidding_markets_of, hosted_markets_of
-    from packages.capability.sensing.wiring import sensors_of
+    from orexis_capability_actuation.wiring import actuator_for, actuators_of
+    from orexis_capability_market.wiring import bidding_markets_of, hosted_markets_of
+    from orexis_capability_sensing.wiring import sensors_of
 
     me = load_self(query, agent_id)
     actuators = actuators_of(query, me.uri)
@@ -394,7 +394,7 @@ def load_wired(query, agent_id: str):
 
 
 def wired_event_topic(agent):
-    from packages.capability.sensing.wiring import event_topic_of
+    from orexis_capability_sensing.wiring import event_topic_of
     return event_topic_of(agent.beliefs.query, agent.me.uri)
 
 
@@ -411,7 +411,7 @@ def write_reading(agent, value: float, observed_property: str | None = None, age
     (the-stake-is-sensings-want) a want's `value` is not the world; the world is."""
     from datetime import datetime, timedelta, timezone
 
-    from packages.capability.sensing.sensed_writer import SensedWriter
+    from orexis_capability_sensing.sensed_writer import SensedWriter
 
     sensors = wired_sensors(agent)
     sensor = next(s for s in sensors if observed_property is None or s.observes == observed_property)

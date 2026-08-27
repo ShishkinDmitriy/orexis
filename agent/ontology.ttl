@@ -10,7 +10,7 @@
     rdfs:label "Orexis core" ;
     rdfs:comment """The society kernel: agents, the capabilities they compose, and the versioned world they share. Everything else is a MODULE layered on this — the microcontrollers it runs on, the protocols their parts speak, the parts themselves, the capabilities, and the domain. Code may reference the terms defined here; it may never reference an instance.
 
-What is NOT here any more is everything physical. `packages/part/microcontroller` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
+What is NOT here any more is everything physical. `packages/orexis-part-microcontroller` holds boards, peripherals, pins and wires; a concrete part is its own package beside it. The two subjects were sharing a file and growing at different rates: adding a sensor should not touch what a society IS.""" .
 
 #################  Agents and capabilities (composition, not hierarchy)  #################
 
@@ -104,7 +104,7 @@ ag:actsFor a owl:ObjectProperty ; rdfs:domain ag:Agent ;
 #################  Devices — dumb mechanism at the edge  #################
 
 #  THE SUBSTRATE AND ITS STAND-IN WERE HERE — `ag:Device`, `ag:simulatedBy`, `ag:DeviceModel`
-#  and the physics a stand-in computes — and are `packages/part/device/`. A BDI kernel has no
+#  and the physics a stand-in computes — and are `packages/orexis-part-device/`. A BDI kernel has no
 #  business saying what a thing is made of: the substrate axis is real (SOSA is explicit that
 #  its classes may be virtual, so `sosa:Sensor` asserts no hardware) and it is not the mind's.
 #  See knowledge/decisions/the-substrate-is-not-the-minds.md.

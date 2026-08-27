@@ -3,7 +3,7 @@
 **These two `.ttl` files are not ours.** They are worked examples published alongside the
 [Semantic Sensor Network Ontology](https://www.w3.org/TR/vocab-ssn/), the 2017 W3C
 Recommendation, and they describe a **DHT22** — the KY-015's sibling and the part
-`packages/part/dht11/` was modelled against.
+`packages/orexis-part-dht11/` was modelled against.
 
 They are here as evidence rather than as documentation. `tests/test_w3c_descriptions.py` drops
 them into a world and holds them to every shape this project owns, which answers a question no
@@ -84,7 +84,7 @@ fails and tells us to drop the patch, rather than silently applying a no-op fore
   treats the two as different IRIs — so a figure their file plainly states was invisible to a
   shape written against ours. That is bridged in `capabilities/sensing/ontology.ttl`.
 - **Their frequency is 2 seconds**, which is the figure the KY-015 declares in
-  `packages/part/dht11/`. Independent corroboration of a number nobody here measured.
+  `packages/orexis-part-dht11/`. Independent corroboration of a number nobody here measured.
 - **One in four of the published examples does not parse.** `IBS-TH2-PLUS.ttl` is deliberately
   not vendored: it comes from the successor draft
   [`w3c/sdw-sosa-ssn`](https://github.com/w3c/sdw-sosa-ssn), which models a datasheet a different

@@ -137,10 +137,10 @@ MOVED = {
         "http://example.org/orexis/market#Offer")},
     #  The AIM went to sensing with the region it sits in (the-stake-is-sensings-want): a
     #  volume authored while it was the kernel's holds `ag:aims`, and this is the rename.
-    #  THE SUBSTRATE went to `packages/part/device/`: a BDI kernel says nothing about what a
+    #  THE SUBSTRATE went to `packages/orexis-part-device/`: a BDI kernel says nothing about what a
     #  thing is made of (the-substrate-is-not-the-minds). It went in ONE word, because the rest
     #  of what the kernel held was never about substrate at all — a stand-in is the ABSENCE of a
-    #  device, so it went to `packages/sim/standin/` under its own name, and the `model` prefix
+    #  device, so it went to `packages/orexis-sim-standin/` under its own name, and the `model` prefix
     #  each of its physics terms carried to fake a namespace inside `ag:` came off with the move
     #  (a-stand-in-is-not-a-device).
     "http://example.org/orexis#Device": "http://example.org/orexis/device#Device",

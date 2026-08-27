@@ -1127,7 +1127,7 @@ def test_no_capability_asks_what_a_thing_is_made_of():
     cannot be written without naming the word. Only what a machine reads is checked.
     """
     offenders = {}
-    for path in sorted(pathlib.Path("packages/capability").rglob("*.ttl")):
+    for path in sorted(f for p in loader.of_kind("capability") for f in p.path.rglob("*.ttl")):
         code = _without_comments(path.read_text())
         for line in code.splitlines():
             if "device:" in line or "orexis/device#" in line:
@@ -1185,11 +1185,11 @@ def test_no_capability_shape_names_a_transport():
     transport-neutral class earns its place the day a second transport exists, and a premise is
     its own capability's to state whatever happens.
     """
-    transports = {p.name for p in pathlib.Path("packages/transport").iterdir() if p.is_dir()
+    transports = {p.name for p in loader.of_kind("transport") if p.path.is_dir()
                   and not p.name.startswith("__")}
     assert transports, "the transport family glob stopped matching"
     offenders = {}
-    for path in sorted(pathlib.Path("packages/capability").rglob("shapes.ttl")):
+    for path in sorted(f for p in loader.of_kind("capability") for f in p.path.rglob("shapes.ttl")):
         code = _without_comments(path.read_text())
         for name in transports:
             for line in code.splitlines():
