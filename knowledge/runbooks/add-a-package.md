@@ -241,6 +241,40 @@ Three extra things, in this order:
 3. **A shape for what an agent holding it must believe.** Capability-aware: it applies only to
    agents the world derived that capability for.
 
+# If it needs a third-party dependency
+
+Declare it as an **extra on the distribution, named for the capability that needs it**, and
+import it inside `provides()`:
+
+```toml
+[project.optional-dependencies]
+consulting = ["some-model-client>=1.0"]
+```
+
+```python
+def provides() -> tuple:
+    from .consulting import ConsultingModule    # the import that needs the extra
+    return (ConsultingModule,)
+```
+
+That way an agent granted the capability pays for it and **an agent that was not pays nothing**:
+`_provider_in` catches the `ImportError`, logs that the capability is unavailable, and every
+other agent in the society starts normally. Before that existed, one missing extra crashed every
+agent at import time, including those that had never heard of the capability.
+
+**Do not give your package its own `pyproject.toml`.** One distribution, one install; a build
+config for a package that is an `ontology.ttl` and nothing else is ceremony, and it breaks
+"adding a package is adding a directory". Fourteen of twenty-one packages ship no Python at all.
+
+# You cannot add a member to somebody else's family
+
+A package may implement only the terms IT declares, and that is enforced at load. So a different
+matching algorithm goes in `packages/capability/market/`, and a model-backed review in
+`packages/capability/review/` — beside the family that declared them, not in a package of your
+own. What a new package brings is a NEW ability: its own family, its own terms, its own members.
+See [a-family-is-closed-and-that-is-a-choice](/decisions/a-family-is-closed-and-that-is-a-choice.md),
+which also says what it would take to change that.
+
 # Before you call it done
 
 ```bash
