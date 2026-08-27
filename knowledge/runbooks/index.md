@@ -7,6 +7,7 @@ How to actually operate a society: bring one into existence, run it, and take it
 
 * [genesis-a-world](/runbooks/genesis-a-world.md) - Author a new world and seed it: what to write, what genesis derives, and the four checks.
 * [run-a-world](/runbooks/run-a-world.md) - Deploy, up, down, logs, and what to do after a code change. One container per agent, generated from the world.
+* [add-a-package](/runbooks/add-a-package.md) - Create one: what is mandatory and which gate refuses you, what is merely recommended, and what an omission states.
 * [tear-down](/runbooks/tear-down.md) - Stopping a society is not one command. What survives `down`, why each survives on purpose, and how to remove it.
 
 # A note on commands
