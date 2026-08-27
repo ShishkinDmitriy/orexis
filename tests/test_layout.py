@@ -784,3 +784,42 @@ def test_a_package_manifest_imports_nothing_expensive():
         "a package manifest imports something expensive at the top level — every agent pays "
         "for it, for every package, granted or not. Move it inside `provides()`:\n  "
         + "\n  ".join(offenders))
+
+
+
+def test_a_service_nobody_offers_is_refused_by_name(monkeypatch):
+    """Asking for a service nothing provides names it, rather than returning None.
+
+    `agent.provider(family)` answers None on purpose — an agent that composed neither member of
+    a family simply cannot do that thing, and callers are written for it. A SERVICE is the other
+    shape: a module that declared `@requires(HISTORY)` has said it cannot work without one, so
+    silence would be the wrong answer twice over — at the point of use, far from the
+    declaration, and indistinguishable from a service that legitimately returned nothing.
+    """
+    import pytest
+
+    from conftest import build_agent
+
+    agent = build_agent("fern", monkeypatch=monkeypatch)
+    with pytest.raises(KeyError, match="nothing offers"):
+        agent.service("urn:orexis:nothing-of-the-sort")
+
+
+def test_what_the_kernel_offers_is_reachable_by_its_class(monkeypatch):
+    """Every service the kernel puts on the table answers to the class a package would import.
+
+    The key is the CLASS, not a term, and the two ends of that must not drift: a service
+    registered under something a package cannot name is the twelve undeclared attributes this
+    design was written against, wearing a registry.
+    """
+    from agent.beliefs import Beliefs
+    from agent.desire import Desires
+    from agent.metrics import Metrics
+    from conftest import build_agent
+
+    agent = build_agent("fern", monkeypatch=monkeypatch)
+    for contract in (Beliefs, Desires, Metrics):
+        got = agent.service(contract)
+        assert isinstance(got, contract), (
+            f"{contract.__name__} is offered as {type(got).__name__} — a package asking for the "
+            "class it imported would be handed something else")
