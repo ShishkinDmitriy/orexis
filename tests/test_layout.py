@@ -6,7 +6,8 @@ directories and runs `pip install -e .` — so what actually kept `onboarding/` 
 was the Containerfile not naming it, and a reader had to infer that from two pyproject files
 that said nothing about images.
 
-One distribution now, and the boundary is here. If someone adds `COPY onboarding/` for
+The boundary is here, and it stayed here when the packages became twenty-one distributions of
+their own: a dependency graph is not a boundary. If someone adds `COPY onboarding/` for
 convenience, this fails; before, nothing did.
 
 Deliberately reads the Containerfile rather than building: a test that needed a container

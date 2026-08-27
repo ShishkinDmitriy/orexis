@@ -9,10 +9,32 @@ description: >-
 
 # The shortest package that works
 
-Two files: a manifest saying what you bring, and the thing you bring.
+Three files: a project saying what you need, a manifest saying what you bring, and the thing you
+bring.
 
 ```bash
 mkdir -p packages/part/thermistor
+```
+
+```toml
+# packages/part/thermistor/pyproject.toml
+[project]
+name = "orexis-part-thermistor"
+version = "0.1.0"
+description = "A resistance thermometer"
+requires-python = ">=3.10"
+dependencies = ["orexis"]        # the manifest imports `assembly`; nothing else is needed
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["packages.part.thermistor"]
+package-dir = {"packages.part.thermistor" = "."}
+
+[tool.setuptools.package-data]
+"packages.part.thermistor" = ["*.ttl", "*.ru", "*.rq"]     # the knowledge IS the package
 ```
 
 ```python
@@ -43,7 +65,8 @@ def vocabulary(package: Path) -> list[Path]:
 :Thermistor a owl:Class ; rdfs:label "Thermistor" .
 ```
 
-That is a complete package. **Nothing else is edited** — no registry, no list, no import. The
+That is a complete package. **Nothing else is edited** — no registry, no list, no import; the
+workspace glob in the root `pyproject.toml` already matches `packages/*/*`. The
 loader walks two levels under `packages/`, finds it, asks what it contributes, merges its
 vocabulary, and `thermistor:` reaches any query. Delete the directory and it is gone as
 completely.
@@ -51,6 +74,7 @@ completely.
 Check it landed:
 
 ```bash
+pip install -e packages/part/thermistor      # or: uv sync --all-packages
 python -c "from assembly import loader; print(loader.prefixes()['thermistor'])"
 orexis-validate simulation
 ```
@@ -243,8 +267,30 @@ Three extra things, in this order:
 
 # If it needs a third-party dependency
 
-Declare it as an **extra on the distribution, named for the capability that needs it**, and
-import it inside `provides()`:
+**Declare it in your own `pyproject.toml`.** You import it, so you depend on it — nobody declares
+it on your behalf, and the root does not know your package exists.
+
+```toml
+dependencies = [
+    "orexis",
+    "some-model-client>=1.0",
+]
+```
+
+`tests/test_projects.py` holds this list to what your Python actually imports, in **both**
+directions: a dependency you import and did not declare fails, and one you declared and do not
+import fails too. That second direction is the one that catches most, because a dependency stops
+being needed when the last import of it goes and nothing about deleting a line of Python makes
+anyone open a TOML file. Four defects were sitting in the single list the day it was split, and
+all four were of these two kinds — see
+[every-package-is-a-project](/decisions/every-package-is-a-project.md).
+
+**A sibling package is a dependency like any other.** `packages/codec/json` implements sensing's
+`Codec`, so it depends on `orexis-capability-sensing` and says so. That is the one written
+exception to packages not importing each other: a family's plug-ins import the family's contract.
+
+**If the dependency is heavy and only some agents need it**, keep it an extra and import it
+inside `provides()`:
 
 ```toml
 [project.optional-dependencies]
@@ -257,14 +303,10 @@ def provides() -> tuple:
     return (ConsultingModule,)
 ```
 
-That way an agent granted the capability pays for it and **an agent that was not pays nothing**:
+An agent granted the capability pays for it and **an agent that was not pays nothing**:
 `_provider_in` catches the `ImportError`, logs that the capability is unavailable, and every
-other agent in the society starts normally. Before that existed, one missing extra crashed every
-agent at import time, including those that had never heard of the capability.
-
-**Do not give your package its own `pyproject.toml`.** One distribution, one install; a build
-config for a package that is an `ontology.ttl` and nothing else is ceremony, and it breaks
-"adding a package is adding a directory". Fourteen of twenty-one packages ship no Python at all.
+other agent in the society starts normally. What changed is only *whose* `pyproject.toml` the
+extra goes in — yours, not the root's.
 
 # You cannot add a member to somebody else's family
 
@@ -278,6 +320,7 @@ which also says what it would take to change that.
 # Before you call it done
 
 ```bash
+pip install -e packages/<family>/<name>   # a project is not installed by existing
 pytest -q                    # BOTH roots — not `pytest tests`
 orexis-validate simulation   # and every other world you have
 lint-imports                 # the layering

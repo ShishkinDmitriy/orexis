@@ -2,7 +2,8 @@
 type: Decision
 title: One convention, and a boundary that is checked rather than implied
 description: Why the repository is flat, why it ships one distribution instead of two, why capabilities and transports live inside the agent while the vocabulary does not, and why the packaging boundary was replaced with a test and an import contract.
-status: accepted
+status: superseded-in-part
+superseded-by: every-package-is-a-project
 timestamp: 2026-08-07T00:00:00Z
 ---
 
@@ -152,6 +153,18 @@ Python — `terms.py`'s equivalent — was always next door.
 Asked by the sovereign after the menu became package-contributed: should this use an existing
 package manager, given that some capabilities — Consulting first — will have dependencies of
 their own, an LLM among them? Two answers, split by what the dependency IS.
+
+> **Amended by [every-package-is-a-project](/decisions/every-package-is-a-project.md).** The
+> clause below — *not per-package pyprojects* — was reversed on 2026-08-27, and the paragraph is
+> kept as written because the two arguments it makes are still worth answering. **The first was
+> wrong**: per-package pyprojects were read as re-erecting the boundary this record removed, but a
+> dependency graph is not a boundary, and the image boundary is untouched — still the
+> `Containerfile` not naming `onboarding/`. **The second was right and is unchanged**: entry
+> points are still not how a package is found, the loader is still this project's package manager,
+> and it still manages what pip cannot. What a `pyproject.toml` added is the one thing pip *can*
+> manage and the loader never could — who needs what — and the day the lists were split, four
+> defects fell out of the single one. The extras mechanism below survives intact; it simply lives
+> in the package's own project now instead of the root's.
 
 **A Python library lands as an extra in the ONE pyproject** (`orexis[consulting]`), the
 mechanism wireviz already uses; the Containerfile decides which extras an image carries.

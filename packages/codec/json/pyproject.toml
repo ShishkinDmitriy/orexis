@@ -1,0 +1,29 @@
+# orexis-codec-json
+#
+# A package is a PROJECT: it declares what it needs, and nothing declares it on its behalf.
+# The import name is `packages.codec.json` and the distribution is `orexis-codec-json` — one namespace,
+# many distributions, which is what lets this directory be developed and installed on its own.
+[project]
+name = "orexis-codec-json"
+version = "0.1.0"
+description = "JSON on the wire — bytes become a document"
+requires-python = ">=3.10"
+dependencies = [
+    "orexis",  # assembly (the manifest) and, where there is behaviour, the kernel
+    "orexis-capability-sensing",  # the Codec contract it implements
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# `packages/` and `packages/codec/` are NAMESPACE portions (PEP 420) and are claimed by nobody,
+# which is what lets twenty-one distributions share them. This project owns one leaf and says so.
+packages = ["packages.codec.json"]
+package-dir = {"packages.codec.json" = "."}
+
+[tool.setuptools.package-data]
+# The knowledge a package ships is not an afterthought to its Python — for most of them it IS
+# the package. A wheel without these files installs a directory that contributes nothing.
+"packages.codec.json" = ["*.ttl", "*.ru", "*.rq"]

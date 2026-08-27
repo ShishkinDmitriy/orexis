@@ -17,11 +17,13 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Dependencies first, so editing a capability does not reinstall the world.
+# Dependencies first, so editing a capability does not reinstall the world. This layer holds
+# the THIRD-PARTY set — pyoxigraph, pyshacl, rdflib, cryptography and the rest — and it changes
+# only when the root's dependency list does.
 COPY pyproject.toml pyproject.toml
 COPY agent/__init__.py agent/__init__.py
 COPY assembly/__init__.py assembly/__init__.py
-RUN pip install -e .
+RUN pip install "setuptools>=68" && pip install -e .
 
 # Everything an agent runs, and nothing else.
 #
@@ -42,6 +44,17 @@ RUN pip install -e .
 COPY assembly/ assembly/
 COPY agent/    agent/
 COPY packages/ packages/
+
+# EVERY PACKAGE IS A PROJECT, so every package is installed as one. Twenty-two distributions
+# sharing one `packages.` namespace: none of them claims `packages/` or `packages/<family>/`,
+# which is what leaves room for a twenty-second package installed from somewhere else.
+#
+# `--no-build-isolation` because the build backend is already here from the layer above, and
+# without it pip would fetch setuptools twenty-one times over. `--no-deps` because this layer
+# must not reach the network at all: everything these projects depend on is either the root
+# (installed above) or a sibling in this same directory, and a dependency that ISN'T is a
+# mistake `pytest` catches at the gate rather than a container discovering it at build time.
+RUN pip install --no-build-isolation --no-deps -e . $(ls -d packages/*/*/)
 
 # The third T-Box source (#175): a firmware's ontology describes what a board running it IS,
 # and an agent whose world types its board by firmware class derives its sensing capability

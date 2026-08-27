@@ -4,19 +4,31 @@ version = "0.1.0"
 description = "Orexis — a market society of agents that bid for a scarce resource"
 requires-python = ">=3.10"
 
-# One distribution, where there used to be two. The split expressed an intent it did not
-# enforce: an agent image excludes the operator's tools by not COPYing `onboarding/`, never by
-# pip, because nothing here installs from an index. What the two pyprojects bought was the
-# appearance of a boundary — which is worse than none, since it invites trust. The boundary is
-# asserted now: see tests/test_layout.py and the importlinter contracts below.
+# `orexis` is ASSEMBLY, the KERNEL and the OPERATOR'S TOOLS — the three trees at the repo root.
+# Every package under `packages/` is its own project with its own dependencies, and this one
+# does not depend on any of them: the kernel loads packages and never needs one, which is a
+# claim `pip install -e .` alone now demonstrates. See knowledge/decisions/every-package-is-a-project.md.
+#
+# What did NOT come back is the boundary two pyprojects used to pretend to draw. `onboarding/`
+# still ships in this distribution beside `agent/`, because packaging never kept the operator's
+# tools out of an agent — the Containerfile not naming the tree does, and lint-imports holds
+# the direction. Twenty-two distributions are not a boundary either; they are a dependency
+# graph, which is a different thing and the thing that was missing.
+#
+# Every name below is imported by `agent/` or `onboarding/`. Nothing else is listed, and
+# tests/test_layout.py holds this list to exactly what those two trees import.
 dependencies = [
-    "paho-mqtt>=2.0",
+    #  assembly/ and agent/ — rdflib is DIRECT (nine imports across the three trees) and used
+    #  to arrive only as a transitive of pyshacl, which is free to drop or re-pin it.
+    "rdflib>=7",
     "pyoxigraph>=0.4",
-    "influxdb-client>=1.40",
-    "requests>=2.31",
-    "python-dotenv>=1.0",
     "pyshacl>=0.26",
+    "python-dotenv>=1.0",
     "cryptography>=42",
+    #  onboarding/ — the operator's tools reach both services and read a drawing
+    "influxdb-client>=1.40",
+    "paho-mqtt>=2.0",
+    "pyyaml>=6",
 ]
 
 [project.optional-dependencies]
@@ -26,7 +38,7 @@ dependencies = [
 # for an output format nobody here can eyeball, since it is easy to emit YAML that
 # parses and that the tool then rejects. Rendering to SVG additionally needs the
 # graphviz BINARY, which pip cannot install and no test needs.
-dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4", "pyyaml>=6", "pytest-xdist>=3"]
+dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4", "pytest-xdist>=3"]
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.
@@ -58,12 +70,48 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-# Four roots at the repo top: what assembles a build, the kernel it assembles onto, the
-# packages it finds, and the operator's tools.
-# `packages*` is what makes `packages.capability.market` installable rather than merely importable
-# from a checkout — the trees moved out of `agent/`, so they are no longer carried along by it.
+# Three roots at the repo top: what assembles a build, the kernel it assembles onto, and the
+# operator's tools. `packages*` is NOT among them — every package installs itself, claiming its
+# own leaf and leaving `packages/` and `packages/<family>/` unclaimed as PEP 420 namespace
+# portions. That is what lets a twenty-second package be installed from another repository and
+# land in the same namespace as these twenty-one.
 where = ["."]
-include = ["assembly*", "agent*", "packages*", "onboarding*"]
+include = ["assembly*", "agent*", "onboarding*"]
+
+# ---------------------------------------------------------------------------------------------
+# THE WORKSPACE. Twenty-one packages and this root are one resolution, so a checkout is set up
+# with `uv sync --all-packages` and a package's dependency on a sibling resolves to the
+# directory rather than to an index that has never heard of it.
+#
+# uv is the ergonomics, not the mechanism: every member is an ordinary PEP 621 project, so
+# `pip install -e . $(ls -d packages/*/*/)` is the same install and is what the Containerfile
+# does. Nothing here requires uv to run an agent.
+[tool.uv.workspace]
+members = ["packages/*/*"]
+
+[tool.uv.sources]
+orexis = { workspace = true }
+orexis-bus-i2c = { workspace = true }
+orexis-bus-onewire = { workspace = true }
+orexis-capability-actuation = { workspace = true }
+orexis-capability-market = { workspace = true }
+orexis-capability-reporting = { workspace = true }
+orexis-capability-review = { workspace = true }
+orexis-capability-sensing = { workspace = true }
+orexis-codec-json = { workspace = true }
+orexis-part-bme280 = { workspace = true }
+orexis-part-device = { workspace = true }
+orexis-part-dht11 = { workspace = true }
+orexis-part-esp32 = { workspace = true }
+orexis-part-microcontroller = { workspace = true }
+orexis-part-moisture-probe = { workspace = true }
+orexis-part-rgb-led = { workspace = true }
+orexis-plant-water = { workspace = true }
+orexis-plant-zamioculcas = { workspace = true }
+orexis-scaling-identity = { workspace = true }
+orexis-sim-standin = { workspace = true }
+orexis-tool-wokwi = { workspace = true }
+orexis-transport-mqtt = { workspace = true }
 
 [tool.pytest.ini_options]
 # BOTH roots. `tests/` is the integration suite — most of what this project asserts is about the
