@@ -36,7 +36,7 @@ from agent import config, genesis
 
 from assembly import loader
 from .beliefs import Beliefs
-from assembly.inject import attribute_for
+from assembly.inject import attribute_for, opened
 from .ontology import DESIRES, DESIRE_URGENCY
 from .deliberator import Deliberator
 from .desire import Desire, Desires
@@ -119,6 +119,9 @@ class Agent:
         #  What this agent offers, by term — the kernel's own, filled below, and a package's
         #  resolved on first ask (an-injected-service-is-reached-by-term).
         self._services: dict = {}
+        #  What has to be shut when this agent does, newest first. A provider that YIELDS its
+        #  service cleans up after the yield; an ordinary one leaves nothing to do.
+        self._closing: list = []
 
 
         # exactly the modules this agent composed — no more, no less, and since #216 the
@@ -206,8 +209,11 @@ class Agent:
                 "dependency nobody declared."
             )
         _, build = offer
-        self._services[key] = build(self)
-        return self._services[key]
+        service, close = opened(build, self)
+        self._services[key] = service
+        if close is not None:
+            self._closing.append(close)
+        return service
 
     def offers(self, key) -> bool:
         """Is this service on the table at all? Asked without building it — which is what lets
@@ -373,6 +379,14 @@ class Agent:
                 module.stop()
             self.upkeep.stop()
             self.revision.stop()
+            #  Services last and in reverse, so one that leans on another is closed before the
+            #  thing it leans on. A failure in one is logged and does not strand the others: a
+            #  shutdown that stops half way is worse than a noisy one.
+            for close in reversed(self._closing):
+                try:
+                    close()
+                except Exception as exc:
+                    log.error("%s: a service would not close: %s", self.id, exc)
 
 
 def main() -> None:

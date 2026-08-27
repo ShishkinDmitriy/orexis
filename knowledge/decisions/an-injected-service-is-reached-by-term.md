@@ -169,3 +169,7 @@ declaration exists at all.
   about the object satisfying the contract the requirer imported.
 - **Nothing decides service lifetime**, because there is exactly one: the agent process. If a
   service ever needs to outlive or subdivide that, this record is where the assumption was made.
+- **A provider that yields is closed at shutdown**, newest first — added after reading what
+  `svcs` offers and finding the gap was ours: a module has `stop()`, a service had nothing, and
+  #311's ring would have had nowhere to flush. What is NOT decided is failure policy beyond
+  logging: a service that will not close does not stop the others, and nothing retries.

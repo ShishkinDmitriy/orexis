@@ -131,6 +131,39 @@ def injections_of(cls) -> dict:
     return out
 
 
+def opened(build, agent):
+    """Run one provider and, where it is a GENERATOR, keep what still has to be closed.
+
+    Returns `(service, close)` — `close` being None for an ordinary provider. A generator
+    provider yields its service and cleans up after the yield, which is the shape `contextlib`
+    made ordinary and every Python developer already reads:
+
+        @provides
+        def history(agent) -> HistoryRing:
+            ring = Ring(agent)
+            yield ring
+            ring.flush()
+
+    A module gets `stop()` for this; a service is not a module and had nothing, so #311's ring
+    would have had nowhere to flush. Noticed by reading what `svcs` offers and finding the hole
+    was ours rather than a feature we lacked.
+    """
+    made = build(agent)
+    if not hasattr(made, "__next__"):
+        return made, None
+
+    service = next(made)
+
+    def close():
+        try:
+            next(made)
+        except StopIteration:
+            return
+        raise RuntimeError("a service provider yielded twice — one service, one yield")
+
+    return service, close
+
+
 def offers_of(subject) -> dict:
     """key -> the name of the function offering it, on a module."""
     return {term: name for name, fn in vars(subject).items()

@@ -222,6 +222,16 @@ def history(agent) -> HistoryRing:  # the key is the return annotation
 
 One key, one provider: offering something another package already offers is refused at load.
 
+**If it needs closing, yield it** — what follows the yield runs at shutdown, newest first:
+
+```python
+@provides
+def history(agent) -> HistoryRing:
+    ring = Ring(agent)
+    yield ring
+    ring.flush()
+```
+
 **If you can work without it, annotate `X | None`.** The attribute is `None` where nothing
 offers it and no gate fails your build — where a plain annotation nothing offers is refused
 before anything runs. Declare it either way: an undeclared reach is invisible, which is what
