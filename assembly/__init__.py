@@ -11,9 +11,9 @@ the kernel, which is what lets the kernel be one of the things assembled.
 """
 
 from .contribute import answer, contributes, contributions_of
-from .inject import Handle, attribute_for, needs_of, offers_of, provides, requires
+from .inject import Handle, attribute_for, injections_of, offers_of, provides
 from .terms import ACTIONS, DERIVATION, REVIEW, SHAPES, VOCABULARY, WANTS
 
 __all__ = ["answer", "contributes", "contributions_of",
-           "Handle", "attribute_for", "needs_of", "offers_of", "provides", "requires",
+           "Handle", "attribute_for", "injections_of", "offers_of", "provides",
            "ACTIONS", "DERIVATION", "REVIEW", "SHAPES", "VOCABULARY", "WANTS"]

@@ -56,12 +56,40 @@ class.
 Seven `ag:*Store` terms were declared for this and removed the same day, which is the shortest
 life any term in this project has had.
 
+**And the key is read off the provider's return annotation**, so it is written once rather than
+named beside a function that already says it. Not off the returned OBJECT — finding out what a
+provider returns means calling it, and a provider runs only when an agent asks. An annotation
+says the same thing without building anything, and a type checker holds the provider to it.
+
 **One term, one provider**, which is `loader._members()`'s rule generalised — it already refuses a
 term implemented twice, because the alternative is settled by whichever package the filesystem
 yielded first.
 
 **Declared eagerly, resolved lazily.** `@requires(…)` declares what a module needs so the gate can
-check it; what is injected is a **handle**, resolved on first use. Constructing at injection time
+check it; what is injected is a **handle**, resolved on first use.
+
+**A module declares what it needs by ANNOTATING A FIELD**, the same convention `dataclasses`
+uses: a value beside it makes it an ordinary attribute, no value makes it a service, and
+`X | None` makes it one the module can work without.
+
+This was `@requires` and `@uses` for a day. The decorators went for a reason that is about
+who reads the code rather than about taste: **a decorator that makes attributes appear is
+invisible to every tool a Python developer brings** — no autocomplete, no go-to-definition, and
+a type checker calling `self.beliefs` an error — where an annotation is seen by all of them.
+This matters most for the reader this design is FOR, an external package author with no repo
+context. And `| None` says optional in the language's own vocabulary, so a second decorator
+stopped being needed at all.
+
+The split still is what a gate can say: a missing requirement is a broken build and is refused
+before anything runs; a missing optional is a fact about which packages were installed, and is
+refused by nobody. Both are DECLARED, which is the point — an undeclared reach is invisible,
+and that was the condition this design was written against.
+
+**An injected field may not shadow an inherited name, and that is enforced loudly.** The first
+attempt wrote `desires: Desires`, which collided with `Module.desires()` — a choir extension
+point. The injection was silently skipped, the module went on calling a bound method as if it
+were a store, and the failure surfaced three layers away as an arithmetic assertion in a review
+test. It raises now, naming both sides. Constructing at injection time
 brings back the ordering problem the runtime does not have today — every module is built with just
 the agent and looks things up later in `start()` — and it would undo #216, because resolving would
 import providers before knowing what was granted.
@@ -85,13 +113,15 @@ picks. Here there is no single graph to merge into: a fern composes Subscribing,
 Reckoning, Storing and Linking; a supplier composes Hosting, Actuation, PayAsBid and more. One
 build, different graphs, because the world says so.
 
-So the check is per agent — and it can run **without booting one**. `onboarding/validate.py`
-already calls `loader.registry_for(me.capabilities)`, so `orexis-validate <world>` knows exactly
-which packages each agent composes and can say *"fern requires `series:sink`, and nothing fern
-composes provides it."*
+**The check turned out to be build-wide, not per agent**, which is simpler than this record
+first claimed and worth correcting. A service is offered by a PACKAGE, and every package is in
+every build; what differs between agents is which MODULES are constructed, and a module class's
+requirements are static. So the question is *does anything offer this*, and asking it needs no
+world at all — `test_every_hard_requirement_is_offered_by_something` runs against the tree.
 
-That is as close to compile-time as this gets, and it answers a question a static graph cannot
-express: not *is this graph satisfiable* but *are these grants satisfiable for this agent*.
+What remains genuinely per-agent is capability composition, which was already checked. The
+per-agent framing came from assuming a service could be granted; it cannot, which is exactly what
+makes it a service rather than a capability.
 
 # Why not an existing library
 

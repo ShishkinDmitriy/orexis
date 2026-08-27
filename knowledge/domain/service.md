@@ -50,24 +50,41 @@ Offer one from a package's manifest. The function runs when an agent first asks,
 manifest is read, so the import is paid only by an agent that wants it:
 
 ```python
-@provides(HistoryRing)             # the CONTRACT — cheap to import, defines nothing heavy
-def history(agent):
-    from .ring import Ring         # the implementation, only for an agent that asks
+from .contract import HistoryRing   # cheap: a contract defines nothing heavy
+
+@provides
+def history(agent) -> HistoryRing:  # the key IS what it says it returns
+    from .ring import Ring          # the implementation, only for an agent that asks
     return Ring(agent)
 ```
 
-Need one by declaring it. It arrives as an attribute named for the key — `Beliefs` becomes
-`self.beliefs` — so the declaration and the use cannot drift apart:
+The key comes from the **return annotation**, so it is written once — where a type checker
+already needs it — and the declaration cannot drift from the thing declared. It is not read off
+the returned OBJECT, which is the obvious other place to look and cannot work: finding out what
+a provider returns means calling it, and the point is that it runs only when an agent asks.
+`@provides(SOME_TERM)` names a key explicitly, for a contract that is not a class.
+
+Need one by **annotating a field with no value beside it** — the same convention `dataclasses`
+uses, and the reason it is that rather than a decorator is that every tool a Python developer
+brings can see an annotation:
 
 ```python
 from agent.beliefs import Beliefs
 from agent.metrics import Metrics
 
-@requires(Beliefs, Metrics)
 class Recorder(Module):
+    CAPABILITY = RECORDING       # has a value: an ordinary attribute
+    beliefs: Beliefs             # no value: a service, required
+    history_ring: Ring | None    # `| None`: a service it can work without
+
     def start(self):
         self.metrics.event("started", "")
 ```
+
+**An injected field may not shadow something that already exists.** `desires: Desires` was the
+first thing tried here and it collided with `Module.desires()`, the choir extension point — the
+injection was skipped and the module went on calling a bound method as if it were a store, which
+failed a test by an arithmetic assertion three layers away. It raises now, naming both.
 
 **The key is a type wherever one can be imported.** You import the thing you want and ask for
 it; the type checker follows you, and there is no parallel naming system to keep in step.
@@ -79,7 +96,16 @@ A **term** is the fallback, for a service whose contract is not an importable cl
 belong to [extension points](/domain/choir.md), where a point IS a declared thing in the graph;
 a service is a Python object, and its type already says what it is.
 
-**One term, one provider.** A term offered by two packages is refused at load rather than
+**A plain annotation is hard; `| None` is not.** A field annotated with a type has said the
+module cannot work without one, so a missing one raises. `X | None` has said it can, so the
+attribute is `None` where nothing offers it and the module checks once.
+
+The difference is what a gate can say. A missing requirement is a **broken build** and is
+refused before anything runs; a missing optional is a **fact about which packages were
+installed** and is refused by nobody. Declaring the optional one anyway is the point: an
+undeclared reach is invisible, which is the condition this whole design was written against.
+
+**One key, one provider.** A key offered by two packages is refused at load rather than
 resolved, because the alternative is settled by whichever package the filesystem yielded first.
 
 **Asking for one nothing offers raises, naming it.** That is the opposite of
